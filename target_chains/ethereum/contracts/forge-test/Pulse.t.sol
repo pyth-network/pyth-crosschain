@@ -8,6 +8,7 @@ import "../contracts/pulse/PulseUpgradeable.sol";
 import "../contracts/pulse/IPulse.sol";
 import "../contracts/pulse/PulseState.sol";
 import "../contracts/pulse/PulseEvents.sol";
+import "../contracts/pulse/PulseErrors.sol";
 
 contract MockPulseConsumer is IPulseConsumer {
     uint64 public lastSequenceNumber;
@@ -141,8 +142,8 @@ contract PulseTest is Test, PulseEvents {
         );
     }
 
-    // Helper function to create update data
-    function createUpdateData(
+    // Helper function to create mock update data
+    function createMockUpdateData(
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal pure returns (bytes[] memory) {
         bytes[] memory updateData = new bytes[](2);
@@ -225,6 +226,20 @@ contract PulseTest is Test, PulseEvents {
         assertEq(lastRequest.requester, expectedRequest.requester);
     }
 
+    function testRequestWithInsufficientFee() public {
+        bytes32[] memory priceIds = createPriceIds();
+        vm.deal(address(consumer), 1 gwei);
+
+        vm.prank(address(consumer));
+        vm.expectRevert(InsufficientFee.selector);
+        pulse.requestPriceUpdatesWithCallback{value: PYTH_FEE}( // Intentionally low fee
+            provider,
+            block.timestamp,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
+    }
+
     function testExecuteCallback() public {
         bytes32[] memory priceIds = createPriceIds();
         uint256 publishTime = block.timestamp;
@@ -275,7 +290,7 @@ contract PulseTest is Test, PulseEvents {
         );
 
         // Create mock update data and execute callback
-        bytes[] memory updateData = createUpdateData(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(provider);
         pulse.executeCallback(
@@ -305,7 +320,7 @@ contract PulseTest is Test, PulseEvents {
             publishTime
         );
         mockPythResponse(priceFeeds);
-        bytes[] memory updateData = createUpdateData(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.expectEmit(true, true, true, true);
         emit PriceUpdateCallbackFailed(
@@ -340,7 +355,7 @@ contract PulseTest is Test, PulseEvents {
             publishTime
         );
         mockPythResponse(priceFeeds);
-        bytes[] memory updateData = createUpdateData(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.expectEmit(true, true, true, true);
         emit PriceUpdateCallbackFailed(
@@ -359,6 +374,97 @@ contract PulseTest is Test, PulseEvents {
             priceIds,
             updateData,
             CALLBACK_GAS_LIMIT
+        );
+    }
+
+    // Test executing callback with mismatched price IDs
+    function testExecuteCallbackWithMismatchedPriceIds() public {
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory originalPriceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer));
+
+        // Create different price IDs array
+        bytes32[] memory differentPriceIds = new bytes32[](1);
+        differentPriceIds[0] = bytes32(uint256(1)); // Different price ID
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockPythResponse(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        vm.prank(provider);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InvalidPriceIds.selector,
+                differentPriceIds,
+                originalPriceIds
+            )
+        );
+        pulse.executeCallback(
+            provider,
+            sequenceNumber,
+            differentPriceIds,
+            updateData,
+            CALLBACK_GAS_LIMIT
+        );
+    }
+
+    function testExecuteCallbackWithInsufficientGas() public {
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer));
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockPythResponse(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        vm.prank(provider);
+        vm.expectRevert();
+        pulse.executeCallback{gas: 10000}(
+            provider,
+            sequenceNumber,
+            priceIds,
+            updateData,
+            CALLBACK_GAS_LIMIT
+        );
+    }
+
+    function testExecuteCallbackWithInvalidGasLimit() public {
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer));
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockPythResponse(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Try to execute with different gas limit than what was requested
+        uint256 differentGasLimit = CALLBACK_GAS_LIMIT + 1000;
+        vm.prank(provider);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InvalidCallbackGasLimit.selector,
+                differentGasLimit,
+                CALLBACK_GAS_LIMIT
+            )
+        );
+        pulse.executeCallback(
+            provider,
+            sequenceNumber,
+            priceIds,
+            updateData,
+            differentGasLimit
         );
     }
 
@@ -496,7 +602,9 @@ contract PulseTest is Test, PulseEvents {
         vm.deal(address(consumer), 1 gwei);
         vm.prank(address(consumer));
 
-        vm.expectRevert("Exceeds max number of prices");
+        vm.expectRevert(
+            abi.encodeWithSelector(ExceedsMaxPrices.selector, 2, 1)
+        );
         pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
             provider,
             block.timestamp,
