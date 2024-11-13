@@ -405,4 +405,45 @@ contract PulseTest is Test, PulseEvents {
             "Unregistered provider fee should only include Pyth fee"
         );
     }
+
+    function testWithdraw() public {
+        // Setup: Request price update to accrue some fees
+        bytes32[] memory priceIds = createPriceIds();
+        vm.deal(address(consumer), 1 gwei);
+
+        vm.prank(address(consumer));
+        pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
+            provider,
+            block.timestamp,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
+
+        // Get provider's balance before withdrawal
+        uint256 providerBalanceBefore = provider.balance;
+        PulseState.ProviderInfo memory infoBefore = pulse.getProviderInfo(
+            provider
+        );
+
+        // Withdraw fees
+        vm.prank(provider);
+        pulse.withdraw(infoBefore.accruedFeesInWei);
+
+        // Verify balances
+        assertEq(
+            provider.balance,
+            providerBalanceBefore + infoBefore.accruedFeesInWei
+        );
+
+        PulseState.ProviderInfo memory infoAfter = pulse.getProviderInfo(
+            provider
+        );
+        assertEq(infoAfter.accruedFeesInWei, 0);
+    }
+
+    function testWithdrawInsufficientBalance() public {
+        vm.prank(provider);
+        vm.expectRevert("Insufficient balance");
+        pulse.withdraw(1 ether);
+    }
 }
