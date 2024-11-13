@@ -49,7 +49,6 @@ export class SolanaPriceListener extends ChainPriceListener {
           } seconds`
         );
       }
-      throw new Error("Solana connection is unhealthy");
     }
   }
 
