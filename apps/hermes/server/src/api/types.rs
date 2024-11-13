@@ -329,6 +329,7 @@ pub struct PriceFeedMetadata {
 #[serde(rename_all = "snake_case")]
 pub enum AssetType {
     Crypto,
+    #[serde(rename = "fx")]
     FX,
     Equity,
     Metal,
