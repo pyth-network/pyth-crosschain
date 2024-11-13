@@ -10,6 +10,7 @@ import {
   MAINNET_UPGRADE_VAAS,
 } from "../tests/utils/wormhole";
 import { BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID } from "../tests/utils/pyth";
+import { calculateUpdatePriceFeedsFee } from "@pythnetwork/pyth-ton-js";
 
 export async function run(provider: NetworkProvider) {
   const SINGLE_UPDATE_FEE = 1;
@@ -21,12 +22,28 @@ export async function run(provider: NetworkProvider) {
     },
   ];
 
+  // Require CHAIN_ID environment variable
+  if (!process.env.CHAIN_ID) {
+    throw new Error(
+      "CHAIN_ID environment variable is required. Example usage: CHAIN_ID=2 npx blueprint run ..."
+    );
+  }
+
+  const chainId = parseInt(process.env.CHAIN_ID, 10);
+
+  // Validate that chainId is a valid number
+  if (isNaN(chainId)) {
+    throw new Error("CHAIN_ID must be a valid number");
+  }
+
+  console.log("Chain ID:", chainId);
+
   const config: MainConfig = {
     singleUpdateFee: SINGLE_UPDATE_FEE,
     dataSources: DATA_SOURCES,
     guardianSetIndex: 0,
     guardianSet: GUARDIAN_SET_0,
-    chainId: 1,
+    chainId,
     governanceChainId: 1,
     governanceContract:
       "0000000000000000000000000000000000000000000000000000000000000004",
@@ -97,12 +114,14 @@ export async function run(provider: NetworkProvider) {
 
   // NOTE: As of 2024/10/14 There's a bug with TON Access (https://ton.access.orbs.network) RPC service where if you provide an update data buffer with length of more than ~320 then the rpc returns error 404 and the function fails
   const updateFee = await main.getUpdateFee(updateData);
-  console.log("Update fee:", updateFee);
 
-  await main.sendUpdatePriceFeeds(
+  const totalFee =
+    calculateUpdatePriceFeedsFee(BigInt(updateFee)) + BigInt(updateFee);
+
+  const result = await main.sendUpdatePriceFeeds(
     provider.sender(),
     updateData,
-    toNano(updateFee)
+    totalFee
   );
   console.log("Price feeds updated successfully.");
 
