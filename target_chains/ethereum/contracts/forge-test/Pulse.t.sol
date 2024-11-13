@@ -132,7 +132,7 @@ contract PulseTest is Test, PulseEvents {
     }
 
     // Helper function to mock Pyth response
-    function mockPythResponse(
+    function mockParsePriceFeedUpdates(
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal {
         vm.mockCall(
@@ -261,7 +261,7 @@ contract PulseTest is Test, PulseEvents {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockPythResponse(priceFeeds);
+        mockParsePriceFeedUpdates(priceFeeds);
 
         // Create arrays for expected event data
         int64[] memory expectedPrices = new int64[](2);
@@ -323,7 +323,7 @@ contract PulseTest is Test, PulseEvents {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockPythResponse(priceFeeds);
+        mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.expectEmit(true, true, true, true);
@@ -358,7 +358,7 @@ contract PulseTest is Test, PulseEvents {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockPythResponse(priceFeeds);
+        mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.expectEmit(true, true, true, true);
@@ -396,7 +396,7 @@ contract PulseTest is Test, PulseEvents {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockPythResponse(priceFeeds);
+        mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(provider);
@@ -426,7 +426,7 @@ contract PulseTest is Test, PulseEvents {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockPythResponse(priceFeeds);
+        mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(provider);
@@ -450,7 +450,7 @@ contract PulseTest is Test, PulseEvents {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockPythResponse(priceFeeds);
+        mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Try to execute with different gas limit than what was requested
@@ -487,7 +487,7 @@ contract PulseTest is Test, PulseEvents {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             futureTime // Mock price feeds with future timestamp
         );
-        mockPythResponse(priceFeeds); // This will make parsePriceFeedUpdates return future-dated prices
+        mockParsePriceFeedUpdates(priceFeeds); // This will make parsePriceFeedUpdates return future-dated prices
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(provider);
@@ -502,6 +502,66 @@ contract PulseTest is Test, PulseEvents {
 
         // Verify the callback was executed with future timestamp
         assertEq(consumer.lastPublishTime(), futureTime);
+    }
+
+    function testExecuteCallbackWithWrongProvider() public {
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer));
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockParsePriceFeedUpdates(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        address wrongProvider = address(0x999);
+        vm.prank(wrongProvider);
+        vm.expectRevert(NoSuchRequest.selector);
+        pulse.executeCallback(
+            wrongProvider,
+            sequenceNumber,
+            priceIds,
+            updateData,
+            CALLBACK_GAS_LIMIT
+        );
+    }
+
+    function testDoubleExecuteCallback() public {
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer));
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockParsePriceFeedUpdates(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // First execution
+        vm.prank(provider);
+        pulse.executeCallback(
+            provider,
+            sequenceNumber,
+            priceIds,
+            updateData,
+            CALLBACK_GAS_LIMIT
+        );
+
+        // Second execution should fail
+        vm.prank(provider);
+        vm.expectRevert(NoSuchRequest.selector);
+        pulse.executeCallback(
+            provider,
+            sequenceNumber,
+            priceIds,
+            updateData,
+            CALLBACK_GAS_LIMIT
+        );
     }
 
     function testGetFee() public {
