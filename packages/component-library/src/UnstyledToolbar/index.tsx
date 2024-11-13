@@ -6,4 +6,4 @@
 
 "use client";
 
-export { Button, Link } from "react-aria-components";
+export { Toolbar as UnstyledToolbar } from "react-aria-components";

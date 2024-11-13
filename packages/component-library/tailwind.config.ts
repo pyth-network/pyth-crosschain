@@ -8,7 +8,7 @@ import { tailwindGlob } from "./src/index.js";
 
 const tailwindConfig = {
   content: [tailwindGlob, ".storybook/**/*.tsx"],
-  darkMode: "class",
+  darkMode: "selector",
   theme: {
     extend: {
       fontFamily: {
@@ -41,6 +41,20 @@ const tailwindConfig = {
           800: "#1E1F3B",
           900: "#100F2A",
           950: "#050217",
+        },
+      },
+      spacing: {
+        "button-padding-xs": "0.25rem",
+        "button-padding-sm": "0.5rem",
+      },
+      animation: {
+        progress: "progress 1s infinite linear",
+      },
+      keyframes: {
+        progress: {
+          "0%": { transform: " translateX(0) scaleX(0)" },
+          "40%": { transform: "translateX(0) scaleX(0.4)" },
+          "100%": { transform: "translateX(100%) scaleX(0.5)" },
         },
       },
     },
