@@ -326,17 +326,71 @@ pub struct PriceFeedMetadata {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum AssetType {
     Crypto,
+    #[serde(rename = "fx")]
     FX,
     Equity,
-    Metals,
+    Metal,
     Rates,
+    CryptoRedemptionRate,
 }
 
 impl Display for AssetType {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "{:?}", self)
+        match self {
+            AssetType::Crypto => write!(f, "crypto"),
+            AssetType::FX => write!(f, "fx"),
+            AssetType::Equity => write!(f, "equity"),
+            AssetType::Metal => write!(f, "metal"),
+            AssetType::Rates => write!(f, "rates"),
+            AssetType::CryptoRedemptionRate => write!(f, "crypto_redemption_rate"),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_serialize_matches_display() {
+        assert_eq!(
+            AssetType::Crypto.to_string(),
+            serde_json::to_string(&AssetType::Crypto)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::FX.to_string(),
+            serde_json::to_string(&AssetType::FX)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::Equity.to_string(),
+            serde_json::to_string(&AssetType::Equity)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::Metal.to_string(),
+            serde_json::to_string(&AssetType::Metal)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::Rates.to_string(),
+            serde_json::to_string(&AssetType::Rates)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::CryptoRedemptionRate.to_string(),
+            serde_json::to_string(&AssetType::CryptoRedemptionRate)
+                .unwrap()
+                .trim_matches('"')
+        );
     }
 }
