@@ -2,11 +2,6 @@
 // and load all env variables.
 /* eslint-disable n/no-process-env */
 
-// Disable the following rule because variables in this file are only loaded at
-// runtime and do not influence the build outputs, thus they need not be
-// declared to turbo for it to be able to cache build outputs correctly.
-/* eslint-disable turbo/no-undeclared-env-vars */
-
 import "server-only";
 
 /**
@@ -21,25 +16,37 @@ const demand = (key: string): string => {
   }
 };
 
-/**
- * Indicates that this server is the live customer-facing production server.
- */
-export const IS_PRODUCTION_SERVER = process.env.VERCEL_ENV === "production";
-
-/**
- * Throw if the env var `key` is not set in the live customer-facing production
- * server, but allow it to be unset in any other environment.
- */
-const demandInProduction = IS_PRODUCTION_SERVER
-  ? demand
-  : (key: string) => process.env[key];
-
-export const GOOGLE_ANALYTICS_ID = demandInProduction("GOOGLE_ANALYTICS_ID");
-export const AMPLITUDE_API_KEY = demandInProduction("AMPLITUDE_API_KEY");
-
 class MissingEnvironmentError extends Error {
   constructor(name: string) {
     super(`Missing environment variable: ${name}!`);
     this.name = "MissingEnvironmentError";
   }
 }
+
+const getEnvOrDefault = (key: string, defaultValue: string) =>
+  process.env[key] ?? defaultValue;
+
+/**
+ * Indicates that this server is the live customer-facing production server.
+ */
+export const IS_PRODUCTION_SERVER = process.env.VERCEL_ENV === "production";
+
+const defaultInProduction = IS_PRODUCTION_SERVER
+  ? getEnvOrDefault
+  : (key: string) => process.env[key];
+
+export const GOOGLE_ANALYTICS_ID = defaultInProduction(
+  "GOOGLE_ANALYTICS_ID",
+  "G-E1QSY256EQ",
+);
+export const AMPLITUDE_API_KEY = defaultInProduction(
+  "AMPLITUDE_API_KEY",
+  "6faa78c51eff33087eb19f0f3dc76f33",
+);
+export const CLICKHOUSE = {
+  url:
+    process.env.CLICKHOUSE_URL ??
+    "https://oxcuvjrqq7.eu-west-2.aws.clickhouse.cloud:8443",
+  username: process.env.CLICKHOUSE_USERNAME ?? "insights",
+  password: demand("CLICKHOUSE_PASSWORD"),
+};

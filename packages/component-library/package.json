@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "20"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./tailwind-config": "./tailwind.config.ts",
@@ -21,6 +24,7 @@
     "react": "catalog:"
   },
   "dependencies": {
+    "@react-hookz/web": "catalog:",
     "clsx": "catalog:",
     "react-aria": "catalog:",
     "react-aria-components": "catalog:"

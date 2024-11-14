@@ -1,10 +1,10 @@
 {
   "name": "@pythnetwork/pyth-crosschain",
   "private": true,
-  "packageManager": "pnpm@9.12.1",
+  "packageManager": "pnpm@9.12.3",
   "engines": {
-    "node": "^20.17.0",
-    "pnpm": "^9.12.1"
+    "node": "^20.18.0",
+    "pnpm": "^9.12.3"
   },
   "scripts": {
     "example:hermes-client": "pnpm i && turbo example --filter @pythnetwork/hermes-client --ui stream",

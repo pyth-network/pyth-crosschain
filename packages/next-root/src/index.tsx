@@ -1,6 +1,7 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { LoggerProvider } from "@pythnetwork/app-logger/provider";
 import dynamic from "next/dynamic";
+import { ThemeProvider } from "next-themes";
 import type { ComponentProps, ReactNode } from "react";
 
 import { Amplitude } from "./amplitude";
@@ -19,6 +20,7 @@ type Props = Omit<ComponentProps<typeof HtmlWithLang>, "children"> & {
   amplitudeApiKey?: string | undefined;
   googleAnalyticsId?: string | undefined;
   providers?: ComponentProps<typeof ComposeProviders>["providers"] | undefined;
+  bodyClassName?: string | undefined;
 };
 
 export const Root = ({
@@ -27,6 +29,7 @@ export const Root = ({
   amplitudeApiKey,
   googleAnalyticsId,
   enableAccessibilityReporting,
+  bodyClassName,
   ...props
 }: Props) => (
   <ComposeProviders
@@ -37,8 +40,14 @@ export const Root = ({
       ...(providers ?? []),
     ]}
   >
-    <HtmlWithLang {...props}>
-      {children}
+    <HtmlWithLang
+      // See https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
+      suppressHydrationWarning
+      {...props}
+    >
+      <body className={bodyClassName}>
+        <ThemeProvider attribute="class">{children}</ThemeProvider>
+      </body>
       {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
       {amplitudeApiKey && <Amplitude apiKey={amplitudeApiKey} />}
       {enableAccessibilityReporting && <ReportAccessibility />}

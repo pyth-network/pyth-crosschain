@@ -3,11 +3,23 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["pull:env", "^build"],
       "outputs": [".next/**", "!.next/cache/**"],
-      "env": ["GOOGLE_ANALYTICS_ID", "AMPLITUDE_API_KEY"]
+      "env": [
+        "VERCEL_ENV",
+        "GOOGLE_ANALYTICS_ID",
+        "AMPLITUDE_API_KEY",
+        "CLICKHOUSE_URL",
+        "CLICKHOUSE_USERNAME",
+        "CLICKHOUSE_PASSWORD"
+      ]
+    },
+    "pull:env": {
+      "outputs": [".env.local"],
+      "cache": false
     },
     "start:dev": {
+      "dependsOn": ["pull:env"],
       "persistent": true,
       "cache": false
     },
