@@ -181,7 +181,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       }
       const data = await response.json();
       return Math.floor(
-        Number(data[0].landed_tips_25th_percentile) * LAMPORTS_PER_SOL
+        Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL
       );
     } catch (err: any) {
       this.logger.error({ err }, "getRecentJitoTips failed");
@@ -194,9 +194,11 @@ export class SolanaPricePusherJito implements IPricePusher {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _pubTimesToPush: number[]
   ): Promise<void> {
-    const jitoTip = this.dynamicJitoTips
-      ? (await this.getRecentJitoTipLamports()) ?? this.defaultJitoTipLamports
-      : this.defaultJitoTipLamports;
+    const recentJitoTip = await this.getRecentJitoTipLamports();
+    const jitoTip =
+      this.dynamicJitoTips && recentJitoTip !== undefined
+        ? Math.max(this.defaultJitoTipLamports, recentJitoTip)
+        : this.defaultJitoTipLamports;
 
     const cappedJitoTip = Math.min(jitoTip, this.maxJitoTipLamports);
     this.logger.info({ cappedJitoTip }, "using jito tip of");
