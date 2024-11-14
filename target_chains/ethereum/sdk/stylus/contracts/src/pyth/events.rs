@@ -1,7 +1,6 @@
 use alloy_sol_types::sol;
 
-
-sol! { 
+sol! {
   event PriceFeedUpdate(
         bytes32 indexed id,
         uint64 publishTime,

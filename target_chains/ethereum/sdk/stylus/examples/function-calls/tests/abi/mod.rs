@@ -11,6 +11,6 @@ sol!(
         function getUpdateFee() external returns (uint256 fee);
         function getValidTimePeriod() external returns (uint256 period);
         function updatePriceFeeds() external payable;
-        function updatePriceFeedsIfNecessary() external payable; 
+        function updatePriceFeedsIfNecessary() external payable;
    }
 );

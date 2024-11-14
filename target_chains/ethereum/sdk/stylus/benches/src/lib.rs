@@ -13,9 +13,9 @@ use eyre::WrapErr;
 use koba::config::{Deploy, Generate, PrivateKey};
 use serde::Deserialize;
 
-pub mod report;
 pub mod function_calls;
 pub mod proxy_calls;
+pub mod report;
 
 #[derive(Debug, Deserialize)]
 struct ArbOtherFields {
@@ -49,7 +49,7 @@ async fn deploy(
         .join("target")
         .join("wasm32-unknown-unknown")
         .join("release")
-        .join(format!("{}_example.wasm", contract_name.replace('-', "_"))); 
+        .join(format!("{}_example.wasm", contract_name.replace('-', "_")));
     let sol_path = args.as_ref().map(|_| {
         manifest_dir
             .join("examples")

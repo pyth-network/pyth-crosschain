@@ -1,15 +1,18 @@
 use std::str::FromStr;
 
 use alloy::{
-    network::{AnyNetwork, EthereumWallet}, primitives::{uint, Address, FixedBytes as TypeFixedBytes},
-    providers::ProviderBuilder, 
-    sol, sol_types::{ SolCall, SolConstructor}
+    network::{AnyNetwork, EthereumWallet},
+    primitives::{uint, Address, FixedBytes as TypeFixedBytes},
+    providers::ProviderBuilder,
+    sol,
+    sol_types::{SolCall, SolConstructor},
 };
-use e2e::{receipt, Account, env};
+use e2e::{env, receipt, Account};
 use pyth_stylus::pyth::mock::create_price_feed_update_data_list;
 
 use crate::{
-     report::{ContractReport, FunctionReport}, CacheOpt
+    report::{ContractReport, FunctionReport},
+    CacheOpt,
 };
 
 sol!(
@@ -58,21 +61,27 @@ pub async fn run_with(
     let id = keccak_const::Keccak256::new().update(b"ETH").finalize().to_vec();
     let id = TypeFixedBytes::<32>::from_slice(&id);
     let time_frame = uint!(10000_U256);
-    let age  = uint!(10000_U256);
+    let age = uint!(10000_U256);
 
-    let (data, ids)  = create_price_feed_update_data_list();
-
+    let (data, ids) = create_price_feed_update_data_list();
 
     let _ = receipt!(contract.getPriceUnsafe(id))?;
     let _ = receipt!(contract.getEmaPriceUnsafe(id))?;
-    let _ = receipt!(contract.getPriceNoOlderThan(id,age))?;
-    let _ = receipt!(contract.getEmaPriceNoOlderThan(id,age))?;
+    let _ = receipt!(contract.getPriceNoOlderThan(id, age))?;
+    let _ = receipt!(contract.getEmaPriceNoOlderThan(id, age))?;
     let _ = receipt!(contract.getValidTimePeriod())?;
     let _ = receipt!(contract.getUpdateFee(data.clone()))?;
     let _ = receipt!(contract.updatePriceFeeds(data.clone()))?;
 
     //println!("{data:?} , {ids:?} ");
-    let _ = contract.updatePriceFeedsIfNecessary(data.clone(),ids.clone(), vec![100,100,100]).send().await?;
+    let _ = contract
+        .updatePriceFeedsIfNecessary(
+            data.clone(),
+            ids.clone(),
+            vec![100, 100, 100],
+        )
+        .send()
+        .await?;
 
     // IMPORTANT: Order matters!
     use ProxyCall::*;

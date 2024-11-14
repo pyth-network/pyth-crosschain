@@ -7,9 +7,12 @@ use alloy::{
     sol,
     sol_types::{SolCall, SolConstructor},
 };
-use e2e::{receipt, Account, env};
+use e2e::{env, receipt, Account};
 
-use crate::{ report::{ContractReport, FunctionReport}, CacheOpt};
+use crate::{
+    report::{ContractReport, FunctionReport},
+    CacheOpt,
+};
 
 sol!(
     #[sol(rpc)]
@@ -21,7 +24,7 @@ sol!(
         function getUpdateFee() external returns (uint256 fee);
         function getValidTimePeriod() external returns (uint256 period);
         function updatePriceFeeds() external payable;
-        function updatePriceFeedsIfNecessary() external payable; 
+        function updatePriceFeedsIfNecessary() external payable;
     }
 );
 
@@ -88,9 +91,12 @@ async fn deploy(
 ) -> eyre::Result<Address> {
     let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
     let address = Address::from_str(&pyth_addr)?;
-    let id= keccak_const::Keccak256::new().update(b"ETH").finalize().to_vec();
+    let id = keccak_const::Keccak256::new().update(b"ETH").finalize().to_vec();
     let price_id = TypeFixedBytes::<32>::from_slice(&id);
-    let args = FunctionCallsExample::constructorCall { _pythAddress: address, _priceId: price_id };
+    let args = FunctionCallsExample::constructorCall {
+        _pythAddress: address,
+        _priceId: price_id,
+    };
     let args = alloy::hex::encode(args.abi_encode());
     crate::deploy(account, "function-calls", Some(args), cache_opt).await
 }

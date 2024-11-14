@@ -1,8 +1,5 @@
-use stylus_sdk::{
-    call::MethodError,
-    prelude::*,
-};
 use alloy_sol_types::sol;
+use stylus_sdk::{call::MethodError, prelude::*};
 
 sol! {
   // Function arguments are invalid (e.g., the arguments lengths mismatch)
@@ -92,7 +89,7 @@ sol! {
     #[derive(Debug)]
     #[allow(missing_docs)]
     error FalledDecodeData();
-    
+
 
 }
 

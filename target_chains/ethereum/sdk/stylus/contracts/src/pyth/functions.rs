@@ -1,23 +1,15 @@
+use crate::pyth::mock::DecodeDataType;
 use crate::pyth::types::{
-    getEmaPriceUnsafeCall,
-    getEmaPriceNoOlderThanCall,
-    getPriceUnsafeCall,
-    getValidTimePeriodCall,
-    getUpdateFeeCall,
-    getPriceNoOlderThanCall,
-    parsePriceFeedUpdatesCall,
-    parsePriceFeedUpdatesUniqueCall,
-    updatePriceFeedsIfNecessaryCall,
-    updatePriceFeedsCall,
-    Price,
-    PriceFeed
+    getEmaPriceNoOlderThanCall, getEmaPriceUnsafeCall, getPriceNoOlderThanCall,
+    getPriceUnsafeCall, getUpdateFeeCall, getValidTimePeriodCall,
+    parsePriceFeedUpdatesCall, parsePriceFeedUpdatesUniqueCall,
+    updatePriceFeedsCall, updatePriceFeedsIfNecessaryCall, Price, PriceFeed,
 };
 use crate::utils::helpers::{call_helper, delegate_call_helper};
 use alloc::vec::Vec;
-use stylus_sdk::storage::TopLevelStorage;
-use alloy_primitives::{ Address, B256, U256, Bytes};
-use crate::pyth::mock::DecodeDataType;
+use alloy_primitives::{Address, Bytes, B256, U256};
 use alloy_sol_types::SolType;
+use stylus_sdk::storage::TopLevelStorage;
 
 /// Retrieves the price for a given asset ID from the Pyth price feed, ensuring the price is not older than a specified age.
 ///
@@ -35,7 +27,11 @@ pub fn get_price_no_older_than(
     id: B256,
     age: U256,
 ) -> Result<Price, Vec<u8>> {
-    let price_call = call_helper::<getPriceNoOlderThanCall>(storage, pyth_address, (id, age,))?;
+    let price_call = call_helper::<getPriceNoOlderThanCall>(
+        storage,
+        pyth_address,
+        (id, age),
+    )?;
     Ok(price_call.price)
 }
 
@@ -53,7 +49,8 @@ pub fn get_update_fee(
     pyth_address: Address,
     update_data: Vec<Bytes>,
 ) -> Result<U256, Vec<u8>> {
-    let update_fee_call = call_helper::<getUpdateFeeCall>(storage, pyth_address, (update_data,))?;
+    let update_fee_call =
+        call_helper::<getUpdateFeeCall>(storage, pyth_address, (update_data,))?;
     Ok(update_fee_call.feeAmount)
 }
 
@@ -71,7 +68,8 @@ pub fn get_ema_price_unsafe(
     pyth_address: Address,
     id: B256,
 ) -> Result<Price, Vec<u8>> {
-    let ema_price = call_helper::<getEmaPriceUnsafeCall>(storage, pyth_address, (id,))?;
+    let ema_price =
+        call_helper::<getEmaPriceUnsafeCall>(storage, pyth_address, (id,))?;
     Ok(ema_price.price)
 }
 
@@ -91,7 +89,11 @@ pub fn get_ema_price_no_older_than(
     id: B256,
     age: U256,
 ) -> Result<Price, Vec<u8>> {
-    let ema_price = call_helper::<getEmaPriceNoOlderThanCall>(storage, pyth_address, (id, age,))?;
+    let ema_price = call_helper::<getEmaPriceNoOlderThanCall>(
+        storage,
+        pyth_address,
+        (id, age),
+    )?;
     Ok(ema_price.price)
 }
 
@@ -109,7 +111,8 @@ pub fn get_price_unsafe(
     pyth_address: Address,
     id: B256,
 ) -> Result<Price, Vec<u8>> {
-    let price = call_helper::<getPriceUnsafeCall>(storage, pyth_address, (id,))?;
+    let price =
+        call_helper::<getPriceUnsafeCall>(storage, pyth_address, (id,))?;
     let price = Price {
         price: price._0,
         conf: price._1,
@@ -131,7 +134,8 @@ pub fn get_valid_time_period(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
 ) -> Result<U256, Vec<u8>> {
-    let valid_time_period = call_helper::<getValidTimePeriodCall>(storage, pyth_address, ())?;
+    let valid_time_period =
+        call_helper::<getValidTimePeriodCall>(storage, pyth_address, ())?;
     Ok(valid_time_period.validTimePeriod)
 }
 
@@ -149,7 +153,11 @@ pub fn update_price_feeds(
     pyth_address: Address,
     update_data: Vec<Bytes>,
 ) -> Result<(), Vec<u8>> {
-    delegate_call_helper::<updatePriceFeedsCall>(storage, pyth_address, (update_data,))?;
+    delegate_call_helper::<updatePriceFeedsCall>(
+        storage,
+        pyth_address,
+        (update_data,),
+    )?;
     Ok(())
 }
 
@@ -199,33 +207,43 @@ pub fn parse_price_feed_updates(
     min_publish_time: u64,
     max_publish_time: u64,
 ) -> Result<Vec<PriceFeed>, Vec<u8>> {
-    let parse_price_feed_updates_call = delegate_call_helper::<parsePriceFeedUpdatesCall>(
-        storage,
-        pyth_address,
-        (update_data, price_ids, min_publish_time, max_publish_time),
-    )?;
+    let parse_price_feed_updates_call =
+        delegate_call_helper::<parsePriceFeedUpdatesCall>(
+            storage,
+            pyth_address,
+            (update_data, price_ids, min_publish_time, max_publish_time),
+        )?;
     Ok(parse_price_feed_updates_call.priceFeeds)
 }
 
+/// Similar to `parse_price_feed_updates`, but only returns the latest price feed for each asset if multiple updates are available.
+///
 /// # Parameters
 /// - `storage`: A mutable reference to an implementation of `TopLevelStorage`.
 /// - `pyth_address`: The address of the Pyth price feed contract.
 /// - `update_data`: A vector of bytes containing the data required for the updates.
 /// - `price_ids`: A vector of fixed byte identifiers for the assets being updated.
-/// - `min_publish_time`: The minimum publish time to consider for the updates
-/// Parses the price feed updates uniquely and returns the corresponding price feeds.
+/// - `min_publish_time`: The minimum publish time to consider for the updates.
+/// - `max_publish_time`: The maximum publish time to consider for the updates.
+///
+/// # Returns
+/// - `Result<Vec<PriceFeed>, Vec<u8>>`: A `Result` containing a vector of `PriceFeed` structs if successful, or an error message as a byte vector.
 pub fn parse_price_feed_updates_unique(
     storage: &mut impl TopLevelStorage,
     pyth_address: Address,
     update_data: Vec<Bytes>,
     price_ids: Vec<B256>,
     min_publish_time: u64,
-    max_publish_time: u64
+    max_publish_time: u64,
 ) -> Result<Vec<PriceFeed>, Vec<u8>> {
-    let parse_price_feed_updates_call = delegate_call_helper::<parsePriceFeedUpdatesUniqueCall>(storage, pyth_address, (update_data, price_ids, min_publish_time, max_publish_time))?;
+    let parse_price_feed_updates_call =
+        delegate_call_helper::<parsePriceFeedUpdatesUniqueCall>(
+            storage,
+            pyth_address,
+            (update_data, price_ids, min_publish_time, max_publish_time),
+        )?;
     Ok(parse_price_feed_updates_call.priceFeeds)
 }
-
 
 /// Creates the update data required for a price feed, encapsulating the current price, confidence interval,
 /// exponential moving average (EMA) price, and other relevant details.
@@ -253,13 +271,10 @@ pub fn create_price_feed_update_data(
     prev_publish_time: u64,
 ) -> Vec<u8> {
     let price = Price { price, conf, expo, publish_time };
-    let ema_price = Price { price: ema_price, conf: ema_conf, expo, publish_time };
+    let ema_price =
+        Price { price: ema_price, conf: ema_conf, expo, publish_time };
 
-    let price_feed_data = PriceFeed {
-        id,
-        price,
-        ema_price,
-    };
+    let price_feed_data = PriceFeed { id, price, ema_price };
 
     let price_feed_data_encoding = (price_feed_data, prev_publish_time);
     return DecodeDataType::abi_encode(&price_feed_data_encoding);

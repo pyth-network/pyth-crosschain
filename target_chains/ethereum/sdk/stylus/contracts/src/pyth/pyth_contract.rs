@@ -1,18 +1,14 @@
-use alloy_sol_types::SolValue;
-use stylus_sdk::{abi::Bytes as AbiBytes, prelude::*, storage::TopLevelStorage};
-use alloc::vec::Vec;
-use alloy_primitives::{ U256 , Bytes, B256 };
 use crate::pyth::functions::{
-    get_price_unsafe,
-    get_price_no_older_than,
-    get_ema_price_unsafe, 
-    get_ema_price_no_older_than, 
-    get_valid_time_period,
-    update_price_feeds,
-    update_price_feeds_if_necessary,
-    get_update_fee,
-    parse_price_feed_updates,
-    parse_price_feed_updates_unique
+    get_ema_price_no_older_than, get_ema_price_unsafe, get_price_no_older_than,
+    get_price_unsafe, get_update_fee, get_valid_time_period,
+    parse_price_feed_updates, parse_price_feed_updates_unique,
+    update_price_feeds, update_price_feeds_if_necessary,
+};
+use alloc::vec::Vec;
+use alloy_primitives::{Bytes, B256, U256};
+use alloy_sol_types::SolValue;
+use stylus_sdk::{
+    abi::Bytes as AbiBytes, prelude::*, storage::TopLevelStorage,
 };
 /// `IPyth` is a trait that defines methods for interacting with the Pyth contract.
 pub trait IPyth {
@@ -21,7 +17,7 @@ pub trait IPyth {
     type Error: Into<alloc::vec::Vec<u8>>;
 
     /// Retrieves the latest price feed without any recency checks.
-    /// 
+    ///
     /// # Parameters
     /// - `id`: The unique identifier for the price feed.
     ///
@@ -30,33 +26,44 @@ pub trait IPyth {
     fn get_price_unsafe(&mut self, id: B256) -> Result<Vec<u8>, Self::Error>;
 
     /// Retrieves a price that is no older than a specified `age`.
-    /// 
+    ///
     /// # Parameters
     /// - `id`: The unique identifier for the price feed.
     /// - `age`: The maximum acceptable age of the price in seconds.
     ///
     /// # Returns
     /// - `Result<Vec<u8>, Self::Error>`: The price data in bytes, or an error.
-    fn get_price_no_older_than(&mut self, id: B256, age: U256) -> Result<Vec<u8>, Self::Error>;
+    fn get_price_no_older_than(
+        &mut self,
+        id: B256,
+        age: U256,
+    ) -> Result<Vec<u8>, Self::Error>;
 
     /// Retrieves the exponentially-weighted moving average (EMA) price without recency checks.
-    /// 
+    ///
     /// # Parameters
     /// - `id`: The unique identifier for the price feed.
     ///
     /// # Returns
     /// - `Result<Vec<u8>, Self::Error>`: The EMA price data in bytes, or an error.
-    fn get_ema_price_unsafe(&mut self, id: B256) -> Result<Vec<u8>, Self::Error>;
-    
+    fn get_ema_price_unsafe(
+        &mut self,
+        id: B256,
+    ) -> Result<Vec<u8>, Self::Error>;
+
     /// Retrieves an EMA price that is no older than the specified `age`.
-    /// 
+    ///
     /// # Parameters
     /// - `id`: The unique identifier for the price feed.
     /// - `age`: The maximum acceptable age of the price in seconds.
     ///
     /// # Returns
     /// - `Result<Vec<u8>, Self::Error>`: The EMA price data in bytes, or an error.
-    fn get_ema_price_no_older_than(&mut self, id: B256, age: U256) -> Result<Vec<u8>, Self::Error>;
+    fn get_ema_price_no_older_than(
+        &mut self,
+        id: B256,
+        age: U256,
+    ) -> Result<Vec<u8>, Self::Error>;
 
     /// Updates price feeds with the given data.
     ///
@@ -65,7 +72,10 @@ pub trait IPyth {
     ///
     /// # Returns
     /// - `Result<(), Self::Error>`: Success or error.
-    fn update_price_feeds(&mut self, update_data: Vec<AbiBytes>) -> Result<(), Self::Error>;
+    fn update_price_feeds(
+        &mut self,
+        update_data: Vec<AbiBytes>,
+    ) -> Result<(), Self::Error>;
 
     /// Updates price feeds if necessary, based on given publish times.
     ///
@@ -90,9 +100,12 @@ pub trait IPyth {
     ///
     /// # Returns
     /// - `Result<U256, Self::Error>`: The required fee in Wei, or an error.
-    fn get_update_fee(&mut self, update_data: Vec<AbiBytes>) -> Result<U256, Self::Error>;
+    fn get_update_fee(
+        &mut self,
+        update_data: Vec<AbiBytes>,
+    ) -> Result<U256, Self::Error>;
 
-       /// Returns the fee required to update the price feeds based on the provided data.
+    /// Returns the fee required to update the price feeds based on the provided data.
     ///
     /// # Parameters
     /// - `update_data`: Array of price update data.
@@ -150,31 +163,42 @@ sol_storage! {
 unsafe impl TopLevelStorage for PythContract {}
 
 #[public]
-impl IPyth for PythContract  {
-
+impl IPyth for PythContract {
     type Error = Vec<u8>;
 
     fn get_price_unsafe(&mut self, id: B256) -> Result<Vec<u8>, Self::Error> {
         let price = get_price_unsafe(self, self._ipyth.get(), id)?;
-        let data =  price.abi_encode();
-        Ok(data)
-    }
-   
-    fn get_price_no_older_than(&mut self,id: B256, age: U256) -> Result<Vec<u8>, Self::Error> {
-        let price = get_price_no_older_than(self, self._ipyth.get(), id,age)?;
-        let data =  price.abi_encode();
+        let data = price.abi_encode();
         Ok(data)
     }
 
-    fn get_ema_price_unsafe(&mut self, id: B256) -> Result<Vec<u8>, Self::Error> {
+    fn get_price_no_older_than(
+        &mut self,
+        id: B256,
+        age: U256,
+    ) -> Result<Vec<u8>, Self::Error> {
+        let price = get_price_no_older_than(self, self._ipyth.get(), id, age)?;
+        let data = price.abi_encode();
+        Ok(data)
+    }
+
+    fn get_ema_price_unsafe(
+        &mut self,
+        id: B256,
+    ) -> Result<Vec<u8>, Self::Error> {
         let price = get_ema_price_unsafe(self, self._ipyth.get(), id)?;
-        let data =  price.abi_encode();
+        let data = price.abi_encode();
         Ok(data)
     }
 
-    fn get_ema_price_no_older_than(&mut self, id: B256, age: U256) -> Result<Vec<u8>, Self::Error> {
-        let price = get_ema_price_no_older_than(self, self._ipyth.get(), id,age)?;
-        let data =  price.abi_encode();
+    fn get_ema_price_no_older_than(
+        &mut self,
+        id: B256,
+        age: U256,
+    ) -> Result<Vec<u8>, Self::Error> {
+        let price =
+            get_ema_price_no_older_than(self, self._ipyth.get(), id, age)?;
+        let data = price.abi_encode();
         Ok(data)
     }
 
@@ -183,19 +207,25 @@ impl IPyth for PythContract  {
         Ok(time)
     }
 
-    fn get_update_fee(&mut self, update_data: Vec<AbiBytes>) -> Result<U256, Self::Error> {
-       let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-       let fee = get_update_fee(self, self._ipyth.get(), data)?;
-       Ok(fee)
-    }
-    
-    #[payable]
-    fn update_price_feeds(&mut self, update_data: Vec<AbiBytes>) -> Result<(), Self::Error> {
+    fn get_update_fee(
+        &mut self,
+        update_data: Vec<AbiBytes>,
+    ) -> Result<U256, Self::Error> {
         let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-        update_price_feeds(self, self._ipyth.get(),data)?;
+        let fee = get_update_fee(self, self._ipyth.get(), data)?;
+        Ok(fee)
+    }
+
+    #[payable]
+    fn update_price_feeds(
+        &mut self,
+        update_data: Vec<AbiBytes>,
+    ) -> Result<(), Self::Error> {
+        let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
+        update_price_feeds(self, self._ipyth.get(), data)?;
         Ok(())
     }
-    
+
     #[payable]
     fn update_price_feeds_if_necessary(
         &mut self,
@@ -204,7 +234,13 @@ impl IPyth for PythContract  {
         publish_times: Vec<u64>,
     ) -> Result<(), Self::Error> {
         let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-        update_price_feeds_if_necessary(self, self._ipyth.get(),data,price_ids,publish_times)?;
+        update_price_feeds_if_necessary(
+            self,
+            self._ipyth.get(),
+            data,
+            price_ids,
+            publish_times,
+        )?;
         Ok(())
     }
 
@@ -217,7 +253,15 @@ impl IPyth for PythContract  {
         max_publish_time: u64,
     ) -> Result<Vec<u8>, Self::Error> {
         let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-        let encode_data=  parse_price_feed_updates(self, self._ipyth.get(), data, price_ids, min_publish_time, max_publish_time)?.abi_encode();
+        let encode_data = parse_price_feed_updates(
+            self,
+            self._ipyth.get(),
+            data,
+            price_ids,
+            min_publish_time,
+            max_publish_time,
+        )?
+        .abi_encode();
         Ok(encode_data)
     }
 
@@ -229,8 +273,16 @@ impl IPyth for PythContract  {
         min_publish_time: u64,
         max_publish_time: u64,
     ) -> Result<Vec<u8>, Self::Error> {
-       let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
-       let encode_data=  parse_price_feed_updates_unique(self, self._ipyth.get(), data, price_ids, min_publish_time, max_publish_time)?.abi_encode();
-       Ok(encode_data)
+        let data = update_data.into_iter().map(|x| Bytes::from(x.0)).collect();
+        let encode_data = parse_price_feed_updates_unique(
+            self,
+            self._ipyth.get(),
+            data,
+            price_ids,
+            min_publish_time,
+            max_publish_time,
+        )?
+        .abi_encode();
+        Ok(encode_data)
     }
 }
