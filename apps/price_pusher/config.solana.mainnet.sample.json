@@ -5,6 +5,7 @@
   "jito-endpoint": "mainnet.block-engine.jito.wtf",
   "jito-keypair-file": "./jito.json",
   "jito-tip-lamports": "100000",
+  "dynamic-jito-tips": true,
   "jito-bundle-size": "5",
   "updates-per-jito-bundle": "6",
   "price-config-file": "./price-config.yaml",
