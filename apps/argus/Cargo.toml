@@ -1,0 +1,8 @@
+[package]
+name = "argus"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alloy = { version = "0.3", features = ["full", "node-bindings"] }
+tokio = { version = "1.28", features = ["full"] }
