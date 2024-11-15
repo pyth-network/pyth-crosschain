@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+  "sdk/rust/protocol",
+  "contracts/solana/programs/pyth-lazer-solana-contract",
+  "sdk/solana",
+]
+
+# TODO: only for solana programs
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
