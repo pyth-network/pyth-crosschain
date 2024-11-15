@@ -32,4 +32,4 @@ jobs:
         with:
           run_install: true
       - name: Test
-        run: pnpm turbo test --ui stream
+        run: pnpm test:ci

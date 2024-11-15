@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "blueprint run",
-    "build": "echo Pyth | blueprint build",
+    "build:blueprint": "echo Pyth | blueprint build",
     "test:unit": "jest --verbose"
   },
   "devDependencies": {
