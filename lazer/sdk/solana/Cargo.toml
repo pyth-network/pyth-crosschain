@@ -1,0 +1,14 @@
+[package]
+name = "pyth-lazer-sdk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pyth-lazer-protocol = { path = "../rust/protocol" }
+pyth-lazer-solana-contract = { path = "../../contracts/solana/programs/pyth-lazer-solana-contract", features = ["no-entrypoint"] }
+
+solana-program = "1.18.26"
+bytemuck = { version = "1.18.0", features = ["derive"] }
+byteorder = "1.5.0"
+thiserror = "1.0.64"
+anchor-lang = "0.30.1"

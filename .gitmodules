@@ -1,0 +1,6 @@
+[submodule "lazer/contracts/evm/lib/forge-std"]
+	path = lazer/contracts/evm/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "lazer/contracts/evm/lib/openzeppelin-contracts-upgradeable"]
+	path = lazer/contracts/evm/lib/openzeppelin-contracts-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable

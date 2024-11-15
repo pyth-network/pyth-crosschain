@@ -1,0 +1,6 @@
+.vscode/
+coverage/
+dist/
+doc/
+doc*/
+node_modules/
