@@ -11,7 +11,7 @@ client.addMessageListener((message) => {
           "stream updated for subscription",
           message.value.subscriptionId,
           ":",
-          message.value.parsed?.priceFeeds,
+          message.value.parsed?.priceFeeds
         );
       }
       break;

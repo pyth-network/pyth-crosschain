@@ -54,7 +54,7 @@ export class PythLazerClient {
         }
         // TODO: some uint64 values may not be representable as Number.
         const subscriptionId = Number(
-          event.data.subarray(pos, pos + UINT64_NUM_BYTES).readBigInt64BE(),
+          event.data.subarray(pos, pos + UINT64_NUM_BYTES).readBigInt64BE()
         );
         pos += UINT64_NUM_BYTES;
 
@@ -73,7 +73,7 @@ export class PythLazerClient {
             value.solana = event.data.subarray(pos, pos + len);
           } else if (magic == PARSED_FORMAT_MAGIC) {
             value.parsed = JSON.parse(
-              event.data.subarray(pos + UINT32_NUM_BYTES, pos + len).toString(),
+              event.data.subarray(pos + UINT32_NUM_BYTES, pos + len).toString()
             ) as ParsedPayload;
           } else {
             throw new Error("unknown magic: " + magic.toString());

@@ -20,7 +20,10 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
-    function updateTrustedSigner(address trustedSigner, uint256 expiresAt) external onlyOwner {
+    function updateTrustedSigner(
+        address trustedSigner,
+        uint256 expiresAt
+    ) external onlyOwner {
         if (expiresAt == 0) {
             for (uint8 i = 0; i < trustedSigners.length; i++) {
                 if (trustedSigners[i].pubkey == trustedSigner) {
@@ -58,7 +61,9 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         return false;
     }
 
-    function verifyUpdate(bytes calldata update) external view returns (bytes calldata payload, address signer) {
+    function verifyUpdate(
+        bytes calldata update
+    ) external view returns (bytes calldata payload, address signer) {
         if (update.length < 71) {
             revert("input too short");
         }
@@ -74,7 +79,12 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         }
         payload = update[71:71 + payload_len];
         bytes32 hash = keccak256(payload);
-        signer = ecrecover(hash, uint8(update[68]) + 27, bytes32(update[4:36]), bytes32(update[36:68]));
+        signer = ecrecover(
+            hash,
+            uint8(update[68]) + 27,
+            bytes32(update[4:36]),
+            bytes32(update[36:68])
+        );
         if (signer == address(0)) {
             revert("invalid signature");
         }

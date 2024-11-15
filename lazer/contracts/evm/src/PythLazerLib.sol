@@ -18,7 +18,9 @@ library PythLazerLib {
         FixedRate200
     }
 
-    function parsePayloadHeader(bytes calldata update)
+    function parsePayloadHeader(
+        bytes calldata update
+    )
         public
         pure
         returns (uint64 timestamp, Channel channel, uint8 feedsLen, uint16 pos)
@@ -39,7 +41,10 @@ library PythLazerLib {
         pos += 1;
     }
 
-    function parseFeedHeader(bytes calldata update, uint16 pos)
+    function parseFeedHeader(
+        bytes calldata update,
+        uint16 pos
+    )
         public
         pure
         returns (uint32 feed_id, uint8 num_properties, uint16 new_pos)
@@ -51,27 +56,28 @@ library PythLazerLib {
         new_pos = pos;
     }
 
-    function parseFeedProperty(bytes calldata update, uint16 pos)
-        public
-        pure
-        returns (PriceFeedProperty property, uint16 new_pos)
-    {
+    function parseFeedProperty(
+        bytes calldata update,
+        uint16 pos
+    ) public pure returns (PriceFeedProperty property, uint16 new_pos) {
         property = PriceFeedProperty(uint8(update[pos]));
         pos += 1;
         new_pos = pos;
     }
 
-    function parseFeedValueUint64(bytes calldata update, uint16 pos)
-        public
-        pure
-        returns (uint64 value, uint16 new_pos)
-    {
+    function parseFeedValueUint64(
+        bytes calldata update,
+        uint16 pos
+    ) public pure returns (uint64 value, uint16 new_pos) {
         value = uint64(bytes8(update[pos:pos + 8]));
         pos += 8;
         new_pos = pos;
     }
 
-    function parseFeedValueUint8(bytes calldata update, uint16 pos) public pure returns (uint8 value, uint16 new_pos) {
+    function parseFeedValueUint8(
+        bytes calldata update,
+        uint16 pos
+    ) public pure returns (uint8 value, uint16 new_pos) {
         value = uint8(update[pos]);
         pos += 1;
         new_pos = pos;
