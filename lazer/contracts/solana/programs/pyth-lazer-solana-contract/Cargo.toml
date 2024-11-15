@@ -1,8 +1,10 @@
 [package]
 name = "pyth-lazer-solana-contract"
 version = "0.1.0"
-description = "Created with Anchor"
 edition = "2021"
+description = "Pyth Lazer Solana contract."
+license = "Apache-2.0"
+repository = "https://github.com/pyth-network/pyth-crosschain"
 
 [lib]
 crate-type = ["cdylib", "lib"]
