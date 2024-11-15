@@ -28,6 +28,7 @@ export const Header = ({
             >
               <Logo className="hidden h-full lg:block" />
               <Logomark className="h-full lg:hidden" />
+              <span className="sr-only">Pyth Staking</span>
             </Link>
             <Stats className="hidden gap-4 sm:flex lg:gap-6" />
           </div>
