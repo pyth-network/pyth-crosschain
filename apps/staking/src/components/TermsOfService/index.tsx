@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type { ReactNode, HTMLProps, ComponentProps } from "react";
+import type { ReactNode, ComponentProps } from "react";
 
 import { Link as BaseLink } from "../Link";
 
@@ -7,7 +7,7 @@ export const TermsOfService = () => (
   <main className="mx-auto flex max-w-prose flex-col gap-10 py-6 md:gap-16 md:py-20">
     <div>
       <h1 className="text-3xl font-light md:text-4xl">Terms of Service</h1>
-      <h2 className="text-sm opacity-60">Last updated: September 2024</h2>
+      <h2 className="text-sm opacity-60">Last updated: November 2024</h2>
     </div>
     <dl className="flex list-inside list-[upper-alpha] flex-col gap-10 md:gap-16">
       <Section title="Scope">
@@ -110,7 +110,7 @@ export const TermsOfService = () => (
               usefulness of information on the Site;
             </li>
             <li>
-              agree that the ability of the Site to connect your third-party
+              agree that the ability of the Services to connect your third-party
               digital wallet holding digital assets to smart contract systems
               offered by third parties that communicate with the Services is not
               an endorsement or recommendation thereof by or on behalf of the
@@ -118,7 +118,7 @@ export const TermsOfService = () => (
               and evaluating and incurring the risks of any bugs, defects,
               malfunctions or interruptions of any third-party smart contract
               systems you directly or indirectly use or connect to in connection
-              with the Site;
+              with the Services;
             </li>
             <li>comply with all applicable laws, rules and regulations;</li>
             <li>
@@ -218,7 +218,7 @@ export const TermsOfService = () => (
               and
             </li>
             <li>
-              ensure that anyone who access or uses the Services through your
+              ensure that anyone who accesses or uses the Services through your
               internet connection is aware of and complies with these Terms.
             </li>
           </UnorderedList>
@@ -257,7 +257,7 @@ export const TermsOfService = () => (
           SERVICES ARE NOT DEVELOPED FOR, AND ARE NOT AVAILABLE TO PERSONS OR
           ENTITIES WHO RESIDE IN, ARE LOCATED IN, ARE INCORPORATED IN, OR HAVE A
           REGISTERED OFFICE OR PRINCIPAL PLACE OF BUSINESS IN THE UNITED STATES
-          OF AMERICA, OR THE UNITED KINGDOM, OR CANADA (COLLECTIVELY, “
+          OF AMERICA OR OR THE UNITED KINGDOM (COLLECTIVELY, “{" "}
           <strong>BLOCKED PERSONS</strong>”). MOREOVER, THE SERVICES ARE NOT
           OFFERED TO PERSONS OR ENTITIES WHO RESIDE IN, ARE CITIZENS OF, ARE
           LOCATED IN, ARE INCORPORATED IN, OR HAVE A REGISTERED OFFICE OR
@@ -268,8 +268,8 @@ export const TermsOfService = () => (
           (BURMA), DONETSK AND LUHANSK REGIONS, OR ANY OTHER COUNTRY TO WHICH
           THE UNITED STATES, THE UNITED KINGDOM, THE EUROPEAN UNION, SWITZERLAND
           OR ANY OTHER JURISDICTIONS EMBARGOES GOODS OR IMPOSES SIMILAR
-          SANCTIONS, INCLUDING THOSE LISTED ON OUR SERVICES (COLLECTIVELY, THE “
-          <strong>RESTRICTED JURISDICTIONS</strong>” AND EACH A “
+          SANCTIONS, INCLUDING THOSE LISTED ON OUR SERVICES (COLLECTIVELY, THE “{" "}
+          <strong>RESTRICTED JURISDICTIONS</strong>” AND EACH A “{" "}
           <strong>RESTRICTED JURISDICTION</strong>”) OR ANY PERSON OWNED,
           CONTROLLED, LOCATED IN OR ORGANIZED UNDER THE LAWS OF ANY JURISDICTION
           UNDER EMBARGO OR CONNECTED OR AFFILIATED WITH ANY SUCH PERSON
@@ -294,12 +294,16 @@ export const TermsOfService = () => (
           digital assets or funds.
         </Paragraph>
         <Paragraph>
-          The Services allow you to participate in different non-custodial
-          staking mechanisms on Pyth Network (“<strong>Pyth Staking</strong>”),
-          an open-source oracle network (“<strong>Pyth Network</strong>”)
-          governed by the Pyth DAO that provides financial market data to
-          blockchain-based applications powered by a blockchain protocol (“
-          <strong>Pyth Protocol</strong>”). PLEASE NOTE THAT THE PYTH DAO IS AN
+          The Services constitute a website-hosted user interface (“
+          <strong>Interface</strong>”). The Interface is an open-sourced
+          frontend software portal which allows you to participate in different
+          non-custodial staking mechanisms on Pyth Network (“
+          <strong>Pyth Staking</strong>”), an open-source oracle network (“
+          <strong>Pyth Network</strong>”) governed by the Pyth DAO that provides
+          financial market data to blockchain-based applications powered by a
+          blockchain protocol (“<strong>Pyth Protocol</strong>”). All
+          transactions conducted on the Pyth Protocol are run by related
+          permissionless smart contracts. PLEASE NOTE THAT THE PYTH DAO IS AN
           INDEPENDENT THIRD-PARTY ENTITY, NOT CONTROLLED BY, NOR UNDER THE
           CONTROL OF THE ASSOCIATION.
         </Paragraph>
@@ -318,8 +322,7 @@ export const TermsOfService = () => (
           NETWORK AND CANNOT CONTROL ANY ACTIVITY ON PYTH NETWORK, INCLUDING
           PYTH STAKING, THE ACTIVITIES OF PERSONS WHO DEVELOP AND USE
           APPLICATIONS ON PYTH NETWORK, THE PRODUCTION OF DATA ON PYTH NETWORK,
-          OR USE OF PYTH NETWORK. PYTH NETWORK IS AN OPEN-SOURCE PROTOCOL THAT
-          IS GOVERNED BY THE PYTH DAO.
+          OR USE OF PYTH NETWORK.
         </Paragraph>
         <Paragraph>
           We are not responsible for the keys to any digital assets or your seed
@@ -574,73 +577,39 @@ export const TermsOfService = () => (
       </Section>
       <Section title="Intellectual Property and Trademarks">
         <Paragraph>
-          The Services and their entire contents, features, and functionality
-          (including but not limited to all information, software, text,
-          displays, images, video, and audio, and the design, selection, and
-          arrangement thereof), other than third-party content, are owned by the
-          Association, its licensors, or other providers of such material and
-          are protected by copyright, trademark, patent, trade secret, and other
-          intellectual property or proprietary rights laws.
+          Each User, subject to and conditioned upon such User’s eligibility
+          under and acceptance of and adherence to these Terms, is hereby
+          granted a personal, revocable, non-exclusive, non-transferable,
+          non-sub-licensable license to view and access the Site and use the
+          Services in accordance with these Terms.
         </Paragraph>
         <Paragraph>
-          Accessing or using the Services does not grant you any license or
-          rights to use the intellectual property or trademarks of the
-          Association, its licensors, its partners, or any third party, except
-          as expressly permitted by these Terms. Any unauthorized use of such
-          intellectual property may result in legal action.
-        </Paragraph>
-        <div>
-          <Paragraph>
-            You must not reproduce, distribute, modify, create derivative works
-            of, publicly display, publicly perform, republish, download, store,
-            or transmit any of the material on our Services, except as follows:
-          </Paragraph>
-          <UnorderedList>
-            <li>
-              your computer may temporarily store copies of such materials in
-              RAM incidental to your accessing and viewing those materials;
-            </li>
-            <li>
-              you may store files that are automatically cached by your web
-              browser for display enhancement purposes; and/or
-            </li>
-            <li>
-              you may print or download one copy of a reasonable number of pages
-              of the Site for your own use and not for further reproduction,
-              publication, or distribution.
-            </li>
-          </UnorderedList>
-        </div>
-        <div>
-          <Paragraph>You must not:</Paragraph>
-          <UnorderedList>
-            <li>modify copies of any materials from the Services;</li>
-            <li>
-              use any illustrations, photographs, video or audio sequences, or
-              any graphics separately from the accompanying text; and/or
-            </li>
-            <li>
-              delete or alter any copyright, trademark, or other proprietary
-              rights notices from copies of materials from the Services.
-            </li>
-          </UnorderedList>
-        </div>
-        <Paragraph>
-          If you print, copy, modify, download, or otherwise use or provide any
-          other person with access to any part of the Services in breach of the
-          Terms, your right to access and/or use the Services will stop
-          immediately and you must, at our option, return or destroy any copies
-          of the materials you have made. No right, title, or interest in or to
-          the Services or any content on the Services is transferred to you, and
-          all rights not expressly granted are reserved by the Association. Any
-          use of the Services not expressly permitted by these Terms is a breach
-          of these Terms and may violate copyright, trademark, and other laws.
+          The software code and text used in the Site, except certain
+          proprietary third-party fonts, are irrevocably and perpetually granted
+          to the general public by the Association pursuant to the terms and
+          conditions of the Apache 2.0 open source license (such license, the “
+          <strong>Open Source License</strong>”) and are available in the
+          repository at{" "}
+          <Link
+            href="https://github.com/pyth-network/pyth-crosschain/tree/main/apps/staking"
+            target="_blank"
+          >
+            https://github.com/pyth-network/pyth-crosschain/tree/main/apps/staking
+          </Link>
+          .
         </Paragraph>
         <Paragraph>
           The Association’s name, and all trademarks, logos, taglines, service
-          names, designs, and slogans on the Services are trademarks of the
+          names, designs, and slogans on the Site are trademarks of the
           Association or its affiliates or licensors. You must not use such
           marks without our prior written permission.
+        </Paragraph>
+        <Paragraph>
+          Viewing and accessing the Site or using the Services does not grant
+          you any license or rights to use trademarks of the Association, its
+          licensors, its partners, or any third party, except as expressly
+          permitted by these Terms. Any unauthorized use of such trademarks may
+          result in legal action.
         </Paragraph>
       </Section>
       <Section title="Taxes and Fraud">
@@ -705,7 +674,7 @@ export const TermsOfService = () => (
             <li>
               the disclosure is made to your and/or our professional advisers on
               a need-to-know basis and on terms that such professional advisers
-              undertake to comply with this section L. in respect of such
+              undertake to comply with this section N. in respect of such
               information as if they were a party to these Terms;
             </li>
             <li>
@@ -1141,7 +1110,7 @@ export const TermsOfService = () => (
           related to these Terms shall be subject to the exclusive jurisdiction
           of the Courts of Zug, ZG, Switzerland, subject to an appeal at the
           Swiss Federal Court. However, we retain the right to bring any suit,
-          action, or proceeding against you for breach of this Policy in your
+          action, or proceeding against you for breach of these Terms in your
           country of residence or any other relevant country. You waive any
           objections to the exercise of jurisdiction over you by such courts and
           to venue in such courts.
@@ -1163,32 +1132,24 @@ export const TermsOfService = () => (
   </main>
 );
 
-type SectionProps = HTMLProps<HTMLElement> & {
+type SectionProps = ComponentProps<"div"> & {
   title: ReactNode;
   children: ReactNode | ReactNode[];
 };
 
 const Section = ({ title, children, className, ...props }: SectionProps) => (
-  <section
+  <div
     className={clsx("list-item marker:text-xl marker:font-bold", className)}
     {...props}
   >
     <dd className="ml-2 inline text-xl font-bold">{title}</dd>
     <dt className="mt-4 flex flex-col gap-4">{children}</dt>
-  </section>
+  </div>
 );
 
-const Paragraph = ({
-  className,
-  ...props
-}: HTMLProps<HTMLParagraphElement>) => (
-  <p className={clsx("", className)} {...props} />
-);
+const Paragraph = (props: ComponentProps<"p">) => <p {...props} />;
 
-const UnorderedList = ({
-  className,
-  ...props
-}: HTMLProps<HTMLUListElement>) => (
+const UnorderedList = ({ className, ...props }: ComponentProps<"ul">) => (
   <ul className={clsx("ml-10 list-disc", className)} {...props} />
 );
 
