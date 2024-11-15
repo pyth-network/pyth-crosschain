@@ -1,8 +1,13 @@
 {
-  "name": "pyth-lazer-sdk",
-  "version": "1.0.0",
-  "description": "pyth-lazer-sdk",
-  "private": "true",
+  "name": "@pythnetwork/pyth-lazer-sdk",
+  "version": "0.1.0",
+  "description": "Pyth Lazer SDK",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "lib/**/*"
+  ],
   "scripts": {
     "build:cjs": "tsc --project tsconfig.json --verbatimModuleSyntax false --module commonjs --outDir ./dist/cjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "build:esm": "tsc --project tsconfig.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
@@ -31,8 +36,17 @@
     "url": "https://github.com/pyth-lazer-sdk/pyth-lazer-sdk/issues"
   },
   "type": "module",
-  "homepage": "https://github.com/pyth-lazer-sdk/pyth-lazer-sdk#readme",
-  "keywords": [],
+  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "lazer/sdk/js"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
   "dependencies": {
     "isomorphic-ws": "^5.0.0",
     "ws": "^8.18.0"
