@@ -1,12 +1,6 @@
 use {
-    borsh::{
-        BorshDeserialize,
-        BorshSerialize,
-    },
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    borsh::{BorshDeserialize, BorshSerialize},
+    serde::{Deserialize, Serialize},
     std::fmt::Debug,
 };
 

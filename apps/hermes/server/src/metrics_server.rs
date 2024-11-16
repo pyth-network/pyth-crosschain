@@ -3,21 +3,11 @@
 //! This server serves metrics over /metrics in OpenMetrics format.
 
 use {
-    crate::{
-        config::RunOptions,
-        state::metrics::Metrics,
-    },
+    crate::{config::RunOptions, state::metrics::Metrics},
     anyhow::Result,
-    axum::{
-        extract::State,
-        http::header,
-        response::IntoResponse,
-        routing::get,
-        Router,
-    },
+    axum::{extract::State, http::header, response::IntoResponse, routing::get, Router},
     std::sync::Arc,
 };
-
 
 #[tracing::instrument(skip(opts, state))]
 pub async fn run<S>(opts: RunOptions, state: Arc<S>) -> Result<()>

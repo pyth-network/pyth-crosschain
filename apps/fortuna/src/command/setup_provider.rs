@@ -1,41 +1,16 @@
 use {
     crate::{
-        api::{
-            get_register_uri,
-            ChainId,
-        },
-        chain::ethereum::{
-            ProviderInfo,
-            SignablePythContract,
-        },
-        command::register_provider::{
-            register_provider_from_config,
-            CommitmentMetadata,
-        },
-        config::{
-            Config,
-            EthereumConfig,
-            SetupProviderOptions,
-        },
-        state::{
-            HashChainState,
-            PebbleHashChain,
-        },
+        api::{get_register_uri, ChainId},
+        chain::ethereum::{ProviderInfo, SignablePythContract},
+        command::register_provider::{register_provider_from_config, CommitmentMetadata},
+        config::{Config, EthereumConfig, SetupProviderOptions},
+        state::{HashChainState, PebbleHashChain},
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::{anyhow, Result},
     ethers::{
         abi::Bytes as AbiBytes,
-        signers::{
-            LocalWallet,
-            Signer,
-        },
-        types::{
-            Address,
-            Bytes,
-        },
+        signers::{LocalWallet, Signer},
+        types::{Address, Bytes},
     },
     futures::future::join_all,
     std::sync::Arc,
@@ -78,7 +53,6 @@ pub async fn setup_provider(opts: &SetupProviderOptions) -> Result<()> {
         false => Err(anyhow!("Failed to setup provider for all chains")),
     }
 }
-
 
 /// Setup provider for a single chain.
 /// 1. Register if there was no previous registration.
@@ -148,12 +122,11 @@ async fn setup_chain_provider(
                 provider_config.chain_sample_interval,
             )?;
             let chain_state = HashChainState {
-                offsets:     vec![provider_info
+                offsets: vec![provider_info
                     .original_commitment_sequence_number
                     .try_into()?],
                 hash_chains: vec![hash_chain],
             };
-
 
             if chain_state.reveal(provider_info.original_commitment_sequence_number)?
                 != provider_info.original_commitment
@@ -172,7 +145,6 @@ async fn setup_chain_provider(
             .map_err(|e| anyhow!("Chain: {} - Failed to register provider: {}", &chain_id, e))?;
         tracing::info!("Registered");
     }
-
 
     let provider_info = contract.get_provider_info(provider_address).call().await?;
 
@@ -256,7 +228,6 @@ async fn sync_fee_manager(
     }
     Ok(())
 }
-
 
 async fn sync_max_num_hashes(
     contract: &Arc<SignablePythContract>,

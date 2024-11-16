@@ -1,13 +1,13 @@
-FROM node:20.17.0-slim@sha256:2394e403d45a644e41ac2a15b6f843a7d4a99ad24be48c27982c5fdc61a1ef17 as builder-base
+FROM node:20.18.0-slim@sha256:ec35a66c9a0a275b027debde05247c081f8b2f0c43d7399d3a6ad5660cee2f6a as builder-base
 WORKDIR /usr/src/pyth
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN apt-get update && apt-get install -y git python3 make gcc g++ && corepack enable
+RUN apt-get update && apt-get install -y git python3 make gcc g++ curl && corepack enable
 COPY ./ .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 
-FROM node:20.17.0-alpine@sha256:2d07db07a2df6830718ae2a47db6fedce6745f5bcd174c398f2acdda90a11c03 as runner-base
+FROM node:20.18.0-alpine3.20@sha256:c13b26e7e602ef2f1074aef304ce6e9b7dd284c419b35d89fcf3cc8e44a8def9 as runner-base
 WORKDIR /srv
 ENV NODE_ENV production
 RUN addgroup --system --gid 1001 pyth && adduser --system --uid 1001 pyth -g pyth && chown pyth:pyth .

@@ -1,16 +1,10 @@
 use {
     anyhow::Result,
-    clap::{
-        CommandFactory,
-        Parser,
-    },
+    clap::{CommandFactory, Parser},
     futures::future::join_all,
     lazy_static::lazy_static,
     std::io::IsTerminal,
-    tokio::{
-        spawn,
-        sync::watch,
-    },
+    tokio::{spawn, sync::watch},
 };
 
 mod api;

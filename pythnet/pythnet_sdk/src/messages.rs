@@ -1,22 +1,13 @@
 #[cfg(feature = "solana-program")]
-use anchor_lang::{
-    AnchorDeserialize,
-    AnchorSerialize,
-};
+use anchor_lang::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "solana-program"))]
-use borsh::{
-    BorshDeserialize,
-    BorshSerialize,
-};
+use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "quickcheck")]
 use quickcheck::Arbitrary;
 use {
     crate::wire::PrefixedVec,
     borsh::BorshSchema,
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    serde::{Deserialize, Serialize},
 };
 
 /// Message format for sending data to other chains via the accumulator program
@@ -100,12 +91,13 @@ pub type Pubkey = [u8; 32];
 )]
 
 pub struct PriceFeedMessage {
-    pub feed_id:           FeedId,
-    pub price:             i64,
-    pub conf:              u64,
-    pub exponent:          i32,
+    /// `FeedId` but avoid the type alias because of compatibility issues with Anchor's `idl-build` feature.
+    pub feed_id: [u8; 32],
+    pub price: i64,
+    pub conf: u64,
+    pub exponent: i32,
     /// The timestamp of this price update in seconds
-    pub publish_time:      i64,
+    pub publish_time: i64,
     /// The timestamp of the previous price update. This field is intended to allow users to
     /// identify the single unique price update for any moment in time:
     /// for any time t, the unique update is the one such that prev_publish_time < t <= publish_time.
@@ -119,8 +111,8 @@ pub struct PriceFeedMessage {
     /// where the aggregation was unsuccesful. This problem will go away once all publishers have
     /// migrated over to a recent version of pyth-agent.
     pub prev_publish_time: i64,
-    pub ema_price:         i64,
-    pub ema_conf:          u64,
+    pub ema_price: i64,
+    pub ema_conf: u64,
 }
 
 #[cfg(feature = "quickcheck")]
@@ -150,14 +142,14 @@ impl Arbitrary for PriceFeedMessage {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TwapMessage {
-    pub feed_id:           FeedId,
-    pub cumulative_price:  i128,
-    pub cumulative_conf:   u128,
-    pub num_down_slots:    u64,
-    pub exponent:          i32,
-    pub publish_time:      i64,
+    pub feed_id: FeedId,
+    pub cumulative_price: i128,
+    pub cumulative_conf: u128,
+    pub num_down_slots: u64,
+    pub exponent: i32,
+    pub publish_time: i64,
     pub prev_publish_time: i64,
-    pub publish_slot:      u64,
+    pub publish_slot: u64,
 }
 
 #[cfg(feature = "quickcheck")]
@@ -187,14 +179,14 @@ impl Arbitrary for TwapMessage {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PublisherStakeCapsMessage {
     pub publish_time: i64,
-    pub caps:         PrefixedVec<u16, PublisherStakeCap>, // PrefixedVec because we might have more than 256 publishers
+    pub caps: PrefixedVec<u16, PublisherStakeCap>, // PrefixedVec because we might have more than 256 publishers
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PublisherStakeCap {
     pub publisher: Pubkey,
-    pub cap:       u64,
+    pub cap: u64,
 }
 
 #[cfg(feature = "quickcheck")]
@@ -203,7 +195,7 @@ impl Arbitrary for PublisherStakeCapsMessage {
         let caps = Vec::arbitrary(g);
         PublisherStakeCapsMessage {
             publish_time: i64::arbitrary(g),
-            caps:         caps.into(),
+            caps: caps.into(),
         }
     }
 }
@@ -219,7 +211,7 @@ impl Arbitrary for PublisherStakeCap {
                 }
                 publisher
             },
-            cap:       u64::arbitrary(g),
+            cap: u64::arbitrary(g),
         }
     }
 }
@@ -228,29 +220,23 @@ impl Arbitrary for PublisherStakeCap {
 mod tests {
 
     use crate::{
-        messages::{
-            Message,
-            PriceFeedMessage,
-        },
+        messages::{Message, PriceFeedMessage},
         wire::Serializer,
     };
 
     // Test if additional payload to the end of a message is forward compatible
     #[test]
     fn test_forward_compatibility() {
-        use {
-            serde::Serialize,
-            std::iter,
-        };
+        use {serde::Serialize, std::iter};
         let msg = Message::PriceFeedMessage(PriceFeedMessage {
-            feed_id:           [1u8; 32],
-            price:             1,
-            conf:              1,
-            exponent:          1,
-            publish_time:      1,
+            feed_id: [1u8; 32],
+            price: 1,
+            conf: 1,
+            exponent: 1,
+            publish_time: 1,
             prev_publish_time: 1,
-            ema_price:         1,
-            ema_conf:          1,
+            ema_price: 1,
+            ema_conf: 1,
         });
         let mut buffer = Vec::new();
         let mut cursor = std::io::Cursor::new(&mut buffer);

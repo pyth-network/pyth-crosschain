@@ -1,35 +1,16 @@
 use {
     super::validate_price_ids,
     crate::{
-        api::{
-            rest::RestError,
-            ApiState,
-        },
-        state::aggregate::{
-            Aggregates,
-            RequestTime,
-            UnixTimestamp,
-        },
+        api::{rest::RestError, ApiState},
+        state::aggregate::{Aggregates, RequestTime, UnixTimestamp},
     },
     anyhow::Result,
-    axum::{
-        extract::State,
-        Json,
-    },
-    derive_more::{
-        Deref,
-        DerefMut,
-    },
+    axum::{extract::State, Json},
+    derive_more::{Deref, DerefMut},
     pyth_sdk::PriceIdentifier,
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    serde::{Deserialize, Serialize},
     serde_qs::axum::QsQuery,
-    utoipa::{
-        IntoParams,
-        ToSchema,
-    },
+    utoipa::{IntoParams, ToSchema},
 };
 
 #[derive(Clone, Debug, Deref, DerefMut, Deserialize, Serialize, ToSchema)]

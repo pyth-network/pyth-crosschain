@@ -1,22 +1,18 @@
 use {
     crate::{
-        message::{
-            AccumulatorSerializer,
-            MessageSchema,
-        },
+        message::{AccumulatorSerializer, MessageSchema},
         state::PriceAccount,
     },
     anchor_lang::prelude::*,
     std::io::Write,
 };
 
-
 #[repr(C)]
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub struct MessageHeader {
-    pub schema:  u8,
+    pub schema: u8,
     pub version: u16,
-    pub size:    u32,
+    pub size: u32,
 }
 
 impl MessageHeader {
@@ -34,12 +30,11 @@ impl MessageHeader {
 #[repr(C)]
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub struct CompactPriceMessage {
-    pub header:     MessageHeader,
-    pub id:         u64,
-    pub price:      u64,
+    pub header: MessageHeader,
+    pub id: u64,
+    pub price: u64,
     pub price_expo: u64,
 }
-
 
 impl CompactPriceMessage {
     // size without header
@@ -62,24 +57,23 @@ impl AccumulatorSerializer for CompactPriceMessage {
 impl From<&PriceAccount> for CompactPriceMessage {
     fn from(other: &PriceAccount) -> Self {
         Self {
-            header:     MessageHeader::new(MessageSchema::Compact, Self::SIZE as u32),
-            id:         other.id,
-            price:      other.price,
+            header: MessageHeader::new(MessageSchema::Compact, Self::SIZE as u32),
+            id: other.id,
+            price: other.price,
             price_expo: other.price_expo,
         }
     }
 }
 
-
 #[repr(C)]
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub struct FullPriceMessage {
-    pub header:     MessageHeader,
-    pub id:         u64,
-    pub price:      u64,
+    pub header: MessageHeader,
+    pub id: u64,
+    pub price: u64,
     pub price_expo: u64,
-    pub ema:        u64,
-    pub ema_expo:   u64,
+    pub ema: u64,
+    pub ema_expo: u64,
 }
 
 impl FullPriceMessage {
@@ -89,12 +83,12 @@ impl FullPriceMessage {
 impl From<&PriceAccount> for FullPriceMessage {
     fn from(other: &PriceAccount) -> Self {
         Self {
-            header:     MessageHeader::new(MessageSchema::Full, Self::SIZE as u32),
-            id:         other.id,
-            price:      other.price,
+            header: MessageHeader::new(MessageSchema::Full, Self::SIZE as u32),
+            id: other.id,
+            price: other.price,
             price_expo: other.price_expo,
-            ema:        other.ema,
-            ema_expo:   other.ema_expo,
+            ema: other.ema,
+            ema_expo: other.ema_expo,
         }
     }
 }
@@ -114,14 +108,12 @@ impl AccumulatorSerializer for FullPriceMessage {
     }
 }
 
-
 #[repr(C)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DummyPriceMessage {
     pub header: MessageHeader,
-    pub data:   Vec<u8>,
+    pub data: Vec<u8>,
 }
-
 
 impl DummyPriceMessage {
     pub const SIZE: usize = 1017;
@@ -129,11 +121,10 @@ impl DummyPriceMessage {
     pub fn new(msg_size: u16) -> Self {
         Self {
             header: MessageHeader::new(MessageSchema::Dummy, msg_size as u32),
-            data:   vec![0u8; msg_size as usize],
+            data: vec![0u8; msg_size as usize],
         }
     }
 }
-
 
 impl AccumulatorSerializer for DummyPriceMessage {
     fn accumulator_serialize(&self) -> Result<Vec<u8>> {

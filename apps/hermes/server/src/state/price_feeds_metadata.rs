@@ -1,9 +1,6 @@
 use {
     crate::{
-        api::types::{
-            AssetType,
-            PriceFeedMetadata,
-        },
+        api::types::{AssetType, PriceFeedMetadata},
         state::State,
     },
     anyhow::Result,
@@ -66,7 +63,6 @@ where
         Ok(())
     }
 
-
     async fn get_price_feeds_metadata(
         &self,
         query: Option<String>,
@@ -87,7 +83,8 @@ where
         if let Some(asset_type) = &asset_type {
             price_feeds_metadata.retain(|feed| {
                 feed.attributes.get("asset_type").map_or(false, |type_str| {
-                    type_str.to_lowercase() == asset_type.to_string().to_lowercase()
+                    type_str.to_lowercase().trim().replace(" ", "_")
+                        == asset_type.to_string().to_lowercase()
                 })
             });
         }

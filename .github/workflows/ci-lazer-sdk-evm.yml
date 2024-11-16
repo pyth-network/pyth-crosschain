@@ -1,0 +1,28 @@
+name: "Lazer EVM Test Suite"
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - lazer/contracts/evm/**
+  pull_request:
+    paths:
+      - lazer/contracts/evm/**
+
+jobs:
+  lazer-evm-test-suite:
+    name: Lazer EVM Test Suite
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: lazer/contracts/evm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Check build
+        run: forge build --sizes
+      - name: Run tests
+        run: forge test -vvv

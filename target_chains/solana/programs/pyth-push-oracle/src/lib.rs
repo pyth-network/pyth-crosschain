@@ -1,17 +1,14 @@
+// We can't do much about the size of `anchor_lang::error::Error`.
+#![allow(clippy::result_large_err)]
+
 use {
     anchor_lang::prelude::*,
     pyth_solana_receiver_sdk::{
-        cpi::accounts::PostUpdate,
-        price_update::PriceUpdateV2,
-        program::PythSolanaReceiver,
-        PostUpdateParams,
-        PYTH_PUSH_ORACLE_ID,
+        cpi::accounts::PostUpdate, price_update::PriceUpdateV2, program::PythSolanaReceiver,
+        PostUpdateParams, PYTH_PUSH_ORACLE_ID,
     },
     pythnet_sdk::{
-        messages::{
-            FeedId,
-            Message,
-        },
+        messages::{FeedId, Message},
         wire::from_slice,
     },
 };
@@ -43,13 +40,13 @@ pub mod pyth_push_oracle {
     ) -> Result<()> {
         let cpi_program = ctx.accounts.pyth_solana_receiver.to_account_info().clone();
         let cpi_accounts = PostUpdate {
-            payer:                ctx.accounts.payer.to_account_info().clone(),
-            encoded_vaa:          ctx.accounts.encoded_vaa.to_account_info().clone(),
-            config:               ctx.accounts.config.to_account_info().clone(),
-            treasury:             ctx.accounts.treasury.to_account_info().clone(),
+            payer: ctx.accounts.payer.to_account_info().clone(),
+            encoded_vaa: ctx.accounts.encoded_vaa.to_account_info().clone(),
+            config: ctx.accounts.config.to_account_info().clone(),
+            treasury: ctx.accounts.treasury.to_account_info().clone(),
             price_update_account: ctx.accounts.price_feed_account.to_account_info().clone(),
-            system_program:       ctx.accounts.system_program.to_account_info().clone(),
-            write_authority:      ctx.accounts.price_feed_account.to_account_info().clone(),
+            system_program: ctx.accounts.system_program.to_account_info().clone(),
+            write_authority: ctx.accounts.price_feed_account.to_account_info().clone(),
         };
 
         let seeds = &[
@@ -111,17 +108,17 @@ pub mod pyth_push_oracle {
 #[instruction(params : PostUpdateParams, shard_id : u16, feed_id : FeedId)]
 pub struct UpdatePriceFeed<'info> {
     #[account(mut)]
-    pub payer:                Signer<'info>,
+    pub payer: Signer<'info>,
     pub pyth_solana_receiver: Program<'info, PythSolanaReceiver>,
     /// CHECK: Checked by CPI into the Pyth Solana Receiver
-    pub encoded_vaa:          AccountInfo<'info>,
+    pub encoded_vaa: AccountInfo<'info>,
     /// CHECK: Checked by CPI into the Pyth Solana Receiver
-    pub config:               AccountInfo<'info>,
+    pub config: AccountInfo<'info>,
     /// CHECK: Checked by CPI into the Pyth Solana Receiver
     #[account(mut)]
-    pub treasury:             AccountInfo<'info>,
+    pub treasury: AccountInfo<'info>,
     /// CHECK: This account's seeds are checked
     #[account(mut, seeds = [&shard_id.to_le_bytes(), &feed_id], bump)]
-    pub price_feed_account:   AccountInfo<'info>,
-    pub system_program:       Program<'info, System>,
+    pub price_feed_account: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }

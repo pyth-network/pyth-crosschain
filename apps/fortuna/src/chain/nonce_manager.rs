@@ -4,21 +4,10 @@
 use {
     axum::async_trait,
     ethers::{
-        providers::{
-            Middleware,
-            MiddlewareError,
-            PendingTransaction,
-        },
-        types::{
-            transaction::eip2718::TypedTransaction,
-            *,
-        },
+        providers::{Middleware, MiddlewareError, PendingTransaction},
+        types::{transaction::eip2718::TypedTransaction, *},
     },
-    std::sync::atomic::{
-        AtomicBool,
-        AtomicU64,
-        Ordering,
-    },
+    std::sync::atomic::{AtomicBool, AtomicU64, Ordering},
     thiserror::Error,
 };
 
@@ -26,11 +15,11 @@ use {
 /// Middleware used for calculating nonces locally, useful for signing multiple
 /// consecutive transactions without waiting for them to hit the mempool
 pub struct NonceManagerMiddleware<M> {
-    inner:       M,
-    init_guard:  futures_locks::Mutex<()>,
+    inner: M,
+    init_guard: futures_locks::Mutex<()>,
     initialized: AtomicBool,
-    nonce:       AtomicU64,
-    address:     Address,
+    nonce: AtomicU64,
+    address: Address,
 }
 
 impl<M> NonceManagerMiddleware<M>

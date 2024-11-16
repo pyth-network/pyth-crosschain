@@ -2,16 +2,10 @@ use {
     crate::{
         api::GetRandomValueResponse,
         chain::ethereum::SignablePythContract,
-        config::{
-            Config,
-            GenerateOptions,
-        },
+        config::{Config, GenerateOptions},
     },
     anyhow::Result,
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
-    },
+    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
     std::sync::Arc,
 };
 

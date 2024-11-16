@@ -1,26 +1,10 @@
 use {
-    crate::{
-        error::PythContractError,
-        PriceFeed,
-        PriceFeedResponse,
-        PriceIdentifier,
-        QueryMsg,
-    },
+    crate::{error::PythContractError, PriceFeed, PriceFeedResponse, PriceIdentifier, QueryMsg},
     cosmwasm_std::{
-        from_binary,
-        to_binary,
-        Binary,
-        Coin,
-        ContractResult,
-        QuerierResult,
-        SystemError,
+        from_binary, to_binary, Binary, Coin, ContractResult, QuerierResult, SystemError,
         SystemResult,
     },
-    std::{
-        collections::HashMap,
-        time::Duration,
-        u128,
-    },
+    std::{collections::HashMap, time::Duration},
 };
 
 /// Mock version of Pyth for testing cosmwasm contracts.
@@ -28,8 +12,8 @@ use {
 #[derive(Clone)]
 pub struct MockPyth {
     pub valid_time_period: Duration,
-    pub fee_per_vaa:       Coin,
-    pub feeds:             HashMap<PriceIdentifier, PriceFeed>,
+    pub fee_per_vaa: Coin,
+    pub feeds: HashMap<PriceIdentifier, PriceFeed>,
 }
 
 impl MockPyth {
@@ -92,7 +76,7 @@ impl MockPyth {
                 SystemResult::Ok(to_binary(&Coin::new(new_amount, denom)).into())
             }
             Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
-                error:   "Invalid message".into(),
+                error: "Invalid message".into(),
                 request: msg.clone(),
             }),
         }

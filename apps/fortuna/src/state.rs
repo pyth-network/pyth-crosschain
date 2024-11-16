@@ -1,14 +1,8 @@
 use {
     crate::api::ChainId,
-    anyhow::{
-        ensure,
-        Result,
-    },
+    anyhow::{ensure, Result},
     ethers::types::Address,
-    sha3::{
-        Digest,
-        Keccak256,
-    },
+    sha3::{Digest, Keccak256},
 };
 
 /// A hash chain of a specific length. The hash chain has the property that
@@ -18,9 +12,9 @@ use {
 /// to keep the chain around.
 #[derive(Clone)]
 pub struct PebbleHashChain {
-    hash:            Vec<[u8; 32]>,
+    hash: Vec<[u8; 32]>,
     sample_interval: usize,
-    length:          usize,
+    length: usize,
 }
 
 impl PebbleHashChain {
@@ -47,7 +41,6 @@ impl PebbleHashChain {
             length,
         }
     }
-
 
     pub fn from_config(
         secret: &str,
@@ -90,6 +83,7 @@ impl PebbleHashChain {
         Ok(val)
     }
 
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.length
     }
@@ -100,14 +94,14 @@ impl PebbleHashChain {
 /// which requires tracking multiple hash chains here.
 pub struct HashChainState {
     // The sequence number where the hash chain starts. Must be stored in sorted order.
-    pub offsets:     Vec<usize>,
+    pub offsets: Vec<usize>,
     pub hash_chains: Vec<PebbleHashChain>,
 }
 
 impl HashChainState {
     pub fn from_chain_at_offset(offset: usize, chain: PebbleHashChain) -> HashChainState {
         HashChainState {
-            offsets:     vec![offset],
+            offsets: vec![offset],
             hash_chains: vec![chain],
         }
     }
@@ -129,10 +123,7 @@ impl HashChainState {
 mod test {
     use {
         crate::state::PebbleHashChain,
-        sha3::{
-            Digest,
-            Keccak256,
-        },
+        sha3::{Digest, Keccak256},
     };
 
     fn run_hash_chain_test(secret: [u8; 32], length: usize, sample_interval: usize) {
@@ -150,6 +141,8 @@ mod test {
         let chain = PebbleHashChain::new(secret, length, sample_interval);
 
         let mut last_val = chain.reveal_ith(0).unwrap();
+
+        #[allow(clippy::needless_range_loop)]
         for i in 1..length {
             let cur_val = chain.reveal_ith(i).unwrap();
             println!("{}", i);

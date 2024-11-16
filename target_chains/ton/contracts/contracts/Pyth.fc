@@ -6,6 +6,7 @@
 #include "common/merkle_tree.fc";
 #include "common/governance_actions.fc";
 #include "common/gas.fc";
+#include "common/op.fc";
 #include "./Wormhole.fc";
 
 cell store_price(int price, int conf, int expo, int publish_time) {
@@ -156,16 +157,7 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     return payload~load_uint(160);  ;; Return root_digest
 }
 
-
-() update_price_feeds(int msg_value, slice data) impure {
-    load_data();
-    slice cs = read_and_verify_header(data);
-
-    int wormhole_proof_size_bytes = cs~load_uint(16);
-    (cell wormhole_proof, slice new_cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
-    cs = new_cs;
-
-    int num_updates = cs~load_uint(8);
+() calculate_and_validate_fees(int msg_value, int num_updates) impure {
     int update_fee = single_update_fee * num_updates;
     int compute_fee = get_compute_fee(
         WORKCHAIN,
@@ -176,6 +168,31 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
 
     ;; Check if the sender has sent enough TON to cover the update_fee
     throw_unless(ERROR_INSUFFICIENT_FEE, remaining_msg_value >= update_fee);
+}
+
+(int) find_price_id_index(tuple price_ids, int price_id) {
+    int len = price_ids.tlen();
+    int i = 0;
+    while (i < len) {
+        if (price_ids.at(i) == price_id) {
+            return i;
+        }
+        i += 1;
+    }
+    return -1;  ;; Not found
+}
+
+
+tuple parse_price_feeds_from_data(int msg_value, slice data, tuple price_ids, int min_publish_time, int max_publish_time, int unique) {
+    slice cs = read_and_verify_header(data);
+
+    int wormhole_proof_size_bytes = cs~load_uint(16);
+    (cell wormhole_proof, slice new_cs) = read_and_store_large_data(cs, wormhole_proof_size_bytes * 8);
+    cs = new_cs;
+
+    int num_updates = cs~load_uint(8);
+
+    calculate_and_validate_fees(msg_value, num_updates);
 
     (_, _, _, _, int emitter_chain_id, int emitter_address, _, _, slice payload, _) = parse_and_verify_wormhole_vm(wormhole_proof.begin_parse());
 
@@ -183,22 +200,231 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
     cell data_source = begin_cell()
         .store_uint(emitter_chain_id, 16)
         .store_uint(emitter_address, 256)
-        .end_cell();
+    .end_cell();
 
     ;; Dictionary doesn't support cell as key, so we use cell_hash to create a 256-bit integer key
     int data_source_key = cell_hash(data_source);
-
     (slice value, int found?) = is_valid_data_source.udict_get?(256, data_source_key);
     throw_unless(ERROR_UPDATE_DATA_SOURCE_NOT_FOUND, found?);
     int valid = value~load_int(1);
     throw_unless(ERROR_INVALID_UPDATE_DATA_SOURCE, valid);
 
-
     int root_digest = parse_pyth_payload_in_wormhole_vm(payload);
 
+    ;; Create dictionary to store price feeds in order (dict has a udict_get_next? method which returns the next key in order)
+    cell ordered_feeds = new_dict();
+    ;; Track which price IDs we've found
+    cell found_price_ids = new_dict();
+
+    int index = 0;
+
     repeat(num_updates) {
-        (int price_id, int price, int conf, int expo, int publish_time, _, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
+        (int price_id, int price, int conf, int expo, int publish_time, int prev_publish_time, int ema_price, int ema_conf, slice new_cs) = read_and_verify_message(cs, root_digest);
         cs = new_cs;
+
+        int price_ids_len = price_ids.tlen();
+
+        ;; Check if we've already processed this price_id to avoid duplicates
+        (_, int already_processed?) = found_price_ids.udict_get?(256, price_id);
+        if (~ already_processed?) { ;; Only process if we haven't seen this price_id yet
+            int should_include = (price_ids_len == 0)
+                | ((price_ids_len > 0)
+                & (publish_time >= min_publish_time)
+                & (publish_time <= max_publish_time)
+                & ((unique == 0) | (min_publish_time > prev_publish_time)));
+
+            if (should_include) {
+                ;; Create price feed cell containing both current and EMA prices
+                cell price_feed_cell = begin_cell()
+                    .store_ref(store_price(price, conf, expo, publish_time))
+                    .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
+                .end_cell();
+
+                if (price_ids_len == 0) {
+                    ordered_feeds~udict_set(8, index, begin_cell()
+                        .store_uint(price_id, 256)
+                        .store_ref(price_feed_cell)
+                    .end_cell().begin_parse());
+                    index += 1;
+                } else {
+                    index = find_price_id_index(price_ids, price_id);
+                    if (index >= 0) {
+                        ordered_feeds~udict_set(8, index, begin_cell()
+                            .store_uint(price_id, 256)
+                            .store_ref(price_feed_cell)
+                        .end_cell().begin_parse());
+                    }
+                }
+
+                ;; Mark this price ID as found
+                found_price_ids~udict_set(256, price_id, begin_cell().store_int(true, 1).end_cell().begin_parse());
+            }
+        }
+    }
+
+    throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
+
+    ;; Verify all requested price IDs were found
+    if (price_ids.tlen() > 0) {
+        int i = 0;
+        repeat(price_ids.tlen()) {
+            int requested_id = price_ids.at(i);
+            (_, int found?) = found_price_ids.udict_get?(256, requested_id);
+            throw_unless(ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE, found?);
+            i += 1;
+        }
+    }
+
+    ;; Create final ordered tuple from dictionary
+    tuple price_feeds = empty_tuple();
+    int index = -1;
+    do {
+        (index, slice value, int success) = ordered_feeds.udict_get_next?(8, index);
+        if (success) {
+            tuple price_feed = empty_tuple();
+            price_feed~tpush(value~load_uint(256));  ;; price_id
+            price_feed~tpush(value~load_ref());      ;; price_feed_cell
+            price_feeds~tpush(price_feed);
+        }
+    } until (~ success);
+
+    return price_feeds;
+}
+
+;; Creates a chain of cells from price feeds, with each cell containing exactly one price_id (256 bits)
+;; and one ref to the price feed cell. Returns the head of the chain.
+;; Each cell now contains exactly:
+;; - One price_id (256 bits)
+;; - One ref to price_feed_cell
+;; - One optional ref to next cell in chain
+;; This approach is:
+;; - More consistent with TON's cell model
+;; - Easier to traverse and read individual price feeds
+;; - Cleaner separation of data
+;; - More predictable in terms of cell structure
+cell create_price_feed_cell_chain(tuple price_feeds) {
+    cell result = null();
+
+    int i = price_feeds.tlen() - 1;
+    while (i >= 0) {
+        tuple price_feed = price_feeds.at(i);
+        int price_id = price_feed.at(0);
+        cell price_feed_cell = price_feed.at(1);
+
+        ;; Create new cell with single price feed and chain to previous result
+        builder current_builder = begin_cell()
+            .store_uint(price_id, 256)    ;; Store price_id
+            .store_ref(price_feed_cell);   ;; Store price data ref
+
+        ;; Chain to previous cells if they exist
+        if (~ cell_null?(result)) {
+            current_builder = current_builder.store_ref(result);
+        }
+
+        result = current_builder.end_cell();
+        i -= 1;
+    }
+
+    return result;
+}
+
+() send_price_feeds_response(tuple price_feeds, int msg_value, int op, slice sender_address) impure {
+    ;; Build response cell with price feeds
+    builder response = begin_cell()
+        .store_uint(op, 32)  ;; Response op
+        .store_uint(price_feeds.tlen(), 8);  ;; Number of price feeds
+
+    ;; Create and store price feed cell chain
+    cell price_feeds_cell = create_price_feed_cell_chain(price_feeds);
+    response = response.store_ref(price_feeds_cell);
+
+    ;; Build the complete message cell (https://docs.ton.org/v3/documentation/smart-contracts/message-management/sending-messages#message-layout)
+    cell msg = begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(sender_address)
+        .store_coins(0) ;; Will fill in actual amount after fee calculations
+        .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+        .store_ref(response.end_cell())
+    .end_cell();
+
+    int num_price_feeds = price_feeds.tlen();
+
+    ;; Number of cells in the message
+    ;; - 2 cells: msg + response
+    int cells = 2 + num_price_feeds;
+
+    ;; Bit layout per TL-B spec (https://github.com/ton-blockchain/ton/blob/master/crypto/block/block.tlb):
+    ;; - 6 bits: optimized way of serializing the tag and the first 4 fields
+    ;; - 256 bits: owner address
+    ;; - 128 bits: coins (VarUInteger 16) from grams$_ amount:(VarUInteger 16) = Grams
+    ;; - 107 bits: MSG_SERIALIZE_BITS
+    ;; - PRICE_FEED_BITS * num_price_feeds: space for each price feed
+    int bits = 6 + 256 + 128 + MSG_SERIALIZE_BITS + (PRICE_FEED_BITS * num_price_feeds);
+    int fwd_fee = get_forward_fee(cells, bits, WORKCHAIN);
+
+    ;; Calculate all fees
+    int compute_fee = get_compute_fee(WORKCHAIN, get_gas_consumed());
+    int update_fee = single_update_fee * price_feeds.tlen();
+
+    ;; Calculate total fees and remaining excess
+    int total_fees = compute_fee + update_fee + fwd_fee;
+    int excess = msg_value - total_fees;
+
+    ;; Send response message back to sender with exact excess amount
+    send_raw_message(begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(sender_address)
+        .store_coins(excess)
+        .store_uint(1, MSG_SERIALIZE_BITS)
+        .store_ref(response.end_cell())
+        .end_cell(),
+        0);
+}
+
+() parse_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int min_publish_time, int max_publish_time, slice sender_address) impure {
+    load_data();
+
+    ;; Load price_ids tuple
+    int price_ids_len = price_ids_slice~load_uint(8);
+    tuple price_ids = empty_tuple();
+    repeat(price_ids_len) {
+        int price_id = price_ids_slice~load_uint(256);
+        price_ids~tpush(price_id);
+    }
+
+    tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, min_publish_time, max_publish_time, false);
+    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_PRICE_FEED_UPDATES, sender_address);
+}
+
+() parse_unique_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int publish_time, int max_staleness, slice sender_address) impure {
+    load_data();
+
+    ;; Load price_ids tuple
+    int price_ids_len = price_ids_slice~load_uint(8);
+    tuple price_ids = empty_tuple();
+    repeat(price_ids_len) {
+        int price_id = price_ids_slice~load_uint(256);
+        price_ids~tpush(price_id);
+    }
+
+    tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, publish_time, publish_time + max_staleness, true);
+    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_UNIQUE_PRICE_FEED_UPDATES, sender_address);
+}
+
+() update_price_feeds(int msg_value, slice data) impure {
+    load_data();
+    tuple price_feeds = parse_price_feeds_from_data(msg_value, data, empty_tuple(), 0, 0, false);
+    int num_updates = price_feeds.tlen();
+
+    int i = 0;
+    while(i < num_updates) {
+        tuple price_feed = price_feeds.at(i);
+        int price_id = price_feed.at(0);
+        cell price_feed_cell = price_feed.at(1);
+        slice price_feed = price_feed_cell.begin_parse();
+        slice price = price_feed~load_ref().begin_parse();
+        slice ema_price = price_feed~load_ref().begin_parse();
+        (int price_, int conf, int expo, int publish_time) = parse_price(price);
 
         (slice latest_price_info, int found?) = latest_price_feeds.udict_get?(256, price_id);
         int latest_publish_time = 0;
@@ -213,16 +439,10 @@ int parse_pyth_payload_in_wormhole_vm(slice payload) impure {
         }
 
         if (publish_time > latest_publish_time) {
-            cell price_feed = begin_cell()
-                .store_ref(store_price(price, conf, expo, publish_time))
-                .store_ref(store_price(ema_price, ema_conf, expo, publish_time))
-            .end_cell();
-
-            latest_price_feeds~udict_set(256, price_id, begin_cell().store_ref(price_feed).end_cell().begin_parse());
+            latest_price_feeds~udict_set(256, price_id, begin_cell().store_ref(price_feed_cell).end_cell().begin_parse());
         }
+        i += 1;
     }
-
-    throw_if(ERROR_INVALID_UPDATE_DATA_LENGTH, ~ cs.slice_empty?());
 
     store_data();
 }

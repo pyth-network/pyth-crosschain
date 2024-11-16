@@ -1,20 +1,11 @@
 use {
     crate::{
-        instructions::is_uninitialized_account,
-        state::*,
-        MessageBufferError,
-        MESSAGE,
-        WHITELIST,
+        instructions::is_uninitialized_account, state::*, MessageBufferError, MESSAGE, WHITELIST,
     },
     anchor_lang::{
         prelude::*,
         solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE,
-        system_program::{
-            self,
-            Allocate,
-            Assign,
-            Transfer,
-        },
+        system_program::{self, Allocate, Assign, Transfer},
     },
 };
 
@@ -85,7 +76,6 @@ pub fn create_buffer<'info>(
     Ok(())
 }
 
-
 #[derive(Accounts)]
 pub struct CreateBuffer<'info> {
     #[account(
@@ -105,7 +95,6 @@ pub struct CreateBuffer<'info> {
     // remaining_accounts:  - [AccumulatorInput PDA]
 }
 
-
 impl<'info> CreateBuffer<'info> {
     /// Manually invoke transfer, allocate & assign ixs to create an account
     /// to handle situation where an account already has lamports
@@ -124,7 +113,7 @@ impl<'info> CreateBuffer<'info> {
                     system_program.to_account_info(),
                     Transfer {
                         from: payer.to_account_info(),
-                        to:   new_account_info.to_account_info(),
+                        to: new_account_info.to_account_info(),
                     },
                     seeds,
                 ),

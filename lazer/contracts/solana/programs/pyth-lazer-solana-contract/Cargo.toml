@@ -1,0 +1,22 @@
+[package]
+name = "pyth-lazer-solana-contract"
+version = "0.1.0"
+edition = "2021"
+description = "Pyth Lazer Solana contract."
+license = "Apache-2.0"
+repository = "https://github.com/pyth-network/pyth-crosschain"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "pyth_lazer_solana_contract"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.30.1"

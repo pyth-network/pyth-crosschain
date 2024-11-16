@@ -1,4 +1,7 @@
 int get_compute_fee(int workchain, int gas_used) asm(gas_used workchain) "GETGASFEE";
+int get_gas_consumed() asm "GASCONSUMED";
+int get_forward_fee(int cells, int bits, int workchain) asm(cells bits workchain) "GETFORWARDFEE";
+
 
 ;; 1 update:  262,567 gas
 ;; 2 updates: 347,791 (+85,224)

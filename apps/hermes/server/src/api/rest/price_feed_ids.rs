@@ -1,17 +1,10 @@
 use {
     crate::{
-        api::{
-            rest::RestError,
-            types::RpcPriceIdentifier,
-            ApiState,
-        },
+        api::{rest::RestError, types::RpcPriceIdentifier, ApiState},
         state::aggregate::Aggregates,
     },
     anyhow::Result,
-    axum::{
-        extract::State,
-        Json,
-    },
+    axum::{extract::State, Json},
 };
 
 /// **Deprecated: use /v2/price_feeds instead**

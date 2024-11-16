@@ -3,9 +3,7 @@ use {
         api::{
             rest::RestError,
             types::{
-                BinaryUpdate,
-                EncodingType,
-                LatestPublisherStakeCapsUpdateDataResponse,
+                BinaryUpdate, EncodingType, LatestPublisherStakeCapsUpdateDataResponse,
                 ParsedPublisherStakeCapsUpdate,
             },
             ApiState,
@@ -13,19 +11,12 @@ use {
         state::Aggregates,
     },
     anyhow::Result,
-    axum::{
-        extract::State,
-        Json,
-    },
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
-    },
+    axum::{extract::State, Json},
+    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
     serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
 };
-
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
@@ -86,7 +77,7 @@ where
 
     let binary = BinaryUpdate {
         encoding: params.encoding,
-        data:     encoded_data,
+        data: encoded_data,
     };
 
     let parsed: Option<Vec<ParsedPublisherStakeCapsUpdate>> = if params.parsed {

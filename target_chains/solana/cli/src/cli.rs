@@ -1,8 +1,5 @@
 use {
-    clap::{
-        Parser,
-        Subcommand,
-    },
+    clap::{Parser, Subcommand},
     solana_sdk::pubkey::Pubkey,
     std::str::FromStr,
 };
@@ -19,18 +16,18 @@ pub struct Cli {
         default_value = "~/.config/solana/id.json",
         help = "Keypair of the payer of transactions"
     )]
-    pub keypair:  String,
+    pub keypair: String,
     #[clap(
         short = 'u',
         long,
         default_value = "http://localhost:8899",
         help = "RPC endpoint of the solana"
     )]
-    pub url:      String,
+    pub url: String,
     #[clap(short = 'w', long, parse(try_from_str = Pubkey::from_str), help = "Address of the wormhole contract")]
     pub wormhole: Pubkey,
     #[clap(subcommand)]
-    pub action:   Action,
+    pub action: Action,
 }
 
 #[derive(Subcommand, Debug)]
@@ -43,7 +40,7 @@ pub enum Action {
     #[clap(about = "Post a price update from Hermes to Solana in one transaction")]
     PostPriceUpdateAtomic {
         #[clap(short = 'p', long, help = "Payload from Hermes")]
-        payload:      String,
+        payload: String,
         #[clap(
             short = 'n',
             default_value = "5",
@@ -57,11 +54,11 @@ pub enum Action {
     InitializeWormholeReceiver {},
     InitializePythReceiver {
         #[clap(short = 'f', long, help = "Fee in lmaports")]
-        fee:                  u64,
+        fee: u64,
         #[clap(short = 'e', long, parse(try_from_str = Pubkey::from_str), help = "Source emitter")]
-        emitter:              Pubkey,
+        emitter: Pubkey,
         #[clap(short = 'c', long, help = "Source chain")]
-        chain:                u16,
+        chain: u16,
         #[clap(short = 'a', long, parse(try_from_str = Pubkey::from_str), help = "Governance authority")]
         governance_authority: Pubkey,
     },

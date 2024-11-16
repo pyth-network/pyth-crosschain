@@ -1,0 +1,26 @@
+name: "Lazer JS SDK Test Suite"
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - lazer/sdk/js/**
+  pull_request:
+    paths:
+      - lazer/sdk/js/**
+
+jobs:
+  lazer-js-sdk-test-suite:
+    name: Lazer JS SDK Test Suite
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: lazer/sdk/js
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.18.0
+      - run: npm install --global pnpm@9.13.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test

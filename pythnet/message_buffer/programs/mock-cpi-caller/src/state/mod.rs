@@ -12,14 +12,9 @@ trait PythAccount {
 #[derive(Copy, Clone)]
 #[repr(u32)]
 pub enum PythAccountType {
-    Mapping     = 1,
-    Product     = 2,
-    Price       = 3,
-    Test        = 4,
+    Mapping = 1,
+    Product = 2,
+    Price = 3,
+    Test = 4,
     Permissions = 5,
-}
-impl PythAccountType {
-    pub(crate) fn to_u32(&self) -> u32 {
-        *self as u32
-    }
 }

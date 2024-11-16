@@ -1,31 +1,13 @@
 use {
-    cosmwasm_std::{
-        Addr,
-        Binary,
-        Coin,
-        StdResult,
-        Storage,
-    },
+    cosmwasm_std::{Addr, Binary, Coin, StdResult, Storage},
     cosmwasm_storage::{
-        bucket,
-        bucket_read,
-        singleton,
-        singleton_read,
-        Bucket,
-        ReadonlyBucket,
-        ReadonlySingleton,
+        bucket, bucket_read, singleton, singleton_read, Bucket, ReadonlyBucket, ReadonlySingleton,
         Singleton,
     },
     pyth_sdk_cw::PriceFeed,
     schemars::JsonSchema,
-    serde::{
-        Deserialize,
-        Serialize,
-    },
-    std::{
-        collections::HashSet,
-        time::Duration,
-    },
+    serde::{Deserialize, Serialize},
+    std::{collections::HashSet, time::Duration},
 };
 
 pub static CONFIG_KEY: &[u8] = b"config_v1";
@@ -36,19 +18,19 @@ pub static CONTRACT_VERSION_KEY: &[u8] = b"contract_version";
 /// a specific blockchain (given by `chain_id`).
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema)]
 pub struct PythDataSource {
-    pub emitter:  Binary,
+    pub emitter: Binary,
     pub chain_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigInfo {
-    pub wormhole_contract:          Addr,
-    pub data_sources:               HashSet<PythDataSource>,
-    pub governance_source:          PythDataSource,
+    pub wormhole_contract: Addr,
+    pub data_sources: HashSet<PythDataSource>,
+    pub governance_source: PythDataSource,
     // Index for preventing replay attacks on governance data source transfers.
     // This index increases every time the governance data source is changed, which prevents old
     // transfer request VAAs from being replayed.
-    pub governance_source_index:    u32,
+    pub governance_source_index: u32,
     // The wormhole sequence number for governance messages. This value is increased every time the
     // a governance instruction is executed.
     //
@@ -58,8 +40,8 @@ pub struct ConfigInfo {
     pub governance_sequence_number: u64,
     // Warning: This id needs to agree with the wormhole chain id.
     // We should read this directly from wormhole, but their contract doesn't expose it.
-    pub chain_id:                   u16,
-    pub valid_time_period:          Duration,
+    pub chain_id: u16,
+    pub valid_time_period: Duration,
 
     // The fee to pay, denominated in fee_denom (typically, the chain's native token)
     pub fee: Coin,

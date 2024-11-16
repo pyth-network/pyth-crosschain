@@ -1,20 +1,10 @@
 use {
     crate::{
         config::RunOptions,
-        state::{
-            Aggregates,
-            Benchmarks,
-            Cache,
-            Metrics,
-        },
+        state::{Aggregates, Benchmarks, Cache, Metrics},
     },
     anyhow::Result,
-    axum::{
-        extract::Extension,
-        middleware::from_fn_with_state,
-        routing::get,
-        Router,
-    },
+    axum::{extract::Extension, middleware::from_fn_with_state, routing::get, Router},
     ipnet::IpNet,
     serde_qs::axum::QsQueryConfig,
     std::sync::Arc,
@@ -30,8 +20,8 @@ pub mod types;
 mod ws;
 
 pub struct ApiState<S> {
-    pub state:   Arc<S>,
-    pub ws:      Arc<ws::WsState>,
+    pub state: Arc<S>,
+    pub ws: Arc<ws::WsState>,
     pub metrics: Arc<metrics_middleware::ApiMetrics>,
 }
 
@@ -40,8 +30,8 @@ pub struct ApiState<S> {
 impl<S> Clone for ApiState<S> {
     fn clone(&self) -> Self {
         Self {
-            state:   self.state.clone(),
-            ws:      self.ws.clone(),
+            state: self.state.clone(),
+            ws: self.ws.clone(),
             metrics: self.metrics.clone(),
         }
     }

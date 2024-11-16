@@ -6,19 +6,14 @@ use {
     crate::{
         ensure,
         instruction::{
-            InitializeArgs,
-            InitializePublisherArgs,
-            Instruction,
-            SubmitPricesArgsHeader,
+            InitializeArgs, InitializePublisherArgs, Instruction, SubmitPricesArgsHeader,
         },
     },
     bytemuck::try_from_bytes,
     initialize::initialize,
     initialize_publisher::initialize_publisher,
     solana_program::{
-        account_info::AccountInfo,
-        entrypoint::ProgramResult,
-        program_error::ProgramError,
+        account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
         pubkey::Pubkey,
     },
     std::mem::size_of,

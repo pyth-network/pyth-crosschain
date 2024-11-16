@@ -5,10 +5,10 @@ pub mod price;
 #[derive(Copy, Clone)]
 #[repr(u8)]
 pub enum MessageSchema {
-    Full    = 0,
+    Full = 0,
     Compact = 1,
     Minimal = 2,
-    Dummy   = 3,
+    Dummy = 3,
 }
 
 impl MessageSchema {
@@ -16,7 +16,6 @@ impl MessageSchema {
         *self as u8
     }
 }
-
 
 pub fn get_schemas(account_type: PythAccountType) -> Vec<MessageSchema> {
     match account_type {

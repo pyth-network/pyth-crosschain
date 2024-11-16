@@ -1,8 +1,5 @@
 use {
-    near_sdk::{
-        serde::Serialize,
-        FunctionError,
-    },
+    near_sdk::{serde::Serialize, FunctionError},
     thiserror::Error,
 };
 

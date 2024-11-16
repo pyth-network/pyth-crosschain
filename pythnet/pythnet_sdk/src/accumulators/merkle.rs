@@ -3,19 +3,10 @@
 use {
     crate::{
         accumulators::Accumulator,
-        hashers::{
-            keccak256::Keccak256,
-            Hasher,
-        },
+        hashers::{keccak256::Keccak256, Hasher},
     },
-    borsh::{
-        BorshDeserialize,
-        BorshSerialize,
-    },
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    borsh::{BorshDeserialize, BorshSerialize},
+    serde::{Deserialize, Serialize},
 };
 
 // We need to discern between leaf and intermediate nodes to prevent trivial second pre-image
@@ -176,7 +167,7 @@ impl<H: Hasher> MerkleTree<H> {
         }
 
         Some(Self {
-            root:  MerkleRoot::new(tree[1]),
+            root: MerkleRoot::new(tree[1]),
             nodes: tree,
         })
     }
@@ -244,25 +235,22 @@ mod test {
     use {
         super::*,
         proptest::prelude::*,
-        std::{
-            collections::BTreeSet,
-            mem::size_of,
-        },
+        std::{collections::BTreeSet, mem::size_of},
     };
 
     #[derive(Default, Clone, Debug, borsh::BorshSerialize)]
     struct PriceAccount {
-        pub id:         u64,
-        pub price:      u64,
+        pub id: u64,
+        pub price: u64,
         pub price_expo: u64,
-        pub ema:        u64,
-        pub ema_expo:   u64,
+        pub ema: u64,
+        pub ema_expo: u64,
     }
 
     #[derive(Default, Debug, borsh::BorshSerialize)]
     struct PriceOnly {
         pub price_expo: u64,
-        pub price:      u64,
+        pub price: u64,
 
         pub id: u64,
     }
@@ -270,8 +258,8 @@ mod test {
     impl From<PriceAccount> for PriceOnly {
         fn from(other: PriceAccount) -> Self {
             Self {
-                id:         other.id,
-                price:      other.price,
+                id: other.id,
+                price: other.price,
                 price_expo: other.price_expo,
             }
         }
@@ -280,7 +268,7 @@ mod test {
     #[derive(Debug)]
     struct MerkleTreeDataWrapper {
         pub accumulator: MerkleTree,
-        pub data:        BTreeSet<Vec<u8>>,
+        pub data: BTreeSet<Vec<u8>>,
     }
 
     impl Arbitrary for MerkleTreeDataWrapper {
@@ -330,11 +318,11 @@ mod test {
         // Create some random elements (converted to bytes). All accumulators store arbitrary bytes so
         // that we can target any account (or subset of accounts).
         let price_account_a = PriceAccount {
-            id:         1,
-            price:      100,
+            id: 1,
+            price: 100,
             price_expo: 2,
-            ema:        50,
-            ema_expo:   1,
+            ema: 50,
+            ema_expo: 1,
         };
         let item_a = borsh::BorshSerialize::try_to_vec(&price_account_a).unwrap();
 
@@ -457,7 +445,7 @@ mod test {
         // falsely prove `A` was in the original tree by tricking the implementation into performing
         // H(a || b) at the leaf.
         let faulty_accumulator = MerkleTree::<Keccak256> {
-            root:  accumulator.root,
+            root: accumulator.root,
             nodes: vec![
                 accumulator.nodes[0],
                 accumulator.nodes[1], // Root Stays the Same

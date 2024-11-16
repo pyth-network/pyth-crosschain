@@ -1,8 +1,4 @@
-use {
-    clap::Args,
-    ipnet::IpNet,
-    std::net::SocketAddr,
-};
+use {clap::Args, ipnet::IpNet, std::net::SocketAddr};
 
 const DEFAULT_RPC_LISTEN_ADDR: &str = "127.0.0.1:33999";
 const DEFAULT_RPC_REQUESTER_IP_HEADER_NAME: &str = "X-Forwarded-For";

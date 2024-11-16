@@ -2,17 +2,11 @@ use {
     axum::async_trait,
     ethers::{
         prelude::{
-            gas_oracle::{
-                GasOracleError,
-                Result,
-            },
+            gas_oracle::{GasOracleError, Result},
             GasOracle,
         },
         providers::Middleware,
-        types::{
-            I256,
-            U256,
-        },
+        types::{I256, U256},
     },
 };
 
@@ -35,11 +29,9 @@ pub const SURGE_THRESHOLD_1: u64 = 40_000;
 pub const SURGE_THRESHOLD_2: u64 = 100_000;
 pub const SURGE_THRESHOLD_3: u64 = 200_000;
 
-
 /// The threshold max change/difference (in %) at which we will ignore the fee history values
 /// under it.
 pub const EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE: i64 = 200;
-
 
 /// Gas oracle from a [`Middleware`] implementation such as an
 /// Ethereum RPC provider.

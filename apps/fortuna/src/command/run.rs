@@ -1,71 +1,36 @@
 use {
     crate::{
-        api::{
-            self,
-            BlockchainState,
-            ChainId,
-        },
+        api::{self, BlockchainState, ChainId},
         chain::{
             ethereum::InstrumentedPythContract,
-            traced_client::{
-                RpcMetrics,
-                TracedClient,
-            },
+            traced_client::{RpcMetrics, TracedClient},
         },
         command::register_provider::CommitmentMetadata,
-        config::{
-            Commitment,
-            Config,
-            EthereumConfig,
-            RunOptions,
-        },
-        keeper::{
-            self,
-            KeeperMetrics,
-        },
-        state::{
-            HashChainState,
-            PebbleHashChain,
-        },
+        config::{Commitment, Config, EthereumConfig, RunOptions},
+        keeper::{self, KeeperMetrics},
+        state::{HashChainState, PebbleHashChain},
     },
-    anyhow::{
-        anyhow,
-        Error,
-        Result,
-    },
+    anyhow::{anyhow, Error, Result},
     axum::Router,
     ethers::{
         middleware::Middleware,
-        types::{
-            Address,
-            BlockNumber,
-        },
+        types::{Address, BlockNumber},
     },
     futures::future::join_all,
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{
-            family::Family,
-            gauge::Gauge,
-        },
+        metrics::{family::Family, gauge::Gauge},
         registry::Registry,
     },
     std::{
         collections::HashMap,
         net::SocketAddr,
         sync::Arc,
-        time::{
-            Duration,
-            SystemTime,
-            UNIX_EPOCH,
-        },
+        time::{Duration, SystemTime, UNIX_EPOCH},
     },
     tokio::{
         spawn,
-        sync::{
-            watch,
-            RwLock,
-        },
+        sync::{watch, RwLock},
         time,
     },
     tower_http::cors::CorsLayer,
@@ -129,7 +94,6 @@ pub async fn run_api(
 
     Ok(())
 }
-
 
 pub async fn run_keeper(
     chains: HashMap<String, api::BlockchainState>,
@@ -205,7 +169,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         return Err(anyhow!("No chains were successfully setup"));
     }
 
-
     // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
     spawn(async move {
         tracing::info!("Registered shutdown signal handler...");
@@ -244,7 +207,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
 async fn setup_chain_state(
     provider: &Address,
-    secret: &String,
+    secret: &str,
     chain_sample_interval: u64,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
@@ -284,8 +247,8 @@ async fn setup_chain_state(
     }
 
     provider_commitments.push(Commitment {
-        seed:                                latest_metadata.seed,
-        chain_length:                        latest_metadata.chain_length,
+        seed: latest_metadata.seed,
+        chain_length: latest_metadata.chain_length,
         original_commitment_sequence_number: provider_info.original_commitment_sequence_number,
     });
 
@@ -337,12 +300,10 @@ async fn setup_chain_state(
     Ok(state)
 }
 
-
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct ChainLabel {
     pub chain_id: String,
 }
-
 
 #[tracing::instrument(name = "block_timestamp_lag", skip_all, fields(chain_id = chain_id))]
 pub async fn check_block_timestamp_lag(
@@ -359,7 +320,6 @@ pub async fn check_block_timestamp_lag(
                 return;
             }
         };
-
 
     const INF_LAG: i64 = 1000000; // value that definitely triggers an alert
     let lag = match provider.get_block(BlockNumber::Latest).await {

@@ -1,22 +1,16 @@
 use std::time::Duration;
 
 use cosmwasm_std::{Binary, Coin};
-use pyth_sdk_cw::{
-    Price,
-    PriceIdentifier,
-};
+use pyth_sdk_cw::{Price, PriceIdentifier};
 
-use cosmwasm_schema::{
-    cw_serde,
-    QueryResponses,
-};
+use cosmwasm_schema::{cw_serde, QueryResponses};
 
 #[cw_serde]
 pub struct MigrateMsg {}
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub price_feed_id:      PriceIdentifier,
+    pub price_feed_id: PriceIdentifier,
     pub pyth_contract_addr: String,
 }
 
@@ -37,5 +31,5 @@ pub enum QueryMsg {
 #[cw_serde]
 pub struct FetchPriceResponse {
     pub current_price: Price,
-    pub ema_price:     Price,
+    pub ema_price: Price,
 }

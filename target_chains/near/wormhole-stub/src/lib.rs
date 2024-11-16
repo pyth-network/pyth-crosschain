@@ -1,18 +1,13 @@
 //#![deny(warnings)]
 
 use near_sdk::{
-    borsh::{
-        self,
-        BorshDeserialize,
-        BorshSerialize,
-    },
-    log,
-    near_bindgen,
-    PanicOnDefault,
+    borsh::{BorshDeserialize, BorshSerialize},
+    log, near_bindgen, PanicOnDefault,
 };
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+#[borsh(crate = "near_sdk::borsh")]
 pub struct State {}
 
 #[near_bindgen]

@@ -1,9 +1,5 @@
 use {
-    crate::{
-        MessageBufferError,
-        MESSAGE,
-        WHITELIST,
-    },
+    crate::{MessageBufferError, MESSAGE, WHITELIST},
     anchor_lang::prelude::*,
 };
 
@@ -13,8 +9,8 @@ use {
 #[account]
 #[derive(InitSpace)]
 pub struct Whitelist {
-    pub bump:             u8,
-    pub admin:            Pubkey,
+    pub bump: u8,
+    pub admin: Pubkey,
     // This is used by the `#[derive(InitSpace)]`
     // to determine initial account size
     #[max_len(32)]

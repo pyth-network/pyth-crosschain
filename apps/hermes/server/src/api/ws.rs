@@ -1,85 +1,46 @@
 use {
     super::{
-        types::{
-            PriceIdInput,
-            RpcPriceFeed,
-        },
+        types::{PriceIdInput, RpcPriceFeed},
         ApiState,
     },
     crate::state::{
-        aggregate::{
-            Aggregates,
-            AggregationEvent,
-            RequestTime,
-        },
+        aggregate::{Aggregates, AggregationEvent, RequestTime},
         metrics::Metrics,
-        Benchmarks,
-        Cache,
-        PriceFeedMeta,
+        Benchmarks, Cache, PriceFeedMeta,
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::{anyhow, Result},
     axum::{
         extract::{
-            ws::{
-                Message,
-                WebSocket,
-                WebSocketUpgrade,
-            },
+            ws::{Message, WebSocket, WebSocketUpgrade},
             State as AxumState,
         },
         http::HeaderMap,
         response::IntoResponse,
     },
     futures::{
-        stream::{
-            SplitSink,
-            SplitStream,
-        },
-        SinkExt,
-        StreamExt,
+        stream::{SplitSink, SplitStream},
+        SinkExt, StreamExt,
     },
-    governor::{
-        DefaultKeyedRateLimiter,
-        Quota,
-        RateLimiter,
-    },
+    governor::{DefaultKeyedRateLimiter, Quota, RateLimiter},
     ipnet::IpNet,
     nonzero_ext::nonzero,
     prometheus_client::{
-        encoding::{
-            EncodeLabelSet,
-            EncodeLabelValue,
-        },
-        metrics::{
-            counter::Counter,
-            family::Family,
-        },
+        encoding::{EncodeLabelSet, EncodeLabelValue},
+        metrics::{counter::Counter, family::Family},
     },
     pyth_sdk::PriceIdentifier,
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    serde::{Deserialize, Serialize},
     std::{
         collections::HashMap,
         net::IpAddr,
         num::NonZeroU32,
         sync::{
-            atomic::{
-                AtomicUsize,
-                Ordering,
-            },
+            atomic::{AtomicUsize, Ordering},
             Arc,
         },
         time::Duration,
     },
-    tokio::sync::{
-        broadcast::Receiver,
-        watch,
-    },
+    tokio::sync::{broadcast::Receiver, watch},
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
@@ -91,8 +52,8 @@ const BYTES_LIMIT_PER_IP_PER_SECOND: u32 = 256 * 1024; // 256 KiB
 
 #[derive(Clone)]
 pub struct PriceFeedClientConfig {
-    verbose:            bool,
-    binary:             bool,
+    verbose: bool,
+    binary: bool,
     allow_out_of_order: bool,
 }
 
@@ -115,7 +76,7 @@ pub enum Status {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, EncodeLabelSet)]
 pub struct Labels {
     pub interaction: Interaction,
-    pub status:      Status,
+    pub status: Status,
 }
 
 pub struct WsMetrics {
@@ -153,11 +114,11 @@ impl WsMetrics {
 }
 
 pub struct WsState {
-    pub subscriber_counter:       AtomicUsize,
-    pub bytes_limit_whitelist:    Vec<IpNet>,
-    pub rate_limiter:             DefaultKeyedRateLimiter<IpAddr>,
+    pub subscriber_counter: AtomicUsize,
+    pub bytes_limit_whitelist: Vec<IpNet>,
+    pub rate_limiter: DefaultKeyedRateLimiter<IpAddr>,
     pub requester_ip_header_name: String,
-    pub metrics:                  WsMetrics,
+    pub metrics: WsMetrics,
 }
 
 impl WsState {
@@ -178,24 +139,22 @@ impl WsState {
     }
 }
 
-
 #[derive(Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 enum ClientMessage {
     #[serde(rename = "subscribe")]
     Subscribe {
-        ids:                Vec<PriceIdInput>,
+        ids: Vec<PriceIdInput>,
         #[serde(default)]
-        verbose:            bool,
+        verbose: bool,
         #[serde(default)]
-        binary:             bool,
+        binary: bool,
         #[serde(default)]
         allow_out_of_order: bool,
     },
     #[serde(rename = "unsubscribe")]
     Unsubscribe { ids: Vec<PriceIdInput> },
 }
-
 
 #[derive(Serialize, Debug, Clone)]
 #[serde(tag = "type")]
@@ -257,7 +216,7 @@ where
         .interactions
         .get_or_create(&Labels {
             interaction: Interaction::NewConnection,
-            status:      Status::Success,
+            status: Status::Success,
         })
         .inc();
 
@@ -281,18 +240,18 @@ pub type SubscriberId = usize;
 /// Subscriber is an actor that handles a single websocket connection.
 /// It listens to the store for updates and sends them to the client.
 pub struct Subscriber<S> {
-    id:                      SubscriberId,
-    ip_addr:                 Option<IpAddr>,
-    closed:                  bool,
-    state:                   Arc<S>,
-    ws_state:                Arc<WsState>,
-    notify_receiver:         Receiver<AggregationEvent>,
-    receiver:                SplitStream<WebSocket>,
-    sender:                  SplitSink<WebSocket, Message>,
+    id: SubscriberId,
+    ip_addr: Option<IpAddr>,
+    closed: bool,
+    state: Arc<S>,
+    ws_state: Arc<WsState>,
+    notify_receiver: Receiver<AggregationEvent>,
+    receiver: SplitStream<WebSocket>,
+    sender: SplitSink<WebSocket, Message>,
     price_feeds_with_config: HashMap<PriceIdentifier, PriceFeedClientConfig>,
-    ping_interval:           tokio::time::Interval,
-    exit:                    watch::Receiver<bool>,
-    responded_to_ping:       bool,
+    ping_interval: tokio::time::Interval,
+    exit: watch::Receiver<bool>,
+    responded_to_ping: bool,
 }
 
 impl<S> Subscriber<S>
@@ -460,10 +419,9 @@ where
                         .interactions
                         .get_or_create(&Labels {
                             interaction: Interaction::RateLimit,
-                            status:      Status::Error,
+                            status: Status::Error,
                         })
                         .inc();
-
 
                     self.sender
                         .send(
@@ -488,7 +446,7 @@ where
                 .interactions
                 .get_or_create(&Labels {
                     interaction: Interaction::PriceUpdate,
-                    status:      Status::Success,
+                    status: Status::Success,
                 })
                 .inc();
         }
@@ -511,7 +469,7 @@ where
                     .interactions
                     .get_or_create(&Labels {
                         interaction: Interaction::CloseConnection,
-                        status:      Status::Success,
+                        status: Status::Success,
                     })
                     .inc();
 
@@ -535,7 +493,7 @@ where
                     .interactions
                     .get_or_create(&Labels {
                         interaction: Interaction::ClientHeartbeat,
-                        status:      Status::Success,
+                        status: Status::Success,
                     })
                     .inc();
 
@@ -551,7 +509,7 @@ where
                     .interactions
                     .get_or_create(&Labels {
                         interaction: Interaction::ClientMessage,
-                        status:      Status::Error,
+                        status: Status::Error,
                     })
                     .inc();
                 self.sender
@@ -624,7 +582,7 @@ where
             .interactions
             .get_or_create(&Labels {
                 interaction: Interaction::ClientMessage,
-                status:      Status::Success,
+                status: Status::Success,
             })
             .inc();
 

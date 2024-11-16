@@ -1,7 +1,4 @@
-use {
-    clap::Args,
-    solana_sdk::pubkey::Pubkey,
-};
+use {clap::Args, solana_sdk::pubkey::Pubkey};
 
 const DEFAULT_PYTHNET_MAPPING_ADDR: &str = "AHtgzX45WTKfkPG53L6WYhGEXwQkN1BVknET3sVsLL8J";
 

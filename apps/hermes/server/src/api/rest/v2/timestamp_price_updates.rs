@@ -2,31 +2,15 @@ use {
     crate::{
         api::{
             doc_examples,
-            rest::{
-                validate_price_ids,
-                RestError,
-            },
-            types::{
-                BinaryUpdate,
-                EncodingType,
-                ParsedPriceUpdate,
-                PriceIdInput,
-                PriceUpdate,
-            },
+            rest::{validate_price_ids, RestError},
+            types::{BinaryUpdate, EncodingType, ParsedPriceUpdate, PriceIdInput, PriceUpdate},
             ApiState,
         },
-        state::aggregate::{
-            Aggregates,
-            RequestTime,
-            UnixTimestamp,
-        },
+        state::aggregate::{Aggregates, RequestTime, UnixTimestamp},
     },
     anyhow::Result,
     axum::{
-        extract::{
-            Path,
-            State,
-        },
+        extract::{Path, State},
         Json,
     },
     pyth_sdk::PriceIdentifier,
@@ -72,7 +56,6 @@ pub struct TimestampPriceUpdatesQueryParams {
     #[serde(default)]
     ignore_invalid_price_ids: bool,
 }
-
 
 fn default_true() -> bool {
     true
@@ -133,7 +116,7 @@ where
         .collect();
     let binary_price_update = BinaryUpdate {
         encoding: query_params.encoding,
-        data:     encoded_data,
+        data: encoded_data,
     };
     let parsed_price_updates: Option<Vec<ParsedPriceUpdate>> = if query_params.parsed {
         Some(
@@ -151,7 +134,6 @@ where
         binary: binary_price_update,
         parsed: parsed_price_updates,
     };
-
 
     Ok(Json(compressed_price_update))
 }

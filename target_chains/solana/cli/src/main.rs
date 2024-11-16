@@ -2,68 +2,40 @@
 
 pub mod cli;
 
-
 use {
-    anchor_client::anchor_lang::{
-        InstructionData,
-        ToAccountMetas,
-    },
+    anchor_client::anchor_lang::{InstructionData, ToAccountMetas},
     anyhow::Result,
     borsh::BorshDeserialize,
     clap::Parser,
-    cli::{
-        Action,
-        Cli,
-    },
+    cli::{Action, Cli},
     pyth_solana_receiver::sdk::{
-        deserialize_accumulator_update_data,
-        get_random_treasury_id,
-        VAA_SPLIT_INDEX,
+        deserialize_accumulator_update_data, get_random_treasury_id, VAA_SPLIT_INDEX,
     },
     pyth_solana_receiver_sdk::config::DataSource,
     pythnet_sdk::wire::v1::MerklePriceUpdate,
     serde_wormhole::RawMessage,
-    solana_client::{
-        rpc_client::RpcClient,
-        rpc_config::RpcSendTransactionConfig,
-    },
+    solana_client::{rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig},
     solana_sdk::{
         commitment_config::CommitmentConfig,
         compute_budget::ComputeBudgetInstruction,
         instruction::Instruction,
         pubkey::Pubkey,
         rent::Rent,
-        signature::{
-            read_keypair_file,
-            Keypair,
-        },
+        signature::{read_keypair_file, Keypair},
         signer::Signer,
         system_instruction,
         transaction::Transaction,
     },
-    wormhole_core_bridge_solana::sdk::{
-        WriteEncodedVaaArgs,
-        VAA_START,
-    },
+    wormhole_core_bridge_solana::sdk::{WriteEncodedVaaArgs, VAA_START},
     wormhole_sdk::{
-        vaa::{
-            Body,
-            Header,
-        },
+        vaa::{Body, Header},
         Vaa,
     },
     wormhole_solana::{
         instructions::{
-            initialize,
-            post_vaa,
-            upgrade_guardian_set,
-            verify_signatures_txs,
-            PostVAAData,
+            initialize, post_vaa, upgrade_guardian_set, verify_signatures_txs, PostVAAData,
         },
-        Account,
-        Config as BridgeConfig,
-        GuardianSet,
-        VAA as LegacyPostedVaa,
+        Account, Config as BridgeConfig, GuardianSet, VAA as LegacyPostedVaa,
     },
 };
 
@@ -357,15 +329,15 @@ pub fn process_legacy_post_vaa(
         process_transaction(rpc_client, tx, &vec![payer, &signature_set_keypair])?;
     }
     let post_vaa_data = PostVAAData {
-        version:            header.version,
+        version: header.version,
         guardian_set_index: header.guardian_set_index,
-        timestamp:          body.timestamp,
-        nonce:              body.nonce,
-        emitter_chain:      body.emitter_chain.into(),
-        emitter_address:    body.emitter_address.0,
-        sequence:           body.sequence,
-        consistency_level:  body.consistency_level,
-        payload:            body.payload.to_vec(),
+        timestamp: body.timestamp,
+        nonce: body.nonce,
+        emitter_chain: body.emitter_chain.into(),
+        emitter_address: body.emitter_address.0,
+        sequence: body.sequence,
+        consistency_level: body.consistency_level,
+        payload: body.payload.to_vec(),
     };
 
     process_transaction(
@@ -406,34 +378,33 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     );
     let init_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::InitEncodedVaa {
         write_authority: payer.pubkey(),
-        encoded_vaa:     encoded_vaa_keypair.pubkey(),
+        encoded_vaa: encoded_vaa_keypair.pubkey(),
     }
     .to_account_metas(None);
 
     let init_encoded_vaa_instruction = Instruction {
         program_id: wormhole,
-        accounts:   init_encoded_vaa_accounts,
-        data:       wormhole_core_bridge_solana::instruction::InitEncodedVaa.data(),
+        accounts: init_encoded_vaa_accounts,
+        data: wormhole_core_bridge_solana::instruction::InitEncodedVaa.data(),
     };
 
     let write_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
         write_authority: payer.pubkey(),
-        draft_vaa:       encoded_vaa_keypair.pubkey(),
+        draft_vaa: encoded_vaa_keypair.pubkey(),
     }
     .to_account_metas(None);
 
     let write_encoded_vaa_accounts_instruction = Instruction {
         program_id: wormhole,
-        accounts:   write_encoded_vaa_accounts.clone(),
-        data:       wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
+        accounts: write_encoded_vaa_accounts.clone(),
+        data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
             args: WriteEncodedVaaArgs {
                 index: 0,
-                data:  vaa[..VAA_SPLIT_INDEX].to_vec(),
+                data: vaa[..VAA_SPLIT_INDEX].to_vec(),
             },
         }
         .data(),
     };
-
 
     // 1st transaction
     process_transaction(
@@ -448,11 +419,11 @@ pub fn process_write_encoded_vaa_and_post_price_update(
 
     let write_encoded_vaa_accounts_instruction_2 = Instruction {
         program_id: wormhole,
-        accounts:   write_encoded_vaa_accounts,
-        data:       wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
+        accounts: write_encoded_vaa_accounts,
+        data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
             args: WriteEncodedVaaArgs {
                 index: VAA_SPLIT_INDEX.try_into().unwrap(),
-                data:  vaa[VAA_SPLIT_INDEX..].to_vec(),
+                data: vaa[VAA_SPLIT_INDEX..].to_vec(),
             },
         }
         .data(),
@@ -473,8 +444,8 @@ pub fn process_write_encoded_vaa_and_post_price_update(
 
     let verify_encoded_vaa_instruction = Instruction {
         program_id: wormhole,
-        accounts:   verify_encoded_vaa_accounts,
-        data:       wormhole_core_bridge_solana::instruction::VerifyEncodedVaaV1 {}.data(),
+        accounts: verify_encoded_vaa_accounts,
+        data: wormhole_core_bridge_solana::instruction::VerifyEncodedVaaV1 {}.data(),
     };
 
     let price_update_keypair = Keypair::new();
@@ -499,7 +470,6 @@ pub fn process_write_encoded_vaa_and_post_price_update(
         ],
         &vec![payer, &price_update_keypair],
     )?;
-
 
     Ok(price_update_keypair.pubkey())
 }

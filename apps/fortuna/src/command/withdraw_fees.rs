@@ -1,21 +1,11 @@
 use {
     crate::{
         chain::ethereum::SignablePythContract,
-        config::{
-            Config,
-            WithdrawFeesOptions,
-        },
+        config::{Config, WithdrawFeesOptions},
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
-    ethers::{
-        signers::Signer,
-        types::Address,
-    },
+    anyhow::{anyhow, Result},
+    ethers::{signers::Signer, types::Address},
 };
-
 
 pub async fn withdraw_fees(opts: &WithdrawFeesOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;

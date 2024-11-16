@@ -2,25 +2,14 @@ use {
     super::executor_simulator::ExecutorBench,
     crate::{
         error::ExecutorError,
-        tests::executor_simulator::{
-            ExecutorAttack,
-            VaaAttack,
-        },
+        tests::executor_simulator::{ExecutorAttack, VaaAttack},
     },
     anchor_lang::{
-        prelude::{
-            Pubkey,
-            Rent,
-        },
-        solana_program::{
-            system_instruction::create_account,
-            system_program,
-        },
+        prelude::{Pubkey, Rent},
+        solana_program::{system_instruction::create_account, system_program},
     },
     solana_sdk::{
-        native_token::LAMPORTS_PER_SOL,
-        signature::Keypair,
-        signer::Signer,
+        native_token::LAMPORTS_PER_SOL, signature::Keypair, signer::Signer,
         system_instruction::transfer,
     },
 };
@@ -68,11 +57,9 @@ async fn test_basic_instructions() {
     );
 
     let vaa_account_create =
-        bench.add_vaa_account(&emitter, &vec![instruction1, instruction2], VaaAttack::None);
-    let vaa_account_transfer1 =
-        bench.add_vaa_account(&emitter, &vec![instruction3], VaaAttack::None);
-    let vaa_account_transfer2 =
-        bench.add_vaa_account(&emitter, &vec![instruction4], VaaAttack::None);
+        bench.add_vaa_account(&emitter, &[instruction1, instruction2], VaaAttack::None);
+    let vaa_account_transfer1 = bench.add_vaa_account(&emitter, &[instruction3], VaaAttack::None);
+    let vaa_account_transfer2 = bench.add_vaa_account(&emitter, &[instruction4], VaaAttack::None);
 
     let mut sim = bench.start().await;
 

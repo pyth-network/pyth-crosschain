@@ -1,36 +1,21 @@
 use {
     common_test_utils::{
-        assert_treasury_balance,
-        setup_pyth_receiver,
-        ProgramTestFixtures,
-        WrongSetupOption,
+        assert_treasury_balance, setup_pyth_receiver, ProgramTestFixtures, WrongSetupOption,
     },
     program_simulator::into_transaction_error,
     pyth_push_oracle::{
-        instruction::UpdatePriceFeed,
-        sdk::get_price_feed_address,
-        PushOracleError,
+        instruction::UpdatePriceFeed, sdk::get_price_feed_address, PushOracleError,
     },
-    pyth_solana_receiver::sdk::{
-        deserialize_accumulator_update_data,
-        DEFAULT_TREASURY_ID,
-    },
-    pyth_solana_receiver_sdk::price_update::{
-        PriceUpdateV2,
-        VerificationLevel,
-    },
+    pyth_solana_receiver::sdk::{deserialize_accumulator_update_data, DEFAULT_TREASURY_ID},
+    pyth_solana_receiver_sdk::price_update::{PriceUpdateV2, VerificationLevel},
     pythnet_sdk::{
         messages::Message,
         test_utils::{
-            create_accumulator_message,
-            create_dummy_feed_id,
+            create_accumulator_message, create_dummy_feed_id,
             create_dummy_price_feed_message_with_feed_id,
         },
     },
-    solana_sdk::{
-        rent::Rent,
-        signer::Signer,
-    },
+    solana_sdk::{rent::Rent, signer::Signer},
 };
 
 const DEFAULT_SHARD: u16 = 0;
@@ -54,7 +39,6 @@ async fn test_update_price_feed() {
         None,
     );
     let (vaa, merkle_price_updates) = deserialize_accumulator_update_data(message).unwrap();
-
 
     let ProgramTestFixtures {
         mut program_simulator,

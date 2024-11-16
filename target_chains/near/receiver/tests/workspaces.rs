@@ -1,33 +1,17 @@
 use {
-    near_sdk::json_types::U128,
+    near_sdk::json_types::{I64, U128, U64},
+    near_workspaces::types::{Gas, NearToken},
     pyth::{
-        governance::{
-            GovernanceAction,
-            GovernanceInstruction,
-            GovernanceModule,
-        },
-        state::{
-            Chain,
-            Price,
-            PriceIdentifier,
-            Source,
-        },
+        governance::{GovernanceAction, GovernanceInstruction, GovernanceModule},
+        state::{Chain, Price, PriceIdentifier, Source},
     },
     pyth_wormhole_attester_sdk::{
-        BatchPriceAttestation,
-        Identifier,
-        PriceAttestation,
-        PriceStatus,
+        BatchPriceAttestation, Identifier, PriceAttestation, PriceStatus,
     },
     pythnet_sdk::test_utils::{
-        create_accumulator_message,
-        create_dummy_price_feed_message,
-        create_vaa_from_payload,
-        DEFAULT_DATA_SOURCE,
-        DEFAULT_GOVERNANCE_SOURCE,
-        DEFAULT_VALID_TIME_PERIOD,
-        SECONDARY_DATA_SOURCE,
-        SECONDARY_GOVERNANCE_SOURCE,
+        create_accumulator_message, create_dummy_price_feed_message, create_vaa_from_payload,
+        DEFAULT_DATA_SOURCE, DEFAULT_GOVERNANCE_SOURCE, DEFAULT_VALID_TIME_PERIOD,
+        SECONDARY_DATA_SOURCE, SECONDARY_GOVERNANCE_SOURCE,
     },
     serde_json::json,
     std::collections::HashMap,
@@ -35,11 +19,11 @@ use {
 };
 
 async fn initialize_chain() -> (
-    workspaces::Worker<workspaces::network::Sandbox>,
-    workspaces::Contract,
-    workspaces::Contract,
+    near_workspaces::Worker<near_workspaces::network::Sandbox>,
+    near_workspaces::Contract,
+    near_workspaces::Contract,
 ) {
-    let worker = workspaces::sandbox().await.expect("Workspaces Failed");
+    let worker = near_workspaces::sandbox().await.expect("Workspaces Failed");
 
     // Deploy Pyth
     let contract = worker
@@ -59,8 +43,8 @@ async fn initialize_chain() -> (
     // Initialize Wormhole.
     let _ = wormhole
         .call("new")
-        .args_json(&json!({}))
-        .gas(300_000_000_000_000)
+        .args_json(json!({}))
+        .gas(Gas::from_gas(300_000_000_000_000))
         .transact_async()
         .await
         .expect("Failed to initialize Wormhole")
@@ -72,7 +56,7 @@ async fn initialize_chain() -> (
 
     let _ = contract
         .call("new")
-        .args_json(&json!({
+        .args_json(json!({
             "wormhole":        wormhole.id(),
             "codehash":        codehash,
             "initial_source":  Source {
@@ -86,7 +70,7 @@ async fn initialize_chain() -> (
             "update_fee":      U128::from(1u128),
             "stale_threshold": DEFAULT_VALID_TIME_PERIOD,
         }))
-        .gas(300_000_000_000_000)
+        .gas(Gas::from_gas(300_000_000_000_000))
         .transact_async()
         .await
         .expect("Failed to initialize Pyth")
@@ -109,13 +93,13 @@ async fn test_set_sources() {
                 data_sources: vec![
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             DEFAULT_DATA_SOURCE.chain,
                         ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             SECONDARY_DATA_SOURCE.chain,
                         ))),
                     },
@@ -132,9 +116,9 @@ async fn test_set_sources() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -152,11 +136,11 @@ async fn test_set_sources() {
         &[
             Source {
                 emitter: DEFAULT_DATA_SOURCE.address.0,
-                chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+                chain: Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
             },
             Source {
                 emitter: SECONDARY_DATA_SOURCE.address.0,
-                chain:   Chain::from(WormholeChain::from(u16::from(SECONDARY_DATA_SOURCE.chain))),
+                chain: Chain::from(WormholeChain::from(u16::from(SECONDARY_DATA_SOURCE.chain))),
             },
         ]
     );
@@ -202,9 +186,9 @@ async fn test_set_governance_source() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact()
@@ -223,13 +207,13 @@ async fn test_set_governance_source() {
                 data_sources: vec![
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             DEFAULT_DATA_SOURCE.chain,
                         ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             SECONDARY_DATA_SOURCE.chain,
                         ))),
                     },
@@ -246,9 +230,9 @@ async fn test_set_governance_source() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -269,13 +253,13 @@ async fn test_set_governance_source() {
                     Source::default(),
                     Source {
                         emitter: DEFAULT_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             DEFAULT_DATA_SOURCE.chain,
                         ))),
                     },
                     Source {
                         emitter: SECONDARY_DATA_SOURCE.address.0,
-                        chain:   Chain::from(WormholeChain::from(u16::from(
+                        chain: Chain::from(WormholeChain::from(u16::from(
                             SECONDARY_DATA_SOURCE.chain,
                         ))),
                     },
@@ -290,12 +274,11 @@ async fn test_set_governance_source() {
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
-
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -323,21 +306,21 @@ async fn test_stale_threshold() {
     let vaa = create_vaa_from_payload(
         &BatchPriceAttestation {
             price_attestations: vec![PriceAttestation {
-                product_id:                 Identifier::default(),
-                price_id:                   Identifier::default(),
-                price:                      100,
-                conf:                       1,
-                expo:                       8,
-                ema_price:                  100,
-                ema_conf:                   1,
-                status:                     PriceStatus::Trading,
-                num_publishers:             8,
-                max_num_publishers:         8,
-                attestation_time:           now.try_into().unwrap(),
-                publish_time:               now.try_into().unwrap(),
-                prev_publish_time:          now.try_into().unwrap(),
-                prev_price:                 100,
-                prev_conf:                  1,
+                product_id: Identifier::default(),
+                price_id: Identifier::default(),
+                price: 100,
+                conf: 1,
+                expo: 8,
+                ema_price: 100,
+                ema_conf: 1,
+                status: PriceStatus::Trading,
+                num_publishers: 8,
+                max_num_publishers: 8,
+                attestation_time: now.try_into().unwrap(),
+                publish_time: now.try_into().unwrap(),
+                prev_publish_time: now.try_into().unwrap(),
+                prev_price: 100,
+                prev_conf: 1,
                 last_attested_publish_time: now.try_into().unwrap(),
             }],
         }
@@ -349,24 +332,12 @@ async fn test_stale_threshold() {
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
-    let update_fee = serde_json::from_slice::<U128>(
-        &contract
-            .view("get_update_fee_estimate")
-            .args_json(&json!({
-                "data": vaa,
-            }))
-            .await
-            .unwrap()
-            .result,
-    )
-    .unwrap();
-
     // Submit price. As there are no prices this should succeed despite being old.
     assert!(contract
         .call("update_price_feeds")
-        .gas(300_000_000_000_000)
-        .deposit(update_fee.into())
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "data": vaa,
         }))
         .transact_async()
@@ -384,7 +355,7 @@ async fn test_stale_threshold() {
         serde_json::from_slice::<Option<Price>>(
             &contract
                 .view("get_price")
-                .args_json(&json!({ "price_identifier": PriceIdentifier([0; 32]) }))
+                .args_json(json!({ "price_identifier": PriceIdentifier([0; 32]) }))
                 .await
                 .unwrap()
                 .result
@@ -397,7 +368,7 @@ async fn test_stale_threshold() {
         serde_json::from_slice::<HashMap<PriceIdentifier, Option<Price>>>(
             &contract
                 .view("list_prices")
-                .args_json(&json!({ "price_ids": vec![PriceIdentifier([0; 32])] }))
+                .args_json(json!({ "price_ids": vec![PriceIdentifier([0; 32])] }))
                 .await
                 .unwrap()
                 .result
@@ -412,21 +383,21 @@ async fn test_stale_threshold() {
     let vaa = create_vaa_from_payload(
         &BatchPriceAttestation {
             price_attestations: vec![PriceAttestation {
-                product_id:                 Identifier::default(),
-                price_id:                   Identifier::default(),
-                price:                      1000,
-                conf:                       1,
-                expo:                       8,
-                ema_price:                  1000,
-                ema_conf:                   1,
-                status:                     PriceStatus::Trading,
-                num_publishers:             8,
-                max_num_publishers:         8,
-                attestation_time:           (now - 1024).try_into().unwrap(),
-                publish_time:               (now - 1024).try_into().unwrap(),
-                prev_publish_time:          (now - 1024).try_into().unwrap(),
-                prev_price:                 90,
-                prev_conf:                  1,
+                product_id: Identifier::default(),
+                price_id: Identifier::default(),
+                price: 1000,
+                conf: 1,
+                expo: 8,
+                ema_price: 1000,
+                ema_conf: 1,
+                status: PriceStatus::Trading,
+                num_publishers: 8,
+                max_num_publishers: 8,
+                attestation_time: (now - 1024).try_into().unwrap(),
+                publish_time: (now - 1024).try_into().unwrap(),
+                prev_publish_time: (now - 1024).try_into().unwrap(),
+                prev_price: 90,
+                prev_conf: 1,
                 last_attested_publish_time: (now - 1024).try_into().unwrap(),
             }],
         }
@@ -441,9 +412,9 @@ async fn test_stale_threshold() {
     // The update handler should now succeed even if price is old, but simply not update the price.
     assert!(contract
         .call("update_price_feeds")
-        .gas(300_000_000_000_000)
-        .deposit(update_fee.into())
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "data": vaa,
         }))
         .transact_async()
@@ -458,15 +429,15 @@ async fn test_stale_threshold() {
     // timestamp and price should be unchanged.
     assert_eq!(
         Price {
-            price:        100.into(),
-            conf:         1.into(),
-            expo:         8,
+            price: 100.into(),
+            conf: 1.into(),
+            expo: 8,
             publish_time: now as i64,
         },
         serde_json::from_slice::<Price>(
             &contract
                 .view("get_price_unsafe")
-                .args_json(&json!({ "price_identifier": PriceIdentifier([0; 32]) }))
+                .args_json(json!({ "price_identifier": PriceIdentifier([0; 32]) }))
                 .await
                 .unwrap()
                 .result
@@ -491,9 +462,9 @@ async fn test_stale_threshold() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -508,15 +479,15 @@ async fn test_stale_threshold() {
     // [ref:failed_price_check]
     assert_eq!(
         Some(Price {
-            price:        100.into(),
-            conf:         1.into(),
-            expo:         8,
+            price: 100.into(),
+            conf: 1.into(),
+            expo: 8,
             publish_time: now as i64,
         }),
         serde_json::from_slice::<Option<Price>>(
             &contract
                 .view("get_price")
-                .args_json(&json!({ "price_identifier": PriceIdentifier([0; 32]) }))
+                .args_json(json!({ "price_identifier": PriceIdentifier([0; 32]) }))
                 .await
                 .unwrap()
                 .result
@@ -525,15 +496,15 @@ async fn test_stale_threshold() {
     );
     assert_eq!(
         &Some(Price {
-            price:        100.into(),
-            conf:         1.into(),
-            expo:         8,
+            price: 100.into(),
+            conf: 1.into(),
+            expo: 8,
             publish_time: now as i64,
         }),
         serde_json::from_slice::<HashMap<PriceIdentifier, Option<Price>>>(
             &contract
                 .view("list_prices")
-                .args_json(&json!({ "price_ids": vec![PriceIdentifier([0; 32])] }))
+                .args_json(json!({ "price_ids": vec![PriceIdentifier([0; 32])] }))
                 .await
                 .unwrap()
                 .result
@@ -572,7 +543,7 @@ async fn test_contract_fees() {
     let update_fee = serde_json::from_slice::<U128>(
         &contract
             .view("get_update_fee_estimate")
-            .args_json(&json!({
+            .args_json(json!({
                 "data": vaa,
             }))
             .await
@@ -584,9 +555,9 @@ async fn test_contract_fees() {
     // Now set the update_fee so that it is too high for the deposit to cover.
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -604,7 +575,7 @@ async fn test_contract_fees() {
             serde_json::from_slice::<U128>(
                 &contract
                     .view("get_update_fee_estimate")
-                    .args_json(&json!({
+                    .args_json(json!({
                         "data": vaa,
                     }))
                     .await
@@ -619,21 +590,21 @@ async fn test_contract_fees() {
     let vaa = create_vaa_from_payload(
         &BatchPriceAttestation {
             price_attestations: vec![PriceAttestation {
-                product_id:                 Identifier::default(),
-                price_id:                   Identifier::default(),
-                price:                      1000,
-                conf:                       1,
-                expo:                       8,
-                ema_price:                  1000,
-                ema_conf:                   1,
-                status:                     PriceStatus::Trading,
-                num_publishers:             8,
-                max_num_publishers:         8,
-                attestation_time:           (now - 1024).try_into().unwrap(),
-                publish_time:               (now - 1024).try_into().unwrap(),
-                prev_publish_time:          (now - 1024).try_into().unwrap(),
-                prev_price:                 90,
-                prev_conf:                  1,
+                product_id: Identifier::default(),
+                price_id: Identifier::default(),
+                price: 1000,
+                conf: 1,
+                expo: 8,
+                ema_price: 1000,
+                ema_conf: 1,
+                status: PriceStatus::Trading,
+                num_publishers: 8,
+                max_num_publishers: 8,
+                attestation_time: (now - 1024).try_into().unwrap(),
+                publish_time: (now - 1024).try_into().unwrap(),
+                prev_publish_time: (now - 1024).try_into().unwrap(),
+                prev_price: 90,
+                prev_conf: 1,
                 last_attested_publish_time: (now - 1024).try_into().unwrap(),
             }],
         }
@@ -647,9 +618,9 @@ async fn test_contract_fees() {
 
     assert!(contract
         .call("update_price_feeds")
-        .gas(300_000_000_000_000)
-        .deposit(update_fee.into())
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(update_fee.into()))
+        .args_json(json!({
             "data": vaa,
         }))
         .transact_async()
@@ -666,7 +637,7 @@ async fn test_contract_fees() {
         serde_json::from_slice::<Option<Price>>(
             &contract
                 .view("get_price")
-                .args_json(&json!({ "price_identifier": PriceIdentifier([0; 32]) }))
+                .args_json(json!({ "price_identifier": PriceIdentifier([0; 32]) }))
                 .await
                 .unwrap()
                 .result
@@ -696,13 +667,12 @@ async fn test_same_governance_sequence_fails() {
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
-
     // Attempt our first SetFee.
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -716,9 +686,9 @@ async fn test_same_governance_sequence_fails() {
     // Attempt to run the same VAA again.
     assert!(!contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -754,9 +724,9 @@ async fn test_out_of_order_sequences_fail() {
     // Attempt our first SetFee.
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -785,9 +755,9 @@ async fn test_out_of_order_sequences_fail() {
     // This should succeed.
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -816,9 +786,9 @@ async fn test_out_of_order_sequences_fail() {
     // This should fail due to being out of order.
     assert!(!contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -849,13 +819,12 @@ async fn test_governance_target_fails_if_not_near() {
     );
     let vaa = hex::encode(serde_wormhole::to_vec(&vaa).unwrap());
 
-
     // This should fail as the target is Solana, when Near is expected.
     assert!(!contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -880,7 +849,7 @@ async fn test_accumulator_updates() {
             action: GovernanceAction::SetDataSources {
                 data_sources: vec![Source {
                     emitter: DEFAULT_DATA_SOURCE.address.0,
-                    chain:   Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
+                    chain: Chain::from(WormholeChain::from(u16::from(DEFAULT_DATA_SOURCE.chain))),
                 }],
             },
         }
@@ -894,9 +863,9 @@ async fn test_accumulator_updates() {
 
     assert!(contract
         .call("execute_governance_instruction")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "vaa": vaa,
         }))
         .transact_async()
@@ -916,9 +885,9 @@ async fn test_accumulator_updates() {
     // Call the usual UpdatePriceFeed function.
     assert!(contract
         .call("update_price_feeds")
-        .gas(300_000_000_000_000)
-        .deposit(300_000_000_000_000_000_000_000)
-        .args_json(&json!({
+        .gas(Gas::from_gas(300_000_000_000_000))
+        .deposit(NearToken::from_yoctonear(300_000_000_000_000_000_000_000))
+        .args_json(json!({
             "data": message,
         }))
         .transact_async()
@@ -935,15 +904,15 @@ async fn test_accumulator_updates() {
 
     assert_eq!(
         Some(Price {
-            price:        100.into(),
-            conf:         100.into(),
-            expo:         100,
+            price: 100.into(),
+            conf: 100.into(),
+            expo: 100,
             publish_time: 100,
         }),
         serde_json::from_slice::<Option<Price>>(
             &contract
                 .view("get_price_unsafe")
-                .args_json(&json!({ "price_identifier": PriceIdentifier(identifier) }))
+                .args_json(json!({ "price_identifier": PriceIdentifier(identifier) }))
                 .await
                 .unwrap()
                 .result
@@ -955,9 +924,9 @@ async fn test_accumulator_updates() {
 #[tokio::test]
 async fn test_sdk_compat() {
     let price = pyth_sdk::Price {
-        price:        i64::MAX,
-        conf:         u64::MAX,
-        expo:         100,
+        price: i64::MAX,
+        conf: u64::MAX,
+        expo: 100,
         publish_time: 100,
     };
 
@@ -966,9 +935,9 @@ async fn test_sdk_compat() {
     assert_eq!(
         decoded_price,
         Price {
-            price:        i64::MAX.into(),
-            conf:         u64::MAX.into(),
-            expo:         100,
+            price: i64::MAX.into(),
+            conf: u64::MAX.into(),
+            expo: 100,
             publish_time: 100,
         }
     );
@@ -976,38 +945,35 @@ async fn test_sdk_compat() {
 
 #[tokio::test]
 async fn test_borsh_field_cmopat() {
-    use near_sdk::borsh::{
-        self,
-        BorshDeserialize,
-        BorshSerialize,
-    };
+    use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 
-    let price = pyth_sdk::Price {
-        price:        i64::MAX,
-        conf:         u64::MAX,
-        expo:         100,
+    let price = Price {
+        price: I64(i64::MAX),
+        conf: U64(u64::MAX),
+        expo: 100,
         publish_time: 100,
     };
 
     // Verify that we can still BorshDeserialize a struct with a different field name. Confirms
     // we don't have to migrate the state.
     #[derive(Eq, PartialEq, Debug, BorshSerialize, BorshDeserialize)]
+    #[borsh(crate = "near_sdk::borsh")]
     struct PriceTester {
-        price:          i64,
-        conf:           u64,
-        expo:           u32,
+        price: i64,
+        conf: u64,
+        expo: u32,
         bad_field_name: u64,
     }
 
-    let encoded = near_sdk::borsh::BorshSerialize::try_to_vec(&price).unwrap();
+    let encoded = near_sdk::borsh::to_vec(&price).unwrap();
     let decoded_price: PriceTester =
         near_sdk::borsh::BorshDeserialize::try_from_slice(&encoded).unwrap();
     assert_eq!(
         decoded_price,
         PriceTester {
-            price:          i64::MAX,
-            conf:           u64::MAX,
-            expo:           100,
+            price: i64::MAX,
+            conf: u64::MAX,
+            expo: 100,
             bad_field_name: 100,
         }
     );

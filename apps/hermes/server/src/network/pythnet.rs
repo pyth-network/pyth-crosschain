@@ -4,68 +4,30 @@
 
 use {
     crate::{
-        api::types::{
-            PriceFeedMetadata,
-            RpcPriceIdentifier,
-        },
+        api::types::{PriceFeedMetadata, RpcPriceIdentifier},
         config::RunOptions,
-        network::wormhole::{
-            BridgeData,
-            GuardianSet,
-            GuardianSetData,
-        },
+        network::wormhole::{BridgeData, GuardianSet, GuardianSetData},
         state::{
-            aggregate::{
-                AccumulatorMessages,
-                Aggregates,
-                Update,
-            },
-            price_feeds_metadata::{
-                PriceFeedMeta,
-                DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL,
-            },
+            aggregate::{AccumulatorMessages, Aggregates, Update},
+            price_feeds_metadata::{PriceFeedMeta, DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL},
             wormhole::Wormhole,
         },
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::{anyhow, Result},
     borsh::BorshDeserialize,
     futures::stream::StreamExt,
     pyth_sdk::PriceIdentifier,
-    pyth_sdk_solana::state::{
-        load_mapping_account,
-        load_product_account,
-    },
+    pyth_sdk_solana::state::{load_mapping_account, load_product_account},
     solana_account_decoder::UiAccountEncoding,
     solana_client::{
-        nonblocking::{
-            pubsub_client::PubsubClient,
-            rpc_client::RpcClient,
-        },
-        rpc_config::{
-            RpcAccountInfoConfig,
-            RpcProgramAccountsConfig,
-        },
-        rpc_filter::{
-            Memcmp,
-            MemcmpEncodedBytes,
-            RpcFilterType,
-        },
+        nonblocking::{pubsub_client::PubsubClient, rpc_client::RpcClient},
+        rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
+        rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
     },
     solana_sdk::{
-        account::Account,
-        bs58,
-        commitment_config::CommitmentConfig,
-        pubkey::Pubkey,
-        system_program,
+        account::Account, bs58, commitment_config::CommitmentConfig, pubkey::Pubkey, system_program,
     },
-    std::{
-        collections::BTreeMap,
-        sync::Arc,
-        time::Duration,
-    },
+    std::{collections::BTreeMap, sync::Arc, time::Duration},
     tokio::time::Instant,
 };
 
@@ -155,11 +117,11 @@ where
             encoding: Some(UiAccountEncoding::Base64Zstd),
             ..Default::default()
         },
-        filters:        Some(vec![RpcFilterType::Memcmp(Memcmp::new(
+        filters: Some(vec![RpcFilterType::Memcmp(Memcmp::new(
             0,                                           // offset
             MemcmpEncodedBytes::Bytes(b"PAS1".to_vec()), // bytes
         ))]),
-        with_context:   Some(true),
+        with_context: Some(true),
     };
 
     // Listen for all PythNet accounts, we will filter down to the Accumulator related accounts.
@@ -333,7 +295,6 @@ where
         })
     };
 
-
     let task_price_feeds_metadata_updater = {
         let price_feeds_state = state.clone();
         let mut exit = crate::EXIT.subscribe();
@@ -378,7 +339,6 @@ where
     Ok(())
 }
 
-
 pub async fn fetch_and_store_price_feeds_metadata<S>(
     state: &S,
     mapping_address: &Pubkey,
@@ -395,7 +355,6 @@ where
         .into_iter()
         .filter(|metadata| all_ids.contains(&PriceIdentifier::from(metadata.id)))
         .collect();
-
 
     state.store_price_feeds_metadata(&filtered_metadata).await?;
     Ok(filtered_metadata)

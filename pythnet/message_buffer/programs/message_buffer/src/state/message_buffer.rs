@@ -27,23 +27,22 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace, Debug)]
 pub struct MessageBuffer {
     /* header */
-    pub bump:        u8, // 1
-    pub version:     u8, // 1
+    pub bump: u8,    // 1
+    pub version: u8, // 1
     // byte offset of accounts where data starts
     // e.g. account_info.data[offset + header_len]
-    pub header_len:  u16, // 2
+    pub header_len: u16, // 2
     /// endpoints of every message.
     /// ex: [10, 14]
     /// => msg1 = account_info.data[(header_len + 0)..(header_len + 10)]
     /// => msg2 = account_info.data[(header_len + 10)..(header_len + 14)]
     pub end_offsets: [u16; 255], // 510
 
-                          /* messages */
-                          //  not defined in struct since needs to support variable length
-                          //  and work with zero_copy
-                          // pub messages: [u8; accountInfo.data.len - header_len]
+                         /* messages */
+                         //  not defined in struct since needs to support variable length
+                         //  and work with zero_copy
+                         // pub messages: [u8; accountInfo.data.len - header_len]
 }
-
 
 impl MessageBuffer {
     // HEADER_LEN allows for append-only forward-compatibility for the header.
@@ -71,7 +70,6 @@ impl MessageBuffer {
         self.version = Self::CURRENT_VERSION;
         self.end_offsets = [0u16; u8::MAX as usize];
     }
-
 
     /// `put_all` writes all the messages to the `AccumulatorInput` account
     /// and updates the `end_offsets` array.
@@ -124,10 +122,7 @@ mod test {
         bytemuck::bytes_of_mut,
         std::{
             io::Write,
-            mem::{
-                align_of,
-                size_of,
-            },
+            mem::{align_of, size_of},
         },
     };
 
@@ -157,7 +152,6 @@ mod test {
         let discriminator = &mut sighash("accounts", "MessageBuffer");
         let destination = &mut vec![0u8; destination_size];
 
-
         account_info_data.write_all(discriminator).unwrap();
         account_info_data
             .write_all(bytes_of_mut(message_buffer))
@@ -165,7 +159,6 @@ mod test {
         account_info_data.write_all(destination).unwrap();
         account_info_data.to_vec()
     }
-
 
     #[test]
     fn test_sizes_and_alignments() {
@@ -193,7 +186,6 @@ mod test {
         assert_eq!(num_msgs, 2);
         assert_eq!(num_bytes, 5);
 
-
         assert_eq!(message_buffer.end_offsets[0], 2);
         assert_eq!(message_buffer.end_offsets[1], 5);
 
@@ -217,7 +209,6 @@ mod test {
             assert_eq!(d, &expected_data.as_slice());
         }
     }
-
 
     #[test]
     fn test_put_all_exceed_max() {
@@ -244,10 +235,8 @@ mod test {
         assert_eq!(message_buffer.end_offsets[0], 9_718 - 2);
         assert_eq!(message_buffer.end_offsets[1], 9_718 - 1);
 
-
         let message_buffer: &MessageBuffer =
             bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
-
 
         let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
         let mut start = header_len;
@@ -284,13 +273,11 @@ mod test {
 
         let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
 
-
         assert_eq!(num_msgs, 3);
         assert_eq!(
             num_bytes,
             data_bytes[0..3].iter().map(|x| x.len()).sum::<usize>() as u16
         );
-
 
         let message_buffer: &MessageBuffer =
             bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
@@ -315,10 +302,7 @@ mod test {
 
     #[test]
     pub fn test_cursor_read() {
-        use byteorder::{
-            LittleEndian,
-            ReadBytesExt,
-        };
+        use byteorder::{LittleEndian, ReadBytesExt};
 
         let data = vec![vec![12, 34], vec![56, 78, 90]];
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
@@ -335,7 +319,6 @@ mod test {
         assert_eq!(num_bytes, 5);
         assert_eq!(message_buffer.end_offsets[0], 2);
         assert_eq!(message_buffer.end_offsets[1], 5);
-
 
         let mut cursor = std::io::Cursor::new(&account_info_data[10..]);
         let header_len = cursor.read_u16::<LittleEndian>().unwrap();
@@ -383,7 +366,6 @@ mod test {
 
         let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
 
-
         assert_eq!(num_msgs, u8::MAX as usize);
         assert_eq!(
             num_bytes,
@@ -392,7 +374,6 @@ mod test {
                 .map(|x| x.len())
                 .sum::<usize>() as u16
         );
-
 
         let message_buffer: &MessageBuffer =
             bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
@@ -439,13 +420,11 @@ mod test {
 
         let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
 
-
         assert_eq!(num_msgs, 3);
         assert_eq!(
             num_bytes,
             data_bytes[0..3].iter().map(|x| x.len()).sum::<usize>() as u16
         );
-
 
         let message_buffer: &MessageBuffer =
             bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);

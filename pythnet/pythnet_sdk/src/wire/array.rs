@@ -12,11 +12,7 @@
 //! }
 //! ```
 use {
-    serde::{
-        Deserialize,
-        Serialize,
-        Serializer,
-    },
+    serde::{Deserialize, Serialize, Serializer},
     std::mem::MaybeUninit,
 };
 

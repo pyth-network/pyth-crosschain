@@ -1,15 +1,8 @@
 #[cfg(not(feature = "solana-program"))]
-use sha3::{
-    Digest,
-    Keccak256,
-};
+use sha3::{Digest, Keccak256};
 #[cfg(feature = "solana-program")]
 use solana_program::keccak::hashv;
-use {
-    crate::hashers::Hasher,
-    serde::Serialize,
-};
-
+use {crate::hashers::Hasher, serde::Serialize};
 
 #[derive(Clone, Default, Debug, Eq, Hash, PartialEq, Serialize)]
 pub struct Keccak160 {}

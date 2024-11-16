@@ -1,10 +1,7 @@
 use {
     crate::hashers::Hasher,
     serde::Serialize,
-    sha3::{
-        Digest,
-        Keccak256 as Keccak256Digest,
-    },
+    sha3::{Digest, Keccak256 as Keccak256Digest},
 };
 
 #[derive(Clone, Default, Debug, Eq, PartialEq, Serialize)]
@@ -22,10 +19,7 @@ impl Hasher for Keccak256 {
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::*,
-        crate::hashers::Hasher,
-    };
+    use {super::*, crate::hashers::Hasher};
 
     #[test]
     fn test_keccak256() {

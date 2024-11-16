@@ -4,16 +4,9 @@
 use {
     crate::{
         error::Error,
-        state::{
-            Price,
-            PriceIdentifier,
-            Source,
-        },
+        state::{Price, PriceIdentifier, Source},
     },
-    near_sdk::{
-        ext_contract,
-        json_types::U128,
-    },
+    near_sdk::{ext_contract, json_types::U128},
     std::collections::HashMap,
 };
 
@@ -31,6 +24,7 @@ pub trait Wormhole {
 pub trait Pyth {
     // See the implementation for details. The `data` parameter can be found by using a Hermes
     // price feed endpoint, and should be fed in as base64.
+    #[handle_result]
     fn update_price_feeds(&mut self, data: String) -> Result<(), Error>;
     fn get_update_fee_estimate(&self, vaa: String) -> U128;
     fn get_sources(&self) -> Vec<Source>;

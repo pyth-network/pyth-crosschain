@@ -1,21 +1,10 @@
 use {
-    super::executor_simulator::{
-        ExecutorAttack,
-        ExecutorBench,
-        VaaAttack,
-    },
+    super::executor_simulator::{ExecutorAttack, ExecutorBench, VaaAttack},
     crate::error::ExecutorError,
-    anchor_lang::prelude::{
-        ErrorCode,
-        ProgramError,
-        Pubkey,
-        Rent,
-    },
+    anchor_lang::prelude::{ErrorCode, ProgramError, Pubkey, Rent},
     solana_sdk::{
-        instruction::InstructionError,
-        native_token::LAMPORTS_PER_SOL,
-        system_instruction::transfer,
-        transaction::TransactionError,
+        instruction::InstructionError, native_token::LAMPORTS_PER_SOL,
+        system_instruction::transfer, transaction::TransactionError,
     },
 };
 
@@ -39,7 +28,7 @@ async fn test_adversarial() {
     // Setup VAAs
     let vaa_account_valid = bench.add_vaa_account(
         &emitter,
-        &vec![transfer(
+        &[transfer(
             &executor_key,
             &receiver,
             Rent::default().minimum_balance(0),
@@ -48,7 +37,7 @@ async fn test_adversarial() {
     );
     let vaa_account_wrong_data = bench.add_vaa_account(
         &emitter,
-        &vec![transfer(
+        &[transfer(
             &executor_key,
             &receiver,
             Rent::default().minimum_balance(0),
@@ -57,7 +46,7 @@ async fn test_adversarial() {
     );
     let vaa_account_wrong_owner = bench.add_vaa_account(
         &emitter,
-        &vec![transfer(
+        &[transfer(
             &executor_key,
             &receiver,
             Rent::default().minimum_balance(0),
@@ -66,7 +55,7 @@ async fn test_adversarial() {
     );
     let vaa_account_wrong_emitter_chain = bench.add_vaa_account(
         &emitter,
-        &vec![transfer(
+        &[transfer(
             &executor_key,
             &receiver,
             Rent::default().minimum_balance(0),
@@ -76,7 +65,7 @@ async fn test_adversarial() {
 
     let vaa_account_wrong_vaa_magic = bench.add_vaa_account(
         &emitter,
-        &vec![transfer(
+        &[transfer(
             &executor_key,
             &receiver,
             Rent::default().minimum_balance(0),
@@ -86,7 +75,7 @@ async fn test_adversarial() {
 
     // The goal of this account is creating a claim_record that the attacker is going to try to use to impersonate
     // the right claim_record
-    let vaa_account_valid_2 = bench.add_vaa_account(&emitter_2, &vec![], VaaAttack::None);
+    let vaa_account_valid_2 = bench.add_vaa_account(&emitter_2, &[], VaaAttack::None);
 
     let mut sim = bench.start().await;
     sim.airdrop(&executor_key, LAMPORTS_PER_SOL).await.unwrap();

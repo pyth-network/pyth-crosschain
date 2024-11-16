@@ -1,11 +1,7 @@
 use {
-    crate::{
-        state::*,
-        MESSAGE,
-    },
+    crate::{state::*, MESSAGE},
     anchor_lang::prelude::*,
 };
-
 
 pub fn put_all<'info>(
     ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
@@ -39,5 +35,5 @@ pub struct PutAll<'info> {
         seeds = [whitelist_verifier.cpi_caller_auth.key().as_ref(), MESSAGE.as_bytes(), base_account_key.as_ref()],
         bump = message_buffer.load()?.bump,
     )]
-    pub message_buffer:     AccountLoader<'info, MessageBuffer>,
+    pub message_buffer: AccountLoader<'info, MessageBuffer>,
 }

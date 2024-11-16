@@ -1,9 +1,5 @@
 use {
-    crate::{
-        state::*,
-        MESSAGE,
-        WHITELIST,
-    },
+    crate::{state::*, MESSAGE, WHITELIST},
     anchor_lang::prelude::*,
 };
 

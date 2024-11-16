@@ -1,9 +1,6 @@
 use anchor_lang::{
     account,
-    prelude::{
-        borsh::BorshSchema,
-        *,
-    },
+    prelude::{borsh::BorshSchema, *},
 };
 
 #[account]

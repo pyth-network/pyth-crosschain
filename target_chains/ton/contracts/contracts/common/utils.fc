@@ -3,6 +3,7 @@
 ;; Built-in assembly functions
 int keccak256(slice s) asm "1 PUSHINT HASHEXT_KECCAK256"; ;; Keccak-256 hash function
 int keccak256_tuple(tuple t) asm "DUP TLEN EXPLODEVAR HASHEXT_KECCAK256";
+int tlen(tuple t) asm "TLEN";
 
 const MAX_BITS = 1016;
 

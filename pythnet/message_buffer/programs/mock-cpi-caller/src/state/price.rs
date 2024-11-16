@@ -1,13 +1,7 @@
 use {
     crate::{
-        instructions::{
-            AddPriceParams,
-            UpdatePriceParams,
-        },
-        state::{
-            PythAccount,
-            PythAccountType,
-        },
+        instructions::{AddPriceParams, UpdatePriceParams},
+        state::{PythAccount, PythAccountType},
     },
     anchor_lang::prelude::*,
 };
@@ -15,12 +9,12 @@ use {
 #[account(zero_copy)]
 #[derive(InitSpace)]
 pub struct PriceAccount {
-    pub id:         u64,
-    pub price:      u64,
+    pub id: u64,
+    pub price: u64,
     pub price_expo: u64,
-    pub ema:        u64,
-    pub ema_expo:   u64,
-    pub comp_:      [Pubkey; 32],
+    pub ema: u64,
+    pub ema_expo: u64,
+    pub comp_: [Pubkey; 32],
 }
 
 impl PriceAccount {

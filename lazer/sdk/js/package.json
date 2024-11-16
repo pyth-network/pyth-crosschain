@@ -1,0 +1,54 @@
+{
+  "name": "@pythnetwork/pyth-lazer-sdk",
+  "version": "0.1.0",
+  "description": "Pyth Lazer SDK",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "scripts": {
+    "build:cjs": "tsc --project tsconfig.json --verbatimModuleSyntax false --module commonjs --outDir ./dist/cjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "build:esm": "tsc --project tsconfig.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "example": "node --loader ts-node/esm examples/index.js",
+    "test": "pnpm run test:lint && pnpm run build:cjs && pnpm run build:esm",
+    "doc": "typedoc --out docs/typedoc src",
+    "test:lint": "eslint .",
+    "fix:lint": "eslint --fix .",
+    "publish": "pnpm run script -- publish"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "^3.0.0",
+    "@cprussin/tsconfig": "^3.0.1",
+    "@eslint/js": "^9.12.0",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^18.19.54",
+    "@types/ws": "^8.5.12",
+    "eslint": "^9.12.0",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.26.8",
+    "typescript": ">=5.5.0 < 5.6.0",
+    "typescript-eslint": "^8.8.0"
+  },
+  "bugs": {
+    "url": "https://github.com/pyth-lazer-sdk/pyth-lazer-sdk/issues"
+  },
+  "type": "module",
+  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "lazer/sdk/js"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "isomorphic-ws": "^5.0.0",
+    "ws": "^8.18.0"
+  }
+}

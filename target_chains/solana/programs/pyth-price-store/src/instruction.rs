@@ -1,7 +1,4 @@
-use bytemuck::{
-    Pod,
-    Zeroable,
-};
+use bytemuck::{Pod, Zeroable};
 
 /// Seed used to derive the config account.
 pub const CONFIG_SEED: &str = "CONFIG";
@@ -54,18 +51,18 @@ pub struct InitializeArgs {
     pub config_bump: u8,
     /// The signature of the authority account will be required to execute
     /// `InitializePublisher` instruction.
-    pub authority:   [u8; 32],
+    pub authority: [u8; 32],
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C, packed)]
 pub struct InitializePublisherArgs {
     /// PDA bump of the config account.
-    pub config_bump:           u8,
+    pub config_bump: u8,
     /// PDA bump of the publisher config account.
     pub publisher_config_bump: u8,
     /// The publisher to be initialized.
-    pub publisher:             [u8; 32],
+    pub publisher: [u8; 32],
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]

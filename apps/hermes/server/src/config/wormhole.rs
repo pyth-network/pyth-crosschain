@@ -1,7 +1,4 @@
-use {
-    clap::Args,
-    solana_sdk::pubkey::Pubkey,
-};
+use {clap::Args, solana_sdk::pubkey::Pubkey};
 
 const DEFAULT_CONTRACT_ADDR: &str = "H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU";
 

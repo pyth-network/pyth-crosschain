@@ -1,12 +1,11 @@
+// We can't do much about the size of `anchor_lang::error::Error`.
+#![allow(clippy::result_large_err)]
+
 pub mod instructions;
 mod state;
 
-
 use {
-    crate::{
-        MESSAGE,
-        WHITELIST,
-    },
+    crate::{MESSAGE, WHITELIST},
     anchor_lang::prelude::*,
     instructions::*,
     state::*,
@@ -17,7 +16,6 @@ declare_id!("7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
 #[program]
 pub mod message_buffer {
     use super::*;
-
 
     /// Initializes the whitelist and sets it's admin. Once initialized,
     /// the admin must sign all further changes to the whitelist.
@@ -51,7 +49,6 @@ pub mod message_buffer {
         Ok(())
     }
 
-
     /// Put messages into the Accumulator. All messages put for the same
     /// `base_account_key` go into the same buffer PDA. The PDA's address is
     /// `[allowed_program_auth, MESSAGE, base_account_key]`, where `allowed_program_auth`
@@ -82,7 +79,6 @@ pub mod message_buffer {
     ) -> Result<()> {
         instructions::put_all(ctx, base_account_key, messages)
     }
-
 
     /// Initializes the buffer account with the `target_size`
     ///
@@ -148,7 +144,7 @@ pub struct Initialize<'info> {
     pub admin: Signer<'info>,
 
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub payer: Signer<'info>,
     #[account(
         init,
         payer = payer,
@@ -156,14 +152,13 @@ pub struct Initialize<'info> {
         bump,
         space = 8 + Whitelist::INIT_SPACE,
     )]
-    pub whitelist:      Account<'info, Whitelist>,
+    pub whitelist: Account<'info, Whitelist>,
     pub system_program: Program<'info, System>,
 }
 
-
 #[derive(Accounts)]
 pub struct UpdateWhitelist<'info> {
-    pub admin:     Signer<'info>,
+    pub admin: Signer<'info>,
     #[account(
         mut,
         seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
@@ -172,7 +167,6 @@ pub struct UpdateWhitelist<'info> {
     )]
     pub whitelist: Account<'info, Whitelist>,
 }
-
 
 #[error_code]
 pub enum MessageBufferError {

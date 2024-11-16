@@ -1,21 +1,11 @@
 use {
     crate::state::PythDataSource,
-    byteorder::{
-        BigEndian,
-        ReadBytesExt,
-        WriteBytesExt,
-    },
+    byteorder::{BigEndian, ReadBytesExt, WriteBytesExt},
     cosmwasm_std::Binary,
     pyth_wormhole_attester_sdk::ErrBox,
     schemars::JsonSchema,
-    serde::{
-        Deserialize,
-        Serialize,
-    },
-    std::{
-        convert::TryFrom,
-        io::Write,
-    },
+    serde::{Deserialize, Serialize},
+    std::{convert::TryFrom, io::Write},
 };
 
 const PYTH_GOVERNANCE_MAGIC: &[u8] = b"PTGM";
@@ -27,7 +17,7 @@ pub enum GovernanceModule {
     /// The PythNet executor contract. Messages sent to the
     Executor = 0,
     /// A target chain contract (like this one!)
-    Target   = 1,
+    Target = 1,
 }
 
 impl GovernanceModule {
@@ -80,8 +70,8 @@ pub enum GovernanceAction {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct GovernanceInstruction {
-    pub module:          GovernanceModule,
-    pub action:          GovernanceAction,
+    pub module: GovernanceModule,
+    pub action: GovernanceAction,
     pub target_chain_id: u16,
 }
 
@@ -230,18 +220,14 @@ impl GovernanceInstruction {
 
 #[cfg(test)]
 mod test {
-    use crate::governance::{
-        GovernanceAction,
-        GovernanceInstruction,
-        GovernanceModule,
-    };
+    use crate::governance::{GovernanceAction, GovernanceInstruction, GovernanceModule};
 
     #[test]
     fn test_payload_wrong_size() {
         let instruction = GovernanceInstruction {
-            module:          GovernanceModule::Target,
-            action:          GovernanceAction::SetFee {
-                val:  100,
+            module: GovernanceModule::Target,
+            action: GovernanceAction::SetFee {
+                val: 100,
                 expo: 200,
             },
             target_chain_id: 7,

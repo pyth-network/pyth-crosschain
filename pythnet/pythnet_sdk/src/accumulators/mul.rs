@@ -2,10 +2,7 @@
 
 use crate::{
     accumulators::Accumulator,
-    hashers::{
-        prime::PrimeHasher,
-        Hasher,
-    },
+    hashers::{prime::PrimeHasher, Hasher},
 };
 
 /// A multiplication based Accumulator
@@ -17,7 +14,7 @@ use crate::{
 /// proved to be a member.
 pub struct MulAccumulator<H: Hasher> {
     pub accumulator: H::Hash,
-    pub items:       Vec<H::Hash>,
+    pub items: Vec<H::Hash>,
 }
 
 impl<'a> Accumulator<'a> for MulAccumulator<PrimeHasher> {
@@ -38,7 +35,7 @@ impl<'a> Accumulator<'a> for MulAccumulator<PrimeHasher> {
     fn from_set(items: impl Iterator<Item = &'a [u8]>) -> Option<Self> {
         let primes: Vec<[u8; 16]> = items.map(|i| PrimeHasher::hashv(&[i])).collect();
         Some(Self {
-            items:       primes.clone(),
+            items: primes.clone(),
             accumulator: primes.into_iter().reduce(|acc, v| {
                 u128::to_be_bytes(u128::from_be_bytes(acc) * u128::from_be_bytes(v))
             })?,
@@ -48,10 +45,7 @@ impl<'a> Accumulator<'a> for MulAccumulator<PrimeHasher> {
 
 #[cfg(test)]
 mod test {
-    use {
-        super::*,
-        std::collections::HashSet,
-    };
+    use {super::*, std::collections::HashSet};
 
     #[test]
     fn test_membership() {

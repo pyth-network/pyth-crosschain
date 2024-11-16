@@ -15,6 +15,30 @@ const int WORMHOLE_MERKLE_UPDATE_TYPE = 0;
 
 const int PRICE_FEED_MESSAGE_TYPE = 0;
 
+;; Bit layout: (https://docs.ton.org/v3/documentation/smart-contracts/message-management/sending-messages#message-layout)
+;; 1  - extra-currencies dictionary (0 = empty)
+;; 4  - ihr_fee (VarUInteger 16)
+;; 4  - fwd_fee (VarUInteger 16)
+;; 64 - created_lt (uint64)
+;; 32 - created_at (uint32)
+;; 1  - init field presence (0 = no init)
+;; 1  - body serialization (0 = in-place)
+const int MSG_SERIALIZE_BITS = 1 + 4 + 4 + 64 + 32 + 1 + 1;  ;; 107 bits total
+
+;; Structure:
+;; - 256 bits: price_id
+;; Price:
+;;   - 64 bits: price
+;;   - 64 bits: confidence
+;;   - 32 bits: exponent
+;;   - 64 bits: publish_time
+;; EMA Price:
+;;   - 64 bits: price
+;;   - 64 bits: confidence
+;;   - 32 bits: exponent
+;;   - 64 bits: publish_time
+const int PRICE_FEED_BITS = 256 + 224 + 224;
+
 {-
   The main workchain ID in TON. Currently, TON has two blockchains:
   1. Masterchain: Used for system-level operations and consensus.

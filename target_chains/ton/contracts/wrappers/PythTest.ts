@@ -3,6 +3,7 @@ import {
   Cell,
   contractAddress,
   ContractProvider,
+  parseTuple,
   Sender,
   SendMode,
   toNano,
@@ -194,6 +195,81 @@ export class PythTest extends BaseWrapper {
   async getDataSources(provider: ContractProvider) {
     const result = await provider.get("test_get_data_sources", []);
     return parseDataSources(result.stack.readCell());
+  }
+
+  private createPriceFeedMessage(
+    op: number,
+    updateData: Buffer,
+    priceIds: HexString[],
+    time1: number,
+    time2: number
+  ): Cell {
+    // Create a buffer for price IDs: 1 byte length + (32 bytes per ID)
+    const priceIdsBuffer = Buffer.alloc(1 + priceIds.length * 32);
+    priceIdsBuffer.writeUint8(priceIds.length, 0);
+
+    // Write each price ID as a 32-byte value
+    priceIds.forEach((id, index) => {
+      // Remove '0x' prefix if present and pad to 64 hex chars (32 bytes)
+      const hexId = id.replace("0x", "").padStart(64, "0");
+      Buffer.from(hexId, "hex").copy(priceIdsBuffer, 1 + index * 32);
+    });
+
+    return beginCell()
+      .storeUint(op, 32)
+      .storeRef(createCellChain(updateData))
+      .storeRef(createCellChain(priceIdsBuffer))
+      .storeUint(time1, 64)
+      .storeUint(time2, 64)
+      .endCell();
+  }
+
+  async sendParsePriceFeedUpdates(
+    provider: ContractProvider,
+    via: Sender,
+    updateData: Buffer,
+    updateFee: bigint,
+    priceIds: HexString[],
+    minPublishTime: number,
+    maxPublishTime: number
+  ) {
+    const messageCell = this.createPriceFeedMessage(
+      5, // OP_PARSE_PRICE_FEED_UPDATES
+      updateData,
+      priceIds,
+      minPublishTime,
+      maxPublishTime
+    );
+
+    await provider.internal(via, {
+      value: updateFee,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageCell,
+    });
+  }
+
+  async sendParseUniquePriceFeedUpdates(
+    provider: ContractProvider,
+    via: Sender,
+    updateData: Buffer,
+    updateFee: bigint,
+    priceIds: HexString[],
+    publishTime: number,
+    maxStaleness: number
+  ) {
+    const messageCell = this.createPriceFeedMessage(
+      6, // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+      updateData,
+      priceIds,
+      publishTime,
+      maxStaleness
+    );
+
+    await provider.internal(via, {
+      value: updateFee,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageCell,
+    });
   }
 
   async getNewFunction(provider: ContractProvider) {
