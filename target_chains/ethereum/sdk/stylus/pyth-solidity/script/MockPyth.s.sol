@@ -40,8 +40,6 @@ contract MockPythScript is Script {
             int32 expo = int32(uint32(_deriveRandom(randomBase, 3) % 40));
             int64 emaPrice = int64(uint64(_deriveRandom(randomBase, 4) % 10));
             uint64 emaConf = uint64(_deriveRandom(randomBase, 5) % 10);
-            string memory str = string(abi.encodePacked("block.timestamp :",uint256(block.timestamp)));
-            console.log(str);
             priceData[i] = pyth_contract.createPriceFeedUpdateData(
                 priceIds[i],
                 price,

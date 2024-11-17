@@ -14,27 +14,25 @@ cd "nitro-testnode"
 
 cd ..
 cd "pyth-solidity"
-# deployed_to=$(
+deployed_to=$(
   forge script ./script/MockPyth.s.sol:MockPythScript \
   --rpc-url "$RPC_URL" \
   --private-key "$PRIVATE_KEY" \
-  --broadcast
-  # \
- # | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1
-#)
+  --broadcast \ | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1
+)
 
-# export MOCK_PYTH_ADDRESS=$deployed_to
-# cd ..
-# # Output the captured address
+export MOCK_PYTH_ADDRESS=$deployed_to
+cd ..
+# Output the captured address
 
-# NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-01-01}
-# cargo +"$NIGHTLY_TOOLCHAIN" build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
+NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-01-01}
+cargo +"$NIGHTLY_TOOLCHAIN" build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
 
-# # No need to compile benchmarks with `--release`
-# # since this only runs the benchmarking code and the contracts have already been compiled with `--release`
-# cargo run -p benches
+# No need to compile benchmarks with `--release`
+# since this only runs the benchmarking code and the contracts have already been compiled with `--release`
+cargo run -p benches
 
-# echo "NOTE: To measure non cached contract's gas usage correctly,
-#  benchmarks should run on a clean instance of the nitro test node."
-# echo
-# echo "Finished running benches!"
+echo "NOTE: To measure non cached contract's gas usage correctly,
+ benchmarks should run on a clean instance of the nitro test node."
+echo
+echo "Finished running benches!"

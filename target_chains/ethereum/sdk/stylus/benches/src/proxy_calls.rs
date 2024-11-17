@@ -63,7 +63,7 @@ pub async fn run_with(
     let time_frame = uint!(10000_U256);
     let age = uint!(10000_U256);
 
-    let (data, ids) = create_price_feed_update_data_list();
+    let (data, _ids) = create_price_feed_update_data_list();
 
     let _ = receipt!(contract.getPriceUnsafe(id))?;
     let _ = receipt!(contract.getEmaPriceUnsafe(id))?;
@@ -73,15 +73,16 @@ pub async fn run_with(
     let _ = receipt!(contract.getUpdateFee(data.clone()))?;
     let _ = receipt!(contract.updatePriceFeeds(data.clone()))?;
 
+    // I will add updatePriceFeedsIfNecessary benchmark when it's ready
     //println!("{data:?} , {ids:?} ");
-    let _ = contract
-        .updatePriceFeedsIfNecessary(
-            data.clone(),
-            ids.clone(),
-            vec![100, 100, 100],
-        )
-        .send()
-        .await?;
+    // let _ = contract
+    //     .updatePriceFeedsIfNecessary(
+    //         data.clone(),
+    //         ids.clone(),
+    //         vec![100, 100, 100],
+    //     )
+    //     .send()
+    //     .await?;
 
     // IMPORTANT: Order matters!
     use ProxyCall::*;
