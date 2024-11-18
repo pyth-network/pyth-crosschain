@@ -63,18 +63,15 @@ abstract contract Pulse is IPulse, PulseState {
         bytes32[] calldata priceIds
     ) external payable override {
         Request storage req = findActiveRequest(sequenceNumber);
+
+        // Verify priceIds match
         bytes32 providedPriceIdsHash = keccak256(abi.encode(priceIds));
         bytes32 storedPriceIdsHash = req.priceIdsHash;
-
         if (providedPriceIdsHash != storedPriceIdsHash) {
             revert InvalidPriceIds(providedPriceIdsHash, storedPriceIdsHash);
         }
 
-        // Check if there's enough gas left for the callback
-        if (gasleft() < req.callbackGasLimit) {
-            revert InsufficientGas();
-        }
-
+        // Parse price feeds first to measure gas usage
         PythStructs.PriceFeed[] memory priceFeeds = IPyth(_state.pyth)
             .parsePriceFeedUpdates(
                 updateData,
@@ -83,21 +80,23 @@ abstract contract Pulse is IPulse, PulseState {
                 SafeCast.toUint64(req.publishTime)
             );
 
-        uint256 publishTime = priceFeeds[0].price.publishTime;
+        // Check if enough gas remains for the callback
+        if (gasleft() < req.callbackGasLimit) {
+            revert InsufficientGas();
+        }
 
         try
             IPulseConsumer(req.requester).pulseCallback{
                 gas: req.callbackGasLimit
-            }(sequenceNumber, msg.sender, publishTime, priceIds)
+            }(sequenceNumber, msg.sender, priceFeeds)
         {
             // Callback succeeded
-            emitPriceUpdate(sequenceNumber, publishTime, priceIds, priceFeeds);
+            emitPriceUpdate(sequenceNumber, priceIds, priceFeeds);
         } catch Error(string memory reason) {
             // Explicit revert/require
             emit PriceUpdateCallbackFailed(
                 sequenceNumber,
                 msg.sender,
-                publishTime,
                 priceIds,
                 req.requester,
                 reason
@@ -107,7 +106,6 @@ abstract contract Pulse is IPulse, PulseState {
             emit PriceUpdateCallbackFailed(
                 sequenceNumber,
                 msg.sender,
-                publishTime,
                 priceIds,
                 req.requester,
                 "low-level error (possibly out of gas)"
@@ -119,7 +117,6 @@ abstract contract Pulse is IPulse, PulseState {
 
     function emitPriceUpdate(
         uint64 sequenceNumber,
-        uint256 publishTime,
         bytes32[] memory priceIds,
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal {
@@ -138,7 +135,6 @@ abstract contract Pulse is IPulse, PulseState {
         emit PriceUpdateExecuted(
             sequenceNumber,
             msg.sender,
-            publishTime,
             priceIds,
             prices,
             conf,
