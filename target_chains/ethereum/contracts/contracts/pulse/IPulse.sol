@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.0;
 
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "./PulseEvents.sol";
 import "./PulseState.sol";
 
@@ -9,8 +10,7 @@ interface IPulseConsumer {
     function pulseCallback(
         uint64 sequenceNumber,
         address updater,
-        uint256 publishTime,
-        bytes32[] calldata priceIds
+        PythStructs.PriceFeed[] memory priceFeeds
     ) external;
 }
 

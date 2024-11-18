@@ -9,7 +9,6 @@ interface PulseEvents {
     event PriceUpdateExecuted(
         uint64 indexed sequenceNumber,
         address indexed updater,
-        uint256 publishTime,
         bytes32[] priceIds,
         int64[] prices,
         uint64[] conf,
@@ -22,7 +21,6 @@ interface PulseEvents {
     event PriceUpdateCallbackFailed(
         uint64 indexed sequenceNumber,
         address indexed updater,
-        uint256 publishTime,
         bytes32[] priceIds,
         address requester,
         string reason
