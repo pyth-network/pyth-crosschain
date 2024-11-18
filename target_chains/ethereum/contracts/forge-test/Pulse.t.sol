@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "../contracts/pulse/PulseUpgradeable.sol";
 import "../contracts/pulse/IPulse.sol";
@@ -13,19 +14,26 @@ import "../contracts/pulse/PulseErrors.sol";
 contract MockPulseConsumer is IPulseConsumer {
     uint64 public lastSequenceNumber;
     address public lastUpdater;
-    uint256 public lastPublishTime;
-    bytes32[] public lastPriceIds;
+    PythStructs.PriceFeed[] private _lastPriceFeeds;
 
     function pulseCallback(
         uint64 sequenceNumber,
         address updater,
-        uint256 publishTime,
-        bytes32[] calldata priceIds
+        PythStructs.PriceFeed[] memory priceFeeds
     ) external override {
         lastSequenceNumber = sequenceNumber;
         lastUpdater = updater;
-        lastPublishTime = publishTime;
-        lastPriceIds = priceIds;
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            _lastPriceFeeds.push(priceFeeds[i]);
+        }
+    }
+
+    function lastPriceFeeds()
+        external
+        view
+        returns (PythStructs.PriceFeed[] memory)
+    {
+        return _lastPriceFeeds;
     }
 }
 
@@ -33,8 +41,7 @@ contract FailingPulseConsumer is IPulseConsumer {
     function pulseCallback(
         uint64,
         address,
-        uint256,
-        bytes32[] calldata
+        PythStructs.PriceFeed[] memory
     ) external pure override {
         revert("callback failed");
     }
@@ -46,8 +53,7 @@ contract CustomErrorPulseConsumer is IPulseConsumer {
     function pulseCallback(
         uint64,
         address,
-        uint256,
-        bytes32[] calldata
+        PythStructs.PriceFeed[] memory
     ) external pure override {
         revert CustomError("callback failed");
     }
@@ -278,7 +284,6 @@ contract PulseTest is Test, PulseEvents {
         emit PriceUpdateExecuted(
             sequenceNumber,
             updater,
-            publishTime,
             priceIds,
             expectedPrices,
             expectedConf,
@@ -294,7 +299,22 @@ contract PulseTest is Test, PulseEvents {
 
         // Verify callback was executed
         assertEq(consumer.lastSequenceNumber(), sequenceNumber);
-        assertEq(consumer.lastPublishTime(), publishTime);
+
+        // Compare price feeds array length
+        PythStructs.PriceFeed[] memory lastFeeds = consumer.lastPriceFeeds();
+        assertEq(lastFeeds.length, priceFeeds.length);
+
+        // Compare each price feed
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            assertEq(lastFeeds[i].id, priceFeeds[i].id);
+            assertEq(lastFeeds[i].price.price, priceFeeds[i].price.price);
+            assertEq(lastFeeds[i].price.conf, priceFeeds[i].price.conf);
+            assertEq(lastFeeds[i].price.expo, priceFeeds[i].price.expo);
+            assertEq(
+                lastFeeds[i].price.publishTime,
+                priceFeeds[i].price.publishTime
+            );
+        }
     }
 
     function testExecuteCallbackFailure() public {
@@ -316,7 +336,6 @@ contract PulseTest is Test, PulseEvents {
         emit PriceUpdateCallbackFailed(
             sequenceNumber,
             updater,
-            publishTime,
             priceIds,
             address(failingConsumer),
             "callback failed"
@@ -345,7 +364,6 @@ contract PulseTest is Test, PulseEvents {
         emit PriceUpdateCallbackFailed(
             sequenceNumber,
             updater,
-            publishTime,
             priceIds,
             address(failingConsumer),
             "low-level error (possibly out of gas)"
@@ -370,10 +388,14 @@ contract PulseTest is Test, PulseEvents {
         mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        // Try executing with only 10K gas when 1M is required
+        // Try executing with only 100K gas when 1M is required
         vm.prank(updater);
         vm.expectRevert(InsufficientGas.selector);
-        pulse.executeCallback{gas: 10000}(sequenceNumber, updateData, priceIds); // Will fail because gasleft() < callbackGasLimit
+        pulse.executeCallback{gas: 100000}(
+            sequenceNumber,
+            updateData,
+            priceIds
+        ); // Will fail because gasleft() < callbackGasLimit
     }
 
     function testExecuteCallbackWithFutureTimestamp() public {
@@ -399,8 +421,17 @@ contract PulseTest is Test, PulseEvents {
         // Should succeed because we're simulating receiving future-dated price updates
         pulse.executeCallback(sequenceNumber, updateData, priceIds);
 
-        // Verify the callback was executed with future timestamp
-        assertEq(consumer.lastPublishTime(), futureTime);
+        // Compare price feeds array length
+        PythStructs.PriceFeed[] memory lastFeeds = consumer.lastPriceFeeds();
+        assertEq(lastFeeds.length, priceFeeds.length);
+
+        // Compare each price feed publish time
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            assertEq(
+                lastFeeds[i].price.publishTime,
+                priceFeeds[i].price.publishTime
+            );
+        }
     }
 
     function testDoubleExecuteCallback() public {
