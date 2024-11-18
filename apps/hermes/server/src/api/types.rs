@@ -244,6 +244,11 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
         }
     }
 }
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct PriceFeedTwap {
+    pub id: PriceIdentifier,
+    pub twap_price: Price,
+}
 
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone, ToSchema)]
 pub struct ParsedPublisherStakeCapsUpdate {
@@ -261,6 +266,13 @@ pub struct LatestPublisherStakeCapsUpdateDataResponse {
     pub binary: BinaryUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parsed: Option<Vec<ParsedPublisherStakeCapsUpdate>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct TwapsResponse {
+    pub binary: BinaryUpdate,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parsed: Option<Vec<PriceFeedTwap>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

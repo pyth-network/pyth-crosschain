@@ -1,7 +1,10 @@
+use crate::api::types::PriceFeedTwap;
 #[cfg(test)]
 use mock_instant::{SystemTime, UNIX_EPOCH};
+use pythnet_sdk::messages::TwapMessage;
 #[cfg(not(test))]
 use std::time::{SystemTime, UNIX_EPOCH};
+
 use {
     self::wormhole_merkle::{
         construct_message_states_proofs, construct_update_data,
@@ -190,6 +193,12 @@ pub struct PublisherStakeCapsWithUpdateData {
     pub update_data: Vec<Vec<u8>>,
 }
 
+#[derive(Debug)]
+pub struct TwapsWithUpdateData {
+    pub twaps: Vec<PriceFeedTwap>,
+    pub update_data: Vec<Vec<u8>>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ReadinessMetadata {
     pub has_completed_recently: bool,
@@ -220,6 +229,12 @@ where
     async fn get_latest_publisher_stake_caps_with_update_data(
         &self,
     ) -> Result<PublisherStakeCapsWithUpdateData>;
+    async fn get_twaps_with_update_data(
+        &self,
+        price_ids: &[PriceIdentifier],
+        start_time: RequestTime,
+        end_time: RequestTime,
+    ) -> Result<TwapsWithUpdateData>;
 }
 
 /// Allow downcasting State into CacheState for functions that depend on the `Cache` service.
@@ -362,6 +377,29 @@ where
             .observe(slot, metrics::Event::CompletedUpdate);
 
         Ok(())
+    }
+
+    async fn get_twaps_with_update_data(
+        &self,
+        price_ids: &[PriceIdentifier],
+        start_time: RequestTime,
+        end_time: RequestTime,
+    ) -> Result<TwapsWithUpdateData> {
+        match get_verified_twaps_with_update_data(
+            self,
+            price_ids,
+            start_time.clone(),
+            end_time.clone(),
+        )
+        .await
+        {
+            Ok(twaps_with_update_data) => Ok(twaps_with_update_data),
+            Err(e) => {
+                // TODO: Hit benchmarks if data not found in the cache
+                tracing::debug!("Update data not found in cache, falling back to Benchmarks");
+                Err(e)
+            }
+        }
     }
 
     async fn get_price_feeds_with_update_data(
@@ -565,6 +603,108 @@ where
     Ok(PriceFeedsWithUpdateData {
         price_feeds,
         update_data,
+    })
+}
+
+async fn get_verified_twaps_with_update_data<S>(
+    state: &S,
+    price_ids: &[PriceIdentifier],
+    start_time: RequestTime,
+    end_time: RequestTime,
+) -> Result<TwapsWithUpdateData>
+where
+    S: Cache,
+{
+    // TODO: what if some messages aren't in the cache?
+    let start_messages = state
+        .fetch_message_states(
+            price_ids
+                .iter()
+                .map(|price_id| price_id.to_bytes())
+                .collect(),
+            start_time,
+            MessageStateFilter::Only(MessageType::TwapMessage),
+        )
+        .await?;
+
+    let end_messages = state
+        .fetch_message_states(
+            price_ids
+                .iter()
+                .map(|price_id| price_id.to_bytes())
+                .collect(),
+            end_time,
+            MessageStateFilter::Only(MessageType::TwapMessage),
+        )
+        .await?;
+
+    if start_messages.len() != end_messages.len() {
+        return Err(anyhow!(
+            "Failed to fetch price updates for provided price IDs"
+        ));
+    }
+
+    let twaps: Vec<PriceFeedTwap> = start_messages
+        .iter()
+        .zip(end_messages.iter())
+        .map(
+            |(start_message, end_message)| match (&start_message.message, &end_message.message) {
+                (Message::TwapMessage(start_twap), Message::TwapMessage(end_twap)) => {
+                    Ok(PriceFeedTwap {
+                        twap_price: calculate_twap(start_twap, end_twap)?,
+                        id: PriceIdentifier::new(start_message.message.feed_id()),
+                    })
+                }
+                _ => Err(anyhow!("Invalid message type for TWAP calculation")),
+            },
+        )
+        .collect::<Result<Vec<_>>>()?;
+
+    // TODO: does it make sense to include binary updates here?
+    // Currently this returns the binary update data for all the messages
+    // involved in creating the TWAPs.
+    let all_messages: Vec<_> = end_messages
+        .into_iter()
+        .chain(start_messages)
+        .map(|m| m.into())
+        .collect();
+    let update_data = construct_update_data(all_messages)?;
+
+    Ok(TwapsWithUpdateData { twaps, update_data })
+}
+
+fn calculate_twap(start_message: &TwapMessage, end_message: &TwapMessage) -> Result<Price> {
+    if end_message.publish_slot <= start_message.publish_slot {
+        return Err(anyhow!(
+            "Cannot calculate TWAP - end slot must be greater than start slot"
+        ));
+    }
+
+    let slot_diff = end_message
+        .publish_slot
+        .checked_sub(start_message.publish_slot)
+        .ok_or_else(|| anyhow!("Slot difference overflow"))?;
+
+    let price_diff = end_message
+        .cumulative_price
+        .checked_sub(start_message.cumulative_price)
+        .ok_or_else(|| anyhow!("Price difference overflow"))?;
+
+    let conf_diff = end_message
+        .cumulative_conf
+        .checked_sub(start_message.cumulative_conf)
+        .ok_or_else(|| anyhow!("Confidence difference overflow"))?;
+
+    // Perform division before casting to maintain precision
+    // Cast slot_diff to the same type as price / conf diff before division
+    let price = (price_diff / slot_diff as i128) as i64;
+    let conf = (conf_diff / slot_diff as u128) as u64;
+
+    Ok(Price {
+        price,
+        conf,
+        expo: end_message.exponent,
+        publish_time: end_message.publish_time,
     })
 }
 
