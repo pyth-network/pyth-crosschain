@@ -22,4 +22,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm build:ci
-      - run: pnpm publish
+      - run: pnpm run publish
