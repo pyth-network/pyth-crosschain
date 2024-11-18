@@ -24,9 +24,8 @@ interface IPulse is PulseEvents {
 
     function executeCallback(
         uint64 sequenceNumber,
-        bytes32[] calldata priceIds,
         bytes[] calldata updateData,
-        uint256 callbackGasLimit
+        bytes32[] calldata priceIds
     ) external payable;
 
     // Getters

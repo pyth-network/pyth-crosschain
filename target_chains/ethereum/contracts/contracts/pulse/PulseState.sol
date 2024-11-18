@@ -9,7 +9,7 @@ contract PulseState {
     struct Request {
         uint64 sequenceNumber;
         uint256 publishTime;
-        bytes32[] priceIds;
+        bytes32 priceIdsHash;
         uint256 callbackGasLimit;
         address requester;
     }
