@@ -190,7 +190,7 @@ contract PulseTest is Test, PulseEvents {
         PulseState.Request memory expectedRequest = PulseState.Request({
             sequenceNumber: 1,
             publishTime: publishTime,
-            priceIds: priceIds,
+            priceIdsHash: keccak256(abi.encode(priceIds)),
             callbackGasLimit: CALLBACK_GAS_LIMIT,
             requester: address(consumer)
         });
@@ -209,10 +209,7 @@ contract PulseTest is Test, PulseEvents {
         PulseState.Request memory lastRequest = pulse.getRequest(1);
         assertEq(lastRequest.sequenceNumber, expectedRequest.sequenceNumber);
         assertEq(lastRequest.publishTime, expectedRequest.publishTime);
-        assertEq(
-            keccak256(abi.encode(lastRequest.priceIds)),
-            keccak256(abi.encode(expectedRequest.priceIds))
-        );
+        assertEq(lastRequest.priceIdsHash, expectedRequest.priceIdsHash);
         assertEq(
             lastRequest.callbackGasLimit,
             expectedRequest.callbackGasLimit
@@ -245,7 +242,6 @@ contract PulseTest is Test, PulseEvents {
 
         // Fund the consumer contract
         vm.deal(address(consumer), 1 gwei);
-
         uint128 totalFee = calculateTotalFee();
 
         // Step 1: Make the request as consumer
@@ -278,7 +274,7 @@ contract PulseTest is Test, PulseEvents {
         expectedPublishTimes[1] = publishTime;
 
         // Expect the PriceUpdateExecuted event with all price data
-        vm.expectEmit(true, true, false, true);
+        vm.expectEmit();
         emit PriceUpdateExecuted(
             sequenceNumber,
             updater,
@@ -294,12 +290,7 @@ contract PulseTest is Test, PulseEvents {
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(updater);
-        pulse.executeCallback(
-            sequenceNumber,
-            priceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
 
         // Verify callback was executed
         assertEq(consumer.lastSequenceNumber(), sequenceNumber);
@@ -321,7 +312,7 @@ contract PulseTest is Test, PulseEvents {
         mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit PriceUpdateCallbackFailed(
             sequenceNumber,
             updater,
@@ -332,12 +323,7 @@ contract PulseTest is Test, PulseEvents {
         );
 
         vm.prank(updater);
-        pulse.executeCallback(
-            sequenceNumber,
-            priceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
     }
 
     function testExecuteCallbackCustomErrorFailure() public {
@@ -355,7 +341,7 @@ contract PulseTest is Test, PulseEvents {
         mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit PriceUpdateCallbackFailed(
             sequenceNumber,
             updater,
@@ -366,100 +352,28 @@ contract PulseTest is Test, PulseEvents {
         );
 
         vm.prank(updater);
-        pulse.executeCallback(
-            sequenceNumber,
-            priceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
-    }
-
-    // Test executing callback with mismatched price IDs
-    function testExecuteCallbackWithMismatchedPriceIds() public {
-        (
-            uint64 sequenceNumber,
-            bytes32[] memory originalPriceIds,
-            uint256 publishTime
-        ) = setupConsumerRequest(address(consumer));
-
-        // Create different price IDs array
-        bytes32[] memory differentPriceIds = new bytes32[](1);
-        differentPriceIds[0] = bytes32(uint256(1)); // Different price ID
-
-        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
-            publishTime
-        );
-        mockParsePriceFeedUpdates(priceFeeds);
-        bytes[] memory updateData = createMockUpdateData(priceFeeds);
-
-        vm.prank(updater);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                InvalidPriceIds.selector,
-                differentPriceIds,
-                originalPriceIds
-            )
-        );
-        pulse.executeCallback(
-            sequenceNumber,
-            differentPriceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
     }
 
     function testExecuteCallbackWithInsufficientGas() public {
+        // Setup request with 1M gas limit
         (
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
         ) = setupConsumerRequest(address(consumer));
 
+        // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
         mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
+        // Try executing with only 10K gas when 1M is required
         vm.prank(updater);
-        vm.expectRevert();
-        pulse.executeCallback{gas: 10000}(
-            sequenceNumber,
-            priceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
-    }
-
-    function testExecuteCallbackWithInvalidGasLimit() public {
-        (
-            uint64 sequenceNumber,
-            bytes32[] memory priceIds,
-            uint256 publishTime
-        ) = setupConsumerRequest(address(consumer));
-
-        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
-            publishTime
-        );
-        mockParsePriceFeedUpdates(priceFeeds);
-        bytes[] memory updateData = createMockUpdateData(priceFeeds);
-
-        // Try to execute with different gas limit than what was requested
-        uint256 differentGasLimit = CALLBACK_GAS_LIMIT + 1000;
-        vm.prank(updater);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                InvalidCallbackGasLimit.selector,
-                differentGasLimit,
-                CALLBACK_GAS_LIMIT
-            )
-        );
-        pulse.executeCallback(
-            sequenceNumber,
-            priceIds,
-            updateData,
-            differentGasLimit
-        );
+        vm.expectRevert(InsufficientGas.selector);
+        pulse.executeCallback{gas: 10000}(sequenceNumber, updateData, priceIds); // Will fail because gasleft() < callbackGasLimit
     }
 
     function testExecuteCallbackWithFutureTimestamp() public {
@@ -483,12 +397,7 @@ contract PulseTest is Test, PulseEvents {
 
         vm.prank(updater);
         // Should succeed because we're simulating receiving future-dated price updates
-        pulse.executeCallback(
-            sequenceNumber,
-            priceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
 
         // Verify the callback was executed with future timestamp
         assertEq(consumer.lastPublishTime(), futureTime);
@@ -509,22 +418,12 @@ contract PulseTest is Test, PulseEvents {
 
         // First execution
         vm.prank(updater);
-        pulse.executeCallback(
-            sequenceNumber,
-            priceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
 
         // Second execution should fail
         vm.prank(updater);
         vm.expectRevert(NoSuchRequest.selector);
-        pulse.executeCallback(
-            sequenceNumber,
-            priceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
     }
 
     function testGetFee() public {
@@ -660,5 +559,40 @@ contract PulseTest is Test, PulseEvents {
         vm.prank(feeManager);
         vm.expectRevert("Insufficient balance");
         pulse.withdrawAsFeeManager(1 ether);
+    }
+
+    // Add new test for invalid priceIds
+    function testExecuteCallbackWithInvalidPriceIds() public {
+        bytes32[] memory priceIds = createPriceIds();
+        uint256 publishTime = block.timestamp;
+
+        // Setup request
+        (uint64 sequenceNumber, , ) = setupConsumerRequest(address(consumer));
+
+        // Create different priceIds
+        bytes32[] memory wrongPriceIds = new bytes32[](2);
+        wrongPriceIds[0] = bytes32(uint256(1)); // Different price IDs
+        wrongPriceIds[1] = bytes32(uint256(2));
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockParsePriceFeedUpdates(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Calculate hashes for both arrays
+        bytes32 providedPriceIdsHash = keccak256(abi.encode(wrongPriceIds));
+        bytes32 storedPriceIdsHash = keccak256(abi.encode(priceIds));
+
+        // Should revert when trying to execute with wrong priceIds
+        vm.prank(updater);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InvalidPriceIds.selector,
+                providedPriceIdsHash,
+                storedPriceIdsHash
+            )
+        );
+        pulse.executeCallback(sequenceNumber, updateData, wrongPriceIds);
     }
 }

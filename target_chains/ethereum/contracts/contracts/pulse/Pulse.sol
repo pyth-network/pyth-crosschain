@@ -48,7 +48,7 @@ abstract contract Pulse is IPulse, PulseState {
         Request storage req = allocRequest(requestSequenceNumber);
         req.sequenceNumber = requestSequenceNumber;
         req.publishTime = publishTime;
-        req.priceIds = priceIds;
+        req.priceIdsHash = keccak256(abi.encode(priceIds));
         req.callbackGasLimit = callbackGasLimit;
         req.requester = msg.sender;
 
@@ -59,24 +59,20 @@ abstract contract Pulse is IPulse, PulseState {
 
     function executeCallback(
         uint64 sequenceNumber,
-        bytes32[] calldata priceIds,
         bytes[] calldata updateData,
-        uint256 callbackGasLimit
+        bytes32[] calldata priceIds
     ) external payable override {
         Request storage req = findActiveRequest(sequenceNumber);
+        bytes32 providedPriceIdsHash = keccak256(abi.encode(priceIds));
+        bytes32 storedPriceIdsHash = req.priceIdsHash;
 
-        if (
-            keccak256(abi.encode(req.priceIds)) !=
-            keccak256(abi.encode(priceIds))
-        ) {
-            revert InvalidPriceIds(priceIds, req.priceIds);
+        if (providedPriceIdsHash != storedPriceIdsHash) {
+            revert InvalidPriceIds(providedPriceIdsHash, storedPriceIdsHash);
         }
 
-        if (req.callbackGasLimit != callbackGasLimit) {
-            revert InvalidCallbackGasLimit(
-                callbackGasLimit,
-                req.callbackGasLimit
-            );
+        // Check if there's enough gas left for the callback
+        if (gasleft() < req.callbackGasLimit) {
+            revert InsufficientGas();
         }
 
         PythStructs.PriceFeed[] memory priceFeeds = IPyth(_state.pyth)
@@ -90,12 +86,9 @@ abstract contract Pulse is IPulse, PulseState {
         uint256 publishTime = priceFeeds[0].price.publishTime;
 
         try
-            IPulseConsumer(req.requester).pulseCallback(
-                sequenceNumber,
-                msg.sender,
-                publishTime,
-                priceIds
-            )
+            IPulseConsumer(req.requester).pulseCallback{
+                gas: req.callbackGasLimit
+            }(sequenceNumber, msg.sender, publishTime, priceIds)
         {
             // Callback succeeded
             emitPriceUpdate(sequenceNumber, publishTime, priceIds, priceFeeds);
