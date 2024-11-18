@@ -1,9 +1,9 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
 import os from "os";
+import { HermesClient } from "@pythnetwork/hermes-client";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -67,15 +67,17 @@ async function main() {
 
 // Fetch price update data from Hermes
 async function getPriceUpdateData() {
-  const priceServiceConnection = new PriceServiceConnection(
+  const priceServiceConnection = new HermesClient(
     "https://hermes.pyth.network/",
-    { priceFeedRequestConfig: { binary: true } }
+    {}
   );
 
-  return await priceServiceConnection.getLatestVaas([
-    SOL_PRICE_FEED_ID,
-    ETH_PRICE_FEED_ID,
-  ]);
+  const response = await priceServiceConnection.getLatestPriceUpdates(
+    [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+    { encoding: "base64" }
+  );
+
+  return response.binary.data;
 }
 
 // Load a solana keypair from an id.json file

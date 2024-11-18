@@ -1,5 +1,5 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient, PriceUpdate } from "@pythnetwork/hermes-client";
 import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
@@ -64,17 +64,16 @@ async function main() {
 }
 
 // Fetch price update data from Hermes
-async function getPriceUpdateDataFromOneDayAgo() {
-  const priceServiceConnection = new PriceServiceConnection(
-    "https://hermes.pyth.network/",
-    { priceFeedRequestConfig: { binary: true } }
-  );
+async function getPriceUpdateDataFromOneDayAgo(): Promise<string[]> {
+  const hermesClient = new HermesClient("https://hermes.pyth.network/", {});
 
   const oneDayAgo = Math.floor(Date.now() / 1000) - 86400;
-
-  return [
-    (await priceServiceConnection.getVaa(SOL_PRICE_FEED_ID, oneDayAgo))[0],
-  ];
+  const response = await hermesClient.getPriceUpdatesAtTimestamp(
+    oneDayAgo,
+    [SOL_PRICE_FEED_ID],
+    { encoding: "base64" }
+  );
+  return response.binary.data;
 }
 
 // Load a solana keypair from an id.json file
