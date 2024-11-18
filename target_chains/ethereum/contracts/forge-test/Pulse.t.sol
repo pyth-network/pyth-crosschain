@@ -12,18 +12,18 @@ import "../contracts/pulse/PulseErrors.sol";
 
 contract MockPulseConsumer is IPulseConsumer {
     uint64 public lastSequenceNumber;
-    address public lastProvider;
+    address public lastUpdater;
     uint256 public lastPublishTime;
     bytes32[] public lastPriceIds;
 
     function pulseCallback(
         uint64 sequenceNumber,
-        address provider,
+        address updater,
         uint256 publishTime,
         bytes32[] calldata priceIds
     ) external override {
         lastSequenceNumber = sequenceNumber;
-        lastProvider = provider;
+        lastUpdater = updater;
         lastPublishTime = publishTime;
         lastPriceIds = priceIds;
     }
@@ -59,13 +59,11 @@ contract PulseTest is Test, PulseEvents {
     MockPulseConsumer public consumer;
     address public owner;
     address public admin;
-    address public provider;
+    address public updater;
     address public pyth;
 
     // Constants
     uint128 constant PYTH_FEE = 1 wei;
-    uint128 constant PROVIDER_FEE = 1 wei;
-    uint128 constant PROVIDER_FEE_PER_GAS = 1 wei;
     uint128 constant CALLBACK_GAS_LIMIT = 1_000_000;
     bytes32 constant BTC_PRICE_FEED_ID =
         0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
@@ -82,22 +80,15 @@ contract PulseTest is Test, PulseEvents {
     function setUp() public {
         owner = address(1);
         admin = address(2);
-        provider = address(3);
+        updater = address(3);
         pyth = address(4);
 
         PulseUpgradeable _pulse = new PulseUpgradeable();
         proxy = new ERC1967Proxy(address(_pulse), "");
         pulse = PulseUpgradeable(address(proxy));
 
-        pulse.initialize(owner, admin, PYTH_FEE, provider, pyth, false);
+        pulse.initialize(owner, admin, PYTH_FEE, pyth, false);
         consumer = new MockPulseConsumer();
-
-        vm.prank(provider);
-        pulse.register(
-            PROVIDER_FEE,
-            PROVIDER_FEE_PER_GAS,
-            "https://provider.com"
-        );
     }
 
     // Helper function to create price IDs array
@@ -153,11 +144,8 @@ contract PulseTest is Test, PulseEvents {
     }
 
     // Helper function to calculate total fee
-    function calculateTotalFee() internal pure returns (uint128) {
-        return
-            PYTH_FEE +
-            PROVIDER_FEE +
-            (PROVIDER_FEE_PER_GAS * uint128(CALLBACK_GAS_LIMIT));
+    function calculateTotalFee() internal view returns (uint128) {
+        return pulse.getFee(CALLBACK_GAS_LIMIT);
     }
 
     // Helper function to setup consumer request
@@ -175,26 +163,31 @@ contract PulseTest is Test, PulseEvents {
         publishTime = block.timestamp;
         vm.deal(consumerAddress, 1 gwei);
 
+        uint128 totalFee = calculateTotalFee();
+
         vm.prank(consumerAddress);
-        sequenceNumber = pulse.requestPriceUpdatesWithCallback{
-            value: calculateTotalFee()
-        }(provider, publishTime, priceIds, CALLBACK_GAS_LIMIT);
+        sequenceNumber = pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+            publishTime,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
 
         return (sequenceNumber, priceIds, publishTime);
     }
 
     function testRequestPriceUpdate() public {
+        // Set a realistic gas price
+        vm.txGasPrice(30 gwei);
+
         bytes32[] memory priceIds = createPriceIds();
         uint256 publishTime = block.timestamp;
 
-        // Fund the consumer contract
-        vm.deal(address(consumer), 1 gwei);
-
-        vm.prank(address(consumer));
+        // Fund the consumer contract with enough ETH for higher gas price
+        vm.deal(address(consumer), 1 ether);
+        uint128 totalFee = calculateTotalFee();
 
         // Create the event data we expect to see
         PulseState.Request memory expectedRequest = PulseState.Request({
-            provider: provider,
             sequenceNumber: 1,
             publishTime: publishTime,
             priceIds: priceIds,
@@ -202,21 +195,18 @@ contract PulseTest is Test, PulseEvents {
             requester: address(consumer)
         });
 
-        // Emit event with expected parameters
         vm.expectEmit();
         emit PriceUpdateRequested(expectedRequest);
 
-        // Make the actual call that should emit the event
-        pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
-            provider,
+        vm.prank(address(consumer));
+        pulse.requestPriceUpdatesWithCallback{value: totalFee}(
             publishTime,
             priceIds,
             CALLBACK_GAS_LIMIT
         );
 
         // Additional assertions to verify event data was stored correctly
-        PulseState.Request memory lastRequest = pulse.getRequest(provider, 1);
-        assertEq(lastRequest.provider, expectedRequest.provider);
+        PulseState.Request memory lastRequest = pulse.getRequest(1);
         assertEq(lastRequest.sequenceNumber, expectedRequest.sequenceNumber);
         assertEq(lastRequest.publishTime, expectedRequest.publishTime);
         assertEq(
@@ -227,17 +217,22 @@ contract PulseTest is Test, PulseEvents {
             lastRequest.callbackGasLimit,
             expectedRequest.callbackGasLimit
         );
-        assertEq(lastRequest.requester, expectedRequest.requester);
+        assertEq(
+            lastRequest.requester,
+            expectedRequest.requester,
+            "Requester mismatch"
+        );
     }
 
     function testRequestWithInsufficientFee() public {
-        bytes32[] memory priceIds = createPriceIds();
-        vm.deal(address(consumer), 1 gwei);
+        // Set a realistic gas price
+        vm.txGasPrice(30 gwei);
 
+        bytes32[] memory priceIds = createPriceIds();
+        vm.deal(address(consumer), 1 ether);
         vm.prank(address(consumer));
         vm.expectRevert(InsufficientFee.selector);
         pulse.requestPriceUpdatesWithCallback{value: PYTH_FEE}( // Intentionally low fee
-            provider,
             block.timestamp,
             priceIds,
             CALLBACK_GAS_LIMIT
@@ -251,11 +246,13 @@ contract PulseTest is Test, PulseEvents {
         // Fund the consumer contract
         vm.deal(address(consumer), 1 gwei);
 
+        uint128 totalFee = calculateTotalFee();
+
         // Step 1: Make the request as consumer
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
-            value: calculateTotalFee()
-        }(provider, publishTime, priceIds, CALLBACK_GAS_LIMIT);
+            value: totalFee
+        }(publishTime, priceIds, CALLBACK_GAS_LIMIT);
 
         // Step 2: Create mock price feeds and setup Pyth response
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
@@ -284,7 +281,7 @@ contract PulseTest is Test, PulseEvents {
         vm.expectEmit(true, true, false, true);
         emit PriceUpdateExecuted(
             sequenceNumber,
-            provider,
+            updater,
             publishTime,
             priceIds,
             expectedPrices,
@@ -296,9 +293,8 @@ contract PulseTest is Test, PulseEvents {
         // Create mock update data and execute callback
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        vm.prank(provider);
+        vm.prank(updater);
         pulse.executeCallback(
-            provider,
             sequenceNumber,
             priceIds,
             updateData,
@@ -307,7 +303,6 @@ contract PulseTest is Test, PulseEvents {
 
         // Verify callback was executed
         assertEq(consumer.lastSequenceNumber(), sequenceNumber);
-        assertEq(consumer.lastProvider(), provider);
         assertEq(consumer.lastPublishTime(), publishTime);
     }
 
@@ -329,16 +324,15 @@ contract PulseTest is Test, PulseEvents {
         vm.expectEmit(true, true, true, true);
         emit PriceUpdateCallbackFailed(
             sequenceNumber,
-            provider,
+            updater,
             publishTime,
             priceIds,
             address(failingConsumer),
             "callback failed"
         );
 
-        vm.prank(provider);
+        vm.prank(updater);
         pulse.executeCallback(
-            provider,
             sequenceNumber,
             priceIds,
             updateData,
@@ -364,16 +358,15 @@ contract PulseTest is Test, PulseEvents {
         vm.expectEmit(true, true, true, true);
         emit PriceUpdateCallbackFailed(
             sequenceNumber,
-            provider,
+            updater,
             publishTime,
             priceIds,
             address(failingConsumer),
             "low-level error (possibly out of gas)"
         );
 
-        vm.prank(provider);
+        vm.prank(updater);
         pulse.executeCallback(
-            provider,
             sequenceNumber,
             priceIds,
             updateData,
@@ -399,7 +392,7 @@ contract PulseTest is Test, PulseEvents {
         mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        vm.prank(provider);
+        vm.prank(updater);
         vm.expectRevert(
             abi.encodeWithSelector(
                 InvalidPriceIds.selector,
@@ -408,7 +401,6 @@ contract PulseTest is Test, PulseEvents {
             )
         );
         pulse.executeCallback(
-            provider,
             sequenceNumber,
             differentPriceIds,
             updateData,
@@ -429,10 +421,9 @@ contract PulseTest is Test, PulseEvents {
         mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        vm.prank(provider);
+        vm.prank(updater);
         vm.expectRevert();
         pulse.executeCallback{gas: 10000}(
-            provider,
             sequenceNumber,
             priceIds,
             updateData,
@@ -455,7 +446,7 @@ contract PulseTest is Test, PulseEvents {
 
         // Try to execute with different gas limit than what was requested
         uint256 differentGasLimit = CALLBACK_GAS_LIMIT + 1000;
-        vm.prank(provider);
+        vm.prank(updater);
         vm.expectRevert(
             abi.encodeWithSelector(
                 InvalidCallbackGasLimit.selector,
@@ -464,7 +455,6 @@ contract PulseTest is Test, PulseEvents {
             )
         );
         pulse.executeCallback(
-            provider,
             sequenceNumber,
             priceIds,
             updateData,
@@ -478,10 +468,11 @@ contract PulseTest is Test, PulseEvents {
         uint256 futureTime = block.timestamp + 1 days;
         vm.deal(address(consumer), 1 gwei);
 
+        uint128 totalFee = calculateTotalFee();
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
-            value: calculateTotalFee()
-        }(provider, futureTime, priceIds, CALLBACK_GAS_LIMIT);
+            value: totalFee
+        }(futureTime, priceIds, CALLBACK_GAS_LIMIT);
 
         // Try to execute callback before the requested timestamp
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
@@ -490,10 +481,9 @@ contract PulseTest is Test, PulseEvents {
         mockParsePriceFeedUpdates(priceFeeds); // This will make parsePriceFeedUpdates return future-dated prices
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        vm.prank(provider);
+        vm.prank(updater);
         // Should succeed because we're simulating receiving future-dated price updates
         pulse.executeCallback(
-            provider,
             sequenceNumber,
             priceIds,
             updateData,
@@ -502,31 +492,6 @@ contract PulseTest is Test, PulseEvents {
 
         // Verify the callback was executed with future timestamp
         assertEq(consumer.lastPublishTime(), futureTime);
-    }
-
-    function testExecuteCallbackWithWrongProvider() public {
-        (
-            uint64 sequenceNumber,
-            bytes32[] memory priceIds,
-            uint256 publishTime
-        ) = setupConsumerRequest(address(consumer));
-
-        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
-            publishTime
-        );
-        mockParsePriceFeedUpdates(priceFeeds);
-        bytes[] memory updateData = createMockUpdateData(priceFeeds);
-
-        address wrongProvider = address(0x999);
-        vm.prank(wrongProvider);
-        vm.expectRevert(NoSuchRequest.selector);
-        pulse.executeCallback(
-            wrongProvider,
-            sequenceNumber,
-            priceIds,
-            updateData,
-            CALLBACK_GAS_LIMIT
-        );
     }
 
     function testDoubleExecuteCallback() public {
@@ -543,9 +508,8 @@ contract PulseTest is Test, PulseEvents {
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // First execution
-        vm.prank(provider);
+        vm.prank(updater);
         pulse.executeCallback(
-            provider,
             sequenceNumber,
             priceIds,
             updateData,
@@ -553,10 +517,9 @@ contract PulseTest is Test, PulseEvents {
         );
 
         // Second execution should fail
-        vm.prank(provider);
+        vm.prank(updater);
         vm.expectRevert(NoSuchRequest.selector);
         pulse.executeCallback(
-            provider,
             sequenceNumber,
             priceIds,
             updateData,
@@ -573,12 +536,9 @@ contract PulseTest is Test, PulseEvents {
 
         for (uint256 i = 0; i < gasLimits.length; i++) {
             uint256 gasLimit = gasLimits[i];
-            uint128 expectedFee = PROVIDER_FEE + // Base provider fee
-                (PROVIDER_FEE_PER_GAS * uint128(gasLimit)) + // Gas-based fee
-                PYTH_FEE; // Pyth oracle fee
-
-            uint128 actualFee = pulse.getFee(provider, gasLimit);
-
+            uint128 expectedFee = SafeCast.toUint128(tx.gasprice * gasLimit) +
+                PYTH_FEE;
+            uint128 actualFee = pulse.getFee(gasLimit);
             assertEq(
                 actualFee,
                 expectedFee,
@@ -587,78 +547,66 @@ contract PulseTest is Test, PulseEvents {
         }
 
         // Test with zero gas limit
-        uint128 expectedMinFee = PROVIDER_FEE + PYTH_FEE;
-        uint128 actualMinFee = pulse.getFee(provider, 0);
+        uint128 expectedMinFee = PYTH_FEE;
+        uint128 actualMinFee = pulse.getFee(0);
         assertEq(
             actualMinFee,
             expectedMinFee,
             "Minimum fee calculation incorrect"
         );
-
-        // Test with unregistered provider (should return 0 fees)
-        address unregisteredProvider = address(0x123);
-        uint128 unregisteredFee = pulse.getFee(
-            unregisteredProvider,
-            gasLimits[0]
-        );
-        assertEq(
-            unregisteredFee,
-            PYTH_FEE,
-            "Unregistered provider fee should only include Pyth fee"
-        );
     }
 
-    function testWithdraw() public {
+    function testWithdrawFees() public {
         // Setup: Request price update to accrue some fees
         bytes32[] memory priceIds = createPriceIds();
         vm.deal(address(consumer), 1 gwei);
 
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
-            provider,
             block.timestamp,
             priceIds,
             CALLBACK_GAS_LIMIT
         );
 
-        // Get provider's balance before withdrawal
-        uint256 providerBalanceBefore = provider.balance;
-        PulseState.ProviderInfo memory infoBefore = pulse.getProviderInfo(
-            provider
-        );
+        // Get admin's balance before withdrawal
+        uint256 adminBalanceBefore = admin.balance;
+        uint128 accruedFees = pulse.getAccruedFees();
 
-        // Withdraw fees
-        vm.prank(provider);
-        pulse.withdraw(infoBefore.accruedFeesInWei);
+        // Withdraw fees as admin
+        vm.prank(admin);
+        pulse.withdrawFees(accruedFees);
 
         // Verify balances
         assertEq(
-            provider.balance,
-            providerBalanceBefore + infoBefore.accruedFeesInWei
+            admin.balance,
+            adminBalanceBefore + accruedFees,
+            "Admin balance should increase by withdrawn amount"
         );
-
-        PulseState.ProviderInfo memory infoAfter = pulse.getProviderInfo(
-            provider
+        assertEq(
+            pulse.getAccruedFees(),
+            0,
+            "Contract should have no fees after withdrawal"
         );
-        assertEq(infoAfter.accruedFeesInWei, 0);
     }
 
-    function testWithdrawInsufficientBalance() public {
-        vm.prank(provider);
+    function testWithdrawFeesUnauthorized() public {
+        vm.prank(address(0xdead));
+        vm.expectRevert("Only admin can withdraw fees");
+        pulse.withdrawFees(1 ether);
+    }
+
+    function testWithdrawFeesInsufficientBalance() public {
+        vm.prank(admin);
         vm.expectRevert("Insufficient balance");
-        pulse.withdraw(1 ether);
+        pulse.withdrawFees(1 ether);
     }
 
     function testSetAndWithdrawAsFeeManager() public {
         address feeManager = address(0x789);
 
-        // Set fee manager
-        vm.prank(provider);
+        // Set fee manager as admin
+        vm.prank(admin);
         pulse.setFeeManager(feeManager);
-
-        // Verify fee manager was set
-        PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
-        assertEq(info.feeManager, feeManager);
 
         // Setup: Request price update to accrue some fees
         bytes32[] memory priceIds = createPriceIds();
@@ -666,7 +614,6 @@ contract PulseTest is Test, PulseEvents {
 
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
-            provider,
             block.timestamp,
             priceIds,
             CALLBACK_GAS_LIMIT
@@ -674,48 +621,44 @@ contract PulseTest is Test, PulseEvents {
 
         // Test withdrawal as fee manager
         uint256 managerBalanceBefore = feeManager.balance;
-        info = pulse.getProviderInfo(provider);
+        uint128 accruedFees = pulse.getAccruedFees();
 
         vm.prank(feeManager);
-        pulse.withdrawAsFeeManager(provider, info.accruedFeesInWei);
+        pulse.withdrawAsFeeManager(accruedFees);
 
         assertEq(
             feeManager.balance,
-            managerBalanceBefore + info.accruedFeesInWei
+            managerBalanceBefore + accruedFees,
+            "Fee manager balance should increase by withdrawn amount"
+        );
+        assertEq(
+            pulse.getAccruedFees(),
+            0,
+            "Contract should have no fees after withdrawal"
         );
     }
 
-    function testMaxNumPrices() public {
-        // Set max number of prices
-        vm.prank(provider);
-        pulse.setMaxNumPrices(1);
-
-        // Try to request more prices than allowed
-        bytes32[] memory priceIds = new bytes32[](2);
-        priceIds[0] = BTC_PRICE_FEED_ID;
-        priceIds[1] = ETH_PRICE_FEED_ID;
-
-        vm.deal(address(consumer), 1 gwei);
-        vm.prank(address(consumer));
-
-        vm.expectRevert(
-            abi.encodeWithSelector(ExceedsMaxPrices.selector, 2, 1)
-        );
-        pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
-            provider,
-            block.timestamp,
-            priceIds,
-            CALLBACK_GAS_LIMIT
-        );
+    function testSetFeeManagerUnauthorized() public {
+        address feeManager = address(0x789);
+        vm.prank(address(0xdead));
+        vm.expectRevert("Only admin can set fee manager");
+        pulse.setFeeManager(feeManager);
     }
 
-    function testSetProviderUri() public {
-        bytes memory newUri = "https://updated-provider.com";
+    function testWithdrawAsFeeManagerUnauthorized() public {
+        vm.prank(address(0xdead));
+        vm.expectRevert("Only fee manager");
+        pulse.withdrawAsFeeManager(1 ether);
+    }
 
-        vm.prank(provider);
-        pulse.setProviderUri(newUri);
+    function testWithdrawAsFeeManagerInsufficientBalance() public {
+        // Set up fee manager first
+        address feeManager = address(0x789);
+        vm.prank(admin);
+        pulse.setFeeManager(feeManager);
 
-        PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
-        assertEq(info.uri, newUri);
+        vm.prank(feeManager);
+        vm.expectRevert("Insufficient balance");
+        pulse.withdrawAsFeeManager(1 ether);
     }
 }
