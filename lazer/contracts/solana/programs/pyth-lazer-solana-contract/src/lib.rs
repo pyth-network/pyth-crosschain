@@ -6,9 +6,9 @@ use {
 declare_id!("pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt");
 
 pub mod storage {
-    use anchor_lang::declare_id;
+    use anchor_lang::prelude::{pubkey, Pubkey};
 
-    declare_id!("3rdJbqfnagQ4yx9HXJViD4zc4xpiSqmFsKpPuSCQVyQL");
+    pub const ID: Pubkey = pubkey!("3rdJbqfnagQ4yx9HXJViD4zc4xpiSqmFsKpPuSCQVyQL");
 
     #[test]
     fn test_storage_id() {
