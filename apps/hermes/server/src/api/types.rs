@@ -250,6 +250,26 @@ pub struct PriceFeedTwap {
     pub twap_price: Price,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct RpcPriceFeedTwap {
+    pub id: RpcPriceIdentifier,
+    pub twap_price: RpcPrice,
+}
+
+impl From<PriceFeedTwap> for RpcPriceFeedTwap {
+    fn from(twap: PriceFeedTwap) -> Self {
+        Self {
+            id: RpcPriceIdentifier::from(twap.id),
+            twap_price: RpcPrice {
+                price: twap.twap_price.price,
+                conf: twap.twap_price.conf,
+                expo: twap.twap_price.expo,
+                publish_time: twap.twap_price.publish_time,
+            },
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone, ToSchema)]
 pub struct ParsedPublisherStakeCapsUpdate {
     pub publisher_stake_caps: Vec<ParsedPublisherStakeCap>,
@@ -272,7 +292,7 @@ pub struct LatestPublisherStakeCapsUpdateDataResponse {
 pub struct TwapsResponse {
     pub binary: BinaryUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub parsed: Option<Vec<PriceFeedTwap>>,
+    pub parsed: Option<Vec<RpcPriceFeedTwap>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

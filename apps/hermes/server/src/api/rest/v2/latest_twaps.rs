@@ -2,7 +2,7 @@ use {
     crate::{
         api::{
             rest::{validate_price_ids, RestError},
-            types::{BinaryUpdate, EncodingType, PriceFeedTwap, PriceIdInput, TwapsResponse},
+            types::{BinaryUpdate, EncodingType, PriceIdInput, RpcPriceFeedTwap, TwapsResponse},
             ApiState,
         },
         state::aggregate::{Aggregates, RequestTime},
@@ -82,7 +82,7 @@ fn default_true() -> bool {
     get,
     path = "/v2/updates/twap/{window_seconds}/latest",
     responses(
-        (status = 200, description = "TWAPs retrieved successfully", body = PriceUpdate),
+        (status = 200, description = "TWAPs retrieved successfully", body = TwapsResponse),
         (status = 404, description = "Price ids not found", body = String)
     ),
     params(
@@ -120,7 +120,6 @@ where
     )
     .await
     .map_err(|e| {
-        eprintln!("Application error: {:#?}", e);
         tracing::warn!(
             "Error getting TWAPs for price IDs {:?} with update data: {:?}",
             price_ids,
@@ -142,8 +141,14 @@ where
         encoding: params.encoding,
         data: encoded_data,
     };
-    let parsed_twaps: Option<Vec<PriceFeedTwap>> = if params.parsed {
-        Some(twaps_with_update_data.twaps)
+    let parsed_twaps: Option<Vec<RpcPriceFeedTwap>> = if params.parsed {
+        Some(
+            twaps_with_update_data
+                .twaps
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        )
     } else {
         None
     };
