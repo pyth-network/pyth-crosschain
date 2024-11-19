@@ -1,7 +1,8 @@
 use {
     super::doc_examples,
     crate::state::aggregate::{
-        PriceFeedTwapUpdate, PriceFeedUpdate, PriceFeedsWithUpdateData, Slot, UnixTimestamp,
+        CalculatedPriceFeedTwap, PriceFeedTwapUpdate, PriceFeedUpdate, PriceFeedsWithUpdateData,
+        PriceTwapWindow, Slot, UnixTimestamp,
     },
     anyhow::Result,
     base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
@@ -247,14 +248,6 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
     }
 }
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct CalculatedPriceFeedTwap {
-    pub id: PriceIdentifier,
-    pub start_timestamp: UnixTimestamp,
-    pub end_timestamp: UnixTimestamp,
-    pub price: Price,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RpcCalculatedPriceFeedTwap {
     pub id: RpcPriceIdentifier,
     pub start_timestamp: i64,
@@ -302,13 +295,6 @@ impl From<PriceFeedTwapUpdate> for ParsedPriceTwapUpdate {
             cumulative_num_down_slots: twap_update.cumulative_num_down_slots,
         }
     }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct PriceTwapWindow {
-    pub id: PriceIdentifier,
-    pub start: PriceFeedTwapUpdate,
-    pub end: PriceFeedTwapUpdate,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

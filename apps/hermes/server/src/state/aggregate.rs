@@ -1,4 +1,3 @@
-use crate::api::types::{CalculatedPriceFeedTwap, PriceTwapWindow};
 #[cfg(test)]
 use mock_instant::{SystemTime, UNIX_EPOCH};
 use pythnet_sdk::messages::TwapMessage;
@@ -199,6 +198,19 @@ impl From<(&TwapMessage, Slot, UnixTimestamp)> for PriceFeedTwapUpdate {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub struct CalculatedPriceFeedTwap {
+    pub id: PriceIdentifier,
+    pub start_timestamp: UnixTimestamp,
+    pub end_timestamp: UnixTimestamp,
+    pub price: Price,
+}
+#[derive(Debug, PartialEq)]
+pub struct PriceTwapWindow {
+    pub id: PriceIdentifier,
+    pub start: PriceFeedTwapUpdate,
+    pub end: PriceFeedTwapUpdate,
+}
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedUpdate {
     pub price_feed: PriceFeed,
