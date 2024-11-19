@@ -2395,9 +2395,9 @@ importers:
         specifier: 1.92.3
         version: 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
     devDependencies:
-      '@pythnetwork/price-service-client':
+      '@pythnetwork/hermes-client':
         specifier: workspace:*
-        version: link:../../../../../price_service/client/js
+        version: link:../../../../../apps/hermes/client/js
       '@types/jest':
         specifier: ^29.4.0
         version: 29.4.0
