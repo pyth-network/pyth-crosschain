@@ -1,0 +1,18 @@
+chains:
+  ethereum:
+    geth_rpc_addr: "https://eth-mainnet.g.alchemy.com/v2/YOUR-API-KEY"
+    contract_addr: "0x1234..."
+    poll_interval: 5
+    min_batch_size: 1
+    max_batch_size: 10
+    batch_timeout: 30
+    min_keeper_balance: 1000000000000000000 # 1 ETH
+    gas_limit: 500000
+
+provider:
+  uri: "http://localhost:8080"
+  address: "0x5678..."
+  private_key: "0xabcd..." # Provider private key
+
+keeper:
+  private_key: "0xdef0..." # Keeper private key
