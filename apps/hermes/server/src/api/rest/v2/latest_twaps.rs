@@ -2,7 +2,10 @@ use {
     crate::{
         api::{
             rest::{validate_price_ids, RestError},
-            types::{BinaryUpdate, EncodingType, PriceIdInput, RpcPriceFeedTwap, TwapsResponse},
+            types::{
+                BinaryUpdate, EncodingType, ParsedPriceTwapWindow, PriceIdInput,
+                RpcCalculatedPriceFeedTwap, TwapsResponse,
+            },
             ApiState,
         },
         state::aggregate::{Aggregates, RequestTime},
@@ -52,6 +55,10 @@ pub struct LatestTwapsQueryParams {
     /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
     #[serde(default = "default_true")]
     parsed: bool,
+
+    /// If true, include the calculated TWAP in the `calculated` field of each returned feed. Default is `true`.
+    #[serde(default = "default_true")]
+    calculated: bool,
 
     /// If true, invalid price IDs in the `ids` parameter are ignored. Only applicable to the v2 APIs. Default is `false`.
     #[serde(default)]
@@ -128,23 +135,40 @@ where
         RestError::UpdateDataNotFound
     })?;
 
-    // Include binary update data for the messages used to calculate the TWAP
     let twap_update_data = twaps_with_update_data.update_data;
-    let encoded_data: Vec<String> = twap_update_data
+    let binary: Vec<BinaryUpdate> = twap_update_data
         .into_iter()
-        .map(|data| match params.encoding {
-            EncodingType::Base64 => base64_standard_engine.encode(data),
-            EncodingType::Hex => hex::encode(data),
+        .map(|data_vec| {
+            let encoded_data = data_vec
+                .into_iter()
+                .map(|data| match params.encoding {
+                    EncodingType::Base64 => base64_standard_engine.encode(data),
+                    EncodingType::Hex => hex::encode(data),
+                })
+                .collect();
+            BinaryUpdate {
+                encoding: params.encoding,
+                data: encoded_data,
+            }
         })
         .collect();
-    let binary_price_update = BinaryUpdate {
-        encoding: params.encoding,
-        data: encoded_data,
-    };
-    let parsed_twaps: Option<Vec<RpcPriceFeedTwap>> = if params.parsed {
+
+    let parsed: Option<Vec<ParsedPriceTwapWindow>> = if params.parsed {
         Some(
             twaps_with_update_data
-                .twaps
+                .windows
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        )
+    } else {
+        None
+    };
+
+    let calculated: Option<Vec<RpcCalculatedPriceFeedTwap>> = if params.calculated {
+        Some(
+            twaps_with_update_data
+                .calculated_twaps
                 .into_iter()
                 .map(Into::into)
                 .collect(),
@@ -154,8 +178,9 @@ where
     };
 
     let twap_resp = TwapsResponse {
-        binary: binary_price_update,
-        parsed: parsed_twaps,
+        binary,
+        parsed,
+        calculated,
     };
 
     Ok(Json(twap_resp))

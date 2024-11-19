@@ -1,6 +1,8 @@
 use {
     super::doc_examples,
-    crate::state::aggregate::{PriceFeedUpdate, PriceFeedsWithUpdateData, Slot, UnixTimestamp},
+    crate::state::aggregate::{
+        PriceFeedTwapUpdate, PriceFeedUpdate, PriceFeedsWithUpdateData, Slot, UnixTimestamp,
+    },
     anyhow::Result,
     base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
     borsh::{BorshDeserialize, BorshSerialize},
@@ -140,7 +142,7 @@ pub struct RpcPrice {
     pub conf: u64,
     /// The exponent associated with both the price and confidence interval. Multiply those values
     /// by `10^expo` to get the real value.
-    #[schema(example=-8)]
+    #[schema(example = -8)]
     pub expo: i32,
     /// When the price was published. The `publish_time` is a unix timestamp, i.e., the number of
     /// seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).
@@ -245,29 +247,99 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
     }
 }
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct PriceFeedTwap {
+pub struct CalculatedPriceFeedTwap {
     pub id: PriceIdentifier,
-    pub twap_price: Price,
+    pub start_timestamp: UnixTimestamp,
+    pub end_timestamp: UnixTimestamp,
+    pub price: Price,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct RpcPriceFeedTwap {
+pub struct RpcCalculatedPriceFeedTwap {
     pub id: RpcPriceIdentifier,
-    pub twap_price: RpcPrice,
+    pub start_timestamp: i64,
+    pub end_timestamp: i64,
+    pub twap: RpcPrice,
 }
 
-impl From<PriceFeedTwap> for RpcPriceFeedTwap {
-    fn from(twap: PriceFeedTwap) -> Self {
+impl From<CalculatedPriceFeedTwap> for RpcCalculatedPriceFeedTwap {
+    fn from(twap: CalculatedPriceFeedTwap) -> Self {
         Self {
             id: RpcPriceIdentifier::from(twap.id),
-            twap_price: RpcPrice {
-                price: twap.twap_price.price,
-                conf: twap.twap_price.conf,
-                expo: twap.twap_price.expo,
-                publish_time: twap.twap_price.publish_time,
+            start_timestamp: twap.start_timestamp,
+            end_timestamp: twap.end_timestamp,
+            twap: RpcPrice {
+                price: twap.price.price,
+                conf: twap.price.conf,
+                expo: twap.price.expo,
+                publish_time: twap.price.publish_time,
             },
         }
     }
+}
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct ParsedPriceTwapUpdate {
+    pub id: RpcPriceIdentifier,
+    pub cumulative_price: RpcPrice,
+    pub cumulative_num_down_slots: u64,
+    pub metadata: RpcPriceFeedMetadataV2,
+}
+impl From<PriceFeedTwapUpdate> for ParsedPriceTwapUpdate {
+    fn from(twap_update: PriceFeedTwapUpdate) -> Self {
+        Self {
+            id: RpcPriceIdentifier::from(twap_update.price_feed_id),
+            cumulative_price: RpcPrice {
+                price: twap_update.cumulative_price.price,
+                conf: twap_update.cumulative_price.conf,
+                expo: twap_update.cumulative_price.expo,
+                publish_time: twap_update.cumulative_price.publish_time,
+            },
+            metadata: RpcPriceFeedMetadataV2 {
+                proof_available_time: twap_update.received_at,
+                slot: twap_update.slot,
+                prev_publish_time: twap_update.prev_publish_time,
+            },
+            cumulative_num_down_slots: twap_update.cumulative_num_down_slots,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct PriceTwapWindow {
+    pub id: PriceIdentifier,
+    pub start: PriceFeedTwapUpdate,
+    pub end: PriceFeedTwapUpdate,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct ParsedPriceTwapWindow {
+    pub id: RpcPriceIdentifier,
+    pub start: ParsedPriceTwapUpdate,
+    pub end: ParsedPriceTwapUpdate,
+}
+impl From<PriceTwapWindow> for ParsedPriceTwapWindow {
+    fn from(window: PriceTwapWindow) -> Self {
+        Self {
+            id: window.id.into(),
+            start: window.start.into(),
+            end: window.end.into(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct TwapsResponse {
+    /// Each BinaryUpdate contains the start & end cumulative price updates used to
+    /// calculate a given price feed's TWAP.
+    pub binary: Vec<BinaryUpdate>,
+
+    /// The parsed start and end cumulative prices for a given price ID's TWAP window
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parsed: Option<Vec<ParsedPriceTwapWindow>>,
+
+    /// The calculated TWAPs for each price ID
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub calculated: Option<Vec<RpcCalculatedPriceFeedTwap>>,
 }
 
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone, ToSchema)]
@@ -286,13 +358,6 @@ pub struct LatestPublisherStakeCapsUpdateDataResponse {
     pub binary: BinaryUpdate,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parsed: Option<Vec<ParsedPublisherStakeCapsUpdate>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct TwapsResponse {
-    pub binary: BinaryUpdate,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parsed: Option<Vec<RpcPriceFeedTwap>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

@@ -128,7 +128,9 @@ where
                 types::ParsedPublisherStakeCap,
                 types::AssetType,
                 types::TwapsResponse,
-                types::RpcPriceFeedTwap,
+                types::RpcCalculatedPriceFeedTwap,
+                types::ParsedPriceTwapWindow,
+                types::ParsedPriceTwapUpdate
             )
         ),
         tags(

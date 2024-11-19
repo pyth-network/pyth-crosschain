@@ -1,4 +1,4 @@
-use crate::api::types::PriceFeedTwap;
+use crate::api::types::{CalculatedPriceFeedTwap, PriceTwapWindow};
 #[cfg(test)]
 use mock_instant::{SystemTime, UNIX_EPOCH};
 use pythnet_sdk::messages::TwapMessage;
@@ -173,6 +173,33 @@ pub enum Update {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct PriceFeedTwapUpdate {
+    pub price_feed_id: PriceIdentifier,
+    pub cumulative_price: Price,
+    pub cumulative_num_down_slots: u64,
+    pub slot: Option<Slot>,
+    pub received_at: Option<UnixTimestamp>,
+    pub prev_publish_time: Option<UnixTimestamp>,
+}
+impl From<(&TwapMessage, Slot, UnixTimestamp)> for PriceFeedTwapUpdate {
+    fn from((twap, slot, received_at): (&TwapMessage, Slot, UnixTimestamp)) -> Self {
+        PriceFeedTwapUpdate {
+            price_feed_id: PriceIdentifier::new(twap.feed_id),
+            cumulative_price: Price {
+                price: twap.cumulative_price as i64,
+                conf: twap.cumulative_conf as u64,
+                expo: twap.exponent,
+                publish_time: twap.publish_time,
+            },
+            slot: Some(slot),
+            received_at: Some(received_at),
+            prev_publish_time: Some(twap.prev_publish_time),
+            cumulative_num_down_slots: twap.num_down_slots,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct PriceFeedUpdate {
     pub price_feed: PriceFeed,
     pub slot: Option<Slot>,
@@ -195,8 +222,9 @@ pub struct PublisherStakeCapsWithUpdateData {
 
 #[derive(Debug)]
 pub struct TwapsWithUpdateData {
-    pub twaps: Vec<PriceFeedTwap>,
-    pub update_data: Vec<Vec<u8>>,
+    pub calculated_twaps: Vec<CalculatedPriceFeedTwap>,
+    pub update_data: Vec<Vec<Vec<u8>>>,
+    pub windows: Vec<PriceTwapWindow>,
 }
 
 #[derive(Debug, Serialize)]
@@ -615,64 +643,96 @@ async fn get_verified_twaps_with_update_data<S>(
 where
     S: Cache,
 {
-    // TODO: what if some messages aren't in the cache?
-    let start_messages = state
-        .fetch_message_states(
-            price_ids
-                .iter()
-                .map(|price_id| price_id.to_bytes())
-                .collect(),
-            start_time,
-            MessageStateFilter::Only(MessageType::TwapMessage),
-        )
-        .await?;
+    let mut calculated_twaps = Vec::new();
+    let mut all_update_data = Vec::new();
+    let mut windows = Vec::new();
 
-    let end_messages = state
-        .fetch_message_states(
-            price_ids
-                .iter()
-                .map(|price_id| price_id.to_bytes())
-                .collect(),
-            end_time,
-            MessageStateFilter::Only(MessageType::TwapMessage),
-        )
-        .await?;
+    for price_id in price_ids {
+        let start_messages = state
+            .fetch_message_states(
+                vec![price_id.to_bytes()],
+                start_time.clone(),
+                MessageStateFilter::Only(MessageType::TwapMessage),
+            )
+            .await?;
 
-    if start_messages.len() != end_messages.len() {
-        return Err(anyhow!(
-            "Failed to fetch price updates for provided price IDs"
-        ));
+        let end_messages = state
+            .fetch_message_states(
+                vec![price_id.to_bytes()],
+                end_time.clone(),
+                MessageStateFilter::Only(MessageType::TwapMessage),
+            )
+            .await?;
+
+        if start_messages.is_empty() || end_messages.is_empty() {
+            continue;
+        }
+
+        let start_message = &start_messages[0];
+        let end_message = &end_messages[0];
+
+        if let (Message::TwapMessage(start_twap), Message::TwapMessage(end_twap)) =
+            (&start_message.message, &end_message.message)
+        {
+            match calculate_twap(start_twap, end_twap) {
+                Ok(twap_price) => {
+                    // Add to calculated TWAPs
+                    calculated_twaps.push(CalculatedPriceFeedTwap {
+                        id: *price_id,
+                        price: twap_price,
+                        start_timestamp: start_twap.publish_time,
+                        end_timestamp: end_twap.publish_time,
+                    });
+
+                    // Create TWAP window
+                    let window = PriceTwapWindow {
+                        start: PriceFeedTwapUpdate::from((
+                            start_twap,
+                            start_message.slot,
+                            start_message.received_at,
+                        )),
+                        end: PriceFeedTwapUpdate::from((
+                            end_twap,
+                            end_message.slot,
+                            end_message.received_at,
+                        )),
+                        id: *price_id,
+                    };
+                    windows.push(window);
+
+                    // Combine messages for update data
+                    let mut messages = Vec::new();
+                    messages.push(start_message.clone().into());
+                    messages.push(end_message.clone().into());
+
+                    if let Ok(update_data) = construct_update_data(messages) {
+                        all_update_data.push(update_data);
+                    } else {
+                        tracing::warn!(
+                            "Failed to construct update data for price feed {}",
+                            price_id
+                        );
+                        continue;
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "Failed to calculate TWAP for price feed {}: {}",
+                        price_id,
+                        e
+                    );
+                    continue;
+                }
+            }
+        }
     }
 
-    let twaps: Vec<PriceFeedTwap> = start_messages
-        .iter()
-        .zip(end_messages.iter())
-        .map(
-            |(start_message, end_message)| match (&start_message.message, &end_message.message) {
-                (Message::TwapMessage(start_twap), Message::TwapMessage(end_twap)) => {
-                    Ok(PriceFeedTwap {
-                        twap_price: calculate_twap(start_twap, end_twap)?,
-                        id: PriceIdentifier::new(start_message.message.feed_id()),
-                    })
-                }
-                _ => Err(anyhow!("Invalid message type for TWAP calculation")),
-            },
-        )
-        .collect::<Result<Vec<_>>>()?;
-
-    // TODO: does it make sense to include binary updates here?
-    // Currently this returns the binary update data for all the messages
-    // involved in creating the TWAPs.
-    let all_messages: Vec<_> = end_messages
-        .into_iter()
-        .chain(start_messages)
-        .map(|m| m.into())
-        .collect();
-    let update_data = construct_update_data(all_messages)?;
-
-    Ok(TwapsWithUpdateData { twaps, update_data })
+    Ok(TwapsWithUpdateData {
+        calculated_twaps,
+        update_data: all_update_data,
+        windows,
+    })
 }
-
 fn calculate_twap(start_message: &TwapMessage, end_message: &TwapMessage) -> Result<Price> {
     if end_message.publish_slot <= start_message.publish_slot {
         return Err(anyhow!(
