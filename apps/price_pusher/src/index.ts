@@ -8,6 +8,7 @@ import sui from "./sui/command";
 import near from "./near/command";
 import solana from "./solana/command";
 import fuel from "./fuel/command";
+import ton from "./ton/command";
 
 yargs(hideBin(process.argv))
   .parserConfiguration({
@@ -22,4 +23,5 @@ yargs(hideBin(process.argv))
   .command(sui)
   .command(near)
   .command(solana)
+  .command(ton)
   .help().argv;
