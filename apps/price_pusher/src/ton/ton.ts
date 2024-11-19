@@ -5,7 +5,7 @@ import {
   PriceInfo,
   PriceItem,
 } from "../interface";
-import { DurationInSeconds } from "../utils";
+import { addLeading0x, DurationInSeconds } from "../utils";
 import { Logger } from "pino";
 import {
   Address,
@@ -41,7 +41,8 @@ export class TonPriceListener extends ChainPriceListener {
 
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
     try {
-      const priceInfo = await this.contract.getPriceUnsafe(priceId);
+      const formattedPriceId = addLeading0x(priceId);
+      const priceInfo = await this.contract.getPriceUnsafe(formattedPriceId);
 
       this.logger.debug(
         `Polled a TON on chain price for feed ${this.priceIdToAlias.get(
