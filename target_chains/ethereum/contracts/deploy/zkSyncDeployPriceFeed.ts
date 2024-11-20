@@ -64,10 +64,10 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     wormholeReceiverContractAddress = await deployWormholeContract(
       deployer,
       chainName,
-      wormholeReceiverChainId,
       wormholeGovernanceChainId,
       wormholeGovernanceContract,
-      wormholeInitialSigners
+      wormholeInitialSigners,
+      wormholeReceiverChainId
     );
   }
 
