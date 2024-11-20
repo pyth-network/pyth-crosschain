@@ -1,5 +1,5 @@
 import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { Cell, CommonMessageInfoInternal, Message, toNano } from "@ton/core";
+import { Cell, CommonMessageInfoInternal, toNano } from "@ton/core";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
@@ -95,6 +95,7 @@ const TEST_GOVERNANCE_DATA_SOURCES: DataSource[] = [
       "0000000000000000000000000000000000000000000000000000000000000000",
   },
 ];
+const CUSTOM_PAYLOAD = Buffer.from("1234567890abcdef", "hex");
 
 describe("PythTest", () => {
   let code: Cell;
@@ -1000,7 +1001,9 @@ describe("PythTest", () => {
       sentValue,
       [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
       HERMES_BTC_PUBLISH_TIME,
-      HERMES_BTC_PUBLISH_TIME
+      HERMES_BTC_PUBLISH_TIME,
+      deployer.address,
+      CUSTOM_PAYLOAD
     );
 
     // Verify transaction success and message count
@@ -1088,6 +1091,20 @@ describe("PythTest", () => {
 
     // Verify this is the end of the chain
     expect(ethCs.remainingRefs).toBe(0);
+
+    // Verify sender address
+    const senderAddress = cs.loadAddress();
+    expect(senderAddress?.toString()).toBe(deployer.address.toString());
+
+    // Verify custom payload
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    const receivedPayload = Buffer.from(
+      customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length)
+    );
+    expect(receivedPayload.toString("hex")).toBe(
+      CUSTOM_PAYLOAD.toString("hex")
+    );
   });
 
   it("should successfully parse unique price feed updates", async () => {
@@ -1101,7 +1118,9 @@ describe("PythTest", () => {
       sentValue,
       [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
       HERMES_BTC_PUBLISH_TIME,
-      60
+      60,
+      deployer.address,
+      CUSTOM_PAYLOAD
     );
 
     // Verify transaction success and message count
@@ -1189,6 +1208,20 @@ describe("PythTest", () => {
 
     // Verify this is the end of the chain
     expect(ethCs.remainingRefs).toBe(0);
+
+    // Verify sender address
+    const senderAddress = cs.loadAddress();
+    expect(senderAddress?.toString()).toBe(deployer.address.toString());
+
+    // Verify custom payload
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    const receivedPayload = Buffer.from(
+      customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length)
+    );
+    expect(receivedPayload.toString("hex")).toBe(
+      CUSTOM_PAYLOAD.toString("hex")
+    );
   });
 
   it("should fail to parse invalid price feed updates", async () => {
@@ -1203,7 +1236,9 @@ describe("PythTest", () => {
       toNano("1"),
       [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
       HERMES_BTC_PUBLISH_TIME,
-      HERMES_BTC_PUBLISH_TIME
+      HERMES_BTC_PUBLISH_TIME,
+      deployer.address,
+      CUSTOM_PAYLOAD
     );
 
     // Verify transaction success and message count
@@ -1226,7 +1261,9 @@ describe("PythTest", () => {
       sentValue,
       [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
       HERMES_BTC_PUBLISH_TIME + 1,
-      HERMES_BTC_PUBLISH_TIME + 1
+      HERMES_BTC_PUBLISH_TIME + 1,
+      deployer.address,
+      CUSTOM_PAYLOAD
     );
 
     // Verify transaction success and message count
@@ -1249,7 +1286,9 @@ describe("PythTest", () => {
       sentValue,
       [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
       HERMES_BTC_PUBLISH_TIME,
-      60
+      60,
+      deployer.address,
+      CUSTOM_PAYLOAD
     );
 
     // Verify transaction success and message count
@@ -1272,7 +1311,9 @@ describe("PythTest", () => {
       sentValue,
       [ETH_PRICE_FEED_ID, BTC_PRICE_FEED_ID],
       HERMES_BTC_PUBLISH_TIME,
-      HERMES_BTC_PUBLISH_TIME
+      HERMES_BTC_PUBLISH_TIME,
+      deployer.address,
+      CUSTOM_PAYLOAD
     );
 
     // Verify transaction success and message count
@@ -1290,6 +1331,10 @@ describe("PythTest", () => {
     expect(
       (outMessage.info as CommonMessageInfoInternal).value.coins
     ).toBeGreaterThan(0);
+
+    expect((outMessage.info as CommonMessageInfoInternal).dest.toString()).toBe(
+      deployer.address.toString()
+    );
 
     const cs = outMessage.body.beginParse();
 
@@ -1373,7 +1418,9 @@ describe("PythTest", () => {
       sentValue,
       [ETH_PRICE_FEED_ID, BTC_PRICE_FEED_ID],
       HERMES_BTC_PUBLISH_TIME,
-      60
+      60,
+      deployer.address,
+      CUSTOM_PAYLOAD
     );
 
     // Verify transaction success and message count
