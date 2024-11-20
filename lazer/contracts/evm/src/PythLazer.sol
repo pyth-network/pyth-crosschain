@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {console} from "forge-std/console.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -88,9 +87,12 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         if (signer == address(0)) {
             revert("invalid signature");
         }
-        console.log("recover address %s", signer);
         if (!isValidSigner(signer)) {
             revert("invalid signer");
         }
+    }
+
+    function version() public pure returns (string memory) {
+        return "0.1.0";
     }
 }
