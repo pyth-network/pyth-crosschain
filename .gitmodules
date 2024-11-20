@@ -4,3 +4,6 @@
 [submodule "lazer/contracts/evm/lib/openzeppelin-contracts-upgradeable"]
 	path = lazer/contracts/evm/lib/openzeppelin-contracts-upgradeable
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+[submodule "lazer/contracts/evm/lib/openzeppelin-contracts"]
+	path = lazer/contracts/evm/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
