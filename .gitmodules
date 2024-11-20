@@ -7,3 +7,6 @@
 [submodule "lazer/contracts/evm/lib/openzeppelin-contracts"]
 	path = lazer/contracts/evm/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "lazer/contracts/evm/lib/createx"]
+	path = lazer/contracts/evm/lib/createx
+	url = https://github.com/pcaversaccio/createx
