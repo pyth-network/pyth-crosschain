@@ -1,6 +1,5 @@
 @use "modern-normalize";
-
-@use "../theme.scss";
+@use "../theme";
 
 :root {
   color: theme.color("foreground");

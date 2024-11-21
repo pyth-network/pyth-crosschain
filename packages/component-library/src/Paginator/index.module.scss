@@ -1,4 +1,4 @@
-@use "../theme.scss";
+@use "../theme";
 
 .paginator {
   display: flex;
@@ -16,6 +16,7 @@
       height: theme.spacing(4);
       opacity: 0;
       transition: opacity 100ms linear;
+
       @include theme.spin;
 
       &.visible {

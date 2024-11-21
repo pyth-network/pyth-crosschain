@@ -1,8 +1,9 @@
-@use "../theme.scss";
+@use "../theme";
 
 .skeleton {
   border-radius: theme.border-radius("lg");
   background: theme.color("button", "disabled", "background");
+
   @include theme.pulse;
 
   .skeletonInner {

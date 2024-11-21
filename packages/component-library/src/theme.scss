@@ -21,6 +21,7 @@ $font-weight: (
   "extrabold": 800,
   "black": 900,
 );
+
 @function font-weight($weight) {
   @return map-get-strict($font-weight, $weight);
 }
@@ -41,6 +42,7 @@ $font-size: (
   "8xl": 6rem,
   "9xl": 8rem,
 );
+
 @function font-size($size) {
   @return map-get-strict($font-size, $size);
 }
@@ -56,6 +58,7 @@ $border-radius: (
   "3xl": 1.5rem,
   "full": 9999px,
 );
+
 @function border-radius($radius: "DEFAULT") {
   @return map-get-strict($border-radius, $radius);
 }
@@ -380,6 +383,7 @@ $color-pallette: (
     950: #050217,
   ),
 );
+
 @function pallette-color($color...) {
   @return map-get-strict($color-pallette, $color...);
 }
@@ -493,6 +497,7 @@ $color: (
     ),
   ),
 );
+
 @function color($color-path...) {
   @return map-get-strict($color, $color-path...);
 }
@@ -531,15 +536,18 @@ $button-sizes: (
     "gap": spacing(3),
   ),
 );
+
 @function button-padding($size, $include-gap) {
   $button: map-get-strict($button-sizes, $size);
   $padding: map-get-strict($button, "padding");
+
   @if $include-gap {
     @return $padding + map-get-strict($button, "gap");
   } @else {
     @return $padding;
   }
 }
+
 @function button-icon-size($size) {
   @return map-get-strict($button-sizes, $size, "icon-size");
 }
@@ -558,11 +566,13 @@ $button-sizes: (
 
 @mixin pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
   @keyframes pulse {
     0%,
     100% {
       opacity: 1;
     }
+
     50% {
       opacity: 0.5;
     }
@@ -571,10 +581,12 @@ $button-sizes: (
 
 @mixin spin {
   animation: spin 1s linear infinite;
+
   @keyframes spin {
     from {
       transform: rotate(0deg);
     }
+
     to {
       transform: rotate(360deg);
     }

@@ -5,9 +5,27 @@
     "build:storybook": {
       "outputs": ["storybook-static/**"]
     },
+    "fix:lint": {
+      "dependsOn": ["fix:lint:eslint", "fix:lint:stylelint"],
+      "cache": false
+    },
+    "fix:lint:eslint": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "fix:lint:stylelint": {
+      "cache": false
+    },
     "start:dev": {
       "persistent": true,
       "cache": false
-    }
+    },
+    "test:lint": {
+      "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
+    },
+    "test:lint:eslint": {
+      "dependsOn": ["^build"]
+    },
+    "test:lint:stylelint": {}
   }
 }
