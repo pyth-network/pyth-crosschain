@@ -1,4 +1,4 @@
-@use "../theme.scss";
+@use "../theme";
 
 .button {
   display: inline flow-root;
@@ -6,7 +6,6 @@
   white-space: nowrap;
   font-weight: theme.font-weight("medium");
   outline: none;
-  border: none;
   transition-property: background-color, color, border-color, box-shadow;
   transition-duration: 100ms;
   transition-timing-function: linear;
@@ -129,6 +128,6 @@
 
   &[data-focus-visible] {
     border-color: theme.color("forms", "input", "focus", "border");
-    box-shadow: 0px 0px 0px 4px theme.color("forms", "focus-color");
+    box-shadow: 0 0 0 4px theme.color("forms", "focus-color");
   }
 }

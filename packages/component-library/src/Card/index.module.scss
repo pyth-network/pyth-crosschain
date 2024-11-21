@@ -1,9 +1,8 @@
-@use "../theme.scss";
+@use "../theme";
 
 .card {
   flex-direction: column;
   gap: theme.spacing(2);
-  border-radius: theme.border-radius("2xl");
   background-color: theme.color("background", "secondary");
   border-radius: theme.border-radius("2xl");
   padding: theme.spacing(1);

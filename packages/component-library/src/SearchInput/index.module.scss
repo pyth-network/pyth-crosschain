@@ -1,12 +1,9 @@
 @use "sass:math";
-
-@use "../theme.scss";
+@use "../theme";
 
 .searchInput {
-  display: flex;
   flex-flow: row nowrap;
   gap: theme.spacing(2);
-  display: inline-block;
   position: relative;
   display: inline-block;
   width: calc(theme.spacing(1) * var(--width));
@@ -37,10 +34,10 @@
 
     &[data-focused] {
       border-color: theme.color("forms", "input", "focus", "border");
-      box-shadow: 0px 0px 0px 4px theme.color("forms", "focus-color");
+      box-shadow: 0 0 0 4px theme.color("forms", "focus-color");
     }
 
-    :placeholder {
+    &::placeholder {
       color: theme.color("button", "disabled", "foreground");
     }
   }
@@ -55,6 +52,7 @@
 
   .loadingIcon {
     opacity: 0;
+
     @include theme.spin;
   }
 
@@ -91,45 +89,40 @@
 
   @each $size, $values in theme.$button-sizes {
     &[data-size="#{$size}"] {
-      height: theme.map-get-strict($values, "height");
+      $padding: theme.map-get-strict($values, "padding");
+      $icon-size: theme.map-get-strict($values, "icon-size");
+      $gap: theme.map-get-strict($values, "gap");
+      $height: theme.map-get-strict($values, "height");
+
+      height: $height;
 
       .input {
         border-radius: theme.map-get-strict($values, "border-radius");
         font-size: theme.map-get-strict($values, "font-size");
-        padding: 0
-          theme.map-get-strict($values, "padding") +
-          theme.map-get-strict($values, "icon-size") +
-          theme.map-get-strict($values, "gap");
-        line-height: calc(theme.map-get-strict($values, "height") - 2px);
+        line-height: calc($height - 2px);
+        padding: 0 ($padding + $icon-size + $gap);
       }
 
       .searchIcon,
       .loadingIcon,
       .clearButton {
-        inset: math.div(
-            theme.map-get-strict($values, "height") - theme.map-get-strict(
-                $values,
-                "icon-size"
-              ),
-            2
-          )
-          auto;
+        inset: math.div($height - $icon-size, 2) auto;
       }
 
       .searchIcon,
       .loadingIcon,
       .clearIcon {
-        width: theme.map-get-strict($values, "icon-size");
-        height: theme.map-get-strict($values, "icon-size");
+        width: $icon-size;
+        height: $icon-size;
       }
 
       .searchIcon,
       .loadingIcon {
-        left: theme.map-get-strict($values, "padding");
+        left: $padding;
       }
 
       .clearButton {
-        right: theme.map-get-strict($values, "padding");
+        right: $padding;
       }
     }
   }
