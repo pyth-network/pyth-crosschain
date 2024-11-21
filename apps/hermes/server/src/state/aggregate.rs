@@ -174,33 +174,6 @@ pub enum Update {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct PriceFeedTwapUpdate {
-    pub price_feed_id: PriceIdentifier,
-    pub cumulative_price: Price,
-    pub cumulative_num_down_slots: u64,
-    pub slot: Option<Slot>,
-    pub received_at: Option<UnixTimestamp>,
-    pub prev_publish_time: Option<UnixTimestamp>,
-}
-impl From<(&TwapMessage, Slot, UnixTimestamp)> for PriceFeedTwapUpdate {
-    fn from((twap, slot, received_at): (&TwapMessage, Slot, UnixTimestamp)) -> Self {
-        PriceFeedTwapUpdate {
-            price_feed_id: PriceIdentifier::new(twap.feed_id),
-            cumulative_price: Price {
-                price: twap.cumulative_price as i64,
-                conf: twap.cumulative_conf as u64,
-                expo: twap.exponent,
-                publish_time: twap.publish_time,
-            },
-            slot: Some(slot),
-            received_at: Some(received_at),
-            prev_publish_time: Some(twap.prev_publish_time),
-            cumulative_num_down_slots: twap.num_down_slots,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
 pub struct PriceFeedTwap {
     pub id: PriceIdentifier,
     pub start_timestamp: UnixTimestamp,
@@ -736,6 +709,21 @@ fn calculate_twap(start_message: &TwapMessage, end_message: &TwapMessage) -> Res
     if end_message.publish_slot <= start_message.publish_slot {
         return Err(anyhow!(
             "Cannot calculate TWAP - end slot must be greater than start slot"
+        ));
+    }
+
+    // Validate that messages are the first ones in their timestamp
+    // This is necessary to ensure that this TWAP is deterministic,
+    // Since there can be multiple messages in a single second.
+    if start_message.prev_publish_time >= start_message.publish_time {
+        return Err(anyhow!(
+            "Start message is not the first update for its timestamp"
+        ));
+    }
+
+    if end_message.prev_publish_time >= end_message.publish_time {
+        return Err(anyhow!(
+            "End message is not the first update for its timestamp"
         ));
     }
 
