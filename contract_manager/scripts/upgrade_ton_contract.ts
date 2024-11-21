@@ -3,7 +3,8 @@ import { hideBin } from "yargs/helpers";
 import { DefaultStore, loadHotWallet } from "../src";
 import { TonChain } from "../src/chains";
 import { CHAINS, toChainName } from "@pythnetwork/xc-admin-common";
-import { compile } from "@ton/blueprint";
+import fs from "fs";
+import path from "path";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -60,15 +61,17 @@ async function main() {
     `Upgrading contract on TON ${argv.network} (Chain ID: ${chainId}, Wormhole Chain Name: ${wormholeChainName})`
   );
 
-  console.log("Compiling new contract code...");
-  const newCode = await compile("Main");
-  const newCodeHash = newCode.hash();
-  console.log("New code hash:", newCodeHash.toString("hex"));
+  // Read the compiled contract from the build directory
+  const compiledPath = path.resolve(
+    __dirname,
+    "../../target_chains/ton/contracts/build/Main.compiled.json"
+  );
+  const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
+  const newCodeHash = compiled.hash;
+  console.log("New code hash:", newCodeHash);
 
   // Generate governance payload for the upgrade
-  const payload = chain.generateGovernanceUpgradePayload(
-    newCodeHash.toString("hex")
-  );
+  const payload = chain.generateGovernanceUpgradePayload(newCodeHash);
   console.log("Generated governance payload");
   console.log("Payload:", payload);
 
