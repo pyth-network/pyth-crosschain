@@ -26,8 +26,11 @@ jobs:
         with:
           version: 9.12.3
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: pnpm install
+
+      - name: Build all packages
+        run: pnpm exec lerna build
 
       - name: Build contract
         working-directory: target_chains/ton/contracts
