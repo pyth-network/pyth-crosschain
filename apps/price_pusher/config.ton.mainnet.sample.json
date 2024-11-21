@@ -1,0 +1,7 @@
+{
+  "endpoint": "https://toncenter.com/api/v2/jsonRPC",
+  "pyth-contract-address": "EQBU6k8HH6yX4Jf3d18swWbnYr31D3PJI7PgjXT",
+  "price-service-endpoint": "https://hermes.pyth.network",
+  "private-key-file": "./mnemonic",
+  "price-config-file": "./price-config.stable.sample.yaml"
+}
