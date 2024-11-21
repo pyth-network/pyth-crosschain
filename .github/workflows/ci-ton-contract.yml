@@ -30,10 +30,7 @@ jobs:
         run: pnpm install
 
       - name: Build workspace dependencies
-        run: |
-          pnpm --filter "@pythnetwork/price-service-sdk" build
-          pnpm --filter "@pythnetwork/xc-admin-common" build
-          pnpm --filter "@pythnetwork/pyth-ton-js" build
+        run: pnpm build:ci
 
       - name: Build contract
         working-directory: target_chains/ton/contracts
