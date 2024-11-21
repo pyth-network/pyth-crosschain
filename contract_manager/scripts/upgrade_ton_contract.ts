@@ -62,6 +62,7 @@ async function main() {
   );
 
   // Read the compiled contract from the build directory
+  // NOTE: Remember to build the contract first before running this script to get the latest build, command: `npm run build:blueprint` on target_chains/ton/contracts
   const compiledPath = path.resolve(
     __dirname,
     "../../target_chains/ton/contracts/build/Main.compiled.json"
