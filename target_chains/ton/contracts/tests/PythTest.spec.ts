@@ -1096,7 +1096,9 @@ describe("PythTest", () => {
 
     // Verify sender address
     const senderAddress = cs.loadAddress();
-    expect(senderAddress?.toString()).toBe(deployer.address.toString());
+    expect(senderAddress?.toString()).toBe(
+      deployer.getSender().address.toString()
+    );
 
     // Verify custom payload
     const customPayloadCell = cs.loadRef();
@@ -1213,7 +1215,9 @@ describe("PythTest", () => {
 
     // Verify sender address
     const senderAddress = cs.loadAddress();
-    expect(senderAddress?.toString()).toBe(deployer.address.toString());
+    expect(senderAddress?.toString()).toBe(
+      deployer.getSender().address.toString()
+    );
 
     // Verify custom payload
     const customPayloadCell = cs.loadRef();
@@ -1564,7 +1568,9 @@ describe("PythTest", () => {
 
     // Verify sender address
     const senderAddress = cs.loadAddress();
-    expect(senderAddress?.toString()).toBe(deployer.address.toString());
+    expect(senderAddress?.toString()).toBe(
+      deployer.getSender().address.toString()
+    );
 
     // Verify custom payload
     const customPayloadCell = cs.loadRef();
@@ -1630,7 +1636,9 @@ describe("PythTest", () => {
 
     // Verify sender address
     const senderAddress = cs.loadAddress();
-    expect(senderAddress?.toString()).toBe(deployer.address.toString());
+    expect(senderAddress?.toString()).toBe(
+      deployer.getSender().address.toString()
+    );
 
     // Verify custom payload
     const customPayloadCell = cs.loadRef();
