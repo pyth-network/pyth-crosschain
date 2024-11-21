@@ -433,3 +433,6 @@
 - chain: mathematician_in_heart
   address: "0x056f829183Ec806A78c26C98961678c24faB71af"
   type: EvmWormholeContract
+- chain: happy_bird_song_ends_with_tio
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
