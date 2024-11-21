@@ -2,10 +2,7 @@ use {
     crate::{
         api::{
             rest::{validate_price_ids, RestError},
-            types::{
-                BinaryUpdate, EncodingType, ParsedPriceTwapWindow, PriceIdInput,
-                RpcCalculatedPriceFeedTwap, TwapsResponse,
-            },
+            types::{BinaryUpdate, EncodingType, ParsedPriceFeedTwap, PriceIdInput, TwapsResponse},
             ApiState,
         },
         state::aggregate::{Aggregates, RequestTime},
@@ -37,6 +34,8 @@ pub struct LatestTwapsPathParams {
 #[into_params(parameter_in=Query)]
 pub struct LatestTwapsQueryParams {
     /// Get the most recent TWAP (time weighted average price) for this set of price feed ids.
+    /// The `binary` data contains the signed start & end cumulative price updates needed to calculate
+    /// the TWAPs on-chain. The `parsed` data contains the calculated TWAPs.
     ///
     /// This parameter can be provided multiple times to retrieve multiple price updates,
     /// for example see the following query string:
@@ -52,13 +51,9 @@ pub struct LatestTwapsQueryParams {
     #[serde(default)]
     encoding: EncodingType,
 
-    /// If true, include the parsed price update in the `parsed` field of each returned feed. Default is `true`.
+    /// If true, include the calculated TWAP in the `parsed` field of each returned feed. Default is `true`.
     #[serde(default = "default_true")]
     parsed: bool,
-
-    /// If true, include the calculated TWAP in the `calculated` field of each returned feed. Default is `true`.
-    #[serde(default = "default_true")]
-    calculated: bool,
 
     /// If true, invalid price IDs in the `ids` parameter are ignored. Only applicable to the v2 APIs. Default is `false`.
     #[serde(default)]
@@ -82,9 +77,9 @@ fn default_true() -> bool {
     true
 }
 
-/// Get the latest TWAP by price feed id.
+/// Get the latest TWAP by price feed id with a custom time window.
 ///
-/// Given a collection of price feed ids, retrieve the latest Pyth price for each price feed.
+/// Given a collection of price feed ids, retrieve the latest Pyth TWAP price for each price feed.
 #[utoipa::path(
     get,
     path = "/v2/updates/twap/{window_seconds}/latest",
@@ -153,10 +148,10 @@ where
         })
         .collect();
 
-    let parsed: Option<Vec<ParsedPriceTwapWindow>> = if params.parsed {
+    let parsed: Option<Vec<ParsedPriceFeedTwap>> = if params.parsed {
         Some(
             twaps_with_update_data
-                .windows
+                .twaps
                 .into_iter()
                 .map(Into::into)
                 .collect(),
@@ -165,23 +160,6 @@ where
         None
     };
 
-    let calculated: Option<Vec<RpcCalculatedPriceFeedTwap>> = if params.calculated {
-        Some(
-            twaps_with_update_data
-                .calculated_twaps
-                .into_iter()
-                .map(Into::into)
-                .collect(),
-        )
-    } else {
-        None
-    };
-
-    let twap_resp = TwapsResponse {
-        binary,
-        parsed,
-        calculated,
-    };
-
+    let twap_resp = TwapsResponse { binary, parsed };
     Ok(Json(twap_resp))
 }

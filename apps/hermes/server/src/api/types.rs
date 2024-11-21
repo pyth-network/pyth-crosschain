@@ -1,8 +1,7 @@
 use {
     super::doc_examples,
     crate::state::aggregate::{
-        CalculatedPriceFeedTwap, PriceFeedTwapUpdate, PriceFeedUpdate, PriceFeedsWithUpdateData,
-        PriceTwapWindow, Slot, UnixTimestamp,
+        PriceFeedTwap, PriceFeedUpdate, PriceFeedsWithUpdateData, Slot, UnixTimestamp,
     },
     anyhow::Result,
     base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
@@ -248,67 +247,35 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
     }
 }
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct RpcCalculatedPriceFeedTwap {
+pub struct ParsedPriceFeedTwap {
     pub id: RpcPriceIdentifier,
+    /// The start unix timestamp of the window
     pub start_timestamp: i64,
+    /// The end unix timestamp of the window
     pub end_timestamp: i64,
+    /// The calculated time weighted average price over the window
     pub twap: RpcPrice,
+    /// The % of slots where the network was down over the TWAP window.
+    /// A value of zero indicates no slots were missed over the window, and
+    /// a value of one indicates that every slot was missed over the window.
+    /// This is a float value stored as a string to avoid precision loss.
+    #[serde(with = "pyth_sdk::utils::as_string")]
+    #[schema(value_type = String, example="0.00001")]
+    pub down_slots_ratio: f64,
 }
-
-impl From<CalculatedPriceFeedTwap> for RpcCalculatedPriceFeedTwap {
-    fn from(twap: CalculatedPriceFeedTwap) -> Self {
+impl From<PriceFeedTwap> for ParsedPriceFeedTwap {
+    fn from(pft: PriceFeedTwap) -> Self {
         Self {
-            id: RpcPriceIdentifier::from(twap.id),
-            start_timestamp: twap.start_timestamp,
-            end_timestamp: twap.end_timestamp,
+            id: RpcPriceIdentifier::from(pft.id),
+            start_timestamp: pft.start_timestamp,
+            end_timestamp: pft.end_timestamp,
             twap: RpcPrice {
-                price: twap.price.price,
-                conf: twap.price.conf,
-                expo: twap.price.expo,
-                publish_time: twap.price.publish_time,
+                price: pft.twap.price,
+                conf: pft.twap.conf,
+                expo: pft.twap.expo,
+                publish_time: pft.twap.publish_time,
             },
-        }
-    }
-}
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct ParsedPriceTwapUpdate {
-    pub id: RpcPriceIdentifier,
-    pub cumulative_price: RpcPrice,
-    pub cumulative_num_down_slots: u64,
-    pub metadata: RpcPriceFeedMetadataV2,
-}
-impl From<PriceFeedTwapUpdate> for ParsedPriceTwapUpdate {
-    fn from(twap_update: PriceFeedTwapUpdate) -> Self {
-        Self {
-            id: RpcPriceIdentifier::from(twap_update.price_feed_id),
-            cumulative_price: RpcPrice {
-                price: twap_update.cumulative_price.price,
-                conf: twap_update.cumulative_price.conf,
-                expo: twap_update.cumulative_price.expo,
-                publish_time: twap_update.cumulative_price.publish_time,
-            },
-            metadata: RpcPriceFeedMetadataV2 {
-                proof_available_time: twap_update.received_at,
-                slot: twap_update.slot,
-                prev_publish_time: twap_update.prev_publish_time,
-            },
-            cumulative_num_down_slots: twap_update.cumulative_num_down_slots,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct ParsedPriceTwapWindow {
-    pub id: RpcPriceIdentifier,
-    pub start: ParsedPriceTwapUpdate,
-    pub end: ParsedPriceTwapUpdate,
-}
-impl From<PriceTwapWindow> for ParsedPriceTwapWindow {
-    fn from(window: PriceTwapWindow) -> Self {
-        Self {
-            id: window.id.into(),
-            start: window.start.into(),
-            end: window.end.into(),
+            down_slots_ratio: pft.down_slots_ratio,
         }
     }
 }
@@ -319,13 +286,9 @@ pub struct TwapsResponse {
     /// calculate a given price feed's TWAP.
     pub binary: Vec<BinaryUpdate>,
 
-    /// The parsed start and end cumulative prices for a given price ID's TWAP window
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parsed: Option<Vec<ParsedPriceTwapWindow>>,
-
     /// The calculated TWAPs for each price ID
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub calculated: Option<Vec<RpcCalculatedPriceFeedTwap>>,
+    pub parsed: Option<Vec<ParsedPriceFeedTwap>>,
 }
 
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone, ToSchema)]

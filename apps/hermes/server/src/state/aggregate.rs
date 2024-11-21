@@ -199,18 +199,20 @@ impl From<(&TwapMessage, Slot, UnixTimestamp)> for PriceFeedTwapUpdate {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct CalculatedPriceFeedTwap {
+pub struct PriceFeedTwap {
     pub id: PriceIdentifier,
     pub start_timestamp: UnixTimestamp,
     pub end_timestamp: UnixTimestamp,
-    pub price: Price,
+    pub twap: Price,
+    pub down_slots_ratio: f64,
 }
-#[derive(Debug, PartialEq)]
-pub struct PriceTwapWindow {
-    pub id: PriceIdentifier,
-    pub start: PriceFeedTwapUpdate,
-    pub end: PriceFeedTwapUpdate,
-}
+
+// #[derive(Debug, PartialEq)]
+// pub struct PriceTwapWindow {
+//     pub id: PriceIdentifier,
+//     pub start: PriceFeedTwapUpdate,
+//     pub end: PriceFeedTwapUpdate,
+// }
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedUpdate {
     pub price_feed: PriceFeed,
@@ -234,9 +236,8 @@ pub struct PublisherStakeCapsWithUpdateData {
 
 #[derive(Debug)]
 pub struct TwapsWithUpdateData {
-    pub calculated_twaps: Vec<CalculatedPriceFeedTwap>,
+    pub twaps: Vec<PriceFeedTwap>,
     pub update_data: Vec<Vec<Vec<u8>>>,
-    pub windows: Vec<PriceTwapWindow>,
 }
 
 #[derive(Debug, Serialize)]
@@ -657,7 +658,6 @@ where
 {
     let mut calculated_twaps = Vec::new();
     let mut all_update_data = Vec::new();
-    let mut windows = Vec::new();
 
     for price_id in price_ids {
         let start_messages = state
@@ -688,29 +688,20 @@ where
         {
             match calculate_twap(start_twap, end_twap) {
                 Ok(twap_price) => {
+                    // down_slots_ratio describes the % of slots where the network was down
+                    // over the TWAP window. A value closer to zero indicates higher confidence.
+                    let total_slots = end_message.slot - start_message.slot;
+                    let total_down_slots = end_twap.num_down_slots - start_twap.num_down_slots;
+                    let down_slots_ratio = total_down_slots as f64 / total_slots as f64;
+
                     // Add to calculated TWAPs
-                    calculated_twaps.push(CalculatedPriceFeedTwap {
+                    calculated_twaps.push(PriceFeedTwap {
                         id: *price_id,
-                        price: twap_price,
+                        twap: twap_price,
                         start_timestamp: start_twap.publish_time,
                         end_timestamp: end_twap.publish_time,
+                        down_slots_ratio,
                     });
-
-                    // Create TWAP window
-                    let window = PriceTwapWindow {
-                        start: PriceFeedTwapUpdate::from((
-                            start_twap,
-                            start_message.slot,
-                            start_message.received_at,
-                        )),
-                        end: PriceFeedTwapUpdate::from((
-                            end_twap,
-                            end_message.slot,
-                            end_message.received_at,
-                        )),
-                        id: *price_id,
-                    };
-                    windows.push(window);
 
                     // Combine messages for update data
                     let mut messages = Vec::new();
@@ -740,9 +731,8 @@ where
     }
 
     Ok(TwapsWithUpdateData {
-        calculated_twaps,
+        twaps: calculated_twaps,
         update_data: all_update_data,
-        windows,
     })
 }
 fn calculate_twap(start_message: &TwapMessage, end_message: &TwapMessage) -> Result<Price> {
