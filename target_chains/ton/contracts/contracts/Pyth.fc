@@ -355,7 +355,6 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
         .store_coins(excess)
         .store_uint(1, MSG_SERIALIZE_BITS)
         .store_ref(response.end_cell())
-
         .end_cell(),
         0);
 }

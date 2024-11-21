@@ -106,11 +106,13 @@ describe("PythTest", () => {
 
   let blockchain: Blockchain;
   let deployer: SandboxContract<TreasuryContract>;
+  let mockDeployer: SandboxContract<TreasuryContract>;
   let pythTest: SandboxContract<PythTest>;
 
   beforeEach(async () => {
     blockchain = await Blockchain.create();
     deployer = await blockchain.treasury("deployer");
+    mockDeployer = await blockchain.treasury("mockDeployer");
   });
 
   async function deployContract(
@@ -1507,5 +1509,137 @@ describe("PythTest", () => {
 
     // Verify this is the end of the chain
     expect(btcCs.remainingRefs).toBe(0);
+  });
+
+  it("should successfully parse price feed updates with a different target address", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParsePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UPDATE, "hex"),
+      sentValue,
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      HERMES_BTC_PUBLISH_TIME,
+      mockDeployer.address,
+      CUSTOM_PAYLOAD
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Verify message success to target address
+    expect(result.transactions).toHaveTransaction({
+      from: pythTest.address,
+      to: mockDeployer.address,
+      success: true,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(5); // OP_PARSE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(2); // We expect BTC and ETH price feeds
+
+    cs.loadRef(); // Skip price feeds
+
+    // Verify sender address
+    const senderAddress = cs.loadAddress();
+    expect(senderAddress?.toString()).toBe(deployer.address.toString());
+
+    // Verify custom payload
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    const receivedPayload = Buffer.from(
+      customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length)
+    );
+    expect(receivedPayload.toString("hex")).toBe(
+      CUSTOM_PAYLOAD.toString("hex")
+    );
+  });
+
+  it("should successfully parse unique price feed updates with a different target address", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_BTC_ETH_UNIQUE_UPDATE, "hex"),
+      sentValue,
+      [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+      HERMES_BTC_PUBLISH_TIME,
+      60,
+      mockDeployer.address,
+      CUSTOM_PAYLOAD
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Verify message success to target address
+    expect(result.transactions).toHaveTransaction({
+      from: pythTest.address,
+      to: mockDeployer.address,
+      success: true,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(6); // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(2); // We expect BTC and ETH price feeds
+
+    cs.loadRef(); // Skip price feeds
+
+    // Verify sender address
+    const senderAddress = cs.loadAddress();
+    expect(senderAddress?.toString()).toBe(deployer.address.toString());
+
+    // Verify custom payload
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    const receivedPayload = Buffer.from(
+      customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length)
+    );
+    expect(receivedPayload.toString("hex")).toBe(
+      CUSTOM_PAYLOAD.toString("hex")
+    );
   });
 });
