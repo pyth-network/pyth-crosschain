@@ -30,7 +30,7 @@ jobs:
         run: pnpm install
 
       - name: Build all packages
-        run: pnpm exec lerna build
+        run: pnpm exec lerna run build
 
       - name: Build contract
         working-directory: target_chains/ton/contracts
