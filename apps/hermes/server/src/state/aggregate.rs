@@ -1,6 +1,7 @@
 #[cfg(test)]
 use mock_instant::{SystemTime, UNIX_EPOCH};
 use pythnet_sdk::messages::TwapMessage;
+
 #[cfg(not(test))]
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -31,6 +32,7 @@ use {
             v1::{WormholeMessage, WormholePayload},
         },
     },
+    rust_decimal::Decimal,
     serde::Serialize,
     solana_sdk::pubkey::Pubkey,
     std::{collections::HashSet, time::Duration},
@@ -204,7 +206,7 @@ pub struct PriceFeedTwap {
     pub start_timestamp: UnixTimestamp,
     pub end_timestamp: UnixTimestamp,
     pub twap: Price,
-    pub down_slots_ratio: f64,
+    pub down_slots_ratio: Decimal,
 }
 
 #[derive(Debug, PartialEq)]
@@ -686,7 +688,8 @@ where
                     // over the TWAP window. A value closer to zero indicates higher confidence.
                     let total_slots = end_message.slot - start_message.slot;
                     let total_down_slots = end_twap.num_down_slots - start_twap.num_down_slots;
-                    let down_slots_ratio = total_down_slots as f64 / total_slots as f64;
+                    let down_slots_ratio =
+                        Decimal::from(total_down_slots) / Decimal::from(total_slots);
 
                     // Add to calculated TWAPs
                     calculated_twaps.push(PriceFeedTwap {

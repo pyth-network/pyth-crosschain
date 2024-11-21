@@ -8,6 +8,7 @@ use {
     borsh::{BorshDeserialize, BorshSerialize},
     derive_more::{Deref, DerefMut},
     pyth_sdk::{Price, PriceFeed, PriceIdentifier},
+    rust_decimal::Decimal,
     serde::{Deserialize, Serialize},
     std::{
         collections::BTreeMap,
@@ -261,7 +262,7 @@ pub struct ParsedPriceFeedTwap {
     /// This is a float value stored as a string to avoid precision loss.
     #[serde(with = "pyth_sdk::utils::as_string")]
     #[schema(value_type = String, example="0.00001")]
-    pub down_slots_ratio: f64,
+    pub down_slots_ratio: Decimal,
 }
 impl From<PriceFeedTwap> for ParsedPriceFeedTwap {
     fn from(pft: PriceFeedTwap) -> Self {
