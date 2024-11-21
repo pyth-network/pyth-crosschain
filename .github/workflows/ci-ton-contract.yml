@@ -29,8 +29,11 @@ jobs:
       - name: Install root dependencies
         run: pnpm install
 
-      - name: Build all packages
-        run: pnpm exec lerna run build
+      - name: Build workspace dependencies
+        run: |
+          pnpm --filter "@pythnetwork/price-service-sdk" build
+          pnpm --filter "@pythnetwork/xc-admin-common" build
+          pnpm --filter "@pythnetwork/pyth-ton-js" build
 
       - name: Build contract
         working-directory: target_chains/ton/contracts
