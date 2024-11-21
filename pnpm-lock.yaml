@@ -822,6 +822,12 @@ importers:
       '@sqds/mesh':
         specifier: ^1.0.6
         version: 1.0.6(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@ton/blueprint':
+        specifier: ^0.22.0
+        version: 0.22.0(@ton/core@0.59.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(@ton/ton@15.1.0(@ton/core@0.59.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))(@types/node@22.8.2)(encoding@0.1.13)(typescript@5.4.5)
+      '@ton/core':
+        specifier: ^0.59.0
+        version: 0.59.0(@ton/crypto@3.3.0)
       '@ton/crypto':
         specifier: ^3.3.0
         version: 3.3.0
@@ -15731,10 +15737,6 @@ packages:
 
   inline-style-parser@0.2.3:
     resolution: {integrity: sha512-qlD8YNDqyTKTyuITrDOffsl6Tdhv+UC4hcdAVuQsK4IMQ99nSgd1MIA/Q+jQYoh9r3hVUXhYh7urSRmXPkW04g==}
-
-  inquirer@8.2.5:
-    resolution: {integrity: sha512-QAgPDQMEgrDssk1XiwwHoOGYF9BAbUcc1+j+FhEvaOt8/cKRqyLn0U5qA6F74fGhTMGxf92pOvPBeh29jQJDTQ==}
-    engines: {node: '>=12.0.0'}
 
   inquirer@8.2.6:
     resolution: {integrity: sha512-M1WuAmb7pn9zdFRtQYk26ZBoY043Sse0wVDdk4Bppr+JOXyQYybdtvK+l9wUibhtjdjvtoiNy8tk+EgsYIUqKg==}
@@ -38612,10 +38614,35 @@ snapshots:
       arg: 5.0.2
       chalk: 4.1.2
       dotenv: 16.4.5
-      inquirer: 8.2.5
+      inquirer: 8.2.6
       qrcode-terminal: 0.12.0
       ton-x: 2.1.0
       ts-node: 10.9.2(@types/node@20.14.15)(typescript@5.5.4)
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - debug
+      - encoding
+      - supports-color
+      - typescript
+
+  '@ton/blueprint@0.22.0(@ton/core@0.59.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(@ton/ton@15.1.0(@ton/core@0.59.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))(@types/node@22.8.2)(encoding@0.1.13)(typescript@5.4.5)':
+    dependencies:
+      '@orbs-network/ton-access': 2.3.3(encoding@0.1.13)
+      '@tact-lang/compiler': 1.4.4(encoding@0.1.13)
+      '@ton-community/func-js': 0.7.0
+      '@ton/core': 0.59.0(@ton/crypto@3.3.0)
+      '@ton/crypto': 3.3.0
+      '@ton/ton': 15.1.0(@ton/core@0.59.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)
+      '@tonconnect/sdk': 2.2.0(encoding@0.1.13)
+      arg: 5.0.2
+      chalk: 4.1.2
+      dotenv: 16.4.5
+      inquirer: 8.2.6
+      qrcode-terminal: 0.12.0
+      ton-x: 2.1.0
+      ts-node: 10.9.2(@types/node@22.8.2)(typescript@5.4.5)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -49239,24 +49266,6 @@ snapshots:
       - bluebird
 
   inline-style-parser@0.2.3: {}
-
-  inquirer@8.2.5:
-    dependencies:
-      ansi-escapes: 4.3.2
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-width: 3.0.0
-      external-editor: 3.1.0
-      figures: 3.2.0
-      lodash: 4.17.21
-      mute-stream: 0.0.8
-      ora: 5.4.1
-      run-async: 2.4.1
-      rxjs: 7.8.1
-      string-width: 4.2.3
-      strip-ansi: 6.0.1
-      through: 2.3.8
-      wrap-ansi: 7.0.0
 
   inquirer@8.2.6:
     dependencies:
