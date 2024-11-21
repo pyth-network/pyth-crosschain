@@ -15,7 +15,7 @@ module.exports = {
       },
     },
   },
-  defaultNetwork: "abstractTestnet",
+  defaultNetwork: "mathMainnet",
   networks: {
     // [process.env.MIGRATIONS_NETWORK!]: {
     //   url: process.env.RPC_URL,
@@ -59,6 +59,12 @@ module.exports = {
       zksync: true,
       verifyURL:
         "https://api-explorer-verify.testnet.abs.xyz/contract_verification",
+    },
+    mathMainnet: {
+      url: "https://redacted.master.dev/",
+      ethNetwork: "mainnet",
+      zksync: true,
+      verifyURL: "https://redacted.master.dev/contract_verification",
     },
   },
   etherscan: {
