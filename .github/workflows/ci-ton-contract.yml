@@ -1,0 +1,40 @@
+name: TON Contract CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "target_chains/ton/contracts/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "target_chains/ton/contracts/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build contract
+        working-directory: target_chains/ton/contracts
+        run: |
+          pnpm build:blueprint
+          echo "Contract hash: $(cat build/Main.compiled.json | jq -r .hash)"
+
+      - name: Run tests
+        working-directory: target_chains/ton/contracts
+        run: pnpm test:unit
