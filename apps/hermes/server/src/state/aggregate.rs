@@ -207,12 +207,6 @@ pub struct PriceFeedTwap {
     pub down_slots_ratio: f64,
 }
 
-// #[derive(Debug, PartialEq)]
-// pub struct PriceTwapWindow {
-//     pub id: PriceIdentifier,
-//     pub start: PriceFeedTwapUpdate,
-//     pub end: PriceFeedTwapUpdate,
-// }
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedUpdate {
     pub price_feed: PriceFeed,
