@@ -79,7 +79,7 @@ export class TonPricePusher implements IPricePusher {
     const keyPair = keyPairFromSeed(Buffer.from(this.privateKey, "hex"));
     const wallet = WalletContractV4.create({
       publicKey: keyPair.publicKey,
-      workchain: 0,
+      workchain: 0, // workchain 0 is the masterchain
     });
     const provider = this.client.open(wallet);
     this.sender = provider.sender(keyPair.secretKey);
@@ -109,7 +109,8 @@ export class TonPricePusher implements IPricePusher {
         const updateDataBuffer = Buffer.from(updateData, "base64");
         const updateFee = await this.contract.getUpdateFee(updateDataBuffer);
         const totalFee =
-          calculateUpdatePriceFeedsFee(BigInt(updateFee)) + BigInt(updateFee);
+          calculateUpdatePriceFeedsFee(BigInt(priceIds.length)) +
+          BigInt(updateFee);
 
         await this.contract.sendUpdatePriceFeeds(
           this.sender,
