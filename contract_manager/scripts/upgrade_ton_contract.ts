@@ -49,13 +49,10 @@ async function main() {
       : "https://testnet.toncenter.com/api/v2/jsonRPC"
   );
 
-  let vaultName: string;
-  if (isMainnet) {
-    vaultName = "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj";
-  } else {
-    vaultName = "devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3";
-  }
-  const vault = DefaultStore.vaults[vaultName];
+  const vault =
+    DefaultStore.vaults[
+      "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
+    ];
 
   console.log(
     `Upgrading contract on TON ${argv.network} (Chain ID: ${chainId}, Wormhole Chain Name: ${wormholeChainName})`
