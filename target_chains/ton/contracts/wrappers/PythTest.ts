@@ -3,10 +3,10 @@ import {
   Cell,
   contractAddress,
   ContractProvider,
-  parseTuple,
   Sender,
   SendMode,
   toNano,
+  Address,
 } from "@ton/core";
 import { BaseWrapper } from "./BaseWrapper";
 import { HexString, Price } from "@pythnetwork/price-service-sdk";
@@ -202,7 +202,9 @@ export class PythTest extends BaseWrapper {
     updateData: Buffer,
     priceIds: HexString[],
     time1: number,
-    time2: number
+    time2: number,
+    targetAddress: Address,
+    customPayload: Buffer
   ): Cell {
     // Create a buffer for price IDs: 1 byte length + (32 bytes per ID)
     const priceIdsBuffer = Buffer.alloc(1 + priceIds.length * 32);
@@ -221,6 +223,8 @@ export class PythTest extends BaseWrapper {
       .storeRef(createCellChain(priceIdsBuffer))
       .storeUint(time1, 64)
       .storeUint(time2, 64)
+      .storeAddress(targetAddress)
+      .storeRef(createCellChain(customPayload))
       .endCell();
   }
 
@@ -231,14 +235,18 @@ export class PythTest extends BaseWrapper {
     updateFee: bigint,
     priceIds: HexString[],
     minPublishTime: number,
-    maxPublishTime: number
+    maxPublishTime: number,
+    targetAddress: Address,
+    customPayload: Buffer
   ) {
     const messageCell = this.createPriceFeedMessage(
       5, // OP_PARSE_PRICE_FEED_UPDATES
       updateData,
       priceIds,
       minPublishTime,
-      maxPublishTime
+      maxPublishTime,
+      targetAddress,
+      customPayload
     );
 
     await provider.internal(via, {
@@ -255,14 +263,18 @@ export class PythTest extends BaseWrapper {
     updateFee: bigint,
     priceIds: HexString[],
     publishTime: number,
-    maxStaleness: number
+    maxStaleness: number,
+    targetAddress: Address,
+    customPayload: Buffer
   ) {
     const messageCell = this.createPriceFeedMessage(
       6, // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
       updateData,
       priceIds,
       publishTime,
-      maxStaleness
+      maxStaleness,
+      targetAddress,
+      customPayload
     );
 
     await provider.internal(via, {
