@@ -1,0 +1,150 @@
+@use "sass:math";
+
+@use "../theme.scss";
+
+.searchInput {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(2);
+  display: inline-block;
+  position: relative;
+  display: inline-block;
+  width: calc(theme.spacing(1) * var(--width));
+  color: theme.color("button", "outline", "foreground");
+
+  .input {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    border: 1px solid theme.color("border");
+    background-color: theme.color("background", "primary");
+    outline: none;
+    transition-property: border-color, box-shadow, background-color, color;
+    transition-duration: 100ms;
+    transition-timing-function: linear;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    caret-color: theme.color("forms", "input", "focus", "border");
+
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+
+    &[data-hovered] {
+      border-color: theme.color("forms", "input", "hover", "border");
+    }
+
+    &[data-focused] {
+      border-color: theme.color("forms", "input", "focus", "border");
+      box-shadow: 0px 0px 0px 4px theme.color("forms", "focus-color");
+    }
+
+    :placeholder {
+      color: theme.color("button", "disabled", "foreground");
+    }
+  }
+
+  .clearButton {
+    background: transparent;
+    border: none;
+    opacity: 1;
+    display: inline;
+    cursor: pointer;
+  }
+
+  .loadingIcon {
+    opacity: 0;
+    @include theme.spin;
+  }
+
+  .searchIcon,
+  .loadingIcon {
+    pointer-events: none;
+  }
+
+  .searchIcon,
+  .loadingIcon,
+  .clearButton {
+    position: absolute;
+    transition-property: opacity, color;
+    transition-duration: 100ms;
+    transition-timing-function: linear;
+  }
+
+  &[data-pending] {
+    .loadingIcon {
+      opacity: 1;
+    }
+
+    .searchIcon {
+      opacity: 0;
+    }
+  }
+
+  &[data-empty] {
+    .clearButton {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  @each $size, $values in theme.$button-sizes {
+    &[data-size="#{$size}"] {
+      height: theme.map-get-strict($values, "height");
+
+      .input {
+        border-radius: theme.map-get-strict($values, "border-radius");
+        font-size: theme.map-get-strict($values, "font-size");
+        padding: 0
+          theme.map-get-strict($values, "padding") +
+          theme.map-get-strict($values, "icon-size") +
+          theme.map-get-strict($values, "gap");
+        line-height: calc(theme.map-get-strict($values, "height") - 2px);
+      }
+
+      .searchIcon,
+      .loadingIcon,
+      .clearButton {
+        inset: math.div(
+            theme.map-get-strict($values, "height") - theme.map-get-strict(
+                $values,
+                "icon-size"
+              ),
+            2
+          )
+          auto;
+      }
+
+      .searchIcon,
+      .loadingIcon,
+      .clearIcon {
+        width: theme.map-get-strict($values, "icon-size");
+        height: theme.map-get-strict($values, "icon-size");
+      }
+
+      .searchIcon,
+      .loadingIcon {
+        left: theme.map-get-strict($values, "padding");
+      }
+
+      .clearButton {
+        right: theme.map-get-strict($values, "padding");
+      }
+    }
+  }
+
+  &[data-disabled] {
+    color: theme.color("button", "disabled", "foreground");
+
+    .input {
+      cursor: not-allowed;
+      background-color: theme.color("button", "disabled", "background");
+      border-color: transparent;
+    }
+
+    .clearButton {
+      pointer-events: none;
+    }
+  }
+}

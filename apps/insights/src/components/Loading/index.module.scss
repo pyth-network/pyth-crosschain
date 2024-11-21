@@ -1,0 +1,5 @@
+@use "@pythnetwork/component-library/theme.scss";
+
+.loading {
+  @include theme.max-width;
+}

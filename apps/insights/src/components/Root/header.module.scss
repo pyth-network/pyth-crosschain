@@ -1,0 +1,49 @@
+@use "@pythnetwork/component-library/theme.scss";
+
+.header {
+  position: sticky;
+  top: 0;
+  height: theme.spacing(20);
+  width: 100%;
+  background-color: theme.color("background", "primary");
+
+  .content {
+    height: 100%;
+    justify-content: space-between;
+    @include theme.row;
+    @include theme.max-width;
+
+    .leftMenu {
+      flex: none;
+      gap: theme.spacing(6);
+      @include theme.row;
+
+      .logo {
+        margin-top: 0.56456rem;
+        height: 2.81456rem;
+        width: theme.spacing(9);
+      }
+
+      .logoLabel {
+        @include theme.sr-only;
+      }
+
+      .appName {
+        font-size: theme.font-size("xl");
+        font-weight: theme.font-weight("semibold");
+        color: theme.color("heading");
+      }
+    }
+
+    .rightMenu {
+      flex: none;
+      gap: theme.spacing(2);
+      @include theme.row;
+      margin-right: -#{theme.button-padding("sm", false)};
+
+      .themeSwitch {
+        margin-left: theme.spacing(1);
+      }
+    }
+  }
+}

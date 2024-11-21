@@ -1,12 +1,12 @@
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 
+import styles from "./index.module.scss";
 import { H1 } from "../H1";
-import { MaxWidth } from "../MaxWidth";
 
 export const Loading = () => (
-  <MaxWidth>
+  <div className={styles.loading}>
     <H1>
-      <Skeleton className="w-60" />
+      <Skeleton width={60} />
     </H1>
-  </MaxWidth>
+  </div>
 );

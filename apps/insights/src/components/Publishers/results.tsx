@@ -1,7 +1,8 @@
 "use client";
 
 import { useLogger } from "@pythnetwork/app-logger";
-import { Table } from "@pythnetwork/component-library/Table";
+import { Paginator } from "@pythnetwork/component-library/Paginator";
+import { TableCard } from "@pythnetwork/component-library/TableCard";
 import { usePathname } from "next/navigation";
 import { parseAsInteger, useQueryStates, createSerializer } from "nuqs";
 import {
@@ -11,16 +12,15 @@ import {
   useCallback,
 } from "react";
 
-import { Paginator } from "../Paginator";
+import { columns } from "./columns";
 
-type Props<T extends string> = Omit<
-  ComponentProps<typeof Table<T>>,
-  "isLoading" | "rows"
-> & {
+type Props = {
   publishers: {
     key: string;
     rank: number;
-    data: ComponentProps<typeof Table<T>>["rows"][number]["data"];
+    data: ComponentProps<
+      typeof TableCard<(typeof columns)[number]["id"]>
+    >["rows"][number]["data"];
   }[];
 };
 
@@ -29,10 +29,7 @@ const params = {
   pageSize: parseAsInteger.withDefault(20),
 };
 
-export const Results = <T extends string>({
-  publishers,
-  ...props
-}: Props<T>) => {
+export const Results = ({ publishers }: Props) => {
   const [isTransitioning, startTransition] = useTransition();
   const [{ page, pageSize }, setQuery] = useQueryStates(params);
   const rows = useMemo(
@@ -81,22 +78,28 @@ export const Results = <T extends string>({
   const mkPageLink = useCallback(
     (page: number) => {
       const serialize = createSerializer(params);
-      return `${pathname}${serialize({ page })}`;
+      return `${pathname}${serialize({ page, pageSize })}`;
     },
-    [pathname],
+    [pathname, pageSize],
   );
 
   return (
-    <>
-      <Table isLoading={isTransitioning} rows={rows} {...props} />
-      <Paginator
-        numPages={numPages}
-        currentPage={page}
-        setCurrentPage={updatePage}
-        pageSize={pageSize}
-        setPageSize={updatePageSize}
-        mkPageLink={mkPageLink}
-      />
-    </>
+    <TableCard
+      label="Publishers"
+      columns={columns}
+      isUpdating={isTransitioning}
+      rows={rows}
+      footer={
+        <Paginator
+          numPages={numPages}
+          currentPage={page}
+          onPageChange={updatePage}
+          pageSize={pageSize}
+          onPageSizeChange={updatePageSize}
+          mkPageLink={mkPageLink}
+          pageSizeOptions={[10, 20, 30, 40, 50]}
+        />
+      }
+    />
   );
 };

@@ -1,0 +1,31 @@
+@use "../theme.scss";
+
+.appTabs {
+  gap: theme.spacing(2);
+  @include theme.row;
+
+  .tab {
+    position: relative;
+    outline: none;
+
+    .bubble {
+      position: absolute;
+      inset: 0;
+      border-radius: theme.border-radius("full");
+      background-color: white;
+      mix-blend-mode: difference;
+      outline: none;
+      z-index: 1;
+      transition: box-shadow 200ms linear;
+    }
+
+    &[data-focus-visible] {
+      box-shadow: none;
+      border-color: transparent;
+
+      .bubble {
+        box-shadow: 0px 0px 0px 4px rgba(white, 0.4);
+      }
+    }
+  }
+}

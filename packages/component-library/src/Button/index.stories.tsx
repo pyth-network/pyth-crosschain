@@ -1,12 +1,65 @@
+import * as Icon from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Category, argTypes } from "./arg-types.js";
-import { Button as ButtonComponent } from "./index.js";
+import { Button as ButtonComponent, VARIANTS, SIZES } from "./index.js";
 
 const meta = {
   component: ButtonComponent,
   argTypes: {
-    ...argTypes,
+    children: {
+      control: "text",
+      table: {
+        category: "Contents",
+      },
+    },
+    isDisabled: {
+      control: "boolean",
+      table: {
+        category: "State",
+      },
+    },
+    variant: {
+      control: "inline-radio",
+      options: VARIANTS,
+      table: {
+        category: "Variant",
+      },
+    },
+    size: {
+      control: "inline-radio",
+      options: SIZES,
+      table: {
+        category: "Variant",
+      },
+    },
+    rounded: {
+      control: "boolean",
+      table: {
+        category: "Variant",
+      },
+    },
+    hideText: {
+      control: "boolean",
+      table: {
+        category: "Contents",
+      },
+    },
+    beforeIcon: {
+      control: "select",
+      options: Object.keys(Icon),
+      mapping: Icon,
+      table: {
+        category: "Contents",
+      },
+    },
+    afterIcon: {
+      control: "select",
+      options: Object.keys(Icon),
+      mapping: Icon,
+      table: {
+        category: "Contents",
+      },
+    },
     onPress: {
       table: {
         category: "Behavior",
@@ -15,7 +68,7 @@ const meta = {
     isPending: {
       control: "boolean",
       table: {
-        category: Category.State,
+        category: "State",
       },
     },
   },
@@ -30,5 +83,6 @@ export const Button = {
     isDisabled: false,
     isPending: false,
     rounded: false,
+    hideText: false,
   },
 } satisfies StoryObj<typeof ButtonComponent>;

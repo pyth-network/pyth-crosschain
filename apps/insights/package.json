@@ -14,7 +14,7 @@
     "start:dev": "next dev --port 3003",
     "start:prod": "next start --port 3003",
     "test:format": "prettier --check .",
-    "test:lint": "jest --selectProjects lint",
+    "test:lint": "eslint .",
     "test:types": "tsc"
   },
   "dependencies": {
@@ -55,7 +55,7 @@
     "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",
-    "tailwindcss": "catalog:",
+    "sass": "catalog:",
     "typescript": "catalog:",
     "vercel": "catalog:"
   }

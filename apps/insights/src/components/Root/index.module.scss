@@ -1,0 +1,17 @@
+@use "@pythnetwork/component-library/theme.scss";
+
+.tabRoot {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-rows: auto 1fr auto;
+
+  .main {
+    padding-top: theme.spacing(6);
+    padding-bottom: theme.spacing(12);
+    isolation: isolate;
+  }
+
+  .header {
+    z-index: 1;
+  }
+}

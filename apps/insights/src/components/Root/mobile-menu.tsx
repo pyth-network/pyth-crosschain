@@ -1,11 +1,9 @@
 import type { Icon } from "@phosphor-icons/react";
-import {
-  PresentationChart,
-  Broadcast,
-  ChartLine,
-  MagnifyingGlass,
-  List,
-} from "@phosphor-icons/react/dist/ssr";
+import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
+import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
+import { List } from "@phosphor-icons/react/dist/ssr/List";
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
+import { PresentationChart } from "@phosphor-icons/react/dist/ssr/PresentationChart";
 import type { ComponentProps, ReactNode } from "react";
 
 import { NavLink } from "./nav-link";

@@ -13,8 +13,8 @@
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_gbljYVzp0m5EpCuOF6nZpM4WMFM6 vercel env pull",
     "start:dev": "next dev --port 3002",
     "start:prod": "next start --port 3002",
-    "test:format": "jest --selectProjects format",
-    "test:lint": "jest --selectProjects lint",
+    "test:format": "prettier --check .",
+    "test:lint": "eslint .",
     "test:types": "tsc"
   },
   "dependencies": {

@@ -1,0 +1,134 @@
+@use "../theme.scss";
+
+.button {
+  display: inline flow-root;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: theme.font-weight("medium");
+  outline: none;
+  border: none;
+  transition-property: background-color, color, border-color, box-shadow;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  border: 1px solid transparent;
+  text-decoration: none;
+
+  .iconWrapper {
+    display: inline-grid;
+    height: 100%;
+    place-content: center;
+    vertical-align: top;
+  }
+
+  @each $size, $values in theme.$button-sizes {
+    &[data-size="#{$size}"] {
+      height: theme.map-get-strict($values, "height");
+      border-radius: theme.map-get-strict($values, "border-radius");
+      padding: 0 theme.map-get-strict($values, "padding");
+      font-size: theme.map-get-strict($values, "font-size");
+
+      .icon {
+        width: theme.map-get-strict($values, "icon-size");
+        height: theme.map-get-strict($values, "icon-size");
+      }
+
+      .text {
+        padding: 0 theme.map-get-strict($values, "gap");
+        line-height: calc(theme.map-get-strict($values, "height") - 2px);
+      }
+    }
+  }
+
+  &[data-rounded] {
+    border-radius: theme.border-radius("full");
+  }
+
+  @each $variant in ("primary", "secondary", "solid") {
+    &[data-variant="#{$variant}"] {
+      background-color: theme.color("button", $variant, "background", "normal");
+      color: theme.color("button", $variant, "foreground");
+
+      &[data-hovered] {
+        background-color: theme.color(
+          "button",
+          $variant,
+          "background",
+          "hover"
+        );
+      }
+
+      &[data-pressed] {
+        background-color: theme.color(
+          "button",
+          $variant,
+          "background",
+          "active"
+        );
+      }
+    }
+  }
+
+  &[data-variant="outline"],
+  &[data-variant="ghost"] {
+    background-color: transparent;
+    color: theme.color("button", "outline", "foreground");
+
+    &[data-hovered] {
+      background-color: theme.color("button", "outline", "background", "hover");
+    }
+
+    &[data-pressed] {
+      background-color: theme.color(
+        "button",
+        "outline",
+        "background",
+        "active"
+      );
+    }
+  }
+
+  @each $variant, $state in ("success": "success", "danger": "error") {
+    &[data-variant="#{$variant}"] {
+      background-color: theme.color("states", $state, "normal");
+      color: theme.color("button", "primary", "foreground");
+
+      &[data-hovered] {
+        background-color: theme.color("states", $state, "hover");
+      }
+
+      &[data-pressed] {
+        background-color: theme.color("states", $state, "active");
+      }
+    }
+  }
+
+  &[data-variant="outline"] {
+    border-color: theme.color("button", "outline", "border");
+  }
+
+  &[data-disabled],
+  &[data-pending] {
+    border-color: transparent;
+    background-color: theme.color("button", "disabled", "background");
+    color: theme.color("button", "disabled", "foreground");
+  }
+
+  &[data-disabled] {
+    cursor: not-allowed;
+  }
+
+  &[data-pending] {
+    cursor: wait;
+  }
+
+  &[data-text-hidden] {
+    .text {
+      @include theme.sr-only;
+    }
+  }
+
+  &[data-focus-visible] {
+    border-color: theme.color("forms", "input", "focus", "border");
+    box-shadow: 0px 0px 0px 4px theme.color("forms", "focus-color");
+  }
+}

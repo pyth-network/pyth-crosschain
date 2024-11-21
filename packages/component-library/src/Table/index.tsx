@@ -9,6 +9,8 @@ import type {
   TableBodyProps,
 } from "react-aria-components";
 
+import styles from "./index.module.scss";
+import { Skeleton } from "../Skeleton/index.js";
 import {
   UnstyledCell,
   UnstyledColumn,
@@ -23,14 +25,16 @@ type TableProps<T extends string> = {
   columns: ColumnConfig<T>[];
   rows: RowConfig<T>[];
   isLoading?: boolean | undefined;
+  isUpdating?: boolean | undefined;
   renderEmptyState?: TableBodyProps<T>["renderEmptyState"];
 };
 
-type ColumnConfig<T extends string> = Omit<ColumnProps, "children"> & {
+export type ColumnConfig<T extends string> = Omit<ColumnProps, "children"> & {
   name: ReactNode;
   id: T;
   fill?: boolean | undefined;
-  alignment?: Alignment;
+  alignment?: Alignment | undefined;
+  loadingSkeletonWidth?: number | undefined;
 };
 
 type Alignment = "left" | "center" | "right" | undefined;
@@ -48,6 +52,7 @@ export const Table = <T extends string>({
   rows,
   columns,
   isLoading,
+  isUpdating,
   renderEmptyState,
 }: TableProps<T>) => {
   const [debouncedRows, setDebouncedRows] = useState(rows);
@@ -61,57 +66,55 @@ export const Table = <T extends string>({
   );
 
   return (
-    <div className="relative">
-      {isLoading && (
-        <div
-          className={clsx(
-            "absolute left-0 right-0 top-8 z-10 h-0.5 overflow-hidden opacity-0 transition",
-            {
-              "opacity-100": true,
-            },
-          )}
-        >
-          <div className="size-full origin-left animate-progress bg-violet-500" />
+    <div className={styles.tableContainer}>
+      {isUpdating && (
+        <div className={styles.loaderWrapper}>
+          <div className={styles.loader} />
         </div>
       )}
-      <UnstyledTable aria-label={label}>
+      <UnstyledTable aria-label={label} className={styles.table ?? ""}>
         <UnstyledTableHeader
           columns={columns}
-          className="border-b border-stone-300 bg-beige-100 pb-4 text-xs text-stone-600 dark:border-steel-600 dark:bg-steel-900 dark:text-steel-400"
+          className={styles.tableHeader ?? ""}
         >
-          {(column: ColumnConfig<T>) => (
-            <UnstyledColumn
-              className={clsx(
-                "whitespace-nowrap pb-4 font-medium",
-                cellClassName(columns, column),
-              )}
-              {...column}
-            >
+          {({ fill, alignment, ...column }: ColumnConfig<T>) => (
+            <UnstyledColumn {...cellProps(alignment, fill)} {...column}>
               {column.name}
             </UnstyledColumn>
           )}
         </UnstyledTableHeader>
         <UnstyledTableBody
-          items={debouncedRows}
-          className="text-sm"
+          items={isLoading ? [] : debouncedRows}
+          className={styles.tableBody ?? ""}
           {...(renderEmptyState !== undefined && { renderEmptyState })}
         >
-          {({ className: rowClassName, data, ...row }: RowConfig<T>) => (
+          {isLoading ? (
             <UnstyledRow
-              className={clsx(
-                "h-16 transition-colors duration-100 data-[hovered]:bg-black/5 data-[pressed]:bg-black/10 dark:data-[hovered]:bg-white/5 dark:data-[pressed]:bg-white/10",
-                { "cursor-pointer": "href" in row },
-                rowClassName,
-              )}
+              id="loading"
+              key="loading"
+              className={styles.row ?? ""}
               columns={columns}
-              {...row}
             >
-              {(column: ColumnConfig<T>) => (
-                <UnstyledCell className={cellClassName(columns, column)}>
-                  {data[column.id]}
+              {({ alignment, fill, loadingSkeletonWidth }: ColumnConfig<T>) => (
+                <UnstyledCell {...cellProps(alignment, fill)}>
+                  <Skeleton width={loadingSkeletonWidth ?? 10} />
                 </UnstyledCell>
               )}
             </UnstyledRow>
+          ) : (
+            ({ className: rowClassName, data, ...row }: RowConfig<T>) => (
+              <UnstyledRow
+                className={clsx(styles.row, rowClassName)}
+                columns={columns}
+                {...row}
+              >
+                {({ alignment, fill, id }: ColumnConfig<T>) => (
+                  <UnstyledCell {...cellProps(alignment, fill)}>
+                    {data[id]}
+                  </UnstyledCell>
+                )}
+              </UnstyledRow>
+            )
           )}
         </UnstyledTableBody>
       </UnstyledTable>
@@ -119,16 +122,11 @@ export const Table = <T extends string>({
   );
 };
 
-const cellClassName = <T extends string>(
-  columns: ColumnConfig<T>[],
-  column: ColumnConfig<T>,
-) =>
-  clsx("px-2", {
-    "pl-4": column === columns[0],
-    "pr-4": column === columns.at(-1),
-    "text-left": column.alignment === "left",
-    "text-right": column.alignment === "right",
-    "text-center":
-      column.alignment === "center" || column.alignment === undefined,
-    "w-full": column.fill,
-  });
+const cellProps = (
+  alignment: Alignment | undefined,
+  fill: boolean | undefined,
+) => ({
+  className: styles.cell ?? "",
+  "data-alignment": alignment ?? "left",
+  ...(fill && { "data-fill": "" }),
+});

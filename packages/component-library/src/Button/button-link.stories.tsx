@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { argTypes } from "./arg-types.js";
 import { ButtonLink as ButtonLinkComponent } from "./index.js";
+import buttonMeta from "./index.stories.js";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { onPress, isPending, ...argTypes } = buttonMeta.argTypes;
 const meta = {
   component: ButtonLinkComponent,
   title: "Button/ButtonLink",
@@ -33,5 +35,6 @@ export const ButtonLink = {
     size: "md",
     isDisabled: false,
     rounded: false,
+    hideText: false,
   },
 } satisfies StoryObj<typeof ButtonLinkComponent>;

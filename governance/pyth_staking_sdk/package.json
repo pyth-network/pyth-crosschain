@@ -16,7 +16,7 @@
     "fix:lint": "eslint --fix .",
     "prepublishOnly": "node scripts/update-package-json.mjs",
     "test:format": "prettier --check .",
-    "test:lint": "jest --selectProjects lint",
+    "test:lint": "eslint .",
     "test:types": "tsc"
   },
   "devDependencies": {

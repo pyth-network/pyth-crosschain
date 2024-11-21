@@ -46,7 +46,7 @@ export const Root = ({
       {...props}
     >
       <body className={bodyClassName}>
-        <ThemeProvider attribute="class">{children}</ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
       {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
       {amplitudeApiKey && <Amplitude apiKey={amplitudeApiKey} />}

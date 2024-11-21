@@ -1,0 +1,15 @@
+@use "modern-normalize";
+
+@use "../theme.scss";
+
+:root {
+  color: theme.color("foreground");
+  background: theme.color("background", "primary");
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*::selection {
+  color: theme.color("selection", "foreground");
+  background: theme.color("selection", "background");
+}
