@@ -10,6 +10,10 @@
   }
 }
 
+@function spacing($increment) {
+  @return $increment * 0.25rem;
+}
+
 $font-weight: (
   "thin": 100,
   "extralight": 200,
@@ -43,14 +47,14 @@ $font-size: (
   "9xl": 8rem,
 );
 
-@function font-size($size) {
+@function font-size($size: "$base") {
   @return map-get-strict($font-size, $size);
 }
 
 $border-radius: (
   "none": 0px,
   "sm": 0.125rem,
-  "DEFAULT": 0.25rem,
+  "base": 0.25rem,
   "md": 0.375rem,
   "lg": 0.5rem,
   "xl": 0.75rem,
@@ -59,12 +63,8 @@ $border-radius: (
   "full": 9999px,
 );
 
-@function border-radius($radius: "DEFAULT") {
+@function border-radius($radius: "base") {
   @return map-get-strict($border-radius, $radius);
-}
-
-@function spacing($increment) {
-  @return $increment * 0.25rem;
 }
 
 $color-pallette: (
@@ -389,6 +389,7 @@ $color-pallette: (
 }
 
 $color: (
+  "transparent": transparent,
   "background": (
     "primary": light-dark(pallette-color("white"), pallette-color("steel", 950)),
     "modal": light-dark(pallette-color("white"), pallette-color("steel", 950)),
@@ -427,14 +428,17 @@ $color: (
         light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
     ),
   ),
+  "focus":
+    light-dark(pallette-color("violet", 700), pallette-color("violet", 500)),
+  "focus-dim":
+    light-dark(
+      rgba(pallette-color("violet", 700), 0.3),
+      rgba(pallette-color("violet", 500), 0.3)
+    ),
   "forms": (
-    "focus-color": light-dark(rgba(#7142cf, 0.2), rgba(#7b4cd9, 0.2)),
     "input": (
       "hover": (
         "border": pallette-color("stone", 400),
-      ),
-      "focus": (
-        "border": pallette-color("steel", 500),
       ),
     ),
   ),
@@ -485,8 +489,16 @@ $color: (
       "foreground":
         light-dark(pallette-color("stone", 900), pallette-color("steel", 50)),
       "background": (
-        "hover": light-dark(rgba(#715858, 0.05), rgba(#e9ecff, 0.05)),
-        "active": light-dark(rgba(#715858, 0.1), rgba(#e9ecff, 0.1)),
+        "hover":
+          light-dark(
+            rgba(pallette-color("beige", 950), 0.05),
+            rgba(pallette-color("steel", 50), 0.05)
+          ),
+        "active":
+          light-dark(
+            rgba(pallette-color("beige", 950), 0.1),
+            rgba(pallette-color("steel", 50), 0.1)
+          ),
       ),
     ),
     "disabled": (

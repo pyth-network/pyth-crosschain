@@ -50,7 +50,7 @@
   }
 
   &[data-focus-visible] {
-    outline: 1px auto currentcolor;
+    outline: 1px solid currentcolor;
     outline-offset: theme.spacing(1);
   }
 
