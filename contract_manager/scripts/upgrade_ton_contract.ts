@@ -59,7 +59,7 @@ async function main() {
   );
 
   // Read the compiled contract from the build directory
-  // NOTE: Remember to build the contract first before running this script to get the latest build, command: `npm run build:blueprint` on target_chains/ton/contracts
+  // NOTE: Remember to rebuild contract_manager before running this script because it will also build the ton contract
   const compiledPath = path.resolve(
     __dirname,
     "../../target_chains/ton/contracts/build/Main.compiled.json"
@@ -75,9 +75,9 @@ async function main() {
 
   // Create and submit governance proposal
   console.log("Using vault for proposal:", vault.getId());
-  const wallet = await loadHotWallet(argv["ops-key-path"] as string);
-  console.log("Using wallet:", wallet.publicKey.toBase58());
-  vault.connect(wallet);
+  const keypair = await loadHotWallet(argv["ops-key-path"] as string);
+  console.log("Using wallet:", keypair.publicKey.toBase58());
+  vault.connect(keypair);
   const proposal = await vault.proposeWormholeMessage([payload]);
   console.log("Proposal address:", proposal.address.toBase58());
 }

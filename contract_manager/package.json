@@ -37,6 +37,7 @@
     "@pythnetwork/pyth-starknet-js": "^0.2.1",
     "@pythnetwork/pyth-sui-js": "workspace:*",
     "@pythnetwork/pyth-ton-js": "workspace:*",
+    "@pythnetwork/pyth-ton": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",
     "@solana/web3.js": "^1.73.0",

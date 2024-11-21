@@ -807,6 +807,9 @@ importers:
       '@pythnetwork/pyth-sui-js':
         specifier: workspace:*
         version: link:../target_chains/sui/sdk/js
+      '@pythnetwork/pyth-ton':
+        specifier: workspace:*
+        version: link:../target_chains/ton/contracts
       '@pythnetwork/pyth-ton-js':
         specifier: workspace:*
         version: link:../target_chains/ton/sdk/js
