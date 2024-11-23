@@ -49,9 +49,12 @@
       align-items: center;
       justify-content: space-between;
       gap: theme.spacing(4);
-      transition-property: background-color;
+      transition-property: background-color, outline-color, border-color;
       transition-duration: 100ms;
       transition-timing-function: linear;
+      border: 1px solid transparent;
+      outline: theme.spacing(0.5) solid transparent;
+      outline-offset: 0;
 
       .check {
         width: theme.spacing(3);
@@ -73,7 +76,8 @@
       }
 
       &[data-focus-visible] {
-        box-shadow: 0 0 0 4px theme.color("forms", "focus-color");
+        border-color: theme.color("focus");
+        outline-color: theme.color("focus-dim");
       }
 
       &[data-selected] .check {

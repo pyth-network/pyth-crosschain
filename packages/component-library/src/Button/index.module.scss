@@ -5,12 +5,13 @@
   cursor: pointer;
   white-space: nowrap;
   font-weight: theme.font-weight("medium");
-  outline: none;
-  transition-property: background-color, color, border-color, box-shadow;
+  transition-property: background-color, color, border-color, outline-color;
   transition-duration: 100ms;
   transition-timing-function: linear;
   border: 1px solid transparent;
   text-decoration: none;
+  outline-offset: 0;
+  outline: theme.spacing(1) solid transparent;
 
   .iconWrapper {
     display: inline-grid;
@@ -127,7 +128,7 @@
   }
 
   &[data-focus-visible] {
-    border-color: theme.color("forms", "input", "focus", "border");
-    box-shadow: 0 0 0 4px theme.color("forms", "focus-color");
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
   }
 }
