@@ -73,17 +73,6 @@ pub async fn run_with(
     let _ = receipt!(contract.getUpdateFee(data.clone()))?;
     let _ = receipt!(contract.updatePriceFeeds(data.clone()))?;
 
-    // I will add updatePriceFeedsIfNecessary benchmark when it's ready
-    //println!("{data:?} , {ids:?} ");
-    // let _ = contract
-    //     .updatePriceFeedsIfNecessary(
-    //         data.clone(),
-    //         ids.clone(),
-    //         vec![100, 100, 100],
-    //     )
-    //     .send()
-    //     .await?;
-
     // IMPORTANT: Order matters!
     use ProxyCall::*;
     #[rustfmt::skip]
@@ -94,8 +83,6 @@ pub async fn run_with(
         (getEmaPriceNoOlderThanCall::SIGNATURE, receipt!(contract.getEmaPriceNoOlderThan(id, time_frame))?),
         (getValidTimePeriodCall::SIGNATURE, receipt!(contract.getValidTimePeriod())?),
         (getUpdateFeeCall::SIGNATURE, receipt!(contract.getUpdateFee(data.clone()))?),
-        //(updatePriceFeedsCall::SIGNATURE, receipt!(contract.updatePriceFeeds(data.clone()))?),
-        //(updatePriceFeedsIfNecessaryCall::SIGNATURE, receipt!(contract.updatePriceFeedsIfNecessary(data.clone(), ids.clone(), vec![0,0,0]))?)
     ];
 
     receipts
