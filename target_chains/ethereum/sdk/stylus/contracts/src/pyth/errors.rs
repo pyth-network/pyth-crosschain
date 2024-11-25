@@ -2,7 +2,7 @@ use alloy_sol_types::sol;
 use stylus_sdk::{call::MethodError, prelude::*};
 
 sol! {
-  // Function arguments are invalid (e.g., the arguments lengths mismatch)
+    // Function arguments are invalid (e.g., the arguments lengths mismatch)
     // Signature: 0xa9cb9e0d
     #[derive(Debug)]
     #[allow(missing_docs)]
