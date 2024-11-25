@@ -643,10 +643,11 @@ where
         )
         .await?;
 
-    // Verify we have matching start and end messages
+    // Verify we have matching start and end messages.
+    // The cache should throw an error earlier, but checking just in case.
     if start_messages.len() != end_messages.len() {
         return Err(anyhow!(
-            "Missing start or end messages for some price feeds"
+            "Update data not found for the specified timestamps"
         ));
     }
 
@@ -778,6 +779,7 @@ mod test {
             wire::v1::{AccumulatorUpdateData, Proof, WormholeMerkleRoot},
         },
         rand::seq::SliceRandom,
+        rust_decimal::prelude::FromPrimitive,
         serde_wormhole::RawMessage,
         std::sync::Arc,
         wormhole_sdk::{Address, Chain},
@@ -834,7 +836,6 @@ mod test {
 
         updates
     }
-
     /// Create a dummy price feed base on the given seed for all the fields except
     /// `publish_time` and `prev_publish_time`. Those are set to the given value.
     pub fn create_dummy_price_feed_message(
@@ -1196,5 +1197,264 @@ mod test {
                 .await
                 .is_err());
         }
+    }
+
+    /// Helper function to create a TWAP message with basic defaults
+    pub(crate) fn create_basic_twap_message(
+        feed_id: [u8; 32],
+        cumulative_price: i128,
+        num_down_slots: u64,
+        publish_time: i64,
+        prev_publish_time: i64,
+        publish_slot: u64,
+    ) -> Message {
+        Message::TwapMessage(TwapMessage {
+            feed_id,
+            cumulative_price,
+            cumulative_conf: 100,
+            num_down_slots,
+            exponent: 8,
+            publish_time,
+            prev_publish_time,
+            publish_slot,
+        })
+    }
+
+    #[tokio::test]
+    async fn test_get_verified_twaps_with_update_data_returns_correct_prices() {
+        let (state, _update_rx) = setup_state(10).await;
+        let feed_id_1 = [1u8; 32];
+        let feed_id_2 = [2u8; 32];
+
+        // Store start TWAP messages for both feeds
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(
+                vec![
+                    create_basic_twap_message(
+                        feed_id_1, 100,  // cumulative_price
+                        0,    // num_down_slots
+                        100,  // publish_time
+                        90,   // prev_publish_time
+                        1000, // publish_slot
+                    ),
+                    create_basic_twap_message(
+                        feed_id_2, 500,  // cumulative_price
+                        10,   // num_down_slots
+                        100,  // publish_time
+                        90,   // prev_publish_time
+                        1000, // publish_slot
+                    ),
+                ],
+                1000,
+                20,
+            ),
+        )
+        .await;
+
+        // Store end TWAP messages for both feeds
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(
+                vec![
+                    create_basic_twap_message(
+                        feed_id_1, 300,  // cumulative_price
+                        50,   // num_down_slots
+                        200,  // publish_time
+                        180,  // prev_publish_time
+                        1100, // publish_slot
+                    ),
+                    create_basic_twap_message(
+                        feed_id_2, 900,  // cumulative_price
+                        30,   // num_down_slots
+                        200,  // publish_time
+                        180,  // prev_publish_time
+                        1100, // publish_slot
+                    ),
+                ],
+                1100,
+                21,
+            ),
+        )
+        .await;
+
+        // Get TWAPs over timestamp window 100 -> 200 for both feeds
+        let result = get_verified_twaps_with_update_data(
+            &*state,
+            &[
+                PriceIdentifier::new(feed_id_1),
+                PriceIdentifier::new(feed_id_2),
+            ],
+            RequestTime::FirstAfter(100), // Start time
+            RequestTime::FirstAfter(200), // End time
+        )
+        .await
+        .unwrap();
+
+        // Verify calculations are accurate for both feeds
+        assert_eq!(result.twaps.len(), 2);
+
+        // Verify feed 1
+        let twap_1 = result
+            .twaps
+            .iter()
+            .find(|t| t.id == PriceIdentifier::new(feed_id_1))
+            .unwrap();
+        assert_eq!(twap_1.twap.price, 2); // (300-100)/(1100-1000) = 2
+        assert_eq!(twap_1.down_slots_ratio, Decimal::from_f64(0.5).unwrap()); // (50-0)/(1100-1000) = 0.5
+        assert_eq!(twap_1.start_timestamp, 100);
+        assert_eq!(twap_1.end_timestamp, 200);
+
+        // Verify feed 2
+        let twap_2 = result
+            .twaps
+            .iter()
+            .find(|t| t.id == PriceIdentifier::new(feed_id_2))
+            .unwrap();
+        assert_eq!(twap_2.twap.price, 4); // (900-500)/(1100-1000) = 4
+        assert_eq!(twap_2.down_slots_ratio, Decimal::from_f64(0.2).unwrap()); // (30-10)/(1100-1000) = 0.2
+        assert_eq!(twap_2.start_timestamp, 100);
+        assert_eq!(twap_2.end_timestamp, 200);
+
+        // Verify update data contains both start and end messages for both feeds
+        assert_eq!(result.update_data.len(), 2);
+        assert_eq!(result.update_data[0].len(), 2); // Should contain 2 messages
+        assert_eq!(result.update_data[1].len(), 2); // Should contain 2 messages
+    }
+    #[tokio::test]
+
+    async fn test_get_verified_twaps_with_missing_messages_throws_error() {
+        let (state, _update_rx) = setup_state(10).await;
+        let feed_id_1 = [1u8; 32];
+        let feed_id_2 = [2u8; 32];
+
+        // Store both messages for feed_1
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(
+                vec![
+                    create_basic_twap_message(
+                        feed_id_1, 100,  // cumulative_price
+                        0,    // num_down_slots
+                        100,  // publish_time
+                        90,   // prev_publish_time
+                        1000, // publish_slot
+                    ),
+                    create_basic_twap_message(
+                        feed_id_2, 500,  // cumulative_price
+                        0,    // num_down_slots
+                        100,  // publish_time
+                        90,   // prev_publish_time
+                        1000, // publish_slot
+                    ),
+                ],
+                1000,
+                20,
+            ),
+        )
+        .await;
+
+        // Store end message only for feed_1 (feed_2 missing end message)
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(
+                vec![create_basic_twap_message(
+                    feed_id_1, 300,  // cumulative_price
+                    0,    // num_down_slots
+                    200,  // publish_time
+                    180,  // prev_publish_time
+                    1100, // publish_slot
+                )],
+                1100,
+                21,
+            ),
+        )
+        .await;
+
+        let result = get_verified_twaps_with_update_data(
+            &*state,
+            &[
+                PriceIdentifier::new(feed_id_1),
+                PriceIdentifier::new(feed_id_2),
+            ],
+            RequestTime::FirstAfter(100),
+            RequestTime::FirstAfter(200),
+        )
+        .await;
+
+        assert_eq!(result.unwrap_err().to_string(), "Message not found");
+    }
+}
+#[cfg(test)]
+/// Unit tests for the core TWAP calculation logic in `calculate_twap`
+mod calculate_twap_unit_tests {
+    use super::*;
+
+    fn create_basic_twap_message(
+        cumulative_price: i128,
+        publish_time: i64,
+        prev_publish_time: i64,
+        publish_slot: u64,
+    ) -> TwapMessage {
+        TwapMessage {
+            feed_id: [0; 32],
+            cumulative_price,
+            cumulative_conf: 100,
+            num_down_slots: 0,
+            exponent: 8,
+            publish_time,
+            prev_publish_time,
+            publish_slot,
+        }
+    }
+
+    #[test]
+    fn test_valid_twap() {
+        let start = create_basic_twap_message(100, 100, 90, 1000);
+        let end = create_basic_twap_message(300, 200, 180, 1100);
+
+        let price = calculate_twap(&start, &end).unwrap();
+        assert_eq!(price.price, 2); // (300-100)/(1100-1000) = 2
+    }
+    #[test]
+    fn test_invalid_slot_order() {
+        let start = create_basic_twap_message(100, 100, 90, 1100);
+        let end = create_basic_twap_message(300, 200, 180, 1000);
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "Cannot calculate TWAP - end slot must be greater than start slot"
+        );
+    }
+
+    #[test]
+    fn test_invalid_timestamps() {
+        let start = create_basic_twap_message(100, 100, 110, 1000);
+        let end = create_basic_twap_message(300, 200, 180, 1100);
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "Start message is not the first update for its timestamp"
+        );
+
+        let start = create_basic_twap_message(100, 100, 90, 1000);
+        let end = create_basic_twap_message(300, 200, 200, 1100);
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "End message is not the first update for its timestamp"
+        );
+    }
+
+    #[test]
+    fn test_overflow() {
+        let start = create_basic_twap_message(i128::MIN, 100, 90, 1000);
+        let end = create_basic_twap_message(i128::MAX, 200, 180, 1100);
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(err.to_string(), "Price difference overflow");
     }
 }
