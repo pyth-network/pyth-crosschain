@@ -1,4 +1,8 @@
 #!/bin/bash
+# This script manages the Nitro test node for deployment and testing purposes.
+# It supports initializing the test node, running it in detached mode, or shutting it down.
+# Options include cloning the Nitro test node repo if not present, and starting or stopping Docker containers as needed.
+
 
 MYDIR=$(realpath "$(dirname "$0")")
 cd "$MYDIR" || exit

@@ -1,3 +1,8 @@
+#!/bin/bash
+# This script automates the deployment and testing of Rust-based smart contracts.
+# It sends L2 transactions, deploys the MockPyth contract using Forge, and captures its address.
+# Finally, it compiles contracts to WebAssembly and runs end-to-end tests using a nightly Rust toolchain.
+
 MYDIR=$(realpath "$(dirname "$0")")
 cd "$MYDIR"
 

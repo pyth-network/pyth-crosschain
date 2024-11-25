@@ -1,4 +1,8 @@
 #!/bin/bash
+# This Bash script deploys and benchmarks a mock Pyth contract in a simulated Ethereum environment.
+# It sends an L2 transaction using a test node, captures the deployed contract address, and compiles Rust-based contracts to WebAssembly.
+# Finally, it runs benchmarking to measure gas usage and performance.
+
 set -e
 
 MYDIR=$(realpath "$(dirname "$0")")

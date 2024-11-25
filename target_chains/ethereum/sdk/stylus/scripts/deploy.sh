@@ -1,4 +1,7 @@
 #!/bin/bash
+# This script compiles Rust contracts to WebAssembly and deploys the .wasm binaries to a blockchain using `cargo stylus deploy`. 
+# It retrieves crate names from Cargo.toml files in the examples directory and automates the deployment process for each contract.
+
 set -e
 
 mydir=$(dirname "$0")

@@ -1,4 +1,7 @@
 #!/bin/bash
+# This script compiles Rust contracts to WebAssembly and validates the .wasm binaries for correctness using cargo stylus check. 
+# It retrieves crate names from Cargo.toml files in the examples directory and ensures each compiled contract is valid
+
 set -e
 
 mydir=$(dirname "$0")
