@@ -24,7 +24,7 @@ For the latest changes from the `main` branch, you can also specify a git depend
 
 ```toml
 [dependencies]
-pyth-stylus = { git = "URL" }
+pyth-stylus = { git = "https://github.com/pyth-network/pyth-crosschain.git" }
 ```
 
 ## Example Usage
