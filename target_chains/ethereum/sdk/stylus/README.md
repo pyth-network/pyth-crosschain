@@ -70,7 +70,7 @@ sol_storage! {
     #[entrypoint]
     struct ProxyCallsExample {
         #[borrow]
-        PythContract pyth
+        PythContract pyth;
     }
 }
 
