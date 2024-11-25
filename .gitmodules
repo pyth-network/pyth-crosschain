@@ -26,3 +26,6 @@
 [submodule "target_chains/ethereum/sdk/stylus/pyth-mock-solidity/lib/forge-std"]
 	path = target_chains/ethereum/sdk/stylus/pyth-mock-solidity/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "target_chains/ethereum/sdk/stylus/pyth-mock-solidity/lib/openzeppelin-foundry-upgrades"]
+	path = target_chains/ethereum/sdk/stylus/pyth-mock-solidity/lib/openzeppelin-foundry-upgrades
+	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
