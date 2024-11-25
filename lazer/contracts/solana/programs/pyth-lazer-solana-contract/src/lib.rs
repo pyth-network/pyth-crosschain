@@ -1,9 +1,4 @@
-use {
-    anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES},
-    std::mem::size_of,
-};
-
-declare_id!("pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt");
+mod signature;
 
 pub mod storage {
     use anchor_lang::prelude::{pubkey, Pubkey};
@@ -20,6 +15,18 @@ pub mod storage {
         );
     }
 }
+
+use {
+    anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES},
+    std::mem::size_of,
+};
+
+pub use {
+    crate::signature::{ed25519_program_args, Ed25519SignatureOffsets},
+    pyth_lazer_protocol as protocol,
+};
+
+declare_id!("pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt");
 
 pub const MAX_NUM_TRUSTED_SIGNERS: usize = 2;
 
@@ -54,6 +61,8 @@ pub const STORAGE_SEED: &[u8] = b"storage";
 
 #[program]
 pub mod pyth_lazer_solana_contract {
+    use signature::VerifiedMessage;
+
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>, top_authority: Pubkey) -> Result<()> {
@@ -102,6 +111,36 @@ pub mod pyth_lazer_solana_contract {
             .expect("num signers overflow");
         Ok(())
     }
+
+    /// Verifies a ed25519 signature on Solana by checking that the transaction contains
+    /// a correct call to the built-in `ed25519_program`.
+    ///
+    /// - `message_data` is the signed message that is being verified.
+    /// - `ed25519_instruction_index` is the index of the `ed25519_program` instruction
+    ///   within the transaction. This instruction must precede the current instruction.
+    /// - `signature_index` is the index of the signature within the inputs to the `ed25519_program`.
+    /// - `message_offset` is the offset of the signed message within the
+    ///   input data for the current instruction.
+    pub fn verify_message(
+        ctx: Context<VerifyMessage>,
+        message_data: Vec<u8>,
+        ed25519_instruction_index: u16,
+        signature_index: u8,
+        message_offset: u16,
+    ) -> Result<VerifiedMessage> {
+        signature::verify_message(
+            &ctx.accounts.storage,
+            &ctx.accounts.sysvar,
+            &message_data,
+            ed25519_instruction_index,
+            signature_index,
+            message_offset,
+        )
+        .map_err(|err| {
+            msg!("signature verification error: {:?}", err);
+            err.into()
+        })
+    }
 }
 
 #[derive(Accounts)]
@@ -129,4 +168,14 @@ pub struct Update<'info> {
         has_one = top_authority,
     )]
     pub storage: Account<'info, Storage>,
+}
+
+#[derive(Accounts)]
+pub struct VerifyMessage<'info> {
+    #[account(
+        seeds = [STORAGE_SEED],
+        bump,
+    )]
+    pub storage: Account<'info, Storage>,
+    pub sysvar: AccountInfo<'info>,
 }
