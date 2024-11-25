@@ -625,33 +625,36 @@ async fn get_verified_twaps_with_update_data<S>(
 where
     S: Cache,
 {
-    let mut calculated_twaps = Vec::new();
-    let mut all_update_data = Vec::new();
+    // Get all start messages for all price IDs
+    let start_messages = state
+        .fetch_message_states(
+            price_ids.iter().map(|id| id.to_bytes()).collect(),
+            start_time.clone(),
+            MessageStateFilter::Only(MessageType::TwapMessage),
+        )
+        .await?;
 
-    for price_id in price_ids {
-        let start_messages = state
-            .fetch_message_states(
-                vec![price_id.to_bytes()],
-                start_time.clone(),
-                MessageStateFilter::Only(MessageType::TwapMessage),
-            )
-            .await?;
+    // Get all end messages for all price IDs
+    let end_messages = state
+        .fetch_message_states(
+            price_ids.iter().map(|id| id.to_bytes()).collect(),
+            end_time.clone(),
+            MessageStateFilter::Only(MessageType::TwapMessage),
+        )
+        .await?;
 
-        let end_messages = state
-            .fetch_message_states(
-                vec![price_id.to_bytes()],
-                end_time.clone(),
-                MessageStateFilter::Only(MessageType::TwapMessage),
-            )
-            .await?;
+    // Verify we have matching start and end messages
+    if start_messages.len() != end_messages.len() {
+        return Err(anyhow!(
+            "Missing start or end messages for some price feeds"
+        ));
+    }
 
-        if start_messages.is_empty() || end_messages.is_empty() {
-            continue;
-        }
+    let mut twaps = Vec::new();
+    let mut update_data = Vec::new();
 
-        let start_message = &start_messages[0];
-        let end_message = &end_messages[0];
-
+    // Iterate through start and end messages together
+    for (start_message, end_message) in start_messages.iter().zip(end_messages.iter()) {
         if let (Message::TwapMessage(start_twap), Message::TwapMessage(end_twap)) =
             (&start_message.message, &end_message.message)
         {
@@ -659,14 +662,14 @@ where
                 Ok(twap_price) => {
                     // down_slots_ratio describes the % of slots where the network was down
                     // over the TWAP window. A value closer to zero indicates higher confidence.
-                    let total_slots = end_message.slot - start_message.slot;
+                    let total_slots = end_twap.publish_slot - start_twap.publish_slot;
                     let total_down_slots = end_twap.num_down_slots - start_twap.num_down_slots;
                     let down_slots_ratio =
                         Decimal::from(total_down_slots) / Decimal::from(total_slots);
 
                     // Add to calculated TWAPs
-                    calculated_twaps.push(PriceFeedTwap {
-                        id: *price_id,
+                    twaps.push(PriceFeedTwap {
+                        id: PriceIdentifier::new(start_twap.feed_id),
                         twap: twap_price,
                         start_timestamp: start_twap.publish_time,
                         end_timestamp: end_twap.publish_time,
@@ -678,20 +681,20 @@ where
                     messages.push(start_message.clone().into());
                     messages.push(end_message.clone().into());
 
-                    if let Ok(update_data) = construct_update_data(messages) {
-                        all_update_data.push(update_data);
+                    if let Ok(update) = construct_update_data(messages) {
+                        update_data.push(update);
                     } else {
                         tracing::warn!(
-                            "Failed to construct update data for price feed {}",
-                            price_id
+                            "Failed to construct update data for price feed {:?}",
+                            start_twap.feed_id
                         );
                         continue;
                     }
                 }
                 Err(e) => {
                     tracing::warn!(
-                        "Failed to calculate TWAP for price feed {}: {}",
-                        price_id,
+                        "Failed to calculate TWAP for price feed {:?}: {}",
+                        start_twap.feed_id,
                         e
                     );
                     continue;
@@ -700,11 +703,9 @@ where
         }
     }
 
-    Ok(TwapsWithUpdateData {
-        twaps: calculated_twaps,
-        update_data: all_update_data,
-    })
+    Ok(TwapsWithUpdateData { twaps, update_data })
 }
+
 fn calculate_twap(start_message: &TwapMessage, end_message: &TwapMessage) -> Result<Price> {
     if end_message.publish_slot <= start_message.publish_slot {
         return Err(anyhow!(
@@ -744,8 +745,10 @@ fn calculate_twap(start_message: &TwapMessage, end_message: &TwapMessage) -> Res
 
     // Perform division before casting to maintain precision
     // Cast slot_diff to the same type as price / conf diff before division
-    let price = (price_diff / slot_diff as i128) as i64;
-    let conf = (conf_diff / slot_diff as u128) as u64;
+    let price = i64::try_from(price_diff / i128::from(slot_diff))
+        .map_err(|e| anyhow!("Price overflow after division: {}", e))?;
+    let conf = u64::try_from(conf_diff / u128::from(slot_diff))
+        .map_err(|e| anyhow!("Confidence overflow after division: {}", e))?;
 
     Ok(Price {
         price,

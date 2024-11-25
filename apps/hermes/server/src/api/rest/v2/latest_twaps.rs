@@ -47,7 +47,7 @@ pub struct LatestTwapsQueryParams {
     #[param(example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
     ids: Vec<PriceIdInput>,
 
-    /// Optional encoding type. If true, return the price update in the encoding specified by the encoding parameter. Default is `hex`.
+    /// Optional encoding type. If true, return the cumulative price updates in the encoding specified by the encoding parameter. Default is `hex`.
     #[serde(default)]
     encoding: EncodingType,
 

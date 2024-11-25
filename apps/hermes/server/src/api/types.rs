@@ -260,8 +260,6 @@ pub struct ParsedPriceFeedTwap {
     /// A value of zero indicates no slots were missed over the window, and
     /// a value of one indicates that every slot was missed over the window.
     /// This is a float value stored as a string to avoid precision loss.
-    #[serde(with = "pyth_sdk::utils::as_string")]
-    #[schema(value_type = String, example="0.00001")]
     pub down_slots_ratio: Decimal,
 }
 impl From<PriceFeedTwap> for ParsedPriceFeedTwap {
