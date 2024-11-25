@@ -37,7 +37,8 @@ async fn test1() {
             .data(),
             vec![
                 AccountMeta::new(payer.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::storage::ID, false),
+                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
+                AccountMeta::new(pyth_lazer_solana_contract::TREASURY_ID, false),
                 AccountMeta::new_readonly(system_program::ID, false),
             ],
         )],
@@ -68,7 +69,7 @@ async fn test1() {
             .data(),
             vec![
                 AccountMeta::new(payer.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::storage::ID, false),
+                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
             ],
         )],
         Some(&payer.pubkey()),
@@ -90,7 +91,12 @@ async fn test1() {
         message_offset,
     ));
 
-    println!("ok1");
+    let treasury_starting_lamports = banks_client
+        .get_account(pyth_lazer_solana_contract::TREASURY_ID)
+        .await
+        .unwrap()
+        .unwrap()
+        .lamports;
     let mut transaction_verify = Transaction::new_with_payer(
         &[
             Instruction::new_with_bytes(
@@ -108,7 +114,10 @@ async fn test1() {
                 }
                 .data(),
                 vec![
-                    AccountMeta::new_readonly(pyth_lazer_solana_contract::storage::ID, false),
+                    AccountMeta::new(payer.pubkey(), true),
+                    AccountMeta::new_readonly(pyth_lazer_solana_contract::STORAGE_ID, false),
+                    AccountMeta::new(pyth_lazer_solana_contract::TREASURY_ID, false),
+                    AccountMeta::new_readonly(system_program::ID, false),
                     AccountMeta::new_readonly(sysvar::instructions::ID, false),
                 ],
             ),
@@ -120,4 +129,13 @@ async fn test1() {
         .process_transaction(transaction_verify)
         .await
         .unwrap();
+    assert_eq!(
+        banks_client
+            .get_account(pyth_lazer_solana_contract::TREASURY_ID)
+            .await
+            .unwrap()
+            .unwrap()
+            .lamports,
+        treasury_starting_lamports + 1
+    );
 }

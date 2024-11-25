@@ -159,7 +159,7 @@ impl From<SignatureVerificationError> for anchor_lang::error::Error {
 ///   input data for the current instruction.
 pub fn verify_message(
     storage: &Storage,
-    instruction_sysvar: &AccountInfo,
+    instructions_sysvar: &AccountInfo,
     message_data: &[u8],
     ed25519_instruction_index: u16,
     signature_index: u8,
@@ -168,7 +168,7 @@ pub fn verify_message(
     const SOLANA_FORMAT_MAGIC_LE: u32 = 2182742457;
 
     let self_instruction_index =
-        sysvar::instructions::load_current_index_checked(instruction_sysvar)
+        sysvar::instructions::load_current_index_checked(instructions_sysvar)
             .map_err(SignatureVerificationError::LoadCurrentIndexFailed)?;
 
     if ed25519_instruction_index >= self_instruction_index {
@@ -177,7 +177,7 @@ pub fn verify_message(
 
     let instruction = sysvar::instructions::load_instruction_at_checked(
         ed25519_instruction_index.into(),
-        instruction_sysvar,
+        instructions_sysvar,
     )
     .map_err(SignatureVerificationError::LoadInstructionAtFailed)?;
 
