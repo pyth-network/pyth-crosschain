@@ -17,7 +17,7 @@ To add the Stylus Contracts from crates.io, add the following line to your `Carg
 
 ```toml
 [dependencies]
-pyth-stylus = "0.0.1"
+pyth-stylus = "0.1.0"
 ```
 
 For the latest changes from the `main` branch, you can also specify a git dependency:
