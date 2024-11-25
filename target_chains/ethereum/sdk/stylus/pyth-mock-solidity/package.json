@@ -1,7 +1,7 @@
 {
   "name": "pyth-mock-solidity",
   "version": "1.0.0",
-  "description": "**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**",
+  "description": "** Deploy mock solidity pyth contract using the pyth solidity sdk **",
   "main": "index.js",
   "directories": {
     "lib": "lib",
