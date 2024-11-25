@@ -1,0 +1,37 @@
+name: Check Links
+# This workflow checks that all links in the documentation are valid.
+# It does this for antora docs(adoc) and markdown files.
+# We prefer lycheeverse because it is faster, but doesn't support adoc files yet(https://github.com/lycheeverse/lychee/issues/291)
+# Because of that, we use linkspector for adoc files and lychee for md files.
+on:
+  push:
+    branches: [ main, v*, release/* ]
+  pull_request:
+    branches: [ main, v*, release/* ]
+
+jobs:
+  check-links-md:
+    name: Check Markdown Links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress './**/*.md'
+          fail: true
+
+  check-links-adoc:
+    name: Check AsciiDoc Links
+    runs-on: ubuntu-latest
+    # We only run the AsciiDoc link checker on v* branches because:
+    # 1. The main branch may contain documentation that is not yet published.
+    if: startsWith(github.ref, 'refs/heads/v') || startsWith(github.base_ref, 'v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run linkspector
+        uses: umbrelladocs/action-linkspector@v1
+        with:
+          fail_on_error: true

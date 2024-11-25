@@ -10,15 +10,11 @@ env:
 
 jobs:
   check:
-    strategy:
-      fail-fast: true
-
     name: Foundry project
     runs-on: ubuntu-latest
-     script:
-      - cd pyth-mock-solidity/
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -28,20 +24,19 @@ jobs:
           version: nightly
 
       - name: Show Forge version
-        run: |
-          forge --version
+        run: forge --version
+
+      - name: Change directory to pyth-mock-solidity
+        run: cd pyth-mock-solidity
 
       - name: Run Forge fmt
-        run: |
-          forge fmt --check
+        run: forge fmt --check
         id: fmt
 
       - name: Run Forge build
-        run: |
-          forge build --sizes
+        run: forge build --sizes
         id: build
 
       - name: Run Forge tests
-        run: |
-          forge test -vvv
+        run: forge test -vvv
         id: test

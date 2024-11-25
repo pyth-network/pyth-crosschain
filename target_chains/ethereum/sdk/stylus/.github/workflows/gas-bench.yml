@@ -1,0 +1,40 @@
+name: gas-bench
+# This workflow checks that the compiled wasm binary of every example contract
+# can be deployed to Arbitrum Stylus.
+permissions:
+  contents: read
+on:
+  push:
+    branches: [ main, release/* ]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  required:
+    name: Gas usage report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache-key: "gas-bench"
+          rustflags: ""
+
+      - name: Install cargo-stylus
+        run: cargo install cargo-stylus@0.5.3
+
+      - name: Install solc
+        run: |
+          curl -LO https://github.com/ethereum/solidity/releases/download/v0.8.24/solc-static-linux
+          sudo mv solc-static-linux /usr/bin/solc
+          sudo chmod a+x /usr/bin/solc
+
+      - name: Setup nitro node
+        run: ./scripts/nitro-testnode.sh -d -i
+      - name: run benches
+        run: ./scripts/bench.sh
