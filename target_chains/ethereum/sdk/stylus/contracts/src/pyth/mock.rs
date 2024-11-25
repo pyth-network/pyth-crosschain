@@ -11,7 +11,7 @@ use alloy_primitives::{Bytes, Uint, B256, U256};
 use alloy_sol_types::{sol_data::Uint as SolUInt, SolType, SolValue};
 use stylus_sdk::{abi::Bytes as AbiBytes, evm, msg, prelude::*};
 
-///Decode data type PriceFeed and uint64
+////Decode data type PriceFeed and uint64
 pub type DecodeDataType = (PriceFeed, SolUInt<64>);
 
 sol_storage! {
@@ -55,21 +55,21 @@ impl MockPythContract {
         self.valid_time_period.get()
     }
 
-    // Takes an array of encoded price feeds and stores them.
-    // You can create this data either by calling createPriceFeedUpdateData or
-    // by using web3.js or ethers abi utilities.
-    // @note: The updateData expected here is different from the one used in the main contract.
-    // In particular, the expected format is:
-    // [
-    //     abi.encode(
-    //         PythStructs.PriceFeed(
-    //             bytes32 id,
-    //             PythStructs.Price price,
-    //             PythStructs.Price emaPrice
-    //         ),
-    //         uint64 prevPublishTime
-    //     )
-    // ]
+    /// Takes an array of encoded price feeds and stores them.
+    /// You can create this data either by calling createPriceFeedUpdateData or
+    /// by using web3.js or ethers abi utilities.
+    /// @note: The updateData expected here is different from the one used in the main contract.
+    /// In particular, the expected format is:
+    /// [
+    ///     abi.encode(
+    ///         PythStructs.PriceFeed(
+    ///             bytes32 id,
+    ///             PythStructs.Price price,
+    ///             PythStructs.Price emaPrice
+    ///         ),
+    ///         uint64 prevPublishTime
+    ///     )
+    /// ]
 
     #[payable]
     fn update_price_feeds(
@@ -264,7 +264,7 @@ mod tests {
     use alloy_sol_types::SolType;
     use stylus_sdk::abi::Bytes;
 
-    // Updated constants to use uppercase naming convention
+    /// Updated constants to use uppercase naming convention
     const PRICE: i64 = 1000;
     const CONF: u64 = 1000;
     const EXPO: i32 = 1000;
