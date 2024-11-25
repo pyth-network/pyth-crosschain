@@ -1,10 +1,13 @@
 "use client";
 
-import { Copy, Check } from "@phosphor-icons/react/dist/ssr";
+import { Check } from "@phosphor-icons/react/dist/ssr/Check";
+import { Copy } from "@phosphor-icons/react/dist/ssr/Copy";
 import { useLogger } from "@pythnetwork/app-logger";
 import { UnstyledButton } from "@pythnetwork/component-library/UnstyledButton";
 import clsx from "clsx";
 import { type ComponentProps, useCallback, useEffect, useState } from "react";
+
+import styles from "./index.module.scss";
 
 type CopyButtonProps = ComponentProps<typeof UnstyledButton> & {
   text: string;
@@ -51,11 +54,7 @@ export const CopyButton = ({
   return (
     <UnstyledButton
       onPress={copy}
-      isDisabled={isCopied}
-      className={clsx(
-        "group/copy-button mx-[-0.5em] -mt-0.5 inline-block whitespace-nowrap rounded-md px-[0.5em] py-0.5 outline-none outline-0 outline-steel-600 transition data-[hovered]:bg-black/5 data-[focus-visible]:outline-2 dark:outline-steel-300 dark:data-[hovered]:bg-white/10",
-        className,
-      )}
+      className={clsx(styles.copyButton, className)}
       {...(isCopied && { "data-is-copied": true })}
       {...props}
     >
@@ -64,12 +63,12 @@ export const CopyButton = ({
           <span>
             {typeof children === "function" ? children(...args) : children}
           </span>
-          <span className="relative top-[0.125em] ml-1 inline-block">
-            <span className="opacity-50 transition-opacity duration-100 group-data-[is-copied]/copy-button:opacity-0">
-              <Copy className="size-[1em]" />
-              <div className="sr-only">Copy to clipboard</div>
+          <span className={styles.iconContainer}>
+            <span className={styles.copyIconContainer}>
+              <Copy className={styles.copyIcon} />
+              <div className={styles.copyIconLabel}>Copy to clipboard</div>
             </span>
-            <Check className="absolute inset-0 text-green-600 opacity-0 transition-opacity duration-100 group-data-[is-copied]/copy-button:opacity-100" />
+            <Check className={styles.checkIcon} />
           </span>
         </>
       )}

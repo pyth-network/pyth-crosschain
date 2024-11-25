@@ -10,7 +10,7 @@
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
     "test:format": "prettier --check .",
-    "test:lint": "jest --selectProjects lint",
+    "test:lint": "eslint .",
     "test:types": "tsc"
   },
   "peerDependencies": {
@@ -25,6 +25,7 @@
     "@axe-core/react": "catalog:",
     "@next/third-parties": "catalog:",
     "@pythnetwork/app-logger": "workspace:*",
+    "@pythnetwork/component-library": "workspace:*",
     "bcp-47": "catalog:",
     "next-themes": "catalog:"
   },

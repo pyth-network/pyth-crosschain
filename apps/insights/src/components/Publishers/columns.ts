@@ -1,21 +1,30 @@
+import type { ColumnConfig } from "@pythnetwork/component-library/Table";
+
 export const columns = [
-  { id: "rank" as const, name: "RANKING" },
+  { id: "rank", name: "RANKING", loadingSkeletonWidth: 10 },
   {
-    id: "name" as const,
+    id: "name",
     name: "NAME / ID",
     isRowHeader: true,
     fill: true,
-    alignment: "left" as const,
+    alignment: "left",
+    loadingSkeletonWidth: 48,
   },
   {
-    id: "activeFeeds" as const,
+    id: "activeFeeds",
     name: "ACTIVE FEEDS",
-    alignment: "left" as const,
+    alignment: "center",
+    loadingSkeletonWidth: 6,
   },
   {
-    id: "inactiveFeeds" as const,
+    id: "inactiveFeeds",
     name: "INACTIVE FEEDS",
-    alignment: "left" as const,
+    alignment: "center",
+    loadingSkeletonWidth: 6,
   },
-  { id: "score" as const, name: "SCORE" },
-];
+  {
+    id: "score",
+    name: "SCORE",
+    loadingSkeletonWidth: 6,
+  },
+] satisfies ColumnConfig<string>[];

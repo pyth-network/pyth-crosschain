@@ -7,25 +7,29 @@
     "node": "20"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./tailwind-config": "./tailwind.config.ts",
-    "./*": "./src/*/index.tsx"
+    "./*": "./src/*/index.tsx",
+    "./theme": "./src/theme.scss"
   },
   "scripts": {
     "build:storybook": "storybook build",
     "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix .",
+    "fix:lint:eslint": "eslint --fix .",
+    "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
     "start:dev": "storybook dev --port 4000 --no-open",
     "test:format": "prettier --check .",
-    "test:lint": "jest --selectProjects lint",
+    "test:lint:eslint": "eslint .",
+    "test:lint:stylelint": "stylelint 'src/**/*.scss'",
     "test:types": "tsc"
   },
   "peerDependencies": {
     "react": "catalog:"
   },
   "dependencies": {
+    "@pythnetwork/fonts": "workspace:*",
     "@react-hookz/web": "catalog:",
     "clsx": "catalog:",
+    "modern-normalize": "catalog:",
+    "motion": "catalog:",
     "react-aria": "catalog:",
     "react-aria-components": "catalog:"
   },
@@ -35,14 +39,12 @@
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@phosphor-icons/react": "catalog:",
-    "@pythnetwork/fonts": "workspace:*",
     "@storybook/addon-essentials": "catalog:",
     "@storybook/addon-styling-webpack": "catalog:",
     "@storybook/addon-themes": "catalog:",
     "@storybook/blocks": "catalog:",
     "@storybook/nextjs": "catalog:",
     "@storybook/react": "catalog:",
-    "@tailwindcss/forms": "catalog:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
     "autoprefixer": "catalog:",
@@ -53,11 +55,12 @@
     "postcss-loader": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:",
+    "sass": "catalog:",
+    "sass-loader": "catalog:",
     "storybook": "catalog:",
     "style-loader": "catalog:",
-    "tailwindcss": "catalog:",
-    "tailwindcss-animate": "catalog:",
-    "tailwindcss-react-aria-components": "catalog:",
+    "stylelint": "catalog:",
+    "stylelint-config-standard-scss": "catalog:",
     "typescript": "catalog:"
   }
 }

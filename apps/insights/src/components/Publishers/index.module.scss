@@ -1,0 +1,50 @@
+@use "@pythnetwork/component-library/theme";
+
+.publisherNameContainer {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: theme.spacing(4);
+
+  .publisherIcon {
+    display: flex;
+    flex: none;
+    width: theme.spacing(9);
+    height: theme.spacing(9);
+  }
+
+  .nameAndKey {
+    display: flex;
+    flex-direction: column;
+    gap: theme.spacing(1);
+
+    .publisherName {
+      font-size: theme.font-size("sm");
+      font-weight: theme.font-weight("medium");
+      line-height: theme.spacing(4);
+    }
+  }
+}
+
+.publisherKey {
+  font-size: theme.font-size("xs");
+}
+
+.ranking {
+  display: inline-block;
+  height: theme.spacing(6);
+  width: 100%;
+  border-radius: theme.border-radius("md");
+  text-align: center;
+  font-size: theme.font-size("sm");
+  font-weight: theme.font-weight("medium");
+  line-height: theme.spacing(6);
+  color: light-dark(
+    theme.pallette-color("steel", 800),
+    theme.pallette-color("steel", 300)
+  );
+  background: light-dark(
+    theme.pallette-color("steel", 200),
+    theme.pallette-color("steel", 700)
+  );
+}

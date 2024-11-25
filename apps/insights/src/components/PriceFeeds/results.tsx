@@ -1,14 +1,10 @@
 "use client";
 
-import {
-  MagnifyingGlass,
-  ChartLine,
-  CircleNotch,
-} from "@phosphor-icons/react/dist/ssr";
+import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
 import { useLogger } from "@pythnetwork/app-logger";
-import { Card } from "@pythnetwork/component-library/Card";
-import { Table } from "@pythnetwork/component-library/Table";
-import clsx from "clsx";
+import { Paginator } from "@pythnetwork/component-library/Paginator";
+import { SearchInput } from "@pythnetwork/component-library/SearchInput";
+import { TableCard } from "@pythnetwork/component-library/TableCard";
 import { usePathname } from "next/navigation";
 import {
   parseAsString,
@@ -23,20 +19,18 @@ import {
   useCallback,
 } from "react";
 import { useFilter, useCollator } from "react-aria";
-import { Input, SearchField } from "react-aria-components";
 
+import { columns } from "./columns";
 import { PriceProvider } from "./prices";
-import { Paginator } from "../Paginator";
 
-type Props<T extends string> = Omit<
-  ComponentProps<typeof Table<T>>,
-  "isLoading" | "rows"
-> & {
+type Props = {
   priceFeeds: {
     symbol: string;
     key: string;
     displaySymbol: string;
-    data: ComponentProps<typeof Table<T>>["rows"][number]["data"];
+    data: ComponentProps<
+      typeof TableCard<(typeof columns)[number]["id"]>
+    >["rows"][number]["data"];
   }[];
 };
 
@@ -46,10 +40,7 @@ const params = {
   search: parseAsString.withDefault(""),
 };
 
-export const Results = <T extends string>({
-  priceFeeds,
-  ...props
-}: Props<T>) => {
+export const Results = ({ priceFeeds }: Props) => {
   const [isTransitioning, startTransition] = useTransition();
   const [{ page, pageSize, search }, setQuery] = useQueryStates(params);
   const filter = useFilter({ sensitivity: "base", usage: "search" });
@@ -61,13 +52,20 @@ export const Results = <T extends string>({
         : priceFeeds.filter((feed) => filter.contains(feed.symbol, search)),
     [search, priceFeeds, filter],
   );
-  const rows = useMemo(
+  const sortedRows = useMemo(
     () =>
-      filteredFeeds
-        .sort((a, b) => collator.compare(a.displaySymbol, b.displaySymbol))
-        .slice((page - 1) * pageSize, page * pageSize)
-        .map(({ key, data }) => ({ id: key, href: "/", data })),
-    [page, pageSize, filteredFeeds, collator],
+      filteredFeeds.sort((a, b) =>
+        collator.compare(a.displaySymbol, b.displaySymbol),
+      ),
+    [filteredFeeds, collator],
+  );
+  const paginatedRows = useMemo(
+    () => sortedRows.slice((page - 1) * pageSize, page * pageSize),
+    [page, pageSize, sortedRows],
+  );
+  const rows = useMemo(
+    () => paginatedRows.map(({ key, data }) => ({ id: key, href: "/", data })),
+    [paginatedRows],
   );
   const numPages = useMemo(
     () => Math.ceil(filteredFeeds.length / pageSize),
@@ -116,82 +114,40 @@ export const Results = <T extends string>({
   const mkPageLink = useCallback(
     (page: number) => {
       const serialize = createSerializer(params);
-      return `${pathname}${serialize({ page })}`;
+      return `${pathname}${serialize({ page, pageSize })}`;
     },
-    [pathname],
+    [pathname, pageSize],
   );
 
   return (
-    <Card
-      header={
-        <div className="flex flex-row items-center gap-3">
-          <ChartLine className="size-6 text-violet-600" />
-          <div>Price Feeds</div>
-        </div>
-      }
-      toolbarLabel="Price Feeds"
-      toolbar={<SearchBar search={search} setSearch={updateSearch} />}
-      full
-    >
-      <PriceProvider feedKeys={feedKeys}>
-        <Table
-          isLoading={isTransitioning}
-          rows={rows}
-          renderEmptyState={() => <p>No results!</p>}
-          {...props}
-        />
-      </PriceProvider>
-      <Paginator
-        numPages={numPages}
-        currentPage={page}
-        setCurrentPage={updatePage}
-        pageSize={pageSize}
-        setPageSize={updatePageSize}
-        mkPageLink={mkPageLink}
+    <PriceProvider feedKeys={feedKeys}>
+      <TableCard
+        label="Price Feeds"
+        icon={ChartLine}
+        columns={columns}
+        isUpdating={isTransitioning}
+        rows={rows}
+        renderEmptyState={() => <p>No results!</p>}
+        toolbar={
+          <SearchInput
+            defaultValue={search}
+            onChange={updateSearch}
+            size="sm"
+            width={40}
+          />
+        }
+        footer={
+          <Paginator
+            numPages={numPages}
+            currentPage={page}
+            onPageChange={updatePage}
+            pageSize={pageSize}
+            onPageSizeChange={updatePageSize}
+            pageSizeOptions={[10, 20, 30, 40, 50]}
+            mkPageLink={mkPageLink}
+          />
+        }
       />
-    </Card>
-  );
-};
-
-type SearchBarProps = {
-  search: string;
-  setSearch: (newSearch: string) => void;
-};
-
-const SearchBar = ({ search, setSearch }: SearchBarProps) => {
-  const [isTransitioning, startTransition] = useTransition();
-  const Icon = isTransitioning ? CircleNotch : MagnifyingGlass;
-
-  const doSearch = useCallback(
-    (search: string) => {
-      startTransition(() => {
-        setSearch(search);
-      });
-    },
-    [setSearch, startTransition],
-  );
-
-  return (
-    <div className="space-x-2">
-      <SearchField
-        defaultValue={search}
-        onChange={doSearch}
-        aria-label="Search"
-        className="inline-block"
-      >
-        <span className="relative inline-block h-9 w-48">
-          <Input
-            className="inline-block size-full rounded-lg border border-stone-300 bg-white px-button-padding-sm pl-9 text-sm ring-violet-500 placeholder:text-stone-400 data-[focused]:ring-2 data-[focused]:ring-violet-500 focus:border-stone-300 focus:outline-0 dark:bg-steel-900 dark:placeholder:text-steel-400"
-            placeholder="Search"
-          />
-          <Icon
-            className={clsx(
-              "pointer-events-none absolute inset-y-2 left-button-padding-sm size-5",
-              { "animate-spin": isTransitioning },
-            )}
-          />
-        </span>
-      </SearchField>
-    </div>
+    </PriceProvider>
   );
 };

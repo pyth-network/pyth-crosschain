@@ -8,7 +8,7 @@ use {
     serde::{de::Error, Deserialize, Serialize},
     std::{
         num::NonZeroI64,
-        ops::{Add, Deref, DerefMut, Div, Sub},
+        ops::{Add, Deref, DerefMut, Div, Mul, Sub},
         time::{SystemTime, UNIX_EPOCH},
     },
 };
@@ -117,6 +117,21 @@ impl Div<i64> for Price {
     type Output = Option<Price>;
     fn div(self, rhs: i64) -> Self::Output {
         let value = self.0.get().saturating_div(rhs);
+        NonZeroI64::new(value).map(Self)
+    }
+}
+
+impl Mul<Price> for Price {
+    type Output = Option<Price>;
+    fn mul(self, rhs: Price) -> Self::Output {
+        let left_value = i128::from(self.0.get());
+        let right_value = i128::from(rhs.0.get());
+
+        let value = left_value * right_value / 10i128.pow(Price::TMP_EXPONENT);
+        let value = match value.try_into() {
+            Ok(value) => value,
+            Err(_) => return None,
+        };
         NonZeroI64::new(value).map(Self)
     }
 }

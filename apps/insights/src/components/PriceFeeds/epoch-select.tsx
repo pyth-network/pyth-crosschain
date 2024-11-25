@@ -1,22 +1,22 @@
 "use client";
 
-import {
-  CaretLeft,
-  CaretRight,
-  CalendarDots,
-} from "@phosphor-icons/react/dist/ssr";
+import { CalendarDots } from "@phosphor-icons/react/dist/ssr/CalendarDots";
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
+import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Select } from "@pythnetwork/component-library/Select";
 
+import styles from "./epoch-select.module.scss";
+
 export const EpochSelect = () => (
-  <div className="flex flex-row items-center gap-2">
+  <div className={styles.epochSelect}>
     <Button variant="outline" size="sm" beforeIcon={CaretLeft} hideText>
       Previous Epoch
     </Button>
     <Select
       variant="outline"
       size="sm"
-      beforeIcon={CalendarDots}
+      icon={CalendarDots}
       options={["27 Oct – 3 Nov"]}
       selectedKey="27 Oct – 3 Nov"
       label="Epoch"

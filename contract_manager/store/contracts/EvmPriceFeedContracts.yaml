@@ -430,3 +430,15 @@
 - chain: tabi_testnet
   address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"
   type: EvmPriceFeedContract
+- chain: hyperevm_testnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: horse_dream
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: mathematician_in_heart
+  address: "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1"
+  type: EvmPriceFeedContract
+- chain: happy_bird_song_ends_with_tio
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract

@@ -10,8 +10,8 @@
   "scripts": {
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
-    "test:format": "jest --selectProjects format",
-    "test:lint": "jest --selectProjects lint",
+    "test:format": "prettier --check .",
+    "test:lint": "eslint .",
     "test:types": "tsc"
   },
   "peerDependencies": {

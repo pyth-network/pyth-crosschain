@@ -1,0 +1,32 @@
+@use "../theme";
+
+.tableCard {
+  .header {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: theme.spacing(4);
+
+    .title {
+      margin: 0;
+      font-size: theme.font-size("lg");
+      font-weight: theme.font-weight("medium");
+      color: theme.color("heading");
+      display: inline-flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(3);
+      align-items: center;
+
+      .icon {
+        width: theme.spacing(6);
+        height: theme.spacing(6);
+        color: theme.color("button", "primary", "background", "normal");
+      }
+    }
+  }
+
+  .footer {
+    padding: theme.spacing(2);
+  }
+}

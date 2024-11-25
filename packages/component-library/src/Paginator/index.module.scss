@@ -1,0 +1,37 @@
+@use "../theme";
+
+.paginator {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+
+  .pageSizeSelect {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: theme.spacing(1);
+
+    .loadingIndicator {
+      width: theme.spacing(4);
+      height: theme.spacing(4);
+      opacity: 0;
+      transition: opacity 100ms linear;
+
+      @include theme.spin;
+
+      &.visible {
+        opacity: 1;
+      }
+    }
+  }
+
+  .paginatorToolbar {
+    display: flex;
+    flex-flow: row nowrap;
+    gap: theme.spacing(1);
+
+    .selectedPage {
+      cursor: text;
+    }
+  }
+}

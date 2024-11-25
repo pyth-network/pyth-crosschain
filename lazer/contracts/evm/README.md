@@ -39,7 +39,7 @@ $ anvil
 ### Deploy
 
 ```shell
-$ forge script script/PythLazer.s.sol:PythLazerScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+$ forge script script/PythLazerDeploy.s.sol --rpc-url <your_rpc_url> --private-key <your_private_key> --broadcast
 ```
 
 ### Cast

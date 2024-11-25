@@ -1,10 +1,4 @@
-import { fileURLToPath } from "node:url";
+import { react, storybook } from "@cprussin/eslint-config";
 
-import { react, tailwind, storybook } from "@cprussin/eslint-config";
-
-const config = [
-  ...react,
-  ...tailwind(fileURLToPath(import.meta.resolve("./tailwind.config.ts"))),
-  ...storybook,
-];
+const config = [...react, ...storybook];
 export default config;

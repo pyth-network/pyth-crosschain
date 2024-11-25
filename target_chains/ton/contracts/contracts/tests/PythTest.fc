@@ -40,13 +40,19 @@
         slice price_ids_slice = price_ids_cell.begin_parse();
         int min_publish_time = in_msg_body~load_uint(64);
         int max_publish_time = in_msg_body~load_uint(64);
-        parse_price_feed_updates(msg_value, data_slice, price_ids_slice, min_publish_time, max_publish_time, sender_address);
+        slice target_address = in_msg_body~load_msg_addr();
+        cell custom_payload_cell = in_msg_body~load_ref();
+        slice custom_payload = custom_payload_cell.begin_parse();
+        parse_price_feed_updates(msg_value, data_slice, price_ids_slice, min_publish_time, max_publish_time, sender_address, target_address, custom_payload);
     } elseif (op == OP_PARSE_UNIQUE_PRICE_FEED_UPDATES) {
         cell price_ids_cell = in_msg_body~load_ref();
         slice price_ids_slice = price_ids_cell.begin_parse();
         int publish_time = in_msg_body~load_uint(64);
         int max_staleness = in_msg_body~load_uint(64);
-        parse_unique_price_feed_updates(msg_value, data_slice, price_ids_slice, publish_time, max_staleness, sender_address);
+        slice target_address = in_msg_body~load_msg_addr();
+        cell custom_payload_cell = in_msg_body~load_ref();
+        slice custom_payload = custom_payload_cell.begin_parse();
+        parse_unique_price_feed_updates(msg_value, data_slice, price_ids_slice, publish_time, max_staleness, sender_address, target_address, custom_payload);
     } else {
         throw(0xffff); ;; Throw exception for unknown op
     }

@@ -2,7 +2,7 @@ import Generic from "cryptocurrency-icons/svg/color/generic.svg";
 import { Fragment } from "react";
 import { z } from "zod";
 
-import { columns } from "./columns";
+import styles from "./index.module.scss";
 import { Price } from "./prices";
 import { Results } from "./results";
 import { getIcon } from "../../icons";
@@ -13,8 +13,6 @@ export const PriceFeeds = async () => {
 
   return (
     <Results
-      label="Price Feeds"
-      columns={columns}
       priceFeeds={priceFeeds.map(({ symbol, product }) => ({
         symbol,
         key: product.price_account,
@@ -36,16 +34,19 @@ const AssetName = ({ children }: { children: string }) => {
   const [firstPart, ...parts] = children.split("/");
   const Icon = firstPart ? (getIcon(firstPart) ?? Generic) : Generic;
   return (
-    <div className="flex flex-row gap-3">
-      <Icon className="size-6" width="100%" height="100%" viewBox="0 0 32 32" />
-      <div className="flex flex-row items-center gap-1">
-        <span className="font-medium">{firstPart}</span>
+    <div className={styles.assetName}>
+      <Icon
+        className={styles.icon}
+        width="100%"
+        height="100%"
+        viewBox="0 0 32 32"
+      />
+      <div className={styles.name}>
+        <span className={styles.firstPart}>{firstPart}</span>
         {parts.map((part, i) => (
           <Fragment key={i}>
-            <span className="font-light text-stone-600 dark:text-steel-400">
-              /
-            </span>
-            <span className="opacity-60">{part}</span>
+            <span className={styles.divider}>/</span>
+            <span className={styles.part}>{part}</span>
           </Fragment>
         ))}
       </div>
@@ -54,9 +55,7 @@ const AssetName = ({ children }: { children: string }) => {
 };
 
 const AssetType = ({ children }: { children: string }) => (
-  <span className="inline-block rounded-3xl border border-steel-900 px-2 text-[0.625rem] uppercase leading-4 text-steel-900 dark:border-steel-50 dark:text-steel-50">
-    {children}
-  </span>
+  <span className={styles.assetType}>{children}</span>
 );
 
 const getPriceFeeds = async () => {

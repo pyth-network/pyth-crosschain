@@ -1,0 +1,87 @@
+@use "../theme";
+
+.select {
+  .caret {
+    transition-property: transform;
+    transition-duration: 300ms;
+    transition-timing-function: ease;
+  }
+
+  &[data-open] {
+    .caret {
+      transform: rotate(-180deg);
+    }
+  }
+
+  &[data-label-hidden] .label {
+    @include theme.sr-only;
+  }
+}
+
+.popover {
+  // data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out"
+
+  .listbox {
+    min-width: var(--trigger-width);
+    background-color: theme.color("background", "modal");
+    border-radius: theme.border-radius("lg");
+    border: 1px solid theme.color("border");
+    color: theme.color("paragraph");
+    padding: theme.spacing(1);
+    display: flex;
+    flex-flow: column nowrap;
+    font-size: theme.font-size("sm");
+    box-shadow:
+      0 4px 6px -4px rgb(0 0 0 / 10%),
+      0 10px 15px -3px rgb(0 0 0 / 10%);
+
+    // origin-top-right"
+
+    .listboxItem {
+      padding: theme.spacing(2);
+      cursor: pointer;
+      background-color: transparent;
+      border-radius: theme.border-radius("lg");
+      white-space: nowrap;
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: theme.spacing(4);
+      transition-property: background-color, outline-color, border-color;
+      transition-duration: 100ms;
+      transition-timing-function: linear;
+      border: 1px solid transparent;
+      outline: theme.spacing(0.5) solid transparent;
+      outline-offset: 0;
+
+      .check {
+        width: theme.spacing(3);
+        height: theme.spacing(3);
+        color: theme.color("button", "primary", "background", "normal");
+        opacity: 0;
+        transition-property: opacity;
+        transition-duration: 100ms;
+        transition-timing-function: linear;
+      }
+
+      &[data-focused] {
+        background-color: theme.color(
+          "button",
+          "outline",
+          "background",
+          "hover"
+        );
+      }
+
+      &[data-focus-visible] {
+        border-color: theme.color("focus");
+        outline-color: theme.color("focus-dim");
+      }
+
+      &[data-selected] .check {
+        opacity: 1;
+      }
+    }
+  }
+}

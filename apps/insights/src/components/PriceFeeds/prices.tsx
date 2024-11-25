@@ -4,7 +4,6 @@ import { useLogger } from "@pythnetwork/app-logger";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { useMap } from "@react-hookz/web";
 import { PublicKey } from "@solana/web3.js";
-import clsx from "clsx";
 import {
   type ComponentProps,
   createContext,
@@ -13,17 +12,14 @@ import {
 } from "react";
 import { useNumberFormatter } from "react-aria";
 
+import styles from "./prices.module.scss";
 import { client, subscribe } from "../../pyth";
 
 const PriceContext = createContext<
   Map<string, [number, ChangeDirection]> | undefined
 >(undefined);
 
-enum ChangeDirection {
-  Up,
-  Down,
-  Flat,
-}
+type ChangeDirection = "up" | "down" | "flat";
 
 type PriceProviderProps = Omit<ComponentProps<typeof PriceContext>, "value"> & {
   feedKeys: string[];
@@ -40,11 +36,9 @@ export const Price = ({ account }: { account: string }) => {
   const price = usePrices().get(account);
 
   return price === undefined ? (
-    <Skeleton className="w-20" />
+    <Skeleton width={20} />
   ) : (
-    <span
-      className={clsx("transition-colors duration-100", getColor(price[1]))}
-    >
+    <span className={styles.price} data-direction={price[1]}>
       {numberFormatter.format(price[0])}
     </span>
   );
@@ -65,7 +59,7 @@ const usePriceData = (feedKeys: string[]) => {
           for (const [i, price] of initialPrices.entries()) {
             const key = initialFeedKeys[i];
             if (key && !priceData.has(key)) {
-              priceData.set(key, [price.aggregate.price, ChangeDirection.Flat]);
+              priceData.set(key, [price.aggregate.price, "flat"]);
             }
           }
         })
@@ -120,24 +114,10 @@ const getChangeDirection = (
   price: number,
 ): ChangeDirection => {
   if (prevPrice === undefined || prevPrice === price) {
-    return ChangeDirection.Flat;
+    return "flat";
   } else if (prevPrice < price) {
-    return ChangeDirection.Up;
+    return "up";
   } else {
-    return ChangeDirection.Down;
-  }
-};
-
-const getColor = (direction: ChangeDirection) => {
-  switch (direction) {
-    case ChangeDirection.Down: {
-      return "text-red-500";
-    }
-    case ChangeDirection.Up: {
-      return "text-green-500";
-    }
-    case ChangeDirection.Flat: {
-      return;
-    }
+    return "down";
   }
 };

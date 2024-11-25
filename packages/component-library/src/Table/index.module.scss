@@ -1,0 +1,146 @@
+@use "../theme";
+
+.tableContainer {
+  background-color: theme.color("background", "primary");
+  border-radius: theme.border-radius("xl");
+  position: relative;
+
+  .loaderWrapper {
+    position: absolute;
+    top: theme.spacing(10);
+    left: 0;
+    right: 0;
+    height: theme.spacing(0.5);
+    overflow: hidden;
+
+    .loader {
+      width: 100%;
+      height: 100%;
+      background-color: theme.color("focus");
+      transform-origin: left;
+      animation: progress 1s infinite linear;
+
+      @keyframes progress {
+        0% {
+          transform: translateX(0) scaleX(0);
+        }
+
+        40% {
+          transform: translateX(0) scaleX(0.4);
+        }
+
+        100% {
+          transform: translateX(100%) scaleX(0.5);
+        }
+      }
+    }
+  }
+
+  .table {
+    border-collapse: collapse;
+
+    .cell {
+      padding-left: theme.spacing(2);
+      padding-right: theme.spacing(2);
+      white-space: nowrap;
+      border: 0;
+      outline: none;
+
+      &:first-child {
+        padding-left: theme.spacing(4);
+      }
+
+      &:last-child {
+        padding-right: theme.spacing(4);
+      }
+
+      &[data-alignment="left"] {
+        text-align: left;
+      }
+
+      &[data-alignment="center"] {
+        text-align: center;
+      }
+
+      &[data-alignment="right"] {
+        text-align: right;
+      }
+
+      &[data-fill] {
+        width: 100%;
+      }
+
+      &[data-focus-visible] {
+        outline: theme.spacing(0.5) solid theme.color("focus");
+      }
+    }
+
+    .tableHeader {
+      border-bottom: 1px solid theme.color("background", "secondary");
+      font-size: theme.font-size("xs");
+      line-height: theme.spacing(4);
+      color: theme.color("muted");
+
+      .cell {
+        font-weight: theme.font-weight("medium");
+        padding-top: theme.spacing(3);
+        padding-bottom: theme.spacing(3);
+      }
+    }
+
+    .tableBody {
+      font-size: theme.font-size("sm");
+
+      .row {
+        background-color: transparent;
+        transition-property: background-color;
+        transition-duration: 100ms;
+        transition-timing-function: linear;
+        outline: none;
+
+        &[data-hovered] {
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "hover"
+          );
+        }
+
+        &[data-pressed] {
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "active"
+          );
+        }
+
+        &[data-focus-visible] {
+          outline: theme.spacing(0.5) solid theme.color("focus");
+        }
+
+        &[data-href] {
+          cursor: pointer;
+        }
+
+        .cell {
+          padding-top: theme.spacing(4);
+          padding-bottom: theme.spacing(4);
+        }
+
+        &:last-child {
+          .cell {
+            &:first-child {
+              border-bottom-left-radius: theme.border-radius("xl");
+            }
+
+            &:last-child {
+              border-bottom-right-radius: theme.border-radius("xl");
+            }
+          }
+        }
+      }
+    }
+  }
+}

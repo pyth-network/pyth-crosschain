@@ -1,8 +1,8 @@
+import styles from "./index.module.scss";
 import { H1 } from "../H1";
-import { MaxWidth } from "../MaxWidth";
 
 export const Overview = () => (
-  <MaxWidth>
+  <div className={styles.overview}>
     <H1>Overview</H1>
-  </MaxWidth>
+  </div>
 );

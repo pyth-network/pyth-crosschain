@@ -328,7 +328,7 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     return result;
 }
 
-() send_price_feeds_response(tuple price_feeds, int msg_value, int op, slice sender_address) impure {
+() send_price_feeds_response(tuple price_feeds, int msg_value, int op, slice sender_address, slice target_address, slice custom_payload) impure {
     ;; Build response cell with price feeds
     builder response = begin_cell()
         .store_uint(op, 32)  ;; Response op
@@ -336,44 +336,22 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
 
     ;; Create and store price feed cell chain
     cell price_feeds_cell = create_price_feed_cell_chain(price_feeds);
-    response = response.store_ref(price_feeds_cell);
-
-    ;; Build the complete message cell (https://docs.ton.org/v3/documentation/smart-contracts/message-management/sending-messages#message-layout)
-    cell msg = begin_cell()
-        .store_uint(0x18, 6)
-        .store_slice(sender_address)
-        .store_coins(0) ;; Will fill in actual amount after fee calculations
-        .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-        .store_ref(response.end_cell())
-    .end_cell();
+    cell custom_payload_cell = begin_cell().store_slice(custom_payload).end_cell();
+    response = response.store_ref(price_feeds_cell).store_slice(sender_address).store_ref(custom_payload_cell);
 
     int num_price_feeds = price_feeds.tlen();
-
-    ;; Number of cells in the message
-    ;; - 2 cells: msg + response
-    int cells = 2 + num_price_feeds;
-
-    ;; Bit layout per TL-B spec (https://github.com/ton-blockchain/ton/blob/master/crypto/block/block.tlb):
-    ;; - 6 bits: optimized way of serializing the tag and the first 4 fields
-    ;; - 256 bits: owner address
-    ;; - 128 bits: coins (VarUInteger 16) from grams$_ amount:(VarUInteger 16) = Grams
-    ;; - 107 bits: MSG_SERIALIZE_BITS
-    ;; - PRICE_FEED_BITS * num_price_feeds: space for each price feed
-    int bits = 6 + 256 + 128 + MSG_SERIALIZE_BITS + (PRICE_FEED_BITS * num_price_feeds);
-    int fwd_fee = get_forward_fee(cells, bits, WORKCHAIN);
 
     ;; Calculate all fees
     int compute_fee = get_compute_fee(WORKCHAIN, get_gas_consumed());
     int update_fee = single_update_fee * price_feeds.tlen();
 
     ;; Calculate total fees and remaining excess
-    int total_fees = compute_fee + update_fee + fwd_fee;
+    int total_fees = compute_fee + update_fee;
     int excess = msg_value - total_fees;
 
-    ;; Send response message back to sender with exact excess amount
     send_raw_message(begin_cell()
         .store_uint(0x18, 6)
-        .store_slice(sender_address)
+        .store_slice(target_address)
         .store_coins(excess)
         .store_uint(1, MSG_SERIALIZE_BITS)
         .store_ref(response.end_cell())
@@ -381,7 +359,7 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
         0);
 }
 
-() parse_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int min_publish_time, int max_publish_time, slice sender_address) impure {
+() parse_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int min_publish_time, int max_publish_time, slice sender_address, slice target_address, slice custom_payload) impure {
     load_data();
 
     ;; Load price_ids tuple
@@ -393,10 +371,10 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     }
 
     tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, min_publish_time, max_publish_time, false);
-    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_PRICE_FEED_UPDATES, sender_address);
+    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_PRICE_FEED_UPDATES, sender_address, target_address, custom_payload);
 }
 
-() parse_unique_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int publish_time, int max_staleness, slice sender_address) impure {
+() parse_unique_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int publish_time, int max_staleness, slice sender_address, slice target_address, slice custom_payload) impure {
     load_data();
 
     ;; Load price_ids tuple
@@ -408,7 +386,7 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     }
 
     tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, publish_time, publish_time + max_staleness, true);
-    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_UNIQUE_PRICE_FEED_UPDATES, sender_address);
+    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_UNIQUE_PRICE_FEED_UPDATES, sender_address, target_address, custom_payload);
 }
 
 () update_price_feeds(int msg_value, slice data) impure {

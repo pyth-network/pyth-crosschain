@@ -14,7 +14,7 @@
     "start:dev": "next dev --port 3001",
     "start:prod": "next start --port 3001",
     "test:format": "prettier --check .",
-    "test:lint": "jest --selectProjects lint",
+    "test:lint": "eslint .",
     "test:types": "tsc",
     "test:unit": "jest --selectProjects unit"
   },

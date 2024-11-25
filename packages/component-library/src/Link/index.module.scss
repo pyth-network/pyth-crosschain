@@ -1,0 +1,28 @@
+@use "../theme";
+
+.link {
+  text-decoration: underline;
+  border: none;
+  border-radius: theme.border-radius();
+  outline-width: 1px;
+  outline-offset: theme.spacing(1);
+  outline-color: transparent;
+  color: inherit;
+
+  &[data-focus-visible] {
+    outline-color: currentcolor;
+  }
+
+  &[data-hovered] {
+    text-decoration: none;
+  }
+
+  &:active {
+    color: inherit;
+  }
+
+  &[data-disabled] {
+    cursor: not-allowed;
+    color: theme.color("button", "disabled", "foreground");
+  }
+}

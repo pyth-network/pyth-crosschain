@@ -1,0 +1,108 @@
+@use "@pythnetwork/component-library/theme";
+
+.footer {
+  // SM
+  background: theme.color("background", "primary");
+
+  // XL
+  padding: theme.spacing(8) 0;
+
+  // bg-beige-100 sm:border-t sm:border-stone-300
+
+  .topContent {
+    display: flex;
+    gap: theme.spacing(6);
+
+    // SM
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: space-between;
+
+    @include theme.max-width;
+
+    // XL
+    margin-bottom: theme.spacing(12);
+
+    // py-6
+
+    // flex-col
+
+    .left {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+
+      // SM
+      gap: theme.spacing(6);
+
+      // gap-8
+
+      .logoLink {
+        margin: -#{theme.spacing(2)};
+        border-radius: theme.border-radius();
+        padding: theme.spacing(2);
+
+        .logo {
+          height: theme.spacing(5);
+        }
+
+        .logoLabel {
+          @include theme.sr-only;
+        }
+      }
+
+      .divider {
+        background-color: theme.color("border");
+        width: 1px;
+
+        // hidden sm:block
+      }
+
+      .help {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        gap: theme.spacing(6);
+        font-size: theme.font-size("sm");
+      }
+    }
+
+    .right {
+      margin: 0 -#{theme.button-padding("sm", false)};
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+
+      // SM
+      justify-content: flex-end;
+      gap: theme.spacing(2);
+
+      // justify-between
+    }
+  }
+
+  .bottomContent {
+    display: flex;
+    gap: theme.spacing(6);
+
+    // SM
+    flex-flow: row nowrap;
+    justify-content: space-between;
+
+    // "flex-col
+
+    @include theme.max-width;
+
+    .copyright {
+      font-size: theme.font-size("xs");
+      color: theme.color("muted");
+    }
+
+    .legal {
+      display: flex;
+      flex-flow: row nowrap;
+      font-size: theme.font-size("xs");
+      gap: theme.spacing(6);
+    }
+  }
+}

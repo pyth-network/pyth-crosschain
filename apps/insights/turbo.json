@@ -14,6 +14,17 @@
         "CLICKHOUSE_PASSWORD"
       ]
     },
+    "fix:lint": {
+      "dependsOn": ["fix:lint:eslint", "fix:lint:stylelint"],
+      "cache": false
+    },
+    "fix:lint:eslint": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "fix:lint:stylelint": {
+      "cache": false
+    },
     "pull:env": {
       "outputs": [".env.local"],
       "cache": false
@@ -27,6 +38,13 @@
       "dependsOn": ["build"],
       "persistent": true,
       "cache": false
-    }
+    },
+    "test:lint": {
+      "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
+    },
+    "test:lint:eslint": {
+      "dependsOn": ["^build"]
+    },
+    "test:lint:stylelint": {}
   }
 }

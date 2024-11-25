@@ -1,0 +1,43 @@
+@use "@pythnetwork/component-library/theme";
+
+.assetName {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(3);
+
+  .icon {
+    width: theme.spacing(6);
+    height: theme.spacing(6);
+  }
+
+  .name {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: theme.spacing(1);
+
+    .firstPart {
+      font-weight: theme.font-weight("medium");
+    }
+
+    .divider {
+      font-weight: theme.font-weight("light");
+      color: theme.color("heading");
+    }
+
+    .part {
+      opacity: 0.6;
+    }
+  }
+}
+
+.assetType {
+  display: inline-block;
+  border-radius: theme.border-radius("3xl");
+  border: 1px solid theme.color("states", "neutral", "normal");
+  padding: 0 theme.spacing(2);
+  font-size: theme.font-size("xxs");
+  text-transform: uppercase;
+  line-height: theme.spacing(4);
+  color: theme.color("states", "neutral", "normal");
+}

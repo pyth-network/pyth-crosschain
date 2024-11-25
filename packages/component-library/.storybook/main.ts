@@ -13,6 +13,10 @@ const config = {
     "../src/**/?(*.)stories.tsx",
   ],
 
+  features: {
+    backgroundsStoryGlobals: true,
+  },
+
   addons: [
     "@storybook/addon-essentials",
     "@storybook/addon-themes",
@@ -21,16 +25,23 @@ const config = {
       options: {
         rules: [
           {
-            test: /\.css$/,
+            test: /\.s[ac]ss$/i,
             use: [
               "style-loader",
               {
                 loader: "css-loader",
-                options: { importLoaders: 1 },
+                options: {
+                  modules: {
+                    auto: true,
+                    localIdentName: "[name]__[local]--[hash:base64:5]",
+                  },
+                  importLoaders: 1,
+                  esModule: false,
+                },
               },
               {
-                loader: "postcss-loader",
-                options: { implementation: resolve("postcss") },
+                loader: "sass-loader",
+                options: { implementation: resolve("sass") },
               },
             ],
           },

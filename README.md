@@ -112,6 +112,52 @@ after `--`, for instance you could run `pnpm test -- --concurrency 2`.
 - `pnpm start:prod`: Run production builds and start production mode servers in
   parallel.
 
+#### Building a new package
+
+New packages should be configured with a few requirements in mind:
+
+1. You need to make sure `package.json` scripts are named such that that
+   turborepo will hook into them at the expected times.
+
+   - See [turbo.json](./turbo.json) to see the base configuration and ensure you
+     use script names that match the tasks that turborepo is configured to run.
+   - You don't need to define scripts for all the tasks that are in the root
+     `turbo.json` config, just define the ones that make sense for your project.
+   - You shouldn't define scripts for tasks that just trigger other tasks;
+     instead configure turborepo dependencies to trigger the tasks. This will
+     allow turborepo to cache and parallelize things more effectively.
+   - In general, `build`, `fix`, and `test` are the main turborepo task graph
+     entry points, and any sub-tasks that apply to your package should be
+     configured as dependencies somewhere in the graph rooted at one of those.
+   - If you need sub-tasks or a task configuration that only apply to your or a
+     small few packages, add a package-scoped `turbo.json`, see [the one in the
+     insights app](./apps/insights/turbo.json) as an example.
+
+2. Make sure to configure the tools you need and hook up the relevant checks to
+   turborepo via the `test` root task so they run on CI. The most common tools
+   (eslint, prettier, jest, and typescript) are trivial to configure correctly
+   using shared configs, see the relevant config files [in the insights
+   app](./apps/insights) as a starting point.
+
+3. If you are writing a package that will be published:
+
+   - Make sure you are dual-exporting cjs and esm correctly, see [how the lazer
+     sdk package builds](./lazer/sdk/js/package.json) (in particular look at the
+     `build:cjs` and `build:esm` tasks) for an example for how to do this
+
+   - Ensure you have properly configured [subpath
+     exports](https://nodejs.org/api/packages.html#subpath-exports) to reference
+     the esm and cjs outputs so that your package can be consumed correctly in
+     both environments. Again, see [the lazer sdk](./lazer/sdk/js/package.json)
+     as an example for doing this correctly.
+
+   - Ensure you have set a `main` and `types` property on your `package.json`
+     pointing to your cjs entrypoint for use in older javascript environments.
+
+   - Ensure you configure the `files` property on your `package.json` to include
+     all output files and to exclude source files & tooling configuration. This
+     will result in smaller package sizes.
+
 ## Audit / Feature Status
 
 ⚠ **This software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or

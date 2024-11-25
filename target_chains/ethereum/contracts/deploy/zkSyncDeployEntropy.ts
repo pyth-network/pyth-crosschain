@@ -43,8 +43,8 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     wormholeInitialSigners,
     governanceEmitter,
     governanceChainId,
-    chainName,
   } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
+  const chainName = envOrErr("MIGRATIONS_NETWORK");
 
   const wormholeReceiverChainId = CHAINS[chainName];
   assert(wormholeReceiverChainId !== undefined);
@@ -90,7 +90,8 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   console.log("Entropy contract address:", entropyContractAddress);
 
   console.log("Saving the contract in the store...");
-  const contract = new EvmEntropyContract(chainName, entropyContractAddress);
+  const chain = DefaultStore.chains[chainName];
+  const contract = new EvmEntropyContract(chain, entropyContractAddress);
   DefaultStore.entropy_contracts[contract.getId()] = contract;
   DefaultStore.saveAllContracts();
 }

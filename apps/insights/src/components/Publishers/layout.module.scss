@@ -1,0 +1,13 @@
+@use "@pythnetwork/component-library/theme";
+
+.publishersLayout {
+  @include theme.max-width;
+
+  .header {
+    margin-bottom: theme.spacing(12);
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
