@@ -10,7 +10,7 @@ cd "nitro-testnode"
 ./test-node.bash script send-l2 --to address_$WALLER_ADDRESS --ethamount 0.1    
 
 cd ..
-cd "pyth-solidity"
+cd "pyth-mock-solidity"
 deployed_to=$(
   forge script ./script/MockPyth.s.sol:MockPythScript \
   --rpc-url "$RPC_URL" \
