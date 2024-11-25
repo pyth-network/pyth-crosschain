@@ -4,7 +4,7 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "build:cjs", "build:esm"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
@@ -15,6 +15,12 @@
         "!vercel.json"
       ],
       "outputs": ["dist/**", "lib/**"]
+    },
+    "build:cjs": {
+      "outputs": ["dist/cjs/**"]
+    },
+    "build:esm": {
+      "outputs": ["dist/esm/**"]
     },
     "fix": {
       "dependsOn": ["fix:lint", "fix:format"],
