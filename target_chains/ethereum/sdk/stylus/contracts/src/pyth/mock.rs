@@ -7,7 +7,7 @@ use crate::{
     utils::helpers::CALL_RETDATA_DECODING_ERROR_MESSAGE,
 };
 use alloc::vec::Vec;
-use alloy_primitives::{Bytes, Uint, B256, U256};
+use alloy_primitives::{Bytes, B256, U256};
 use alloy_sol_types::{sol_data::Uint as SolUInt, SolType, SolValue};
 use stylus_sdk::{abi::Bytes as AbiBytes, evm, msg, prelude::*};
 
@@ -77,7 +77,7 @@ impl MockPythContract {
         update_data: Vec<AbiBytes>,
     ) -> Result<(), Vec<u8>> {
         let required_fee = self.get_update_fee(update_data.clone());
-        if required_fee.lt(&U256::from(msg::value())) {
+        if required_fee < msg::value() {
             return Err(Error::InsufficientFee(InsufficientFee {}).into());
         }
 
@@ -88,8 +88,8 @@ impl MockPythContract {
                         CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec()
                     })?;
             let last_publish_time =
-                &self.price_feeds.get(price_feed_data.id).price.publish_time;
-            if last_publish_time.lt(&price_feed_data.price.publish_time) {
+                &self.price_feeds.get(price_feed_data.id).price.publish_time.get();
+            if last_publish_time < &price_feed_data.price.publish_time {
                 self.price_feeds
                     .setter(price_feed_data.id)
                     .set(price_feed_data);
@@ -173,7 +173,7 @@ impl MockPythContract {
         unique: bool,
     ) -> Result<Vec<u8>, Vec<u8>> {
         let required_fee = self.get_update_fee(update_data.clone());
-        if required_fee.lt(&U256::from(msg::value())) {
+        if required_fee < msg::value() {
             return Err(Error::InsufficientFee(InsufficientFee {}).into());
         }
 
@@ -198,8 +198,7 @@ impl MockPythContract {
                     .price_feeds
                     .get(feeds[i].id)
                     .price
-                    .publish_time
-                    .lt(&publish_time)
+                    .publish_time.get() < publish_time
                 {
                     self.price_feeds.setter(feeds[i].id).set(feeds[i]);
                     evm::log(PriceFeedUpdate {
@@ -211,9 +210,9 @@ impl MockPythContract {
                 }
 
                 if feeds[i].id == price_ids[i] {
-                    if publish_time.gt(&U256::from(min_publish_time))
-                        && publish_time.le(&U256::from(max_publish_time))
-                        && (!unique || prev_publish_time.lt(&min_publish_time))
+                    if publish_time > U256::from(min_publish_time)
+                        && publish_time <= U256::from(max_publish_time)
+                        && (!unique || prev_publish_time < min_publish_time)
                     {
                         break;
                     } else {
