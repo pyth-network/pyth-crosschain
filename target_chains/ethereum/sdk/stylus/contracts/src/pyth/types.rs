@@ -166,7 +166,7 @@ impl StoragePrice {
     }
 
     /// This function is for just for testing
-    pub fn from_price(price: Price) -> Self {
+    pub fn test_from_price(price: Price) -> Self {
         let mut storage_price =
             unsafe { StoragePrice::new(U256::from(100), 0) };
         storage_price.set(price);
@@ -200,7 +200,8 @@ impl StoragePriceFeed {
         self.ema_price.set(price_feed.ema_price);
     }
 
-    pub fn from_price_feed(price_feed: PriceFeed) -> Self {
+    /// This function is for just for testing
+    pub fn test_from_price_feed(price_feed: PriceFeed) -> Self {
         let mut storage_price_feed =
             unsafe { StoragePriceFeed::new(U256::from(100), 0) };
         storage_price_feed.set(price_feed);
@@ -277,7 +278,7 @@ mod tests {
             expo: EXPO,
             publish_time: U256::from(1000),
         };
-        let storage_price_result = StoragePrice::from_price(price_result);
+        let storage_price_result = StoragePrice::test_from_price(price_result);
         let price_result = storage_price_result.to_price();
         assert_eq!(price_result.price, PRICE);
         assert_eq!(price_result.conf, CONF);
@@ -305,7 +306,7 @@ mod tests {
             ema_price: price_result_ema,
         };
         let storage_price_feed_result =
-            StoragePriceFeed::from_price_feed(price_feed_result);
+            StoragePriceFeed::test_from_price_feed(price_feed_result);
         let price_feed_result = storage_price_feed_result.to_price_feed();
         assert_eq!(price_feed_result.price.price, PRICE);
         assert_eq!(price_feed_result.price.conf, CONF);
