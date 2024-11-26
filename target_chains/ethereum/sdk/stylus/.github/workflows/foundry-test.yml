@@ -3,12 +3,12 @@ name: foundry-test
 on:
   pull_request:
     paths:
-      - target_chains/sui/contracts/**
+      - target_chains/ethereum/sdk/stylus/**                                                                 **
   push:
     branches:
       - main
     paths:
-      - target_chains/sui/contracts/**
+      - target_chains/ethereum/sdk/stylus/**
 
 env:
   FOUNDRY_PROFILE: ci
