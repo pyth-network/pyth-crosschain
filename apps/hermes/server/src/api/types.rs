@@ -1,11 +1,14 @@
 use {
     super::doc_examples,
-    crate::state::aggregate::{PriceFeedUpdate, PriceFeedsWithUpdateData, Slot, UnixTimestamp},
+    crate::state::aggregate::{
+        PriceFeedTwap, PriceFeedUpdate, PriceFeedsWithUpdateData, Slot, UnixTimestamp,
+    },
     anyhow::Result,
     base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
     borsh::{BorshDeserialize, BorshSerialize},
     derive_more::{Deref, DerefMut},
     pyth_sdk::{Price, PriceFeed, PriceIdentifier},
+    rust_decimal::Decimal,
     serde::{Deserialize, Serialize},
     std::{
         collections::BTreeMap,
@@ -140,7 +143,7 @@ pub struct RpcPrice {
     pub conf: u64,
     /// The exponent associated with both the price and confidence interval. Multiply those values
     /// by `10^expo` to get the real value.
-    #[schema(example=-8)]
+    #[schema(example = -8)]
     pub expo: i32,
     /// When the price was published. The `publish_time` is a unix timestamp, i.e., the number of
     /// seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).
@@ -243,6 +246,48 @@ impl From<PriceFeedUpdate> for ParsedPriceUpdate {
             },
         }
     }
+}
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct ParsedPriceFeedTwap {
+    pub id: RpcPriceIdentifier,
+    /// The start unix timestamp of the window
+    pub start_timestamp: i64,
+    /// The end unix timestamp of the window
+    pub end_timestamp: i64,
+    /// The calculated time weighted average price over the window
+    pub twap: RpcPrice,
+    /// The % of slots where the network was down over the TWAP window.
+    /// A value of zero indicates no slots were missed over the window, and
+    /// a value of one indicates that every slot was missed over the window.
+    /// This is a float value stored as a string to avoid precision loss.
+    pub down_slots_ratio: Decimal,
+}
+impl From<PriceFeedTwap> for ParsedPriceFeedTwap {
+    fn from(pft: PriceFeedTwap) -> Self {
+        Self {
+            id: RpcPriceIdentifier::from(pft.id),
+            start_timestamp: pft.start_timestamp,
+            end_timestamp: pft.end_timestamp,
+            twap: RpcPrice {
+                price: pft.twap.price,
+                conf: pft.twap.conf,
+                expo: pft.twap.expo,
+                publish_time: pft.twap.publish_time,
+            },
+            down_slots_ratio: pft.down_slots_ratio,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct TwapsResponse {
+    /// Each BinaryUpdate contains the start & end cumulative price updates used to
+    /// calculate a given price feed's TWAP.
+    pub binary: Vec<BinaryUpdate>,
+
+    /// The calculated TWAPs for each price ID
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parsed: Option<Vec<ParsedPriceFeedTwap>>,
 }
 
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Clone, ToSchema)]

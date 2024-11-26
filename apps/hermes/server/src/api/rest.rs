@@ -30,8 +30,8 @@ pub use {
     price_feed_ids::*,
     ready::*,
     v2::{
-        latest_price_updates::*, latest_publisher_stake_caps::*, price_feeds_metadata::*, sse::*,
-        timestamp_price_updates::*,
+        latest_price_updates::*, latest_publisher_stake_caps::*, latest_twaps::*,
+        price_feeds_metadata::*, sse::*, timestamp_price_updates::*,
     },
 };
 
@@ -125,7 +125,7 @@ mod tests {
         crate::state::{
             aggregate::{
                 AggregationEvent, PriceFeedsWithUpdateData, PublisherStakeCapsWithUpdateData,
-                ReadinessMetadata, RequestTime, Update,
+                ReadinessMetadata, RequestTime, TwapsWithUpdateData, Update,
             },
             benchmarks::BenchmarksState,
             cache::CacheState,
@@ -196,6 +196,14 @@ mod tests {
         async fn get_latest_publisher_stake_caps_with_update_data(
             &self,
         ) -> Result<PublisherStakeCapsWithUpdateData> {
+            unimplemented!("Not needed for this test")
+        }
+        async fn get_twaps_with_update_data(
+            &self,
+            _price_ids: &[PriceIdentifier],
+            _start_time: RequestTime,
+            _end_time: RequestTime,
+        ) -> Result<TwapsWithUpdateData> {
             unimplemented!("Not needed for this test")
         }
     }
