@@ -1,12 +1,17 @@
 name: check-wasm
 # This workflow checks that the compiled wasm binary of every example contract
 # can be deployed to Arbitrum Stylus.
+on:
+  pull_request:
+    paths:
+      - target_chains/ethereum/sdk/stylus/**                                                                 **
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/ethereum/sdk/stylus/**
 permissions:
   contents: read
-on:
-  push:
-    branches: [ main, release/* ]
-  pull_request:
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true

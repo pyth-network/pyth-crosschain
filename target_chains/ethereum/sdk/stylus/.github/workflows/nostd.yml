@@ -5,9 +5,14 @@ name: no-std
 permissions:
   contents: read
 on:
-  push:
-    branches: [ main, release/*  ]
   pull_request:
+    paths:
+      - target_chains/sui/contracts/**
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/sui/contracts/**
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true

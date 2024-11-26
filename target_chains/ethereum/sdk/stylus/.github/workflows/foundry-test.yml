@@ -1,9 +1,14 @@
-name: CI
+name: foundry-test
 
 on:
-  push:
   pull_request:
-  workflow_dispatch:
+    paths:
+      - target_chains/sui/contracts/**
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/sui/contracts/**
 
 env:
   FOUNDRY_PROFILE: ci
