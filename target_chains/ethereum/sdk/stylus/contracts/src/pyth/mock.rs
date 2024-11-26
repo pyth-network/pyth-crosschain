@@ -26,11 +26,11 @@ sol_storage! {
 impl MockPythContract {
     fn initialize(
         &mut self,
-        single_update_fee_in_wei: Uint<256, 4>,
-        valid_time_period: Uint<256, 4>,
+        single_update_fee_in_wei: U256,
+        valid_time_period: U256,
     ) -> Result<(), Vec<u8>> {
-        if single_update_fee_in_wei <= U256::from(0)
-            || valid_time_period <= U256::from(0)
+        if single_update_fee_in_wei <= U256::ZERO
+            || valid_time_period <= U256::ZERO
         {
             return Err(Error::InvalidArgument(InvalidArgument {}).into());
         }
@@ -41,7 +41,7 @@ impl MockPythContract {
 
     fn query_price_feed(&self, id: B256) -> Result<Vec<u8>, Vec<u8>> {
         let price_feed = self.price_feeds.get(id).to_price_feed();
-        if price_feed.id.eq(&B256::ZERO) {
+        if price_feed.id.is_zero() {
             return Err(Error::PriceFeedNotFound(PriceFeedNotFound {}).into());
         }
         Ok(price_feed.abi_encode())
@@ -51,7 +51,7 @@ impl MockPythContract {
         self.price_feeds.getter(id).id.is_empty()
     }
 
-    fn get_valid_time_period(&self) -> Uint<256, 4> {
+    fn get_valid_time_period(&self) -> U256 {
         self.valid_time_period.get()
     }
 
@@ -104,7 +104,7 @@ impl MockPythContract {
         Ok(())
     }
 
-    fn get_update_fee(&self, update_data: Vec<AbiBytes>) -> Uint<256, 4> {
+    fn get_update_fee(&self, update_data: Vec<AbiBytes>) -> U256 {
         self.single_update_fee_in_wei.get() * U256::from(update_data.len())
     }
     #[payable]
