@@ -5,7 +5,7 @@ use crate::pyth::types::{
     parsePriceFeedUpdatesCall, parsePriceFeedUpdatesUniqueCall,
     updatePriceFeedsCall, updatePriceFeedsIfNecessaryCall, Price, PriceFeed,
 };
-use crate::utils::helpers::{call_helper, delegate_call_helper};
+use crate::utils::{call_helper, delegate_call_helper};
 use alloc::vec::Vec;
 use alloy_primitives::{Address, Bytes, B256, U256};
 use alloy_sol_types::SolType;

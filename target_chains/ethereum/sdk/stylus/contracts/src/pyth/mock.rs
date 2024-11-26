@@ -4,7 +4,7 @@ use crate::pyth::functions::create_price_feed_update_data;
 use crate::pyth::types::{Price, PriceFeed, StoragePriceFeed};
 use crate::{
     pyth::errors::{FalledDecodeData, InsufficientFee, InvalidArgument},
-    utils::helpers::CALL_RETDATA_DECODING_ERROR_MESSAGE,
+    utils::CALL_RETDATA_DECODING_ERROR_MESSAGE,
 };
 use alloc::vec::Vec;
 use alloy_primitives::{Bytes, B256, U256};
