@@ -3,7 +3,7 @@ import { WormholeContract } from "./wormhole";
 import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
 import { TokenQty } from "../token";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { Address, OpenedContract } from "@ton/ton";
+import { Address, Cell, OpenedContract } from "@ton/ton";
 import {
   calculateUpdatePriceFeedsFee,
   PythContract,
@@ -264,6 +264,30 @@ export class TonPriceFeedContract extends PriceFeedContract {
     const wallet = await this.chain.getWallet(senderPrivateKey);
     const sender = await this.chain.getSender(senderPrivateKey);
     await contract.sendExecuteGovernanceAction(sender, vaa);
+
+    const txDetails = await client.getTransactions(wallet.address, {
+      limit: 1,
+    });
+    const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
+    const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    );
+
+    return {
+      id: txHash,
+      info: txInfo,
+    };
+  }
+
+  async upgradeContract(
+    senderPrivateKey: PrivateKey,
+    newCode: Cell
+  ): Promise<TxResult> {
+    const client = await this.chain.getClient();
+    const contract = await this.getContract();
+    const wallet = await this.chain.getWallet(senderPrivateKey);
+    const sender = await this.chain.getSender(senderPrivateKey);
+    await contract.sendUpgradeContract(sender, newCode);
 
     const txDetails = await client.getTransactions(wallet.address, {
       limit: 1,

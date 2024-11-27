@@ -93,6 +93,23 @@ export class PythContract implements Contract {
     });
   }
 
+  async sendUpgradeContract(
+    provider: ContractProvider,
+    via: Sender,
+    newCode: Cell
+  ) {
+    const messageBody = beginCell()
+      .storeUint(4, 32) // OP_UPGRADE_CONTRACT
+      .storeRef(newCode)
+      .endCell();
+
+    await provider.internal(via, {
+      value: toNano("0.1"),
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      body: messageBody,
+    });
+  }
+
   async getPriceUnsafe(provider: ContractProvider, priceFeedId: string) {
     const result = await provider.get("get_price_unsafe", [
       { type: "int", value: BigInt(priceFeedId) },
