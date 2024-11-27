@@ -21,6 +21,7 @@ import {
   PRICE_FEED_OPS_KEY,
   getMessageBufferAddressForPrice,
   getMaximumNumberOfPublishers,
+  isPriceStoreInitialized,
   isPriceStorePublisherInitialized,
   createDetermisticPriceStoreInitializePublisherInstruction,
 } from '@pythnetwork/xc-admin-common'
@@ -302,8 +303,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           : multisigAuthority
 
         const initPublisherInPriceStore = async (publisherKey: PublicKey) => {
-          // Price store is only available in Pythnet and Pythtest-crosschain
-          if (cluster !== 'pythnet' && cluster !== 'pythtest-crosschain') {
+          // Ignore this step if Price Store is not initialized (or not deployed)
+          if (!connection || !(await isPriceStoreInitialized(connection))) {
             return
           }
 
