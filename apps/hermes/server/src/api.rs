@@ -101,6 +101,7 @@ where
             rest::latest_vaas,
             rest::price_feed_ids,
             rest::latest_price_updates,
+            rest::latest_twaps,
             rest::latest_publisher_stake_caps,
             rest::timestamp_price_updates,
             rest::price_feeds_metadata,
@@ -126,6 +127,8 @@ where
                 types::ParsedPublisherStakeCapsUpdate,
                 types::ParsedPublisherStakeCap,
                 types::AssetType,
+                types::TwapsResponse,
+                types::ParsedPriceFeedTwap,
             )
         ),
         tags(
@@ -152,6 +155,15 @@ where
             get(rest::price_stream_sse_handler),
         )
         .route("/v2/updates/price/latest", get(rest::latest_price_updates))
+        .route(
+            "/v2/updates/twap/:window_seconds/latest",
+            get(rest::latest_twaps),
+        )
+        // TODO(Tejas)
+        // .route(
+        //     "/v2/updates/twap/:window_seconds/:publish_time",
+        //     get(rest::latest_twaps),
+        // )
         .route(
             "/v2/updates/publisher_stake_caps/latest",
             get(rest::latest_publisher_stake_caps),
