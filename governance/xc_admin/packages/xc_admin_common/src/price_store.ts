@@ -331,3 +331,11 @@ export async function isPriceStorePublisherInitialized(
   const response = await connection.getAccountInfo(publisherConfigKey);
   return response !== null;
 }
+
+export async function isPriceStoreInitialized(
+  connection: Connection
+): Promise<boolean> {
+  const configKey = findPriceStoreConfigAddress()[0];
+  const response = await connection.getAccountInfo(configKey);
+  return response !== null;
+}

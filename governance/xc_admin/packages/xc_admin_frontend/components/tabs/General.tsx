@@ -21,6 +21,7 @@ import {
   PRICE_FEED_OPS_KEY,
   getMessageBufferAddressForPrice,
   getMaximumNumberOfPublishers,
+  isPriceStoreInitialized,
   isPriceStorePublisherInitialized,
   createDetermisticPriceStoreInitializePublisherInstruction,
 } from '@pythnetwork/xc-admin-common'
@@ -290,7 +291,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const handleSendProposalButtonClick = async () => {
     if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
       const instructions: TransactionInstruction[] = []
-      const publisherInitializationsVerified: PublicKey[] = []
+      const publisherInPriceStoreInitializationsVerified: PublicKey[] = []
 
       for (const symbol of Object.keys(dataChanges)) {
         const multisigAuthority = squads.getAuthorityPDA(
@@ -301,9 +302,14 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           ? mapKey(multisigAuthority)
           : multisigAuthority
 
-        const initPublisher = async (publisherKey: PublicKey) => {
+        const initPublisherInPriceStore = async (publisherKey: PublicKey) => {
+          // Ignore this step if Price Store is not initialized (or not deployed)
+          if (!connection || !(await isPriceStoreInitialized(connection))) {
+            return
+          }
+
           if (
-            publisherInitializationsVerified.every(
+            publisherInPriceStoreInitializationsVerified.every(
               (el) => !el.equals(publisherKey)
             )
           ) {
@@ -321,7 +327,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 )
               )
             }
-            publisherInitializationsVerified.push(publisherKey)
+            publisherInPriceStoreInitializationsVerified.push(publisherKey)
           }
         }
         const { prev, new: newChanges } = dataChanges[symbol]
@@ -406,7 +412,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 })
                 .instruction()
             )
-            await initPublisher(publisherPubKey)
+            await initPublisherInPriceStore(publisherPubKey)
           }
 
           // create set min publisher instruction if there are any publishers
@@ -576,7 +582,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 })
                 .instruction()
             )
-            await initPublisher(publisherPubKey)
+            await initPublisherInPriceStore(publisherPubKey)
           }
         }
       }
