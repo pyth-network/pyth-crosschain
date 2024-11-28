@@ -2,14 +2,10 @@
   "name": "pyth-mock-solidity",
   "version": "1.0.0",
   "description": "** Deploy mock solidity pyth contract using the pyth solidity sdk **",
-  "main": "index.js",
   "directories": {
     "lib": "lib",
     "test": "test"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  }, 
   "keywords": [],
   "author": "",
   "license": "ISC",
