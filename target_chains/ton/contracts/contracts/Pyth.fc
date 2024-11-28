@@ -349,6 +349,15 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     int total_fees = compute_fee + update_fee;
     int excess = msg_value - total_fees;
 
+    ;; SECURITY: Integrators MUST validate that messages are from this Pyth contract
+    ;; in their receive function. Otherwise, attackers could:
+    ;; 1. Send invalid price responses
+    ;; 2. Impersonate users via sender_address and custom_payload fields
+    ;; 3. Potentially drain the protocol
+    ;;
+    ;; Note: This message is bounceable. If the target contract rejects the message,
+    ;; the excess TON will remain in this contract and won't be automatically refunded to the
+    ;; original sender. Integrators should handle failed requests and refunds in their implementation.
     send_raw_message(begin_cell()
         .store_uint(0x18, 6)
         .store_slice(target_address)
