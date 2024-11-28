@@ -201,6 +201,7 @@ impl StoragePriceFeed {
     }
 
     /// This function is for just for testing
+    #[cfg(test)]
     pub fn test_from_price_feed(price_feed: PriceFeed) -> Self {
         let mut storage_price_feed =
             unsafe { StoragePriceFeed::new(U256::from(100), 0) };
