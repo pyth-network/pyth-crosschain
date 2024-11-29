@@ -25,6 +25,8 @@ fn test_ids() {
 }
 
 pub const MAX_NUM_TRUSTED_SIGNERS: usize = 2;
+pub const SPACE_FOR_TRUSTED_SIGNERS: usize = 5;
+pub const EXTRA_SPACE: usize = 100;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, AnchorSerialize, AnchorDeserialize)]
 pub struct TrustedSignerInfo {
@@ -52,13 +54,15 @@ impl StorageV1 {
         &self.trusted_signers[0..usize::from(self.num_trusted_signers)]
     }
 }
+
 #[account]
 pub struct StorageV2 {
     pub top_authority: Pubkey,
     pub treasury: Pubkey,
     pub single_update_fee_in_lamports: u64,
     pub num_trusted_signers: u8,
-    pub trusted_signers: [TrustedSignerInfo; MAX_NUM_TRUSTED_SIGNERS],
+    pub trusted_signers: [TrustedSignerInfo; SPACE_FOR_TRUSTED_SIGNERS],
+    pub _extra_space: [u8; EXTRA_SPACE],
 }
 
 impl StorageV2 {
@@ -66,7 +70,8 @@ impl StorageV2 {
         + PUBKEY_BYTES
         + size_of::<u64>()
         + size_of::<u8>()
-        + TrustedSignerInfo::SERIALIZED_LEN * MAX_NUM_TRUSTED_SIGNERS;
+        + TrustedSignerInfo::SERIALIZED_LEN * SPACE_FOR_TRUSTED_SIGNERS
+        + EXTRA_SPACE;
 
     pub fn initialized_trusted_signers(&self) -> &[TrustedSignerInfo] {
         &self.trusted_signers[0..usize::from(self.num_trusted_signers)]
@@ -108,13 +113,16 @@ pub mod pyth_lazer_solana_contract {
             return Err(ProgramError::AccountNotRentExempt.into());
         }
 
-        let new_storage = StorageV2 {
+        let mut new_storage = StorageV2 {
             top_authority: old_storage.top_authority,
             treasury,
             single_update_fee_in_lamports: 1,
             num_trusted_signers: old_storage.num_trusted_signers,
-            trusted_signers: old_storage.trusted_signers,
+            trusted_signers: Default::default(),
+            _extra_space: [0; EXTRA_SPACE],
         };
+        new_storage.trusted_signers[..old_storage.trusted_signers.len()]
+            .copy_from_slice(&old_storage.trusted_signers);
         new_storage.try_serialize(&mut Cursor::new(
             &mut **ctx.accounts.storage.data.borrow_mut(),
         ))?;
@@ -124,6 +132,9 @@ pub mod pyth_lazer_solana_contract {
     pub fn update(ctx: Context<Update>, trusted_signer: Pubkey, expires_at: i64) -> Result<()> {
         let num_trusted_signers: usize = ctx.accounts.storage.num_trusted_signers.into();
         if num_trusted_signers > ctx.accounts.storage.trusted_signers.len() {
+            return Err(ProgramError::InvalidAccountData.into());
+        }
+        if num_trusted_signers > MAX_NUM_TRUSTED_SIGNERS {
             return Err(ProgramError::InvalidAccountData.into());
         }
         let mut trusted_signers =
@@ -151,6 +162,9 @@ pub mod pyth_lazer_solana_contract {
 
         if trusted_signers.len() > ctx.accounts.storage.trusted_signers.len() {
             return Err(ProgramError::AccountDataTooSmall.into());
+        }
+        if trusted_signers.len() > MAX_NUM_TRUSTED_SIGNERS {
+            return Err(ProgramError::InvalidInstructionData.into());
         }
 
         ctx.accounts.storage.trusted_signers = Default::default();

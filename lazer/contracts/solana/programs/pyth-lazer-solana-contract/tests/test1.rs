@@ -224,7 +224,7 @@ async fn test_with_init_v1_and_migrate() {
     let tx_transfer = system_transaction::transfer(
         &setup.payer,
         &pyth_lazer_solana_contract::STORAGE_ID,
-        500_000,
+        10_000_000,
         setup.recent_blockhash,
     );
     setup
