@@ -214,6 +214,8 @@ export const RECEIVER_CHAINS = {
   superseed_testnet: 50107,
   happy_bird_song_ends_with_tio: 50108,
   hyperevm_testnet: 50109,
+  eventum_testnet: 50110,
+  fantom_sonic_devnet: 50111,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
