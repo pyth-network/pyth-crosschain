@@ -202,7 +202,7 @@ async fn test_with_init_v1_and_migrate() {
     let mut transaction_init_contract = Transaction::new_with_payer(
         &[Instruction::new_with_bytes(
             pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::InitializeV1 {
+            &pyth_lazer_solana_contract::instruction::Initialize {
                 top_authority: setup.payer.pubkey(),
             }
             .data(),

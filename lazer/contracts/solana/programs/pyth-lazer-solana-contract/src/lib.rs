@@ -38,14 +38,15 @@ impl TrustedSignerInfo {
     const SERIALIZED_LEN: usize = PUBKEY_BYTES + size_of::<i64>();
 }
 
+/// TODO: remove this legacy storage type
 #[account]
-pub struct StorageV1 {
+pub struct Storage {
     pub top_authority: Pubkey,
     pub num_trusted_signers: u8,
     pub trusted_signers: [TrustedSignerInfo; MAX_NUM_TRUSTED_SIGNERS],
 }
 
-impl StorageV1 {
+impl Storage {
     const SERIALIZED_LEN: usize = PUBKEY_BYTES
         + size_of::<u8>()
         + TrustedSignerInfo::SERIALIZED_LEN * MAX_NUM_TRUSTED_SIGNERS;
@@ -84,7 +85,8 @@ pub const STORAGE_SEED: &[u8] = b"storage";
 pub mod pyth_lazer_solana_contract {
     use super::*;
 
-    pub fn initialize_v1(ctx: Context<InitializeV1>, top_authority: Pubkey) -> Result<()> {
+    /// TODO: remove this legacy instruction
+    pub fn initialize(ctx: Context<Initialize>, top_authority: Pubkey) -> Result<()> {
         ctx.accounts.storage.top_authority = top_authority;
         Ok(())
     }
@@ -101,7 +103,7 @@ pub mod pyth_lazer_solana_contract {
     }
 
     pub fn migrate_to_storage_v2(ctx: Context<MigrateToStorageV2>, treasury: Pubkey) -> Result<()> {
-        let old_storage = StorageV1::try_deserialize(&mut &**ctx.accounts.storage.data.borrow())?;
+        let old_storage = Storage::try_deserialize(&mut &**ctx.accounts.storage.data.borrow())?;
         if old_storage.top_authority != ctx.accounts.top_authority.key() {
             return Err(ProgramError::MissingRequiredSignature.into());
         }
@@ -220,17 +222,17 @@ pub mod pyth_lazer_solana_contract {
 }
 
 #[derive(Accounts)]
-pub struct InitializeV1<'info> {
+pub struct Initialize<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
         init,
         payer = payer,
-        space = 8 + StorageV1::SERIALIZED_LEN,
+        space = 8 + Storage::SERIALIZED_LEN,
         seeds = [STORAGE_SEED],
         bump,
     )]
-    pub storage: Account<'info, StorageV1>,
+    pub storage: Account<'info, Storage>,
     pub system_program: Program<'info, System>,
 }
 
