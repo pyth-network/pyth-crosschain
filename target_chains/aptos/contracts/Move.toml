@@ -4,12 +4,12 @@ version = "0.0.1"
 upgrade_policy = "compatible"
 
 [dependencies]
-AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "6f83bc6d02207298b2dee91133d75538789bf582" }
-MoveStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib/", rev = "6f83bc6d02207298b2dee91133d75538789bf582" }
-AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "6f83bc6d02207298b2dee91133d75538789bf582" }
-AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token/", rev = "6f83bc6d02207298b2dee91133d75538789bf582" }
-Wormhole = { git = "https://github.com/wormhole-foundation/wormhole.git", subdir = "aptos/wormhole", rev = "b8676f09a6e4a92bbaecb5f3d59b5e9b778de082" }
-Deployer = { git = "https://github.com/wormhole-foundation/wormhole.git", subdir = "aptos/deployer", rev = "b8676f09a6e4a92bbaecb5f3d59b5e9b778de082" }
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "47f0bf397eb5ca43257bfa775a6b28e7b7faf8b3" }
+MoveStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib/", rev = "47f0bf397eb5ca43257bfa775a6b28e7b7faf8b3" }
+AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "47f0bf397eb5ca43257bfa775a6b28e7b7faf8b3" }
+AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token/", rev = "47f0bf397eb5ca43257bfa775a6b28e7b7faf8b3" }
+Wormhole = { git = "https://github.com/ali-bahjati/wormhole.git", subdir = "aptos/wormhole", rev = "aptos/upgrade-4.5.0" }
+Deployer = { git = "https://github.com/ali-bahjati/wormhole.git", subdir = "aptos/deployer", rev = "aptos/upgrade-4.5.0" }
 
 [addresses]
 pyth = "_"
