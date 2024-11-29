@@ -3,6 +3,7 @@ mod signature;
 use {
     crate::signature::VerifiedMessage,
     anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES, system_program},
+    std::io::Cursor,
     std::mem::size_of,
 };
 
@@ -14,17 +15,12 @@ pub use {
 declare_id!("pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt");
 
 pub const STORAGE_ID: Pubkey = pubkey!("3rdJbqfnagQ4yx9HXJViD4zc4xpiSqmFsKpPuSCQVyQL");
-pub const TREASURY_ID: Pubkey = pubkey!("EN4aB3soE5iuCG2fGj2r5fksh4kLRVPV8g7N86vXm8WM");
 
 #[test]
 fn test_ids() {
     assert_eq!(
         Pubkey::find_program_address(&[STORAGE_SEED], &ID).0,
         STORAGE_ID
-    );
-    assert_eq!(
-        Pubkey::find_program_address(&[TREASURY_SEED], &ID).0,
-        TREASURY_ID
     );
 }
 
@@ -41,17 +37,35 @@ impl TrustedSignerInfo {
 }
 
 #[account]
-pub struct Storage {
+pub struct StorageV1 {
     pub top_authority: Pubkey,
     pub num_trusted_signers: u8,
-    pub single_update_fee_in_lamports: u64,
     pub trusted_signers: [TrustedSignerInfo; MAX_NUM_TRUSTED_SIGNERS],
 }
 
-impl Storage {
+impl StorageV1 {
     const SERIALIZED_LEN: usize = PUBKEY_BYTES
         + size_of::<u8>()
+        + TrustedSignerInfo::SERIALIZED_LEN * MAX_NUM_TRUSTED_SIGNERS;
+
+    pub fn initialized_trusted_signers(&self) -> &[TrustedSignerInfo] {
+        &self.trusted_signers[0..usize::from(self.num_trusted_signers)]
+    }
+}
+#[account]
+pub struct StorageV2 {
+    pub top_authority: Pubkey,
+    pub treasury: Pubkey,
+    pub single_update_fee_in_lamports: u64,
+    pub num_trusted_signers: u8,
+    pub trusted_signers: [TrustedSignerInfo; MAX_NUM_TRUSTED_SIGNERS],
+}
+
+impl StorageV2 {
+    const SERIALIZED_LEN: usize = PUBKEY_BYTES
+        + PUBKEY_BYTES
         + size_of::<u64>()
+        + size_of::<u8>()
         + TrustedSignerInfo::SERIALIZED_LEN * MAX_NUM_TRUSTED_SIGNERS;
 
     pub fn initialized_trusted_signers(&self) -> &[TrustedSignerInfo] {
@@ -60,15 +74,50 @@ impl Storage {
 }
 
 pub const STORAGE_SEED: &[u8] = b"storage";
-pub const TREASURY_SEED: &[u8] = b"treasury";
 
 #[program]
 pub mod pyth_lazer_solana_contract {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, top_authority: Pubkey) -> Result<()> {
+    pub fn initialize_v1(ctx: Context<InitializeV1>, top_authority: Pubkey) -> Result<()> {
         ctx.accounts.storage.top_authority = top_authority;
+        Ok(())
+    }
+
+    pub fn initialize_v2(
+        ctx: Context<InitializeV2>,
+        top_authority: Pubkey,
+        treasury: Pubkey,
+    ) -> Result<()> {
+        ctx.accounts.storage.top_authority = top_authority;
+        ctx.accounts.storage.treasury = treasury;
         ctx.accounts.storage.single_update_fee_in_lamports = 1;
+        Ok(())
+    }
+
+    pub fn migrate_to_storage_v2(ctx: Context<MigrateToStorageV2>, treasury: Pubkey) -> Result<()> {
+        let old_storage = StorageV1::try_deserialize(&mut &**ctx.accounts.storage.data.borrow())?;
+        if old_storage.top_authority != ctx.accounts.top_authority.key() {
+            return Err(ProgramError::MissingRequiredSignature.into());
+        }
+
+        let space = 8 + StorageV2::SERIALIZED_LEN;
+        ctx.accounts.storage.realloc(space, false)?;
+        let min_lamports = Rent::get()?.minimum_balance(space);
+        if ctx.accounts.storage.lamports() < min_lamports {
+            return Err(ProgramError::AccountNotRentExempt.into());
+        }
+
+        let new_storage = StorageV2 {
+            top_authority: old_storage.top_authority,
+            treasury,
+            single_update_fee_in_lamports: 1,
+            num_trusted_signers: old_storage.num_trusted_signers,
+            trusted_signers: old_storage.trusted_signers,
+        };
+        new_storage.try_serialize(&mut Cursor::new(
+            &mut **ctx.accounts.storage.data.borrow_mut(),
+        ))?;
         Ok(())
     }
 
@@ -157,29 +206,45 @@ pub mod pyth_lazer_solana_contract {
 }
 
 #[derive(Accounts)]
-pub struct Initialize<'info> {
+pub struct InitializeV1<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
         init,
         payer = payer,
-        space = 8 + Storage::SERIALIZED_LEN,
+        space = 8 + StorageV1::SERIALIZED_LEN,
         seeds = [STORAGE_SEED],
         bump,
     )]
-    pub storage: Account<'info, Storage>,
+    pub storage: Account<'info, StorageV1>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MigrateToStorageV2<'info> {
+    pub top_authority: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [STORAGE_SEED],
+        bump,
+    )]
+    /// CHECK: top_authority in storage must match top_authority account.
+    pub storage: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct InitializeV2<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
     #[account(
         init,
         payer = payer,
-        space = 0,
-        owner = system_program::ID,
-        seeds = [TREASURY_SEED],
+        space = 8 + StorageV2::SERIALIZED_LEN,
+        seeds = [STORAGE_SEED],
         bump,
     )]
-    /// CHECK: this is a system program account but using anchor's `SystemAccount`
-    /// results in invalid output from the Accounts proc macro. No extra checks
-    /// are necessary because all necessary constraints are specified in the attribute.
-    pub treasury: AccountInfo<'info>,
+    pub storage: Account<'info, StorageV2>,
     pub system_program: Program<'info, System>,
 }
 
@@ -192,7 +257,7 @@ pub struct Update<'info> {
         bump,
         has_one = top_authority,
     )]
-    pub storage: Account<'info, Storage>,
+    pub storage: Account<'info, StorageV2>,
 }
 
 #[derive(Accounts)]
@@ -202,17 +267,10 @@ pub struct VerifyMessage<'info> {
     #[account(
         seeds = [STORAGE_SEED],
         bump,
+        has_one = treasury
     )]
-    pub storage: Account<'info, Storage>,
-    #[account(
-        mut,
-        owner = system_program::ID,
-        seeds = [TREASURY_SEED],
-        bump,
-    )]
-    /// CHECK: this is a system program account but using anchor's `SystemAccount`
-    /// results in invalid output from the Accounts proc macro. No extra checks
-    /// are necessary because all necessary constraints are specified in the attribute.
+    pub storage: Account<'info, StorageV2>,
+    /// CHECK: this account doesn't need additional constraints.
     pub treasury: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
     /// CHECK: account ID is checked in Solana SDK during calls

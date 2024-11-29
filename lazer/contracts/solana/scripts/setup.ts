@@ -35,11 +35,11 @@ async function main() {
     provider
   );
 
-  const storage = await program.account.storage.all();
+  const storage = await program.account.storageV2.all();
   if (storage.length === 0) {
     console.log("Initializing the program");
     await program.methods
-      .initialize(keypair.publicKey)
+      .initializeV2(keypair.publicKey, anchor.web3.PublicKey.unique())
       .accounts({
         payer: wallet.publicKey,
       })

@@ -1,5 +1,5 @@
 use {
-    crate::Storage,
+    crate::StorageV2,
     anchor_lang::{
         prelude::{borsh, AccountInfo, Clock, ProgramError, Pubkey, SolanaSysvar},
         solana_program::{ed25519_program, pubkey::PUBKEY_BYTES, sysvar},
@@ -158,7 +158,7 @@ impl From<SignatureVerificationError> for anchor_lang::error::Error {
 /// - `message_offset` is the offset of the signed message within the
 ///   input data for the current instruction.
 pub fn verify_message(
-    storage: &Storage,
+    storage: &StorageV2,
     instructions_sysvar: &AccountInfo,
     message_data: &[u8],
     ed25519_instruction_index: u16,
