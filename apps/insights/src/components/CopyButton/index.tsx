@@ -64,10 +64,7 @@ export const CopyButton = ({
             {typeof children === "function" ? children(...args) : children}
           </span>
           <span className={styles.iconContainer}>
-            <span className={styles.copyIconContainer}>
-              <Copy className={styles.copyIcon} />
-              <div className={styles.copyIconLabel}>Copy to clipboard</div>
-            </span>
+            <Copy className={styles.copyIcon} />
             <Check className={styles.checkIcon} />
           </span>
         </>

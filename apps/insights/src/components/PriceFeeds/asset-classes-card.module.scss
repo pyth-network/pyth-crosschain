@@ -1,8 +1,7 @@
 @use "@pythnetwork/component-library/theme";
 
-.epochSelect {
+.drawerTitle {
   display: flex;
   flex-flow: row nowrap;
-  align-items: center;
-  gap: theme.spacing(2);
+  gap: theme.spacing(3);
 }

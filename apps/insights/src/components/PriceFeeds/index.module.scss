@@ -1,16 +1,41 @@
 @use "@pythnetwork/component-library/theme";
 
-.assetName {
+.priceFeeds {
+  @include theme.max-width;
+
+  .header {
+    @include theme.h3;
+
+    color: theme.color("heading");
+    font-weight: theme.font-weight("semibold");
+    margin: theme.spacing(6) 0;
+  }
+
+  .body {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(6);
+
+    .stats {
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(4);
+      align-items: center;
+
+      & > * {
+        flex: 1;
+      }
+    }
+  }
+}
+
+.priceFeedNameAndIcon,
+.priceFeedNameAndAssetClass {
   display: flex;
   flex-flow: row nowrap;
   gap: theme.spacing(3);
 
-  .icon {
-    width: theme.spacing(6);
-    height: theme.spacing(6);
-  }
-
-  .name {
+  .priceFeedName {
     display: flex;
     flex-flow: row nowrap;
     align-items: center;
@@ -31,13 +56,27 @@
   }
 }
 
-.assetType {
-  display: inline-block;
-  border-radius: theme.border-radius("3xl");
-  border: 1px solid theme.color("states", "neutral", "normal");
-  padding: 0 theme.spacing(2);
-  font-size: theme.font-size("xxs");
-  text-transform: uppercase;
-  line-height: theme.spacing(4);
-  color: theme.color("states", "neutral", "normal");
+.priceFeedNameAndIcon .priceFeedIcon {
+  width: theme.spacing(6);
+  height: theme.spacing(6);
+}
+
+.priceFeedNameAndAssetClass {
+  .priceFeedIcon {
+    width: theme.spacing(10);
+    height: theme.spacing(10);
+  }
+
+  .nameAndClass {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(1);
+
+    .assetClass {
+      font-size: theme.font-size("xs");
+      font-weight: theme.font-weight("medium");
+      line-height: theme.spacing(4);
+      color: theme.color("muted");
+    }
+  }
 }

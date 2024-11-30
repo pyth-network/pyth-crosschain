@@ -1,16 +1,12 @@
 "use client";
 
 import { useLogger } from "@pythnetwork/app-logger";
+import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
-import { TableCard } from "@pythnetwork/component-library/TableCard";
+import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
 import { usePathname } from "next/navigation";
 import { parseAsInteger, useQueryStates, createSerializer } from "nuqs";
-import {
-  type ComponentProps,
-  useTransition,
-  useMemo,
-  useCallback,
-} from "react";
+import { useTransition, useMemo, useCallback } from "react";
 
 import { columns } from "./columns";
 
@@ -18,9 +14,7 @@ type Props = {
   publishers: {
     key: string;
     rank: number;
-    data: ComponentProps<
-      typeof TableCard<(typeof columns)[number]["id"]>
-    >["rows"][number]["data"];
+    data: RowConfig<(typeof columns)[number]["id"]>["data"];
   }[];
 };
 
@@ -84,11 +78,8 @@ export const Results = ({ publishers }: Props) => {
   );
 
   return (
-    <TableCard
-      label="Publishers"
-      columns={columns}
-      isUpdating={isTransitioning}
-      rows={rows}
+    <Card
+      title="Publishers"
       footer={
         <Paginator
           numPages={numPages}
@@ -100,6 +91,13 @@ export const Results = ({ publishers }: Props) => {
           pageSizeOptions={[10, 20, 30, 40, 50]}
         />
       }
-    />
+    >
+      <Table
+        label="Publishers"
+        columns={columns}
+        isUpdating={isTransitioning}
+        rows={rows}
+      />
+    </Card>
   );
 };

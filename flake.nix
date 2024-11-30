@@ -59,6 +59,7 @@
             pkgs.python3
             pkgs.python3Packages.distutils
             pkgs.graphviz
+            pkgs.anchor
           ];
         };
       }

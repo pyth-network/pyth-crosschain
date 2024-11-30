@@ -3,8 +3,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Select as SelectComponent } from "./index.js";
 import buttonMeta from "../Button/index.stories.js";
 
-const OPTIONS = ["foo", "bar", "baz"];
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { children, beforeIcon, onPress, ...argTypes } = buttonMeta.argTypes;
 const meta = {
@@ -25,6 +23,11 @@ const meta = {
       },
     },
     options: {
+      table: {
+        disable: true,
+      },
+    },
+    optionGroups: {
       table: {
         disable: true,
       },
@@ -74,14 +77,20 @@ const meta = {
         category: "Behavior",
       },
     },
+    buttonLabel: {
+      control: "text",
+      table: {
+        category: "Label",
+      },
+    },
   },
 } satisfies Meta<typeof SelectComponent>;
 export default meta;
 
-export const Select = {
+export const Flat = {
   args: {
     defaultSelectedKey: "foo",
-    options: OPTIONS,
+    options: ["foo", "bar", "baz"],
     variant: "primary",
     size: "md",
     isDisabled: false,
@@ -89,7 +98,38 @@ export const Select = {
     rounded: false,
     hideText: false,
     show: (value) => `The option ${value.toString()}`,
-    label: "A Select!",
+    label: "A SELECT!",
     hideLabel: true,
+    buttonLabel: "",
+  },
+} satisfies StoryObj<typeof SelectComponent>;
+
+export const Grouped = {
+  argTypes: {
+    hideGroupLabel: {
+      control: "boolean",
+      table: {
+        category: "Contents",
+      },
+    },
+  },
+  args: {
+    defaultSelectedKey: "foo",
+    optionGroups: [
+      { name: "All", options: ["foo1", "foo2", "Some"] },
+      { name: "bars", options: ["bar1", "bar2", "bar3"] },
+      { name: "bazzes", options: ["baz1", "baz2", "baz3"] },
+    ],
+    variant: "primary",
+    size: "md",
+    isDisabled: false,
+    isPending: false,
+    rounded: false,
+    hideText: false,
+    show: (value) => `The option ${value.toString()}`,
+    label: "FOOS AND BARS",
+    hideLabel: true,
+    hideGroupLabel: true,
+    buttonLabel: "",
   },
 } satisfies StoryObj<typeof SelectComponent>;

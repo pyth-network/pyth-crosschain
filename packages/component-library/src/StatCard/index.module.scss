@@ -1,0 +1,36 @@
+@use "../theme";
+
+.statCard {
+  height: theme.spacing(22);
+
+  .cardContents {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-between;
+    height: 100%;
+    padding: theme.spacing(3);
+    padding-bottom: theme.spacing(2);
+
+    .header {
+      color: theme.color("muted");
+      text-align: left;
+
+      @include theme.text("sm", "medium");
+    }
+
+    .bottom {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: center;
+
+      .stat {
+        @include theme.h3;
+      }
+
+      .miniStat {
+        @include theme.text("sm", "medium");
+      }
+    }
+  }
+}

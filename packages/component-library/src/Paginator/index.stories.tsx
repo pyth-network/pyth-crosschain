@@ -33,6 +33,11 @@ const meta = {
         disable: true,
       },
     },
+    className: {
+      table: {
+        disable: true,
+      },
+    },
     onPageChange: {
       table: {
         category: "Behavior",

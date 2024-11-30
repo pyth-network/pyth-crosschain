@@ -8,6 +8,9 @@ import {
   Popover,
   ListBox,
   ListBoxItem,
+  ListBoxSection,
+  Header,
+  Collection,
   SelectValue,
 } from "react-aria-components";
 
@@ -23,24 +26,32 @@ type Props<T> = Omit<
     "variant" | "size" | "rounded" | "hideText" | "isPending"
   > &
   Pick<PopoverProps, "placement"> & {
-    options: readonly T[];
     show?: (value: T) => string;
     icon?: ComponentProps<typeof Button>["beforeIcon"];
     label: ReactNode;
     hideLabel?: boolean | undefined;
+    buttonLabel?: ReactNode;
   } & (
     | {
-        defaultSelectedKey: T;
+        defaultSelectedKey?: T | undefined;
       }
     | {
         selectedKey: T;
         onSelectionChange: (newValue: T) => void;
       }
+  ) &
+  (
+    | {
+        options: readonly T[];
+      }
+    | {
+        hideGroupLabel?: boolean | undefined;
+        optionGroups: { name: string; options: readonly T[] }[];
+      }
   );
 
 export const Select = <T extends string | number>({
   className,
-  options,
   show,
   variant,
   size,
@@ -51,6 +62,7 @@ export const Select = <T extends string | number>({
   hideLabel,
   placement,
   isPending,
+  buttonLabel,
   ...props
 }: Props<T>) => (
   // @ts-expect-error react-aria coerces everything to Key for some reason...
@@ -72,29 +84,63 @@ export const Select = <T extends string | number>({
       beforeIcon={icon}
       isPending={isPending === true}
     >
-      <SelectValue<{ id: T }>>
-        {({ selectedItem }) =>
-          selectedItem ? (show?.(selectedItem.id) ?? selectedItem.id) : <></>
-        }
-      </SelectValue>
+      {buttonLabel !== undefined && buttonLabel !== "" ? (
+        buttonLabel
+      ) : (
+        <SelectValue<{ id: T }>>
+          {({ selectedItem, selectedText }) =>
+            selectedItem
+              ? (show?.(selectedItem.id) ?? selectedItem.id)
+              : selectedText
+          }
+        </SelectValue>
+      )}
     </Button>
-    <Popover {...(placement && { placement })} className={styles.popover ?? ""}>
-      <ListBox
-        className={styles.listbox ?? ""}
-        items={options.map((id) => ({ id }))}
-      >
-        {({ id }) => (
-          <ListBoxItem
-            className={styles.listboxItem ?? ""}
-            textValue={show?.(id) ?? id.toString()}
-          >
-            <span>{show?.(id) ?? id}</span>
-            <Check weight="bold" className={styles.check} />
-          </ListBoxItem>
-        )}
-      </ListBox>
+    <Popover
+      {...(placement && { placement })}
+      data-group-label-hidden={
+        "hideGroupLabel" in props && props.hideGroupLabel ? "" : undefined
+      }
+      className={styles.popover ?? ""}
+    >
+      <span className={styles.title}>{label}</span>
+      {"options" in props ? (
+        <ListBox
+          className={styles.listbox ?? ""}
+          items={props.options.map((id) => ({ id }))}
+        >
+          {({ id }) => <Item show={show}>{id}</Item>}
+        </ListBox>
+      ) : (
+        <ListBox className={styles.listbox ?? ""} items={props.optionGroups}>
+          {({ name, options }) => (
+            <ListBoxSection className={styles.section ?? ""} id={name}>
+              <Header className={styles.groupLabel ?? ""}>{name}</Header>
+              <Collection items={options.map((id) => ({ id }))}>
+                {({ id }) => <Item show={show}>{id}</Item>}
+              </Collection>
+            </ListBoxSection>
+          )}
+        </ListBox>
+      )}
     </Popover>
   </BaseSelect>
+);
+
+type ItemProps<T> = {
+  children: T;
+  show: ((value: T) => string) | undefined;
+};
+
+const Item = <T extends string | number>({ children, show }: ItemProps<T>) => (
+  <ListBoxItem
+    id={children}
+    className={styles.listboxItem ?? ""}
+    textValue={show?.(children) ?? children.toString()}
+  >
+    <span>{show?.(children) ?? children}</span>
+    <Check weight="bold" className={styles.check} />
+  </ListBoxItem>
 );
 
 const DropdownCaretDown = (

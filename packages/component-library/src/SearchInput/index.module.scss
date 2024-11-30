@@ -100,7 +100,7 @@
       .input {
         border-radius: theme.map-get-strict($values, "border-radius");
         font-size: theme.map-get-strict($values, "font-size");
-        line-height: calc($height - 2px);
+        line-height: $height;
         padding: 0 ($padding + $icon-size + $gap);
       }
 

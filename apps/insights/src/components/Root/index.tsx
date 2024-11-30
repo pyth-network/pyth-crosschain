@@ -12,6 +12,7 @@ import {
   GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
 } from "../../config/server";
+import { LivePricesProvider } from "../LivePrices";
 
 type Props = {
   children: ReactNode;
@@ -22,7 +23,8 @@ export const Root = ({ children }: Props) => (
     amplitudeApiKey={AMPLITUDE_API_KEY}
     googleAnalyticsId={GOOGLE_ANALYTICS_ID}
     enableAccessibilityReporting={!IS_PRODUCTION_SERVER}
-    providers={[NuqsAdapter]}
+    providers={[NuqsAdapter, LivePricesProvider]}
+    className={styles.root}
   >
     <TabRoot className={styles.tabRoot ?? ""}>
       <Header className={styles.header} />

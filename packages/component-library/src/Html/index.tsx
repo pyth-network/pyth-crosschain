@@ -5,5 +5,10 @@ import type { ComponentProps } from "react";
 import "./base.scss";
 
 export const Html = ({ className, lang, ...props }: ComponentProps<"html">) => (
-  <html lang={lang} className={clsx(sans.className, className)} {...props} />
+  <html
+    lang={lang}
+    className={clsx(sans.className, className)}
+    data-gutter-stable
+    {...props}
+  />
 );

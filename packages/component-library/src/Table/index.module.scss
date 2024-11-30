@@ -2,7 +2,6 @@
 
 .tableContainer {
   background-color: theme.color("background", "primary");
-  border-radius: theme.border-radius("xl");
   position: relative;
 
   .loaderWrapper {
@@ -40,11 +39,12 @@
     border-collapse: collapse;
 
     .cell {
-      padding-left: theme.spacing(2);
-      padding-right: theme.spacing(2);
+      padding-left: theme.spacing(3);
+      padding-right: theme.spacing(3);
       white-space: nowrap;
       border: 0;
       outline: none;
+      width: calc(theme.spacing(1) * var(--width));
 
       &:first-child {
         padding-left: theme.spacing(4);
@@ -89,7 +89,7 @@
     }
 
     .tableBody {
-      font-size: theme.font-size("sm");
+      @include theme.text("sm", "medium");
 
       .row {
         background-color: transparent;
@@ -128,18 +128,34 @@
           padding-top: theme.spacing(4);
           padding-bottom: theme.spacing(4);
         }
+      }
+    }
+  }
 
-        &:last-child {
-          .cell {
-            &:first-child {
-              border-bottom-left-radius: theme.border-radius("xl");
-            }
+  &[data-fill] .table {
+    width: 100%;
+  }
 
-            &:last-child {
-              border-bottom-right-radius: theme.border-radius("xl");
-            }
-          }
-        }
+  &[data-divide] {
+    .tableHeader {
+      border-color: theme.color("border");
+    }
+
+    .tableBody .row .cell {
+      border-bottom: 1px solid theme.color("background", "secondary");
+    }
+  }
+
+  &[data-rounded] {
+    border-radius: theme.border-radius("xl");
+
+    .tableBody .row:last-child .cell {
+      &:first-child {
+        border-bottom-left-radius: theme.border-radius("xl");
+      }
+
+      &:last-child {
+        border-bottom-right-radius: theme.border-radius("xl");
       }
     }
   }
