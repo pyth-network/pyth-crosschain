@@ -34,7 +34,7 @@
 
       .text {
         padding: 0 theme.map-get-strict($values, "gap");
-        line-height: calc(theme.map-get-strict($values, "height") - 2px);
+        line-height: theme.map-get-strict($values, "height");
       }
     }
   }

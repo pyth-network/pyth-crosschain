@@ -1,16 +1,19 @@
 @use "@pythnetwork/component-library/theme";
 
 .copyButton {
-  margin: -#{theme.spacing(0.5)} -0.5em;
+  margin: -#{theme.spacing(0.5)} -#{theme.spacing(1)};
   display: inline-block;
   white-space: nowrap;
   border-radius: theme.border-radius("md");
-  padding: theme.spacing(0.5) 0.5em;
-  border: none;
+  padding: theme.spacing(0.5) theme.spacing(1);
   background: none;
   cursor: pointer;
-  transition: background-color 100ms linear;
-  outline: none;
+  transition-property: background-color, color, border-color, outline-color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  border: 1px solid transparent;
+  outline-offset: 0;
+  outline: theme.spacing(1) solid transparent;
 
   .iconContainer {
     position: relative;
@@ -18,18 +21,11 @@
     margin-left: theme.spacing(1);
     display: inline-block;
 
-    .copyIconContainer {
+    .copyIcon {
       opacity: 0.5;
       transition: opacity 100ms linear;
-
-      .copyIcon {
-        width: 1em;
-        height: 1em;
-      }
-
-      .copyIconLabel {
-        @include theme.sr-only;
-      }
+      width: 1em;
+      height: 1em;
     }
 
     .checkIcon {
@@ -50,12 +46,12 @@
   }
 
   &[data-focus-visible] {
-    outline: 1px solid currentcolor;
-    outline-offset: theme.spacing(1);
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
   }
 
   &[data-is-copied] .iconContainer {
-    .copyIconContainer {
+    .copyIcon {
       opacity: 0;
     }
 

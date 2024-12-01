@@ -1,0 +1,42 @@
+@use "../theme";
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(from black r g b / 30%);
+  z-index: 1;
+
+  .modal {
+    position: fixed;
+    top: theme.spacing(4);
+    bottom: theme.spacing(4);
+    right: theme.spacing(4);
+    width: 40%;
+    max-width: theme.spacing(160);
+    background: theme.color("background", "primary");
+    border: 1px solid theme.color("border");
+    border-radius: theme.border-radius("3xl");
+    outline: none;
+    overflow: hidden;
+
+    .dialog {
+      outline: none;
+      display: flex;
+      flex-flow: column nowrap;
+      height: 100%;
+
+      .heading {
+        padding: theme.spacing(4);
+        padding-left: theme.spacing(6);
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        align-items: center;
+
+        .title {
+          @include theme.h4;
+        }
+      }
+    }
+  }
+}

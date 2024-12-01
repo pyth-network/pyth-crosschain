@@ -60,6 +60,7 @@ catalog:
   "@types/react-dom": npm:types-react-dom@19.0.0-rc.1
   autoprefixer: 10.4.20
   bcp-47: 2.1.0
+  bs58: 6.0.0
   clsx: 2.1.1
   cryptocurrency-icons: 0.18.1
   css-loader: 7.1.2
@@ -75,8 +76,8 @@ catalog:
   postcss-loader: 8.1.1
   postcss: 8.4.47
   prettier: 3.3.3
-  react-aria-components: 1.4.0
-  react-aria: 3.35.0
+  react-aria-components: 1.5.0
+  react-aria: 3.36.0
   react-dom: 19.0.0-rc-603e6108-20241029
   react: 19.0.0-rc-603e6108-20241029
   sass-loader: 16.0.3
@@ -85,6 +86,7 @@ catalog:
   style-loader: 4.0.0
   stylelint-config-standard-scss: 13.1.0
   stylelint: 16.10.0
+  swr: 2.2.5
   tailwindcss-animate: 1.0.7
   tailwindcss-react-aria-components: 1.1.6
   tailwindcss: 3.4.14

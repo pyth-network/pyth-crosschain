@@ -13,11 +13,11 @@
       position: absolute;
       inset: 0;
       border-radius: theme.border-radius("full");
-      background-color: white;
-      mix-blend-mode: difference;
-      outline: none;
-      z-index: 1;
-      transition: box-shadow 200ms linear;
+      background-color: theme.color("button", "solid", "background", "normal");
+      outline: 4px solid transparent;
+      outline-offset: 0;
+      z-index: -1;
+      transition: outline-color 200ms linear;
     }
 
     &[data-focus-visible] {
@@ -25,8 +25,12 @@
       border-color: transparent;
 
       .bubble {
-        box-shadow: 0 0 0 4px rgba(white, 0.4);
+        outline-color: theme.color("focus-dim");
       }
+    }
+
+    &[data-selected] {
+      color: theme.color("button", "solid", "foreground");
     }
   }
 }

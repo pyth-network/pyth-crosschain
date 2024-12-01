@@ -1,3 +1,5 @@
+"use client";
+
 import { CircleNotch } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";

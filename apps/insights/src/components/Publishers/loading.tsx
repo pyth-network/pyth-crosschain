@@ -1,7 +1,10 @@
-import { TableCard } from "@pythnetwork/component-library/TableCard";
+import { Card } from "@pythnetwork/component-library/Card";
+import { Table } from "@pythnetwork/component-library/Table";
 
 import { columns } from "./columns";
 
 export const PublishersLoading = () => (
-  <TableCard label="Publishers" columns={columns} isLoading rows={[]} />
+  <Card title="Publishers">
+    <Table label="Publishers" columns={columns} isLoading />
+  </Card>
 );

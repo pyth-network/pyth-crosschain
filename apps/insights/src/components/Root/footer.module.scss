@@ -38,12 +38,13 @@
       // gap-8
 
       .logoLink {
-        margin: -#{theme.spacing(2)};
-        border-radius: theme.border-radius();
-        padding: theme.spacing(2);
+        height: theme.spacing(5);
+        box-sizing: content-box;
+        padding: theme.spacing(3);
+        margin: -#{theme.spacing(3)};
 
         .logo {
-          height: theme.spacing(5);
+          height: 100%;
         }
 
         .logoLabel {

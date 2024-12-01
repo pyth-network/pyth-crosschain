@@ -20,6 +20,11 @@ const meta = {
         disable: true,
       },
     },
+    className: {
+      table: {
+        disable: true,
+      },
+    },
     label: {
       table: {
         category: "Accessibility",
@@ -37,6 +42,29 @@ const meta = {
         category: "State",
       },
     },
+    divide: {
+      control: "boolean",
+      table: {
+        category: "Variant",
+      },
+    },
+    fill: {
+      control: "boolean",
+      table: {
+        category: "Variant",
+      },
+    },
+    rounded: {
+      control: "boolean",
+      table: {
+        category: "Variant",
+      },
+    },
+    dependencies: {
+      table: {
+        disable: true,
+      },
+    },
   },
 } satisfies Meta<typeof TableComponent>;
 export default meta;
@@ -46,6 +74,9 @@ export const Table = {
     label: "A Table",
     isUpdating: false,
     isLoading: false,
+    fill: true,
+    divide: false,
+    rounded: true,
     columns: [
       {
         name: "PRICE FEED",

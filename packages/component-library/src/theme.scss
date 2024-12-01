@@ -47,8 +47,21 @@ $font-size: (
   "9xl": 8rem,
 );
 
-@function font-size($size: "$base") {
+@function font-size($size: "base") {
   @return map-get-strict($font-size, $size);
+}
+
+$letter-spacing: (
+  "tighter": -0.05em,
+  "tight": -0.025em,
+  "normal": 0em,
+  "wide": 0.025em,
+  "wider": 0.05em,
+  "widest": 0.1em,
+);
+
+@function letter-spacing($spacing: "normal") {
+  @return map-get-strict($letter-spacing, $spacing);
 }
 
 $border-radius: (
@@ -378,9 +391,9 @@ $color-pallette: (
     500: #64678b,
     600: #474a69,
     700: #333655,
-    800: #1e1f3b,
-    900: #100f2a,
-    950: #050217,
+    800: #25253e,
+    900: #27253d,
+    950: #100e23,
   ),
 );
 
@@ -392,9 +405,18 @@ $color: (
   "transparent": transparent,
   "background": (
     "primary": light-dark(pallette-color("white"), pallette-color("steel", 950)),
+    "nav-blur":
+      light-dark(
+        rgb(from pallette-color("white") r g b / 70%),
+        rgb(from pallette-color("steel", 950) r g b / 70%)
+      ),
     "modal": light-dark(pallette-color("white"), pallette-color("steel", 950)),
     "secondary":
       light-dark(pallette-color("beige", 100), pallette-color("steel", 900)),
+    "card-highlight":
+      light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
+    "card-secondary":
+      light-dark(pallette-color("white"), pallette-color("steel", 950)),
   ),
   "foreground":
     light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
@@ -403,7 +425,7 @@ $color: (
   "paragraph":
     light-dark(pallette-color("steel", 700), pallette-color("steel", 300)),
   "muted":
-    light-dark(pallette-color("stone", 500), pallette-color("steel", 400)),
+    light-dark(pallette-color("stone", 700), pallette-color("steel", 300)),
   "border":
     light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
   "selection": (
@@ -414,11 +436,17 @@ $color: (
   ),
   "states": (
     "success": (
+      "base":
+        light-dark(
+          pallette-color("emerald", 600),
+          pallette-color("emerald", 500)
+        ),
       "normal": pallette-color("emerald", 500),
       "hover": pallette-color("emerald", 600),
       "active": pallette-color("emerald", 700),
     ),
     "error": (
+      "base": light-dark(pallette-color("red", 600), pallette-color("red", 400)),
       "normal": pallette-color("red", 500),
       "hover": pallette-color("red", 600),
       "active": pallette-color("red", 700),
@@ -427,13 +455,25 @@ $color: (
       "normal":
         light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
     ),
+    "info": (
+      "normal":
+        light-dark(pallette-color("indigo", 600), pallette-color("indigo", 400)),
+    ),
+    "warning": (
+      "normal":
+        light-dark(pallette-color("orange", 600), pallette-color("orange", 400)),
+    ),
+    "data": (
+      "normal":
+        light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
+    ),
   ),
   "focus":
     light-dark(pallette-color("violet", 700), pallette-color("violet", 500)),
   "focus-dim":
     light-dark(
-      rgba(pallette-color("violet", 700), 0.3),
-      rgba(pallette-color("violet", 500), 0.3)
+      rgb(from pallette-color("violet", 700) r g b / 30%),
+      rgb(from pallette-color("violet", 500) r g b / 30%)
     ),
   "forms": (
     "input": (
@@ -491,13 +531,13 @@ $color: (
       "background": (
         "hover":
           light-dark(
-            rgba(pallette-color("beige", 950), 0.05),
-            rgba(pallette-color("steel", 50), 0.05)
+            rgb(from pallette-color("beige", 950) r g b / 5%),
+            rgb(from pallette-color("steel", 50) r g b / 5%)
           ),
         "active":
           light-dark(
-            rgba(pallette-color("beige", 950), 0.1),
-            rgba(pallette-color("steel", 50), 0.1)
+            rgb(from pallette-color("beige", 950) r g b / 10%),
+            rgb(from pallette-color("steel", 50) r g b / 10%)
           ),
       ),
     ),
@@ -605,9 +645,11 @@ $button-sizes: (
   }
 }
 
+$max-width: 96rem;
+
 @mixin max-width {
   margin: 0 auto;
-  max-width: 1536px;
+  max-width: $max-width;
   padding: 0 spacing(6);
   box-sizing: content-box;
 }
@@ -616,4 +658,62 @@ $button-sizes: (
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
+}
+
+$elevations: (
+  primary: (
+    2: (
+      0px 66px 18px 0px rgb(112 66 206 / 0%),
+      0px 42px 17px 0px rgb(112 66 206 / 3%),
+      0px 24px 14px 0px rgb(112 66 206 / 8%),
+      0px 11px 11px 0px rgb(112 66 206 / 14%),
+      0px 3px 6px 0px rgb(112 66 206 / 17%),
+    ),
+  ),
+  default: (
+    1: (
+      0px 4px 6px -4px rgb(from black r g b / 10%),
+      0px 10px 15px -3px rgb(from black r g b / 10%),
+    ),
+    2: (
+      0px 29px 12px 0px
+        light-dark(rgb(from #564848 r g b / 2%), rgb(from black r g b / 8%)),
+      0px 16px 10px 0px
+        light-dark(rgb(from #564848 r g b / 6%), rgb(from black r g b / 12%)),
+      0px 7px 7px 0px
+        light-dark(rgb(from #564848 r g b / 12%), rgb(from black r g b / 20%)),
+      0px 2px 4px 0px
+        light-dark(rgb(from #564848 r g b / 14%), rgb(from black r g b / 30%)),
+    ),
+  ),
+);
+
+@mixin elevation($elevation...) {
+  box-shadow: map-get-strict($elevations, $elevation...);
+}
+
+@mixin h3 {
+  font-size: font-size("2xl");
+  font-style: normal;
+  font-weight: font-weight("medium");
+  line-height: 125%;
+  letter-spacing: letter-spacing("tighter");
+  margin: 0;
+}
+
+@mixin h4 {
+  font-size: font-size("xl");
+  font-style: normal;
+  font-weight: font-weight("medium");
+  line-height: 125%;
+  letter-spacing: letter-spacing("tight");
+  margin: 0;
+}
+
+@mixin text($size: "base", $weight: "normal") {
+  font-size: font-size($size);
+  font-weight: font-weight($weight);
+  margin: 0;
+  font-style: normal;
+  line-height: normal;
 }

@@ -1,17 +1,22 @@
 @use "@pythnetwork/component-library/theme";
 
-.tabRoot {
-  display: grid;
-  min-height: 100dvh;
-  grid-template-rows: auto 1fr auto;
+$header-height: theme.spacing(20);
 
-  .main {
-    padding-top: theme.spacing(6);
-    padding-bottom: theme.spacing(12);
-    isolation: isolate;
-  }
+.root {
+  scroll-padding-top: $header-height;
 
-  .header {
-    z-index: 1;
+  .tabRoot {
+    display: grid;
+    min-height: 100dvh;
+    grid-template-rows: auto 1fr auto;
+
+    .main {
+      isolation: isolate;
+    }
+
+    .header {
+      z-index: 1;
+      height: $header-height;
+    }
   }
 }

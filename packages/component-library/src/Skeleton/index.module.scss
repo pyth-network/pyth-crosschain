@@ -14,4 +14,31 @@
       @include theme.sr-only;
     }
   }
+
+  &[data-round] {
+    border-radius: theme.border-radius("full");
+    display: inline-block;
+    width: calc(theme.spacing(1) * var(--skeleton-width));
+    height: calc(theme.spacing(1) * var(--skeleton-width));
+
+    .skeletonInner {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &[data-fill] {
+    .skeletonInner {
+      width: 100%;
+    }
+
+    &[data-round] {
+      width: 100%;
+      height: 100%;
+
+      .skeletonInner {
+        height: 100%;
+      }
+    }
+  }
 }

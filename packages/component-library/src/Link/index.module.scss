@@ -2,15 +2,21 @@
 
 .link {
   text-decoration: underline;
-  border: none;
+  border: 1px solid transparent;
   border-radius: theme.border-radius();
-  outline-width: 1px;
-  outline-offset: theme.spacing(1);
-  outline-color: transparent;
+  transition:
+    outline-color 100ms linear,
+    border-color 100ms linear;
+  outline: theme.spacing(1) solid transparent;
   color: inherit;
+  padding: theme.spacing(1);
+  margin: -#{theme.spacing(1)};
+  text-underline-offset: 0.125em;
+  outline-offset: 0;
 
   &[data-focus-visible] {
-    outline-color: currentcolor;
+    outline-color: theme.color("focus-dim");
+    border-color: theme.color("focus");
   }
 
   &[data-hovered] {
