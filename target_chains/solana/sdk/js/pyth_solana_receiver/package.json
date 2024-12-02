@@ -22,7 +22,8 @@
     "test:lint": "eslint src/",
     "prepublishOnly": "pnpm run build && pnpm test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "driver": "ts-node test_twap.ts"
   },
   "keywords": [
     "pyth",
@@ -45,8 +46,10 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@noble/hashes": "^1.4.0",
-    "@pythnetwork/price-service-sdk": ">=1.6.0",
+    "@pythnetwork/price-service-sdk": "workspace:*",
+    "@pythnetwork/pyth-solana-receiver": "link:",
     "@pythnetwork/solana-utils": "workspace:*",
-    "@solana/web3.js": "^1.90.0"
+    "@solana/web3.js": "^1.90.0",
+    "axios": "^1.7.8"
   }
 }

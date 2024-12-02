@@ -24,7 +24,8 @@
     "test:lint": "eslint src/",
     "prepublishOnly": "pnpm run build && pnpm test:unit && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "driver": "pnpm exec ts-node driver.ts"
   },
   "keywords": [
     "pyth",

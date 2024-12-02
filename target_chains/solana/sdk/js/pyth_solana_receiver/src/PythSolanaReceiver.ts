@@ -98,6 +98,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
   readonly pythSolanaReceiver: PythSolanaReceiver;
   readonly closeInstructions: InstructionWithEphemeralSigners[];
   readonly priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
+  readonly priceFeedIdToTwapUpdateAccount: Record<string, PublicKey>;
   readonly closeUpdateAccounts: boolean;
 
   constructor(
@@ -113,6 +114,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
     this.pythSolanaReceiver = pythSolanaReceiver;
     this.closeInstructions = [];
     this.priceFeedIdToPriceUpdateAccount = {};
+    this.priceFeedIdToTwapUpdateAccount = {};
     this.closeUpdateAccounts = config.closeUpdateAccounts ?? true;
   }
 
@@ -230,6 +232,22 @@ export class PythTransactionBuilder extends TransactionBuilder {
     this.addInstructions(postInstructions);
   }
 
+  async addPostTwapUpdates(twapUpdateDataArray: string[]) {
+    const {
+      postInstructions,
+      priceFeedIdToTwapUpdateAccount,
+      closeInstructions,
+    } = await this.pythSolanaReceiver.buildPostTwapUpdateInstructions(
+      priceUpdateDataArray
+    );
+    this.closeInstructions.push(...closeInstructions);
+    Object.assign(
+      this.priceFeedIdToTwapUpdateAccount,
+      priceFeedIdToTwapUpdateAccount
+    );
+    this.addInstructions(postInstructions);
+  }
+
   /**
    * Add instructions that consume price updates to the builder.
    *
@@ -319,6 +337,20 @@ export class PythTransactionBuilder extends TransactionBuilder {
       );
     }
     return priceUpdateAccount;
+  }
+
+  /**
+   * This method is used to retrieve the address of the TWAP update account where the TWAP update for a given price feed ID will be posted.
+   * If multiple TWAP updates for the same price feed ID will be posted with the same builder, the address of the account corresponding to the last update to get posted will be returned.
+   * */
+  getTwapUpdateAccount(priceFeedId: string): PublicKey {
+    const twapUpdateAccount = this.priceFeedIdToTwapUpdateAccount[priceFeedId];
+    if (!twapUpdateAccount) {
+      throw new Error(
+        `No TWAP update account found for the price feed ID ${priceFeedId}. Make sure to call addPostTwapUpdates before calling this function.`
+      );
+    }
+    return twapUpdateAccount;
   }
 }
 
@@ -665,6 +697,87 @@ export class PythSolanaReceiver {
     return {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
+      closeInstructions,
+    };
+  }
+
+  async buildPostTwapUpdateInstructions(
+    twapUpdateDataArray: string[]
+  ): Promise<{
+    postInstructions: InstructionWithEphemeralSigners[];
+    priceFeedIdToTwapUpdateAccount: Record<string, PublicKey>;
+    closeInstructions: InstructionWithEphemeralSigners[];
+  }> {
+    const postInstructions: InstructionWithEphemeralSigners[] = [];
+    const priceFeedIdToTwapUpdateAccount: Record<string, PublicKey> = {};
+    const closeInstructions: InstructionWithEphemeralSigners[] = [];
+    const treasuryId = getRandomTreasuryId();
+
+    const [startUpdate, endUpdate] = twapUpdateDataArray;
+    const startAccumulatorUpdateData = parseAccumulatorUpdateData(
+      Buffer.from(startUpdate, "base64")
+    );
+    const endAccumulatorUpdateData = parseAccumulatorUpdateData(
+      Buffer.from(endUpdate, "base64")
+    );
+
+    // Verify both start and end VAAs
+    const {
+      postInstructions: postStartEncodedVaaInstructions,
+      encodedVaaAddress: startEncodedVaa,
+      closeInstructions: postStartEncodedVaaCloseInstructions,
+    } = await this.buildPostEncodedVaaInstructions(
+      startAccumulatorUpdateData.vaa
+    );
+    const {
+      postInstructions: postEndEncodedVaaInstructions,
+      encodedVaaAddress: endEncodedVaa,
+      closeInstructions: postEndEncodedVaaCloseInstructions,
+    } = await this.buildPostEncodedVaaInstructions(
+      endAccumulatorUpdateData.vaa
+    );
+    postInstructions.push(...postStartEncodedVaaInstructions);
+    postInstructions.push(...postEndEncodedVaaInstructions);
+    closeInstructions.push(...postStartEncodedVaaCloseInstructions);
+    closeInstructions.push(...postEndEncodedVaaCloseInstructions);
+
+    // Post TWAP updates to receiver
+    for (let i = 0; i < startAccumulatorUpdateData.updates.length; i++) {
+      // Get start and end cumulative prices for price feed i
+      const startUpdate = startAccumulatorUpdateData.updates[i];
+      const endUpdate = endAccumulatorUpdateData.updates[i];
+
+      const twapUpdateKeypair = new Keypair();
+      postInstructions.push({
+        instruction: await this.receiver.methods
+          .postTwapUpdate({
+            startMerklePriceUpdate: startUpdate,
+            endMerklePriceUpdate: endUpdate,
+            treasuryId,
+          })
+          .accounts({
+            startEncodedVaa: startEncodedVaa,
+            endEncodedVaa: endEncodedVaa,
+            twapUpdateAccount: twapUpdateKeypair.publicKey,
+            treasury: getTreasuryPda(treasuryId, this.receiver.programId),
+            config: getConfigPda(this.receiver.programId),
+          })
+          .instruction(),
+        signers: [twapUpdateKeypair],
+        computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+      });
+
+      priceFeedIdToTwapUpdateAccount[
+        "0x" + parsePriceFeedMessage(startUpdate.message).feedId.toString("hex")
+      ] = twapUpdateKeypair.publicKey;
+      closeInstructions.push(
+        await this.buildClosePriceUpdateInstruction(twapUpdateKeypair.publicKey)
+      );
+    }
+
+    return {
+      postInstructions,
+      priceFeedIdToTwapUpdateAccount,
       closeInstructions,
     };
   }
