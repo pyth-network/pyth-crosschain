@@ -216,6 +216,7 @@ export const RECEIVER_CHAINS = {
   hyperevm_testnet: 50109,
   eventum_testnet: 50110,
   fantom_sonic_devnet: 50111,
+  movement_bardock_testnet: 50112,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
