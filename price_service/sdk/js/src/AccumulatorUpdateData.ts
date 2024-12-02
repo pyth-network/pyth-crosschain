@@ -5,12 +5,12 @@ const MAJOR_VERSION = 1;
 const MINOR_VERSION = 0;
 const KECCAK160_HASH_SIZE = 20;
 const PRICE_FEED_MESSAGE_VARIANT = 0;
+const TWAP_MESSAGE_VARIANT = 1;
 
 export type AccumulatorUpdateData = {
   vaa: Buffer;
   updates: { message: Buffer; proof: number[][] }[];
 };
-
 export type PriceFeedMessage = {
   feedId: Buffer;
   price: BN;
@@ -22,6 +22,17 @@ export type PriceFeedMessage = {
   emaConf: BN;
 };
 
+export type TwapMessage = {
+  feedId: Buffer;
+  cumulativePrice: BN;
+  cumulativeConf: BN;
+  numDownSlots: BN;
+  exponent: number;
+  publishTime: BN;
+  prevPublishTime: BN;
+  publishSlot: BN;
+};
+
 export function isAccumulatorUpdateData(updateBytes: Buffer): boolean {
   return (
     updateBytes.toString("hex").slice(0, 8) === ACCUMULATOR_MAGIC &&
@@ -29,6 +40,7 @@ export function isAccumulatorUpdateData(updateBytes: Buffer): boolean {
     updateBytes[5] === MINOR_VERSION
   );
 }
+
 export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
   let cursor = 0;
   const variant = message.readUInt8(cursor);
@@ -61,6 +73,41 @@ export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
     prevPublishTime,
     emaPrice,
     emaConf,
+  };
+}
+
+export function parseTwapMessage(message: Buffer): TwapMessage {
+  let cursor = 0;
+  const variant = message.readUInt8(cursor);
+  if (variant !== TWAP_MESSAGE_VARIANT) {
+    throw new Error("Not a twap message");
+  }
+  cursor += 1;
+  const feedId = message.subarray(cursor, cursor + 32);
+  cursor += 32;
+  const cumulativePrice = new BN(message.subarray(cursor, cursor + 16), "be");
+  cursor += 16;
+  const cumulativeConf = new BN(message.subarray(cursor, cursor + 16), "be");
+  cursor += 16;
+  const numDownSlots = new BN(message.subarray(cursor, cursor + 8), "be");
+  cursor += 8;
+  const exponent = message.readInt32BE(cursor);
+  cursor += 4;
+  const publishTime = new BN(message.subarray(cursor, cursor + 8), "be");
+  cursor += 8;
+  const prevPublishTime = new BN(message.subarray(cursor, cursor + 8), "be");
+  cursor += 8;
+  const publishSlot = new BN(message.subarray(cursor, cursor + 8), "be");
+  cursor += 8;
+  return {
+    feedId,
+    cumulativePrice,
+    cumulativeConf,
+    numDownSlots,
+    exponent,
+    publishTime,
+    prevPublishTime,
+    publishSlot,
   };
 }
 
