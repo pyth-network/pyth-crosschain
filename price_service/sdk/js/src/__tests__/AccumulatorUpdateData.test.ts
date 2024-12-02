@@ -134,6 +134,7 @@ describe("Test parse accumulator update", () => {
     expect(twapMessage1.exponent).toBe(-5);
     expect(twapMessage1.publishTime.toString()).toBe("1733155135");
     expect(twapMessage1.prevPublishTime.toString()).toBe("1733155134");
+    expect(twapMessage1.publishSlot.toString()).toBe("181871343");
 
     const twapMessage2 = parseTwapMessage(updates[1].message);
     expect(twapMessage2.feedId.toString("hex")).toBe(
