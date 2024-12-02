@@ -8,7 +8,6 @@ export const getCurrentSolanaTimestamp = async (connection: Connection) => {
   if (blockTime === null) {
     throw new Error("Block time is not available");
   }
-
   return BigInt(blockTime);
 };
 
