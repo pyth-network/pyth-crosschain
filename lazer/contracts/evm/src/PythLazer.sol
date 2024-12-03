@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[2] public trustedSigners;
+    uint256 public verification_fee = 0.01 ether;
 
     struct TrustedSignerInfo {
         address pubkey;
@@ -62,7 +63,13 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
 
     function verifyUpdate(
         bytes calldata update
-    ) external view returns (bytes calldata payload, address signer) {
+    ) external payable returns (bytes calldata payload, address signer) {
+        // Require fee and refund excess
+        require(msg.value >= verification_fee, "Insufficient fee provided");
+        if (msg.value > verification_fee) {
+            payable(msg.sender).transfer(msg.value - verification_fee);
+        }
+
         if (update.length < 71) {
             revert("input too short");
         }
