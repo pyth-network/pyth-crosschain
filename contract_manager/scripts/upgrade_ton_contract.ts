@@ -5,18 +5,17 @@ import fs from "fs";
 import path from "path";
 import { Cell } from "@ton/ton";
 
+// This script upgrades the Pyth contract on TON after the governance has authorized the upgrade
+// If you are starting over, the process is like the following:
+// 1. create a governance proposal using generate_upgrade_ton_contract_proposal script
+// 2. once approved and executed, relay it to TON using sync_governance_vaas script
+// 3. upgrade the contract on TON using this script
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Upgrades the Pyth contract on TON and creates a governance proposal for it.\n" +
-      "Usage: $0 --network <mainnet|testnet> --contract <contract_name> --private-key <private_key>"
+      "Usage: $0 --contract <contract_name> --private-key <private_key>"
   )
   .options({
-    network: {
-      type: "string",
-      choices: ["mainnet", "testnet"],
-      description: "Network to deploy to",
-      demandOption: true,
-    },
     contract: {
       type: "string",
       description: "Contract name",
