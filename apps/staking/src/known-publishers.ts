@@ -2,6 +2,7 @@ import blocksize from "./publisher-icons/blocksize.svg";
 import elfomo from "./publisher-icons/elfomo.svg";
 import finazon from "./publisher-icons/finazon.svg";
 import sentio from "./publisher-icons/sentio.svg";
+import woo from "./publisher-icons/woo.svg";
 
 export const KNOWN_PUBLISHERS = {
   CfVkYofcLC1iVBcYFzgdYPeiX25SVRmWvBQVHorP1A3y: {
@@ -19,5 +20,9 @@ export const KNOWN_PUBLISHERS = {
   "5giNPEh9PytXcnKNgufofmQPdS4jHoySgFpiu8f7QxP4": {
     name: "Elfomo",
     icon: elfomo,
+  },
+  DANa2ZYtyUcSW8W8C25ZfscKdBra53npt2frmh7fUucf: {
+    name: "WOO",
+    icon: woo,
   },
 };
