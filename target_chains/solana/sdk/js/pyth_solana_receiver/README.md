@@ -65,6 +65,7 @@ Instantiate it with a Solana web3 `Connection` and anchor `Wallet`:
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { Wallet } from "@coral-xyz/anchor";
+import { sendTransactions } from "@pythnetwork/solana-utils";
 
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 const wallet = new Wallet(

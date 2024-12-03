@@ -4,6 +4,7 @@ import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
 import os from "os";
 import { HermesClient } from "@pythnetwork/hermes-client";
+import { sendTransactions } from "@pythnetwork/solana-utils";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -57,12 +58,13 @@ async function main() {
 
   // Send the instructions in the builder in 1 or more transactions.
   // The builder will pack the instructions into transactions automatically.
-  await pythSolanaReceiver.provider.sendAll(
+  sendTransactions(
     await transactionBuilder.buildVersionedTransactions({
       computeUnitPriceMicroLamports: 100000,
       tightComputeBudget: true,
     }),
-    { preflightCommitment: "processed" }
+    pythSolanaReceiver.connection,
+    pythSolanaReceiver.wallet
   );
 }
 
