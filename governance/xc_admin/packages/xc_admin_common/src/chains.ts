@@ -98,6 +98,7 @@ export const RECEIVER_CHAINS = {
   ton_mainnet: 60069,
   horse_dream: 60070,
   mathematician_in_heart: 60071,
+  fantom_sonic_mainnet: 60072,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

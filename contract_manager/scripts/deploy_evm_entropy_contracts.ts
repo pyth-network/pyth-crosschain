@@ -134,7 +134,7 @@ async function topupAccountsIfNecessary(
     const accountAddress = chain.isMainnet()
       ? defaultAddresses.mainnet
       : defaultAddresses.testnet;
-    const web3 = new Web3(chain.getRpcUrl());
+    const web3 = chain.getWeb3();
     const balance = Number(
       web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether")
     );
