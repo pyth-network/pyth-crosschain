@@ -58,6 +58,7 @@ async function main() {
   await pythSolanaReceiver.provider.sendAll(
     await transactionBuilder.buildVersionedTransactions({
       computeUnitPriceMicroLamports: 100000,
+      tightComputeBudget: true,
     }),
     { preflightCommitment: "processed" }
   );

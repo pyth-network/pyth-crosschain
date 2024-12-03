@@ -104,6 +104,7 @@ await transactionBuilder.addPriceConsumerInstructions(
 await pythSolanaReceiver.provider.sendAll(
   await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 100000,
+    tightComputeBudget: true,
   })
 );
 ```
@@ -140,6 +141,7 @@ await transactionBuilder.addPriceConsumerInstructions(
 await pythSolanaReceiver.provider.sendAll(
   await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 100000,
+    tightComputeBudget: true,
   })
 );
 ```
