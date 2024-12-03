@@ -37,6 +37,26 @@ import {
 import { keyPairFromSeed } from "@ton/crypto";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
 
+/**
+ * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
+ */
+export function parseRpcUrl(rpcUrl: string): string {
+  const envMatches = rpcUrl.match(/\$ENV_\w+/);
+  if (envMatches) {
+    for (const envMatch of envMatches) {
+      const envName = envMatch.replace("$ENV_", "");
+      const envValue = process.env[envName];
+      if (!envValue) {
+        throw new Error(
+          `Missing env variable ${envName} required for this RPC: ${rpcUrl}`
+        );
+      }
+      rpcUrl = rpcUrl.replace(envMatch, envValue);
+    }
+  }
+  return rpcUrl;
+}
+
 export type ChainConfig = Record<string, string> & {
   mainnet: boolean;
   id: string;
@@ -352,23 +372,10 @@ export class EvmChain extends Chain {
   }
 
   /**
-   * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
+   * Returns a web3 provider for this chain
    */
-  getRpcUrl(): string {
-    const envMatches = this.rpcUrl.match(/\$ENV_\w+/);
-    if (envMatches) {
-      for (const envMatch of envMatches) {
-        const envName = envMatch.replace("$ENV_", "");
-        const envValue = process.env[envName];
-        if (!envValue) {
-          throw new Error(
-            `Missing env variable ${envName} required for chain ${this.id} rpc: ${this.rpcUrl}`
-          );
-        }
-        this.rpcUrl = this.rpcUrl.replace(envMatch, envValue);
-      }
-    }
-    return this.rpcUrl;
+  getWeb3(): Web3 {
+    return new Web3(parseRpcUrl(this.rpcUrl));
   }
 
   /**
@@ -419,7 +426,7 @@ export class EvmChain extends Chain {
   }
 
   async getGasPrice() {
-    const web3 = new Web3(this.getRpcUrl());
+    const web3 = this.getWeb3();
     let gasPrice = await web3.eth.getGasPrice();
     // some testnets have inaccuarte gas prices that leads to transactions not being mined, we double it since it's free!
     if (!this.isMainnet()) {
@@ -459,7 +466,7 @@ export class EvmChain extends Chain {
     gasMultiplier = 1,
     gasPriceMultiplier = 1
   ): Promise<string> {
-    const web3 = new Web3(this.getRpcUrl());
+    const web3 = this.getWeb3();
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(signer);
     const contract = new web3.eth.Contract(abi);
@@ -494,13 +501,13 @@ export class EvmChain extends Chain {
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const web3 = new Web3(this.getRpcUrl());
+    const web3 = this.getWeb3();
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
     return signer.address;
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
-    const web3 = new Web3(this.getRpcUrl());
+    const web3 = this.getWeb3();
     const balance = await web3.eth.getBalance(
       await this.getAccountAddress(privateKey)
     );
@@ -757,15 +764,19 @@ export class TonChain extends Chain {
     mainnet: boolean,
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
-    public rpcUrl: string
+    private rpcUrl: string
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
   async getClient(): Promise<TonClient> {
-    // add apiKey if facing rate limit
+    // We are hacking rpcUrl to include the apiKey header which is a
+    // header that is used to bypass rate limits on the TON network
+    const [rpcUrl, apiKey] = parseRpcUrl(this.rpcUrl).split("#");
+
     const client = new TonClient({
-      endpoint: this.rpcUrl,
+      endpoint: rpcUrl,
+      apiKey,
     });
     return client;
   }
