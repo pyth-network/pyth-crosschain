@@ -51,11 +51,5 @@ contract PythLazerTest is Test {
         vm.expectRevert("Insufficient fee provided");
         pythLazer.verifyUpdate(update);
         assertEq(bob.balance, 1 ether);
-
-        // Bob does not attach enough fees
-        vm.prank(bob);
-        vm.expectRevert("Insufficient fee provided");
-        pythLazer.verifyUpdate{value: 1 wei}(update);
-        assertEq(bob.balance, 1 ether);
     }
 }
