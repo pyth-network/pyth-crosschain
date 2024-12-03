@@ -206,7 +206,7 @@ pub struct PublisherStakeCapsWithUpdateData {
 #[derive(Debug)]
 pub struct TwapsWithUpdateData {
     pub twaps: Vec<PriceFeedTwap>,
-    pub update_data: Vec<Vec<Vec<u8>>>,
+    pub update_data: Vec<Vec<u8>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -688,12 +688,13 @@ where
     }
 
     // Construct update data.
-    // update_data[0] will contain the start VAA and merkle proofs
-    // update_data[1] will contain the end VAA and merkle proofs
-    let start_updates =
+    // update_data[0] contains the start VAA and merkle proofs
+    // update_data[1] contains the end VAA and merkle proofs
+    let mut update_data =
         construct_update_data(start_messages.into_iter().map(Into::into).collect())?;
-    let end_updates = construct_update_data(end_messages.into_iter().map(Into::into).collect())?;
-    let update_data = vec![start_updates, end_updates];
+    update_data.extend(construct_update_data(
+        end_messages.into_iter().map(Into::into).collect(),
+    )?);
 
     Ok(TwapsWithUpdateData { twaps, update_data })
 }
@@ -1307,10 +1308,8 @@ mod test {
         assert_eq!(twap_2.start_timestamp, 100);
         assert_eq!(twap_2.end_timestamp, 200);
 
-        // Each update_data element contains a VAA and merkle proofs for both feeds
+        // update_data should have 2 elements, one for the start block and one for the end block.
         assert_eq!(result.update_data.len(), 2);
-        assert_eq!(result.update_data[0].len(), 1); // Start update
-        assert_eq!(result.update_data[1].len(), 1); // End update
     }
     #[tokio::test]
 
