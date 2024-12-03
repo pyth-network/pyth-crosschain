@@ -810,3 +810,8 @@
   rpcUrl: https://rpc.blaze.soniclabs.com
   networkId: 57054
   type: EvmChain
+- id: fantom_sonic_mainnet
+  mainnet: true
+  rpcUrl: https://rpc.soniclabs.com
+  networkId: 146
+  type: EvmChain
