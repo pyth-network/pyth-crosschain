@@ -2,9 +2,10 @@ mod signature;
 
 use {
     crate::signature::VerifiedMessage,
-    anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES, system_program},
-    std::io::Cursor,
-    std::mem::size_of,
+    anchor_lang::{
+        prelude::*, solana_program::pubkey::PUBKEY_BYTES, system_program, Discriminator,
+    },
+    std::{io::Cursor, mem::size_of},
 };
 
 pub use {
@@ -24,6 +25,7 @@ fn test_ids() {
     );
 }
 
+pub const ANCHOR_DISCRIMINATOR_BYTES: usize = 8;
 pub const MAX_NUM_TRUSTED_SIGNERS: usize = 2;
 pub const SPACE_FOR_TRUSTED_SIGNERS: usize = 5;
 pub const EXTRA_SPACE: usize = 100;
@@ -39,15 +41,15 @@ impl TrustedSignerInfo {
 }
 
 /// TODO: remove this legacy storage type
-#[account]
-pub struct Storage {
+#[derive(AnchorDeserialize)]
+pub struct StorageV010 {
     pub top_authority: Pubkey,
     pub num_trusted_signers: u8,
     pub trusted_signers: [TrustedSignerInfo; MAX_NUM_TRUSTED_SIGNERS],
 }
 
-impl Storage {
-    const SERIALIZED_LEN: usize = PUBKEY_BYTES
+impl StorageV010 {
+    pub const SERIALIZED_LEN: usize = PUBKEY_BYTES
         + size_of::<u8>()
         + TrustedSignerInfo::SERIALIZED_LEN * MAX_NUM_TRUSTED_SIGNERS;
 
@@ -57,7 +59,7 @@ impl Storage {
 }
 
 #[account]
-pub struct StorageV2 {
+pub struct Storage {
     pub top_authority: Pubkey,
     pub treasury: Pubkey,
     pub single_update_fee_in_lamports: u64,
@@ -66,7 +68,7 @@ pub struct StorageV2 {
     pub _extra_space: [u8; EXTRA_SPACE],
 }
 
-impl StorageV2 {
+impl Storage {
     const SERIALIZED_LEN: usize = PUBKEY_BYTES
         + PUBKEY_BYTES
         + size_of::<u64>()
@@ -85,14 +87,8 @@ pub const STORAGE_SEED: &[u8] = b"storage";
 pub mod pyth_lazer_solana_contract {
     use super::*;
 
-    /// TODO: remove this legacy instruction
-    pub fn initialize(ctx: Context<Initialize>, top_authority: Pubkey) -> Result<()> {
-        ctx.accounts.storage.top_authority = top_authority;
-        Ok(())
-    }
-
-    pub fn initialize_v2(
-        ctx: Context<InitializeV2>,
+    pub fn initialize(
+        ctx: Context<Initialize>,
         top_authority: Pubkey,
         treasury: Pubkey,
     ) -> Result<()> {
@@ -102,20 +98,25 @@ pub mod pyth_lazer_solana_contract {
         Ok(())
     }
 
-    pub fn migrate_to_storage_v2(ctx: Context<MigrateToStorageV2>, treasury: Pubkey) -> Result<()> {
-        let old_storage = Storage::try_deserialize(&mut &**ctx.accounts.storage.data.borrow())?;
+    pub fn migrate_from_0_1_0(ctx: Context<MigrateFrom010>, treasury: Pubkey) -> Result<()> {
+        let old_data = ctx.accounts.storage.data.borrow();
+        if old_data[0..ANCHOR_DISCRIMINATOR_BYTES] != Storage::DISCRIMINATOR {
+            return Err(ProgramError::InvalidAccountData.into());
+        }
+        let old_storage = StorageV010::deserialize(&mut &old_data[ANCHOR_DISCRIMINATOR_BYTES..])?;
         if old_storage.top_authority != ctx.accounts.top_authority.key() {
             return Err(ProgramError::MissingRequiredSignature.into());
         }
+        drop(old_data);
 
-        let space = 8 + StorageV2::SERIALIZED_LEN;
+        let space = ANCHOR_DISCRIMINATOR_BYTES + Storage::SERIALIZED_LEN;
         ctx.accounts.storage.realloc(space, false)?;
         let min_lamports = Rent::get()?.minimum_balance(space);
         if ctx.accounts.storage.lamports() < min_lamports {
             return Err(ProgramError::AccountNotRentExempt.into());
         }
 
-        let mut new_storage = StorageV2 {
+        let mut new_storage = Storage {
             top_authority: old_storage.top_authority,
             treasury,
             single_update_fee_in_lamports: 1,
@@ -228,7 +229,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + Storage::SERIALIZED_LEN,
+        space = ANCHOR_DISCRIMINATOR_BYTES + Storage::SERIALIZED_LEN,
         seeds = [STORAGE_SEED],
         bump,
     )]
@@ -237,7 +238,7 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-pub struct MigrateToStorageV2<'info> {
+pub struct MigrateFrom010<'info> {
     pub top_authority: Signer<'info>,
     #[account(
         mut,
@@ -250,21 +251,6 @@ pub struct MigrateToStorageV2<'info> {
 }
 
 #[derive(Accounts)]
-pub struct InitializeV2<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    #[account(
-        init,
-        payer = payer,
-        space = 8 + StorageV2::SERIALIZED_LEN,
-        seeds = [STORAGE_SEED],
-        bump,
-    )]
-    pub storage: Account<'info, StorageV2>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
 pub struct Update<'info> {
     pub top_authority: Signer<'info>,
     #[account(
@@ -273,7 +259,7 @@ pub struct Update<'info> {
         bump,
         has_one = top_authority,
     )]
-    pub storage: Account<'info, StorageV2>,
+    pub storage: Account<'info, Storage>,
 }
 
 #[derive(Accounts)]
@@ -285,7 +271,7 @@ pub struct VerifyMessage<'info> {
         bump,
         has_one = treasury
     )]
-    pub storage: Account<'info, StorageV2>,
+    pub storage: Account<'info, Storage>,
     /// CHECK: this account doesn't need additional constraints.
     pub treasury: AccountInfo<'info>,
     pub system_program: Program<'info, System>,

@@ -1,14 +1,38 @@
 use {
     anchor_lang::{prelude::AccountMeta, InstructionData},
-    pyth_lazer_solana_contract::ed25519_program_args,
+    pyth_lazer_solana_contract::{ed25519_program_args, ANCHOR_DISCRIMINATOR_BYTES},
     solana_program_test::{BanksClient, ProgramTest},
     solana_sdk::{
-        ed25519_program, hash::Hash, instruction::Instruction, pubkey::Pubkey, signature::Keypair,
-        signer::Signer, system_instruction, system_program, system_transaction, sysvar,
+        account::Account,
+        ed25519_program,
+        hash::Hash,
+        instruction::Instruction,
+        pubkey::{Pubkey, PUBKEY_BYTES},
+        signature::Keypair,
+        signer::Signer,
+        system_instruction, system_program, system_transaction, sysvar,
         transaction::Transaction,
     },
     std::env,
 };
+
+fn program_test() -> ProgramTest {
+    if env::var("SBF_OUT_DIR").is_err() {
+        env::set_var(
+            "SBF_OUT_DIR",
+            format!(
+                "{}/../../../../target/sbf-solana-solana/release",
+                env::var("CARGO_MANIFEST_DIR").unwrap()
+            ),
+        );
+    }
+    println!("if add_program fails, run `cargo build-sbf` first.");
+    ProgramTest::new(
+        "pyth_lazer_solana_contract",
+        pyth_lazer_solana_contract::ID,
+        None,
+    )
+}
 
 struct Setup {
     banks_client: BanksClient,
@@ -17,28 +41,17 @@ struct Setup {
 }
 
 impl Setup {
-    async fn new() -> Self {
-        if env::var("SBF_OUT_DIR").is_err() {
-            env::set_var(
-                "SBF_OUT_DIR",
-                format!(
-                    "{}/../../../../target/sbf-solana-solana/release",
-                    env::var("CARGO_MANIFEST_DIR").unwrap()
-                ),
-            );
-        }
-        println!("if add_program fails, run `cargo build-sbf` first.");
-        let program_test = ProgramTest::new(
-            "pyth_lazer_solana_contract",
-            pyth_lazer_solana_contract::ID,
-            None,
-        );
+    async fn with_program_test(program_test: ProgramTest) -> Self {
         let (banks_client, payer, recent_blockhash) = program_test.start().await;
         Self {
             banks_client,
             payer,
             recent_blockhash,
         }
+    }
+
+    async fn new() -> Self {
+        Self::with_program_test(program_test()).await
     }
 
     async fn create_treasury(&mut self) -> Pubkey {
@@ -154,14 +167,14 @@ impl Setup {
 }
 
 #[tokio::test]
-async fn test_with_init_v2() {
+async fn test_basic() {
     let mut setup = Setup::new().await;
     let treasury = setup.create_treasury().await;
 
     let mut transaction_init_contract = Transaction::new_with_payer(
         &[Instruction::new_with_bytes(
             pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::InitializeV2 {
+            &pyth_lazer_solana_contract::instruction::Initialize {
                 top_authority: setup.payer.pubkey(),
                 treasury,
             }
@@ -195,32 +208,33 @@ async fn test_with_init_v2() {
 }
 
 #[tokio::test]
-async fn test_with_init_v1_and_migrate() {
-    let mut setup = Setup::new().await;
+async fn test_migrate_from_0_1_0() {
+    let mut program_test = program_test();
+    // Create a storage PDA account with the data that was produced by the program v0.1.0.
+    let mut old_storage_data = hex::decode(
+        "d175ffb9c4af4409aa4dcb5d31150b162b664abd843cb231cee5c0ebf759ce371d9cb36ffc653796\
+        0174313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214ffffffffffffff7\
+        f00000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    )
+    .unwrap();
+    let top_authority = Keypair::new();
+    // Replace top authority pubkey in storage PDA data to allow successful migration.
+    old_storage_data[ANCHOR_DISCRIMINATOR_BYTES..ANCHOR_DISCRIMINATOR_BYTES + PUBKEY_BYTES]
+        .copy_from_slice(&top_authority.pubkey().to_bytes());
+    program_test.add_account(
+        pyth_lazer_solana_contract::STORAGE_ID,
+        Account {
+            lamports: 1733040,
+            data: old_storage_data,
+            owner: pyth_lazer_solana_contract::ID,
+            executable: false,
+            rent_epoch: 18446744073709551615,
+        },
+    );
+    let mut setup = Setup::with_program_test(program_test).await;
     let treasury = setup.create_treasury().await;
 
-    let mut transaction_init_contract = Transaction::new_with_payer(
-        &[Instruction::new_with_bytes(
-            pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::Initialize {
-                top_authority: setup.payer.pubkey(),
-            }
-            .data(),
-            vec![
-                AccountMeta::new(setup.payer.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
-                AccountMeta::new_readonly(system_program::ID, false),
-            ],
-        )],
-        Some(&setup.payer.pubkey()),
-    );
-    transaction_init_contract.sign(&[&setup.payer], setup.recent_blockhash);
-    setup
-        .banks_client
-        .process_transaction(transaction_init_contract)
-        .await
-        .unwrap();
-
+    // Make sure storage PDA will be rent-exempt after resize.
     let tx_transfer = system_transaction::transfer(
         &setup.payer,
         &pyth_lazer_solana_contract::STORAGE_ID,
@@ -236,24 +250,22 @@ async fn test_with_init_v1_and_migrate() {
     let mut transaction_migrate_contract = Transaction::new_with_payer(
         &[Instruction::new_with_bytes(
             pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::MigrateToStorageV2 { treasury }.data(),
+            &pyth_lazer_solana_contract::instruction::MigrateFrom010 { treasury }.data(),
             vec![
-                AccountMeta::new(setup.payer.pubkey(), true),
+                AccountMeta::new(top_authority.pubkey(), true),
                 AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
                 AccountMeta::new_readonly(system_program::ID, false),
             ],
         )],
         Some(&setup.payer.pubkey()),
     );
-    transaction_migrate_contract.sign(&[&setup.payer], setup.recent_blockhash);
+    transaction_migrate_contract.sign(&[&setup.payer, &top_authority], setup.recent_blockhash);
     setup
         .banks_client
         .process_transaction(transaction_migrate_contract)
         .await
         .unwrap();
 
-    let verifying_key =
-        hex::decode("74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214").unwrap();
     let message = hex::decode(
         "b9011a82e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307\
         afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c60074313a6525edf99936aa1477e94c72bc5cc61\
@@ -261,6 +273,7 @@ async fn test_with_init_v1_and_migrate() {
     )
     .unwrap();
 
-    setup.set_trusted(verifying_key.try_into().unwrap()).await;
+    // The contract will recognize the trusted signer without calling `set_trusted`
+    // because it was present in the original storage PDA data.
     setup.verify_message(&message, treasury).await;
 }
