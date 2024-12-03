@@ -206,7 +206,7 @@ pub struct PublisherStakeCapsWithUpdateData {
 #[derive(Debug)]
 pub struct TwapsWithUpdateData {
     pub twaps: Vec<PriceFeedTwap>,
-    pub update_data: Vec<Vec<Vec<u8>>>,
+    pub update_data: Vec<Vec<u8>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -652,7 +652,6 @@ where
     }
 
     let mut twaps = Vec::new();
-    let mut update_data = Vec::new();
 
     // Iterate through start and end messages together
     for (start_message, end_message) in start_messages.iter().zip(end_messages.iter()) {
@@ -676,33 +675,26 @@ where
                         end_timestamp: end_twap.publish_time,
                         down_slots_ratio,
                     });
-
-                    // Combine messages for update data
-                    let mut messages = Vec::new();
-                    messages.push(start_message.clone().into());
-                    messages.push(end_message.clone().into());
-
-                    if let Ok(update) = construct_update_data(messages) {
-                        update_data.push(update);
-                    } else {
-                        tracing::warn!(
-                            "Failed to construct update data for price feed {:?}",
-                            start_twap.feed_id
-                        );
-                        continue;
-                    }
                 }
                 Err(e) => {
-                    tracing::warn!(
+                    return Err(anyhow!(
                         "Failed to calculate TWAP for price feed {:?}: {}",
                         start_twap.feed_id,
                         e
-                    );
-                    continue;
+                    ));
                 }
             }
         }
     }
+
+    // Construct update data.
+    // update_data[0] contains the start VAA and merkle proofs
+    // update_data[1] contains the end VAA and merkle proofs
+    let mut update_data =
+        construct_update_data(start_messages.into_iter().map(Into::into).collect())?;
+    update_data.extend(construct_update_data(
+        end_messages.into_iter().map(Into::into).collect(),
+    )?);
 
     Ok(TwapsWithUpdateData { twaps, update_data })
 }
@@ -1316,10 +1308,8 @@ mod test {
         assert_eq!(twap_2.start_timestamp, 100);
         assert_eq!(twap_2.end_timestamp, 200);
 
-        // Verify update data contains both start and end messages for both feeds
+        // update_data should have 2 elements, one for the start block and one for the end block.
         assert_eq!(result.update_data.len(), 2);
-        assert_eq!(result.update_data[0].len(), 2); // Should contain 2 messages
-        assert_eq!(result.update_data[1].len(), 2); // Should contain 2 messages
     }
     #[tokio::test]
 

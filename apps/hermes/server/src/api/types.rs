@@ -281,9 +281,9 @@ impl From<PriceFeedTwap> for ParsedPriceFeedTwap {
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct TwapsResponse {
-    /// Each BinaryUpdate contains the start & end cumulative price updates used to
+    /// Contains the start & end cumulative price updates used to
     /// calculate a given price feed's TWAP.
-    pub binary: Vec<BinaryUpdate>,
+    pub binary: BinaryUpdate,
 
     /// The calculated TWAPs for each price ID
     #[serde(skip_serializing_if = "Option::is_none")]
