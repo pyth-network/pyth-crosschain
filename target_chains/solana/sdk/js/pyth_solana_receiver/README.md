@@ -102,11 +102,15 @@ await transactionBuilder.addPriceConsumerInstructions(
 
 // Send the instructions in the builder in 1 or more transactions.
 // The builder will pack the instructions into transactions automatically.
-await pythSolanaReceiver.provider.sendAll(
+// We use some custom transactions dispatch logic instead of the simple `provider.sendAll` to increase landing rate,
+// feel free to use your own optimized logic.
+sendTransactions(
   await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 100000,
     tightComputeBudget: true,
-  })
+  }),
+  pythSolanaReceiver.connection,
+  pythSolanaReceiver.wallet
 );
 ```
 
@@ -139,11 +143,15 @@ await transactionBuilder.addPriceConsumerInstructions(
 
 // Send the instructions in the builder in 1 or more transactions.
 // The builder will pack the instructions into transactions automatically.
-await pythSolanaReceiver.provider.sendAll(
+// We use some custom transactions dispatch logic instead of the simple `provider.sendAll` to increase landing rate,
+// feel free to use your own optimized logic.
+sendTransactions(
   await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 100000,
     tightComputeBudget: true,
-  })
+  }),
+  pythSolanaReceiver.connection,
+  pythSolanaReceiver.wallet
 );
 ```
 
