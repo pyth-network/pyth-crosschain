@@ -439,7 +439,7 @@
 - chain: mathematician_in_heart
   address: "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1"
   type: EvmPriceFeedContract
-- chain: happy_bird_song_ends_with_tio
+- chain: happy_bird_song_ends_with_tio # stable contract
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: eventum_testnet
@@ -447,4 +447,7 @@
   type: EvmPriceFeedContract
 - chain: fantom_sonic_devnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: happy_bird_song_ends_with_tio # beta contract
+  address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
   type: EvmPriceFeedContract
