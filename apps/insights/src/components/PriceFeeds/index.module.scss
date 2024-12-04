@@ -16,6 +16,16 @@
     flex-flow: column nowrap;
     gap: theme.spacing(6);
 
+    .featuredFeeds {
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(1);
+
+      & > * {
+        flex: 1;
+      }
+    }
+
     .stats {
       display: flex;
       flex-flow: row nowrap;
@@ -26,20 +36,27 @@
         flex: 1;
       }
     }
+
+    .priceFeedId {
+      color: theme.color("link", "normal");
+      font-weight: theme.font-weight("medium");
+    }
   }
 }
 
 .priceFeedNameAndIcon,
-.priceFeedNameAndAssetClass {
+.priceFeedNameAndDescription {
   display: flex;
   flex-flow: row nowrap;
   gap: theme.spacing(3);
+  align-items: center;
 
   .priceFeedName {
     display: flex;
     flex-flow: row nowrap;
     align-items: center;
     gap: theme.spacing(1);
+    color: theme.color("heading");
 
     .firstPart {
       font-weight: theme.font-weight("medium");
@@ -47,7 +64,7 @@
 
     .divider {
       font-weight: theme.font-weight("light");
-      color: theme.color("heading");
+      color: theme.color("muted");
     }
 
     .part {
@@ -59,20 +76,24 @@
 .priceFeedNameAndIcon .priceFeedIcon {
   width: theme.spacing(6);
   height: theme.spacing(6);
+
+  &.skeleton {
+    border-radius: theme.border-radius("full");
+  }
 }
 
-.priceFeedNameAndAssetClass {
+.priceFeedNameAndDescription {
   .priceFeedIcon {
     width: theme.spacing(10);
     height: theme.spacing(10);
   }
 
-  .nameAndClass {
+  .nameAndDescription {
     display: flex;
     flex-flow: column nowrap;
     gap: theme.spacing(1);
 
-    .assetClass {
+    .description {
       font-size: theme.font-size("xs");
       font-weight: theme.font-weight("medium");
       line-height: theme.spacing(4);

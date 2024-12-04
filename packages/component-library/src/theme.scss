@@ -424,6 +424,10 @@ $color: (
     light-dark(pallette-color("steel", 800), pallette-color("steel", 200)),
   "paragraph":
     light-dark(pallette-color("steel", 700), pallette-color("steel", 300)),
+  "link": (
+    "normal":
+      light-dark(pallette-color("steel", 800), pallette-color("steel", 50)),
+  ),
   "muted":
     light-dark(pallette-color("stone", 700), pallette-color("steel", 300)),
   "border":
@@ -441,12 +445,21 @@ $color: (
           pallette-color("emerald", 600),
           pallette-color("emerald", 500)
         ),
+      "background":
+        light-dark(
+          pallette-color("emerald", 100),
+          pallette-color("emerald", 950)
+        ),
       "normal": pallette-color("emerald", 500),
       "hover": pallette-color("emerald", 600),
       "active": pallette-color("emerald", 700),
     ),
     "error": (
       "base": light-dark(pallette-color("red", 600), pallette-color("red", 400)),
+      "color":
+        light-dark(pallette-color("red", 500), pallette-color("red", 400)),
+      "background":
+        light-dark(pallette-color("red", 100), pallette-color("red", 950)),
       "normal": pallette-color("red", 500),
       "hover": pallette-color("red", 600),
       "active": pallette-color("red", 700),
@@ -462,6 +475,18 @@ $color: (
     "warning": (
       "normal":
         light-dark(pallette-color("orange", 600), pallette-color("orange", 400)),
+      "background":
+        light-dark(pallette-color("orange", 100), pallette-color("orange", 950)),
+    ),
+    "yellow": (
+      "normal": pallette-color("yellow", 500),
+      "background":
+        light-dark(pallette-color("yellow", 100), pallette-color("yellow", 900)),
+    ),
+    "lime": (
+      "normal": pallette-color("lime", 500),
+      "background":
+        light-dark(pallette-color("lime", 100), pallette-color("lime", 900)),
     ),
     "data": (
       "normal":
@@ -715,5 +740,5 @@ $elevations: (
   font-weight: font-weight($weight);
   margin: 0;
   font-style: normal;
-  line-height: normal;
+  line-height: 1;
 }

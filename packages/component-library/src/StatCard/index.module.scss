@@ -26,6 +26,8 @@
 
       .stat {
         @include theme.h3;
+
+        color: theme.color("heading");
       }
 
       .miniStat {

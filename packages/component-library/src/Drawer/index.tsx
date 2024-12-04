@@ -1,3 +1,5 @@
+"use client";
+
 import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import clsx from "clsx";
 import { motion, AnimatePresence } from "motion/react";
@@ -7,6 +9,7 @@ import {
   type ContextType,
   use,
   useCallback,
+  useEffect,
 } from "react";
 import {
   Dialog,
@@ -18,6 +21,7 @@ import {
 
 import styles from "./index.module.scss";
 import { Button } from "../Button/index.js";
+import { useSetOverlayVisible } from "../overlay-visible-context.js";
 
 export { DialogTrigger as DrawerTrigger } from "react-aria-components";
 
@@ -46,6 +50,13 @@ type Props = Omit<ComponentProps<typeof Dialog>, keyof OwnProps> & OwnProps;
 
 export const Drawer = ({ title, children, className, ...props }: Props) => {
   const state = use(OverlayTriggerStateContext);
+  const { hideOverlay, showOverlay } = useSetOverlayVisible();
+
+  useEffect(() => {
+    if (state?.isOpen) {
+      showOverlay();
+    }
+  }, [state, showOverlay]);
 
   const onOpenChange = useCallback(
     (newValue: boolean) => {
@@ -55,7 +66,7 @@ export const Drawer = ({ title, children, className, ...props }: Props) => {
   );
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={hideOverlay}>
       {state?.isOpen && (
         <ModalOverlay
           isOpen

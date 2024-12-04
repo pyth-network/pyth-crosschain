@@ -42,6 +42,7 @@
         box-sizing: content-box;
         padding: theme.spacing(3);
         margin: -#{theme.spacing(3)};
+        color: theme.color("foreground");
 
         .logo {
           height: 100%;

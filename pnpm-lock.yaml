@@ -96,6 +96,9 @@ catalogs:
     css-loader:
       specifier: 7.1.2
       version: 7.1.2
+    dnum:
+      specifier: 2.14.0
+      version: 2.14.0
     eslint:
       specifier: 9.13.0
       version: 9.13.0
@@ -144,6 +147,9 @@ catalogs:
     react-dom:
       specifier: 19.0.0-rc-603e6108-20241029
       version: 19.0.0-rc-603e6108-20241029
+    recharts:
+      specifier: 2.14.1
+      version: 2.14.1
     sass:
       specifier: 1.80.7
       version: 1.80.7
@@ -408,6 +414,9 @@ importers:
       '@pythnetwork/fonts':
         specifier: workspace:*
         version: link:../../packages/fonts
+      '@pythnetwork/hermes-client':
+        specifier: workspace:*
+        version: link:../hermes/client/js
       '@pythnetwork/known-publishers':
         specifier: workspace:*
         version: link:../../packages/known-publishers
@@ -429,6 +438,9 @@ importers:
       cryptocurrency-icons:
         specifier: 'catalog:'
         version: 0.18.1
+      dnum:
+        specifier: 'catalog:'
+        version: 2.14.0
       framer-motion:
         specifier: 'catalog:'
         version: 11.11.10(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0-rc-603e6108-20241029(react@19.0.0-rc-603e6108-20241029))(react@19.0.0-rc-603e6108-20241029)
@@ -453,6 +465,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.0.0-rc-603e6108-20241029(react@19.0.0-rc-603e6108-20241029)
+      recharts:
+        specifier: 'catalog:'
+        version: 2.14.1(react-dom@19.0.0-rc-603e6108-20241029(react@19.0.0-rc-603e6108-20241029))(react@19.0.0-rc-603e6108-20241029)
       swr:
         specifier: 'catalog:'
         version: 2.2.5(react@19.0.0-rc-603e6108-20241029)
@@ -472,6 +487,9 @@ importers:
       '@cprussin/tsconfig':
         specifier: 'catalog:'
         version: 3.0.1
+      '@pythnetwork/staking-sdk':
+        specifier: 'workspace:'
+        version: link:../../governance/pyth_staking_sdk
       '@svgr/webpack':
         specifier: 'catalog:'
         version: 8.1.0(typescript@5.6.3)
@@ -13587,6 +13605,9 @@ packages:
   dnum@2.13.1:
     resolution: {integrity: sha512-4oZ+BtlvNtKFJji1Fc5073LyJFvgioBQ0PNu/C+r1A8P09Yvka/aXYYD5bsUHMTUPEu01iv4bk+5nPQmt5AA8A==}
 
+  dnum@2.14.0:
+    resolution: {integrity: sha512-xyP+csC3QlQY0YCCcpJ6VApTJ35Gh+QN9L7gRstqaZc2VCtd1W1844AuYTy3FlZtWePJ/2hXYY250I0dd3qH6Q==}
+
   docker-modem@1.0.9:
     resolution: {integrity: sha512-lVjqCSCIAUDZPAZIeyM125HXfNvOmYYInciphNrLrylUtKyW66meAjSPXWchKVzoIYZx69TPnAepVSSkeawoIw==}
     engines: {node: '>= 0.8'}
@@ -19917,6 +19938,13 @@ packages:
 
   recharts@2.13.3:
     resolution: {integrity: sha512-YDZ9dOfK9t3ycwxgKbrnDlRC4BHdjlY73fet3a0C1+qGMjXVZe6+VXmpOIIhzkje5MMEL8AN4hLIe4AMskBzlA==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      react: ^16.0.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
+
+  recharts@2.14.1:
+    resolution: {integrity: sha512-xtWulflkA+/xu4/QClBdtZYN30dbvTHjxjkh5XTMrH/CQ3WGDDPHHa/LLKCbgoqz0z3UaSH2/blV1i6VNMeh1g==}
     engines: {node: '>=14'}
     peerDependencies:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0
@@ -45866,6 +45894,10 @@ snapshots:
     dependencies:
       from-exponential: 1.1.1
 
+  dnum@2.14.0:
+    dependencies:
+      from-exponential: 1.1.1
+
   docker-modem@1.0.9:
     dependencies:
       JSONStream: 1.3.2
@@ -57081,6 +57113,19 @@ snapshots:
       decimal.js-light: 2.5.1
 
   recharts@2.13.3(react-dom@19.0.0-rc-603e6108-20241029(react@19.0.0-rc-603e6108-20241029))(react@19.0.0-rc-603e6108-20241029):
+    dependencies:
+      clsx: 2.1.1
+      eventemitter3: 4.0.7
+      lodash: 4.17.21
+      react: 19.0.0-rc-603e6108-20241029
+      react-dom: 19.0.0-rc-603e6108-20241029(react@19.0.0-rc-603e6108-20241029)
+      react-is: 18.3.1
+      react-smooth: 4.0.1(react-dom@19.0.0-rc-603e6108-20241029(react@19.0.0-rc-603e6108-20241029))(react@19.0.0-rc-603e6108-20241029)
+      recharts-scale: 0.4.5
+      tiny-invariant: 1.3.3
+      victory-vendor: 36.9.2
+
+  recharts@2.14.1(react-dom@19.0.0-rc-603e6108-20241029(react@19.0.0-rc-603e6108-20241029))(react@19.0.0-rc-603e6108-20241029):
     dependencies:
       clsx: 2.1.1
       eventemitter3: 4.0.7

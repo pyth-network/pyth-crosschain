@@ -1,5 +1,5 @@
 export const priceFeeds = {
-  activeChains: "80+",
+  activeChains: "88",
   updateFrequency: "400ms",
   featuredRecentlyAdded: [
     "Crypto.PYTH/USD",
@@ -8,5 +8,11 @@ export const priceFeeds = {
     "Commodities.WTI1M",
     "Crypto.1INCH/USD",
   ],
-  featuredComingSoon: ["Rates.US2Y", "Crypto.SOL/ETH", "Commodities.BRENT2M"],
+  featuredComingSoon: [
+    "Rates.US2Y",
+    "Crypto.SOL/ETH",
+    "Crypto.ION/USD",
+    "Equity.NL.BCOIN/USD",
+    "Crypto.BSOL/SOL.RR",
+  ],
 };

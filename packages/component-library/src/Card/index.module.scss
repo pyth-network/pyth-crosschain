@@ -1,12 +1,12 @@
 @use "../theme";
 
 .card {
-  display: block;
+  display: flex;
   flex-direction: column;
-  gap: theme.spacing(2);
+  gap: theme.spacing(1);
   border-radius: theme.border-radius("2xl");
   text-decoration: none;
-  color: theme.color("foreground");
+  color: unset;
   outline-offset: 0;
   outline: theme.spacing(1) solid transparent;
   transition-property: outline-color, border-color, box-shadow, background;
@@ -57,9 +57,11 @@
       position: absolute;
       right: theme.spacing(3);
       top: 0;
-      bottom: 0;
-      display: grid;
-      place-content: center;
+      bottom: theme.spacing(0);
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(2);
+      align-items: center;
     }
   }
 

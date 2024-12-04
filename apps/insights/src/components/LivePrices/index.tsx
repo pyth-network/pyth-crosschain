@@ -16,7 +16,7 @@ import {
 import { useNumberFormatter } from "react-aria";
 
 import styles from "./index.module.scss";
-import { client, subscribe } from "../../pyth";
+import { client, subscribe } from "../../services/pyth";
 
 export const SKELETON_WIDTH = 20;
 

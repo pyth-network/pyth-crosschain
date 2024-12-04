@@ -6,35 +6,22 @@ import {
   Drawer,
   DrawerTrigger,
 } from "@pythnetwork/component-library/Drawer";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { Table } from "@pythnetwork/component-library/Table";
 import { usePathname } from "next/navigation";
-import { createSerializer } from "nuqs";
-import { Suspense, use, useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { useCollator } from "react-aria";
 
-import styles from "./asset-classes-card.module.scss";
-import { queryParams, useQuery } from "./use-query";
+import { serialize, useQueryParams } from "./query-params";
 
 type Props = {
-  numFeedsByAssetClassPromise: Promise<Record<string, number>>;
+  numFeedsByAssetClass: Record<string, number>;
+  children: ReactNode;
 };
 
-export const AssetClassesCard = ({ numFeedsByAssetClassPromise }: Props) => (
-  <Suspense
-    fallback={
-      <StatCard stat={<Skeleton width={10} />} {...sharedStatCardProps} />
-    }
-  >
-    <ResolvedAssetClassesCard
-      numFeedsByAssetClassPromise={numFeedsByAssetClassPromise}
-    />
-  </Suspense>
-);
-
-const ResolvedAssetClassesCard = ({ numFeedsByAssetClassPromise }: Props) => {
-  const numFeedsByAssetClass = use(numFeedsByAssetClassPromise);
+export const AssetClassesDrawer = ({
+  numFeedsByAssetClass,
+  children,
+}: Props) => {
   const numAssetClasses = useMemo(
     () => Object.keys(numFeedsByAssetClass).length,
     [numFeedsByAssetClass],
@@ -42,13 +29,13 @@ const ResolvedAssetClassesCard = ({ numFeedsByAssetClassPromise }: Props) => {
 
   return (
     <DrawerTrigger>
-      <StatCard stat={numAssetClasses} {...sharedStatCardProps} />
+      {children}
       <Drawer
         title={
-          <div className={styles.drawerTitle}>
+          <>
             <span>Asset Classes</span>
             <Badge>{numAssetClasses}</Badge>
-          </div>
+          </>
         }
       >
         {({ close }) => (
@@ -62,10 +49,6 @@ const ResolvedAssetClassesCard = ({ numFeedsByAssetClassPromise }: Props) => {
   );
 };
 
-const sharedStatCardProps = {
-  header: "Asset Classes",
-};
-
 type AssetClassTableProps = {
   numFeedsByAssetClass: Record<string, number>;
   closeDrawer: () => void;
@@ -77,28 +60,26 @@ const AssetClassTable = ({
 }: AssetClassTableProps) => {
   const collator = useCollator();
   const pathname = usePathname();
-  const { updateAssetClass } = useQuery();
+  const { updateAssetClass, updateSearch } = useQueryParams();
   const assetClassRows = useMemo(
     () =>
       Object.entries(numFeedsByAssetClass)
         .sort(([a], [b]) => collator.compare(a, b))
-        .map(([assetClass, count]) => {
-          const serialize = createSerializer(queryParams);
-          return {
-            id: assetClass,
-            href: `${pathname}${serialize({ assetClass })}`,
-            onAction: () => {
-              closeDrawer();
-              setTimeout(() => {
-                updateAssetClass(assetClass);
-              }, CLOSE_DURATION_IN_MS);
-            },
-            data: {
-              assetClass,
-              count: <Badge style="outline">{count}</Badge>,
-            },
-          };
-        }),
+        .map(([assetClass, count]) => ({
+          id: assetClass,
+          href: `${pathname}${serialize({ assetClass })}`,
+          onAction: () => {
+            closeDrawer();
+            setTimeout(() => {
+              updateAssetClass(assetClass);
+              updateSearch("");
+            }, CLOSE_DURATION_IN_MS);
+          },
+          data: {
+            assetClass,
+            count: <Badge style="outline">{count}</Badge>,
+          },
+        })),
     [numFeedsByAssetClass, collator, closeDrawer, pathname, updateAssetClass],
   );
   return (
