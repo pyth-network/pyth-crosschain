@@ -9,6 +9,7 @@ import { StatusTag } from './StatusTag'
 import { getInstructionsSummary, getProposalStatus } from './utils'
 
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { AccountMeta, Keypair } from '@solana/web3.js'
 import {
   MultisigParser,
@@ -30,6 +31,7 @@ export const ProposalRow = ({
   const { isLoading: isMultisigLoading, connection } = useMultisigContext()
   const router = useRouter()
   const elementRef = useRef(null)
+  const { publicKey: walletPublicKey } = useWallet()
   const formattedTime = time?.toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -184,6 +186,24 @@ export const ProposalRow = ({
               />
             </div>
           )}
+          {walletPublicKey &&
+            proposal.approved.some((vote) => vote.equals(walletPublicKey)) && (
+              <div>
+                <StatusTag proposalStatus="executed" text="You approved" />
+              </div>
+            )}
+          {walletPublicKey &&
+            proposal.rejected.some((vote) => vote.equals(walletPublicKey)) && (
+              <div>
+                <StatusTag proposalStatus="rejected" text="You rejected" />
+              </div>
+            )}
+          {walletPublicKey &&
+            proposal.cancelled.some((vote) => vote.equals(walletPublicKey)) && (
+              <div>
+                <StatusTag proposalStatus="cancelled" text="You cancelled" />
+              </div>
+            )}
           <div>
             <StatusTag proposalStatus={status} />
           </div>
