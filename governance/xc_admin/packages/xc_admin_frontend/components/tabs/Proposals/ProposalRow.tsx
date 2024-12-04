@@ -55,6 +55,7 @@ export const ProposalRow = ({
 
         // set proposal time
         if (!time) {
+<<<<<<< HEAD
           connection
             .getSignaturesForAddress(proposal.publicKey)
             .then((txs) => {
@@ -69,6 +70,15 @@ export const ProposalRow = ({
                 `Error fetching proposal time for ${proposal.publicKey.toBase58()}: ${err}`
               )
             })
+=======
+          connection.getSignaturesForAddress(proposal.publicKey).then((txs) => {
+            if (isCancelled) return
+            const firstBlockTime = txs?.[txs.length - 1]?.blockTime
+            if (firstBlockTime) {
+              setTime(new Date(firstBlockTime * 1000))
+            }
+          })
+>>>>>>> c6a78a605 (use getSignaturesForAddress)
         }
 
         // calculate instructions summary
