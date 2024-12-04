@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[2] public trustedSigners;
-    uint256 public verification_fee = 1 wei;
+    uint256 public verification_fee;
 
     struct TrustedSignerInfo {
         address pubkey;
@@ -16,6 +16,8 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     function initialize(address _topAuthority) public initializer {
         __Ownable_init(_topAuthority);
         __UUPSUpgradeable_init();
+
+        verification_fee = 1 wei;
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
