@@ -11,6 +11,7 @@
         "WALLETCONNECT_PROJECT_ID",
         "PROXYCHECK_API_KEY",
         "MAINNET_RPC",
+        "MAINNET_API_RPC",
         "BLOCKED_REGIONS",
         "AMPLITUDE_API_KEY",
         "GOOGLE_ANALYTICS_ID"
