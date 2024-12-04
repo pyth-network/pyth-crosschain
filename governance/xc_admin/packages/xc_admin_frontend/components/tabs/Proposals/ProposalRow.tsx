@@ -55,15 +55,13 @@ export const ProposalRow = ({
 
         // set proposal time
         if (!time) {
-          connection
-            .getConfirmedSignaturesForAddress2(proposal.publicKey)
-            .then((txs) => {
-              if (isCancelled) return
-              const firstBlockTime = txs?.[txs.length - 1]?.blockTime
-              if (firstBlockTime) {
-                setTime(new Date(firstBlockTime * 1000))
-              }
-            })
+          connection.getSignaturesForAddress(proposal.publicKey).then((txs) => {
+            if (isCancelled) return
+            const firstBlockTime = txs?.[txs.length - 1]?.blockTime
+            if (firstBlockTime) {
+              setTime(new Date(firstBlockTime * 1000))
+            }
+          })
         }
 
         // calculate instructions summary
