@@ -4,7 +4,7 @@ import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { MAINNET_RPC } from "../../../../config/server";
+import { MAINNET_API_RPC } from "../../../../config/server";
 import { tokensToString } from "../../../../tokens";
 
 const UnlockScheduleSchema = z.object({
@@ -38,15 +38,9 @@ export async function GET(req: NextRequest) {
   const isMainnet = req.nextUrl.searchParams.get("devnet") !== "true";
   const stakingClient = new PythStakingClient({
     connection: new Connection(
-      isMainnet && MAINNET_RPC !== undefined
-        ? MAINNET_RPC
+      isMainnet && MAINNET_API_RPC !== undefined
+        ? MAINNET_API_RPC
         : clusterApiUrl(WalletAdapterNetwork.Devnet),
-      {
-        httpHeaders: {
-          Origin: req.nextUrl.origin,
-          "User-Agent": req.headers.get("User-Agent") ?? "",
-        },
-      },
     ),
   });
 
