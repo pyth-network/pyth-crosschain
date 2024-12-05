@@ -423,7 +423,7 @@ export async function sendTransactions(
   maxRetries?: number
 ): Promise<string[]> {
   const blockhashResult = await connection.getLatestBlockhashAndContext({
-    commitment: "confirmed",
+    commitment: "finalized",
   });
 
   const signatures: string[] = [];
@@ -487,7 +487,18 @@ export async function sendTransactions(
         ),
       ]);
       if (confirmedTx) {
-        break;
+        console.log("this is the err", confirmedTx.err?.toString());
+        if (
+          confirmedTx.err &&
+          confirmedTx.err
+            .toString()
+            .includes("Minimum context slot has not been reached.")
+        ) {
+          console.log("Handling minimum context slot error");
+          confirmedTx = null;
+        } else {
+          break;
+        }
       }
       if (maxRetries && maxRetries < retryCount) {
         break;
