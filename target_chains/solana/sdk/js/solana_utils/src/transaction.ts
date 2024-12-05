@@ -227,7 +227,7 @@ export class TransactionBuilder {
     args: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const blockhash = (
-      await this.connection.getLatestBlockhash({ commitment: "confirmed" })
+      await this.connection.getLatestBlockhash({ commitment: "finalized" })
     ).blockhash;
 
     const jitoBundleSize =
@@ -423,7 +423,7 @@ export async function sendTransactions(
   maxRetries?: number
 ): Promise<string[]> {
   const blockhashResult = await connection.getLatestBlockhashAndContext({
-    commitment: "finalized",
+    commitment: "confirmed",
   });
 
   const signatures: string[] = [];
@@ -487,18 +487,7 @@ export async function sendTransactions(
         ),
       ]);
       if (confirmedTx) {
-        console.log("this is the err", confirmedTx.err?.toString());
-        if (
-          confirmedTx.err &&
-          confirmedTx.err
-            .toString()
-            .includes("Minimum context slot has not been reached.")
-        ) {
-          console.log("Handling minimum context slot error");
-          confirmedTx = null;
-        } else {
-          break;
-        }
+        break;
       }
       if (maxRetries && maxRetries < retryCount) {
         break;
