@@ -32,9 +32,10 @@ $ forge snapshot
 
 ### Anvil
 
-Anvil does not come with CreateX by default. It can be deployed or an RPC which has the contract can be forked. The below command forks an RPC with a functional CreateX contract. 
+Anvil does not come with CreateX by default. It can be deployed or an RPC which has the contract can be forked. The below command forks an RPC with a functional CreateX contract.
+
 ```shell
-$ anvil --fork-url "https://eth-sepolia.public.blastapi.io" 
+$ anvil --fork-url "https://eth-sepolia.public.blastapi.io"
 ```
 
 ### Deploy
@@ -44,6 +45,7 @@ $ forge script script/PythLazerDeploy.s.sol --rpc-url <your_rpc_url> --private-k
 ```
 
 ### Upgrade
+
 The UUPSUpgradeable feature adds functions to the cocntract which support upgrading through the use of an UUPS/ERC1967Proxy. A function can be defined to migrate state if needed. Be careful of changing storage slots when upgrading. See [Documentation](https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable) for more details.
 In addition, the private key is necessary or contracts will be deployed to different addresses than expected.
 
