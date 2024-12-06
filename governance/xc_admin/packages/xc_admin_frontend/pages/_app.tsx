@@ -25,6 +25,7 @@ import { Toaster } from 'react-hot-toast'
 import { ClusterProvider } from '../contexts/ClusterContext'
 import SEO from '../next-seo.config'
 import '../styles/globals.css'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 
 const walletConnectConfig: WalletConnectWalletAdapterConfig = {
   network: WalletAdapterNetwork.Mainnet,
@@ -66,7 +67,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   )
 
   return (
-    <>
+    <NuqsAdapter>
       <ConnectionProvider
         endpoint={endpoint || clusterApiUrl(WalletAdapterNetwork.Devnet)}
       >
@@ -94,7 +95,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           </WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
-    </>
+    </NuqsAdapter>
   )
 }
 
