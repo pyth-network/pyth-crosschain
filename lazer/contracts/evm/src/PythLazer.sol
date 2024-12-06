@@ -22,7 +22,10 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function migrate() public onlyOwner {
-        require(trustedSigners.length >= deprecatedTrustedSigners.length, "trustedSigners cannot be migrated to smaller array");
+        require(
+            trustedSigners.length >= deprecatedTrustedSigners.length,
+            "trustedSigners cannot be migrated to smaller array"
+        );
 
         verification_fee = 1 wei;
         for (uint8 i = 0; i < deprecatedTrustedSigners.length; i++) {
