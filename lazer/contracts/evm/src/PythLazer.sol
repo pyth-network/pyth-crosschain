@@ -5,8 +5,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
-    TrustedSignerInfo[2] public trustedSigners;
+    TrustedSignerInfo[2] private deprecatedTrustedSigners;
     uint256 public verification_fee;
+    TrustedSignerInfo[200] internal trustedSigners;
 
     struct TrustedSignerInfo {
         address pubkey;
@@ -16,10 +17,18 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     function initialize(address _topAuthority) public initializer {
         __Ownable_init(_topAuthority);
         __UUPSUpgradeable_init();
+
+        verification_fee = 1 wei;
     }
 
     function migrate() public onlyOwner {
+        require(trustedSigners.length >= deprecatedTrustedSigners.length, "trustedSigners cannot be migrated to smaller array");
+
         verification_fee = 1 wei;
+        for (uint8 i = 0; i < deprecatedTrustedSigners.length; i++) {
+            trustedSigners[i].pubkey = deprecatedTrustedSigners[i].pubkey;
+            trustedSigners[i].expiresAt = deprecatedTrustedSigners[i].expiresAt;
+        }
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
@@ -104,6 +113,6 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function version() public pure returns (string memory) {
-        return "0.1.0";
+        return "0.1.1";
     }
 }

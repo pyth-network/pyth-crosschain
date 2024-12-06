@@ -181,6 +181,7 @@ contract PythLazerDeployScript is Script {
     }
 
     function migrate() public {
+        // Deploys new version and updates proxy to use new address
         address proxyAddress =  getProxyAddress("lazer:proxy");
         address newImpl = deployImplementation("lazer:impl");
         bytes memory migrateCall = abi.encodeWithSignature("migrate()");

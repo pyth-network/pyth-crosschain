@@ -12,7 +12,7 @@ contract PythLazerTest is Test {
         pythLazer.initialize(address(1));
     }
 
-    function test_update() public {
+    function test_update_add_signer() public {
         assert(!pythLazer.isValidSigner(address(2)));
         vm.prank(address(1));
         pythLazer.updateTrustedSigner(address(2), block.timestamp + 1000);
@@ -21,7 +21,18 @@ contract PythLazerTest is Test {
         assert(!pythLazer.isValidSigner(address(2)));
     }
 
-    function test_verify_with_fee() public {
+    function test_update_remove_signer() public {
+        assert(!pythLazer.isValidSigner(address(2)));
+        vm.prank(address(1));
+        pythLazer.updateTrustedSigner(address(2), block.timestamp + 1000);
+        assert(pythLazer.isValidSigner(address(2)));
+
+        vm.prank(address(1));
+        pythLazer.updateTrustedSigner(address(2), 0);
+        assert(!pythLazer.isValidSigner(address(2)));
+    }
+
+    function test_verify() public {
         // Prepare dummy update and signer
         address trustedSigner = 0xEfEf56cD66896f6799A90A4e4d512C330c094e44;
         vm.prank(address(1));
