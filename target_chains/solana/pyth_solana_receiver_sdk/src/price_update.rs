@@ -1,4 +1,4 @@
-pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage};
+pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage, TwapPrice};
 use {
     crate::{check, error::GetPriceError},
     anchor_lang::prelude::{borsh::BorshSchema, *},
@@ -58,6 +58,31 @@ pub struct PriceUpdateV2 {
 
 impl PriceUpdateV2 {
     pub const LEN: usize = 8 + 32 + 2 + 32 + 8 + 8 + 4 + 8 + 8 + 8 + 8 + 8;
+}
+/// A time weighted average price account. This account is used by the Pyth Receiver program to store a verified TWAP update from a Pyth price feed.
+/// It contains:
+/// - `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different TWAP update.
+/// - `verification_level`: The [`VerificationLevel`] of this price update. This represents how many Wormhole guardian signatures have been verified for this TWAP update.
+/// - `twap`: The actual TWAP update.
+/// - `posted_slot`: The slot at which this TWAP update was posted.
+#[account]
+#[derive(BorshSchema)]
+pub struct TwapUpdate {
+    pub write_authority: Pubkey,
+    pub verification_level: VerificationLevel,
+    pub twap: TwapPrice,
+    pub posted_slot: u64,
+}
+
+impl TwapUpdate {
+    pub const LEN: usize = (
+        8 // account discriminator (anchor)
+        + 32 // write_authority
+        + 2 // verification_level
+        + (32 + 8 + 8 + 8 + 8 + 4 + 4) // twap
+        + 8
+        // posted_slot
+    );
 }
 
 /// A Pyth price.
