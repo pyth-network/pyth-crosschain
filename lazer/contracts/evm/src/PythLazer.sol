@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[2] private deprecatedTrustedSigners;
     uint256 public verification_fee;
-    TrustedSignerInfo[200] internal trustedSigners;
+    TrustedSignerInfo[100] internal trustedSigners;
 
     struct TrustedSignerInfo {
         address pubkey;
