@@ -55,13 +55,20 @@ export const ProposalRow = ({
 
         // set proposal time
         if (!time) {
-          connection.getSignaturesForAddress(proposal.publicKey).then((txs) => {
-            if (isCancelled) return
-            const firstBlockTime = txs?.[txs.length - 1]?.blockTime
-            if (firstBlockTime) {
-              setTime(new Date(firstBlockTime * 1000))
-            }
-          })
+          connection
+            .getSignaturesForAddress(proposal.publicKey)
+            .then((txs) => {
+              if (isCancelled) return
+              const firstBlockTime = txs?.[txs.length - 1]?.blockTime
+              if (firstBlockTime) {
+                setTime(new Date(firstBlockTime * 1000))
+              }
+            })
+            .catch((err) => {
+              console.error(
+                `Error fetching proposal time for ${proposal.publicKey.toBase58()}: ${err}`
+              )
+            })
         }
 
         // calculate instructions summary
