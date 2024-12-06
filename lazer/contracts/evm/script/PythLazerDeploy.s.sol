@@ -6,6 +6,7 @@ import {PythLazer} from "../src/PythLazer.sol";
 import {ICreateX} from "createx/ICreateX.sol";
 import {CreateX} from "createx/CreateX.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 // This script deploys the PythLazer proxy and implementation contract using
 // CreateX's contract factory to a deterministic address. Having deterministic
@@ -168,8 +169,24 @@ contract PythLazerDeployScript is Script {
         return addr;
     }
 
+    function getProxyAddress(bytes11 seed) public view returns (address addr) {
+        (, bytes32 guardedSalt) = generateSalt(seed);
+        address proxyAddr = createX.computeCreate3Address({salt: guardedSalt});
+        return proxyAddr;
+    }
+
     function run() public {
         address impl = deployImplementation("lazer:impl");
         deployProxy("lazer:proxy", impl);
+    }
+
+    function migrate() public {
+        address proxyAddress =  getProxyAddress("lazer:proxy");
+        address newImpl = deployImplementation("lazer:impl");
+        bytes memory migrateCall = abi.encodeWithSignature("migrate()");
+        vm.startBroadcast();
+        UUPSUpgradeable proxy = UUPSUpgradeable(proxyAddress);
+        proxy.upgradeToAndCall(newImpl, migrateCall);
+        vm.stopBroadcast();
     }
 }

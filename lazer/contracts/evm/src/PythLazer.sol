@@ -16,7 +16,9 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     function initialize(address _topAuthority) public initializer {
         __Ownable_init(_topAuthority);
         __UUPSUpgradeable_init();
+    }
 
+    function migrate() public onlyOwner {
         verification_fee = 1 wei;
     }
 
