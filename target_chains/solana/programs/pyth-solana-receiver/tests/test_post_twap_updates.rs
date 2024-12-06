@@ -82,10 +82,9 @@ async fn test_post_twap_updates() {
         false,
         None,
     );
-    // Extract the VAA and merkle proofs from the accumulator update
+    // Extract the VAAs and merkle proofs from the accumulator updates
     let (start_vaa, start_merkle_price_updates) =
         deserialize_accumulator_update_data(start_accumulator_message).unwrap();
-    // Extract the VAA and merkle proofs from the accumulator update
     let (end_vaa, end_merkle_price_updates) =
         deserialize_accumulator_update_data(end_accumulator_message).unwrap();
 

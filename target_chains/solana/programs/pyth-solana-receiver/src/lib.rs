@@ -241,8 +241,8 @@ pub mod pyth_solana_receiver {
         let payer: &Signer<'_> = &ctx.accounts.payer;
         let write_authority: &Signer<'_> = &ctx.accounts.write_authority;
 
-        // IMPORTANT: These line checks that the encoded VAAs have ProcessingStatus::Verified.
-        // This check is critical otherwise the program could be tricked into accepting unverified VAAs.
+        // IMPORTANT: These lines check that the encoded VAAs have ProcessingStatus::Verified.
+        // These checks are critical otherwise the program could be tricked into accepting unverified VAAs.
         let start_encoded_vaa = VaaAccount::load(&ctx.accounts.start_encoded_vaa)?;
         let end_encoded_vaa = VaaAccount::load(&ctx.accounts.end_encoded_vaa)?;
 
@@ -553,7 +553,9 @@ fn calculate_twap(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<(i64
         .num_down_slots
         .checked_sub(start_msg.num_down_slots)
         .ok_or(ReceiverError::TwapCalculationOverflow)?;
-    let down_slots_ratio = (total_down_slots * 1_000_000)
+    let down_slots_ratio = total_down_slots
+        .checked_mul(1_000_000)
+        .ok_or(ReceiverError::TwapCalculationOverflow)?
         .checked_div(total_slots)
         .ok_or(ReceiverError::TwapCalculationOverflow)?;
     // down_slots_ratio is a number in [0, 1_000_000], so we only need 32 unsigned bits

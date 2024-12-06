@@ -1,4 +1,4 @@
-pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage, TwapPrice};
+pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage};
 use {
     crate::{check, error::GetPriceError},
     anchor_lang::prelude::{borsh::BorshSchema, *},
@@ -83,6 +83,20 @@ impl TwapUpdate {
         + 8
         // posted_slot
     );
+}
+/// The time weighted average price & conf for a feed over the window [start_time, end_time].
+/// This type is used to persist the calculated TWAP in TwapUpdate accounts on Solana.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug)]
+pub struct TwapPrice {
+    pub feed_id: FeedId,
+    pub start_time: i64,
+    pub end_time: i64,
+    pub price: i64,
+    pub conf: u64,
+    pub exponent: i32,
+    /// Ratio out of 1_000_000, where a value of 1_000_000 represents
+    /// all slots were missed and 0 represents no slots were missed.
+    pub down_slots_ratio: u32,
 }
 
 /// A Pyth price.
