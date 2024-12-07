@@ -23,6 +23,7 @@
       .logoLink {
         padding: theme.spacing(3);
         margin: -#{theme.spacing(3)};
+        color: theme.color("foreground");
 
         .logoWrapper {
           width: theme.spacing(9);

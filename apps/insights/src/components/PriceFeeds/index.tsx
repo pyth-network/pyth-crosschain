@@ -1,30 +1,42 @@
 import { ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
 import { StackPlus } from "@phosphor-icons/react/dist/ssr/StackPlus";
 import { Badge } from "@pythnetwork/component-library/Badge";
+import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
+import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import base58 from "bs58";
+import clsx from "clsx";
 import Generic from "cryptocurrency-icons/svg/color/generic.svg";
 import { Fragment } from "react";
 import { z } from "zod";
 
-import { AssetClassesCard } from "./asset-classes-card";
-import { ComingSoonShowAllButton } from "./coming-soon-show-all-button";
-import { FeaturedComingSoon } from "./featured-coming-soon";
+import { AssetClassesDrawer } from "./asset-classes-drawer";
+import { ComingSoonList } from "./coming-soon-list";
 import { FeaturedRecentlyAdded } from "./featured-recently-added";
 import styles from "./index.module.scss";
-import { NumActiveFeeds } from "./num-active-feeds";
 import { PriceFeedsCard } from "./price-feeds-card";
 import { getIcon } from "../../icons";
-import { client } from "../../pyth";
+import { client } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
 import { CopyButton } from "../CopyButton";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
 
-export const PriceFeeds = () => {
-  const priceFeeds = getPriceFeeds();
+export const PriceFeeds = async () => {
+  const priceFeeds = await getPriceFeeds();
+  const numFeedsByAssetClass = getNumFeedsByAssetClass(priceFeeds.activeFeeds);
+  const featuredComingSoon = [
+    ...filterFeeds(
+      priceFeeds.comingSoon,
+      priceFeedsStaticConfig.featuredComingSoon,
+    ),
+    ...priceFeeds.comingSoon.filter(
+      ({ symbol }) =>
+        !priceFeedsStaticConfig.featuredComingSoon.includes(symbol),
+    ),
+  ].slice(0, 5);
 
   return (
     <div className={styles.priceFeeds}>
@@ -34,13 +46,7 @@ export const PriceFeeds = () => {
           <StatCard
             variant="primary"
             header="Active Feeds"
-            stat={
-              <NumActiveFeeds
-                numFeedsPromise={priceFeeds.then(
-                  ({ activeFeeds }) => activeFeeds.length,
-                )}
-              />
-            }
+            stat={priceFeeds.activeFeeds.length}
             href={`#${PRICE_FEEDS_ANCHOR}`}
           />
           <StatCard
@@ -53,90 +59,101 @@ export const PriceFeeds = () => {
             href="https://docs.pyth.network/price-feeds/contract-addresses"
             target="_blank"
           />
-          <AssetClassesCard
-            numFeedsByAssetClassPromise={priceFeeds.then(({ activeFeeds }) =>
-              getNumFeedsByAssetClass(activeFeeds),
-            )}
-          />
+          <AssetClassesDrawer numFeedsByAssetClass={numFeedsByAssetClass}>
+            <StatCard
+              header="Asset Classes"
+              stat={Object.keys(numFeedsByAssetClass).length}
+            />
+          </AssetClassesDrawer>
         </div>
         <Card title="Recently added" icon={<StackPlus />}>
-          <FeaturedRecentlyAdded
-            placeholderPriceFeedName={<PlaceholderPriceFeedNameAndAssetClass />}
-            recentlyAddedPromise={priceFeeds.then(({ activeFeeds }) =>
-              filterFeeds(
-                activeFeeds,
+          <div className={styles.featuredFeeds}>
+            <FeaturedRecentlyAdded
+              recentlyAdded={filterFeeds(
+                priceFeeds.activeFeeds,
                 priceFeedsStaticConfig.featuredRecentlyAdded,
               ).map(({ product, symbol }) => ({
                 id: product.price_account,
                 symbol,
                 priceFeedName: (
-                  <PriceFeedNameAndAssetClass
-                    assetClass={product.asset_type.toUpperCase()}
-                  >
+                  <PriceNameAndDescription description={product.description}>
                     {product.display_symbol}
-                  </PriceFeedNameAndAssetClass>
+                  </PriceNameAndDescription>
                 ),
-              })),
-            )}
-          />
+              }))}
+            />
+          </div>
         </Card>
         <Card
           title="Coming soon"
           icon={<ClockCountdown />}
           toolbar={
-            <ComingSoonShowAllButton
-              comingSoonPromise={priceFeeds.then(({ comingSoon }) =>
-                comingSoon.map(({ symbol, product }) => ({
-                  symbol,
-                  id: product.price_account,
-                  displaySymbol: product.display_symbol,
-                  assetClassAsString: product.asset_type,
-                  priceFeedName: (
-                    <PriceFeedNameAndIcon>
-                      {product.display_symbol}
-                    </PriceFeedNameAndIcon>
-                  ),
-                  assetClass: (
-                    <Badge variant="neutral" style="outline" size="xs">
-                      {product.asset_type.toUpperCase()}
-                    </Badge>
-                  ),
-                })),
-              )}
-            />
+            <DrawerTrigger>
+              <Button size="xs" variant="outline">
+                Show all
+              </Button>
+              <Drawer
+                className={styles.comingSoonCard ?? ""}
+                title={
+                  <>
+                    <span>Coming Soon</span>
+                    <Badge>{priceFeeds.comingSoon.length}</Badge>
+                  </>
+                }
+              >
+                <ComingSoonList
+                  comingSoonFeeds={priceFeeds.comingSoon.map(
+                    ({ symbol, product }) => ({
+                      symbol,
+                      id: product.price_account,
+                      displaySymbol: product.display_symbol,
+                      assetClassAsString: product.asset_type,
+                      priceFeedName: (
+                        <PriceFeedNameAndIcon>
+                          {product.display_symbol}
+                        </PriceFeedNameAndIcon>
+                      ),
+                      assetClass: (
+                        <Badge variant="neutral" style="outline" size="xs">
+                          {product.asset_type.toUpperCase()}
+                        </Badge>
+                      ),
+                    }),
+                  )}
+                />
+              </Drawer>
+            </DrawerTrigger>
           }
         >
-          <FeaturedComingSoon
-            placeholderPriceFeedName={<PlaceholderPriceFeedNameAndAssetClass />}
-            comingSoonPromise={priceFeeds.then(({ comingSoon }) =>
-              [
-                ...filterFeeds(
-                  comingSoon,
-                  priceFeedsStaticConfig.featuredComingSoon,
-                ),
-                ...comingSoon.filter(
-                  ({ symbol }) =>
-                    !priceFeedsStaticConfig.featuredComingSoon.includes(symbol),
-                ),
-              ]
-                .slice(0, 5)
-                .map(({ product }) => ({
-                  priceFeedName: (
-                    <PriceFeedNameAndAssetClass
-                      assetClass={product.asset_type.toUpperCase()}
-                    >
-                      {product.display_symbol}
-                    </PriceFeedNameAndAssetClass>
-                  ),
-                })),
-            )}
-          />
+          <div className={styles.featuredFeeds}>
+            {featuredComingSoon.map(({ product }, id) => (
+              <Card
+                key={id}
+                title={
+                  <PriceNameAndDescription description={product.description}>
+                    {product.display_symbol}
+                  </PriceNameAndDescription>
+                }
+                variant="tertiary"
+              />
+            ))}
+          </div>
         </Card>
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
-          placeholderPriceFeedName={<PlaceholderPriceFeedNameAndIcon />}
-          priceFeedsPromise={priceFeeds.then(({ activeFeeds }) =>
-            activeFeeds.map(({ symbol, product, price }) => ({
+          nameLoadingSkeleton={
+            <div className={styles.priceFeedNameAndIcon}>
+              <Skeleton
+                className={clsx(styles.priceFeedIcon, styles.skeleton)}
+                fill
+              />
+              <div className={styles.priceFeedName}>
+                <Skeleton width={20} />
+              </div>
+            </div>
+          }
+          priceFeeds={priceFeeds.activeFeeds.map(
+            ({ symbol, product, price }) => ({
               symbol,
               id: product.price_account,
               displaySymbol: product.display_symbol,
@@ -155,11 +172,14 @@ export const PriceFeeds = () => {
                 </Badge>
               ),
               priceFeedId: (
-                <CopyButton text={toHex(product.price_account)}>
+                <CopyButton
+                  className={styles.priceFeedId ?? ""}
+                  text={toHex(product.price_account)}
+                >
                   {toTruncatedHex(product.price_account)}
                 </CopyButton>
               ),
-            })),
+            }),
           )}
         />
       </div>
@@ -167,34 +187,18 @@ export const PriceFeeds = () => {
   );
 };
 
-const PriceFeedNameAndAssetClass = ({
+const PriceNameAndDescription = ({
   children,
-  assetClass,
+  description,
 }: {
   children: string;
-  assetClass: string;
+  description: string;
 }) => (
-  <div className={styles.priceFeedNameAndAssetClass}>
+  <div className={styles.priceFeedNameAndDescription}>
     <PriceFeedIcon>{children}</PriceFeedIcon>
-    <div className={styles.nameAndClass}>
+    <div className={styles.nameAndDescription}>
       <PriceFeedName>{children}</PriceFeedName>
-      <div className={styles.assetClass}>{assetClass}</div>
-    </div>
-  </div>
-);
-
-const PlaceholderPriceFeedNameAndAssetClass = () => (
-  <div className={styles.priceFeedNameAndAssetClass}>
-    <div className={styles.priceFeedIcon}>
-      <Skeleton round />
-    </div>
-    <div className={styles.nameAndClass}>
-      <div className={styles.priceFeedName}>
-        <Skeleton width={20} />
-      </div>
-      <div className={styles.assetClass}>
-        <Skeleton width={10} />
-      </div>
+      <div className={styles.description}>{description.split("/")[0]}</div>
     </div>
   </div>
 );
@@ -203,17 +207,6 @@ const PriceFeedNameAndIcon = ({ children }: { children: string }) => (
   <div className={styles.priceFeedNameAndIcon}>
     <PriceFeedIcon>{children}</PriceFeedIcon>
     <PriceFeedName>{children}</PriceFeedName>
-  </div>
-);
-
-const PlaceholderPriceFeedNameAndIcon = () => (
-  <div className={styles.priceFeedNameAndIcon}>
-    <div className={styles.priceFeedIcon}>
-      <Skeleton round />
-    </div>
-    <div className={styles.priceFeedName}>
-      <Skeleton width={20} />
-    </div>
   </div>
 );
 
@@ -304,6 +297,7 @@ const priceFeedsSchema = z.array(
     product: z.object({
       display_symbol: z.string(),
       asset_type: z.string(),
+      description: z.string(),
       price_account: z.string(),
       weekly_schedule: z.string().optional(),
     }),

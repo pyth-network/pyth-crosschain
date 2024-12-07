@@ -1,51 +1,41 @@
 @use "@pythnetwork/component-library/theme";
 
-.featuredRecentlyAdded {
+.recentlyAddedFeed .footer {
   display: flex;
   flex-flow: row nowrap;
-  gap: theme.spacing(1);
+  justify-content: space-between;
+  align-items: center;
+  color: theme.color("heading");
+  font-weight: theme.font-weight("medium");
+  line-height: theme.spacing(6);
+  font-size: theme.font-size("base");
+  padding: 0 theme.spacing(2);
 
-  & > * {
-    flex: 1;
-  }
+  .changePercent {
+    font-size: theme.font-size("sm");
 
-  .recentlyAddedFeed .footer {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: space-between;
-    align-items: center;
-    color: theme.color("heading");
-    font-weight: theme.font-weight("medium");
-    line-height: theme.spacing(6);
-    font-size: theme.font-size("base");
-    padding: 0 theme.spacing(2);
+    .price {
+      transition: color 100ms linear;
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(1);
+      align-items: center;
 
-    .changePercent {
-      font-size: theme.font-size("sm");
+      .caret {
+        width: theme.spacing(3);
+        height: theme.spacing(3);
+        transition: transform 300ms linear;
+      }
 
-      .price {
-        transition: color 100ms linear;
-        display: flex;
-        flex-flow: row nowrap;
-        gap: theme.spacing(1);
-        align-items: center;
+      &[data-direction="up"] {
+        color: theme.color("states", "success", "base");
+      }
+
+      &[data-direction="down"] {
+        color: theme.color("states", "error", "base");
 
         .caret {
-          width: theme.spacing(3);
-          height: theme.spacing(3);
-          transition: transform 300ms linear;
-        }
-
-        &[data-direction="up"] {
-          color: theme.color("states", "success", "base");
-        }
-
-        &[data-direction="down"] {
-          color: theme.color("states", "error", "base");
-
-          .caret {
-            transform: rotate3d(1, 0, 0, 180deg);
-          }
+          transform: rotate3d(1, 0, 0, 180deg);
         }
       }
     }

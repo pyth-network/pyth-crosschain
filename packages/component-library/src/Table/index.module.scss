@@ -91,6 +91,9 @@
     .tableBody {
       @include theme.text("sm", "medium");
 
+      color: theme.color("paragraph");
+      font-weight: theme.font-weight("medium");
+
       .row {
         background-color: transparent;
         transition-property: background-color;

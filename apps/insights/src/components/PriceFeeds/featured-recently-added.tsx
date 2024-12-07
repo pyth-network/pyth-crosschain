@@ -3,13 +3,13 @@
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import { type ReactNode, Suspense, use, useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { useNumberFormatter } from "react-aria";
 import { z } from "zod";
 
 import styles from "./featured-recently-added.module.scss";
 import { StateType, useData } from "../../use-data";
-import { SKELETON_WIDTH, LivePrice, useLivePrice } from "../LivePrices";
+import { LivePrice, useLivePrice } from "../LivePrices";
 
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
@@ -19,8 +19,7 @@ const REFRESH_YESTERDAYS_PRICES_INTERVAL = ONE_HOUR_IN_MS;
 const CHANGE_PERCENT_SKELETON_WIDTH = 15;
 
 type Props = {
-  placeholderPriceFeedName: ReactNode;
-  recentlyAddedPromise: Promise<RecentlyAddedPriceFeed[]>;
+  recentlyAdded: RecentlyAddedPriceFeed[];
 };
 
 type RecentlyAddedPriceFeed = {
@@ -29,58 +28,7 @@ type RecentlyAddedPriceFeed = {
   priceFeedName: ReactNode;
 };
 
-export const FeaturedRecentlyAdded = ({
-  placeholderPriceFeedName,
-  recentlyAddedPromise,
-}: Props) => (
-  <div className={styles.featuredRecentlyAdded}>
-    <Suspense
-      fallback={
-        <Placeholder placeholderPriceFeedName={placeholderPriceFeedName} />
-      }
-    >
-      <ResolvedFeaturedRecentlyAdded
-        recentlyAddedPromise={recentlyAddedPromise}
-      />
-    </Suspense>
-  </div>
-);
-
-type PlaceholderProps = {
-  placeholderPriceFeedName: ReactNode;
-};
-
-const Placeholder = ({ placeholderPriceFeedName }: PlaceholderProps) => (
-  <>
-    <PlaceholderCard placeholderPriceFeedName={placeholderPriceFeedName} />
-    <PlaceholderCard placeholderPriceFeedName={placeholderPriceFeedName} />
-    <PlaceholderCard placeholderPriceFeedName={placeholderPriceFeedName} />
-    <PlaceholderCard placeholderPriceFeedName={placeholderPriceFeedName} />
-    <PlaceholderCard placeholderPriceFeedName={placeholderPriceFeedName} />
-  </>
-);
-
-const PlaceholderCard = ({ placeholderPriceFeedName }: PlaceholderProps) => (
-  <Card
-    title={placeholderPriceFeedName}
-    footer={
-      <Footer
-        price={<Skeleton width={SKELETON_WIDTH} />}
-        changePercent={<Skeleton width={CHANGE_PERCENT_SKELETON_WIDTH} />}
-      />
-    }
-    {...sharedCardProps}
-  />
-);
-
-type ResolvedFeaturedRecentlyAddedProps = {
-  recentlyAddedPromise: Promise<RecentlyAddedPriceFeed[]>;
-};
-
-const ResolvedFeaturedRecentlyAdded = ({
-  recentlyAddedPromise,
-}: ResolvedFeaturedRecentlyAddedProps) => {
-  const recentlyAdded = use(recentlyAddedPromise);
+export const FeaturedRecentlyAdded = ({ recentlyAdded }: Props) => {
   const feedKeys = useMemo(
     () => recentlyAdded.map(({ id }) => id),
     [recentlyAdded],
@@ -105,39 +53,23 @@ const ResolvedFeaturedRecentlyAdded = ({
           href="#"
           title={priceFeedName}
           footer={
-            <Footer
-              price={<LivePrice account={id} />}
-              changePercent={
+            <div className={styles.footer}>
+              <LivePrice account={id} />
+              <div className={styles.changePercent}>
                 <ChangePercent
                   yesterdaysPriceState={state}
                   feedKey={id}
                   symbol={symbol}
                 />
-              }
-            />
+              </div>
+            </div>
           }
-          {...sharedCardProps}
+          className={styles.recentlyAddedFeed ?? ""}
+          variant="tertiary"
         />
       ))}
     </>
   );
-};
-
-type FooterProps = {
-  price: ReactNode;
-  changePercent: ReactNode;
-};
-
-const Footer = ({ price, changePercent }: FooterProps) => (
-  <div className={styles.footer}>
-    {price}
-    <div className={styles.changePercent}>{changePercent}</div>
-  </div>
-);
-
-const sharedCardProps = {
-  className: styles.recentlyAddedFeed,
-  variant: "tertiary" as const,
 };
 
 const getYesterdaysPrices = async (

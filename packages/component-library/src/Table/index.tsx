@@ -113,7 +113,7 @@ export const Table = <T extends string>({
                     width={
                       "loadingSkeletonWidth" in column
                         ? column.loadingSkeletonWidth
-                        : undefined
+                        : width
                     }
                   />
                 )}

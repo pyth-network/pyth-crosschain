@@ -14,7 +14,7 @@ export const Header = ({ className, ...props }: ComponentProps<"header">) => (
   <header className={clsx(styles.header, className)} {...props}>
     <div className={styles.content}>
       <div className={styles.leftMenu}>
-        <Link href="https://www.pyth.network" className={styles.logoLink ?? ""}>
+        <Link href="/" className={styles.logoLink ?? ""}>
           <div className={styles.logoWrapper}>
             <Logo className={styles.logo} />
           </div>

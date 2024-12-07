@@ -1,3 +1,5 @@
+import "server-only";
+
 import Pac from "cryptocurrency-icons/svg/color/$pac.svg";
 import ZeroXbtc from "cryptocurrency-icons/svg/color/0xbtc.svg";
 import Oneinch from "cryptocurrency-icons/svg/color/1inch.svg";

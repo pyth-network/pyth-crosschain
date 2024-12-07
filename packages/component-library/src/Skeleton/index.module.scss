@@ -1,18 +1,26 @@
 @use "../theme";
 
+.fullSkeleton,
 .skeleton {
-  border-radius: theme.border-radius("lg");
   background: theme.color("button", "disabled", "background");
 
   @include theme.pulse;
 
+  .skeletonLabel {
+    @include theme.sr-only;
+  }
+}
+
+.fullSkeleton {
+  display: inline-block;
+}
+
+.skeleton {
+  border-radius: theme.border-radius("lg");
+
   .skeletonInner {
     display: inline flow-root;
     width: calc(theme.spacing(1) * var(--skeleton-width));
-
-    .skeletonLabel {
-      @include theme.sr-only;
-    }
   }
 
   &[data-round] {
@@ -27,7 +35,7 @@
     }
   }
 
-  &[data-fill] {
+  &[data-fill-width] {
     .skeletonInner {
       width: 100%;
     }

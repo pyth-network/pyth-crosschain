@@ -32,9 +32,14 @@
         flex-flow: row nowrap;
         justify-content: space-between;
         align-items: center;
+        color: theme.color("heading");
 
         .title {
           @include theme.h4;
+
+          display: flex;
+          flex-flow: row nowrap;
+          gap: theme.spacing(3);
         }
       }
     }

@@ -1,8 +1,22 @@
 import { useLogger } from "@pythnetwork/app-logger";
-import { parseAsString, parseAsInteger, useQueryStates } from "nuqs";
+import {
+  parseAsString,
+  parseAsInteger,
+  useQueryStates,
+  createSerializer,
+} from "nuqs";
 import { useCallback } from "react";
 
-export const useQuery = () => {
+const queryParams = {
+  assetClass: parseAsString.withDefault(""),
+  page: parseAsInteger.withDefault(1),
+  pageSize: parseAsInteger.withDefault(30),
+  search: parseAsString.withDefault(""),
+};
+
+export const serialize = createSerializer(queryParams);
+
+export const useQueryParams = () => {
   const logger = useLogger();
 
   const [{ search, page, pageSize, assetClass }, setQuery] =
@@ -55,11 +69,4 @@ export const useQuery = () => {
     updatePageSize,
     updateAssetClass,
   };
-};
-
-export const queryParams = {
-  assetClass: parseAsString.withDefault(""),
-  page: parseAsInteger.withDefault(1),
-  pageSize: parseAsInteger.withDefault(30),
-  search: parseAsString.withDefault(""),
 };
