@@ -30,3 +30,21 @@ CHAIN_ID=<CHAIN-ID> npx blueprint run --custom https://testnet.toncenter.com/api
 ### Add a new contract
 
 `npx blueprint create ContractName` or `yarn blueprint create ContractName`
+
+## Important Note on Message Handling
+
+When using the Pyth price feed in the recommended flow (User/App -> Pyth -> Protocol), be aware that:
+
+### Security Warning ⚠️
+
+**CRITICAL**: Integrators MUST validate the sender address in their receive function to ensure messages are coming from the Pyth Oracle contract. Failure to do so could allow attackers to:
+
+- Send invalid price responses
+- Impersonate users via the sender_address and custom_payload fields
+- Potentially drain the protocol
+
+### Message Bouncing Behavior
+
+- If the target protocol bounces the message (e.g., due to invalid custom payload or other errors), the forwarded TON will remain in the Pyth contract and will not be automatically refunded to the original sender.
+- This could be significant when dealing with large amounts of TON (e.g., in DeFi operations).
+- Integrators should implement proper error handling and refund mechanisms in their applications.

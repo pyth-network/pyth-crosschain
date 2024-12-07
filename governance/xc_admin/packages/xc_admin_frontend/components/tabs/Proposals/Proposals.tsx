@@ -1,25 +1,50 @@
 import { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
-import { useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState, useMemo } from 'react'
 import { ClusterContext } from '../../../contexts/ClusterContext'
 import { useMultisigContext } from '../../../contexts/MultisigContext'
-import { StatusFilterContext } from '../../../contexts/StatusFilterContext'
+import { PROPOSAL_STATUSES } from './utils'
 import ClusterSwitch from '../../ClusterSwitch'
-import ProposalStatusFilter from '../../ProposalStatusFilter'
 import Loadbar from '../../loaders/Loadbar'
+import { Select } from '../../Select'
+import { useQueryState, parseAsStringLiteral } from 'nuqs'
 
 import { ProposalRow } from './ProposalRow'
 import { getProposalStatus } from './utils'
 import { Proposal } from './Proposal'
+import { useWallet } from '@solana/wallet-adapter-react'
 
 type ProposalType = 'priceFeed' | 'governance'
+
+const VOTE_STATUSES = [
+  'any',
+  'voted',
+  'approved',
+  'rejected',
+  'cancelled',
+  'notVoted',
+] as const
+const DEFAULT_VOTE_STATUS = 'any'
+
+const PROPOSAL_STATUS_FILTERS = ['all', ...PROPOSAL_STATUSES] as const
+const DEFAULT_PROPOSAL_STATUS_FILTER = 'all'
 
 const Proposals = () => {
   const router = useRouter()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
+  const [statusFilter, setStatusFilter] = useQueryState(
+    'status',
+    parseAsStringLiteral(PROPOSAL_STATUS_FILTERS).withDefault(
+      DEFAULT_PROPOSAL_STATUS_FILTER
+    )
+  )
+  const [voteStatus, setVoteStatus] = useQueryState(
+    'voteStatus',
+    parseAsStringLiteral(VOTE_STATUSES).withDefault(DEFAULT_VOTE_STATUS)
+  )
   const { cluster } = useContext(ClusterContext)
-  const { statusFilter } = useContext(StatusFilterContext)
+  const { publicKey: walletPublicKey } = useWallet()
 
   const {
     upgradeMultisigAccount,
@@ -40,9 +65,6 @@ const Proposals = () => {
     proposalType === 'priceFeed'
       ? priceFeedMultisigProposals
       : upgradeMultisigProposals
-  const [filteredProposals, setFilteredProposals] = useState<
-    TransactionAccount[]
-  >([])
 
   const handleClickBackToProposals = () => {
     delete router.query.proposal
@@ -103,19 +125,60 @@ const Proposals = () => {
     cluster,
   ])
 
-  useEffect(() => {
-    // filter price feed multisig proposals by status
-    if (statusFilter === 'all') {
-      setFilteredProposals(multisigProposals)
+  const proposalsFilteredByStatus = useMemo(
+    () =>
+      statusFilter === 'all'
+        ? multisigProposals
+        : multisigProposals.filter(
+            (proposal) =>
+              getProposalStatus(proposal, multisigAccount) === statusFilter
+          ),
+    [statusFilter, multisigAccount, multisigProposals]
+  )
+
+  const filteredProposals = useMemo(() => {
+    if (walletPublicKey) {
+      switch (voteStatus) {
+        case 'any':
+          return proposalsFilteredByStatus
+        case 'voted': {
+          return proposalsFilteredByStatus.filter((proposal) =>
+            [
+              ...proposal.approved,
+              ...proposal.rejected,
+              ...proposal.cancelled,
+            ].some((vote) => vote.equals(walletPublicKey))
+          )
+        }
+        case 'approved': {
+          return proposalsFilteredByStatus.filter((proposal) =>
+            proposal.approved.some((vote) => vote.equals(walletPublicKey))
+          )
+        }
+        case 'rejected': {
+          return proposalsFilteredByStatus.filter((proposal) =>
+            proposal.rejected.some((vote) => vote.equals(walletPublicKey))
+          )
+        }
+        case 'cancelled': {
+          return proposalsFilteredByStatus.filter((proposal) =>
+            proposal.cancelled.some((vote) => vote.equals(walletPublicKey))
+          )
+        }
+        case 'notVoted': {
+          return proposalsFilteredByStatus.filter((proposal) =>
+            [
+              ...proposal.approved,
+              ...proposal.rejected,
+              ...proposal.cancelled,
+            ].every((vote) => !vote.equals(walletPublicKey))
+          )
+        }
+      }
     } else {
-      setFilteredProposals(
-        multisigProposals.filter(
-          (proposal) =>
-            getProposalStatus(proposal, multisigAccount) === statusFilter
-        )
-      )
+      return proposalsFilteredByStatus
     }
-  }, [statusFilter, multisigAccount, multisigProposals])
+  }, [proposalsFilteredByStatus, walletPublicKey, voteStatus])
 
   return (
     <div className="relative">
@@ -167,11 +230,26 @@ const Proposals = () => {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between pb-4">
+                  <div className="flex items-end md:flex-row-reverse justify-between pb-4">
+                    <div className="flex flex-col md:flex-row md:items-center gap-4 text-sm">
+                      {walletPublicKey && (
+                        <Select
+                          label="Your Vote"
+                          value={voteStatus}
+                          options={VOTE_STATUSES}
+                          onChange={setVoteStatus}
+                        />
+                      )}
+                      <Select
+                        label="Proposal Status"
+                        value={statusFilter}
+                        options={PROPOSAL_STATUS_FILTERS}
+                        onChange={setStatusFilter}
+                      />
+                    </div>
                     <h4 className="h4">
                       Total Proposals: {filteredProposals.length}
                     </h4>
-                    <ProposalStatusFilter />
                   </div>
                   {filteredProposals.length > 0 ? (
                     <div className="flex flex-col">

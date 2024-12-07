@@ -1,14 +1,12 @@
 use {
-    anchor_lang::{prelude::Clock, AccountDeserialize},
+    crate::Storage,
+    anchor_lang::{
+        prelude::{borsh, AccountInfo, Clock, ProgramError, Pubkey, SolanaSysvar},
+        solana_program::{ed25519_program, pubkey::PUBKEY_BYTES, sysvar},
+        AnchorDeserialize, AnchorSerialize,
+    },
     bytemuck::{cast_slice, checked::try_cast_slice, Pod, Zeroable},
     byteorder::{ByteOrder, LE},
-    solana_program::{
-        account_info::AccountInfo,
-        ed25519_program,
-        program_error::ProgramError,
-        pubkey::PUBKEY_BYTES,
-        sysvar::{self, Sysvar},
-    },
     thiserror::Error,
 };
 
@@ -44,33 +42,32 @@ pub struct Ed25519SignatureOffsets {
     pub message_instruction_index: u16,
 }
 
-/// Sets up `Ed25519SignatureOffsets` for verifying the Pyth Lazer message signature.
-/// - `instruction_data` must be the *full* input data for your contract's instruction.
-/// - `instruction_index` is the index of that instruction within the transaction.
-/// - `starting_offset` is the offset of the Pyth Lazer message within the instruction data.
-///
-/// Panics if `starting_offset` is invalid or the `instruction_data` is not long enough to
-/// contain the message.
-pub fn signature_offsets(
-    instruction_data: &[u8],
-    instruction_index: u16,
-    starting_offset: u16,
-) -> Ed25519SignatureOffsets {
-    let signature_offset = starting_offset + MAGIC_LEN;
-    let public_key_offset = signature_offset + SIGNATURE_LEN;
-    let message_data_size_offset = public_key_offset + PUBKEY_LEN;
-    let message_data_offset = message_data_size_offset + MESSAGE_SIZE_LEN;
-    let message_data_size = LE::read_u16(
-        &instruction_data[message_data_size_offset.into()..message_data_offset.into()],
-    );
-    Ed25519SignatureOffsets {
-        signature_offset,
-        signature_instruction_index: instruction_index,
-        public_key_offset,
-        public_key_instruction_index: instruction_index,
-        message_data_offset,
-        message_data_size,
-        message_instruction_index: instruction_index,
+impl Ed25519SignatureOffsets {
+    /// Sets up `Ed25519SignatureOffsets` for verifying the Pyth Lazer message signature.
+    /// - `message` is the Pyth Lazer message being sent.
+    /// - `instruction_index` is the index of that instruction within the transaction.
+    /// - `starting_offset` is the offset of the Pyth Lazer message within the instruction data.
+    ///
+    /// Panics if `starting_offset` is invalid or the `instruction_data` is not long enough to
+    /// contain the message.
+    pub fn new(message: &[u8], instruction_index: u16, starting_offset: u16) -> Self {
+        let signature_offset = starting_offset + MAGIC_LEN;
+        let public_key_offset = signature_offset + SIGNATURE_LEN;
+        let message_data_size_offset = public_key_offset + PUBKEY_LEN;
+        let message_data_offset = message_data_size_offset + MESSAGE_SIZE_LEN;
+        let message_data_size = LE::read_u16(
+            &message[(message_data_size_offset - starting_offset).into()
+                ..(message_data_offset - starting_offset).into()],
+        );
+        Ed25519SignatureOffsets {
+            signature_offset,
+            signature_instruction_index: instruction_index,
+            public_key_offset,
+            public_key_instruction_index: instruction_index,
+            message_data_offset,
+            message_data_size,
+            message_instruction_index: instruction_index,
+        }
     }
 }
 
@@ -86,12 +83,12 @@ pub fn ed25519_program_args(signatures: &[Ed25519SignatureOffsets]) -> Vec<u8> {
 }
 
 /// A message with a verified ed25519 signature.
-#[derive(Debug, Clone, Copy)]
-pub struct VerifiedMessage<'a> {
+#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
+pub struct VerifiedMessage {
     /// Public key that signed the message.
-    pub public_key: &'a [u8],
+    pub public_key: Pubkey,
     /// Signed message payload.
-    pub payload: &'a [u8],
+    pub payload: Vec<u8>,
 }
 
 #[derive(Debug, Error)]
@@ -145,6 +142,12 @@ impl From<SignatureVerificationError> for ProgramError {
     }
 }
 
+impl From<SignatureVerificationError> for anchor_lang::error::Error {
+    fn from(value: SignatureVerificationError) -> Self {
+        ProgramError::from(value).into()
+    }
+}
+
 /// Verifies a ed25519 signature on Solana by checking that the transaction contains
 /// a correct call to the built-in `ed25519_program`.
 ///
@@ -154,28 +157,18 @@ impl From<SignatureVerificationError> for ProgramError {
 /// - `signature_index` is the index of the signature within the inputs to the `ed25519_program`.
 /// - `message_offset` is the offset of the signed message within the
 ///   input data for the current instruction.
-pub fn verify_message<'a>(
-    pyth_storage_account: &AccountInfo,
-    instruction_sysvar: &AccountInfo,
-    message_data: &'a [u8],
+pub fn verify_message(
+    storage: &Storage,
+    instructions_sysvar: &AccountInfo,
+    message_data: &[u8],
     ed25519_instruction_index: u16,
     signature_index: u8,
     message_offset: u16,
-) -> Result<VerifiedMessage<'a>, SignatureVerificationError> {
-    if pyth_storage_account.key != &pyth_lazer_solana_contract::storage::ID {
-        return Err(SignatureVerificationError::InvalidStorageAccountId);
-    }
-    let storage = {
-        let storage_data = pyth_storage_account.data.borrow();
-        let mut storage_data: &[u8] = *storage_data;
-        pyth_lazer_solana_contract::Storage::try_deserialize(&mut storage_data)
-            .map_err(|_| SignatureVerificationError::InvalidStorageData)?
-    };
-
+) -> Result<VerifiedMessage, SignatureVerificationError> {
     const SOLANA_FORMAT_MAGIC_LE: u32 = 2182742457;
 
     let self_instruction_index =
-        sysvar::instructions::load_current_index_checked(instruction_sysvar)
+        sysvar::instructions::load_current_index_checked(instructions_sysvar)
             .map_err(SignatureVerificationError::LoadCurrentIndexFailed)?;
 
     if ed25519_instruction_index >= self_instruction_index {
@@ -184,7 +177,7 @@ pub fn verify_message<'a>(
 
     let instruction = sysvar::instructions::load_instruction_at_checked(
         ed25519_instruction_index.into(),
-        instruction_sysvar,
+        instructions_sysvar,
     )
     .map_err(SignatureVerificationError::LoadInstructionAtFailed)?;
 
@@ -300,7 +293,7 @@ pub fn verify_message<'a>(
     };
 
     Ok(VerifiedMessage {
-        public_key,
-        payload,
+        public_key: Pubkey::new_from_array(public_key.try_into().unwrap()),
+        payload: payload.to_vec(),
     })
 }
