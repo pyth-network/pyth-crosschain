@@ -8,13 +8,13 @@ use {
     pyth_solana_receiver_sdk::{
         config::{Config, DataSource},
         pda::{CONFIG_SEED, TREASURY_SEED},
-        price_update::{PriceUpdateV2, VerificationLevel},
-        PostUpdateAtomicParams, PostUpdateParams,
+        price_update::{PriceUpdateV2, TwapUpdate, VerificationLevel},
+        PostTwapUpdateParams, PostUpdateAtomicParams, PostUpdateParams,
     },
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
-        messages::Message,
+        messages::{Message, TwapMessage},
         wire::{
             from_slice,
             v1::{WormholeMessage, WormholePayload},
@@ -232,6 +232,52 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
+    /// Post a TWAP (time weighted average price) update for a given time window.
+    pub fn post_twap_update(
+        ctx: Context<PostTwapUpdate>,
+        params: PostTwapUpdateParams,
+    ) -> Result<()> {
+        let config = &ctx.accounts.config;
+        let payer: &Signer<'_> = &ctx.accounts.payer;
+        let write_authority: &Signer<'_> = &ctx.accounts.write_authority;
+
+        // IMPORTANT: These lines check that the encoded VAAs have ProcessingStatus::Verified.
+        // These checks are critical otherwise the program could be tricked into accepting unverified VAAs.
+        let start_encoded_vaa = VaaAccount::load(&ctx.accounts.start_encoded_vaa)?;
+        let end_encoded_vaa = VaaAccount::load(&ctx.accounts.end_encoded_vaa)?;
+
+        let treasury: &AccountInfo<'_> = &ctx.accounts.treasury;
+        let twap_update_account: &mut Account<'_, TwapUpdate> =
+            &mut ctx.accounts.twap_update_account;
+
+        let start_vaa_components = VaaComponents {
+            verification_level: VerificationLevel::Full,
+            emitter_address: start_encoded_vaa.try_emitter_address()?,
+            emitter_chain: start_encoded_vaa.try_emitter_chain()?,
+        };
+        let end_vaa_components = VaaComponents {
+            verification_level: VerificationLevel::Full,
+            emitter_address: end_encoded_vaa.try_emitter_address()?,
+            emitter_chain: end_encoded_vaa.try_emitter_chain()?,
+        };
+
+        post_twap_update_from_vaas(
+            config,
+            payer,
+            write_authority,
+            treasury,
+            twap_update_account,
+            &start_vaa_components,
+            &end_vaa_components,
+            start_encoded_vaa.try_payload()?.as_ref(),
+            end_encoded_vaa.try_payload()?.as_ref(),
+            &params.start_merkle_price_update,
+            &params.end_merkle_price_update,
+        )?;
+
+        Ok(())
+    }
+
     pub fn reclaim_rent(_ctx: Context<ReclaimRent>) -> Result<()> {
         Ok(())
     }
@@ -286,6 +332,30 @@ pub struct PostUpdate<'info> {
     /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
     #[account(init_if_needed, constraint = price_update_account.write_authority == Pubkey::default() || price_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = PriceUpdateV2::LEN)]
     pub price_update_account: Account<'info, PriceUpdateV2>,
+    pub system_program: Program<'info, System>,
+    pub write_authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(params: PostTwapUpdateParams)]
+pub struct PostTwapUpdate<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
+    #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
+    pub start_encoded_vaa: AccountInfo<'info>,
+    /// CHECK: We aren't deserializing the VAA here but later with VaaAccount::load, which is the recommended way
+    #[account(owner = config.wormhole @ ReceiverError::WrongVaaOwner)]
+    pub end_encoded_vaa: AccountInfo<'info>,
+    #[account(seeds = [CONFIG_SEED.as_ref()], bump)]
+    pub config: Account<'info, Config>,
+    /// CHECK: This is just a PDA controlled by the program. There is currently no way to withdraw funds from it.
+    #[account(mut, seeds = [TREASURY_SEED.as_ref(), &[params.treasury_id]], bump)]
+    pub treasury: AccountInfo<'info>,
+    /// The constraint is such that either the price_update_account is uninitialized or the write_authority is the write_authority.
+    /// Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized
+    #[account(init_if_needed, constraint = twap_update_account.write_authority == Pubkey::default() || twap_update_account.write_authority == write_authority.key() @ ReceiverError::WrongWriteAuthority , payer =payer, space = TwapUpdate::LEN)]
+    pub twap_update_account: Account<'info, TwapUpdate>,
     pub system_program: Program<'info, System>,
     pub write_authority: Signer<'info>,
 }
@@ -368,50 +438,9 @@ fn post_price_update_from_vaa<'info>(
     vaa_payload: &[u8],
     price_update: &MerklePriceUpdate,
 ) -> Result<()> {
-    let amount_to_pay = if treasury.lamports() == 0 {
-        Rent::get()?
-            .minimum_balance(0)
-            .max(config.single_update_fee_in_lamports)
-    } else {
-        config.single_update_fee_in_lamports
-    }; // First person to use the treasury account has to pay rent
-    if payer.lamports()
-        < Rent::get()?
-            .minimum_balance(payer.data_len())
-            .saturating_add(amount_to_pay)
-    {
-        return err!(ReceiverError::InsufficientFunds);
-    };
-
-    let transfer_instruction = system_instruction::transfer(payer.key, treasury.key, amount_to_pay);
-    anchor_lang::solana_program::program::invoke(
-        &transfer_instruction,
-        &[payer.to_account_info(), treasury.to_account_info()],
-    )?;
-
-    let valid_data_source = config.valid_data_sources.iter().any(|x| {
-        *x == DataSource {
-            chain: vaa_components.emitter_chain,
-            emitter: Pubkey::from(vaa_components.emitter_address),
-        }
-    });
-    if !valid_data_source {
-        return err!(ReceiverError::InvalidDataSource);
-    }
-
-    let wormhole_message = WormholeMessage::try_from_bytes(vaa_payload)
-        .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
-    let root: MerkleRoot<Keccak160> = MerkleRoot::new(match wormhole_message.payload {
-        WormholePayload::Merkle(merkle_root) => merkle_root.root,
-    });
-
-    if !root.check(price_update.proof.clone(), price_update.message.as_ref()) {
-        return err!(ReceiverError::InvalidPriceUpdate);
-    }
-
-    let message = from_slice::<byteorder::BE, Message>(price_update.message.as_ref())
-        .map_err(|_| ReceiverError::DeserializeMessageFailed)?;
-
+    pay_single_update_fee(config, treasury, payer)?;
+    verify_vaa_data_source(config, vaa_components)?;
+    let message = verify_merkle_proof(vaa_payload, price_update)?;
     match message {
         Message::PriceFeedMessage(price_feed_message) => {
             price_update_account.write_authority = write_authority.key();
@@ -423,6 +452,145 @@ fn post_price_update_from_vaa<'info>(
             return err!(ReceiverError::UnsupportedMessageType);
         }
     }
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn post_twap_update_from_vaas<'info>(
+    config: &Account<'info, Config>,
+    payer: &Signer<'info>,
+    write_authority: &Signer<'info>,
+    treasury: &AccountInfo<'info>,
+    twap_update_account: &mut Account<'_, TwapUpdate>,
+    start_vaa_components: &VaaComponents,
+    end_vaa_components: &VaaComponents,
+    start_vaa_payload: &[u8],
+    end_vaa_payload: &[u8],
+    start_price_update: &MerklePriceUpdate,
+    end_price_update: &MerklePriceUpdate,
+) -> Result<()> {
+    pay_single_update_fee(config, treasury, payer)?;
+
+    // Verify data sources for both VAAs
+    for vaa_components in [start_vaa_components, end_vaa_components] {
+        verify_vaa_data_source(config, vaa_components)?;
+    }
+
+    // Verify both merkle proofs and extract their messages
+    let start_message = verify_merkle_proof(start_vaa_payload, start_price_update)?;
+    let end_message = verify_merkle_proof(end_vaa_payload, end_price_update)?;
+
+    // Calculate the TWAP and store it in the output account
+    match (start_message, end_message) {
+        (Message::TwapMessage(start_msg), Message::TwapMessage(end_msg)) => {
+            let (price, conf, down_slots_ratio) = calculate_twap(&start_msg, &end_msg)?;
+
+            twap_update_account.write_authority = write_authority.key();
+            twap_update_account.verification_level = start_vaa_components.verification_level;
+
+            twap_update_account.twap.feed_id = start_msg.feed_id;
+            twap_update_account.twap.start_time = start_msg.publish_time;
+            twap_update_account.twap.end_time = end_msg.publish_time;
+            twap_update_account.twap.price = price;
+            twap_update_account.twap.conf = conf;
+            twap_update_account.twap.exponent = start_msg.exponent;
+            twap_update_account.twap.down_slots_ratio = down_slots_ratio;
+
+            twap_update_account.posted_slot = Clock::get()?.slot;
+        }
+        _ => {
+            return err!(ReceiverError::UnsupportedMessageType);
+        }
+    }
+
+    Ok(())
+}
+
+fn calculate_twap(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<(i64, u64, u32)> {
+    // Validate slots
+    require!(
+        end_msg.publish_slot > start_msg.publish_slot,
+        ReceiverError::InvalidTwapSlots
+    );
+
+    // Validate first messages in timestamp
+    require!(
+        start_msg.prev_publish_time < start_msg.publish_time,
+        ReceiverError::InvalidTwapStartMessage
+    );
+    require!(
+        end_msg.prev_publish_time < end_msg.publish_time,
+        ReceiverError::InvalidTwapEndMessage
+    );
+    let slot_diff = end_msg
+        .publish_slot
+        .checked_sub(start_msg.publish_slot)
+        .ok_or(ReceiverError::TwapCalculationOverflow)?;
+
+    let price_diff = end_msg
+        .cumulative_price
+        .checked_sub(start_msg.cumulative_price)
+        .ok_or(ReceiverError::TwapCalculationOverflow)?;
+
+    let conf_diff = end_msg
+        .cumulative_conf
+        .checked_sub(start_msg.cumulative_conf)
+        .ok_or(ReceiverError::TwapCalculationOverflow)?;
+
+    // Calculate time averaged price and confidence
+    let price = i64::try_from(price_diff / i128::from(slot_diff))
+        .map_err(|_| ReceiverError::TwapCalculationOverflow)?;
+    let conf = u64::try_from(conf_diff / u128::from(slot_diff))
+        .map_err(|_| ReceiverError::TwapCalculationOverflow)?;
+
+    // Calculate down_slots_ratio as an integer between 0 and 1_000_000
+    // A value of 1_000_000 means all slots were missed and 0 means no slots were missed.
+    let total_slots = end_msg
+        .publish_slot
+        .checked_sub(start_msg.publish_slot)
+        .ok_or(ReceiverError::TwapCalculationOverflow)?;
+    let total_down_slots = end_msg
+        .num_down_slots
+        .checked_sub(start_msg.num_down_slots)
+        .ok_or(ReceiverError::TwapCalculationOverflow)?;
+    let down_slots_ratio = total_down_slots
+        .checked_mul(1_000_000)
+        .ok_or(ReceiverError::TwapCalculationOverflow)?
+        .checked_div(total_slots)
+        .ok_or(ReceiverError::TwapCalculationOverflow)?;
+    // down_slots_ratio is a number in [0, 1_000_000], so we only need 32 unsigned bits
+    let down_slots_ratio =
+        u32::try_from(down_slots_ratio).map_err(|_| ReceiverError::TwapCalculationOverflow)?;
+    Ok((price, conf, down_slots_ratio))
+}
+
+fn pay_single_update_fee<'info>(
+    config: &Account<'info, Config>,
+    treasury: &AccountInfo<'info>,
+    payer: &Signer<'info>,
+) -> Result<()> {
+    // Handle treasury payment
+    let amount_to_pay = if treasury.lamports() == 0 {
+        Rent::get()?
+            .minimum_balance(0)
+            .max(config.single_update_fee_in_lamports)
+    } else {
+        config.single_update_fee_in_lamports
+    };
+
+    if payer.lamports()
+        < Rent::get()?
+            .minimum_balance(payer.data_len())
+            .saturating_add(amount_to_pay)
+    {
+        return err!(ReceiverError::InsufficientFunds);
+    }
+
+    let transfer_instruction = system_instruction::transfer(payer.key, treasury.key, amount_to_pay);
+    anchor_lang::solana_program::program::invoke(
+        &transfer_instruction,
+        &[payer.to_account_info(), treasury.to_account_info()],
+    )?;
     Ok(())
 }
 
@@ -458,4 +626,102 @@ fn verify_guardian_signature(
 
     // Done.
     Ok(())
+}
+
+fn verify_merkle_proof(vaa_payload: &[u8], price_update: &MerklePriceUpdate) -> Result<Message> {
+    let wormhole_message = WormholeMessage::try_from_bytes(vaa_payload)
+        .map_err(|_| ReceiverError::InvalidWormholeMessage)?;
+    let root: MerkleRoot<Keccak160> = MerkleRoot::new(match wormhole_message.payload {
+        WormholePayload::Merkle(merkle_root) => merkle_root.root,
+    });
+
+    if !root.check(price_update.proof.clone(), price_update.message.as_ref()) {
+        return err!(ReceiverError::InvalidPriceUpdate);
+    }
+
+    from_slice::<byteorder::BE, Message>(price_update.message.as_ref())
+        .map_err(|_| error!(ReceiverError::DeserializeMessageFailed))
+}
+fn verify_vaa_data_source(
+    config: &Account<'_, Config>,
+    vaa_components: &VaaComponents,
+) -> Result<()> {
+    let valid_data_source = config.valid_data_sources.iter().any(|x| {
+        *x == DataSource {
+            chain: vaa_components.emitter_chain,
+            emitter: Pubkey::from(vaa_components.emitter_address),
+        }
+    });
+    if !valid_data_source {
+        return err!(ReceiverError::InvalidDataSource);
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+/// Unit tests for the core TWAP calculation logic in `calculate_twap`
+/// This test module is here because `calculate_twap` is private and can't
+/// be imported into `tests/test_post_twap_updates`.
+mod calculate_twap_unit_tests {
+    use super::*;
+
+    fn create_basic_twap_message(
+        cumulative_price: i128,
+        publish_time: i64,
+        prev_publish_time: i64,
+        publish_slot: u64,
+    ) -> TwapMessage {
+        TwapMessage {
+            feed_id: [0; 32],
+            cumulative_price,
+            cumulative_conf: 100,
+            num_down_slots: 0,
+            exponent: 8,
+            publish_time,
+            prev_publish_time,
+            publish_slot,
+        }
+    }
+
+    #[test]
+    fn test_valid_twap() {
+        let start = create_basic_twap_message(100, 100, 90, 1000);
+        let end = create_basic_twap_message(300, 200, 180, 1100);
+
+        let price = calculate_twap(&start, &end).unwrap();
+        assert_eq!(price.0, 2); // (300-100)/(1100-1000) = 2
+    }
+
+    #[test]
+    fn test_invalid_slot_order() {
+        let start = create_basic_twap_message(100, 100, 90, 1100);
+        let end = create_basic_twap_message(300, 200, 180, 1000);
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(err, ReceiverError::InvalidTwapSlots.into());
+    }
+
+    #[test]
+    fn test_invalid_timestamps() {
+        let start = create_basic_twap_message(100, 100, 110, 1000);
+        let end = create_basic_twap_message(300, 200, 180, 1100);
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(err, ReceiverError::InvalidTwapStartMessage.into());
+
+        let start = create_basic_twap_message(100, 100, 90, 1000);
+        let end = create_basic_twap_message(300, 200, 200, 1100);
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(err, ReceiverError::InvalidTwapEndMessage.into());
+    }
+
+    #[test]
+    fn test_overflow() {
+        let start = create_basic_twap_message(i128::MIN, 100, 90, 1000);
+        let end = create_basic_twap_message(i128::MAX, 200, 180, 1100);
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(err, ReceiverError::TwapCalculationOverflow.into());
+    }
 }

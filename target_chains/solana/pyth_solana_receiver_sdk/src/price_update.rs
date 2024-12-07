@@ -59,6 +59,45 @@ pub struct PriceUpdateV2 {
 impl PriceUpdateV2 {
     pub const LEN: usize = 8 + 32 + 2 + 32 + 8 + 8 + 4 + 8 + 8 + 8 + 8 + 8;
 }
+/// A time weighted average price account. This account is used by the Pyth Receiver program to store a verified TWAP update from a Pyth price feed.
+/// It contains:
+/// - `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different TWAP update.
+/// - `verification_level`: The [`VerificationLevel`] of this price update. This represents how many Wormhole guardian signatures have been verified for this TWAP update.
+/// - `twap`: The actual TWAP update.
+/// - `posted_slot`: The slot at which this TWAP update was posted.
+#[account]
+#[derive(BorshSchema)]
+pub struct TwapUpdate {
+    pub write_authority: Pubkey,
+    pub verification_level: VerificationLevel,
+    pub twap: TwapPrice,
+    pub posted_slot: u64,
+}
+
+impl TwapUpdate {
+    pub const LEN: usize = (
+        8 // account discriminator (anchor)
+        + 32 // write_authority
+        + 2 // verification_level
+        + (32 + 8 + 8 + 8 + 8 + 4 + 4) // twap
+        + 8
+        // posted_slot
+    );
+}
+/// The time weighted average price & conf for a feed over the window [start_time, end_time].
+/// This type is used to persist the calculated TWAP in TwapUpdate accounts on Solana.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug)]
+pub struct TwapPrice {
+    pub feed_id: FeedId,
+    pub start_time: i64,
+    pub end_time: i64,
+    pub price: i64,
+    pub conf: u64,
+    pub exponent: i32,
+    /// Ratio out of 1_000_000, where a value of 1_000_000 represents
+    /// all slots were missed and 0 represents no slots were missed.
+    pub down_slots_ratio: u32,
+}
 
 /// A Pyth price.
 /// The actual price is `(price ± conf)* 10^exponent`. `publish_time` may be used to check the recency of the price.

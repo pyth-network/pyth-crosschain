@@ -4,7 +4,7 @@ use {
     pyth_solana_receiver_sdk::{
         config::{Config, DataSource},
         pda::{get_config_address, get_treasury_address},
-        PostUpdateAtomicParams, PostUpdateParams,
+        PostTwapUpdateParams, PostUpdateAtomicParams, PostUpdateParams,
     },
     pythnet_sdk::wire::v1::{AccumulatorUpdateData, MerklePriceUpdate, Proof},
     rand::Rng,
@@ -74,6 +74,30 @@ impl accounts::PostUpdate {
             config,
             treasury,
             price_update_account,
+            system_program: system_program::ID,
+            write_authority,
+        }
+    }
+}
+
+impl accounts::PostTwapUpdate {
+    pub fn populate(
+        payer: Pubkey,
+        write_authority: Pubkey,
+        start_encoded_vaa: Pubkey,
+        end_encoded_vaa: Pubkey,
+        twap_update_account: Pubkey,
+        treasury_id: u8,
+    ) -> Self {
+        let config = get_config_address();
+        let treasury = get_treasury_address(treasury_id);
+        accounts::PostTwapUpdate {
+            payer,
+            start_encoded_vaa,
+            end_encoded_vaa,
+            config,
+            treasury,
+            twap_update_account,
             system_program: system_program::ID,
             write_authority,
         }
@@ -180,7 +204,42 @@ impl instruction::PostUpdateAtomic {
         }
     }
 }
+impl instruction::PostTwapUpdate {
+    #[allow(clippy::too_many_arguments)]
+    pub fn populate(
+        payer: Pubkey,
+        write_authority: Pubkey,
+        start_encoded_vaa: Pubkey,
+        end_encoded_vaa: Pubkey,
+        twap_update_account: Pubkey,
+        start_merkle_price_update: MerklePriceUpdate,
+        end_merkle_price_update: MerklePriceUpdate,
+        treasury_id: u8,
+    ) -> Instruction {
+        let post_twap_accounts = accounts::PostTwapUpdate::populate(
+            payer,
+            write_authority,
+            start_encoded_vaa,
+            end_encoded_vaa,
+            twap_update_account,
+            treasury_id,
+        )
+        .to_account_metas(None);
 
+        Instruction {
+            program_id: ID,
+            accounts: post_twap_accounts,
+            data: instruction::PostTwapUpdate {
+                params: PostTwapUpdateParams {
+                    start_merkle_price_update,
+                    end_merkle_price_update,
+                    treasury_id,
+                },
+            }
+            .data(),
+        }
+    }
+}
 impl instruction::SetDataSources {
     pub fn populate(payer: Pubkey, data_sources: Vec<DataSource>) -> Instruction {
         let governance_accounts = accounts::Governance::populate(payer).to_account_metas(None);

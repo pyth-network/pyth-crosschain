@@ -15,6 +15,14 @@ pub enum ReceiverError {
     InvalidDataSource,
     #[msg("Funds are insufficient to pay the receiving fee")]
     InsufficientFunds,
+    #[msg("Cannot calculate TWAP, end slot must be greater than start slot")]
+    InvalidTwapSlots,
+    #[msg("Start message is not the first update for its timestamp")]
+    InvalidTwapStartMessage,
+    #[msg("End message is not the first update for its timestamp")]
+    InvalidTwapEndMessage,
+    #[msg("Overflow in TWAP calculation")]
+    TwapCalculationOverflow,
     // Price account permissions
     #[msg("This signer can't write to price update account")]
     WrongWriteAuthority,
