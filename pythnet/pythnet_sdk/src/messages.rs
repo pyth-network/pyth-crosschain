@@ -177,27 +177,6 @@ impl Arbitrary for TwapMessage {
     }
 }
 
-/// The time weighted average price & conf for a feed over the window [start_time, end_time].
-/// This type is used to persist the calculated TWAP in TwapUpdate accounts on Solana.
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, BorshSchema)]
-#[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
-#[cfg_attr(
-    not(feature = "solana-program"),
-    derive(BorshSerialize, BorshDeserialize)
-)]
-pub struct TwapPrice {
-    pub feed_id: FeedId,
-    pub start_time: i64,
-    pub end_time: i64,
-    pub price: i64,
-    pub conf: u64,
-    pub exponent: i32,
-    /// Ratio out of 1_000_000, where a value of 1_000_000 represents
-    /// all slots were missed and 0 represents no slots were missed.
-    pub down_slots_ratio: u32,
-}
-
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PublisherStakeCapsMessage {
