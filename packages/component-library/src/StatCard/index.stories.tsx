@@ -31,6 +31,12 @@ const meta = {
         category: "Contents",
       },
     },
+    corner: {
+      control: "text",
+      table: {
+        category: "Contents",
+      },
+    },
   },
 } satisfies Meta<typeof StatCardComponent>;
 export default meta;
@@ -47,5 +53,6 @@ export const StatCard = {
     header: "Active Feeds",
     stat: "552",
     miniStat: "+5",
+    corner: ":)",
   },
 } satisfies StoryObj<typeof StatCardComponent>;

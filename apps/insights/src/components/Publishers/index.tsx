@@ -1,6 +1,9 @@
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
-import { ButtonLink } from "@pythnetwork/component-library/Button";
+import { Info } from "@phosphor-icons/react/dist/ssr/Info";
+import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb";
+import { Alert, AlertTrigger } from "@pythnetwork/component-library/Alert";
+import { ButtonLink, Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
@@ -41,6 +44,42 @@ export const Publishers = async () => {
           />
           <StatCard
             header="Avg. Median Score"
+            corner={
+              <AlertTrigger>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  beforeIcon={(props) => <Info weight="fill" {...props} />}
+                  rounded
+                  hideText
+                  className={styles.averageMedianScoreExplainButton ?? ""}
+                >
+                  Explain Average Median Score
+                </Button>
+                <Alert title="Average Median Score" icon={<Lightbulb />}>
+                  <p className={styles.averageMedianScoreDescription}>
+                    Each <b>Price Feed Component</b> that a <b>Publisher</b>{" "}
+                    provides has an associated <b>Score</b>, which is determined
+                    by that component{"'"}s <b>Uptime</b>,{" "}
+                    <b>Price Deviation</b>, and <b>Staleness</b>. The publisher
+                    {"'"}s <b>Median Score</b> measures the 50th percentile of
+                    the <b>Score</b> across all of that publisher{"'"}s{" "}
+                    <b>Price Feed Components</b>. The{" "}
+                    <b>Average Median Score</b> is the average of the{" "}
+                    <b>Median Scores</b> of all publishers who contribute to the
+                    Pyth Network.
+                  </p>
+                  <ButtonLink
+                    size="xs"
+                    variant="solid"
+                    href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
+                    target="_blank"
+                  >
+                    Learn more
+                  </ButtonLink>
+                </Alert>
+              </AlertTrigger>
+            }
             stat={(
               publishers.reduce(
                 (sum, publisher) => sum + publisher.medianScore,

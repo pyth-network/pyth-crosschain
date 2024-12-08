@@ -80,7 +80,14 @@ const AssetClassTable = ({
             count: <Badge style="outline">{count}</Badge>,
           },
         })),
-    [numFeedsByAssetClass, collator, closeDrawer, pathname, updateAssetClass],
+    [
+      numFeedsByAssetClass,
+      collator,
+      closeDrawer,
+      pathname,
+      updateAssetClass,
+      updateSearch,
+    ],
   );
   return (
     <Table

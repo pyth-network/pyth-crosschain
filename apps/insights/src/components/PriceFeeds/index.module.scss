@@ -1,55 +1,16 @@
 @use "@pythnetwork/component-library/theme";
 
-.priceFeeds {
-  @include theme.max-width;
-
-  .header {
-    @include theme.h3;
-
-    color: theme.color("heading");
-    font-weight: theme.font-weight("semibold");
-    margin: theme.spacing(6) 0;
-  }
-
-  .body {
-    display: flex;
-    flex-flow: column nowrap;
-    gap: theme.spacing(6);
-
-    .featuredFeeds {
-      display: flex;
-      flex-flow: row nowrap;
-      gap: theme.spacing(1);
-
-      & > * {
-        flex: 1;
-      }
-    }
-
-    .stats {
-      display: flex;
-      flex-flow: row nowrap;
-      gap: theme.spacing(4);
-      align-items: center;
-
-      & > * {
-        flex: 1;
-      }
-    }
-
-    .priceFeedId {
-      color: theme.color("link", "normal");
-      font-weight: theme.font-weight("medium");
-    }
-  }
-}
-
 .priceFeedNameAndIcon,
 .priceFeedNameAndDescription {
   display: flex;
   flex-flow: row nowrap;
   gap: theme.spacing(3);
   align-items: center;
+  width: 100%;
+
+  .priceFeedIcon {
+    flex: none;
+  }
 
   .priceFeedName {
     display: flex;
@@ -73,31 +34,112 @@
   }
 }
 
-.priceFeedNameAndIcon .priceFeedIcon {
-  width: theme.spacing(6);
-  height: theme.spacing(6);
+.priceFeedNameAndIcon {
+  .priceFeedIcon {
+    width: theme.spacing(6);
+    height: theme.spacing(6);
 
-  &.skeleton {
-    border-radius: theme.border-radius("full");
+    &.skeleton {
+      border-radius: theme.border-radius("full");
+    }
+  }
+
+  .priceFeedName {
+    flex-grow: 1;
+    flex-basis: 0;
   }
 }
 
-.priceFeedNameAndDescription {
-  .priceFeedIcon {
-    width: theme.spacing(10);
-    height: theme.spacing(10);
+.priceFeeds {
+  @include theme.max-width;
+
+  .header {
+    @include theme.h3;
+
+    color: theme.color("heading");
+    font-weight: theme.font-weight("semibold");
+    margin: theme.spacing(6) 0;
   }
 
-  .nameAndDescription {
+  .body {
     display: flex;
     flex-flow: column nowrap;
-    gap: theme.spacing(1);
+    gap: theme.spacing(6);
 
-    .description {
-      font-size: theme.font-size("xs");
+    .featuredFeeds,
+    .stats {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+
+      & > * {
+        flex: 1 1 0px;
+        width: 0;
+      }
+    }
+
+    .stats {
+      gap: theme.spacing(4);
+    }
+
+    .featuredFeeds {
+      gap: theme.spacing(1);
+
+      .feedCardContents {
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: space-between;
+        align-items: stretch;
+        padding: theme.spacing(3);
+        gap: theme.spacing(6);
+
+        .priceFeedNameAndDescription {
+          .priceFeedIcon {
+            width: theme.spacing(10);
+            height: theme.spacing(10);
+          }
+
+          .nameAndDescription {
+            display: flex;
+            flex-flow: column nowrap;
+            gap: theme.spacing(1);
+            flex-grow: 1;
+            flex-basis: 0;
+            white-space: nowrap;
+            overflow: hidden;
+
+            .priceFeedName {
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+
+            .description {
+              font-size: theme.font-size("xs");
+              font-weight: theme.font-weight("medium");
+              line-height: theme.spacing(4);
+              color: theme.color("muted");
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+
+        .prices {
+          display: flex;
+          flex-flow: row nowrap;
+          justify-content: space-between;
+          align-items: center;
+          color: theme.color("heading");
+          font-weight: theme.font-weight("medium");
+          line-height: 1;
+          font-size: theme.font-size("base");
+        }
+      }
+    }
+
+    .priceFeedId {
+      color: theme.color("link", "normal");
       font-weight: theme.font-weight("medium");
-      line-height: theme.spacing(4);
-      color: theme.color("muted");
     }
   }
 }

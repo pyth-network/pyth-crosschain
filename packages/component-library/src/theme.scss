@@ -469,6 +469,11 @@ $color: (
         light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
     ),
     "info": (
+      "background-opaque":
+        light-dark(
+          rgb(from pallette-color("indigo", 200) r g b / 80%),
+          rgb(from pallette-color("indigo", 950) r g b / 80%)
+        ),
       "normal":
         light-dark(pallette-color("indigo", 600), pallette-color("indigo", 400)),
     ),
