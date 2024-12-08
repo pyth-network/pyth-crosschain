@@ -4,6 +4,7 @@ import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
 import os from "os";
 import { HermesClient } from "@pythnetwork/hermes-client";
+import { sendTransactions } from "@pythnetwork/solana-utils";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -49,11 +50,13 @@ async function main() {
 
   const transactions = await pythSolanaReceiver.batchIntoVersionedTransactions(
     [...postInstructions, ...consumerInstructions, ...closeInstructions],
-    { computeUnitPriceMicroLamports: 100000 }
+    { computeUnitPriceMicroLamports: 100000, tightComputeBudget: true }
   ); // Put all the instructions together
-  await pythSolanaReceiver.provider.sendAll(transactions, {
-    preflightCommitment: "processed",
-  });
+  await sendTransactions(
+    transactions,
+    pythSolanaReceiver.connection,
+    pythSolanaReceiver.wallet
+  );
 }
 
 // Fetch price update data from Hermes
