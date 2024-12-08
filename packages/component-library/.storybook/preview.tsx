@@ -5,6 +5,7 @@ import clsx from "clsx";
 
 import "../src/Html/base.scss";
 import styles from "./storybook.module.scss";
+import { OverlayVisibleContextProvider } from "../src/overlay-visible-context.js";
 
 const preview = {
   parameters: {
@@ -28,6 +29,11 @@ const preview = {
 export default preview;
 
 export const decorators: Decorator[] = [
+  (Story) => (
+    <OverlayVisibleContextProvider>
+      <Story />
+    </OverlayVisibleContextProvider>
+  ),
   withThemeByClassName({
     themes: {
       Light: clsx(sans.className, styles.light),

@@ -1,26 +1,33 @@
+import { ArrowLineDown } from "@phosphor-icons/react/dist/ssr/ArrowLineDown";
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
+import { Info } from "@phosphor-icons/react/dist/ssr/Info";
 import { StackPlus } from "@phosphor-icons/react/dist/ssr/StackPlus";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Button } from "@pythnetwork/component-library/Button";
-import { Card } from "@pythnetwork/component-library/Card";
+import {
+  type Props as CardProps,
+  Card,
+} from "@pythnetwork/component-library/Card";
 import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import base58 from "bs58";
 import clsx from "clsx";
 import Generic from "cryptocurrency-icons/svg/color/generic.svg";
-import { Fragment } from "react";
+import { Fragment, type ElementType } from "react";
 import { z } from "zod";
 
 import { AssetClassesDrawer } from "./asset-classes-drawer";
+import { YesterdaysPricesProvider, ChangePercent } from "./change-percent";
 import { ComingSoonList } from "./coming-soon-list";
-import { FeaturedRecentlyAdded } from "./featured-recently-added";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
 import { getIcon } from "../../icons";
 import { client } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
 import { CopyButton } from "../CopyButton";
+import { LivePrice } from "../LivePrices";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
 
@@ -37,6 +44,10 @@ export const PriceFeeds = async () => {
         !priceFeedsStaticConfig.featuredComingSoon.includes(symbol),
     ),
   ].slice(0, 5);
+  const featuredRecentlyAdded = filterFeeds(
+    priceFeeds.activeFeeds,
+    priceFeedsStaticConfig.featuredRecentlyAdded,
+  );
 
   return (
     <div className={styles.priceFeeds}>
@@ -48,6 +59,7 @@ export const PriceFeeds = async () => {
             header="Active Feeds"
             stat={priceFeeds.activeFeeds.length}
             href={`#${PRICE_FEEDS_ANCHOR}`}
+            corner={<ArrowLineDown />}
           />
           <StatCard
             header="Frequency"
@@ -58,35 +70,36 @@ export const PriceFeeds = async () => {
             stat={priceFeedsStaticConfig.activeChains}
             href="https://docs.pyth.network/price-feeds/contract-addresses"
             target="_blank"
+            corner={<ArrowSquareOut weight="fill" />}
           />
           <AssetClassesDrawer numFeedsByAssetClass={numFeedsByAssetClass}>
             <StatCard
               header="Asset Classes"
               stat={Object.keys(numFeedsByAssetClass).length}
+              corner={<Info weight="fill" />}
             />
           </AssetClassesDrawer>
         </div>
-        <Card title="Recently added" icon={<StackPlus />}>
-          <div className={styles.featuredFeeds}>
-            <FeaturedRecentlyAdded
-              recentlyAdded={filterFeeds(
-                priceFeeds.activeFeeds,
-                priceFeedsStaticConfig.featuredRecentlyAdded,
-              ).map(({ product, symbol }) => ({
-                id: product.price_account,
-                symbol,
-                priceFeedName: (
-                  <PriceNameAndDescription description={product.description}>
-                    {product.display_symbol}
-                  </PriceNameAndDescription>
-                ),
-              }))}
-            />
-          </div>
-        </Card>
-        <Card
+        <YesterdaysPricesProvider
+          symbolsToFeedKeys={Object.fromEntries(
+            featuredRecentlyAdded.map(({ symbol, product }) => [
+              symbol,
+              product.price_account,
+            ]),
+          )}
+        >
+          <FeaturedFeedsCard
+            title="Recently added"
+            icon={<StackPlus />}
+            feeds={featuredRecentlyAdded}
+            showPrices
+            linkFeeds
+          />
+        </YesterdaysPricesProvider>
+        <FeaturedFeedsCard
           title="Coming soon"
           icon={<ClockCountdown />}
+          feeds={featuredComingSoon}
           toolbar={
             <DrawerTrigger>
               <Button size="xs" variant="outline">
@@ -124,21 +137,7 @@ export const PriceFeeds = async () => {
               </Drawer>
             </DrawerTrigger>
           }
-        >
-          <div className={styles.featuredFeeds}>
-            {featuredComingSoon.map(({ product }, id) => (
-              <Card
-                key={id}
-                title={
-                  <PriceNameAndDescription description={product.description}>
-                    {product.display_symbol}
-                  </PriceNameAndDescription>
-                }
-                variant="tertiary"
-              />
-            ))}
-          </div>
-        </Card>
+        />
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
           nameLoadingSkeleton={
@@ -187,20 +186,56 @@ export const PriceFeeds = async () => {
   );
 };
 
-const PriceNameAndDescription = ({
-  children,
-  description,
-}: {
-  children: string;
-  description: string;
-}) => (
-  <div className={styles.priceFeedNameAndDescription}>
-    <PriceFeedIcon>{children}</PriceFeedIcon>
-    <div className={styles.nameAndDescription}>
-      <PriceFeedName>{children}</PriceFeedName>
-      <div className={styles.description}>{description.split("/")[0]}</div>
+type FeaturedFeedsCardProps<T extends ElementType> = Omit<
+  CardProps<T>,
+  "children"
+> & {
+  showPrices?: boolean | undefined;
+  linkFeeds?: boolean | undefined;
+  feeds: {
+    product: {
+      display_symbol: string;
+      price_account: string;
+      description: string;
+    };
+  }[];
+};
+
+const FeaturedFeedsCard = <T extends ElementType>({
+  showPrices,
+  linkFeeds,
+  feeds,
+  ...props
+}: FeaturedFeedsCardProps<T>) => (
+  <Card {...props}>
+    <div className={styles.featuredFeeds}>
+      {feeds.map(({ product }) => (
+        <Card
+          key={product.price_account}
+          variant="tertiary"
+          {...(linkFeeds && { href: "#" })}
+        >
+          <div className={styles.feedCardContents}>
+            <div className={styles.priceFeedNameAndDescription}>
+              <PriceFeedIcon>{product.display_symbol}</PriceFeedIcon>
+              <div className={styles.nameAndDescription}>
+                <PriceFeedName>{product.display_symbol}</PriceFeedName>
+                <div className={styles.description}>
+                  {product.description.split("/")[0]}
+                </div>
+              </div>
+            </div>
+            {showPrices && (
+              <div className={styles.prices}>
+                <LivePrice account={product.price_account} />
+                <ChangePercent feedKey={product.price_account} />
+              </div>
+            )}
+          </div>
+        </Card>
+      ))}
     </div>
-  </div>
+  </Card>
 );
 
 const PriceFeedNameAndIcon = ({ children }: { children: string }) => (

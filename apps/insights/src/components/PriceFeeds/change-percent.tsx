@@ -1,15 +1,14 @@
 "use client";
 
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp";
-import { Card } from "@pythnetwork/component-library/Card";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import { type ReactNode, useMemo } from "react";
+import { type ComponentProps, createContext, use } from "react";
 import { useNumberFormatter } from "react-aria";
 import { z } from "zod";
 
-import styles from "./featured-recently-added.module.scss";
+import styles from "./change-percent.module.scss";
 import { StateType, useData } from "../../use-data";
-import { LivePrice, useLivePrice } from "../LivePrices";
+import { useLivePrice } from "../LivePrices";
 
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
@@ -18,87 +17,64 @@ const REFRESH_YESTERDAYS_PRICES_INTERVAL = ONE_HOUR_IN_MS;
 
 const CHANGE_PERCENT_SKELETON_WIDTH = 15;
 
-type Props = {
-  recentlyAdded: RecentlyAddedPriceFeed[];
+type Props = Omit<ComponentProps<typeof YesterdaysPricesContext>, "value"> & {
+  symbolsToFeedKeys: Record<string, string>;
 };
 
-type RecentlyAddedPriceFeed = {
-  id: string;
-  symbol: string;
-  priceFeedName: ReactNode;
-};
+const YesterdaysPricesContext = createContext<
+  undefined | ReturnType<typeof useData<Map<string, number>>>
+>(undefined);
 
-export const FeaturedRecentlyAdded = ({ recentlyAdded }: Props) => {
-  const feedKeys = useMemo(
-    () => recentlyAdded.map(({ id }) => id),
-    [recentlyAdded],
-  );
-  const symbols = useMemo(
-    () => recentlyAdded.map(({ symbol }) => symbol),
-    [recentlyAdded],
-  );
+export const YesterdaysPricesProvider = ({
+  symbolsToFeedKeys,
+  ...props
+}: Props) => {
   const state = useData(
-    ["yesterdaysPrices", feedKeys],
-    () => getYesterdaysPrices(symbols),
+    ["yesterdaysPrices", Object.values(symbolsToFeedKeys)],
+    () => getYesterdaysPrices(symbolsToFeedKeys),
     {
       refreshInterval: REFRESH_YESTERDAYS_PRICES_INTERVAL,
     },
   );
 
-  return (
-    <>
-      {recentlyAdded.map(({ priceFeedName, id, symbol }, i) => (
-        <Card
-          key={i}
-          href="#"
-          title={priceFeedName}
-          footer={
-            <div className={styles.footer}>
-              <LivePrice account={id} />
-              <div className={styles.changePercent}>
-                <ChangePercent
-                  yesterdaysPriceState={state}
-                  feedKey={id}
-                  symbol={symbol}
-                />
-              </div>
-            </div>
-          }
-          className={styles.recentlyAddedFeed ?? ""}
-          variant="tertiary"
-        />
-      ))}
-    </>
-  );
+  return <YesterdaysPricesContext value={state} {...props} />;
 };
 
 const getYesterdaysPrices = async (
-  symbols: string[],
-): Promise<Record<string, number>> => {
+  symbolsToFeedKeys: Record<string, string>,
+): Promise<Map<string, number>> => {
   const url = new URL("/yesterdays-prices", window.location.origin);
-  for (const symbol of symbols) {
+  for (const symbol of Object.keys(symbolsToFeedKeys)) {
     url.searchParams.append("symbols", symbol);
   }
   const response = await fetch(url);
   const data: unknown = await response.json();
-  return yesterdaysPricesSchema.parse(data);
+  return new Map(
+    Object.entries(yesterdaysPricesSchema.parse(data)).map(
+      ([symbol, value]) => [symbolsToFeedKeys[symbol] ?? "", value],
+    ),
+  );
 };
 
 const yesterdaysPricesSchema = z.record(z.string(), z.number());
 
-type ChangePercentProps = {
-  yesterdaysPriceState: ReturnType<
-    typeof useData<Awaited<ReturnType<typeof getYesterdaysPrices>>>
-  >;
-  feedKey: string;
-  symbol: string;
+const useYesterdaysPrices = () => {
+  const state = use(YesterdaysPricesContext);
+
+  if (state) {
+    return state;
+  } else {
+    throw new YesterdaysPricesNotInitializedError();
+  }
 };
 
-const ChangePercent = ({
-  yesterdaysPriceState,
-  feedKey,
-  symbol,
-}: ChangePercentProps) => {
+type ChangePercentProps = {
+  feedKey: string;
+};
+
+export const ChangePercent = ({ feedKey }: ChangePercentProps) => {
+  const yesterdaysPriceState = useYesterdaysPrices();
+
   switch (yesterdaysPriceState.type) {
     case StateType.Error: {
       // eslint-disable-next-line unicorn/no-null
@@ -107,11 +83,16 @@ const ChangePercent = ({
 
     case StateType.Loading:
     case StateType.NotLoaded: {
-      return <Skeleton width={CHANGE_PERCENT_SKELETON_WIDTH} />;
+      return (
+        <Skeleton
+          className={styles.changePercent}
+          width={CHANGE_PERCENT_SKELETON_WIDTH}
+        />
+      );
     }
 
     case StateType.Loaded: {
-      const yesterdaysPrice = yesterdaysPriceState.data[symbol];
+      const yesterdaysPrice = yesterdaysPriceState.data.get(feedKey);
       // eslint-disable-next-line unicorn/no-null
       return yesterdaysPrice === undefined ? null : (
         <ChangePercentLoaded priorPrice={yesterdaysPrice} feedKey={feedKey} />
@@ -132,7 +113,10 @@ const ChangePercentLoaded = ({
   const currentPrice = useLivePrice(feedKey);
 
   return currentPrice === undefined ? (
-    <Skeleton width={CHANGE_PERCENT_SKELETON_WIDTH} />
+    <Skeleton
+      className={styles.changePercent}
+      width={CHANGE_PERCENT_SKELETON_WIDTH}
+    />
   ) : (
     <PriceDifference
       currentPrice={currentPrice.price}
@@ -154,7 +138,7 @@ const PriceDifference = ({
   const direction = getDirection(currentPrice, priorPrice);
 
   return (
-    <span data-direction={direction} className={styles.price}>
+    <span data-direction={direction} className={styles.changePercent}>
       <CaretUp weight="fill" className={styles.caret} />
       {numberFormatter.format(
         (100 * Math.abs(currentPrice - priorPrice)) / currentPrice,
@@ -173,3 +157,12 @@ const getDirection = (currentPrice: number, priorPrice: number) => {
     return "flat";
   }
 };
+
+class YesterdaysPricesNotInitializedError extends Error {
+  constructor() {
+    super(
+      "This component must be contained within a <YesterdaysPricesProvider>",
+    );
+    this.name = "YesterdaysPricesNotInitializedError";
+  }
+}
