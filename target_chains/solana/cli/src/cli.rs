@@ -48,12 +48,27 @@ pub enum Action {
         )]
         n_signatures: usize,
     },
+    #[clap(about = "Post a TWAP update from Hermes to Solana")]
+    PostTwapUpdate {
+        #[clap(
+            short = 's',
+            long,
+            help = "Start base64 data from Hermes (binary.data.0)"
+        )]
+        start_payload: String,
+        #[clap(
+            short = 'e',
+            long,
+            help = "End base64 data from Hermes (binary.data.1)"
+        )]
+        end_payload: String,
+    },
     #[clap(
         about = "Initialize a wormhole receiver contract by sequentially replaying the guardian set updates"
     )]
     InitializeWormholeReceiver {},
     InitializePythReceiver {
-        #[clap(short = 'f', long, help = "Fee in lmaports")]
+        #[clap(short = 'f', long, help = "Fee in lamports")]
         fee: u64,
         #[clap(short = 'e', long, parse(try_from_str = Pubkey::from_str), help = "Source emitter")]
         emitter: Pubkey,

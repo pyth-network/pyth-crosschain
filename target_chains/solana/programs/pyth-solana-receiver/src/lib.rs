@@ -233,6 +233,8 @@ pub mod pyth_solana_receiver {
     }
 
     /// Post a TWAP (time weighted average price) update for a given time window.
+    /// This should be called after the client has already verified the VAAs via the Wormhole contract.
+    /// Check out target_chains/solana/cli/src/main.rs for an example of how to do this.
     pub fn post_twap_update(
         ctx: Context<PostTwapUpdate>,
         params: PostTwapUpdateParams,
@@ -486,8 +488,6 @@ fn post_twap_update_from_vaas<'info>(
             let (price, conf, down_slots_ratio) = calculate_twap(&start_msg, &end_msg)?;
 
             twap_update_account.write_authority = write_authority.key();
-            twap_update_account.verification_level = start_vaa_components.verification_level;
-
             twap_update_account.twap.feed_id = start_msg.feed_id;
             twap_update_account.twap.start_time = start_msg.publish_time;
             twap_update_account.twap.end_time = end_msg.publish_time;
@@ -495,8 +495,6 @@ fn post_twap_update_from_vaas<'info>(
             twap_update_account.twap.conf = conf;
             twap_update_account.twap.exponent = start_msg.exponent;
             twap_update_account.twap.down_slots_ratio = down_slots_ratio;
-
-            twap_update_account.posted_slot = Clock::get()?.slot;
         }
         _ => {
             return err!(ReceiverError::UnsupportedMessageType);
@@ -507,6 +505,18 @@ fn post_twap_update_from_vaas<'info>(
 }
 
 fn calculate_twap(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<(i64, u64, u32)> {
+    // Validate feed ids match
+    require!(
+        start_msg.feed_id == end_msg.feed_id,
+        ReceiverError::FeedIdMismatch
+    );
+
+    // Validate exponents match
+    require!(
+        start_msg.exponent == end_msg.exponent,
+        ReceiverError::ExponentMismatch
+    );
+
     // Validate slots
     require!(
         end_msg.publish_slot > start_msg.publish_slot,
@@ -723,5 +733,25 @@ mod calculate_twap_unit_tests {
 
         let err = calculate_twap(&start, &end).unwrap_err();
         assert_eq!(err, ReceiverError::TwapCalculationOverflow.into());
+    }
+
+    #[test]
+    fn test_mismatched_feed_id() {
+        let start = create_basic_twap_message(100, 100, 90, 1000);
+        let mut end = create_basic_twap_message(300, 200, 180, 1100);
+        end.feed_id = [1; 32];
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(err, ReceiverError::FeedIdMismatch.into());
+    }
+
+    #[test]
+    fn test_mismatched_exponent() {
+        let start = create_basic_twap_message(100, 100, 90, 1000);
+        let mut end = create_basic_twap_message(300, 200, 180, 1100);
+        end.exponent = 9;
+
+        let err = calculate_twap(&start, &end).unwrap_err();
+        assert_eq!(err, ReceiverError::ExponentMismatch.into());
     }
 }

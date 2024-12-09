@@ -6,7 +6,7 @@ use {
         instruction::PostTwapUpdate,
         sdk::{deserialize_accumulator_update_data, DEFAULT_TREASURY_ID},
     },
-    pyth_solana_receiver_sdk::price_update::{TwapUpdate, VerificationLevel},
+    pyth_solana_receiver_sdk::price_update::TwapUpdate,
     pythnet_sdk::{
         messages::{Message, TwapMessage},
         test_utils::create_accumulator_message,
@@ -161,10 +161,6 @@ async fn test_post_twap_updates() {
 
     // Assert that the TWAP account was created correctly
     assert_eq!(twap_update_account_1.write_authority, poster.pubkey());
-    assert_eq!(
-        twap_update_account_1.verification_level,
-        VerificationLevel::Full
-    );
 
     // Assert all TWAP fields are correctly calculated for feed 1
     assert_eq!(twap_update_account_1.twap.feed_id, [1; 32]);
@@ -183,10 +179,6 @@ async fn test_post_twap_updates() {
 
     // Assert that the TWAP account was created correctly
     assert_eq!(twap_update_account_2.write_authority, poster.pubkey());
-    assert_eq!(
-        twap_update_account_2.verification_level,
-        VerificationLevel::Full
-    );
 
     // Assert all TWAP fields are correctly calculated for feed 2
     assert_eq!(twap_update_account_2.twap.feed_id, [2; 32]);
