@@ -8,8 +8,6 @@ import { HermesClient } from "@pythnetwork/hermes-client";
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
-const ETH_PRICE_FEED_ID =
-  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace";
 
 let keypairFile = "";
 if (process.env["SOLANA_KEYPAIR"]) {
@@ -78,7 +76,7 @@ async function getPriceUpdateData() {
   );
 
   const response = await priceServiceConnection.getLatestPriceUpdates(
-    [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
+    [SOL_PRICE_FEED_ID],
     { encoding: "base64" }
   );
 
