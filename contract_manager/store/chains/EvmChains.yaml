@@ -815,3 +815,28 @@
   rpcUrl: https://rpc.soniclabs.com
   networkId: 146
   type: EvmChain
+# - id: bittensor
+#   mainnet: true
+#   rpcUrl: https://entrypoint-finney.opentensor.ai:443
+#   networkId: 945
+#   type: EvmChain
+# - id: bittensor_testnet
+#   mainnet: false
+#   rpcUrl: https://test.finney.opentensor.ai:443
+#   networkId: 945
+#   type: EvmChain
+- id: threat_level_midnight
+  mainnet: true
+  rpcUrl: $ENV_THREAT_LEVEL_MIDNIGHT_RPC_URL
+  networkId: 1868
+  type: EvmChain
+- id: story_testnet
+  mainnet: false
+  rpcUrl: https://rpc.odyssey.storyrpc.io/
+  networkId: 1516
+  type: EvmChain
+- id: eventum_mainnet
+  mainnet: true
+  rpcUrl: https://mainnet-rpc.evedex.com
+  networkId: 161803
+  type: EvmChain
