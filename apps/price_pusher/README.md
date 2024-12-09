@@ -75,7 +75,11 @@ You can get the list of available price feeds from
 
 Price pusher communicates with [Hermes][] price service to get the most recent price updates. Hermes listens to the
 Pythnet and Wormhole network to get latest price updates, and serves REST and websocket APIs for consumers to fetch the
-updates. Pyth hosts public endpoints for Hermes; however, it is recommended to get a private endpoint from one of the
+updates.
+
+NOTE: It is recommended to use stable hermes endpoints. If you are running the price pusher for **Aptos Testnet**, **Sui Testnet**, or **Near Testnet**, we recommend you use beta hermes endpoints.
+
+Pyth hosts [public endpoints](https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes) for Hermes; however, it is recommended to get a private endpoint from one of the
 Hermes RPC providers for more reliability. Please refer to [this
 document](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes) for more information.
 
