@@ -16,6 +16,10 @@ pub enum ReceiverError {
     #[msg("Funds are insufficient to pay the receiving fee")]
     InsufficientFunds,
     #[msg("Cannot calculate TWAP, end slot must be greater than start slot")]
+    FeedIdMismatch,
+    #[msg("The start and end messages must have the same feed ID")]
+    ExponentMismatch,
+    #[msg("The start and end messages must have the same exponent")]
     InvalidTwapSlots,
     #[msg("Start message is not the first update for its timestamp")]
     InvalidTwapStartMessage,
