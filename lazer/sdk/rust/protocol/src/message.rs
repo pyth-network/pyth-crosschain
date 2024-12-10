@@ -6,7 +6,7 @@ use {
 };
 
 /// EVM signature enveope.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct EvmMessage {
     pub payload: Vec<u8>,
     pub signature: [u8; 64],
@@ -47,7 +47,7 @@ impl EvmMessage {
 }
 
 /// Solana signature envelope.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SolanaMessage {
     pub payload: Vec<u8>,
     pub signature: [u8; 64],
@@ -86,4 +86,28 @@ impl SolanaMessage {
             public_key,
         })
     }
+}
+
+#[test]
+fn test_evm_serde() {
+    let m1 = EvmMessage {
+        payload: vec![1, 2, 4, 3],
+        signature: [5; 64],
+        recovery_id: 1,
+    };
+    let mut buf = Vec::new();
+    m1.serialize(&mut buf).unwrap();
+    assert_eq!(m1, EvmMessage::deserialize_slice(&buf).unwrap());
+}
+
+#[test]
+fn test_solana_serde() {
+    let m1 = SolanaMessage {
+        payload: vec![1, 2, 4, 3],
+        signature: [5; 64],
+        public_key: [6; 32],
+    };
+    let mut buf = Vec::new();
+    m1.serialize(&mut buf).unwrap();
+    assert_eq!(m1, SolanaMessage::deserialize_slice(&buf).unwrap());
 }
