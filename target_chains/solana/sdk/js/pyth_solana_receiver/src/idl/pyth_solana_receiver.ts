@@ -1,5 +1,5 @@
 export type PythSolanaReceiver = {
-  version: "0.1.0";
+  version: "0.2.0";
   name: "pyth_solana_receiver";
   instructions: [
     {
@@ -274,6 +274,68 @@ export type PythSolanaReceiver = {
       ];
     },
     {
+      name: "postTwapUpdate";
+      docs: [
+        "Post a TWAP (time weighted average price) update for a given time window.",
+        "This should be called after the client has already verified the VAAs via the Wormhole contract.",
+        "Check out target_chains/solana/cli/src/main.rs for an example of how to do this."
+      ];
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "startEncodedVaa";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "endEncodedVaa";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "config";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "treasury";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "twapUpdateAccount";
+          isMut: true;
+          isSigner: true;
+          docs: [
+            "The contraint is such that either the twap_update_account is uninitialized or the write_authority is the write_authority.",
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that twap_update_account.write_authority == Pubkey::default() once the account is initialized"
+          ];
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "writeAuthority";
+          isMut: false;
+          isSigner: true;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "PostTwapUpdateParams";
+          };
+        }
+      ];
+    },
+    {
       name: "reclaimRent";
       accounts: [
         {
@@ -356,6 +418,24 @@ export type PythSolanaReceiver = {
           }
         ];
       };
+    },
+    {
+      name: "twapUpdate";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "writeAuthority";
+            type: "publicKey";
+          },
+          {
+            name: "twap";
+            type: {
+              defined: "TwapPrice";
+            };
+          }
+        ];
+      };
     }
   ];
   types: [
@@ -397,6 +477,52 @@ export type PythSolanaReceiver = {
           {
             name: "emaConf";
             type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "TwapPrice";
+      docs: [
+        "The time weighted average price & conf for a feed over the window [start_time, end_time].",
+        "This type is used to persist the calculated TWAP in TwapUpdate accounts on Solana."
+      ];
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "feedId";
+            type: {
+              array: ["u8", 32];
+            };
+          },
+          {
+            name: "startTime";
+            type: "i64";
+          },
+          {
+            name: "endTime";
+            type: "i64";
+          },
+          {
+            name: "price";
+            type: "i64";
+          },
+          {
+            name: "conf";
+            type: "u64";
+          },
+          {
+            name: "exponent";
+            type: "i32";
+          },
+          {
+            name: "downSlotsRatio";
+            docs: [
+              "Ratio out of 1_000_000, where a value of 1_000_000 represents",
+              "all slots were missed and 0 represents no slots were missed."
+            ];
+            type: "u32";
           }
         ];
       };
@@ -466,6 +592,30 @@ export type PythSolanaReceiver = {
         fields: [
           {
             name: "merklePriceUpdate";
+            type: {
+              defined: "MerklePriceUpdate";
+            };
+          },
+          {
+            name: "treasuryId";
+            type: "u8";
+          }
+        ];
+      };
+    },
+    {
+      name: "PostTwapUpdateParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "startMerklePriceUpdate";
+            type: {
+              defined: "MerklePriceUpdate";
+            };
+          },
+          {
+            name: "endMerklePriceUpdate";
             type: {
               defined: "MerklePriceUpdate";
             };
@@ -616,7 +766,7 @@ export type PythSolanaReceiver = {
 };
 
 export const IDL: PythSolanaReceiver = {
-  version: "0.1.0",
+  version: "0.2.0",
   name: "pyth_solana_receiver",
   instructions: [
     {
@@ -891,6 +1041,68 @@ export const IDL: PythSolanaReceiver = {
       ],
     },
     {
+      name: "postTwapUpdate",
+      docs: [
+        "Post a TWAP (time weighted average price) update for a given time window.",
+        "This should be called after the client has already verified the VAAs via the Wormhole contract.",
+        "Check out target_chains/solana/cli/src/main.rs for an example of how to do this.",
+      ],
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "startEncodedVaa",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "endEncodedVaa",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "config",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "treasury",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "twapUpdateAccount",
+          isMut: true,
+          isSigner: true,
+          docs: [
+            "The contraint is such that either the twap_update_account is uninitialized or the write_authority is the write_authority.",
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that twap_update_account.write_authority == Pubkey::default() once the account is initialized",
+          ],
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "writeAuthority",
+          isMut: false,
+          isSigner: true,
+        },
+      ],
+      args: [
+        {
+          name: "params",
+          type: {
+            defined: "PostTwapUpdateParams",
+          },
+        },
+      ],
+    },
+    {
       name: "reclaimRent",
       accounts: [
         {
@@ -974,6 +1186,24 @@ export const IDL: PythSolanaReceiver = {
         ],
       },
     },
+    {
+      name: "twapUpdate",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "writeAuthority",
+            type: "publicKey",
+          },
+          {
+            name: "twap",
+            type: {
+              defined: "TwapPrice",
+            },
+          },
+        ],
+      },
+    },
   ],
   types: [
     {
@@ -1014,6 +1244,52 @@ export const IDL: PythSolanaReceiver = {
           {
             name: "emaConf",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "TwapPrice",
+      docs: [
+        "The time weighted average price & conf for a feed over the window [start_time, end_time].",
+        "This type is used to persist the calculated TWAP in TwapUpdate accounts on Solana.",
+      ],
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "feedId",
+            type: {
+              array: ["u8", 32],
+            },
+          },
+          {
+            name: "startTime",
+            type: "i64",
+          },
+          {
+            name: "endTime",
+            type: "i64",
+          },
+          {
+            name: "price",
+            type: "i64",
+          },
+          {
+            name: "conf",
+            type: "u64",
+          },
+          {
+            name: "exponent",
+            type: "i32",
+          },
+          {
+            name: "downSlotsRatio",
+            docs: [
+              "Ratio out of 1_000_000, where a value of 1_000_000 represents",
+              "all slots were missed and 0 represents no slots were missed.",
+            ],
+            type: "u32",
           },
         ],
       },
@@ -1083,6 +1359,30 @@ export const IDL: PythSolanaReceiver = {
         fields: [
           {
             name: "merklePriceUpdate",
+            type: {
+              defined: "MerklePriceUpdate",
+            },
+          },
+          {
+            name: "treasuryId",
+            type: "u8",
+          },
+        ],
+      },
+    },
+    {
+      name: "PostTwapUpdateParams",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "startMerklePriceUpdate",
+            type: {
+              defined: "MerklePriceUpdate",
+            },
+          },
+          {
+            name: "endMerklePriceUpdate",
             type: {
               defined: "MerklePriceUpdate",
             },

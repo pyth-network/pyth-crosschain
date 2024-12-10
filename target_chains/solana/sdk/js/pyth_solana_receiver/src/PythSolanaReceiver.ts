@@ -56,6 +56,8 @@ import {
 
 export type PriceUpdateAccount =
   IdlAccounts<PythSolanaReceiverProgram>["priceUpdateV2"];
+export type TwapUpdateAccount =
+  IdlAccounts<PythSolanaReceiverProgram>["twapUpdate"];
 /**
  * Configuration for the PythTransactionBuilder
  * @property closeUpdateAccounts (default: true) if true, the builder will add instructions to close the price update accounts and the encoded vaa accounts to recover the rent
