@@ -35,6 +35,7 @@ import {
   POST_UPDATE_COMPUTE_BUDGET,
   UPDATE_PRICE_FEED_COMPUTE_BUDGET,
   VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
+  WRITE_ENCODED_VAA_COMPUTE_BUDGET,
 } from "./compute_budget";
 import { Wallet } from "@coral-xyz/anchor";
 import {
@@ -43,6 +44,7 @@ import {
   findEncodedVaaAccountsByWriteAuthority,
   getGuardianSetIndex,
   trimSignatures,
+  VAA_SPLIT_INDEX,
 } from "./vaa";
 import {
   TransactionBuilder,
@@ -195,6 +197,42 @@ export class PythTransactionBuilder extends TransactionBuilder {
   }
 
   /**
+   * Add instructions to post TWAP updates to the builder.
+   * Use this function to post fully verified TWAP updates from the present or from the past for your program to consume.
+   *
+   * @param twapUpdateDataArray the output of the `@pythnetwork/hermes-client`'s `getLatestTwaps`. This is an array of verifiable price updates.
+   *
+   * @example
+   * ```typescript
+   * // Get the price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
+   * const twapUpdateData = await hermesClient.getLatestTwaps([
+   *    SOL_PRICE_FEED_ID,
+   *    ETH_PRICE_FEED_ID,
+   * ]);
+   *
+   * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
+   * await transactionBuilder.addPostTwapUpdates(priceUpdateData);
+   * console.log("The SOL/USD price update will get posted to:", transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58())
+   * await transactionBuilder.addPriceConsumerInstructions(...)
+   * ```
+   */
+  async addPostTwapUpdates(twapUpdateDataArray: string[]) {
+    const {
+      postInstructions,
+      priceFeedIdToTwapUpdateAccount,
+      closeInstructions,
+    } = await this.pythSolanaReceiver.buildPostTwapUpdateInstructions(
+      twapUpdateDataArray
+    );
+    this.closeInstructions.push(...closeInstructions);
+    Object.assign(
+      this.priceFeedIdToPriceUpdateAccount,
+      priceFeedIdToTwapUpdateAccount
+    );
+    this.addInstructions(postInstructions);
+  }
+
+  /**
    * Add instructions to update price feed accounts to the builder.
    * Price feed accounts are fixed accounts per price feed id that can only be updated with a more recent price.
    *
@@ -317,7 +355,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
       this.priceFeedIdToPriceUpdateAccount[priceFeedId];
     if (!priceUpdateAccount) {
       throw new Error(
-        `No price update account found for the price feed ID ${priceFeedId}. Make sure to call addPostPriceUpdates or addPostPartiallyVerifiedPriceUpdates before calling this function.`
+        `No price update account found for the price feed ID ${priceFeedId}. Make sure to call addPostPriceUpdates or addPostPartiallyVerifiedPriceUpdates or postTwapUpdates before calling this function.`
       );
     }
     return priceUpdateAccount;
@@ -592,6 +630,231 @@ export class PythSolanaReceiver {
     return {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
+      closeInstructions,
+    };
+  }
+
+  /**
+   * Build a series of helper instructions that post TWAP updates to the Pyth Solana Receiver program and another series to close the encoded vaa accounts and the TWAP update accounts.
+   *
+   * @param twapUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestTwaps`. This is an array of verifiable price updates.
+   * @returns `postInstructions`: the instructions to post the TWAP updates, these should be called before consuming the price updates
+   * @returns `priceFeedIdToTwapUpdateAccount`: this is a map of price feed IDs to Solana address. Given a price feed ID, you can use this map to find the account where `postInstructions` will post the TWAP update.
+   * @returns `closeInstructions`: the instructions to close the TWAP update accounts, these should be called after consuming the TWAP updates
+   */
+  async buildPostTwapUpdateInstructions(
+    twapUpdateDataArray: string[]
+  ): Promise<{
+    postInstructions: InstructionWithEphemeralSigners[];
+    priceFeedIdToTwapUpdateAccount: Record<string, PublicKey>;
+    closeInstructions: InstructionWithEphemeralSigners[];
+  }> {
+    const postInstructions: InstructionWithEphemeralSigners[] = [];
+    const priceFeedIdToTwapUpdateAccount: Record<string, PublicKey> = {};
+    const closeInstructions: InstructionWithEphemeralSigners[] = [];
+
+    const treasuryId = getRandomTreasuryId();
+
+    if (twapUpdateDataArray.length !== 2) {
+      throw new Error(
+        "twapUpdateDataArray must contain exactly two updates (start and end)"
+      );
+    }
+
+    const [startUpdateData, endUpdateData] = twapUpdateDataArray.map((data) =>
+      parseAccumulatorUpdateData(Buffer.from(data, "base64"))
+    );
+
+    // Validate that the start and end updates contain the same number of price feeds
+    if (startUpdateData.updates.length !== endUpdateData.updates.length) {
+      throw new Error(
+        "Start and end updates must contain the same number of price feeds"
+      );
+    }
+
+    // // Verify the VAAs
+    // const [startVaa, endVaa] = await Promise.all([
+    //   this.buildPostEncodedVaaInstructions(startUpdateData.vaa),
+    //   this.buildPostEncodedVaaInstructions(endUpdateData.vaa)
+    // ]);
+    // postInstructions.push(...startVaa.postInstructions, ...endVaa.postInstructions);
+    // closeInstructions.push(...startVaa.closeInstructions, ...endVaa.closeInstructions);
+
+    // const { encodedVaaAddress: startEncodedVaa } = startVaa;
+    // const { encodedVaaAddress: endEncodedVaa } = endVaa;
+
+    // TRANSACTION 1: Create, init, write initial data for Start VAA
+    // Create
+    const trimmedStartVaa = trimSignatures(startUpdateData.vaa, 13);
+    const startEncodedVaaKeypair = new Keypair();
+    postInstructions.push(
+      await buildEncodedVaaCreateInstruction(
+        this.wormhole,
+        trimmedStartVaa,
+        startEncodedVaaKeypair
+      )
+    );
+    // Init
+    postInstructions.push({
+      instruction: await this.wormhole.methods
+        .initEncodedVaa()
+        .accounts({
+          encodedVaa: startEncodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
+    });
+
+    // Write initial data
+    postInstructions.push(
+      ...(await buildWriteEncodedVaaWithSplitInstructions(
+        this.wormhole,
+        trimmedStartVaa,
+        startEncodedVaaKeypair.publicKey
+      ))
+    );
+
+    // TRANSACTION 2: Create, init, write initial data for End VAA
+    // Create
+    const trimmedEndVaa = trimSignatures(endUpdateData.vaa, 13);
+    const endEncodedVaaKeypair = new Keypair();
+    postInstructions.push(
+      await buildEncodedVaaCreateInstruction(
+        this.wormhole,
+        trimmedEndVaa,
+        endEncodedVaaKeypair
+      )
+    );
+    // Init
+    postInstructions.push({
+      instruction: await this.wormhole.methods
+        .initEncodedVaa()
+        .accounts({
+          encodedVaa: endEncodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
+    });
+
+    // Write initial data
+    postInstructions.push(
+      ...(await buildWriteEncodedVaaWithSplitInstructions(
+        this.wormhole,
+        trimmedEndVaa,
+        endEncodedVaaKeypair.publicKey
+      ))
+    );
+
+    // TRANSACTION 3: Write remaining data and verify for Start & End VAAs
+    // Write remaining data for start VAA
+    postInstructions.push({
+      instruction: await this.wormhole.methods
+        .writeEncodedVaa({
+          index: VAA_SPLIT_INDEX,
+          data: trimmedStartVaa.subarray(VAA_SPLIT_INDEX),
+        })
+        .accounts({
+          draftVaa: startEncodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
+    });
+
+    // Write remaining data for end VAA
+    postInstructions.push({
+      instruction: await this.wormhole.methods
+        .writeEncodedVaa({
+          index: VAA_SPLIT_INDEX,
+          data: trimmedEndVaa.subarray(VAA_SPLIT_INDEX),
+        })
+        .accounts({
+          draftVaa: endEncodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
+    });
+
+    // Verify start VAA
+    const startGuardianSetIndex = getGuardianSetIndex(trimmedStartVaa);
+    postInstructions.push({
+      instruction: await this.wormhole.methods
+        .verifyEncodedVaaV1()
+        .accounts({
+          guardianSet: getGuardianSetPda(
+            startGuardianSetIndex,
+            this.wormhole.programId
+          ),
+          draftVaa: startEncodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
+    });
+
+    // Verify end VAA
+    const endGuardianSetIndex = getGuardianSetIndex(trimmedEndVaa);
+    postInstructions.push({
+      instruction: await this.wormhole.methods
+        .verifyEncodedVaaV1()
+        .accounts({
+          guardianSet: getGuardianSetPda(
+            startGuardianSetIndex,
+            this.wormhole.programId
+          ),
+          draftVaa: startEncodedVaaKeypair.publicKey,
+        })
+        .accounts({
+          guardianSet: getGuardianSetPda(
+            startGuardianSetIndex,
+            this.wormhole.programId
+          ),
+          draftVaa: endEncodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
+    });
+
+    // Post a TWAP update to the receiver contract for each price feed
+    for (let i = 0; i < startUpdateData.updates.length; i++) {
+      const startUpdate = startUpdateData.updates[i];
+      const endUpdate = endUpdateData.updates[i];
+
+      const twapUpdateKeypair = new Keypair();
+      postInstructions.push({
+        instruction: await this.receiver.methods
+          .postTwapUpdate({
+            startMerklePriceUpdate: startUpdate,
+            endMerklePriceUpdate: endUpdate,
+            treasuryId,
+          })
+          .accounts({
+            startEncodedVaa: startEncodedVaaKeypair.publicKey,
+            endEncodedVaa: endEncodedVaaKeypair.publicKey,
+            twapUpdateAccount: twapUpdateKeypair.publicKey,
+            treasury: getTreasuryPda(treasuryId, this.receiver.programId),
+            config: getConfigPda(this.receiver.programId),
+          })
+          .instruction(),
+        signers: [twapUpdateKeypair],
+        computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+      });
+
+      priceFeedIdToTwapUpdateAccount[
+        "0x" + parsePriceFeedMessage(startUpdate.message).feedId.toString("hex")
+      ] = twapUpdateKeypair.publicKey;
+      closeInstructions.push(
+        await this.buildClosePriceUpdateInstruction(twapUpdateKeypair.publicKey)
+      );
+    }
+
+    return {
+      postInstructions,
+      priceFeedIdToTwapUpdateAccount,
       closeInstructions,
     };
   }
