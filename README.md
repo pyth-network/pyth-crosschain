@@ -108,7 +108,6 @@ after `--`, for instance you could run `pnpm test -- --concurrency 2`.
   checks, as well as whatever other code checks any packages support.
 - `pnpm fix`: Run auto fixes, including reformatting code and auto-fixing lint
   rules where possible.
-- `pnpm turbo build`: Build all packages in the monorepo using turborepo.
 - `pnpm start:dev`: Start all development servers in parallel.
 - `pnpm start:prod`: Run production builds and start production mode servers in
   parallel.
