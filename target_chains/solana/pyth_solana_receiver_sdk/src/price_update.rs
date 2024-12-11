@@ -59,29 +59,27 @@ pub struct PriceUpdateV2 {
 impl PriceUpdateV2 {
     pub const LEN: usize = 8 + 32 + 2 + 32 + 8 + 8 + 4 + 8 + 8 + 8 + 8 + 8;
 }
-/// A time weighted average price account. This account is used by the Pyth Receiver program to store a verified TWAP update from a Pyth price feed.
+/// A time weighted average price account.
+/// This account is used by the Pyth Receiver program to store a TWAP update from a Pyth price feed.
+/// TwapUpdates can only be created after the client has verified the VAAs via the Wormhole contract.
+/// Check out `target_chains/solana/cli/src/main.rs` for an example of how to do this.
+///
 /// It contains:
 /// - `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different TWAP update.
-/// - `verification_level`: The [`VerificationLevel`] of this price update. This represents how many Wormhole guardian signatures have been verified for this TWAP update.
 /// - `twap`: The actual TWAP update.
-/// - `posted_slot`: The slot at which this TWAP update was posted.
 #[account]
 #[derive(BorshSchema)]
 pub struct TwapUpdate {
     pub write_authority: Pubkey,
-    pub verification_level: VerificationLevel,
     pub twap: TwapPrice,
-    pub posted_slot: u64,
 }
 
 impl TwapUpdate {
     pub const LEN: usize = (
         8 // account discriminator (anchor)
         + 32 // write_authority
-        + 2 // verification_level
-        + (32 + 8 + 8 + 8 + 8 + 4 + 4) // twap
-        + 8
-        // posted_slot
+        + (32 + 8 + 8 + 8 + 8 + 4 + 4)
+        // twap
     );
 
     /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId`.
@@ -104,7 +102,7 @@ impl TwapUpdate {
         Ok(self.twap)
     }
 
-    /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId` no older than `maximum_age` with `Full` verification.
+    /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId` no older than `maximum_age`.
     ///
     /// # Example
     /// ```
@@ -131,11 +129,6 @@ impl TwapUpdate {
         maximum_age: u64,
         feed_id: &FeedId,
     ) -> std::result::Result<TwapPrice, GetPriceError> {
-        // Ensure the update is fully verified
-        check!(
-            self.verification_level.eq(&VerificationLevel::Full),
-            GetPriceError::InsufficientVerificationLevel
-        );
         // Ensure the update isn't outdated
         let twap_price = self.get_twap_unchecked(feed_id)?;
         check!(
@@ -570,57 +563,33 @@ pub mod tests {
             ..Default::default()
         };
 
-        let twap_update_unverified = TwapUpdate {
+        let update = TwapUpdate {
             write_authority: Pubkey::new_unique(),
-            verification_level: VerificationLevel::Partial { num_signatures: 0 },
             twap: expected_twap,
-            posted_slot: 0,
-        };
-
-        let twap_update_fully_verified = TwapUpdate {
-            write_authority: Pubkey::new_unique(),
-            verification_level: VerificationLevel::Full,
-            twap: expected_twap,
-            posted_slot: 0,
         };
 
         // Test unchecked access
-        assert_eq!(
-            twap_update_unverified.get_twap_unchecked(&feed_id),
-            Ok(expected_twap)
-        );
-        assert_eq!(
-            twap_update_fully_verified.get_twap_unchecked(&feed_id),
-            Ok(expected_twap)
-        );
+        assert_eq!(update.get_twap_unchecked(&feed_id), Ok(expected_twap));
 
-        // Test with age and verification checks
+        // Test with age check
         assert_eq!(
-            twap_update_unverified.get_twap_no_older_than(&mock_clock, 100, &feed_id),
-            Err(GetPriceError::InsufficientVerificationLevel)
-        );
-        assert_eq!(
-            twap_update_fully_verified.get_twap_no_older_than(&mock_clock, 100, &feed_id),
+            update.get_twap_no_older_than(&mock_clock, 100, &feed_id),
             Ok(expected_twap)
         );
 
         // Test with reduced maximum age
         assert_eq!(
-            twap_update_fully_verified.get_twap_no_older_than(&mock_clock, 10, &feed_id),
+            update.get_twap_no_older_than(&mock_clock, 10, &feed_id),
             Err(GetPriceError::PriceTooOld)
         );
 
         // Test with mismatched feed id
         assert_eq!(
-            twap_update_fully_verified.get_twap_unchecked(&mismatched_feed_id),
+            update.get_twap_unchecked(&mismatched_feed_id),
             Err(GetPriceError::MismatchedFeedId)
         );
         assert_eq!(
-            twap_update_fully_verified.get_twap_no_older_than(
-                &mock_clock,
-                100,
-                &mismatched_feed_id
-            ),
+            update.get_twap_no_older_than(&mock_clock, 100, &mismatched_feed_id),
             Err(GetPriceError::MismatchedFeedId)
         );
     }
