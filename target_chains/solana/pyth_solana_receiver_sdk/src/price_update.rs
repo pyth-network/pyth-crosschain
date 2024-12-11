@@ -61,11 +61,8 @@ impl PriceUpdateV2 {
 }
 /// A time weighted average price account.
 /// This account is used by the Pyth Receiver program to store a TWAP update from a Pyth price feed.
-///
-/// ## Warning
-/// This function doesn't check whether the TwapUpdate is constructed from verified price updates.
-///     TwapUpdates should be only created and used after the client has already verified the VAAs via the Wormhole contract.
-///     Check out `target_chains/solana/cli/src/main.rs` for an example of how to do this.
+/// TwapUpdates can only be created after the client has verified the VAAs via the Wormhole contract.
+/// Check out `target_chains/solana/cli/src/main.rs` for an example of how to do this.
 ///
 /// It contains:
 /// - `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different TWAP update.

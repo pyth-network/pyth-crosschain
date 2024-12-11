@@ -394,7 +394,7 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     let encoded_vaa_keypair = Keypair::new();
 
     // Transaction 1: Create and initialize VAA
-    let init_instructions = create_and_init_encoded_vaa_instructions(
+    let init_instructions = init_encoded_vaa_and_write_initial_data_ixs(
         &payer.pubkey(),
         vaa,
         &wormhole,
@@ -410,7 +410,7 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     let price_update_keypair = Keypair::new();
     let mut update_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(600_000)];
 
-    update_instructions.extend(write_and_verify_vaa_instructions(
+    update_instructions.extend(write_remaining_data_and_verify_vaa_ixs(
         &payer.pubkey(),
         vaa,
         &encoded_vaa_keypair.pubkey(),
@@ -457,7 +457,7 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
     let end_encoded_vaa_keypair = Keypair::new();
 
     // Transaction 1: Create and initialize start VAA
-    let start_init_instructions = create_and_init_encoded_vaa_instructions(
+    let start_init_instructions = init_encoded_vaa_and_write_initial_data_ixs(
         &payer.pubkey(),
         start_vaa,
         &wormhole,
@@ -470,7 +470,7 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
     )?;
 
     // Transaction 2: Create and initialize end VAA
-    let end_init_instructions = create_and_init_encoded_vaa_instructions(
+    let end_init_instructions = init_encoded_vaa_and_write_initial_data_ixs(
         &payer.pubkey(),
         end_vaa,
         &wormhole,
@@ -484,13 +484,13 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
 
     // Transaction 3: Write remaining VAA data and verify both VAAs
     let mut verify_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(400_000)];
-    verify_instructions.extend(write_and_verify_vaa_instructions(
+    verify_instructions.extend(write_remaining_data_and_verify_vaa_ixs(
         &payer.pubkey(),
         start_vaa,
         &start_encoded_vaa_keypair.pubkey(),
         wormhole,
     )?);
-    verify_instructions.extend(write_and_verify_vaa_instructions(
+    verify_instructions.extend(write_remaining_data_and_verify_vaa_ixs(
         &payer.pubkey(),
         end_vaa,
         &end_encoded_vaa_keypair.pubkey(),
@@ -523,7 +523,7 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
 }
 
 /// Creates instructions to initialize an encoded VAA account and write the first part of the VAA data
-pub fn create_and_init_encoded_vaa_instructions(
+pub fn init_encoded_vaa_and_write_initial_data_ixs(
     payer: &Pubkey,
     vaa: &[u8],
     wormhole: &Pubkey,
@@ -577,7 +577,7 @@ pub fn create_and_init_encoded_vaa_instructions(
 }
 
 /// Creates instructions to write remaining VAA data and verify the VAA
-pub fn write_and_verify_vaa_instructions(
+pub fn write_remaining_data_and_verify_vaa_ixs(
     payer: &Pubkey,
     vaa: &[u8],
     encoded_vaa_keypair: &Pubkey,

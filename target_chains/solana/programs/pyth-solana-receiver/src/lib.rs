@@ -485,6 +485,9 @@ fn post_twap_update_from_vaas<'info>(
     // Calculate the TWAP and store it in the output account
     match (start_message, end_message) {
         (Message::TwapMessage(start_msg), Message::TwapMessage(end_msg)) => {
+            // Verify that the feed ids and expos match, the start msg was published before the end msg,
+            // and that they are the first messages within their slots
+            validate_twap_messages(&start_msg, &end_msg)?;
             let (price, conf, down_slots_ratio) = calculate_twap(&start_msg, &end_msg)?;
 
             twap_update_account.write_authority = write_authority.key();
@@ -504,7 +507,7 @@ fn post_twap_update_from_vaas<'info>(
     Ok(())
 }
 
-fn calculate_twap(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<(i64, u64, u32)> {
+fn validate_twap_messages(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<()> {
     // Validate feed ids match
     require!(
         start_msg.feed_id == end_msg.feed_id,
@@ -532,6 +535,12 @@ fn calculate_twap(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<(i64
         end_msg.prev_publish_time < end_msg.publish_time,
         ReceiverError::InvalidTwapEndMessage
     );
+    Ok(())
+}
+
+/// Calculate the TWAP for the window before start and end messages
+/// Warning: The parameters aren't checked for validity, call `validate_twap_messages` before using.
+fn calculate_twap(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<(i64, u64, u32)> {
     let slot_diff = end_msg
         .publish_slot
         .checked_sub(start_msg.publish_slot)
@@ -669,8 +678,8 @@ fn verify_vaa_data_source(
 }
 
 #[cfg(test)]
-/// Unit tests for the core TWAP calculation logic in `calculate_twap`
-/// This test module is here because `calculate_twap` is private and can't
+/// Unit tests for the core TWAP calculation logic in `calculate_twap` and `validate_twap_messages`
+/// This test module is here because these functions are private and can't
 /// be imported into `tests/test_post_twap_updates`.
 mod calculate_twap_unit_tests {
     use super::*;
@@ -698,6 +707,7 @@ mod calculate_twap_unit_tests {
         let start = create_basic_twap_message(100, 100, 90, 1000);
         let end = create_basic_twap_message(300, 200, 180, 1100);
 
+        validate_twap_messages(&start, &end).unwrap();
         let price = calculate_twap(&start, &end).unwrap();
         assert_eq!(price.0, 2); // (300-100)/(1100-1000) = 2
     }
@@ -707,7 +717,7 @@ mod calculate_twap_unit_tests {
         let start = create_basic_twap_message(100, 100, 90, 1100);
         let end = create_basic_twap_message(300, 200, 180, 1000);
 
-        let err = calculate_twap(&start, &end).unwrap_err();
+        let err = validate_twap_messages(&start, &end).unwrap_err();
         assert_eq!(err, ReceiverError::InvalidTwapSlots.into());
     }
 
@@ -716,13 +726,13 @@ mod calculate_twap_unit_tests {
         let start = create_basic_twap_message(100, 100, 110, 1000);
         let end = create_basic_twap_message(300, 200, 180, 1100);
 
-        let err = calculate_twap(&start, &end).unwrap_err();
+        let err = validate_twap_messages(&start, &end).unwrap_err();
         assert_eq!(err, ReceiverError::InvalidTwapStartMessage.into());
 
         let start = create_basic_twap_message(100, 100, 90, 1000);
         let end = create_basic_twap_message(300, 200, 200, 1100);
 
-        let err = calculate_twap(&start, &end).unwrap_err();
+        let err = validate_twap_messages(&start, &end).unwrap_err();
         assert_eq!(err, ReceiverError::InvalidTwapEndMessage.into());
     }
 
@@ -731,6 +741,7 @@ mod calculate_twap_unit_tests {
         let start = create_basic_twap_message(i128::MIN, 100, 90, 1000);
         let end = create_basic_twap_message(i128::MAX, 200, 180, 1100);
 
+        validate_twap_messages(&start, &end).unwrap();
         let err = calculate_twap(&start, &end).unwrap_err();
         assert_eq!(err, ReceiverError::TwapCalculationOverflow.into());
     }
@@ -741,7 +752,7 @@ mod calculate_twap_unit_tests {
         let mut end = create_basic_twap_message(300, 200, 180, 1100);
         end.feed_id = [1; 32];
 
-        let err = calculate_twap(&start, &end).unwrap_err();
+        let err = validate_twap_messages(&start, &end).unwrap_err();
         assert_eq!(err, ReceiverError::FeedIdMismatch.into());
     }
 
@@ -751,7 +762,7 @@ mod calculate_twap_unit_tests {
         let mut end = create_basic_twap_message(300, 200, 180, 1100);
         end.exponent = 9;
 
-        let err = calculate_twap(&start, &end).unwrap_err();
+        let err = validate_twap_messages(&start, &end).unwrap_err();
         assert_eq!(err, ReceiverError::ExponentMismatch.into());
     }
 }
