@@ -38,6 +38,7 @@ Fortuna is an off-chain service which can be used by [Entropy](https://pyth.netw
 ## Development
 
 ### TypeScript Version Requirements
+
 The project requires TypeScript version >=4.7.4 <5.5.0. Using versions outside this range may result in linting warnings.
 
 ### Pull requests
