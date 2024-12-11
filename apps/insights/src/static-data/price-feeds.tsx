@@ -8,11 +8,5 @@ export const priceFeeds = {
     "Commodities.WTI1M",
     "Crypto.1INCH/USD",
   ],
-  featuredComingSoon: [
-    "Rates.US2Y",
-    "Crypto.SOL/ETH",
-    "Crypto.ION/USD",
-    "Equity.NL.BCOIN/USD",
-    "Crypto.BSOL/SOL.RR",
-  ],
+  featuredComingSoon: ["Rates.US2Y", "Crypto.ION/USD", "Equity.NL.BCOIN/USD"],
 };

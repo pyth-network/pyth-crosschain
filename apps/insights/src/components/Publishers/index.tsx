@@ -36,7 +36,7 @@ export const Publishers = async () => {
     <div className={styles.publishers}>
       <h1 className={styles.header}>Publishers</h1>
       <div className={styles.body}>
-        <div className={styles.stats}>
+        <section className={styles.stats}>
           <StatCard
             variant="primary"
             header="Active Publishers"
@@ -115,15 +115,17 @@ export const Publishers = async () => {
               <div className={styles.legend}>
                 <Label className={styles.title}>PYTH Staking Pool</Label>
                 <p className={styles.poolUsed}>
-                  <FormattedTokens mode="wholePart">
-                    {oisStats.totalStaked}
-                  </FormattedTokens>
+                  <FormattedTokens
+                    mode="wholePart"
+                    tokens={oisStats.totalStaked}
+                  />
                 </p>
                 <p className={styles.poolTotal}>
                   /{" "}
-                  <FormattedTokens mode="wholePart">
-                    {BigInt(oisStats.maxPoolSize ?? 0)}
-                  </FormattedTokens>
+                  <FormattedTokens
+                    mode="wholePart"
+                    tokens={BigInt(oisStats.maxPoolSize ?? 0)}
+                  />
                 </p>
               </div>
             </SemicircleMeter>
@@ -134,7 +136,7 @@ export const Publishers = async () => {
                 stat={
                   <>
                     <TokenIcon />
-                    <FormattedTokens>{oisStats.totalStaked}</FormattedTokens>
+                    <FormattedTokens tokens={oisStats.totalStaked} />
                   </>
                 }
               />
@@ -144,15 +146,13 @@ export const Publishers = async () => {
                 stat={
                   <>
                     <TokenIcon />
-                    <FormattedTokens>
-                      {oisStats.rewardsDistributed}
-                    </FormattedTokens>
+                    <FormattedTokens tokens={oisStats.rewardsDistributed} />
                   </>
                 }
               />
             </div>
           </Card>
-        </div>
+        </section>
         <PublishersCard
           className={styles.publishersCard}
           rankingLoadingSkeleton={
@@ -178,7 +178,7 @@ export const Publishers = async () => {
             ({ key, rank, numSymbols, medianScore }) => ({
               id: key,
               nameAsString: lookupPublisher(key)?.name,
-              name: <PublisherName>{key}</PublisherName>,
+              name: <PublisherName publisherKey={key} />,
               ranking: <Ranking>{rank}</Ranking>,
               activeFeeds: numSymbols,
               inactiveFeeds: totalFeeds - numSymbols,
@@ -195,8 +195,8 @@ const Ranking = ({ className, ...props }: ComponentProps<"span">) => (
   <span className={clsx(styles.ranking, className)} {...props} />
 );
 
-const PublisherName = ({ children }: { children: string }) => {
-  const knownPublisher = lookupPublisher(children);
+const PublisherName = ({ publisherKey }: { publisherKey: string }) => {
+  const knownPublisher = lookupPublisher(publisherKey);
   const Icon = knownPublisher?.icon.color ?? UndisclosedIcon;
   const name = knownPublisher?.name ?? "Undisclosed";
   return (
@@ -208,13 +208,23 @@ const PublisherName = ({ children }: { children: string }) => {
       {knownPublisher ? (
         <div className={styles.nameAndKey}>
           <div className={styles.name}>{name}</div>
-          <CopyButton className={styles.publisherKey ?? ""} text={children}>
-            {`${children.slice(0, 4)}...${children.slice(-4)}`}
+          <CopyButton
+            size="xs"
+            variant="ghost"
+            className={styles.key ?? ""}
+            text={publisherKey}
+          >
+            {`${publisherKey.slice(0, 4)}...${publisherKey.slice(-4)}`}
           </CopyButton>
         </div>
       ) : (
-        <CopyButton className={styles.name ?? ""} text={children}>
-          {`${children.slice(0, 4)}...${children.slice(-4)}`}
+        <CopyButton
+          size="sm"
+          variant="ghost"
+          className={styles.key ?? ""}
+          text={publisherKey}
+        >
+          {`${publisherKey.slice(0, 4)}...${publisherKey.slice(-4)}`}
         </CopyButton>
       )}
     </div>

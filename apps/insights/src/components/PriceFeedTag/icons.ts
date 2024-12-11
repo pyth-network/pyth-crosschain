@@ -969,6 +969,3 @@ export const icons = {
   ZIL: Zil,
   ZRX: Zrx,
 };
-
-export const getIcon = (symbol: string) =>
-  symbol in icons ? icons[symbol as keyof typeof icons] : undefined;

@@ -1,6 +1,6 @@
 @use "../theme";
 
-.appTabs {
+.mainNavTabs {
   gap: theme.spacing(2);
 
   @include theme.row;
@@ -17,7 +17,9 @@
       outline: 4px solid transparent;
       outline-offset: 0;
       z-index: -1;
-      transition: outline-color 200ms linear;
+      transition-property: background-color, outline-color;
+      transition-duration: 100ms;
+      transition-timing-function: linear;
     }
 
     &[data-focus-visible] {
@@ -31,7 +33,29 @@
 
     &[data-selected] {
       color: theme.color("button", "solid", "foreground");
-      cursor: default;
+      pointer-events: none;
+
+      &[data-selectable] {
+        pointer-events: auto;
+
+        &[data-hovered] .bubble {
+          background-color: theme.color(
+            "button",
+            "solid",
+            "background",
+            "hover"
+          );
+        }
+
+        &[data-pressed] .bubble {
+          background-color: theme.color(
+            "button",
+            "solid",
+            "background",
+            "active"
+          );
+        }
+      }
     }
   }
 }

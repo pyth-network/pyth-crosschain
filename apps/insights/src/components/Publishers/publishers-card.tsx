@@ -128,7 +128,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
         href: "#",
         data: {
           ...data,
-          medianScore: <PublisherScore>{medianScore}</PublisherScore>,
+          medianScore: <PublisherScore score={medianScore} />,
         },
       })),
     [paginatedPublishers],
@@ -283,14 +283,15 @@ const PublishersCardContents = ({
 );
 
 type PublisherScoreProps = {
-  children: number;
+  score: number;
 };
 
-const PublisherScore = ({ children }: PublisherScoreProps) => (
+const PublisherScore = ({ score }: PublisherScoreProps) => (
   <Meter
-    value={children}
+    value={score}
     maxValue={1}
     style={{ "--width": PUBLISHER_SCORE_WIDTH } as CSSProperties}
+    aria-label="Score"
   >
     {({ percentage }) => (
       <div
@@ -301,7 +302,7 @@ const PublisherScore = ({ children }: PublisherScoreProps) => (
           className={styles.fill}
           style={{ width: `${(50 + percentage / 2).toString()}%` }}
         >
-          {children.toFixed(2)}
+          {score.toFixed(2)}
         </div>
       </div>
     )}

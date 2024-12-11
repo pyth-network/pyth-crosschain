@@ -2,11 +2,12 @@
 
 import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
+import clsx from "clsx";
 import { type ComponentProps, createContext, use } from "react";
 import { useNumberFormatter } from "react-aria";
 import { z } from "zod";
 
-import styles from "./change-percent.module.scss";
+import styles from "./index.module.scss";
 import { StateType, useData } from "../../use-data";
 import { useLivePrice } from "../LivePrices";
 
@@ -18,20 +19,17 @@ const REFRESH_YESTERDAYS_PRICES_INTERVAL = ONE_HOUR_IN_MS;
 const CHANGE_PERCENT_SKELETON_WIDTH = 15;
 
 type Props = Omit<ComponentProps<typeof YesterdaysPricesContext>, "value"> & {
-  symbolsToFeedKeys: Record<string, string>;
+  feeds: (Feed & { symbol: string })[];
 };
 
 const YesterdaysPricesContext = createContext<
   undefined | ReturnType<typeof useData<Map<string, number>>>
 >(undefined);
 
-export const YesterdaysPricesProvider = ({
-  symbolsToFeedKeys,
-  ...props
-}: Props) => {
+export const YesterdaysPricesProvider = ({ feeds, ...props }: Props) => {
   const state = useData(
-    ["yesterdaysPrices", Object.values(symbolsToFeedKeys)],
-    () => getYesterdaysPrices(symbolsToFeedKeys),
+    ["yesterdaysPrices", feeds.map((feed) => feed.symbol)],
+    () => getYesterdaysPrices(feeds),
     {
       refreshInterval: REFRESH_YESTERDAYS_PRICES_INTERVAL,
     },
@@ -41,17 +39,21 @@ export const YesterdaysPricesProvider = ({
 };
 
 const getYesterdaysPrices = async (
-  symbolsToFeedKeys: Record<string, string>,
+  feeds: (Feed & { symbol: string })[],
 ): Promise<Map<string, number>> => {
   const url = new URL("/yesterdays-prices", window.location.origin);
-  for (const symbol of Object.keys(symbolsToFeedKeys)) {
-    url.searchParams.append("symbols", symbol);
+  for (const feed of feeds) {
+    url.searchParams.append("symbols", feed.symbol);
   }
   const response = await fetch(url);
   const data: unknown = await response.json();
   return new Map(
     Object.entries(yesterdaysPricesSchema.parse(data)).map(
-      ([symbol, value]) => [symbolsToFeedKeys[symbol] ?? "", value],
+      ([symbol, value]) => [
+        feeds.find((feed) => feed.symbol === symbol)?.product.price_account ??
+          "",
+        value,
+      ],
     ),
   );
 };
@@ -69,10 +71,17 @@ const useYesterdaysPrices = () => {
 };
 
 type ChangePercentProps = {
-  feedKey: string;
+  className?: string | undefined;
+  feed: Feed;
 };
 
-export const ChangePercent = ({ feedKey }: ChangePercentProps) => {
+type Feed = {
+  product: {
+    price_account: string;
+  };
+};
+
+export const ChangePercent = ({ feed, className }: ChangePercentProps) => {
   const yesterdaysPriceState = useYesterdaysPrices();
 
   switch (yesterdaysPriceState.type) {
@@ -85,52 +94,60 @@ export const ChangePercent = ({ feedKey }: ChangePercentProps) => {
     case StateType.NotLoaded: {
       return (
         <Skeleton
-          className={styles.changePercent}
+          className={clsx(styles.changePercent, className)}
           width={CHANGE_PERCENT_SKELETON_WIDTH}
         />
       );
     }
 
     case StateType.Loaded: {
-      const yesterdaysPrice = yesterdaysPriceState.data.get(feedKey);
+      const yesterdaysPrice = yesterdaysPriceState.data.get(
+        feed.product.price_account,
+      );
       // eslint-disable-next-line unicorn/no-null
       return yesterdaysPrice === undefined ? null : (
-        <ChangePercentLoaded priorPrice={yesterdaysPrice} feedKey={feedKey} />
+        <ChangePercentLoaded
+          className={clsx(styles.changePercent, className)}
+          priorPrice={yesterdaysPrice}
+          feed={feed}
+        />
       );
     }
   }
 };
 
 type ChangePercentLoadedProps = {
+  className?: string | undefined;
   priorPrice: number;
-  feedKey: string;
+  feed: Feed;
 };
 
 const ChangePercentLoaded = ({
+  className,
   priorPrice,
-  feedKey,
+  feed,
 }: ChangePercentLoadedProps) => {
-  const currentPrice = useLivePrice(feedKey);
+  const currentPrice = useLivePrice(feed);
 
   return currentPrice === undefined ? (
-    <Skeleton
-      className={styles.changePercent}
-      width={CHANGE_PERCENT_SKELETON_WIDTH}
-    />
+    <Skeleton className={className} width={CHANGE_PERCENT_SKELETON_WIDTH} />
   ) : (
     <PriceDifference
-      currentPrice={currentPrice.price}
+      className={className}
+      currentPrice={currentPrice.aggregate.price}
       priorPrice={priorPrice}
     />
   );
 };
 
 type PriceDifferenceProps = {
+  className?: string | undefined;
   currentPrice: number;
   priorPrice: number;
 };
 
 const PriceDifference = ({
+  className,
   currentPrice,
   priorPrice,
 }: PriceDifferenceProps) => {
@@ -138,7 +155,7 @@ const PriceDifference = ({
   const direction = getDirection(currentPrice, priorPrice);
 
   return (
-    <span data-direction={direction} className={styles.changePercent}>
+    <span data-direction={direction} className={className}>
       <CaretUp weight="fill" className={styles.caret} />
       {numberFormatter.format(
         (100 * Math.abs(currentPrice - priorPrice)) / currentPrice,
