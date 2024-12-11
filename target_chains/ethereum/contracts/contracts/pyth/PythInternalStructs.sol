@@ -30,4 +30,13 @@ contract PythInternalStructs {
         uint16 chainId;
         bytes32 emitterAddress;
     }
+
+    struct TwapInfo {
+        bytes32 feedId;
+        uint64 startTime;
+        uint64 endTime;
+        int64 price;
+        uint64 conf;
+        int32 exponent;
+    }
 }
