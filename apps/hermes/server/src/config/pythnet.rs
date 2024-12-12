@@ -11,7 +11,7 @@ pub struct Options {
     #[arg(env = "PYTHNET_WS_ADDR")]
     pub ws_addr: String,
 
-    /// Addres of a PythNet compatible HTP RPC endpoint.
+    /// Address of a PythNet compatible HTP RPC endpoint.
     #[arg(long = "pythnet-http-addr")]
     #[arg(env = "PYTHNET_HTTP_ADDR")]
     pub http_addr: String,

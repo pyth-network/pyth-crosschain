@@ -601,7 +601,7 @@ export type WormholeCoreBridgeSolana = {
             name: "signerIndices";
             docs: [
               "Indices of verified guardian signatures, where -1 indicates a missing value. There is a",
-              "missing value if the guardian at this index is not expected to have its signature verfied by",
+              "missing value if the guardian at this index is not expected to have its signature verified by",
               "the Sig Verify native program in the instruction invoked prior).",
               "",
               "NOTE: In the legacy implementation, this argument being a fixed-sized array of 19 only",
@@ -2207,7 +2207,7 @@ export const IDL: WormholeCoreBridgeSolana = {
             name: "signerIndices",
             docs: [
               "Indices of verified guardian signatures, where -1 indicates a missing value. There is a",
-              "missing value if the guardian at this index is not expected to have its signature verfied by",
+              "missing value if the guardian at this index is not expected to have its signature verified by",
               "the Sig Verify native program in the instruction invoked prior).",
               "",
               "NOTE: In the legacy implementation, this argument being a fixed-sized array of 19 only",

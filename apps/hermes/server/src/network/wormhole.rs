@@ -30,7 +30,7 @@ impl std::fmt::Display for GuardianSet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "[")?;
         for (i, key) in self.keys.iter().enumerate() {
-            // Comma seperated printing of the keys using hex encoding.
+            // Comma separated printing of the keys using hex encoding.
             if i != 0 {
                 write!(f, ", ")?;
             }
