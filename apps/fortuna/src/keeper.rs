@@ -2,7 +2,7 @@ use {
     crate::{
         api::{self, BlockchainState, ChainId},
         chain::{
-            eth_gas_oracle::eip1559_default_estimator,
+            eth_gas_oracle::EthProviderOracle,
             ethereum::{
                 InstrumentedPythContract, InstrumentedSignablePythContract, PythContractCall,
             },
@@ -14,6 +14,7 @@ use {
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
     ethers::{
+        prelude::GasOracle,
         providers::{Middleware, Provider, Ws},
         signers::Signer,
         types::{Address, U256},
@@ -1208,11 +1209,13 @@ pub async fn estimate_tx_cost(
             .try_into()
             .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?
     } else {
-        let (max_fee_per_gas, max_priority_fee_per_gas) = middleware
-            .estimate_eip1559_fees(Some(eip1559_default_estimator))
-            .await?;
+        let gas_oracle = EthProviderOracle::new(middleware.clone(), 100);
+        let (max_fee_per_gas, _) = gas_oracle
+            .estimate_eip1559_fees()
+            .await
+            .map_err(|e| anyhow!("Failed to estimate gas price: {}", e))?;
 
-        (max_fee_per_gas + max_priority_fee_per_gas)
+        max_fee_per_gas
             .try_into()
             .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?
     };

@@ -211,7 +211,8 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         provider: Provider<T>,
     ) -> Result<SignablePythContractInner<T>> {
         let chain_id = provider.get_chainid().await?;
-        let gas_oracle = EthProviderOracle::new(provider.clone());
+        let gas_oracle =
+            EthProviderOracle::new(provider.clone(), chain_config.priority_fee_multiplier_pct);
         let wallet__ = private_key
             .parse::<LocalWallet>()?
             .with_chain_id(chain_id.as_u64());

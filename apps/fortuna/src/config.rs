@@ -166,6 +166,10 @@ pub struct EthereumConfig {
     /// Maximum number of hashes to record in a request.
     /// This should be set according to the maximum gas limit the provider supports for callbacks.
     pub max_num_hashes: Option<u32>,
+
+    /// The percentage multiplier to apply to the priority fee (100 = no change, e.g. 150 = 150% of base fee)
+    #[serde(default = "default_priority_fee_multiplier_pct")]
+    pub priority_fee_multiplier_pct: u64,
 }
 
 /// A commitment that the provider used to generate random numbers at some point in the past.
@@ -213,6 +217,10 @@ pub struct ProviderConfig {
 
 fn default_chain_sample_interval() -> u64 {
     1
+}
+
+fn default_priority_fee_multiplier_pct() -> u64 {
+    100
 }
 
 /// Configuration values for the keeper service that are shared across chains.
