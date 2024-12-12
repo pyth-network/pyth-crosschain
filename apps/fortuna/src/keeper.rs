@@ -1,11 +1,13 @@
 use {
     crate::{
-        api::{self, BlockchainState},
+        api::{self, BlockchainState, ChainId},
         chain::{
             eth_gas_oracle::eip1559_default_estimator,
-            ethereum::{InstrumentedSignablePythContract, PythContractCall},
+            ethereum::{
+                InstrumentedPythContract, InstrumentedSignablePythContract, PythContractCall,
+            },
             reader::{BlockNumber, RequestedWithCallbackEvent},
-            traced_client::RpcMetrics,
+            traced_client::{RpcMetrics, TracedClient},
         },
         config::EthereumConfig,
     },
@@ -42,6 +44,8 @@ const BACKLOG_RANGE: u64 = 1000;
 const BLOCK_BATCH_SIZE: u64 = 100;
 /// How much to wait before polling the next latest block
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
+/// Track metrics in this interval
+const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 /// Check whether we need to conduct a withdrawal at this interval.
 const WITHDRAW_INTERVAL: Duration = Duration::from_secs(300);
 /// Check whether we need to adjust the fee at this interval.
@@ -205,6 +209,7 @@ pub async fn run_keeper_threads(
         .await
         .expect("Chain config should be valid"),
     );
+    let keeper_address = contract.wallet().address();
 
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashSet::<u64>::new()));
 
@@ -287,15 +292,51 @@ pub async fn run_keeper_threads(
 
     // Spawn a thread to track the provider info and the balance of the keeper
     spawn(
-        track_provider(
-            contract.clone(),
-            chain_state.provider_address,
-            metrics.clone(),
-        )
+        async move {
+            let chain_id = chain_state.id.clone();
+            let chain_config = chain_eth_config.clone();
+            let provider_address = chain_state.provider_address;
+            let keeper_metrics = metrics.clone();
+            let contract = match InstrumentedPythContract::from_config(
+                &chain_config,
+                chain_id.clone(),
+                rpc_metrics,
+            ) {
+                Ok(r) => r,
+                Err(e) => {
+                    tracing::error!("Error while connecting to pythnet contract. error: {:?}", e);
+                    return;
+                }
+            };
+
+            loop {
+                // There isn't a loop for indefinite trials. There is a new thread being spawned every `TRACK_INTERVAL` seconds.
+                // If rpc start fails all of these threads will just exit, instead of retrying.
+                // We are tracking rpc failures elsewhere, so it's fine.
+                spawn(
+                    track_provider(
+                        chain_id.clone(),
+                        contract.clone(),
+                        provider_address,
+                        keeper_metrics.clone(),
+                    )
+                    .in_current_span(),
+                );
+                spawn(
+                    track_balance(
+                        chain_id.clone(),
+                        contract.client(),
+                        keeper_address,
+                        keeper_metrics.clone(),
+                    )
+                    .in_current_span(),
+                );
+
+                time::sleep(TRACK_INTERVAL).await;
+            }
+        }
         .in_current_span(),
     );
-
-    spawn(track_balance(contract.clone(), chain_state.provider_address, metrics).in_current_span());
 }
 
 /// Process an event with backoff. It will retry the reveal on failure for 5 minutes.
@@ -773,23 +814,15 @@ pub async fn process_backlog(
     tracing::info!("Backlog processed");
 }
 
-/// tracks the balance of the given address on the given chain
-/// if there was an error, the function will just return
+/// Track the balance of an account. If there was an error, the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_balance(
-    contract: Arc<InstrumentedSignablePythContract>,
+    chain_id: String,
+    provider: Arc<Provider<TracedClient>>,
     address: Address,
     metrics: Arc<KeeperMetrics>,
 ) {
-    let chain_id = match contract.provider().get_chainid().await {
-        Ok(id) => id.to_string(),
-        Err(e) => {
-            tracing::error!("Error while getting chain id. error: {:?}", e);
-            return;
-        }
-    };
-
-    let balance = match contract.client().get_balance(address, None).await {
+    let balance = match provider.get_balance(address, None).await {
         // This conversion to u128 is fine as the total balance will never cross the limits
         // of u128 practically.
         Ok(r) => r.as_u128(),
@@ -805,28 +838,20 @@ pub async fn track_balance(
     metrics
         .balance
         .get_or_create(&AccountLabel {
-            chain_id,
+            chain_id: chain_id.clone(),
             address: address.to_string(),
         })
         .set(balance);
 }
 
-/// tracks the collected fees and the hashchain data of the given provider address on the given chain
-/// if there is a error the function will just return
+/// Track the provider info. If there is a error the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_provider(
-    contract: Arc<InstrumentedSignablePythContract>,
+    chain_id: ChainId,
+    contract: InstrumentedPythContract,
     provider_address: Address,
     metrics: Arc<KeeperMetrics>,
 ) {
-    let chain_id = match contract.provider().get_chainid().await {
-        Ok(id) => id.to_string(),
-        Err(e) => {
-            tracing::error!("Error while getting chain id. error: {:?}", e);
-            return;
-        }
-    };
-
     let provider_info = match contract.get_provider_info(provider_address).call().await {
         Ok(info) => info,
         Err(e) => {
