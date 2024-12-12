@@ -56,8 +56,8 @@ catalog:
   "@tailwindcss/forms": 0.5.9
   "@types/jest": 29.5.14
   "@types/node": 22.8.2
-  "@types/react": npm:types-react@19.0.0-rc.1
-  "@types/react-dom": npm:types-react-dom@19.0.0-rc.1
+  "@types/react": 19.0.1
+  "@types/react-dom": 19.0.2
   autoprefixer: 10.4.20
   bcp-47: 2.1.0
   bs58: 6.0.0
@@ -71,7 +71,7 @@ catalog:
   modern-normalize: 3.0.1
   motion: 11.11.17
   next-themes: 0.3.0
-  next: 15.0.3
+  next: 15.1.0
   nuqs: 2.1.2
   pino: 9.5.0
   postcss-loader: 8.1.1
@@ -79,8 +79,8 @@ catalog:
   prettier: 3.3.3
   react-aria-components: 1.5.0
   react-aria: 3.36.0
-  react-dom: 19.0.0-rc-603e6108-20241029
-  react: 19.0.0-rc-603e6108-20241029
+  react-dom: 19.0.0
+  react: 19.0.0
   recharts: 2.14.1
   sass-loader: 16.0.3
   sass: 1.80.7

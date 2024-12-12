@@ -29,6 +29,12 @@ const meta = {
         category: "State",
       },
     },
+    invert: {
+      control: "boolean",
+      table: {
+        category: "Link",
+      },
+    },
   },
 } satisfies Meta<typeof LinkComponent>;
 export default meta;
@@ -39,5 +45,6 @@ export const Link = {
     href: "https://www.pyth.network",
     target: "_blank",
     isDisabled: false,
+    invert: false,
   },
 } satisfies StoryObj<typeof LinkComponent>;

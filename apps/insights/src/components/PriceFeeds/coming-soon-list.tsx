@@ -67,7 +67,7 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
     [filteredFeeds],
   );
   return (
-    <>
+    <div className={styles.comingSoonList}>
       <div className={styles.searchBar}>
         <SearchInput
           size="sm"
@@ -109,6 +109,6 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
         ]}
         rows={rows}
       />
-    </>
+    </div>
   );
 };

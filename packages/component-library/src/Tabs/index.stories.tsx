@@ -1,21 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { AppTabs as AppTabsComponent } from "./index.js";
+import { Tabs as TabsComponent } from "./index.js";
 import { UnstyledTabs } from "../UnstyledTabs/index.js";
 
 const meta = {
-  component: AppTabsComponent,
+  component: TabsComponent,
   argTypes: {
-    tabs: {
+    items: {
       table: {
         disable: true,
       },
     },
   },
-} satisfies Meta<typeof AppTabsComponent>;
+} satisfies Meta<typeof TabsComponent>;
 export default meta;
 
-export const AppTabs = {
+export const Tabs = {
   decorators: [
     (Story) => (
       <UnstyledTabs>
@@ -24,9 +24,9 @@ export const AppTabs = {
     ),
   ],
   args: {
-    tabs: [
+    items: [
       { id: "foo", children: "Foo" },
       { id: "bar", children: "Bar" },
     ],
   },
-} satisfies StoryObj<typeof AppTabsComponent>;
+} satisfies StoryObj<typeof TabsComponent>;

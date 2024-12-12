@@ -1,0 +1,12 @@
+@use "@pythnetwork/component-library/theme";
+
+.referenceData {
+  .field {
+    color: theme.color("muted");
+    font-weight: theme.font-weight("normal");
+  }
+
+  .value {
+    color: theme.color("paragraph");
+  }
+}

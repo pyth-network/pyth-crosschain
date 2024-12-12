@@ -6,8 +6,7 @@ import { Footer } from "./footer";
 import { Header } from "./header";
 // import { MobileMenu } from "./mobile-menu";
 import styles from "./index.module.scss";
-import { TabPanel } from "./tab-panel";
-import { TabRoot } from "./tabs";
+import { TabRoot, TabPanel } from "./tabs";
 import {
   IS_PRODUCTION_SERVER,
   GOOGLE_ANALYTICS_ID,

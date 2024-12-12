@@ -39,6 +39,7 @@ export type ColumnConfig<T extends string> = Omit<ColumnProps, "children"> & {
   name: ReactNode;
   id: T;
   fill?: boolean | undefined;
+  sticky?: boolean | undefined;
   alignment?: Alignment | undefined;
   width?: number | undefined;
 } & (
@@ -85,8 +86,8 @@ export const Table = <T extends string>({
         columns={columns}
         className={styles.tableHeader ?? ""}
       >
-        {({ fill, width, alignment, ...column }: ColumnConfig<T>) => (
-          <UnstyledColumn {...cellProps(alignment, width, fill)} {...column}>
+        {(column: ColumnConfig<T>) => (
+          <UnstyledColumn {...cellProps(column)} {...column}>
             {column.name}
           </UnstyledColumn>
         )}
@@ -104,8 +105,8 @@ export const Table = <T extends string>({
             className={styles.row ?? ""}
             columns={columns}
           >
-            {({ alignment, fill, width, ...column }: ColumnConfig<T>) => (
-              <UnstyledCell {...cellProps(alignment, width, fill)}>
+            {(column: ColumnConfig<T>) => (
+              <UnstyledCell {...cellProps(column)}>
                 {"loadingSkeleton" in column ? (
                   column.loadingSkeleton
                 ) : (
@@ -113,7 +114,7 @@ export const Table = <T extends string>({
                     width={
                       "loadingSkeletonWidth" in column
                         ? column.loadingSkeletonWidth
-                        : width
+                        : column.width
                     }
                   />
                 )}
@@ -127,9 +128,9 @@ export const Table = <T extends string>({
               columns={columns}
               {...row}
             >
-              {({ alignment, width, fill, id }: ColumnConfig<T>) => (
-                <UnstyledCell {...cellProps(alignment, width, fill)}>
-                  {data[id]}
+              {(column: ColumnConfig<T>) => (
+                <UnstyledCell {...cellProps(column)}>
+                  {data[column.id]}
                 </UnstyledCell>
               )}
             </UnstyledRow>
@@ -140,13 +141,15 @@ export const Table = <T extends string>({
   </div>
 );
 
-const cellProps = (
-  alignment: Alignment | undefined,
-  width: number | undefined,
-  fill: boolean | undefined,
-) => ({
+const cellProps = <T extends string>({
+  alignment,
+  width,
+  fill,
+  sticky,
+}: Pick<ColumnConfig<T>, "alignment" | "width" | "fill" | "sticky">) => ({
   className: styles.cell ?? "",
   "data-alignment": alignment ?? "left",
+  "data-fill": fill ? "" : undefined,
+  "data-sticky": sticky ? "" : undefined,
   ...(width && { style: { "--width": width } as CSSProperties }),
-  ...(fill && { "data-fill": "" }),
 });

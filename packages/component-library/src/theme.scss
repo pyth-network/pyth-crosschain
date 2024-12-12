@@ -425,6 +425,8 @@ $color: (
   "paragraph":
     light-dark(pallette-color("steel", 700), pallette-color("steel", 300)),
   "link": (
+    "primary":
+      light-dark(pallette-color("violet", 700), pallette-color("purple", 300)),
     "normal":
       light-dark(pallette-color("steel", 800), pallette-color("steel", 50)),
   ),
