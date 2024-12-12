@@ -1,13 +1,11 @@
 use {
     crate::{
-        api::{self, BlockchainState, ChainId},
+        api::{self, BlockchainState},
         chain::{
             eth_gas_oracle::eip1559_default_estimator,
-            ethereum::{
-                InstrumentedPythContract, InstrumentedSignablePythContract, PythContractCall,
-            },
+            ethereum::{InstrumentedSignablePythContract, PythContractCall},
             reader::{BlockNumber, RequestedWithCallbackEvent},
-            traced_client::{RpcMetrics, TracedClient},
+            traced_client::RpcMetrics,
         },
         config::EthereumConfig,
     },
@@ -33,7 +31,7 @@ use {
         sync::{mpsc, RwLock},
         time::{self, timeout, Duration},
     },
-    tracing::{error, info_span, Instrument},
+    tracing::{self, Instrument},
 };
 
 /// How much to wait before retrying in case of an RPC error
@@ -192,7 +190,7 @@ pub async fn run_keeper_threads(
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
     rpc_metrics: Arc<RpcMetrics>,
-) -> Result<()> {
+) {
     tracing::info!("starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("latest safe block: {}", &latest_safe_block);
@@ -278,7 +276,7 @@ pub async fn run_keeper_threads(
                 config_for_fee.target_profit_pct,
                 config_for_fee.max_profit_pct,
                 config_for_fee.fee,
-                &config_for_fee,
+                config_for_fee.eip1559_fee_multiplier_pct,
             )
             .await
         }
@@ -288,32 +286,16 @@ pub async fn run_keeper_threads(
     spawn(update_commitments_loop(contract.clone(), chain_state.clone()).in_current_span());
 
     // Spawn a thread to track the provider info and the balance of the keeper
-    let chain_id = chain_state.id.clone();
-    let provider_address = chain_state.provider_address;
-    let config_for_track = chain_eth_config.clone();
-    let keeper_metrics = metrics.clone();
     spawn(
-        async move {
-            let contract = match InstrumentedPythContract::from_config(
-                &config_for_track,
-                chain_id.clone(),
-                rpc_metrics,
-            ) {
-                Ok(c) => c,
-                Err(e) => {
-                    error!("Failed to create contract: {:?}", e);
-                    return;
-                }
-            };
-
-            track_provider(chain_id, contract, provider_address, keeper_metrics)
-                .instrument(info_span!("track_provider"))
-                .await
-        }
+        track_provider(
+            contract.clone(),
+            chain_state.provider_address,
+            metrics.clone(),
+        )
         .in_current_span(),
     );
 
-    Ok(())
+    spawn(track_balance(contract.clone(), chain_state.provider_address, metrics).in_current_span());
 }
 
 /// Process an event with backoff. It will retry the reveal on failure for 5 minutes.
@@ -795,12 +777,19 @@ pub async fn process_backlog(
 /// if there was an error, the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_balance(
-    chain_id: String,
-    provider: Arc<Provider<TracedClient>>,
+    contract: Arc<InstrumentedSignablePythContract>,
     address: Address,
     metrics: Arc<KeeperMetrics>,
 ) {
-    let balance = match provider.get_balance(address, None).await {
+    let chain_id = match contract.provider().get_chainid().await {
+        Ok(id) => id.to_string(),
+        Err(e) => {
+            tracing::error!("Error while getting chain id. error: {:?}", e);
+            return;
+        }
+    };
+
+    let balance = match contract.client().get_balance(address, None).await {
         // This conversion to u128 is fine as the total balance will never cross the limits
         // of u128 practically.
         Ok(r) => r.as_u128(),
@@ -816,7 +805,7 @@ pub async fn track_balance(
     metrics
         .balance
         .get_or_create(&AccountLabel {
-            chain_id: chain_id.clone(),
+            chain_id,
             address: address.to_string(),
         })
         .set(balance);
@@ -826,11 +815,18 @@ pub async fn track_balance(
 /// if there is a error the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_provider(
-    chain_id: ChainId,
-    contract: InstrumentedPythContract,
+    contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
     metrics: Arc<KeeperMetrics>,
 ) {
+    let chain_id = match contract.provider().get_chainid().await {
+        Ok(id) => id.to_string(),
+        Err(e) => {
+            tracing::error!("Error while getting chain id. error: {:?}", e);
+            return;
+        }
+    };
+
     let provider_info = match contract.get_provider_info(provider_address).call().await {
         Ok(info) => info,
         Err(e) => {
@@ -981,7 +977,7 @@ pub async fn adjust_fee_wrapper(
     target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee_wei: u128,
-    config: &EthereumConfig,
+    eip1559_fee_multiplier_pct: u64,
 ) {
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
@@ -999,7 +995,7 @@ pub async fn adjust_fee_wrapper(
             min_fee_wei,
             &mut high_water_pnl,
             &mut sequence_number_of_last_fee_update,
-            config,
+            eip1559_fee_multiplier_pct,
         )
         .in_current_span()
         .await
@@ -1083,7 +1079,7 @@ pub async fn adjust_fee_if_necessary(
     min_fee_wei: u128,
     high_water_pnl: &mut Option<U256>,
     sequence_number_of_last_fee_update: &mut Option<u64>,
-    config: &EthereumConfig,
+    eip1559_fee_multiplier_pct: u64,
 ) -> Result<()> {
     let provider_info = contract
         .get_provider_info(provider_address)
@@ -1096,10 +1092,14 @@ pub async fn adjust_fee_if_necessary(
     }
 
     // Calculate target window for the on-chain fee.
-    let max_callback_cost: u128 =
-        estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into(), config)
-            .await
-            .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
+    let max_callback_cost: u128 = estimate_tx_cost(
+        contract.clone(),
+        legacy_tx,
+        gas_limit.into(),
+        eip1559_fee_multiplier_pct,
+    )
+    .await
+    .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
     let target_fee_min = std::cmp::max(
         (max_callback_cost * (100 + u128::from(min_profit_pct))) / 100,
         min_fee_wei,
@@ -1185,7 +1185,7 @@ pub async fn estimate_tx_cost(
     contract: Arc<InstrumentedSignablePythContract>,
     use_legacy_tx: bool,
     gas_used: u128,
-    config: &EthereumConfig,
+    eip1559_fee_multiplier_pct: u64,
 ) -> Result<u128> {
     let middleware = contract.client();
 
@@ -1201,7 +1201,7 @@ pub async fn estimate_tx_cost(
             .estimate_eip1559_fees(Some(eip1559_default_estimator))
             .await?;
 
-        let multiplier = U256::from(config.eip1559_fee_multiplier_pct);
+        let multiplier = U256::from(eip1559_fee_multiplier_pct);
         let base = max_fee_per_gas + max_priority_fee_per_gas;
         let adjusted = (base * multiplier) / U256::from(100);
 
