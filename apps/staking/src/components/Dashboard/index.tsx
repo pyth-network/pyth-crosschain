@@ -139,7 +139,7 @@ export const Dashboard = ({
   return (
     <>
       <main
-        className={clsx("flex w-full flex-col gap-8 xl:px-4 xl:py-6", {
+        className={clsx("flex w-full flex-col gap-4 xl:px-4", {
           "sm:gap-0": !enableOis,
         })}
       >
@@ -168,7 +168,7 @@ export const Dashboard = ({
             className="group border-neutral-600/50 data-[empty]:my-[5dvh] data-[empty]:border data-[empty]:bg-white/10 data-[empty]:p-4 sm:p-4 data-[empty]:sm:my-0 data-[empty]:sm:border-0 data-[empty]:sm:bg-transparent data-[empty]:sm:p-0"
             {...(tab === TabIds.Empty && { "data-empty": true })}
           >
-            <h1 className="my-4 hidden text-center text-xl/tight font-light group-data-[empty]:mb-10 group-data-[empty]:block sm:mb-6 sm:text-3xl group-data-[empty]:sm:mb-6 lg:my-14 lg:text-5xl">
+            <h1 className="my-4 hidden text-center text-xl/tight font-light group-data-[empty]:mb-10 group-data-[empty]:block sm:mb-6 sm:text-3xl group-data-[empty]:sm:mb-6 lg:my-6 lg:text-5xl">
               Choose Your Journey
             </h1>
             <TabList className="sticky top-header-height z-10 flex flex-row items-stretch justify-center group-data-[empty]:mx-auto group-data-[empty]:max-w-7xl group-data-[empty]:flex-col group-data-[empty]:gap-8 group-data-[empty]:sm:flex-row group-data-[empty]:sm:gap-2">
