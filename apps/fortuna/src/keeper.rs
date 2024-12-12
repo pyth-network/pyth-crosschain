@@ -276,6 +276,7 @@ pub async fn run_keeper_threads(
             chain_eth_config.target_profit_pct,
             chain_eth_config.max_profit_pct,
             chain_eth_config.fee,
+            chain_eth_config.eip1559_fee_multiplier_pct,
         )
         .in_current_span(),
     );
@@ -996,6 +997,7 @@ pub async fn adjust_fee_wrapper(
     target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee_wei: u128,
+    eip1559_fee_multiplier_pct: u64,
 ) {
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
@@ -1013,6 +1015,7 @@ pub async fn adjust_fee_wrapper(
             min_fee_wei,
             &mut high_water_pnl,
             &mut sequence_number_of_last_fee_update,
+            eip1559_fee_multiplier_pct,
         )
         .in_current_span()
         .await
@@ -1096,6 +1099,7 @@ pub async fn adjust_fee_if_necessary(
     min_fee_wei: u128,
     high_water_pnl: &mut Option<U256>,
     sequence_number_of_last_fee_update: &mut Option<u64>,
+    eip1559_fee_multiplier_pct: u64,
 ) -> Result<()> {
     let provider_info = contract
         .get_provider_info(provider_address)
@@ -1108,9 +1112,14 @@ pub async fn adjust_fee_if_necessary(
     }
 
     // Calculate target window for the on-chain fee.
-    let max_callback_cost: u128 = estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
-        .await
-        .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
+    let max_callback_cost: u128 = estimate_tx_cost(
+        contract.clone(),
+        legacy_tx,
+        gas_limit.into(),
+        eip1559_fee_multiplier_pct,
+    )
+    .await
+    .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
     let target_fee_min = std::cmp::max(
         (max_callback_cost * (100 + u128::from(min_profit_pct))) / 100,
         min_fee_wei,
@@ -1196,6 +1205,7 @@ pub async fn estimate_tx_cost(
     contract: Arc<InstrumentedSignablePythContract>,
     use_legacy_tx: bool,
     gas_used: u128,
+    eip1559_fee_multiplier_pct: u64,
 ) -> Result<u128> {
     let middleware = contract.client();
 
@@ -1210,7 +1220,10 @@ pub async fn estimate_tx_cost(
         let (max_fee_per_gas, max_priority_fee_per_gas) =
             middleware.estimate_eip1559_fees(None).await?;
 
-        (max_fee_per_gas + max_priority_fee_per_gas)
+        let total_fee = max_fee_per_gas + max_priority_fee_per_gas;
+        let adjusted_fee = total_fee * eip1559_fee_multiplier_pct / 100;
+
+        adjusted_fee
             .try_into()
             .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?
     };
