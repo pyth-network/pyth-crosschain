@@ -49,40 +49,6 @@ impl<M: Middleware> EthProviderOracle<M> {
             priority_fee_multiplier_pct,
         }
     }
-
-    /// The default EIP-1559 fee estimator which is based on the work by [MyCrypto](https://github.com/MyCryptoHQ/MyCrypto/blob/master/src/services/ApiService/Gas/eip1559.ts)
-    /// with a configurable priority fee multiplier.
-    pub fn eip1559_default_estimator(
-        &self,
-        base_fee_per_gas: U256,
-        rewards: Vec<Vec<U256>>,
-    ) -> (U256, U256) {
-        let max_priority_fee_per_gas =
-            if base_fee_per_gas < U256::from(EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER) {
-                U256::from(EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE)
-            } else {
-                std::cmp::max(
-                    estimate_priority_fee(rewards),
-                    U256::from(EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE),
-                )
-            };
-
-        // Apply the multiplier to max_priority_fee_per_gas
-        let max_priority_fee_per_gas = max_priority_fee_per_gas
-            .checked_mul(U256::from(self.priority_fee_multiplier_pct))
-            .and_then(|x| x.checked_div(U256::from(100)))
-            .unwrap_or(max_priority_fee_per_gas);
-
-        // TODO: what does this logic do?
-        let potential_max_fee = base_fee_surged(base_fee_per_gas);
-        let max_fee_per_gas = if max_priority_fee_per_gas > potential_max_fee {
-            max_priority_fee_per_gas + potential_max_fee
-        } else {
-            potential_max_fee
-        };
-
-        (max_fee_per_gas, max_priority_fee_per_gas)
-    }
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
@@ -101,17 +67,25 @@ where
     async fn estimate_eip1559_fees(&self) -> Result<(U256, U256)> {
         let (max_fee_per_gas, max_priority_fee_per_gas) = self
             .provider
-            .estimate_eip1559_fees(Some(|x, y| self.eip1559_default_estimator(x, y)))
+            .estimate_eip1559_fees(Some(eip1559_default_estimator))
             .await
             .map_err(|err| GasOracleError::ProviderError(Box::new(err)))?;
+
+        // Apply the multiplier to max_priority_fee_per_gas
+        let max_priority_fee_per_gas = max_priority_fee_per_gas
+            .checked_mul(U256::from(self.priority_fee_multiplier_pct))
+            .and_then(|x| x.checked_div(U256::from(100)))
+            .unwrap_or(max_priority_fee_per_gas);
 
         Ok((max_fee_per_gas, max_priority_fee_per_gas))
     }
 }
 
-fn estimate_base_fees(base_fee: U256, rewards: Vec<Vec<U256>>) -> (U256, U256) {
+/// The default EIP-1559 fee estimator which is based on the work by [MyCrypto](https://github.com/MyCryptoHQ/MyCrypto/blob/master/src/services/ApiService/Gas/eip1559.ts)
+/// with a configurable priority fee multiplier.
+pub fn eip1559_default_estimator(base_fee_per_gas: U256, rewards: Vec<Vec<U256>>) -> (U256, U256) {
     let max_priority_fee_per_gas =
-        if base_fee < U256::from(EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER) {
+        if base_fee_per_gas < U256::from(EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER) {
             U256::from(EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE)
         } else {
             std::cmp::max(
@@ -120,12 +94,14 @@ fn estimate_base_fees(base_fee: U256, rewards: Vec<Vec<U256>>) -> (U256, U256) {
             )
         };
 
-    let potential_max_fee = base_fee_surged(base_fee);
+    // TODO: what does this logic do?
+    let potential_max_fee = base_fee_surged(base_fee_per_gas);
     let max_fee_per_gas = if max_priority_fee_per_gas > potential_max_fee {
         max_priority_fee_per_gas + potential_max_fee
     } else {
         potential_max_fee
     };
+
     (max_fee_per_gas, max_priority_fee_per_gas)
 }
 

@@ -2,7 +2,6 @@ use {
     crate::{
         api::{self, BlockchainState, ChainId},
         chain::{
-            eth_gas_oracle::EthProviderOracle,
             ethereum::{
                 InstrumentedPythContract, InstrumentedSignablePythContract, PythContractCall,
             },
@@ -14,7 +13,6 @@ use {
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
     ethers::{
-        prelude::GasOracle,
         providers::{Middleware, Provider, Ws},
         signers::Signer,
         types::{Address, U256},
