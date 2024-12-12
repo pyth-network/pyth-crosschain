@@ -103,6 +103,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
   readonly pythSolanaReceiver: PythSolanaReceiver;
   readonly closeInstructions: InstructionWithEphemeralSigners[];
   readonly priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
+  readonly priceFeedIdToTwapUpdateAccount: Record<string, PublicKey>;
   readonly closeUpdateAccounts: boolean;
 
   constructor(
@@ -118,6 +119,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
     this.pythSolanaReceiver = pythSolanaReceiver;
     this.closeInstructions = [];
     this.priceFeedIdToPriceUpdateAccount = {};
+    this.priceFeedIdToTwapUpdateAccount = {};
     this.closeUpdateAccounts = config.closeUpdateAccounts ?? true;
   }
 
@@ -227,7 +229,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
     );
     this.closeInstructions.push(...closeInstructions);
     Object.assign(
-      this.priceFeedIdToPriceUpdateAccount,
+      this.priceFeedIdToTwapUpdateAccount,
       priceFeedIdToTwapUpdateAccount
     );
     this.addInstructions(postInstructions);
@@ -311,6 +313,46 @@ export class PythTransactionBuilder extends TransactionBuilder {
     );
   }
 
+  /**
+   * Add instructions that consume TWAP updates to the builder.
+   *
+   * @param getInstructions a function that given a mapping of price feed IDs to TWAP update accounts, generates a series of instructions. TWAP updates get posted to ephemeral accounts and this function allows the user to indicate which accounts in their instruction need to be "replaced" with each price update account.
+   * If multiple TWAP updates for the same price feed ID are posted with the same builder, the account corresponding to the last update to get posted will be used.
+   *
+   * @example
+   * ```typescript
+   * ...
+   * await transactionBuilder.addPostTwapUpdates(twapUpdateData);
+   * await transactionBuilder.addTwapConsumerInstructions(
+   *   async (
+   *     getTwapUpdateAccount: ( priceFeedId: string) => PublicKey
+   *   ): Promise<InstructionWithEphemeralSigners[]> => {
+   *     return [
+   *       {
+   *         instruction: await myFirstPythApp.methods
+   *           .consume()
+   *           .accounts({
+   *              solTwapUpdate: getTwapUpdateAccount(SOL_PRICE_FEED_ID),
+   *              ethTwapUpdate: getTwapUpdateAccount(ETH_PRICE_FEED_ID),
+   *           })
+   *           .instruction(),
+   *         signers: [],
+   *       },
+   *     ];
+   *   }
+   * );
+   * ```
+   */
+  async addTwapConsumerInstructions(
+    getInstructions: (
+      getTwapUpdateAccount: (priceFeedId: string) => PublicKey
+    ) => Promise<InstructionWithEphemeralSigners[]>
+  ) {
+    this.addInstructions(
+      await getInstructions(this.getTwapUpdateAccount.bind(this))
+    );
+  }
+
   /** Add instructions to close encoded VAA accounts from previous actions.
    * If you have previously used the PythTransactionBuilder with closeUpdateAccounts set to false or if you posted encoded VAAs but the transaction to close them did not land on-chain, your wallet might own many encoded VAA accounts.
    * The rent cost for these accounts is 0.008 SOL per encoded VAA account. You can recover this rent calling this function when building a set of transactions.
@@ -356,10 +398,24 @@ export class PythTransactionBuilder extends TransactionBuilder {
       this.priceFeedIdToPriceUpdateAccount[priceFeedId];
     if (!priceUpdateAccount) {
       throw new Error(
-        `No price update account found for the price feed ID ${priceFeedId}. Make sure to call addPostPriceUpdates or addPostPartiallyVerifiedPriceUpdates or postTwapUpdates before calling this function.`
+        `No price update account found for the price feed ID ${priceFeedId}. Make sure to call addPostPriceUpdates or addPostPartiallyVerifiedPriceUpdates before calling this function.`
       );
     }
     return priceUpdateAccount;
+  }
+
+  /**
+   * This method is used to retrieve the address of the TWAP update account where the TWAP update for a given price feed ID will be posted.
+   * If multiple updates for the same price feed ID will be posted with the same builder, the address of the account corresponding to the last update to get posted will be returned.
+   * */
+  getTwapUpdateAccount(priceFeedId: string): PublicKey {
+    const twapUpdateAccount = this.priceFeedIdToTwapUpdateAccount[priceFeedId];
+    if (!twapUpdateAccount) {
+      throw new Error(
+        `No TWAP update account found for the price feed ID ${priceFeedId}. Make sure to call addPostTwapUpdates before calling this function.`
+      );
+    }
+    return twapUpdateAccount;
   }
 }
 
