@@ -27,6 +27,7 @@ import { PublicKey, Keypair } from "@solana/web3.js";
 import {
   parseAccumulatorUpdateData,
   parsePriceFeedMessage,
+  parseTwapMessage,
 } from "@pythnetwork/price-service-sdk";
 import {
   CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
@@ -40,11 +41,11 @@ import {
 import { Wallet } from "@coral-xyz/anchor";
 import {
   buildEncodedVaaCreateInstruction,
+  buildPostEncodedVaasForTwapInstructions,
   buildWriteEncodedVaaWithSplitInstructions,
   findEncodedVaaAccountsByWriteAuthority,
   getGuardianSetIndex,
   trimSignatures,
-  VAA_SPLIT_INDEX,
 } from "./vaa";
 import {
   TransactionBuilder,
@@ -518,6 +519,7 @@ export class PythSolanaReceiver {
         encodedVaaKeypair
       )
     );
+
     postInstructions.push({
       instruction: await this.wormhole.methods
         .initEncodedVaa()
@@ -529,13 +531,12 @@ export class PythSolanaReceiver {
       computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
     });
 
-    postInstructions.push(
-      ...(await buildWriteEncodedVaaWithSplitInstructions(
-        this.wormhole,
-        trimmedVaa,
-        encodedVaaKeypair.publicKey
-      ))
+    const writeInstructions = await buildWriteEncodedVaaWithSplitInstructions(
+      this.wormhole,
+      trimmedVaa,
+      encodedVaaKeypair.publicKey
     );
+    postInstructions.push(...writeInstructions);
 
     postInstructions.push({
       instruction: await this.wormhole.methods
@@ -672,152 +673,19 @@ export class PythSolanaReceiver {
       );
     }
 
-    // // Verify the VAAs
-    // const [startVaa, endVaa] = await Promise.all([
-    //   this.buildPostEncodedVaaInstructions(startUpdateData.vaa),
-    //   this.buildPostEncodedVaaInstructions(endUpdateData.vaa)
-    // ]);
-    // postInstructions.push(...startVaa.postInstructions, ...endVaa.postInstructions);
-    // closeInstructions.push(...startVaa.closeInstructions, ...endVaa.closeInstructions);
-
-    // const { encodedVaaAddress: startEncodedVaa } = startVaa;
-    // const { encodedVaaAddress: endEncodedVaa } = endVaa;
-
-    // TRANSACTION 1: Create, init, write initial data for Start VAA
-    // Create
-    const trimmedStartVaa = trimSignatures(startUpdateData.vaa, 13);
-    const startEncodedVaaKeypair = new Keypair();
-    postInstructions.push(
-      await buildEncodedVaaCreateInstruction(
-        this.wormhole,
-        trimmedStartVaa,
-        startEncodedVaaKeypair
-      )
+    // Post encoded VAAs
+    const {
+      postInstructions: buildVaasInstructions,
+      closeInstructions: closeVaasInstructions,
+      startVaa,
+      endVaa,
+    } = await buildPostEncodedVaasForTwapInstructions(
+      this.wormhole,
+      startUpdateData,
+      endUpdateData
     );
-    // Init
-    postInstructions.push({
-      instruction: await this.wormhole.methods
-        .initEncodedVaa()
-        .accounts({
-          encodedVaa: startEncodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
-    });
-
-    // Write initial data
-    postInstructions.push(
-      ...(await buildWriteEncodedVaaWithSplitInstructions(
-        this.wormhole,
-        trimmedStartVaa,
-        startEncodedVaaKeypair.publicKey
-      ))
-    );
-
-    // TRANSACTION 2: Create, init, write initial data for End VAA
-    // Create
-    const trimmedEndVaa = trimSignatures(endUpdateData.vaa, 13);
-    const endEncodedVaaKeypair = new Keypair();
-    postInstructions.push(
-      await buildEncodedVaaCreateInstruction(
-        this.wormhole,
-        trimmedEndVaa,
-        endEncodedVaaKeypair
-      )
-    );
-    // Init
-    postInstructions.push({
-      instruction: await this.wormhole.methods
-        .initEncodedVaa()
-        .accounts({
-          encodedVaa: endEncodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
-    });
-
-    // Write initial data
-    postInstructions.push(
-      ...(await buildWriteEncodedVaaWithSplitInstructions(
-        this.wormhole,
-        trimmedEndVaa,
-        endEncodedVaaKeypair.publicKey
-      ))
-    );
-
-    // TRANSACTION 3: Write remaining data and verify for Start & End VAAs
-    // Write remaining data for start VAA
-    postInstructions.push({
-      instruction: await this.wormhole.methods
-        .writeEncodedVaa({
-          index: VAA_SPLIT_INDEX,
-          data: trimmedStartVaa.subarray(VAA_SPLIT_INDEX),
-        })
-        .accounts({
-          draftVaa: startEncodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
-    });
-
-    // Write remaining data for end VAA
-    postInstructions.push({
-      instruction: await this.wormhole.methods
-        .writeEncodedVaa({
-          index: VAA_SPLIT_INDEX,
-          data: trimmedEndVaa.subarray(VAA_SPLIT_INDEX),
-        })
-        .accounts({
-          draftVaa: endEncodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
-    });
-
-    // Verify start VAA
-    const startGuardianSetIndex = getGuardianSetIndex(trimmedStartVaa);
-    postInstructions.push({
-      instruction: await this.wormhole.methods
-        .verifyEncodedVaaV1()
-        .accounts({
-          guardianSet: getGuardianSetPda(
-            startGuardianSetIndex,
-            this.wormhole.programId
-          ),
-          draftVaa: startEncodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-    });
-
-    // Verify end VAA
-    const endGuardianSetIndex = getGuardianSetIndex(trimmedEndVaa);
-    postInstructions.push({
-      instruction: await this.wormhole.methods
-        .verifyEncodedVaaV1()
-        .accounts({
-          guardianSet: getGuardianSetPda(
-            startGuardianSetIndex,
-            this.wormhole.programId
-          ),
-          draftVaa: startEncodedVaaKeypair.publicKey,
-        })
-        .accounts({
-          guardianSet: getGuardianSetPda(
-            startGuardianSetIndex,
-            this.wormhole.programId
-          ),
-          draftVaa: endEncodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-    });
+    postInstructions.push(...buildVaasInstructions);
+    closeInstructions.push(...closeVaasInstructions);
 
     // Post a TWAP update to the receiver contract for each price feed
     for (let i = 0; i < startUpdateData.updates.length; i++) {
@@ -833,8 +701,8 @@ export class PythSolanaReceiver {
             treasuryId,
           })
           .accounts({
-            startEncodedVaa: startEncodedVaaKeypair.publicKey,
-            endEncodedVaa: endEncodedVaaKeypair.publicKey,
+            startEncodedVaa: startVaa.encodedVaaKeypair.publicKey,
+            endEncodedVaa: endVaa.encodedVaaKeypair.publicKey,
             twapUpdateAccount: twapUpdateKeypair.publicKey,
             treasury: getTreasuryPda(treasuryId, this.receiver.programId),
             config: getConfigPda(this.receiver.programId),
@@ -845,7 +713,7 @@ export class PythSolanaReceiver {
       });
 
       priceFeedIdToTwapUpdateAccount[
-        "0x" + parsePriceFeedMessage(startUpdate.message).feedId.toString("hex")
+        "0x" + parseTwapMessage(startUpdate.message).feedId.toString("hex")
       ] = twapUpdateKeypair.publicKey;
       closeInstructions.push(
         await this.buildClosePriceUpdateInstruction(twapUpdateKeypair.publicKey)
