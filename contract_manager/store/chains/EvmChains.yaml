@@ -840,3 +840,23 @@
   rpcUrl: https://mainnet-rpc.evedex.com
   networkId: 161803
   type: EvmChain
+# - id: coredao_testnet
+#   mainnet: false
+#   rpcUrl: https://rpc.test2.btcs.network
+#   networkId: 1114
+#   type: EvmChain
+- id: just_breathe
+  mainnet: true
+  rpcUrl: $ENV_JUST_BREATHE_RPC_URL
+  networkId: 57073
+  type: EvmChain
+- id: berachain_cartio_testnet
+  mainnet: false
+  rpcUrl: $BERACHAIN_CARTIO_TESTNET_RPC_URL
+  networkId: 80000
+  type: EvmChain
+- id: monad_devnet
+  mainnet: false
+  rpcUrl: $MONAD_DEVNET_RPC_URL
+  networkId: 41454
+  type: EvmChain

@@ -84,6 +84,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   aurora_testnet: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
   bnb_testnet: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
   base_sepolia: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  berachain_cartio_testnet: "0x825c0390f379C631f3Cf11A82a37D20BddF93c07",
   berachain_testnet_v2: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   blackbird: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   blast_s2_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
