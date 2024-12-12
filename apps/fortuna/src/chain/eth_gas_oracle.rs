@@ -51,6 +51,7 @@ impl<M: Middleware> EthProviderOracle<M> {
     }
 
     /// The default EIP-1559 fee estimator which is based on the work by [MyCrypto](https://github.com/MyCryptoHQ/MyCrypto/blob/master/src/services/ApiService/Gas/eip1559.ts)
+    /// with a configurable priority fee multiplier.
     pub fn eip1559_default_estimator(
         &self,
         base_fee_per_gas: U256,
@@ -69,16 +70,17 @@ impl<M: Middleware> EthProviderOracle<M> {
         // Apply the multiplier to max_priority_fee_per_gas
         let max_priority_fee_per_gas = max_priority_fee_per_gas
             .checked_mul(U256::from(self.priority_fee_multiplier_pct))
-            .unwrap_or(max_priority_fee_per_gas)
-            .checked_div(U256::from(100))
+            .and_then(|x| x.checked_div(U256::from(100)))
             .unwrap_or(max_priority_fee_per_gas);
 
+        // TODO: what does this logic do?
         let potential_max_fee = base_fee_surged(base_fee_per_gas);
         let max_fee_per_gas = if max_priority_fee_per_gas > potential_max_fee {
             max_priority_fee_per_gas + potential_max_fee
         } else {
             potential_max_fee
         };
+
         (max_fee_per_gas, max_priority_fee_per_gas)
     }
 }
@@ -99,19 +101,9 @@ where
     async fn estimate_eip1559_fees(&self) -> Result<(U256, U256)> {
         let (max_fee_per_gas, max_priority_fee_per_gas) = self
             .provider
-            .estimate_eip1559_fees(Some(estimate_base_fees))
+            .estimate_eip1559_fees(Some(|x, y| self.eip1559_default_estimator(x, y)))
             .await
             .map_err(|err| GasOracleError::ProviderError(Box::new(err)))?;
-
-        // Apply the multiplier to max_priority_fee_per_gas
-        let max_priority_fee_per_gas = max_priority_fee_per_gas
-            .checked_mul(U256::from(self.priority_fee_multiplier_pct))
-            .unwrap_or(max_priority_fee_per_gas)
-            .checked_div(U256::from(100))
-            .unwrap_or(max_priority_fee_per_gas);
-
-        // Recalculate max_fee_per_gas with the new priority fee
-        let max_fee_per_gas = std::cmp::max(max_fee_per_gas, max_priority_fee_per_gas);
 
         Ok((max_fee_per_gas, max_priority_fee_per_gas))
     }
