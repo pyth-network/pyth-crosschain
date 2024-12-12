@@ -394,4 +394,88 @@ abstract contract Pyth is
     function version() public pure returns (string memory) {
         return "1.4.3";
     }
+
+    // TWAP verification and update methods
+    function updateTwapFeed(
+        bytes[] calldata updateData,
+        bytes32 feedId,
+        uint64 startTime,
+        uint64 endTime
+    ) external payable {
+        // Parse and validate both start and end updates
+        PythStructs.PriceFeed[] memory startFeed = parsePriceFeedUpdatesInternal(
+            updateData,
+            new bytes32[](1),
+            PythInternalStructs.ParseConfig(startTime, startTime, true)
+        );
+
+        PythStructs.PriceFeed[] memory endFeed = parsePriceFeedUpdatesInternal(
+            updateData,
+            new bytes32[](1),
+            PythInternalStructs.ParseConfig(endTime, endTime, true)
+        );
+
+        // Validate TWAP requirements
+        validateTwapMessages(startFeed[0], endFeed[0], feedId);
+
+        // Calculate and store TWAP
+        calculateAndStoreTwap(startFeed[0], endFeed[0]);
+    }
+
+    function validateTwapMessages(
+        PythStructs.PriceFeed memory startFeed,
+        PythStructs.PriceFeed memory endFeed,
+        bytes32 expectedFeedId
+    ) internal pure {
+        // Validate feed IDs match expected ID
+        if (startFeed.id != expectedFeedId || endFeed.id != expectedFeedId)
+            revert PythErrors.InvalidArgument();
+
+        // Validate feed IDs match each other
+        if (startFeed.id != endFeed.id)
+            revert PythErrors.InvalidArgument();
+
+        // Validate exponents match
+        if (startFeed.price.expo != endFeed.price.expo)
+            revert PythErrors.InvalidArgument();
+
+        // Validate time order
+        if (startFeed.price.publishTime >= endFeed.price.publishTime)
+            revert PythErrors.InvalidArgument();
+    }
+
+    function calculateAndStoreTwap(
+        PythStructs.PriceFeed memory startFeed,
+        PythStructs.PriceFeed memory endFeed
+    ) internal returns (PythInternalStructs.TwapInfo memory) {
+        // Calculate time-weighted average price
+        uint64 timeDiff = uint64(endFeed.price.publishTime - startFeed.price.publishTime);
+        int64 priceDiff = endFeed.price.price - startFeed.price.price;
+
+        // Calculate TWAP using linear interpolation
+        int64 twapPrice = startFeed.price.price + (priceDiff * int64(timeDiff) / int64(timeDiff));
+
+        // Create TWAP info
+        PythInternalStructs.TwapInfo memory twapInfo = PythInternalStructs.TwapInfo({
+            feedId: startFeed.id,
+            startTime: uint64(startFeed.price.publishTime),
+            endTime: uint64(endFeed.price.publishTime),
+            price: twapPrice,
+            conf: endFeed.price.conf, // Use the end confidence
+            exponent: startFeed.price.expo
+        });
+
+        // Store TWAP info in state
+        _state.latestTwapInfo[startFeed.id] = twapInfo;
+
+        return twapInfo;
+    }
+
+    function getTwapFeed(
+        bytes32 id
+    ) public view returns (PythInternalStructs.TwapInfo memory twapInfo) {
+        twapInfo = _state.latestTwapInfo[id];
+        if (twapInfo.startTime == 0) revert PythErrors.PriceFeedNotFound();
+        return twapInfo;
+    }
 }
