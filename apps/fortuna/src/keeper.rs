@@ -1210,9 +1210,8 @@ pub async fn estimate_tx_cost(
         // This is not obvious but the implementation of estimate_eip1559_fees in ethers.rs
         // for a middleware that has a GasOracleMiddleware inside is to ignore the passed-in callback
         // and use whatever the gas oracle returns.
-        let (max_fee_per_gas, max_priority_fee_per_gas) = middleware
-            .estimate_eip1559_fees(None)
-            .await?;
+        let (max_fee_per_gas, max_priority_fee_per_gas) =
+            middleware.estimate_eip1559_fees(None).await?;
 
         (max_fee_per_gas + max_priority_fee_per_gas)
             .try_into()
