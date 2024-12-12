@@ -463,3 +463,6 @@
 - chain: berachain_cartio_testnet
   address: "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167"
   type: EvmWormholeContract
+- chain: monad_devnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract

@@ -857,6 +857,6 @@
   type: EvmChain
 - id: monad_devnet
   mainnet: false
-  rpcUrl: $MONAD_DEVNET_RPC_URL
+  rpcUrl: https://devnet1.monad.xyz/rpc/X67JTUmM4cBeq25KAqV0uJd8Wf00a1ul
   networkId: 41454
   type: EvmChain

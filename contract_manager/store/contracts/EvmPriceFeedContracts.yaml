@@ -469,3 +469,6 @@
 - chain: berachain_cartio_testnet
   address: "0x825c0390f379C631f3Cf11A82a37D20BddF93c07"
   type: EvmPriceFeedContract
+- chain: monad_devnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
