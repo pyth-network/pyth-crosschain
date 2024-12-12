@@ -1212,7 +1212,7 @@ pub async fn estimate_tx_cost(
         // and use whatever the gas oracle returns.
         let (max_fee_per_gas, max_priority_fee_per_gas) = middleware
             .estimate_eip1559_fees(None)
-            .await?
+            .await?;
 
         (max_fee_per_gas + max_priority_fee_per_gas)
             .try_into()
