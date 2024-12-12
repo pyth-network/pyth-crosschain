@@ -214,122 +214,100 @@ pub async fn run_keeper_threads(
 
     // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
     let gas_limit: U256 = chain_eth_config.gas_limit.into();
-    spawn(
-        process_backlog(
-            BlockRange {
-                from: latest_safe_block.saturating_sub(BACKLOG_RANGE),
-                to: latest_safe_block,
-            },
-            contract.clone(),
-            gas_limit,
-            chain_state.clone(),
-            metrics.clone(),
-            fulfilled_requests_cache.clone(),
-        )
-        .in_current_span(),
-    );
+    spawn(process_backlog(
+        BlockRange {
+            from: latest_safe_block.saturating_sub(BACKLOG_RANGE),
+            to: latest_safe_block,
+        },
+        Arc::clone(&contract),
+        gas_limit,
+        chain_state.clone(),
+        metrics.clone(),
+        fulfilled_requests_cache.clone(),
+    ));
 
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
-    spawn(
-        watch_blocks_wrapper(
-            chain_state.clone(),
-            latest_safe_block,
-            tx,
-            chain_eth_config.geth_rpc_wss.clone(),
-        )
-        .in_current_span(),
-    );
+    spawn(watch_blocks_wrapper(
+        chain_state.clone(),
+        latest_safe_block,
+        tx,
+        chain_eth_config.geth_rpc_wss.clone(),
+    ));
     // Spawn a thread that listens for block ranges on the `rx` channel and processes the events for those blocks.
-    spawn(
-        process_new_blocks(
-            chain_state.clone(),
-            rx,
-            Arc::clone(&contract),
-            gas_limit,
-            metrics.clone(),
-            fulfilled_requests_cache.clone(),
-        )
-        .in_current_span(),
-    );
+    spawn(process_new_blocks(
+        chain_state.clone(),
+        rx,
+        Arc::clone(&contract),
+        gas_limit,
+        metrics.clone(),
+        fulfilled_requests_cache.clone(),
+    ));
 
     // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
-    spawn(
-        withdraw_fees_wrapper(
-            contract.clone(),
-            chain_state.provider_address,
-            WITHDRAW_INTERVAL,
-            U256::from(chain_eth_config.min_keeper_balance),
-        )
-        .in_current_span(),
-    );
+    spawn(withdraw_fees_wrapper(
+        Arc::clone(&contract),
+        chain_state.provider_address,
+        WITHDRAW_INTERVAL,
+        U256::from(chain_eth_config.min_keeper_balance),
+    ));
 
     // Spawn a thread that periodically adjusts the provider fee.
-    spawn(
-        adjust_fee_wrapper(
-            contract.clone(),
-            chain_state.provider_address,
-            ADJUST_FEE_INTERVAL,
-            chain_eth_config.legacy_tx,
-            chain_eth_config.gas_limit,
-            chain_eth_config.min_profit_pct,
-            chain_eth_config.target_profit_pct,
-            chain_eth_config.max_profit_pct,
-            chain_eth_config.fee,
-            chain_eth_config.eip1559_fee_multiplier_pct,
-        )
-        .in_current_span(),
-    );
+    spawn(adjust_fee_wrapper(
+        Arc::clone(&contract),
+        chain_state.provider_address,
+        ADJUST_FEE_INTERVAL,
+        chain_eth_config.legacy_tx,
+        chain_eth_config.gas_limit,
+        chain_eth_config.min_profit_pct,
+        chain_eth_config.target_profit_pct,
+        chain_eth_config.max_profit_pct,
+        chain_eth_config.fee,
+    ));
 
-    spawn(update_commitments_loop(contract.clone(), chain_state.clone()).in_current_span());
+    spawn(update_commitments_loop(
+        Arc::clone(&contract),
+        chain_state.clone(),
+    ));
 
     // Spawn a thread to track the provider info and the balance of the keeper
-    spawn(
-        async move {
-            let chain_id = chain_state.id.clone();
-            let chain_config = chain_eth_config.clone();
-            let provider_address = chain_state.provider_address;
-            let keeper_metrics = metrics.clone();
-            let contract = match InstrumentedPythContract::from_config(
-                &chain_config,
-                chain_id.clone(),
-                rpc_metrics,
-            ) {
-                Ok(r) => r,
-                Err(e) => {
-                    tracing::error!("Error while connecting to pythnet contract. error: {:?}", e);
-                    return;
-                }
-            };
-
-            loop {
-                // There isn't a loop for indefinite trials. There is a new thread being spawned every `TRACK_INTERVAL` seconds.
-                // If rpc start fails all of these threads will just exit, instead of retrying.
-                // We are tracking rpc failures elsewhere, so it's fine.
-                spawn(
-                    track_provider(
-                        chain_id.clone(),
-                        contract.clone(),
-                        provider_address,
-                        keeper_metrics.clone(),
-                    )
-                    .in_current_span(),
-                );
-                spawn(
-                    track_balance(
-                        chain_id.clone(),
-                        contract.client(),
-                        keeper_address,
-                        keeper_metrics.clone(),
-                    )
-                    .in_current_span(),
-                );
-
-                time::sleep(TRACK_INTERVAL).await;
+    spawn(async move {
+        let chain_id = chain_state.id.clone();
+        let chain_config = chain_eth_config.clone();
+        let provider_address = chain_state.provider_address;
+        let keeper_metrics = metrics.clone();
+        let contract = match InstrumentedPythContract::from_config(
+            &chain_config,
+            chain_id.clone(),
+            rpc_metrics,
+        ) {
+            Ok(r) => r,
+            Err(e) => {
+                tracing::error!("Error while connecting to pythnet contract. error: {:?}", e);
+                return;
             }
+        };
+
+        loop {
+            // There isn't a loop for indefinite trials. There is a new thread being spawned every `TRACK_INTERVAL` seconds.
+            // If rpc start fails all of these threads will just exit, instead of retrying.
+            // We are tracking rpc failures elsewhere, so it's fine.
+            spawn(track_provider(
+                chain_id.clone(),
+                contract.clone(),
+                provider_address,
+                keeper_metrics.clone(),
+            ));
+            spawn(track_balance(
+                chain_id.clone(),
+                contract.client(),
+                keeper_address,
+                keeper_metrics.clone(),
+            ));
+
+            time::sleep(TRACK_INTERVAL).await;
         }
-        .in_current_span(),
-    );
+    });
 }
 
 /// Process an event with backoff. It will retry the reveal on failure for 5 minutes.
@@ -997,7 +975,6 @@ pub async fn adjust_fee_wrapper(
     target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee_wei: u128,
-    eip1559_fee_multiplier_pct: u64,
 ) {
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
@@ -1005,7 +982,7 @@ pub async fn adjust_fee_wrapper(
     let mut sequence_number_of_last_fee_update: Option<u64> = None;
     loop {
         if let Err(e) = adjust_fee_if_necessary(
-            contract.clone(),
+            Arc::clone(&contract),
             provider_address,
             legacy_tx,
             gas_limit,
@@ -1015,12 +992,10 @@ pub async fn adjust_fee_wrapper(
             min_fee_wei,
             &mut high_water_pnl,
             &mut sequence_number_of_last_fee_update,
-            eip1559_fee_multiplier_pct,
         )
-        .in_current_span()
         .await
         {
-            tracing::error!("Withdrawing fees. error: {:?}", e);
+            tracing::error!("Error adjusting fees. error: {:?}", e);
         }
         time::sleep(poll_interval).await;
     }
@@ -1032,10 +1007,7 @@ pub async fn update_commitments_loop(
     chain_state: BlockchainState,
 ) {
     loop {
-        if let Err(e) = update_commitments_if_necessary(contract.clone(), &chain_state)
-            .in_current_span()
-            .await
-        {
+        if let Err(e) = update_commitments_if_necessary(Arc::clone(&contract), &chain_state).await {
             tracing::error!("Update commitments. error: {:?}", e);
         }
         time::sleep(UPDATE_COMMITMENTS_INTERVAL).await;
@@ -1099,7 +1071,6 @@ pub async fn adjust_fee_if_necessary(
     min_fee_wei: u128,
     high_water_pnl: &mut Option<U256>,
     sequence_number_of_last_fee_update: &mut Option<u64>,
-    eip1559_fee_multiplier_pct: u64,
 ) -> Result<()> {
     let provider_info = contract
         .get_provider_info(provider_address)
@@ -1112,14 +1083,9 @@ pub async fn adjust_fee_if_necessary(
     }
 
     // Calculate target window for the on-chain fee.
-    let max_callback_cost: u128 = estimate_tx_cost(
-        contract.clone(),
-        legacy_tx,
-        gas_limit.into(),
-        eip1559_fee_multiplier_pct,
-    )
-    .await
-    .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
+    let max_callback_cost: u128 = estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
+        .await
+        .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
     let target_fee_min = std::cmp::max(
         (max_callback_cost * (100 + u128::from(min_profit_pct))) / 100,
         min_fee_wei,
@@ -1205,7 +1171,6 @@ pub async fn estimate_tx_cost(
     contract: Arc<InstrumentedSignablePythContract>,
     use_legacy_tx: bool,
     gas_used: u128,
-    eip1559_fee_multiplier_pct: u64,
 ) -> Result<u128> {
     let middleware = contract.client();
 
@@ -1220,10 +1185,7 @@ pub async fn estimate_tx_cost(
         let (max_fee_per_gas, max_priority_fee_per_gas) =
             middleware.estimate_eip1559_fees(None).await?;
 
-        let total_fee = max_fee_per_gas + max_priority_fee_per_gas;
-        let adjusted_fee = total_fee * eip1559_fee_multiplier_pct / 100;
-
-        adjusted_fee
+        (max_fee_per_gas + max_priority_fee_per_gas)
             .try_into()
             .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?
     };
