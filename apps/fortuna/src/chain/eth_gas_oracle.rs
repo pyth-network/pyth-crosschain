@@ -82,7 +82,6 @@ where
 }
 
 /// The default EIP-1559 fee estimator which is based on the work by [MyCrypto](https://github.com/MyCryptoHQ/MyCrypto/blob/master/src/services/ApiService/Gas/eip1559.ts)
-/// with a configurable priority fee multiplier.
 pub fn eip1559_default_estimator(base_fee_per_gas: U256, rewards: Vec<Vec<U256>>) -> (U256, U256) {
     let max_priority_fee_per_gas =
         if base_fee_per_gas < U256::from(EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER) {
@@ -94,7 +93,6 @@ pub fn eip1559_default_estimator(base_fee_per_gas: U256, rewards: Vec<Vec<U256>>
             )
         };
 
-    // TODO: what does this logic do?
     let potential_max_fee = base_fee_surged(base_fee_per_gas);
     let max_fee_per_gas = if max_priority_fee_per_gas > potential_max_fee {
         max_priority_fee_per_gas + potential_max_fee
