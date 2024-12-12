@@ -9,7 +9,10 @@ import path from "path";
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Upgrades the Pyth contract on TON and creates a governance proposal for it.\n" +
-      "Usage: $0 --network <mainnet|testnet> --contract-address <address> --ops-key-path <ops_key_path>"
+      "Usage: $0 --network <mainnet|testnet> --contract-address <address> --ops-key-path <ops_key_path>\n" +
+      "Required environment variables:\n" +
+      "  - ENV_TON_MAINNET_API_KEY: API key for TON mainnet\n" +
+      "  - ENV_TON_TESTNET_API_KEY: API key for TON testnet"
   )
   .options({
     network: {
@@ -38,16 +41,11 @@ async function main() {
   const chainId = isMainnet ? CHAINS.ton_mainnet : CHAINS.ton_testnet;
   const wormholeChainName = toChainName(chainId);
 
-  // Get the TON chain instance with appropriate RPC URL based on network
-  const chain = new TonChain(
-    chainId.toString(),
-    isMainnet,
-    wormholeChainName,
-    undefined,
-    isMainnet
-      ? "https://toncenter.com/api/v2/jsonRPC"
-      : "https://testnet.toncenter.com/api/v2/jsonRPC"
-  );
+  // Get the TON chain instance from DefaultStore based on network
+  const chain = DefaultStore.chains[isMainnet ? "ton_mainnet" : "ton_testnet"];
+  if (!chain || !(chain instanceof TonChain)) {
+    throw new Error(`Chain configuration not found for TON ${argv.network}`);
+  }
 
   const vault =
     DefaultStore.vaults[
