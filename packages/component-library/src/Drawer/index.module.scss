@@ -19,11 +19,12 @@
       background: theme.color("background", "primary");
       border: 1px solid theme.color("border");
       border-radius: theme.border-radius("3xl");
-      overflow: hidden;
       outline: none;
       display: flex;
       flex-flow: column nowrap;
       height: 100%;
+      overflow-y: hidden;
+      padding-bottom: theme.border-radius("3xl");
 
       .heading {
         padding: theme.spacing(4);
@@ -33,6 +34,7 @@
         justify-content: space-between;
         align-items: center;
         color: theme.color("heading");
+        flex: none;
 
         .title {
           @include theme.h4;
@@ -41,6 +43,11 @@
           flex-flow: row nowrap;
           gap: theme.spacing(3);
         }
+      }
+
+      .body {
+        flex: 1;
+        overflow-y: auto;
       }
     }
   }

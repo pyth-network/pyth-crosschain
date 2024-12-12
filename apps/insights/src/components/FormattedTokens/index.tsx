@@ -8,18 +8,18 @@ const DECIMALS = 6;
 
 type Props = {
   mode?: "compact" | "wholePart" | "full";
-  children: bigint;
+  tokens: bigint;
 };
 
-export const FormattedTokens = ({ children, mode = "compact" }: Props) => {
+export const FormattedTokens = ({ tokens, mode = "compact" }: Props) => {
   const { locale } = useLocale();
   const value = useMemo(
     () =>
-      dnum.format([children, DECIMALS], {
+      dnum.format([tokens, DECIMALS], {
         compact: mode === "compact",
         locale,
       }),
-    [children, locale, mode],
+    [tokens, locale, mode],
   );
 
   return mode === "wholePart" ? value.split(".")[0] : value;

@@ -12,7 +12,7 @@ import { type ReactNode, Suspense, useCallback, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import { serialize, useQueryParams } from "./query-params";
-import { SKELETON_WIDTH, LivePrice, LiveConfidence } from "../LivePrices";
+import { SKELETON_WIDTH } from "../LivePrices";
 
 type Props = {
   id: string;
@@ -25,8 +25,10 @@ type PriceFeed = {
   id: string;
   displaySymbol: string;
   assetClassAsString: string;
-  exponent: number;
-  numPublishers: number;
+  exponent: ReactNode;
+  numPublishers: ReactNode;
+  price: ReactNode;
+  confidenceInterval: ReactNode;
   priceFeedId: ReactNode;
   priceFeedName: ReactNode;
   assetClass: ReactNode;
@@ -85,14 +87,10 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
   );
   const rows = useMemo(
     () =>
-      paginatedFeeds.map(({ id, ...data }) => ({
+      paginatedFeeds.map(({ id, symbol, ...data }) => ({
         id,
-        href: "#",
-        data: {
-          ...data,
-          price: <LivePrice account={id} />,
-          confidenceInterval: <LiveConfidence account={id} />,
-        },
+        href: `/price-feeds/${encodeURIComponent(symbol)}`,
+        data,
       })),
     [paginatedFeeds],
   );

@@ -2,18 +2,21 @@
 
 import { PlusMinus } from "@phosphor-icons/react/dist/ssr/PlusMinus";
 import { useLogger } from "@pythnetwork/app-logger";
+import type { PriceData } from "@pythnetwork/client";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { useMap } from "@react-hookz/web";
 import { PublicKey } from "@solana/web3.js";
 import {
   type ComponentProps,
+  type ReactNode,
   use,
   createContext,
   useEffect,
   useCallback,
   useState,
+  useMemo,
 } from "react";
-import { useNumberFormatter } from "react-aria";
+import { useNumberFormatter, useDateFormatter } from "react-aria";
 
 import styles from "./index.module.scss";
 import { client, subscribe } from "../../services/pyth";
@@ -24,10 +27,8 @@ const LivePricesContext = createContext<
   ReturnType<typeof usePriceData> | undefined
 >(undefined);
 
-type Price = {
-  price: number;
+type Price = PriceData & {
   direction: ChangeDirection;
-  confidence: number;
 };
 
 type ChangeDirection = "up" | "down" | "flat";
@@ -43,43 +44,100 @@ export const LivePricesProvider = ({ ...props }: LivePricesProviderProps) => {
   return <LivePricesContext value={priceData} {...props} />;
 };
 
-export const useLivePrice = (account: string) => {
+type Feed = {
+  product: {
+    price_account: string;
+  };
+};
+
+export const useLivePrice = (feed: Feed) => {
+  const { price_account } = feed.product;
   const { priceData, addSubscription, removeSubscription } = useLivePrices();
 
   useEffect(() => {
-    addSubscription(account);
+    addSubscription(price_account);
     return () => {
-      removeSubscription(account);
+      removeSubscription(price_account);
     };
-  }, [addSubscription, removeSubscription, account]);
+  }, [addSubscription, removeSubscription, price_account]);
 
-  return priceData.get(account);
+  return priceData.get(price_account);
 };
 
-export const LivePrice = ({ account }: { account: string }) => {
+export const LivePrice = ({ feed }: { feed: Feed }) => {
   const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 5 });
-  const price = useLivePrice(account);
+  const price = useLivePrice(feed);
 
   return price === undefined ? (
     <Skeleton width={SKELETON_WIDTH} />
   ) : (
     <span className={styles.price} data-direction={price.direction}>
-      {numberFormatter.format(price.price)}
+      {numberFormatter.format(price.aggregate.price)}
     </span>
   );
 };
 
-export const LiveConfidence = ({ account }: { account: string }) => {
+export const LiveConfidence = ({ feed }: { feed: Feed }) => {
   const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 5 });
-  const price = useLivePrice(account);
+  const price = useLivePrice(feed);
 
-  return price === undefined ? (
-    <Skeleton width={SKELETON_WIDTH} />
-  ) : (
+  return (
     <span className={styles.confidence}>
       <PlusMinus className={styles.plusMinus} />
-      <span>{numberFormatter.format(price.confidence)}</span>
+      {price === undefined ? (
+        <Skeleton width={SKELETON_WIDTH} />
+      ) : (
+        <span>{numberFormatter.format(price.aggregate.confidence)}</span>
+      )}
     </span>
+  );
+};
+
+export const LiveLastUpdated = ({ feed }: { feed: Feed }) => {
+  const price = useLivePrice(feed);
+  const formatterWithDate = useDateFormatter({
+    dateStyle: "short",
+    timeStyle: "medium",
+  });
+  const formatterWithoutDate = useDateFormatter({
+    timeStyle: "medium",
+  });
+  const formattedTimestamp = useMemo(() => {
+    if (price) {
+      const timestamp = new Date(Number(price.timestamp * 1000n));
+      return isToday(timestamp)
+        ? formatterWithoutDate.format(timestamp)
+        : formatterWithDate.format(timestamp);
+    } else {
+      return;
+    }
+  }, [price, formatterWithDate, formatterWithoutDate]);
+
+  return formattedTimestamp ?? <Skeleton width={SKELETON_WIDTH} />;
+};
+
+type LiveValueProps<T extends keyof PriceData> = {
+  field: T;
+  feed: Feed & {
+    price: Record<T, ReactNode>;
+  };
+};
+
+export const LiveValue = <T extends keyof PriceData>({
+  feed,
+  field,
+}: LiveValueProps<T>) => {
+  const price = useLivePrice(feed);
+
+  return price?.[field]?.toString() ?? feed.price[field];
+};
+
+const isToday = (date: Date) => {
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
   );
 };
 
@@ -104,11 +162,7 @@ const usePriceData = () => {
           for (const [i, price] of initialPrices.entries()) {
             const key = uninitializedFeedKeys[i];
             if (key) {
-              priceData.set(key, {
-                price: price.aggregate.price,
-                direction: "flat",
-                confidence: price.aggregate.confidence,
-              });
+              priceData.set(key, { ...price, direction: "flat" });
             }
           }
         })
@@ -120,13 +174,12 @@ const usePriceData = () => {
     // Then, we create a subscription to update prices live.
     const connection = subscribe(
       feedKeys.map((key) => new PublicKey(key)),
-      ({ price_account }, { aggregate }) => {
+      ({ price_account }, price) => {
         if (price_account) {
           const prevPrice = priceData.get(price_account)?.price;
           priceData.set(price_account, {
-            price: aggregate.price,
-            direction: getChangeDirection(prevPrice, aggregate.price),
-            confidence: aggregate.confidence,
+            ...price,
+            direction: getChangeDirection(prevPrice, price.aggregate.price),
           });
         }
       },

@@ -27,4 +27,12 @@
     cursor: not-allowed;
     color: theme.color("button", "disabled", "foreground");
   }
+
+  &[data-invert] {
+    text-decoration: none;
+
+    &[data-hovered] {
+      text-decoration: underline;
+    }
+  }
 }

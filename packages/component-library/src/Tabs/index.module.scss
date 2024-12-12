@@ -1,0 +1,35 @@
+@use "../theme";
+
+.tabs {
+  border-bottom: 1px solid theme.color("border");
+
+  .tabList {
+    @include theme.max-width;
+
+    display: flex;
+    flex-flow: row nowrap;
+    gap: theme.spacing(2);
+    padding-bottom: theme.spacing(1);
+
+    .tab {
+      position: relative;
+
+      .underline {
+        position: absolute;
+        bottom: -#{theme.spacing(1.5)};
+        left: 0;
+        width: 100%;
+        height: theme.spacing(0.5);
+        background: theme.color("foreground");
+      }
+
+      &[data-selected] {
+        pointer-events: none;
+
+        &[data-selectable] {
+          pointer-events: auto;
+        }
+      }
+    }
+  }
+}

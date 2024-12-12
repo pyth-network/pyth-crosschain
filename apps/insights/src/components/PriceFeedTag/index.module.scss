@@ -1,0 +1,70 @@
+@use "@pythnetwork/component-library/theme";
+
+.priceFeedTag {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(3);
+  align-items: center;
+  width: 100%;
+
+  .icon {
+    flex: none;
+    width: theme.spacing(10);
+    height: theme.spacing(10);
+  }
+
+  .nameAndDescription {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(1);
+    flex-grow: 1;
+    flex-basis: 0;
+    white-space: nowrap;
+    overflow: hidden;
+
+    .name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      gap: theme.spacing(1);
+      color: theme.color("heading");
+
+      .firstPart {
+        font-weight: theme.font-weight("medium");
+      }
+
+      .divider {
+        font-weight: theme.font-weight("light");
+        color: theme.color("muted");
+      }
+
+      .part {
+        opacity: 0.6;
+      }
+    }
+
+    .description {
+      font-size: theme.font-size("xs");
+      font-weight: theme.font-weight("medium");
+      line-height: theme.spacing(4);
+      color: theme.color("muted");
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &[data-compact] {
+    .icon {
+      width: theme.spacing(6);
+      height: theme.spacing(6);
+    }
+  }
+
+  &[data-loading] {
+    .icon {
+      border-radius: theme.border-radius("full");
+    }
+  }
+}

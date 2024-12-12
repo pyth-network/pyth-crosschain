@@ -76,14 +76,14 @@ export const AccountSummary = ({
       alt=""
       className="absolute -right-40 hidden h-full object-cover object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)] md:block"
     />
-    <div className="relative flex flex-col items-start justify-between gap-8 sm:px-6 sm:py-10 md:flex-row md:items-center md:gap-16 lg:px-12 lg:py-20">
+    <div className="relative flex flex-col items-start justify-between gap-8 sm:p-4 md:flex-row md:items-center md:gap-16 xl:px-8 xl:py-2">
       <div>
         <div className="mb-2 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400 sm:mb-4">
           Total Balance
         </div>
         <div className="flex flex-row items-center gap-8">
           <span>
-            <Tokens className="text-4xl font-light sm:text-6xl">{total}</Tokens>
+            <Tokens className="text-4xl font-light">{total}</Tokens>
           </span>
           {lastSlash && (
             <p className="max-w-48 text-sm text-red-600">
@@ -402,20 +402,20 @@ const BalanceCategory = ({
 }: BalanceCategoryProps) => (
   <div
     className={clsx(
-      "flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-4 backdrop-blur sm:p-6 xl:w-80 2xl:w-96",
+      "flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-4 backdrop-blur sm:px-6 xl:w-80 2xl:w-96",
       className,
     )}
   >
     <div>
-      <div className="mb-4 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
+      <div className="mb-2 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
         {name}
       </div>
       <div>
         <Tokens className="text-xl font-light">{amount}</Tokens>
       </div>
-      <div className="mt-4 text-sm text-neutral-500">{description}</div>
+      <div className="mt-2 text-sm text-neutral-500">{description}</div>
     </div>
-    <div className="mt-4 flex flex-row items-center gap-4">
+    <div className="mt-2 flex flex-row items-center gap-4">
       {action}
       {warning && <div className="text-xs text-red-600">{warning}</div>}
     </div>

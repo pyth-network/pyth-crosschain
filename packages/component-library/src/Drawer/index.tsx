@@ -58,7 +58,9 @@ export const Drawer = ({ title, children, className, ...props }: Props) => (
             Close
           </Button>
         </div>
-        {typeof children === "function" ? children(state) : children}
+        <div className={styles.body}>
+          {typeof children === "function" ? children(state) : children}
+        </div>
       </Dialog>
     )}
   </Modal>

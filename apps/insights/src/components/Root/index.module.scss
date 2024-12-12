@@ -4,6 +4,7 @@ $header-height: theme.spacing(20);
 
 .root {
   scroll-padding-top: $header-height;
+  overflow-x: hidden;
 
   .tabRoot {
     display: grid;

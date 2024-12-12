@@ -149,21 +149,23 @@
     border-radius: theme.border-radius("full");
   }
 
+  .key {
+    margin: 0 -#{theme.button-padding("sm", true)};
+  }
+
   .nameAndKey {
     display: flex;
     flex-flow: column nowrap;
     gap: theme.spacing(1);
     align-items: flex-start;
 
-    .publisherKey {
-      color: theme.color("link", "normal");
-      font-weight: theme.font-weight("medium");
-      font-size: theme.font-size("xxs");
+    .name {
+      color: theme.color("heading");
     }
-  }
 
-  .name {
-    color: theme.color("heading");
+    .key {
+      margin: 0 -#{theme.button-padding("xs", true)};
+    }
   }
 
   &[data-is-undisclosed] {

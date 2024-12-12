@@ -1,7 +1,6 @@
 @use "@pythnetwork/component-library/theme";
 
 .changePercent {
-  font-size: theme.font-size("sm");
   transition: color 100ms linear;
   display: flex;
   flex-flow: row nowrap;

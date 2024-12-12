@@ -36,15 +36,18 @@
   }
 
   .table {
-    border-collapse: collapse;
+    border-spacing: 0;
 
     .cell {
       padding-left: theme.spacing(3);
       padding-right: theme.spacing(3);
       white-space: nowrap;
       border: 0;
-      outline: none;
+      outline: theme.spacing(0.5) solid transparent;
       width: calc(theme.spacing(1) * var(--width));
+      outline-offset: -#{theme.spacing(0.5)};
+      background-color: theme.color("background", "primary");
+      transition: outline-color 100ms linear;
 
       &:first-child {
         padding-left: theme.spacing(4);
@@ -70,21 +73,35 @@
         width: 100%;
       }
 
+      &[data-sticky] {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        border-right: 1px solid theme.color("border");
+      }
+
       &[data-focus-visible] {
-        outline: theme.spacing(0.5) solid theme.color("focus");
+        outline-color: theme.color("focus");
       }
     }
 
     .tableHeader {
-      border-bottom: 1px solid theme.color("background", "secondary");
       font-size: theme.font-size("xs");
       line-height: theme.spacing(4);
       color: theme.color("muted");
 
       .cell {
+        border-bottom: 1px solid theme.color("background", "secondary");
         font-weight: theme.font-weight("medium");
         padding-top: theme.spacing(3);
         padding-bottom: theme.spacing(3);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+
+        &[data-sticky] {
+          z-index: 2;
+        }
       }
     }
 
@@ -95,29 +112,9 @@
       font-weight: theme.font-weight("medium");
 
       .row {
-        background-color: transparent;
-        transition-property: background-color;
-        transition-duration: 100ms;
-        transition-timing-function: linear;
-        outline: none;
-
-        &[data-hovered] {
-          background-color: theme.color(
-            "button",
-            "outline",
-            "background",
-            "hover"
-          );
-        }
-
-        &[data-pressed] {
-          background-color: theme.color(
-            "button",
-            "outline",
-            "background",
-            "active"
-          );
-        }
+        outline: theme.spacing(0.5) solid transparent;
+        outline-offset: -#{theme.spacing(0.5)};
+        transition: outline-color 100ms linear;
 
         &[data-focus-visible] {
           outline: theme.spacing(0.5) solid theme.color("focus");
@@ -130,6 +127,25 @@
         .cell {
           padding-top: theme.spacing(4);
           padding-bottom: theme.spacing(4);
+          transition: background-color 100ms linear;
+        }
+
+        &[data-hovered] .cell {
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "hover"
+          );
+        }
+
+        &[data-pressed] .cell {
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "active"
+          );
         }
       }
     }
@@ -140,25 +156,49 @@
   }
 
   &[data-divide] {
-    .tableHeader {
-      border-color: theme.color("border");
-    }
+    .table {
+      // This rule has lower specificity than a rule above which applies the
+      // background color to hovered / pressed body cells, but csslint has no
+      // way to understand that .tableHeader and .tableBody are mutually
+      // exclusive and so these rules will never override other other.
+      // stylelint-disable-next-line no-descending-specificity
+      .tableHeader .cell {
+        border-color: theme.color("border");
+      }
 
-    .tableBody .row .cell {
-      border-bottom: 1px solid theme.color("background", "secondary");
+      .tableBody .row .cell {
+        border-bottom: 1px solid theme.color("background", "secondary");
+      }
     }
   }
 
   &[data-rounded] {
     border-radius: theme.border-radius("xl");
 
-    .tableBody .row:last-child .cell {
-      &:first-child {
-        border-bottom-left-radius: theme.border-radius("xl");
+    .table {
+      .tableHeader .cell {
+        &:first-child {
+          border-top-left-radius: theme.border-radius("xl");
+        }
+
+        &:last-child {
+          border-top-right-radius: theme.border-radius("xl");
+        }
       }
 
-      &:last-child {
+      .tableBody .row:last-child {
+        border-bottom-left-radius: theme.border-radius("xl");
         border-bottom-right-radius: theme.border-radius("xl");
+
+        .cell {
+          &:first-child {
+            border-bottom-left-radius: theme.border-radius("xl");
+          }
+
+          &:last-child {
+            border-bottom-right-radius: theme.border-radius("xl");
+          }
+        }
       }
     }
   }

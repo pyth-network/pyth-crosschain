@@ -10,24 +10,20 @@ import {
   Card,
 } from "@pythnetwork/component-library/Card";
 import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
-import base58 from "bs58";
-import clsx from "clsx";
-import Generic from "cryptocurrency-icons/svg/color/generic.svg";
-import { Fragment, type ElementType } from "react";
+import { type ElementType } from "react";
 import { z } from "zod";
 
 import { AssetClassesDrawer } from "./asset-classes-drawer";
-import { YesterdaysPricesProvider, ChangePercent } from "./change-percent";
 import { ComingSoonList } from "./coming-soon-list";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { getIcon } from "../../icons";
 import { client } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
-import { CopyButton } from "../CopyButton";
-import { LivePrice } from "../LivePrices";
+import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
+import { FeedKey } from "../FeedKey";
+import { LivePrice, LiveConfidence, LiveValue } from "../LivePrices";
+import { PriceFeedTag } from "../PriceFeedTag";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
 
@@ -53,7 +49,7 @@ export const PriceFeeds = async () => {
     <div className={styles.priceFeeds}>
       <h1 className={styles.header}>Price Feeds</h1>
       <div className={styles.body}>
-        <div className={styles.stats}>
+        <section className={styles.stats}>
           <StatCard
             variant="primary"
             header="Active Feeds"
@@ -79,15 +75,8 @@ export const PriceFeeds = async () => {
               corner={<Info weight="fill" />}
             />
           </AssetClassesDrawer>
-        </div>
-        <YesterdaysPricesProvider
-          symbolsToFeedKeys={Object.fromEntries(
-            featuredRecentlyAdded.map(({ symbol, product }) => [
-              symbol,
-              product.price_account,
-            ]),
-          )}
-        >
+        </section>
+        <YesterdaysPricesProvider feeds={featuredRecentlyAdded}>
           <FeaturedFeedsCard
             title="Recently added"
             icon={<StackPlus />}
@@ -115,24 +104,18 @@ export const PriceFeeds = async () => {
                 }
               >
                 <ComingSoonList
-                  comingSoonFeeds={priceFeeds.comingSoon.map(
-                    ({ symbol, product }) => ({
-                      symbol,
-                      id: product.price_account,
-                      displaySymbol: product.display_symbol,
-                      assetClassAsString: product.asset_type,
-                      priceFeedName: (
-                        <PriceFeedNameAndIcon>
-                          {product.display_symbol}
-                        </PriceFeedNameAndIcon>
-                      ),
-                      assetClass: (
-                        <Badge variant="neutral" style="outline" size="xs">
-                          {product.asset_type.toUpperCase()}
-                        </Badge>
-                      ),
-                    }),
-                  )}
+                  comingSoonFeeds={priceFeeds.comingSoon.map((feed) => ({
+                    symbol: feed.symbol,
+                    id: feed.product.price_account,
+                    displaySymbol: feed.product.display_symbol,
+                    assetClassAsString: feed.product.asset_type,
+                    priceFeedName: <PriceFeedTag compact feed={feed} />,
+                    assetClass: (
+                      <Badge variant="neutral" style="outline" size="xs">
+                        {feed.product.asset_type.toUpperCase()}
+                      </Badge>
+                    ),
+                  }))}
                 />
               </Drawer>
             </DrawerTrigger>
@@ -140,46 +123,32 @@ export const PriceFeeds = async () => {
         />
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
-          nameLoadingSkeleton={
-            <div className={styles.priceFeedNameAndIcon}>
-              <Skeleton
-                className={clsx(styles.priceFeedIcon, styles.skeleton)}
-                fill
+          nameLoadingSkeleton={<PriceFeedTag compact />}
+          priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
+            symbol: feed.symbol,
+            id: feed.product.price_account,
+            displaySymbol: feed.product.display_symbol,
+            assetClassAsString: feed.product.asset_type,
+            exponent: <LiveValue field="exponent" feed={feed} />,
+            numPublishers: <LiveValue field="numQuoters" feed={feed} />,
+            price: <LivePrice feed={feed} />,
+            confidenceInterval: <LiveConfidence feed={feed} />,
+            weeklySchedule: feed.product.weekly_schedule,
+            priceFeedName: <PriceFeedTag compact feed={feed} />,
+            assetClass: (
+              <Badge variant="neutral" style="outline" size="xs">
+                {feed.product.asset_type.toUpperCase()}
+              </Badge>
+            ),
+            priceFeedId: (
+              <FeedKey
+                className={styles.feedKey ?? ""}
+                size="xs"
+                variant="ghost"
+                feed={feed}
               />
-              <div className={styles.priceFeedName}>
-                <Skeleton width={20} />
-              </div>
-            </div>
-          }
-          priceFeeds={priceFeeds.activeFeeds.map(
-            ({ symbol, product, price }) => ({
-              symbol,
-              id: product.price_account,
-              displaySymbol: product.display_symbol,
-              assetClassAsString: product.asset_type,
-              exponent: price.exponent,
-              numPublishers: price.numQuoters,
-              weeklySchedule: product.weekly_schedule,
-              priceFeedName: (
-                <PriceFeedNameAndIcon>
-                  {product.display_symbol}
-                </PriceFeedNameAndIcon>
-              ),
-              assetClass: (
-                <Badge variant="neutral" style="outline" size="xs">
-                  {product.asset_type.toUpperCase()}
-                </Badge>
-              ),
-              priceFeedId: (
-                <CopyButton
-                  className={styles.priceFeedId ?? ""}
-                  text={toHex(product.price_account)}
-                >
-                  {toTruncatedHex(product.price_account)}
-                </CopyButton>
-              ),
-            }),
-          )}
+            ),
+          }))}
         />
       </div>
     </div>
@@ -193,6 +162,7 @@ type FeaturedFeedsCardProps<T extends ElementType> = Omit<
   showPrices?: boolean | undefined;
   linkFeeds?: boolean | undefined;
   feeds: {
+    symbol: string;
     product: {
       display_symbol: string;
       price_account: string;
@@ -209,26 +179,20 @@ const FeaturedFeedsCard = <T extends ElementType>({
 }: FeaturedFeedsCardProps<T>) => (
   <Card {...props}>
     <div className={styles.featuredFeeds}>
-      {feeds.map(({ product }) => (
+      {feeds.map((feed) => (
         <Card
-          key={product.price_account}
+          key={feed.product.price_account}
           variant="tertiary"
-          {...(linkFeeds && { href: "#" })}
+          {...(linkFeeds && {
+            href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
+          })}
         >
           <div className={styles.feedCardContents}>
-            <div className={styles.priceFeedNameAndDescription}>
-              <PriceFeedIcon>{product.display_symbol}</PriceFeedIcon>
-              <div className={styles.nameAndDescription}>
-                <PriceFeedName>{product.display_symbol}</PriceFeedName>
-                <div className={styles.description}>
-                  {product.description.split("/")[0]}
-                </div>
-              </div>
-            </div>
+            <PriceFeedTag feed={feed} />
             {showPrices && (
               <div className={styles.prices}>
-                <LivePrice account={product.price_account} />
-                <ChangePercent feedKey={product.price_account} />
+                <LivePrice feed={feed} />
+                <ChangePercent className={styles.changePercent} feed={feed} />
               </div>
             )}
           </div>
@@ -237,53 +201,6 @@ const FeaturedFeedsCard = <T extends ElementType>({
     </div>
   </Card>
 );
-
-const PriceFeedNameAndIcon = ({ children }: { children: string }) => (
-  <div className={styles.priceFeedNameAndIcon}>
-    <PriceFeedIcon>{children}</PriceFeedIcon>
-    <PriceFeedName>{children}</PriceFeedName>
-  </div>
-);
-
-const PriceFeedIcon = ({ children }: { children: string }) => {
-  const firstPart = children.split("/")[0];
-  const Icon = firstPart ? (getIcon(firstPart) ?? Generic) : Generic;
-
-  return (
-    <Icon
-      className={styles.priceFeedIcon}
-      width="100%"
-      height="100%"
-      viewBox="0 0 32 32"
-    />
-  );
-};
-
-const PriceFeedName = ({ children }: { children: string }) => {
-  const [firstPart, ...parts] = children.split("/");
-
-  return (
-    <div className={styles.priceFeedName}>
-      <span className={styles.firstPart}>{firstPart}</span>
-      {parts.map((part, i) => (
-        <Fragment key={i}>
-          <span className={styles.divider}>/</span>
-          <span className={styles.part}>{part}</span>
-        </Fragment>
-      ))}
-    </div>
-  );
-};
-
-const toHex = (value: string) => toHexString(base58.decode(value));
-
-const toTruncatedHex = (value: string) => {
-  const hex = toHex(value);
-  return `${hex.slice(0, 6)}...${hex.slice(-4)}`;
-};
-
-const toHexString = (byteArray: Uint8Array) =>
-  `0x${Array.from(byteArray, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 
 const getPriceFeeds = async () => {
   const data = await client.getData();
