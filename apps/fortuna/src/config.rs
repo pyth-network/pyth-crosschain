@@ -166,6 +166,16 @@ pub struct EthereumConfig {
     /// Maximum number of hashes to record in a request.
     /// This should be set according to the maximum gas limit the provider supports for callbacks.
     pub max_num_hashes: Option<u32>,
+
+    /// Multiplier for EIP1559 fee estimates, represented as a percentage.
+    /// For example, 100 means no change, 200 means double the fees.
+    #[serde(default = "default_eip1559_fee_multiplier_pct")]
+    pub eip1559_fee_multiplier_pct: u64,
+}
+
+/// Default value for eip1559_fee_multiplier_pct (100 = no change to fees)
+fn default_eip1559_fee_multiplier_pct() -> u64 {
+    100
 }
 
 /// A commitment that the provider used to generate random numbers at some point in the past.
