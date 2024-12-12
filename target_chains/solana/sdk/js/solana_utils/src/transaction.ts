@@ -227,7 +227,7 @@ export class TransactionBuilder {
     args: PriorityFeeConfig
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     const blockhash = (
-      await this.connection.getLatestBlockhash({ commitment: "finalized" })
+      await this.connection.getLatestBlockhash({ commitment: "confirmed" })
     ).blockhash;
 
     const jitoBundleSize =
