@@ -195,7 +195,7 @@ const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
 await transactionBuilder.addPostTwapUpdates(binary_data_array);
 
 // You can now use the TWAP prices in subsequent instructions
-await transactionBuilder.addPriceConsumerInstructions(
+await transactionBuilder.addTwapConsumerInstructions(
   async (
     getTwapUpdateAccount: (priceFeedId: string) => PublicKey
   ): Promise<InstructionWithEphemeralSigners[]> => {
