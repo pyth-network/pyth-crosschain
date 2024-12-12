@@ -2,7 +2,6 @@ use {
     crate::{
         api::{self, BlockchainState, ChainId},
         chain::{
-            eth_gas_oracle::eip1559_default_estimator,
             ethereum::{
                 InstrumentedPythContract, InstrumentedSignablePythContract, PythContractCall,
             },
@@ -266,25 +265,18 @@ pub async fn run_keeper_threads(
     );
 
     // Spawn a thread that periodically adjusts the provider fee.
-    let config_for_fee = chain_eth_config.clone();
-    let provider_address = chain_state.provider_address;
-    let contract_for_fee = contract.clone();
     spawn(
-        async move {
-            adjust_fee_wrapper(
-                contract_for_fee,
-                provider_address,
-                ADJUST_FEE_INTERVAL,
-                config_for_fee.legacy_tx,
-                config_for_fee.gas_limit,
-                config_for_fee.min_profit_pct,
-                config_for_fee.target_profit_pct,
-                config_for_fee.max_profit_pct,
-                config_for_fee.fee,
-                config_for_fee.eip1559_fee_multiplier_pct,
-            )
-            .await
-        }
+        adjust_fee_wrapper(
+            contract.clone(),
+            chain_state.provider_address,
+            ADJUST_FEE_INTERVAL,
+            chain_eth_config.legacy_tx,
+            chain_eth_config.gas_limit,
+            chain_eth_config.min_profit_pct,
+            chain_eth_config.target_profit_pct,
+            chain_eth_config.max_profit_pct,
+            chain_eth_config.fee,
+        )
         .in_current_span(),
     );
 
@@ -814,7 +806,8 @@ pub async fn process_backlog(
     tracing::info!("Backlog processed");
 }
 
-/// Track the balance of an account. If there was an error, the function will just return
+/// tracks the balance of the given address on the given chain
+/// if there was an error, the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_balance(
     chain_id: String,
@@ -844,7 +837,8 @@ pub async fn track_balance(
         .set(balance);
 }
 
-/// Track the provider info. If there is a error the function will just return
+/// tracks the collected fees and the hashchain data of the given provider address on the given chain
+/// if there is a error the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_provider(
     chain_id: ChainId,
@@ -1002,7 +996,6 @@ pub async fn adjust_fee_wrapper(
     target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee_wei: u128,
-    eip1559_fee_multiplier_pct: u64,
 ) {
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
@@ -1020,7 +1013,6 @@ pub async fn adjust_fee_wrapper(
             min_fee_wei,
             &mut high_water_pnl,
             &mut sequence_number_of_last_fee_update,
-            eip1559_fee_multiplier_pct,
         )
         .in_current_span()
         .await
@@ -1104,7 +1096,6 @@ pub async fn adjust_fee_if_necessary(
     min_fee_wei: u128,
     high_water_pnl: &mut Option<U256>,
     sequence_number_of_last_fee_update: &mut Option<u64>,
-    eip1559_fee_multiplier_pct: u64,
 ) -> Result<()> {
     let provider_info = contract
         .get_provider_info(provider_address)
@@ -1117,14 +1108,9 @@ pub async fn adjust_fee_if_necessary(
     }
 
     // Calculate target window for the on-chain fee.
-    let max_callback_cost: u128 = estimate_tx_cost(
-        contract.clone(),
-        legacy_tx,
-        gas_limit.into(),
-        eip1559_fee_multiplier_pct,
-    )
-    .await
-    .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
+    let max_callback_cost: u128 = estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
+        .await
+        .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
     let target_fee_min = std::cmp::max(
         (max_callback_cost * (100 + u128::from(min_profit_pct))) / 100,
         min_fee_wei,
@@ -1210,7 +1196,6 @@ pub async fn estimate_tx_cost(
     contract: Arc<InstrumentedSignablePythContract>,
     use_legacy_tx: bool,
     gas_used: u128,
-    eip1559_fee_multiplier_pct: u64,
 ) -> Result<u128> {
     let middleware = contract.client();
 
@@ -1222,15 +1207,10 @@ pub async fn estimate_tx_cost(
             .try_into()
             .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?
     } else {
-        let (max_fee_per_gas, max_priority_fee_per_gas) = middleware
-            .estimate_eip1559_fees(Some(eip1559_default_estimator))
-            .await?;
+        let (max_fee_per_gas, max_priority_fee_per_gas) =
+            middleware.estimate_eip1559_fees(None).await?;
 
-        let multiplier = U256::from(eip1559_fee_multiplier_pct);
-        let base = max_fee_per_gas + max_priority_fee_per_gas;
-        let adjusted = (base * multiplier) / U256::from(100);
-
-        adjusted
+        (max_fee_per_gas + max_priority_fee_per_gas)
             .try_into()
             .map_err(|e| anyhow!("gas price doesn't fit into 128 bits. error: {:?}", e))?
     };
