@@ -496,7 +496,9 @@ multisigCommand(
 
       if (await accountExists(cluster, stakePubkey)) {
         throw new Error(
-          "Stake account already exists, one of the validators provided appears to be already permissioned"
+          "Stake account for validator " +
+            votePubkey.toBase58() +
+            " already exists, it may be already permissioned"
         );
       }
 
