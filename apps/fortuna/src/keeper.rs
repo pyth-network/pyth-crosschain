@@ -20,7 +20,7 @@ use {
     futures::StreamExt,
     prometheus_client::{
         encoding::EncodeLabelSet,
-        metrics::{counter::Counter, family::Family, gauge::Gauge},
+        metrics::{counter::Counter, family::Family, gauge::Gauge, histogram::Histogram},
         registry::Registry,
     },
     std::{
@@ -62,7 +62,6 @@ pub struct AccountLabel {
     pub address: String,
 }
 
-#[derive(Default)]
 pub struct KeeperMetrics {
     pub current_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number: Family<AccountLabel, Gauge>,
@@ -74,6 +73,33 @@ pub struct KeeperMetrics {
     pub requests_processed: Family<AccountLabel, Counter>,
     pub requests_reprocessed: Family<AccountLabel, Counter>,
     pub reveals: Family<AccountLabel, Counter>,
+    pub request_duration_ms: Family<AccountLabel, Histogram>,
+}
+
+impl Default for KeeperMetrics {
+    fn default() -> Self {
+        Self {
+            current_sequence_number: Family::default(),
+            end_sequence_number: Family::default(),
+            balance: Family::default(),
+            collected_fee: Family::default(),
+            current_fee: Family::default(),
+            total_gas_spent: Family::default(),
+            requests: Family::default(),
+            requests_processed: Family::default(),
+            requests_reprocessed: Family::default(),
+            reveals: Family::default(),
+            request_duration_ms: Family::new_with_constructor(|| {
+                Histogram::new(
+                    vec![
+                        1.0, 5.0, 10.0, 50.0, 100.0, 500.0, 1000.0, 5000.0, 10000.0, 30000.0,
+                        60000.0,
+                    ]
+                    .into_iter(),
+                )
+            }),
+        }
+    }
 }
 
 impl KeeperMetrics {
@@ -139,6 +165,12 @@ impl KeeperMetrics {
             "requests_reprocessed",
             "Number of requests reprocessed",
             keeper_metrics.requests_reprocessed.clone(),
+        );
+
+        writable_registry.register(
+            "request_duration_ms",
+            "Time taken to process each callback request in milliseconds",
+            keeper_metrics.request_duration_ms.clone(),
         );
 
         keeper_metrics
