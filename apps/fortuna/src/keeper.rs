@@ -92,8 +92,8 @@ impl Default for KeeperMetrics {
             request_duration_ms: Family::new_with_constructor(|| {
                 Histogram::new(
                     vec![
-                        1.0, 5.0, 10.0, 50.0, 100.0, 500.0, 1000.0, 5000.0, 10000.0, 30000.0,
-                        60000.0,
+                        1000.0, 2500.0, 5000.0, 7500.0, 10000.0, 20000.0, 30000.0, 40000.0,
+                        50000.0, 60000.0,
                     ]
                     .into_iter(),
                 )
@@ -374,6 +374,8 @@ pub async fn process_event_with_backoff(
     gas_limit: U256,
     metrics: Arc<KeeperMetrics>,
 ) {
+    let start_time = std::time::Instant::now();
+
     metrics
         .requests
         .get_or_create(&AccountLabel {
@@ -404,6 +406,16 @@ pub async fn process_event_with_backoff(
             tracing::error!("Failed to process event: {:?}", e);
         }
     }
+
+    let duration_ms = start_time.elapsed().as_millis() as f64;
+    metrics
+        .request_duration_ms
+        .get_or_create(&AccountLabel {
+            chain_id: chain_state.id.clone(),
+            address: chain_state.provider_address.to_string(),
+        })
+        .observe(duration_ms);
+
     metrics
         .requests_processed
         .get_or_create(&AccountLabel {
