@@ -1,5 +1,4 @@
-import { getPythClusterApiUrl, PythCluster } from "@pythnetwork/client";
-import { Connection, PublicKey, StakeProgram } from "@solana/web3.js";
+import { PublicKey, StakeProgram } from "@solana/web3.js";
 
 export async function findDetermisticStakeAccountAddress(
   basePubkey: PublicKey,
