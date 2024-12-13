@@ -529,15 +529,16 @@ multisigCommand(
       );
     }
 
-    const proposalAddress = await vault.proposeInstructions(
+    const proposalAddresses = await vault.proposeInstructions(
       instructions,
       cluster,
       DEFAULT_PRIORITY_FEE_CONFIG
     );
 
+    // This should be a single proposal normally
     console.log(
       "Successfully proposed at: https://proposals.pyth.network/?tab=proposals&proposal=" +
-        proposalAddress[0].toBase58()
+        proposalAddresses[0].toBase58()
     );
   });
 
