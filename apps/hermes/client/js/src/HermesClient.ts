@@ -81,7 +81,12 @@ export class HermesClient {
       const response = await fetch(url, options);
       clearTimeout(timeout); // Clear the timeout if the request completes in time
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorBody = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}${
+            errorBody ? `, body: ${errorBody}` : ""
+          }`
+        );
       }
       const data = await response.json();
       return schema.parse(data);
@@ -274,7 +279,7 @@ export class HermesClient {
    *
    * @returns TwapsResponse object containing the latest TWAPs.
    */
-  async getLatestTwap(
+  async getLatestTwaps(
     ids: HexString[],
     window_seconds: number,
     options?: {

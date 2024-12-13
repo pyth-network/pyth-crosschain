@@ -22,7 +22,7 @@
   "scripts": {
     "build:typescript": "tsc",
     "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
-    "pull:schema": "curl -o schema.json -z schema.json http://localhost:33999/docs/openapi.json",
+    "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
     "example": "node lib/examples/HermesClient.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "test:lint": "eslint src/",
