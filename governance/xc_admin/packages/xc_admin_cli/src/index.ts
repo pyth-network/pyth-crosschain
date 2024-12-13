@@ -458,6 +458,15 @@ multisigCommand(
     );
   });
 
+async function accountExists(
+  cluster: PythCluster,
+  accountPubkey: PublicKey
+): Promise<boolean> {
+  const connection = new Connection(getPythClusterApiUrl(cluster));
+  const account = await connection.getAccountInfo(accountPubkey);
+  return account !== null;
+}
+
 multisigCommand(
   "initialize-stake-accounts",
   "Initialize stake accounts and assign them to the given vote accounts"
@@ -484,6 +493,13 @@ multisigCommand(
         authorizedPubkey,
         votePubkey
       );
+
+      if (await accountExists(cluster, stakePubkey)) {
+        throw new Error(
+          "Stake account already exists, one of the validators provided appears to be already permissioned"
+        );
+      }
+
       instructions.push(
         SystemProgram.createAccountWithSeed({
           basePubkey: authorizedPubkey,
@@ -513,10 +529,15 @@ multisigCommand(
       );
     }
 
-    await vault.proposeInstructions(
+    const proposalAddress = await vault.proposeInstructions(
       instructions,
       cluster,
       DEFAULT_PRIORITY_FEE_CONFIG
+    );
+
+    console.log(
+      "Successfully proposed at: https://proposals.pyth.network/?tab=proposals&proposal=" +
+        proposalAddress[0].toBase58()
     );
   });
 
