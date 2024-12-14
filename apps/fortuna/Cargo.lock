@@ -1503,7 +1503,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "6.7.0"
+version = "6.7.1"
 dependencies = [
  "anyhow",
  "axum",
