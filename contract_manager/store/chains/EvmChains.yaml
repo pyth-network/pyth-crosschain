@@ -840,3 +840,13 @@
   rpcUrl: https://mainnet-rpc.evedex.com
   networkId: 161803
   type: EvmChain
+- id: just_breathe
+  mainnet: true
+  rpcUrl: $ENV_JUST_BREATHE_RPC_URL
+  networkId: 57073
+  type: EvmChain
+- id: monad_devnet
+  mainnet: false
+  rpcUrl: https://devnet1.monad.xyz/rpc/X67JTUmM4cBeq25KAqV0uJd8Wf00a1ul
+  networkId: 41454
+  type: EvmChain
