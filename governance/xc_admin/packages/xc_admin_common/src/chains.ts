@@ -222,7 +222,6 @@ export const RECEIVER_CHAINS = {
   movement_bardock_testnet: 50112,
   story_testnet: 50113,
   coredao_testnet_v2: 50114,
-  berachain_cartio_testnet: 50115,
   monad_devnet: 50116,
 };
 
