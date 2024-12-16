@@ -35,7 +35,20 @@ and [examples](https://github.com/pyth-network/pyth-examples/tree/main/price_fee
 
 Fortuna is an off-chain service which can be used by [Entropy](https://pyth.network/entropy) providers.
 
-## Development
+## Local Development
+
+### Setup
+
+Please install the following tools in order to work in this repository:
+
+- [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to manage your node version, then run `nvm use 20` to ensure you are using node version 20.
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) in order to use `forge` for Ethereum contract development
+- [Solana CLI](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) for working with Solana programs.
+  - After installing, please run `solana keygen new` to generate a local private key.
+- [Anchor](https://www.anchor-lang.com/docs/installation) for developing Solana programs.
+- [Pre-commit](https://pre-commit.com/) is used to automatically format and lint the repository.
+  - After installing, please run `pre-commit install` in the root of the repo to configure the checks to run on each git commit.
+- [Rust](https://www.rust-lang.org/tools/install)
 
 ### Pull requests
 
@@ -45,14 +58,16 @@ to update the package versions following the [Semantic Versioning](https://semve
 
 ### Releases
 
-The repository has a CI workflow that will release javascript packages whose version number has changed.
-To perform a release, follow these steps:
+The repository has several CI workflows that automatically release new versions of the various components when a new Github release is published.
+Each component's workflow uses a specific tag format including the component name and version number (e.g., Fortuna uses the tag `fortuna-vX.Y.Z`).
+The general process for creating a new release is:
 
-1. Update the version number in the `package.json` file for the package(s) you wish to release. Please follow [Semantic Versioning](https://semver.org/) for package versions.
+1. Update the version number of the component in the repo, e.g., in `package.json` or `Cargo.toml` or wherever. Please follow [Semantic Versioning](https://semver.org/) for package versions.
 2. Submit a PR with the changes and merge them in to main.
-3. Create a new tag `pyth-js-v<number>` and push to github. You can simply increment the version number each time -- it doesn't affect any of the published information.
-4. Pushing the tag automatically triggers a CI workflow to publish the updated packages to NPM.
+3. Create a new release on github. Configure the release to create a new tag when published. Set the tag name and version for the component you wish to release -- see the [Releases](https://github.com/pyth-network/pyth-crosschain/releases) page to identify the relevant tag.
+4. Publish the release. This step will automatically trigger a Github Action to build the package and release it. This step will e.g., publish packages to NPM, or build and push docker images.
 
+Note that all javascript packages are released together using a tag of the form `pyth-js-v<number>`. (The `number` is arbitrary.)
 If you have a javascript package that shouldn't be published, simply add `"private": "true"` to the `package.json` file
 and it will be excluded from the publishing workflow. If you are creating a new public javascript package, you should add
 the following config option to `package.json`:
@@ -62,16 +77,6 @@ the following config option to `package.json`:
     "access": "public"
   },
 ```
-
-### pre-commit hooks
-
-pre-commit is a tool that checks and fixes simple issues (formatting, ...) before each commit. You can install it by following [their website](https://pre-commit.com/). In order to enable checks for this repo run `pre-commit install` from command-line in the root of this repo.
-
-The checks are also performed in the CI to ensure the code follows consistent formatting.
-
-### Tilt CI
-
-Integration tests run in Tilt (via the `tilt ci` command). The Tilt CI workflow requires approval from a member of the Pyth team. If you are a member, click on "Details" next to the "Workflow / ci-pyth-crosschain" check in a pull request, and then on the "Resume" button on the workflow page.
 
 ### Typescript Monorepo
 
