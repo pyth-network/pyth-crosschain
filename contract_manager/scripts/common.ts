@@ -5,6 +5,7 @@ import {
   EvmWormholeContract,
   getDefaultDeploymentConfig,
   PrivateKey,
+  Store,
 } from "../src";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -65,7 +66,16 @@ export function getWeb3Contract(
   return new web3.eth.Contract(artifact["abi"], address);
 }
 
+export const COMMON_STORE_OPTIONS = {
+  "store-dir": {
+    type: "string",
+    demandOption: false,
+    desc: "Path to the store directory. Defaults to the location of DefaultStore",
+  },
+} as const;
+
 export const COMMON_DEPLOY_OPTIONS = {
+  ...COMMON_STORE_OPTIONS,
   "std-output-dir": {
     type: "string",
     demandOption: true,
@@ -126,6 +136,7 @@ export const CHAIN_SELECTION_OPTIONS = {
 } as const;
 export const COMMON_UPGRADE_OPTIONS = {
   ...CHAIN_SELECTION_OPTIONS,
+  ...COMMON_STORE_OPTIONS,
   "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   "ops-key-path": {
     type: "string",
@@ -161,17 +172,20 @@ export function makeCacheFunction(
   return runIfNotCached;
 }
 
-export function getSelectedChains(argv: {
-  chain: InferredOptionType<typeof COMMON_UPGRADE_OPTIONS["chain"]>;
-  testnet: InferredOptionType<typeof COMMON_UPGRADE_OPTIONS["testnet"]>;
-  allChains: InferredOptionType<typeof COMMON_UPGRADE_OPTIONS["all-chains"]>;
-}) {
+export function getSelectedChains(
+  argv: {
+    chain: InferredOptionType<typeof COMMON_UPGRADE_OPTIONS["chain"]>;
+    testnet: InferredOptionType<typeof COMMON_UPGRADE_OPTIONS["testnet"]>;
+    allChains: InferredOptionType<typeof COMMON_UPGRADE_OPTIONS["all-chains"]>;
+  },
+  store: Store
+) {
   const selectedChains: EvmChain[] = [];
   if (argv.allChains && argv.chain)
     throw new Error("Cannot use both --all-chains and --chain");
   if (!argv.allChains && !argv.chain)
     throw new Error("Must use either --all-chains or --chain");
-  for (const chain of Object.values(DefaultStore.chains)) {
+  for (const chain of Object.values(store.chains)) {
     if (!(chain instanceof EvmChain)) continue;
     if (
       (argv.allChains && chain.isMainnet() !== argv.testnet) ||
@@ -198,8 +212,11 @@ export function getSelectedChains(argv: {
  * @returns The entropy contract for the given EVM chain.
  * @throws {Error} an error if the entropy contract is not found for the given EVM chain.
  */
-export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
-  for (const contract of Object.values(DefaultStore.entropy_contracts)) {
+export function findEntropyContract(
+  chain: EvmChain,
+  store: Store
+): EvmEntropyContract {
+  for (const contract of Object.values(store.entropy_contracts)) {
     if (contract.getChain().getId() === chain.getId()) {
       return contract;
     }
@@ -213,8 +230,8 @@ export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
  * @returns The EVM chain instance.
  * @throws {Error} an error if the chain is not found or is not an EVM chain.
  */
-export function findEvmChain(chainName: string): EvmChain {
-  const chain = DefaultStore.chains[chainName];
+export function findEvmChain(chainName: string, store: Store): EvmChain {
+  const chain = store.chains[chainName];
   if (!chain) {
     throw new Error(`Chain ${chainName} not found`);
   } else if (!(chain instanceof EvmChain)) {
@@ -229,9 +246,10 @@ export function findEvmChain(chainName: string): EvmChain {
  * @returns If found, the wormhole contract for the given EVM chain. Else, undefined
  */
 export function findWormholeContract(
-  chain: EvmChain
+  chain: EvmChain,
+  store: Store
 ): EvmWormholeContract | undefined {
-  for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
+  for (const contract of Object.values(store.wormhole_contracts)) {
     if (
       contract instanceof EvmWormholeContract &&
       contract.getChain().getId() === chain.getId()
@@ -256,7 +274,8 @@ export interface DeployWormholeReceiverContractsConfig
 export async function deployWormholeContract(
   chain: EvmChain,
   config: DeployWormholeReceiverContractsConfig,
-  cacheFile: string
+  cacheFile: string,
+  store: Store
 ): Promise<EvmWormholeContract> {
   const receiverSetupAddr = await deployIfNotCached(
     cacheFile,
@@ -311,9 +330,8 @@ export async function deployWormholeContract(
   }
 
   if (config.saveContract) {
-    DefaultStore.wormhole_contracts[wormholeContract.getId()] =
-      wormholeContract;
-    DefaultStore.saveAllContracts();
+    store.wormhole_contracts[wormholeContract.getId()] = wormholeContract;
+    store.saveAllContracts();
   }
 
   return wormholeContract;
@@ -330,10 +348,11 @@ export async function deployWormholeContract(
 export async function getOrDeployWormholeContract(
   chain: EvmChain,
   config: DeployWormholeReceiverContractsConfig,
-  cacheFile: string
+  cacheFile: string,
+  store: Store
 ): Promise<EvmWormholeContract> {
   return (
-    findWormholeContract(chain) ??
-    (await deployWormholeContract(chain, config, cacheFile))
+    findWormholeContract(chain, store) ??
+    (await deployWormholeContract(chain, config, cacheFile, store))
   );
 }
