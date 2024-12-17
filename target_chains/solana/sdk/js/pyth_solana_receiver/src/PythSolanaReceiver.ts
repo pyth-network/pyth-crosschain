@@ -215,8 +215,8 @@ export class PythTransactionBuilder extends TransactionBuilder {
    *
    * const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
    * await transactionBuilder.addPostTwapUpdates(priceUpdateData);
-   * console.log("The SOL/USD price update will get posted to:", transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58())
-   * await transactionBuilder.addPriceConsumerInstructions(...)
+   * console.log("The SOL/USD price update will get posted to:", transactionBuilder.getTwapUpdateAccount(SOL_PRICE_FEED_ID).toBase58())
+   * await transactionBuilder.addTwapConsumerInstructions(...)
    * ```
    */
   async addPostTwapUpdates(twapUpdateDataArray: string[]) {

@@ -179,7 +179,7 @@ This method does sacrifice some security however -- please see the method docume
 
 TWAP prices updates are calculated using a pair of verifiable cumulative price updates per price feed (the "start" and "end" updates for the given time window), and then performing an averaging calculation on-chain to create the time-weighted average price.
 
-The flow of using verifying, posting, and consuming these prices are the same as standard price updates. Get the binary update data from Hermes or Benchmarks, verify the VAAs via the Wormhole contract, and post the VAAs to the Pyth receiver contract. After this, you can consume the calculated TWAP posted to the TwapUpdate account. You can also optionally close these ephemeral accounts after the TWAP has been consumed to save on rent.
+The flow of using, verifying, posting, and consuming these prices are the same as standard price updates. Get the binary update data from Hermes or Benchmarks, post and verify the VAAs via the Wormhole contract, and verify the updates against the VAAs via Pyth receiver contract. After this, you can consume the calculated TWAP posted to the TwapUpdate account. You can also optionally close these ephemeral accounts after the TWAP has been consumed to save on rent.
 
 ```typescript
 // Fetch the binary TWAP data from hermes or benchmarks. See Preliminaries section above for more info.
@@ -200,7 +200,7 @@ await transactionBuilder.addTwapConsumerInstructions(
     getTwapUpdateAccount: (priceFeedId: string) => PublicKey
   ): Promise<InstructionWithEphemeralSigners[]> => {
     // Generate instructions here that use the TWAP updates posted above.
-    // getTwaoUpdateAccount(<price feed id>) will give you the account for each TWAP update.
+    // getTwapUpdateAccount(<price feed id>) will give you the account for each TWAP update.
     return [];
   }
 );
