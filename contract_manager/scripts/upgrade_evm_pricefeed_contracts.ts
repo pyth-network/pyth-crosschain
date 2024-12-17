@@ -1,12 +1,13 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, loadHotWallet, toPrivateKey } from "../src";
+import { DefaultStore, loadHotWallet, toPrivateKey, createStore } from "../src";
 import { readFileSync } from "fs";
 
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
+  COMMON_STORE_OPTIONS,
 } from "./common";
 
 const CACHE_FILE = ".cache-upgrade-evm";
@@ -16,18 +17,32 @@ const parser = yargs(hideBin(process.argv))
   .usage(
     "Deploys a new PythUpgradable contract to a set of chains and creates a governance proposal for it.\n" +
       `Uses a cache file (${CACHE_FILE}) to avoid deploying contracts twice\n` +
-      "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> --ops-key-path <ops_key_path> --std-output <std_output>"
+      "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> --ops-key-path <ops_key_path> --std-output <std_output> [--store-dir <store-dir>]"
   )
-  .options(COMMON_UPGRADE_OPTIONS);
+  .options({
+    ...COMMON_UPGRADE_OPTIONS,
+    ...COMMON_STORE_OPTIONS,
+  });
+
+interface ArgV {
+  chain?: string[];
+  "private-key": string;
+  "ops-key-path": string;
+  "std-output": string;
+  "store-dir"?: string;
+  testnet: boolean;
+  allChains: boolean;
+  _: (string | number)[];
+  $0: string;
+}
 
 async function main() {
-  const argv = await parser.argv;
+  const argv = (await parser.argv) as ArgV;
+  const store = createStore(argv["store-dir"]);
   const selectedChains = getSelectedChains(argv);
 
   const vault =
-    DefaultStore.vaults[
-      "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
-    ];
+    store.vaults["mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"];
 
   console.log("Using cache file", CACHE_FILE);
   console.log(

@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { EvmChain } from "../src/chains";
-import { DefaultStore } from "../src/store";
+import { DefaultStore, createStore } from "../src/store";
 import {
   DeploymentType,
   EvmPriceFeedContract,
@@ -15,6 +15,7 @@ import {
   getWeb3Contract,
   getOrDeployWormholeContract,
   BaseDeployConfig,
+  COMMON_STORE_OPTIONS,
 } from "./common";
 
 interface DeploymentConfig extends BaseDeployConfig {
@@ -24,15 +25,29 @@ interface DeploymentConfig extends BaseDeployConfig {
   saveContract: boolean;
 }
 
+interface ArgV {
+  chain: string[];
+  validTimePeriodSeconds: number;
+  singleUpdateFeeInWei: number;
+  deploymentType: string;
+  "store-dir"?: string;
+  privateKey: string;
+  gasMultiplier: number;
+  gasPriceMultiplier: number;
+  stdOutputDir: string;
+  saveContract: boolean;
+}
+
 const CACHE_FILE = ".cache-deploy-evm";
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_pricefeed_contracts.ts")
   .usage(
-    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain0> --chain <chain1>"
+    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain0> --chain <chain1> [--store-dir <store-dir>]"
   )
   .options({
     ...COMMON_DEPLOY_OPTIONS,
+    ...COMMON_STORE_OPTIONS,
     "valid-time-period-seconds": {
       type: "number",
       demandOption: false,
@@ -91,7 +106,8 @@ async function deployPriceFeedContracts(
 }
 
 async function main() {
-  const argv = await parser.argv;
+  const argv = (await parser.argv) as ArgV;
+  const store = createStore(argv["store-dir"]);
 
   const deploymentConfig: DeploymentConfig = {
     type: toDeploymentType(argv.deploymentType),
@@ -111,7 +127,7 @@ async function main() {
   const chainNames = argv.chain;
 
   for (const chainName of chainNames) {
-    const chain = DefaultStore.chains[chainName];
+    const chain = store.chains[chainName];
     if (!chain) {
       throw new Error(`Chain ${chainName} not found`);
     } else if (!(chain instanceof EvmChain)) {
@@ -135,8 +151,8 @@ async function main() {
     if (deploymentConfig.saveContract) {
       console.log("Saving the contract in the store...");
       const contract = new EvmPriceFeedContract(chain, priceFeedAddr);
-      DefaultStore.contracts[contract.getId()] = contract;
-      DefaultStore.saveAllContracts();
+      store.contracts[contract.getId()] = contract;
+      store.saveAllContracts();
     }
 
     console.log(

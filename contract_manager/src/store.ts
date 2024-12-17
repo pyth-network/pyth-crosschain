@@ -219,6 +219,15 @@ export class Store {
 }
 
 /**
+ * Creates a new Store instance with an optional custom path.
+ * If no path is provided, uses the default store path.
+ */
+export function createStore(customPath?: string): Store {
+  const defaultPath = `${__dirname}/../store`;
+  return new Store(customPath ?? defaultPath);
+}
+
+/**
  * DefaultStore loads all the contracts and chains from the store directory and provides a single point of access to them.
  */
 export const DefaultStore = new Store(`${__dirname}/../store`);

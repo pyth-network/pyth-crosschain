@@ -1,20 +1,29 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, loadHotWallet } from "../src";
+import { DefaultStore, loadHotWallet, createStore } from "../src";
 import { TonChain } from "../src/chains";
 import { CHAINS, toChainName } from "@pythnetwork/xc-admin-common";
 import fs from "fs";
 import path from "path";
+import { COMMON_STORE_OPTIONS } from "./common";
+
+interface ArgV {
+  network: "mainnet" | "testnet";
+  "contract-address": string;
+  "ops-key-path": string;
+  "store-dir"?: string;
+}
 
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Upgrades the Pyth contract on TON and creates a governance proposal for it.\n" +
-      "Usage: $0 --network <mainnet|testnet> --contract-address <address> --ops-key-path <ops_key_path>\n" +
+      "Usage: $0 --network <mainnet|testnet> --contract-address <address> --ops-key-path <ops_key_path> [--store-dir <store-dir>]\n" +
       "Required environment variables:\n" +
       "  - ENV_TON_MAINNET_API_KEY: API key for TON mainnet\n" +
       "  - ENV_TON_TESTNET_API_KEY: API key for TON testnet"
   )
   .options({
+    ...COMMON_STORE_OPTIONS,
     network: {
       type: "string",
       choices: ["mainnet", "testnet"],
@@ -34,23 +43,22 @@ const parser = yargs(hideBin(process.argv))
   });
 
 async function main() {
-  const argv = await parser.argv;
+  const argv = (await parser.argv) as ArgV;
+  const store = createStore(argv["store-dir"]);
   const isMainnet = argv.network === "mainnet";
 
   // Get chain ID and name from CHAINS mapping
   const chainId = isMainnet ? CHAINS.ton_mainnet : CHAINS.ton_testnet;
   const wormholeChainName = toChainName(chainId);
 
-  // Get the TON chain instance from DefaultStore based on network
-  const chain = DefaultStore.chains[isMainnet ? "ton_mainnet" : "ton_testnet"];
+  // Get the TON chain instance from store based on network
+  const chain = store.chains[isMainnet ? "ton_mainnet" : "ton_testnet"];
   if (!chain || !(chain instanceof TonChain)) {
     throw new Error(`Chain configuration not found for TON ${argv.network}`);
   }
 
   const vault =
-    DefaultStore.vaults[
-      "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
-    ];
+    store.vaults["mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"];
 
   console.log(
     `Upgrading contract on TON ${argv.network} (Chain ID: ${chainId}, Wormhole Chain Name: ${wormholeChainName})`
@@ -73,7 +81,7 @@ async function main() {
 
   // Create and submit governance proposal
   console.log("Using vault for proposal:", vault.getId());
-  const keypair = await loadHotWallet(argv["ops-key-path"] as string);
+  const keypair = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet:", keypair.publicKey.toBase58());
   vault.connect(keypair);
   const proposal = await vault.proposeWormholeMessage([payload]);

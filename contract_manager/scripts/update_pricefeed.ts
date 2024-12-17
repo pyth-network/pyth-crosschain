@@ -1,13 +1,23 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, toPrivateKey } from "../src";
+import { DefaultStore, toPrivateKey, createStore } from "../src";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { COMMON_STORE_OPTIONS } from "./common";
+
+interface ArgV {
+  contract: string;
+  "feed-id": string[];
+  "private-key": string;
+  endpoint?: string;
+  "store-dir"?: string;
+}
 
 const parser = yargs(hideBin(process.argv))
   .usage(
-    "Usage: $0 --contract <contract_id> --feed-id <feed-id> --private-key <private-key>"
+    "Usage: $0 --contract <contract_id> --feed-id <feed-id> --private-key <private-key> [--store-dir <store-dir>]"
   )
   .options({
+    ...COMMON_STORE_OPTIONS,
     contract: {
       type: "string",
       demandOption: true,
@@ -30,19 +40,20 @@ const parser = yargs(hideBin(process.argv))
   });
 
 async function main() {
-  const argv = await parser.argv;
-  const contract = DefaultStore.contracts[argv.contract];
+  const argv = (await parser.argv) as ArgV;
+  const store = createStore(argv["store-dir"]);
+  const contract = store.contracts[argv.contract];
   if (!contract) {
     throw new Error(
       `Contract ${argv.contract} not found. Contracts found: ${Object.keys(
-        DefaultStore.contracts
+        store.contracts
       )}`
     );
   }
   const priceService = new PriceServiceConnection(
     argv.endpoint || "https://hermes.pyth.network"
   );
-  const vaas = await priceService.getLatestVaas(argv["feed-id"] as string[]);
+  const vaas = await priceService.getLatestVaas(argv["feed-id"]);
   const privateKey = toPrivateKey(argv["private-key"]);
   console.log(
     await contract.executeUpdatePriceFeed(
