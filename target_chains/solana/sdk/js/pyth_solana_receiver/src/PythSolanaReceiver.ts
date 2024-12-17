@@ -40,9 +40,9 @@ import {
 } from "./compute_budget";
 import { Wallet } from "@coral-xyz/anchor";
 import {
-  buildEncodedVaaCreateInstruction,
+  buildCloseEncodedVaaInstruction,
+  buildPostEncodedVaaInstructions,
   buildPostEncodedVaasForTwapInstructions,
-  buildWriteEncodedVaaWithSplitInstructions,
   findEncodedVaaAccountsByWriteAuthority,
   getGuardianSetIndex,
   trimSignatures,
@@ -550,77 +550,6 @@ export class PythSolanaReceiver {
   }
 
   /**
-   * Build a series of helper instructions that post a VAA in an encoded VAA account. This function is bespoke for posting Pyth VAAs and might not work for other usecases.
-   *
-   * @param vaa a Wormhole VAA
-   * @returns `postInstructions`: the instructions to post the VAA
-   * @returns `encodedVaaAddress`: the address of the encoded VAA account where the VAA will be posted
-   * @returns `closeInstructions`: the instructions to close the encoded VAA account
-   */
-  async buildPostEncodedVaaInstructions(vaa: Buffer): Promise<{
-    postInstructions: InstructionWithEphemeralSigners[];
-    encodedVaaAddress: PublicKey;
-    closeInstructions: InstructionWithEphemeralSigners[];
-  }> {
-    const trimmedVaa = trimSignatures(vaa, 13);
-    const postInstructions: InstructionWithEphemeralSigners[] = [];
-    const closeInstructions: InstructionWithEphemeralSigners[] = [];
-    const encodedVaaKeypair = new Keypair();
-    const guardianSetIndex = getGuardianSetIndex(trimmedVaa);
-
-    postInstructions.push(
-      await buildEncodedVaaCreateInstruction(
-        this.wormhole,
-        trimmedVaa,
-        encodedVaaKeypair
-      )
-    );
-
-    postInstructions.push({
-      instruction: await this.wormhole.methods
-        .initEncodedVaa()
-        .accounts({
-          encodedVaa: encodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
-    });
-
-    const writeInstructions = await buildWriteEncodedVaaWithSplitInstructions(
-      this.wormhole,
-      trimmedVaa,
-      encodedVaaKeypair.publicKey
-    );
-    postInstructions.push(...writeInstructions);
-
-    postInstructions.push({
-      instruction: await this.wormhole.methods
-        .verifyEncodedVaaV1()
-        .accounts({
-          guardianSet: getGuardianSetPda(
-            guardianSetIndex,
-            this.wormhole.programId
-          ),
-          draftVaa: encodedVaaKeypair.publicKey,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-    });
-
-    closeInstructions.push(
-      await this.buildCloseEncodedVaaInstruction(encodedVaaKeypair.publicKey)
-    );
-
-    return {
-      postInstructions,
-      encodedVaaAddress: encodedVaaKeypair.publicKey,
-      closeInstructions,
-    };
-  }
-
-  /**
    * Build a series of helper instructions that post price updates to the Pyth Solana Receiver program and another series to close the encoded vaa accounts and the price update accounts.
    *
    * @param priceUpdateDataArray the output of the `@pythnetwork/price-service-client`'s `PriceServiceConnection.getLatestVaas`. This is an array of verifiable price updates.
@@ -859,20 +788,19 @@ export class PythSolanaReceiver {
   }
 
   /**
-   * Build an instruction to close an encoded VAA account, recovering the rent.
+   * Build a series of helper instructions that post a VAA in an encoded VAA account. This function is bespoke for posting Pyth VAAs and might not work for other usecases.
+   *
+   * @param vaa a Wormhole VAA
+   * @returns `encodedVaaAddress`: the address of the encoded VAA account where the VAA will be posted
+   * @returns `postInstructions`: the instructions to post the VAA
+   * @returns `closeInstructions`: the instructions to close the encoded VAA account
    */
-  async buildCloseEncodedVaaInstruction(
-    encodedVaa: PublicKey
-  ): Promise<InstructionWithEphemeralSigners> {
-    const instruction = await this.wormhole.methods
-      .closeEncodedVaa()
-      .accounts({ encodedVaa })
-      .instruction();
-    return {
-      instruction,
-      signers: [],
-      computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
-    };
+  async buildPostEncodedVaaInstructions(vaa: Buffer): Promise<{
+    encodedVaaAddress: PublicKey;
+    postInstructions: InstructionWithEphemeralSigners[];
+    closeInstructions: InstructionWithEphemeralSigners[];
+  }> {
+    return buildPostEncodedVaaInstructions(this.wormhole, vaa);
   }
 
   /**
@@ -884,7 +812,9 @@ export class PythSolanaReceiver {
     const encodedVaas = await this.findOwnedEncodedVaaAccounts();
     const instructions = [];
     for (const encodedVaa of encodedVaas) {
-      instructions.push(await this.buildCloseEncodedVaaInstruction(encodedVaa));
+      instructions.push(
+        await buildCloseEncodedVaaInstruction(this.wormhole, encodedVaa)
+      );
     }
     return instructions.slice(0, maxInstructions);
   }

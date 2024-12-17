@@ -33,6 +33,21 @@ export const DEFAULT_REDUCED_GUARDIAN_SET_SIZE = 5;
 export const VAA_SIGNATURE_SIZE = 66;
 
 /**
+ * The start of the VAA bytes in an encoded VAA account. Before this offset, the account contains a header.
+ */
+export const VAA_START = 46;
+
+/**
+ * Writing the VAA to an encoded VAA account is done in 2 instructions.
+ *
+ * The first one writes the first `VAA_SPLIT_INDEX` bytes and the second one writes the rest.
+ *
+ * This number was chosen as the biggest number such that one can still call `createInstruction`, `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction.
+ * This way, the packing of the instructions to post an encoded vaa is more efficient.
+ */
+export const VAA_SPLIT_INDEX = 755;
+
+/**
  * Trim the number of signatures of a VAA.
  *
  * @returns the same VAA as the input, but with `n` signatures instead of the original number of signatures.
@@ -61,9 +76,231 @@ export function trimSignatures(
 }
 
 /**
- * The start of the VAA bytes in an encoded VAA account. Before this offset, the account contains a header.
+ * Groups of instructions for posting a VAA to the Wormhole program.
+ * The instructions are split into logical groups to allow flexible ordering and batching:
+ * - initInstructions: Create and initialize the encoded VAA account
+ * - writeFirstPartInstructions: Write the first part of the VAA data (up to VAA_SPLIT_INDEX)
+ * - writeSecondPartAndVerifyInstructions: Write remaining VAA data and verify signatures
+ * - closeInstructions: Close the encoded VAA account to recover rent
  */
-export const VAA_START = 46;
+interface VaaInstructionGroups {
+  initInstructions: InstructionWithEphemeralSigners[];
+  writeFirstPartInstructions: InstructionWithEphemeralSigners[];
+  writeSecondPartAndVerifyInstructions: InstructionWithEphemeralSigners[];
+  closeInstructions: InstructionWithEphemeralSigners[];
+  encodedVaaAddress: PublicKey;
+}
+
+// Core function to generate VAA instruction groups
+async function generateVaaInstructionGroups(
+  wormhole: Program<WormholeCoreBridgeSolana>,
+  vaa: Buffer
+): Promise<VaaInstructionGroups> {
+  const encodedVaaKeypair = new Keypair();
+
+  // Create and init instructions
+  const initInstructions: InstructionWithEphemeralSigners[] = [
+    await buildEncodedVaaCreateInstruction(wormhole, vaa, encodedVaaKeypair),
+    {
+      instruction: await wormhole.methods
+        .initEncodedVaa()
+        .accounts({
+          encodedVaa: encodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
+    },
+  ];
+
+  // First write instruction
+  const writeFirstPartInstructions: InstructionWithEphemeralSigners[] = [
+    {
+      instruction: await wormhole.methods
+        .writeEncodedVaa({
+          index: 0,
+          data: vaa.subarray(0, VAA_SPLIT_INDEX),
+        })
+        .accounts({
+          draftVaa: encodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
+    },
+  ];
+
+  // Second write and verify instructions
+  const writeSecondPartAndVerifyInstructions: InstructionWithEphemeralSigners[] =
+    [
+      {
+        instruction: await wormhole.methods
+          .writeEncodedVaa({
+            index: VAA_SPLIT_INDEX,
+            data: vaa.subarray(VAA_SPLIT_INDEX),
+          })
+          .accounts({
+            draftVaa: encodedVaaKeypair.publicKey,
+          })
+          .instruction(),
+        signers: [],
+        computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
+      },
+      {
+        instruction: await wormhole.methods
+          .verifyEncodedVaaV1()
+          .accounts({
+            guardianSet: getGuardianSetPda(
+              getGuardianSetIndex(vaa),
+              wormhole.programId
+            ),
+            draftVaa: encodedVaaKeypair.publicKey,
+          })
+          .instruction(),
+        signers: [],
+        computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
+      },
+    ];
+
+  // Close instructions
+  const closeInstructions: InstructionWithEphemeralSigners[] = [
+    {
+      instruction: await wormhole.methods
+        .closeEncodedVaa()
+        .accounts({ encodedVaa: encodedVaaKeypair.publicKey })
+        .instruction(),
+      signers: [],
+      computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
+    },
+  ];
+
+  return {
+    initInstructions,
+    writeFirstPartInstructions,
+    writeSecondPartAndVerifyInstructions,
+    closeInstructions,
+    encodedVaaAddress: encodedVaaKeypair.publicKey,
+  };
+}
+
+/**
+ * Build instructions to post a single VAA to the Wormhole program.
+ * The instructions are packed efficiently into 2 transactions:
+ * - TX1: Create, init the encoded VAA account and write the first part of the VAA
+ * - TX2: Write the second part of the VAA and verify it
+ *
+ * @param wormhole - The Wormhole program instance
+ * @param vaa - The VAA buffer to post
+ * @returns {Object} Result containing:
+ *   - encodedVaaAddress: Public key of the encoded VAA account
+ *   - postInstructions: Instructions to post and verify the VAA
+ *   - closeInstructions: Instructions to close the encoded VAA account and recover rent
+ */
+export async function buildPostEncodedVaaInstructions(
+  wormhole: Program<WormholeCoreBridgeSolana>,
+  vaa: Buffer
+): Promise<{
+  encodedVaaAddress: PublicKey;
+  postInstructions: InstructionWithEphemeralSigners[];
+  closeInstructions: InstructionWithEphemeralSigners[];
+}> {
+  const groups = await generateVaaInstructionGroups(wormhole, vaa);
+
+  // Pack instructions for optimal 2-transaction pattern:
+  // TX1: init + first write
+  // TX2: second write + verify
+  return {
+    encodedVaaAddress: groups.encodedVaaAddress,
+    postInstructions: [
+      ...groups.initInstructions,
+      ...groups.writeFirstPartInstructions,
+      ...groups.writeSecondPartAndVerifyInstructions,
+    ],
+    closeInstructions: groups.closeInstructions,
+  };
+}
+
+/**
+ * Build instructions to post two VAAs for TWAP (Time-Weighted Average Price) calculations,
+ * optimized for 3 transactions. This is specifically designed for posting start and end
+ * accumulator update VAAs efficiently.
+ * The instructions are packed into 3 transactions:
+ * - TX1: Initialize and write first part of start VAA
+ * - TX2: Initialize and write first part of end VAA
+ * - TX3: Write second part and verify both VAAs
+ *
+ * @param wormhole - The Wormhole program instance
+ * @param startUpdateData - Accumulator update data containing the start VAA
+ * @param endUpdateData - Accumulator update data containing the end VAA
+ * @returns {Object} Result containing:
+ *   - startEncodedVaaAddress: Public key of the start VAA account
+ *   - endEncodedVaaAddress: Public key of the end VAA account
+ *   - postInstructions: Instructions to post and verify both VAAs
+ *   - closeInstructions: Instructions to close both encoded VAA accounts
+ */
+export async function buildPostEncodedVaasForTwapInstructions(
+  wormhole: Program<WormholeCoreBridgeSolana>,
+  startUpdateData: AccumulatorUpdateData,
+  endUpdateData: AccumulatorUpdateData
+): Promise<{
+  startEncodedVaaAddress: PublicKey;
+  endEncodedVaaAddress: PublicKey;
+  postInstructions: InstructionWithEphemeralSigners[];
+  closeInstructions: InstructionWithEphemeralSigners[];
+}> {
+  const startGroups = await generateVaaInstructionGroups(
+    wormhole,
+    startUpdateData.vaa
+  );
+  const endGroups = await generateVaaInstructionGroups(
+    wormhole,
+    endUpdateData.vaa
+  );
+
+  // Pack instructions for optimal 3-transaction pattern:
+  // TX1: start VAA init + first write
+  // TX2: end VAA init + first write
+  // TX3: both VAAs second write + verify
+  const postInstructions = [
+    // TX1
+    ...startGroups.initInstructions,
+    ...startGroups.writeFirstPartInstructions,
+    // TX2
+    ...endGroups.initInstructions,
+    ...endGroups.writeFirstPartInstructions,
+    // TX3
+    ...startGroups.writeSecondPartAndVerifyInstructions,
+    ...endGroups.writeSecondPartAndVerifyInstructions,
+  ];
+
+  return {
+    startEncodedVaaAddress: startGroups.encodedVaaAddress,
+    endEncodedVaaAddress: endGroups.encodedVaaAddress,
+    postInstructions,
+    closeInstructions: [
+      ...startGroups.closeInstructions,
+      ...endGroups.closeInstructions,
+    ],
+  };
+}
+
+/**
+ * Build an instruction to close an encoded VAA account, recovering the rent.
+ */
+export async function buildCloseEncodedVaaInstruction(
+  wormhole: Program<WormholeCoreBridgeSolana>,
+  encodedVaa: PublicKey
+): Promise<InstructionWithEphemeralSigners> {
+  const instruction = await wormhole.methods
+    .closeEncodedVaa()
+    .accounts({ encodedVaa })
+    .instruction();
+  return {
+    instruction,
+    signers: [],
+    computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
+  };
+}
 
 /**
  * Build an instruction to create an encoded VAA account.
@@ -83,59 +320,6 @@ export async function buildEncodedVaaCreateInstruction(
     ),
     signers: [encodedVaaKeypair],
   };
-}
-
-/**
- * Writing the VAA to an encoded VAA account is done in 2 instructions.
- *
- * The first one writes the first `VAA_SPLIT_INDEX` bytes and the second one writes the rest.
- *
- * This number was chosen as the biggest number such that one can still call `createInstruction`, `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction.
- * This way, the packing of the instructions to post an encoded vaa is more efficient.
- */
-export const VAA_SPLIT_INDEX = 755;
-
-/**
- * Build a set of instructions to write a VAA to an encoded VAA account
- * This functions returns 2 instructions and splits the VAA in an opinionated way, so that the whole process of posting a VAA can be efficiently packed in the 2 transactions:
- *
- * TX 1 : `createInstruction` + `initEncodedVaa` + `writeEncodedVaa_1`
- *
- * TX 2 : `writeEncodedVaa_2` + `verifyEncodedVaaV1`
- */
-export async function buildWriteEncodedVaaWithSplitInstructions(
-  wormhole: Program<WormholeCoreBridgeSolana>,
-  vaa: Buffer,
-  draftVaa: PublicKey
-): Promise<InstructionWithEphemeralSigners[]> {
-  return [
-    {
-      instruction: await wormhole.methods
-        .writeEncodedVaa({
-          index: 0,
-          data: vaa.subarray(0, VAA_SPLIT_INDEX),
-        })
-        .accounts({
-          draftVaa,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
-    },
-    {
-      instruction: await wormhole.methods
-        .writeEncodedVaa({
-          index: VAA_SPLIT_INDEX,
-          data: vaa.subarray(VAA_SPLIT_INDEX),
-        })
-        .accounts({
-          draftVaa,
-        })
-        .instruction(),
-      signers: [],
-      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
-    },
-  ];
 }
 
 /**
@@ -166,192 +350,4 @@ export async function findEncodedVaaAccountsByWriteAuthority(
     ],
   });
   return result.map((account) => new PublicKey(account.pubkey));
-}
-
-/**
- * Build a set of instructions to write two VAAs (start and end) to encoded VAA accounts.
- *
- * The instructions are assembled in an opinionated way so that they can be efficiently packed in 3 transactions:
- * TX 1. Create, init and write initial data for start VAA
- * TX 2. Create, init and write initial data for end VAA
- * TX 3. Write remaining data and verify start and end VAAs
- *
- * @param wormhole The Wormhole program instance
- * @param startUpdateData The accumulator update data for the start VAA
- * @param endUpdateData The accumulator update data for the end VAA
- * @returns Instructions for posting VAAs, closing VAAs, and the VAA data
- */
-export async function buildPostEncodedVaasForTwapInstructions(
-  wormhole: Program<WormholeCoreBridgeSolana>,
-  startUpdateData: AccumulatorUpdateData,
-  endUpdateData: AccumulatorUpdateData
-): Promise<{
-  postInstructions: InstructionWithEphemeralSigners[];
-  closeInstructions: InstructionWithEphemeralSigners[];
-  startEncodedVaaAddress: PublicKey;
-  endEncodedVaaAddress: PublicKey;
-}> {
-  const postInstructions: InstructionWithEphemeralSigners[] = [];
-  const closeInstructions: InstructionWithEphemeralSigners[] = [];
-  const {
-    encodedVaaAddress: startEncodedVaaAddress,
-    postInstructions: startVaaInstructions,
-  } = await buildInitEncodedVaaAndWriteInitialDataInstructions(
-    wormhole,
-    startUpdateData
-  );
-  const {
-    encodedVaaAddress: endEncodedVaaAddress,
-    postInstructions: endVaaInstructions,
-  } = await buildInitEncodedVaaAndWriteInitialDataInstructions(
-    wormhole,
-    endUpdateData
-  );
-  postInstructions.push(...startVaaInstructions);
-  postInstructions.push(...endVaaInstructions);
-
-  const startRemainingInstructions =
-    await buildWriteRemainingDataAndVerifyVaaInstructions(
-      wormhole,
-      startUpdateData.vaa,
-      startEncodedVaaAddress
-    );
-  const endRemainingInstructions =
-    await buildWriteRemainingDataAndVerifyVaaInstructions(
-      wormhole,
-      endUpdateData.vaa,
-      endEncodedVaaAddress
-    );
-  postInstructions.push(...startRemainingInstructions);
-  postInstructions.push(...endRemainingInstructions);
-
-  // Add close instructions for both VAAs
-  closeInstructions.push({
-    instruction: await wormhole.methods
-      .closeEncodedVaa()
-      .accounts({
-        encodedVaa: startEncodedVaaAddress,
-      })
-      .instruction(),
-    signers: [],
-    computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
-  });
-
-  closeInstructions.push({
-    instruction: await wormhole.methods
-      .closeEncodedVaa()
-      .accounts({
-        encodedVaa: endEncodedVaaAddress,
-      })
-      .instruction(),
-    signers: [],
-    computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
-  });
-
-  return {
-    postInstructions,
-    closeInstructions,
-    startEncodedVaaAddress,
-    endEncodedVaaAddress,
-  };
-}
-
-/**
- * Helper function to create, init, and write initial data for a VAA
- * @param wormhole The Wormhole program instance
- * @param updateData The accumulator update data containing the VAA
- * @returns The trimmed VAA, generated keypair, and instructions
- */
-async function buildInitEncodedVaaAndWriteInitialDataInstructions(
-  wormhole: Program<WormholeCoreBridgeSolana>,
-  updateData: AccumulatorUpdateData
-): Promise<{
-  encodedVaaAddress: PublicKey;
-  postInstructions: InstructionWithEphemeralSigners[];
-}> {
-  const encodedVaaKeypair = new Keypair();
-  const postInstructions: InstructionWithEphemeralSigners[] = [];
-
-  // Create
-  postInstructions.push(
-    await buildEncodedVaaCreateInstruction(
-      wormhole,
-      updateData.vaa,
-      encodedVaaKeypair
-    )
-  );
-
-  // Init
-  postInstructions.push({
-    instruction: await wormhole.methods
-      .initEncodedVaa()
-      .accounts({
-        encodedVaa: encodedVaaKeypair.publicKey,
-      })
-      .instruction(),
-    signers: [],
-    computeUnits: INIT_ENCODED_VAA_COMPUTE_BUDGET,
-  });
-
-  // Write initial data
-  postInstructions.push({
-    instruction: await wormhole.methods
-      .writeEncodedVaa({
-        index: 0,
-        data: updateData.vaa.subarray(0, VAA_SPLIT_INDEX),
-      })
-      .accounts({
-        draftVaa: encodedVaaKeypair.publicKey,
-      })
-      .instruction(),
-    signers: [],
-    computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
-  });
-
-  return { encodedVaaAddress: encodedVaaKeypair.publicKey, postInstructions };
-}
-
-/**
- * Helper function to write the remaining data and verify VAA
- * @param wormhole The Wormhole program instance
- * @param vaa The VAA data containing trimmedVaa and encodedVaaKeypair
- * @returns Instructions to write remaining data and verify VAA
- */
-async function buildWriteRemainingDataAndVerifyVaaInstructions(
-  wormhole: Program<WormholeCoreBridgeSolana>,
-  verifiedVaa: Buffer,
-  encodedVaaAddress: PublicKey
-): Promise<InstructionWithEphemeralSigners[]> {
-  const postInstructions: InstructionWithEphemeralSigners[] = [];
-
-  // Write remaining data
-  postInstructions.push({
-    instruction: await wormhole.methods
-      .writeEncodedVaa({
-        index: VAA_SPLIT_INDEX,
-        data: verifiedVaa.subarray(VAA_SPLIT_INDEX),
-      })
-      .accounts({
-        draftVaa: encodedVaaAddress,
-      })
-      .instruction(),
-    signers: [],
-    computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
-  });
-
-  // Verify
-  const guardianSetIndex = getGuardianSetIndex(verifiedVaa);
-  postInstructions.push({
-    instruction: await wormhole.methods
-      .verifyEncodedVaaV1()
-      .accounts({
-        guardianSet: getGuardianSetPda(guardianSetIndex, wormhole.programId),
-        draftVaa: encodedVaaAddress,
-      })
-      .instruction(),
-    signers: [],
-    computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-  });
-
-  return postInstructions;
 }
