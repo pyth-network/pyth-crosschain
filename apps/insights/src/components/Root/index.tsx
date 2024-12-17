@@ -6,12 +6,13 @@ import { Footer } from "./footer";
 import { Header } from "./header";
 // import { MobileMenu } from "./mobile-menu";
 import styles from "./index.module.scss";
-import { TabPanel, TabRoot } from "./tabs";
+import { TabRoot, TabPanel } from "./tabs";
 import {
   IS_PRODUCTION_SERVER,
   GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
 } from "../../config/server";
+import { LivePricesProvider } from "../LivePrices";
 
 type Props = {
   children: ReactNode;
@@ -22,7 +23,8 @@ export const Root = ({ children }: Props) => (
     amplitudeApiKey={AMPLITUDE_API_KEY}
     googleAnalyticsId={GOOGLE_ANALYTICS_ID}
     enableAccessibilityReporting={!IS_PRODUCTION_SERVER}
-    providers={[NuqsAdapter]}
+    providers={[NuqsAdapter, LivePricesProvider]}
+    className={styles.root}
   >
     <TabRoot className={styles.tabRoot ?? ""}>
       <Header className={styles.header} />

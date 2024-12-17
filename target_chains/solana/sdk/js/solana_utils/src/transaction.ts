@@ -512,7 +512,6 @@ export async function sendTransactions(
         // Set this manually so that the default is skipped
         maxRetries: 0,
         preflightCommitment: "confirmed",
-        minContextSlot: blockhashResult.context.slot,
       });
     }
     if (confirmedTx?.err) {

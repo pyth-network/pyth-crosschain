@@ -1,8 +1,7 @@
 "use client";
 
-import { useDebouncedEffect } from "@react-hookz/web";
 import clsx from "clsx";
-import { type ReactNode, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type {
   RowProps,
   ColumnProps,
@@ -21,25 +20,36 @@ import {
 } from "../UnstyledTable/index.js";
 
 type TableProps<T extends string> = {
+  className?: string | undefined;
+  fill?: boolean | undefined;
+  divide?: boolean | undefined;
+  rounded?: boolean | undefined;
   label: string;
   columns: ColumnConfig<T>[];
-  rows: RowConfig<T>[];
   isLoading?: boolean | undefined;
   isUpdating?: boolean | undefined;
-  renderEmptyState?: TableBodyProps<T>["renderEmptyState"];
-};
+  renderEmptyState?: TableBodyProps<T>["renderEmptyState"] | undefined;
+  dependencies?: TableBodyProps<T>["dependencies"] | undefined;
+} & (
+  | { isLoading: true; rows?: RowConfig<T>[] | undefined }
+  | { isLoading?: false | undefined; rows: RowConfig<T>[] }
+);
 
 export type ColumnConfig<T extends string> = Omit<ColumnProps, "children"> & {
   name: ReactNode;
   id: T;
   fill?: boolean | undefined;
+  sticky?: boolean | undefined;
   alignment?: Alignment | undefined;
-  loadingSkeletonWidth?: number | undefined;
-};
+  width?: number | undefined;
+} & (
+    | { loadingSkeleton?: ReactNode }
+    | { loadingSkeletonWidth?: number | undefined }
+  );
 
 type Alignment = "left" | "center" | "right" | undefined;
 
-type RowConfig<T extends string> = Omit<
+export type RowConfig<T extends string> = Omit<
   RowProps<T>,
   "columns" | "children" | "value"
 > & {
@@ -48,85 +58,98 @@ type RowConfig<T extends string> = Omit<
 };
 
 export const Table = <T extends string>({
+  className,
+  fill,
+  divide,
+  rounded,
   label,
   rows,
   columns,
   isLoading,
   isUpdating,
   renderEmptyState,
-}: TableProps<T>) => {
-  const [debouncedRows, setDebouncedRows] = useState(rows);
-
-  useDebouncedEffect(
-    () => {
-      setDebouncedRows(rows);
-    },
-    [rows],
-    500,
-  );
-
-  return (
-    <div className={styles.tableContainer}>
-      {isUpdating && (
-        <div className={styles.loaderWrapper}>
-          <div className={styles.loader} />
-        </div>
-      )}
-      <UnstyledTable aria-label={label} className={styles.table ?? ""}>
-        <UnstyledTableHeader
-          columns={columns}
-          className={styles.tableHeader ?? ""}
-        >
-          {({ fill, alignment, ...column }: ColumnConfig<T>) => (
-            <UnstyledColumn {...cellProps(alignment, fill)} {...column}>
-              {column.name}
-            </UnstyledColumn>
-          )}
-        </UnstyledTableHeader>
-        <UnstyledTableBody
-          items={isLoading ? [] : debouncedRows}
-          className={styles.tableBody ?? ""}
-          {...(renderEmptyState !== undefined && { renderEmptyState })}
-        >
-          {isLoading ? (
+  dependencies,
+}: TableProps<T>) => (
+  <div
+    className={clsx(styles.tableContainer, className)}
+    data-fill={fill ? "" : undefined}
+    data-divide={divide ? "" : undefined}
+    data-rounded={rounded ? "" : undefined}
+  >
+    {isUpdating && (
+      <div className={styles.loaderWrapper}>
+        <div className={styles.loader} />
+      </div>
+    )}
+    <UnstyledTable aria-label={label} className={styles.table ?? ""}>
+      <UnstyledTableHeader
+        columns={columns}
+        className={styles.tableHeader ?? ""}
+      >
+        {(column: ColumnConfig<T>) => (
+          <UnstyledColumn {...cellProps(column)} {...column}>
+            {column.name}
+          </UnstyledColumn>
+        )}
+      </UnstyledTableHeader>
+      <UnstyledTableBody
+        items={isLoading ? [] : rows}
+        className={styles.tableBody ?? ""}
+        {...(dependencies !== undefined && { dependencies })}
+        {...(renderEmptyState !== undefined && { renderEmptyState })}
+      >
+        {isLoading ? (
+          <UnstyledRow
+            id="loading"
+            key="loading"
+            className={styles.row ?? ""}
+            columns={columns}
+          >
+            {(column: ColumnConfig<T>) => (
+              <UnstyledCell {...cellProps(column)}>
+                {"loadingSkeleton" in column ? (
+                  column.loadingSkeleton
+                ) : (
+                  <Skeleton
+                    width={
+                      "loadingSkeletonWidth" in column
+                        ? column.loadingSkeletonWidth
+                        : column.width
+                    }
+                  />
+                )}
+              </UnstyledCell>
+            )}
+          </UnstyledRow>
+        ) : (
+          ({ className: rowClassName, data, ...row }: RowConfig<T>) => (
             <UnstyledRow
-              id="loading"
-              key="loading"
-              className={styles.row ?? ""}
+              className={clsx(styles.row, rowClassName)}
               columns={columns}
+              {...row}
             >
-              {({ alignment, fill, loadingSkeletonWidth }: ColumnConfig<T>) => (
-                <UnstyledCell {...cellProps(alignment, fill)}>
-                  <Skeleton width={loadingSkeletonWidth ?? 10} />
+              {(column: ColumnConfig<T>) => (
+                <UnstyledCell {...cellProps(column)}>
+                  {data[column.id]}
                 </UnstyledCell>
               )}
             </UnstyledRow>
-          ) : (
-            ({ className: rowClassName, data, ...row }: RowConfig<T>) => (
-              <UnstyledRow
-                className={clsx(styles.row, rowClassName)}
-                columns={columns}
-                {...row}
-              >
-                {({ alignment, fill, id }: ColumnConfig<T>) => (
-                  <UnstyledCell {...cellProps(alignment, fill)}>
-                    {data[id]}
-                  </UnstyledCell>
-                )}
-              </UnstyledRow>
-            )
-          )}
-        </UnstyledTableBody>
-      </UnstyledTable>
-    </div>
-  );
-};
+          )
+        )}
+      </UnstyledTableBody>
+    </UnstyledTable>
+  </div>
+);
 
-const cellProps = (
-  alignment: Alignment | undefined,
-  fill: boolean | undefined,
-) => ({
+const cellProps = <T extends string>({
+  alignment,
+  width,
+  fill,
+  sticky,
+}: Pick<ColumnConfig<T>, "alignment" | "width" | "fill" | "sticky">) => ({
   className: styles.cell ?? "",
   "data-alignment": alignment ?? "left",
-  ...(fill && { "data-fill": "" }),
+  "data-fill": fill ? "" : undefined,
+  "data-sticky": sticky ? "" : undefined,
+  ...(width && { style: { "--width": width } as CSSProperties }),
 });

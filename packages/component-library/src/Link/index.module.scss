@@ -2,27 +2,37 @@
 
 .link {
   text-decoration: underline;
-  border: none;
+  border: 1px solid transparent;
   border-radius: theme.border-radius();
-  outline-width: 1px;
-  outline-offset: theme.spacing(1);
-  outline-color: transparent;
-  color: inherit;
+  transition:
+    outline-color 100ms linear,
+    border-color 100ms linear;
+  outline: theme.spacing(1) solid transparent;
+  padding: theme.spacing(1);
+  margin: -#{theme.spacing(1)};
+  text-underline-offset: 0.125em;
+  outline-offset: 0;
+  color: theme.color("link", "normal");
 
   &[data-focus-visible] {
-    outline-color: currentcolor;
+    outline-color: theme.color("focus-dim");
+    border-color: theme.color("focus");
   }
 
   &[data-hovered] {
     text-decoration: none;
   }
 
-  &:active {
-    color: inherit;
-  }
-
   &[data-disabled] {
     cursor: not-allowed;
     color: theme.color("button", "disabled", "foreground");
+  }
+
+  &[data-invert] {
+    text-decoration: none;
+
+    &[data-hovered] {
+      text-decoration: underline;
+    }
   }
 }

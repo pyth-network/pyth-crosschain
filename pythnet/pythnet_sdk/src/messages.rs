@@ -138,7 +138,9 @@ impl Arbitrary for PriceFeedMessage {
     }
 }
 
-/// Message format for sending Twap data via the accumulator program
+/// Message format for sending cumulative price data via the accumulator program.
+/// These messages are used to calculate TWAPs for a given time window.
+/// The calculated TWAPs are stored as TwapPrices in TwapUpdate accounts.
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TwapMessage {

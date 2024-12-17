@@ -436,3 +436,30 @@
 - chain: happy_bird_song_ends_with_tio
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
+- chain: eventum_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: fantom_sonic_devnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: happy_bird_song_ends_with_tio
+  address: "0x0708325268dF9F66270F1401206434524814508b"
+  type: EvmWormholeContract
+- chain: fantom_sonic_mainnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: eventum_mainnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: threat_level_midnight
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: story_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: just_breathe
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: monad_devnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract

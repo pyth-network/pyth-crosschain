@@ -800,3 +800,53 @@
   rpcUrl: https://redacted.master.dev/
   networkId: 2741
   type: EvmChain
+- id: eventum_testnet
+  mainnet: false
+  rpcUrl: https://testnet-rpc.eh-dev.app
+  networkId: 16182
+  type: EvmChain
+- id: fantom_sonic_devnet
+  mainnet: false
+  rpcUrl: https://rpc.blaze.soniclabs.com
+  networkId: 57054
+  type: EvmChain
+- id: fantom_sonic_mainnet
+  mainnet: true
+  rpcUrl: https://rpc.soniclabs.com
+  networkId: 146
+  type: EvmChain
+# - id: bittensor
+#   mainnet: true
+#   rpcUrl: https://entrypoint-finney.opentensor.ai:443
+#   networkId: 945
+#   type: EvmChain
+# - id: bittensor_testnet
+#   mainnet: false
+#   rpcUrl: https://test.finney.opentensor.ai:443
+#   networkId: 945
+#   type: EvmChain
+- id: threat_level_midnight
+  mainnet: true
+  rpcUrl: $ENV_THREAT_LEVEL_MIDNIGHT_RPC_URL
+  networkId: 1868
+  type: EvmChain
+- id: story_testnet
+  mainnet: false
+  rpcUrl: https://rpc.odyssey.storyrpc.io/
+  networkId: 1516
+  type: EvmChain
+- id: eventum_mainnet
+  mainnet: true
+  rpcUrl: https://mainnet-rpc.evedex.com
+  networkId: 161803
+  type: EvmChain
+- id: just_breathe
+  mainnet: true
+  rpcUrl: $ENV_JUST_BREATHE_RPC_URL
+  networkId: 57073
+  type: EvmChain
+- id: monad_devnet
+  mainnet: false
+  rpcUrl: https://devnet1.monad.xyz/rpc/X67JTUmM4cBeq25KAqV0uJd8Wf00a1ul
+  networkId: 41454
+  type: EvmChain

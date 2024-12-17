@@ -34,10 +34,10 @@ export const Root = ({
 }: Props) => (
   <ComposeProviders
     providers={[
+      ...(providers ?? []),
       LoggerProvider,
       I18nProvider,
       RouterProvider,
-      ...(providers ?? []),
     ]}
   >
     <HtmlWithLang

@@ -1,43 +1,67 @@
 @use "@pythnetwork/component-library/theme";
 
-.assetName {
-  display: flex;
-  flex-flow: row nowrap;
-  gap: theme.spacing(3);
+.priceFeeds {
+  @include theme.max-width;
 
-  .icon {
-    width: theme.spacing(6);
-    height: theme.spacing(6);
+  .header {
+    @include theme.h3;
+
+    color: theme.color("heading");
+    font-weight: theme.font-weight("semibold");
+    margin: theme.spacing(6) 0;
   }
 
-  .name {
+  .body {
     display: flex;
-    flex-flow: row nowrap;
-    align-items: center;
-    gap: theme.spacing(1);
+    flex-flow: column nowrap;
+    gap: theme.spacing(6);
 
-    .firstPart {
-      font-weight: theme.font-weight("medium");
+    .feedKey {
+      margin: 0 -#{theme.button-padding("xs", true)};
     }
 
-    .divider {
-      font-weight: theme.font-weight("light");
-      color: theme.color("heading");
+    .featuredFeeds,
+    .stats {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+
+      & > * {
+        flex: 1 1 0px;
+        width: 0;
+      }
     }
 
-    .part {
-      opacity: 0.6;
+    .stats {
+      gap: theme.spacing(6);
+    }
+
+    .featuredFeeds {
+      gap: theme.spacing(1);
+
+      .feedCardContents {
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: space-between;
+        align-items: stretch;
+        padding: theme.spacing(3);
+        gap: theme.spacing(6);
+
+        .prices {
+          display: flex;
+          flex-flow: row nowrap;
+          justify-content: space-between;
+          align-items: center;
+          color: theme.color("heading");
+          font-weight: theme.font-weight("medium");
+          line-height: 1;
+          font-size: theme.font-size("base");
+
+          .changePercent {
+            font-size: theme.font-size("sm");
+          }
+        }
+      }
     }
   }
-}
-
-.assetType {
-  display: inline-block;
-  border-radius: theme.border-radius("3xl");
-  border: 1px solid theme.color("states", "neutral", "normal");
-  padding: 0 theme.spacing(2);
-  font-size: theme.font-size("xxs");
-  text-transform: uppercase;
-  line-height: theme.spacing(4);
-  color: theme.color("states", "neutral", "normal");
 }

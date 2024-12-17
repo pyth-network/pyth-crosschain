@@ -10,15 +10,17 @@ import {
   WormholeMultisigInstruction,
 } from '@pythnetwork/xc-admin-common'
 
-export type ProposalStatus =
-  | 'active'
-  | 'executed'
-  | 'cancelled'
-  | 'rejected'
-  | 'expired'
-  | 'executeReady'
-  | 'draft'
-  | 'unkwown'
+export const PROPOSAL_STATUSES = [
+  'active',
+  'executed',
+  'cancelled',
+  'rejected',
+  'expired',
+  'executeReady',
+  'draft',
+  'unkwown',
+] as const
+export type ProposalStatus = typeof PROPOSAL_STATUSES[number]
 
 export const getProposalStatus = (
   proposal: TransactionAccount | undefined,

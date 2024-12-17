@@ -2,4 +2,12 @@
 
 .overview {
   @include theme.max-width;
+
+  .header {
+    @include theme.h3;
+
+    color: theme.color("heading");
+    font-weight: theme.font-weight("semibold");
+    margin: theme.spacing(6) 0;
+  }
 }

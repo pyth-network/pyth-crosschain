@@ -15,6 +15,7 @@ export {
   parseAccumulatorUpdateData,
   AccumulatorUpdateData,
   parsePriceFeedMessage,
+  parseTwapMessage,
 } from "./AccumulatorUpdateData";
 
 /**

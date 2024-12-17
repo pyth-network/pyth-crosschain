@@ -1,0 +1,45 @@
+@use "../theme";
+
+.statCard {
+  height: theme.spacing(22);
+
+  .cardContents {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-between;
+    height: 100%;
+    padding: theme.spacing(3);
+    padding-bottom: theme.spacing(2);
+
+    .corner {
+      position: absolute;
+      right: theme.spacing(3);
+      top: theme.spacing(3);
+      display: flex;
+    }
+
+    .header {
+      color: theme.color("muted");
+      text-align: left;
+
+      @include theme.text("sm", "medium");
+    }
+
+    .bottom {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: center;
+
+      .stat {
+        @include theme.h3;
+
+        color: theme.color("heading");
+      }
+
+      .miniStat {
+        @include theme.text("sm", "medium");
+      }
+    }
+  }
+}

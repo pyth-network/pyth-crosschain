@@ -3,7 +3,7 @@ artifacts: build
 
 .PHONY: build
 build:
-	aptos move compile --save-metadata --named-addresses wormhole=0x251011524cd0f76881f16e7c2d822f0c1c9510bfd2430ba24e1b3d52796df204,deployer=0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b,pyth=0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b
+	aptos move compile --save-metadata --named-addresses wormhole=0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9,deployer=0xa3ad2d9c8114b9a4fe97d45b7a9d3c731148d936b0f5dd396fc20a53a11a70da,pyth=0x9357e76fe965c9956a76181ee49f66d51b7f9c3800182a944ed96be86301e49f
 
 .PHONY: clean
 clean:

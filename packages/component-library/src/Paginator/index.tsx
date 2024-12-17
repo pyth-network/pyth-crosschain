@@ -1,13 +1,7 @@
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
-import { CircleNotch } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import clsx from "clsx";
-import {
-  type ComponentProps,
-  useTransition,
-  useMemo,
-  useCallback,
-} from "react";
+import { type ComponentProps, useMemo, useCallback } from "react";
 
 import styles from "./index.module.scss";
 import { Button, ButtonLink } from "../Button/index.js";
@@ -63,38 +57,19 @@ const PageSizeSelect = ({
   pageSize,
   onPageSizeChange,
   pageSizeOptions,
-}: PageSizeSelectProps) => {
-  const [isTransitioning, startTransition] = useTransition();
-
-  const onChange = useCallback(
-    (newPageSize: number) => {
-      startTransition(() => {
-        onPageSizeChange(newPageSize);
-      });
-    },
-    [startTransition, onPageSizeChange],
-  );
-
-  return (
-    <div className={styles.pageSizeSelect}>
-      <Select
-        label="Page size"
-        hideLabel
-        options={pageSizeOptions}
-        selectedKey={pageSize}
-        onSelectionChange={onChange}
-        show={(value) => `${value.toString()} per page`}
-        variant="ghost"
-        size="sm"
-      />
-      <CircleNotch
-        className={clsx(styles.loadingIndicator, {
-          [styles.visible ?? ""]: isTransitioning,
-        })}
-      />
-    </div>
-  );
-};
+}: PageSizeSelectProps) => (
+  <Select
+    className={styles.pageSizeSelect ?? ""}
+    label="Page size"
+    hideLabel
+    options={pageSizeOptions}
+    selectedKey={pageSize}
+    onSelectionChange={onPageSizeChange}
+    show={(value) => `${value.toString()} per page`}
+    variant="ghost"
+    size="sm"
+  />
+);
 
 type PaginatorProps = {
   numPages: number;
@@ -209,13 +184,9 @@ const PageLink = ({
   mkPageLink,
   ...props
 }: PageLinkProps) => {
-  const [isTransitioning, startTransition] = useTransition();
-
   const url = useMemo(() => mkPageLink(page), [page, mkPageLink]);
   const onPress = useCallback(() => {
-    startTransition(() => {
-      onPageChange(page);
-    });
+    onPageChange(page);
   }, [onPageChange, page]);
 
   return (
@@ -224,7 +195,7 @@ const PageLink = ({
       size="sm"
       onPress={onPress}
       href={url}
-      isDisabled={isDisabled === true || isTransitioning}
+      isDisabled={isDisabled === true}
       {...props}
     />
   );
@@ -244,12 +215,8 @@ const PageButton = ({
   onPageChange,
   ...props
 }: PageButtonProps) => {
-  const [isTransitioning, startTransition] = useTransition();
-
   const onPress = useCallback(() => {
-    startTransition(() => {
-      onPageChange(page);
-    });
+    onPageChange(page);
   }, [onPageChange, page]);
 
   return (
@@ -257,7 +224,7 @@ const PageButton = ({
       variant="ghost"
       size="sm"
       onPress={onPress}
-      isDisabled={isDisabled === true || isTransitioning}
+      isDisabled={isDisabled === true}
       {...props}
     />
   );

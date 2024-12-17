@@ -14,7 +14,7 @@ describe("pyth-lazer-solana-contract", () => {
     const topAuthorityKeypair = anchor.web3.Keypair.generate();
 
     const tx = await program.methods
-      .initialize(topAuthorityKeypair.publicKey)
+      .initialize(topAuthorityKeypair.publicKey, anchor.web3.PublicKey.unique())
       .rpc();
     console.log("Your transaction signature", tx);
 

@@ -7,11 +7,13 @@ export const useLogger = () => {
   if (logger) {
     return logger;
   } else {
-    throw new NotInitializedError();
+    throw new LoggerNotInitializedError();
   }
 };
 
-class NotInitializedError extends Error {
-  override message =
-    "This component must be contained within a `LoggerProvider`!";
+class LoggerNotInitializedError extends Error {
+  constructor() {
+    super("This component must be contained within a <LoggerProvider>");
+    this.name = "LoggerNotInitializedError";
+  }
 }

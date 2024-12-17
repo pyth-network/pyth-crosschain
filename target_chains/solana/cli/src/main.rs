@@ -92,7 +92,32 @@ fn main() -> Result<()> {
                 &merkle_price_updates[0],
             )?;
         }
+        Action::PostTwapUpdate {
+            start_payload,
+            end_payload,
+        } => {
+            let rpc_client = RpcClient::new(url);
+            let payer =
+                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
 
+            let start_payload_bytes: Vec<u8> = base64::decode(start_payload)?;
+            let end_payload_bytes: Vec<u8> = base64::decode(end_payload)?;
+
+            let (start_vaa, start_merkle_price_updates) =
+                deserialize_accumulator_update_data(start_payload_bytes)?;
+            let (end_vaa, end_merkle_price_updates) =
+                deserialize_accumulator_update_data(end_payload_bytes)?;
+
+            process_write_encoded_vaa_and_post_twap_update(
+                &rpc_client,
+                &start_vaa,
+                &end_vaa,
+                wormhole,
+                &payer,
+                &start_merkle_price_updates[0],
+                &end_merkle_price_updates[0],
+            )?;
+        }
         Action::InitializeWormholeReceiver {} => {
             let rpc_client = RpcClient::new(url);
             let payer =
@@ -367,36 +392,174 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     merkle_price_update: &MerklePriceUpdate,
 ) -> Result<Pubkey> {
     let encoded_vaa_keypair = Keypair::new();
+
+    // Transaction 1: Create and initialize VAA
+    let init_instructions = init_encoded_vaa_and_write_initial_data_ixs(
+        &payer.pubkey(),
+        vaa,
+        &wormhole,
+        &encoded_vaa_keypair,
+    )?;
+    process_transaction(
+        rpc_client,
+        init_instructions,
+        &vec![payer, &encoded_vaa_keypair],
+    )?;
+
+    // Transaction 2: Write remaining VAA data, verify VAA, and post price update
+    let price_update_keypair = Keypair::new();
+    let mut update_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(600_000)];
+
+    update_instructions.extend(write_remaining_data_and_verify_vaa_ixs(
+        &payer.pubkey(),
+        vaa,
+        &encoded_vaa_keypair.pubkey(),
+        wormhole,
+    )?);
+
+    update_instructions.push(pyth_solana_receiver::instruction::PostUpdate::populate(
+        payer.pubkey(),
+        payer.pubkey(),
+        encoded_vaa_keypair.pubkey(),
+        price_update_keypair.pubkey(),
+        merkle_price_update.clone(),
+        get_random_treasury_id(),
+    ));
+
+    process_transaction(
+        rpc_client,
+        update_instructions,
+        &vec![payer, &price_update_keypair],
+    )?;
+
+    Ok(price_update_keypair.pubkey())
+}
+
+/// This function verifies start & end VAAs from Hermes via Wormhole to produce encoded VAAs,
+/// and then posts a TWAP update using the encoded VAAs. Returns the TwapUpdate account pubkey.
+///
+/// The operation is split up into 4 transactions:
+/// 1. Creates and initializes the start VAA account and writes its first part
+/// 2. Creates and initializes the end VAA account and writes its first part
+/// 3. Writes the remaining data for both VAAs and verifies them
+/// 4. Posts the TWAP update
+pub fn process_write_encoded_vaa_and_post_twap_update(
+    rpc_client: &RpcClient,
+    start_vaa: &[u8],
+    end_vaa: &[u8],
+    wormhole: Pubkey,
+    payer: &Keypair,
+    start_merkle_price_update: &MerklePriceUpdate,
+    end_merkle_price_update: &MerklePriceUpdate,
+) -> Result<Pubkey> {
+    // Create keypairs for both encoded VAAs
+    let start_encoded_vaa_keypair = Keypair::new();
+    let end_encoded_vaa_keypair = Keypair::new();
+
+    // Transaction 1: Create and initialize start VAA
+    let start_init_instructions = init_encoded_vaa_and_write_initial_data_ixs(
+        &payer.pubkey(),
+        start_vaa,
+        &wormhole,
+        &start_encoded_vaa_keypair,
+    )?;
+    process_transaction(
+        rpc_client,
+        start_init_instructions,
+        &vec![payer, &start_encoded_vaa_keypair],
+    )?;
+
+    // Transaction 2: Create and initialize end VAA
+    let end_init_instructions = init_encoded_vaa_and_write_initial_data_ixs(
+        &payer.pubkey(),
+        end_vaa,
+        &wormhole,
+        &end_encoded_vaa_keypair,
+    )?;
+    process_transaction(
+        rpc_client,
+        end_init_instructions,
+        &vec![payer, &end_encoded_vaa_keypair],
+    )?;
+
+    // Transaction 3: Write remaining VAA data and verify both VAAs
+    let mut verify_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(400_000)];
+    verify_instructions.extend(write_remaining_data_and_verify_vaa_ixs(
+        &payer.pubkey(),
+        start_vaa,
+        &start_encoded_vaa_keypair.pubkey(),
+        wormhole,
+    )?);
+    verify_instructions.extend(write_remaining_data_and_verify_vaa_ixs(
+        &payer.pubkey(),
+        end_vaa,
+        &end_encoded_vaa_keypair.pubkey(),
+        wormhole,
+    )?);
+    process_transaction(rpc_client, verify_instructions, &vec![payer])?;
+
+    // Transaction 4: Post TWAP update
+    let twap_update_keypair = Keypair::new();
+    let post_instructions = vec![
+        ComputeBudgetInstruction::set_compute_unit_limit(400_000),
+        pyth_solana_receiver::instruction::PostTwapUpdate::populate(
+            payer.pubkey(),
+            payer.pubkey(),
+            start_encoded_vaa_keypair.pubkey(),
+            end_encoded_vaa_keypair.pubkey(),
+            twap_update_keypair.pubkey(),
+            start_merkle_price_update.clone(),
+            end_merkle_price_update.clone(),
+            get_random_treasury_id(),
+        ),
+    ];
+    process_transaction(
+        rpc_client,
+        post_instructions,
+        &vec![payer, &twap_update_keypair],
+    )?;
+
+    Ok(twap_update_keypair.pubkey())
+}
+
+/// Creates instructions to initialize an encoded VAA account and write the first part of the VAA data
+pub fn init_encoded_vaa_and_write_initial_data_ixs(
+    payer: &Pubkey,
+    vaa: &[u8],
+    wormhole: &Pubkey,
+    encoded_vaa_keypair: &Keypair,
+) -> Result<Vec<Instruction>> {
     let encoded_vaa_size: usize = vaa.len() + VAA_START;
 
     let create_encoded_vaa = system_instruction::create_account(
-        &payer.pubkey(),
+        payer,
         &encoded_vaa_keypair.pubkey(),
         Rent::default().minimum_balance(encoded_vaa_size),
         encoded_vaa_size as u64,
-        &wormhole,
+        wormhole,
     );
+
     let init_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::InitEncodedVaa {
-        write_authority: payer.pubkey(),
+        write_authority: *payer,
         encoded_vaa: encoded_vaa_keypair.pubkey(),
     }
     .to_account_metas(None);
 
     let init_encoded_vaa_instruction = Instruction {
-        program_id: wormhole,
+        program_id: *wormhole,
         accounts: init_encoded_vaa_accounts,
         data: wormhole_core_bridge_solana::instruction::InitEncodedVaa.data(),
     };
 
     let write_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
-        write_authority: payer.pubkey(),
+        write_authority: *payer,
         draft_vaa: encoded_vaa_keypair.pubkey(),
     }
     .to_account_metas(None);
 
-    let write_encoded_vaa_accounts_instruction = Instruction {
-        program_id: wormhole,
-        accounts: write_encoded_vaa_accounts.clone(),
+    let write_encoded_vaa_instruction = Instruction {
+        program_id: *wormhole,
+        accounts: write_encoded_vaa_accounts,
         data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
             args: WriteEncodedVaaArgs {
                 index: 0,
@@ -406,18 +569,27 @@ pub fn process_write_encoded_vaa_and_post_price_update(
         .data(),
     };
 
-    // 1st transaction
-    process_transaction(
-        rpc_client,
-        vec![
-            create_encoded_vaa,
-            init_encoded_vaa_instruction,
-            write_encoded_vaa_accounts_instruction,
-        ],
-        &vec![payer, &encoded_vaa_keypair],
-    )?;
+    Ok(vec![
+        create_encoded_vaa,
+        init_encoded_vaa_instruction,
+        write_encoded_vaa_instruction,
+    ])
+}
 
-    let write_encoded_vaa_accounts_instruction_2 = Instruction {
+/// Creates instructions to write remaining VAA data and verify the VAA
+pub fn write_remaining_data_and_verify_vaa_ixs(
+    payer: &Pubkey,
+    vaa: &[u8],
+    encoded_vaa_keypair: &Pubkey,
+    wormhole: Pubkey,
+) -> Result<Vec<Instruction>> {
+    let write_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
+        write_authority: *payer,
+        draft_vaa: *encoded_vaa_keypair,
+    }
+    .to_account_metas(None);
+
+    let write_encoded_vaa_instruction = Instruction {
         program_id: wormhole,
         accounts: write_encoded_vaa_accounts,
         data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
@@ -432,13 +604,10 @@ pub fn process_write_encoded_vaa_and_post_price_update(
     let (header, _): (Header, Body<&RawMessage>) = serde_wormhole::from_slice(vaa).unwrap();
     let guardian_set = GuardianSet::key(&wormhole, header.guardian_set_index);
 
-    let request_compute_units_instruction: Instruction =
-        ComputeBudgetInstruction::set_compute_unit_limit(600_000);
-
     let verify_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::VerifyEncodedVaaV1 {
         guardian_set,
-        write_authority: payer.pubkey(),
-        draft_vaa: encoded_vaa_keypair.pubkey(),
+        write_authority: *payer,
+        draft_vaa: *encoded_vaa_keypair,
     }
     .to_account_metas(None);
 
@@ -448,30 +617,10 @@ pub fn process_write_encoded_vaa_and_post_price_update(
         data: wormhole_core_bridge_solana::instruction::VerifyEncodedVaaV1 {}.data(),
     };
 
-    let price_update_keypair = Keypair::new();
-
-    let post_update_instructions = pyth_solana_receiver::instruction::PostUpdate::populate(
-        payer.pubkey(),
-        payer.pubkey(),
-        encoded_vaa_keypair.pubkey(),
-        price_update_keypair.pubkey(),
-        merkle_price_update.clone(),
-        get_random_treasury_id(),
-    );
-
-    // 2nd transaction
-    process_transaction(
-        rpc_client,
-        vec![
-            request_compute_units_instruction,
-            write_encoded_vaa_accounts_instruction_2,
-            verify_encoded_vaa_instruction,
-            post_update_instructions,
-        ],
-        &vec![payer, &price_update_keypair],
-    )?;
-
-    Ok(price_update_keypair.pubkey())
+    Ok(vec![
+        write_encoded_vaa_instruction,
+        verify_encoded_vaa_instruction,
+    ])
 }
 
 pub fn process_transaction(

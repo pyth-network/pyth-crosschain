@@ -131,22 +131,17 @@ where
     })?;
 
     let twap_update_data = twaps_with_update_data.update_data;
-    let binary: Vec<BinaryUpdate> = twap_update_data
+    let encoded_data = twap_update_data
         .into_iter()
-        .map(|data_vec| {
-            let encoded_data = data_vec
-                .into_iter()
-                .map(|data| match params.encoding {
-                    EncodingType::Base64 => base64_standard_engine.encode(data),
-                    EncodingType::Hex => hex::encode(data),
-                })
-                .collect();
-            BinaryUpdate {
-                encoding: params.encoding,
-                data: encoded_data,
-            }
+        .map(|data| match params.encoding {
+            EncodingType::Base64 => base64_standard_engine.encode(data),
+            EncodingType::Hex => hex::encode(data),
         })
         .collect();
+    let binary = BinaryUpdate {
+        encoding: params.encoding,
+        data: encoded_data,
+    };
 
     let parsed: Option<Vec<ParsedPriceFeedTwap>> = if params.parsed {
         Some(

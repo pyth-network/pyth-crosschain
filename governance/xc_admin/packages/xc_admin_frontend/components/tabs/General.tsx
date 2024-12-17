@@ -508,22 +508,6 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             )
           }
 
-          // check if minPub has changed
-          if (
-            prev.priceAccounts[0].minPub !== newChanges.priceAccounts[0].minPub
-          ) {
-            // create update product account instruction
-            instructions.push(
-              await pythProgramClient.methods
-                .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
-                .accounts({
-                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
-                  fundingAccount,
-                })
-                .instruction()
-            )
-          }
-
           // check if maxLatency has changed
           if (
             prev.priceAccounts[0].maxLatency !==
@@ -583,6 +567,22 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 .instruction()
             )
             await initPublisherInPriceStore(publisherPubKey)
+          }
+
+          // check if minPub has changed
+          if (
+            prev.priceAccounts[0].minPub !== newChanges.priceAccounts[0].minPub
+          ) {
+            // create update product account instruction
+            instructions.push(
+              await pythProgramClient.methods
+                .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+                .accounts({
+                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                  fundingAccount,
+                })
+                .instruction()
+            )
           }
         }
       }

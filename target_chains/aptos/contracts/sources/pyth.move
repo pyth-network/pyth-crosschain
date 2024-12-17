@@ -424,6 +424,14 @@ module pyth::pyth {
         get_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
     }
 
+    #[view]
+    /// A view function version of get_price(...) that's available in offchain programming environments
+    /// including aptos fullnode api, aptos cli, and aptos ts sdk.
+    public fun get_price_by_feed_id(feed_id: vector<u8>): Price {
+        let price_identifier = price_identifier::from_byte_vec(feed_id);
+        get_price(price_identifier)
+    }
+
     /// Get the latest available price cached for the given price identifier, if that price is
     /// no older than the given age.
     public fun get_price_no_older_than(price_identifier: PriceIdentifier, max_age_secs: u64): Price {
@@ -431,6 +439,12 @@ module pyth::pyth {
         check_price_is_fresh(&price, max_age_secs);
 
         price
+    }
+
+    #[view]
+    public fun get_price_no_older_than_by_feed_id(feed_id: vector<u8>, max_age_secs: u64): Price {
+        let price_identifier = price_identifier::from_byte_vec(feed_id);
+        get_price_no_older_than(price_identifier, max_age_secs)
     }
 
     /// Get the latest available price cached for the given price identifier.
@@ -444,6 +458,12 @@ module pyth::pyth {
     public fun get_price_unsafe(price_identifier: PriceIdentifier): Price {
         price_feed::get_price(
             price_info::get_price_feed(&state::get_latest_price_info(price_identifier)))
+    }
+
+    #[view]
+    public fun get_price_unsafe_by_feed_id(feed_id: vector<u8>): Price {
+        let price_identifier = price_identifier::from_byte_vec(feed_id);
+        get_price_unsafe(price_identifier)
     }
 
     fun abs_diff(x: u64, y: u64): u64 {
