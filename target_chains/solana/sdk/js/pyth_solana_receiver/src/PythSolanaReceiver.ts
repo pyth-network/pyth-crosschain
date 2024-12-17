@@ -733,8 +733,8 @@ export class PythSolanaReceiver {
     const {
       postInstructions: buildVaasInstructions,
       closeInstructions: closeVaasInstructions,
-      startVaa,
-      endVaa,
+      startEncodedVaaAddress,
+      endEncodedVaaAddress,
     } = await buildPostEncodedVaasForTwapInstructions(
       this.wormhole,
       startUpdateData,
@@ -757,8 +757,8 @@ export class PythSolanaReceiver {
             treasuryId,
           })
           .accounts({
-            startEncodedVaa: startVaa.encodedVaaKeypair.publicKey,
-            endEncodedVaa: endVaa.encodedVaaKeypair.publicKey,
+            startEncodedVaa: startEncodedVaaAddress,
+            endEncodedVaa: endEncodedVaaAddress,
             twapUpdateAccount: twapUpdateKeypair.publicKey,
             treasury: getTreasuryPda(treasuryId, this.receiver.programId),
             config: getConfigPda(this.receiver.programId),

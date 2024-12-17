@@ -3,6 +3,7 @@ import { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
 import { Program } from "@coral-xyz/anchor";
 import { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
 import {
+  CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   INIT_ENCODED_VAA_COMPUTE_BUDGET,
   VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
   WRITE_ENCODED_VAA_COMPUTE_BUDGET,
@@ -187,33 +188,40 @@ export async function buildPostEncodedVaasForTwapInstructions(
 ): Promise<{
   postInstructions: InstructionWithEphemeralSigners[];
   closeInstructions: InstructionWithEphemeralSigners[];
-  startVaa: {
-    trimmedVaa: Buffer;
-    encodedVaaKeypair: Keypair;
-  };
-  endVaa: {
-    trimmedVaa: Buffer;
-    encodedVaaKeypair: Keypair;
-  };
+  startEncodedVaaAddress: PublicKey;
+  endEncodedVaaAddress: PublicKey;
 }> {
   const postInstructions: InstructionWithEphemeralSigners[] = [];
   const closeInstructions: InstructionWithEphemeralSigners[] = [];
-
-  const startVaa = await buildInitEncodedVaaAndWriteInitialDataInstructions(
+  const {
+    encodedVaaAddress: startEncodedVaaAddress,
+    postInstructions: startVaaInstructions,
+  } = await buildInitEncodedVaaAndWriteInitialDataInstructions(
     wormhole,
     startUpdateData
   );
-  const endVaa = await buildInitEncodedVaaAndWriteInitialDataInstructions(
+  const {
+    encodedVaaAddress: endEncodedVaaAddress,
+    postInstructions: endVaaInstructions,
+  } = await buildInitEncodedVaaAndWriteInitialDataInstructions(
     wormhole,
     endUpdateData
   );
-  postInstructions.push(...startVaa.postInstructions);
-  postInstructions.push(...endVaa.postInstructions);
+  postInstructions.push(...startVaaInstructions);
+  postInstructions.push(...endVaaInstructions);
 
   const startRemainingInstructions =
-    await buildWriteRemainingDataAndVerifyVaaInstructions(wormhole, startVaa);
+    await buildWriteRemainingDataAndVerifyVaaInstructions(
+      wormhole,
+      startUpdateData.vaa,
+      startEncodedVaaAddress
+    );
   const endRemainingInstructions =
-    await buildWriteRemainingDataAndVerifyVaaInstructions(wormhole, endVaa);
+    await buildWriteRemainingDataAndVerifyVaaInstructions(
+      wormhole,
+      endUpdateData.vaa,
+      endEncodedVaaAddress
+    );
   postInstructions.push(...startRemainingInstructions);
   postInstructions.push(...endRemainingInstructions);
 
@@ -222,29 +230,29 @@ export async function buildPostEncodedVaasForTwapInstructions(
     instruction: await wormhole.methods
       .closeEncodedVaa()
       .accounts({
-        encodedVaa: startVaa.encodedVaaKeypair.publicKey,
+        encodedVaa: startEncodedVaaAddress,
       })
       .instruction(),
     signers: [],
-    computeUnits: 0,
+    computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   });
 
   closeInstructions.push({
     instruction: await wormhole.methods
       .closeEncodedVaa()
       .accounts({
-        encodedVaa: endVaa.encodedVaaKeypair.publicKey,
+        encodedVaa: endEncodedVaaAddress,
       })
       .instruction(),
     signers: [],
-    computeUnits: 0,
+    computeUnits: CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   });
 
   return {
     postInstructions,
     closeInstructions,
-    startVaa,
-    endVaa,
+    startEncodedVaaAddress,
+    endEncodedVaaAddress,
   };
 }
 
@@ -258,11 +266,9 @@ async function buildInitEncodedVaaAndWriteInitialDataInstructions(
   wormhole: Program<WormholeCoreBridgeSolana>,
   updateData: AccumulatorUpdateData
 ): Promise<{
-  trimmedVaa: Buffer;
-  encodedVaaKeypair: Keypair;
+  encodedVaaAddress: PublicKey;
   postInstructions: InstructionWithEphemeralSigners[];
 }> {
-  const trimmedVaa = trimSignatures(updateData.vaa, 13);
   const encodedVaaKeypair = new Keypair();
   const postInstructions: InstructionWithEphemeralSigners[] = [];
 
@@ -270,7 +276,7 @@ async function buildInitEncodedVaaAndWriteInitialDataInstructions(
   postInstructions.push(
     await buildEncodedVaaCreateInstruction(
       wormhole,
-      trimmedVaa,
+      updateData.vaa,
       encodedVaaKeypair
     )
   );
@@ -292,7 +298,7 @@ async function buildInitEncodedVaaAndWriteInitialDataInstructions(
     instruction: await wormhole.methods
       .writeEncodedVaa({
         index: 0,
-        data: trimmedVaa.subarray(0, VAA_SPLIT_INDEX),
+        data: updateData.vaa.subarray(0, VAA_SPLIT_INDEX),
       })
       .accounts({
         draftVaa: encodedVaaKeypair.publicKey,
@@ -302,7 +308,7 @@ async function buildInitEncodedVaaAndWriteInitialDataInstructions(
     computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
   });
 
-  return { trimmedVaa, encodedVaaKeypair, postInstructions };
+  return { encodedVaaAddress: encodedVaaKeypair.publicKey, postInstructions };
 }
 
 /**
@@ -313,7 +319,8 @@ async function buildInitEncodedVaaAndWriteInitialDataInstructions(
  */
 async function buildWriteRemainingDataAndVerifyVaaInstructions(
   wormhole: Program<WormholeCoreBridgeSolana>,
-  vaa: { trimmedVaa: Buffer; encodedVaaKeypair: Keypair }
+  verifiedVaa: Buffer,
+  encodedVaaAddress: PublicKey
 ): Promise<InstructionWithEphemeralSigners[]> {
   const postInstructions: InstructionWithEphemeralSigners[] = [];
 
@@ -322,10 +329,10 @@ async function buildWriteRemainingDataAndVerifyVaaInstructions(
     instruction: await wormhole.methods
       .writeEncodedVaa({
         index: VAA_SPLIT_INDEX,
-        data: vaa.trimmedVaa.subarray(VAA_SPLIT_INDEX),
+        data: verifiedVaa.subarray(VAA_SPLIT_INDEX),
       })
       .accounts({
-        draftVaa: vaa.encodedVaaKeypair.publicKey,
+        draftVaa: encodedVaaAddress,
       })
       .instruction(),
     signers: [],
@@ -333,13 +340,13 @@ async function buildWriteRemainingDataAndVerifyVaaInstructions(
   });
 
   // Verify
-  const guardianSetIndex = getGuardianSetIndex(vaa.trimmedVaa);
+  const guardianSetIndex = getGuardianSetIndex(verifiedVaa);
   postInstructions.push({
     instruction: await wormhole.methods
       .verifyEncodedVaaV1()
       .accounts({
         guardianSet: getGuardianSetPda(guardianSetIndex, wormhole.programId),
-        draftVaa: vaa.encodedVaaKeypair.publicKey,
+        draftVaa: encodedVaaAddress,
       })
       .instruction(),
     signers: [],

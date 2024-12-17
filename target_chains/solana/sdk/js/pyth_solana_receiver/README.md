@@ -183,7 +183,7 @@ The flow of using verifying, posting, and consuming these prices are the same as
 
 ```typescript
 // Fetch the binary TWAP data from hermes or benchmarks. See Preliminaries section above for more info.
-const binary_data_array = ["UE5BV...khz609", "UE5BV...BAg8i6"];
+const binaryDataArray = ["UE5BV...khz609", "UE5BV...BAg8i6"];
 
 // Pass `closeUpdateAccounts: true` to automatically close the TWAP update accounts
 // after they're consumed
@@ -192,7 +192,7 @@ const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
 });
 
 // Post the updates and calculate the TWAP
-await transactionBuilder.addPostTwapUpdates(binary_data_array);
+await transactionBuilder.addPostTwapUpdates(binaryDataArray);
 
 // You can now use the TWAP prices in subsequent instructions
 await transactionBuilder.addTwapConsumerInstructions(
