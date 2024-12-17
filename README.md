@@ -43,7 +43,7 @@ Please install the following tools in order to work in this repository:
 
 - [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to manage your node version, then run `nvm use 20` to ensure you are using node version 20.
 - [Foundry](https://book.getfoundry.sh/getting-started/installation) in order to use `forge` for Ethereum contract development
-- [Solana CLI](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) for working with Solana programs.
+- [Solana CLI](https://solana.com/docs/intro/installation) for working with Solana programs.
   - After installing, please run `solana keygen new` to generate a local private key.
 - [Anchor](https://www.anchor-lang.com/docs/installation) for developing Solana programs.
 - [Pre-commit](https://pre-commit.com/) is used to automatically format and lint the repository.
