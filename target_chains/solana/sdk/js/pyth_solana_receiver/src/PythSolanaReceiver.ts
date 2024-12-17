@@ -804,6 +804,15 @@ export class PythSolanaReceiver {
   }
 
   /**
+   * Build an instruction to close an encoded VAA account, recovering the rent.
+   */
+  async buildCloseEncodedVaaInstruction(
+    encodedVaa: PublicKey
+  ): Promise<InstructionWithEphemeralSigners> {
+    return buildCloseEncodedVaaInstruction(this.wormhole, encodedVaa);
+  }
+
+  /**
    * Build aset of instructions to close all the existing encoded VAA accounts owned by this PythSolanaReceiver's wallet
    */
   async buildClosePreviousEncodedVaasInstructions(
@@ -812,9 +821,7 @@ export class PythSolanaReceiver {
     const encodedVaas = await this.findOwnedEncodedVaaAccounts();
     const instructions = [];
     for (const encodedVaa of encodedVaas) {
-      instructions.push(
-        await buildCloseEncodedVaaInstruction(this.wormhole, encodedVaa)
-      );
+      instructions.push(await this.buildCloseEncodedVaaInstruction(encodedVaa));
     }
     return instructions.slice(0, maxInstructions);
   }
