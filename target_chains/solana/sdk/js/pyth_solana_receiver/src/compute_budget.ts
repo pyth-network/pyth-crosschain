@@ -11,7 +11,7 @@ export const POST_UPDATE_ATOMIC_COMPUTE_BUDGET = 170000;
  */
 export const POST_UPDATE_COMPUTE_BUDGET = 35000;
 /**
- * A hard-coded budget for the compute units required for the `postUpdate` instruction in the Pyth Solana Receiver program.
+ * A hard-coded budget for the compute units required for the `postTwapUpdate` instruction in the Pyth Solana Receiver program.
  */
 export const POST_TWAP_UPDATE_COMPUTE_BUDGET = 50_000;
 /**
