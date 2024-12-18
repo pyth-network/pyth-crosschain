@@ -1,6 +1,7 @@
 import * as BufferLayout from "@solana/buffer-layout";
 import { Ed25519Program, TransactionInstruction } from "@solana/web3.js";
 
+const ED25519_INSTRUCTION_LEN = 16;
 const SIGNATURE_LEN = 64;
 const PUBKEY_LEN = 32;
 const MAGIC_LEN = 4;
@@ -50,7 +51,7 @@ export const createEd25519Instruction = (
     messageDataSizeOffset - startingOffset
   );
 
-  const instructionData = Buffer.alloc(16);
+  const instructionData = Buffer.alloc(ED25519_INSTRUCTION_LEN);
 
   ED25519_INSTRUCTION_LAYOUT.encode(
     {
