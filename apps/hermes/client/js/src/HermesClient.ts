@@ -10,6 +10,7 @@ export type EncodingType = z.infer<typeof schemas.EncodingType>;
 export type PriceFeedMetadata = z.infer<typeof schemas.PriceFeedMetadata>;
 export type PriceIdInput = z.infer<typeof schemas.PriceIdInput>;
 export type PriceUpdate = z.infer<typeof schemas.PriceUpdate>;
+export type TwapsResponse = z.infer<typeof schemas.TwapsResponse>;
 export type PublisherCaps = z.infer<
   typeof schemas.LatestPublisherStakeCapsUpdateDataResponse
 >;
@@ -80,7 +81,12 @@ export class HermesClient {
       const response = await fetch(url, options);
       clearTimeout(timeout); // Clear the timeout if the request completes in time
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorBody = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}${
+            errorBody ? `, body: ${errorBody}` : ""
+          }`
+        );
       }
       const data = await response.json();
       return schema.parse(data);
@@ -256,6 +262,46 @@ export class HermesClient {
     }
 
     return new EventSource(url.toString(), { headers: this.headers });
+  }
+
+  /**
+   * Fetch the latest TWAP (time weighted average price) for a set of price feed IDs.
+   * This endpoint can be customized by specifying the encoding type and whether the results should also return the calculated TWAP using the options object.
+   * This will throw an error if there is a network problem or the price service returns a non-ok response.
+   *
+   * @param ids Array of hex-encoded price feed IDs for which updates are requested.
+   * @param window_seconds The time window in seconds over which to calculate the TWAP, ending at the current time.
+   *  For example, a value of 300 would return the most recent 5 minute TWAP. Must be greater than 0 and less than or equal to 600 seconds (10 minutes).
+   * @param options Optional parameters:
+   *        - encoding: Encoding type. If specified, return the TWAP binary data in the encoding specified by the encoding parameter. Default is hex.
+   *        - parsed: Boolean to specify if the calculated TWAP should be included in the response. Default is false.
+   *        - ignoreInvalidPriceIds: Boolean to specify if invalid price IDs should be ignored instead of returning an error. Default is false.
+   *
+   * @returns TwapsResponse object containing the latest TWAPs.
+   */
+  async getLatestTwaps(
+    ids: HexString[],
+    window_seconds: number,
+    options?: {
+      encoding?: EncodingType;
+      parsed?: boolean;
+      ignoreInvalidPriceIds?: boolean;
+    }
+  ): Promise<TwapsResponse> {
+    const url = new URL(
+      `v2/updates/twap/${window_seconds}/latest`,
+      this.baseURL
+    );
+    for (const id of ids) {
+      url.searchParams.append("ids[]", id);
+    }
+
+    if (options) {
+      const transformedOptions = camelToSnakeCaseObject(options);
+      this.appendUrlSearchParams(url, transformedOptions);
+    }
+
+    return this.httpRequest(url.toString(), schemas.TwapsResponse);
   }
 
   private appendUrlSearchParams(
