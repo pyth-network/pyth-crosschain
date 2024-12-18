@@ -350,6 +350,22 @@ export type PythSolanaReceiver = {
         }
       ];
       args: [];
+    },
+    {
+      name: "reclaimTwapRent";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "twapUpdateAccount";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [];
     }
   ];
   accounts: [
@@ -1112,6 +1128,22 @@ export const IDL: PythSolanaReceiver = {
         },
         {
           name: "priceUpdateAccount",
+          isMut: true,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "reclaimTwapRent",
+      accounts: [
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "twapUpdateAccount",
           isMut: true,
           isSigner: false,
         },

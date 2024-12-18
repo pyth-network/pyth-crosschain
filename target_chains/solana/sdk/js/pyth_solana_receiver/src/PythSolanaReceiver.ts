@@ -698,7 +698,7 @@ export class PythSolanaReceiver {
         "0x" + parseTwapMessage(startUpdate.message).feedId.toString("hex")
       ] = twapUpdateKeypair.publicKey;
       closeInstructions.push(
-        await this.buildClosePriceUpdateInstruction(twapUpdateKeypair.publicKey)
+        await this.buildCloseTwapUpdateInstruction(twapUpdateKeypair.publicKey)
       );
     }
 
@@ -832,6 +832,19 @@ export class PythSolanaReceiver {
     const instruction = await this.receiver.methods
       .reclaimRent()
       .accounts({ priceUpdateAccount })
+      .instruction();
+    return { instruction, signers: [] };
+  }
+
+  /**
+   * Build an instruction to close a TWAP update account, recovering the rent.
+   */
+  async buildCloseTwapUpdateInstruction(
+    twapUpdateAccount: PublicKey
+  ): Promise<InstructionWithEphemeralSigners> {
+    const instruction = await this.receiver.methods
+      .reclaimTwapRent()
+      .accounts({ twapUpdateAccount })
       .instruction();
     return { instruction, signers: [] };
   }
