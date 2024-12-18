@@ -13,7 +13,7 @@ export const POST_UPDATE_COMPUTE_BUDGET = 35000;
 /**
  * A hard-coded budget for the compute units required for the `postUpdate` instruction in the Pyth Solana Receiver program.
  */
-export const POST_TWAP_UPDATE_COMPUTE_BUDGET = 100_000;
+export const POST_TWAP_UPDATE_COMPUTE_BUDGET = 50_000;
 /**
  * A hard-coded budget for the compute units required for the `updatePriceFeed` instruction in the Pyth Push Oracle program.
  */
