@@ -38,6 +38,9 @@ contract PythStorage {
         // Mapping of cached price information
         // priceId => PriceInfo
         mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
+        // Mapping of TWAP information
+        // priceId => TwapInfo
+        mapping(bytes32 => PythInternalStructs.TwapInfo) latestTwapInfo;
     }
 }
 
