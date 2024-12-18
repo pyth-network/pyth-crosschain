@@ -38,4 +38,14 @@ client.ws.addEventListener("open", () => {
     channel: "fixed_rate@200ms",
     jsonBinaryEncoding: "hex",
   });
+
+  // Example: Update an existing subscription
+  setTimeout(() => {
+    client.send({
+      type: "updateSubscription",
+      subscriptionId: 1,
+      priceFeedIds: [1, 2, 3],
+      properties: ["price", "bestBidPrice"],
+    });
+  }, 2000); // Wait 2 seconds before updating
 });

@@ -19,6 +19,12 @@ export type Request =
   | {
       type: "unsubscribe";
       subscriptionId: number;
+    }
+  | {
+      type: "updateSubscription";
+      subscriptionId: number;
+      priceFeedIds: number[];
+      properties: PriceFeedProperty[];
     };
 
 export type ParsedFeedPayload = {
