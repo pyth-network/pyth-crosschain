@@ -14,6 +14,7 @@ use {
 pub enum Request {
     Subscribe(SubscribeRequest),
     Unsubscribe(UnsubscribeRequest),
+    UpdateSubscription(UpdateSubscriptionRequest),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -31,6 +32,20 @@ pub struct SubscribeRequest {
 #[serde(rename_all = "camelCase")]
 pub struct UnsubscribeRequest {
     pub subscription_id: SubscriptionId,
+}
+
+/// A request to update an existing subscription with new parameters.
+/// This is idempotent - the new parameters completely replace the old ones.
+/// The subscription parameters include:
+/// - price_feed_ids: List of price feeds to subscribe to
+/// - properties: List of properties to include in updates (e.g., price, confidence, timestamp)
+///   These properties determine what data fields will be included in price feed updates
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateSubscriptionRequest {
+    pub subscription_id: SubscriptionId,
+    #[serde(flatten)]
+    pub params: SubscriptionParams,
 }
 
 /// A response sent from the server to the client.
