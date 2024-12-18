@@ -30,13 +30,10 @@ import {
   parseTwapMessage,
 } from "@pythnetwork/price-service-sdk";
 import {
-  CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
-  INIT_ENCODED_VAA_COMPUTE_BUDGET,
+  POST_TWAP_UPDATE_COMPUTE_BUDGET,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
   UPDATE_PRICE_FEED_COMPUTE_BUDGET,
-  VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-  WRITE_ENCODED_VAA_COMPUTE_BUDGET,
 } from "./compute_budget";
 import { Wallet } from "@coral-xyz/anchor";
 import {
@@ -694,7 +691,7 @@ export class PythSolanaReceiver {
           })
           .instruction(),
         signers: [twapUpdateKeypair],
-        computeUnits: POST_UPDATE_COMPUTE_BUDGET,
+        computeUnits: POST_TWAP_UPDATE_COMPUTE_BUDGET,
       });
 
       priceFeedIdToTwapUpdateAccount[
