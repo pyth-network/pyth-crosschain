@@ -185,7 +185,7 @@ async function generateVaaInstructionGroups(
 
 /**
  * Build instructions to post a single VAA to the Wormhole program.
- * The instructions are packed efficiently into 2 transactions:
+ * The instructions can be packed efficiently into 2 transactions:
  * - TX1: Create, init the encoded VAA account and write the first part of the VAA
  * - TX2: Write the second part of the VAA and verify it
  *
