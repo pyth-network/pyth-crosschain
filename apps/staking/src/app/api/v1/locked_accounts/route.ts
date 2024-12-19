@@ -72,10 +72,12 @@ export async function GET(req: NextRequest) {
         actualAmount: tokensToString(custodyAccount.amount),
         lock: {
           type: lock.type,
-          schedule: lock.schedule.map((unlock) => ({
-            date: unlock.date,
-            amount: tokensToString(unlock.amount),
-          })),
+          schedule: lock.schedule
+            .filter((unlock) => unlock.date > new Date())
+            .map((unlock) => ({
+              date: unlock.date,
+              amount: tokensToString(unlock.amount),
+            })),
         },
       };
     }),
