@@ -483,7 +483,7 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
     )?;
 
     // Transaction 3: Write remaining VAA data and verify both VAAs
-    let mut verify_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(400_000)];
+    let mut verify_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(1_200_000)];
     verify_instructions.extend(write_remaining_data_and_verify_vaa_ixs(
         &payer.pubkey(),
         start_vaa,
@@ -523,6 +523,8 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
 }
 
 /// Creates instructions to initialize an encoded VAA account and write the first part of the VAA data
+/// The VAA data is split at VAA_SPLIT_INDEX (755 bytes) to ensure the create+init+write instructions
+/// can fit in a single Solana transaction. This is a transaction size optimization, not a VAA structure requirement.
 pub fn init_encoded_vaa_and_write_initial_data_ixs(
     payer: &Pubkey,
     vaa: &[u8],
@@ -563,7 +565,7 @@ pub fn init_encoded_vaa_and_write_initial_data_ixs(
         data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
             args: WriteEncodedVaaArgs {
                 index: 0,
-                data: vaa[..VAA_SPLIT_INDEX].to_vec(),
+                data: vaa[..std::cmp::min(VAA_SPLIT_INDEX, vaa.len())].to_vec(),
             },
         }
         .data(),
@@ -577,33 +579,44 @@ pub fn init_encoded_vaa_and_write_initial_data_ixs(
 }
 
 /// Creates instructions to write remaining VAA data and verify the VAA
+/// If the VAA data is longer than VAA_SPLIT_INDEX, the remaining data is written in a separate instruction
+/// before verification. This ensures proper handling of large VAAs while respecting Solana transaction size limits.
+/// The verification step requires the complete VAA data to be written before it can succeed.
 pub fn write_remaining_data_and_verify_vaa_ixs(
     payer: &Pubkey,
     vaa: &[u8],
     encoded_vaa_keypair: &Pubkey,
     wormhole: Pubkey,
 ) -> Result<Vec<Instruction>> {
-    let write_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
-        write_authority: *payer,
-        draft_vaa: *encoded_vaa_keypair,
-    }
-    .to_account_metas(None);
+    // Only write remaining data if there is data after VAA_SPLIT_INDEX
+    let mut instructions = Vec::new();
 
-    let write_encoded_vaa_instruction = Instruction {
-        program_id: wormhole,
-        accounts: write_encoded_vaa_accounts,
-        data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
-            args: WriteEncodedVaaArgs {
-                index: VAA_SPLIT_INDEX.try_into().unwrap(),
-                data: vaa[VAA_SPLIT_INDEX..].to_vec(),
-            },
+    if vaa.len() > VAA_SPLIT_INDEX {
+        let write_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::WriteEncodedVaa {
+            write_authority: *payer,
+            draft_vaa: *encoded_vaa_keypair,
         }
-        .data(),
-    };
+        .to_account_metas(None);
 
+        let write_encoded_vaa_instruction = Instruction {
+            program_id: wormhole,
+            accounts: write_encoded_vaa_accounts,
+            data: wormhole_core_bridge_solana::instruction::WriteEncodedVaa {
+                args: WriteEncodedVaaArgs {
+                    index: VAA_SPLIT_INDEX.try_into().unwrap(),
+                    data: vaa[VAA_SPLIT_INDEX..].to_vec(),
+                },
+            }
+            .data(),
+        };
+        instructions.push(write_encoded_vaa_instruction);
+    }
+
+    // Parse VAA header to get guardian set index
     let (header, _): (Header, Body<&RawMessage>) = serde_wormhole::from_slice(vaa).unwrap();
     let guardian_set = GuardianSet::key(&wormhole, header.guardian_set_index);
 
+    // Add verify instruction
     let verify_encoded_vaa_accounts = wormhole_core_bridge_solana::accounts::VerifyEncodedVaaV1 {
         guardian_set,
         write_authority: *payer,
@@ -616,11 +629,9 @@ pub fn write_remaining_data_and_verify_vaa_ixs(
         accounts: verify_encoded_vaa_accounts,
         data: wormhole_core_bridge_solana::instruction::VerifyEncodedVaaV1 {}.data(),
     };
+    instructions.push(verify_encoded_vaa_instruction);
 
-    Ok(vec![
-        write_encoded_vaa_instruction,
-        verify_encoded_vaa_instruction,
-    ])
+    Ok(instructions)
 }
 
 pub fn process_transaction(
