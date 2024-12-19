@@ -431,7 +431,10 @@ pub fn process_write_encoded_vaa_and_post_price_update(
         update_instructions,
         &vec![payer, &price_update_keypair],
     )?;
-    println!("Successfully posted price update at address: {}", price_update_keypair.pubkey());
+    println!(
+        "Successfully posted price update at address: {}",
+        price_update_keypair.pubkey()
+    );
 
     Ok(price_update_keypair.pubkey())
 }
@@ -519,7 +522,10 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
         post_instructions,
         &vec![payer, &twap_update_keypair],
     )?;
-    println!("Successfully posted TWAP update at address: {}", twap_update_keypair.pubkey());
+    println!(
+        "Successfully posted TWAP update at address: {}",
+        twap_update_keypair.pubkey()
+    );
 
     Ok(twap_update_keypair.pubkey())
 }
