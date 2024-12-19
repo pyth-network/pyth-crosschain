@@ -2458,8 +2458,8 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       '@pythnetwork/price-service-sdk':
-        specifier: '>=1.6.0'
-        version: 1.7.1
+        specifier: workspace:*
+        version: link:../../../../../price_service/sdk/js
       '@pythnetwork/solana-utils':
         specifier: workspace:*
         version: link:../solana_utils
