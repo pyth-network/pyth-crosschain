@@ -1,5 +1,5 @@
 import { Lifebuoy } from "@phosphor-icons/react/dist/ssr/Lifebuoy";
-import { Button, ButtonLink } from "@pythnetwork/component-library/Button";
+import { Button } from "@pythnetwork/component-library/Button";
 import { Link } from "@pythnetwork/component-library/Link";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
@@ -28,14 +28,14 @@ export const Header = ({ className, ...props }: ComponentProps<"header">) => (
           Support
         </Button>
         <SearchButton />
-        <ButtonLink
+        <Button
           href="https://docs.pyth.network"
           size="sm"
           rounded
           target="_blank"
         >
           Dev Docs
-        </ButtonLink>
+        </Button>
         <ThemeSwitch className={styles.themeSwitch ?? ""} />
       </div>
     </div>

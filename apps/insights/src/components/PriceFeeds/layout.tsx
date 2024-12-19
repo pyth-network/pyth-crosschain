@@ -13,11 +13,11 @@ export const PriceFeedsLayout = ({ children }: Props) => (
     variants={{
       initial: (custom) => ({
         opacity: 0,
-        scale: isGoingToIndex(custom) ? 1.04 : 0.96,
+        scale: getInitialScale(custom),
       }),
       exit: (custom) => ({
         opacity: 0,
-        scale: isGoingToIndex(custom) ? 0.96 : 1.04,
+        scale: getExitScale(custom),
         transition: {
           scale: { type: "spring", bounce: 0 },
         },
@@ -38,4 +38,22 @@ export const PriceFeedsLayout = ({ children }: Props) => (
   </LayoutTransition>
 );
 
-const isGoingToIndex = ({ segment }: VariantArg) => segment === null;
+const getInitialScale = ({ segment, prevSegment }: VariantArg) => {
+  if (segment === null) {
+    return 1.04;
+  } else if (prevSegment === null) {
+    return 0.96;
+  } else {
+    return 1;
+  }
+};
+
+const getExitScale = ({ segment, prevSegment }: VariantArg) => {
+  if (segment === null) {
+    return 0.96;
+  } else if (prevSegment === null) {
+    return 1.04;
+  } else {
+    return 1;
+  }
+};

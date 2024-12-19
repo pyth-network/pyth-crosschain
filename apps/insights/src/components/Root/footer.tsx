@@ -3,9 +3,12 @@ import { GithubLogo } from "@phosphor-icons/react/dist/ssr/GithubLogo";
 import { TelegramLogo } from "@phosphor-icons/react/dist/ssr/TelegramLogo";
 import { XLogo } from "@phosphor-icons/react/dist/ssr/XLogo";
 import { YoutubeLogo } from "@phosphor-icons/react/dist/ssr/YoutubeLogo";
-import { ButtonLink } from "@pythnetwork/component-library/Button";
+import {
+  type Props as ButtonProps,
+  Button,
+} from "@pythnetwork/component-library/Button";
 import { Link } from "@pythnetwork/component-library/Link";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ElementType } from "react";
 
 import styles from "./footer.module.scss";
 import Wordmark from "./wordmark.svg";
@@ -64,15 +67,18 @@ export const Footer = () => (
   </footer>
 );
 
-type SocialLinkProps = Omit<
-  ComponentProps<typeof ButtonLink>,
+type SocialLinkProps<T extends ElementType> = Omit<
+  ButtonProps<T>,
   "target" | "variant" | "size" | "beforeIcon" | "hideText"
 > & {
-  icon: ComponentProps<typeof ButtonLink>["beforeIcon"];
+  icon: ComponentProps<typeof Button>["beforeIcon"];
 };
 
-const SocialLink = ({ icon, ...props }: SocialLinkProps) => (
-  <ButtonLink
+const SocialLink = <T extends ElementType>({
+  icon,
+  ...props
+}: SocialLinkProps<T>) => (
+  <Button
     target="_blank"
     variant="ghost"
     size="sm"

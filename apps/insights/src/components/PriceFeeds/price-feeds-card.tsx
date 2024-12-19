@@ -1,17 +1,18 @@
 "use client";
 
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
+import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
-import { usePathname } from "next/navigation";
+import { useQueryState, parseAsString } from "nuqs";
 import { type ReactNode, Suspense, useCallback, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
-import { serialize, useQueryParams } from "./query-params";
+import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { SKELETON_WIDTH } from "../LivePrices";
 
 type Props = {
@@ -41,70 +42,70 @@ export const PriceFeedsCard = ({ priceFeeds, ...props }: Props) => (
 );
 
 const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
-  const {
-    search,
-    page,
-    pageSize,
-    assetClass,
-    updateSearch,
-    updatePage,
-    updatePageSize,
-    updateAssetClass,
-  } = useQueryParams();
-
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const logger = useLogger();
   const collator = useCollator();
-  const sortedFeeds = useMemo(
+  const sortedPriceFeeds = useMemo(
     () =>
       priceFeeds.sort((a, b) =>
         collator.compare(a.displaySymbol, b.displaySymbol),
       ),
     [priceFeeds, collator],
   );
+  const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const [assetClass, setAssetClass] = useQueryState(
+    "assetClass",
+    parseAsString.withDefault(""),
+  );
   const feedsFilteredByAssetClass = useMemo(
     () =>
       assetClass
-        ? sortedFeeds.filter((feed) => feed.assetClassAsString === assetClass)
-        : sortedFeeds,
-    [assetClass, sortedFeeds],
+        ? sortedPriceFeeds.filter(
+            (feed) => feed.assetClassAsString === assetClass,
+          )
+        : sortedPriceFeeds,
+    [assetClass, sortedPriceFeeds],
   );
-  const filteredFeeds = useMemo(() => {
-    if (search === "") {
-      return feedsFilteredByAssetClass;
-    } else {
+  const {
+    search,
+    page,
+    pageSize,
+    updateSearch,
+    updatePage,
+    updatePageSize,
+    paginatedItems,
+    numResults,
+    numPages,
+    mkPageLink,
+  } = useQueryParamFilterPagination(
+    feedsFilteredByAssetClass,
+    (priceFeed, search) => {
       const searchTokens = search
         .split(" ")
         .flatMap((item) => item.split(","))
         .filter(Boolean);
-      return feedsFilteredByAssetClass.filter((feed) =>
-        searchTokens.some((token) => filter.contains(feed.symbol, token)),
+      return searchTokens.some((token) =>
+        filter.contains(priceFeed.symbol, token),
       );
-    }
-  }, [search, feedsFilteredByAssetClass, filter]);
-  const paginatedFeeds = useMemo(
-    () => filteredFeeds.slice((page - 1) * pageSize, page * pageSize),
-    [page, pageSize, filteredFeeds],
+    },
   );
   const rows = useMemo(
     () =>
-      paginatedFeeds.map(({ id, symbol, ...data }) => ({
+      paginatedItems.map(({ id, symbol, ...data }) => ({
         id,
         href: `/price-feeds/${encodeURIComponent(symbol)}`,
         data,
       })),
-    [paginatedFeeds],
+    [paginatedItems],
   );
 
-  const numPages = useMemo(
-    () => Math.ceil(filteredFeeds.length / pageSize),
-    [filteredFeeds.length, pageSize],
-  );
-
-  const pathname = usePathname();
-
-  const mkPageLink = useCallback(
-    (page: number) => `${pathname}${serialize({ page, pageSize })}`,
-    [pathname, pageSize],
+  const updateAssetClass = useCallback(
+    (newAssetClass: string) => {
+      updatePage(1);
+      setAssetClass(newAssetClass).catch((error: unknown) => {
+        logger.error("Failed to update asset class", error);
+      });
+    },
+    [updatePage, setAssetClass, logger],
   );
 
   const assetClasses = useMemo(
@@ -117,7 +118,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
 
   return (
     <PriceFeedsCardContents
-      numResults={filteredFeeds.length}
+      numResults={numResults}
       search={search}
       assetClass={assetClass}
       assetClasses={assetClasses}
@@ -211,7 +212,7 @@ const PriceFeedsCardContents = ({
           {...(props.isLoading
             ? { isPending: true, isDisabled: true }
             : {
-                defaultValue: props.search,
+                value: props.search,
                 onChange: props.onSearchChange,
               })}
         />

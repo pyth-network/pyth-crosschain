@@ -44,6 +44,7 @@
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "recharts": "catalog:",
+    "superjson": "catalog:",
     "swr": "catalog:",
     "zod": "catalog:"
   },

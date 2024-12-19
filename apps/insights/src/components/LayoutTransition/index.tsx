@@ -53,7 +53,7 @@ export const LayoutTransition = ({ children, ...props }: Props) => {
 
   return (
     <AnimatePresence
-      mode="wait"
+      mode="popLayout"
       initial={false}
       onExitComplete={updatePrevSegment}
       custom={{ segment, prevSegment: prevSegment.current }}
