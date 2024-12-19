@@ -1,9 +1,10 @@
 import clsx from "clsx";
-import type { ComponentType, ReactNode } from "react";
-import {
-  type ButtonProps as BaseButtonProps,
-  type LinkProps as BaseLinkProps,
-} from "react-aria-components";
+import type {
+  ComponentProps,
+  ElementType,
+  ComponentType,
+  ReactNode,
+} from "react";
 
 import styles from "./index.module.scss";
 import { UnstyledButton } from "../UnstyledButton/index.js";
@@ -30,17 +31,20 @@ type OwnProps = {
   afterIcon?: Icon | undefined;
 };
 
-export type ButtonProps = Omit<BaseButtonProps, keyof OwnProps> & OwnProps;
+export type Props<T extends ElementType> = Omit<
+  ComponentProps<T>,
+  keyof OwnProps
+> &
+  OwnProps;
 
-export const Button = (props: ButtonProps) => (
-  <UnstyledButton {...buttonProps(props)} />
-);
-
-export type ButtonLinkProps = Omit<BaseLinkProps, keyof OwnProps> & OwnProps;
-
-export const ButtonLink = (props: ButtonLinkProps) => (
-  <UnstyledLink {...buttonProps(props)} />
-);
+export const Button = (
+  props: Props<typeof UnstyledButton> | Props<typeof UnstyledLink>,
+) =>
+  "href" in props ? (
+    <UnstyledLink {...buttonProps(props)} />
+  ) : (
+    <UnstyledButton {...buttonProps(props)} />
+  );
 
 type ButtonImplProps = OwnProps & {
   className?: Parameters<typeof clsx>[0];

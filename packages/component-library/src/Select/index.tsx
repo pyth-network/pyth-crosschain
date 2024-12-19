@@ -3,6 +3,7 @@ import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import {
   type PopoverProps,
+  type Button as BaseButton,
   Label,
   Select as BaseSelect,
   Popover,
@@ -15,14 +16,15 @@ import {
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { Button } from "../Button/index.js";
+import { type Props as ButtonProps, Button } from "../Button/index.js";
+import { DropdownCaretDown } from "../DropdownCaretDown/index.js";
 
 type Props<T> = Omit<
   ComponentProps<typeof BaseSelect>,
   "defaultSelectedKey" | "selectedKey" | "onSelectionChange"
 > &
   Pick<
-    ComponentProps<typeof Button>,
+    ButtonProps<typeof BaseButton>,
     "variant" | "size" | "rounded" | "hideText" | "isPending"
   > &
   Pick<PopoverProps, "placement"> & {
@@ -141,17 +143,4 @@ const Item = <T extends string | number>({ children, show }: ItemProps<T>) => (
     <span>{show?.(children) ?? children}</span>
     <Check weight="bold" className={styles.check} />
   </ListBoxItem>
-);
-
-const DropdownCaretDown = (
-  props: Omit<ComponentProps<"svg">, "xmlns" | "viewBox" | "fill">,
-) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    {...props}
-  >
-    <path d="m13.346 9.284-3.125 3.125a.311.311 0 0 1-.442 0L6.654 9.284a.312.312 0 0 1 .221-.534h6.25a.312.312 0 0 1 .221.534Z" />
-  </svg>
 );

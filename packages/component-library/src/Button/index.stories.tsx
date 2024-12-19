@@ -71,6 +71,18 @@ const meta = {
         category: "State",
       },
     },
+    href: {
+      control: "text",
+      table: {
+        category: "Link",
+      },
+    },
+    target: {
+      control: "text",
+      table: {
+        category: "Link",
+      },
+    },
   },
 } satisfies Meta<typeof ButtonComponent>;
 export default meta;

@@ -1,39 +1,22 @@
 "use client";
 
 import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
-import clsx from "clsx";
-import { usePathname } from "next/navigation";
-import {
-  parseAsString,
-  parseAsInteger,
-  useQueryStates,
-  createSerializer,
-} from "nuqs";
-import {
-  type ReactNode,
-  type CSSProperties,
-  Suspense,
-  useCallback,
-  useMemo,
-} from "react";
+import { type ReactNode, Suspense, useMemo } from "react";
 import { useFilter } from "react-aria";
-import { Meter } from "react-aria-components";
 
-import styles from "./publishers-card.module.scss";
-
-const PUBLISHER_SCORE_WIDTH = 24;
+import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 
 type Props = {
   className?: string | undefined;
   rankingLoadingSkeleton: ReactNode;
   nameLoadingSkeleton: ReactNode;
+  scoreLoadingSkeleton: ReactNode;
+  scoreWidth: number;
   publishers: Publisher[];
 };
 
@@ -44,7 +27,7 @@ type Publisher = {
   ranking: ReactNode;
   activeFeeds: ReactNode;
   inactiveFeeds: ReactNode;
-  medianScore: number;
+  medianScore: ReactNode;
 };
 
 export const PublishersCard = ({ publishers, ...props }: Props) => (
@@ -54,89 +37,34 @@ export const PublishersCard = ({ publishers, ...props }: Props) => (
 );
 
 const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
-  const logger = useLogger();
-
-  const [{ search, page, pageSize }, setQuery] = useQueryStates(queryParams);
-
-  const updateQuery = useCallback(
-    (...params: Parameters<typeof setQuery>) => {
-      setQuery(...params).catch((error: unknown) => {
-        logger.error("Failed to update query", error);
-      });
-    },
-    [setQuery, logger],
-  );
-
-  const updateSearch = useCallback(
-    (newSearch: string) => {
-      updateQuery({ page: 1, search: newSearch });
-    },
-    [updateQuery],
-  );
-
-  const updatePage = useCallback(
-    (newPage: number) => {
-      updateQuery({ page: newPage });
-    },
-    [updateQuery],
-  );
-
-  const updatePageSize = useCallback(
-    (newPageSize: number) => {
-      updateQuery({ page: 1, pageSize: newPageSize });
-    },
-    [updateQuery],
-  );
-
   const filter = useFilter({ sensitivity: "base", usage: "search" });
-  const filteredPublishers = useMemo(
-    () =>
-      search === ""
-        ? publishers
-        : publishers.filter(
-            (publisher) =>
-              filter.contains(publisher.id, search) ||
-              (publisher.nameAsString !== undefined &&
-                filter.contains(publisher.nameAsString, search)),
-          ),
-    [publishers, search, filter],
-  );
-  const paginatedPublishers = useMemo(
-    () => filteredPublishers.slice((page - 1) * pageSize, page * pageSize),
-    [page, pageSize, filteredPublishers],
-  );
-
-  const numPages = useMemo(
-    () => Math.ceil(filteredPublishers.length / pageSize),
-    [filteredPublishers.length, pageSize],
-  );
-
-  const pathname = usePathname();
-
-  const mkPageLink = useCallback(
-    (page: number) => {
-      const serialize = createSerializer(queryParams);
-      return `${pathname}${serialize({ page, pageSize })}`;
-    },
-    [pathname, pageSize],
+  const {
+    search,
+    page,
+    pageSize,
+    updateSearch,
+    updatePage,
+    updatePageSize,
+    paginatedItems,
+    numResults,
+    numPages,
+    mkPageLink,
+  } = useQueryParamFilterPagination(
+    publishers,
+    (publisher, search) =>
+      filter.contains(publisher.id, search) ||
+      (publisher.nameAsString !== undefined &&
+        filter.contains(publisher.nameAsString, search)),
   );
 
   const rows = useMemo(
-    () =>
-      paginatedPublishers.map(({ id, medianScore, ...data }) => ({
-        id,
-        href: "#",
-        data: {
-          ...data,
-          medianScore: <PublisherScore score={medianScore} />,
-        },
-      })),
-    [paginatedPublishers],
+    () => paginatedItems.map(({ id, ...data }) => ({ id, href: "#", data })),
+    [paginatedItems],
   );
 
   return (
     <PublishersCardContents
-      numResults={filteredPublishers.length}
+      numResults={numResults}
       search={search}
       numPages={numPages}
       page={page}
@@ -151,15 +79,13 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
   );
 };
 
-const queryParams = {
-  page: parseAsInteger.withDefault(1),
-  pageSize: parseAsInteger.withDefault(30),
-  search: parseAsString.withDefault(""),
-};
-
 type PublishersCardContentsProps = Pick<
   Props,
-  "className" | "rankingLoadingSkeleton" | "nameLoadingSkeleton"
+  | "className"
+  | "rankingLoadingSkeleton"
+  | "nameLoadingSkeleton"
+  | "scoreLoadingSkeleton"
+  | "scoreWidth"
 > &
   (
     | { isLoading: true }
@@ -184,10 +110,12 @@ const PublishersCardContents = ({
   className,
   rankingLoadingSkeleton,
   nameLoadingSkeleton,
+  scoreLoadingSkeleton,
+  scoreWidth,
   ...props
 }: PublishersCardContentsProps) => (
   <Card
-    className={clsx(styles.publishersCard, className)}
+    className={className}
     icon={<Broadcast />}
     title={
       <>
@@ -206,7 +134,7 @@ const PublishersCardContents = ({
         {...(props.isLoading
           ? { isPending: true, isDisabled: true }
           : {
-              defaultValue: props.search,
+              value: props.search,
               onChange: props.onSearchChange,
             })}
       />
@@ -259,15 +187,9 @@ const PublishersCardContents = ({
         {
           id: "medianScore",
           name: "MEDIAN SCORE",
-          width: PUBLISHER_SCORE_WIDTH,
-          alignment: "center",
-          loadingSkeleton: (
-            <Skeleton
-              className={styles.publisherScore}
-              fill
-              style={{ "--width": PUBLISHER_SCORE_WIDTH } as CSSProperties}
-            />
-          ),
+          alignment: "right",
+          width: scoreWidth,
+          loadingSkeleton: scoreLoadingSkeleton,
         },
       ]}
       {...(props.isLoading
@@ -281,44 +203,3 @@ const PublishersCardContents = ({
     />
   </Card>
 );
-
-type PublisherScoreProps = {
-  score: number;
-};
-
-const PublisherScore = ({ score }: PublisherScoreProps) => (
-  <Meter
-    value={score}
-    maxValue={1}
-    style={{ "--width": PUBLISHER_SCORE_WIDTH } as CSSProperties}
-    aria-label="Score"
-  >
-    {({ percentage }) => (
-      <div
-        className={styles.publisherScore}
-        data-size-class={getSizeClass(percentage)}
-      >
-        <div
-          className={styles.fill}
-          style={{ width: `${(50 + percentage / 2).toString()}%` }}
-        >
-          {score.toFixed(2)}
-        </div>
-      </div>
-    )}
-  </Meter>
-);
-
-const getSizeClass = (percentage: number) => {
-  if (percentage < 60) {
-    return "bad";
-  } else if (percentage < 70) {
-    return "weak";
-  } else if (percentage < 80) {
-    return "warn";
-  } else if (percentage < 90) {
-    return "ok";
-  } else {
-    return "good";
-  }
-};

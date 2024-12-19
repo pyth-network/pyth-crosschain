@@ -1,0 +1,52 @@
+@use "@pythnetwork/component-library/theme";
+
+.publisherTag {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(4);
+  align-items: center;
+
+  .icon {
+    width: theme.spacing(9);
+    height: theme.spacing(9);
+  }
+
+  .key {
+    margin: 0 -#{theme.button-padding("sm", true)};
+  }
+
+  .nameAndKey {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(1);
+    align-items: flex-start;
+
+    .name {
+      color: theme.color("heading");
+    }
+
+    .key {
+      margin: -#{theme.spacing(1)} -#{theme.button-padding("xs", true)};
+      margin-bottom: -#{theme.spacing(2)};
+    }
+  }
+
+  .undisclosedIconWrapper {
+    background: theme.color("button", "disabled", "background");
+    border-radius: theme.border-radius("full");
+    display: grid;
+    place-content: center;
+
+    .undisclosedIcon {
+      width: theme.spacing(4);
+      height: theme.spacing(4);
+      color: theme.color("button", "disabled", "foreground");
+    }
+  }
+
+  &[data-loading] {
+    .icon {
+      border-radius: theme.border-radius("full");
+    }
+  }
+}

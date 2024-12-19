@@ -3,9 +3,12 @@
 import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy";
 import { useLogger } from "@pythnetwork/app-logger";
-import { Button } from "@pythnetwork/component-library/Button";
+import {
+  type Props as ButtonProps,
+  Button,
+} from "@pythnetwork/component-library/Button";
 import clsx from "clsx";
-import { type ComponentProps, useCallback, useEffect, useState } from "react";
+import { type ElementType, useCallback, useEffect, useState } from "react";
 
 import styles from "./index.module.scss";
 
@@ -13,13 +16,18 @@ type OwnProps = {
   text: string;
 };
 
-type Props = Omit<
-  ComponentProps<typeof Button>,
+type Props<T extends ElementType> = Omit<
+  ButtonProps<T>,
   keyof OwnProps | "onPress" | "afterIcon"
 > &
   OwnProps;
 
-export const CopyButton = ({ text, children, className, ...props }: Props) => {
+export const CopyButton = <T extends ElementType>({
+  text,
+  children,
+  className,
+  ...props
+}: Props<T>) => {
   const [isCopied, setIsCopied] = useState(false);
   const logger = useLogger();
   const copy = useCallback(() => {
