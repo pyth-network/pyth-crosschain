@@ -469,7 +469,6 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
         start_init_instructions,
         &vec![payer, &start_encoded_vaa_keypair],
     )?;
-    println!("Successfully created and initialized start VAA at address: {}", start_encoded_vaa_keypair.pubkey());
 
     // Transaction 2: Create and initialize end VAA
     let end_init_instructions = init_encoded_vaa_and_write_initial_data_ixs(
@@ -483,7 +482,6 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
         end_init_instructions,
         &vec![payer, &end_encoded_vaa_keypair],
     )?;
-    println!("Successfully created and initialized end VAA at address: {}", end_encoded_vaa_keypair.pubkey());
 
     // Transaction 3: Write remaining VAA data and verify both VAAs
     let mut verify_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(1_200_000)];
@@ -521,9 +519,7 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
         post_instructions,
         &vec![payer, &twap_update_keypair],
     )?;
-    println!("Successfully posted TWAP update with start VAA at {} and end VAA at {}",
-             start_encoded_vaa_keypair.pubkey(),
-             end_encoded_vaa_keypair.pubkey());
+    println!("Successfully posted TWAP update at address: {}", twap_update_keypair.pubkey());
 
     Ok(twap_update_keypair.pubkey())
 }
