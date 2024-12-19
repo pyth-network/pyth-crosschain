@@ -61,6 +61,7 @@ async function run() {
   const priceIds = argv.priceIds as string[];
 
   // Get price feeds
+  console.log(`Price feeds matching "btc" with asset type "crypto":`);
   const priceFeeds = await connection.getPriceFeeds({
     query: "btc",
     filter: "crypto",
@@ -68,10 +69,17 @@ async function run() {
   console.log(priceFeeds);
 
   // Latest price updates
+  console.log(`Latest price updates for price IDs ${priceIds}:`);
   const priceUpdates = await connection.getLatestPriceUpdates(priceIds);
   console.log(priceUpdates);
 
+  // Get the latest 5 second TWAPs
+  console.log(`Latest 5 second TWAPs for price IDs ${priceIds}`);
+  const twapUpdates = await connection.getLatestTwaps(priceIds, 5);
+  console.log(twapUpdates);
+
   // Streaming price updates
+  console.log(`Streaming latest prices for price IDs ${priceIds}...`);
   const eventSource = await connection.getPriceUpdatesStream(priceIds, {
     encoding: "hex",
     parsed: true,
