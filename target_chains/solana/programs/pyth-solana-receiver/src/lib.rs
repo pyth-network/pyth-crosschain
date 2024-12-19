@@ -283,6 +283,9 @@ pub mod pyth_solana_receiver {
     pub fn reclaim_rent(_ctx: Context<ReclaimRent>) -> Result<()> {
         Ok(())
     }
+    pub fn reclaim_twap_rent(_ctx: Context<ReclaimTwapRent>) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -391,6 +394,14 @@ pub struct ReclaimRent<'info> {
     pub payer: Signer<'info>,
     #[account(mut, close = payer, constraint = price_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority)]
     pub price_update_account: Account<'info, PriceUpdateV2>,
+}
+
+#[derive(Accounts)]
+pub struct ReclaimTwapRent<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(mut, close = payer, constraint = twap_update_account.write_authority == payer.key() @ ReceiverError::WrongWriteAuthority)]
+    pub twap_update_account: Account<'info, TwapUpdate>,
 }
 
 fn deserialize_guardian_set_checked(
