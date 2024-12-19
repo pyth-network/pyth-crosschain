@@ -7,11 +7,6 @@ const PUBKEY_LEN = 32;
 const MAGIC_LEN = 4;
 const MESSAGE_SIZE_LEN = 2;
 
-const readUint16LE = (data: Uint8Array, offset: number) => {
-  // @ts-expect-error - crashes if offset is out of bounds
-  return data[offset] | (data[offset + 1] << 8);
-};
-
 const ED25519_INSTRUCTION_LAYOUT = BufferLayout.struct<
   Readonly<{
     messageDataOffset: number;
@@ -37,7 +32,7 @@ const ED25519_INSTRUCTION_LAYOUT = BufferLayout.struct<
 ]);
 
 export const createEd25519Instruction = (
-  message: Uint8Array,
+  message: Buffer,
   instructionIndex: number,
   startingOffset: number
 ) => {
@@ -46,8 +41,7 @@ export const createEd25519Instruction = (
   const messageDataSizeOffset = publicKeyOffset + PUBKEY_LEN;
   const messageDataOffset = messageDataSizeOffset + MESSAGE_SIZE_LEN;
 
-  const messageDataSize = readUint16LE(
-    message,
+  const messageDataSize = message.readUInt16LE(
     messageDataSizeOffset - startingOffset
   );
 
