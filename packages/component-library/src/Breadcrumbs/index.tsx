@@ -6,7 +6,7 @@ import clsx from "clsx";
 import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
-import { ButtonLink } from "../Button/index.js";
+import { Button } from "../Button/index.js";
 import { Link } from "../Link/index.js";
 import {
   UnstyledBreadcrumbs,
@@ -41,7 +41,7 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
           {"href" in item ? (
             <>
               {item.href === "/" ? (
-                <ButtonLink
+                <Button
                   size="xs"
                   variant="outline"
                   // I'm not quite sure why this is triggering, I'll need to
@@ -54,7 +54,7 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
                   href="/"
                 >
                   {item.label}
-                </ButtonLink>
+                </Button>
               ) : (
                 <Link href={item.href} className={styles.crumb ?? ""} invert>
                   {item.label}

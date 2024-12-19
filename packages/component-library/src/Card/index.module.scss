@@ -33,18 +33,18 @@
   }
 
   .header {
+    display: flex;
     padding: theme.spacing(3) theme.spacing(4);
     position: relative;
 
     .title {
-      margin: 0;
-      font-size: theme.font-size("base");
-      font-weight: theme.font-weight("medium");
       color: theme.color("heading");
       display: inline-flex;
       flex-flow: row nowrap;
       gap: theme.spacing(3);
       align-items: center;
+
+      @include theme.text("lg", "medium");
 
       .icon {
         font-size: theme.spacing(6);

@@ -22,7 +22,6 @@ import {
 type TableProps<T extends string> = {
   className?: string | undefined;
   fill?: boolean | undefined;
-  divide?: boolean | undefined;
   rounded?: boolean | undefined;
   label: string;
   columns: ColumnConfig<T>[];
@@ -60,7 +59,6 @@ export type RowConfig<T extends string> = Omit<
 export const Table = <T extends string>({
   className,
   fill,
-  divide,
   rounded,
   label,
   rows,
@@ -73,7 +71,6 @@ export const Table = <T extends string>({
   <div
     className={clsx(styles.tableContainer, className)}
     data-fill={fill ? "" : undefined}
-    data-divide={divide ? "" : undefined}
     data-rounded={rounded ? "" : undefined}
   >
     {isUpdating && (

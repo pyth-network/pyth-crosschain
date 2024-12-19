@@ -1,5 +1,6 @@
 "use client";
 
+import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import {
   CLOSE_DURATION_IN_MS,
@@ -8,10 +9,14 @@ import {
 } from "@pythnetwork/component-library/Drawer";
 import { Table } from "@pythnetwork/component-library/Table";
 import { usePathname } from "next/navigation";
+import {
+  parseAsString,
+  parseAsInteger,
+  useQueryStates,
+  createSerializer,
+} from "nuqs";
 import { type ReactNode, useMemo } from "react";
 import { useCollator } from "react-aria";
-
-import { serialize, useQueryParams } from "./query-params";
 
 type Props = {
   numFeedsByAssetClass: Record<string, number>;
@@ -38,10 +43,10 @@ export const AssetClassesDrawer = ({
           </>
         }
       >
-        {({ close }) => (
+        {({ state }) => (
           <AssetClassTable
             numFeedsByAssetClass={numFeedsByAssetClass}
-            closeDrawer={close}
+            state={state}
           />
         )}
       </Drawer>
@@ -51,48 +56,59 @@ export const AssetClassesDrawer = ({
 
 type AssetClassTableProps = {
   numFeedsByAssetClass: Record<string, number>;
-  closeDrawer: () => void;
+  state: { close: () => void };
 };
 
 const AssetClassTable = ({
   numFeedsByAssetClass,
-  closeDrawer,
+  state,
 }: AssetClassTableProps) => {
+  const logger = useLogger();
   const collator = useCollator();
   const pathname = usePathname();
-  const { updateAssetClass, updateSearch } = useQueryParams();
+  const queryStates = {
+    page: parseAsInteger.withDefault(1),
+    search: parseAsString.withDefault(""),
+    assetClass: parseAsString.withDefault(""),
+  };
+  const serialize = createSerializer(queryStates);
+  const [, setQuery] = useQueryStates(queryStates);
   const assetClassRows = useMemo(
     () =>
       Object.entries(numFeedsByAssetClass)
         .sort(([a], [b]) => collator.compare(a, b))
-        .map(([assetClass, count]) => ({
-          id: assetClass,
-          href: `${pathname}${serialize({ assetClass })}`,
-          onAction: () => {
-            closeDrawer();
-            setTimeout(() => {
-              updateAssetClass(assetClass);
-              updateSearch("");
-            }, CLOSE_DURATION_IN_MS);
-          },
-          data: {
-            assetClass,
-            count: <Badge style="outline">{count}</Badge>,
-          },
-        })),
+        .map(([assetClass, count]) => {
+          const newQuery = { assetClass, search: "", page: 1 };
+          return {
+            id: assetClass,
+            href: `${pathname}${serialize(newQuery)}`,
+            onAction: () => {
+              state.close();
+              setTimeout(() => {
+                setQuery(newQuery).catch((error: unknown) => {
+                  logger.error("Failed to update query", error);
+                });
+              }, CLOSE_DURATION_IN_MS);
+            },
+            data: {
+              assetClass,
+              count: <Badge style="outline">{count}</Badge>,
+            },
+          };
+        }),
     [
       numFeedsByAssetClass,
       collator,
-      closeDrawer,
+      state,
       pathname,
-      updateAssetClass,
-      updateSearch,
+      setQuery,
+      serialize,
+      logger,
     ],
   );
   return (
     <Table
       fill
-      divide
       label="Asset Classes"
       columns={[
         {

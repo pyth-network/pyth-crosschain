@@ -36,7 +36,6 @@ export const MainNavTabs = ({ className, pathname, ...props }: Props) => (
             {args.isSelected && (
               <motion.span
                 layoutId="bubble"
-                // @ts-expect-error Looks like framer-motion has a bug in it's typings...
                 className={styles.bubble}
                 transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
                 style={{ originY: "top" }}

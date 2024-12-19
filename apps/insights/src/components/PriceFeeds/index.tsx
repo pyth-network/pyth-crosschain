@@ -12,13 +12,12 @@ import {
 import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { type ElementType } from "react";
-import { z } from "zod";
 
 import { AssetClassesDrawer } from "./asset-classes-drawer";
 import { ComingSoonList } from "./coming-soon-list";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { client } from "../../services/pyth";
+import { getData } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
 import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { FeedKey } from "../FeedKey";
@@ -123,7 +122,7 @@ export const PriceFeeds = async () => {
         />
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
-          nameLoadingSkeleton={<PriceFeedTag compact />}
+          nameLoadingSkeleton={<PriceFeedTag compact isLoading />}
           priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
             symbol: feed.symbol,
             id: feed.product.price_account,
@@ -203,14 +202,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
 );
 
 const getPriceFeeds = async () => {
-  const data = await client.getData();
-  const priceFeeds = priceFeedsSchema.parse(
-    data.symbols.map((symbol) => ({
-      symbol,
-      product: data.productFromSymbol.get(symbol),
-      price: data.productPrice.get(symbol),
-    })),
-  );
+  const priceFeeds = await getData();
   const activeFeeds = priceFeeds.filter((feed) => isActive(feed));
   const comingSoon = priceFeeds.filter((feed) => !isActive(feed));
   return { activeFeeds, comingSoon };
@@ -242,24 +234,6 @@ const filterFeeds = <T extends { symbol: string }>(
 
 const isActive = (feed: { price: { minPublishers: number } }) =>
   feed.price.minPublishers <= 50;
-
-const priceFeedsSchema = z.array(
-  z.object({
-    symbol: z.string(),
-    product: z.object({
-      display_symbol: z.string(),
-      asset_type: z.string(),
-      description: z.string(),
-      price_account: z.string(),
-      weekly_schedule: z.string().optional(),
-    }),
-    price: z.object({
-      exponent: z.number(),
-      numQuoters: z.number(),
-      minPublishers: z.number(),
-    }),
-  }),
-);
 
 class NoSuchFeedError extends Error {
   constructor(symbol: string) {
