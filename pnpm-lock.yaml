@@ -112,8 +112,8 @@ catalogs:
       specifier: 3.0.1
       version: 3.0.1
     motion:
-      specifier: 11.11.17
-      version: 11.11.17
+      specifier: 11.14.4
+      version: 11.14.4
     next:
       specifier: 15.1.0
       version: 15.1.0
@@ -168,6 +168,9 @@ catalogs:
     stylelint-config-standard-scss:
       specifier: 13.1.0
       version: 13.1.0
+    superjson:
+      specifier: 2.2.2
+      version: 2.2.2
     swr:
       specifier: 2.2.5
       version: 2.2.5
@@ -443,7 +446,7 @@ importers:
         version: 2.14.0
       motion:
         specifier: 'catalog:'
-        version: 11.11.17(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 11.14.4(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       next:
         specifier: 'catalog:'
         version: 15.1.0(@babel/core@7.25.8)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.80.7)
@@ -468,6 +471,9 @@ importers:
       recharts:
         specifier: 'catalog:'
         version: 2.14.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      superjson:
+        specifier: 'catalog:'
+        version: 2.2.2
       swr:
         specifier: 'catalog:'
         version: 2.2.5(react@19.0.0)
@@ -815,16 +821,16 @@ importers:
     dependencies:
       '@certusone/wormhole-sdk':
         specifier: ^0.9.8
-        version: 0.9.24(bufferutil@4.0.7)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@5.0.10)
+        version: 0.9.24(bufferutil@4.0.8)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@5.0.10)
       '@coral-xyz/anchor':
         specifier: ^0.29.0
-        version: 0.29.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 0.29.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@cosmjs/cosmwasm-stargate':
         specifier: ^0.32.3
-        version: 0.32.3(bufferutil@4.0.7)(utf-8-validate@5.0.10)
+        version: 0.32.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       '@cosmjs/stargate':
         specifier: ^0.32.3
-        version: 0.32.3(bufferutil@4.0.7)(utf-8-validate@5.0.10)
+        version: 0.32.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       '@injectivelabs/networks':
         specifier: ^1.14.6
         version: 1.14.6(google-protobuf@3.21.4)
@@ -833,7 +839,7 @@ importers:
         version: 1.3.0(svelte@4.2.18)(typescript@5.4.5)
       '@pythnetwork/client':
         specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/cosmwasm-deploy-tools':
         specifier: workspace:*
         version: link:../target_chains/cosmwasm/tools
@@ -872,10 +878,10 @@ importers:
         version: link:../governance/xc_admin/packages/xc_admin_common
       '@solana/web3.js':
         specifier: 1.92.3
-        version: 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@sqds/mesh':
         specifier: ^1.0.6
-        version: 1.0.6(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 1.0.6(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@ton/blueprint':
         specifier: ^0.22.0
         version: 0.22.0(@ton/core@0.59.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)(@ton/ton@15.1.0(@ton/core@0.59.0(@ton/crypto@3.3.0))(@ton/crypto@3.3.0))(@types/node@22.8.2)(encoding@0.1.13)(typescript@5.4.5)
@@ -920,7 +926,7 @@ importers:
         version: 5.4.5
       web3:
         specifier: ^1.8.2
-        version: 1.10.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 1.10.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       web3-eth-contract:
         specifier: ^1.8.2
         version: 1.10.0(encoding@0.1.13)
@@ -930,7 +936,7 @@ importers:
     devDependencies:
       '@types/web3':
         specifier: ^1.2.2
-        version: 1.2.2(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 1.2.2(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       eslint:
         specifier: ^8.0.0
         version: 8.56.0
@@ -1516,12 +1522,18 @@ importers:
 
   lazer/sdk/js:
     dependencies:
+      '@solana/buffer-layout':
+        specifier: ^4.0.1
+        version: 4.0.1
+      '@solana/web3.js':
+        specifier: 1.92.3
+        version: 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@6.0.4))
+        version: 5.0.0(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       ws:
         specifier: ^8.18.0
-        version: 8.18.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+        version: 8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
     devDependencies:
       '@cprussin/eslint-config':
         specifier: ^3.0.0
@@ -1616,7 +1628,7 @@ importers:
         version: 3.0.1
       motion:
         specifier: 'catalog:'
-        version: 11.11.17(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@19.0.0)
+        version: 11.14.4(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@19.0.0)
       react-aria:
         specifier: 'catalog:'
         version: 3.36.0(react-dom@18.3.1(react@18.3.1))(react@19.0.0)
@@ -2458,8 +2470,8 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       '@pythnetwork/price-service-sdk':
-        specifier: '>=1.6.0'
-        version: 1.7.1
+        specifier: workspace:*
+        version: link:../../../../../price_service/sdk/js
       '@pythnetwork/solana-utils':
         specifier: workspace:*
         version: link:../solana_utils
@@ -4432,10 +4444,6 @@ packages:
 
   '@babel/runtime@7.23.9':
     resolution: {integrity: sha512-0CX6F+BI2s9dkUqr08KFrAIZgNFj75rdBU/DjCyYLIaV/quFjkk6T+EJ2LkZHyZTbEV4L5p97mNkUsHl2wLFAw==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/runtime@7.25.0':
-    resolution: {integrity: sha512-7dRy4DwXwtzBrPbZflqxnvfxLF8kdZXPkhymtDeFoFqE6ldzjQFgYTtYIFARcLEYDrqfBfYcZt1WqFxRoyC9Rw==}
     engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.25.7':
@@ -12930,6 +12938,10 @@ packages:
     resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
     engines: {node: '>= 0.6'}
 
+  copy-anything@3.0.5:
+    resolution: {integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==}
+    engines: {node: '>=12.13'}
+
   copy-to-clipboard@3.3.3:
     resolution: {integrity: sha512-2KV8NhB5JqC3ky0r9PMCAZKbUHSwtEo4CwCs0KXgruG43gX5PMqDEBbVU4OUzw2MuAWUfsuFmWvEKG5QRfSnJA==}
 
@@ -15053,12 +15065,12 @@ packages:
       react-dom:
         optional: true
 
-  framer-motion@11.11.17:
-    resolution: {integrity: sha512-O8QzvoKiuzI5HSAHbcYuL6xU+ZLXbrH7C8Akaato4JzQbX2ULNeniqC2Vo5eiCtFktX9XsJ+7nUhxcl2E2IjpA==}
+  framer-motion@11.15.0:
+    resolution: {integrity: sha512-MLk8IvZntxOMg7lDBLw2qgTHHv664bYoYmnFTmE0Gm/FW67aOJk0WM3ctMcG+Xhcv+vh5uyyXwxvxhSeJzSe+w==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
-      react: ^18.0.0
-      react-dom: ^18.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       '@emotion/is-prop-valid':
         optional: true
@@ -16285,6 +16297,10 @@ packages:
   is-weakset@2.0.3:
     resolution: {integrity: sha512-LvIm3/KWzS9oRFHugab7d+M/GcBXuXX5xZkzPmN+NxihdQlZUQ4dWuSV1xR/sq6upL1TJEDrfBgRepHFdBtSNQ==}
     engines: {node: '>= 0.4'}
+
+  is-what@4.1.16:
+    resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
+    engines: {node: '>=12.13'}
 
   is-windows@1.0.2:
     resolution: {integrity: sha512-eXK1UInq2bPmjyX6e3VHIzMLobc4J94i4AWn+Hpq3OU5KkrRC96OAcR3PRJ/pGu6m8TRnBHP9dkXQVsT/COVIA==}
@@ -17928,15 +17944,21 @@ packages:
   moment@2.29.4:
     resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
 
+  motion-dom@11.14.3:
+    resolution: {integrity: sha512-lW+D2wBy5vxLJi6aCP0xyxTxlTfiu+b+zcpVbGVFUxotwThqhdpPRSmX8xztAgtZMPMeU0WGVn/k1w4I+TbPqA==}
+
+  motion-utils@11.14.3:
+    resolution: {integrity: sha512-Xg+8xnqIJTpr0L/cidfTTBFkvRw26ZtGGuIhA94J9PQ2p4mEa06Xx7QVYZH0BP+EpMSaDlu+q0I0mmvwADPsaQ==}
+
   motion@10.16.2:
     resolution: {integrity: sha512-p+PurYqfUdcJZvtnmAqu5fJgV2kR0uLFQuBKtLeFVTrYEVllI99tiOTSefVNYuip9ELTEkepIIDftNdze76NAQ==}
 
-  motion@11.11.17:
-    resolution: {integrity: sha512-y6mXYElvJ5HHwPBUpYG/5wclKVGW4hJhqPkTjWccib5/WrcRM185adg3+4aSmG5iD10XKFt5uBOAiKwuzMHPPQ==}
+  motion@11.14.4:
+    resolution: {integrity: sha512-ZIaw6ko88B8rSmBEFzqbTCQMbo9xMu8f4PSXSGdb9DTDy8R0sXcbwMEKmTEYkrj9TmZ4n+Ebd0KYjtqHgzRkRQ==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
-      react: ^18.0.0
-      react-dom: ^18.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       '@emotion/is-prop-valid':
         optional: true
@@ -21128,6 +21150,11 @@ packages:
 
   sudo-prompt@9.2.1:
     resolution: {integrity: sha512-Mu7R0g4ig9TUuGSxJavny5Rv0egCEtpZRNMrZaYS1vxkiIxGiGUwoezU3LazIQ+KE04hTrTfNPgxU5gzi7F5Pw==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+  superjson@2.2.2:
+    resolution: {integrity: sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==}
+    engines: {node: '>=16'}
 
   superstruct@0.14.2:
     resolution: {integrity: sha512-nPewA6m9mR3d6k7WkZ8N8zpTWfenFH3q9pA2PkuiZxINr9DKB2+40wEQf0ixn8VaGuJ78AB6iWOtStI+/4FKZQ==}
@@ -27353,10 +27380,6 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
-  '@babel/runtime@7.25.0':
-    dependencies:
-      regenerator-runtime: 0.14.1
-
   '@babel/runtime@7.25.7':
     dependencies:
       regenerator-runtime: 0.14.1
@@ -27631,41 +27654,6 @@ snapshots:
       - subscriptions-transport-ws
       - utf-8-validate
 
-  '@certusone/wormhole-sdk@0.9.24(bufferutil@4.0.7)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@certusone/wormhole-sdk-proto-web': 0.0.6(google-protobuf@3.21.4)
-      '@certusone/wormhole-sdk-wasm': 0.0.1
-      '@coral-xyz/borsh': 0.2.6(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))
-      '@mysten/sui.js': 0.32.2(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      '@project-serum/anchor': 0.25.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@solana/spl-token': 0.3.7(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@terra-money/terra.js': 3.1.9
-      '@xpla/xpla.js': 0.2.3
-      algosdk: 2.7.0
-      aptos: 1.5.0
-      axios: 0.24.0
-      bech32: 2.0.0
-      binary-parser: 2.2.1
-      bs58: 4.0.1
-      elliptic: 6.5.6
-      js-base64: 3.7.5
-      near-api-js: 1.1.0(encoding@0.1.13)
-    optionalDependencies:
-      '@injectivelabs/networks': 1.10.12(google-protobuf@3.21.4)
-      '@injectivelabs/sdk-ts': 1.10.72(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      '@injectivelabs/utils': 1.10.12(google-protobuf@3.21.4)
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - encoding
-      - google-protobuf
-      - graphql-ws
-      - react
-      - react-dom
-      - subscriptions-transport-ws
-      - utf-8-validate
-
   '@certusone/wormhole-sdk@0.9.24(bufferutil@4.0.7)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@6.0.3)':
     dependencies:
       '@certusone/wormhole-sdk-proto-web': 0.0.6(google-protobuf@3.21.4)
@@ -27689,6 +27677,41 @@ snapshots:
     optionalDependencies:
       '@injectivelabs/networks': 1.10.12(google-protobuf@3.21.4)
       '@injectivelabs/sdk-ts': 1.10.72(bufferutil@4.0.7)(utf-8-validate@6.0.3)
+      '@injectivelabs/utils': 1.10.12(google-protobuf@3.21.4)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - encoding
+      - google-protobuf
+      - graphql-ws
+      - react
+      - react-dom
+      - subscriptions-transport-ws
+      - utf-8-validate
+
+  '@certusone/wormhole-sdk@0.9.24(bufferutil@4.0.8)(encoding@0.1.13)(google-protobuf@3.21.4)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@certusone/wormhole-sdk-proto-web': 0.0.6(google-protobuf@3.21.4)
+      '@certusone/wormhole-sdk-wasm': 0.0.1
+      '@coral-xyz/borsh': 0.2.6(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
+      '@mysten/sui.js': 0.32.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      '@project-serum/anchor': 0.25.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@solana/spl-token': 0.3.7(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@terra-money/terra.js': 3.1.9
+      '@xpla/xpla.js': 0.2.3
+      algosdk: 2.7.0
+      aptos: 1.5.0
+      axios: 0.24.0
+      bech32: 2.0.0
+      binary-parser: 2.2.1
+      bs58: 4.0.1
+      elliptic: 6.5.6
+      js-base64: 3.7.5
+      near-api-js: 1.1.0(encoding@0.1.13)
+    optionalDependencies:
+      '@injectivelabs/networks': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/sdk-ts': 1.10.72(bufferutil@4.0.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
       '@injectivelabs/utils': 1.10.12(google-protobuf@3.21.4)
     transitivePeerDependencies:
       - bufferutil
@@ -27827,27 +27850,6 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@coral-xyz/anchor@0.29.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@coral-xyz/borsh': 0.29.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))
-      '@noble/hashes': 1.4.0
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bn.js: 5.2.1
-      bs58: 4.0.1
-      buffer-layout: 1.2.2
-      camelcase: 6.3.0
-      cross-fetch: 3.1.5(encoding@0.1.13)
-      crypto-hash: 1.3.0
-      eventemitter3: 4.0.7
-      pako: 2.1.0
-      snake-case: 3.0.4
-      superstruct: 0.15.5
-      toml: 3.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
-
   '@coral-xyz/anchor@0.29.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/borsh': 0.29.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
@@ -27934,12 +27936,6 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@coral-xyz/borsh@0.2.6(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))':
-    dependencies:
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bn.js: 5.2.1
-      buffer-layout: 1.2.2
-
   '@coral-xyz/borsh@0.2.6(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3))':
     dependencies:
       '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)
@@ -27964,12 +27960,6 @@ snapshots:
       bn.js: 5.2.1
       buffer-layout: 1.2.2
 
-  '@coral-xyz/borsh@0.28.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))':
-    dependencies:
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bn.js: 5.2.1
-      buffer-layout: 1.2.2
-
   '@coral-xyz/borsh@0.28.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -27979,12 +27969,6 @@ snapshots:
   '@coral-xyz/borsh@0.28.0(@solana/web3.js@1.95.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.95.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bn.js: 5.2.1
-      buffer-layout: 1.2.2
-
-  '@coral-xyz/borsh@0.29.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))':
-    dependencies:
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bn.js: 5.2.1
       buffer-layout: 1.2.2
 
@@ -28042,6 +28026,23 @@ snapshots:
       '@cosmjs/proto-signing': 0.32.3
       '@cosmjs/stargate': 0.32.3(bufferutil@4.0.7)(utf-8-validate@5.0.10)
       '@cosmjs/tendermint-rpc': 0.32.3(bufferutil@4.0.7)(utf-8-validate@5.0.10)
+      '@cosmjs/utils': 0.32.3
+      cosmjs-types: 0.9.0
+      pako: 2.1.0
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - utf-8-validate
+
+  '@cosmjs/cosmwasm-stargate@0.32.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@cosmjs/amino': 0.32.3
+      '@cosmjs/crypto': 0.32.3
+      '@cosmjs/encoding': 0.32.3
+      '@cosmjs/math': 0.32.3
+      '@cosmjs/proto-signing': 0.32.3
+      '@cosmjs/stargate': 0.32.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      '@cosmjs/tendermint-rpc': 0.32.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       '@cosmjs/utils': 0.32.3
       cosmjs-types: 0.9.0
       pako: 2.1.0
@@ -28128,17 +28129,6 @@ snapshots:
       '@cosmjs/utils': 0.32.3
       cosmjs-types: 0.9.0
 
-  '@cosmjs/socket@0.30.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@cosmjs/stream': 0.30.1
-      isomorphic-ws: 4.0.1(ws@7.5.10(bufferutil@4.0.7)(utf-8-validate@5.0.10))
-      ws: 7.5.10(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      xstream: 11.14.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-    optional: true
-
   '@cosmjs/socket@0.30.1(bufferutil@4.0.7)(utf-8-validate@6.0.3)':
     dependencies:
       '@cosmjs/stream': 0.30.1
@@ -28190,26 +28180,6 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
-
-  '@cosmjs/stargate@0.30.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@confio/ics23': 0.6.8
-      '@cosmjs/amino': 0.30.1
-      '@cosmjs/encoding': 0.30.1
-      '@cosmjs/math': 0.30.1
-      '@cosmjs/proto-signing': 0.30.1
-      '@cosmjs/stream': 0.30.1
-      '@cosmjs/tendermint-rpc': 0.30.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      '@cosmjs/utils': 0.30.1
-      cosmjs-types: 0.7.2
-      long: 4.0.0
-      protobufjs: 6.11.4
-      xstream: 11.14.0
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - utf-8-validate
-    optional: true
 
   '@cosmjs/stargate@0.30.1(bufferutil@4.0.7)(utf-8-validate@6.0.3)':
     dependencies:
@@ -28328,24 +28298,6 @@ snapshots:
   '@cosmjs/stream@0.32.3':
     dependencies:
       xstream: 11.14.0
-
-  '@cosmjs/tendermint-rpc@0.30.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@cosmjs/crypto': 0.30.1
-      '@cosmjs/encoding': 0.30.1
-      '@cosmjs/json-rpc': 0.30.1
-      '@cosmjs/math': 0.30.1
-      '@cosmjs/socket': 0.30.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      '@cosmjs/stream': 0.30.1
-      '@cosmjs/utils': 0.30.1
-      axios: 0.21.4
-      readonly-date: 1.0.0
-      xstream: 11.14.0
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - utf-8-validate
-    optional: true
 
   '@cosmjs/tendermint-rpc@0.30.1(bufferutil@4.0.7)(utf-8-validate@6.0.3)':
     dependencies:
@@ -30688,54 +30640,6 @@ snapshots:
       - debug
       - google-protobuf
 
-  '@injectivelabs/sdk-ts@1.10.72(bufferutil@4.0.7)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@apollo/client': 3.7.13(graphql@16.6.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@cosmjs/amino': 0.30.1
-      '@cosmjs/proto-signing': 0.30.1
-      '@cosmjs/stargate': 0.30.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      '@ethersproject/bytes': 5.7.0
-      '@injectivelabs/core-proto-ts': 0.0.14
-      '@injectivelabs/exceptions': 1.14.6(google-protobuf@3.21.2)
-      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.2)
-      '@injectivelabs/grpc-web-node-http-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.2))
-      '@injectivelabs/grpc-web-react-native-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.2))
-      '@injectivelabs/indexer-proto-ts': 1.10.8-rc.4
-      '@injectivelabs/mito-proto-ts': 1.0.9
-      '@injectivelabs/networks': 1.14.6(google-protobuf@3.21.2)
-      '@injectivelabs/test-utils': 1.14.4
-      '@injectivelabs/token-metadata': 1.10.42(google-protobuf@3.21.2)
-      '@injectivelabs/ts-types': 1.14.6
-      '@injectivelabs/utils': 1.14.6(google-protobuf@3.21.2)
-      '@metamask/eth-sig-util': 4.0.1
-      axios: 0.27.2
-      bech32: 2.0.0
-      bip39: 3.0.4
-      cosmjs-types: 0.7.2
-      eth-crypto: 2.6.0(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      ethereumjs-util: 7.1.5
-      ethers: 5.7.2(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      google-protobuf: 3.21.2
-      graphql: 16.6.0
-      http-status-codes: 2.2.0
-      js-sha3: 0.8.0
-      jscrypto: 1.0.3
-      keccak256: 1.0.6
-      link-module-alias: 1.2.0
-      rxjs: 7.8.0
-      secp256k1: 4.0.3
-      shx: 0.3.4
-      snakecase-keys: 5.4.5
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - graphql-ws
-      - react
-      - react-dom
-      - subscriptions-transport-ws
-      - utf-8-validate
-    optional: true
-
   '@injectivelabs/sdk-ts@1.10.72(bufferutil@4.0.7)(utf-8-validate@6.0.3)':
     dependencies:
       '@apollo/client': 3.7.13(graphql@16.6.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -32784,22 +32688,6 @@ snapshots:
     dependencies:
       bs58: 6.0.0
 
-  '@mysten/sui.js@0.32.2(bufferutil@4.0.7)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@mysten/bcs': 0.7.1
-      '@noble/curves': 1.6.0
-      '@noble/hashes': 1.5.0
-      '@scure/bip32': 1.4.0
-      '@scure/bip39': 1.3.0
-      '@suchipi/femver': 1.0.0
-      jayson: 4.1.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      rpc-websockets: 7.5.1
-      superstruct: 1.0.4
-      tweetnacl: 1.0.3
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   '@mysten/sui.js@0.32.2(bufferutil@4.0.7)(utf-8-validate@6.0.3)':
     dependencies:
       '@mysten/bcs': 0.7.1
@@ -33840,28 +33728,6 @@ snapshots:
       type-fest: 4.26.1
       webpack-hot-middleware: 2.26.1
 
-  '@project-serum/anchor@0.25.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@project-serum/borsh': 0.2.5(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      base64-js: 1.5.1
-      bn.js: 5.2.1
-      bs58: 4.0.1
-      buffer-layout: 1.2.2
-      camelcase: 5.3.1
-      cross-fetch: 3.1.5(encoding@0.1.13)
-      crypto-hash: 1.3.0
-      eventemitter3: 4.0.7
-      js-sha256: 0.9.0
-      pako: 2.1.0
-      snake-case: 3.0.4
-      superstruct: 0.15.5
-      toml: 3.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
-
   '@project-serum/anchor@0.25.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)':
     dependencies:
       '@project-serum/borsh': 0.2.5(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3))
@@ -33928,12 +33794,6 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@project-serum/borsh@0.2.5(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))':
-    dependencies:
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bn.js: 5.2.1
-      buffer-layout: 1.2.2
-
   '@project-serum/borsh@0.2.5(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3))':
     dependencies:
       '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)
@@ -33986,17 +33846,6 @@ snapshots:
       '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@coral-xyz/borsh': 0.28.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
       '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      buffer: 6.0.3
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
-
-  '@pythnetwork/client@2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@coral-xyz/borsh': 0.28.0(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
       buffer: 6.0.3
     transitivePeerDependencies:
       - bufferutil
@@ -36459,17 +36308,6 @@ snapshots:
       - react
       - react-native
 
-  '@solana/buffer-layout-utils@0.2.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@solana/buffer-layout': 4.0.1
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bigint-buffer: 1.1.5
-      bignumber.js: 9.1.2
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
-
   '@solana/buffer-layout-utils@0.2.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)':
     dependencies:
       '@solana/buffer-layout': 4.0.1
@@ -36654,17 +36492,6 @@ snapshots:
       - encoding
       - fastestsmallesttextencoderdecoder
       - typescript
-      - utf-8-validate
-
-  '@solana/spl-token@0.3.7(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@solana/buffer-layout': 4.0.1
-      '@solana/buffer-layout-utils': 0.2.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      buffer: 6.0.3
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
       - utf-8-validate
 
   '@solana/spl-token@0.3.7(@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3))(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)':
@@ -37401,33 +37228,11 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@babel/runtime': 7.25.0
-      '@noble/curves': 1.4.2
-      '@noble/hashes': 1.4.0
-      '@solana/buffer-layout': 4.0.1
-      agentkeepalive: 4.5.0
-      bigint-buffer: 1.1.5
-      bn.js: 5.2.1
-      borsh: 0.7.0
-      bs58: 4.0.1
-      buffer: 6.0.3
-      fast-stable-stringify: 1.0.0
-      jayson: 4.1.1(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      node-fetch: 2.7.0(encoding@0.1.13)
-      rpc-websockets: 8.0.1
-      superstruct: 1.0.4
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
-
   '@solana/web3.js@1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)':
     dependencies:
-      '@babel/runtime': 7.25.0
-      '@noble/curves': 1.4.2
-      '@noble/hashes': 1.4.0
+      '@babel/runtime': 7.25.7
+      '@noble/curves': 1.6.0
+      '@noble/hashes': 1.5.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.5.0
       bigint-buffer: 1.1.5
@@ -37447,9 +37252,9 @@ snapshots:
 
   '@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
-      '@babel/runtime': 7.25.0
-      '@noble/curves': 1.4.2
-      '@noble/hashes': 1.4.0
+      '@babel/runtime': 7.25.7
+      '@noble/curves': 1.6.0
+      '@noble/hashes': 1.5.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.5.0
       bigint-buffer: 1.1.5
@@ -37469,9 +37274,9 @@ snapshots:
 
   '@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@6.0.4)':
     dependencies:
-      '@babel/runtime': 7.25.0
-      '@noble/curves': 1.4.2
-      '@noble/hashes': 1.4.0
+      '@babel/runtime': 7.25.7
+      '@noble/curves': 1.6.0
+      '@noble/hashes': 1.5.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.5.0
       bigint-buffer: 1.1.5
@@ -37491,9 +37296,9 @@ snapshots:
 
   '@solana/web3.js@1.92.3(encoding@0.1.13)':
     dependencies:
-      '@babel/runtime': 7.25.0
-      '@noble/curves': 1.4.2
-      '@noble/hashes': 1.4.0
+      '@babel/runtime': 7.25.7
+      '@noble/curves': 1.6.0
+      '@noble/hashes': 1.5.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.5.0
       bigint-buffer: 1.1.5
@@ -37555,16 +37360,6 @@ snapshots:
 
   '@solidity-parser/parser@0.17.0':
     optional: true
-
-  '@sqds/mesh@1.0.6(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@project-serum/anchor': 0.25.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@solana/web3.js': 1.92.3(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bn.js: 5.2.1
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
 
   '@sqds/mesh@1.0.6(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
@@ -38473,14 +38268,14 @@ snapshots:
       bech32: 2.0.0
       bip32: 2.0.6
       bip39: 3.0.4
-      bufferutil: 4.0.7
+      bufferutil: 4.0.8
       decimal.js: 10.4.3
       jscrypto: 1.0.3
       readable-stream: 3.6.2
       secp256k1: 4.0.3
       tmp: 0.2.3
       utf-8-validate: 5.0.10
-      ws: 7.5.10(bufferutil@4.0.7)(utf-8-validate@5.0.10)
+      ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - debug
 
@@ -39632,9 +39427,9 @@ snapshots:
       '@types/bn.js': 5.1.6
       '@types/underscore': 1.11.4
 
-  '@types/web3@1.2.2(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+  '@types/web3@1.2.2(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
-      web3: 1.10.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      web3: 1.10.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -42067,7 +41862,7 @@ snapshots:
       bech32: 2.0.0
       bip32: 2.0.6
       bip39: 3.0.4
-      bufferutil: 4.0.7
+      bufferutil: 4.0.8
       crypto-addr-codec: 0.1.7
       decimal.js: 10.4.3
       elliptic: 6.5.6
@@ -42077,7 +41872,7 @@ snapshots:
       secp256k1: 4.0.3
       tmp: 0.2.3
       utf-8-validate: 5.0.10
-      ws: 7.5.10(bufferutil@4.0.7)(utf-8-validate@5.0.10)
+      ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - debug
 
@@ -44428,6 +44223,10 @@ snapshots:
   cookie@0.4.2: {}
 
   cookie@0.6.0: {}
+
+  copy-anything@3.0.5:
+    dependencies:
+      is-what: 4.1.16
 
   copy-to-clipboard@3.3.3:
     dependencies:
@@ -46955,20 +46754,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eth-crypto@2.6.0(bufferutil@4.0.7)(utf-8-validate@5.0.10):
-    dependencies:
-      '@babel/runtime': 7.20.13
-      '@ethereumjs/tx': 3.5.2
-      '@types/bn.js': 5.1.1
-      eccrypto: 1.1.6(patch_hash=rjcfmtfgn3z72mudpdif5oxmye)
-      ethereumjs-util: 7.1.5
-      ethers: 5.7.2(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      secp256k1: 5.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-    optional: true
-
   eth-crypto@2.6.0(bufferutil@4.0.7)(utf-8-validate@6.0.3):
     dependencies:
       '@babel/runtime': 7.20.13
@@ -47058,19 +46843,6 @@ snapshots:
       safe-event-emitter: 1.0.1
     transitivePeerDependencies:
       - encoding
-
-  eth-lib@0.1.29(bufferutil@4.0.7)(utf-8-validate@5.0.10):
-    dependencies:
-      bn.js: 4.12.0
-      elliptic: 6.5.6
-      nano-json-stream-parser: 0.1.2
-      servify: 0.1.12
-      ws: 3.3.3(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      xhr-request-promise: 0.1.3
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
 
   eth-lib@0.1.29(bufferutil@4.0.7)(utf-8-validate@6.0.3):
     dependencies:
@@ -47970,16 +47742,20 @@ snapshots:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
-  framer-motion@11.11.17(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@19.0.0):
+  framer-motion@11.15.0(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@19.0.0):
     dependencies:
+      motion-dom: 11.14.3
+      motion-utils: 11.14.3
       tslib: 2.8.0
     optionalDependencies:
       '@emotion/is-prop-valid': 1.2.2
       react: 19.0.0
       react-dom: 18.3.1(react@18.3.1)
 
-  framer-motion@11.11.17(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  framer-motion@11.15.0(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
+      motion-dom: 11.14.3
+      motion-utils: 11.14.3
       tslib: 2.8.0
     optionalDependencies:
       '@emotion/is-prop-valid': 1.2.2
@@ -49515,6 +49291,8 @@ snapshots:
       call-bind: 1.0.7
       get-intrinsic: 1.2.4
 
+  is-what@4.1.16: {}
+
   is-windows@1.0.2: {}
 
   is-wsl@1.1.0: {}
@@ -49588,10 +49366,6 @@ snapshots:
   isomorphic-ws@5.0.0(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
     dependencies:
       ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-
-  isomorphic-ws@5.0.0(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)):
-    dependencies:
-      ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@6.0.4)
 
   isows@1.0.3(ws@8.13.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
     dependencies:
@@ -49761,24 +49535,6 @@ snapshots:
       json-stringify-safe: 5.0.1
       uuid: 8.3.2
       ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@6.0.4)
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  jayson@4.1.1(bufferutil@4.0.7)(utf-8-validate@5.0.10):
-    dependencies:
-      '@types/connect': 3.4.38
-      '@types/node': 12.20.55
-      '@types/ws': 7.4.7
-      JSONStream: 1.3.5
-      commander: 2.20.3
-      delay: 5.0.0
-      es6-promisify: 5.0.0
-      eyes: 0.1.8
-      isomorphic-ws: 4.0.1(ws@7.5.10(bufferutil@4.0.7)(utf-8-validate@5.0.10))
-      json-stringify-safe: 5.0.1
-      uuid: 8.3.2
-      ws: 7.5.10(bufferutil@4.0.7)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -53558,6 +53314,10 @@ snapshots:
 
   moment@2.29.4: {}
 
+  motion-dom@11.14.3: {}
+
+  motion-utils@11.14.3: {}
+
   motion@10.16.2:
     dependencies:
       '@motionone/animation': 10.18.0
@@ -53567,18 +53327,18 @@ snapshots:
       '@motionone/utils': 10.18.0
       '@motionone/vue': 10.16.4
 
-  motion@11.11.17(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@19.0.0):
+  motion@11.14.4(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@19.0.0):
     dependencies:
-      framer-motion: 11.11.17(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@19.0.0)
+      framer-motion: 11.15.0(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@19.0.0)
       tslib: 2.8.0
     optionalDependencies:
       '@emotion/is-prop-valid': 1.2.2
       react: 19.0.0
       react-dom: 18.3.1(react@18.3.1)
 
-  motion@11.11.17(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  motion@11.14.4(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
-      framer-motion: 11.11.17(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      framer-motion: 11.15.0(@emotion/is-prop-valid@1.2.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       tslib: 2.8.0
     optionalDependencies:
       '@emotion/is-prop-valid': 1.2.2
@@ -57962,6 +57722,10 @@ snapshots:
 
   sudo-prompt@9.2.1: {}
 
+  superjson@2.2.2:
+    dependencies:
+      copy-anything: 3.0.5
+
   superstruct@0.14.2: {}
 
   superstruct@0.15.5: {}
@@ -58048,24 +57812,6 @@ snapshots:
     dependencies:
       lower-case: 1.1.4
       upper-case: 1.1.3
-
-  swarm-js@0.1.42(bufferutil@4.0.7)(utf-8-validate@5.0.10):
-    dependencies:
-      bluebird: 3.7.2
-      buffer: 5.7.1
-      eth-lib: 0.1.29(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-      fs-extra: 4.0.3
-      got: 11.8.6
-      mime-types: 2.1.35
-      mkdirp-promise: 5.0.1
-      mock-fs: 4.14.0
-      setimmediate: 1.0.5
-      tar: 4.4.19
-      xhr-request: 1.1.0
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
 
   swarm-js@0.1.42(bufferutil@4.0.7)(utf-8-validate@6.0.3):
     dependencies:
@@ -60258,21 +60004,21 @@ snapshots:
 
   web-vitals@0.2.4: {}
 
-  web3-bzz@1.10.0(bufferutil@4.0.7)(utf-8-validate@5.0.10):
-    dependencies:
-      '@types/node': 12.20.55
-      got: 12.1.0
-      swarm-js: 0.1.42(bufferutil@4.0.7)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
   web3-bzz@1.10.0(bufferutil@4.0.7)(utf-8-validate@6.0.3):
     dependencies:
       '@types/node': 12.20.55
       got: 12.1.0
       swarm-js: 0.1.42(bufferutil@4.0.7)(utf-8-validate@6.0.3)
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  web3-bzz@1.10.0(bufferutil@4.0.8)(utf-8-validate@5.0.10):
+    dependencies:
+      '@types/node': 12.20.55
+      got: 12.1.0
+      swarm-js: 0.1.42(bufferutil@4.0.8)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -61372,9 +61118,9 @@ snapshots:
       web3-types: 1.7.0
       zod: 3.23.8
 
-  web3@1.10.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@5.0.10):
+  web3@1.10.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3):
     dependencies:
-      web3-bzz: 1.10.0(bufferutil@4.0.7)(utf-8-validate@5.0.10)
+      web3-bzz: 1.10.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
       web3-core: 1.10.0(encoding@0.1.13)
       web3-eth: 1.10.0(encoding@0.1.13)
       web3-eth-personal: 1.10.0(encoding@0.1.13)
@@ -61387,9 +61133,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  web3@1.10.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3):
+  web3@1.10.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10):
     dependencies:
-      web3-bzz: 1.10.0(bufferutil@4.0.7)(utf-8-validate@6.0.3)
+      web3-bzz: 1.10.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       web3-core: 1.10.0(encoding@0.1.13)
       web3-eth: 1.10.0(encoding@0.1.13)
       web3-eth-personal: 1.10.0(encoding@0.1.13)
@@ -61801,15 +61547,6 @@ snapshots:
     dependencies:
       readable-stream: 0.0.4
     optional: true
-
-  ws@3.3.3(bufferutil@4.0.7)(utf-8-validate@5.0.10):
-    dependencies:
-      async-limiter: 1.0.1
-      safe-buffer: 5.1.2
-      ultron: 1.1.1
-    optionalDependencies:
-      bufferutil: 4.0.7
-      utf-8-validate: 5.0.10
 
   ws@3.3.3(bufferutil@4.0.7)(utf-8-validate@6.0.3):
     dependencies:

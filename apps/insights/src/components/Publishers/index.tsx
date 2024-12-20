@@ -1,15 +1,11 @@
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
-import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
 import { Info } from "@phosphor-icons/react/dist/ssr/Info";
 import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb";
 import { Alert, AlertTrigger } from "@pythnetwork/component-library/Alert";
-import { ButtonLink, Button } from "@pythnetwork/component-library/Button";
+import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
-import clsx from "clsx";
-import type { ComponentProps } from "react";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
@@ -17,10 +13,10 @@ import { PublishersCard } from "./publishers-card";
 import { SemicircleMeter, Label } from "./semicircle-meter";
 import { client as clickhouseClient } from "../../services/clickhouse";
 import { client as hermesClient } from "../../services/hermes";
-import { CLUSTER, client as pythClient } from "../../services/pyth";
+import { CLUSTER, getData } from "../../services/pyth";
 import { client as stakingClient } from "../../services/staking";
-import { CopyButton } from "../CopyButton";
 import { FormattedTokens } from "../FormattedTokens";
+import { PublisherTag } from "../PublisherTag";
 import { TokenIcon } from "../TokenIcon";
 
 const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
@@ -69,14 +65,14 @@ export const Publishers = async () => {
                     <b>Median Scores</b> of all publishers who contribute to the
                     Pyth Network.
                   </p>
-                  <ButtonLink
+                  <Button
                     size="xs"
                     variant="solid"
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                     target="_blank"
                   >
                     Learn more
-                  </ButtonLink>
+                  </Button>
                 </Alert>
               </AlertTrigger>
             }
@@ -91,7 +87,7 @@ export const Publishers = async () => {
             title="Oracle Integrity Staking (OIS)"
             className={styles.oisCard}
             toolbar={
-              <ButtonLink
+              <Button
                 href="https://staking.pyth.network"
                 target="_blank"
                 size="sm"
@@ -99,7 +95,7 @@ export const Publishers = async () => {
                 afterIcon={ArrowSquareOut}
               >
                 Staking App
-              </ButtonLink>
+              </Button>
             }
           >
             <SemicircleMeter
@@ -155,34 +151,16 @@ export const Publishers = async () => {
         </section>
         <PublishersCard
           className={styles.publishersCard}
-          rankingLoadingSkeleton={
-            <Skeleton className={styles.rankingLoader} fill />
-          }
-          nameLoadingSkeleton={
-            <div
-              className={clsx(
-                styles.publisherName,
-                styles.publisherNamePlaceholder,
-              )}
-            >
-              <Skeleton className={styles.publisherIcon} fill />
-              <div className={styles.nameAndKey}>
-                <div className={styles.name}>
-                  <Skeleton width={40} />
-                </div>
-                <Skeleton className={styles.publisherKey ?? ""} width={20} />
-              </div>
-            </div>
-          }
+          nameLoadingSkeleton={<PublisherTag isLoading />}
           publishers={publishers.map(
             ({ key, rank, numSymbols, medianScore }) => ({
               id: key,
               nameAsString: lookupPublisher(key)?.name,
-              name: <PublisherName publisherKey={key} />,
-              ranking: <Ranking>{rank}</Ranking>,
+              name: <PublisherTag publisherKey={key} />,
+              ranking: rank,
               activeFeeds: numSymbols,
               inactiveFeeds: totalFeeds - numSymbols,
-              medianScore,
+              medianScore: medianScore,
             }),
           )}
         />
@@ -190,52 +168,6 @@ export const Publishers = async () => {
     </div>
   );
 };
-
-const Ranking = ({ className, ...props }: ComponentProps<"span">) => (
-  <span className={clsx(styles.ranking, className)} {...props} />
-);
-
-const PublisherName = ({ publisherKey }: { publisherKey: string }) => {
-  const knownPublisher = lookupPublisher(publisherKey);
-  const Icon = knownPublisher?.icon.color ?? UndisclosedIcon;
-  const name = knownPublisher?.name ?? "Undisclosed";
-  return (
-    <div
-      data-is-undisclosed={knownPublisher === undefined ? "" : undefined}
-      className={styles.publisherName}
-    >
-      <Icon className={styles.publisherIcon} />
-      {knownPublisher ? (
-        <div className={styles.nameAndKey}>
-          <div className={styles.name}>{name}</div>
-          <CopyButton
-            size="xs"
-            variant="ghost"
-            className={styles.key ?? ""}
-            text={publisherKey}
-          >
-            {`${publisherKey.slice(0, 4)}...${publisherKey.slice(-4)}`}
-          </CopyButton>
-        </div>
-      ) : (
-        <CopyButton
-          size="sm"
-          variant="ghost"
-          className={styles.key ?? ""}
-          text={publisherKey}
-        >
-          {`${publisherKey.slice(0, 4)}...${publisherKey.slice(-4)}`}
-        </CopyButton>
-      )}
-    </div>
-  );
-};
-
-const UndisclosedIcon = ({ className, ...props }: ComponentProps<"div">) => (
-  <div className={clsx(styles.undisclosedIconWrapper, className)} {...props}>
-    <Broadcast className={styles.undisclosedIcon} />
-  </div>
-);
 
 const getPublishers = async () => {
   const rows = await clickhouseClient.query({
@@ -258,11 +190,8 @@ const publishersSchema = z.array(
 );
 
 const getTotalFeedCount = async () => {
-  const pythData = await pythClient.getData();
-  return pythData.symbols.filter(
-    (symbol) =>
-      (pythData.productPrice.get(symbol)?.numComponentPrices ?? 0) > 0,
-  ).length;
+  const pythData = await getData();
+  return pythData.filter(({ price }) => price.numComponentPrices > 0).length;
 };
 
 const getOisStats = async () => {

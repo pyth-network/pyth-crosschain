@@ -94,7 +94,6 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
       </div>
       <Table
         fill
-        divide
         label="Asset Classes"
         className={styles.priceFeeds ?? ""}
         columns={[

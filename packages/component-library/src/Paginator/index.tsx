@@ -2,9 +2,10 @@ import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import clsx from "clsx";
 import { type ComponentProps, useMemo, useCallback } from "react";
+import type { Link } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { Button, ButtonLink } from "../Button/index.js";
+import { type Props as ButtonProps, Button } from "../Button/index.js";
 import buttonStyles from "../Button/index.module.scss";
 import { Select } from "../Select/index.js";
 import { UnstyledToolbar } from "../UnstyledToolbar/index.js";
@@ -153,7 +154,7 @@ const PaginatorToolbar = ({
 };
 
 type PageSelectorProps = Pick<
-  ComponentProps<typeof ButtonLink>,
+  ComponentProps<typeof Button>,
   "hideText" | "beforeIcon" | "isDisabled" | "children"
 > & {
   page: number;
@@ -169,7 +170,7 @@ const PageSelector = ({ mkPageLink, ...props }: PageSelectorProps) =>
   );
 
 type PageLinkProps = Omit<
-  ComponentProps<typeof ButtonLink>,
+  ButtonProps<typeof Link>,
   "variant" | "size" | "href" | "onPress"
 > & {
   page: number;
@@ -190,7 +191,7 @@ const PageLink = ({
   }, [onPageChange, page]);
 
   return (
-    <ButtonLink
+    <Button
       variant="ghost"
       size="sm"
       onPress={onPress}
@@ -202,7 +203,7 @@ const PageLink = ({
 };
 
 type PageButtonProps = Omit<
-  ComponentProps<typeof Button>,
+  ButtonProps<typeof Link>,
   "variant" | "size" | "href" | "onPress"
 > & {
   page: number;

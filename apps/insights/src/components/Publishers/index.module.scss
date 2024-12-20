@@ -9,7 +9,6 @@
 
     color: theme.color("heading");
     font-weight: theme.font-weight("semibold");
-    margin: theme.spacing(6) 0;
   }
 
   .body {
@@ -17,6 +16,7 @@
     flex-flow: row nowrap;
     gap: theme.spacing(12);
     align-items: flex-start;
+    margin-top: theme.spacing(6);
 
     .stats {
       display: grid;
@@ -108,78 +108,5 @@
 
   b {
     font-weight: theme.font-weight("semibold");
-  }
-}
-
-.ranking,
-.rankingLoader {
-  height: theme.spacing(6);
-  border-radius: theme.border-radius("md");
-  width: 100%;
-}
-
-.ranking {
-  display: inline-block;
-  text-align: center;
-  font-size: theme.font-size("sm");
-  font-weight: theme.font-weight("medium");
-  line-height: theme.spacing(6);
-  color: light-dark(
-    theme.pallette-color("steel", 800),
-    theme.pallette-color("steel", 300)
-  );
-  background: light-dark(
-    theme.pallette-color("steel", 200),
-    theme.pallette-color("steel", 700)
-  );
-}
-
-.publisherName {
-  display: flex;
-  flex-flow: row nowrap;
-  gap: theme.spacing(4);
-  align-items: center;
-
-  .publisherIcon {
-    width: theme.spacing(9);
-    height: theme.spacing(9);
-  }
-
-  &.publisherNamePlaceholder .publisherIcon {
-    border-radius: theme.border-radius("full");
-  }
-
-  .key {
-    margin: 0 -#{theme.button-padding("sm", true)};
-  }
-
-  .nameAndKey {
-    display: flex;
-    flex-flow: column nowrap;
-    gap: theme.spacing(1);
-    align-items: flex-start;
-
-    .name {
-      color: theme.color("heading");
-    }
-
-    .key {
-      margin: 0 -#{theme.button-padding("xs", true)};
-    }
-  }
-
-  &[data-is-undisclosed] {
-    .undisclosedIconWrapper {
-      background: theme.color("button", "disabled", "background");
-      border-radius: theme.border-radius("full");
-      display: grid;
-      place-content: center;
-
-      .undisclosedIcon {
-        width: theme.spacing(4);
-        height: theme.spacing(4);
-        color: theme.color("button", "disabled", "foreground");
-      }
-    }
   }
 }

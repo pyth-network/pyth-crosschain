@@ -1,38 +1,24 @@
 "use client";
 
 import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
-import clsx from "clsx";
-import { usePathname } from "next/navigation";
-import {
-  parseAsString,
-  parseAsInteger,
-  useQueryStates,
-  createSerializer,
-} from "nuqs";
-import {
-  type ReactNode,
-  type CSSProperties,
-  Suspense,
-  useCallback,
-  useMemo,
-} from "react";
-import { useFilter } from "react-aria";
-import { Meter } from "react-aria-components";
+import { type ReactNode, Suspense, useMemo } from "react";
+import { useFilter, useCollator } from "react-aria";
+import type { SortDescriptor } from "react-aria-components";
 
-import styles from "./publishers-card.module.scss";
+import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
+import { NoResults } from "../NoResults";
+import { Ranking } from "../Ranking";
+import { Score } from "../Score";
 
 const PUBLISHER_SCORE_WIDTH = 24;
 
 type Props = {
   className?: string | undefined;
-  rankingLoadingSkeleton: ReactNode;
   nameLoadingSkeleton: ReactNode;
   publishers: Publisher[];
 };
@@ -41,9 +27,9 @@ type Publisher = {
   id: string;
   nameAsString: string | undefined;
   name: ReactNode;
-  ranking: ReactNode;
-  activeFeeds: ReactNode;
-  inactiveFeeds: ReactNode;
+  ranking: number;
+  activeFeeds: number;
+  inactiveFeeds: number;
   medianScore: number;
 };
 
@@ -54,94 +40,81 @@ export const PublishersCard = ({ publishers, ...props }: Props) => (
 );
 
 const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
-  const logger = useLogger();
-
-  const [{ search, page, pageSize }, setQuery] = useQueryStates(queryParams);
-
-  const updateQuery = useCallback(
-    (...params: Parameters<typeof setQuery>) => {
-      setQuery(...params).catch((error: unknown) => {
-        logger.error("Failed to update query", error);
-      });
-    },
-    [setQuery, logger],
-  );
-
-  const updateSearch = useCallback(
-    (newSearch: string) => {
-      updateQuery({ page: 1, search: newSearch });
-    },
-    [updateQuery],
-  );
-
-  const updatePage = useCallback(
-    (newPage: number) => {
-      updateQuery({ page: newPage });
-    },
-    [updateQuery],
-  );
-
-  const updatePageSize = useCallback(
-    (newPageSize: number) => {
-      updateQuery({ page: 1, pageSize: newPageSize });
-    },
-    [updateQuery],
-  );
-
+  const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
-  const filteredPublishers = useMemo(
-    () =>
-      search === ""
-        ? publishers
-        : publishers.filter(
-            (publisher) =>
-              filter.contains(publisher.id, search) ||
-              (publisher.nameAsString !== undefined &&
-                filter.contains(publisher.nameAsString, search)),
-          ),
-    [publishers, search, filter],
-  );
-  const paginatedPublishers = useMemo(
-    () => filteredPublishers.slice((page - 1) * pageSize, page * pageSize),
-    [page, pageSize, filteredPublishers],
-  );
+  const {
+    search,
+    sortDescriptor,
+    page,
+    pageSize,
+    updateSearch,
+    updateSortDescriptor,
+    updatePage,
+    updatePageSize,
+    paginatedItems,
+    numResults,
+    numPages,
+    mkPageLink,
+  } = useQueryParamFilterPagination(
+    publishers,
+    (publisher, search) =>
+      filter.contains(publisher.id, search) ||
+      (publisher.nameAsString !== undefined &&
+        filter.contains(publisher.nameAsString, search)),
+    (a, b, { column, direction }) => {
+      switch (column) {
+        case "ranking":
+        case "activeFeeds":
+        case "inactiveFeeds":
+        case "medianScore": {
+          return (
+            (direction === "descending" ? -1 : 1) * (a[column] - b[column])
+          );
+        }
 
-  const numPages = useMemo(
-    () => Math.ceil(filteredPublishers.length / pageSize),
-    [filteredPublishers.length, pageSize],
-  );
+        case "name": {
+          return (
+            (direction === "descending" ? -1 : 1) *
+            collator.compare(a.nameAsString ?? a.id, b.nameAsString ?? b.id)
+          );
+        }
 
-  const pathname = usePathname();
-
-  const mkPageLink = useCallback(
-    (page: number) => {
-      const serialize = createSerializer(queryParams);
-      return `${pathname}${serialize({ page, pageSize })}`;
+        default: {
+          return (
+            (direction === "descending" ? -1 : 1) * (a.ranking - b.ranking)
+          );
+        }
+      }
     },
-    [pathname, pageSize],
+    { defaultSort: "ranking" },
   );
 
   const rows = useMemo(
     () =>
-      paginatedPublishers.map(({ id, medianScore, ...data }) => ({
+      paginatedItems.map(({ id, ranking, medianScore, ...data }) => ({
         id,
         href: "#",
         data: {
           ...data,
-          medianScore: <PublisherScore score={medianScore} />,
+          ranking: <Ranking>{ranking}</Ranking>,
+          medianScore: (
+            <Score score={medianScore} width={PUBLISHER_SCORE_WIDTH} />
+          ),
         },
       })),
-    [paginatedPublishers],
+    [paginatedItems],
   );
 
   return (
     <PublishersCardContents
-      numResults={filteredPublishers.length}
+      numResults={numResults}
       search={search}
+      sortDescriptor={sortDescriptor}
       numPages={numPages}
       page={page}
       pageSize={pageSize}
       onSearchChange={updateSearch}
+      onSortChange={updateSortDescriptor}
       onPageSizeChange={updatePageSize}
       onPageChange={updatePage}
       mkPageLink={mkPageLink}
@@ -151,15 +124,9 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
   );
 };
 
-const queryParams = {
-  page: parseAsInteger.withDefault(1),
-  pageSize: parseAsInteger.withDefault(30),
-  search: parseAsString.withDefault(""),
-};
-
 type PublishersCardContentsProps = Pick<
   Props,
-  "className" | "rankingLoadingSkeleton" | "nameLoadingSkeleton"
+  "className" | "nameLoadingSkeleton"
 > &
   (
     | { isLoading: true }
@@ -167,10 +134,12 @@ type PublishersCardContentsProps = Pick<
         isLoading?: false;
         numResults: number;
         search: string;
+        sortDescriptor: SortDescriptor;
         numPages: number;
         page: number;
         pageSize: number;
         onSearchChange: (newSearch: string) => void;
+        onSortChange: (newSort: SortDescriptor) => void;
         onPageSizeChange: (newPageSize: number) => void;
         onPageChange: (newPage: number) => void;
         mkPageLink: (page: number) => string;
@@ -182,12 +151,11 @@ type PublishersCardContentsProps = Pick<
 
 const PublishersCardContents = ({
   className,
-  rankingLoadingSkeleton,
   nameLoadingSkeleton,
   ...props
 }: PublishersCardContentsProps) => (
   <Card
-    className={clsx(styles.publishersCard, className)}
+    className={className}
     icon={<Broadcast />}
     title={
       <>
@@ -206,7 +174,7 @@ const PublishersCardContents = ({
         {...(props.isLoading
           ? { isPending: true, isDisabled: true }
           : {
-              defaultValue: props.search,
+              value: props.search,
               onChange: props.onSearchChange,
             })}
       />
@@ -233,41 +201,39 @@ const PublishersCardContents = ({
         {
           id: "ranking",
           name: "RANKING",
-          width: 10,
-          loadingSkeleton: rankingLoadingSkeleton,
+          width: 30,
+          loadingSkeleton: <Ranking isLoading />,
+          allowsSorting: true,
         },
         {
           id: "name",
           name: "NAME / ID",
           isRowHeader: true,
-          fill: true,
           alignment: "left",
           loadingSkeleton: nameLoadingSkeleton,
+          allowsSorting: true,
         },
         {
           id: "activeFeeds",
           name: "ACTIVE FEEDS",
           alignment: "center",
-          width: 10,
+          width: 40,
+          allowsSorting: true,
         },
         {
           id: "inactiveFeeds",
           name: "INACTIVE FEEDS",
           alignment: "center",
-          width: 10,
+          width: 45,
+          allowsSorting: true,
         },
         {
           id: "medianScore",
           name: "MEDIAN SCORE",
+          alignment: "right",
           width: PUBLISHER_SCORE_WIDTH,
-          alignment: "center",
-          loadingSkeleton: (
-            <Skeleton
-              className={styles.publisherScore}
-              fill
-              style={{ "--width": PUBLISHER_SCORE_WIDTH } as CSSProperties}
-            />
-          ),
+          loadingSkeleton: <Score isLoading width={PUBLISHER_SCORE_WIDTH} />,
+          allowsSorting: true,
         },
       ]}
       {...(props.isLoading
@@ -276,49 +242,17 @@ const PublishersCardContents = ({
           }
         : {
             rows: props.rows,
-            renderEmptyState: () => <p>No results!</p>,
+            sortDescriptor: props.sortDescriptor,
+            onSortChange: props.onSortChange,
+            renderEmptyState: () => (
+              <NoResults
+                query={props.search}
+                onClearSearch={() => {
+                  props.onSearchChange("");
+                }}
+              />
+            ),
           })}
     />
   </Card>
 );
-
-type PublisherScoreProps = {
-  score: number;
-};
-
-const PublisherScore = ({ score }: PublisherScoreProps) => (
-  <Meter
-    value={score}
-    maxValue={1}
-    style={{ "--width": PUBLISHER_SCORE_WIDTH } as CSSProperties}
-    aria-label="Score"
-  >
-    {({ percentage }) => (
-      <div
-        className={styles.publisherScore}
-        data-size-class={getSizeClass(percentage)}
-      >
-        <div
-          className={styles.fill}
-          style={{ width: `${(50 + percentage / 2).toString()}%` }}
-        >
-          {score.toFixed(2)}
-        </div>
-      </div>
-    )}
-  </Meter>
-);
-
-const getSizeClass = (percentage: number) => {
-  if (percentage < 60) {
-    return "bad";
-  } else if (percentage < 70) {
-    return "weak";
-  } else if (percentage < 80) {
-    return "warn";
-  } else if (percentage < 90) {
-    return "ok";
-  } else {
-    return "good";
-  }
-};

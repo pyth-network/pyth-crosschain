@@ -6,49 +6,44 @@
   background: rgba(from black r g b / 30%);
   z-index: 1;
 
-  .modal {
+  .drawer {
     position: fixed;
     top: theme.spacing(4);
     bottom: theme.spacing(4);
     right: theme.spacing(4);
-    width: 40%;
+    width: 60%;
     max-width: theme.spacing(160);
     outline: none;
+    background: theme.color("background", "primary");
+    border: 1px solid theme.color("border");
+    border-radius: theme.border-radius("3xl");
+    display: flex;
+    flex-flow: column nowrap;
+    overflow-y: hidden;
+    padding-bottom: theme.border-radius("3xl");
 
-    .dialog {
-      background: theme.color("background", "primary");
-      border: 1px solid theme.color("border");
-      border-radius: theme.border-radius("3xl");
-      outline: none;
+    .heading {
+      padding: theme.spacing(4);
+      padding-left: theme.spacing(6);
       display: flex;
-      flex-flow: column nowrap;
-      height: 100%;
-      overflow-y: hidden;
-      padding-bottom: theme.border-radius("3xl");
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: center;
+      color: theme.color("heading");
+      flex: none;
 
-      .heading {
-        padding: theme.spacing(4);
-        padding-left: theme.spacing(6);
+      .title {
+        @include theme.h4;
+
         display: flex;
         flex-flow: row nowrap;
-        justify-content: space-between;
-        align-items: center;
-        color: theme.color("heading");
-        flex: none;
-
-        .title {
-          @include theme.h4;
-
-          display: flex;
-          flex-flow: row nowrap;
-          gap: theme.spacing(3);
-        }
+        gap: theme.spacing(3);
       }
+    }
 
-      .body {
-        flex: 1;
-        overflow-y: auto;
-      }
+    .body {
+      flex: 1;
+      overflow-y: auto;
     }
   }
 }

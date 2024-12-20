@@ -8,46 +8,53 @@ import styles from "./index.module.scss";
 
 type OwnProps = {
   compact?: boolean | undefined;
-  feed?:
-    | {
+} & (
+  | { isLoading: true }
+  | {
+      isLoading?: false;
+      feed: {
         product: {
           display_symbol: string;
           description: string;
         };
-      }
-    | undefined;
-};
+      };
+    }
+);
+
 type Props = Omit<ComponentProps<"div">, keyof OwnProps> & OwnProps;
 
-export const PriceFeedTag = ({ feed, className, compact, ...props }: Props) => (
+export const PriceFeedTag = ({ className, compact, ...props }: Props) => (
   <div
     className={clsx(styles.priceFeedTag, className)}
     data-compact={compact ? "" : undefined}
-    data-loading={feed === undefined}
+    data-loading={props.isLoading ? "" : undefined}
     {...props}
   >
-    {feed === undefined ? (
+    {props.isLoading ? (
       <Skeleton fill className={styles.icon} />
     ) : (
-      <FeedIcon className={styles.icon} symbol={feed.product.display_symbol} />
+      <FeedIcon
+        className={styles.icon}
+        symbol={props.feed.product.display_symbol}
+      />
     )}
     <div className={styles.nameAndDescription}>
-      {feed === undefined ? (
+      {props.isLoading ? (
         <div className={styles.name}>
           <Skeleton width={30} />
         </div>
       ) : (
         <FeedName
           className={styles.name}
-          symbol={feed.product.display_symbol}
+          symbol={props.feed.product.display_symbol}
         />
       )}
       {!compact && (
         <div className={styles.description}>
-          {feed === undefined ? (
+          {props.isLoading ? (
             <Skeleton width={50} />
           ) : (
-            feed.product.description.split("/")[0]
+            props.feed.product.description.split("/")[0]
           )}
         </div>
       )}

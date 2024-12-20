@@ -4,20 +4,26 @@ import { ListDashes } from "@phosphor-icons/react/dist/ssr/ListDashes";
 import { Alert, AlertTrigger } from "@pythnetwork/component-library/Alert";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Breadcrumbs } from "@pythnetwork/component-library/Breadcrumbs";
-import { Button, ButtonLink } from "@pythnetwork/component-library/Button";
+import { Button } from "@pythnetwork/component-library/Button";
 import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
+import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { z } from "zod";
 
 import styles from "./layout.module.scss";
+import { PriceFeedSelect } from "./price-feed-select";
 import { ReferenceData } from "./reference-data";
 import { TabPanel, TabRoot, Tabs } from "./tabs";
-import { client } from "../../services/pyth";
+import { toHex } from "../../hex";
+import { getData } from "../../services/pyth";
 import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { FeedKey } from "../FeedKey";
-import { LivePrice, LiveConfidence, LiveLastUpdated } from "../LivePrices";
-import { NotFound } from "../NotFound";
+import {
+  LivePrice,
+  LiveConfidence,
+  LiveLastUpdated,
+  LiveValue,
+} from "../LivePrices";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
@@ -28,8 +34,9 @@ type Props = {
 };
 
 export const PriceFeedLayout = async ({ children, params }: Props) => {
-  const { slug } = await params;
-  const feed = await getPriceFeed(decodeURIComponent(slug));
+  const [{ slug }, data] = await Promise.all([params, getData()]);
+  const symbol = decodeURIComponent(slug);
+  const feed = data.find((item) => item.symbol === symbol);
 
   return feed ? (
     <div className={styles.priceFeedLayout}>
@@ -50,7 +57,24 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           </div>
         </div>
         <div className={styles.headerRow}>
-          <PriceFeedTag feed={feed} />
+          <PriceFeedSelect
+            feeds={data
+              .filter((feed) => feed.symbol !== symbol)
+              .map((feed) => ({
+                id: encodeURIComponent(feed.symbol),
+                key: toHex(feed.product.price_account),
+                displaySymbol: feed.product.display_symbol,
+                name: <PriceFeedTag compact feed={feed} />,
+                assetClassText: feed.product.asset_type,
+                assetClass: (
+                  <Badge variant="neutral" style="outline" size="xs">
+                    {feed.product.asset_type.toUpperCase()}
+                  </Badge>
+                ),
+              }))}
+          >
+            <PriceFeedTag feed={feed} />
+          </PriceFeedSelect>
           <div className={styles.rightGroup}>
             <FeedKey
               variant="ghost"
@@ -96,14 +120,14 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
                     of the confidence of individual quoters and how well
                     individual quoters agree with each other.
                   </p>
-                  <ButtonLink
+                  <Button
                     size="xs"
                     variant="solid"
                     href="https://docs.pyth.network/price-feeds/best-practices#confidence-intervals"
                     target="_blank"
                   >
                     Learn more
-                  </ButtonLink>
+                  </Button>
                 </Alert>
               </AlertTrigger>
             }
@@ -134,7 +158,7 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
                 <div className={styles.priceComponentsTabLabel}>
                   <span>Price Components</span>
                   <Badge size="xs" style="filled" variant="neutral">
-                    {feed.price.numComponentPrices}
+                    <LiveValue feed={feed} field="numComponentPrices" />
                   </Badge>
                 </div>
               ),
@@ -145,49 +169,6 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
       </TabRoot>
     </div>
   ) : (
-    <NotFound />
+    notFound()
   );
 };
-
-const getPriceFeed = async (symbol: string) => {
-  const data = await client.getData();
-  const priceFeeds = priceFeedsSchema.parse(
-    data.symbols.map((symbol) => ({
-      symbol,
-      product: data.productFromSymbol.get(symbol),
-      price: data.productPrice.get(symbol),
-    })),
-  );
-  return priceFeeds.find((feed) => feed.symbol === symbol);
-};
-
-const priceFeedsSchema = z.array(
-  z.object({
-    symbol: z.string(),
-    product: z.object({
-      display_symbol: z.string(),
-      asset_type: z.string(),
-      description: z.string(),
-      price_account: z.string(),
-      base: z.string().optional(),
-      country: z.string().optional(),
-      quote_currency: z.string().optional(),
-      tenor: z.string().optional(),
-      cms_symbol: z.string().optional(),
-      cqs_symbol: z.string().optional(),
-      nasdaq_symbol: z.string().optional(),
-      generic_symbol: z.string().optional(),
-      weekly_schedule: z.string().optional(),
-      schedule: z.string().optional(),
-      contract_id: z.string().optional(),
-    }),
-    price: z.object({
-      exponent: z.number(),
-      numComponentPrices: z.number(),
-      numQuoters: z.number(),
-      minPublishers: z.number(),
-      lastSlot: z.bigint(),
-      validSlot: z.bigint(),
-    }),
-  }),
-);

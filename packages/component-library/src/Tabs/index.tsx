@@ -40,7 +40,6 @@ export const Tabs = ({ label, className, pathname, ...props }: Props) => (
               {args.isSelected && (
                 <motion.span
                   layoutId="underline"
-                  // @ts-expect-error Looks like framer-motion has a bug in it's typings...
                   className={styles.underline}
                   transition={{ type: "spring", bounce: 0.6, duration: 0.6 }}
                   style={{ originY: "top" }}

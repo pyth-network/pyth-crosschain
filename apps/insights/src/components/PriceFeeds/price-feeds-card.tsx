@@ -1,18 +1,21 @@
 "use client";
 
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
+import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
-import { usePathname } from "next/navigation";
+import { useQueryState, parseAsString } from "nuqs";
 import { type ReactNode, Suspense, useCallback, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
+import type { SortDescriptor } from "react-aria-components";
 
-import { serialize, useQueryParams } from "./query-params";
+import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { SKELETON_WIDTH } from "../LivePrices";
+import { NoResults } from "../NoResults";
 
 type Props = {
   id: string;
@@ -41,70 +44,73 @@ export const PriceFeedsCard = ({ priceFeeds, ...props }: Props) => (
 );
 
 const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
-  const {
-    search,
-    page,
-    pageSize,
-    assetClass,
-    updateSearch,
-    updatePage,
-    updatePageSize,
-    updateAssetClass,
-  } = useQueryParams();
-
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const logger = useLogger();
   const collator = useCollator();
-  const sortedFeeds = useMemo(
-    () =>
-      priceFeeds.sort((a, b) =>
-        collator.compare(a.displaySymbol, b.displaySymbol),
-      ),
-    [priceFeeds, collator],
+  const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const [assetClass, setAssetClass] = useQueryState(
+    "assetClass",
+    parseAsString.withDefault(""),
   );
   const feedsFilteredByAssetClass = useMemo(
     () =>
       assetClass
-        ? sortedFeeds.filter((feed) => feed.assetClassAsString === assetClass)
-        : sortedFeeds,
-    [assetClass, sortedFeeds],
+        ? priceFeeds.filter((feed) => feed.assetClassAsString === assetClass)
+        : priceFeeds,
+    [assetClass, priceFeeds],
   );
-  const filteredFeeds = useMemo(() => {
-    if (search === "") {
-      return feedsFilteredByAssetClass;
-    } else {
+  const {
+    search,
+    sortDescriptor,
+    page,
+    pageSize,
+    updateSearch,
+    updateSortDescriptor,
+    updatePage,
+    updatePageSize,
+    paginatedItems,
+    numResults,
+    numPages,
+    mkPageLink,
+  } = useQueryParamFilterPagination(
+    feedsFilteredByAssetClass,
+    (priceFeed, search) => {
       const searchTokens = search
         .split(" ")
         .flatMap((item) => item.split(","))
         .filter(Boolean);
-      return feedsFilteredByAssetClass.filter((feed) =>
-        searchTokens.some((token) => filter.contains(feed.symbol, token)),
+      return searchTokens.some((token) =>
+        filter.contains(priceFeed.symbol, token),
       );
-    }
-  }, [search, feedsFilteredByAssetClass, filter]);
-  const paginatedFeeds = useMemo(
-    () => filteredFeeds.slice((page - 1) * pageSize, page * pageSize),
-    [page, pageSize, filteredFeeds],
+    },
+    (a, b, { column, direction }) => {
+      const field =
+        column === "assetClass" ? "assetClassAsString" : "displaySymbol";
+      return (
+        (direction === "descending" ? -1 : 1) *
+        collator.compare(a[field], b[field])
+      );
+    },
+    { defaultSort: "priceFeedName" },
   );
+
   const rows = useMemo(
     () =>
-      paginatedFeeds.map(({ id, symbol, ...data }) => ({
+      paginatedItems.map(({ id, symbol, ...data }) => ({
         id,
         href: `/price-feeds/${encodeURIComponent(symbol)}`,
         data,
       })),
-    [paginatedFeeds],
+    [paginatedItems],
   );
 
-  const numPages = useMemo(
-    () => Math.ceil(filteredFeeds.length / pageSize),
-    [filteredFeeds.length, pageSize],
-  );
-
-  const pathname = usePathname();
-
-  const mkPageLink = useCallback(
-    (page: number) => `${pathname}${serialize({ page, pageSize })}`,
-    [pathname, pageSize],
+  const updateAssetClass = useCallback(
+    (newAssetClass: string) => {
+      updatePage(1);
+      setAssetClass(newAssetClass).catch((error: unknown) => {
+        logger.error("Failed to update asset class", error);
+      });
+    },
+    [updatePage, setAssetClass, logger],
   );
 
   const assetClasses = useMemo(
@@ -117,14 +123,16 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
 
   return (
     <PriceFeedsCardContents
-      numResults={filteredFeeds.length}
+      numResults={numResults}
       search={search}
+      sortDescriptor={sortDescriptor}
       assetClass={assetClass}
       assetClasses={assetClasses}
       numPages={numPages}
       page={page}
       pageSize={pageSize}
       onSearchChange={updateSearch}
+      onSortChange={updateSortDescriptor}
       onAssetClassChange={updateAssetClass}
       onPageSizeChange={updatePageSize}
       onPageChange={updatePage}
@@ -142,6 +150,8 @@ type PriceFeedsCardContents = Pick<Props, "id" | "nameLoadingSkeleton"> &
         isLoading?: false;
         numResults: number;
         search: string;
+        sortDescriptor: SortDescriptor;
+        onSortChange: (newSort: SortDescriptor) => void;
         assetClass: string;
         assetClasses: string[];
         numPages: number;
@@ -211,7 +221,7 @@ const PriceFeedsCardContents = ({
           {...(props.isLoading
             ? { isPending: true, isDisabled: true }
             : {
-                defaultValue: props.search,
+                value: props.search,
                 onChange: props.onSearchChange,
               })}
         />
@@ -241,21 +251,22 @@ const PriceFeedsCardContents = ({
           name: "PRICE FEED",
           isRowHeader: true,
           alignment: "left",
-          width: 50,
           loadingSkeleton: nameLoadingSkeleton,
+          allowsSorting: true,
         },
         {
           id: "assetClass",
           name: "ASSET CLASS",
           alignment: "left",
-          width: 60,
+          width: 75,
           loadingSkeletonWidth: 20,
+          allowsSorting: true,
         },
         {
           id: "priceFeedId",
           name: "PRICE FEED ID",
           alignment: "left",
-          width: 40,
+          width: 50,
           loadingSkeletonWidth: 30,
         },
         {
@@ -269,7 +280,7 @@ const PriceFeedsCardContents = ({
           id: "confidenceInterval",
           name: "CONFIDENCE INTERVAL",
           alignment: "left",
-          width: 40,
+          width: 50,
           loadingSkeletonWidth: SKELETON_WIDTH,
         },
         {
@@ -291,7 +302,16 @@ const PriceFeedsCardContents = ({
           }
         : {
             rows: props.rows,
-            renderEmptyState: () => <p>No results!</p>,
+            sortDescriptor: props.sortDescriptor,
+            onSortChange: props.onSortChange,
+            renderEmptyState: () => (
+              <NoResults
+                query={props.search}
+                onClearSearch={() => {
+                  props.onSearchChange("");
+                }}
+              />
+            ),
           })}
     />
   </Card>

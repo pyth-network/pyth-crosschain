@@ -39,8 +39,7 @@
     border-spacing: 0;
 
     .cell {
-      padding-left: theme.spacing(3);
-      padding-right: theme.spacing(3);
+      padding: theme.spacing(3) theme.spacing(4);
       white-space: nowrap;
       border: 0;
       outline: theme.spacing(0.5) solid transparent;
@@ -48,14 +47,6 @@
       outline-offset: -#{theme.spacing(0.5)};
       background-color: theme.color("background", "primary");
       transition: outline-color 100ms linear;
-
-      &:first-child {
-        padding-left: theme.spacing(4);
-      }
-
-      &:last-child {
-        padding-right: theme.spacing(4);
-      }
 
       &[data-alignment="left"] {
         text-align: left;
@@ -91,22 +82,60 @@
       color: theme.color("muted");
 
       .cell {
-        border-bottom: 1px solid theme.color("background", "secondary");
+        border-bottom: 1px solid theme.color("border");
         font-weight: theme.font-weight("medium");
-        padding-top: theme.spacing(3);
-        padding-bottom: theme.spacing(3);
         position: sticky;
         top: 0;
         z-index: 1;
 
+        .divider {
+          width: 1px;
+          height: theme.spacing(4);
+          background: theme.color("background", "secondary");
+          position: absolute;
+          right: 0;
+          top: theme.spacing(3);
+        }
+
         &[data-sticky] {
           z-index: 2;
+        }
+
+        &:last-child .divider {
+          display: none;
+        }
+
+        &[data-alignment="right"],
+        &[data-alignment="center"] {
+          &[data-allows-sorting] {
+            padding-right: theme.spacing(10);
+          }
+        }
+
+        .sortButton {
+          position: absolute;
+          right: theme.spacing(2);
+          top: theme.spacing(2);
+
+          .ascending,
+          .descending {
+            opacity: 0.25;
+            transition: opacity 100ms linear;
+          }
+        }
+
+        &[data-sort-direction="ascending"] .sortButton .ascending {
+          opacity: 1;
+        }
+
+        &[data-sort-direction="descending"] .sortButton .descending {
+          opacity: 1;
         }
       }
     }
 
     .tableBody {
-      @include theme.text("sm", "medium");
+      @include theme.text("base", "medium");
 
       color: theme.color("paragraph");
       font-weight: theme.font-weight("medium");
@@ -125,9 +154,8 @@
         }
 
         .cell {
-          padding-top: theme.spacing(4);
-          padding-bottom: theme.spacing(4);
           transition: background-color 100ms linear;
+          border-bottom: 1px solid theme.color("background", "secondary");
         }
 
         &[data-hovered] .cell {
@@ -153,23 +181,6 @@
 
   &[data-fill] .table {
     width: 100%;
-  }
-
-  &[data-divide] {
-    .table {
-      // This rule has lower specificity than a rule above which applies the
-      // background color to hovered / pressed body cells, but csslint has no
-      // way to understand that .tableHeader and .tableBody are mutually
-      // exclusive and so these rules will never override other other.
-      // stylelint-disable-next-line no-descending-specificity
-      .tableHeader .cell {
-        border-color: theme.color("border");
-      }
-
-      .tableBody .row .cell {
-        border-bottom: 1px solid theme.color("background", "secondary");
-      }
-    }
   }
 
   &[data-rounded] {

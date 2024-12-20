@@ -431,7 +431,10 @@ pub fn process_write_encoded_vaa_and_post_price_update(
         update_instructions,
         &vec![payer, &price_update_keypair],
     )?;
-
+    println!(
+        "Price update posted to account: {}",
+        price_update_keypair.pubkey()
+    );
     Ok(price_update_keypair.pubkey())
 }
 
@@ -483,7 +486,7 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
     )?;
 
     // Transaction 3: Write remaining VAA data and verify both VAAs
-    let mut verify_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(400_000)];
+    let mut verify_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(850_000)];
     verify_instructions.extend(write_remaining_data_and_verify_vaa_ixs(
         &payer.pubkey(),
         start_vaa,
@@ -518,6 +521,10 @@ pub fn process_write_encoded_vaa_and_post_twap_update(
         post_instructions,
         &vec![payer, &twap_update_keypair],
     )?;
+    println!(
+        "TWAP update posted to account: {}",
+        twap_update_keypair.pubkey()
+    );
 
     Ok(twap_update_keypair.pubkey())
 }

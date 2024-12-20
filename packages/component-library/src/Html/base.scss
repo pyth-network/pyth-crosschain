@@ -29,6 +29,7 @@ html {
   &[data-overlay-visible] {
     scrollbar-gutter: auto;
     padding-right: var(--scrollbar-width) !important;
+    overflow: hidden;
   }
 }
 
