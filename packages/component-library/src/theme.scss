@@ -430,6 +430,8 @@ $color: (
     "normal":
       light-dark(pallette-color("steel", 800), pallette-color("steel", 50)),
   ),
+  "highlight":
+    light-dark(pallette-color("violet", 600), pallette-color("violet", 500)),
   "muted":
     light-dark(pallette-color("stone", 700), pallette-color("steel", 300)),
   "border":

@@ -4,11 +4,8 @@ import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb";
 import { Alert, AlertTrigger } from "@pythnetwork/component-library/Alert";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
-import clsx from "clsx";
-import type { ComponentProps } from "react";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
@@ -20,11 +17,9 @@ import { CLUSTER, getData } from "../../services/pyth";
 import { client as stakingClient } from "../../services/staking";
 import { FormattedTokens } from "../FormattedTokens";
 import { PublisherTag } from "../PublisherTag";
-import { Score } from "../Score";
 import { TokenIcon } from "../TokenIcon";
 
 const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
-const PUBLISHER_SCORE_WIDTH = 24;
 
 export const Publishers = async () => {
   const [publishers, totalFeeds, oisStats] = await Promise.all([
@@ -156,25 +151,16 @@ export const Publishers = async () => {
         </section>
         <PublishersCard
           className={styles.publishersCard}
-          rankingLoadingSkeleton={
-            <Skeleton className={styles.rankingLoader} fill />
-          }
           nameLoadingSkeleton={<PublisherTag isLoading />}
-          scoreLoadingSkeleton={
-            <Score isLoading width={PUBLISHER_SCORE_WIDTH} />
-          }
-          scoreWidth={PUBLISHER_SCORE_WIDTH}
           publishers={publishers.map(
             ({ key, rank, numSymbols, medianScore }) => ({
               id: key,
               nameAsString: lookupPublisher(key)?.name,
               name: <PublisherTag publisherKey={key} />,
-              ranking: <Ranking>{rank}</Ranking>,
+              ranking: rank,
               activeFeeds: numSymbols,
               inactiveFeeds: totalFeeds - numSymbols,
-              medianScore: (
-                <Score score={medianScore} width={PUBLISHER_SCORE_WIDTH} />
-              ),
+              medianScore: medianScore,
             }),
           )}
         />
@@ -182,10 +168,6 @@ export const Publishers = async () => {
     </div>
   );
 };
-
-const Ranking = ({ className, ...props }: ComponentProps<"span">) => (
-  <span className={clsx(styles.ranking, className)} {...props} />
-);
 
 const getPublishers = async () => {
   const rows = await clickhouseClient.query({

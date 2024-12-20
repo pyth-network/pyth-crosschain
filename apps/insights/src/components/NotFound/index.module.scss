@@ -1,0 +1,41 @@
+@use "@pythnetwork/component-library/theme";
+
+.notFound {
+  @include theme.max-width;
+
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(12);
+  align-items: center;
+  text-align: center;
+  padding: theme.spacing(36) theme.spacing(0);
+
+  .searchIcon {
+    display: grid;
+    place-content: center;
+    padding: theme.spacing(8);
+    background: theme.color("button", "disabled", "background");
+    font-size: theme.spacing(12);
+    color: theme.color("button", "disabled", "foreground");
+    border-radius: theme.border-radius("full");
+  }
+
+  .text {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(4);
+    align-items: center;
+
+    .header {
+      @include theme.text("5xl", "semibold");
+
+      color: theme.color("heading");
+    }
+
+    .subheader {
+      @include theme.text("xl", "light");
+
+      color: theme.color("heading");
+    }
+  }
+}
