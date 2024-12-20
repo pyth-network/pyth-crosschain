@@ -20,5 +20,6 @@ patches/
 apps/api-reference
 apps/staking
 apps/insights
+apps/entropy-debug
 governance/pyth_staking_sdk
 packages/*
