@@ -77,6 +77,8 @@ where
             .and_then(|x| x.checked_div(U256::from(100)))
             .unwrap_or(max_priority_fee_per_gas);
 
+        let max_fee_per_gas = std::cmp::max(max_fee_per_gas, max_priority_fee_per_gas);
+
         Ok((max_fee_per_gas, max_priority_fee_per_gas))
     }
 }
