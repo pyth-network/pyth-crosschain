@@ -97,7 +97,7 @@ pub fn eip1559_default_estimator(base_fee_per_gas: U256, rewards: Vec<Vec<U256>>
     let max_fee_per_gas = if max_priority_fee_per_gas > potential_max_fee {
         max_priority_fee_per_gas + potential_max_fee
     } else {
-        std::cmp::max(potential_max_fee, max_priority_fee_per_gas)  // Ensure max_fee_per_gas is always >= max_priority_fee_per_gas
+        std::cmp::max(potential_max_fee, max_priority_fee_per_gas) // Ensure max_fee_per_gas is always >= max_priority_fee_per_gas
     };
 
     (max_fee_per_gas, max_priority_fee_per_gas)
