@@ -81,9 +81,9 @@ impl MockPythContract {
             return Err(Error::InsufficientFee(InsufficientFee {}).into());
         }
 
-        for i in 0..update_data.len() {
+        for item in update_data.iter() {
             let price_feed_data =
-                <PriceFeed as SolType>::abi_decode(&update_data[i], false)
+                <PriceFeed as SolType>::abi_decode(item, false)
                     .map_err(|_| {
                         CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec()
                     })?;
@@ -107,6 +107,7 @@ impl MockPythContract {
     fn get_update_fee(&self, update_data: Vec<AbiBytes>) -> U256 {
         self.single_update_fee_in_wei.get() * U256::from(update_data.len())
     }
+    
     #[payable]
     fn parse_price_feed_updates(
         &mut self,
