@@ -8,13 +8,13 @@
 
     color: theme.color("heading");
     font-weight: theme.font-weight("semibold");
-    margin: theme.spacing(6) 0;
   }
 
   .body {
     display: flex;
     flex-flow: column nowrap;
     gap: theme.spacing(6);
+    margin-top: theme.spacing(6);
 
     .feedKey {
       margin: 0 -#{theme.button-padding("xs", true)};

@@ -5,15 +5,24 @@ import { usePathname } from "next/navigation";
 import {
   parseAsString,
   parseAsInteger,
+  parseAsBoolean,
   useQueryStates,
   createSerializer,
 } from "nuqs";
 import { useCallback, useMemo } from "react";
+import type { SortDescriptor } from "react-aria-components";
 
 export const useQueryParamFilterPagination = <T>(
   items: T[],
   predicate: (item: T, term: string) => boolean,
-  options?: { defaultPageSize: number },
+  doSort: (a: T, b: T, descriptor: SortDescriptor) => number,
+  options?:
+    | {
+        defaultPageSize?: number | undefined;
+        defaultSort?: string | undefined;
+        defaultDescending?: boolean;
+      }
+    | undefined,
 ) => {
   const logger = useLogger();
 
@@ -22,11 +31,24 @@ export const useQueryParamFilterPagination = <T>(
       page: parseAsInteger.withDefault(1),
       pageSize: parseAsInteger.withDefault(options?.defaultPageSize ?? 30),
       search: parseAsString.withDefault(""),
+      sort: parseAsString.withDefault(options?.defaultSort ?? ""),
+      descending: parseAsBoolean.withDefault(
+        options?.defaultDescending ?? false,
+      ),
     }),
     [options],
   );
 
-  const [{ search, page, pageSize }, setQuery] = useQueryStates(queryParams);
+  const [{ search, page, pageSize, sort, descending }, setQuery] =
+    useQueryStates(queryParams);
+
+  const sortDescriptor = useMemo(
+    (): SortDescriptor => ({
+      column: sort,
+      direction: descending ? "descending" : "ascending",
+    }),
+    [sort, descending],
+  );
 
   const updateQuery = useCallback(
     (...params: Parameters<typeof setQuery>) => {
@@ -58,14 +80,31 @@ export const useQueryParamFilterPagination = <T>(
     [updateQuery],
   );
 
+  const updateSortDescriptor = useCallback(
+    ({ column, direction }: SortDescriptor) => {
+      updateQuery({
+        page: 1,
+        sort: column.toString(),
+        descending: direction === "descending",
+      });
+    },
+    [updateQuery],
+  );
+
   const filteredItems = useMemo(
     () =>
       search === "" ? items : items.filter((item) => predicate(item, search)),
     [items, search, predicate],
   );
+
+  const sortedItems = useMemo(
+    () => filteredItems.toSorted((a, b) => doSort(a, b, sortDescriptor)),
+    [filteredItems, sortDescriptor, doSort],
+  );
+
   const paginatedItems = useMemo(
-    () => filteredItems.slice((page - 1) * pageSize, page * pageSize),
-    [page, pageSize, filteredItems],
+    () => sortedItems.slice((page - 1) * pageSize, page * pageSize),
+    [page, pageSize, sortedItems],
   );
 
   const numPages = useMemo(
@@ -85,9 +124,11 @@ export const useQueryParamFilterPagination = <T>(
 
   return {
     search,
+    sortDescriptor,
     page,
     pageSize,
     updateSearch,
+    updateSortDescriptor,
     updatePage,
     updatePageSize,
     paginatedItems,

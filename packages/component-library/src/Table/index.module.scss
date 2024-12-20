@@ -88,8 +88,48 @@
         top: 0;
         z-index: 1;
 
+        .divider {
+          width: 1px;
+          height: theme.spacing(4);
+          background: theme.color("background", "secondary");
+          position: absolute;
+          right: 0;
+          top: theme.spacing(3);
+        }
+
         &[data-sticky] {
           z-index: 2;
+        }
+
+        &:last-child .divider {
+          display: none;
+        }
+
+        &[data-alignment="right"],
+        &[data-alignment="center"] {
+          &[data-allows-sorting] {
+            padding-right: theme.spacing(10);
+          }
+        }
+
+        .sortButton {
+          position: absolute;
+          right: theme.spacing(2);
+          top: theme.spacing(2);
+
+          .ascending,
+          .descending {
+            opacity: 0.25;
+            transition: opacity 100ms linear;
+          }
+        }
+
+        &[data-sort-direction="ascending"] .sortButton .ascending {
+          opacity: 1;
+        }
+
+        &[data-sort-direction="descending"] .sortButton .descending {
+          opacity: 1;
         }
       }
     }

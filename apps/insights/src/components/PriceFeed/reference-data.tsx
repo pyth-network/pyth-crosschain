@@ -107,7 +107,7 @@ export const ReferenceData = ({ feed }: Props) => {
     <Table
       label="Reference Data"
       fill
-      className={styles.referenceData}
+      className={styles.referenceData ?? ""}
       columns={[
         {
           id: "field",

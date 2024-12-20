@@ -1,6 +1,9 @@
+import { Warning } from "@phosphor-icons/react/dist/ssr/Warning";
 import { useLogger } from "@pythnetwork/app-logger";
 import { Button } from "@pythnetwork/component-library/Button";
 import { useEffect } from "react";
+
+import styles from "./index.module.scss";
 
 type Props = {
   error: Error & { digest?: string };
@@ -15,13 +18,18 @@ export const Error = ({ error, reset }: Props) => {
   }, [error, logger]);
 
   return (
-    <div>
-      <h1>Uh oh!</h1>
-      <h2>Something went wrong</h2>
-      <p>
-        Error Details: <strong>{error.digest ?? error.message}</strong>
-      </p>
-      {reset && <Button onPress={reset}>Reset</Button>}
+    <div className={styles.error}>
+      <Warning className={styles.errorIcon} />
+      <div className={styles.text}>
+        <h1 className={styles.header}>Uh oh!</h1>
+        <h2 className={styles.subheader}>Something went wrong</h2>
+        <code className={styles.details}>{error.digest ?? error.message}</code>
+      </div>
+      {reset && (
+        <Button onPress={reset} size="lg">
+          Reset
+        </Button>
+      )}
     </div>
   );
 };

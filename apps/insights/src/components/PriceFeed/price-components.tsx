@@ -8,11 +8,7 @@ import { PriceComponentsCard } from "./price-components-card";
 import styles from "./price-components.module.scss";
 import { getRankings } from "../../services/clickhouse";
 import { getData } from "../../services/pyth";
-import { FormattedNumber } from "../FormattedNumber";
 import { PublisherTag } from "../PublisherTag";
-import { Score } from "../Score";
-
-const PUBLISHER_SCORE_WIDTH = 24;
 
 type Props = {
   children: ReactNode;
@@ -34,9 +30,7 @@ export const PriceComponents = async ({ children, params }: Props) => {
         priceComponents={rankings.map((ranking) => ({
           id: ranking.publisher,
           publisherNameAsString: lookupPublisher(ranking.publisher)?.name,
-          score: (
-            <Score score={ranking.final_score} width={PUBLISHER_SCORE_WIDTH} />
-          ),
+          score: ranking.final_score,
           name: (
             <div className={styles.publisherName}>
               <PublisherTag publisherKey={ranking.publisher} />
@@ -47,41 +41,13 @@ export const PriceComponents = async ({ children, params }: Props) => {
               )}
             </div>
           ),
-          uptimeScore: (
-            <FormattedNumber
-              value={ranking.uptime_score}
-              maximumSignificantDigits={5}
-            />
-          ),
-          deviationPenalty: ranking.deviation_penalty ? (
-            <FormattedNumber
-              value={ranking.deviation_penalty}
-              maximumSignificantDigits={5}
-            />
-          ) : // eslint-disable-next-line unicorn/no-null
-          null,
-          deviationScore: (
-            <FormattedNumber
-              value={ranking.deviation_score}
-              maximumSignificantDigits={5}
-            />
-          ),
-          stalledPenalty: (
-            <FormattedNumber
-              value={ranking.stalled_penalty}
-              maximumSignificantDigits={5}
-            />
-          ),
-          stalledScore: (
-            <FormattedNumber
-              value={ranking.stalled_score}
-              maximumSignificantDigits={5}
-            />
-          ),
+          uptimeScore: ranking.uptime_score,
+          deviationPenalty: ranking.deviation_penalty,
+          deviationScore: ranking.deviation_score,
+          stalledPenalty: ranking.stalled_penalty,
+          stalledScore: ranking.stalled_score,
         }))}
         nameLoadingSkeleton={<PublisherTag isLoading />}
-        scoreLoadingSkeleton={<Score isLoading width={PUBLISHER_SCORE_WIDTH} />}
-        scoreWidth={PUBLISHER_SCORE_WIDTH}
       />
       <PriceComponentDrawer>{children}</PriceComponentDrawer>
     </>

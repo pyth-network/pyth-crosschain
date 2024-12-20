@@ -4,7 +4,7 @@
   .header {
     @include theme.max-width;
 
-    margin: theme.spacing(6) auto;
+    margin-bottom: theme.spacing(6);
     display: flex;
     flex-flow: column nowrap;
     gap: theme.spacing(6);
