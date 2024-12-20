@@ -1,13 +1,11 @@
 [workspace]
 members = [
   "contracts",
-  "examples/function-calls",
   "examples/proxy-calls",
   "benches"
 ]
 default-members = [
   "contracts",
-  "examples/function-calls",
   "examples/proxy-calls",
 ]
 

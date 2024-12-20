@@ -13,7 +13,6 @@ use eyre::WrapErr;
 use koba::config::{Deploy, Generate, PrivateKey};
 use serde::Deserialize;
 
-pub mod function_calls;
 pub mod proxy_calls;
 pub mod report;
 

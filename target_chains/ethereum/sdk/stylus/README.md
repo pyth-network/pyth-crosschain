@@ -33,31 +33,8 @@ To consume prices, use the functions interface. Be sure to read the function doc
 
 For example, to read the latest price, call [`getPriceNoOlderThan`](https://github.com/pyth-network/pyth-crosschain/blob/stylus-sdk/target_chains/ethereum/sdk/stylus/contracts/src/pyth/functions.rs) with the Price ID of the price feed you are interested in:
 
-```rust
-use pyth_stylus::pyth::functions::get_price_no_older_than;
 
-sol_storage! {
-    #[entrypoint]
-    struct FunctionCallsExample {
-        address pyth_address;
-        bytes32 price_id;
-        StoragePrice price;
-        StoragePriceFeed price_feed;
-        StoragePrice ema_price;
-        StoragePriceFeed ema_price_feed;
-    }
-}
-
-
-impl FunctionCallsExample {
-    pub fn get_price_no_older_than(&mut self) -> Result<(), Vec<u8>> {
-       let _ = get_price_no_older_than(self, self.pyth_address.get(), self.price_id.get(), U256::from(1000))?;
-       Ok(())
-    }
-}
-```
-
-Alternatively, you can interact directly with the Pyth contract, which implements the IPyth functions, instead of using call functions:
+You can interact directly with the Pyth contract, which implements the IPyth functions, instead of using call functions:
 
 ```rust
 #![cfg_attr(not(test), no_std, no_main)]
