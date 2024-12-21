@@ -70,7 +70,7 @@ async function getTwapUpdateData() {
   const hermesConnection = new HermesClient("https://hermes.pyth.network/", {});
 
   // Request TWAP updates for the last hour (3600 seconds)
-  const response = await hermesConnection.getLatestTwapUpdates(
+  const response = await hermesConnection.getLatestTwaps(
     [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
     3600,
     { encoding: "base64" }
