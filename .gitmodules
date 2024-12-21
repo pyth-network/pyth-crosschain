@@ -20,3 +20,6 @@
 [submodule "lazer/contracts/evm/lib/createx"]
 	path = lazer/contracts/evm/lib/createx
 	url = https://github.com/pcaversaccio/createx
+[submodule "target_chains/ethereum/sdk/stylus/pyth-mock-solidity/lib/openzeppelin-contracts-upgradeable"]
+	path = target_chains/ethereum/sdk/stylus/pyth-mock-solidity/lib/openzeppelin-contracts-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
