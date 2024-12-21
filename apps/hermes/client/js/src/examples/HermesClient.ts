@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { HermesClient } from "../HermesClient";
+import { HermesClient, PriceUpdate } from "../HermesClient";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -87,11 +87,12 @@ async function run() {
     benchmarksOnly: true,
   });
 
-  eventSource.onmessage = (event) => {
+  eventSource.onmessage = (event: MessageEvent<string>) => {
     console.log("Received price update:", event.data);
+    const _priceUpdate = JSON.parse(event.data) as PriceUpdate;
   };
 
-  eventSource.onerror = (error) => {
+  eventSource.onerror = (error: Event) => {
     console.error("Error receiving updates:", error);
     eventSource.close();
   };

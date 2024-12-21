@@ -17,7 +17,7 @@ const meta = {
         category: "Skeleton",
       },
     },
-    round: {
+    fill: {
       control: "boolean",
       table: {
         category: "Skeleton",
@@ -31,6 +31,6 @@ export const Skeleton = {
   args: {
     label: "Loading",
     width: 20,
-    round: false,
+    fill: false,
   },
 } satisfies StoryObj<typeof SkeletonComponent>;

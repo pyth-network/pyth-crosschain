@@ -18,7 +18,10 @@
 
     ;; Get sender address from message
     slice cs = in_msg_full.begin_parse();
-    cs~skip_bits(4);  ;; skip flags
+    int flags = cs~load_uint(4);
+    if (flags & 1) { ;; ignore all bounced messages
+        return ();
+    }
     slice sender_address = cs~load_msg_addr();  ;; load sender address
 
     ;; * The remainder of the message body is specific for each supported value of `op`.

@@ -1,0 +1,61 @@
+@use "../theme";
+
+.mainNavTabs {
+  gap: theme.spacing(2);
+
+  @include theme.row;
+
+  .tab {
+    position: relative;
+    outline: none;
+
+    .bubble {
+      position: absolute;
+      inset: 0;
+      border-radius: theme.border-radius("full");
+      background-color: theme.color("button", "solid", "background", "normal");
+      outline: 4px solid transparent;
+      outline-offset: 0;
+      z-index: -1;
+      transition-property: background-color, outline-color;
+      transition-duration: 100ms;
+      transition-timing-function: linear;
+    }
+
+    &[data-focus-visible] {
+      box-shadow: none;
+      border-color: transparent;
+
+      .bubble {
+        outline-color: theme.color("focus-dim");
+      }
+    }
+
+    &[data-selected] {
+      color: theme.color("button", "solid", "foreground");
+      pointer-events: none;
+
+      &[data-selectable] {
+        pointer-events: auto;
+
+        &[data-hovered] .bubble {
+          background-color: theme.color(
+            "button",
+            "solid",
+            "background",
+            "hover"
+          );
+        }
+
+        &[data-pressed] .bubble {
+          background-color: theme.color(
+            "button",
+            "solid",
+            "background",
+            "active"
+          );
+        }
+      }
+    }
+  }
+}

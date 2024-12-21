@@ -4,7 +4,7 @@ import { ParameterType } from "../../components/EvmApi";
 export const getPriceUnsafe = readApi<"id">({
   name: "getPriceUnsafe",
   summary:
-    "Get the **last updated** price object for the requested price feed ID. _Caution: This function may return a price from arbitrarily in the the past_",
+    "Get the **last updated** price object for the requested price feed ID. _Caution: This function may return a price from arbitrarily in the past_",
   description: `
   This method returns the price object containing **last updated** price for the requested price feed ID.
 

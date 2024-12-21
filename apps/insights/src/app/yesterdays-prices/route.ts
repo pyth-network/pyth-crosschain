@@ -1,13 +1,13 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { client } from "../../clickhouse";
+import { client } from "../../services/clickhouse";
 
 export async function GET(req: NextRequest) {
   const symbols = req.nextUrl.searchParams.getAll("symbols");
   const rows = await client.query({
     query:
-      "select * from insights_yesterdays_prices(symbols={symbols: Array(String)})",
+      "select symbol, price from insights_yesterdays_prices(symbols={symbols: Array(String)})",
     query_params: { symbols },
   });
   const result = await rows.json();

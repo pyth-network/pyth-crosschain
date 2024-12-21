@@ -99,7 +99,9 @@ export const RECEIVER_CHAINS = {
   horse_dream: 60070,
   mathematician_in_heart: 60071,
   fantom_sonic_mainnet: 60072,
-
+  eventum_mainnet: 60073,
+  threat_level_midnight: 60074,
+  just_breathe: 60075,
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
@@ -218,6 +220,10 @@ export const RECEIVER_CHAINS = {
   eventum_testnet: 50110,
   fantom_sonic_devnet: 50111,
   movement_bardock_testnet: 50112,
+  story_testnet: 50113,
+  coredao_testnet_v2: 50114,
+  bittensor_testnet: 50115,
+  monad_devnet: 50116,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

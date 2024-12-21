@@ -8,75 +8,60 @@
 
     color: theme.color("heading");
     font-weight: theme.font-weight("semibold");
-    margin: theme.spacing(6) 0;
   }
 
   .body {
     display: flex;
     flex-flow: column nowrap;
     gap: theme.spacing(6);
+    margin-top: theme.spacing(6);
 
+    .feedKey {
+      margin: 0 -#{theme.button-padding("xs", true)};
+    }
+
+    .featuredFeeds,
     .stats {
       display: flex;
       flex-flow: row nowrap;
-      gap: theme.spacing(4);
       align-items: center;
 
       & > * {
-        flex: 1;
+        flex: 1 1 0px;
+        width: 0;
       }
     }
-  }
-}
 
-.priceFeedNameAndIcon,
-.priceFeedNameAndAssetClass {
-  display: flex;
-  flex-flow: row nowrap;
-  gap: theme.spacing(3);
-
-  .priceFeedName {
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: center;
-    gap: theme.spacing(1);
-
-    .firstPart {
-      font-weight: theme.font-weight("medium");
+    .stats {
+      gap: theme.spacing(6);
     }
 
-    .divider {
-      font-weight: theme.font-weight("light");
-      color: theme.color("heading");
-    }
+    .featuredFeeds {
+      gap: theme.spacing(1);
 
-    .part {
-      opacity: 0.6;
-    }
-  }
-}
+      .feedCardContents {
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: space-between;
+        align-items: stretch;
+        padding: theme.spacing(3);
+        gap: theme.spacing(6);
 
-.priceFeedNameAndIcon .priceFeedIcon {
-  width: theme.spacing(6);
-  height: theme.spacing(6);
-}
+        .prices {
+          display: flex;
+          flex-flow: row nowrap;
+          justify-content: space-between;
+          align-items: center;
+          color: theme.color("heading");
+          font-weight: theme.font-weight("medium");
+          line-height: 1;
+          font-size: theme.font-size("base");
 
-.priceFeedNameAndAssetClass {
-  .priceFeedIcon {
-    width: theme.spacing(10);
-    height: theme.spacing(10);
-  }
-
-  .nameAndClass {
-    display: flex;
-    flex-flow: column nowrap;
-    gap: theme.spacing(1);
-
-    .assetClass {
-      font-size: theme.font-size("xs");
-      font-weight: theme.font-weight("medium");
-      line-height: theme.spacing(4);
-      color: theme.color("muted");
+          .changePercent {
+            font-size: theme.font-size("sm");
+          }
+        }
+      }
     }
   }
 }

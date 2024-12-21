@@ -39,7 +39,7 @@ async function main() {
   if (storage.length === 0) {
     console.log("Initializing the program");
     await program.methods
-      .initialize(keypair.publicKey)
+      .initialize(keypair.publicKey, anchor.web3.PublicKey.unique())
       .accounts({
         payer: wallet.publicKey,
       })

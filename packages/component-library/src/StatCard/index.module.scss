@@ -11,6 +11,13 @@
     padding: theme.spacing(3);
     padding-bottom: theme.spacing(2);
 
+    .corner {
+      position: absolute;
+      right: theme.spacing(3);
+      top: theme.spacing(3);
+      display: flex;
+    }
+
     .header {
       color: theme.color("muted");
       text-align: left;
@@ -26,6 +33,8 @@
 
       .stat {
         @include theme.h3;
+
+        color: theme.color("heading");
       }
 
       .miniStat {

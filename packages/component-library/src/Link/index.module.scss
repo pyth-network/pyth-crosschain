@@ -8,11 +8,11 @@
     outline-color 100ms linear,
     border-color 100ms linear;
   outline: theme.spacing(1) solid transparent;
-  color: inherit;
   padding: theme.spacing(1);
   margin: -#{theme.spacing(1)};
   text-underline-offset: 0.125em;
   outline-offset: 0;
+  color: theme.color("link", "normal");
 
   &[data-focus-visible] {
     outline-color: theme.color("focus-dim");
@@ -23,12 +23,16 @@
     text-decoration: none;
   }
 
-  &:active {
-    color: inherit;
-  }
-
   &[data-disabled] {
     cursor: not-allowed;
     color: theme.color("button", "disabled", "foreground");
+  }
+
+  &[data-invert] {
+    text-decoration: none;
+
+    &[data-hovered] {
+      text-decoration: underline;
+    }
   }
 }

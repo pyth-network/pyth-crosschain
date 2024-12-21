@@ -1,9 +1,0 @@
-@use "@pythnetwork/component-library/theme";
-
-.priceFeedsCard {
-  .toolbar {
-    display: flex;
-    flex-flow: row nowrap;
-    gap: theme.spacing(2);
-  }
-}

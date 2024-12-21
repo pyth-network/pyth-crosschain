@@ -65,6 +65,7 @@ Instantiate it with a Solana web3 `Connection` and anchor `Wallet`:
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { Wallet } from "@coral-xyz/anchor";
+import { sendTransactions } from "@pythnetwork/solana-utils";
 
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 const wallet = new Wallet(
@@ -101,10 +102,15 @@ await transactionBuilder.addPriceConsumerInstructions(
 
 // Send the instructions in the builder in 1 or more transactions.
 // The builder will pack the instructions into transactions automatically.
-await pythSolanaReceiver.provider.sendAll(
+// We use some custom transaction dispatch logic instead of the simple `provider.sendAll` to increase landing rate,
+// feel free to use your own optimized logic.
+sendTransactions(
   await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 100000,
-  })
+    tightComputeBudget: true,
+  }),
+  pythSolanaReceiver.connection,
+  pythSolanaReceiver.wallet
 );
 ```
 
@@ -137,10 +143,15 @@ await transactionBuilder.addPriceConsumerInstructions(
 
 // Send the instructions in the builder in 1 or more transactions.
 // The builder will pack the instructions into transactions automatically.
-await pythSolanaReceiver.provider.sendAll(
+// We use some custom transaction dispatch logic instead of the simple `provider.sendAll` to increase landing rate,
+// feel free to use your own optimized logic.
+sendTransactions(
   await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 100000,
-  })
+    tightComputeBudget: true,
+  }),
+  pythSolanaReceiver.connection,
+  pythSolanaReceiver.wallet
 );
 ```
 
@@ -163,6 +174,50 @@ See `examples/update_price_feed.ts` for a runnable example of updating a price f
 Price updates are relatively large and can take multiple transactions to post on the blockchain.
 You can reduce the size of the transaction payload by using `addPostPartiallyVerifiedPriceUpdates` instead of `addPostPriceUpdates`.
 This method does sacrifice some security however -- please see the method documentation for more details.
+
+### Post a TWAP price update
+
+TWAP price updates are calculated using a pair of verifiable cumulative price updates per price feed (the "start" and "end" updates for the given time window), and then performing an averaging calculation on-chain to create the time-weighted average price.
+
+The flow of using, verifying, posting, and consuming these prices is the same as standard price updates. Get the binary update data from Hermes or Benchmarks, post and verify the VAAs via the Wormhole contract, and verify the updates against the VAAs via Pyth receiver contract. After this, you can consume the calculated TWAP posted to the TwapUpdate account. You can also optionally close these ephemeral accounts after the TWAP has been consumed to save on rent.
+
+```typescript
+// Fetch the binary TWAP data from hermes or benchmarks. See Preliminaries section above for more info.
+const binaryDataArray = ["UE5BV...khz609", "UE5BV...BAg8i6"];
+
+// Pass `closeUpdateAccounts: true` to automatically close the TWAP update accounts
+// after they're consumed
+const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
+  closeUpdateAccounts: false,
+});
+
+// Post the updates and calculate the TWAP
+await transactionBuilder.addPostTwapUpdates(binaryDataArray);
+
+// You can now use the TWAP prices in subsequent instructions
+await transactionBuilder.addTwapConsumerInstructions(
+  async (
+    getTwapUpdateAccount: (priceFeedId: string) => PublicKey
+  ): Promise<InstructionWithEphemeralSigners[]> => {
+    // Generate instructions here that use the TWAP updates posted above.
+    // getTwapUpdateAccount(<price feed id>) will give you the account for each TWAP update.
+    return [];
+  }
+);
+
+// Send the instructions in the builder in 1 or more transactions.
+// The builder will pack the instructions into transactions automatically.
+sendTransactions(
+  await transactionBuilder.buildVersionedTransactions({
+    computeUnitPriceMicroLamports: 100000,
+    tightComputeBudget: true,
+  }),
+  pythSolanaReceiver.connection,
+  pythSolanaReceiver.wallet
+);
+```
+
+See `examples/post_twap_update.ts` for a runnable example of posting a TWAP price update.
 
 ### Get Instructions
 

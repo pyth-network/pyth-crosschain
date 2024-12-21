@@ -1,0 +1,63 @@
+@use "@pythnetwork/component-library/theme";
+
+.priceFeedLayout {
+  .header {
+    @include theme.max-width;
+
+    margin-bottom: theme.spacing(6);
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(6);
+
+    .headerRow,
+    .rightGroup,
+    .stats {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+    }
+
+    .headerRow {
+      justify-content: space-between;
+    }
+
+    .rightGroup {
+      gap: theme.spacing(2);
+    }
+
+    .stats {
+      gap: theme.spacing(6);
+
+      & > * {
+        flex: 1 1 0px;
+        width: 0;
+      }
+
+      .confidenceExplainButton {
+        margin-top: -#{theme.button-padding("xs", false)};
+        margin-right: -#{theme.button-padding("xs", false)};
+      }
+    }
+  }
+
+  .priceComponentsTabLabel {
+    display: inline-flex;
+    flex-flow: row nowrap;
+    gap: theme.spacing(2);
+    align-items: center;
+  }
+
+  .body {
+    @include theme.max-width;
+
+    padding-top: theme.spacing(6);
+  }
+}
+
+.confidenceDescription {
+  margin: 0;
+
+  b {
+    font-weight: theme.font-weight("semibold");
+  }
+}

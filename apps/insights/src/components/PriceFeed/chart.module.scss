@@ -1,0 +1,8 @@
+@use "@pythnetwork/component-library/theme";
+
+.chartCard {
+  .chart {
+    background: theme.color("background", "primary");
+    border-radius: theme.border-radius("lg");
+  }
+}

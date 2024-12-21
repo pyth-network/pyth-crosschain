@@ -31,3 +31,10 @@ pub struct PostUpdateAtomicParams {
     pub merkle_price_update: MerklePriceUpdate,
     pub treasury_id: u8,
 }
+
+#[derive(Debug, BorshSerialize, BorshDeserialize, Clone)]
+pub struct PostTwapUpdateParams {
+    pub start_merkle_price_update: MerklePriceUpdate,
+    pub end_merkle_price_update: MerklePriceUpdate,
+    pub treasury_id: u8,
+}

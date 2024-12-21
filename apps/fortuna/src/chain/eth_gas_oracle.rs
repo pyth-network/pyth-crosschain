@@ -39,11 +39,15 @@ pub const EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE: i64 = 200;
 #[must_use]
 pub struct EthProviderOracle<M: Middleware> {
     provider: M,
+    priority_fee_multiplier_pct: u64,
 }
 
 impl<M: Middleware> EthProviderOracle<M> {
-    pub fn new(provider: M) -> Self {
-        Self { provider }
+    pub fn new(provider: M, priority_fee_multiplier_pct: u64) -> Self {
+        Self {
+            provider,
+            priority_fee_multiplier_pct,
+        }
     }
 }
 
@@ -61,10 +65,21 @@ where
     }
 
     async fn estimate_eip1559_fees(&self) -> Result<(U256, U256)> {
-        self.provider
+        let (max_fee_per_gas, max_priority_fee_per_gas) = self
+            .provider
             .estimate_eip1559_fees(Some(eip1559_default_estimator))
             .await
-            .map_err(|err| GasOracleError::ProviderError(Box::new(err)))
+            .map_err(|err| GasOracleError::ProviderError(Box::new(err)))?;
+
+        // Apply the multiplier to max_priority_fee_per_gas
+        let max_priority_fee_per_gas = max_priority_fee_per_gas
+            .checked_mul(U256::from(self.priority_fee_multiplier_pct))
+            .and_then(|x| x.checked_div(U256::from(100)))
+            .unwrap_or(max_priority_fee_per_gas);
+
+        let max_fee_per_gas = std::cmp::max(max_fee_per_gas, max_priority_fee_per_gas);
+
+        Ok((max_fee_per_gas, max_priority_fee_per_gas))
     }
 }
 
@@ -79,12 +94,14 @@ pub fn eip1559_default_estimator(base_fee_per_gas: U256, rewards: Vec<Vec<U256>>
                 U256::from(EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE),
             )
         };
+
     let potential_max_fee = base_fee_surged(base_fee_per_gas);
     let max_fee_per_gas = if max_priority_fee_per_gas > potential_max_fee {
         max_priority_fee_per_gas + potential_max_fee
     } else {
         potential_max_fee
     };
+
     (max_fee_per_gas, max_priority_fee_per_gas)
 }
 

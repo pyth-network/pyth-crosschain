@@ -1,24 +1,88 @@
 "use client";
 
+import { MainNavTabs as MainNavTabsComponent } from "@pythnetwork/component-library/MainNavTabs";
 import {
   UnstyledTabPanel,
   UnstyledTabs,
 } from "@pythnetwork/component-library/UnstyledTabs";
-import { useSelectedLayoutSegment } from "next/navigation";
-import type { ComponentProps } from "react";
+import { useSelectedLayoutSegment, usePathname } from "next/navigation";
+import { type ComponentProps } from "react";
+
+import { type VariantArg, LayoutTransition } from "../LayoutTransition";
 
 export const TabRoot = (
   props: Omit<ComponentProps<typeof UnstyledTabs>, "selectedKey">,
 ) => {
-  const layoutSegment = useSelectedLayoutSegment();
+  const tabId = useSelectedLayoutSegment() ?? "";
 
-  return <UnstyledTabs selectedKey={`/${layoutSegment ?? ""}`} {...props} />;
+  return <UnstyledTabs selectedKey={tabId} {...props} />;
 };
 
-export const TabPanel = (
-  props: Omit<ComponentProps<typeof UnstyledTabPanel>, "id">,
+export const MainNavTabs = (
+  props: Omit<
+    ComponentProps<typeof MainNavTabsComponent>,
+    "pathname" | "items"
+  >,
 ) => {
-  const layoutSegment = useSelectedLayoutSegment();
+  const pathname = usePathname();
 
-  return <UnstyledTabPanel id={`/${layoutSegment ?? ""}`} {...props} />;
+  return (
+    <MainNavTabsComponent
+      pathname={pathname}
+      items={[
+        { href: "/", id: "", children: "Overview" },
+        { href: "/publishers", id: "publishers", children: "Publishers" },
+        {
+          href: "/price-feeds",
+          id: "price-feeds",
+          children: "Price Feeds",
+        },
+      ]}
+      {...props}
+    />
+  );
 };
+
+export const TabPanel = ({
+  children,
+  ...props
+}: Omit<ComponentProps<typeof UnstyledTabPanel>, "id">) => {
+  const tabId = useSelectedLayoutSegment() ?? "";
+
+  return (
+    <UnstyledTabPanel key="tabpanel" id={tabId} {...props}>
+      {(args) => (
+        <LayoutTransition
+          variants={{
+            initial: (custom) => ({
+              opacity: 0,
+              x: isMovingLeft(custom) ? "-2%" : "2%",
+            }),
+            exit: (custom) => ({
+              opacity: 0,
+              x: isMovingLeft(custom) ? "2%" : "-2%",
+              transition: {
+                x: { type: "spring", bounce: 0 },
+              },
+            }),
+          }}
+          initial="initial"
+          animate={{
+            opacity: 1,
+            x: 0,
+            transition: {
+              x: { type: "spring", bounce: 0 },
+            },
+          }}
+          exit="exit"
+        >
+          {typeof children === "function" ? children(args) : children}
+        </LayoutTransition>
+      )}
+    </UnstyledTabPanel>
+  );
+};
+
+const isMovingLeft = ({ segment, prevSegment }: VariantArg): boolean =>
+  segment === null ||
+  (segment === "publishers" && prevSegment === "price-feeds");

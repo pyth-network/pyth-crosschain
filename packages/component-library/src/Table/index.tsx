@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import type { CSSProperties, ReactNode } from "react";
+import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import type {
   RowProps,
   ColumnProps,
@@ -9,6 +9,7 @@ import type {
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
+import { Button } from "../Button/index.js";
 import { Skeleton } from "../Skeleton/index.js";
 import {
   UnstyledCell,
@@ -19,10 +20,9 @@ import {
   UnstyledTableHeader,
 } from "../UnstyledTable/index.js";
 
-type TableProps<T extends string> = {
+type TableProps<T extends string> = ComponentProps<typeof UnstyledTable> & {
   className?: string | undefined;
   fill?: boolean | undefined;
-  divide?: boolean | undefined;
   rounded?: boolean | undefined;
   label: string;
   columns: ColumnConfig<T>[];
@@ -31,14 +31,15 @@ type TableProps<T extends string> = {
   renderEmptyState?: TableBodyProps<T>["renderEmptyState"] | undefined;
   dependencies?: TableBodyProps<T>["dependencies"] | undefined;
 } & (
-  | { isLoading: true; rows?: RowConfig<T>[] | undefined }
-  | { isLoading?: false | undefined; rows: RowConfig<T>[] }
-);
+    | { isLoading: true; rows?: RowConfig<T>[] | undefined }
+    | { isLoading?: false | undefined; rows: RowConfig<T>[] }
+  );
 
 export type ColumnConfig<T extends string> = Omit<ColumnProps, "children"> & {
   name: ReactNode;
   id: T;
   fill?: boolean | undefined;
+  sticky?: boolean | undefined;
   alignment?: Alignment | undefined;
   width?: number | undefined;
 } & (
@@ -59,7 +60,6 @@ export type RowConfig<T extends string> = Omit<
 export const Table = <T extends string>({
   className,
   fill,
-  divide,
   rounded,
   label,
   rows,
@@ -68,11 +68,11 @@ export const Table = <T extends string>({
   isUpdating,
   renderEmptyState,
   dependencies,
+  ...props
 }: TableProps<T>) => (
   <div
     className={clsx(styles.tableContainer, className)}
     data-fill={fill ? "" : undefined}
-    data-divide={divide ? "" : undefined}
     data-rounded={rounded ? "" : undefined}
   >
     {isUpdating && (
@@ -80,14 +80,53 @@ export const Table = <T extends string>({
         <div className={styles.loader} />
       </div>
     )}
-    <UnstyledTable aria-label={label} className={styles.table ?? ""}>
+    <UnstyledTable aria-label={label} className={styles.table ?? ""} {...props}>
       <UnstyledTableHeader
         columns={columns}
         className={styles.tableHeader ?? ""}
       >
-        {({ fill, width, alignment, ...column }: ColumnConfig<T>) => (
-          <UnstyledColumn {...cellProps(alignment, width, fill)} {...column}>
-            {column.name}
+        {(column: ColumnConfig<T>) => (
+          <UnstyledColumn {...cellProps(column)} {...column}>
+            {({ allowsSorting, sort, sortDirection }) => (
+              <>
+                {column.name}
+                {allowsSorting && (
+                  <Button
+                    className={styles.sortButton ?? ""}
+                    size="xs"
+                    variant="ghost"
+                    onPress={() => {
+                      sort(
+                        sortDirection === "ascending"
+                          ? "descending"
+                          : "ascending",
+                      );
+                    }}
+                    beforeIcon={(props) => (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                        {...props}
+                      >
+                        <path
+                          className={styles.ascending}
+                          d="m10.677 6.073-2.5-2.5a.25.25 0 0 0-.354 0l-2.5 2.5A.25.25 0 0 0 5.5 6.5h5a.25.25 0 0 0 .177-.427Z"
+                        />
+                        <path
+                          className={styles.descending}
+                          d="m10.677 9.927-2.5 2.5a.25.25 0 0 1-.354 0l-2.5-2.5A.25.25 0 0 1 5.5 9.5h5a.25.25 0 0 1 .177.427Z"
+                        />
+                      </svg>
+                    )}
+                    hideText
+                  >
+                    Sort
+                  </Button>
+                )}
+                <div className={styles.divider} />
+              </>
+            )}
           </UnstyledColumn>
         )}
       </UnstyledTableHeader>
@@ -104,8 +143,8 @@ export const Table = <T extends string>({
             className={styles.row ?? ""}
             columns={columns}
           >
-            {({ alignment, fill, width, ...column }: ColumnConfig<T>) => (
-              <UnstyledCell {...cellProps(alignment, width, fill)}>
+            {(column: ColumnConfig<T>) => (
+              <UnstyledCell {...cellProps(column)}>
                 {"loadingSkeleton" in column ? (
                   column.loadingSkeleton
                 ) : (
@@ -113,7 +152,7 @@ export const Table = <T extends string>({
                     width={
                       "loadingSkeletonWidth" in column
                         ? column.loadingSkeletonWidth
-                        : undefined
+                        : column.width
                     }
                   />
                 )}
@@ -127,9 +166,9 @@ export const Table = <T extends string>({
               columns={columns}
               {...row}
             >
-              {({ alignment, width, fill, id }: ColumnConfig<T>) => (
-                <UnstyledCell {...cellProps(alignment, width, fill)}>
-                  {data[id]}
+              {(column: ColumnConfig<T>) => (
+                <UnstyledCell {...cellProps(column)}>
+                  {data[column.id]}
                 </UnstyledCell>
               )}
             </UnstyledRow>
@@ -140,13 +179,15 @@ export const Table = <T extends string>({
   </div>
 );
 
-const cellProps = (
-  alignment: Alignment | undefined,
-  width: number | undefined,
-  fill: boolean | undefined,
-) => ({
+const cellProps = <T extends string>({
+  alignment,
+  width,
+  fill,
+  sticky,
+}: Pick<ColumnConfig<T>, "alignment" | "width" | "fill" | "sticky">) => ({
   className: styles.cell ?? "",
   "data-alignment": alignment ?? "left",
+  "data-fill": fill ? "" : undefined,
+  "data-sticky": sticky ? "" : undefined,
   ...(width && { style: { "--width": width } as CSSProperties }),
-  ...(fill && { "data-fill": "" }),
 });

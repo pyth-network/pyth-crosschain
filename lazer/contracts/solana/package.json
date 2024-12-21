@@ -7,7 +7,8 @@
     "test:format": "prettier --check **/*.*",
     "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" anchor test",
     "test": "pnpm run test:format && pnpm run test:anchor",
-    "setup": "anchor build && pnpm ts-node scripts/setup.ts"
+    "setup": "anchor build && pnpm ts-node scripts/setup.ts",
+    "migrate_from_0_1_0": "pnpm ts-node scripts/migrate_from_0_1_0.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1"

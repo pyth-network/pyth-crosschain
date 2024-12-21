@@ -42,12 +42,6 @@ const meta = {
         category: "State",
       },
     },
-    divide: {
-      control: "boolean",
-      table: {
-        category: "Variant",
-      },
-    },
     fill: {
       control: "boolean",
       table: {
@@ -75,7 +69,6 @@ export const Table = {
     isUpdating: false,
     isLoading: false,
     fill: true,
-    divide: false,
     rounded: true,
     columns: [
       {

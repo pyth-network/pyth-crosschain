@@ -1,0 +1,58 @@
+@use "../theme";
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+
+  .alert {
+    position: fixed;
+    bottom: theme.spacing(8);
+    right: theme.spacing(8);
+    outline: none;
+    background: theme.color("states", "info", "background-opaque");
+    border-radius: theme.border-radius("3xl");
+    backdrop-filter: blur(32px);
+    width: theme.spacing(156);
+    padding: theme.spacing(6);
+    padding-right: theme.spacing(16);
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(4);
+
+    .closeButton {
+      position: absolute;
+      right: theme.spacing(2);
+      top: theme.spacing(2);
+    }
+
+    .title {
+      @include theme.h4;
+
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(3);
+      align-items: center;
+      color: theme.color("heading");
+      line-height: 1;
+
+      .icon {
+        color: theme.color("states", "info", "normal");
+        flex: none;
+        display: grid;
+        place-content: center;
+        font-size: theme.spacing(6);
+      }
+    }
+
+    .body {
+      color: theme.color("paragraph");
+      font-size: theme.font-size("sm");
+      line-height: 140%;
+      display: flex;
+      flex-flow: column nowrap;
+      gap: theme.spacing(4);
+      align-items: flex-start;
+    }
+  }
+}

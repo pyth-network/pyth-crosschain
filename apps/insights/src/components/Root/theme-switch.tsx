@@ -4,12 +4,15 @@ import type { IconProps } from "@phosphor-icons/react";
 import { Desktop } from "@phosphor-icons/react/dist/ssr/Desktop";
 import { Moon } from "@phosphor-icons/react/dist/ssr/Moon";
 import { Sun } from "@phosphor-icons/react/dist/ssr/Sun";
-import { Button } from "@pythnetwork/component-library/Button";
+import {
+  type Props as ButtonProps,
+  Button,
+} from "@pythnetwork/component-library/Button";
 import clsx from "clsx";
-import { m, LazyMotion, domMax } from "framer-motion";
+import { motion } from "motion/react";
 import { useTheme } from "next-themes";
 import {
-  type ComponentProps,
+  type ElementType,
   useCallback,
   useRef,
   useMemo,
@@ -19,12 +22,15 @@ import { useIsSSR } from "react-aria";
 
 import styles from "./theme-switch.module.scss";
 
-type Props = Omit<
-  ComponentProps<typeof Button>,
+type Props<T extends ElementType> = Omit<
+  ButtonProps<T>,
   "beforeIcon" | "variant" | "size" | "hideText" | "children" | "onPress"
 >;
 
-export const ThemeSwitch = ({ className, ...props }: Props) => {
+export const ThemeSwitch = <T extends ElementType>({
+  className,
+  ...props
+}: Props<T>) => {
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = useCallback(() => {
@@ -33,20 +39,18 @@ export const ThemeSwitch = ({ className, ...props }: Props) => {
   }, [theme, setTheme]);
 
   return (
-    <LazyMotion features={domMax} strict>
-      <Button
-        variant="ghost"
-        size="sm"
-        hideText
-        onPress={toggleTheme}
-        beforeIcon={IconPath}
-        className={clsx(styles.themeSwitch, className)}
-        rounded
-        {...props}
-      >
-        Dark mode
-      </Button>
-    </LazyMotion>
+    <Button
+      variant="ghost"
+      size="sm"
+      hideText
+      onPress={toggleTheme}
+      beforeIcon={IconPath}
+      className={clsx(styles.themeSwitch, className)}
+      rounded
+      {...props}
+    >
+      Dark mode
+    </Button>
   );
 };
 
@@ -71,15 +75,14 @@ type IconMovementProps = Omit<IconProps, "offset"> & {
 };
 
 const IconMovement = ({ icon: Icon, offset, ...props }: IconMovementProps) => (
-  <m.div
-    // @ts-expect-error Looks like framer-motion has a bug in it's typings...
+  <motion.div
     className={styles.iconMovement}
     animate={{ offsetDistance: offset }}
     transition={{ type: "spring", bounce: 0.35, duration: 0.6 }}
     initial={false}
   >
     <Icon className={styles.icon} {...props} />
-  </m.div>
+  </motion.div>
 );
 
 const useOffsets = () => {

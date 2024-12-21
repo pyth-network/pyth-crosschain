@@ -9,7 +9,13 @@ import {
 } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { Fragment, useContext, useEffect, useState } from 'react'
+import {
+  type ReactNode,
+  Fragment,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import toast from 'react-hot-toast'
 import {
   AnchorMultisigInstruction,
@@ -53,7 +59,7 @@ const IconWithTooltip = ({
   icon,
   tooltipText,
 }: {
-  icon: JSX.Element
+  icon: ReactNode
   tooltipText: string
 }) => {
   return (

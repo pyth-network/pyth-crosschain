@@ -59,6 +59,102 @@ pub struct PriceUpdateV2 {
 impl PriceUpdateV2 {
     pub const LEN: usize = 8 + 32 + 2 + 32 + 8 + 8 + 4 + 8 + 8 + 8 + 8 + 8;
 }
+/// A time weighted average price account.
+/// This account is used by the Pyth Receiver program to store a TWAP update from a Pyth price feed.
+/// TwapUpdates can only be created after the client has verified the VAAs via the Wormhole contract.
+/// Check out `target_chains/solana/cli/src/main.rs` for an example of how to do this.
+///
+/// It contains:
+/// - `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different TWAP update.
+/// - `twap`: The actual TWAP update.
+#[account]
+#[derive(BorshSchema)]
+pub struct TwapUpdate {
+    pub write_authority: Pubkey,
+    pub twap: TwapPrice,
+}
+
+impl TwapUpdate {
+    pub const LEN: usize = (
+        8 // account discriminator (anchor)
+        + 32 // write_authority
+        + (32 + 8 + 8 + 8 + 8 + 4 + 4)
+        // twap
+    );
+
+    /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId`.
+    ///
+    /// # Warning
+    /// This function does not check :
+    /// - How recent the price is
+    /// - Whether the price update has been verified
+    ///
+    /// It is therefore unsafe to use this function without any extra checks,
+    /// as it allows for the possibility of using unverified or outdated price updates.
+    pub fn get_twap_unchecked(
+        &self,
+        feed_id: &FeedId,
+    ) -> std::result::Result<TwapPrice, GetPriceError> {
+        check!(
+            self.twap.feed_id == *feed_id,
+            GetPriceError::MismatchedFeedId
+        );
+        Ok(self.twap)
+    }
+
+    /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId` no older than `maximum_age`.
+    ///
+    /// # Example
+    /// ```
+    /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, TwapUpdate};
+    /// use anchor_lang::prelude::*;
+    ///
+    /// const MAXIMUM_AGE : u64 = 30;
+    /// const FEED_ID: &str = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"; // SOL/USD
+    ///
+    /// #[derive(Accounts)]
+    /// pub struct ReadTwapAccount<'info> {
+    ///     pub twap_update: Account<'info, TwapUpdate>,
+    /// }
+    ///
+    /// pub fn read_twap_account(ctx : Context<ReadTwapAccount>) -> Result<()> {
+    ///     let twap_update = &ctx.accounts.twap_update;
+    ///     let twap = twap_update.get_twap_no_older_than(&Clock::get()?, MAXIMUM_AGE, &get_feed_id_from_hex(FEED_ID)?)?;
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn get_twap_no_older_than(
+        &self,
+        clock: &Clock,
+        maximum_age: u64,
+        feed_id: &FeedId,
+    ) -> std::result::Result<TwapPrice, GetPriceError> {
+        // Ensure the update isn't outdated
+        let twap_price = self.get_twap_unchecked(feed_id)?;
+        check!(
+            twap_price
+                .end_time
+                .saturating_add(maximum_age.try_into().unwrap())
+                >= clock.unix_timestamp,
+            GetPriceError::PriceTooOld
+        );
+        Ok(twap_price)
+    }
+}
+/// The time weighted average price & conf for a feed over the window [start_time, end_time].
+/// This type is used to persist the calculated TWAP in TwapUpdate accounts on Solana.
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, BorshSchema, Debug)]
+pub struct TwapPrice {
+    pub feed_id: FeedId,
+    pub start_time: i64,
+    pub end_time: i64,
+    pub price: i64,
+    pub conf: u64,
+    pub exponent: i32,
+    /// Ratio out of 1_000_000, where a value of 1_000_000 represents
+    /// all slots were missed and 0 represents no slots were missed.
+    pub down_slots_ratio: u32,
+}
 
 /// A Pyth price.
 /// The actual price is `(price ± conf)* 10^exponent`. `publish_time` may be used to check the recency of the price.
@@ -210,7 +306,7 @@ pub mod tests {
     use {
         crate::{
             error::GetPriceError,
-            price_update::{Price, PriceUpdateV2, VerificationLevel},
+            price_update::{Price, PriceUpdateV2, TwapPrice, TwapUpdate, VerificationLevel},
         },
         anchor_lang::Discriminator,
         pythnet_sdk::messages::PriceFeedMessage,
@@ -444,6 +540,56 @@ pub mod tests {
                 100,
                 &mismatched_feed_id,
             ),
+            Err(GetPriceError::MismatchedFeedId)
+        );
+    }
+
+    #[test]
+    fn test_get_twap_no_older_than() {
+        let expected_twap = TwapPrice {
+            feed_id: [0; 32],
+            start_time: 800,
+            end_time: 900,
+            price: 1,
+            conf: 2,
+            exponent: -3,
+            down_slots_ratio: 0,
+        };
+
+        let feed_id = [0; 32];
+        let mismatched_feed_id = [1; 32];
+        let mock_clock = Clock {
+            unix_timestamp: 1000,
+            ..Default::default()
+        };
+
+        let update = TwapUpdate {
+            write_authority: Pubkey::new_unique(),
+            twap: expected_twap,
+        };
+
+        // Test unchecked access
+        assert_eq!(update.get_twap_unchecked(&feed_id), Ok(expected_twap));
+
+        // Test with age check
+        assert_eq!(
+            update.get_twap_no_older_than(&mock_clock, 100, &feed_id),
+            Ok(expected_twap)
+        );
+
+        // Test with reduced maximum age
+        assert_eq!(
+            update.get_twap_no_older_than(&mock_clock, 10, &feed_id),
+            Err(GetPriceError::PriceTooOld)
+        );
+
+        // Test with mismatched feed id
+        assert_eq!(
+            update.get_twap_unchecked(&mismatched_feed_id),
+            Err(GetPriceError::MismatchedFeedId)
+        );
+        assert_eq!(
+            update.get_twap_no_older_than(&mock_clock, 100, &mismatched_feed_id),
             Err(GetPriceError::MismatchedFeedId)
         );
     }

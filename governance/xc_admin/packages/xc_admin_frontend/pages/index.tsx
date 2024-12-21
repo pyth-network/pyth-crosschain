@@ -11,7 +11,6 @@ import Proposals from '../components/tabs/Proposals/Proposals'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import { MultisigContextProvider } from '../contexts/MultisigContext'
 import { PythContextProvider } from '../contexts/PythContext'
-import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 import '../mappings/signers.json'
 
@@ -165,11 +164,7 @@ const Home: NextPage<{
           {tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.UpdatePermissions.queryString && <UpdatePermissions />}
           {tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.Proposals.queryString && (
-            <StatusFilterProvider>
-              <Proposals />
-            </StatusFilterProvider>
-          )}
+            TAB_INFO.Proposals.queryString && <Proposals />}
         </MultisigContextProvider>
       </PythContextProvider>
     </Layout>

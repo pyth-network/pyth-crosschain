@@ -1,6 +1,6 @@
 [package]
 name = "pyth-solana-receiver-cli"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
@@ -10,13 +10,13 @@ shellexpand = "2.1.2"
 solana-sdk = { workspace = true }
 solana-client = { workspace = true }
 anchor-client = { workspace = true }
-clap = {version ="3.2.22", features = ["derive"]}
-pyth-solana-receiver = {path = "../programs/pyth-solana-receiver" }
-wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"} # Used for initializing the wormhole receiver
+clap = { version = "3.2.22", features = ["derive"] }
+pyth-solana-receiver = { path = "../programs/pyth-solana-receiver" }
+wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana" } # Used for initializing the wormhole receiver
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.0.0" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 hex = "0.4.3"
-borsh = "0.9.3" # Old version of borsh needed for wormhole-solana
-wormhole-core-bridge-solana = {workspace = true}
-pyth-solana-receiver-sdk = {path = "../pyth_solana_receiver_sdk"}
+borsh = "0.9.3"                                                                                   # Old version of borsh needed for wormhole-solana
+wormhole-core-bridge-solana = { workspace = true }
+pyth-solana-receiver-sdk = { path = "../pyth_solana_receiver_sdk" }
