@@ -1,5 +1,5 @@
 [package]
-name = "proxy-calls-example"
+name = "pyth-example"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true

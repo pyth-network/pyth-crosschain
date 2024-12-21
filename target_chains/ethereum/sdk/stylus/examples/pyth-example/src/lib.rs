@@ -41,7 +41,7 @@ sol_storage! {
 }
 
 #[public]
-impl ProxyCallsExample {
+impl PythInheritExample {
 
    fn mint(&mut self) -> Result<(), Vec<u8>> {
     // Get the price if it is not older than 60 seconds.
