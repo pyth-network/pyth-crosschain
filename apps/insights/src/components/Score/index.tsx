@@ -1,8 +1,8 @@
 "use client";
 
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
+import { Meter } from "@pythnetwork/component-library/unstyled/Meter";
 import type { CSSProperties } from "react";
-import { Meter } from "react-aria-components";
 
 import styles from "./index.module.scss";
 

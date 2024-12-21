@@ -6,24 +6,23 @@ import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
-import { UnstyledTab, UnstyledTabList } from "../UnstyledTabs/index.js";
+import { Tab, TabList } from "../unstyled/Tabs/index.js";
 
 type OwnProps = {
   pathname?: string | undefined;
-  items: ComponentProps<typeof UnstyledTab>[];
+  items: ComponentProps<typeof Tab>[];
 };
-type Props = Omit<ComponentProps<typeof UnstyledTabList>, keyof OwnProps> &
-  OwnProps;
+type Props = Omit<ComponentProps<typeof TabList>, keyof OwnProps> & OwnProps;
 
 export const MainNavTabs = ({ className, pathname, ...props }: Props) => (
-  <UnstyledTabList
+  <TabList
     aria-label="Main Navigation"
     className={clsx(styles.mainNavTabs, className)}
     dependencies={[pathname]}
     {...props}
   >
     {({ className: tabClassName, children, ...tab }) => (
-      <UnstyledTab
+      <Tab
         className={clsx(styles.tab, buttonStyles.button, tabClassName)}
         data-size="sm"
         data-variant="ghost"
@@ -46,7 +45,7 @@ export const MainNavTabs = ({ className, pathname, ...props }: Props) => (
             </span>
           </>
         )}
-      </UnstyledTab>
+      </Tab>
     )}
-  </UnstyledTabList>
+  </TabList>
 );

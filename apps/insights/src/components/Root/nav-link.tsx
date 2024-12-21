@@ -1,8 +1,8 @@
 "use client";
 
+import { Link } from "@pythnetwork/component-library/unstyled/Link";
 import { useSelectedLayoutSegment } from "next/navigation";
 import type { ReactNode } from "react";
-import { Link } from "react-aria-components";
 
 type Props = {
   href: string;

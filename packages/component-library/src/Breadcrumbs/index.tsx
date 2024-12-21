@@ -9,9 +9,9 @@ import styles from "./index.module.scss";
 import { Button } from "../Button/index.js";
 import { Link } from "../Link/index.js";
 import {
-  UnstyledBreadcrumbs,
-  UnstyledBreadcrumb,
-} from "../UnstyledBreadcrumbs/index.js";
+  Breadcrumbs as UnstyledBreadcrumbs,
+  Breadcrumb,
+} from "../unstyled/Breadcrumbs/index.js";
 
 type OwnProps = {
   label: string;
@@ -37,7 +37,7 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
       {...props}
     >
       {(item) => (
-        <UnstyledBreadcrumb className={styles.breadcrumb ?? ""}>
+        <Breadcrumb className={styles.breadcrumb ?? ""}>
           {"href" in item ? (
             <>
               {item.href === "/" ? (
@@ -65,7 +65,7 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
           ) : (
             <div className={styles.current}>{item.label}</div>
           )}
-        </UnstyledBreadcrumb>
+        </Breadcrumb>
       )}
     </UnstyledBreadcrumbs>
   </nav>

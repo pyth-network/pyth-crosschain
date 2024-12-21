@@ -10,8 +10,8 @@ import {
 import { OverlayTriggerStateContext } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { UnstyledButton } from "../UnstyledButton/index.js";
-import { UnstyledLink } from "../UnstyledLink/index.js";
+import { Button } from "../unstyled/Button/index.js";
+import { Link } from "../unstyled/Link/index.js";
 
 export const VARIANTS = ["primary", "secondary", "tertiary"] as const;
 
@@ -30,17 +30,14 @@ export type Props<T extends ElementType> = Omit<
   OwnProps;
 
 export const Card = (
-  props:
-    | Props<"div">
-    | Props<typeof UnstyledLink>
-    | Props<typeof UnstyledButton>,
+  props: Props<"div"> | Props<typeof Link> | Props<typeof Button>,
 ) => {
   const overlayState = use(OverlayTriggerStateContext);
 
   if (overlayState !== null || "onPress" in props) {
-    return <UnstyledButton {...cardProps(props)} />;
+    return <Button {...cardProps(props)} />;
   } else if ("href" in props) {
-    return <UnstyledLink {...cardProps(props)} />;
+    return <Link {...cardProps(props)} />;
   } else {
     return <div {...cardProps(props)} />;
   }

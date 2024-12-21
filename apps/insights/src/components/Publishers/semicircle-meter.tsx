@@ -1,11 +1,11 @@
 "use client";
 
+import { Meter } from "@pythnetwork/component-library/unstyled/Meter";
 import dynamic from "next/dynamic";
 import { type ComponentProps, Suspense } from "react";
-import { Meter } from "react-aria-components";
 import { PolarAngleAxis, RadialBar } from "recharts";
 
-export { Label } from "react-aria-components";
+export { Label } from "@pythnetwork/component-library/unstyled/Label";
 
 const RadialBarChart = dynamic(
   () => import("recharts").then((recharts) => recharts.RadialBarChart),

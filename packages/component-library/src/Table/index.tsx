@@ -12,13 +12,15 @@ import styles from "./index.module.scss";
 import { Button } from "../Button/index.js";
 import { Skeleton } from "../Skeleton/index.js";
 import {
-  UnstyledCell,
-  UnstyledColumn,
-  UnstyledRow,
-  UnstyledTable,
-  UnstyledTableBody,
-  UnstyledTableHeader,
-} from "../UnstyledTable/index.js";
+  Cell,
+  Column,
+  Row,
+  Table as UnstyledTable,
+  TableBody,
+  TableHeader,
+} from "../unstyled/Table/index.js";
+
+export type { SortDescriptor } from "../unstyled/Table/index.js";
 
 type TableProps<T extends string> = ComponentProps<typeof UnstyledTable> & {
   className?: string | undefined;
@@ -81,12 +83,9 @@ export const Table = <T extends string>({
       </div>
     )}
     <UnstyledTable aria-label={label} className={styles.table ?? ""} {...props}>
-      <UnstyledTableHeader
-        columns={columns}
-        className={styles.tableHeader ?? ""}
-      >
+      <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
         {(column: ColumnConfig<T>) => (
-          <UnstyledColumn {...cellProps(column)} {...column}>
+          <Column {...cellProps(column)} {...column}>
             {({ allowsSorting, sort, sortDirection }) => (
               <>
                 {column.name}
@@ -127,24 +126,24 @@ export const Table = <T extends string>({
                 <div className={styles.divider} />
               </>
             )}
-          </UnstyledColumn>
+          </Column>
         )}
-      </UnstyledTableHeader>
-      <UnstyledTableBody
+      </TableHeader>
+      <TableBody
         items={isLoading ? [] : rows}
         className={styles.tableBody ?? ""}
         {...(dependencies !== undefined && { dependencies })}
         {...(renderEmptyState !== undefined && { renderEmptyState })}
       >
         {isLoading ? (
-          <UnstyledRow
+          <Row
             id="loading"
             key="loading"
             className={styles.row ?? ""}
             columns={columns}
           >
             {(column: ColumnConfig<T>) => (
-              <UnstyledCell {...cellProps(column)}>
+              <Cell {...cellProps(column)}>
                 {"loadingSkeleton" in column ? (
                   column.loadingSkeleton
                 ) : (
@@ -156,25 +155,23 @@ export const Table = <T extends string>({
                     }
                   />
                 )}
-              </UnstyledCell>
+              </Cell>
             )}
-          </UnstyledRow>
+          </Row>
         ) : (
           ({ className: rowClassName, data, ...row }: RowConfig<T>) => (
-            <UnstyledRow
+            <Row
               className={clsx(styles.row, rowClassName)}
               columns={columns}
               {...row}
             >
               {(column: ColumnConfig<T>) => (
-                <UnstyledCell {...cellProps(column)}>
-                  {data[column.id]}
-                </UnstyledCell>
+                <Cell {...cellProps(column)}>{data[column.id]}</Cell>
               )}
-            </UnstyledRow>
+            </Row>
           )
         )}
-      </UnstyledTableBody>
+      </TableBody>
     </UnstyledTable>
   </div>
 );

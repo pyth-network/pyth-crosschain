@@ -6,17 +6,17 @@ import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
-import { UnstyledTab, UnstyledTabList } from "../UnstyledTabs/index.js";
+import { Tab, TabList as UnstyledTabList } from "../unstyled/Tabs/index.js";
 
 type OwnProps = {
   label: string;
   pathname?: string | undefined;
-  items: ComponentProps<typeof UnstyledTab>[];
+  items: ComponentProps<typeof Tab>[];
 };
 type Props = Omit<ComponentProps<typeof UnstyledTabList>, keyof OwnProps> &
   OwnProps;
 
-export const Tabs = ({ label, className, pathname, ...props }: Props) => (
+export const TabList = ({ label, className, pathname, ...props }: Props) => (
   <div className={clsx(styles.tabs, className)}>
     <UnstyledTabList
       aria-label={label}
@@ -25,7 +25,7 @@ export const Tabs = ({ label, className, pathname, ...props }: Props) => (
       {...props}
     >
       {({ className: tabClassName, children, ...tab }) => (
-        <UnstyledTab
+        <Tab
           className={clsx(styles.tab, buttonStyles.button, tabClassName)}
           data-size="sm"
           data-variant="ghost"
@@ -47,7 +47,7 @@ export const Tabs = ({ label, className, pathname, ...props }: Props) => (
               )}
             </>
           )}
-        </UnstyledTab>
+        </Tab>
       )}
     </UnstyledTabList>
   </div>

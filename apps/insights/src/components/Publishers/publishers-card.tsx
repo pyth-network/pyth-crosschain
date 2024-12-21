@@ -5,10 +5,13 @@ import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
-import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
+import {
+  type RowConfig,
+  type SortDescriptor,
+  Table,
+} from "@pythnetwork/component-library/Table";
 import { type ReactNode, Suspense, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
-import type { SortDescriptor } from "react-aria-components";
 
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { NoResults } from "../NoResults";

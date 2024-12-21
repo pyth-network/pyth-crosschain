@@ -1,6 +1,7 @@
 "use client";
 
 import { useLogger } from "@pythnetwork/app-logger";
+import type { SortDescriptor } from "@pythnetwork/component-library/unstyled/Table";
 import { usePathname } from "next/navigation";
 import {
   parseAsString,
@@ -10,7 +11,6 @@ import {
   createSerializer,
 } from "nuqs";
 import { useCallback, useMemo } from "react";
-import type { SortDescriptor } from "react-aria-components";
 
 export const useQueryParamFilterPagination = <T>(
   items: T[],
