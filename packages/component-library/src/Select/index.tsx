@@ -7,9 +7,6 @@ import {
   Label,
   Select as BaseSelect,
   Popover,
-  ListBox,
-  ListBoxItem,
-  ListBoxSection,
   Header,
   Collection,
   SelectValue,
@@ -18,6 +15,11 @@ import {
 import styles from "./index.module.scss";
 import { type Props as ButtonProps, Button } from "../Button/index.js";
 import { DropdownCaretDown } from "../DropdownCaretDown/index.js";
+import {
+  ListBox,
+  ListBoxItem,
+  ListBoxSection,
+} from "../unstyled/ListBox/index.js";
 
 type Props<T> = Omit<
   ComponentProps<typeof BaseSelect>,

@@ -8,7 +8,7 @@ import styles from "./index.module.scss";
 import { type Props as ButtonProps, Button } from "../Button/index.js";
 import buttonStyles from "../Button/index.module.scss";
 import { Select } from "../Select/index.js";
-import { UnstyledToolbar } from "../UnstyledToolbar/index.js";
+import { Toolbar } from "../unstyled/Toolbar/index.js";
 
 type Props = {
   numPages: number;
@@ -102,10 +102,7 @@ const PaginatorToolbar = ({
   );
 
   return (
-    <UnstyledToolbar
-      aria-label="Page"
-      className={styles.paginatorToolbar ?? ""}
-    >
+    <Toolbar aria-label="Page" className={styles.paginatorToolbar ?? ""}>
       <PageSelector
         hideText
         // I'm not quite sure why this is triggering, I'll need to figure this
@@ -149,7 +146,7 @@ const PaginatorToolbar = ({
       >
         Last Page
       </PageSelector>
-    </UnstyledToolbar>
+    </Toolbar>
   );
 };
 

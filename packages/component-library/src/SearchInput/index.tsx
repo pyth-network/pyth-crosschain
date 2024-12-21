@@ -8,7 +8,7 @@ import { type CSSProperties, type ComponentProps } from "react";
 import { Input, SearchField } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { UnstyledButton } from "../UnstyledButton/index.js";
+import { Button } from "../unstyled/Button/index.js";
 
 export const SIZES = ["xs", "sm", "md", "lg"] as const;
 
@@ -38,8 +38,8 @@ export const SearchInput = ({
     <Input className={styles.input ?? ""} placeholder="Search" />
     <MagnifyingGlass className={styles.searchIcon} />
     <CircleNotch className={styles.loadingIcon} />
-    <UnstyledButton className={styles.clearButton ?? ""}>
+    <Button className={styles.clearButton ?? ""}>
       <XCircle weight="fill" className={styles.clearIcon} />
-    </UnstyledButton>
+    </Button>
   </SearchField>
 );

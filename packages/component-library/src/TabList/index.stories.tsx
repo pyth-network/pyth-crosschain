@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Tabs as TabsComponent } from "./index.js";
-import { UnstyledTabs } from "../UnstyledTabs/index.js";
+import { TabList as TabListComponent } from "./index.js";
+import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.js";
 
 const meta = {
-  component: TabsComponent,
+  component: TabListComponent,
   argTypes: {
     items: {
       table: {
@@ -12,7 +12,7 @@ const meta = {
       },
     },
   },
-} satisfies Meta<typeof TabsComponent>;
+} satisfies Meta<typeof TabListComponent>;
 export default meta;
 
 export const Tabs = {
@@ -29,4 +29,4 @@ export const Tabs = {
       { id: "bar", children: "Bar" },
     ],
   },
-} satisfies StoryObj<typeof TabsComponent>;
+} satisfies StoryObj<typeof TabListComponent>;
