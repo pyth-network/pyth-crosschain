@@ -1,14 +1,16 @@
 [workspace]
 members = [
   "contracts",
-  "examples/pyth-exmaple",
+  "examples/pyth-example",
   "examples/extend-pyth-example",
+  "examples/function-example",
   "benches"
 ]
 default-members = [
   "contracts",
   "examples/pyth-example",
-  "examples/extend-pyth-example"
+  "examples/extend-pyth-example",
+  "examples/function-example",
 ]
 
 # Explicitly set the resolver to version 2, which is the default for packages

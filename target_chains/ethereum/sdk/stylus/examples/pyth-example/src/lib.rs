@@ -12,6 +12,7 @@ use stylus_sdk::{
 use alloc::vec::Vec;
 use alloy_sol_types::SolValue;
 
+
 pub use sol::*;
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod sol {
@@ -34,7 +35,7 @@ pub enum Error {
 
 sol_storage! {
     #[entrypoint]
-    struct ProxyCallsExample {
+    struct PythInheritExample {
         PythContract pyth;
         bytes32 eth_usd_price_id;
     }
@@ -42,7 +43,6 @@ sol_storage! {
 
 #[public]
 impl PythInheritExample {
-
    fn mint(&mut self) -> Result<(), Vec<u8>> {
     // Get the price if it is not older than 60 seconds.
     let  price = self.pyth.get_ema_price_no_older_than(self.eth_usd_price_id.get(), U256::from(60))?;
@@ -52,8 +52,6 @@ impl PythInheritExample {
 
     let one_dollar_in_wei = U256::MAX  / eth_price_18_decimals;
  
-    // console2.log("required payment in wei");
-    // console2.log(oneDollarInWei);
  
     if msg::value() >= one_dollar_in_wei {
       // User paid enough money.
