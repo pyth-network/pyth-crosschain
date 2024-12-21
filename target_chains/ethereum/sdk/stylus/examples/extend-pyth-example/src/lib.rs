@@ -1,8 +1,10 @@
 #![cfg_attr(not(test), no_std, no_main)]
 extern crate alloc;
 
-use pyth_stylus::pyth::pyth_contract:: PythContract;
+use pyth_stylus::pyth::pyth_contract::PythContract;
 use stylus_sdk::prelude::{entrypoint, public, sol_storage};
+use alloc::vec::Vec;
+use alloc::vec;
 
 
 sol_storage! {
