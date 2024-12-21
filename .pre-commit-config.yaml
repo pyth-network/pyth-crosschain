@@ -163,3 +163,15 @@ repos:
         entry: cargo +1.82.0 clippy --manifest-path ./lazer/Cargo.toml --all-targets -- --deny warnings
         pass_filenames: false
         files: lazer
+      - id: cargo-fmt-stylus-sdk
+        name: Cargo format for Stylus SDK
+        language: "rust"        
+        entry: cargo +1.82.0 fmt --manifest-path ./target_chains/ethereum/sdk/stylus/Cargo.toml --all
+        pass_filenames: false
+        files: target_chains/ethereum/sdk/stylus
+      - id: cargo-clippy-stylus-sdk
+        name: Cargo clippy for Stylus SDK
+        language: "rust"
+        entry: cargo +1.82.0 clippy --manifest-path ./target_chains/ethereum/sdk/stylus/Cargo.toml  --all-targets -- --deny warnings
+        pass_filenames: false
+        files: target_chains/ethereum/sdk/stylus
