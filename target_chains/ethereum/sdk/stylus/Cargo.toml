@@ -1,12 +1,14 @@
 [workspace]
 members = [
   "contracts",
-  "examples/proxy-calls",
+  "examples/pyth-exmaple",
+  "examples/extend-pyth-example",
   "benches"
 ]
 default-members = [
   "contracts",
-  "examples/proxy-calls",
+  "examples/pyth-example",
+  "examples/extend-pyth-example"
 ]
 
 # Explicitly set the resolver to version 2, which is the default for packages
