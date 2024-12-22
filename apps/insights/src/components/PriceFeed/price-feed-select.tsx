@@ -12,11 +12,9 @@ import {
   ListBoxItem,
 } from "@pythnetwork/component-library/unstyled/ListBox";
 import { Popover } from "@pythnetwork/component-library/unstyled/Popover";
+import { SearchField } from "@pythnetwork/component-library/unstyled/SearchField";
 import { Select } from "@pythnetwork/component-library/unstyled/Select";
-import {
-  TextField,
-  Input,
-} from "@pythnetwork/component-library/unstyled/TextField";
+import { Input } from "@pythnetwork/component-library/unstyled/TextField";
 import { type ReactNode, useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
 
@@ -66,7 +64,7 @@ export const PriceFeedSelect = ({ children, feeds }: Props) => {
       </Button>
       <Popover placement="bottom start" className={styles.popover ?? ""}>
         <Dialog aria-label="Price Feeds" className={styles.dialog ?? ""}>
-          <TextField
+          <SearchField
             value={search}
             onChange={setSearch}
             className={styles.searchField ?? ""}
@@ -78,7 +76,7 @@ export const PriceFeedSelect = ({ children, feeds }: Props) => {
               className={styles.searchInput ?? ""}
               placeholder="Symbol, asset class, or key"
             />
-          </TextField>
+          </SearchField>
           <Virtualizer layout={new ListLayout()}>
             <ListBox
               items={filteredFeeds}

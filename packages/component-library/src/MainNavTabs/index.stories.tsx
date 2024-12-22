@@ -11,6 +11,11 @@ const meta = {
         disable: true,
       },
     },
+    pathname: {
+      table: {
+        disable: true,
+      },
+    },
   },
 } satisfies Meta<typeof MainNavTabsComponent>;
 export default meta;

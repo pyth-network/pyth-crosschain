@@ -5,10 +5,11 @@ import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import clsx from "clsx";
 import { type CSSProperties, type ComponentProps } from "react";
-import { Input, SearchField } from "react-aria-components";
 
 import styles from "./index.module.scss";
 import { Button } from "../unstyled/Button/index.js";
+import { SearchField } from "../unstyled/SearchField/index.js";
+import { Input } from "../unstyled/TextField/index.js";
 
 export const SIZES = ["xs", "sm", "md", "lg"] as const;
 

@@ -57,6 +57,7 @@
     "postcss-loader": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:",
+    "react-dom": "catalog:",
     "sass": "catalog:",
     "sass-loader": "catalog:",
     "storybook": "catalog:",
