@@ -40,8 +40,9 @@ async function main() {
   // Post the TWAP updates to ephemeral accounts, one per price feed
   await transactionBuilder.addPostTwapUpdates(twapUpdateData);
   console.log(
-    "The SOL/USD TWAP update will get posted to:",
-    transactionBuilder.getTwapUpdateAccount(SOL_PRICE_FEED_ID).toBase58()
+    `\nThe SOL/USD TWAP update will get posted to: ${transactionBuilder
+      .getTwapUpdateAccount(SOL_PRICE_FEED_ID)
+      .toBase58()}\n`
   );
 
   await transactionBuilder.addTwapConsumerInstructions(
@@ -69,10 +70,10 @@ async function main() {
 async function getTwapUpdateData() {
   const hermesConnection = new HermesClient("https://hermes.pyth.network/", {});
 
-  // Request TWAP updates for the last hour (3600 seconds)
+  // Request TWAP updates with a 5 minute window (300 seconds)
   const response = await hermesConnection.getLatestTwaps(
     [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
-    3600,
+    300,
     { encoding: "base64" }
   );
 
