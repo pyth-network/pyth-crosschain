@@ -2,10 +2,14 @@
 
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
-import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
-import { type ReactNode, Suspense, useMemo } from "react";
+import { Switch } from "@pythnetwork/component-library/Switch";
+import {
+  type RowConfig,
+  type SortDescriptor,
+  Table,
+} from "@pythnetwork/component-library/Table";
+import { type ReactNode, Suspense, useMemo, useState } from "react";
 import { useFilter, useCollator } from "react-aria";
-import type { SortDescriptor } from "react-aria-components";
 
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FormattedNumber } from "../FormattedNumber";
@@ -30,6 +34,7 @@ type PriceComponent = {
   deviationScore: number;
   stalledPenalty: number;
   stalledScore: number;
+  isTest: boolean;
 };
 
 export const PriceComponentsCard = ({
@@ -53,6 +58,16 @@ const ResolvedPriceComponentsCard = ({
 }: Props) => {
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const [includeTestComponents, setIncludeTestComponents] = useState(false);
+
+  const filteredPriceComponents = useMemo(
+    () =>
+      includeTestComponents
+        ? priceComponents
+        : priceComponents.filter((component) => !component.isTest),
+    [includeTestComponents, priceComponents],
+  );
+
   const {
     search,
     sortDescriptor,
@@ -67,7 +82,7 @@ const ResolvedPriceComponentsCard = ({
     numPages,
     mkPageLink,
   } = useQueryParamFilterPagination(
-    priceComponents,
+    filteredPriceComponents,
     (priceComponent, search) =>
       filter.contains(priceComponent.id, search) ||
       (priceComponent.publisherNameAsString !== undefined &&
@@ -178,6 +193,8 @@ const ResolvedPriceComponentsCard = ({
 
   return (
     <PriceComponentsCardContents
+      includeTestComponents={includeTestComponents}
+      setIncludeTestComponents={setIncludeTestComponents}
       numResults={numResults}
       search={search}
       sortDescriptor={sortDescriptor}
@@ -203,6 +220,8 @@ type PriceComponentsCardProps = Pick<
     | { isLoading: true }
     | {
         isLoading?: false;
+        includeTestComponents: boolean;
+        setIncludeTestComponents: (newValue: boolean) => void;
         numResults: number;
         search: string;
         sortDescriptor: SortDescriptor;
@@ -234,6 +253,18 @@ const PriceComponentsCardContents = ({
   <Card
     className={className}
     title="Price components"
+    toolbar={
+      <Switch
+        {...(props.isLoading
+          ? { isPending: true }
+          : {
+              isSelected: props.includeTestComponents,
+              onChange: props.setIncludeTestComponents,
+            })}
+      >
+        Show test components
+      </Switch>
+    }
     {...(!props.isLoading && {
       footer: (
         <Paginator

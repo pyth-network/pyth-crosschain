@@ -1,10 +1,10 @@
 "use client";
 
-import { Tabs as TabsComponent } from "@pythnetwork/component-library/Tabs";
+import { TabList } from "@pythnetwork/component-library/TabList";
 import {
-  UnstyledTabPanel,
-  UnstyledTabs,
-} from "@pythnetwork/component-library/UnstyledTabs";
+  TabPanel as UnstyledTabPanel,
+  Tabs as UnstyledTabs,
+} from "@pythnetwork/component-library/unstyled/Tabs";
 import { useSelectedLayoutSegment, usePathname } from "next/navigation";
 import { useMemo, type ComponentProps } from "react";
 
@@ -18,13 +18,10 @@ export const TabRoot = (
   return <UnstyledTabs selectedKey={tabId} {...props} />;
 };
 
-type TabsProps = Omit<
-  ComponentProps<typeof TabsComponent>,
-  "pathname" | "items"
-> & {
+type TabsProps = Omit<ComponentProps<typeof TabList>, "pathname" | "items"> & {
   slug: string;
   items: (Omit<
-    ComponentProps<typeof TabsComponent>["items"],
+    ComponentProps<typeof TabList>["items"],
     "href" | "id"
   >[number] & {
     segment: string | undefined;
@@ -42,7 +39,7 @@ export const Tabs = ({ slug, items, ...props }: TabsProps) => {
     }));
   }, [items, slug]);
 
-  return <TabsComponent pathname={pathname} items={mappedItems} {...props} />;
+  return <TabList pathname={pathname} items={mappedItems} {...props} />;
 };
 
 export const TabPanel = ({

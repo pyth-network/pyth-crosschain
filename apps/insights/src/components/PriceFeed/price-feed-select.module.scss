@@ -86,6 +86,7 @@
           border-color 100ms linear,
           outline-color 100ms linear,
           color 100ms linear;
+        background-color: transparent;
 
         &[data-hovered] {
           border-color: theme.color("forms", "input", "hover", "border");

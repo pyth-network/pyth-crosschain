@@ -1,12 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { MainNavTabs as MainNavTabsComponent } from "./index.js";
-import { UnstyledTabs } from "../UnstyledTabs/index.js";
+import { Tabs } from "../unstyled/Tabs/index.js";
 
 const meta = {
   component: MainNavTabsComponent,
   argTypes: {
     items: {
+      table: {
+        disable: true,
+      },
+    },
+    pathname: {
       table: {
         disable: true,
       },
@@ -18,9 +23,9 @@ export default meta;
 export const MainNavTabs = {
   decorators: [
     (Story) => (
-      <UnstyledTabs>
+      <Tabs>
         <Story />
-      </UnstyledTabs>
+      </Tabs>
     ),
   ],
   args: {

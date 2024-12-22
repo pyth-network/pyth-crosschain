@@ -2,7 +2,7 @@ import clsx from "clsx";
 import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
-import { UnstyledLink } from "../UnstyledLink/index.js";
+import { Link as UnstyledLink } from "../unstyled/Link/index.js";
 
 type OwnProps = {
   invert?: boolean | undefined;

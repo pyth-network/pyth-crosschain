@@ -1,20 +1,22 @@
 "use client";
 
 import { DropdownCaretDown } from "@pythnetwork/component-library/DropdownCaretDown";
-import { type ReactNode, useMemo, useState } from "react";
-import { useCollator, useFilter } from "react-aria";
 import {
-  Select,
-  Button,
-  Popover,
-  Dialog,
+  Virtualizer,
+  ListLayout,
+} from "@pythnetwork/component-library/Virtualizer";
+import { Button } from "@pythnetwork/component-library/unstyled/Button";
+import { Dialog } from "@pythnetwork/component-library/unstyled/Dialog";
+import {
   ListBox,
   ListBoxItem,
-  UNSTABLE_Virtualizer as Virtualizer,
-  UNSTABLE_ListLayout as ListLayout,
-  TextField,
-  Input,
-} from "react-aria-components";
+} from "@pythnetwork/component-library/unstyled/ListBox";
+import { Popover } from "@pythnetwork/component-library/unstyled/Popover";
+import { SearchField } from "@pythnetwork/component-library/unstyled/SearchField";
+import { Select } from "@pythnetwork/component-library/unstyled/Select";
+import { Input } from "@pythnetwork/component-library/unstyled/TextField";
+import { type ReactNode, useMemo, useState } from "react";
+import { useCollator, useFilter } from "react-aria";
 
 import styles from "./price-feed-select.module.scss";
 
@@ -62,7 +64,7 @@ export const PriceFeedSelect = ({ children, feeds }: Props) => {
       </Button>
       <Popover placement="bottom start" className={styles.popover ?? ""}>
         <Dialog aria-label="Price Feeds" className={styles.dialog ?? ""}>
-          <TextField
+          <SearchField
             value={search}
             onChange={setSearch}
             className={styles.searchField ?? ""}
@@ -74,7 +76,7 @@ export const PriceFeedSelect = ({ children, feeds }: Props) => {
               className={styles.searchInput ?? ""}
               placeholder="Symbol, asset class, or key"
             />
-          </TextField>
+          </SearchField>
           <Virtualizer layout={new ListLayout()}>
             <ListBox
               items={filteredFeeds}

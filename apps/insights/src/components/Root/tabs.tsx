@@ -2,20 +2,20 @@
 
 import { MainNavTabs as MainNavTabsComponent } from "@pythnetwork/component-library/MainNavTabs";
 import {
-  UnstyledTabPanel,
-  UnstyledTabs,
-} from "@pythnetwork/component-library/UnstyledTabs";
+  TabPanel as UnstyledTabPanel,
+  Tabs,
+} from "@pythnetwork/component-library/unstyled/Tabs";
 import { useSelectedLayoutSegment, usePathname } from "next/navigation";
 import { type ComponentProps } from "react";
 
 import { type VariantArg, LayoutTransition } from "../LayoutTransition";
 
 export const TabRoot = (
-  props: Omit<ComponentProps<typeof UnstyledTabs>, "selectedKey">,
+  props: Omit<ComponentProps<typeof Tabs>, "selectedKey">,
 ) => {
   const tabId = useSelectedLayoutSegment() ?? "";
 
-  return <UnstyledTabs selectedKey={tabId} {...props} />;
+  return <Tabs selectedKey={tabId} {...props} />;
 };
 
 export const MainNavTabs = (
