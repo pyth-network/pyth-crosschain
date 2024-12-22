@@ -512,7 +512,8 @@ $color: (
   "forms": (
     "input": (
       "hover": (
-        "border": pallette-color("stone", 400),
+        "border":
+          light-dark(pallette-color("stone", 400), pallette-color("steel", 500)),
       ),
     ),
   ),

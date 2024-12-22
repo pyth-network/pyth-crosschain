@@ -11,11 +11,16 @@ const meta = {
         disable: true,
       },
     },
+    pathname: {
+      table: {
+        disable: true,
+      },
+    },
   },
 } satisfies Meta<typeof TabListComponent>;
 export default meta;
 
-export const Tabs = {
+export const TabList = {
   decorators: [
     (Story) => (
       <UnstyledTabs>
@@ -24,6 +29,7 @@ export const Tabs = {
     ),
   ],
   args: {
+    label: "Tab List",
     items: [
       { id: "foo", children: "Foo" },
       { id: "bar", children: "Bar" },

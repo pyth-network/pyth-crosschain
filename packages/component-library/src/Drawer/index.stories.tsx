@@ -26,6 +26,11 @@ const meta = {
         category: "Contents",
       },
     },
+    closeHref: {
+      table: {
+        disable: true,
+      },
+    },
   },
 } satisfies Meta<typeof DrawerComponent>;
 export default meta;

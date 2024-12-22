@@ -31,6 +31,7 @@ export const PriceComponents = async ({ children, params }: Props) => {
           id: ranking.publisher,
           publisherNameAsString: lookupPublisher(ranking.publisher)?.name,
           score: ranking.final_score,
+          isTest: ranking.cluster === "pythtest-conformance",
           name: (
             <div className={styles.publisherName}>
               <PublisherTag publisherKey={ranking.publisher} />
