@@ -9,7 +9,7 @@ use crate::{
 use alloc::vec::Vec;
 use alloy_primitives::{Bytes, B256, U256};
 use alloy_sol_types::{sol_data::Uint as SolUInt, SolType, SolValue};
-use stylus_sdk::{abi::Bytes as AbiBytes, evm, msg, prelude::*};
+use stylus_sdk::{abi::Bytes as AbiBytes,  evm, msg, prelude::*};
 
 ////Decode data type PriceFeed and uint64
 pub type DecodeDataType = (PriceFeed, SolUInt<64>);
@@ -165,6 +165,7 @@ impl MockPythContract {
 }
 
 impl MockPythContract {
+
     fn parse_price_feed_updates_internal(
         &mut self,
         update_data: Vec<AbiBytes>,
@@ -174,59 +175,65 @@ impl MockPythContract {
         unique: bool,
     ) -> Result<Vec<u8>, Vec<u8>> {
         let required_fee = self.get_update_fee(update_data.clone());
-        if required_fee < msg::value() {
+        if required_fee > msg::value() {
             return Err(Error::InsufficientFee(InsufficientFee {}).into());
         }
 
-        let mut feeds = Vec::<PriceFeed>::with_capacity(price_ids.len());
+        let mut result_feeds = Vec::new();
 
-        for i in 0..price_ids.len() {
-            for j in 0..update_data.len() {
-                let (price_feed, prev_publish_time) =
-                    match DecodeDataType::abi_decode(&update_data[j], false) {
-                        Ok(res) => res,
-                        Err(_) => {
-                            return Err(Error::FalledDecodeData(
-                                FalledDecodeData {},
-                            )
-                            .into())
-                        }
-                    };
-                feeds[j] = price_feed.clone();
+        for price_id in price_ids {
+            let mut matched_feed: Option<PriceFeed> = None;
 
-                let publish_time = price_feed.price.publish_time;
-                if self
-                    .price_feeds
-                    .get(feeds[i].id)
-                    .price
-                    .publish_time.get() < publish_time
-                {
-                    self.price_feeds.setter(feeds[i].id).set(feeds[i]);
-                    evm::log(PriceFeedUpdate {
-                        id: feeds[i].id,
-                        publishTime: publish_time.to(),
-                        price: feeds[i].price.price,
-                        conf: feeds[i].price.conf,
-                    });
-                }
+            for data in &update_data {
+                // Decode the update_data
+                let (price_feed, prev_publish_time) = match DecodeDataType::abi_decode(data, false) {
+                    Ok(res) => res,
+                    Err(_) => {
+                        return Err(Error::FalledDecodeData(FalledDecodeData {}).into());
+                    }
+                };
 
-                if feeds[i].id == price_ids[i] {
+                if price_feed.id == price_id {
+                    let publish_time = price_feed.price.publish_time;
+                    let previous_publish_time = self
+                        .price_feeds
+                        .get(price_id)
+                        .price
+                        .publish_time
+                        .get();
+
+                    // Validate publish time and uniqueness
                     if publish_time > U256::from(min_publish_time)
                         && publish_time <= U256::from(max_publish_time)
-                        && (!unique || prev_publish_time < min_publish_time)
+                        && (!unique || previous_publish_time < U256::from(min_publish_time))
                     {
+                        // Store the matched feed
+                        matched_feed = Some(price_feed.clone());
+
+                        // Update storage if the feed is newer
+                        if previous_publish_time < publish_time {
+                            self.price_feeds.setter(price_id).set(price_feed.clone());
+                            evm::log(PriceFeedUpdate {
+                                id: price_feed.id,
+                                publishTime: publish_time.to(),
+                                price: price_feed.price.price,
+                                conf: price_feed.price.conf,
+                            });
+                        }
                         break;
-                    } else {
-                        feeds[i].id = B256::ZERO;
                     }
                 }
             }
 
-            if feeds[i].id != price_ids[i] {
+            // Check if a matching feed was found for the price_id
+            if let Some(feed) = matched_feed {
+                result_feeds.push(feed);
+            } else {
                 return Err(Error::FalledDecodeData(FalledDecodeData {}).into());
             }
         }
-        Ok(feeds.abi_encode())
+
+        Ok(result_feeds.abi_encode())
     }
 }
 
