@@ -17,7 +17,7 @@ use crate::{
 
 sol!(
     #[sol(rpc)]
-    contract ProxyCall{
+    contract ExtendPyth{
      function getPriceUnsafe(bytes32 id) external returns (uint8[] price);
      function getEmaPriceUnsafe(bytes32 id) external returns (uint8[] price);
      function getPriceNoOlderThan(bytes32 id, uint age) external returns (uint8[] price);
@@ -26,16 +26,18 @@ sol!(
      function getValidTimePeriod() external returns (uint256 period);
      function updatePriceFeeds(bytes[] calldata updateData) external payable;
      function updatePriceFeedsIfNecessary(bytes[] calldata updateData, bytes32[] calldata priceIds, uint64[] calldata publishTimes) external payable;
+
+      function getData() external returns (uint[] calldata data);
     }
 );
 
-sol!("../examples/proxy-calls/src/constructor.sol");
+sol!("../examples/extend-pyth-example/src/constructor.sol");
 
 pub async fn bench() -> eyre::Result<ContractReport> {
     let reports = run_with(CacheOpt::None).await?;
     let report = reports
         .into_iter()
-        .try_fold(ContractReport::new("ProxyCalls"), ContractReport::add)?;
+        .try_fold(ContractReport::new("ExtendPyth"), ContractReport::add)?;
 
     let cached_reports = run_with(CacheOpt::Bid(0)).await?;
     let report = cached_reports
@@ -57,7 +59,7 @@ pub async fn run_with(
 
     let contract_addr = deploy(&alice, cache_opt).await?;
 
-    let contract = ProxyCall::new(contract_addr, &alice_wallet);
+    let contract = ExtendPyth::new(contract_addr, &alice_wallet);
     let id = keccak_const::Keccak256::new().update(b"ETH").finalize().to_vec();
     let id = TypeFixedBytes::<32>::from_slice(&id);
     let time_frame = uint!(10000_U256);
@@ -74,7 +76,7 @@ pub async fn run_with(
     let _ = receipt!(contract.updatePriceFeeds(data.clone()))?;
 
     // IMPORTANT: Order matters!
-    use ProxyCall::*;
+    use ExtendPyth::*;
     #[rustfmt::skip]
     let receipts = vec![
         (getPriceUnsafeCall::SIGNATURE, receipt!(contract.getPriceUnsafe(id))?),
@@ -97,7 +99,7 @@ async fn deploy(
 ) -> eyre::Result<Address> {
     let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
     let address = Address::from_str(&pyth_addr)?;
-    let args = ProxyCallsExample::constructorCall { _pythAddress: address };
+    let args = ExtendPythExample::constructorCall { _pythAddress: address };
     let args = alloy::hex::encode(args.abi_encode());
-    crate::deploy(account, "proxy-calls", Some(args), cache_opt).await
+    crate::deploy(account, "extend-pyth", Some(args), cache_opt).await
 }

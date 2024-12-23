@@ -13,7 +13,7 @@ use eyre::WrapErr;
 use koba::config::{Deploy, Generate, PrivateKey};
 use serde::Deserialize;
 
-pub mod proxy_calls;
+pub mod extend_pyth;
 pub mod report;
 
 #[derive(Debug, Deserialize)]
