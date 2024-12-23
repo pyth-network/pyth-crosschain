@@ -186,7 +186,7 @@ impl MockPythContract {
 
             for data in &update_data {
                 // Decode the update_data
-                let (price_feed, prev_publish_time) = match DecodeDataType::abi_decode(data, false) {
+                let (price_feed, _prev_publish_time) = match DecodeDataType::abi_decode(data, false) {
                     Ok(res) => res,
                     Err(_) => {
                         return Err(Error::FalledDecodeData(FalledDecodeData {}).into());
