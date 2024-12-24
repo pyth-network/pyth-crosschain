@@ -478,6 +478,9 @@ int apply_decimal_expo(int value, int expo) {
     ;; Reset the upgrade code hash
     upgrade_code_hash = 0;
 
+    ;; Store the data to persist the reset above
+    store_data();
+
     ;; Throw an exception to end the current execution
     ;; The contract will be restarted with the new code
     throw(0);
