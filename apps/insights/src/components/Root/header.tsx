@@ -7,6 +7,7 @@ import type { ComponentProps } from "react";
 import styles from "./header.module.scss";
 import Logo from "./logo.svg";
 import { SearchButton } from "./search-button";
+import { SupportDrawer } from "./support-drawer";
 import { MainNavTabs } from "./tabs";
 import { ThemeSwitch } from "./theme-switch";
 
@@ -24,9 +25,11 @@ export const Header = ({ className, ...props }: ComponentProps<"header">) => (
         <MainNavTabs />
       </div>
       <div className={styles.rightMenu}>
-        <Button beforeIcon={Lifebuoy} variant="ghost" size="sm" rounded>
-          Support
-        </Button>
+        <SupportDrawer>
+          <Button beforeIcon={Lifebuoy} variant="ghost" size="sm" rounded>
+            Support
+          </Button>
+        </SupportDrawer>
         <SearchButton />
         <Button
           href="https://docs.pyth.network"
