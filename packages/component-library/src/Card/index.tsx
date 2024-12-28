@@ -42,10 +42,10 @@ export const Card = (
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { nonInteractive, ...otherProps } = props;
     return <div {...cardProps(otherProps)} />;
-  } else if (overlayState !== null || "onPress" in props) {
-    return <Button {...cardProps(props)} />;
   } else if ("href" in props) {
     return <Link {...cardProps(props)} />;
+  } else if (overlayState !== null || "onPress" in props) {
+    return <Button {...cardProps(props)} />;
   } else {
     return <div {...cardProps(props)} />;
   }
