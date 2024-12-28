@@ -19,6 +19,7 @@ import { useFilter, useCollator } from "react-aria";
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { SKELETON_WIDTH } from "../LivePrices";
 import { NoResults } from "../NoResults";
+import rootStyles from "../Root/index.module.scss";
 
 type Props = {
   id: string;
@@ -248,6 +249,7 @@ const PriceFeedsCardContents = ({
       rounded
       fill
       label="Price Feeds"
+      stickyHeader={rootStyles.headerHeight}
       columns={[
         {
           id: "priceFeedName",

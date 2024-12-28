@@ -24,6 +24,8 @@ export type { SortDescriptor } from "../unstyled/Table/index.js";
 
 type TableProps<T extends string> = ComponentProps<typeof UnstyledTable> & {
   className?: string | undefined;
+  headerCellClassName?: string | undefined;
+  stickyHeader?: boolean | string | undefined;
   fill?: boolean | undefined;
   rounded?: boolean | undefined;
   label: string;
@@ -70,6 +72,8 @@ export const Table = <T extends string>({
   isUpdating,
   renderEmptyState,
   dependencies,
+  headerCellClassName,
+  stickyHeader,
   ...props
 }: TableProps<T>) => (
   <div
@@ -85,7 +89,14 @@ export const Table = <T extends string>({
     <UnstyledTable aria-label={label} className={styles.table ?? ""} {...props}>
       <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
         {(column: ColumnConfig<T>) => (
-          <Column {...cellProps(column)} {...column}>
+          <Column
+            data-sticky-header={stickyHeader === undefined ? undefined : ""}
+            {...column}
+            {...cellProps(column, headerCellClassName, {
+              "--sticky-header-top":
+                typeof stickyHeader === "string" ? stickyHeader : 0,
+            } as CSSProperties)}
+          >
             {({ allowsSorting, sort, sortDirection }) => (
               <>
                 {column.name}
@@ -163,6 +174,7 @@ export const Table = <T extends string>({
             <Row
               className={clsx(styles.row, rowClassName)}
               columns={columns}
+              data-has-action={row.onAction === undefined ? undefined : ""}
               {...row}
             >
               {(column: ColumnConfig<T>) => (
@@ -176,15 +188,26 @@ export const Table = <T extends string>({
   </div>
 );
 
-const cellProps = <T extends string>({
-  alignment,
-  width,
-  fill,
-  sticky,
-}: Pick<ColumnConfig<T>, "alignment" | "width" | "fill" | "sticky">) => ({
-  className: styles.cell ?? "",
+const cellProps = <T extends string>(
+  {
+    className,
+    alignment,
+    width,
+    fill,
+    sticky,
+  }: Pick<
+    ColumnConfig<T>,
+    "alignment" | "width" | "fill" | "sticky" | "className"
+  >,
+  extraClassName?: string | undefined,
+  extraStyle?: CSSProperties,
+) => ({
+  className: clsx(styles.cell, extraClassName, className),
   "data-alignment": alignment ?? "left",
   "data-fill": fill ? "" : undefined,
   "data-sticky": sticky ? "" : undefined,
-  ...(width && { style: { "--width": width } as CSSProperties }),
+  style: {
+    ...extraStyle,
+    ...(width && ({ "--width": width } as CSSProperties)),
+  },
 });

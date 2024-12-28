@@ -36,6 +36,7 @@ export const AssetClassesDrawer = ({
     <DrawerTrigger>
       {children}
       <Drawer
+        fill
         title={
           <>
             <span>Asset Classes</span>
@@ -109,6 +110,7 @@ const AssetClassTable = ({
   return (
     <Table
       fill
+      stickyHeader
       label="Asset Classes"
       columns={[
         {

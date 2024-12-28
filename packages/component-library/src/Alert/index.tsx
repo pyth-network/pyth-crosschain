@@ -40,9 +40,10 @@ export const Alert = ({
         transition: { type: "spring", duration: 0.75, bounce: 0.5 },
       },
       hidden: {
-        y: "100%",
+        y: "calc(100% + 2rem)",
         transition: { ease: "linear", duration: CLOSE_DURATION_IN_S },
       },
+      unmounted: { y: "calc(100% + 2rem)" },
     }}
     className={clsx(styles.alert, className)}
     {...props}

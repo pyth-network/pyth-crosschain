@@ -19,7 +19,7 @@ export const TabRoot = (
 };
 
 type TabsProps = Omit<ComponentProps<typeof TabList>, "pathname" | "items"> & {
-  slug: string;
+  prefix: string;
   items: (Omit<
     ComponentProps<typeof TabList>["items"],
     "href" | "id"
@@ -28,16 +28,17 @@ type TabsProps = Omit<ComponentProps<typeof TabList>, "pathname" | "items"> & {
   })[];
 };
 
-export const Tabs = ({ slug, items, ...props }: TabsProps) => {
+export const Tabs = ({ prefix, items, ...props }: TabsProps) => {
   const pathname = usePathname();
-  const mappedItems = useMemo(() => {
-    const prefix = `/price-feeds/${slug}`;
-    return items.map((item) => ({
-      ...item,
-      id: item.segment ?? "",
-      href: item.segment ? `${prefix}/${item.segment}` : prefix,
-    }));
-  }, [items, slug]);
+  const mappedItems = useMemo(
+    () =>
+      items.map((item) => ({
+        ...item,
+        id: item.segment ?? "",
+        href: item.segment ? `${prefix}/${item.segment}` : prefix,
+      })),
+    [items, prefix],
+  );
 
   return <TabList pathname={pathname} items={mappedItems} {...props} />;
 };

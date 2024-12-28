@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { type ComponentProps, useMemo } from "react";
 
 import styles from "./index.module.scss";
-import { CopyButton } from "../CopyButton";
+import { PublisherKey } from "../PublisherKey";
 
 type Props = { isLoading: true } | { isLoading?: false; publisherKey: string };
 
@@ -32,24 +32,14 @@ export const PublisherTag = (props: Props) => {
           {knownPublisher ? (
             <div className={styles.nameAndKey}>
               <div className={styles.name}>{knownPublisher.name}</div>
-              <CopyButton
-                size="xs"
-                variant="ghost"
+              <PublisherKey
                 className={styles.key ?? ""}
-                text={props.publisherKey}
-              >
-                {`${props.publisherKey.slice(0, 4)}...${props.publisherKey.slice(-4)}`}
-              </CopyButton>
+                publisherKey={props.publisherKey}
+                size="xs"
+              />
             </div>
           ) : (
-            <CopyButton
-              size="sm"
-              variant="ghost"
-              className={styles.key ?? ""}
-              text={props.publisherKey}
-            >
-              {`${props.publisherKey.slice(0, 4)}...${props.publisherKey.slice(-4)}`}
-            </CopyButton>
+            <PublisherKey publisherKey={props.publisherKey} size="sm" />
           )}
         </>
       )}

@@ -10,6 +10,12 @@ const config = {
           `Expected class selector "${selector}" to be camel-case`,
       },
     ],
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        ignorePseudoClasses: ["global", "export"],
+      },
+    ],
   },
 };
 export default config;

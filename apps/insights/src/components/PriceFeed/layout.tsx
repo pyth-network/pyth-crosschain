@@ -13,7 +13,6 @@ import type { ReactNode } from "react";
 import styles from "./layout.module.scss";
 import { PriceFeedSelect } from "./price-feed-select";
 import { ReferenceData } from "./reference-data";
-import { TabPanel, TabRoot, Tabs } from "./tabs";
 import { toHex } from "../../hex";
 import { getData } from "../../services/pyth";
 import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
@@ -25,6 +24,7 @@ import {
   LiveValue,
 } from "../LivePrices";
 import { PriceFeedTag } from "../PriceFeedTag";
+import { TabPanel, TabRoot, Tabs } from "../Tabs";
 
 type Props = {
   children: ReactNode;
@@ -86,7 +86,7 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
               <Button variant="outline" size="sm" beforeIcon={ListDashes}>
                 Reference Data
               </Button>
-              <Drawer title="Reference Data">
+              <Drawer fill title="Reference Data">
                 <ReferenceData feed={feed} />
               </Drawer>
             </DrawerTrigger>
@@ -149,14 +149,14 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
       <TabRoot>
         <Tabs
           label="Price Feed Navigation"
-          slug={slug}
+          prefix={`/price-feeds/${slug}`}
           items={[
             { segment: undefined, children: "Chart" },
             {
-              segment: "price-components",
+              segment: "publishers",
               children: (
                 <div className={styles.priceComponentsTabLabel}>
-                  <span>Price Components</span>
+                  <span>Publishers</span>
                   <Badge size="xs" style="filled" variant="neutral">
                     <LiveValue feed={feed} field="numComponentPrices" />
                   </Badge>

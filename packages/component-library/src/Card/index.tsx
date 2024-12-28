@@ -21,6 +21,7 @@ type OwnProps = {
   title?: ReactNode | undefined;
   toolbar?: ReactNode | ReactNode[] | undefined;
   footer?: ReactNode | undefined;
+  nonInteractive?: boolean | undefined;
 };
 
 export type Props<T extends ElementType> = Omit<
@@ -30,11 +31,18 @@ export type Props<T extends ElementType> = Omit<
   OwnProps;
 
 export const Card = (
-  props: Props<"div"> | Props<typeof Link> | Props<typeof Button>,
+  props:
+    | (Props<"div"> & { nonInteractive?: true })
+    | Props<typeof Link>
+    | Props<typeof Button>,
 ) => {
   const overlayState = use(OverlayTriggerStateContext);
 
-  if (overlayState !== null || "onPress" in props) {
+  if (props.nonInteractive) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { nonInteractive, ...otherProps } = props;
+    return <div {...cardProps(otherProps)} />;
+  } else if (overlayState !== null || "onPress" in props) {
     return <Button {...cardProps(props)} />;
   } else if ("href" in props) {
     return <Link {...cardProps(props)} />;

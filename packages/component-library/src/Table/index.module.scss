@@ -82,11 +82,9 @@
       color: theme.color("muted");
 
       .cell {
+        position: relative;
         border-bottom: 1px solid theme.color("border");
         font-weight: theme.font-weight("medium");
-        position: sticky;
-        top: 0;
-        z-index: 1;
 
         .divider {
           width: 1px;
@@ -95,6 +93,12 @@
           position: absolute;
           right: 0;
           top: theme.spacing(3);
+        }
+
+        &[data-sticky-header] {
+          position: sticky;
+          top: var(--sticky-header-top);
+          z-index: 1;
         }
 
         &[data-sticky] {
@@ -149,7 +153,8 @@
           outline: theme.spacing(0.5) solid theme.color("focus");
         }
 
-        &[data-href] {
+        &[data-href],
+        &[data-has-action] {
           cursor: pointer;
         }
 
@@ -179,8 +184,11 @@
     }
   }
 
-  &[data-fill] .table {
-    width: 100%;
+  &[data-fill] {
+    &,
+    .table {
+      width: 100%;
+    }
   }
 
   &[data-rounded] {

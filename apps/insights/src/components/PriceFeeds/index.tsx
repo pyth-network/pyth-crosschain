@@ -11,7 +11,7 @@ import {
 } from "@pythnetwork/component-library/Card";
 import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
-import { type ElementType } from "react";
+import type { ElementType } from "react";
 
 import { AssetClassesDrawer } from "./asset-classes-drawer";
 import { ComingSoonList } from "./coming-soon-list";
@@ -94,6 +94,7 @@ export const PriceFeeds = async () => {
                 Show all
               </Button>
               <Drawer
+                fill
                 className={styles.comingSoonCard ?? ""}
                 title={
                   <>

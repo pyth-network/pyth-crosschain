@@ -16,6 +16,7 @@ import { useFilter, useCollator } from "react-aria";
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { NoResults } from "../NoResults";
 import { Ranking } from "../Ranking";
+import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 
 const PUBLISHER_SCORE_WIDTH = 24;
@@ -96,7 +97,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
     () =>
       paginatedItems.map(({ id, ranking, medianScore, ...data }) => ({
         id,
-        href: "#",
+        href: `/publishers/${id}`,
         data: {
           ...data,
           ranking: <Ranking>{ranking}</Ranking>,
@@ -200,6 +201,7 @@ const PublishersCardContents = ({
       rounded
       fill
       label="Publishers"
+      stickyHeader={rootStyles.headerHeight}
       columns={[
         {
           id: "ranking",
