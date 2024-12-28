@@ -94,6 +94,7 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
       </div>
       <Table
         fill
+        stickyHeader
         label="Asset Classes"
         className={styles.priceFeeds ?? ""}
         columns={[

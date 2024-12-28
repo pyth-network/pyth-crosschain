@@ -8,7 +8,7 @@ type Props = {
   children: ReactNode;
 };
 
-export const PriceFeedsLayout = ({ children }: Props) => (
+export const ZoomLayoutTransition = ({ children }: Props) => (
   <LayoutTransition
     variants={{
       initial: (custom) => ({

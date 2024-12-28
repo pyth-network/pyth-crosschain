@@ -1,22 +1,17 @@
 "use client";
 
-import { CaretUp } from "@phosphor-icons/react/dist/ssr/CaretUp";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import clsx from "clsx";
 import { type ComponentProps, createContext, use } from "react";
 import { useNumberFormatter } from "react-aria";
 import { z } from "zod";
 
-import styles from "./index.module.scss";
 import { StateType, useData } from "../../use-data";
+import { ChangeValue } from "../ChangeValue";
 import { useLivePrice } from "../LivePrices";
 
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
 const ONE_HOUR_IN_MS = 60 * ONE_MINUTE_IN_MS;
 const REFRESH_YESTERDAYS_PRICES_INTERVAL = ONE_HOUR_IN_MS;
-
-const CHANGE_PERCENT_SKELETON_WIDTH = 15;
 
 type Props = Omit<ComponentProps<typeof YesterdaysPricesContext>, "value"> & {
   feeds: (Feed & { symbol: string })[];
@@ -92,12 +87,7 @@ export const ChangePercent = ({ feed, className }: ChangePercentProps) => {
 
     case StateType.Loading:
     case StateType.NotLoaded: {
-      return (
-        <Skeleton
-          className={clsx(styles.changePercent, className)}
-          width={CHANGE_PERCENT_SKELETON_WIDTH}
-        />
-      );
+      return <ChangeValue className={className} isLoading />;
     }
 
     case StateType.Loaded: {
@@ -107,7 +97,7 @@ export const ChangePercent = ({ feed, className }: ChangePercentProps) => {
       // eslint-disable-next-line unicorn/no-null
       return yesterdaysPrice === undefined ? null : (
         <ChangePercentLoaded
-          className={clsx(styles.changePercent, className)}
+          className={className}
           priorPrice={yesterdaysPrice}
           feed={feed}
         />
@@ -130,7 +120,7 @@ const ChangePercentLoaded = ({
   const currentPrice = useLivePrice(feed);
 
   return currentPrice === undefined ? (
-    <Skeleton className={className} width={CHANGE_PERCENT_SKELETON_WIDTH} />
+    <ChangeValue className={className} isLoading />
   ) : (
     <PriceDifference
       className={className}
@@ -155,13 +145,12 @@ const PriceDifference = ({
   const direction = getDirection(currentPrice, priorPrice);
 
   return (
-    <span data-direction={direction} className={className}>
-      <CaretUp weight="fill" className={styles.caret} />
+    <ChangeValue direction={direction} className={className}>
       {numberFormatter.format(
-        (100 * Math.abs(currentPrice - priorPrice)) / currentPrice,
+        (100 * Math.abs(currentPrice - priorPrice)) / priorPrice,
       )}
       %
-    </span>
+    </ChangeValue>
   );
 };
 

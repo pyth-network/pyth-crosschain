@@ -15,8 +15,13 @@ const CLOSE_DURATION_IN_S = 0.15;
 export const CLOSE_DURATION_IN_MS = CLOSE_DURATION_IN_S * 1000;
 
 type OwnProps = {
+  fill?: boolean | undefined;
   title: ReactNode;
   closeHref?: string | undefined;
+  footer?: ReactNode | undefined;
+  headingClassName?: string | undefined;
+  bodyClassName?: string | undefined;
+  footerClassName?: string | undefined;
 };
 
 type Props = Omit<
@@ -30,10 +35,16 @@ export const Drawer = ({
   title,
   closeHref,
   children,
+  fill,
+  footer,
+  headingClassName,
+  bodyClassName,
+  footerClassName,
   ...props
 }: Props) => (
   <ModalDialog
     overlayVariants={{
+      unmounted: { backgroundColor: "#00000000" },
       hidden: { backgroundColor: "#00000000" },
       visible: { backgroundColor: "#00000080" },
     }}
@@ -47,13 +58,18 @@ export const Drawer = ({
         x: "calc(100% + 1rem)",
         transition: { ease: "linear", duration: CLOSE_DURATION_IN_S },
       },
+      unmounted: {
+        x: "calc(100% + 1rem)",
+      },
     }}
     className={clsx(styles.drawer, className)}
+    data-has-footer={footer === undefined ? undefined : ""}
+    data-fill={fill ? "" : undefined}
     {...props}
   >
     {(...args) => (
       <>
-        <div className={styles.heading}>
+        <div className={clsx(styles.heading, headingClassName)}>
           <Heading className={styles.title} slot="title">
             {title}
           </Heading>
@@ -70,9 +86,12 @@ export const Drawer = ({
             Close
           </Button>
         </div>
-        <div className={styles.body}>
+        <div className={clsx(styles.body, bodyClassName)}>
           {typeof children === "function" ? children(...args) : children}
         </div>
+        {footer && (
+          <div className={clsx(styles.footer, footerClassName)}>{footer}</div>
+        )}
       </>
     )}
   </ModalDialog>

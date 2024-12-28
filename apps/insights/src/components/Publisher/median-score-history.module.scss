@@ -1,0 +1,177 @@
+@use "@pythnetwork/component-library/theme";
+
+.medianScoreHistory {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(6);
+
+  .medianScoreHistoryChart {
+    grid-column: span 2 / span 2;
+    border-radius: theme.border-radius("2xl");
+    border: 1px solid theme.color("border");
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(4);
+
+    .top {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin: theme.spacing(4);
+
+      .left {
+        display: flex;
+        flex-flow: column nowrap;
+        gap: theme.spacing(1);
+
+        .header {
+          color: theme.color("heading");
+
+          @include theme.text("sm", "medium");
+        }
+
+        .subheader {
+          color: theme.color("muted");
+
+          @include theme.text("xs", "normal");
+        }
+      }
+    }
+
+    .chart {
+      border-bottom-left-radius: theme.border-radius("2xl");
+      border-bottom-right-radius: theme.border-radius("2xl");
+      overflow: hidden;
+
+      .medianScore,
+      .medianUptimeScore,
+      .medianDeviationScore,
+      .medianStalledScore {
+        transition: opacity 100ms linear;
+        opacity: 0.1;
+      }
+
+      .medianScore {
+        color: theme.color("states", "data", "normal");
+      }
+
+      .medianUptimeScore {
+        color: theme.color("states", "info", "normal");
+      }
+
+      .medianDeviationScore {
+        color: theme.color("states", "lime", "normal");
+      }
+
+      .medianStalledScore {
+        color: theme.color("states", "warning", "normal");
+      }
+    }
+
+    &:not([data-focused-score], [data-hovered-score]) {
+      .medianScore,
+      .medianUptimeScore,
+      .medianDeviationScore,
+      .medianStalledScore {
+        opacity: 1;
+      }
+    }
+
+    &[data-hovered-score="uptime"] {
+      .medianUptimeScore {
+        opacity: 0.7;
+      }
+    }
+
+    &[data-focused-score="uptime"] {
+      .medianUptimeScore {
+        opacity: 1;
+      }
+    }
+
+    &[data-hovered-score="deviation"] {
+      .medianDeviationScore {
+        opacity: 0.7;
+      }
+    }
+
+    &[data-focused-score="deviation"] {
+      .medianDeviationScore {
+        opacity: 1;
+      }
+    }
+
+    &[data-hovered-score="stalled"] {
+      .medianStalledScore {
+        opacity: 0.7;
+      }
+    }
+
+    &[data-focused-score="stalled"] {
+      .medianStalledScore {
+        opacity: 1;
+      }
+    }
+
+    &[data-hovered-score="final"] {
+      .medianScore {
+        opacity: 0.7;
+      }
+    }
+
+    &[data-focused-score="final"] {
+      .medianScore {
+        opacity: 1;
+      }
+    }
+  }
+
+  .rankingBreakdown {
+    .legendCell,
+    .scoreCell {
+      vertical-align: top;
+    }
+
+    .uptimeLegend,
+    .deviationLegend,
+    .stalledLegend,
+    .finalScoreLegend {
+      width: theme.spacing(4);
+      height: theme.spacing(4);
+      border-radius: theme.border-radius("full");
+    }
+
+    .uptimeLegend {
+      background: theme.color("states", "info", "normal");
+    }
+
+    .deviationLegend {
+      background: theme.color("states", "lime", "normal");
+    }
+
+    .stalledLegend {
+      background: theme.color("states", "warning", "normal");
+    }
+
+    .finalScoreLegend {
+      background: theme.color("states", "data", "normal");
+    }
+
+    .metric {
+      display: flex;
+      flex-flow: column nowrap;
+      gap: theme.spacing(2);
+      overflow: hidden;
+
+      .metricDescription {
+        color: theme.color("muted");
+
+        @include theme.text("sm", "normal");
+
+        white-space: normal;
+        line-height: 1.2;
+      }
+    }
+  }
+}

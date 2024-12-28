@@ -2,6 +2,11 @@
 
 $header-height: theme.spacing(20);
 
+:export {
+  // stylelint-disable-next-line property-no-unknown
+  headerHeight: $header-height;
+}
+
 .root {
   scroll-padding-top: $header-height;
   overflow-x: hidden;

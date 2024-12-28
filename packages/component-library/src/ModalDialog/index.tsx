@@ -106,7 +106,7 @@ export const ModalDialog = ({
       isExiting={animation === "hidden"}
       onAnimationStart={startAnimation}
       onAnimationComplete={endAnimation}
-      initial="hidden"
+      initial="unmounted"
       animate={animation}
       {...(onOpenChange && { onOpenChange })}
       {...(overlayVariants && { variants: overlayVariants })}

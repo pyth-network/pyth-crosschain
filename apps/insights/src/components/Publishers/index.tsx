@@ -6,17 +6,20 @@ import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
-import { z } from "zod";
 
 import styles from "./index.module.scss";
 import { PublishersCard } from "./publishers-card";
-import { SemicircleMeter, Label } from "./semicircle-meter";
-import { client as clickhouseClient } from "../../services/clickhouse";
-import { client as hermesClient } from "../../services/hermes";
-import { CLUSTER, getData } from "../../services/pyth";
-import { client as stakingClient } from "../../services/staking";
+import { getPublishers } from "../../services/clickhouse";
+import { getPublisherCaps } from "../../services/hermes";
+import { getData } from "../../services/pyth";
+import {
+  getDelState,
+  getClaimableRewards,
+  getDistributedRewards,
+} from "../../services/staking";
 import { FormattedTokens } from "../FormattedTokens";
 import { PublisherTag } from "../PublisherTag";
+import { SemicircleMeter, Label } from "../SemicircleMeter";
 import { TokenIcon } from "../TokenIcon";
 
 const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
@@ -104,26 +107,21 @@ export const Publishers = async () => {
               value={Number(oisStats.totalStaked)}
               maxValue={oisStats.maxPoolSize ?? 0}
               className={styles.oisPool ?? ""}
-              chartClassName={styles.oisPoolChart}
-              barClassName={styles.bar}
-              backgroundClassName={styles.background}
             >
-              <div className={styles.legend}>
-                <Label className={styles.title}>PYTH Staking Pool</Label>
-                <p className={styles.poolUsed}>
-                  <FormattedTokens
-                    mode="wholePart"
-                    tokens={oisStats.totalStaked}
-                  />
-                </p>
-                <p className={styles.poolTotal}>
-                  /{" "}
-                  <FormattedTokens
-                    mode="wholePart"
-                    tokens={BigInt(oisStats.maxPoolSize ?? 0)}
-                  />
-                </p>
-              </div>
+              <Label className={styles.title}>PYTH Staking Pool</Label>
+              <p className={styles.poolUsed}>
+                <FormattedTokens
+                  mode="wholePart"
+                  tokens={oisStats.totalStaked}
+                />
+              </p>
+              <p className={styles.poolTotal}>
+                /{" "}
+                <FormattedTokens
+                  mode="wholePart"
+                  tokens={BigInt(oisStats.maxPoolSize ?? 0)}
+                />
+              </p>
             </SemicircleMeter>
             <div className={styles.oisStats}>
               <StatCard
@@ -169,45 +167,25 @@ export const Publishers = async () => {
   );
 };
 
-const getPublishers = async () => {
-  const rows = await clickhouseClient.query({
-    query:
-      "SELECT key, rank, numSymbols, medianScore FROM insights_publishers(cluster={cluster: String})",
-    query_params: { cluster: CLUSTER },
-  });
-  const result = await rows.json();
-
-  return publishersSchema.parse(result.data);
-};
-
-const publishersSchema = z.array(
-  z.strictObject({
-    key: z.string(),
-    rank: z.number(),
-    numSymbols: z.number(),
-    medianScore: z.number(),
-  }),
-);
-
 const getTotalFeedCount = async () => {
   const pythData = await getData();
   return pythData.filter(({ price }) => price.numComponentPrices > 0).length;
 };
 
 const getOisStats = async () => {
-  const [poolData, rewardCustodyAccount, publisherCaps] = await Promise.all([
-    stakingClient.getPoolDataAccount(),
-    stakingClient.getRewardCustodyAccount(),
-    hermesClient.getLatestPublisherCaps({ parsed: true }),
-  ]);
+  const [delState, claimableRewards, distributedRewards, publisherCaps] =
+    await Promise.all([
+      getDelState(),
+      getClaimableRewards(),
+      getDistributedRewards(),
+      getPublisherCaps(),
+    ]);
 
   return {
     totalStaked:
-      sumDelegations(poolData.delState) + sumDelegations(poolData.selfDelState),
+      sumDelegations(delState.delState) + sumDelegations(delState.selfDelState),
     rewardsDistributed:
-      poolData.claimableRewards +
-      INITIAL_REWARD_POOL_SIZE -
-      rewardCustodyAccount.amount,
+      claimableRewards + INITIAL_REWARD_POOL_SIZE - distributedRewards,
     maxPoolSize: publisherCaps.parsed?.[0]?.publisher_stake_caps
       .map(({ cap }) => cap)
       .reduce((acc, value) => acc + value),

@@ -2,31 +2,33 @@
 
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
-import { Switch } from "@pythnetwork/component-library/Switch";
 import {
   type RowConfig,
   type SortDescriptor,
   Table,
 } from "@pythnetwork/component-library/Table";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import { type ReactNode, Suspense, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FormattedNumber } from "../FormattedNumber";
+import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 
-const PUBLISHER_SCORE_WIDTH = 24;
+const SCORE_WIDTH = 24;
 
 type Props = {
   className?: string | undefined;
+  toolbar?: ReactNode;
+  defaultSort: string;
+  defaultDescending?: boolean | undefined;
   priceComponents: PriceComponent[];
   nameLoadingSkeleton: ReactNode;
-  slug: string;
 };
 
 type PriceComponent = {
   id: string;
-  publisherNameAsString: string | undefined;
+  nameAsString: string | undefined;
   score: number;
   name: ReactNode;
   uptimeScore: number;
@@ -34,39 +36,22 @@ type PriceComponent = {
   deviationScore: number;
   stalledPenalty: number;
   stalledScore: number;
-  isTest: boolean;
 };
 
-export const PriceComponentsCard = ({
-  priceComponents,
-  slug,
-  ...props
-}: Props) => (
+export const PriceComponentsCard = ({ priceComponents, ...props }: Props) => (
   <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
-    <ResolvedPriceComponentsCard
-      priceComponents={priceComponents}
-      slug={slug}
-      {...props}
-    />
+    <ResolvedPriceComponentsCard priceComponents={priceComponents} {...props} />
   </Suspense>
 );
 
 const ResolvedPriceComponentsCard = ({
   priceComponents,
-  slug,
+  defaultSort,
+  defaultDescending,
   ...props
 }: Props) => {
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
-  const [includeTestComponents, setIncludeTestComponents] = useState(false);
-
-  const filteredPriceComponents = useMemo(
-    () =>
-      includeTestComponents
-        ? priceComponents
-        : priceComponents.filter((component) => !component.isTest),
-    [includeTestComponents, priceComponents],
-  );
 
   const {
     search,
@@ -82,11 +67,11 @@ const ResolvedPriceComponentsCard = ({
     numPages,
     mkPageLink,
   } = useQueryParamFilterPagination(
-    filteredPriceComponents,
+    priceComponents,
     (priceComponent, search) =>
       filter.contains(priceComponent.id, search) ||
-      (priceComponent.publisherNameAsString !== undefined &&
-        filter.contains(priceComponent.publisherNameAsString, search)),
+      (priceComponent.nameAsString !== undefined &&
+        filter.contains(priceComponent.nameAsString, search)),
     (a, b, { column, direction }) => {
       switch (column) {
         case "score":
@@ -117,10 +102,7 @@ const ResolvedPriceComponentsCard = ({
         case "name": {
           return (
             (direction === "descending" ? -1 : 1) *
-            collator.compare(
-              a.publisherNameAsString ?? a.id,
-              b.publisherNameAsString ?? b.id,
-            )
+            collator.compare(a.nameAsString ?? a.id, b.nameAsString ?? b.id)
           );
         }
 
@@ -131,8 +113,8 @@ const ResolvedPriceComponentsCard = ({
     },
     {
       defaultPageSize: 20,
-      defaultSort: "score",
-      defaultDescending: true,
+      defaultSort,
+      defaultDescending: defaultDescending ?? false,
     },
   );
 
@@ -150,10 +132,9 @@ const ResolvedPriceComponentsCard = ({
           ...data
         }) => ({
           id,
-          href: `/price-feeds/${slug}/price-components/${id}`,
           data: {
             ...data,
-            score: <Score score={score} width={PUBLISHER_SCORE_WIDTH} />,
+            score: <Score score={score} width={SCORE_WIDTH} />,
             uptimeScore: (
               <FormattedNumber
                 value={uptimeScore}
@@ -188,13 +169,11 @@ const ResolvedPriceComponentsCard = ({
           },
         }),
       ),
-    [paginatedItems, slug],
+    [paginatedItems],
   );
 
   return (
     <PriceComponentsCardContents
-      includeTestComponents={includeTestComponents}
-      setIncludeTestComponents={setIncludeTestComponents}
       numResults={numResults}
       search={search}
       sortDescriptor={sortDescriptor}
@@ -214,14 +193,12 @@ const ResolvedPriceComponentsCard = ({
 
 type PriceComponentsCardProps = Pick<
   Props,
-  "className" | "nameLoadingSkeleton"
+  "className" | "nameLoadingSkeleton" | "toolbar"
 > &
   (
     | { isLoading: true }
     | {
         isLoading?: false;
-        includeTestComponents: boolean;
-        setIncludeTestComponents: (newValue: boolean) => void;
         numResults: number;
         search: string;
         sortDescriptor: SortDescriptor;
@@ -248,23 +225,13 @@ type PriceComponentsCardProps = Pick<
 const PriceComponentsCardContents = ({
   className,
   nameLoadingSkeleton,
+  toolbar,
   ...props
 }: PriceComponentsCardProps) => (
   <Card
     className={className}
     title="Price components"
-    toolbar={
-      <Switch
-        {...(props.isLoading
-          ? { isPending: true }
-          : {
-              isSelected: props.includeTestComponents,
-              onChange: props.setIncludeTestComponents,
-            })}
-      >
-        Show test components
-      </Switch>
-    }
+    toolbar={toolbar}
     {...(!props.isLoading && {
       footer: (
         <Paginator
@@ -283,13 +250,14 @@ const PriceComponentsCardContents = ({
       label="Price components"
       fill
       rounded
+      stickyHeader={rootStyles.headerHeight}
       columns={[
         {
           id: "score",
           name: "SCORE",
           alignment: "center",
-          width: PUBLISHER_SCORE_WIDTH,
-          loadingSkeleton: <Score isLoading width={PUBLISHER_SCORE_WIDTH} />,
+          width: SCORE_WIDTH,
+          loadingSkeleton: <Score isLoading width={SCORE_WIDTH} />,
           allowsSorting: true,
         },
         {

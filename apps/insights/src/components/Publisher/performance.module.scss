@@ -1,0 +1,12 @@
+@use "@pythnetwork/component-library/theme";
+
+.performance {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: theme.spacing(12) theme.spacing(6);
+  align-items: flex-start;
+
+  > *:first-child {
+    grid-column: span 2 / span 2;
+  }
+}

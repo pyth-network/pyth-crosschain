@@ -473,11 +473,15 @@ $color: (
         light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
     ),
     "info": (
+      "background":
+        light-dark(pallette-color("indigo", 100), pallette-color("indigo", 950)),
       "background-opaque":
         light-dark(
           rgb(from pallette-color("indigo", 200) r g b / 80%),
           rgb(from pallette-color("indigo", 950) r g b / 80%)
         ),
+      "icon":
+        light-dark(pallette-color("indigo", 600), pallette-color("indigo", 500)),
       "normal":
         light-dark(pallette-color("indigo", 600), pallette-color("indigo", 400)),
     ),
@@ -500,6 +504,8 @@ $color: (
     "data": (
       "normal":
         light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
+      "background":
+        light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
     ),
   ),
   "focus":
@@ -515,6 +521,14 @@ $color: (
         "border":
           light-dark(pallette-color("stone", 400), pallette-color("steel", 500)),
       ),
+    ),
+  ),
+  "chart": (
+    "series": (
+      "primary":
+        light-dark(pallette-color("violet", 500), pallette-color("violet", 400)),
+      "neutral":
+        light-dark(pallette-color("stone", 500), pallette-color("steel", 300)),
     ),
   ),
   "button": (

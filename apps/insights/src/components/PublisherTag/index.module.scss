@@ -11,10 +11,6 @@
     height: theme.spacing(9);
   }
 
-  .key {
-    margin: 0 -#{theme.button-padding("sm", true)};
-  }
-
   .nameAndKey {
     display: flex;
     flex-flow: column nowrap;
@@ -26,7 +22,6 @@
     }
 
     .key {
-      margin: -#{theme.spacing(1)} -#{theme.button-padding("xs", true)};
       margin-bottom: -#{theme.spacing(2)};
     }
   }
