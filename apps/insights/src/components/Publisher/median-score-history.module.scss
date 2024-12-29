@@ -49,7 +49,7 @@
       .medianDeviationScore,
       .medianStalledScore {
         transition: opacity 100ms linear;
-        opacity: 0.1;
+        opacity: 0.2;
       }
 
       .medianScore {
@@ -78,48 +78,28 @@
       }
     }
 
-    &[data-hovered-score="uptime"] {
-      .medianUptimeScore {
-        opacity: 0.7;
-      }
-    }
-
+    &[data-hovered-score="uptime"],
     &[data-focused-score="uptime"] {
       .medianUptimeScore {
         opacity: 1;
       }
     }
 
-    &[data-hovered-score="deviation"] {
-      .medianDeviationScore {
-        opacity: 0.7;
-      }
-    }
-
+    &[data-hovered-score="deviation"],
     &[data-focused-score="deviation"] {
       .medianDeviationScore {
         opacity: 1;
       }
     }
 
-    &[data-hovered-score="stalled"] {
-      .medianStalledScore {
-        opacity: 0.7;
-      }
-    }
-
+    &[data-hovered-score="stalled"],
     &[data-focused-score="stalled"] {
       .medianStalledScore {
         opacity: 1;
       }
     }
 
-    &[data-hovered-score="final"] {
-      .medianScore {
-        opacity: 0.7;
-      }
-    }
-
+    &[data-hovered-score="final"],
     &[data-focused-score="final"] {
       .medianScore {
         opacity: 1;

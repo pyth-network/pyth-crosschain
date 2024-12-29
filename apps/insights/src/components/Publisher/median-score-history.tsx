@@ -97,7 +97,12 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
       >
         <div className={styles.top}>
           <div className={styles.left}>
-            <h3 className={styles.header}>Score History</h3>
+            <h3 className={styles.header}>
+              <HeaderText
+                hoveredScore={hoveredScore}
+                focusedScore={focusedScore}
+              />
+            </h3>
             <div className={styles.subheader}>
               {selectedPoint
                 ? dateFormatter.format(selectedPoint.time)
@@ -127,6 +132,7 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
                 dot={false}
                 className={styles.medianScore ?? ""}
                 stroke="currentColor"
+                strokeWidth={focusedScore === "final" ? 3 : 1}
               />
               <Line
                 type="monotone"
@@ -134,6 +140,7 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
                 dot={false}
                 className={styles.medianUptimeScore ?? ""}
                 stroke="currentColor"
+                strokeWidth={focusedScore === "uptime" ? 3 : 1}
               />
               <Line
                 type="monotone"
@@ -141,6 +148,7 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
                 dot={false}
                 className={styles.medianDeviationScore ?? ""}
                 stroke="currentColor"
+                strokeWidth={focusedScore === "deviation" ? 3 : 1}
               />
               <Line
                 type="monotone"
@@ -148,6 +156,7 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
                 dot={false}
                 className={styles.medianStalledScore ?? ""}
                 stroke="currentColor"
+                strokeWidth={focusedScore === "stalled" ? 3 : 1}
               />
               <XAxis dataKey="time" hide />
               <YAxis hide />
@@ -261,6 +270,28 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
       </Card>
     </div>
   );
+};
+
+type HeaderTextProps = {
+  focusedScore: FocusedScore;
+  hoveredScore: FocusedScore;
+};
+
+const HeaderText = ({ hoveredScore, focusedScore }: HeaderTextProps) => {
+  switch (focusedScore ?? hoveredScore) {
+    case "uptime": {
+      return "Median Uptime Score History";
+    }
+    case "deviation": {
+      return "Median Deviation Score History";
+    }
+    case "stalled": {
+      return "Median Stalled Score History";
+    }
+    default: {
+      return "Median Score History";
+    }
+  }
 };
 
 type FocusedScore = "uptime" | "deviation" | "stalled" | "final" | undefined;

@@ -191,10 +191,12 @@ export const PublishersLayout = async ({ children, params }: Props) => {
             />
             <Drawer
               title="Median Score"
+              className={styles.medianScoreDrawer ?? ""}
               bodyClassName={styles.medianScoreDrawerBody}
+              footerClassName={styles.medianScoreDrawerFooter}
               footer={
                 <Button
-                  variant="solid"
+                  variant="outline"
                   size="sm"
                   href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                   target="_blank"
