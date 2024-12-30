@@ -8,6 +8,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
 
 import styles from "./coming-soon-list.module.scss";
+import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
@@ -78,9 +79,10 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
       <div className={styles.searchBar}>
         <SearchInput
           size="sm"
-          defaultValue={search}
+          value={search}
           onChange={setSearch}
-          width={40}
+          width={50}
+          placeholder="Feed symbol"
         />
         <Select
           optionGroups={[
@@ -104,15 +106,27 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
         stickyHeader
         label="Coming Soon"
         className={styles.priceFeeds ?? ""}
+        renderEmptyState={() => (
+          <NoResults
+            query={search}
+            onClearSearch={() => {
+              setSearch("");
+            }}
+          />
+        )}
         columns={[
           {
             id: "priceFeedName",
             name: "PRICE FEED",
             isRowHeader: true,
-            fill: true,
             alignment: "left",
           },
-          { id: "assetClass", name: "ASSET CLASS", alignment: "right" },
+          {
+            id: "assetClass",
+            name: "ASSET CLASS",
+            alignment: "right",
+            width: 40,
+          },
         ]}
         rows={rows}
       />

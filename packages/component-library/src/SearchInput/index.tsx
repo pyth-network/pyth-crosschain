@@ -18,6 +18,7 @@ type Props = ComponentProps<typeof SearchField> & {
   size?: (typeof SIZES)[number] | undefined;
   width: number;
   isPending?: boolean | undefined;
+  placeholder?: string;
 };
 
 export const SearchInput = ({
@@ -26,6 +27,7 @@ export const SearchInput = ({
   width,
   className,
   isPending,
+  placeholder = "Search",
   ...props
 }: Props) => (
   <SearchField
@@ -36,7 +38,7 @@ export const SearchInput = ({
     {...(isPending && { "data-pending": "" })}
     {...props}
   >
-    <Input className={styles.input ?? ""} placeholder="Search" />
+    <Input className={styles.input ?? ""} placeholder={placeholder} />
     <MagnifyingGlass className={styles.searchIcon} />
     <CircleNotch className={styles.loadingIcon} />
     <Button className={styles.clearButton ?? ""}>

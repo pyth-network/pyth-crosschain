@@ -261,7 +261,8 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
         />
         <SearchInput
           size="sm"
-          width={40}
+          width={50}
+          placeholder="Feed symbol"
           {...(props.isLoading
             ? { isPending: true, isDisabled: true }
             : {

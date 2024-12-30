@@ -51,7 +51,7 @@ export const Performance = async ({ params }: Props) => {
             {
               id: "ranking",
               name: "RANKING",
-              width: 30,
+              width: 25,
             },
             {
               id: "name",
@@ -63,13 +63,13 @@ export const Performance = async ({ params }: Props) => {
               id: "activeFeeds",
               name: "ACTIVE FEEDS",
               alignment: "center",
-              width: 40,
+              width: 30,
             },
             {
               id: "inactiveFeeds",
               name: "INACTIVE FEEDS",
               alignment: "center",
-              width: 45,
+              width: 30,
             },
             {
               id: "medianScore",
@@ -148,20 +148,19 @@ const feedColumns = [
     id: "score" as const,
     name: "SCORE",
     alignment: "left" as const,
-    width: 40,
+    width: PUBLISHER_SCORE_WIDTH,
   },
   {
     id: "asset" as const,
     name: "ASSET",
     isRowHeader: true,
     alignment: "left" as const,
-    fill: true,
   },
   {
     id: "assetClass" as const,
     name: "ASSET CLASS",
     alignment: "right" as const,
-    width: 50,
+    width: 40,
   },
 ];
 
