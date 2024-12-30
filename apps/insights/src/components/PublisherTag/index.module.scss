@@ -3,12 +3,18 @@
 .publisherTag {
   display: flex;
   flex-flow: row nowrap;
-  gap: theme.spacing(4);
+  gap: theme.spacing(3);
   align-items: center;
+  width: 100%;
+
+  .icon,
+  .undisclosedIconWrapper {
+    width: theme.spacing(10);
+    height: theme.spacing(10);
+  }
 
   .icon {
-    width: theme.spacing(9);
-    height: theme.spacing(9);
+    flex: none;
     display: grid;
     place-content: center;
 
@@ -20,15 +26,21 @@
     }
   }
 
+  .name {
+    color: theme.color("heading");
+    font-weight: theme.font-weight("medium");
+  }
+
+  .publisherKey,
+  .icon {
+    color: theme.color("foreground");
+  }
+
   .nameAndKey {
     display: flex;
     flex-flow: column nowrap;
     gap: theme.spacing(1);
     align-items: flex-start;
-
-    .name {
-      color: theme.color("heading");
-    }
 
     .key {
       margin-bottom: -#{theme.spacing(2)};
@@ -53,6 +65,14 @@
   &[data-loading] {
     .icon {
       border-radius: theme.border-radius("full");
+    }
+  }
+
+  &[data-compact] {
+    .icon,
+    .undisclosedIconWrapper {
+      width: theme.spacing(6);
+      height: theme.spacing(6);
     }
   }
 }

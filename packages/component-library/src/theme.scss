@@ -653,6 +653,10 @@ $button-sizes: (
   @return map-get-strict($button-sizes, $size, "icon-size");
 }
 
+@function button-border-radius($size) {
+  @return map-get-strict($button-sizes, $size, "border-radius");
+}
+
 @mixin sr-only {
   position: absolute;
   width: 1px;

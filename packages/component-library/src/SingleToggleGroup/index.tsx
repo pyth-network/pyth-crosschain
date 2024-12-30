@@ -3,34 +3,40 @@
 import clsx from "clsx";
 import { motion } from "motion/react";
 import { type ComponentProps, useId } from "react";
+import { ToggleButtonGroup, ToggleButton } from "react-aria-components";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
-import { Tab, TabList } from "../unstyled/Tabs/index.js";
 
 type OwnProps = {
-  pathname?: string | undefined;
-  items: ComponentProps<typeof Tab>[];
+  items: ComponentProps<typeof ToggleButton>[];
 };
-type Props = Omit<ComponentProps<typeof TabList>, keyof OwnProps> & OwnProps;
+type Props = Omit<
+  ComponentProps<typeof ToggleButtonGroup>,
+  keyof OwnProps | "selectionMode"
+> &
+  OwnProps;
 
-export const MainNavTabs = ({ className, pathname, ...props }: Props) => {
+export const SingleToggleGroup = ({ className, items, ...props }: Props) => {
   const id = useId();
+
   return (
-    <TabList
-      aria-label="Main Navigation"
-      className={clsx(styles.mainNavTabs, className)}
-      dependencies={[pathname]}
+    <ToggleButtonGroup
+      className={clsx(styles.singleToggleGroup, className)}
+      selectionMode="single"
       {...props}
     >
-      {({ className: tabClassName, children, ...tab }) => (
-        <Tab
-          className={clsx(styles.tab, buttonStyles.button, tabClassName)}
+      {items.map(({ className: tabClassName, children, ...toggleButton }) => (
+        <ToggleButton
+          key={toggleButton.id}
+          className={clsx(
+            styles.toggleButton,
+            buttonStyles.button,
+            tabClassName,
+          )}
           data-size="sm"
           data-variant="ghost"
-          data-rounded
-          data-selectable={pathname === tab.href ? undefined : ""}
-          {...tab}
+          {...toggleButton}
         >
           {(args) => (
             <>
@@ -47,8 +53,8 @@ export const MainNavTabs = ({ className, pathname, ...props }: Props) => {
               </span>
             </>
           )}
-        </Tab>
-      )}
-    </TabList>
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
   );
 };

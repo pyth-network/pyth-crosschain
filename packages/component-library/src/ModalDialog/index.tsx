@@ -16,6 +16,7 @@ import {
   ModalOverlay,
   Dialog,
   DialogTrigger,
+  Select,
 } from "react-aria-components";
 
 import { useSetOverlayVisible } from "../overlay-visible-context.js";
@@ -38,6 +39,23 @@ export const ModalDialogTrigger = (
   return (
     <ModalAnimationContext value={[animation, setAnimation]}>
       <DialogTrigger onOpenChange={handleOpenChange} {...props} />
+    </ModalAnimationContext>
+  );
+};
+
+export const ModalSelect = (props: ComponentProps<typeof DialogTrigger>) => {
+  const [animation, setAnimation] = useState<AnimationState>("unmounted");
+
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      setAnimation(isOpen ? "visible" : "hidden");
+    },
+    [setAnimation],
+  );
+
+  return (
+    <ModalAnimationContext value={[animation, setAnimation]}>
+      <Select onOpenChange={handleOpenChange} {...props} />
     </ModalAnimationContext>
   );
 };
@@ -113,7 +131,7 @@ export const ModalDialog = ({
       {...(overlayClassName && { className: overlayClassName })}
       {...(isOpen !== undefined && { isOpen })}
     >
-      <Modal>
+      <Modal style={{ height: 0 }}>
         {(...args) => (
           <MotionDialog {...props}>
             {typeof children === "function" ? children(...args) : children}

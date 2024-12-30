@@ -7,6 +7,7 @@
   transition-duration: 100ms;
   transition-timing-function: linear;
   border: 1px solid var(--badge-color);
+  white-space: nowrap;
 
   &[data-size="xs"] {
     line-height: theme.spacing(4);
