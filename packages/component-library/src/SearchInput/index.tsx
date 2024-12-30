@@ -4,7 +4,7 @@ import { CircleNotch } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import clsx from "clsx";
-import { type CSSProperties, type ComponentProps } from "react";
+import type { CSSProperties, ComponentProps } from "react";
 
 import styles from "./index.module.scss";
 import { Button } from "../unstyled/Button/index.js";

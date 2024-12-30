@@ -6,11 +6,22 @@ import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { useMemo } from "react";
 import { useIsSSR } from "react-aria";
 
-export const SearchButton = () => (
-  <Button beforeIcon={MagnifyingGlass} variant="outline" size="sm" rounded>
-    <SearchText />
-  </Button>
-);
+import { useToggleSearchDialog } from "./search-dialog";
+
+export const SearchButton = () => {
+  const toggleSearchDialog = useToggleSearchDialog();
+  return (
+    <Button
+      onPress={toggleSearchDialog}
+      beforeIcon={MagnifyingGlass}
+      variant="outline"
+      size="sm"
+      rounded
+    >
+      <SearchText />
+    </Button>
+  );
+};
 
 const SearchText = () => {
   const isSSR = useIsSSR();
