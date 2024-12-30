@@ -4,11 +4,7 @@ import { toHex, truncateHex } from "../../hex";
 import { CopyButton } from "../CopyButton";
 
 type OwnProps = {
-  feed: {
-    product: {
-      price_account: string;
-    };
-  };
+  feedKey: string;
 };
 
 type Props = Omit<
@@ -17,15 +13,12 @@ type Props = Omit<
 > &
   OwnProps;
 
-export const FeedKey = ({ feed, ...props }: Props) => {
-  const key = useMemo(
-    () => toHex(feed.product.price_account),
-    [feed.product.price_account],
-  );
-  const truncatedKey = useMemo(() => truncateHex(key), [key]);
+export const FeedKey = ({ feedKey, ...props }: Props) => {
+  const hexKey = useMemo(() => toHex(feedKey), [feedKey]);
+  const truncatedKey = useMemo(() => truncateHex(hexKey), [hexKey]);
 
   return (
-    <CopyButton text={key} {...props}>
+    <CopyButton text={hexKey} {...props}>
       {truncatedKey}
     </CopyButton>
   );

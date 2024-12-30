@@ -46,10 +46,6 @@ export const Button = (
     <UnstyledButton {...buttonProps(props)} />
   );
 
-type ButtonImplProps = OwnProps & {
-  className?: Parameters<typeof clsx>[0];
-};
-
 const buttonProps = ({
   variant = "primary",
   size = "md",
@@ -59,9 +55,9 @@ const buttonProps = ({
   beforeIcon,
   afterIcon,
   hideText = false,
-  ...inputProps
-}: ButtonImplProps) => ({
-  ...inputProps,
+  ...otherProps
+}: OwnProps & { className?: Parameters<typeof clsx>[0] }) => ({
+  ...otherProps,
   "data-variant": variant,
   "data-size": size,
   "data-rounded": rounded ? "" : undefined,

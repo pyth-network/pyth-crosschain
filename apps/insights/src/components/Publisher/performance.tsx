@@ -3,12 +3,15 @@ import { Network } from "@phosphor-icons/react/dist/ssr/Network";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Table } from "@pythnetwork/component-library/Table";
+import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
+import { createElement } from "react";
 
 import { getRankingsWithData } from "./get-rankings-with-data";
 import styles from "./performance.module.scss";
 import { getPublishers } from "../../services/clickhouse";
 import { getTotalFeedCount } from "../../services/pyth";
+import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
@@ -75,35 +78,46 @@ export const Performance = async ({ params }: Props) => {
               width: PUBLISHER_SCORE_WIDTH,
             },
           ]}
-          rows={slicedPublishers.map((publisher) => ({
-            id: publisher.key,
-            data: {
-              ranking: (
-                <Ranking isCurrent={publisher.key === key}>
-                  {publisher.rank}
-                </Ranking>
-              ),
-              activeFeeds: publisher.numSymbols,
-              inactiveFeeds: totalFeeds - publisher.numSymbols,
-              medianScore: (
-                <Score
-                  width={PUBLISHER_SCORE_WIDTH}
-                  score={publisher.medianScore}
-                />
-              ),
-              name: <PublisherTag publisherKey={publisher.key} />,
-            },
-            ...(publisher.key !== key && {
-              href: `/publishers/${publisher.key}`,
-            }),
-          }))}
+          rows={slicedPublishers.map((publisher) => {
+            const knownPublisher = lookup(publisher.key);
+            return {
+              id: publisher.key,
+              data: {
+                ranking: (
+                  <Ranking isCurrent={publisher.key === key}>
+                    {publisher.rank}
+                  </Ranking>
+                ),
+                activeFeeds: publisher.numSymbols,
+                inactiveFeeds: totalFeeds - publisher.numSymbols,
+                medianScore: (
+                  <Score
+                    width={PUBLISHER_SCORE_WIDTH}
+                    score={publisher.medianScore}
+                  />
+                ),
+                name: (
+                  <PublisherTag
+                    publisherKey={publisher.key}
+                    {...(knownPublisher && {
+                      name: knownPublisher.name,
+                      icon: createElement(knownPublisher.icon.color),
+                    })}
+                  />
+                ),
+              },
+              ...(publisher.key !== key && {
+                href: `/publishers/${publisher.key}`,
+              }),
+            };
+          })}
         />
       </Card>
-      <Card icon={<Network />} title="High-performing feeds">
+      <Card icon={<Network />} title="High-Performing Feeds">
         <Table
           rounded
           fill
-          label="High-performing feeds"
+          label="High-Performing Feeds"
           columns={feedColumns}
           rows={getFeedRows(
             rankingsWithData
@@ -112,11 +126,11 @@ export const Performance = async ({ params }: Props) => {
           )}
         />
       </Card>
-      <Card icon={<Network />} title="Low-performing feeds">
+      <Card icon={<Network />} title="Low-Performing Feeds">
         <Table
           rounded
           fill
-          label="Low-performing feeds"
+          label="Low-Performing Feeds"
           columns={feedColumns}
           rows={getFeedRows(
             rankingsWithData
@@ -157,7 +171,13 @@ const getFeedRows = (
   rankingsWithData.slice(0, 10).map(({ feed, ranking }) => ({
     id: ranking.symbol,
     data: {
-      asset: <PriceFeedTag compact feed={feed} />,
+      asset: (
+        <PriceFeedTag
+          compact
+          symbol={feed.product.display_symbol}
+          icon={<PriceFeedIcon symbol={feed.symbol} />}
+        />
+      ),
       assetClass: (
         <Badge variant="neutral" style="outline" size="xs">
           {feed.product.asset_type.toUpperCase()}

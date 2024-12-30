@@ -1,6 +1,6 @@
 import { getRankingsWithData } from "./get-rankings-with-data";
-import { PriceComponentsCard } from "../PriceComponentsCard";
-import { PriceFeedTag } from "../PriceFeedTag";
+import { PriceFeedsCard } from "./price-feeds-card";
+import { PriceFeedIcon } from "../PriceFeedIcon";
 
 type Props = {
   params: Promise<{
@@ -13,20 +13,18 @@ export const PriceFeeds = async ({ params }: Props) => {
   const rankingsWithData = await getRankingsWithData(key);
 
   return (
-    <PriceComponentsCard
-      defaultSort="name"
+    <PriceFeedsCard
       priceComponents={rankingsWithData.map(({ ranking, feed }) => ({
         id: feed.product.price_account,
-        nameAsString: feed.product.display_symbol,
+        displaySymbol: feed.product.display_symbol,
         score: ranking.final_score,
-        name: <PriceFeedTag compact feed={feed} />,
+        icon: <PriceFeedIcon symbol={feed.symbol} />,
         uptimeScore: ranking.uptime_score,
         deviationPenalty: ranking.deviation_penalty,
         deviationScore: ranking.deviation_score,
         stalledPenalty: ranking.stalled_penalty,
         stalledScore: ranking.stalled_score,
       }))}
-      nameLoadingSkeleton={<PriceFeedTag compact isLoading />}
     />
   );
 };

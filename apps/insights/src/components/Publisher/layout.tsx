@@ -11,8 +11,9 @@ import { Button } from "@pythnetwork/component-library/Button";
 import { DrawerTrigger, Drawer } from "@pythnetwork/component-library/Drawer";
 import { InfoBox } from "@pythnetwork/component-library/InfoBox";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
+import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, createElement } from "react";
 
 import { ActiveFeedsCard } from "./active-feeds-card";
 import { ChartCard } from "./chart-card";
@@ -71,6 +72,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
 
   const currentMedianScore = medianScoreHistory.at(-1);
   const previousMedianScore = medianScoreHistory.at(-2);
+  const knownPublisher = lookup(key);
 
   return currentRanking && currentMedianScore && publisher ? (
     <div className={styles.publisherLayout}>
@@ -87,7 +89,13 @@ export const PublishersLayout = async ({ children, params }: Props) => {
           />
         </div>
         <div className={styles.headerRow}>
-          <PublisherTag publisherKey={key} />
+          <PublisherTag
+            publisherKey={key}
+            {...(knownPublisher && {
+              name: knownPublisher.name,
+              icon: createElement(knownPublisher.icon.color),
+            })}
+          />
         </div>
         <section className={styles.stats}>
           <ChartCard

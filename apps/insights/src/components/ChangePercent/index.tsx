@@ -14,7 +14,7 @@ const ONE_HOUR_IN_MS = 60 * ONE_MINUTE_IN_MS;
 const REFRESH_YESTERDAYS_PRICES_INTERVAL = ONE_HOUR_IN_MS;
 
 type Props = Omit<ComponentProps<typeof YesterdaysPricesContext>, "value"> & {
-  feeds: (Feed & { symbol: string })[];
+  feeds: Record<string, string>;
 };
 
 const YesterdaysPricesContext = createContext<
@@ -23,7 +23,7 @@ const YesterdaysPricesContext = createContext<
 
 export const YesterdaysPricesProvider = ({ feeds, ...props }: Props) => {
   const state = useData(
-    ["yesterdaysPrices", feeds.map((feed) => feed.symbol)],
+    ["yesterdaysPrices", Object.keys(feeds)],
     () => getYesterdaysPrices(feeds),
     {
       refreshInterval: REFRESH_YESTERDAYS_PRICES_INTERVAL,
@@ -34,22 +34,16 @@ export const YesterdaysPricesProvider = ({ feeds, ...props }: Props) => {
 };
 
 const getYesterdaysPrices = async (
-  feeds: (Feed & { symbol: string })[],
+  feeds: Props["feeds"],
 ): Promise<Map<string, number>> => {
   const url = new URL("/yesterdays-prices", window.location.origin);
-  for (const feed of feeds) {
-    url.searchParams.append("symbols", feed.symbol);
+  for (const symbol of Object.keys(feeds)) {
+    url.searchParams.append("symbols", symbol);
   }
   const response = await fetch(url);
-  const data: unknown = await response.json();
+  const data = yesterdaysPricesSchema.parse(await response.json());
   return new Map(
-    Object.entries(yesterdaysPricesSchema.parse(data)).map(
-      ([symbol, value]) => [
-        feeds.find((feed) => feed.symbol === symbol)?.product.price_account ??
-          "",
-        value,
-      ],
-    ),
+    Object.entries(data).map(([symbol, value]) => [feeds[symbol] ?? "", value]),
   );
 };
 
@@ -67,39 +61,28 @@ const useYesterdaysPrices = () => {
 
 type ChangePercentProps = {
   className?: string | undefined;
-  feed: Feed;
+  feedKey: string;
 };
 
-type Feed = {
-  product: {
-    price_account: string;
-  };
-};
-
-export const ChangePercent = ({ feed, className }: ChangePercentProps) => {
+export const ChangePercent = ({ feedKey, className }: ChangePercentProps) => {
   const yesterdaysPriceState = useYesterdaysPrices();
 
   switch (yesterdaysPriceState.type) {
-    case StateType.Error: {
-      // eslint-disable-next-line unicorn/no-null
-      return null;
-    }
-
+    case StateType.Error:
     case StateType.Loading:
     case StateType.NotLoaded: {
       return <ChangeValue className={className} isLoading />;
     }
 
     case StateType.Loaded: {
-      const yesterdaysPrice = yesterdaysPriceState.data.get(
-        feed.product.price_account,
-      );
-      // eslint-disable-next-line unicorn/no-null
-      return yesterdaysPrice === undefined ? null : (
+      const yesterdaysPrice = yesterdaysPriceState.data.get(feedKey);
+      return yesterdaysPrice === undefined ? (
+        <ChangeValue className={className} isLoading />
+      ) : (
         <ChangePercentLoaded
           className={className}
           priorPrice={yesterdaysPrice}
-          feed={feed}
+          feedKey={feedKey}
         />
       );
     }
@@ -109,15 +92,15 @@ export const ChangePercent = ({ feed, className }: ChangePercentProps) => {
 type ChangePercentLoadedProps = {
   className?: string | undefined;
   priorPrice: number;
-  feed: Feed;
+  feedKey: string;
 };
 
 const ChangePercentLoaded = ({
   className,
   priorPrice,
-  feed,
+  feedKey,
 }: ChangePercentLoadedProps) => {
-  const currentPrice = useLivePrice(feed);
+  const currentPrice = useLivePrice(feedKey);
 
   return currentPrice === undefined ? (
     <ChangeValue className={className} isLoading />

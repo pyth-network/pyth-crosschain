@@ -13,7 +13,6 @@
     display: inline-flex;
     align-items: center;
     padding: 0 theme.spacing(0.5);
-    margin-right: theme.spacing(2);
     justify-content: flex-start;
     transition-property: background-color, border-color, outline-color;
     transition-duration: 100ms;
@@ -35,6 +34,7 @@
     @include theme.text("sm", "normal");
 
     display: inline-block;
+    margin: 0 theme.spacing(2);
   }
 
   &[data-hovered] {
