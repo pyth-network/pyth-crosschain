@@ -18,6 +18,7 @@ import { useFilter, useCollator } from "react-aria";
 import styles from "./publishers-card.module.scss";
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FormattedNumber } from "../FormattedNumber";
+import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
@@ -284,7 +285,8 @@ const PriceComponentsCardContents = ({
         </Switch>
         <SearchInput
           size="sm"
-          width={40}
+          width={60}
+          placeholder="Publisher key or name"
           {...(props.isLoading
             ? { isPending: true, isDisabled: true }
             : {
@@ -334,35 +336,35 @@ const PriceComponentsCardContents = ({
           id: "uptimeScore",
           name: "UPTIME SCORE",
           alignment: "center",
-          width: 40,
+          width: 35,
           allowsSorting: true,
         },
         {
           id: "deviationScore",
           name: "DEVIATION SCORE",
           alignment: "center",
-          width: 40,
+          width: 35,
           allowsSorting: true,
         },
         {
           id: "deviationPenalty",
           name: "DEVIATION PENALTY",
           alignment: "center",
-          width: 40,
+          width: 35,
           allowsSorting: true,
         },
         {
           id: "stalledScore",
           name: "STALLED SCORE",
           alignment: "center",
-          width: 40,
+          width: 35,
           allowsSorting: true,
         },
         {
           id: "stalledPenalty",
           name: "STALLED PENALTY",
           alignment: "center",
-          width: 40,
+          width: 35,
           allowsSorting: true,
         },
       ]}
@@ -372,6 +374,14 @@ const PriceComponentsCardContents = ({
             rows: props.rows,
             sortDescriptor: props.sortDescriptor,
             onSortChange: props.onSortChange,
+            renderEmptyState: () => (
+              <NoResults
+                query={props.search}
+                onClearSearch={() => {
+                  props.onSearchChange("");
+                }}
+              />
+            ),
           })}
     />
   </Card>

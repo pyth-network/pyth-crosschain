@@ -194,7 +194,8 @@ const PublishersCardContents = ({
     toolbar={
       <SearchInput
         size="sm"
-        width={40}
+        width={60}
+        placeholder="Publisher key or name"
         {...(props.isLoading
           ? { isPending: true, isDisabled: true }
           : {
@@ -226,7 +227,7 @@ const PublishersCardContents = ({
         {
           id: "ranking",
           name: "RANKING",
-          width: 30,
+          width: 25,
           loadingSkeleton: <Ranking isLoading />,
           allowsSorting: true,
         },
@@ -242,14 +243,14 @@ const PublishersCardContents = ({
           id: "activeFeeds",
           name: "ACTIVE FEEDS",
           alignment: "center",
-          width: 40,
+          width: 30,
           allowsSorting: true,
         },
         {
           id: "inactiveFeeds",
           name: "INACTIVE FEEDS",
           alignment: "center",
-          width: 45,
+          width: 30,
           allowsSorting: true,
         },
         {

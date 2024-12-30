@@ -43,7 +43,7 @@
       white-space: nowrap;
       border: 0;
       outline: theme.spacing(0.5) solid transparent;
-      width: calc(theme.spacing(1) * var(--width));
+      width: calc((theme.spacing(1) * var(--width)) + theme.spacing(8));
       outline-offset: -#{theme.spacing(0.5)};
       background-color: theme.color("background", "primary");
       transition: outline-color 100ms linear;
