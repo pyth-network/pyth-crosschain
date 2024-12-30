@@ -129,8 +129,16 @@
   }
 }
 
-.medianScoreDrawerBody {
-  display: flex;
-  flex-flow: column nowrap;
-  gap: theme.spacing(6);
+.medianScoreDrawer {
+  .medianScoreDrawerFooter {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-end;
+  }
+
+  .medianScoreDrawerBody {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(6);
+  }
 }
