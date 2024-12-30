@@ -1,18 +1,27 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { EvmChain } from "../src/chains";
-import { DefaultStore } from "../src/store";
+import { DefaultStore, createStore } from "../src/store";
 import { readFileSync } from "fs";
 import { toPrivateKey } from "../src";
 
-import { COMMON_DEPLOY_OPTIONS } from "./common";
+import { COMMON_DEPLOY_OPTIONS, COMMON_STORE_OPTIONS } from "./common";
+
+interface ArgV {
+  "std-output": string;
+  "private-key": string;
+  chain: string;
+  "deploy-args"?: string[];
+  "store-dir"?: string;
+}
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_contract.ts")
   .usage(
-    "Usage: $0 --std-output <path/to/std-output.json> --private-key <private-key> --chain <chain> [--deploy-args <arg> [... <args>]]"
+    "Usage: $0 --std-output <path/to/std-output.json> --private-key <private-key> --chain <chain> [--deploy-args <arg> [... <args>]] [--store-dir <store-dir>]"
   )
   .options({
+    ...COMMON_STORE_OPTIONS,
     "std-output": {
       type: "string",
       demandOption: true,
@@ -31,12 +40,13 @@ const parser = yargs(hideBin(process.argv))
   });
 
 async function main() {
-  const argv = await parser.argv;
+  const argv = (await parser.argv) as ArgV;
+  const store = createStore(argv["store-dir"]);
 
-  const chain = DefaultStore.chains[argv.chain];
+  const chain = store.chains[argv.chain];
 
   if (!chain) {
-    throw new Error(`Chain ${argv.contract} not found`);
+    throw new Error(`Chain ${argv.chain} not found`);
   }
 
   if (chain instanceof EvmChain) {

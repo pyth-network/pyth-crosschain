@@ -1,13 +1,23 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, EvmChain, loadHotWallet } from "../src";
+import { DefaultStore, EvmChain, loadHotWallet, createStore } from "../src";
+import { COMMON_STORE_OPTIONS } from "./common";
+
+interface ArgV {
+  testnet: boolean;
+  "all-chains": boolean;
+  chain?: string[];
+  "ops-key-path": string;
+  "store-dir"?: string;
+}
 
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Creates governance proposal to accept pending admin or ownership transfer for Pyth entropy contracts.\n" +
-      "Usage: $0 --chain <chain_1> --chain <chain_2> --ops-key-path <ops_key_path>"
+      "Usage: $0 --chain <chain_1> --chain <chain_2> --ops-key-path <ops_key_path> [--store-dir <store-dir>]"
   )
   .options({
+    ...COMMON_STORE_OPTIONS,
     testnet: {
       type: "boolean",
       default: false,
@@ -31,17 +41,18 @@ const parser = yargs(hideBin(process.argv))
   });
 
 async function main() {
-  const argv = await parser.argv;
+  const argv = (await parser.argv) as ArgV;
+  const store = createStore(argv["store-dir"]);
   const selectedChains: EvmChain[] = [];
 
-  if (argv.allChains && argv.chain)
+  if (argv["all-chains"] && argv.chain)
     throw new Error("Cannot use both --all-chains and --chain");
-  if (!argv.allChains && !argv.chain)
+  if (!argv["all-chains"] && !argv.chain)
     throw new Error("Must use either --all-chains or --chain");
-  for (const chain of Object.values(DefaultStore.chains)) {
+  for (const chain of Object.values(store.chains)) {
     if (!(chain instanceof EvmChain)) continue;
     if (
-      (argv.allChains && chain.isMainnet() !== argv.testnet) ||
+      (argv["all-chains"] && chain.isMainnet() !== argv.testnet) ||
       argv.chain?.includes(chain.getId())
     )
       selectedChains.push(chain);
@@ -58,12 +69,10 @@ async function main() {
   }
 
   const vault =
-    DefaultStore.vaults[
-      "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
-    ];
+    store.vaults["mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"];
 
   const payloads: Buffer[] = [];
-  for (const contract of Object.values(DefaultStore.entropy_contracts)) {
+  for (const contract of Object.values(store.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
       console.log("Creating payload for chain: ", contract.chain.getId());
       const pendingOwner = await contract.getPendingOwner();
