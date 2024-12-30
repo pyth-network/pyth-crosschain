@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@pythnetwork/component-library/Badge";
 import { DropdownCaretDown } from "@pythnetwork/component-library/DropdownCaretDown";
 import {
   Virtualizer,
@@ -19,6 +20,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
 
 import styles from "./price-feed-select.module.scss";
+import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
   children: ReactNode;
@@ -26,9 +28,8 @@ type Props = {
     id: string;
     key: string;
     displaySymbol: string;
-    name: ReactNode;
-    assetClass: ReactNode;
-    assetClassText: string;
+    icon: ReactNode;
+    assetClass: string;
   }[];
 };
 
@@ -48,7 +49,7 @@ export const PriceFeedSelect = ({ children, feeds }: Props) => {
         : sortedFeeds.filter(
             (feed) =>
               filter.contains(feed.displaySymbol, search) ||
-              filter.contains(feed.assetClassText, search) ||
+              filter.contains(feed.assetClass, search) ||
               filter.contains(feed.key, search),
           ),
     [sortedFeeds, search, filter],
@@ -84,15 +85,17 @@ export const PriceFeedSelect = ({ children, feeds }: Props) => {
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus={false}
             >
-              {({ name, assetClass, id, displaySymbol }) => (
+              {({ assetClass, id, displaySymbol, icon }) => (
                 <ListBoxItem
                   textValue={displaySymbol}
                   className={styles.priceFeed ?? ""}
-                  href={`/price-feeds/${id}`}
+                  href={`/price-feeds/${encodeURIComponent(id)}`}
                   data-is-first={id === filteredFeeds[0]?.id ? "" : undefined}
                 >
-                  {name}
-                  {assetClass}
+                  <PriceFeedTag compact symbol={displaySymbol} icon={icon} />
+                  <Badge variant="neutral" style="outline" size="xs">
+                    {assetClass.toUpperCase()}
+                  </Badge>
                 </ListBoxItem>
               )}
             </ListBox>

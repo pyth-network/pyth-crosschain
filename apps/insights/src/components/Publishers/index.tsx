@@ -6,6 +6,7 @@ import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
+import { createElement } from "react";
 
 import styles from "./index.module.scss";
 import { PublishersCard } from "./publishers-card";
@@ -151,15 +152,20 @@ export const Publishers = async () => {
           className={styles.publishersCard}
           nameLoadingSkeleton={<PublisherTag isLoading />}
           publishers={publishers.map(
-            ({ key, rank, numSymbols, medianScore }) => ({
-              id: key,
-              nameAsString: lookupPublisher(key)?.name,
-              name: <PublisherTag publisherKey={key} />,
-              ranking: rank,
-              activeFeeds: numSymbols,
-              inactiveFeeds: totalFeeds - numSymbols,
-              medianScore: medianScore,
-            }),
+            ({ key, rank, numSymbols, medianScore }) => {
+              const knownPublisher = lookupPublisher(key);
+              return {
+                id: key,
+                ranking: rank,
+                activeFeeds: numSymbols,
+                inactiveFeeds: totalFeeds - numSymbols,
+                medianScore: medianScore,
+                ...(knownPublisher && {
+                  name: knownPublisher.name,
+                  icon: createElement(knownPublisher.icon.color),
+                }),
+              };
+            },
           )}
         />
       </div>

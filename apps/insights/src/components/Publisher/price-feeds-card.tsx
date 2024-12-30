@@ -2,6 +2,7 @@
 
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
+import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import {
   type RowConfig,
   type SortDescriptor,
@@ -12,6 +13,7 @@ import { useFilter, useCollator } from "react-aria";
 
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FormattedNumber } from "../FormattedNumber";
+import { PriceFeedTag } from "../PriceFeedTag";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 
@@ -20,36 +22,28 @@ const SCORE_WIDTH = 24;
 type Props = {
   className?: string | undefined;
   toolbar?: ReactNode;
-  defaultSort: string;
-  defaultDescending?: boolean | undefined;
   priceComponents: PriceComponent[];
-  nameLoadingSkeleton: ReactNode;
 };
 
 type PriceComponent = {
   id: string;
-  nameAsString: string | undefined;
   score: number;
-  name: ReactNode;
+  displaySymbol: string;
   uptimeScore: number;
   deviationPenalty: number | null;
   deviationScore: number;
   stalledPenalty: number;
   stalledScore: number;
+  icon: ReactNode;
 };
 
-export const PriceComponentsCard = ({ priceComponents, ...props }: Props) => (
+export const PriceFeedsCard = ({ priceComponents, ...props }: Props) => (
   <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
     <ResolvedPriceComponentsCard priceComponents={priceComponents} {...props} />
   </Suspense>
 );
 
-const ResolvedPriceComponentsCard = ({
-  priceComponents,
-  defaultSort,
-  defaultDescending,
-  ...props
-}: Props) => {
+const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
 
@@ -69,9 +63,7 @@ const ResolvedPriceComponentsCard = ({
   } = useQueryParamFilterPagination(
     priceComponents,
     (priceComponent, search) =>
-      filter.contains(priceComponent.id, search) ||
-      (priceComponent.nameAsString !== undefined &&
-        filter.contains(priceComponent.nameAsString, search)),
+      filter.contains(priceComponent.displaySymbol, search),
     (a, b, { column, direction }) => {
       switch (column) {
         case "score":
@@ -102,7 +94,7 @@ const ResolvedPriceComponentsCard = ({
         case "name": {
           return (
             (direction === "descending" ? -1 : 1) *
-            collator.compare(a.nameAsString ?? a.id, b.nameAsString ?? b.id)
+            collator.compare(a.displaySymbol, b.displaySymbol)
           );
         }
 
@@ -113,8 +105,8 @@ const ResolvedPriceComponentsCard = ({
     },
     {
       defaultPageSize: 20,
-      defaultSort,
-      defaultDescending: defaultDescending ?? false,
+      defaultSort: "name",
+      defaultDescending: false,
     },
   );
 
@@ -129,11 +121,12 @@ const ResolvedPriceComponentsCard = ({
           deviationScore,
           stalledPenalty,
           stalledScore,
-          ...data
+          displaySymbol,
+          icon,
         }) => ({
           id,
           data: {
-            ...data,
+            name: <PriceFeedTag compact symbol={displaySymbol} icon={icon} />,
             score: <Score score={score} width={SCORE_WIDTH} />,
             uptimeScore: (
               <FormattedNumber
@@ -191,10 +184,7 @@ const ResolvedPriceComponentsCard = ({
   );
 };
 
-type PriceComponentsCardProps = Pick<
-  Props,
-  "className" | "nameLoadingSkeleton" | "toolbar"
-> &
+type PriceComponentsCardProps = Pick<Props, "className" | "toolbar"> &
   (
     | { isLoading: true }
     | {
@@ -224,14 +214,23 @@ type PriceComponentsCardProps = Pick<
 
 const PriceComponentsCardContents = ({
   className,
-  nameLoadingSkeleton,
-  toolbar,
   ...props
 }: PriceComponentsCardProps) => (
   <Card
     className={className}
-    title="Price components"
-    toolbar={toolbar}
+    title="Price Feeds"
+    toolbar={
+      <SearchInput
+        size="sm"
+        width={40}
+        {...(props.isLoading
+          ? { isPending: true, isDisabled: true }
+          : {
+              value: props.search,
+              onChange: props.onSearchChange,
+            })}
+      />
+    }
     {...(!props.isLoading && {
       footer: (
         <Paginator
@@ -247,7 +246,7 @@ const PriceComponentsCardContents = ({
     })}
   >
     <Table
-      label="Price components"
+      label="Price Feeds"
       fill
       rounded
       stickyHeader={rootStyles.headerHeight}
@@ -265,7 +264,7 @@ const PriceComponentsCardContents = ({
           name: "NAME / ID",
           alignment: "left",
           isRowHeader: true,
-          loadingSkeleton: nameLoadingSkeleton,
+          loadingSkeleton: <PriceFeedTag compact isLoading />,
           allowsSorting: true,
         },
         {

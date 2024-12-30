@@ -38,35 +38,28 @@ type LivePricesProviderProps = Omit<
   "value"
 >;
 
-export const LivePricesProvider = ({ ...props }: LivePricesProviderProps) => {
+export const LivePricesProvider = (props: LivePricesProviderProps) => {
   const priceData = usePriceData();
 
   return <LivePricesContext value={priceData} {...props} />;
 };
 
-type Feed = {
-  product: {
-    price_account: string;
-  };
-};
-
-export const useLivePrice = (feed: Feed) => {
-  const { price_account } = feed.product;
+export const useLivePrice = (feedKey: string) => {
   const { priceData, addSubscription, removeSubscription } = useLivePrices();
 
   useEffect(() => {
-    addSubscription(price_account);
+    addSubscription(feedKey);
     return () => {
-      removeSubscription(price_account);
+      removeSubscription(feedKey);
     };
-  }, [addSubscription, removeSubscription, price_account]);
+  }, [addSubscription, removeSubscription, feedKey]);
 
-  return priceData.get(price_account);
+  return priceData.get(feedKey);
 };
 
-export const LivePrice = ({ feed }: { feed: Feed }) => {
+export const LivePrice = ({ feedKey }: { feedKey: string }) => {
   const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 5 });
-  const price = useLivePrice(feed);
+  const price = useLivePrice(feedKey);
 
   return price === undefined ? (
     <Skeleton width={SKELETON_WIDTH} />
@@ -77,9 +70,9 @@ export const LivePrice = ({ feed }: { feed: Feed }) => {
   );
 };
 
-export const LiveConfidence = ({ feed }: { feed: Feed }) => {
+export const LiveConfidence = ({ feedKey }: { feedKey: string }) => {
   const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 5 });
-  const price = useLivePrice(feed);
+  const price = useLivePrice(feedKey);
 
   return (
     <span className={styles.confidence}>
@@ -93,8 +86,8 @@ export const LiveConfidence = ({ feed }: { feed: Feed }) => {
   );
 };
 
-export const LiveLastUpdated = ({ feed }: { feed: Feed }) => {
-  const price = useLivePrice(feed);
+export const LiveLastUpdated = ({ feedKey }: { feedKey: string }) => {
+  const price = useLivePrice(feedKey);
   const formatterWithDate = useDateFormatter({
     dateStyle: "short",
     timeStyle: "medium",
@@ -118,18 +111,18 @@ export const LiveLastUpdated = ({ feed }: { feed: Feed }) => {
 
 type LiveValueProps<T extends keyof PriceData> = {
   field: T;
-  feed: Feed & {
-    price: Record<T, ReactNode>;
-  };
+  feedKey: string;
+  defaultValue?: ReactNode | undefined;
 };
 
 export const LiveValue = <T extends keyof PriceData>({
-  feed,
+  feedKey,
   field,
+  defaultValue,
 }: LiveValueProps<T>) => {
-  const price = useLivePrice(feed);
+  const price = useLivePrice(feedKey);
 
-  return price?.[field]?.toString() ?? feed.price[field];
+  return price?.[field]?.toString() ?? defaultValue;
 };
 
 const isToday = (date: Date) => {

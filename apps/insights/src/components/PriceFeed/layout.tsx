@@ -23,6 +23,7 @@ import {
   LiveLastUpdated,
   LiveValue,
 } from "../LivePrices";
+import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 
@@ -61,33 +62,57 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
             feeds={data
               .filter((feed) => feed.symbol !== symbol)
               .map((feed) => ({
-                id: encodeURIComponent(feed.symbol),
+                id: feed.symbol,
                 key: toHex(feed.product.price_account),
                 displaySymbol: feed.product.display_symbol,
-                name: <PriceFeedTag compact feed={feed} />,
-                assetClassText: feed.product.asset_type,
-                assetClass: (
-                  <Badge variant="neutral" style="outline" size="xs">
-                    {feed.product.asset_type.toUpperCase()}
-                  </Badge>
-                ),
+                icon: <PriceFeedIcon symbol={feed.symbol} />,
+                assetClass: feed.product.asset_type,
               }))}
           >
-            <PriceFeedTag feed={feed} />
+            <PriceFeedTag
+              symbol={feed.product.display_symbol}
+              description={feed.product.description}
+              icon={<PriceFeedIcon symbol={feed.symbol} />}
+            />
           </PriceFeedSelect>
           <div className={styles.rightGroup}>
             <FeedKey
               variant="ghost"
               size="sm"
               className={styles.feedKey ?? ""}
-              feed={feed}
+              feedKey={feed.product.price_account}
             />
             <DrawerTrigger>
               <Button variant="outline" size="sm" beforeIcon={ListDashes}>
                 Reference Data
               </Button>
               <Drawer fill title="Reference Data">
-                <ReferenceData feed={feed} />
+                <ReferenceData
+                  feed={{
+                    symbol: feed.symbol,
+                    feedKey: feed.product.price_account,
+                    assetClass: feed.product.asset_type,
+                    base: feed.product.base,
+                    description: feed.product.description,
+                    country: feed.product.country,
+                    quoteCurrency: feed.product.quote_currency,
+                    tenor: feed.product.tenor,
+                    cmsSymbol: feed.product.cms_symbol,
+                    cqsSymbol: feed.product.cqs_symbol,
+                    nasdaqSymbol: feed.product.nasdaq_symbol,
+                    genericSymbol: feed.product.generic_symbol,
+                    weeklySchedule: feed.product.weekly_schedule,
+                    schedule: feed.product.schedule,
+                    contractId: feed.product.contract_id,
+                    displaySymbol: feed.product.display_symbol,
+                    exponent: feed.price.exponent,
+                    numComponentPrices: feed.price.numComponentPrices,
+                    numQuoters: feed.price.numQuoters,
+                    minPublishers: feed.price.minPublishers,
+                    lastSlot: feed.price.lastSlot,
+                    validSlot: feed.price.validSlot,
+                  }}
+                />
               </Drawer>
             </DrawerTrigger>
           </div>
@@ -96,11 +121,11 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           <StatCard
             variant="primary"
             header="Aggregated Price"
-            stat={<LivePrice feed={feed} />}
+            stat={<LivePrice feedKey={feed.product.price_account} />}
           />
           <StatCard
             header="Confidence"
-            stat={<LiveConfidence feed={feed} />}
+            stat={<LiveConfidence feedKey={feed.product.price_account} />}
             corner={
               <AlertTrigger>
                 <Button
@@ -135,14 +160,16 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           <StatCard
             header="1-Day Price Change"
             stat={
-              <YesterdaysPricesProvider feeds={[feed]}>
-                <ChangePercent feed={feed} />
+              <YesterdaysPricesProvider
+                feeds={{ [feed.symbol]: feed.product.price_account }}
+              >
+                <ChangePercent feedKey={feed.product.price_account} />
               </YesterdaysPricesProvider>
             }
           />
           <StatCard
             header="Last Updated"
-            stat={<LiveLastUpdated feed={feed} />}
+            stat={<LiveLastUpdated feedKey={feed.product.price_account} />}
           />
         </section>
       </section>
@@ -158,7 +185,11 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
                 <div className={styles.priceComponentsTabLabel}>
                   <span>Publishers</span>
                   <Badge size="xs" style="filled" variant="neutral">
-                    <LiveValue feed={feed} field="numComponentPrices" />
+                    <LiveValue
+                      feedKey={feed.product.price_account}
+                      field="numComponentPrices"
+                      defaultValue={feed.price.numComponentPrices}
+                    />
                   </Badge>
                 </div>
               ),

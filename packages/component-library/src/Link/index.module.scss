@@ -14,6 +14,7 @@
   outline-offset: 0;
   color: theme.color("link", "normal");
   cursor: pointer;
+  background: transparent;
 
   &[data-focus-visible] {
     outline-color: theme.color("focus-dim");

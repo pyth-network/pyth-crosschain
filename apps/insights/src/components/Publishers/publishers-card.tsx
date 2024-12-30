@@ -15,6 +15,7 @@ import { useFilter, useCollator } from "react-aria";
 
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { NoResults } from "../NoResults";
+import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
@@ -29,13 +30,14 @@ type Props = {
 
 type Publisher = {
   id: string;
-  nameAsString: string | undefined;
-  name: ReactNode;
   ranking: number;
   activeFeeds: number;
   inactiveFeeds: number;
   medianScore: number;
-};
+} & (
+  | { name: string; icon: ReactNode }
+  | { name?: undefined; icon?: undefined }
+);
 
 export const PublishersCard = ({ publishers, ...props }: Props) => (
   <Suspense fallback={<PublishersCardContents isLoading {...props} />}>
@@ -63,8 +65,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
     publishers,
     (publisher, search) =>
       filter.contains(publisher.id, search) ||
-      (publisher.nameAsString !== undefined &&
-        filter.contains(publisher.nameAsString, search)),
+      (publisher.name !== undefined && filter.contains(publisher.name, search)),
     (a, b, { column, direction }) => {
       switch (column) {
         case "ranking":
@@ -79,7 +80,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
         case "name": {
           return (
             (direction === "descending" ? -1 : 1) *
-            collator.compare(a.nameAsString ?? a.id, b.nameAsString ?? b.id)
+            collator.compare(a.name ?? a.id, b.name ?? b.id)
           );
         }
 
@@ -95,17 +96,36 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
 
   const rows = useMemo(
     () =>
-      paginatedItems.map(({ id, ranking, medianScore, ...data }) => ({
-        id,
-        href: `/publishers/${id}`,
-        data: {
-          ...data,
-          ranking: <Ranking>{ranking}</Ranking>,
-          medianScore: (
-            <Score score={medianScore} width={PUBLISHER_SCORE_WIDTH} />
-          ),
-        },
-      })),
+      paginatedItems.map(
+        ({
+          id,
+          ranking,
+          medianScore,
+          activeFeeds,
+          inactiveFeeds,
+          ...publisher
+        }) => ({
+          id,
+          href: `/publishers/${id}`,
+          data: {
+            ranking: <Ranking>{ranking}</Ranking>,
+            name: (
+              <PublisherTag
+                publisherKey={id}
+                {...(publisher.name && {
+                  name: publisher.name,
+                  icon: publisher.icon,
+                })}
+              />
+            ),
+            activeFeeds,
+            inactiveFeeds,
+            medianScore: (
+              <Score score={medianScore} width={PUBLISHER_SCORE_WIDTH} />
+            ),
+          },
+        }),
+      ),
     [paginatedItems],
   );
 
