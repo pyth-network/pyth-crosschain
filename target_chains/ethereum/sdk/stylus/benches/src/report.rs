@@ -40,10 +40,7 @@ impl ContractReport {
         Ok(self)
     }
 
-    pub fn add_cached(
-        mut self,
-        fn_report: FunctionReport,
-    ) -> eyre::Result<Self> {
+    pub fn add_cached(mut self, fn_report: FunctionReport) -> eyre::Result<Self> {
         self.functions_cached.push(fn_report);
         Ok(self)
     }
@@ -104,12 +101,8 @@ impl Display for BenchmarkReport {
         const HEADER_GAS: &str = "Not Cached";
 
         // Calculating the width of table columns.
-        let width1 =
-            self.column_width(ContractReport::signature_max_len, HEADER_SIG);
-        let width2 = self.column_width(
-            ContractReport::gas_cached_max_len,
-            HEADER_GAS_CACHED,
-        );
+        let width1 = self.column_width(ContractReport::signature_max_len, HEADER_SIG);
+        let width2 = self.column_width(ContractReport::gas_cached_max_len, HEADER_GAS_CACHED);
         let width3 = self.column_width(ContractReport::gas_max_len, HEADER_GAS);
 
         // Print headers for the table columns.

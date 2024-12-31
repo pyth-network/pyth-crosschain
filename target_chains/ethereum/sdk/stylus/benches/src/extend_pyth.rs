@@ -47,9 +47,7 @@ pub async fn bench() -> eyre::Result<ContractReport> {
     Ok(report)
 }
 
-pub async fn run_with(
-    cache_opt: CacheOpt,
-) -> eyre::Result<Vec<FunctionReport>> {
+pub async fn run_with(cache_opt: CacheOpt) -> eyre::Result<Vec<FunctionReport>> {
     let alice = Account::new().await?;
     let alice_wallet = ProviderBuilder::new()
         .network::<AnyNetwork>()
@@ -60,7 +58,10 @@ pub async fn run_with(
     let contract_addr = deploy(&alice, cache_opt).await?;
 
     let contract = ExtendPyth::new(contract_addr, &alice_wallet);
-    let id = keccak_const::Keccak256::new().update(b"ETH").finalize().to_vec();
+    let id = keccak_const::Keccak256::new()
+        .update(b"ETH")
+        .finalize()
+        .to_vec();
     let id = TypeFixedBytes::<32>::from_slice(&id);
     let time_frame = uint!(10000_U256);
     let age = uint!(10000_U256);
@@ -93,13 +94,12 @@ pub async fn run_with(
         .collect::<eyre::Result<Vec<_>>>()
 }
 
-async fn deploy(
-    account: &Account,
-    cache_opt: CacheOpt,
-) -> eyre::Result<Address> {
+async fn deploy(account: &Account, cache_opt: CacheOpt) -> eyre::Result<Address> {
     let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
     let address = Address::from_str(&pyth_addr)?;
-    let args = ExtendPythExample::constructorCall { _pythAddress: address };
+    let args = ExtendPythExample::constructorCall {
+        _pythAddress: address,
+    };
     let args = alloy::hex::encode(args.abi_encode());
     crate::deploy(account, "extend-pyth", Some(args), cache_opt).await
 }

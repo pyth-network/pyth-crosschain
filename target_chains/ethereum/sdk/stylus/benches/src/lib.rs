@@ -2,10 +2,7 @@ use std::process::Command;
 
 use alloy::{
     primitives::Address,
-    rpc::types::{
-        serde_helpers::WithOtherFields, AnyReceiptEnvelope, Log,
-        TransactionReceipt,
-    },
+    rpc::types::{serde_helpers::WithOtherFields, AnyReceiptEnvelope, Log, TransactionReceipt},
 };
 use alloy_primitives::U128;
 use e2e::{Account, ReceiptExt};
@@ -32,8 +29,7 @@ pub enum CacheOpt {
     Bid(u32),
 }
 
-type ArbTxReceipt =
-    WithOtherFields<TransactionReceipt<AnyReceiptEnvelope<Log>>>;
+type ArbTxReceipt = WithOtherFields<TransactionReceipt<AnyReceiptEnvelope<Log>>>;
 
 async fn deploy(
     account: &Account,
@@ -41,8 +37,7 @@ async fn deploy(
     args: Option<String>,
     cache_opt: CacheOpt,
 ) -> eyre::Result<Address> {
-    let manifest_dir =
-        std::env::current_dir().context("should get current dir from env")?;
+    let manifest_dir = std::env::current_dir().context("should get current dir from env")?;
 
     let wasm_path = manifest_dir
         .join("target")
@@ -92,11 +87,7 @@ async fn deploy(
 /// Already cached contracts won't be cached, and this function will not return
 /// an error.
 /// Output will be forwarded to the child process.
-fn cache_contract(
-    account: &Account,
-    contract_addr: Address,
-    bid: u32,
-) -> eyre::Result<()> {
+fn cache_contract(account: &Account, contract_addr: Address, bid: u32) -> eyre::Result<()> {
     // We don't need a status code.
     // Since it is not zero when the contract is already cached.
     let _ = Command::new("cargo")
