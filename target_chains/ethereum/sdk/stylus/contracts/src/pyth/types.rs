@@ -167,8 +167,7 @@ impl StoragePrice {
 
     /// This function is for just for testing
     pub fn test_from_price(price: Price) -> Self {
-        let mut storage_price =
-            unsafe { StoragePrice::new(U256::from(100), 0) };
+        let mut storage_price = unsafe { StoragePrice::new(U256::from(100), 0) };
         storage_price.set(price);
         storage_price
     }
@@ -203,8 +202,7 @@ impl StoragePriceFeed {
     /// This function is for just for testing
     #[cfg(test)]
     pub fn test_from_price_feed(price_feed: PriceFeed) -> Self {
-        let mut storage_price_feed =
-            unsafe { StoragePriceFeed::new(U256::from(100), 0) };
+        let mut storage_price_feed = unsafe { StoragePriceFeed::new(U256::from(100), 0) };
         storage_price_feed.set(price_feed);
         storage_price_feed
     }
@@ -212,9 +210,7 @@ impl StoragePriceFeed {
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
-    use crate::pyth::types::{
-        Price, PriceFeed, StoragePrice, StoragePriceFeed,
-    };
+    use crate::pyth::types::{Price, PriceFeed, StoragePrice, StoragePriceFeed};
     use alloy_primitives::{B256, U256};
 
     // Updated constants to use uppercase naming convention
@@ -259,8 +255,11 @@ mod tests {
             expo: EXPO,
             publish_time: U256::from(1000),
         };
-        let price_feed_result =
-            PriceFeed { id, price: price_result, ema_price: price_result_ema };
+        let price_feed_result = PriceFeed {
+            id,
+            price: price_result,
+            ema_price: price_result_ema,
+        };
         assert_eq!(price_feed_result.price.price, PRICE);
         assert_eq!(price_feed_result.price.conf, CONF);
         assert_eq!(price_feed_result.price.expo, EXPO);
@@ -306,8 +305,7 @@ mod tests {
             price: price_result,
             ema_price: price_result_ema,
         };
-        let storage_price_feed_result =
-            StoragePriceFeed::test_from_price_feed(price_feed_result);
+        let storage_price_feed_result = StoragePriceFeed::test_from_price_feed(price_feed_result);
         let price_feed_result = storage_price_feed_result.to_price_feed();
         assert_eq!(price_feed_result.price.price, PRICE);
         assert_eq!(price_feed_result.price.conf, CONF);

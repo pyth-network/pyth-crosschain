@@ -9,7 +9,7 @@ use crate::{
 use alloc::vec::Vec;
 use alloy_primitives::{Bytes, B256, U256};
 use alloy_sol_types::{sol_data::Uint as SolUInt, SolType, SolValue};
-use stylus_sdk::{abi::Bytes as AbiBytes,  evm, msg, prelude::*};
+use stylus_sdk::{abi::Bytes as AbiBytes, evm, msg, prelude::*};
 
 ////Decode data type PriceFeed and uint64
 pub type DecodeDataType = (PriceFeed, SolUInt<64>);
@@ -29,9 +29,7 @@ impl MockPythContract {
         single_update_fee_in_wei: U256,
         valid_time_period: U256,
     ) -> Result<(), Vec<u8>> {
-        if single_update_fee_in_wei <= U256::ZERO
-            || valid_time_period <= U256::ZERO
-        {
+        if single_update_fee_in_wei <= U256::ZERO || valid_time_period <= U256::ZERO {
             return Err(Error::InvalidArgument(InvalidArgument {}).into());
         }
         self.single_update_fee_in_wei.set(single_update_fee_in_wei);
@@ -72,23 +70,21 @@ impl MockPythContract {
     /// ]
 
     #[payable]
-    fn update_price_feeds(
-        &mut self,
-        update_data: Vec<AbiBytes>,
-    ) -> Result<(), Vec<u8>> {
+    fn update_price_feeds(&mut self, update_data: Vec<AbiBytes>) -> Result<(), Vec<u8>> {
         let required_fee = self.get_update_fee(update_data.clone());
         if required_fee < msg::value() {
             return Err(Error::InsufficientFee(InsufficientFee {}).into());
         }
 
         for item in update_data.iter() {
-            let price_feed_data =
-                <PriceFeed as SolType>::abi_decode(item, false)
-                    .map_err(|_| {
-                        CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec()
-                    })?;
-            let last_publish_time =
-                &self.price_feeds.get(price_feed_data.id).price.publish_time.get();
+            let price_feed_data = <PriceFeed as SolType>::abi_decode(item, false)
+                .map_err(|_| CALL_RETDATA_DECODING_ERROR_MESSAGE.to_vec())?;
+            let last_publish_time = &self
+                .price_feeds
+                .get(price_feed_data.id)
+                .price
+                .publish_time
+                .get();
             if last_publish_time < &price_feed_data.price.publish_time {
                 self.price_feeds
                     .setter(price_feed_data.id)
@@ -107,7 +103,7 @@ impl MockPythContract {
     fn get_update_fee(&self, update_data: Vec<AbiBytes>) -> U256 {
         self.single_update_fee_in_wei.get() * U256::from(update_data.len())
     }
-    
+
     #[payable]
     fn parse_price_feed_updates(
         &mut self,
@@ -153,11 +149,24 @@ impl MockPythContract {
         publish_time: U256,
         prev_publish_time: u64,
     ) -> Vec<u8> {
-        let price = Price { price, conf, expo, publish_time };
-        let ema_price =
-            Price { price: ema_price, conf: ema_conf, expo, publish_time };
+        let price = Price {
+            price,
+            conf,
+            expo,
+            publish_time,
+        };
+        let ema_price = Price {
+            price: ema_price,
+            conf: ema_conf,
+            expo,
+            publish_time,
+        };
 
-        let price_feed_data = PriceFeed { id, price, ema_price };
+        let price_feed_data = PriceFeed {
+            id,
+            price,
+            ema_price,
+        };
 
         let price_feed_data_encoding = (price_feed_data, prev_publish_time);
         return DecodeDataType::abi_encode(&price_feed_data_encoding);
@@ -165,7 +174,6 @@ impl MockPythContract {
 }
 
 impl MockPythContract {
-
     fn parse_price_feed_updates_internal(
         &mut self,
         update_data: Vec<AbiBytes>,
@@ -186,7 +194,8 @@ impl MockPythContract {
 
             for data in &update_data {
                 // Decode the update_data
-                let (price_feed, _prev_publish_time) = match DecodeDataType::abi_decode(data, false) {
+                let (price_feed, _prev_publish_time) = match DecodeDataType::abi_decode(data, false)
+                {
                     Ok(res) => res,
                     Err(_) => {
                         return Err(Error::FalledDecodeData(FalledDecodeData {}).into());
@@ -195,12 +204,8 @@ impl MockPythContract {
 
                 if price_feed.id == price_id {
                     let publish_time = price_feed.price.publish_time;
-                    let previous_publish_time = self
-                        .price_feeds
-                        .get(price_id)
-                        .price
-                        .publish_time
-                        .get();
+                    let previous_publish_time =
+                        self.price_feeds.get(price_id).price.publish_time.get();
 
                     // Validate publish time and uniqueness
                     if publish_time > U256::from(min_publish_time)
@@ -311,8 +316,7 @@ mod tests {
             publish_time,
             PREV_PUBLISH_TIME,
         );
-        let price_feed_decoded =
-            DecodeDataType::abi_decode(&price_feed_created, true).unwrap();
+        let price_feed_decoded = DecodeDataType::abi_decode(&price_feed_created, true).unwrap();
         assert_eq!(price_feed_decoded.0.id, id);
         assert_eq!(price_feed_decoded.0.price.price, PRICE);
         assert_eq!(price_feed_decoded.0.price.conf, CONF);
