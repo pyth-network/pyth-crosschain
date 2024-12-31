@@ -1,17 +1,13 @@
 #![cfg_attr(not(test), no_std, no_main)]
 extern crate alloc;
 
-use pyth_stylus::pyth::{pyth_contract::{IPyth, PythContract}, types::Price};
-use stylus_sdk::{
-    abi::Bytes, 
-    alloy_primitives::U256, 
-    msg,
-    prelude::*,
-    stylus_proc::SolidityError
-};
 use alloc::vec::Vec;
 use alloy_sol_types::SolValue;
-
+use pyth_stylus::pyth::{
+    pyth_contract::{IPyth, PythContract},
+    types::Price,
+};
+use stylus_sdk::{abi::Bytes, alloy_primitives::U256, msg, prelude::*, stylus_proc::SolidityError};
 
 pub use sol::*;
 #[cfg_attr(coverage_nightly, coverage(off))]
@@ -26,12 +22,10 @@ mod sol {
     }
 }
 
-
 #[derive(SolidityError, Debug)]
 pub enum Error {
-    InsufficientFee(InsufficientFee)
+    InsufficientFee(InsufficientFee),
 }
-
 
 sol_storage! {
     #[entrypoint]
@@ -43,27 +37,28 @@ sol_storage! {
 
 #[public]
 impl PythInheritExample {
-   fn mint(&mut self) -> Result<(), Vec<u8>> {
-    // Get the price if it is not older than 60 seconds.
-    let  price = self.pyth.get_ema_price_no_older_than(self.eth_usd_price_id.get(), U256::from(60))?;
-    let decode_price = Price::abi_decode(&price, false).expect("Failed to decode price");
- 
-    let eth_price_18_decimals = U256::from(decode_price.price) / U256::from(decode_price.expo);
+    fn mint(&mut self) -> Result<(), Vec<u8>> {
+        // Get the price if it is not older than 60 seconds.
+        let price = self
+            .pyth
+            .get_ema_price_no_older_than(self.eth_usd_price_id.get(), U256::from(60))?;
+        let decode_price = Price::abi_decode(&price, false).expect("Failed to decode price");
 
-    let one_dollar_in_wei = U256::MAX  / eth_price_18_decimals;
- 
- 
-    if msg::value() >= one_dollar_in_wei {
-      // User paid enough money.
-      // TODO: mint the NFT here
-    } else {
-         return Err(Error::InsufficientFee(InsufficientFee {}).into());
+        let eth_price_18_decimals = U256::from(decode_price.price) / U256::from(decode_price.expo);
+
+        let one_dollar_in_wei = U256::MAX / eth_price_18_decimals;
+
+        if msg::value() >= one_dollar_in_wei {
+            // User paid enough money.
+            // TODO: mint the NFT here
+        } else {
+            return Err(Error::InsufficientFee(InsufficientFee {}).into());
+        }
+        Ok(())
     }
-    Ok(())
-  }
 
-    fn update_and_mint(&mut self,pyth_price_update: Vec<Bytes>) -> Result<(), Vec<u8>> {
-        let  update_fee =  self.pyth.get_update_fee(pyth_price_update.clone())?;
+    fn update_and_mint(&mut self, pyth_price_update: Vec<Bytes>) -> Result<(), Vec<u8>> {
+        let update_fee = self.pyth.get_update_fee(pyth_price_update.clone())?;
         if update_fee < msg::value() {
             return Err(Error::InsufficientFee(InsufficientFee {}).into());
         }

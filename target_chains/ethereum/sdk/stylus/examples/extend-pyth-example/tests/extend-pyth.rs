@@ -10,9 +10,7 @@ use e2e::{env, Account, ReceiptExt};
 
 use crate::ExtendPythExample::constructorCall;
 use eyre::Result;
-use pyth_stylus::pyth::{
-    mock::create_price_feed_update_data_list, types::Price,
-};
+use pyth_stylus::pyth::{mock::create_price_feed_update_data_list, types::Price};
 
 mod abi;
 
@@ -43,7 +41,9 @@ fn ctr(invaid_pyth_address: bool) -> constructorCall {
         env("MOCK_PYTH_ADDRESS").unwrap()
     };
     let address_addr = Address::parse_checksummed(&pyth_addr, None).unwrap();
-    constructorCall { _pythAddress: address_addr }
+    constructorCall {
+        _pythAddress: address_addr,
+    }
 }
 
 #[e2e::test]
@@ -71,10 +71,8 @@ async fn can_get_price_unsafe(alice: Account) -> Result<()> {
         .address()?;
     let contract = ExtendPyth::new(contract_addr, &alice.wallet);
     let id = generate_pyth_id_from_str("ETH");
-    let ExtendPyth::getPriceUnsafeReturn { price } =
-        contract.getPriceUnsafe(id).call().await?;
-    let decoded_price =
-        Price::abi_decode(&price, false).expect("Failed to decode price");
+    let ExtendPyth::getPriceUnsafeReturn { price } = contract.getPriceUnsafe(id).call().await?;
+    let decoded_price = Price::abi_decode(&price, false).expect("Failed to decode price");
     assert!(decoded_price.price > 0_i64);
     assert!(decoded_price.conf > 0_u64);
     assert!(decoded_price.expo > 0_i32);
@@ -83,9 +81,7 @@ async fn can_get_price_unsafe(alice: Account) -> Result<()> {
 }
 
 #[e2e::test]
-async fn error_provided_invaild_id_get_price_unsafe(
-    alice: Account,
-) -> Result<()> {
+async fn error_provided_invaild_id_get_price_unsafe(alice: Account) -> Result<()> {
     let contract_addr = alice
         .as_deployer()
         .with_default_constructor::<constructorCall>()
@@ -111,8 +107,7 @@ async fn can_get_ema_price_unsafe(alice: Account) -> Result<()> {
     let id = generate_pyth_id_from_str("ETH");
     let ExtendPyth::getEmaPriceUnsafeReturn { price } =
         contract.getEmaPriceUnsafe(id).call().await?;
-    let decoded_price =
-        Price::abi_decode(&price, false).expect("Failed to decode price");
+    let decoded_price = Price::abi_decode(&price, false).expect("Failed to decode price");
     assert!(decoded_price.price > 0_i64);
     assert!(decoded_price.conf > 0_u64);
     assert!(decoded_price.expo > 0_i32);
@@ -121,9 +116,7 @@ async fn can_get_ema_price_unsafe(alice: Account) -> Result<()> {
 }
 
 #[e2e::test]
-async fn error_provided_invaild_id_get_ema_price_unsafe(
-    alice: Account,
-) -> Result<()> {
+async fn error_provided_invaild_id_get_ema_price_unsafe(alice: Account) -> Result<()> {
     let contract_addr = alice
         .as_deployer()
         .with_default_constructor::<constructorCall>()
@@ -147,10 +140,11 @@ async fn can_get_price_no_older_than(alice: Account) -> Result<()> {
         .address()?;
     let contract = ExtendPyth::new(contract_addr, &alice.wallet);
     let id = generate_pyth_id_from_str("ETH");
-    let ExtendPyth::getPriceNoOlderThanReturn { price } =
-        contract.getPriceNoOlderThan(id, U256::from(1000)).call().await?;
-    let decoded_price =
-        Price::abi_decode(&price, false).expect("Failed to decode price");
+    let ExtendPyth::getPriceNoOlderThanReturn { price } = contract
+        .getPriceNoOlderThan(id, U256::from(1000))
+        .call()
+        .await?;
+    let decoded_price = Price::abi_decode(&price, false).expect("Failed to decode price");
     assert!(decoded_price.price > 0_i64);
     assert!(decoded_price.conf > 0_u64);
     assert!(decoded_price.expo > 0_i32);
@@ -159,9 +153,7 @@ async fn can_get_price_no_older_than(alice: Account) -> Result<()> {
 }
 
 #[e2e::test]
-async fn error_provided_invaild_id_get_price_no_older_than(
-    alice: Account,
-) -> Result<()> {
+async fn error_provided_invaild_id_get_price_no_older_than(alice: Account) -> Result<()> {
     let contract_addr = alice
         .as_deployer()
         .with_default_constructor::<constructorCall>()
@@ -170,16 +162,16 @@ async fn error_provided_invaild_id_get_price_no_older_than(
         .address()?;
     let contract = ExtendPyth::new(contract_addr, &alice.wallet);
     let id = generate_pyth_id_from_str("BALLON");
-    let price_result =
-        contract.getPriceNoOlderThan(id, U256::from(1000)).call().await;
+    let price_result = contract
+        .getPriceNoOlderThan(id, U256::from(1000))
+        .call()
+        .await;
     assert!(price_result.is_err());
     Ok(())
 }
 
 #[e2e::test]
-async fn error_provided_invaild_period_get_price_no_older_than(
-    alice: Account,
-) -> Result<()> {
+async fn error_provided_invaild_period_get_price_no_older_than(alice: Account) -> Result<()> {
     let contract_addr = alice
         .as_deployer()
         .with_default_constructor::<constructorCall>()
@@ -188,8 +180,7 @@ async fn error_provided_invaild_period_get_price_no_older_than(
         .address()?;
     let contract = ExtendPyth::new(contract_addr, &alice.wallet);
     let id = generate_pyth_id_from_str("SOL");
-    let price_result =
-        contract.getPriceNoOlderThan(id, U256::from(1)).call().await;
+    let price_result = contract.getPriceNoOlderThan(id, U256::from(1)).call().await;
     assert!(price_result.is_err());
     Ok(())
 }
@@ -204,8 +195,7 @@ async fn can_get_fee(alice: Account) -> Result<()> {
         .address()?;
     let contract = ExtendPyth::new(contract_addr, &alice.wallet);
     let (data, _id) = create_price_feed_update_data_list();
-    let ExtendPyth::getUpdateFeeReturn { fee } =
-        contract.getUpdateFee(data).call().await?;
+    let ExtendPyth::getUpdateFeeReturn { fee } = contract.getUpdateFee(data).call().await?;
     assert_eq!(fee, U256::from(300));
     Ok(())
 }
@@ -225,7 +215,6 @@ async fn can_get_valid_time_peroid(alice: Account) -> Result<()> {
     Ok(())
 }
 
-
 #[e2e::test]
 async fn can_get_data(alice: Account) -> Result<()> {
     let contract_addr = alice
@@ -235,9 +224,7 @@ async fn can_get_data(alice: Account) -> Result<()> {
         .await?
         .address()?;
     let contract = ExtendPyth::new(contract_addr, &alice.wallet);
-    let ExtendPyth::getDataReturn { data } =
-        contract.getData().call().await?;
+    let ExtendPyth::getDataReturn { data } = contract.getData().call().await?;
     assert!(data.len() > 0);
     Ok(())
 }
-

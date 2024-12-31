@@ -7,9 +7,8 @@ use alloy_primitives::U256;
 use alloy_sol_types::sol;
 use pyth_stylus::pyth::{
     functions::{
-        get_ema_price_no_older_than, get_ema_price_unsafe,
-        get_price_no_older_than, get_price_unsafe, get_update_fee,
-        get_valid_time_period, update_price_feeds
+        get_ema_price_no_older_than, get_ema_price_unsafe, get_price_no_older_than,
+        get_price_unsafe, get_update_fee, get_valid_time_period, update_price_feeds,
     },
     mock::create_price_feed_update_data_list,
     types::{StoragePrice, StoragePriceFeed},
@@ -49,21 +48,14 @@ pub enum MultiCallErrors {
 #[public]
 impl FunctionCallsExample {
     pub fn get_price_unsafe(&mut self) -> Result<i64, Vec<u8>> {
-        let price_result = get_price_unsafe(
-            self,
-            self.pyth_address.get(),
-            self.price_id.get(),
-        )?;
+        let price_result = get_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
         self.price.set(price_result);
         Ok(price_result.price)
     }
 
     pub fn get_ema_price_unsafe(&mut self) -> Result<i64, Vec<u8>> {
-        let price_result = get_ema_price_unsafe(
-            self,
-            self.pyth_address.get(),
-            self.price_id.get(),
-        )?;
+        let price_result =
+            get_ema_price_unsafe(self, self.pyth_address.get(), self.price_id.get())?;
         Ok(price_result.price)
     }
     pub fn get_price_no_older_than(&mut self) -> Result<i64, Vec<u8>> {
@@ -103,5 +95,4 @@ impl FunctionCallsExample {
         let _ = update_price_feeds(self, self.pyth_address.get(), data_bytes)?;
         Ok(())
     }
-
 }
