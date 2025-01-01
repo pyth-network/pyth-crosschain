@@ -5,7 +5,6 @@ import { Card } from "@pythnetwork/component-library/Card";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
-import { createElement } from "react";
 
 import { getRankingsWithData } from "./get-rankings-with-data";
 import styles from "./performance.module.scss";
@@ -13,6 +12,7 @@ import { getPublishers } from "../../services/clickhouse";
 import { getTotalFeedCount } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
+import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import { Score } from "../Score";
@@ -101,7 +101,7 @@ export const Performance = async ({ params }: Props) => {
                     publisherKey={publisher.key}
                     {...(knownPublisher && {
                       name: knownPublisher.name,
-                      icon: createElement(knownPublisher.icon.color),
+                      icon: <PublisherIcon knownPublisher={knownPublisher} />,
                     })}
                   />
                 ),

@@ -1,10 +1,10 @@
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
-import { createElement } from "react";
 
 import { PublishersCard } from "./publishers-card";
 import { getRankings } from "../../services/clickhouse";
 import { getData } from "../../services/pyth";
+import { PublisherIcon } from "../PublisherIcon";
 
 type Props = {
   params: Promise<{
@@ -33,7 +33,7 @@ export const Publishers = async ({ params }: Props) => {
           stalledScore: ranking.stalled_score,
           ...(knownPublisher && {
             name: knownPublisher.name,
-            icon: createElement(knownPublisher.icon.color),
+            icon: <PublisherIcon knownPublisher={knownPublisher} />,
           }),
         };
       })}

@@ -6,7 +6,6 @@ import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
-import { createElement } from "react";
 
 import styles from "./index.module.scss";
 import { PublishersCard } from "./publishers-card";
@@ -19,6 +18,7 @@ import {
   getDistributedRewards,
 } from "../../services/staking";
 import { FormattedTokens } from "../FormattedTokens";
+import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { SemicircleMeter, Label } from "../SemicircleMeter";
 import { TokenIcon } from "../TokenIcon";
@@ -162,7 +162,7 @@ export const Publishers = async () => {
                 medianScore: medianScore,
                 ...(knownPublisher && {
                   name: knownPublisher.name,
-                  icon: createElement(knownPublisher.icon.color),
+                  icon: <PublisherIcon knownPublisher={knownPublisher} />,
                 }),
               };
             },

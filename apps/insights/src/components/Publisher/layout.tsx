@@ -13,7 +13,7 @@ import { InfoBox } from "@pythnetwork/component-library/InfoBox";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
-import { type ReactNode, createElement } from "react";
+import type { ReactNode } from "react";
 
 import { ActiveFeedsCard } from "./active-feeds-card";
 import { ChartCard } from "./chart-card";
@@ -34,6 +34,7 @@ import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 import { FormattedTokens } from "../FormattedTokens";
 import { Meter } from "../Meter";
+import { PublisherIcon } from "../PublisherIcon";
 import { PublisherKey } from "../PublisherKey";
 import { PublisherTag } from "../PublisherTag";
 import { SemicircleMeter } from "../SemicircleMeter";
@@ -93,7 +94,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
             publisherKey={key}
             {...(knownPublisher && {
               name: knownPublisher.name,
-              icon: createElement(knownPublisher.icon.color),
+              icon: <PublisherIcon knownPublisher={knownPublisher} />,
             })}
           />
         </div>

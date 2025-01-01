@@ -2,7 +2,6 @@ import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { Root as BaseRoot } from "@pythnetwork/next-root";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
-import { createElement } from "react";
 
 import { Footer } from "./footer";
 import { Header } from "./header";
@@ -20,6 +19,7 @@ import { getPublishers } from "../../services/clickhouse";
 import { getData } from "../../services/pyth";
 import { LivePricesProvider } from "../LivePrices";
 import { PriceFeedIcon } from "../PriceFeedIcon";
+import { PublisherIcon } from "../PublisherIcon";
 
 type Props = {
   children: ReactNode;
@@ -51,7 +51,7 @@ export const Root = async ({ children }: Props) => {
             medianScore: publisher.medianScore,
             ...(knownPublisher && {
               name: knownPublisher.name,
-              icon: createElement(knownPublisher.icon.color),
+              icon: <PublisherIcon knownPublisher={knownPublisher} />,
             }),
           };
         })}
