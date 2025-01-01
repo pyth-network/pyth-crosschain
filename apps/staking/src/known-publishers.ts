@@ -1,6 +1,7 @@
 import blocksize from "./publisher-icons/blocksize.svg";
 import elfomo from "./publisher-icons/elfomo.svg";
 import finazon from "./publisher-icons/finazon.svg";
+import ltp from "./publisher-icons/ltp.svg";
 import sentio from "./publisher-icons/sentio.svg";
 import woo from "./publisher-icons/woo.svg";
 
@@ -24,5 +25,9 @@ export const KNOWN_PUBLISHERS = {
   DANa2ZYtyUcSW8W8C25ZfscKdBra53npt2frmh7fUucf: {
     name: "WOO",
     icon: woo,
+  },
+  GUcFC3NBuVSf9rdQqW3t2sBcP6sEp269rtPxxGyvAHoM: {
+    name: "LTP",
+    icon: ltp,
   },
 };
