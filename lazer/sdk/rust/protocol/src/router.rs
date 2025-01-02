@@ -8,7 +8,7 @@ use {
     serde::{de::Error, Deserialize, Serialize},
     std::{
         num::NonZeroI64,
-        ops::{Add, Deref, DerefMut, Div, Mul, Sub},
+        ops::{Add, Deref, DerefMut, Div, Sub},
         time::{SystemTime, UNIX_EPOCH},
     },
 };
@@ -46,9 +46,6 @@ impl TimestampUs {
 pub struct Price(pub NonZeroI64);
 
 impl Price {
-    // TODO: define exponent in price feed metadata instead
-    pub const TMP_EXPONENT: u32 = 8;
-
     pub fn from_integer(value: i64, exponent: u32) -> anyhow::Result<Price> {
         let coef = 10i64.checked_pow(exponent).context("overflow")?;
         let value = value.checked_mul(coef).context("overflow")?;
@@ -77,13 +74,20 @@ impl Price {
     pub fn into_inner(self) -> NonZeroI64 {
         self.0
     }
-}
 
-impl TryInto<f64> for Price {
-    type Error = anyhow::Error;
+    pub fn to_f64(self, exponent: u32) -> anyhow::Result<f64> {
+        Ok(self.0.get() as f64 / 10i64.checked_pow(exponent).context("overflow")? as f64)
+    }
 
-    fn try_into(self) -> Result<f64, Self::Error> {
-        Ok(self.0.get() as f64 / 10i64.checked_pow(Self::TMP_EXPONENT).context("overflow")? as f64)
+    pub fn mul(self, rhs: Price, rhs_exponent: u32) -> anyhow::Result<Price> {
+        let left_value = i128::from(self.0.get());
+        let right_value = i128::from(rhs.0.get());
+
+        let value = left_value * right_value / 10i128.pow(rhs_exponent);
+        let value = value.try_into()?;
+        NonZeroI64::new(value)
+            .context("zero price is unsupported")
+            .map(Self)
     }
 }
 
@@ -117,21 +121,6 @@ impl Div<i64> for Price {
     type Output = Option<Price>;
     fn div(self, rhs: i64) -> Self::Output {
         let value = self.0.get().saturating_div(rhs);
-        NonZeroI64::new(value).map(Self)
-    }
-}
-
-impl Mul<Price> for Price {
-    type Output = Option<Price>;
-    fn mul(self, rhs: Price) -> Self::Output {
-        let left_value = i128::from(self.0.get());
-        let right_value = i128::from(rhs.0.get());
-
-        let value = left_value * right_value / 10i128.pow(Price::TMP_EXPONENT);
-        let value = match value.try_into() {
-            Ok(value) => value,
-            Err(_) => return None,
-        };
         NonZeroI64::new(value).map(Self)
     }
 }
