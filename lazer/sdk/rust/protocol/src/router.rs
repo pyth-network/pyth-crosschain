@@ -8,7 +8,7 @@ use {
     serde::{de::Error, Deserialize, Serialize},
     std::{
         num::NonZeroI64,
-        ops::{Add, Deref, DerefMut, Div, Mul, Sub},
+        ops::{Add, Deref, DerefMut, Div, Sub},
         time::{SystemTime, UNIX_EPOCH},
     },
 };
