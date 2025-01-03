@@ -575,10 +575,6 @@ fn calculate_twap(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<(i64
 
     // Calculate down_slots_ratio as an integer between 0 and 1_000_000
     // A value of 1_000_000 means all slots were missed and 0 means no slots were missed.
-    let total_slots = end_msg
-        .publish_slot
-        .checked_sub(start_msg.publish_slot)
-        .ok_or(ReceiverError::TwapCalculationOverflow)?;
     let total_down_slots = end_msg
         .num_down_slots
         .checked_sub(start_msg.num_down_slots)
@@ -586,7 +582,7 @@ fn calculate_twap(start_msg: &TwapMessage, end_msg: &TwapMessage) -> Result<(i64
     let down_slots_ratio = total_down_slots
         .checked_mul(1_000_000)
         .ok_or(ReceiverError::TwapCalculationOverflow)?
-        .checked_div(total_slots)
+        .checked_div(slot_diff)
         .ok_or(ReceiverError::TwapCalculationOverflow)?;
     // down_slots_ratio is a number in [0, 1_000_000], so we only need 32 unsigned bits
     let down_slots_ratio =

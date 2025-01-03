@@ -5,6 +5,8 @@ use anchor_lang::error_code;
 pub enum GetPriceError {
     #[msg("This price feed update's age exceeds the requested maximum age")]
     PriceTooOld = 10000, // Big number to avoid conflicts with the SDK user's program error codes
+    #[msg("This TWAP update's window size is invalid")]
+    InvalidWindowSize,
     #[msg("The price feed update doesn't match the requested feed id")]
     MismatchedFeedId,
     #[msg("This price feed update has a lower verification level than the one requested")]
