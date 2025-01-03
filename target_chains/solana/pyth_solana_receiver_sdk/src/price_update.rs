@@ -87,10 +87,11 @@ impl TwapUpdate {
     /// # Warning
     /// This function does not check :
     /// - How recent the price is
+    /// - If the TWAP's window size is expected
     /// - Whether the price update has been verified
     ///
     /// It is therefore unsafe to use this function without any extra checks,
-    /// as it allows for the possibility of using unverified or outdated price updates.
+    /// as it allows for the possibility of using unverified, outdated, or unexpected price updates.
     pub fn get_twap_unchecked(
         &self,
         feed_id: &FeedId,
@@ -101,15 +102,16 @@ impl TwapUpdate {
         );
         Ok(self.twap)
     }
-
-    /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId` no older than `maximum_age`.
+    /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId` no older than `maximum_age` with a specific window size.
+    /// The window size check includes a tolerance of ±1 second to account for Solana block time variations.
     ///
     /// # Example
     /// ```
     /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, TwapUpdate};
     /// use anchor_lang::prelude::*;
     ///
-    /// const MAXIMUM_AGE : u64 = 30;
+    /// const MAXIMUM_AGE: u64 = 30;
+    /// const WINDOW_SECONDS: u64 = 300; // 5-minute TWAP
     /// const FEED_ID: &str = "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"; // SOL/USD
     ///
     /// #[derive(Accounts)]
@@ -117,9 +119,14 @@ impl TwapUpdate {
     ///     pub twap_update: Account<'info, TwapUpdate>,
     /// }
     ///
-    /// pub fn read_twap_account(ctx : Context<ReadTwapAccount>) -> Result<()> {
+    /// pub fn read_twap_account(ctx: Context<ReadTwapAccount>) -> Result<()> {
     ///     let twap_update = &ctx.accounts.twap_update;
-    ///     let twap = twap_update.get_twap_no_older_than(&Clock::get()?, MAXIMUM_AGE, &get_feed_id_from_hex(FEED_ID)?)?;
+    ///     let twap = twap_update.get_twap_no_older_than(
+    ///         &Clock::get()?,
+    ///         MAXIMUM_AGE,
+    ///         WINDOW_SECONDS,
+    ///         &get_feed_id_from_hex(FEED_ID)?
+    ///     )?;
     ///     Ok(())
     /// }
     /// ```
@@ -127,9 +134,10 @@ impl TwapUpdate {
         &self,
         clock: &Clock,
         maximum_age: u64,
+        window_seconds: u64,
         feed_id: &FeedId,
     ) -> std::result::Result<TwapPrice, GetPriceError> {
-        // Ensure the update isn't outdated
+        // Ensure the update is isn't outdated
         let twap_price = self.get_twap_unchecked(feed_id)?;
         check!(
             twap_price
@@ -138,6 +146,16 @@ impl TwapUpdate {
                 >= clock.unix_timestamp,
             GetPriceError::PriceTooOld
         );
+
+        // Ensure the twap window size is as expected
+        // Allow for +/- 1 second tolerance to account for the imprecision introduced by Solana block times
+        const TOLERANCE: i64 = 1;
+        let actual_window = twap_price.end_time.saturating_sub(twap_price.start_time);
+        check!(
+            (actual_window - i64::try_from(window_seconds).unwrap()).abs() <= TOLERANCE,
+            GetPriceError::InvalidWindowSize
+        );
+
         Ok(twap_price)
     }
 }
@@ -543,13 +561,12 @@ pub mod tests {
             Err(GetPriceError::MismatchedFeedId)
         );
     }
-
     #[test]
     fn test_get_twap_no_older_than() {
         let expected_twap = TwapPrice {
             feed_id: [0; 32],
             start_time: 800,
-            end_time: 900,
+            end_time: 900, // Window size is 100 seconds (900 - 800)
             price: 1,
             conf: 2,
             exponent: -3,
@@ -571,15 +588,39 @@ pub mod tests {
         // Test unchecked access
         assert_eq!(update.get_twap_unchecked(&feed_id), Ok(expected_twap));
 
-        // Test with age check
+        // Test with correct window size (100 seconds)
         assert_eq!(
-            update.get_twap_no_older_than(&mock_clock, 100, &feed_id),
+            update.get_twap_no_older_than(&mock_clock, 100, 100, &feed_id),
             Ok(expected_twap)
+        );
+
+        // Test with window size within tolerance (+1 second)
+        assert_eq!(
+            update.get_twap_no_older_than(&mock_clock, 100, 101, &feed_id),
+            Ok(expected_twap)
+        );
+
+        // Test with window size within tolerance (-1 second)
+        assert_eq!(
+            update.get_twap_no_older_than(&mock_clock, 100, 99, &feed_id),
+            Ok(expected_twap)
+        );
+
+        // Test with incorrect window size (outside tolerance)
+        assert_eq!(
+            update.get_twap_no_older_than(&mock_clock, 100, 103, &feed_id),
+            Err(GetPriceError::InvalidWindowSize)
+        );
+
+        // Test with incorrect window size (outside tolerance)
+        assert_eq!(
+            update.get_twap_no_older_than(&mock_clock, 100, 97, &feed_id),
+            Err(GetPriceError::InvalidWindowSize)
         );
 
         // Test with reduced maximum age
         assert_eq!(
-            update.get_twap_no_older_than(&mock_clock, 10, &feed_id),
+            update.get_twap_no_older_than(&mock_clock, 10, 100, &feed_id),
             Err(GetPriceError::PriceTooOld)
         );
 
@@ -589,7 +630,7 @@ pub mod tests {
             Err(GetPriceError::MismatchedFeedId)
         );
         assert_eq!(
-            update.get_twap_no_older_than(&mock_clock, 100, &mismatched_feed_id),
+            update.get_twap_no_older_than(&mock_clock, 100, 100, &mismatched_feed_id),
             Err(GetPriceError::MismatchedFeedId)
         );
     }
