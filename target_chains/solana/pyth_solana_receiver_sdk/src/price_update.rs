@@ -103,7 +103,6 @@ impl TwapUpdate {
         Ok(self.twap)
     }
     /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId` no older than `maximum_age` with a specific window size.
-    /// The window size check includes a tolerance of ±1 second to account for Solana block time variations.
     ///
     /// # Example
     /// ```
@@ -148,11 +147,9 @@ impl TwapUpdate {
         );
 
         // Ensure the twap window size is as expected
-        // Allow for +/- 1 second tolerance to account for the imprecision introduced by Solana block times
-        const TOLERANCE: i64 = 1;
         let actual_window = twap_price.end_time.saturating_sub(twap_price.start_time);
         check!(
-            (actual_window - i64::try_from(window_seconds).unwrap()).abs() <= TOLERANCE,
+            actual_window == i64::try_from(window_seconds).unwrap(),
             GetPriceError::InvalidWindowSize
         );
 
@@ -594,27 +591,15 @@ pub mod tests {
             Ok(expected_twap)
         );
 
-        // Test with window size within tolerance (+1 second)
+        // Test with incorrect window size
         assert_eq!(
             update.get_twap_no_older_than(&mock_clock, 100, 101, &feed_id),
-            Ok(expected_twap)
-        );
-
-        // Test with window size within tolerance (-1 second)
-        assert_eq!(
-            update.get_twap_no_older_than(&mock_clock, 100, 99, &feed_id),
-            Ok(expected_twap)
-        );
-
-        // Test with incorrect window size (outside tolerance)
-        assert_eq!(
-            update.get_twap_no_older_than(&mock_clock, 100, 103, &feed_id),
             Err(GetPriceError::InvalidWindowSize)
         );
 
-        // Test with incorrect window size (outside tolerance)
+        // Test with incorrect window size
         assert_eq!(
-            update.get_twap_no_older_than(&mock_clock, 100, 97, &feed_id),
+            update.get_twap_no_older_than(&mock_clock, 100, 99, &feed_id),
             Err(GetPriceError::InvalidWindowSize)
         );
 
