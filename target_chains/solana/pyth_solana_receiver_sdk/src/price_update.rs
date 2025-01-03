@@ -137,7 +137,7 @@ impl TwapUpdate {
         window_seconds: u64,
         feed_id: &FeedId,
     ) -> std::result::Result<TwapPrice, GetPriceError> {
-        // Ensure the update is isn't outdated
+        // Ensure the update isn't outdated
         let twap_price = self.get_twap_unchecked(feed_id)?;
         check!(
             twap_price
