@@ -91,7 +91,7 @@ impl TwapUpdate {
     /// - Whether the price update has been verified
     ///
     /// It is therefore unsafe to use this function without any extra checks,
-    /// as it allows for the possibility of using unverified, outdated, or unexpected price updates.
+    /// as it allows for the possibility of using unverified, outdated, or arbitrary window length twap updates.
     pub fn get_twap_unchecked(
         &self,
         feed_id: &FeedId,
