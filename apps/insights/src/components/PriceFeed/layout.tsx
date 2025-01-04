@@ -14,7 +14,7 @@ import styles from "./layout.module.scss";
 import { PriceFeedSelect } from "./price-feed-select";
 import { ReferenceData } from "./reference-data";
 import { toHex } from "../../hex";
-import { getData } from "../../services/pyth";
+import { Cluster, getData } from "../../services/pyth";
 import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { FeedKey } from "../FeedKey";
 import {
@@ -35,7 +35,10 @@ type Props = {
 };
 
 export const PriceFeedLayout = async ({ children, params }: Props) => {
-  const [{ slug }, data] = await Promise.all([params, getData()]);
+  const [{ slug }, data] = await Promise.all([
+    params,
+    getData(Cluster.Pythnet),
+  ]);
   const symbol = decodeURIComponent(slug);
   const feed = data.find((item) => item.symbol === symbol);
 

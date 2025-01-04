@@ -19,6 +19,7 @@ type OwnProps = {
   title: ReactNode;
   closeHref?: string | undefined;
   footer?: ReactNode | undefined;
+  headingExtra?: ReactNode | undefined;
   headingClassName?: string | undefined;
   bodyClassName?: string | undefined;
   footerClassName?: string | undefined;
@@ -40,6 +41,7 @@ export const Drawer = ({
   headingClassName,
   bodyClassName,
   footerClassName,
+  headingExtra,
   ...props
 }: Props) => (
   <ModalDialog
@@ -73,18 +75,21 @@ export const Drawer = ({
           <Heading className={styles.title} slot="title">
             {title}
           </Heading>
-          <Button
-            className={styles.closeButton ?? ""}
-            beforeIcon={(props) => <XCircle weight="fill" {...props} />}
-            slot="close"
-            hideText
-            rounded
-            variant="ghost"
-            size="sm"
-            {...(closeHref && { href: closeHref })}
-          >
-            Close
-          </Button>
+          <div className={styles.headingEnd}>
+            {headingExtra}
+            <Button
+              className={styles.closeButton ?? ""}
+              beforeIcon={(props) => <XCircle weight="fill" {...props} />}
+              slot="close"
+              hideText
+              rounded
+              variant="ghost"
+              size="sm"
+              {...(closeHref && { href: closeHref })}
+            >
+              Close
+            </Button>
+          </div>
         </div>
         <div className={clsx(styles.body, bodyClassName)}>
           {typeof children === "function" ? children(...args) : children}

@@ -32,11 +32,21 @@ type TableProps<T extends string> = ComponentProps<typeof UnstyledTable> & {
   columns: ColumnConfig<T>[];
   isLoading?: boolean | undefined;
   isUpdating?: boolean | undefined;
-  renderEmptyState?: TableBodyProps<T>["renderEmptyState"] | undefined;
   dependencies?: TableBodyProps<T>["dependencies"] | undefined;
 } & (
     | { isLoading: true; rows?: RowConfig<T>[] | undefined }
     | { isLoading?: false | undefined; rows: RowConfig<T>[] }
+  ) &
+  (
+    | { hideHeadersInEmptyState?: undefined }
+    | ({ hideHeadersInEmptyState?: boolean } & (
+        | { emptyState: ReactNode }
+        | {
+            renderEmptyState: NonNullable<
+              TableBodyProps<T>["renderEmptyState"]
+            >;
+          }
+      ))
   );
 
 export type ColumnConfig<T extends string> = Omit<ColumnProps, "children"> & {
@@ -70,7 +80,6 @@ export const Table = <T extends string>({
   columns,
   isLoading,
   isUpdating,
-  renderEmptyState,
   dependencies,
   headerCellClassName,
   stickyHeader,
@@ -86,105 +95,123 @@ export const Table = <T extends string>({
         <div className={styles.loader} />
       </div>
     )}
-    <UnstyledTable aria-label={label} className={styles.table ?? ""} {...props}>
-      <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
-        {(column: ColumnConfig<T>) => (
-          <Column
-            data-sticky-header={stickyHeader === undefined ? undefined : ""}
-            {...column}
-            {...cellProps(column, headerCellClassName, {
-              "--sticky-header-top":
-                typeof stickyHeader === "string" ? stickyHeader : 0,
-            } as CSSProperties)}
-          >
-            {({ allowsSorting, sort, sortDirection }) => (
-              <>
-                {column.name}
-                {allowsSorting && (
-                  <Button
-                    className={styles.sortButton ?? ""}
-                    size="xs"
-                    variant="ghost"
-                    onPress={() => {
-                      sort(
-                        sortDirection === "ascending"
-                          ? "descending"
-                          : "ascending",
-                      );
-                    }}
-                    beforeIcon={(props) => (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
-                        {...props}
-                      >
-                        <path
-                          className={styles.ascending}
-                          d="m10.677 6.073-2.5-2.5a.25.25 0 0 0-.354 0l-2.5 2.5A.25.25 0 0 0 5.5 6.5h5a.25.25 0 0 0 .177-.427Z"
-                        />
-                        <path
-                          className={styles.descending}
-                          d="m10.677 9.927-2.5 2.5a.25.25 0 0 1-.354 0l-2.5-2.5A.25.25 0 0 1 5.5 9.5h5a.25.25 0 0 1 .177.427Z"
-                        />
-                      </svg>
-                    )}
-                    hideText
-                  >
-                    Sort
-                  </Button>
-                )}
-                <div className={styles.divider} />
-              </>
-            )}
-          </Column>
-        )}
-      </TableHeader>
-      <TableBody
-        items={isLoading ? [] : rows}
-        className={styles.tableBody ?? ""}
-        {...(dependencies !== undefined && { dependencies })}
-        {...(renderEmptyState !== undefined && { renderEmptyState })}
+    {props.hideHeadersInEmptyState === true && rows?.length === 0 ? (
+      <>
+        {"renderEmptyState" in props
+          ? props.renderEmptyState({ isEmpty: true, isDropTarget: false })
+          : props.emptyState}
+      </>
+    ) : (
+      <UnstyledTable
+        aria-label={label}
+        className={styles.table ?? ""}
+        {...props}
       >
-        {isLoading ? (
-          <Row
-            id="loading"
-            key="loading"
-            className={styles.row ?? ""}
-            columns={columns}
-          >
-            {(column: ColumnConfig<T>) => (
-              <Cell {...cellProps(column)}>
-                {"loadingSkeleton" in column ? (
-                  column.loadingSkeleton
-                ) : (
-                  <Skeleton
-                    width={
-                      "loadingSkeletonWidth" in column
-                        ? column.loadingSkeletonWidth
-                        : column.width
-                    }
-                  />
-                )}
-              </Cell>
-            )}
-          </Row>
-        ) : (
-          ({ className: rowClassName, data, ...row }: RowConfig<T>) => (
+        <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
+          {(column: ColumnConfig<T>) => (
+            <Column
+              data-sticky-header={stickyHeader === undefined ? undefined : ""}
+              {...column}
+              {...cellProps(column, headerCellClassName, {
+                "--sticky-header-top":
+                  typeof stickyHeader === "string" ? stickyHeader : 0,
+              } as CSSProperties)}
+            >
+              {({ allowsSorting, sort, sortDirection }) => (
+                <>
+                  {column.name}
+                  {allowsSorting && (
+                    <Button
+                      className={styles.sortButton ?? ""}
+                      size="xs"
+                      variant="ghost"
+                      onPress={() => {
+                        sort(
+                          sortDirection === "ascending"
+                            ? "descending"
+                            : "ascending",
+                        );
+                      }}
+                      beforeIcon={(props) => (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          {...props}
+                        >
+                          <path
+                            className={styles.ascending}
+                            d="m10.677 6.073-2.5-2.5a.25.25 0 0 0-.354 0l-2.5 2.5A.25.25 0 0 0 5.5 6.5h5a.25.25 0 0 0 .177-.427Z"
+                          />
+                          <path
+                            className={styles.descending}
+                            d="m10.677 9.927-2.5 2.5a.25.25 0 0 1-.354 0l-2.5-2.5A.25.25 0 0 1 5.5 9.5h5a.25.25 0 0 1 .177.427Z"
+                          />
+                        </svg>
+                      )}
+                      hideText
+                    >
+                      Sort
+                    </Button>
+                  )}
+                  <div className={styles.divider} />
+                </>
+              )}
+            </Column>
+          )}
+        </TableHeader>
+        <TableBody
+          items={isLoading ? [] : rows}
+          className={styles.tableBody ?? ""}
+          {...(dependencies !== undefined && { dependencies })}
+          {...(!props.hideHeadersInEmptyState &&
+            ("renderEmptyState" in props || "emptyState" in props) && {
+              renderEmptyState:
+                "renderEmptyState" in props
+                  ? props.renderEmptyState
+                  : () => props.emptyState,
+            })}
+        >
+          {isLoading ? (
             <Row
-              className={clsx(styles.row, rowClassName)}
+              id="loading"
+              key="loading"
+              className={styles.row ?? ""}
               columns={columns}
-              data-has-action={row.onAction === undefined ? undefined : ""}
-              {...row}
             >
               {(column: ColumnConfig<T>) => (
-                <Cell {...cellProps(column)}>{data[column.id]}</Cell>
+                <Cell {...cellProps(column)}>
+                  {"loadingSkeleton" in column ? (
+                    column.loadingSkeleton
+                  ) : (
+                    <Skeleton
+                      width={
+                        "loadingSkeletonWidth" in column
+                          ? column.loadingSkeletonWidth
+                          : column.width
+                      }
+                    />
+                  )}
+                </Cell>
               )}
             </Row>
-          )
-        )}
-      </TableBody>
-    </UnstyledTable>
+          ) : (
+            ({ className: rowClassName, data, ...row }: RowConfig<T>) => (
+              <Row
+                className={clsx(styles.row, rowClassName)}
+                columns={columns}
+                data-has-action={row.onAction === undefined ? undefined : ""}
+                {...row}
+              >
+                {(column: ColumnConfig<T>) => (
+                  <Cell {...cellProps(column)}>{data[column.id]}</Cell>
+                )}
+              </Row>
+            )
+          )}
+        </TableBody>
+      </UnstyledTable>
+    )}
   </div>
 );
 

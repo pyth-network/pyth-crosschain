@@ -2,7 +2,7 @@
 
 import { PlusMinus } from "@phosphor-icons/react/dist/ssr/PlusMinus";
 import { useLogger } from "@pythnetwork/app-logger";
-import type { PriceData } from "@pythnetwork/client";
+import type { PriceData, PriceComponent } from "@pythnetwork/client";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { useMap } from "@react-hookz/web";
 import { PublicKey } from "@solana/web3.js";
@@ -19,19 +19,17 @@ import {
 import { useNumberFormatter, useDateFormatter } from "react-aria";
 
 import styles from "./index.module.scss";
-import { client, subscribe } from "../../services/pyth";
+import {
+  Cluster,
+  subscribe,
+  getAssetPricesFromAccounts,
+} from "../../services/pyth";
 
 export const SKELETON_WIDTH = 20;
 
 const LivePricesContext = createContext<
   ReturnType<typeof usePriceData> | undefined
 >(undefined);
-
-type Price = PriceData & {
-  direction: ChangeDirection;
-};
-
-type ChangeDirection = "up" | "down" | "flat";
 
 type LivePricesProviderProps = Omit<
   ComponentProps<typeof LivePricesContext>,
@@ -45,7 +43,8 @@ export const LivePricesProvider = (props: LivePricesProviderProps) => {
 };
 
 export const useLivePrice = (feedKey: string) => {
-  const { priceData, addSubscription, removeSubscription } = useLivePrices();
+  const { priceData, prevPriceData, addSubscription, removeSubscription } =
+    useLivePrices();
 
   useEffect(() => {
     addSubscription(feedKey);
@@ -54,40 +53,130 @@ export const useLivePrice = (feedKey: string) => {
     };
   }, [addSubscription, removeSubscription, feedKey]);
 
-  return priceData.get(feedKey);
+  const current = priceData.get(feedKey);
+  const prev = prevPriceData.get(feedKey);
+
+  return { current, prev };
 };
 
-export const LivePrice = ({ feedKey }: { feedKey: string }) => {
-  const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 5 });
-  const price = useLivePrice(feedKey);
+export const useLivePriceComponent = (
+  feedKey: string,
+  publisherKeyAsBase58: string,
+) => {
+  const { current, prev } = useLivePrice(feedKey);
+  const publisherKey = useMemo(
+    () => new PublicKey(publisherKeyAsBase58),
+    [publisherKeyAsBase58],
+  );
 
-  return price === undefined ? (
+  return {
+    current: current?.priceComponents.find((component) =>
+      component.publisher.equals(publisherKey),
+    ),
+    prev: prev?.priceComponents.find((component) =>
+      component.publisher.equals(publisherKey),
+    ),
+  };
+};
+
+export const LivePrice = ({
+  feedKey,
+  publisherKey,
+}: {
+  feedKey: string;
+  publisherKey?: string | undefined;
+}) =>
+  publisherKey ? (
+    <LiveComponentPrice feedKey={feedKey} publisherKey={publisherKey} />
+  ) : (
+    <LiveAggregatePrice feedKey={feedKey} />
+  );
+
+const LiveAggregatePrice = ({ feedKey }: { feedKey: string }) => {
+  const { prev, current } = useLivePrice(feedKey);
+  return (
+    <Price current={current?.aggregate.price} prev={prev?.aggregate.price} />
+  );
+};
+
+const LiveComponentPrice = ({
+  feedKey,
+  publisherKey,
+}: {
+  feedKey: string;
+  publisherKey: string;
+}) => {
+  const { prev, current } = useLivePriceComponent(feedKey, publisherKey);
+  return <Price current={current?.latest.price} prev={prev?.latest.price} />;
+};
+
+const Price = ({
+  prev,
+  current,
+}: {
+  prev?: number | undefined;
+  current?: number | undefined;
+}) => {
+  const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 5 });
+
+  return current === undefined ? (
     <Skeleton width={SKELETON_WIDTH} />
   ) : (
-    <span className={styles.price} data-direction={price.direction}>
-      {numberFormatter.format(price.aggregate.price)}
+    <span
+      className={styles.price}
+      data-direction={prev ? getChangeDirection(prev, current) : "flat"}
+    >
+      {numberFormatter.format(current)}
     </span>
   );
 };
 
-export const LiveConfidence = ({ feedKey }: { feedKey: string }) => {
+export const LiveConfidence = ({
+  feedKey,
+  publisherKey,
+}: {
+  feedKey: string;
+  publisherKey?: string | undefined;
+}) =>
+  publisherKey === undefined ? (
+    <LiveAggregateConfidence feedKey={feedKey} />
+  ) : (
+    <LiveComponentConfidence feedKey={feedKey} publisherKey={publisherKey} />
+  );
+
+const LiveAggregateConfidence = ({ feedKey }: { feedKey: string }) => {
+  const { current } = useLivePrice(feedKey);
+  return <Confidence confidence={current?.aggregate.confidence} />;
+};
+
+const LiveComponentConfidence = ({
+  feedKey,
+  publisherKey,
+}: {
+  feedKey: string;
+  publisherKey: string;
+}) => {
+  const { current } = useLivePriceComponent(feedKey, publisherKey);
+  return <Confidence confidence={current?.latest.confidence} />;
+};
+
+const Confidence = ({ confidence }: { confidence?: number | undefined }) => {
   const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 5 });
-  const price = useLivePrice(feedKey);
 
   return (
     <span className={styles.confidence}>
       <PlusMinus className={styles.plusMinus} />
-      {price === undefined ? (
+      {confidence === undefined ? (
         <Skeleton width={SKELETON_WIDTH} />
       ) : (
-        <span>{numberFormatter.format(price.aggregate.confidence)}</span>
+        <span>{numberFormatter.format(confidence)}</span>
       )}
     </span>
   );
 };
 
 export const LiveLastUpdated = ({ feedKey }: { feedKey: string }) => {
-  const price = useLivePrice(feedKey);
+  const { current } = useLivePrice(feedKey);
   const formatterWithDate = useDateFormatter({
     dateStyle: "short",
     timeStyle: "medium",
@@ -96,15 +185,15 @@ export const LiveLastUpdated = ({ feedKey }: { feedKey: string }) => {
     timeStyle: "medium",
   });
   const formattedTimestamp = useMemo(() => {
-    if (price) {
-      const timestamp = new Date(Number(price.timestamp * 1000n));
+    if (current) {
+      const timestamp = new Date(Number(current.timestamp * 1000n));
       return isToday(timestamp)
         ? formatterWithoutDate.format(timestamp)
         : formatterWithDate.format(timestamp);
     } else {
       return;
     }
-  }, [price, formatterWithDate, formatterWithoutDate]);
+  }, [current, formatterWithDate, formatterWithoutDate]);
 
   return formattedTimestamp ?? <Skeleton width={SKELETON_WIDTH} />;
 };
@@ -120,9 +209,27 @@ export const LiveValue = <T extends keyof PriceData>({
   field,
   defaultValue,
 }: LiveValueProps<T>) => {
-  const price = useLivePrice(feedKey);
+  const { current } = useLivePrice(feedKey);
 
-  return price?.[field]?.toString() ?? defaultValue;
+  return current?.[field]?.toString() ?? defaultValue;
+};
+
+type LiveComponentValueProps<T extends keyof PriceComponent["latest"]> = {
+  field: T;
+  feedKey: string;
+  publisherKey: string;
+  defaultValue?: ReactNode | undefined;
+};
+
+export const LiveComponentValue = <T extends keyof PriceComponent["latest"]>({
+  feedKey,
+  field,
+  publisherKey,
+  defaultValue,
+}: LiveComponentValueProps<T>) => {
+  const { current } = useLivePriceComponent(feedKey, publisherKey);
+
+  return current?.latest[field].toString() ?? defaultValue;
 };
 
 const isToday = (date: Date) => {
@@ -137,7 +244,8 @@ const isToday = (date: Date) => {
 const usePriceData = () => {
   const feedSubscriptions = useMap<string, number>([]);
   const [feedKeys, setFeedKeys] = useState<string[]>([]);
-  const priceData = useMap<string, Price>([]);
+  const prevPriceData = useMap<string, PriceData>([]);
+  const priceData = useMap<string, PriceData>([]);
   const logger = useLogger();
 
   useEffect(() => {
@@ -147,15 +255,15 @@ const usePriceData = () => {
     // that symbol.
     const uninitializedFeedKeys = feedKeys.filter((key) => !priceData.has(key));
     if (uninitializedFeedKeys.length > 0) {
-      client
-        .getAssetPricesFromAccounts(
-          uninitializedFeedKeys.map((key) => new PublicKey(key)),
-        )
+      getAssetPricesFromAccounts(
+        Cluster.Pythnet,
+        uninitializedFeedKeys.map((key) => new PublicKey(key)),
+      )
         .then((initialPrices) => {
           for (const [i, price] of initialPrices.entries()) {
             const key = uninitializedFeedKeys[i];
-            if (key) {
-              priceData.set(key, { ...price, direction: "flat" });
+            if (key && !priceData.has(key)) {
+              priceData.set(key, price);
             }
           }
         })
@@ -166,14 +274,15 @@ const usePriceData = () => {
 
     // Then, we create a subscription to update prices live.
     const connection = subscribe(
+      Cluster.Pythnet,
       feedKeys.map((key) => new PublicKey(key)),
-      ({ price_account }, price) => {
+      ({ price_account }, data) => {
         if (price_account) {
-          const prevPrice = priceData.get(price_account)?.price;
-          priceData.set(price_account, {
-            ...price,
-            direction: getChangeDirection(prevPrice, price.aggregate.price),
-          });
+          const prevData = priceData.get(price_account);
+          if (prevData) {
+            prevPriceData.set(price_account, prevData);
+          }
+          priceData.set(price_account, data);
         }
       },
     );
@@ -186,7 +295,7 @@ const usePriceData = () => {
         logger.error("Failed to unsubscribe from price updates", error);
       });
     };
-  }, [feedKeys, logger, priceData]);
+  }, [feedKeys, logger, priceData, prevPriceData]);
 
   const addSubscription = useCallback(
     (key: string) => {
@@ -214,6 +323,7 @@ const usePriceData = () => {
 
   return {
     priceData: new Map(priceData),
+    prevPriceData: new Map(prevPriceData),
     addSubscription,
     removeSubscription,
   };
@@ -246,3 +356,5 @@ const getChangeDirection = (
     return "down";
   }
 };
+
+type ChangeDirection = "up" | "down" | "flat";

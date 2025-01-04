@@ -350,7 +350,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
             rows: props.rows,
             sortDescriptor: props.sortDescriptor,
             onSortChange: props.onSortChange,
-            renderEmptyState: () => (
+            emptyState: (
               <NoResults
                 query={props.search}
                 onClearSearch={() => {

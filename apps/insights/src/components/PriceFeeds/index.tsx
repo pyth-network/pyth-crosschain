@@ -17,7 +17,7 @@ import { AssetClassesDrawer } from "./asset-classes-drawer";
 import { ComingSoonList } from "./coming-soon-list";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { getData } from "../../services/pyth";
+import { Cluster, getData } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
 import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { LivePrice } from "../LivePrices";
@@ -196,7 +196,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
 );
 
 const getPriceFeeds = async () => {
-  const priceFeeds = await getData();
+  const priceFeeds = await getData(Cluster.Pythnet);
   const activeFeeds = priceFeeds.filter((feed) => isActive(feed));
   const comingSoon = priceFeeds.filter((feed) => !isActive(feed));
   return { activeFeeds, comingSoon };

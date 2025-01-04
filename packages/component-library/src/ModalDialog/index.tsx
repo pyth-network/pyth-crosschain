@@ -36,6 +36,12 @@ export const ModalDialogTrigger = (
     [setAnimation],
   );
 
+  useEffect(() => {
+    if (props.defaultOpen) {
+      setAnimation("visible");
+    }
+  }, [props.defaultOpen]);
+
   return (
     <ModalAnimationContext value={[animation, setAnimation]}>
       <DialogTrigger onOpenChange={handleOpenChange} {...props} />
@@ -72,6 +78,7 @@ type OwnProps = Pick<ComponentProps<typeof Modal>, "children"> &
     overlayVariants?:
       | ComponentProps<typeof MotionModalOverlay>["variants"]
       | undefined;
+    onCloseFinish?: (() => void) | undefined;
   };
 
 type Props = Omit<ComponentProps<typeof MotionDialog>, keyof OwnProps> &
@@ -80,6 +87,7 @@ type Props = Omit<ComponentProps<typeof MotionDialog>, keyof OwnProps> &
 export const ModalDialog = ({
   isOpen,
   onOpenChange,
+  onCloseFinish,
   overlayClassName,
   overlayVariants,
   children,
@@ -100,6 +108,7 @@ export const ModalDialog = ({
   const endAnimation = (animation: AnimationState) => {
     if (animation === "hidden") {
       hideOverlay();
+      onCloseFinish?.();
     }
     setAnimation((a) => {
       return animation === "hidden" && a === "hidden" ? "unmounted" : a;

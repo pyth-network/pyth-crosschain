@@ -10,13 +10,13 @@ import styles from "./index.module.scss";
 import { SearchDialogProvider } from "./search-dialog";
 import { TabRoot, TabPanel } from "./tabs";
 import {
-  IS_PRODUCTION_SERVER,
+  ENABLE_ACCESSIBILITY_REPORTING,
   GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
 } from "../../config/server";
 import { toHex } from "../../hex";
 import { getPublishers } from "../../services/clickhouse";
-import { getData } from "../../services/pyth";
+import { Cluster, getData } from "../../services/pyth";
 import { LivePricesProvider } from "../LivePrices";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
@@ -26,13 +26,16 @@ type Props = {
 };
 
 export const Root = async ({ children }: Props) => {
-  const [data, publishers] = await Promise.all([getData(), getPublishers()]);
+  const [data, publishers] = await Promise.all([
+    getData(Cluster.Pythnet),
+    getPublishers(),
+  ]);
 
   return (
     <BaseRoot
       amplitudeApiKey={AMPLITUDE_API_KEY}
       googleAnalyticsId={GOOGLE_ANALYTICS_ID}
-      enableAccessibilityReporting={!IS_PRODUCTION_SERVER}
+      enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
       providers={[NuqsAdapter, LivePricesProvider]}
       className={styles.root}
     >

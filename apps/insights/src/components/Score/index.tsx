@@ -10,6 +10,7 @@ const SCORE_WIDTH = 24;
 
 type Props = {
   width?: number | undefined;
+  fill?: boolean | undefined;
 } & (
   | { isLoading: true }
   | {
@@ -18,19 +19,26 @@ type Props = {
     }
 );
 
-export const Score = ({ width, ...props }: Props) =>
+export const Score = ({ width, fill, ...props }: Props) =>
   props.isLoading ? (
     <Skeleton
       className={styles.score}
       fill
-      style={{ "--width": width ?? SCORE_WIDTH } as CSSProperties}
+      data-fill={fill ? "" : undefined}
+      {...(!fill && {
+        style: { "--width": width ?? SCORE_WIDTH } as CSSProperties,
+      })}
     />
   ) : (
     <Meter
+      className={styles.meter ?? ""}
       value={props.score}
       maxValue={1}
-      style={{ "--width": width ?? SCORE_WIDTH } as CSSProperties}
       aria-label="Score"
+      data-fill={fill ? "" : undefined}
+      {...(!fill && {
+        style: { "--width": width ?? SCORE_WIDTH } as CSSProperties,
+      })}
     >
       {({ percentage }) => (
         <div

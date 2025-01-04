@@ -1,15 +1,20 @@
 import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
+import { Confetti } from "@phosphor-icons/react/dist/ssr/Confetti";
 import { Network } from "@phosphor-icons/react/dist/ssr/Network";
+import { SmileySad } from "@phosphor-icons/react/dist/ssr/SmileySad";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 
-import { getRankingsWithData } from "./get-rankings-with-data";
+import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./performance.module.scss";
+import { TopFeedsTable } from "./top-feeds-table";
 import { getPublishers } from "../../services/clickhouse";
-import { getTotalFeedCount } from "../../services/pyth";
+import { Cluster, getTotalFeedCount } from "../../services/pyth";
+import { Status } from "../../status";
+import { NoResults } from "../NoResults";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherIcon } from "../PublisherIcon";
@@ -27,10 +32,10 @@ type Props = {
 
 export const Performance = async ({ params }: Props) => {
   const { key } = await params;
-  const [publishers, rankingsWithData, totalFeeds] = await Promise.all([
+  const [publishers, priceFeeds, totalFeeds] = await Promise.all([
     getPublishers(),
-    getRankingsWithData(key),
-    getTotalFeedCount(),
+    getPriceFeeds(Cluster.Pythnet, key),
+    getTotalFeedCount(Cluster.Pythnet),
   ]);
   const slicedPublishers = sliceAround(
     publishers,
@@ -114,26 +119,40 @@ export const Performance = async ({ params }: Props) => {
         />
       </Card>
       <Card icon={<Network />} title="High-Performing Feeds">
-        <Table
-          rounded
-          fill
+        <TopFeedsTable
           label="High-Performing Feeds"
-          columns={feedColumns}
+          publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
+          emptyState={
+            <NoResults
+              icon={<SmileySad />}
+              header="Oh no!"
+              body="This publisher has no high performing feeds"
+              variant="error"
+            />
+          }
           rows={getFeedRows(
-            rankingsWithData
+            priceFeeds
+              .filter((feed) => hasRanking(feed))
               .filter(({ ranking }) => ranking.final_score > 0.9)
               .sort((a, b) => b.ranking.final_score - a.ranking.final_score),
           )}
         />
       </Card>
       <Card icon={<Network />} title="Low-Performing Feeds">
-        <Table
-          rounded
-          fill
+        <TopFeedsTable
           label="Low-Performing Feeds"
-          columns={feedColumns}
+          publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
+          emptyState={
+            <NoResults
+              icon={<Confetti />}
+              header="Looking good!"
+              body="This publisher has no low performing feeds"
+              variant="success"
+            />
+          }
           rows={getFeedRows(
-            rankingsWithData
+            priceFeeds
+              .filter((feed) => hasRanking(feed))
               .filter(({ ranking }) => ranking.final_score < 0.7)
               .sort((a, b) => a.ranking.final_score - b.ranking.final_score),
           )}
@@ -143,50 +162,39 @@ export const Performance = async ({ params }: Props) => {
   );
 };
 
-const feedColumns = [
-  {
-    id: "score" as const,
-    name: "SCORE",
-    alignment: "left" as const,
-    width: PUBLISHER_SCORE_WIDTH,
-  },
-  {
-    id: "asset" as const,
-    name: "ASSET",
-    isRowHeader: true,
-    alignment: "left" as const,
-  },
-  {
-    id: "assetClass" as const,
-    name: "ASSET CLASS",
-    alignment: "right" as const,
-    width: 40,
-  },
-];
-
 const getFeedRows = (
-  rankingsWithData: Awaited<ReturnType<typeof getRankingsWithData>>,
+  priceFeeds: (Omit<
+    Awaited<ReturnType<typeof getPriceFeeds>>,
+    "ranking"
+  >[number] & {
+    ranking: NonNullable<
+      Awaited<ReturnType<typeof getPriceFeeds>>[number]["ranking"]
+    >;
+  })[],
 ) =>
-  rankingsWithData.slice(0, 10).map(({ feed, ranking }) => ({
-    id: ranking.symbol,
-    data: {
-      asset: (
-        <PriceFeedTag
-          compact
-          symbol={feed.product.display_symbol}
-          icon={<PriceFeedIcon symbol={feed.symbol} />}
-        />
-      ),
-      assetClass: (
-        <Badge variant="neutral" style="outline" size="xs">
-          {feed.product.asset_type.toUpperCase()}
-        </Badge>
-      ),
-      score: (
-        <Score width={PUBLISHER_SCORE_WIDTH} score={ranking.final_score} />
-      ),
-    },
-  }));
+  priceFeeds
+    .filter((feed) => feed.status === Status.Active)
+    .slice(0, 20)
+    .map(({ feed, ranking }) => ({
+      id: ranking.symbol,
+      data: {
+        asset: (
+          <PriceFeedTag
+            compact
+            symbol={feed.product.display_symbol}
+            icon={<PriceFeedIcon symbol={feed.symbol} />}
+          />
+        ),
+        assetClass: (
+          <Badge variant="neutral" style="outline" size="xs">
+            {feed.product.asset_type.toUpperCase()}
+          </Badge>
+        ),
+        score: (
+          <Score width={PUBLISHER_SCORE_WIDTH} score={ranking.final_score} />
+        ),
+      },
+    }));
 
 const sliceAround = <T,>(
   arr: T[],
@@ -205,3 +213,7 @@ const sliceAround = <T,>(
     return arr.slice(min, max);
   }
 };
+
+const hasRanking = <T,>(feed: {
+  ranking: T | undefined;
+}): feed is { ranking: T } => feed.ranking !== undefined;

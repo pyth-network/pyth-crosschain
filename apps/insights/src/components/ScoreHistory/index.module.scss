@@ -1,11 +1,11 @@
 @use "@pythnetwork/component-library/theme";
 
-.medianScoreHistory {
+.scoreHistory {
   display: flex;
   flex-flow: column nowrap;
   gap: theme.spacing(6);
 
-  .medianScoreHistoryChart {
+  .scoreHistoryChart {
     grid-column: span 2 / span 2;
     border-radius: theme.border-radius("2xl");
     border: 1px solid theme.color("border");
@@ -44,64 +44,64 @@
       border-bottom-right-radius: theme.border-radius("2xl");
       overflow: hidden;
 
-      .medianScore,
-      .medianUptimeScore,
-      .medianDeviationScore,
-      .medianStalledScore {
+      .score,
+      .uptimeScore,
+      .deviationScore,
+      .stalledScore {
         transition: opacity 100ms linear;
         opacity: 0.2;
       }
 
-      .medianScore {
+      .score {
         color: theme.color("states", "data", "normal");
       }
 
-      .medianUptimeScore {
+      .uptimeScore {
         color: theme.color("states", "info", "normal");
       }
 
-      .medianDeviationScore {
+      .deviationScore {
         color: theme.color("states", "lime", "normal");
       }
 
-      .medianStalledScore {
+      .stalledScore {
         color: theme.color("states", "warning", "normal");
       }
     }
 
     &:not([data-focused-score], [data-hovered-score]) {
-      .medianScore,
-      .medianUptimeScore,
-      .medianDeviationScore,
-      .medianStalledScore {
+      .score,
+      .uptimeScore,
+      .deviationScore,
+      .stalledScore {
         opacity: 1;
       }
     }
 
     &[data-hovered-score="uptime"],
     &[data-focused-score="uptime"] {
-      .medianUptimeScore {
+      .uptimeScore {
         opacity: 1;
       }
     }
 
     &[data-hovered-score="deviation"],
     &[data-focused-score="deviation"] {
-      .medianDeviationScore {
+      .deviationScore {
         opacity: 1;
       }
     }
 
     &[data-hovered-score="stalled"],
     &[data-focused-score="stalled"] {
-      .medianStalledScore {
+      .stalledScore {
         opacity: 1;
       }
     }
 
     &[data-hovered-score="final"],
     &[data-focused-score="final"] {
-      .medianScore {
+      .score {
         opacity: 1;
       }
     }

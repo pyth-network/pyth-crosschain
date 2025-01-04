@@ -53,3 +53,6 @@ export const CLICKHOUSE = {
 
 export const SOLANA_RPC =
   process.env.SOLANA_RPC ?? "https://api.mainnet-beta.solana.com";
+
+export const ENABLE_ACCESSIBILITY_REPORTING =
+  !IS_PRODUCTION_SERVER && !process.env.DISABLE_ACCESSIBILITY_REPORTING;

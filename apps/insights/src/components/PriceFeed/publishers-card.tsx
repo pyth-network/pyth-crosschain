@@ -11,59 +11,77 @@ import {
   type SortDescriptor,
   Table,
 } from "@pythnetwork/component-library/Table";
-import { useQueryState, parseAsBoolean } from "nuqs";
+import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
 import { type ReactNode, Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import styles from "./publishers-card.module.scss";
+import { Cluster } from "../../services/pyth";
+import { Status as StatusType } from "../../status";
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FormattedNumber } from "../FormattedNumber";
 import { NoResults } from "../NoResults";
+import { PriceComponentDrawer } from "../PriceComponentDrawer";
 import { PublisherTag } from "../PublisherTag";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
+import { Status as StatusComponent } from "../Status";
 
 const SCORE_WIDTH = 24;
 
 type Props = {
+  symbol: string;
+  feedKey: string;
   className?: string | undefined;
-  priceComponents: PriceComponent[];
+  publishers: Publisher[];
 };
 
-type PriceComponent = {
+type Publisher = {
   id: string;
-  score: number;
-  uptimeScore: number;
-  deviationPenalty: number | null;
-  deviationScore: number;
-  stalledPenalty: number;
-  stalledScore: number;
-  isTest: boolean;
+  publisherKey: string;
+  score: number | undefined;
+  uptimeScore: number | undefined;
+  deviationPenalty: number | undefined;
+  deviationScore: number | undefined;
+  stalledPenalty: number | undefined;
+  stalledScore: number | undefined;
+  rank: number | undefined;
+  cluster: Cluster;
+  status: StatusType;
 } & (
   | { name: string; icon: ReactNode }
   | { name?: undefined; icon?: undefined }
 );
 
-export const PublishersCard = ({ priceComponents, ...props }: Props) => (
-  <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
-    <ResolvedPriceComponentsCard priceComponents={priceComponents} {...props} />
+export const PublishersCard = ({ publishers, ...props }: Props) => (
+  <Suspense fallback={<PublishersCardContents isLoading {...props} />}>
+    <ResolvedPublishersCard publishers={publishers} {...props} />
   </Suspense>
 );
 
-const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
+const ResolvedPublishersCard = ({
+  symbol,
+  feedKey,
+  publishers,
+  ...props
+}: Props) => {
+  const { handleClose, selectedPublisher, updateSelectedPublisherKey } =
+    usePublisherDrawer(publishers);
   const logger = useLogger();
-  const [includeTestComponents, setIncludeTestComponents] = useQueryState(
-    "includeTestComponents",
+  const [includeTestFeeds, setIncludeTestFeeds] = useQueryState(
+    "includeTestFeeds",
     parseAsBoolean.withDefault(false),
   );
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
-  const filteredPriceComponents = useMemo(
+  const filteredPublishers = useMemo(
     () =>
-      includeTestComponents
-        ? priceComponents
-        : priceComponents.filter((component) => !component.isTest),
-    [includeTestComponents, priceComponents],
+      includeTestFeeds
+        ? publishers
+        : publishers.filter(
+            (publisher) => publisher.cluster === Cluster.Pythnet,
+          ),
+    [includeTestFeeds, publishers],
   );
 
   const {
@@ -80,34 +98,27 @@ const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
     numPages,
     mkPageLink,
   } = useQueryParamFilterPagination(
-    filteredPriceComponents,
-    (priceComponent, search) =>
-      filter.contains(priceComponent.id, search) ||
-      (priceComponent.name !== undefined &&
-        filter.contains(priceComponent.name, search)),
+    filteredPublishers,
+    (publisher, search) =>
+      filter.contains(publisher.publisherKey, search) ||
+      (publisher.name !== undefined && filter.contains(publisher.name, search)),
     (a, b, { column, direction }) => {
       switch (column) {
         case "score":
         case "uptimeScore":
         case "deviationScore":
         case "stalledScore":
-        case "stalledPenalty": {
-          return (
-            (direction === "descending" ? -1 : 1) * (a[column] - b[column])
-          );
-        }
-
+        case "stalledPenalty":
         case "deviationPenalty": {
-          if (a.deviationPenalty === null && b.deviationPenalty === null) {
+          if (a[column] === undefined && b[column] === undefined) {
             return 0;
-          } else if (a.deviationPenalty === null) {
+          } else if (a[column] === undefined) {
             return direction === "descending" ? 1 : -1;
-          } else if (b.deviationPenalty === null) {
+          } else if (b[column] === undefined) {
             return direction === "descending" ? -1 : 1;
           } else {
             return (
-              (direction === "descending" ? -1 : 1) *
-              (a.deviationPenalty - b.deviationPenalty)
+              (direction === "descending" ? -1 : 1) * (a[column] - b[column])
             );
           }
         }
@@ -115,12 +126,25 @@ const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
         case "name": {
           return (
             (direction === "descending" ? -1 : 1) *
-            collator.compare(a.name ?? a.id, b.name ?? b.id)
+            collator.compare(a.name ?? a.publisherKey, b.name ?? b.publisherKey)
           );
         }
 
+        case "status": {
+          const resultByStatus = b.status - a.status;
+          const result =
+            resultByStatus === 0
+              ? collator.compare(
+                  a.name ?? a.publisherKey,
+                  b.name ?? b.publisherKey,
+                )
+              : resultByStatus;
+
+          return (direction === "descending" ? -1 : 1) * result;
+        }
+
         default: {
-          return (direction === "descending" ? -1 : 1) * (a.score - b.score);
+          return 0;
         }
       }
     },
@@ -136,105 +160,128 @@ const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
       paginatedItems.map(
         ({
           id,
+          publisherKey,
           score,
           uptimeScore,
           deviationPenalty,
           deviationScore,
           stalledPenalty,
           stalledScore,
-          isTest,
+          cluster,
+          status,
           ...publisher
         }) => ({
           id,
+          onAction: () => {
+            updateSelectedPublisherKey(publisherKey);
+          },
           data: {
-            score: <Score score={score} width={SCORE_WIDTH} />,
+            score: score !== undefined && (
+              <Score score={score} width={SCORE_WIDTH} />
+            ),
             name: (
               <div className={styles.publisherName}>
                 <PublisherTag
-                  publisherKey={id}
+                  publisherKey={publisherKey}
                   {...(publisher.name && {
                     name: publisher.name,
                     icon: publisher.icon,
                   })}
                 />
-                {isTest && (
+                {cluster === Cluster.PythtestConformance && (
                   <Badge variant="muted" style="filled" size="xs">
                     test
                   </Badge>
                 )}
               </div>
             ),
-            uptimeScore: (
+            uptimeScore: uptimeScore && (
               <FormattedNumber
                 value={uptimeScore}
                 maximumSignificantDigits={5}
               />
             ),
-            deviationPenalty: deviationPenalty ? (
+            deviationPenalty: deviationPenalty && (
               <FormattedNumber
                 value={deviationPenalty}
                 maximumSignificantDigits={5}
               />
-            ) : // eslint-disable-next-line unicorn/no-null
-            null,
-            deviationScore: (
+            ),
+            deviationScore: deviationScore && (
               <FormattedNumber
                 value={deviationScore}
                 maximumSignificantDigits={5}
               />
             ),
-            stalledPenalty: (
+            stalledPenalty: stalledPenalty && (
               <FormattedNumber
                 value={stalledPenalty}
                 maximumSignificantDigits={5}
               />
             ),
-            stalledScore: (
+            stalledScore: stalledScore && (
               <FormattedNumber
                 value={stalledScore}
                 maximumSignificantDigits={5}
               />
             ),
+            status: <StatusComponent status={status} />,
           },
         }),
       ),
-    [paginatedItems],
+    [paginatedItems, updateSelectedPublisherKey],
   );
 
-  const updateIncludeTestComponents = useCallback(
+  const updateIncludeTestFeeds = useCallback(
     (newValue: boolean) => {
-      setIncludeTestComponents(newValue).catch((error: unknown) => {
+      setIncludeTestFeeds(newValue).catch((error: unknown) => {
         logger.error(
           "Failed to update include test components query param",
           error,
         );
       });
     },
-    [setIncludeTestComponents, logger],
+    [setIncludeTestFeeds, logger],
   );
 
   return (
-    <PriceComponentsCardContents
-      numResults={numResults}
-      search={search}
-      sortDescriptor={sortDescriptor}
-      numPages={numPages}
-      page={page}
-      pageSize={pageSize}
-      includeTestComponents={includeTestComponents}
-      onSearchChange={updateSearch}
-      onSortChange={updateSortDescriptor}
-      onPageSizeChange={updatePageSize}
-      onPageChange={updatePage}
-      mkPageLink={mkPageLink}
-      onIncludeTestComponentsChange={updateIncludeTestComponents}
-      rows={rows}
-      {...props}
-    />
+    <>
+      <PublishersCardContents
+        numResults={numResults}
+        search={search}
+        sortDescriptor={sortDescriptor}
+        numPages={numPages}
+        page={page}
+        pageSize={pageSize}
+        includeTestFeeds={includeTestFeeds}
+        onSearchChange={updateSearch}
+        onSortChange={updateSortDescriptor}
+        onPageSizeChange={updatePageSize}
+        onPageChange={updatePage}
+        mkPageLink={mkPageLink}
+        onIncludeTestFeedsChange={updateIncludeTestFeeds}
+        rows={rows}
+        {...props}
+      />
+      {selectedPublisher && (
+        <PriceComponentDrawer
+          publisherKey={selectedPublisher.publisherKey}
+          onClose={handleClose}
+          symbol={symbol}
+          feedKey={feedKey}
+          rank={selectedPublisher.rank}
+          score={selectedPublisher.score}
+          status={selectedPublisher.status}
+          title={<PublisherTag {...selectedPublisher} />}
+          navigateButtonText="Open Publisher"
+          navigateHref={`/publishers/${selectedPublisher.publisherKey}`}
+        />
+      )}
+    </>
   );
 };
 
-type PriceComponentsCardProps = Pick<Props, "className"> &
+type PublishersCardProps = Pick<Props, "className"> &
   (
     | { isLoading: true }
     | {
@@ -245,8 +292,8 @@ type PriceComponentsCardProps = Pick<Props, "className"> &
         numPages: number;
         page: number;
         pageSize: number;
-        includeTestComponents: boolean;
-        onIncludeTestComponentsChange: (newValue: boolean) => void;
+        includeTestFeeds: boolean;
+        onIncludeTestFeedsChange: (newValue: boolean) => void;
         onSearchChange: (newSearch: string) => void;
         onSortChange: (newSort: SortDescriptor) => void;
         onPageSizeChange: (newPageSize: number) => void;
@@ -260,14 +307,15 @@ type PriceComponentsCardProps = Pick<Props, "className"> &
           | "deviationPenalty"
           | "stalledScore"
           | "stalledPenalty"
+          | "status"
         >[];
       }
   );
 
-const PriceComponentsCardContents = ({
+const PublishersCardContents = ({
   className,
   ...props
-}: PriceComponentsCardProps) => (
+}: PublishersCardProps) => (
   <Card
     className={className}
     title="Publishers"
@@ -277,11 +325,11 @@ const PriceComponentsCardContents = ({
           {...(props.isLoading
             ? { isLoading: true }
             : {
-                isSelected: props.includeTestComponents,
-                onChange: props.onIncludeTestComponentsChange,
+                isSelected: props.includeTestFeeds,
+                onChange: props.onIncludeTestFeedsChange,
               })}
         >
-          Show test components
+          Show test feeds
         </Switch>
         <SearchInput
           size="sm"
@@ -331,40 +379,42 @@ const PriceComponentsCardContents = ({
           isRowHeader: true,
           loadingSkeleton: <PublisherTag isLoading />,
           allowsSorting: true,
+          fill: true,
         },
         {
           id: "uptimeScore",
           name: "UPTIME SCORE",
           alignment: "center",
-          width: 35,
           allowsSorting: true,
         },
         {
           id: "deviationScore",
           name: "DEVIATION SCORE",
           alignment: "center",
-          width: 35,
           allowsSorting: true,
         },
         {
           id: "deviationPenalty",
           name: "DEVIATION PENALTY",
           alignment: "center",
-          width: 35,
           allowsSorting: true,
         },
         {
           id: "stalledScore",
           name: "STALLED SCORE",
           alignment: "center",
-          width: 35,
           allowsSorting: true,
         },
         {
           id: "stalledPenalty",
           name: "STALLED PENALTY",
           alignment: "center",
-          width: 35,
+          allowsSorting: true,
+        },
+        {
+          id: "status",
+          name: "STATUS",
+          alignment: "right",
           allowsSorting: true,
         },
       ]}
@@ -374,7 +424,7 @@ const PriceComponentsCardContents = ({
             rows: props.rows,
             sortDescriptor: props.sortDescriptor,
             onSortChange: props.onSortChange,
-            renderEmptyState: () => (
+            emptyState: (
               <NoResults
                 query={props.search}
                 onClearSearch={() => {
@@ -386,3 +436,33 @@ const PriceComponentsCardContents = ({
     />
   </Card>
 );
+
+const usePublisherDrawer = (publishers: Publisher[]) => {
+  const logger = useLogger();
+  const [selectedPublisherKey, setSelectedPublisher] = useQueryState(
+    "publisher",
+    parseAsString.withDefault("").withOptions({
+      history: "push",
+    }),
+  );
+  const updateSelectedPublisherKey = useCallback(
+    (newPublisherKey: string) => {
+      setSelectedPublisher(newPublisherKey).catch((error: unknown) => {
+        logger.error("Failed to update selected publisher", error);
+      });
+    },
+    [setSelectedPublisher, logger],
+  );
+  const selectedPublisher = useMemo(
+    () =>
+      publishers.find(
+        (publisher) => publisher.publisherKey === selectedPublisherKey,
+      ),
+    [selectedPublisherKey, publishers],
+  );
+  const handleClose = useCallback(() => {
+    updateSelectedPublisherKey("");
+  }, [updateSelectedPublisherKey]);
+
+  return { selectedPublisher, handleClose, updateSelectedPublisherKey };
+};

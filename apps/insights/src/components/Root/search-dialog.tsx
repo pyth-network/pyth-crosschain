@@ -154,25 +154,27 @@ export const SearchDialogProvider = ({
         aria-label="Search"
       >
         <div className={styles.searchBar}>
-          <SearchInput
-            size="md"
-            width={90}
-            placeholder="Asset symbol, publisher name or id"
-            value={search}
-            onChange={setSearch}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-          />
-          <SingleToggleGroup
-            selectedKeys={[type]}
-            // @ts-expect-error react-aria coerces everything to Key for some reason...
-            onSelectionChange={updateSelectedType}
-            items={[
-              { id: "", children: "All" },
-              { id: ResultType.PriceFeed, children: "Price Feeds" },
-              { id: ResultType.Publisher, children: "Publishers" },
-            ]}
-          />
+          <div className={styles.left}>
+            <SearchInput
+              size="md"
+              width={90}
+              placeholder="Asset symbol, publisher name or id"
+              value={search}
+              onChange={setSearch}
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
+            />
+            <SingleToggleGroup
+              selectedKeys={[type]}
+              // @ts-expect-error react-aria coerces everything to Key for some reason...
+              onSelectionChange={updateSelectedType}
+              items={[
+                { id: "", children: "All" },
+                { id: ResultType.PriceFeed, children: "Price Feeds" },
+                { id: ResultType.Publisher, children: "Publishers" },
+              ]}
+            />
+          </div>
           <Button
             className={styles.closeButton ?? ""}
             beforeIcon={(props) => <XCircle weight="fill" {...props} />}
@@ -197,14 +199,14 @@ export const SearchDialogProvider = ({
               // property in the typescript types correctly...
               shouldFocusOnHover
               onAction={close}
-              renderEmptyState={() => (
+              emptyState={
                 <NoResults
                   query={search}
                   onClearSearch={() => {
                     setSearch("");
                   }}
                 />
-              )}
+              }
             >
               {(result) => (
                 <ListBoxItem

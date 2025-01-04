@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@clickhouse/client";
 import { z, type ZodSchema, type ZodTypeDef } from "zod";
 
+import { Cluster, ClusterToName } from "./pyth";
 import { cache } from "../cache";
 import { CLICKHOUSE } from "../config/server";
 
@@ -23,8 +24,10 @@ export const getPublishers = cache(
         }),
       ),
       {
-        query:
-          "SELECT key, rank, numSymbols, medianScore FROM insights_publishers(cluster={cluster: String})",
+        query: `
+          SELECT key, rank, numSymbols, medianScore
+          FROM insights_publishers(cluster={cluster: String})
+        `,
         query_params: { cluster: "pythnet" },
       },
     ),
@@ -34,83 +37,54 @@ export const getPublishers = cache(
   },
 );
 
-export const getRankings = cache(
-  async (symbol: string) =>
-    safeQuery(
-      z.array(
-        rankingSchema.extend({
-          cluster: z.enum(["pythnet", "pythtest-conformance"]),
-          publisher: z.string(),
-        }),
-      ),
-      {
-        query: `
-      SELECT
-        cluster,
-        publisher,
-        uptime_score,
-        uptime_rank,
-        deviation_penalty,
-        deviation_score,
-        deviation_rank,
-        stalled_penalty,
-        stalled_score,
-        stalled_rank,
-        final_score
-      FROM insights_feed_component_rankings(symbol={symbol: String})
-    `,
-        query_params: { symbol },
-      },
-    ),
-  ["rankings"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
-
-export const getPublisherFeeds = cache(
+export const getRankingsByPublisher = cache(
   async (publisherKey: string) =>
-    safeQuery(
-      z.array(
-        rankingSchema.extend({
-          symbol: z.string(),
-        }),
-      ),
-      {
-        query: `
-      SELECT
-        symbol,
-        uptime_score,
-        uptime_rank,
-        deviation_penalty,
-        deviation_score,
-        deviation_rank,
-        stalled_penalty,
-        stalled_score,
-        stalled_rank,
-        final_score
-      FROM insights_feeds_for_publisher(publisherKey={publisherKey: String})
-    `,
-        query_params: { publisherKey },
-      },
-    ),
-  ["publisher-feeds"],
+    safeQuery(rankingsSchema, {
+      query: `
+          SELECT * FROM insights__rankings
+          WHERE publisher = {publisherKey: String}
+        `,
+      query_params: { publisherKey },
+    }),
+  ["rankingsByPublisher"],
   {
     revalidate: ONE_HOUR_IN_SECONDS,
   },
 );
 
-const rankingSchema = z.strictObject({
-  uptime_score: z.number(),
-  uptime_rank: z.number(),
-  deviation_penalty: z.number().nullable(),
-  deviation_score: z.number(),
-  deviation_rank: z.number(),
-  stalled_penalty: z.number(),
-  stalled_score: z.number(),
-  stalled_rank: z.number(),
-  final_score: z.number(),
-});
+export const getRankingsBySymbol = cache(
+  async (symbol: string) =>
+    safeQuery(rankingsSchema, {
+      query: `
+          SELECT * FROM insights__rankings
+          WHERE symbol = {symbol: String}
+        `,
+      query_params: { symbol },
+    }),
+  ["rankingsBySymbol"],
+  {
+    revalidate: ONE_HOUR_IN_SECONDS,
+  },
+);
+
+const rankingsSchema = z.array(
+  z.strictObject({
+    symbol: z.string(),
+    cluster: z.enum(["pythnet", "pythtest-conformance"]),
+    publisher: z.string(),
+    uptime_score: z.number(),
+    uptime_rank: z.number(),
+    deviation_penalty: z.number().nullable(),
+    deviation_score: z.number(),
+    deviation_rank: z.number(),
+    stalled_penalty: z.number(),
+    stalled_score: z.number(),
+    stalled_rank: z.number(),
+    final_score: z.number(),
+    final_rank: z.number(),
+    is_active: z.number().transform((value) => value === 1),
+  }),
+);
 
 export const getYesterdaysPrices = cache(
   async (symbols: string[]) =>
@@ -122,8 +96,10 @@ export const getYesterdaysPrices = cache(
         }),
       ),
       {
-        query:
-          "select symbol, price from insights_yesterdays_prices(symbols={symbols: Array(String)})",
+        query: `
+          SELECT symbol, price
+          FROM insights_yesterdays_prices(symbols={symbols: Array(String)})
+        `,
         query_params: { symbols },
       },
     ),
@@ -144,21 +120,100 @@ export const getPublisherRankingHistory = cache(
       ),
       {
         query: `
-        SELECT * FROM (
-          SELECT timestamp, rank
-          FROM publishers_ranking
-          WHERE publisher = {key: String}
-          AND cluster = 'pythnet'
-          ORDER BY timestamp DESC
-          LIMIT 30
-        )
-        ORDER BY timestamp ASC
-      `,
+          SELECT * FROM (
+            SELECT timestamp, rank
+            FROM publishers_ranking
+            WHERE publisher = {key: String}
+            AND cluster = 'pythnet'
+            ORDER BY timestamp DESC
+            LIMIT 30
+          )
+          ORDER BY timestamp ASC
+        `,
         query_params: { key },
       },
     ),
   ["publisher-ranking-history"],
   { revalidate: ONE_HOUR_IN_SECONDS },
+);
+
+export const getFeedScoreHistory = cache(
+  async (cluster: Cluster, publisherKey: string, symbol: string) =>
+    safeQuery(
+      z.array(
+        z.strictObject({
+          time: z.string().transform((value) => new Date(value)),
+          score: z.number(),
+          uptimeScore: z.number(),
+          deviationScore: z.number(),
+          stalledScore: z.number(),
+        }),
+      ),
+      {
+        query: `
+          SELECT * FROM (
+            SELECT
+              time,
+              final_score AS score,
+              uptime_score AS uptimeScore,
+              deviation_score AS deviationScore,
+              stalled_score AS stalledScore
+            FROM default.publisher_quality_ranking
+            WHERE publisher = {publisherKey: String}
+            AND cluster = {cluster: String}
+            AND symbol = {symbol: String}
+            ORDER BY time DESC
+            LIMIT 30
+          )
+          ORDER BY time ASC
+        `,
+        query_params: {
+          cluster: ClusterToName[cluster],
+          publisherKey,
+          symbol,
+        },
+      },
+    ),
+  ["feed-score-history"],
+  {
+    revalidate: ONE_HOUR_IN_SECONDS,
+  },
+);
+
+export const getFeedPriceHistory = cache(
+  async (cluster: Cluster, publisherKey: string, symbol: string) =>
+    safeQuery(
+      z.array(
+        z.strictObject({
+          time: z.string().transform((value) => new Date(value)),
+          price: z.number(),
+          confidence: z.number(),
+        }),
+      ),
+      {
+        query: `
+          SELECT * FROM (
+            SELECT time, price, confidence
+            FROM prices
+            WHERE publisher = {publisherKey: String}
+            AND cluster = {cluster: String}
+            AND symbol = {symbol: String}
+            ORDER BY time DESC
+            LIMIT 30
+          )
+          ORDER BY time ASC
+        `,
+        query_params: {
+          cluster: ClusterToName[cluster],
+          publisherKey,
+          symbol,
+        },
+      },
+    ),
+  ["feed-price-history"],
+  {
+    revalidate: ONE_HOUR_IN_SECONDS,
+  },
 );
 
 export const getPublisherMedianScoreHistory = cache(
@@ -167,30 +222,30 @@ export const getPublisherMedianScoreHistory = cache(
       z.array(
         z.strictObject({
           time: z.string().transform((value) => new Date(value)),
-          medianScore: z.number(),
-          medianUptimeScore: z.number(),
-          medianDeviationScore: z.number(),
-          medianStalledScore: z.number(),
+          score: z.number(),
+          uptimeScore: z.number(),
+          deviationScore: z.number(),
+          stalledScore: z.number(),
         }),
       ),
       {
         query: `
-        SELECT * FROM (
-          SELECT
-            time,
-            medianExact(final_score) AS medianScore,
-            medianExact(uptime_score) AS medianUptimeScore,
-            medianExact(deviation_score) AS medianDeviationScore,
-            medianExact(stalled_score) AS medianStalledScore
-          FROM default.publisher_quality_ranking
-          WHERE publisher = {key: String}
-          AND cluster = 'pythnet'
-          GROUP BY time
-          ORDER BY time DESC
-          LIMIT 30
-        )
-        ORDER BY time ASC
-      `,
+          SELECT * FROM (
+            SELECT
+              time,
+              medianExact(final_score) AS score,
+              medianExact(uptime_score) AS uptimeScore,
+              medianExact(deviation_score) AS deviationScore,
+              medianExact(stalled_score) AS stalledScore
+            FROM default.publisher_quality_ranking
+            WHERE publisher = {key: String}
+            AND cluster = 'pythnet'
+            GROUP BY time
+            ORDER BY time DESC
+            LIMIT 30
+          )
+          ORDER BY time ASC
+        `,
         query_params: { key },
       },
     ),

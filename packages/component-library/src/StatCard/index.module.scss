@@ -5,13 +5,18 @@
   .top {
     display: flex;
     flex-flow: column nowrap;
-    gap: theme.spacing(4);
+    justify-content: space-between;
+  }
+
+  .top {
+    height: theme.spacing(15);
   }
 
   .cardContents {
     padding: theme.spacing(3);
     padding-bottom: theme.spacing(2);
     justify-content: space-between;
+    gap: theme.spacing(4);
     height: 100%;
     width: 100%;
 
@@ -54,13 +59,26 @@
       }
 
       .mainStat {
-        @include theme.h3;
+        @include theme.text("2xl", "medium");
 
+        letter-spacing: theme.letter-spacing("tighter");
+        line-height: theme.spacing(8);
+        height: theme.spacing(8);
+        display: flex;
+        align-items: center;
         color: theme.color("heading");
+        flex-grow: 1;
+        text-align: left;
       }
 
       .miniStat {
         @include theme.text("sm", "medium");
+      }
+
+      &[data-small] {
+        .mainStat {
+          font-size: theme.font-size("lg");
+        }
       }
     }
   }
