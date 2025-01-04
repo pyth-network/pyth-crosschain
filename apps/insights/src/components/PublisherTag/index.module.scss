@@ -5,7 +5,6 @@
   flex-flow: row nowrap;
   gap: theme.spacing(3);
   align-items: center;
-  width: 100%;
 
   .icon,
   .undisclosedIconWrapper {
@@ -28,7 +27,8 @@
 
   .name {
     color: theme.color("heading");
-    font-weight: theme.font-weight("medium");
+
+    @include theme.text("base", "medium");
   }
 
   .publisherKey,

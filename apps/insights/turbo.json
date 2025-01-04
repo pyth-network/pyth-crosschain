@@ -12,7 +12,8 @@
         "CLICKHOUSE_URL",
         "CLICKHOUSE_USERNAME",
         "CLICKHOUSE_PASSWORD",
-        "SOLANA_RPC"
+        "SOLANA_RPC",
+        "DISABLE_ACCESSIBILITY_REPORTING"
       ]
     },
     "fix:lint": {

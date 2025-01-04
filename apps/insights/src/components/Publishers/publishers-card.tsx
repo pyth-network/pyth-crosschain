@@ -270,7 +270,7 @@ const PublishersCardContents = ({
             rows: props.rows,
             sortDescriptor: props.sortDescriptor,
             onSortChange: props.onSortChange,
-            renderEmptyState: () => (
+            emptyState: (
               <NoResults
                 query={props.search}
                 onClearSearch={() => {

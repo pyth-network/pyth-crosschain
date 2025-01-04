@@ -100,14 +100,14 @@ const ChangePercentLoaded = ({
   priorPrice,
   feedKey,
 }: ChangePercentLoadedProps) => {
-  const currentPrice = useLivePrice(feedKey);
+  const { current } = useLivePrice(feedKey);
 
-  return currentPrice === undefined ? (
+  return current === undefined ? (
     <ChangeValue className={className} isLoading />
   ) : (
     <PriceDifference
       className={className}
-      currentPrice={currentPrice.aggregate.price}
+      currentPrice={current.aggregate.price}
       priorPrice={priorPrice}
     />
   );

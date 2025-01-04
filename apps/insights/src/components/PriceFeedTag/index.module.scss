@@ -5,7 +5,6 @@
   flex-flow: row nowrap;
   gap: theme.spacing(3);
   align-items: center;
-  width: 100%;
 
   .icon {
     flex: none;
@@ -16,7 +15,7 @@
   .nameAndDescription {
     display: flex;
     flex-flow: column nowrap;
-    gap: theme.spacing(1);
+    gap: theme.spacing(1.5);
     flex-grow: 1;
     flex-basis: 0;
     white-space: nowrap;
@@ -31,13 +30,17 @@
       gap: theme.spacing(1);
       color: theme.color("heading");
 
+      @include theme.text("base", "normal");
+
+      line-height: theme.spacing(4);
+
       .firstPart {
         font-weight: theme.font-weight("medium");
       }
 
       .divider {
-        font-weight: theme.font-weight("light");
         color: theme.color("muted");
+        font-weight: theme.font-weight("light");
       }
 
       .part {
@@ -46,12 +49,11 @@
     }
 
     .description {
-      font-size: theme.font-size("xs");
-      font-weight: theme.font-weight("medium");
-      line-height: theme.spacing(4);
       color: theme.color("muted");
       overflow: hidden;
       text-overflow: ellipsis;
+
+      @include theme.text("xs", "medium");
     }
   }
 

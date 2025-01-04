@@ -19,19 +19,23 @@
     flex-flow: column nowrap;
     flex-grow: 1;
     gap: theme.spacing(1);
-    width: fit-content;
+    width: min-content;
 
-    .searchBar {
+    .searchBar,
+    .left {
       flex: none;
       display: flex;
       flex-flow: row nowrap;
-      gap: theme.spacing(2);
       align-items: center;
-      padding: theme.spacing(1);
+    }
 
-      .closeButton {
-        margin-left: theme.spacing(8);
-      }
+    .searchBar {
+      justify-content: space-between;
+      padding: theme.spacing(1);
+    }
+
+    .left {
+      gap: theme.spacing(2);
     }
 
     .body {
@@ -51,7 +55,6 @@
           display: flex;
           flex-flow: row nowrap;
           align-items: center;
-          width: 100%;
           cursor: pointer;
           transition: background-color 100ms linear;
           outline: none;
@@ -85,7 +88,6 @@
           }
 
           .itemType {
-            width: theme.spacing(21);
             flex-shrink: 0;
             margin-right: theme.spacing(6);
           }

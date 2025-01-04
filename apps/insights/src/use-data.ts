@@ -2,8 +2,17 @@ import { useLogger } from "@pythnetwork/app-logger";
 import { useCallback } from "react";
 import useSWR, { type KeyedMutator } from "swr";
 
-export const useData = <T>(...args: Parameters<typeof useSWR<T>>) => {
-  const { data, isLoading, mutate, ...rest } = useSWR(...args);
+export const useData = <T>(
+  key: Parameters<typeof useSWR<T>>[0],
+  fetcher?: Parameters<typeof useSWR<T>>[1],
+  config?: Parameters<typeof useSWR<T>>[2],
+) => {
+  const { data, isLoading, mutate, ...rest } = useSWR(
+    key,
+    // eslint-disable-next-line unicorn/no-null
+    fetcher ?? null,
+    config,
+  );
 
   const error = rest.error as unknown;
   const logger = useLogger();

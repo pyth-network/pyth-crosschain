@@ -11,7 +11,7 @@ import styles from "./index.module.scss";
 import { PublishersCard } from "./publishers-card";
 import { getPublishers } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
-import { getData } from "../../services/pyth";
+import { Cluster, getData } from "../../services/pyth";
 import {
   getDelState,
   getClaimableRewards,
@@ -174,7 +174,7 @@ export const Publishers = async () => {
 };
 
 const getTotalFeedCount = async () => {
-  const pythData = await getData();
+  const pythData = await getData(Cluster.Pythnet);
   return pythData.filter(({ price }) => price.numComponentPrices > 0).length;
 };
 

@@ -1,0 +1,8 @@
+@use "@pythnetwork/component-library/theme";
+
+.priceFeedName {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: theme.spacing(6);
+}

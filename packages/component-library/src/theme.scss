@@ -454,9 +454,18 @@ $color: (
           pallette-color("emerald", 100),
           pallette-color("emerald", 950)
         ),
-      "normal": pallette-color("emerald", 500),
-      "hover": pallette-color("emerald", 600),
-      "active": pallette-color("emerald", 700),
+      "normal":
+        light-dark(
+          pallette-color("emerald", 600),
+          pallette-color("emerald", 500)
+        ),
+      "hover": pallette-color("emerald", 700),
+      "active": pallette-color("emerald", 800),
+      "border":
+        light-dark(
+          pallette-color("emerald", 400),
+          pallette-color("emerald", 800)
+        ),
     ),
     "error": (
       "base": light-dark(pallette-color("red", 600), pallette-color("red", 400)),
@@ -467,10 +476,16 @@ $color: (
       "normal": pallette-color("red", 500),
       "hover": pallette-color("red", 600),
       "active": pallette-color("red", 700),
+      "border":
+        light-dark(pallette-color("red", 400), pallette-color("red", 900)),
     ),
     "neutral": (
       "normal":
         light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
+      "border":
+        light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
+      "background":
+        light-dark(pallette-color("white"), pallette-color("steel", 900)),
     ),
     "info": (
       "background":
@@ -484,12 +499,16 @@ $color: (
         light-dark(pallette-color("indigo", 600), pallette-color("indigo", 500)),
       "normal":
         light-dark(pallette-color("indigo", 600), pallette-color("indigo", 400)),
+      "border":
+        light-dark(pallette-color("indigo", 400), pallette-color("indigo", 800)),
     ),
     "warning": (
       "normal":
         light-dark(pallette-color("orange", 600), pallette-color("orange", 400)),
       "background":
         light-dark(pallette-color("orange", 100), pallette-color("orange", 950)),
+      "border":
+        light-dark(pallette-color("orange", 400), pallette-color("orange", 700)),
     ),
     "yellow": (
       "normal": pallette-color("yellow", 500),
@@ -506,6 +525,8 @@ $color: (
         light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
       "background":
         light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
+      "border":
+        light-dark(pallette-color("violet", 200), pallette-color("violet", 800)),
     ),
   ),
   "focus":

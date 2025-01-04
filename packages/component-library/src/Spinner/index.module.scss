@@ -1,0 +1,31 @@
+@use "../theme";
+
+.spinnerContainer {
+  overflow: hidden;
+
+  .spinner {
+    transform: rotate(-90deg);
+
+    @keyframes spin {
+      from {
+        transform: rotate(-25deg);
+      }
+
+      to {
+        transform: rotate(335deg);
+      }
+    }
+
+    .background {
+      stroke: theme.color("border");
+    }
+
+    .indicator {
+      stroke: theme.color("foreground");
+    }
+  }
+
+  &:not([aria-valuenow]) .spinner {
+    animation: spin 1s ease-in-out infinite;
+  }
+}

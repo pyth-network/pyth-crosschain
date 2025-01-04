@@ -45,7 +45,8 @@
     "recharts": "catalog:",
     "superjson": "catalog:",
     "swr": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zod-validation-error": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

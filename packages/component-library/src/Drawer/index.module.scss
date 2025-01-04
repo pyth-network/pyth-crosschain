@@ -40,6 +40,13 @@
         flex-flow: row nowrap;
         gap: theme.spacing(3);
       }
+
+      .headingEnd {
+        display: flex;
+        flex-flow: row nowrap;
+        gap: theme.spacing(3);
+        align-items: center;
+      }
     }
 
     .body {

@@ -9,6 +9,7 @@ type OwnPropsSingle = {
   stat: ReactNode;
   miniStat?: ReactNode | undefined;
   corner?: ReactNode | undefined;
+  small?: boolean | undefined;
 };
 
 type OwnPropsDual = {
@@ -42,6 +43,7 @@ export const StatCard = <T extends ElementType>({
     stat,
     miniStat,
     corner,
+    small,
     header1,
     header2,
     stat1,
@@ -61,7 +63,10 @@ export const StatCard = <T extends ElementType>({
                 <div className={styles.corner}>{props.corner}</div>
               )}
               <h2 className={styles.header}>{props.header}</h2>
-              <div className={styles.stats}>
+              <div
+                data-small={props.small ? "" : undefined}
+                className={styles.stats}
+              >
                 <div className={styles.mainStat}>{props.stat}</div>
                 {props.miniStat && (
                   <div className={styles.miniStat}>{props.miniStat}</div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
@@ -11,42 +12,51 @@ import {
 import { type ReactNode, Suspense, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
+import { useSelectPriceFeed } from "./price-feed-drawer-provider";
+import styles from "./price-feeds-card.module.scss";
+import { Cluster } from "../../services/pyth";
+import { Status as StatusType } from "../../status";
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FormattedNumber } from "../FormattedNumber";
 import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
+import { Status as StatusComponent } from "../Status";
 
 const SCORE_WIDTH = 24;
 
 type Props = {
   className?: string | undefined;
   toolbar?: ReactNode;
-  priceComponents: PriceComponent[];
+  priceFeeds: PriceFeed[];
 };
 
-type PriceComponent = {
+type PriceFeed = {
   id: string;
-  score: number;
+  score: number | undefined;
+  symbol: string;
   displaySymbol: string;
-  uptimeScore: number;
-  deviationPenalty: number | null;
-  deviationScore: number;
-  stalledPenalty: number;
-  stalledScore: number;
+  uptimeScore: number | undefined;
+  deviationPenalty: number | undefined;
+  deviationScore: number | undefined;
+  stalledPenalty: number | undefined;
+  stalledScore: number | undefined;
   icon: ReactNode;
+  cluster: Cluster;
+  status: StatusType;
 };
 
-export const PriceFeedsCard = ({ priceComponents, ...props }: Props) => (
-  <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
-    <ResolvedPriceComponentsCard priceComponents={priceComponents} {...props} />
+export const PriceFeedsCard = ({ priceFeeds, ...props }: Props) => (
+  <Suspense fallback={<PriceFeedsCardContents isLoading {...props} />}>
+    <ResolvedPriceFeedsCard priceFeeds={priceFeeds} {...props} />
   </Suspense>
 );
 
-const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
+const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const selectPriceFeed = useSelectPriceFeed();
 
   const {
     search,
@@ -62,32 +72,25 @@ const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
     numPages,
     mkPageLink,
   } = useQueryParamFilterPagination(
-    priceComponents,
-    (priceComponent, search) =>
-      filter.contains(priceComponent.displaySymbol, search),
+    priceFeeds,
+    (priceFeed, search) => filter.contains(priceFeed.displaySymbol, search),
     (a, b, { column, direction }) => {
       switch (column) {
         case "score":
         case "uptimeScore":
         case "deviationScore":
         case "stalledScore":
-        case "stalledPenalty": {
-          return (
-            (direction === "descending" ? -1 : 1) * (a[column] - b[column])
-          );
-        }
-
+        case "stalledPenalty":
         case "deviationPenalty": {
-          if (a.deviationPenalty === null && b.deviationPenalty === null) {
+          if (a[column] === undefined && b[column] === undefined) {
             return 0;
-          } else if (a.deviationPenalty === null) {
+          } else if (a[column] === undefined) {
             return direction === "descending" ? 1 : -1;
-          } else if (b.deviationPenalty === null) {
+          } else if (b[column] === undefined) {
             return direction === "descending" ? -1 : 1;
           } else {
             return (
-              (direction === "descending" ? -1 : 1) *
-              (a.deviationPenalty - b.deviationPenalty)
+              (direction === "descending" ? -1 : 1) * (a[column] - b[column])
             );
           }
         }
@@ -99,8 +102,18 @@ const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
           );
         }
 
+        case "status": {
+          const resultByStatus = b.status - a.status;
+          const result =
+            resultByStatus === 0
+              ? collator.compare(a.displaySymbol, b.displaySymbol)
+              : resultByStatus;
+
+          return (direction === "descending" ? -1 : 1) * result;
+        }
+
         default: {
-          return (direction === "descending" ? -1 : 1) * (a.score - b.score);
+          return 0;
         }
       }
     },
@@ -123,51 +136,70 @@ const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
           stalledPenalty,
           stalledScore,
           displaySymbol,
+          symbol,
           icon,
+          cluster,
+          status,
         }) => ({
           id,
           data: {
-            name: <PriceFeedTag compact symbol={displaySymbol} icon={icon} />,
-            score: <Score score={score} width={SCORE_WIDTH} />,
-            uptimeScore: (
+            name: (
+              <div className={styles.priceFeedName}>
+                <PriceFeedTag compact symbol={displaySymbol} icon={icon} />
+                {cluster === Cluster.PythtestConformance && (
+                  <Badge variant="muted" style="filled" size="xs">
+                    test
+                  </Badge>
+                )}
+              </div>
+            ),
+            score: score !== undefined && (
+              <Score score={score} width={SCORE_WIDTH} />
+            ),
+            uptimeScore: uptimeScore !== undefined && (
               <FormattedNumber
                 value={uptimeScore}
                 maximumSignificantDigits={5}
               />
             ),
-            deviationPenalty: deviationPenalty ? (
+            deviationPenalty: deviationPenalty !== undefined && (
               <FormattedNumber
                 value={deviationPenalty}
                 maximumSignificantDigits={5}
               />
-            ) : // eslint-disable-next-line unicorn/no-null
-            null,
-            deviationScore: (
+            ),
+            deviationScore: deviationScore !== undefined && (
               <FormattedNumber
                 value={deviationScore}
                 maximumSignificantDigits={5}
               />
             ),
-            stalledPenalty: (
+            stalledPenalty: stalledPenalty !== undefined && (
               <FormattedNumber
                 value={stalledPenalty}
                 maximumSignificantDigits={5}
               />
             ),
-            stalledScore: (
+            stalledScore: stalledScore !== undefined && (
               <FormattedNumber
                 value={stalledScore}
                 maximumSignificantDigits={5}
               />
             ),
+            status: <StatusComponent status={status} />,
           },
+          ...(selectPriceFeed && {
+            onAction: () => {
+              selectPriceFeed(symbol);
+            },
+          }),
         }),
       ),
-    [paginatedItems],
+    [paginatedItems, selectPriceFeed],
   );
 
   return (
-    <PriceComponentsCardContents
+    <PriceFeedsCardContents
       numResults={numResults}
       search={search}
       sortDescriptor={sortDescriptor}
@@ -185,7 +217,7 @@ const ResolvedPriceComponentsCard = ({ priceComponents, ...props }: Props) => {
   );
 };
 
-type PriceComponentsCardProps = Pick<Props, "className" | "toolbar"> &
+type PriceFeedsCardProps = Pick<Props, "className" | "toolbar"> &
   (
     | { isLoading: true }
     | {
@@ -209,14 +241,15 @@ type PriceComponentsCardProps = Pick<Props, "className" | "toolbar"> &
           | "deviationPenalty"
           | "stalledScore"
           | "stalledPenalty"
+          | "status"
         >[];
       }
   );
 
-const PriceComponentsCardContents = ({
+const PriceFeedsCardContents = ({
   className,
   ...props
-}: PriceComponentsCardProps) => (
+}: PriceFeedsCardProps) => (
   <Card
     className={className}
     title="Price Feeds"
@@ -256,7 +289,7 @@ const PriceComponentsCardContents = ({
         {
           id: "score",
           name: "SCORE",
-          alignment: "center",
+          alignment: "left",
           width: SCORE_WIDTH,
           loadingSkeleton: <Score isLoading width={SCORE_WIDTH} />,
           allowsSorting: true,
@@ -267,41 +300,43 @@ const PriceComponentsCardContents = ({
           alignment: "left",
           isRowHeader: true,
           loadingSkeleton: <PriceFeedTag compact isLoading />,
+          fill: true,
           allowsSorting: true,
         },
         {
           id: "uptimeScore",
           name: "UPTIME SCORE",
           alignment: "center",
-          width: 35,
           allowsSorting: true,
         },
         {
           id: "deviationScore",
           name: "DEVIATION SCORE",
           alignment: "center",
-          width: 35,
           allowsSorting: true,
         },
         {
           id: "deviationPenalty",
           name: "DEVIATION PENALTY",
           alignment: "center",
-          width: 35,
           allowsSorting: true,
         },
         {
           id: "stalledScore",
           name: "STALLED SCORE",
           alignment: "center",
-          width: 35,
           allowsSorting: true,
         },
         {
           id: "stalledPenalty",
           name: "STALLED PENALTY",
           alignment: "center",
-          width: 35,
+          allowsSorting: true,
+        },
+        {
+          id: "status",
+          name: "STATUS",
+          alignment: "right",
           allowsSorting: true,
         },
       ]}
@@ -311,7 +346,7 @@ const PriceComponentsCardContents = ({
             rows: props.rows,
             sortDescriptor: props.sortDescriptor,
             onSortChange: props.onSortChange,
-            renderEmptyState: () => (
+            emptyState: (
               <NoResults
                 query={props.search}
                 onClearSearch={() => {

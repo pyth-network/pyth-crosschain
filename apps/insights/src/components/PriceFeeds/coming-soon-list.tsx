@@ -106,14 +106,14 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
         stickyHeader
         label="Coming Soon"
         className={styles.priceFeeds ?? ""}
-        renderEmptyState={() => (
+        emptyState={
           <NoResults
             query={search}
             onClearSearch={() => {
               setSearch("");
             }}
           />
-        )}
+        }
         columns={[
           {
             id: "priceFeedName",

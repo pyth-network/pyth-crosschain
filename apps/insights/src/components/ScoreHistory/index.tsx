@@ -3,12 +3,18 @@
 import { Card } from "@pythnetwork/component-library/Card";
 import { Table } from "@pythnetwork/component-library/Table";
 import dynamic from "next/dynamic";
-import { Suspense, useState, useCallback, useMemo } from "react";
+import {
+  type ReactNode,
+  Suspense,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { useDateFormatter, useNumberFormatter } from "react-aria";
 import { ResponsiveContainer, Tooltip, Line, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 
-import styles from "./median-score-history.module.scss";
+import styles from "./index.module.scss";
 import { Score } from "../Score";
 
 const LineChart = dynamic(
@@ -21,21 +27,22 @@ const LineChart = dynamic(
 const CHART_HEIGHT = 104;
 
 type Props = {
-  medianScoreHistory: Point[];
+  isMedian?: boolean | undefined;
+  scoreHistory: Point[];
 };
 
 type Point = {
   time: Date;
-  medianScore: number;
-  medianUptimeScore: number;
-  medianDeviationScore: number;
-  medianStalledScore: number;
+  score: number;
+  uptimeScore: number;
+  deviationScore: number;
+  stalledScore: number;
 };
 
-export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
-  const [selectedPoint, setSelectedPoint] = useState<
-    (typeof medianScoreHistory)[number] | undefined
-  >(undefined);
+export const ScoreHistory = ({ isMedian, scoreHistory }: Props) => {
+  const [selectedPoint, setSelectedPoint] = useState<Point | undefined>(
+    undefined,
+  );
   const updateSelectedPoint = useCallback(
     (chart: CategoricalChartState) => {
       setSelectedPoint(
@@ -45,13 +52,15 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
     [setSelectedPoint],
   );
   const currentPoint = useMemo(
-    () => selectedPoint ?? medianScoreHistory.at(-1),
-    [selectedPoint, medianScoreHistory],
+    () => selectedPoint ?? scoreHistory.at(-1),
+    [selectedPoint, scoreHistory],
   );
   const dateFormatter = useDateFormatter();
   const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 4 });
 
-  const [hoveredScore, setHoveredScore] = useState<FocusedScore>(undefined);
+  const [hoveredScore, setHoveredScore] = useState<ScoreComponent | undefined>(
+    undefined,
+  );
   const hoverUptime = useCallback(() => {
     setHoveredScore("uptime");
   }, [setHoveredScore]);
@@ -68,7 +77,9 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
     setHoveredScore(undefined);
   }, [setHoveredScore]);
 
-  const [focusedScore, setFocusedScore] = useState<FocusedScore>(undefined);
+  const [focusedScore, setFocusedScore] = useState<ScoreComponent | undefined>(
+    undefined,
+  );
   const toggleFocusedScore = useCallback(
     (value: typeof focusedScore) => {
       setFocusedScore((cur) => (cur === value ? undefined : value));
@@ -89,19 +100,20 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
   }, [toggleFocusedScore]);
 
   return (
-    <div className={styles.medianScoreHistory}>
+    <div className={styles.scoreHistory}>
       <div
-        className={styles.medianScoreHistoryChart}
+        className={styles.scoreHistoryChart}
         data-hovered-score={hoveredScore}
         data-focused-score={focusedScore}
       >
         <div className={styles.top}>
           <div className={styles.left}>
             <h3 className={styles.header}>
-              <HeaderText
-                hoveredScore={hoveredScore}
-                focusedScore={focusedScore}
-              />
+              <Label
+                isMedian={isMedian}
+                component={hoveredScore ?? focusedScore ?? "final"}
+              />{" "}
+              History
             </h3>
             <div className={styles.subheader}>
               {selectedPoint
@@ -118,43 +130,43 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
         >
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <LineChart
-              data={medianScoreHistory}
+              data={scoreHistory}
               className={styles.chart ?? ""}
               onMouseEnter={updateSelectedPoint}
               onMouseMove={updateSelectedPoint}
               onMouseLeave={updateSelectedPoint}
-              margin={{ bottom: 0, left: 0, top: 0, right: 0 }}
+              margin={{ bottom: 0, left: 0, top: 3, right: 0 }}
             >
               <Tooltip content={() => <></>} />
               <Line
                 type="monotone"
-                dataKey="medianScore"
+                dataKey="score"
                 dot={false}
-                className={styles.medianScore ?? ""}
+                className={styles.score ?? ""}
                 stroke="currentColor"
                 strokeWidth={focusedScore === "final" ? 3 : 1}
               />
               <Line
                 type="monotone"
-                dataKey="medianUptimeScore"
+                dataKey="uptimeScore"
                 dot={false}
-                className={styles.medianUptimeScore ?? ""}
+                className={styles.uptimeScore ?? ""}
                 stroke="currentColor"
                 strokeWidth={focusedScore === "uptime" ? 3 : 1}
               />
               <Line
                 type="monotone"
-                dataKey="medianDeviationScore"
+                dataKey="deviationScore"
                 dot={false}
-                className={styles.medianDeviationScore ?? ""}
+                className={styles.deviationScore ?? ""}
                 stroke="currentColor"
                 strokeWidth={focusedScore === "deviation" ? 3 : 1}
               />
               <Line
                 type="monotone"
-                dataKey="medianStalledScore"
+                dataKey="stalledScore"
                 dot={false}
-                className={styles.medianStalledScore ?? ""}
+                className={styles.stalledScore ?? ""}
                 stroke="currentColor"
                 strokeWidth={focusedScore === "stalled" ? 3 : 1}
               />
@@ -204,13 +216,11 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
                 legend: <div className={styles.uptimeLegend} />,
                 metric: (
                   <Metric
-                    name="Median Uptime"
+                    name={<Label isMedian={isMedian} component="uptime" />}
                     description="Percentage of time a publisher is available and active"
                   />
                 ),
-                score: numberFormatter.format(
-                  currentPoint?.medianUptimeScore ?? 0,
-                ),
+                score: numberFormatter.format(currentPoint?.uptimeScore ?? 0),
               },
             },
             {
@@ -222,12 +232,12 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
                 legend: <div className={styles.deviationLegend} />,
                 metric: (
                   <Metric
-                    name="Median Price Deviation"
+                    name={<Label isMedian={isMedian} component="deviation" />}
                     description="Deviations that occur between a publishers' price and the aggregate price"
                   />
                 ),
                 score: numberFormatter.format(
-                  currentPoint?.medianDeviationScore ?? 0,
+                  currentPoint?.deviationScore ?? 0,
                 ),
               },
             },
@@ -240,13 +250,11 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
                 legend: <div className={styles.stalledLegend} />,
                 metric: (
                   <Metric
-                    name="Median Staleness"
+                    name={<Label isMedian={isMedian} component="stalled" />}
                     description="Penalizes publishers reporting the same value for the price"
                   />
                 ),
-                score: numberFormatter.format(
-                  currentPoint?.medianStalledScore ?? 0,
-                ),
+                score: numberFormatter.format(currentPoint?.stalledScore ?? 0),
               },
             },
             {
@@ -258,11 +266,11 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
                 legend: <div className={styles.finalScoreLegend} />,
                 metric: (
                   <Metric
-                    name="Median Final Score"
+                    name={<Label isMedian={isMedian} component="final" />}
                     description="The aggregate score, calculated by combining the other three score components"
                   />
                 ),
-                score: numberFormatter.format(currentPoint?.medianScore ?? 0),
+                score: numberFormatter.format(currentPoint?.score ?? 0),
               },
             },
           ]}
@@ -273,54 +281,54 @@ export const MedianScoreHistory = ({ medianScoreHistory }: Props) => {
 };
 
 type HeaderTextProps = {
-  focusedScore: FocusedScore;
-  hoveredScore: FocusedScore;
+  isMedian?: boolean | undefined;
+  component: ScoreComponent;
 };
 
-const HeaderText = ({ hoveredScore, focusedScore }: HeaderTextProps) => {
-  switch (focusedScore ?? hoveredScore) {
+const Label = ({ isMedian, component }: HeaderTextProps) => {
+  switch (component) {
     case "uptime": {
-      return "Median Uptime Score History";
+      return `${isMedian ? "Median " : ""}Uptime Score`;
     }
     case "deviation": {
-      return "Median Deviation Score History";
+      return `${isMedian ? "Median " : ""}Deviation Score`;
     }
     case "stalled": {
-      return "Median Stalled Score History";
+      return `${isMedian ? "Median " : ""}Stalled Score`;
     }
-    default: {
-      return "Median Score History";
+    case "final": {
+      return `${isMedian ? "Median " : ""}Final Score`;
     }
   }
 };
 
-type FocusedScore = "uptime" | "deviation" | "stalled" | "final" | undefined;
+type ScoreComponent = "uptime" | "deviation" | "stalled" | "final";
 
 type CurrentValueProps = {
   point: Point;
-  focusedScore: FocusedScore;
+  focusedScore: ScoreComponent | undefined;
 };
 
 const CurrentValue = ({ point, focusedScore }: CurrentValueProps) => {
   const numberFormatter = useNumberFormatter({ maximumSignificantDigits: 4 });
   switch (focusedScore) {
     case "uptime": {
-      return numberFormatter.format(point.medianUptimeScore);
+      return numberFormatter.format(point.uptimeScore);
     }
     case "deviation": {
-      return numberFormatter.format(point.medianDeviationScore);
+      return numberFormatter.format(point.deviationScore);
     }
     case "stalled": {
-      return numberFormatter.format(point.medianStalledScore);
+      return numberFormatter.format(point.stalledScore);
     }
     default: {
-      return <Score score={point.medianScore} />;
+      return <Score score={point.score} />;
     }
   }
 };
 
 type MetricProps = {
-  name: string;
+  name: ReactNode;
   description: string;
 };
 
