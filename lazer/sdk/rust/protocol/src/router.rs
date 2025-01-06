@@ -393,9 +393,8 @@ pub struct ParsedFeedPayload {
     #[serde(with = "crate::serde_str::option_price")]
     #[serde(default)]
     pub best_ask_price: Option<Price>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub publisher_count: Option<u32>,
+    pub publisher_count: u16,
     // More fields may be added later.
 }
 
@@ -410,7 +409,7 @@ impl ParsedFeedPayload {
             price: None,
             best_bid_price: None,
             best_ask_price: None,
-            publisher_count: None,
+            publisher_count: 0,
         };
         for &property in properties {
             match property {

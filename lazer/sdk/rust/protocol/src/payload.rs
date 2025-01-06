@@ -32,6 +32,7 @@ pub enum PayloadPropertyValue {
     Price(Option<Price>),
     BestBidPrice(Option<Price>),
     BestAskPrice(Option<Price>),
+    PublisherCount(u16),
 }
 
 #[derive(Debug, Clone, Default)]
@@ -39,7 +40,7 @@ pub struct AggregatedPriceFeedData {
     pub price: Option<Price>,
     pub best_bid_price: Option<Price>,
     pub best_ask_price: Option<Price>,
-    pub publisher_count: Option<u32>,
+    pub publisher_count: u16,
 }
 
 pub const PAYLOAD_FORMAT_MAGIC: u32 = 2479346549;
@@ -67,6 +68,9 @@ impl PayloadData {
                             }
                             PriceFeedProperty::BestAskPrice => {
                                 PayloadPropertyValue::BestAskPrice(feed.best_ask_price)
+                            }
+                            PriceFeedProperty::PublisherCount => {
+                                PayloadPropertyValue::PublisherCount(feed.publisher_count)
                             }
                         })
                         .collect(),
@@ -96,6 +100,9 @@ impl PayloadData {
                     PayloadPropertyValue::BestAskPrice(price) => {
                         writer.write_u8(PriceFeedProperty::BestAskPrice as u8)?;
                         write_option_price::<BO>(&mut writer, *price)?;
+                    }
+                    PayloadPropertyValue::PublisherCount(count) => {
+                        writer.write_u16::<BO>(*count)?;
                     }
                 }
             }
