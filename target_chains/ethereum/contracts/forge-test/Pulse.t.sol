@@ -401,7 +401,7 @@ contract PulseTest is Test, PulseEvents {
     function testExecuteCallbackWithFutureTimestamp() public {
         // Setup request with future timestamp
         bytes32[] memory priceIds = createPriceIds();
-        uint256 futureTime = block.timestamp + 1 days;
+        uint256 futureTime = block.timestamp + 10; // 10 seconds in future
         vm.deal(address(consumer), 1 gwei);
 
         uint128 totalFee = calculateTotalFee();
@@ -432,6 +432,22 @@ contract PulseTest is Test, PulseEvents {
                 priceFeeds[i].price.publishTime
             );
         }
+    }
+
+    function testRevertOnTooFarFutureTimestamp() public {
+        bytes32[] memory priceIds = createPriceIds();
+        uint256 farFutureTime = block.timestamp + 61; // Just over 1 minute
+        vm.deal(address(consumer), 1 gwei);
+
+        uint128 totalFee = calculateTotalFee();
+        vm.prank(address(consumer));
+
+        vm.expectRevert("Too far in future");
+        pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+            farFutureTime,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
     }
 
     function testDoubleExecuteCallback() public {
