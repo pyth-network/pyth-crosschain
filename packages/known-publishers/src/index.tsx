@@ -6,6 +6,7 @@ import ltpLight from "./icons/light/ltp.svg";
 import blocksize from "./icons/monochrome/blocksize.svg";
 import elfomo from "./icons/monochrome/elfomo.svg";
 import finazonMonochrome from "./icons/monochrome/finazon.svg";
+import gluex from "./icons/monochrome/gluex.svg";
 import ltpMonochrome from "./icons/monochrome/ltp.svg";
 import sentioMonochrome from "./icons/monochrome/sentio.svg";
 import wooMonochrome from "./icons/monochrome/woo.svg";
@@ -50,6 +51,12 @@ export const knownPublishers = {
       monochrome: ltpMonochrome,
       dark: ltpDark,
       light: ltpLight,
+    },
+  },
+  "7JZm3iUVZTVTnK1Z6XqCGxUY51w1j3XkHAkA2rNpPGCo": {
+    name: "GlueX",
+    icon: {
+      monochrome: gluex,
     },
   },
 } as const;
