@@ -55,7 +55,7 @@ abstract contract Pulse is IPulse, PulseState {
 
         _state.accruedFeesInWei += SafeCast.toUint128(msg.value);
 
-        emit PriceUpdateRequested(req);
+        emit PriceUpdateRequested(req, priceIds);
     }
 
     function executeCallback(
