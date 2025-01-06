@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./PulseState.sol";
 
 interface PulseEvents {
-    event PriceUpdateRequested(PulseState.Request request);
+    event PriceUpdateRequested(PulseState.Request request, bytes32[] priceIds);
 
     event PriceUpdateExecuted(
         uint64 indexed sequenceNumber,

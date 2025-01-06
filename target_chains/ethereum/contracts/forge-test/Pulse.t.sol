@@ -202,7 +202,7 @@ contract PulseTest is Test, PulseEvents {
         });
 
         vm.expectEmit();
-        emit PriceUpdateRequested(expectedRequest);
+        emit PriceUpdateRequested(expectedRequest, priceIds);
 
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: totalFee}(
