@@ -32,6 +32,7 @@ pub enum PayloadPropertyValue {
     Price(Option<Price>),
     BestBidPrice(Option<Price>),
     BestAskPrice(Option<Price>),
+    PublisherCount(Option<u16>),
 }
 
 #[derive(Debug, Clone, Default)]
@@ -39,6 +40,7 @@ pub struct AggregatedPriceFeedData {
     pub price: Option<Price>,
     pub best_bid_price: Option<Price>,
     pub best_ask_price: Option<Price>,
+    pub publisher_count: Option<u16>,
 }
 
 pub const PAYLOAD_FORMAT_MAGIC: u32 = 2479346549;
@@ -66,6 +68,9 @@ impl PayloadData {
                             }
                             PriceFeedProperty::BestAskPrice => {
                                 PayloadPropertyValue::BestAskPrice(feed.best_ask_price)
+                            }
+                            PriceFeedProperty::PublisherCount => {
+                                PayloadPropertyValue::PublisherCount(feed.publisher_count)
                             }
                         })
                         .collect(),
@@ -95,6 +100,10 @@ impl PayloadData {
                     PayloadPropertyValue::BestAskPrice(price) => {
                         writer.write_u8(PriceFeedProperty::BestAskPrice as u8)?;
                         write_option_price::<BO>(&mut writer, *price)?;
+                    }
+                    PayloadPropertyValue::PublisherCount(count) => {
+                        writer.write_u8(PriceFeedProperty::PublisherCount as u8)?;
+                        write_option_u16::<BO>(&mut writer, *count)?;
                     }
                 }
             }
@@ -134,6 +143,8 @@ impl PayloadData {
                     PayloadPropertyValue::BestBidPrice(read_option_price::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::BestAskPrice as u8 {
                     PayloadPropertyValue::BestAskPrice(read_option_price::<BO>(&mut reader)?)
+                } else if property == PriceFeedProperty::PublisherCount as u8 {
+                    PayloadPropertyValue::PublisherCount(read_option_u16::<BO>(&mut reader)?)
                 } else {
                     bail!("unknown property");
                 };
@@ -159,6 +170,18 @@ fn write_option_price<BO: ByteOrder>(
 fn read_option_price<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<Price>> {
     let value = NonZeroI64::new(reader.read_i64::<BO>()?);
     Ok(value.map(Price))
+}
+
+fn write_option_u16<BO: ByteOrder>(
+    mut writer: impl Write,
+    value: Option<u16>,
+) -> std::io::Result<()> {
+    writer.write_u16::<BO>(value.unwrap_or(0))
+}
+
+fn read_option_u16<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<u16>> {
+    let value = reader.read_u16::<BO>()?;
+    Ok(Some(value))
 }
 
 pub const BINARY_UPDATE_FORMAT_MAGIC: u32 = 1937213467;
