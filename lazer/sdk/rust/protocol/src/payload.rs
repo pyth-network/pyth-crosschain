@@ -39,6 +39,7 @@ pub struct AggregatedPriceFeedData {
     pub price: Option<Price>,
     pub best_bid_price: Option<Price>,
     pub best_ask_price: Option<Price>,
+    pub publisher_count: Option<i32>,
 }
 
 pub const PAYLOAD_FORMAT_MAGIC: u32 = 2479346549;
