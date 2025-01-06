@@ -40,6 +40,7 @@ abstract contract Pulse is IPulse, PulseState {
         bytes32[] calldata priceIds,
         uint256 callbackGasLimit
     ) external payable override returns (uint64 requestSequenceNumber) {
+        require(publishTime <= block.timestamp + 60, "Too far in future");
         requestSequenceNumber = _state.currentSequenceNumber++;
 
         uint128 requiredFee = getFee(callbackGasLimit);
