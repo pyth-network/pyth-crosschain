@@ -3065,7 +3065,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-solana-receiver"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anchor-lang",
  "byteorder",
@@ -3107,7 +3107,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-solana-receiver-sdk"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anchor-lang",
  "hex",
