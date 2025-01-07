@@ -81,8 +81,8 @@ abstract contract Pulse is IPulse, PulseState {
                 SafeCast.toUint64(req.publishTime)
             );
 
-        // Check if enough gas remains for the callback
-        if (gasleft() < req.callbackGasLimit) {
+        // Check if enough gas remains for the callback plus 50% overhead for cross-contract call (uses integer arithmetic to avoid floating point)
+        if (gasleft() < (req.callbackGasLimit * 3) / 2) {
             revert InsufficientGas();
         }
 
