@@ -16,12 +16,30 @@ interface IPulseConsumer {
 
 interface IPulse is PulseEvents {
     // Core functions
+    /**
+     * @notice Requests price updates with a callback
+     * @dev The msg.value must cover both the Pyth fee and gas costs
+     * Note: The actual gas required for execution will be 1.5x the callbackGasLimit
+     * to account for cross-contract call overhead + some gas for some other operations in the function before the callback
+     * @param publishTime The minimum publish time for price updates
+     * @param priceIds The price feed IDs to update
+     * @param callbackGasLimit Gas limit for the callback execution
+     * @return sequenceNumber The sequence number assigned to this request
+     */
     function requestPriceUpdatesWithCallback(
         uint256 publishTime,
         bytes32[] calldata priceIds,
         uint256 callbackGasLimit
     ) external payable returns (uint64 sequenceNumber);
 
+    /**
+     * @notice Executes the callback for a price update request
+     * @dev Requires 1.5x the callback gas limit to account for cross-contract call overhead
+     * For example, if callbackGasLimit is 1M, the transaction needs at least 1.5M gas + some gas for some other operations in the function before the callback
+     * @param sequenceNumber The sequence number of the request
+     * @param updateData The raw price update data from Pyth
+     * @param priceIds The price feed IDs to update, must match the request
+     */
     function executeCallback(
         uint64 sequenceNumber,
         bytes[] calldata updateData,
