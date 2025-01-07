@@ -642,4 +642,41 @@ contract PulseTest is Test, PulseEvents {
         );
         pulse.executeCallback(sequenceNumber, updateData, wrongPriceIds);
     }
+
+    function testExecuteCallbackGasOverhead() public {
+        // Setup request with 1M gas limit
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer));
+
+        // Setup mock data
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockParsePriceFeedUpdates(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Should fail with exactly 1.4x gas (less than required 1.5x)
+        vm.prank(updater);
+        vm.expectRevert(InsufficientGas.selector);
+        pulse.executeCallback{gas: (CALLBACK_GAS_LIMIT * 14) / 10}(
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
+
+        // Should succeed with 1.6x gas
+        vm.prank(updater);
+        pulse.executeCallback{gas: (CALLBACK_GAS_LIMIT * 16) / 10}(
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
+
+        // Verify callback was executed successfully
+        assertEq(consumer.lastSequenceNumber(), sequenceNumber);
+        assertEq(consumer.lastUpdater(), updater);
+    }
 }
