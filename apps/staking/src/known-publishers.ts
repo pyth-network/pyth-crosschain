@@ -32,7 +32,7 @@ export const KNOWN_PUBLISHERS = {
     icon: ltp,
   },
   "7JZm3iUVZTVTnK1Z6XqCGxUY51w1j3XkHAkA2rNpPGCo": {
-    name: "GlueX",
+    name: "GlueX Protocol",
     icon: gluex,
   },
 };
