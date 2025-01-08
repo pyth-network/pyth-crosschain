@@ -25,6 +25,6 @@ pub struct LatestPriceResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LatestPrice {
-    id: PriceFeedId,
-    prices: AggregatedPriceFeedData,
+    pub id: PriceFeedId,
+    pub prices: AggregatedPriceFeedData,
 }
