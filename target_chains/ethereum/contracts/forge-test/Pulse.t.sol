@@ -196,7 +196,19 @@ contract PulseTest is Test, PulseEvents {
         PulseState.Request memory expectedRequest = PulseState.Request({
             sequenceNumber: 1,
             publishTime: publishTime,
-            priceIdsHash: keccak256(abi.encode(priceIds)),
+            priceIds: [
+                priceIds[0],
+                priceIds[1],
+                bytes32(0), // Fill remaining slots with zero
+                bytes32(0),
+                bytes32(0),
+                bytes32(0),
+                bytes32(0),
+                bytes32(0),
+                bytes32(0),
+                bytes32(0)
+            ],
+            numPriceIds: 2,
             callbackGasLimit: CALLBACK_GAS_LIMIT,
             requester: address(consumer)
         });
@@ -215,7 +227,10 @@ contract PulseTest is Test, PulseEvents {
         PulseState.Request memory lastRequest = pulse.getRequest(1);
         assertEq(lastRequest.sequenceNumber, expectedRequest.sequenceNumber);
         assertEq(lastRequest.publishTime, expectedRequest.publishTime);
-        assertEq(lastRequest.priceIdsHash, expectedRequest.priceIdsHash);
+        assertEq(lastRequest.numPriceIds, expectedRequest.numPriceIds);
+        for (uint8 i = 0; i < lastRequest.numPriceIds; i++) {
+            assertEq(lastRequest.priceIds[i], expectedRequest.priceIds[i]);
+        }
         assertEq(
             lastRequest.callbackGasLimit,
             expectedRequest.callbackGasLimit
@@ -627,17 +642,13 @@ contract PulseTest is Test, PulseEvents {
         mockParsePriceFeedUpdates(priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        // Calculate hashes for both arrays
-        bytes32 providedPriceIdsHash = keccak256(abi.encode(wrongPriceIds));
-        bytes32 storedPriceIdsHash = keccak256(abi.encode(priceIds));
-
         // Should revert when trying to execute with wrong priceIds
         vm.prank(updater);
         vm.expectRevert(
             abi.encodeWithSelector(
                 InvalidPriceIds.selector,
-                providedPriceIdsHash,
-                storedPriceIdsHash
+                wrongPriceIds[0],
+                priceIds[0]
             )
         );
         pulse.executeCallback(sequenceNumber, updateData, wrongPriceIds);
@@ -678,5 +689,31 @@ contract PulseTest is Test, PulseEvents {
         // Verify callback was executed successfully
         assertEq(consumer.lastSequenceNumber(), sequenceNumber);
         assertEq(consumer.lastUpdater(), updater);
+    }
+
+    function testRevertOnTooManyPriceIds() public {
+        uint256 maxPriceIds = uint256(pulse.MAX_PRICE_IDS());
+        // Create array with MAX_PRICE_IDS + 1 price IDs
+        bytes32[] memory priceIds = new bytes32[](maxPriceIds + 1);
+        for (uint i = 0; i < priceIds.length; i++) {
+            priceIds[i] = bytes32(uint256(i + 1));
+        }
+
+        vm.deal(address(consumer), 1 gwei);
+        uint128 totalFee = calculateTotalFee();
+
+        vm.prank(address(consumer));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TooManyPriceIds.selector,
+                maxPriceIds + 1,
+                maxPriceIds
+            )
+        );
+        pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+            block.timestamp,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
     }
 }
