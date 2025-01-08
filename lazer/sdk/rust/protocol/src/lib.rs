@@ -1,5 +1,6 @@
 //! Protocol types.
 
+pub mod api;
 pub mod message;
 pub mod payload;
 pub mod publisher;

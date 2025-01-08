@@ -5,6 +5,7 @@ use {
     crate::router::{ChannelId, Price},
     anyhow::bail,
     byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BE, LE},
+    serde::{Deserialize, Serialize},
     std::{
         io::{Cursor, Read, Write},
         num::NonZeroI64,
@@ -35,7 +36,7 @@ pub enum PayloadPropertyValue {
     PublisherCount(Option<u16>),
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AggregatedPriceFeedData {
     pub price: Option<Price>,
     pub best_bid_price: Option<Price>,
