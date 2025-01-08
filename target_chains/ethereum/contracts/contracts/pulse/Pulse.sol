@@ -31,6 +31,11 @@ abstract contract Pulse is IPulse, PulseState {
                 req.publishTime = 1;
                 req.callbackGasLimit = 1;
                 req.requester = address(1);
+                req.numPriceIds = 0;
+                // Pre-warm the priceIds array storage
+                for (uint8 j = 0; j < MAX_PRICE_IDS; j++) {
+                    req.priceIds[j] = bytes32(0);
+                }
             }
         }
     }
@@ -41,6 +46,9 @@ abstract contract Pulse is IPulse, PulseState {
         uint256 callbackGasLimit
     ) external payable override returns (uint64 requestSequenceNumber) {
         require(publishTime <= block.timestamp + 60, "Too far in future");
+        if (priceIds.length > MAX_PRICE_IDS) {
+            revert TooManyPriceIds(priceIds.length, MAX_PRICE_IDS);
+        }
         requestSequenceNumber = _state.currentSequenceNumber++;
 
         uint128 requiredFee = getFee(callbackGasLimit);
@@ -49,9 +57,14 @@ abstract contract Pulse is IPulse, PulseState {
         Request storage req = allocRequest(requestSequenceNumber);
         req.sequenceNumber = requestSequenceNumber;
         req.publishTime = publishTime;
-        req.priceIdsHash = keccak256(abi.encode(priceIds));
         req.callbackGasLimit = callbackGasLimit;
         req.requester = msg.sender;
+        req.numPriceIds = uint8(priceIds.length);
+
+        // Copy price IDs to storage
+        for (uint8 i = 0; i < priceIds.length; i++) {
+            req.priceIds[i] = priceIds[i];
+        }
 
         _state.accruedFeesInWei += SafeCast.toUint128(msg.value);
 
@@ -66,10 +79,14 @@ abstract contract Pulse is IPulse, PulseState {
         Request storage req = findActiveRequest(sequenceNumber);
 
         // Verify priceIds match
-        bytes32 providedPriceIdsHash = keccak256(abi.encode(priceIds));
-        bytes32 storedPriceIdsHash = req.priceIdsHash;
-        if (providedPriceIdsHash != storedPriceIdsHash) {
-            revert InvalidPriceIds(providedPriceIdsHash, storedPriceIdsHash);
+        require(
+            priceIds.length == req.numPriceIds,
+            "Price IDs length mismatch"
+        );
+        for (uint8 i = 0; i < req.numPriceIds; i++) {
+            if (priceIds[i] != req.priceIds[i]) {
+                revert InvalidPriceIds(priceIds[i], req.priceIds[i]);
+            }
         }
 
         // Parse price feeds first to measure gas usage

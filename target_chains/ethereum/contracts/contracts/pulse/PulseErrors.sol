@@ -12,3 +12,4 @@ error InvalidPriceIds(bytes32 providedPriceIdsHash, bytes32 storedPriceIdsHash);
 error InvalidCallbackGasLimit(uint256 requested, uint256 stored);
 error ExceedsMaxPrices(uint32 requested, uint32 maxAllowed);
 error InsufficientGas();
+error TooManyPriceIds(uint256 provided, uint256 maximum);
