@@ -15,8 +15,16 @@ pub enum ApiRequest {
 pub struct LatestPriceRequest {
     pub price_feed_ids: Vec<PriceFeedId>,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LatestPriceResponse {
-    pub price_feed_ids: Vec<AggregatedPriceFeedData>,
+    pub latest_prices: Vec<LatestPrice>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LatestPrice {
+    id: PriceFeedId,
+    prices: AggregatedPriceFeedData,
 }
