@@ -34,5 +34,6 @@ pub struct ReducePriceResponse {
 #[serde(rename_all = "camelCase")]
 pub struct LatestPrice {
     pub id: PriceFeedId,
+    pub exponent: i16,
     pub prices: AggregatedPriceFeedData,
 }
