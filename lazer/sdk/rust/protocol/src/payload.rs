@@ -34,6 +34,7 @@ pub enum PayloadPropertyValue {
     BestBidPrice(Option<Price>),
     BestAskPrice(Option<Price>),
     PublisherCount(Option<u16>),
+    Exponent(i16),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -50,7 +51,7 @@ impl PayloadData {
     pub fn new(
         timestamp_us: TimestampUs,
         channel_id: ChannelId,
-        feeds: &[(PriceFeedId, AggregatedPriceFeedData)],
+        feeds: &[(PriceFeedId, i16, AggregatedPriceFeedData)],
         requested_properties: &[PriceFeedProperty],
     ) -> Self {
         Self {
@@ -58,7 +59,7 @@ impl PayloadData {
             channel_id,
             feeds: feeds
                 .iter()
-                .map(|(feed_id, feed)| PayloadFeedData {
+                .map(|(feed_id, exponent, feed)| PayloadFeedData {
                     feed_id: *feed_id,
                     properties: requested_properties
                         .iter()
@@ -72,6 +73,9 @@ impl PayloadData {
                             }
                             PriceFeedProperty::PublisherCount => {
                                 PayloadPropertyValue::PublisherCount(feed.publisher_count)
+                            }
+                            PriceFeedProperty::Exponent => {
+                                PayloadPropertyValue::Exponent(*exponent)
                             }
                         })
                         .collect(),
@@ -105,6 +109,10 @@ impl PayloadData {
                     PayloadPropertyValue::PublisherCount(count) => {
                         writer.write_u8(PriceFeedProperty::PublisherCount as u8)?;
                         write_option_u16::<BO>(&mut writer, *count)?;
+                    }
+                    PayloadPropertyValue::Exponent(exponent) => {
+                        writer.write_u8(PriceFeedProperty::Exponent as u8)?;
+                        writer.write_i16::<BO>(*exponent)?;
                     }
                 }
             }
@@ -146,6 +154,8 @@ impl PayloadData {
                     PayloadPropertyValue::BestAskPrice(read_option_price::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::PublisherCount as u8 {
                     PayloadPropertyValue::PublisherCount(read_option_u16::<BO>(&mut reader)?)
+                } else if property == PriceFeedProperty::Exponent as u8 {
+                    PayloadPropertyValue::Exponent(reader.read_i16::<BO>()?)
                 } else {
                     bail!("unknown property");
                 };

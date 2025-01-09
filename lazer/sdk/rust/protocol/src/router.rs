@@ -132,6 +132,7 @@ pub enum PriceFeedProperty {
     BestBidPrice,
     BestAskPrice,
     PublisherCount,
+    Exponent,
     // More fields may be added later.
 }
 
@@ -396,12 +397,16 @@ pub struct ParsedFeedPayload {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub publisher_count: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub exponent: Option<i16>,
     // More fields may be added later.
 }
 
 impl ParsedFeedPayload {
     pub fn new(
         price_feed_id: PriceFeedId,
+        exponent: Option<i16>,
         data: &AggregatedPriceFeedData,
         properties: &[PriceFeedProperty],
     ) -> Self {
@@ -411,6 +416,7 @@ impl ParsedFeedPayload {
             best_bid_price: None,
             best_ask_price: None,
             publisher_count: None,
+            exponent: None,
         };
         for &property in properties {
             match property {
@@ -426,18 +432,26 @@ impl ParsedFeedPayload {
                 PriceFeedProperty::PublisherCount => {
                     output.publisher_count = data.publisher_count;
                 }
+                PriceFeedProperty::Exponent => {
+                    output.exponent = exponent;
+                }
             }
         }
         output
     }
 
-    pub fn new_full(price_feed_id: PriceFeedId, data: &AggregatedPriceFeedData) -> Self {
+    pub fn new_full(
+        price_feed_id: PriceFeedId,
+        exponent: Option<i16>,
+        data: &AggregatedPriceFeedData,
+    ) -> Self {
         Self {
             price_feed_id,
             price: data.price,
             best_bid_price: data.best_bid_price,
             best_ask_price: data.best_ask_price,
             publisher_count: data.publisher_count,
+            exponent,
         }
     }
 }
