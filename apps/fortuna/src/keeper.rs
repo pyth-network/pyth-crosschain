@@ -55,6 +55,8 @@ const UPDATE_COMMITMENTS_INTERVAL: Duration = Duration::from_secs(30);
 const UPDATE_COMMITMENTS_THRESHOLD_FACTOR: f64 = 0.95;
 /// Rety last N blocks
 const RETRY_PREVIOUS_BLOCKS: u64 = 100;
+/// By default, we scale the gas estimate by 25% when submitting the tx.
+const DEFAULT_GAS_ESTIMATE_MULTIPLIER_PCT: u64 = 125;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct AccountLabel {
@@ -270,6 +272,7 @@ pub async fn run_keeper_threads(
             },
             contract.clone(),
             gas_limit,
+            chain_eth_config.backoff_gas_multiplier_pct,
             chain_state.clone(),
             metrics.clone(),
             fulfilled_requests_cache.clone(),
@@ -295,6 +298,7 @@ pub async fn run_keeper_threads(
             rx,
             Arc::clone(&contract),
             gas_limit,
+            chain_eth_config.backoff_gas_multiplier_pct,
             metrics.clone(),
             fulfilled_requests_cache.clone(),
         )
@@ -319,7 +323,9 @@ pub async fn run_keeper_threads(
             chain_state.provider_address,
             ADJUST_FEE_INTERVAL,
             chain_eth_config.legacy_tx,
-            chain_eth_config.gas_limit,
+            // NOTE: we adjust fees based on the maximum gas that the keeper will submit a callback with.
+            // This number is *larger* than the configured gas limit, as we pad gas on transaction submission for reliability.
+            (chain_eth_config.gas_limit * DEFAULT_GAS_ESTIMATE_MULTIPLIER_PCT) / 100,
             chain_eth_config.min_profit_pct,
             chain_eth_config.target_profit_pct,
             chain_eth_config.max_profit_pct,
@@ -388,6 +394,7 @@ pub async fn process_event_with_backoff(
     chain_state: BlockchainState,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
+    backoff_gas_multiplier_pct: u64,
     metrics: Arc<KeeperMetrics>,
 ) {
     let start_time = std::time::Instant::now();
@@ -403,13 +410,34 @@ pub async fn process_event_with_backoff(
         ..Default::default()
     };
 
+    let current_multiplier = Arc::new(AtomicU64::new(DEFAULT_GAS_ESTIMATE_MULTIPLIER_PCT));
+
     let success = backoff::future::retry_notify(
         backoff,
         || async {
-            process_event(&event, &chain_state, &contract, gas_limit, metrics.clone()).await
+            let multiplier = current_multiplier.load(std::sync::atomic::Ordering::Relaxed);
+            process_event(
+                &event,
+                &chain_state,
+                &contract,
+                gas_limit,
+                multiplier,
+                metrics.clone(),
+            )
+            .await
         },
         |e, dur| {
-            tracing::error!("Error happened at {:?}: {}", dur, e);
+            let multiplier = current_multiplier.load(std::sync::atomic::Ordering::Relaxed);
+            tracing::error!(
+                "Error at duration {:?} with gas multiplier {}: {}",
+                dur,
+                multiplier,
+                e
+            );
+            current_multiplier.store(
+                multiplier.saturating_mul(backoff_gas_multiplier_pct) / 100,
+                std::sync::atomic::Ordering::Relaxed,
+            );
         },
     )
     .await;
@@ -467,6 +495,8 @@ pub async fn process_event(
     chain_config: &BlockchainState,
     contract: &InstrumentedSignablePythContract,
     gas_limit: U256,
+    // A value of 100 submits the tx with the same gas as the estimate.
+    gas_estimate_multiplier_pct: u64,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<(), backoff::Error<anyhow::Error>> {
     // ignore requests that are not for the configured provider
@@ -497,6 +527,8 @@ pub async fn process_event(
         backoff::Error::transient(anyhow!("Error estimating gas for reveal: {:?}", e))
     })?;
 
+    // The gas limit on the simulated transaction is the configured gas limit on the chain,
+    // but we are willing to pad the gas a bit to ensure reliable submission.
     if gas_estimate > gas_limit {
         return Err(backoff::Error::permanent(anyhow!(
             "Gas estimate for reveal with callback is higher than the gas limit {} > {}",
@@ -505,8 +537,10 @@ pub async fn process_event(
         )));
     }
 
-    // Pad the gas estimate by 25% after checking it against the gas limit
-    let gas_estimate = gas_estimate.saturating_mul(5.into()) / 4;
+    // Pad the gas estimate after checking it against the simulation gas limit, ensuring that
+    // the padded gas estimate doesn't exceed the maximum amount of gas we are willing to use.
+    let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
+    let gas_estimate = gas_estimate.min((gas_limit * DEFAULT_GAS_ESTIMATE_MULTIPLIER_PCT) / 100);
 
     let contract_call = contract
         .reveal_with_callback(
@@ -620,6 +654,7 @@ pub async fn process_block_range(
     block_range: BlockRange,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
+    backoff_gas_multiplier_pct: u64,
     chain_state: api::BlockchainState,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
@@ -643,6 +678,7 @@ pub async fn process_block_range(
             },
             contract.clone(),
             gas_limit,
+            backoff_gas_multiplier_pct,
             chain_state.clone(),
             metrics.clone(),
             fulfilled_requests_cache.clone(),
@@ -665,6 +701,7 @@ pub async fn process_single_block_batch(
     block_range: BlockRange,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
+    backoff_gas_multiplier_pct: u64,
     chain_state: api::BlockchainState,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
@@ -691,6 +728,7 @@ pub async fn process_single_block_batch(
                                 chain_state.clone(),
                                 contract.clone(),
                                 gas_limit,
+                                backoff_gas_multiplier_pct,
                                 metrics.clone(),
                             )
                             .in_current_span(),
@@ -837,6 +875,7 @@ pub async fn process_new_blocks(
     mut rx: mpsc::Receiver<BlockRange>,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
+    backoff_gas_multiplier_pct: u64,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
 ) {
@@ -847,6 +886,7 @@ pub async fn process_new_blocks(
                 block_range,
                 Arc::clone(&contract),
                 gas_limit,
+                backoff_gas_multiplier_pct,
                 chain_state.clone(),
                 metrics.clone(),
                 fulfilled_requests_cache.clone(),
@@ -863,6 +903,7 @@ pub async fn process_backlog(
     backlog_range: BlockRange,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
+    backoff_gas_multiplier_pct: u64,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
@@ -872,6 +913,7 @@ pub async fn process_backlog(
         backlog_range,
         contract,
         gas_limit,
+        backoff_gas_multiplier_pct,
         chain_state,
         metrics,
         fulfilled_requests_cache,

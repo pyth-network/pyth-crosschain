@@ -134,6 +134,10 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 
+    /// The percentage multiplier to apply to the gas limit for each backoff.
+    #[serde(default = "default_backoff_gas_multiplier_pct")]
+    pub backoff_gas_multiplier_pct: u64,
+
     /// The minimum percentage profit to earn as a function of the callback cost.
     /// For example, 20 means a profit of 20% over the cost of the callback.
     /// The fee will be raised if the profit is less than this number.
@@ -170,6 +174,10 @@ pub struct EthereumConfig {
     /// The percentage multiplier to apply to the priority fee (100 = no change, e.g. 150 = 150% of base fee)
     #[serde(default = "default_priority_fee_multiplier_pct")]
     pub priority_fee_multiplier_pct: u64,
+}
+
+fn default_backoff_gas_multiplier_pct() -> u64 {
+    100
 }
 
 /// A commitment that the provider used to generate random numbers at some point in the past.
