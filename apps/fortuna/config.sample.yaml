@@ -7,6 +7,7 @@ chains:
     reveal_delay_blocks: 0
     gas_limit: 500000
     # Increase the transaction gas limit by 10% each time the callback fails
+    # defaults to 100 (i.e., don't change the gas limit) if not specified.
     backoff_gas_multiplier_pct: 110
     min_keeper_balance: 100000000000000000
 
