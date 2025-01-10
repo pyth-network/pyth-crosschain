@@ -1,3 +1,6 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-empty-function */
+
 import { PythLazerClient } from "../src/index.js";
 
 // Ignore debug messages
@@ -37,7 +40,7 @@ client.addMessageListener((message) => {
 });
 
 // Create and remove one or more subscriptions on the fly
-client.subscribe({
+await client.subscribe({
   type: "subscribe",
   subscriptionId: 1,
   priceFeedIds: [1, 2],
@@ -48,7 +51,7 @@ client.subscribe({
   parsed: false,
   jsonBinaryEncoding: "base64",
 });
-client.subscribe({
+await client.subscribe({
   type: "subscribe",
   subscriptionId: 2,
   priceFeedIds: [1, 2, 3, 4, 5],
@@ -60,8 +63,8 @@ client.subscribe({
   jsonBinaryEncoding: "hex",
 });
 
-await new Promise((resolve) => setTimeout(resolve, 10000));
+await new Promise((resolve) => setTimeout(resolve, 10_000));
 
-client.unsubscribe(1);
-client.unsubscribe(2);
+await client.unsubscribe(1);
+await client.unsubscribe(2);
 client.shutdown();

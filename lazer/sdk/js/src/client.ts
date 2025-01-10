@@ -1,4 +1,5 @@
 import WebSocket from "isomorphic-ws";
+import { dummyLogger, type Logger } from "ts-log";
 
 import {
   BINARY_UPDATE_FORMAT_MAGIC,
@@ -9,8 +10,7 @@ import {
   type Response,
   SOLANA_FORMAT_MAGIC_BE,
 } from "./protocol.js";
-import { WebSocketPool } from "./socket/WebSocketPool.js";
-import { dummyLogger, type Logger } from "ts-log";
+import { WebSocketPool } from "./socket/web-socket-pool.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -34,15 +34,15 @@ export class PythLazerClient {
 
   /**
    * Creates a new PythLazerClient instance.
-   * @param urls List of WebSocket URLs of the Pyth Lazer service
-   * @param token The access token for authentication
-   * @param numConnections The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream.
-   * @param logger Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
+   * @param urls - List of WebSocket URLs of the Pyth Lazer service
+   * @param token - The access token for authentication
+   * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream.
+   * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
   constructor(
     urls: string[],
     token: string,
-    numConnections: number = 3,
+    numConnections = 3,
     logger: Logger = dummyLogger
   ) {
     this.wsp = new WebSocketPool(urls, token, numConnections, logger);
@@ -95,19 +95,19 @@ export class PythLazerClient {
     });
   }
 
-  subscribe(request: Request) {
+  async subscribe(request: Request): Promise<void> {
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
-    this.wsp.addSubscription(request);
+    await this.wsp.addSubscription(request);
   }
 
-  unsubscribe(subscriptionId: number) {
-    this.wsp.removeSubscription(subscriptionId);
+  async unsubscribe(subscriptionId: number): Promise<void> {
+    await this.wsp.removeSubscription(subscriptionId);
   }
 
-  send(request: Request) {
-    this.wsp.sendRequest(request);
+  async send(request: Request): Promise<void> {
+    await this.wsp.sendRequest(request);
   }
 
   shutdown(): void {

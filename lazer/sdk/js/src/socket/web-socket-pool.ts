@@ -1,8 +1,9 @@
-import { dummyLogger, type Logger } from "ts-log";
 import TTLCache from "@isaacs/ttlcache";
 import WebSocket from "isomorphic-ws";
+import { dummyLogger, type Logger } from "ts-log";
+
+import { ResilientWebSocket } from "./resilient-web-socket.js";
 import type { Request, Response } from "../protocol.js";
-import { ResilientWebSocket } from "./ResillientWebSocket.js";
 
 // Maintains multiple redundant WebSocket connections for reliability
 const DEFAULT_NUM_CONNECTIONS = 3;
@@ -16,10 +17,10 @@ export class WebSocketPool {
   /**
    * Creates a new WebSocketPool instance that maintains multiple redundant WebSocket connections for reliability.
    * Usage semantics are similar to using a regular WebSocket client.
-   * @param urls List of WebSocket URLs to connect to
-   * @param token Authentication token to use for the connections
-   * @param numConnections Number of parallel WebSocket connections to maintain (default: 3)
-   * @param logger Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
+   * @param urls - List of WebSocket URLs to connect to
+   * @param token - Authentication token to use for the connections
+   * @param numConnections - Number of parallel WebSocket connections to maintain (default: 3)
+   * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
   constructor(
     urls: string[],
@@ -37,9 +38,11 @@ export class WebSocketPool {
     this.rwsPool = [];
     this.subscriptions = new Map();
     this.messageListeners = [];
-
     for (let i = 0; i < numConnections; i++) {
-      const url = urls[i % urls.length]!;
+      const url = urls[i % urls.length];
+      if (!url) {
+        throw new Error(`URLs must not be null or empty`);
+      }
       const wsOptions = {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -50,12 +53,19 @@ export class WebSocketPool {
       // If a websocket client unexpectedly disconnects, ResilientWebSocket will reestablish
       // the connection and call the onReconnect callback.
       // When we reconnect, replay all subscription messages to resume the data stream.
-      rws.onReconnect = () => {
-        if (rws.wsUserClosed === true) {
+      rws.onReconnect = async () => {
+        if (rws.wsUserClosed) {
           return;
         }
-        for (const [_, request] of this.subscriptions) {
-          rws.send(JSON.stringify(request));
+        for (const [, request] of this.subscriptions) {
+          try {
+            await rws.send(JSON.stringify(request));
+          } catch (error) {
+            this.logger.error(
+              "Failed to resend subscription on reconnect:",
+              error
+            );
+          }
         }
       };
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
@@ -69,7 +79,9 @@ export class WebSocketPool {
       rws.startWebSocket();
     }
 
-    this.logger.info(`Using ${numConnections} redundant WebSocket connections`);
+    this.logger.info(
+      `Using ${numConnections.toString()} redundant WebSocket connections`
+    );
   }
 
   /**
@@ -78,7 +90,11 @@ export class WebSocketPool {
   private handleErrorMessages(data: string): void {
     const message = JSON.parse(data) as Response;
     if (message.type === "subscriptionError") {
-      throw new Error(`Subscription error: ${message}`);
+      throw new Error(
+        `Error occurred for subscription ID ${String(
+          message.subscriptionId
+        )}: ${message.error}`
+      );
     } else if (message.type === "error") {
       throw new Error(`Error: ${message.error}`);
     }
@@ -117,45 +133,51 @@ export class WebSocketPool {
 
   /**
    * Sends a message to all websockets in the pool
-   * @param data The data to send
+   * @param request - The request to send
    */
-  sendRequest(request: Request) {
+  async sendRequest(request: Request): Promise<void> {
     // Send to all websockets in the pool
-    for (const rws of this.rwsPool) {
-      rws.send(JSON.stringify(request));
-    }
+    const sendPromises = this.rwsPool.map(async (rws) => {
+      try {
+        await rws.send(JSON.stringify(request));
+      } catch (error) {
+        this.logger.error("Failed to send request:", error);
+        throw error; // Re-throw the error
+      }
+    });
+    await Promise.all(sendPromises);
   }
 
   /**
    * Adds a subscription by sending a subscribe request to all websockets in the pool
    * and storing it for replay on reconnection
-   * @param request The subscription request to send
+   * @param request - The subscription request to send
    */
-  addSubscription(request: Request) {
+  async addSubscription(request: Request): Promise<void> {
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
     this.subscriptions.set(request.subscriptionId, request);
-    this.sendRequest(request);
+    await this.sendRequest(request);
   }
 
   /**
    * Removes a subscription by sending an unsubscribe request to all websockets in the pool
    * and removing it from stored subscriptions
-   * @param subscriptionId The ID of the subscription to remove
+   * @param subscriptionId - The ID of the subscription to remove
    */
-  removeSubscription(subscriptionId: number) {
+  async removeSubscription(subscriptionId: number): Promise<void> {
     this.subscriptions.delete(subscriptionId);
     const request: Request = {
       type: "unsubscribe",
       subscriptionId,
     };
-    this.sendRequest(request);
+    await this.sendRequest(request);
   }
 
   /**
    * Adds a message handler function to receive websocket messages
-   * @param handler Function that will be called with each received message
+   * @param handler - Function that will be called with each received message
    */
   addMessageListener(handler: (data: WebSocket.Data) => void): void {
     this.messageListeners.push(handler);
@@ -166,8 +188,6 @@ export class WebSocketPool {
    */
   shutdown(): void {
     for (const rws of this.rwsPool) {
-      rws.onReconnect = () => {};
-      rws.onError = () => {};
       rws.closeWebSocket();
     }
     this.rwsPool = [];

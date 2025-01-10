@@ -1,9 +1,10 @@
-import WebSocket, { type ClientOptions } from "isomorphic-ws";
 import type { ClientRequestArgs } from "node:http";
+
+import WebSocket, { type ClientOptions, type ErrorEvent } from "isomorphic-ws";
 import type { Logger } from "ts-log";
 
 // Reconnect with expo backoff if we don't get a message or ping for 10 seconds
-const HEARTBEAT_TIMEOUT_DURATION = 10000;
+const HEARTBEAT_TIMEOUT_DURATION = 10_000;
 
 /**
  * This class wraps websocket to provide a resilient web socket client.
@@ -24,7 +25,7 @@ export class ResilientWebSocket {
   private heartbeatTimeout: undefined | NodeJS.Timeout;
   private logger: undefined | Logger;
 
-  onError: (error: Error) => void;
+  onError: (error: ErrorEvent) => void;
   onMessage: (data: WebSocket.Data) => void;
   onReconnect: () => void;
   constructor(
@@ -37,16 +38,20 @@ export class ResilientWebSocket {
     this.logger = logger;
 
     this.wsFailedAttempts = 0;
-    this.onError = (error: Error) => {
-      this.logger?.error(error);
+    this.onError = (error: ErrorEvent) => {
+      this.logger?.error(error.error);
     };
     this.wsUserClosed = true;
-    this.onMessage = () => {};
-    this.onReconnect = () => {};
+    this.onMessage = (data: WebSocket.Data): void => {
+      void data;
+    };
+    this.onReconnect = (): void => {
+      // Empty function, can be set by the user.
+    };
   }
 
-  async send(data: any) {
-    this.logger?.info(`Sending ${data}`);
+  async send(data: string | Buffer) {
+    this.logger?.info(`Sending message`);
 
     await this.waitForMaybeReadyWebSocket();
 
@@ -55,11 +60,11 @@ export class ResilientWebSocket {
         "Couldn't connect to the websocket server. Error callback is called."
       );
     } else {
-      this.wsClient?.send(data);
+      this.wsClient.send(data);
     }
   }
 
-  async startWebSocket() {
+  startWebSocket(): void {
     if (this.wsClient !== undefined) {
       return;
     }
@@ -69,42 +74,26 @@ export class ResilientWebSocket {
     this.wsClient = new WebSocket(this.endpoint, this.wsOptions);
     this.wsUserClosed = false;
 
-    this.wsClient.onopen = () => {
+    this.wsClient.addEventListener("open", () => {
       this.wsFailedAttempts = 0;
       this.resetHeartbeat();
-    };
+    });
 
-    this.wsClient.onerror = (event) => {
-      this.onError(event.error);
-    };
+    this.wsClient.addEventListener("error", (event) => {
+      this.onError(event);
+    });
 
-    this.wsClient.onmessage = (event) => {
+    this.wsClient.addEventListener("message", (event) => {
       this.resetHeartbeat();
       this.onMessage(event.data);
-    };
+    });
 
-    this.wsClient.onclose = async () => {
-      if (this.heartbeatTimeout !== undefined) {
-        clearTimeout(this.heartbeatTimeout);
-      }
+    this.wsClient.addEventListener("close", () => {
+      void this.handleClose();
+    });
 
-      if (this.wsUserClosed === false) {
-        this.wsFailedAttempts += 1;
-        this.wsClient = undefined;
-        const waitTime = expoBackoff(this.wsFailedAttempts);
-
-        this.logger?.error(
-          `Connection closed unexpectedly or because of timeout. Reconnecting after ${waitTime}ms.`
-        );
-
-        await sleep(waitTime);
-        this.restartUnexpectedClosedWebsocket();
-      } else {
-        this.logger?.info("The connection has been closed successfully.");
-      }
-    };
-
-    if (this.wsClient.on !== undefined) {
+    // Handle ping events if supported (Node.js only)
+    if ("on" in this.wsClient) {
       // Ping handler is undefined in browser side
       this.wsClient.on("ping", () => {
         this.logger?.info("Ping received");
@@ -118,19 +107,19 @@ export class ResilientWebSocket {
    * from the server. If we don't receive any message within HEARTBEAT_TIMEOUT_DURATION,
    * we assume the connection is dead and reconnect.
    */
-  private resetHeartbeat() {
+  private resetHeartbeat(): void {
     if (this.heartbeatTimeout !== undefined) {
       clearTimeout(this.heartbeatTimeout);
     }
 
     this.heartbeatTimeout = setTimeout(() => {
-      this.logger?.warn(`Connection timed out. Reconnecting...`);
+      this.logger?.warn("Connection timed out. Reconnecting...");
       this.wsClient?.terminate();
-      this.restartUnexpectedClosedWebsocket();
+      void this.restartUnexpectedClosedWebsocket();
     }, HEARTBEAT_TIMEOUT_DURATION);
   }
 
-  private async waitForMaybeReadyWebSocket() {
+  private async waitForMaybeReadyWebSocket(): Promise<void> {
     let waitedTime = 0;
     while (
       this.wsClient !== undefined &&
@@ -146,12 +135,35 @@ export class ResilientWebSocket {
     }
   }
 
-  private async restartUnexpectedClosedWebsocket() {
-    if (this.wsUserClosed === true) {
+  private async handleClose(): Promise<void> {
+    if (this.heartbeatTimeout !== undefined) {
+      clearTimeout(this.heartbeatTimeout);
+    }
+
+    if (this.wsUserClosed) {
+      this.logger?.info("The connection has been closed successfully.");
+    } else {
+      this.wsFailedAttempts += 1;
+      this.wsClient = undefined;
+      const waitTime = expoBackoff(this.wsFailedAttempts);
+
+      this.logger?.error(
+        "Connection closed unexpectedly or because of timeout. Reconnecting after " +
+          String(waitTime) +
+          "ms."
+      );
+
+      await sleep(waitTime);
+      await this.restartUnexpectedClosedWebsocket();
+    }
+  }
+
+  private async restartUnexpectedClosedWebsocket(): Promise<void> {
+    if (this.wsUserClosed) {
       return;
     }
 
-    await this.startWebSocket();
+    this.startWebSocket();
     await this.waitForMaybeReadyWebSocket();
 
     if (this.wsClient === undefined) {
@@ -164,7 +176,7 @@ export class ResilientWebSocket {
     this.onReconnect();
   }
 
-  closeWebSocket() {
+  closeWebSocket(): void {
     if (this.wsClient !== undefined) {
       const client = this.wsClient;
       this.wsClient = undefined;
@@ -174,7 +186,7 @@ export class ResilientWebSocket {
   }
 }
 
-async function sleep(ms: number) {
+async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
