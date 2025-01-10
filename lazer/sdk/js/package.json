@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-sdk",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Pyth Lazer SDK",
   "publishConfig": {
     "access": "public"
@@ -63,6 +63,8 @@
     "@solana/buffer-layout": "^4.0.1",
     "@solana/web3.js": "^1.98.0",
     "isomorphic-ws": "^5.0.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "@isaacs/ttlcache": "^1.4.1",
+    "ts-log": "^2.2.7"
   }
 }
