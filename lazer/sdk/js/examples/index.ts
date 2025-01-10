@@ -1,13 +1,21 @@
 import { PythLazerClient } from "../src/index.js";
 
-/* eslint-disable no-console */
-const client = new PythLazerClient("ws://127.0.0.1:1234/v1/stream", "ctoken1");
+// Ignore debug messages
+console.debug = () => {};
+
+const client = new PythLazerClient(
+  ["wss://pyth-lazer.dourolabs.app/v1/stream"],
+  "access_token",
+  3, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. Default is 3.
+  console // Optionally log socket operations (to the console in this case.)
+);
+
 client.addMessageListener((message) => {
-  console.log("got message:", message);
+  console.info("got message:", message);
   switch (message.type) {
     case "json": {
       if (message.value.type == "streamUpdated") {
-        console.log(
+        console.info(
           "stream updated for subscription",
           message.value.subscriptionId,
           ":",
@@ -18,24 +26,42 @@ client.addMessageListener((message) => {
     }
     case "binary": {
       if ("solana" in message.value) {
-        console.log("solana message:", message.value.solana?.toString("hex"));
+        console.info("solana message:", message.value.solana?.toString("hex"));
       }
       if ("evm" in message.value) {
-        console.log("evm message:", message.value.evm?.toString("hex"));
+        console.info("evm message:", message.value.evm?.toString("hex"));
       }
       break;
     }
   }
 });
-client.ws.addEventListener("open", () => {
-  client.send({
-    type: "subscribe",
-    subscriptionId: 1,
-    priceFeedIds: [1, 2],
-    properties: ["price"],
-    chains: ["solana"],
-    deliveryFormat: "json",
-    channel: "fixed_rate@200ms",
-    jsonBinaryEncoding: "hex",
-  });
+
+// Create and remove one or more subscriptions on the fly
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2],
+  properties: ["price"],
+  chains: ["solana"],
+  deliveryFormat: "binary",
+  channel: "fixed_rate@200ms",
+  parsed: false,
+  jsonBinaryEncoding: "base64",
 });
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 2,
+  priceFeedIds: [1, 2, 3, 4, 5],
+  properties: ["price"],
+  chains: ["evm"],
+  deliveryFormat: "json",
+  channel: "fixed_rate@200ms",
+  parsed: true,
+  jsonBinaryEncoding: "hex",
+});
+
+await new Promise((resolve) => setTimeout(resolve, 10000));
+
+client.unsubscribe(1);
+client.unsubscribe(2);
+client.shutdown();
