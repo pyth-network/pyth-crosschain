@@ -5,7 +5,7 @@ import { dummyLogger, type Logger } from "ts-log";
 import { ResilientWebSocket } from "./resilient-web-socket.js";
 import type { Request, Response } from "../protocol.js";
 
-// Maintains multiple redundant WebSocket connections for reliability
+// Number of redundant parallel WebSocket connections
 const DEFAULT_NUM_CONNECTIONS = 3;
 
 export class WebSocketPool {
@@ -15,7 +15,7 @@ export class WebSocketPool {
   private messageListeners: ((event: WebSocket.Data) => void)[];
 
   /**
-   * Creates a new WebSocketPool instance that maintains multiple redundant WebSocket connections for reliability.
+   * Creates a new WebSocketPool instance that uses multiple redundant WebSocket connections for reliability.
    * Usage semantics are similar to using a regular WebSocket client.
    * @param urls - List of WebSocket URLs to connect to
    * @param token - Authentication token to use for the connections
