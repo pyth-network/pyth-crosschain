@@ -53,13 +53,13 @@ export class WebSocketPool {
       // If a websocket client unexpectedly disconnects, ResilientWebSocket will reestablish
       // the connection and call the onReconnect callback.
       // When we reconnect, replay all subscription messages to resume the data stream.
-      rws.onReconnect = async () => {
+      rws.onReconnect = () => {
         if (rws.wsUserClosed) {
           return;
         }
         for (const [, request] of this.subscriptions) {
           try {
-            await rws.send(JSON.stringify(request));
+            void rws.send(JSON.stringify(request));
           } catch (error) {
             this.logger.error(
               "Failed to resend subscription on reconnect:",
