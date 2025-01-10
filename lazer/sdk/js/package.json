@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-sdk",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Pyth Lazer SDK",
   "publishConfig": {
     "access": "public"

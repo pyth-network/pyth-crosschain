@@ -1,7 +1,7 @@
 import { dummyLogger, type Logger } from "ts-log";
 import TTLCache from "@isaacs/ttlcache";
 import WebSocket from "isomorphic-ws";
-import type { Request } from "../protocol.js";
+import type { Request, Response } from "../protocol.js";
 import { ResilientWebSocket } from "./ResillientWebSocket.js";
 
 // Maintains multiple redundant WebSocket connections for reliability
@@ -73,6 +73,18 @@ export class WebSocketPool {
   }
 
   /**
+   * Checks for error responses in JSON messages and throws appropriate errors
+   */
+  private handleErrorMessages(data: string): void {
+    const message = JSON.parse(data) as Response;
+    if (message.type === "subscriptionError") {
+      throw new Error(`Subscription error: ${message}`);
+    } else if (message.type === "error") {
+      throw new Error(`Error: ${message.error}`);
+    }
+  }
+
+  /**
    * Handles incoming websocket messages by deduplicating identical messages received across
    * multiple connections before forwarding to registered handlers
    */
@@ -92,6 +104,11 @@ export class WebSocketPool {
 
     // Haven't seen this message, cache it and forward to handlers
     this.cache.set(cacheKey, true);
+
+    // Check for errors in JSON responses
+    if (typeof data === "string") {
+      this.handleErrorMessages(data);
+    }
 
     for (const handler of this.messageListeners) {
       handler(data);
@@ -151,8 +168,6 @@ export class WebSocketPool {
     for (const rws of this.rwsPool) {
       rws.onReconnect = () => {};
       rws.onError = () => {};
-    }
-    for (const rws of this.rwsPool) {
       rws.closeWebSocket();
     }
     this.rwsPool = [];
