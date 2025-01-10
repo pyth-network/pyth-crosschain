@@ -850,3 +850,8 @@
   rpcUrl: https://rpc.test2.btcs.network
   networkId: 1114
   type: EvmChain
+- id: monad_testnet
+  mainnet: false
+  rpcUrl: https://rpc.monad-testnet.category.xyz/rpc/nSyzM1wlIgaALWzbh3oIg5rW65AC6yjqrslOE8wb
+  networkId: 10143
+  type: EvmChain
