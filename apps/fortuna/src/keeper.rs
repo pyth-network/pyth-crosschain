@@ -185,7 +185,7 @@ impl KeeperMetrics {
 
         writable_registry.register(
             "request_duration_ms",
-            "Time taken to process each callback request in milliseconds",
+            "Time taken to process each successful callback request in milliseconds",
             keeper_metrics.request_duration_ms.clone(),
         );
 
