@@ -248,6 +248,10 @@ pub async fn run_keeper_threads(
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("latest safe block: {}", &latest_safe_block);
 
+    // Update BlockchainState with the gas multiplier cap from config
+    let mut chain_state = chain_state;
+    chain_state.backoff_gas_multiplier_cap_pct = chain_eth_config.backoff_gas_multiplier_cap_pct;
+
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(
             &chain_eth_config,

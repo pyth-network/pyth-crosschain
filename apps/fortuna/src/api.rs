@@ -92,6 +92,9 @@ pub struct BlockchainState {
     /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
     /// For eg., Finalized, Safe
     pub confirmed_block_status: BlockStatus,
+
+    /// The maximum percentage that the gas limit can be multiplied by during backoff retries
+    pub backoff_gas_multiplier_cap_pct: u64,
 }
 
 pub enum RestError {
@@ -212,6 +215,7 @@ mod test {
             provider_address: PROVIDER,
             reveal_delay_blocks: 1,
             confirmed_block_status: BlockStatus::Latest,
+            backoff_gas_multiplier_cap_pct: 500,
         };
 
         let metrics_registry = Arc::new(RwLock::new(Registry::default()));
@@ -225,6 +229,7 @@ mod test {
             provider_address: PROVIDER,
             reveal_delay_blocks: 2,
             confirmed_block_status: BlockStatus::Latest,
+            backoff_gas_multiplier_cap_pct: 500,
         };
 
         let mut chains = HashMap::new();
