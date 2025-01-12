@@ -540,7 +540,9 @@ pub async fn process_event(
     // Pad the gas estimate after checking it against the simulation gas limit, ensuring that
     // the padded gas estimate doesn't exceed the maximum amount of gas we are willing to use.
     let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
-    let gas_estimate = gas_estimate.min((gas_limit * DEFAULT_GAS_ESTIMATE_MULTIPLIER_PCT) / 100);
+    // Apply the configurable cap from backoff_gas_multiplier_cap_pct
+    let max_gas_estimate = gas_limit.saturating_mul(chain_config.backoff_gas_multiplier_cap_pct.into()) / 100;
+    let gas_estimate = gas_estimate.min(max_gas_estimate);
 
     let contract_call = contract
         .reveal_with_callback(
