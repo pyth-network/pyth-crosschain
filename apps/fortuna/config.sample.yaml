@@ -9,6 +9,9 @@ chains:
     # Increase the transaction gas limit by 10% each time the callback fails
     # defaults to 100 (i.e., don't change the gas limit) if not specified.
     backoff_gas_multiplier_pct: 110
+    # Maximum percentage that the gas limit can be multiplied by during backoff retries
+    # defaults to 500 (i.e., up to 5x the original gas limit) if not specified.
+    backoff_gas_multiplier_cap_pct: 500
     min_keeper_balance: 100000000000000000
 
     # Provider configuration
