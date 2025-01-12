@@ -434,8 +434,10 @@ pub async fn process_event_with_backoff(
                 multiplier,
                 e
             );
+            // Calculate new multiplier with backoff, capped by backoff_gas_multiplier_cap_pct
+            let new_multiplier = multiplier.saturating_mul(backoff_gas_multiplier_pct) / 100;
             current_multiplier.store(
-                multiplier.saturating_mul(backoff_gas_multiplier_pct) / 100,
+                std::cmp::min(new_multiplier, chain_state.backoff_gas_multiplier_cap_pct),
                 std::sync::atomic::Ordering::Relaxed,
             );
         },
