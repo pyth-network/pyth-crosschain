@@ -174,6 +174,15 @@ pub struct EthereumConfig {
     /// The percentage multiplier to apply to the priority fee (100 = no change, e.g. 150 = 150% of base fee)
     #[serde(default = "default_priority_fee_multiplier_pct")]
     pub priority_fee_multiplier_pct: u64,
+
+    /// The maximum percentage that the gas limit can be multiplied by during backoff retries
+    /// For example, 500 means the gas limit can be increased up to 500% of the original estimate
+    #[serde(default = "default_backoff_gas_multiplier_cap_pct")]
+    pub backoff_gas_multiplier_cap_pct: u64,
+}
+
+fn default_backoff_gas_multiplier_cap_pct() -> u64 {
+    500  // Default to 500% (5x) maximum gas multiplier
 }
 
 fn default_backoff_gas_multiplier_pct() -> u64 {

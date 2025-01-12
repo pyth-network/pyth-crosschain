@@ -248,6 +248,10 @@ pub async fn run_keeper_threads(
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("latest safe block: {}", &latest_safe_block);
 
+    // Update BlockchainState with the gas multiplier cap from config
+    let mut chain_state = chain_state;
+    chain_state.backoff_gas_multiplier_cap_pct = chain_eth_config.backoff_gas_multiplier_cap_pct;
+
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(
             &chain_eth_config,
@@ -434,8 +438,10 @@ pub async fn process_event_with_backoff(
                 multiplier,
                 e
             );
+            // Calculate new multiplier with backoff, capped by backoff_gas_multiplier_cap_pct
+            let new_multiplier = multiplier.saturating_mul(backoff_gas_multiplier_pct) / 100;
             current_multiplier.store(
-                multiplier.saturating_mul(backoff_gas_multiplier_pct) / 100,
+                std::cmp::min(new_multiplier, chain_state.backoff_gas_multiplier_cap_pct),
                 std::sync::atomic::Ordering::Relaxed,
             );
         },
@@ -537,10 +543,8 @@ pub async fn process_event(
         )));
     }
 
-    // Pad the gas estimate after checking it against the simulation gas limit, ensuring that
-    // the padded gas estimate doesn't exceed the maximum amount of gas we are willing to use.
+    // Pad the gas estimate after checking it against the simulation gas limit
     let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
-    let gas_estimate = gas_estimate.min((gas_limit * DEFAULT_GAS_ESTIMATE_MULTIPLIER_PCT) / 100);
 
     let contract_call = contract
         .reveal_with_callback(
