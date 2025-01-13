@@ -199,7 +199,10 @@ pub struct EscalationPolicyConfig {
     #[serde(default = "default_gas_multiplier_cap_pct")]
     pub gas_multiplier_cap_pct: u64,
 
-    /// The initial fee multiplier to apply to the fee estimate
+    /// The initial fee multiplier to apply to the fee estimate.
+    /// Note: consider carefully whether you want to adjust this value or priority_fee_multiplier_pct in the chain configuration.
+    /// The difference between these is that priority_fee_multiplier_pct additionally influences the fees charged by the keeper.
+    /// Setting this value to >100 means that the keeper may lose money on callbacks -- only do this if you know what you are doing.
     #[serde(default = "default_initial_fee_multiplier_pct")]
     pub initial_fee_multiplier_pct: u64,
 
