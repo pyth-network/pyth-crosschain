@@ -1,17 +1,17 @@
 use {
     anchor_lang::{prelude::AccountMeta, InstructionData},
     pyth_lazer_solana_contract::{ed25519_program_args, ANCHOR_DISCRIMINATOR_BYTES},
-    solana_program_test::{BanksClient, ProgramTest},
+    solana_program_test::{BanksClient, BanksClientError, ProgramTest},
     solana_sdk::{
         account::Account,
         ed25519_program,
         hash::Hash,
-        instruction::Instruction,
+        instruction::{Instruction, InstructionError},
         pubkey::{Pubkey, PUBKEY_BYTES},
         signature::Keypair,
         signer::Signer,
         system_instruction, system_program, system_transaction, sysvar,
-        transaction::Transaction,
+        transaction::{Transaction, TransactionError},
     },
     std::env,
 };
@@ -276,4 +276,59 @@ async fn test_migrate_from_0_1_0() {
     // The contract will recognize the trusted signer without calling `set_trusted`
     // because it was present in the original storage PDA data.
     setup.verify_message(&message, treasury).await;
+}
+
+#[tokio::test]
+async fn test_disallows_extra_migrate() {
+    let mut setup = Setup::new().await;
+    let treasury = setup.create_treasury().await;
+
+    let mut transaction_init_contract = Transaction::new_with_payer(
+        &[Instruction::new_with_bytes(
+            pyth_lazer_solana_contract::ID,
+            &pyth_lazer_solana_contract::instruction::Initialize {
+                top_authority: setup.payer.pubkey(),
+                treasury,
+            }
+            .data(),
+            vec![
+                AccountMeta::new(setup.payer.pubkey(), true),
+                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
+                AccountMeta::new_readonly(system_program::ID, false),
+            ],
+        )],
+        Some(&setup.payer.pubkey()),
+    );
+    transaction_init_contract.sign(&[&setup.payer], setup.recent_blockhash);
+    setup
+        .banks_client
+        .process_transaction(transaction_init_contract)
+        .await
+        .unwrap();
+
+    let mut transaction_migrate_contract = Transaction::new_with_payer(
+        &[Instruction::new_with_bytes(
+            pyth_lazer_solana_contract::ID,
+            &pyth_lazer_solana_contract::instruction::MigrateFrom010 { treasury }.data(),
+            vec![
+                AccountMeta::new(setup.payer.pubkey(), true),
+                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
+                AccountMeta::new_readonly(system_program::ID, false),
+            ],
+        )],
+        Some(&setup.payer.pubkey()),
+    );
+    transaction_migrate_contract.sign(&[&setup.payer], setup.recent_blockhash);
+    let err = setup
+        .banks_client
+        .process_transaction(transaction_migrate_contract)
+        .await
+        .unwrap_err();
+    assert!(matches!(
+        err,
+        BanksClientError::TransactionError(TransactionError::InstructionError(
+            0,
+            InstructionError::InvalidAccountData
+        ))
+    ));
 }

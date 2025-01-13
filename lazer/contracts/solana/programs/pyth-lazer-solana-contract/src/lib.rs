@@ -103,6 +103,9 @@ pub mod pyth_lazer_solana_contract {
         if old_data[0..ANCHOR_DISCRIMINATOR_BYTES] != Storage::DISCRIMINATOR {
             return Err(ProgramError::InvalidAccountData.into());
         }
+        if old_data.len() != StorageV010::SERIALIZED_LEN + ANCHOR_DISCRIMINATOR_BYTES {
+            return Err(ProgramError::InvalidAccountData.into());
+        }
         let old_storage = StorageV010::deserialize(&mut &old_data[ANCHOR_DISCRIMINATOR_BYTES..])?;
         if old_storage.top_authority != ctx.accounts.top_authority.key() {
             return Err(ProgramError::MissingRequiredSignature.into());
