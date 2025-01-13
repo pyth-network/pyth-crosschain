@@ -183,7 +183,7 @@ impl KeeperMetrics {
 
         writable_registry.register(
             "total_gas_fee_spent",
-            "Total amount of wei spent on gas for revealing requests",
+            "Total amount of ETH spent on gas for revealing requests",
             keeper_metrics.total_gas_fee_spent.clone(),
         );
 
