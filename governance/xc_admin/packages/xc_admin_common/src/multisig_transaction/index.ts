@@ -27,6 +27,10 @@ import {
   PRICE_STORE_PROGRAM_ID,
   PriceStoreMultisigInstruction,
 } from "../price_store";
+import {
+  LazerMultisigInstruction,
+  LAZER_PROGRAM_ID,
+} from "./LazerMultisigInstruction";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
@@ -41,6 +45,7 @@ export enum MultisigInstructionProgram {
   SolanaReceiver,
   UnrecognizedProgram,
   PythPriceStore,
+  Lazer,
 }
 
 export function getProgramName(program: MultisigInstructionProgram) {
@@ -67,6 +72,8 @@ export function getProgramName(program: MultisigInstructionProgram) {
       return "Pyth Price Store";
     case MultisigInstructionProgram.UnrecognizedProgram:
       return "Unknown";
+    case MultisigInstructionProgram.Lazer:
+      return "Lazer";
   }
 }
 
@@ -161,6 +168,8 @@ export class MultisigParser {
       return SolanaStakingMultisigInstruction.fromTransactionInstruction(
         instruction
       );
+    } else if (instruction.programId.equals(LAZER_PROGRAM_ID)) {
+      return LazerMultisigInstruction.fromInstruction(instruction);
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }
