@@ -71,6 +71,7 @@ pub struct KeeperMetrics {
     pub collected_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub current_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub total_gas_spent: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub total_gas_fee_spent: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub requests: Family<AccountLabel, Counter>,
     pub requests_processed: Family<AccountLabel, Counter>,
     pub requests_processed_success: Family<AccountLabel, Counter>,
@@ -89,6 +90,7 @@ impl Default for KeeperMetrics {
             collected_fee: Family::default(),
             current_fee: Family::default(),
             total_gas_spent: Family::default(),
+            total_gas_fee_spent: Family::default(),
             requests: Family::default(),
             requests_processed: Family::default(),
             requests_processed_success: Family::default(),
@@ -177,6 +179,12 @@ impl KeeperMetrics {
             "total_gas_spent",
             "Total gas spent revealing requests",
             keeper_metrics.total_gas_spent.clone(),
+        );
+
+        writable_registry.register(
+            "total_gas_fee_spent",
+            "Total amount of wei spent on gas for revealing requests",
+            keeper_metrics.total_gas_fee_spent.clone(),
         );
 
         writable_registry.register(
@@ -471,6 +479,7 @@ pub async fn process_event_with_backoff(
                 .contract
                 .get_request(event.provider_address, event.sequence_number)
                 .await;
+
             tracing::error!("Failed to process event: {:?}. Request: {:?}", e, req);
 
             // We only count failures for cases where we are completely certain that the callback failed.
@@ -618,30 +627,28 @@ pub async fn process_event(
         receipt
     );
 
+    let account_label = AccountLabel {
+        chain_id: chain_config.id.clone(),
+        address: chain_config.provider_address.to_string(),
+    };
+
     if let Some(gas_used) = receipt.gas_used {
-        let gas_used = gas_used.as_u128() as f64 / 1e18;
+        let gas_used_float = gas_used.as_u128() as f64 / 1e18;
         metrics
             .total_gas_spent
-            .get_or_create(&AccountLabel {
-                chain_id: chain_config.id.clone(),
-                address: client
-                    .inner()
-                    .inner()
-                    .inner()
-                    .signer()
-                    .address()
-                    .to_string(),
-            })
-            .inc_by(gas_used);
+            .get_or_create(&account_label)
+            .inc_by(gas_used_float);
+
+        if let Some(gas_price) = receipt.effective_gas_price {
+            let gas_fee = (gas_used * gas_price).as_u128() as f64 / 1e18;
+            metrics
+                .total_gas_fee_spent
+                .get_or_create(&account_label)
+                .inc_by(gas_fee);
+        }
     }
 
-    metrics
-        .reveals
-        .get_or_create(&AccountLabel {
-            chain_id: chain_config.id.clone(),
-            address: chain_config.provider_address.to_string(),
-        })
-        .inc();
+    metrics.reveals.get_or_create(&account_label).inc();
 
     Ok(())
 }
