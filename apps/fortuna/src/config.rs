@@ -199,17 +199,9 @@ pub struct EscalationPolicyConfig {
     #[serde(default = "default_gas_multiplier_cap_pct")]
     pub gas_multiplier_cap_pct: u64,
 
-    /// The initial fee multiplier to apply to the fee estimate.
-    /// Note: consider carefully whether you want to adjust this value or priority_fee_multiplier_pct in the chain configuration.
-    /// The difference between these is that priority_fee_multiplier_pct additionally influences the fees charged by the keeper.
-    /// Setting this value to >100 means that the keeper may lose money on callbacks -- only do this if you know what you are doing.
-    #[serde(default = "default_initial_fee_multiplier_pct")]
-    pub initial_fee_multiplier_pct: u64,
-
     /// The fee multiplier to apply to the fee during backoff retries.
-    /// The fee estimate for the chain (which itself may be padded based on our chain configuration) is multiplied by the fee multiplier.
-    /// The initial multiplier is initial_fee_multiplier_pct, which is multiplied by fee_multiplier_pct on each successive retry.
-    /// The maximum multiplier capped at `fee_multiplier_cap_pct`.
+    /// The initial fee is 100% of the estimate (which itself may be padded based on our chain configuration)
+    /// The fee on each successive retry is multiplied by this value, with the maximum multiplier capped at `fee_multiplier_cap_pct`.
     #[serde(default = "default_fee_multiplier_pct")]
     pub fee_multiplier_pct: u64,
     #[serde(default = "default_fee_multiplier_cap_pct")]
@@ -232,10 +224,6 @@ fn default_gas_multiplier_cap_pct() -> u64 {
     600
 }
 
-fn default_initial_fee_multiplier_pct() -> u64 {
-    100
-}
-
 fn default_fee_multiplier_pct() -> u64 {
     110
 }
@@ -251,7 +239,6 @@ impl Default for EscalationPolicyConfig {
             initial_gas_multiplier_pct: default_initial_gas_multiplier_pct(),
             gas_multiplier_pct: default_gas_multiplier_pct(),
             gas_multiplier_cap_pct: default_gas_multiplier_cap_pct(),
-            initial_fee_multiplier_pct: default_initial_fee_multiplier_pct(),
             fee_multiplier_pct: default_fee_multiplier_pct(),
             fee_multiplier_cap_pct: default_fee_multiplier_cap_pct(),
         }
@@ -271,7 +258,7 @@ impl EscalationPolicyConfig {
     pub fn get_fee_multiplier_pct(&self, num_retries: u64) -> u64 {
         self.apply_escalation_policy(
             num_retries,
-            self.initial_fee_multiplier_pct,
+            100,
             self.fee_multiplier_pct,
             self.fee_multiplier_cap_pct,
         )
