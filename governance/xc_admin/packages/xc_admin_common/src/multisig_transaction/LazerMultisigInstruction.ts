@@ -32,18 +32,7 @@ export class LazerMultisigInstruction implements MultisigInstruction {
     instruction: TransactionInstruction
   ): LazerMultisigInstruction {
     // TODO: This is a hack to transform the IDL to be compatible with the anchor version we are using, we can't upgrade anchor to 0.30.1 because then the existing idls will break
-    const idl = {
-      version: lazerIdl.metadata.version,
-      name: lazerIdl.metadata.name,
-      instructions: lazerIdl.instructions.map((ix) => ({
-        ...ix,
-        accounts: ix.accounts.map((acc) => ({
-          name: acc.name,
-          isMut: acc.writable ?? false,
-          isSigner: acc.signer ?? false,
-        })),
-      })),
-    } as Idl;
+    const idl = lazerIdl as Idl;
 
     const coder = new BorshInstructionCoder(idl);
 
