@@ -1,0 +1,307 @@
+{
+  "version": "0.2.0",
+  "name": "pyth_lazer_solana_contract",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "storage",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "topAuthority",
+          "type": "publicKey"
+        },
+        {
+          "name": "treasury",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "migrateFrom010",
+      "accounts": [
+        {
+          "name": "topAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "storage",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "treasury",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "accounts": [
+        {
+          "name": "topAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "storage",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "trustedSigner",
+          "type": "publicKey"
+        },
+        {
+          "name": "expiresAt",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "verifyMessage",
+      "docs": [
+        "Verifies a ed25519 signature on Solana by checking that the transaction contains",
+        "a correct call to the built-in `ed25519_program`.",
+        "",
+        "- `message_data` is the signed message that is being verified.",
+        "- `ed25519_instruction_index` is the index of the `ed25519_program` instruction",
+        "within the transaction. This instruction must precede the current instruction.",
+        "- `signature_index` is the index of the signature within the inputs to the `ed25519_program`.",
+        "- `message_offset` is the offset of the signed message within the",
+        "input data for the current instruction."
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "storage",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructionsSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "(e.g. in `sysvar::instructions::load_instruction_at_checked`).",
+            "This account is not usable with anchor's `Program` account type because it's not executable."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "messageData",
+          "type": "bytes"
+        },
+        {
+          "name": "ed25519InstructionIndex",
+          "type": "u16"
+        },
+        {
+          "name": "signatureIndex",
+          "type": "u8"
+        },
+        {
+          "name": "messageOffset",
+          "type": "u16"
+        }
+      ],
+      "returns": {
+        "defined": "VerifiedMessage"
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Storage",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "topAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "treasury",
+            "type": "publicKey"
+          },
+          {
+            "name": "singleUpdateFeeInLamports",
+            "type": "u64"
+          },
+          {
+            "name": "numTrustedSigners",
+            "type": "u8"
+          },
+          {
+            "name": "trustedSigners",
+            "type": {
+              "array": [
+                {
+                  "defined": "TrustedSignerInfo"
+                },
+                5
+              ]
+            }
+          },
+          {
+            "name": "extraSpace",
+            "type": {
+              "array": ["u8", 100]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "VerifiedMessage",
+      "docs": ["A message with a verified ed25519 signature."],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "publicKey",
+            "docs": ["Public key that signed the message."],
+            "type": "publicKey"
+          },
+          {
+            "name": "payload",
+            "docs": ["Signed message payload."],
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TrustedSignerInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "expiresAt",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SignatureVerificationError",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Ed25519InstructionMustPrecedeCurrentInstruction"
+          },
+          {
+            "name": "LoadInstructionAtFailed",
+            "fields": [
+              {
+                "defined": "ProgramError"
+              }
+            ]
+          },
+          {
+            "name": "LoadCurrentIndexFailed",
+            "fields": [
+              {
+                "defined": "ProgramError"
+              }
+            ]
+          },
+          {
+            "name": "ClockGetFailed",
+            "fields": [
+              {
+                "defined": "ProgramError"
+              }
+            ]
+          },
+          {
+            "name": "InvalidEd25519InstructionProgramId"
+          },
+          {
+            "name": "InvalidEd25519InstructionDataLength"
+          },
+          {
+            "name": "InvalidSignatureIndex"
+          },
+          {
+            "name": "InvalidSignatureOffset"
+          },
+          {
+            "name": "InvalidPublicKeyOffset"
+          },
+          {
+            "name": "InvalidMessageOffset"
+          },
+          {
+            "name": "InvalidMessageDataSize"
+          },
+          {
+            "name": "InvalidInstructionIndex"
+          },
+          {
+            "name": "MessageOffsetOverflow"
+          },
+          {
+            "name": "FormatMagicMismatch"
+          },
+          {
+            "name": "InvalidStorageAccountId"
+          },
+          {
+            "name": "InvalidStorageData"
+          },
+          {
+            "name": "NotTrustedSigner"
+          }
+        ]
+      }
+    }
+  ]
+}
