@@ -134,6 +134,10 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 
+    /// The percentage multiplier to apply to priority fee estimates (100 = no change, e.g. 150 = 150% of base fee)
+    #[serde(default = "default_priority_fee_multiplier_pct")]
+    pub priority_fee_multiplier_pct: u64,
+
     /// The escalation policy governs how the gas limit and fee are increased during backoff retries.
     pub escalation_policy: EscalationPolicyConfig,
 
@@ -171,6 +175,10 @@ pub struct EthereumConfig {
     pub max_num_hashes: Option<u32>,
 }
 
+fn default_priority_fee_multiplier_pct() -> u64 {
+    100
+}
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EscalationPolicyConfig {
     /// The initial gas multiplier to apply to the gas limit.
@@ -185,11 +193,8 @@ pub struct EscalationPolicyConfig {
     #[serde(default = "default_gas_multiplier_cap_pct")]
     pub gas_multiplier_cap_pct: u64,
 
-    /// The initial fee multiplier to apply to the fee.
-    #[serde(default = "default_initial_fee_multiplier_pct")]
-    pub initial_fee_multiplier_pct: u64,
-
     /// The fee multiplier to apply to the fee during backoff retries.
+    /// The initial fee is 100% of the estimate (which itself may be padded based on our chain configuration)
     /// The fee on each successive retry is multiplied by this value, with the maximum multiplier capped at `fee_multiplier_cap_pct`.
     #[serde(default = "default_fee_multiplier_pct")]
     pub fee_multiplier_pct: u64,
@@ -199,14 +204,30 @@ pub struct EscalationPolicyConfig {
 
 impl EscalationPolicyConfig {
     pub fn get_gas_multiplier_pct(&self, num_retries: u64) -> u64 {
-        self.apply_escalation_policy(num_retries, self.initial_gas_multiplier_pct, self.gas_multiplier_pct, self.gas_multiplier_cap_pct)        
+        self.apply_escalation_policy(
+            num_retries,
+            self.initial_gas_multiplier_pct,
+            self.gas_multiplier_pct,
+            self.gas_multiplier_cap_pct,
+        )
     }
 
     pub fn get_fee_multiplier_pct(&self, num_retries: u64) -> u64 {
-        self.apply_escalation_policy(num_retries, self.initial_fee_multiplier_pct, self.fee_multiplier_pct, self.fee_multiplier_cap_pct)
+        self.apply_escalation_policy(
+            num_retries,
+            100,
+            self.fee_multiplier_pct,
+            self.fee_multiplier_cap_pct,
+        )
     }
 
-    fn apply_escalation_policy(&self, num_retries: u64, initial: u64, multiplier: u64, cap: u64) -> u64 {
+    fn apply_escalation_policy(
+        &self,
+        num_retries: u64,
+        initial: u64,
+        multiplier: u64,
+        cap: u64,
+    ) -> u64 {
         let mut current = initial;
         let mut i = 0;
         while i < num_retries && current < cap {
@@ -223,15 +244,11 @@ fn default_initial_gas_multiplier_pct() -> u64 {
 }
 
 fn default_gas_multiplier_pct() -> u64 {
-    100
+    110
 }
 
 fn default_gas_multiplier_cap_pct() -> u64 {
-    500
-}
-
-fn default_initial_fee_multiplier_pct() -> u64 {
-    100
+    600
 }
 
 fn default_fee_multiplier_pct() -> u64 {
@@ -287,10 +304,6 @@ pub struct ProviderConfig {
 
 fn default_chain_sample_interval() -> u64 {
     1
-}
-
-fn default_priority_fee_multiplier_pct() -> u64 {
-    100
 }
 
 /// Configuration values for the keeper service that are shared across chains.

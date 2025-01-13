@@ -224,7 +224,7 @@ mod test {
             contract: avax_read.clone(),
             provider_address: PROVIDER,
             reveal_delay_blocks: 2,
-            confirmed_block_status: BlockStatus::Latest
+            confirmed_block_status: BlockStatus::Latest,
         };
 
         let mut chains = HashMap::new();

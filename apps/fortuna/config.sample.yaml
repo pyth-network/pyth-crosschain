@@ -6,21 +6,31 @@ chains:
     # Keeper configuration for the chain
     reveal_delay_blocks: 0
     gas_limit: 500000
-    # Increase the transaction gas limit by 10% each time the callback fails
-    # defaults to 100 (i.e., don't change the gas limit) if not specified.
-    backoff_gas_multiplier_pct: 110
-    # Maximum percentage that the gas limit can be multiplied by during backoff retries
-    # defaults to 500 (i.e., up to 5x the original gas limit) if not specified.
-    backoff_gas_multiplier_cap_pct: 500
+
+    # Multiplier for the priority fee estimate, as a percentage (i.e., 100 = no change).
+    # Defaults to 100 if the field is omitted.
+    priority_fee_multiplier_pct: 100
+
+    escalation_policy:
+      # Pad the first callback transaction's gas estimate by 25%,
+      # then multiply each successive callback transaction's gas estimate by 10% until the cap is reached.
+      # All numbers are expressed as percentages where 100 = no change.
+      initial_gas_multiplier_pct: 125
+      gas_multiplier_pct: 110
+      gas_multiplier_cap_pct: 600
+
+      # Multiply successive callback transaction's fees by 10% until the cap is reached.
+      # All numbers are expressed as percentages where 100 = no change.
+      # (See also priority_fee_multiplier_pct above to generically adjust the priority fee estimates for the chain --
+      # adjusting that parameter will influence the fee of the first transaction, in addition to other things)
+      fee_multiplier_pct: 110
+      fee_multiplier_cap_pct: 200
+
     min_keeper_balance: 100000000000000000
 
     # Provider configuration
     # How much to charge in fees
     fee: 1500000000000000
-
-    # Multiplier for the priority fee estimate, as a percentage (i.e., 100 = no change).
-    # Defaults to 100 if the field is omitted.
-    priority_fee_multiplier_pct: 100
 
     # Configuration for dynamic fees under high gas prices. The keeper will set
     # on-chain fees to make between [min_profit_pct, max_profit_pct] of the max callback
