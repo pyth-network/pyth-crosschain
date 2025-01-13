@@ -6,7 +6,7 @@ import {
 import { AnchorAccounts, resolveAccountNames } from "./anchor";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { Idl, BorshInstructionCoder } from "@coral-xyz/anchor";
-import * as pythLazerSolanaContractIdl from "../../../../../../lazer/contracts/solana/target/idl/pyth_lazer_solana_contract.json";
+import lazerIdl from "./idl/lazer.json";
 
 export const LAZER_PROGRAM_ID = new PublicKey(
   "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt"
@@ -33,9 +33,9 @@ export class LazerMultisigInstruction implements MultisigInstruction {
   ): LazerMultisigInstruction {
     // TODO: This is a hack to transform the IDL to be compatible with the anchor version we are using, we can't upgrade anchor to 0.30.1 because then the existing idls will break
     const idl = {
-      version: pythLazerSolanaContractIdl.metadata.version,
-      name: pythLazerSolanaContractIdl.metadata.name,
-      instructions: pythLazerSolanaContractIdl.instructions.map((ix) => ({
+      version: lazerIdl.metadata.version,
+      name: lazerIdl.metadata.name,
+      instructions: lazerIdl.instructions.map((ix) => ({
         ...ix,
         accounts: ix.accounts.map((acc) => ({
           name: acc.name,
