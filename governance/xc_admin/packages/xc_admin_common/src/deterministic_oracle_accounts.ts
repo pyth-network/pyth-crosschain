@@ -67,7 +67,7 @@ export async function findDetermisticAccountAddress(
   const seed: string = getSeed(type, symbol);
   const address: PublicKey = await PublicKey.createWithSeed(
     PRICE_FEED_OPS_KEY,
-    seed,
+    seed.slice(32),
     getPythProgramKeyForCluster(cluster)
   );
   return [address, seed];
