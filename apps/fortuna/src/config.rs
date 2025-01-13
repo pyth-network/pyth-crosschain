@@ -134,9 +134,13 @@ pub struct EthereumConfig {
     /// The gas limit to use for entropy callback transactions.
     pub gas_limit: u64,
 
-    /// The percentage multiplier to apply to the gas limit for each backoff.
-    #[serde(default = "default_backoff_gas_multiplier_pct")]
-    pub backoff_gas_multiplier_pct: u64,
+    /// The percentage multiplier to apply to priority fee estimates (100 = no change, e.g. 150 = 150% of base fee)
+    #[serde(default = "default_priority_fee_multiplier_pct")]
+    pub priority_fee_multiplier_pct: u64,
+
+    /// The escalation policy governs how the gas limit and fee are increased during backoff retries.
+    #[serde(default)]
+    pub escalation_policy: EscalationPolicyConfig,
 
     /// The minimum percentage profit to earn as a function of the callback cost.
     /// For example, 20 means a profit of 20% over the cost of the callback.
@@ -170,14 +174,102 @@ pub struct EthereumConfig {
     /// Maximum number of hashes to record in a request.
     /// This should be set according to the maximum gas limit the provider supports for callbacks.
     pub max_num_hashes: Option<u32>,
-
-    /// The percentage multiplier to apply to the priority fee (100 = no change, e.g. 150 = 150% of base fee)
-    #[serde(default = "default_priority_fee_multiplier_pct")]
-    pub priority_fee_multiplier_pct: u64,
 }
 
-fn default_backoff_gas_multiplier_pct() -> u64 {
+fn default_priority_fee_multiplier_pct() -> u64 {
     100
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct EscalationPolicyConfig {
+    /// The initial gas multiplier to apply to the gas limit.
+    #[serde(default = "default_initial_gas_multiplier_pct")]
+    pub initial_gas_multiplier_pct: u64,
+
+    /// The gas multiplier to apply to the gas limit during backoff retries.
+    /// The gas on each successive retry is multiplied by this value, with the maximum multiplier capped at `gas_multiplier_cap_pct`.
+    #[serde(default = "default_gas_multiplier_pct")]
+    pub gas_multiplier_pct: u64,
+    /// The maximum gas multiplier to apply to the gas limit during backoff retries.
+    #[serde(default = "default_gas_multiplier_cap_pct")]
+    pub gas_multiplier_cap_pct: u64,
+
+    /// The fee multiplier to apply to the fee during backoff retries.
+    /// The initial fee is 100% of the estimate (which itself may be padded based on our chain configuration)
+    /// The fee on each successive retry is multiplied by this value, with the maximum multiplier capped at `fee_multiplier_cap_pct`.
+    #[serde(default = "default_fee_multiplier_pct")]
+    pub fee_multiplier_pct: u64,
+    #[serde(default = "default_fee_multiplier_cap_pct")]
+    pub fee_multiplier_cap_pct: u64,
+}
+
+fn default_initial_gas_multiplier_pct() -> u64 {
+    125
+}
+
+fn default_gas_multiplier_pct() -> u64 {
+    110
+}
+
+fn default_gas_multiplier_cap_pct() -> u64 {
+    600
+}
+
+fn default_fee_multiplier_pct() -> u64 {
+    110
+}
+
+fn default_fee_multiplier_cap_pct() -> u64 {
+    200
+}
+
+impl Default for EscalationPolicyConfig {
+    fn default() -> Self {
+        Self {
+            initial_gas_multiplier_pct: default_initial_gas_multiplier_pct(),
+            gas_multiplier_pct: default_gas_multiplier_pct(),
+            gas_multiplier_cap_pct: default_gas_multiplier_cap_pct(),
+            fee_multiplier_pct: default_fee_multiplier_pct(),
+            fee_multiplier_cap_pct: default_fee_multiplier_cap_pct(),
+        }
+    }
+}
+
+impl EscalationPolicyConfig {
+    pub fn get_gas_multiplier_pct(&self, num_retries: u64) -> u64 {
+        self.apply_escalation_policy(
+            num_retries,
+            self.initial_gas_multiplier_pct,
+            self.gas_multiplier_pct,
+            self.gas_multiplier_cap_pct,
+        )
+    }
+
+    pub fn get_fee_multiplier_pct(&self, num_retries: u64) -> u64 {
+        self.apply_escalation_policy(
+            num_retries,
+            100,
+            self.fee_multiplier_pct,
+            self.fee_multiplier_cap_pct,
+        )
+    }
+
+    fn apply_escalation_policy(
+        &self,
+        num_retries: u64,
+        initial: u64,
+        multiplier: u64,
+        cap: u64,
+    ) -> u64 {
+        let mut current = initial;
+        let mut i = 0;
+        while i < num_retries && current < cap {
+            current = current.saturating_mul(multiplier) / 100;
+            i += 1;
+        }
+
+        current.min(cap)
+    }
 }
 
 /// A commitment that the provider used to generate random numbers at some point in the past.
@@ -225,10 +317,6 @@ pub struct ProviderConfig {
 
 fn default_chain_sample_interval() -> u64 {
     1
-}
-
-fn default_priority_fee_multiplier_pct() -> u64 {
-    100
 }
 
 /// Configuration values for the keeper service that are shared across chains.
