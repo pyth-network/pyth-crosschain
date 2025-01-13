@@ -9,6 +9,7 @@ use {
             traced_client::{RpcMetrics, TracedClient},
         },
         config::EthereumConfig,
+        config::EscalationPolicyConfig,
     },
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
@@ -248,10 +249,6 @@ pub async fn run_keeper_threads(
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("latest safe block: {}", &latest_safe_block);
 
-    // Update BlockchainState with the gas multiplier cap from config
-    let mut chain_state = chain_state;
-    chain_state.backoff_gas_multiplier_cap_pct = chain_eth_config.backoff_gas_multiplier_cap_pct;
-
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(
             &chain_eth_config,
@@ -276,7 +273,7 @@ pub async fn run_keeper_threads(
             },
             contract.clone(),
             gas_limit,
-            chain_eth_config.backoff_gas_multiplier_pct,
+            chain_eth_config.escalation_policy,
             chain_state.clone(),
             metrics.clone(),
             fulfilled_requests_cache.clone(),
@@ -302,7 +299,7 @@ pub async fn run_keeper_threads(
             rx,
             Arc::clone(&contract),
             gas_limit,
-            chain_eth_config.backoff_gas_multiplier_pct,
+            chain_eth_config.escalation_policy,
             metrics.clone(),
             fulfilled_requests_cache.clone(),
         )
@@ -327,9 +324,14 @@ pub async fn run_keeper_threads(
             chain_state.provider_address,
             ADJUST_FEE_INTERVAL,
             chain_eth_config.legacy_tx,
-            // NOTE: we adjust fees based on the maximum gas that the keeper will submit a callback with.
-            // This number is *larger* than the configured gas limit, as we pad gas on transaction submission for reliability.
-            (chain_eth_config.gas_limit * DEFAULT_GAS_ESTIMATE_MULTIPLIER_PCT) / 100,
+            // NOTE: we are adjusting the fees based on the maximum configured gas for user transactions.
+            // However, the keeper will pad the gas limit for transactions (per the escalation policy) to ensure reliable submission.
+            // Consequently, fees can be adjusted such that transactions are still unprofitable.
+            // While we could scale up this value based on the padding, that ends up overcharging users as most transactions cost nowhere
+            // near the maximum gas limit. 
+            // In the unlikely event that the keeper fees aren't sufficient, the solution to this is to configure the target 
+            // fee percentage to be higher on that specific chain.
+            chain_eth_config.gas_limit,
             chain_eth_config.min_profit_pct,
             chain_eth_config.target_profit_pct,
             chain_eth_config.max_profit_pct,
@@ -398,7 +400,7 @@ pub async fn process_event_with_backoff(
     chain_state: BlockchainState,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
-    backoff_gas_multiplier_pct: u64,
+    escalation_policy: EscalationPolicyConfig,
     metrics: Arc<KeeperMetrics>,
 ) {
     let start_time = std::time::Instant::now();
@@ -414,36 +416,35 @@ pub async fn process_event_with_backoff(
         ..Default::default()
     };
 
-    let current_multiplier = Arc::new(AtomicU64::new(DEFAULT_GAS_ESTIMATE_MULTIPLIER_PCT));
+    let num_retries = Arc::new(AtomicU64::new(0));
 
     let success = backoff::future::retry_notify(
         backoff,
         || async {
-            let multiplier = current_multiplier.load(std::sync::atomic::Ordering::Relaxed);
+            let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
+
+            let gas_multiplier_pct = escalation_policy.get_gas_multiplier_pct(num_retries);
+            let fee_multiplier_pct = escalation_policy.get_fee_multiplier_pct(num_retries);
             process_event(
                 &event,
                 &chain_state,
                 &contract,
                 gas_limit,
-                multiplier,
+                gas_multiplier_pct,
+                fee_multiplier_pct,
                 metrics.clone(),
             )
             .await
         },
         |e, dur| {
-            let multiplier = current_multiplier.load(std::sync::atomic::Ordering::Relaxed);
+            let retry_number = num_retries.load(std::sync::atomic::Ordering::Relaxed);
             tracing::error!(
-                "Error at duration {:?} with gas multiplier {}: {}",
+                "Error on retry {} at duration {:?}: {}",
+                retry_number,
                 dur,
-                multiplier,
                 e
             );
-            // Calculate new multiplier with backoff, capped by backoff_gas_multiplier_cap_pct
-            let new_multiplier = multiplier.saturating_mul(backoff_gas_multiplier_pct) / 100;
-            current_multiplier.store(
-                std::cmp::min(new_multiplier, chain_state.backoff_gas_multiplier_cap_pct),
-                std::sync::atomic::Ordering::Relaxed,
-            );
+            num_retries.store(retry_number + 1, std::sync::atomic::Ordering::Relaxed);
         },
     )
     .await;
@@ -501,8 +502,9 @@ pub async fn process_event(
     chain_config: &BlockchainState,
     contract: &InstrumentedSignablePythContract,
     gas_limit: U256,
-    // A value of 100 submits the tx with the same gas as the estimate.
+    // A value of 100 submits the tx with the same gas/fee as the estimate.
     gas_estimate_multiplier_pct: u64,
+    fee_estimate_multiplier_pct: u64,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<(), backoff::Error<anyhow::Error>> {
     // ignore requests that are not for the configured provider
@@ -546,9 +548,7 @@ pub async fn process_event(
     // Pad the gas estimate after checking it against the simulation gas limit, ensuring that
     // the padded gas estimate doesn't exceed the maximum amount of gas we are willing to use.
     let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
-    // Apply the configurable cap from backoff_gas_multiplier_cap_pct
-    let max_gas_estimate = gas_limit.saturating_mul(chain_config.backoff_gas_multiplier_cap_pct.into()) / 100;
-    let gas_estimate = gas_estimate.min(max_gas_estimate);
+
 
     let contract_call = contract
         .reveal_with_callback(
@@ -561,6 +561,7 @@ pub async fn process_event(
 
     let client = contract.client();
     let mut transaction = contract_call.tx.clone();
+
     // manually fill the tx with the gas info, so we can log the details in case of error
     client
         .fill_transaction(&mut transaction, None)
@@ -568,6 +569,11 @@ pub async fn process_event(
         .map_err(|e| {
             backoff::Error::transient(anyhow!("Error filling the reveal transaction: {:?}", e))
         })?;
+
+    // Apply the fee escalation policy. Note: the unwrap_or_default should never default as we have a gas oracle
+    // in the client that sets the gas price.
+    transaction.set_gas_price(transaction.gas_price().unwrap_or_default().saturating_mul(fee_estimate_multiplier_pct.into()) / 100);
+
     let pending_tx = client
         .send_transaction(transaction.clone(), None)
         .await
@@ -883,7 +889,7 @@ pub async fn process_new_blocks(
     mut rx: mpsc::Receiver<BlockRange>,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
-    backoff_gas_multiplier_pct: u64,
+    escalation_policy: EscalationPolicyConfig,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
 ) {
@@ -894,7 +900,7 @@ pub async fn process_new_blocks(
                 block_range,
                 Arc::clone(&contract),
                 gas_limit,
-                backoff_gas_multiplier_pct,
+                escalation_policy,
                 chain_state.clone(),
                 metrics.clone(),
                 fulfilled_requests_cache.clone(),
@@ -911,7 +917,7 @@ pub async fn process_backlog(
     backlog_range: BlockRange,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
-    backoff_gas_multiplier_pct: u64,
+    escalation_policy: EscalationPolicyConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
@@ -921,7 +927,7 @@ pub async fn process_backlog(
         backlog_range,
         contract,
         gas_limit,
-        backoff_gas_multiplier_pct,
+        escalation_policy,
         chain_state,
         metrics,
         fulfilled_requests_cache,

@@ -295,8 +295,7 @@ async fn setup_chain_state(
         contract,
         provider_address: *provider,
         reveal_delay_blocks: chain_config.reveal_delay_blocks,
-        confirmed_block_status: chain_config.confirmed_block_status,
-        backoff_gas_multiplier_cap_pct: chain_config.backoff_gas_multiplier_cap_pct,
+        confirmed_block_status: chain_config.confirmed_block_status
     };
     Ok(state)
 }
