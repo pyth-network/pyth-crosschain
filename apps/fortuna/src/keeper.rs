@@ -435,7 +435,7 @@ pub async fn process_event_with_backoff(
                 &event,
                 &chain_state,
                 &contract,
-                gas_limit,
+                gas_limit.saturating_mul(escalation_policy.gas_limit_tolerance_pct.into()) / 100,
                 gas_multiplier_pct,
                 fee_multiplier_pct,
                 metrics.clone(),

@@ -143,17 +143,17 @@ pub struct EthereumConfig {
     pub escalation_policy: EscalationPolicyConfig,
 
     /// The minimum percentage profit to earn as a function of the callback cost.
-    /// For example, 20 means a profit of 20% over the cost of the callback.
+    /// For example, 20 means a profit of 20% over the cost of a callback that uses the full gas limit.
     /// The fee will be raised if the profit is less than this number.
     pub min_profit_pct: u64,
 
     /// The target percentage profit to earn as a function of the callback cost.
-    /// For example, 20 means a profit of 20% over the cost of the callback.
+    /// For example, 20 means a profit of 20% over the cost of a callback that uses the full gas limit.
     /// The fee will be set to this target whenever it falls outside the min/max bounds.
     pub target_profit_pct: u64,
 
     /// The maximum percentage profit to earn as a function of the callback cost.
-    /// For example, 100 means a profit of 100% over the cost of the callback.
+    /// For example, 100 means a profit of 100% over the cost of a callback that uses the full gas limit.
     /// The fee will be lowered if it is more profitable than specified here.
     /// Must be larger than min_profit_pct.
     pub max_profit_pct: u64,
@@ -182,25 +182,39 @@ fn default_priority_fee_multiplier_pct() -> u64 {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EscalationPolicyConfig {
-    /// The initial gas multiplier to apply to the gas limit.
+    // The keeper will perform the callback as long as the tx is within this percentage of the configured gas limit.
+    // Default value is 110, meaning a 10% tolerance over the configured value.
+    #[serde(default = "default_gas_limit_tolerance_pct")]
+    pub gas_limit_tolerance_pct: u64,
+
+    /// The initial gas multiplier to apply to the tx gas estimate
     #[serde(default = "default_initial_gas_multiplier_pct")]
     pub initial_gas_multiplier_pct: u64,
 
-    /// The gas multiplier to apply to the gas limit during backoff retries.
+    /// The gas multiplier to apply to the tx gas estimate during backoff retries.
     /// The gas on each successive retry is multiplied by this value, with the maximum multiplier capped at `gas_multiplier_cap_pct`.
     #[serde(default = "default_gas_multiplier_pct")]
     pub gas_multiplier_pct: u64,
-    /// The maximum gas multiplier to apply to the gas limit during backoff retries.
+    /// The maximum gas multiplier to apply to the tx gas estimate during backoff retries.
     #[serde(default = "default_gas_multiplier_cap_pct")]
     pub gas_multiplier_cap_pct: u64,
 
+    /// The initial fee multiplier to apply to the fee estimate
+    #[serde(default = "default_initial_fee_multiplier_pct")]
+    pub initial_fee_multiplier_pct: u64,
+
     /// The fee multiplier to apply to the fee during backoff retries.
-    /// The initial fee is 100% of the estimate (which itself may be padded based on our chain configuration)
-    /// The fee on each successive retry is multiplied by this value, with the maximum multiplier capped at `fee_multiplier_cap_pct`.
+    /// The fee estimate for the chain (which itself may be padded based on our chain configuration) is multiplied by the fee multiplier.
+    /// The initial multiplier is initial_fee_multiplier_pct, which is multiplied by fee_multiplier_pct on each successive retry.
+    /// The maximum multiplier capped at `fee_multiplier_cap_pct`.
     #[serde(default = "default_fee_multiplier_pct")]
     pub fee_multiplier_pct: u64,
     #[serde(default = "default_fee_multiplier_cap_pct")]
     pub fee_multiplier_cap_pct: u64,
+}
+
+fn default_gas_limit_tolerance_pct() -> u64 {
+    110
 }
 
 fn default_initial_gas_multiplier_pct() -> u64 {
@@ -215,6 +229,10 @@ fn default_gas_multiplier_cap_pct() -> u64 {
     600
 }
 
+fn default_initial_fee_multiplier_pct() -> u64 {
+    100
+}
+
 fn default_fee_multiplier_pct() -> u64 {
     110
 }
@@ -226,9 +244,11 @@ fn default_fee_multiplier_cap_pct() -> u64 {
 impl Default for EscalationPolicyConfig {
     fn default() -> Self {
         Self {
+            gas_limit_tolerance_pct: default_gas_limit_tolerance_pct(),
             initial_gas_multiplier_pct: default_initial_gas_multiplier_pct(),
             gas_multiplier_pct: default_gas_multiplier_pct(),
             gas_multiplier_cap_pct: default_gas_multiplier_cap_pct(),
+            initial_fee_multiplier_pct: default_initial_fee_multiplier_pct(),
             fee_multiplier_pct: default_fee_multiplier_pct(),
             fee_multiplier_cap_pct: default_fee_multiplier_cap_pct(),
         }
@@ -248,7 +268,7 @@ impl EscalationPolicyConfig {
     pub fn get_fee_multiplier_pct(&self, num_retries: u64) -> u64 {
         self.apply_escalation_policy(
             num_retries,
-            100,
+            self.initial_fee_multiplier_pct,
             self.fee_multiplier_pct,
             self.fee_multiplier_cap_pct,
         )
