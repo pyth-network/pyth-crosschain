@@ -64,7 +64,7 @@ async function run() {
   console.log(`Price feeds matching "btc" with asset type "crypto":`);
   const priceFeeds = await connection.getPriceFeeds({
     query: "btc",
-    filter: "crypto",
+    assetType: "crypto",
   });
   console.log(priceFeeds);
 

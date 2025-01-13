@@ -32,7 +32,10 @@ const priceIds = [
 ];
 
 // Get price feeds
-const priceFeeds = await connection.getPriceFeeds("btc", "crypto");
+const priceFeeds = await connection.getPriceFeeds({
+  query: "btc",
+  assetType: "crypto",
+});
 console.log(priceFeeds);
 
 // Latest price updates
