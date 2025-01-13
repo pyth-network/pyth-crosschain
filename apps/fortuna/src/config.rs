@@ -139,6 +139,7 @@ pub struct EthereumConfig {
     pub priority_fee_multiplier_pct: u64,
 
     /// The escalation policy governs how the gas limit and fee are increased during backoff retries.
+    #[serde(default)]
     pub escalation_policy: EscalationPolicyConfig,
 
     /// The minimum percentage profit to earn as a function of the callback cost.
@@ -202,6 +203,38 @@ pub struct EscalationPolicyConfig {
     pub fee_multiplier_cap_pct: u64,
 }
 
+fn default_initial_gas_multiplier_pct() -> u64 {
+    125
+}
+
+fn default_gas_multiplier_pct() -> u64 {
+    110
+}
+
+fn default_gas_multiplier_cap_pct() -> u64 {
+    600
+}
+
+fn default_fee_multiplier_pct() -> u64 {
+    110
+}
+
+fn default_fee_multiplier_cap_pct() -> u64 {
+    200
+}
+
+impl Default for EscalationPolicyConfig {
+    fn default() -> Self {
+        Self {
+            initial_gas_multiplier_pct: default_initial_gas_multiplier_pct(),
+            gas_multiplier_pct: default_gas_multiplier_pct(),
+            gas_multiplier_cap_pct: default_gas_multiplier_cap_pct(),
+            fee_multiplier_pct: default_fee_multiplier_pct(),
+            fee_multiplier_cap_pct: default_fee_multiplier_cap_pct(),
+        }
+    }
+}
+
 impl EscalationPolicyConfig {
     pub fn get_gas_multiplier_pct(&self, num_retries: u64) -> u64 {
         self.apply_escalation_policy(
@@ -237,26 +270,6 @@ impl EscalationPolicyConfig {
 
         current.min(cap)
     }
-}
-
-fn default_initial_gas_multiplier_pct() -> u64 {
-    125
-}
-
-fn default_gas_multiplier_pct() -> u64 {
-    110
-}
-
-fn default_gas_multiplier_cap_pct() -> u64 {
-    600
-}
-
-fn default_fee_multiplier_pct() -> u64 {
-    110
-}
-
-fn default_fee_multiplier_cap_pct() -> u64 {
-    200
 }
 
 /// A commitment that the provider used to generate random numbers at some point in the past.
