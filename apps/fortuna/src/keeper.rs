@@ -338,9 +338,10 @@ pub async fn run_keeper_threads(
             // In the unlikely event that the keeper fees aren't sufficient, the solution to this is to configure the target
             // fee percentage to be higher on that specific chain.
             chain_eth_config.gas_limit,
-            chain_eth_config.min_profit_pct,
-            chain_eth_config.target_profit_pct,
-            chain_eth_config.max_profit_pct,
+            // NOTE: unwrap() here so we panic early if someone configures these values below -100.
+            u64::try_from(100 + chain_eth_config.min_profit_pct).unwrap(),
+            u64::try_from(100 + chain_eth_config.target_profit_pct).unwrap(),
+            u64::try_from(100 + chain_eth_config.max_profit_pct).unwrap(),
             chain_eth_config.fee,
         )
         .in_current_span(),
@@ -1253,15 +1254,15 @@ pub async fn adjust_fee_if_necessary(
         .await
         .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
     let target_fee_min = std::cmp::max(
-        (max_callback_cost * (100 + u128::from(min_profit_pct))) / 100,
+        (max_callback_cost * u128::from(min_profit_pct)) / 100,
         min_fee_wei,
     );
     let target_fee = std::cmp::max(
-        (max_callback_cost * (100 + u128::from(target_profit_pct))) / 100,
+        (max_callback_cost * u128::from(target_profit_pct)) / 100,
         min_fee_wei,
     );
     let target_fee_max = std::cmp::max(
-        (max_callback_cost * (100 + u128::from(max_profit_pct))) / 100,
+        (max_callback_cost * u128::from(max_profit_pct)) / 100,
         min_fee_wei,
     );
 
