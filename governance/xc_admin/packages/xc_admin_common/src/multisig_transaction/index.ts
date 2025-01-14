@@ -28,7 +28,7 @@ import {
   PriceStoreMultisigInstruction,
 } from "../price_store";
 import { LazerMultisigInstruction } from "./LazerMultisigInstruction";
-import { LAZER_PROGRAM_ID } from "@pythnetwork/pyth-lazer-sdk";
+import { SOLANA_LAZER_PROGRAM_ID } from "@pythnetwork/pyth-lazer-sdk";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
@@ -166,7 +166,7 @@ export class MultisigParser {
       return SolanaStakingMultisigInstruction.fromTransactionInstruction(
         instruction
       );
-    } else if (instruction.programId.equals(LAZER_PROGRAM_ID)) {
+    } else if (instruction.programId.equals(SOLANA_LAZER_PROGRAM_ID)) {
       return LazerMultisigInstruction.fromInstruction(instruction);
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);

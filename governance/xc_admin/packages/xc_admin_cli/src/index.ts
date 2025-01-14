@@ -54,7 +54,10 @@ import {
   getConfigPda,
   DEFAULT_RECEIVER_PROGRAM_ID,
 } from "@pythnetwork/pyth-solana-receiver";
-import { LAZER_PROGRAM_ID, STORAGE_ID } from "@pythnetwork/pyth-lazer-sdk";
+import {
+  SOLANA_LAZER_PROGRAM_ID,
+  SOLANA_STORAGE_ID,
+} from "@pythnetwork/pyth-lazer-sdk";
 
 import { LedgerNodeWallet } from "./ledger";
 import {
@@ -946,7 +949,7 @@ multisigCommand(
 
     // Create the update instruction
     const updateInstruction = new TransactionInstruction({
-      programId: LAZER_PROGRAM_ID,
+      programId: SOLANA_LAZER_PROGRAM_ID,
       keys: [
         {
           pubkey: await vault.getVaultAuthorityPDA(targetCluster),
@@ -954,7 +957,7 @@ multisigCommand(
           isWritable: false,
         },
         {
-          pubkey: STORAGE_ID,
+          pubkey: SOLANA_STORAGE_ID,
           isSigner: false,
           isWritable: true,
         },
