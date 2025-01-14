@@ -143,20 +143,23 @@ pub struct EthereumConfig {
     pub escalation_policy: EscalationPolicyConfig,
 
     /// The minimum percentage profit to earn as a function of the callback cost.
-    /// For example, 20 means a profit of 20% over the cost of the callback.
+    /// For example, 20 means a profit of 20% over the cost of a callback that uses the full gas limit.
     /// The fee will be raised if the profit is less than this number.
-    pub min_profit_pct: u64,
+    /// The minimum value for this is -100. If set to < 0, it means the keeper may lose money on callbacks that use the full gas limit.
+    pub min_profit_pct: i64,
 
     /// The target percentage profit to earn as a function of the callback cost.
-    /// For example, 20 means a profit of 20% over the cost of the callback.
+    /// For example, 20 means a profit of 20% over the cost of a callback that uses the full gas limit.
     /// The fee will be set to this target whenever it falls outside the min/max bounds.
-    pub target_profit_pct: u64,
+    /// The minimum value for this is -100. If set to < 0, it means the keeper may lose money on callbacks that use the full gas limit.
+    pub target_profit_pct: i64,
 
     /// The maximum percentage profit to earn as a function of the callback cost.
-    /// For example, 100 means a profit of 100% over the cost of the callback.
+    /// For example, 100 means a profit of 100% over the cost of a callback that uses the full gas limit.
     /// The fee will be lowered if it is more profitable than specified here.
     /// Must be larger than min_profit_pct.
-    pub max_profit_pct: u64,
+    /// The minimum value for this is -100. If set to < 0, it means the keeper may lose money on callbacks that use the full gas limit.
+    pub max_profit_pct: i64,
 
     /// Minimum wallet balance for the keeper. If the balance falls below this level, the keeper will
     /// withdraw fees from the contract to top up. This functionality requires the keeper to be the fee
@@ -182,15 +185,20 @@ fn default_priority_fee_multiplier_pct() -> u64 {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EscalationPolicyConfig {
-    /// The initial gas multiplier to apply to the gas limit.
+    // The keeper will perform the callback as long as the tx is within this percentage of the configured gas limit.
+    // Default value is 110, meaning a 10% tolerance over the configured value.
+    #[serde(default = "default_gas_limit_tolerance_pct")]
+    pub gas_limit_tolerance_pct: u64,
+
+    /// The initial gas multiplier to apply to the tx gas estimate
     #[serde(default = "default_initial_gas_multiplier_pct")]
     pub initial_gas_multiplier_pct: u64,
 
-    /// The gas multiplier to apply to the gas limit during backoff retries.
+    /// The gas multiplier to apply to the tx gas estimate during backoff retries.
     /// The gas on each successive retry is multiplied by this value, with the maximum multiplier capped at `gas_multiplier_cap_pct`.
     #[serde(default = "default_gas_multiplier_pct")]
     pub gas_multiplier_pct: u64,
-    /// The maximum gas multiplier to apply to the gas limit during backoff retries.
+    /// The maximum gas multiplier to apply to the tx gas estimate during backoff retries.
     #[serde(default = "default_gas_multiplier_cap_pct")]
     pub gas_multiplier_cap_pct: u64,
 
@@ -201,6 +209,10 @@ pub struct EscalationPolicyConfig {
     pub fee_multiplier_pct: u64,
     #[serde(default = "default_fee_multiplier_cap_pct")]
     pub fee_multiplier_cap_pct: u64,
+}
+
+fn default_gas_limit_tolerance_pct() -> u64 {
+    110
 }
 
 fn default_initial_gas_multiplier_pct() -> u64 {
@@ -226,6 +238,7 @@ fn default_fee_multiplier_cap_pct() -> u64 {
 impl Default for EscalationPolicyConfig {
     fn default() -> Self {
         Self {
+            gas_limit_tolerance_pct: default_gas_limit_tolerance_pct(),
             initial_gas_multiplier_pct: default_initial_gas_multiplier_pct(),
             gas_multiplier_pct: default_gas_multiplier_pct(),
             gas_multiplier_cap_pct: default_gas_multiplier_cap_pct(),
