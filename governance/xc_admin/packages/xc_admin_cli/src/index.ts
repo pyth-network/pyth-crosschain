@@ -1,4 +1,4 @@
-import { Program } from "@coral-xyz/anchor";
+import { Program, BN, Idl } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
@@ -47,6 +47,7 @@ import {
   getProposalInstructions,
   idlSetBuffer,
   isPriceStorePublisherInitialized,
+  lazerIdl,
 } from "@pythnetwork/xc-admin-common";
 
 import {
@@ -54,6 +55,10 @@ import {
   getConfigPda,
   DEFAULT_RECEIVER_PROGRAM_ID,
 } from "@pythnetwork/pyth-solana-receiver";
+import {
+  SOLANA_LAZER_PROGRAM_ID,
+  SOLANA_STORAGE_ID,
+} from "@pythnetwork/pyth-lazer-sdk";
 
 import { LedgerNodeWallet } from "./ledger";
 import {
@@ -922,6 +927,48 @@ multisigCommand("execute-add-and-delete", "Execute a roster change proposal")
     const vault: MultisigVault = await loadVaultFromOptions(options);
     const proposal = new PublicKey(options.transaction);
     await vault.squad.executeTransaction(proposal);
+  });
+
+multisigCommand(
+  "set-trusted-signer",
+  "Set a trusted signer for the Lazer program"
+)
+  .requiredOption(
+    "-s, --signer <pubkey>",
+    "public key of the trusted signer to add/update"
+  )
+  .requiredOption(
+    "-e, --expiry-time <seconds>",
+    "expiry time in seconds since Unix epoch. Set to 0 to remove the signer."
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+
+    const trustedSigner = new PublicKey(options.signer);
+    const expiryTime = new BN(options.expiryTime);
+
+    // Create Anchor program instance
+    const lazerProgram = new Program(
+      lazerIdl as Idl,
+      SOLANA_LAZER_PROGRAM_ID,
+      vault.getAnchorProvider()
+    );
+
+    // Use Anchor to create the instruction
+    const updateInstruction = await lazerProgram.methods
+      .update(trustedSigner, expiryTime)
+      .accounts({
+        authority: await vault.getVaultAuthorityPDA(targetCluster),
+        storage: SOLANA_STORAGE_ID,
+      })
+      .instruction();
+
+    await vault.proposeInstructions(
+      [updateInstruction],
+      targetCluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 program.parse();

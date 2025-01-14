@@ -1249,6 +1249,9 @@ importers:
       '@pythnetwork/client':
         specifier: ^2.22.0
         version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@pythnetwork/pyth-lazer-sdk':
+        specifier: workspace:*
+        version: link:../../../../lazer/sdk/js
       '@pythnetwork/pyth-solana-receiver':
         specifier: workspace:*
         version: link:../../../../target_chains/solana/sdk/js/pyth_solana_receiver
@@ -1291,6 +1294,9 @@ importers:
       '@pythnetwork/client':
         specifier: ^2.22.0
         version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@pythnetwork/pyth-lazer-sdk':
+        specifier: workspace:*
+        version: link:../../../../lazer/sdk/js
       '@pythnetwork/pyth-solana-receiver':
         specifier: workspace:*
         version: link:../../../../target_chains/solana/sdk/js/pyth_solana_receiver
