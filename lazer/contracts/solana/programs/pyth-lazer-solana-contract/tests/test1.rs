@@ -134,7 +134,6 @@ impl Setup {
                         message_data: message.to_vec(),
                         ed25519_instruction_index: 0,
                         signature_index: 0,
-                        message_offset,
                     }
                     .data(),
                     vec![

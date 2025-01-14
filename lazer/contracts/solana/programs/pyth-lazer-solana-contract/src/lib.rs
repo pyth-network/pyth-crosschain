@@ -197,7 +197,6 @@ pub mod pyth_lazer_solana_contract {
         message_data: Vec<u8>,
         ed25519_instruction_index: u16,
         signature_index: u8,
-        message_offset: u16,
     ) -> Result<VerifiedMessage> {
         system_program::transfer(
             CpiContext::new(
@@ -216,7 +215,6 @@ pub mod pyth_lazer_solana_contract {
             &message_data,
             ed25519_instruction_index,
             signature_index,
-            message_offset,
         )
         .map_err(|err| {
             msg!("signature verification error: {:?}", err);

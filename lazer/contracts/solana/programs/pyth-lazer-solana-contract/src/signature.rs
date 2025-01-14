@@ -2,7 +2,9 @@ use {
     crate::Storage,
     anchor_lang::{
         prelude::{borsh, AccountInfo, Clock, ProgramError, Pubkey, SolanaSysvar},
-        solana_program::{ed25519_program, pubkey::PUBKEY_BYTES, sysvar},
+        solana_program::{
+            ed25519_program, program_memory::sol_memcmp, pubkey::PUBKEY_BYTES, sysvar,
+        },
         AnchorDeserialize, AnchorSerialize,
     },
     bytemuck::{cast_slice, checked::try_cast_slice, Pod, Zeroable},
@@ -127,6 +129,8 @@ pub enum SignatureVerificationError {
     InvalidStorageData,
     #[error("not a trusted signer")]
     NotTrustedSigner,
+    #[error("invalid message data")]
+    InvalidMessageData,
 }
 
 impl From<SignatureVerificationError> for ProgramError {
@@ -148,6 +152,10 @@ impl From<SignatureVerificationError> for anchor_lang::error::Error {
     }
 }
 
+fn slice_eq(a: &[u8], b: &[u8]) -> bool {
+    a.len() == b.len() && sol_memcmp(a, b, a.len()) == 0
+}
+
 /// Verifies a ed25519 signature on Solana by checking that the transaction contains
 /// a correct call to the built-in `ed25519_program`.
 ///
@@ -163,7 +171,6 @@ pub fn verify_message(
     message_data: &[u8],
     ed25519_instruction_index: u16,
     signature_index: u8,
-    message_offset: u16,
 ) -> Result<VerifiedMessage, SignatureVerificationError> {
     const SOLANA_FORMAT_MAGIC_LE: u32 = 2182742457;
 
@@ -175,25 +182,25 @@ pub fn verify_message(
         return Err(SignatureVerificationError::Ed25519InstructionMustPrecedeCurrentInstruction);
     }
 
-    let instruction = sysvar::instructions::load_instruction_at_checked(
+    let ed25519_instruction = sysvar::instructions::load_instruction_at_checked(
         ed25519_instruction_index.into(),
         instructions_sysvar,
     )
     .map_err(SignatureVerificationError::LoadInstructionAtFailed)?;
 
-    if instruction.program_id != ed25519_program::ID {
+    if ed25519_instruction.program_id != ed25519_program::ID {
         return Err(SignatureVerificationError::InvalidEd25519InstructionProgramId);
     }
-    if instruction.data.len() < ED25519_PROGRAM_INPUT_HEADER_LEN {
+    if ed25519_instruction.data.len() < ED25519_PROGRAM_INPUT_HEADER_LEN {
         return Err(SignatureVerificationError::InvalidEd25519InstructionDataLength);
     }
 
-    let num_signatures = instruction.data[0];
+    let num_signatures = ed25519_instruction.data[0];
     if signature_index >= num_signatures {
         return Err(SignatureVerificationError::InvalidSignatureIndex);
     }
     let args: &[Ed25519SignatureOffsets] =
-        try_cast_slice(&instruction.data[ED25519_PROGRAM_INPUT_HEADER_LEN..])
+        try_cast_slice(&ed25519_instruction.data[ED25519_PROGRAM_INPUT_HEADER_LEN..])
             .map_err(|_| SignatureVerificationError::InvalidEd25519InstructionDataLength)?;
 
     let args_len = args
@@ -205,11 +212,28 @@ pub fn verify_message(
     }
     let offsets = &args[usize::from(signature_index)];
 
-    let expected_signature_offset = message_offset
-        .checked_add(MAGIC_LEN)
+    let message_offset = offsets
+        .signature_offset
+        .checked_sub(MAGIC_LEN)
         .ok_or(SignatureVerificationError::MessageOffsetOverflow)?;
-    if offsets.signature_offset != expected_signature_offset {
-        return Err(SignatureVerificationError::InvalidSignatureOffset);
+
+    let self_instruction = sysvar::instructions::load_instruction_at_checked(
+        self_instruction_index.into(),
+        instructions_sysvar,
+    )
+    .map_err(SignatureVerificationError::LoadInstructionAtFailed)?;
+
+    let message_end_offset = offsets
+        .message_data_offset
+        .checked_add(offsets.message_data_size)
+        .ok_or(SignatureVerificationError::MessageOffsetOverflow)?;
+    let expected_message_data = self_instruction
+        .data
+        .get(usize::from(message_offset)..usize::from(message_end_offset))
+        .ok_or(SignatureVerificationError::InvalidMessageOffset)?;
+
+    if !slice_eq(expected_message_data, message_data) {
+        return Err(SignatureVerificationError::InvalidMessageData);
     }
 
     let magic = LE::read_u32(&message_data[..MAGIC_LEN.into()]);
@@ -217,7 +241,8 @@ pub fn verify_message(
         return Err(SignatureVerificationError::FormatMagicMismatch);
     }
 
-    let expected_public_key_offset = expected_signature_offset
+    let expected_public_key_offset = offsets
+        .signature_offset
         .checked_add(SIGNATURE_LEN)
         .ok_or(SignatureVerificationError::MessageOffsetOverflow)?;
     if offsets.public_key_offset != expected_public_key_offset {
