@@ -27,10 +27,8 @@ import {
   PRICE_STORE_PROGRAM_ID,
   PriceStoreMultisigInstruction,
 } from "../price_store";
-import {
-  LazerMultisigInstruction,
-  LAZER_PROGRAM_ID,
-} from "./LazerMultisigInstruction";
+import { LazerMultisigInstruction } from "./LazerMultisigInstruction";
+import { LAZER_PROGRAM_ID } from "@pythnetwork/pyth-lazer-sdk";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {

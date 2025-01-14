@@ -1,4 +1,4 @@
-import { Program } from "@coral-xyz/anchor";
+import { Program, BN } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
@@ -54,6 +54,7 @@ import {
   getConfigPda,
   DEFAULT_RECEIVER_PROGRAM_ID,
 } from "@pythnetwork/pyth-solana-receiver";
+import { LAZER_PROGRAM_ID, STORAGE_ID } from "@pythnetwork/pyth-lazer-sdk";
 
 import { LedgerNodeWallet } from "./ledger";
 import {
@@ -922,6 +923,57 @@ multisigCommand("execute-add-and-delete", "Execute a roster change proposal")
     const vault: MultisigVault = await loadVaultFromOptions(options);
     const proposal = new PublicKey(options.transaction);
     await vault.squad.executeTransaction(proposal);
+  });
+
+multisigCommand(
+  "set-trusted-signer",
+  "Set a trusted signer for the Lazer program"
+)
+  .requiredOption(
+    "-s, --signer <pubkey>",
+    "public key of the trusted signer to add/update"
+  )
+  .requiredOption(
+    "-e, --expiry-time <seconds>",
+    "expiry time in seconds since Unix epoch. Set to 0 to remove the signer."
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+
+    const trustedSigner = new PublicKey(options.signer);
+    const expiryTime = new BN(options.expiryTime);
+
+    // Create the update instruction
+    const updateInstruction = new TransactionInstruction({
+      programId: LAZER_PROGRAM_ID,
+      keys: [
+        {
+          pubkey: await vault.getVaultAuthorityPDA(targetCluster),
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: STORAGE_ID,
+          isSigner: false,
+          isWritable: true,
+        },
+      ],
+      data: Buffer.concat([
+        // Anchor discriminator for "update"
+        Buffer.from([219, 200, 88, 176, 158, 63, 253, 127]),
+        // Trusted signer pubkey
+        trustedSigner.toBuffer(),
+        // Expiry time (i64)
+        Buffer.from(expiryTime.toArray("le", 8)),
+      ]),
+    });
+
+    await vault.proposeInstructions(
+      [updateInstruction],
+      targetCluster,
+      DEFAULT_PRIORITY_FEE_CONFIG
+    );
   });
 
 program.parse();
