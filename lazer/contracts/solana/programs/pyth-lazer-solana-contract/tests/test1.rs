@@ -103,17 +103,6 @@ impl Setup {
     }
 
     async fn verify_message(&mut self, message: &[u8], treasury: Pubkey) {
-        // Instruction #0 will be ed25519 instruction;
-        // Instruction #1 will be our contract instruction.
-        let instruction_index = 1;
-        // 8 bytes for Anchor header, 4 bytes for Vec length.
-        let message_offset = 12;
-        let ed25519_args = dbg!(pyth_lazer_solana_contract::Ed25519SignatureOffsets::new(
-            message,
-            instruction_index,
-            message_offset,
-        ));
-
         let treasury_starting_lamports = self
             .banks_client
             .get_account(treasury)
@@ -121,6 +110,38 @@ impl Setup {
             .unwrap()
             .unwrap()
             .lamports;
+
+        // 8 bytes for Anchor header, 4 bytes for Vec length.
+        self.verify_message_with_offset(message, treasury, 12)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            self.banks_client
+                .get_account(treasury)
+                .await
+                .unwrap()
+                .unwrap()
+                .lamports,
+            treasury_starting_lamports + 1,
+        );
+    }
+
+    async fn verify_message_with_offset(
+        &mut self,
+        message: &[u8],
+        treasury: Pubkey,
+        message_offset: u16,
+    ) -> Result<(), BanksClientError> {
+        // Instruction #0 will be ed25519 instruction;
+        // Instruction #1 will be our contract instruction.
+        let instruction_index = 1;
+        let ed25519_args = dbg!(pyth_lazer_solana_contract::Ed25519SignatureOffsets::new(
+            message,
+            instruction_index,
+            message_offset,
+        ));
+
         let mut transaction_verify = Transaction::new_with_payer(
             &[
                 Instruction::new_with_bytes(
@@ -151,17 +172,6 @@ impl Setup {
         self.banks_client
             .process_transaction(transaction_verify)
             .await
-            .unwrap();
-
-        assert_eq!(
-            self.banks_client
-                .get_account(treasury)
-                .await
-                .unwrap()
-                .unwrap()
-                .lamports,
-            treasury_starting_lamports + 1,
-        );
     }
 }
 
@@ -204,6 +214,84 @@ async fn test_basic() {
 
     setup.set_trusted(verifying_key.try_into().unwrap()).await;
     setup.verify_message(&message, treasury).await;
+}
+
+#[tokio::test]
+async fn test_rejects_wrong_offset() {
+    let mut setup = Setup::new().await;
+    let treasury = setup.create_treasury().await;
+
+    let mut transaction_init_contract = Transaction::new_with_payer(
+        &[Instruction::new_with_bytes(
+            pyth_lazer_solana_contract::ID,
+            &pyth_lazer_solana_contract::instruction::Initialize {
+                top_authority: setup.payer.pubkey(),
+                treasury,
+            }
+            .data(),
+            vec![
+                AccountMeta::new(setup.payer.pubkey(), true),
+                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
+                AccountMeta::new_readonly(system_program::ID, false),
+            ],
+        )],
+        Some(&setup.payer.pubkey()),
+    );
+    transaction_init_contract.sign(&[&setup.payer], setup.recent_blockhash);
+    setup
+        .banks_client
+        .process_transaction(transaction_init_contract)
+        .await
+        .unwrap();
+
+    let verifying_key =
+        hex::decode("74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214").unwrap();
+    let verifying_key_2 =
+        hex::decode("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA").unwrap();
+    let message = hex::decode(
+        [
+            // --- First copy of the message (this data is returned by the Lazer contract)
+
+            // SOLANA_FORMAT_MAGIC_LE
+            "b9011a82",
+            // Signature
+            "e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c600",
+            // Pubkey
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            // Payload length (could be adjusted)
+            "1c00",
+            // Payload
+            "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+
+            // --- Second copy of the message (this data is used by the ed25519 program)
+
+            // Unused, was SOLANA_FORMAT_MAGIC_LE, could be removed, left it for slightly easier offset adjustments
+            "AABBCCDD",
+            // Signature
+            "e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c600",
+            // Pubkey
+            "74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
+            // Payload length
+            "1c00",
+            // Payload
+            "75d3c7931c9773f30a240600010102000000010000e1f50500000000"
+        ].concat()
+    )
+    .unwrap();
+
+    setup.set_trusted(verifying_key.try_into().unwrap()).await;
+    setup.set_trusted(verifying_key_2.try_into().unwrap()).await;
+    let err = setup
+        .verify_message_with_offset(&message, treasury, 12 + 130)
+        .await
+        .unwrap_err();
+    assert!(matches!(
+        err,
+        BanksClientError::TransactionError(TransactionError::InstructionError(
+            1,
+            InstructionError::InvalidInstructionData
+        ))
+    ));
 }
 
 #[tokio::test]
