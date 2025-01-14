@@ -1,4 +1,4 @@
-import { Program, BN } from "@coral-xyz/anchor";
+import { Program, BN, Idl } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
@@ -47,6 +47,7 @@ import {
   getProposalInstructions,
   idlSetBuffer,
   isPriceStorePublisherInitialized,
+  lazerIdl,
 } from "@pythnetwork/xc-admin-common";
 
 import {
@@ -947,30 +948,21 @@ multisigCommand(
     const trustedSigner = new PublicKey(options.signer);
     const expiryTime = new BN(options.expiryTime);
 
-    // Create the update instruction
-    const updateInstruction = new TransactionInstruction({
-      programId: SOLANA_LAZER_PROGRAM_ID,
-      keys: [
-        {
-          pubkey: await vault.getVaultAuthorityPDA(targetCluster),
-          isSigner: false,
-          isWritable: false,
-        },
-        {
-          pubkey: SOLANA_STORAGE_ID,
-          isSigner: false,
-          isWritable: true,
-        },
-      ],
-      data: Buffer.concat([
-        // Anchor discriminator for "update"
-        Buffer.from([219, 200, 88, 176, 158, 63, 253, 127]),
-        // Trusted signer pubkey
-        trustedSigner.toBuffer(),
-        // Expiry time (i64)
-        Buffer.from(expiryTime.toArray("le", 8)),
-      ]),
-    });
+    // Create Anchor program instance
+    const lazerProgram = new Program(
+      lazerIdl as Idl,
+      SOLANA_LAZER_PROGRAM_ID,
+      vault.getAnchorProvider()
+    );
+
+    // Use Anchor to create the instruction
+    const updateInstruction = await lazerProgram.methods
+      .update(trustedSigner, expiryTime)
+      .accounts({
+        authority: await vault.getVaultAuthorityPDA(targetCluster),
+        storage: SOLANA_STORAGE_ID,
+      })
+      .instruction();
 
     await vault.proposeInstructions(
       [updateInstruction],
