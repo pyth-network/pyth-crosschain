@@ -54,7 +54,7 @@ export const Footer = ({
             <Logo className="h-10 lg:h-8" />
             <span className="sr-only">Pyth homepage</span>
           </Link>
-          <div>© 2024 Pyth Data Association</div>
+          <div>© 2025 Pyth Data Association</div>
         </div>
         <div className="flex flex-col items-center gap-6 lg:flex-row-reverse lg:gap-8 xl:gap-16">
           <div className="relative flex h-full items-center lg:-right-3">
