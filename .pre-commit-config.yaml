@@ -126,30 +126,6 @@ repos:
         entry: cargo +1.73.0 clippy --manifest-path ./target_chains/solana/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: target_chains/solana
-      # For express relay python files
-      - id: poetry-install
-        name: poetry install
-        entry: poetry -C express_relay/sdk/python/express_relay install
-        pass_filenames: false
-        files: express_relay/sdk/python/express_relay
-        language: "system"
-      - id: black
-        name: black
-        entry: poetry -C express_relay/sdk/python/express_relay run black
-        files: express_relay/sdk/python/express_relay
-        language: "system"
-      - id: pyflakes
-        name: pyflakes
-        entry: poetry -C express_relay/sdk/python/express_relay run pyflakes
-        files: express_relay/sdk/python/express_relay
-        exclude: express_relay/sdk/python/express_relay/svm/generated/
-        language: "system"
-      - id: mypy
-        name: mypy
-        entry: poetry -C express_relay/sdk/python/express_relay run mypy
-        files: express_relay/sdk/python/express_relay
-        exclude: express_relay/sdk/python/express_relay/svm/generated/
-        language: "system"
       # For Lazer
       - id: cargo-fmt-lazer
         name: Cargo format for Lazer
