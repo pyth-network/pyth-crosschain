@@ -13,12 +13,7 @@ const client = await PythLazerClient.create(
   console // Optionally log socket operations (to the console in this case.)
 );
 
-// Monitor for all connections in the pool being down simultaneously (e.g. if the internet goes down)
-// The connections may still try to reconnect in the background. To shut down the client completely, call shutdown().
-client.addAllConnectionsDownHandler(() => {
-  console.error("All connections are down!");
-});
-
+// Read and process messages from the Lazer stream
 client.addMessageListener((message) => {
   console.info("got message:", message);
   switch (message.type) {
@@ -43,6 +38,12 @@ client.addMessageListener((message) => {
       break;
     }
   }
+});
+
+// Monitor for all connections in the pool being down simultaneously (e.g. if the internet goes down)
+// The connections may still try to reconnect in the background. To shut down the client completely, call shutdown().
+client.addAllConnectionsDownHandler(() => {
+  console.error("All connections are down!");
 });
 
 // Create and remove one or more subscriptions on the fly
