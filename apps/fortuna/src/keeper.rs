@@ -78,6 +78,11 @@ pub struct KeeperMetrics {
     pub requests_reprocessed: Family<AccountLabel, Counter>,
     pub reveals: Family<AccountLabel, Counter>,
     pub request_duration_ms: Family<AccountLabel, Histogram>,
+    pub retry_count: Family<AccountLabel, Histogram>,
+    pub final_gas_multiplier: Family<AccountLabel, Histogram>,
+    pub final_fee_multiplier: Family<AccountLabel, Histogram>,
+    pub priority_fee_estimate: Family<AccountLabel, Histogram>,
+    pub estimated_keeper_fee: Family<AccountLabel, Histogram>,
 }
 
 impl Default for KeeperMetrics {
@@ -104,6 +109,23 @@ impl Default for KeeperMetrics {
                     ]
                     .into_iter(),
                 )
+            }),
+            retry_count: Family::new_with_constructor(|| {
+                Histogram::new(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 15.0, 20.0].into_iter())
+            }),
+            final_gas_multiplier: Family::new_with_constructor(|| {
+                Histogram::new(
+                    vec![100.0, 125.0, 150.0, 200.0, 300.0, 400.0, 500.0, 600.0].into_iter(),
+                )
+            }),
+            final_fee_multiplier: Family::new_with_constructor(|| {
+                Histogram::new(vec![100.0, 110.0, 120.0, 140.0, 160.0, 180.0, 200.0].into_iter())
+            }),
+            priority_fee_estimate: Family::new_with_constructor(|| {
+                Histogram::new(vec![0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 100.0].into_iter())
+            }),
+            estimated_keeper_fee: Family::new_with_constructor(|| {
+                Histogram::new(vec![0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0].into_iter())
             }),
         }
     }
@@ -196,6 +218,36 @@ impl KeeperMetrics {
             "request_duration_ms",
             "Time taken to process each successful callback request in milliseconds",
             keeper_metrics.request_duration_ms.clone(),
+        );
+
+        writable_registry.register(
+            "retry_count",
+            "Number of retries for successful transactions",
+            keeper_metrics.retry_count.clone(),
+        );
+
+        writable_registry.register(
+            "final_gas_multiplier",
+            "Final gas multiplier percentage for successful transactions",
+            keeper_metrics.final_gas_multiplier.clone(),
+        );
+
+        writable_registry.register(
+            "final_fee_multiplier",
+            "Final fee multiplier percentage for successful transactions",
+            keeper_metrics.final_fee_multiplier.clone(),
+        );
+
+        writable_registry.register(
+            "priority_fee_estimate",
+            "Priority fee estimate in gwei",
+            keeper_metrics.priority_fee_estimate.clone(),
+        );
+
+        writable_registry.register(
+            "estimated_keeper_fee",
+            "Estimated keeper fee in wei before thresholds",
+            keeper_metrics.estimated_keeper_fee.clone(),
         );
 
         keeper_metrics
@@ -327,6 +379,7 @@ pub async fn run_keeper_threads(
     spawn(
         adjust_fee_wrapper(
             contract.clone(),
+            chain_state.clone(),
             chain_state.provider_address,
             ADJUST_FEE_INTERVAL,
             chain_eth_config.legacy_tx,
@@ -346,6 +399,7 @@ pub async fn run_keeper_threads(
             u64::try_from(100 + chain_eth_config.max_profit_pct)
                 .expect("max_profit_pct must be >= -100"),
             chain_eth_config.fee,
+            metrics.clone(),
         )
         .in_current_span(),
     );
@@ -479,6 +533,25 @@ pub async fn process_event_with_backoff(
                 .request_duration_ms
                 .get_or_create(&account_label)
                 .observe(duration.as_millis() as f64);
+
+            // Track retry count, gas multiplier, and fee multiplier for successful transactions
+            let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
+            metrics
+                .retry_count
+                .get_or_create(&account_label)
+                .observe(num_retries as f64);
+
+            let gas_multiplier = escalation_policy.get_gas_multiplier_pct(num_retries);
+            metrics
+                .final_gas_multiplier
+                .get_or_create(&account_label)
+                .observe(gas_multiplier as f64);
+
+            let fee_multiplier = escalation_policy.get_fee_multiplier_pct(num_retries);
+            metrics
+                .final_fee_multiplier
+                .get_or_create(&account_label)
+                .observe(fee_multiplier as f64);
         }
         Err(e) => {
             // In case the callback did not succeed, we double-check that the request is still on-chain.
@@ -1133,6 +1206,7 @@ pub async fn send_and_confirm(contract_call: PythContractCall) -> Result<()> {
 #[allow(clippy::too_many_arguments)]
 pub async fn adjust_fee_wrapper(
     contract: Arc<InstrumentedSignablePythContract>,
+    chain_state: BlockchainState,
     provider_address: Address,
     poll_interval: Duration,
     legacy_tx: bool,
@@ -1141,6 +1215,7 @@ pub async fn adjust_fee_wrapper(
     target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee_wei: u128,
+    metrics: Arc<KeeperMetrics>,
 ) {
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
@@ -1149,6 +1224,7 @@ pub async fn adjust_fee_wrapper(
     loop {
         if let Err(e) = adjust_fee_if_necessary(
             contract.clone(),
+            &chain_state,
             provider_address,
             legacy_tx,
             gas_limit,
@@ -1158,6 +1234,7 @@ pub async fn adjust_fee_wrapper(
             min_fee_wei,
             &mut high_water_pnl,
             &mut sequence_number_of_last_fee_update,
+            metrics.clone(),
         )
         .in_current_span()
         .await
@@ -1232,6 +1309,7 @@ pub async fn update_commitments_if_necessary(
 #[allow(clippy::too_many_arguments)]
 pub async fn adjust_fee_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
+    chain_state: &BlockchainState,
     provider_address: Address,
     legacy_tx: bool,
     gas_limit: u64,
@@ -1241,6 +1319,7 @@ pub async fn adjust_fee_if_necessary(
     min_fee_wei: u128,
     high_water_pnl: &mut Option<U256>,
     sequence_number_of_last_fee_update: &mut Option<u64>,
+    metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
     let provider_info = contract
         .get_provider_info(provider_address)
@@ -1253,9 +1332,15 @@ pub async fn adjust_fee_if_necessary(
     }
 
     // Calculate target window for the on-chain fee.
-    let max_callback_cost: u128 = estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
-        .await
-        .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
+    let max_callback_cost: u128 = estimate_tx_cost(
+        contract.clone(),
+        chain_state.clone(),
+        legacy_tx,
+        gas_limit.into(),
+        metrics.clone(),
+    )
+    .await
+    .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
     let target_fee_min = std::cmp::max(
         (max_callback_cost * u128::from(min_profit_pct)) / 100,
         min_fee_wei,
@@ -1264,6 +1349,18 @@ pub async fn adjust_fee_if_necessary(
         (max_callback_cost * u128::from(target_profit_pct)) / 100,
         min_fee_wei,
     );
+
+    // Track estimated keeper fee before thresholds
+    // Track estimated keeper fee before thresholds
+    let account_label = AccountLabel {
+        chain_id: chain_state.id.clone(),
+        address: chain_state.provider_address.to_string(),
+    };
+    metrics
+        .estimated_keeper_fee
+        .get_or_create(&account_label)
+        .observe(target_fee as f64 / 1e18); // Convert to ETH units
+
     let target_fee_max = std::cmp::max(
         (max_callback_cost * u128::from(max_profit_pct)) / 100,
         min_fee_wei,
@@ -1339,8 +1436,10 @@ pub async fn adjust_fee_if_necessary(
 /// Estimate the cost (in wei) of a transaction consuming gas_used gas.
 pub async fn estimate_tx_cost(
     contract: Arc<InstrumentedSignablePythContract>,
+    chain_state: BlockchainState,
     use_legacy_tx: bool,
     gas_used: u128,
+    metrics: Arc<KeeperMetrics>,
 ) -> Result<u128> {
     let middleware = contract.client();
 
@@ -1357,6 +1456,16 @@ pub async fn estimate_tx_cost(
         // and use whatever the gas oracle returns.
         let (max_fee_per_gas, max_priority_fee_per_gas) =
             middleware.estimate_eip1559_fees(None).await?;
+
+        // Track priority fee estimate in gwei
+        let account_label = AccountLabel {
+            chain_id: chain_state.id.clone(),
+            address: chain_state.provider_address.to_string(),
+        };
+        metrics
+            .priority_fee_estimate
+            .get_or_create(&account_label)
+            .observe(max_priority_fee_per_gas.as_u128() as f64 / 1e9); // Convert to gwei
 
         (max_fee_per_gas + max_priority_fee_per_gas)
             .try_into()
