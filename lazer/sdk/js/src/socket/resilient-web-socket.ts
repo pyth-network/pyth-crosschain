@@ -1,21 +1,10 @@
 import type { ClientRequestArgs } from "node:http";
-
 import WebSocket, { type ClientOptions, type ErrorEvent } from "isomorphic-ws";
 import type { Logger } from "ts-log";
 
-// Reconnect with expo backoff if we don't get a message or ping for 10 seconds
 const HEARTBEAT_TIMEOUT_DURATION = 10_000;
+const CONNECTION_TIMEOUT = 5000;
 
-/**
- * This class wraps websocket to provide a resilient web socket client.
- *
- * It will reconnect if connection fails with exponential backoff. Also, it will reconnect
- * if it receives no ping request or regular message from server within a while as indication
- * of timeout (assuming the server sends either regularly).
- *
- * This class also logs events if logger is given and by replacing onError method you can handle
- * connection errors yourself (e.g: do not retry and close the connection).
- */
 export class ResilientWebSocket {
   endpoint: string;
   wsClient: undefined | WebSocket;
@@ -24,10 +13,14 @@ export class ResilientWebSocket {
   private wsFailedAttempts: number;
   private heartbeatTimeout: undefined | NodeJS.Timeout;
   private logger: undefined | Logger;
+  private connectionPromise: Promise<void> | undefined;
+  private resolveConnection: (() => void) | undefined;
+  private rejectConnection: ((error: Error) => void) | undefined;
 
   onError: (error: ErrorEvent) => void;
   onMessage: (data: WebSocket.Data) => void;
   onReconnect: () => void;
+
   constructor(
     endpoint: string,
     wsOptions?: ClientOptions | ClientRequestArgs,
@@ -64,12 +57,31 @@ export class ResilientWebSocket {
     }
   }
 
-  startWebSocket(): void {
+  async startWebSocket(): Promise<void> {
     if (this.wsClient !== undefined) {
-      return;
+      // If there's an existing connection attempt, wait for it
+      if (this.connectionPromise) {
+        return this.connectionPromise;
+      }
+      return Promise.resolve();
     }
 
     this.logger?.info(`Creating Web Socket client`);
+
+    // Create a new promise for this connection attempt
+    this.connectionPromise = new Promise((resolve, reject) => {
+      this.resolveConnection = resolve;
+      this.rejectConnection = reject;
+    });
+
+    // Set a connection timeout
+    const timeoutId = setTimeout(() => {
+      if (this.rejectConnection) {
+        this.rejectConnection(
+          new Error(`Connection timeout after ${CONNECTION_TIMEOUT}ms`)
+        );
+      }
+    }, CONNECTION_TIMEOUT);
 
     this.wsClient = new WebSocket(this.endpoint, this.wsOptions);
     this.wsUserClosed = false;
@@ -77,10 +89,15 @@ export class ResilientWebSocket {
     this.wsClient.addEventListener("open", () => {
       this.wsFailedAttempts = 0;
       this.resetHeartbeat();
+      clearTimeout(timeoutId);
+      this.resolveConnection?.();
     });
 
     this.wsClient.addEventListener("error", (event) => {
       this.onError(event);
+      if (this.rejectConnection) {
+        this.rejectConnection(new Error("WebSocket connection failed"));
+      }
     });
 
     this.wsClient.addEventListener("message", (event) => {
@@ -89,24 +106,23 @@ export class ResilientWebSocket {
     });
 
     this.wsClient.addEventListener("close", () => {
+      clearTimeout(timeoutId);
+      if (this.rejectConnection) {
+        this.rejectConnection(new Error("WebSocket closed before connecting"));
+      }
       void this.handleClose();
     });
 
-    // Handle ping events if supported (Node.js only)
     if ("on" in this.wsClient) {
-      // Ping handler is undefined in browser side
       this.wsClient.on("ping", () => {
         this.logger?.info("Ping received");
         this.resetHeartbeat();
       });
     }
+
+    return this.connectionPromise;
   }
 
-  /**
-   * Reset the heartbeat timeout. This is called when we receive any message (ping or regular)
-   * from the server. If we don't receive any message within HEARTBEAT_TIMEOUT_DURATION,
-   * we assume the connection is dead and reconnect.
-   */
   private resetHeartbeat(): void {
     if (this.heartbeatTimeout !== undefined) {
       clearTimeout(this.heartbeatTimeout);
@@ -145,6 +161,10 @@ export class ResilientWebSocket {
     } else {
       this.wsFailedAttempts += 1;
       this.wsClient = undefined;
+      this.connectionPromise = undefined;
+      this.resolveConnection = undefined;
+      this.rejectConnection = undefined;
+
       const waitTime = expoBackoff(this.wsFailedAttempts);
 
       this.logger?.error(
@@ -163,7 +183,7 @@ export class ResilientWebSocket {
       return;
     }
 
-    this.startWebSocket();
+    await this.startWebSocket();
     await this.waitForMaybeReadyWebSocket();
 
     if (this.wsClient === undefined) {
@@ -180,6 +200,9 @@ export class ResilientWebSocket {
     if (this.wsClient !== undefined) {
       const client = this.wsClient;
       this.wsClient = undefined;
+      this.connectionPromise = undefined;
+      this.resolveConnection = undefined;
+      this.rejectConnection = undefined;
       client.close();
     }
     this.wsUserClosed = true;
