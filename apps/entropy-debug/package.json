@@ -12,9 +12,9 @@
     "access": "public"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3005",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3005",
     "lint": "next lint"
   },
   "license": "Apache-2.0",
@@ -27,9 +27,9 @@
     "ethers": "^6.13.4",
     "highlight.js": "^11.10.0",
     "lucide-react": "^0.465.0",
-    "next": "15.0.3",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "viem": "^2.21.53"
@@ -40,8 +40,8 @@
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",
