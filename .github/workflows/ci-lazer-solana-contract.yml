@@ -37,7 +37,7 @@ jobs:
       - name: Install Anchor
         run: RUSTFLAGS= cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli
       - name: Install pnpm
-        run: npm install --global pnpm@9.13.2
+        run: npm install --global pnpm@9.15.4
       - name: Install test dependencies
         run: pnpm install --frozen-lockfile
       - name: Run tests
