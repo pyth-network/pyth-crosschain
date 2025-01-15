@@ -79,8 +79,6 @@ async function main() {
 
   await client.unsubscribe(1);
   await client.unsubscribe(2);
-
-  await new Promise((resolve) => setTimeout(resolve, 10_000));
   client.shutdown();
 }
 
