@@ -25,7 +25,7 @@ jobs:
         run: cargo install --locked taplo-cli@0.9.3
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.18.0
+          node-version-file: "package.json"
       - name: Install Solana Cli
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
