@@ -1,7 +1,6 @@
 import { AnchorProvider, Idl, Program } from '@coral-xyz/anchor'
 import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
-import { useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import messageBuffer from 'message_buffer/idl/message_buffer.json'
 import { MessageBuffer } from 'message_buffer/idl/message_buffer'
@@ -48,7 +47,6 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const isRemote: boolean = isRemoteCluster(cluster) // Move to multisig context
   const { isLoading: isMultisigLoading, readOnlySquads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
-  const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
     useState<Program<PythOracle>>()
 
@@ -860,9 +858,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
-  // create anchor wallet when connected
   useEffect(() => {
-    if (connected && readOnlySquads && connection) {
+    if (readOnlySquads && connection) {
       const provider = new AnchorProvider(
         connection,
         readOnlySquads.wallet as Wallet,
@@ -882,7 +879,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         )
       }
     }
-  }, [connection, connected, cluster, readOnlySquads])
+  }, [connection, cluster, readOnlySquads])
 
   return (
     <div className="relative">
