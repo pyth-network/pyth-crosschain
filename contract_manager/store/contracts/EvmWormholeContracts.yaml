@@ -460,9 +460,9 @@
 - chain: just_breathe
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
-- chain: monad_devnet
+- chain: coredao_testnet_v2
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
-- chain: coredao_testnet_v2
+- chain: monad_devnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract

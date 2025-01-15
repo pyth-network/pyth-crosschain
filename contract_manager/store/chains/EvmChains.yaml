@@ -842,8 +842,8 @@
   type: EvmChain
 - id: monad_devnet
   mainnet: false
-  rpcUrl: https://devnet1.monad.xyz/rpc/X67JTUmM4cBeq25KAqV0uJd8Wf00a1ul
-  networkId: 41454
+  rpcUrl: https://rpc-devnet.monadinfra.com/rpc/dT2y6zgpggQ20WuJZ3corhJwfh9NwJPM
+  networkId: 20143
   type: EvmChain
 - id: coredao_testnet_v2
   mainnet: false
