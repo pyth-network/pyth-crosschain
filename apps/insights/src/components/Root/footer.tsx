@@ -37,7 +37,7 @@ export const Footer = () => (
       </div>
     </div>
     <div className={styles.bottomContent}>
-      <small className={styles.copyright}>© 2024 Pyth Data Association</small>
+      <small className={styles.copyright}>© 2025 Pyth Data Association</small>
       <div className={styles.legal}>
         <Link href="https://www.pyth.network/privacy-policy" target="_blank">
           Privacy Policy
