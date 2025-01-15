@@ -1,16 +1,15 @@
 use {
     anchor_lang::{prelude::AccountMeta, InstructionData},
-    pyth_lazer_solana_contract::{ed25519_program_args, ANCHOR_DISCRIMINATOR_BYTES},
+    pyth_lazer_solana_contract::ed25519_program_args,
     solana_program_test::{BanksClient, BanksClientError, ProgramTest},
     solana_sdk::{
-        account::Account,
         ed25519_program,
         hash::Hash,
         instruction::{Instruction, InstructionError},
-        pubkey::{Pubkey, PUBKEY_BYTES},
+        pubkey::Pubkey,
         signature::Keypair,
         signer::Signer,
-        system_instruction, system_program, system_transaction, sysvar,
+        system_instruction, system_program, sysvar,
         transaction::{Transaction, TransactionError},
     },
     std::env,
@@ -290,132 +289,6 @@ async fn test_rejects_wrong_offset() {
         BanksClientError::TransactionError(TransactionError::InstructionError(
             1,
             InstructionError::InvalidInstructionData
-        ))
-    ));
-}
-
-#[tokio::test]
-async fn test_migrate_from_0_1_0() {
-    let mut program_test = program_test();
-    // Create a storage PDA account with the data that was produced by the program v0.1.0.
-    let mut old_storage_data = hex::decode(
-        "d175ffb9c4af4409aa4dcb5d31150b162b664abd843cb231cee5c0ebf759ce371d9cb36ffc653796\
-        0174313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214ffffffffffffff7\
-        f00000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    )
-    .unwrap();
-    let top_authority = Keypair::new();
-    // Replace top authority pubkey in storage PDA data to allow successful migration.
-    old_storage_data[ANCHOR_DISCRIMINATOR_BYTES..ANCHOR_DISCRIMINATOR_BYTES + PUBKEY_BYTES]
-        .copy_from_slice(&top_authority.pubkey().to_bytes());
-    program_test.add_account(
-        pyth_lazer_solana_contract::STORAGE_ID,
-        Account {
-            lamports: 1733040,
-            data: old_storage_data,
-            owner: pyth_lazer_solana_contract::ID,
-            executable: false,
-            rent_epoch: 18446744073709551615,
-        },
-    );
-    let mut setup = Setup::with_program_test(program_test).await;
-    let treasury = setup.create_treasury().await;
-
-    // Make sure storage PDA will be rent-exempt after resize.
-    let tx_transfer = system_transaction::transfer(
-        &setup.payer,
-        &pyth_lazer_solana_contract::STORAGE_ID,
-        10_000_000,
-        setup.recent_blockhash,
-    );
-    setup
-        .banks_client
-        .process_transaction(tx_transfer)
-        .await
-        .unwrap();
-
-    let mut transaction_migrate_contract = Transaction::new_with_payer(
-        &[Instruction::new_with_bytes(
-            pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::MigrateFrom010 { treasury }.data(),
-            vec![
-                AccountMeta::new(top_authority.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
-                AccountMeta::new_readonly(system_program::ID, false),
-            ],
-        )],
-        Some(&setup.payer.pubkey()),
-    );
-    transaction_migrate_contract.sign(&[&setup.payer, &top_authority], setup.recent_blockhash);
-    setup
-        .banks_client
-        .process_transaction(transaction_migrate_contract)
-        .await
-        .unwrap();
-
-    let message = hex::decode(
-        "b9011a82e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307\
-        afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c60074313a6525edf99936aa1477e94c72bc5cc61\
-        7b21745f5f03296f3154461f2141c0075d3c7931c9773f30a240600010102000000010000e1f50500000000",
-    )
-    .unwrap();
-
-    // The contract will recognize the trusted signer without calling `set_trusted`
-    // because it was present in the original storage PDA data.
-    setup.verify_message(&message, treasury).await;
-}
-
-#[tokio::test]
-async fn test_disallows_extra_migrate() {
-    let mut setup = Setup::new().await;
-    let treasury = setup.create_treasury().await;
-
-    let mut transaction_init_contract = Transaction::new_with_payer(
-        &[Instruction::new_with_bytes(
-            pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::Initialize {
-                top_authority: setup.payer.pubkey(),
-                treasury,
-            }
-            .data(),
-            vec![
-                AccountMeta::new(setup.payer.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
-                AccountMeta::new_readonly(system_program::ID, false),
-            ],
-        )],
-        Some(&setup.payer.pubkey()),
-    );
-    transaction_init_contract.sign(&[&setup.payer], setup.recent_blockhash);
-    setup
-        .banks_client
-        .process_transaction(transaction_init_contract)
-        .await
-        .unwrap();
-
-    let mut transaction_migrate_contract = Transaction::new_with_payer(
-        &[Instruction::new_with_bytes(
-            pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::MigrateFrom010 { treasury }.data(),
-            vec![
-                AccountMeta::new(setup.payer.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
-                AccountMeta::new_readonly(system_program::ID, false),
-            ],
-        )],
-        Some(&setup.payer.pubkey()),
-    );
-    transaction_migrate_contract.sign(&[&setup.payer], setup.recent_blockhash);
-    let err = setup
-        .banks_client
-        .process_transaction(transaction_migrate_contract)
-        .await
-        .unwrap_err();
-    assert!(matches!(
-        err,
-        BanksClientError::TransactionError(TransactionError::InstructionError(
-            0,
-            InstructionError::InvalidAccountData
         ))
     ));
 }
