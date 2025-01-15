@@ -1,4 +1,5 @@
 import type { ClientRequestArgs } from "node:http";
+
 import WebSocket, { type ClientOptions, type ErrorEvent } from "isomorphic-ws";
 import type { Logger } from "ts-log";
 
@@ -16,7 +17,7 @@ export class ResilientWebSocket {
   private connectionPromise: Promise<void> | undefined;
   private resolveConnection: (() => void) | undefined;
   private rejectConnection: ((error: Error) => void) | undefined;
-  private _isReconnecting: boolean = false;
+  private _isReconnecting = false;
 
   get isReconnecting(): boolean {
     return this._isReconnecting;
@@ -72,7 +73,7 @@ export class ResilientWebSocket {
       if (this.connectionPromise) {
         return this.connectionPromise;
       }
-      return Promise.resolve();
+      return;
     }
 
     this.logger?.info(`Creating Web Socket client`);
@@ -87,7 +88,7 @@ export class ResilientWebSocket {
     const timeoutId = setTimeout(() => {
       if (this.rejectConnection) {
         this.rejectConnection(
-          new Error(`Connection timeout after ${CONNECTION_TIMEOUT}ms`)
+          new Error(`Connection timeout after ${String(CONNECTION_TIMEOUT)}ms`)
         );
       }
     }, CONNECTION_TIMEOUT);

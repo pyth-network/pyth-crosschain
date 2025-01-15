@@ -15,7 +15,7 @@ async function main() {
   );
 
   // Monitor for all connections being down
-  client.onAllConnectionsDown().then(() => {
+  void client.onAllConnectionsDown().then(() => {
     // Handle complete connection failure.
     // The connections will keep attempting to reconnect with expo backoff.
     // To shutdown the client completely, call shutdown().
@@ -82,7 +82,7 @@ async function main() {
   client.shutdown();
 }
 
-main().catch((error) => {
+await main().catch((error: unknown) => {
   console.error("Unhandled error:", error);
-  process.exit(1);
+  throw error;
 });

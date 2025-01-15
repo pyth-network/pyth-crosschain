@@ -10,7 +10,7 @@ import {
   type Response,
   SOLANA_FORMAT_MAGIC_BE,
 } from "./protocol.js";
-import { WebSocketPool } from "./socket/web-socket-pool.js";
+import { WebSocketPool } from "./socket/websocket-pool.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -36,7 +36,7 @@ export class PythLazerClient {
    * Creates a new PythLazerClient instance.
    * @param urls - List of WebSocket URLs of the Pyth Lazer service
    * @param token - The access token for authentication
-   * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream.
+   * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream. The connections will round-robin across the provided URLs.
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
   static async create(

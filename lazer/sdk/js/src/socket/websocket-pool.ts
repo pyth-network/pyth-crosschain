@@ -2,7 +2,7 @@ import TTLCache from "@isaacs/ttlcache";
 import WebSocket from "isomorphic-ws";
 import { dummyLogger, type Logger } from "ts-log";
 
-import { ResilientWebSocket } from "./resilient-web-socket.js";
+import { ResilientWebSocket } from "./resilient-websocket.js";
 import type { Request, Response } from "../protocol.js";
 
 const DEFAULT_NUM_CONNECTIONS = 3;
@@ -13,7 +13,7 @@ export class WebSocketPool {
   private subscriptions: Map<number, Request>; // id -> subscription Request
   private messageListeners: ((event: WebSocket.Data) => void)[];
   private allConnectionsDownListeners: (() => void)[];
-  private wasAllDown: boolean = true;
+  private wasAllDown = true;
 
   private constructor(private readonly logger: Logger = dummyLogger) {
     this.rwsPool = [];
@@ -23,7 +23,9 @@ export class WebSocketPool {
     this.allConnectionsDownListeners = [];
 
     // Start monitoring connection states
-    setInterval(() => this.checkConnectionStates(), 100);
+    setInterval(() => {
+      this.checkConnectionStates();
+    }, 100);
   }
 
   /**
@@ -179,8 +181,8 @@ export class WebSocketPool {
   }
 
   /**
-   * Monitors if all websocket connections are currently down or in reconnecting state
-   * Returns a promise that resolves when all connections are down
+   * Monitors if all websocket connections are currently down or in reconnecting state.
+   * Returns a promise that resolves when all connections are down.
    */
   onAllConnectionsDown(): Promise<void> {
     return new Promise((resolve) => {
