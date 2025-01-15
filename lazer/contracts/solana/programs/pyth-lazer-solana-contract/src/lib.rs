@@ -2,10 +2,8 @@ mod signature;
 
 use {
     crate::signature::VerifiedMessage,
-    anchor_lang::{
-        prelude::*, solana_program::pubkey::PUBKEY_BYTES, system_program, Discriminator,
-    },
-    std::{io::Cursor, mem::size_of},
+    anchor_lang::{prelude::*, solana_program::pubkey::PUBKEY_BYTES, system_program},
+    std::mem::size_of,
 };
 
 pub use {
@@ -38,24 +36,6 @@ pub struct TrustedSignerInfo {
 
 impl TrustedSignerInfo {
     const SERIALIZED_LEN: usize = PUBKEY_BYTES + size_of::<i64>();
-}
-
-/// TODO: remove this legacy storage type
-#[derive(AnchorDeserialize)]
-pub struct StorageV010 {
-    pub top_authority: Pubkey,
-    pub num_trusted_signers: u8,
-    pub trusted_signers: [TrustedSignerInfo; MAX_NUM_TRUSTED_SIGNERS],
-}
-
-impl StorageV010 {
-    pub const SERIALIZED_LEN: usize = PUBKEY_BYTES
-        + size_of::<u8>()
-        + TrustedSignerInfo::SERIALIZED_LEN * MAX_NUM_TRUSTED_SIGNERS;
-
-    pub fn initialized_trusted_signers(&self) -> &[TrustedSignerInfo] {
-        &self.trusted_signers[0..usize::from(self.num_trusted_signers)]
-    }
 }
 
 #[account]
@@ -95,43 +75,6 @@ pub mod pyth_lazer_solana_contract {
         ctx.accounts.storage.top_authority = top_authority;
         ctx.accounts.storage.treasury = treasury;
         ctx.accounts.storage.single_update_fee_in_lamports = 1;
-        Ok(())
-    }
-
-    pub fn migrate_from_0_1_0(ctx: Context<MigrateFrom010>, treasury: Pubkey) -> Result<()> {
-        let old_data = ctx.accounts.storage.data.borrow();
-        if old_data[0..ANCHOR_DISCRIMINATOR_BYTES] != Storage::DISCRIMINATOR {
-            return Err(ProgramError::InvalidAccountData.into());
-        }
-        if old_data.len() != StorageV010::SERIALIZED_LEN + ANCHOR_DISCRIMINATOR_BYTES {
-            return Err(ProgramError::InvalidAccountData.into());
-        }
-        let old_storage = StorageV010::deserialize(&mut &old_data[ANCHOR_DISCRIMINATOR_BYTES..])?;
-        if old_storage.top_authority != ctx.accounts.top_authority.key() {
-            return Err(ProgramError::MissingRequiredSignature.into());
-        }
-        drop(old_data);
-
-        let space = ANCHOR_DISCRIMINATOR_BYTES + Storage::SERIALIZED_LEN;
-        ctx.accounts.storage.realloc(space, false)?;
-        let min_lamports = Rent::get()?.minimum_balance(space);
-        if ctx.accounts.storage.lamports() < min_lamports {
-            return Err(ProgramError::AccountNotRentExempt.into());
-        }
-
-        let mut new_storage = Storage {
-            top_authority: old_storage.top_authority,
-            treasury,
-            single_update_fee_in_lamports: 1,
-            num_trusted_signers: old_storage.num_trusted_signers,
-            trusted_signers: Default::default(),
-            _extra_space: [0; EXTRA_SPACE],
-        };
-        new_storage.trusted_signers[..old_storage.trusted_signers.len()]
-            .copy_from_slice(&old_storage.trusted_signers);
-        new_storage.try_serialize(&mut Cursor::new(
-            &mut **ctx.accounts.storage.data.borrow_mut(),
-        ))?;
         Ok(())
     }
 
@@ -235,19 +178,6 @@ pub struct Initialize<'info> {
         bump,
     )]
     pub storage: Account<'info, Storage>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct MigrateFrom010<'info> {
-    pub top_authority: Signer<'info>,
-    #[account(
-        mut,
-        seeds = [STORAGE_SEED],
-        bump,
-    )]
-    /// CHECK: top_authority in storage must match top_authority account.
-    pub storage: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
 }
 
