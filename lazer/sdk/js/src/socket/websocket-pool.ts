@@ -2,10 +2,9 @@ import TTLCache from "@isaacs/ttlcache";
 import WebSocket from "isomorphic-ws";
 import { dummyLogger, type Logger } from "ts-log";
 
-import { ResilientWebSocket } from "./resilient-web-socket.js";
+import { ResilientWebSocket } from "./resilient-websocket.js";
 import type { Request, Response } from "../protocol.js";
 
-// Number of redundant parallel WebSocket connections
 const DEFAULT_NUM_CONNECTIONS = 3;
 
 export class WebSocketPool {
@@ -13,6 +12,21 @@ export class WebSocketPool {
   private cache: TTLCache<string, boolean>;
   private subscriptions: Map<number, Request>; // id -> subscription Request
   private messageListeners: ((event: WebSocket.Data) => void)[];
+  private allConnectionsDownListeners: (() => void)[];
+  private wasAllDown = true;
+
+  private constructor(private readonly logger: Logger = dummyLogger) {
+    this.rwsPool = [];
+    this.cache = new TTLCache({ ttl: 1000 * 10 }); // TTL of 10 seconds
+    this.subscriptions = new Map();
+    this.messageListeners = [];
+    this.allConnectionsDownListeners = [];
+
+    // Start monitoring connection states
+    setInterval(() => {
+      this.checkConnectionStates();
+    }, 100);
+  }
 
   /**
    * Creates a new WebSocketPool instance that uses multiple redundant WebSocket connections for reliability.
@@ -22,22 +36,21 @@ export class WebSocketPool {
    * @param numConnections - Number of parallel WebSocket connections to maintain (default: 3)
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
-  constructor(
+  static async create(
     urls: string[],
     token: string,
     numConnections: number = DEFAULT_NUM_CONNECTIONS,
-    private readonly logger: Logger = dummyLogger
-  ) {
+    logger: Logger = dummyLogger
+  ): Promise<WebSocketPool> {
     if (urls.length === 0) {
       throw new Error("No URLs provided");
     }
-    // This cache is used to deduplicate messages received across different websocket clients in the pool.
-    // A TTL cache is used to prevent unbounded memory usage. A very short TTL of 10 seconds is chosen since
-    // deduplication only needs to happen between messages received very close together in time.
-    this.cache = new TTLCache({ ttl: 1000 * 10 }); // TTL of 10 seconds
-    this.rwsPool = [];
-    this.subscriptions = new Map();
-    this.messageListeners = [];
+
+    const pool = new WebSocketPool(logger);
+
+    // Create all websocket instances
+    const connectionPromises: Promise<void>[] = [];
+
     for (let i = 0; i < numConnections; i++) {
       const url = urls[i % urls.length];
       if (!url) {
@@ -52,36 +65,44 @@ export class WebSocketPool {
 
       // If a websocket client unexpectedly disconnects, ResilientWebSocket will reestablish
       // the connection and call the onReconnect callback.
-      // When we reconnect, replay all subscription messages to resume the data stream.
       rws.onReconnect = () => {
         if (rws.wsUserClosed) {
           return;
         }
-        for (const [, request] of this.subscriptions) {
+        for (const [, request] of pool.subscriptions) {
           try {
             void rws.send(JSON.stringify(request));
           } catch (error) {
-            this.logger.error(
+            pool.logger.error(
               "Failed to resend subscription on reconnect:",
               error
             );
           }
         }
       };
+
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
-      rws.onMessage = this.dedupeHandler;
-      this.rwsPool.push(rws);
+      rws.onMessage = pool.dedupeHandler;
+      pool.rwsPool.push(rws);
+
+      // Start the websocket and collect the promise
+      connectionPromises.push(rws.startWebSocket());
     }
 
-    // Let it rip
-    // TODO: wait for sockets to receive `open` msg before subscribing?
-    for (const rws of this.rwsPool) {
-      rws.startWebSocket();
+    // Wait for all connections to be established
+    try {
+      await Promise.all(connectionPromises);
+    } catch (error) {
+      // If any connection fails, clean up and throw
+      pool.shutdown();
+      throw error;
     }
 
-    this.logger.info(
-      `Using ${numConnections.toString()} redundant WebSocket connections`
+    pool.logger.info(
+      `Successfully established ${numConnections.toString()} redundant WebSocket connections`
     );
+
+    return pool;
   }
 
   /**
@@ -105,23 +126,18 @@ export class WebSocketPool {
    * multiple connections before forwarding to registered handlers
    */
   dedupeHandler = (data: WebSocket.Data): void => {
-    // For string data, use the whole string as the cache key. This avoids expensive JSON parsing during deduping.
-    // For binary data, use the hex string representation as the cache key
     const cacheKey =
       typeof data === "string"
         ? data
         : Buffer.from(data as Buffer).toString("hex");
 
-    // If we've seen this exact message recently, drop it
     if (this.cache.has(cacheKey)) {
       this.logger.debug("Dropping duplicate message");
       return;
     }
 
-    // Haven't seen this message, cache it and forward to handlers
     this.cache.set(cacheKey, true);
 
-    // Check for errors in JSON responses
     if (typeof data === "string") {
       this.handleErrorMessages(data);
     }
@@ -131,28 +147,18 @@ export class WebSocketPool {
     }
   };
 
-  /**
-   * Sends a message to all websockets in the pool
-   * @param request - The request to send
-   */
   async sendRequest(request: Request): Promise<void> {
-    // Send to all websockets in the pool
     const sendPromises = this.rwsPool.map(async (rws) => {
       try {
         await rws.send(JSON.stringify(request));
       } catch (error) {
         this.logger.error("Failed to send request:", error);
-        throw error; // Re-throw the error
+        throw error;
       }
     });
     await Promise.all(sendPromises);
   }
 
-  /**
-   * Adds a subscription by sending a subscribe request to all websockets in the pool
-   * and storing it for replay on reconnection
-   * @param request - The subscription request to send
-   */
   async addSubscription(request: Request): Promise<void> {
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
@@ -161,11 +167,6 @@ export class WebSocketPool {
     await this.sendRequest(request);
   }
 
-  /**
-   * Removes a subscription by sending an unsubscribe request to all websockets in the pool
-   * and removing it from stored subscriptions
-   * @param subscriptionId - The ID of the subscription to remove
-   */
   async removeSubscription(subscriptionId: number): Promise<void> {
     this.subscriptions.delete(subscriptionId);
     const request: Request = {
@@ -175,17 +176,40 @@ export class WebSocketPool {
     await this.sendRequest(request);
   }
 
-  /**
-   * Adds a message handler function to receive websocket messages
-   * @param handler - Function that will be called with each received message
-   */
   addMessageListener(handler: (data: WebSocket.Data) => void): void {
     this.messageListeners.push(handler);
   }
 
   /**
-   * Elegantly closes all websocket connections in the pool
+   * Calls the handler if all websocket connections are currently down or in reconnecting state.
+   * The connections may still try to reconnect in the background.
    */
+  addAllConnectionsDownListener(handler: () => void): void {
+    this.allConnectionsDownListeners.push(handler);
+  }
+
+  private areAllConnectionsDown(): boolean {
+    return this.rwsPool.every((ws) => !ws.isConnected || ws.isReconnecting);
+  }
+
+  private checkConnectionStates(): void {
+    const allDown = this.areAllConnectionsDown();
+
+    // If all connections just went down
+    if (allDown && !this.wasAllDown) {
+      this.wasAllDown = true;
+      this.logger.error("All WebSocket connections are down or reconnecting");
+      // Notify all listeners
+      for (const listener of this.allConnectionsDownListeners) {
+        listener();
+      }
+    }
+    // If at least one connection was restored
+    if (!allDown && this.wasAllDown) {
+      this.wasAllDown = false;
+    }
+  }
+
   shutdown(): void {
     for (const rws of this.rwsPool) {
       rws.closeWebSocket();
@@ -193,5 +217,6 @@ export class WebSocketPool {
     this.rwsPool = [];
     this.subscriptions.clear();
     this.messageListeners = [];
+    this.allConnectionsDownListeners = [];
   }
 }

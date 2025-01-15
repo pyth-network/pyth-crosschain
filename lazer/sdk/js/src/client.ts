@@ -10,7 +10,7 @@ import {
   type Response,
   SOLANA_FORMAT_MAGIC_BE,
 } from "./protocol.js";
-import { WebSocketPool } from "./socket/web-socket-pool.js";
+import { WebSocketPool } from "./socket/websocket-pool.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -30,24 +30,31 @@ const UINT32_NUM_BYTES = 4;
 const UINT64_NUM_BYTES = 8;
 
 export class PythLazerClient {
-  wsp: WebSocketPool;
+  private constructor(private readonly wsp: WebSocketPool) {}
 
   /**
    * Creates a new PythLazerClient instance.
    * @param urls - List of WebSocket URLs of the Pyth Lazer service
    * @param token - The access token for authentication
-   * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream.
+   * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream. The connections will round-robin across the provided URLs.
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
-  constructor(
+  static async create(
     urls: string[],
     token: string,
     numConnections = 3,
     logger: Logger = dummyLogger
-  ) {
-    this.wsp = new WebSocketPool(urls, token, numConnections, logger);
+  ): Promise<PythLazerClient> {
+    const wsp = await WebSocketPool.create(urls, token, numConnections, logger);
+    return new PythLazerClient(wsp);
   }
 
+  /**
+   * Adds a message listener that receives either JSON or binary responses from the WebSocket connections.
+   * The listener will be called for each message received, with deduplication across redundant connections.
+   * @param handler - Callback function that receives the parsed message. The message can be either a JSON response
+   * or a binary response containing EVM, Solana, or parsed payload data.
+   */
   addMessageListener(handler: (event: JsonOrBinaryResponse) => void) {
     this.wsp.addMessageListener((data: WebSocket.Data) => {
       if (typeof data == "string") {
@@ -108,6 +115,15 @@ export class PythLazerClient {
 
   async send(request: Request): Promise<void> {
     await this.wsp.sendRequest(request);
+  }
+
+  /**
+   * Registers a handler function that will be called whenever all WebSocket connections are down or attempting to reconnect.
+   * The connections may still try to reconnect in the background. To shut down the pool, call `shutdown()`.
+   * @param handler - Function to be called when all connections are down
+   */
+  addAllConnectionsDownListener(handler: () => void): void {
+    this.wsp.addAllConnectionsDownListener(handler);
   }
 
   shutdown(): void {
