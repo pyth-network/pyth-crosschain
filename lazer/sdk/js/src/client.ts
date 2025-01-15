@@ -111,6 +111,13 @@ export class PythLazerClient {
     await this.wsp.sendRequest(request);
   }
 
+  /**
+   * Returns a promise that resolves when all WebSocket connections are down or attempting to reconnect
+   */
+  onAllConnectionsDown(): Promise<void> {
+    return this.wsp.onAllConnectionsDown();
+  }
+
   shutdown(): void {
     this.wsp.shutdown();
   }

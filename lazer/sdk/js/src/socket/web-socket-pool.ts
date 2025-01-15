@@ -12,12 +12,18 @@ export class WebSocketPool {
   private cache: TTLCache<string, boolean>;
   private subscriptions: Map<number, Request>; // id -> subscription Request
   private messageListeners: ((event: WebSocket.Data) => void)[];
+  private allConnectionsDownListeners: (() => void)[];
+  private wasAllDown: boolean = true;
 
   private constructor(private readonly logger: Logger = dummyLogger) {
     this.rwsPool = [];
     this.cache = new TTLCache({ ttl: 1000 * 10 }); // TTL of 10 seconds
     this.subscriptions = new Map();
     this.messageListeners = [];
+    this.allConnectionsDownListeners = [];
+
+    // Start monitoring connection states
+    setInterval(() => this.checkConnectionStates(), 100);
   }
 
   /**
@@ -172,6 +178,43 @@ export class WebSocketPool {
     this.messageListeners.push(handler);
   }
 
+  /**
+   * Monitors if all websocket connections are currently down or in reconnecting state
+   * Returns a promise that resolves when all connections are down
+   */
+  onAllConnectionsDown(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.areAllConnectionsDown()) {
+        resolve();
+      } else {
+        this.allConnectionsDownListeners.push(resolve);
+      }
+    });
+  }
+
+  private areAllConnectionsDown(): boolean {
+    return this.rwsPool.every((ws) => !ws.isConnected || ws.isReconnecting);
+  }
+
+  private checkConnectionStates(): void {
+    const allDown = this.areAllConnectionsDown();
+
+    // If all connections just went down
+    if (allDown && !this.wasAllDown) {
+      this.wasAllDown = true;
+      this.logger.error("All WebSocket connections are down or reconnecting");
+      // Notify all listeners
+      while (this.allConnectionsDownListeners.length > 0) {
+        const listener = this.allConnectionsDownListeners.shift();
+        listener?.();
+      }
+    }
+    // If at least one connection was restored
+    if (!allDown && this.wasAllDown) {
+      this.wasAllDown = false;
+    }
+  }
+
   shutdown(): void {
     for (const rws of this.rwsPool) {
       rws.closeWebSocket();
@@ -179,5 +222,6 @@ export class WebSocketPool {
     this.rwsPool = [];
     this.subscriptions.clear();
     this.messageListeners = [];
+    this.allConnectionsDownListeners = [];
   }
 }

@@ -16,6 +16,15 @@ export class ResilientWebSocket {
   private connectionPromise: Promise<void> | undefined;
   private resolveConnection: (() => void) | undefined;
   private rejectConnection: ((error: Error) => void) | undefined;
+  private _isReconnecting: boolean = false;
+
+  get isReconnecting(): boolean {
+    return this._isReconnecting;
+  }
+
+  get isConnected(): boolean {
+    return this.wsClient?.readyState === WebSocket.OPEN;
+  }
 
   onError: (error: ErrorEvent) => void;
   onMessage: (data: WebSocket.Data) => void;
@@ -90,6 +99,7 @@ export class ResilientWebSocket {
       this.wsFailedAttempts = 0;
       this.resetHeartbeat();
       clearTimeout(timeoutId);
+      this._isReconnecting = false;
       this.resolveConnection?.();
     });
 
@@ -167,6 +177,7 @@ export class ResilientWebSocket {
 
       const waitTime = expoBackoff(this.wsFailedAttempts);
 
+      this._isReconnecting = true;
       this.logger?.error(
         "Connection closed unexpectedly or because of timeout. Reconnecting after " +
           String(waitTime) +
