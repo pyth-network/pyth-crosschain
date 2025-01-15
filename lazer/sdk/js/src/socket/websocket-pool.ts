@@ -14,6 +14,7 @@ export class WebSocketPool {
   private messageListeners: ((event: WebSocket.Data) => void)[];
   private allConnectionsDownListeners: (() => void)[];
   private wasAllDown = true;
+  private checkConnectionStatesInterval: NodeJS.Timeout;
 
   private constructor(private readonly logger: Logger = dummyLogger) {
     this.rwsPool = [];
@@ -23,7 +24,7 @@ export class WebSocketPool {
     this.allConnectionsDownListeners = [];
 
     // Start monitoring connection states
-    setInterval(() => {
+    this.checkConnectionStatesInterval = setInterval(() => {
       this.checkConnectionStates();
     }, 100);
   }
@@ -218,5 +219,6 @@ export class WebSocketPool {
     this.subscriptions.clear();
     this.messageListeners = [];
     this.allConnectionsDownListeners = [];
+    clearInterval(this.checkConnectionStatesInterval);
   }
 }
