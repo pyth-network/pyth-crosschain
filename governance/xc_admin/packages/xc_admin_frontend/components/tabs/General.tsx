@@ -46,7 +46,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     useState(false)
   const { cluster } = useContext(ClusterContext)
   const isRemote: boolean = isRemoteCluster(cluster) // Move to multisig context
-  const { isLoading: isMultisigLoading, squads } = useMultisigContext()
+  const { isLoading: isMultisigLoading, readOnlySquads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
@@ -289,12 +289,17 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   }
 
   const handleSendProposalButtonClick = async () => {
-    if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
+    if (
+      pythProgramClient &&
+      dataChanges &&
+      !isMultisigLoading &&
+      readOnlySquads
+    ) {
       const instructions: TransactionInstruction[] = []
       const publisherInPriceStoreInitializationsVerified: PublicKey[] = []
 
       for (const symbol of Object.keys(dataChanges)) {
-        const multisigAuthority = squads.getAuthorityPDA(
+        const multisigAuthority = readOnlySquads.getAuthorityPDA(
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
           1
         )
@@ -845,11 +850,10 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             <button
               className="action-btn text-base"
               onClick={handleSendProposalButtonClick}
-              disabled={isSendProposalButtonLoading || !squads}
+              disabled={isSendProposalButtonLoading}
             >
               {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
             </button>
-            {!squads && <div>Please connect your wallet</div>}
           </>
         )}
       </>
@@ -858,10 +862,10 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected && squads && connection) {
+    if (connected && readOnlySquads && connection) {
       const provider = new AnchorProvider(
         connection,
-        squads.wallet as Wallet,
+        readOnlySquads.wallet as Wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
@@ -878,7 +882,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         )
       }
     }
-  }, [connection, connected, cluster, squads])
+  }, [connection, connected, cluster, readOnlySquads])
 
   return (
     <div className="relative">
@@ -903,13 +907,13 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           <PermissionDepermissionKey
             isPermission={true}
             pythProgramClient={pythProgramClient}
-            squads={squads}
+            squads={readOnlySquads}
             proposerServerUrl={proposerServerUrl}
           />
           <PermissionDepermissionKey
             isPermission={false}
             pythProgramClient={pythProgramClient}
-            squads={squads}
+            squads={readOnlySquads}
             proposerServerUrl={proposerServerUrl}
           />
         </div>

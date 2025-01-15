@@ -56,7 +56,6 @@ const PermissionDepermissionKey = ({
   const [priceAccounts, setPriceAccounts] = useState<PublicKey[]>([])
   const { cluster } = useContext(ClusterContext)
   const { rawConfig, dataIsLoading, connection } = usePythContext()
-  const { connected } = useWallet()
 
   // get current input value
 
@@ -265,22 +264,16 @@ const PermissionDepermissionKey = ({
                       />
                     </div>
                     <div className="mt-6">
-                      {!connected ? (
-                        <div className="flex justify-center">
-                          <WalletModalButton className="action-btn text-base" />
-                        </div>
-                      ) : (
-                        <button
-                          className="action-btn text-base"
-                          onClick={handleSubmitButton}
-                        >
-                          {isSubmitButtonLoading ? (
-                            <Spinner />
-                          ) : (
-                            'Submit Proposal'
-                          )}
-                        </button>
-                      )}
+                      <button
+                        className="action-btn text-base"
+                        onClick={handleSubmitButton}
+                      >
+                        {isSubmitButtonLoading ? (
+                          <Spinner />
+                        ) : (
+                          'Submit Proposal'
+                        )}
+                      </button>
                     </div>
                   </div>
                 </Dialog.Panel>

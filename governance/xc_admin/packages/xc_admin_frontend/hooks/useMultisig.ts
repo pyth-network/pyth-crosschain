@@ -16,6 +16,7 @@ import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 export interface MultisigHookData {
   isLoading: boolean
   squads: SquadsMesh | undefined
+  readOnlySquads: SquadsMesh | undefined
   upgradeMultisigAccount: MultisigAccount | undefined
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
@@ -47,6 +48,7 @@ export const useMultisig = (): MultisigHookData => {
     TransactionAccount[]
   >([])
   const [squads, setSquads] = useState<SquadsMesh | undefined>()
+  const [readOnlySquads, setReadOnlySquads] = useState<SquadsMesh | undefined>()
 
   const [urlsIndex, setUrlsIndex] = useState(0)
 
@@ -73,9 +75,23 @@ export const useMultisig = (): MultisigHookData => {
         })
       )
     } else {
-      setSquads(undefined)
+      setSquads(
+        new SquadsMesh({
+          connection,
+          wallet: new NodeWallet(new Keypair()),
+        })
+      )
     }
-  }, [wallet, urlsIndex, cluster, connection])
+  }, [wallet, connection])
+
+  useEffect(() => {
+    setReadOnlySquads(
+      new SquadsMesh({
+        connection,
+        wallet: new NodeWallet(new Keypair()),
+      })
+    )
+  }, [connection])
 
   const refreshData = useCallback(() => {
     let cancelled = false
@@ -83,11 +99,7 @@ export const useMultisig = (): MultisigHookData => {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        // mock wallet to allow users to view proposals without connecting their wallet
-        const readOnlySquads = new SquadsMesh({
-          connection,
-          wallet: new NodeWallet(new Keypair()),
-        })
+        if (!readOnlySquads) return
         if (cancelled) return
         const upgradeMultisigAccount = await readOnlySquads.getMultisig(
           UPGRADE_MULTISIG[multisigCluster]
@@ -147,6 +159,7 @@ export const useMultisig = (): MultisigHookData => {
   return {
     isLoading,
     squads,
+    readOnlySquads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
