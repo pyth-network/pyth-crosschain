@@ -1,8 +1,6 @@
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
   AccountMeta,
-  Keypair,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
