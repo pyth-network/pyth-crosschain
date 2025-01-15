@@ -42,7 +42,7 @@ client.addMessageListener((message) => {
 
 // Monitor for all connections in the pool being down simultaneously (e.g. if the internet goes down)
 // The connections may still try to reconnect in the background. To shut down the client completely, call shutdown().
-client.addAllConnectionsDownHandler(() => {
+client.addAllConnectionsDownListener(() => {
   console.error("All connections are down!");
 });
 

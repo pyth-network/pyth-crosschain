@@ -122,7 +122,7 @@ export class PythLazerClient {
    * The connections may still try to reconnect in the background. To shut down the pool, call `shutdown()`.
    * @param handler - Function to be called when all connections are down
    */
-  addAllConnectionsDownHandler(handler: () => void): void {
+  addAllConnectionsDownListener(handler: () => void): void {
     this.wsp.addAllConnectionsDownListener(handler);
   }
 
