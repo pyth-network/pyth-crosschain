@@ -49,6 +49,12 @@ export class PythLazerClient {
     return new PythLazerClient(wsp);
   }
 
+  /**
+   * Adds a message listener that receives either JSON or binary responses from the WebSocket connections.
+   * The listener will be called for each message received, with deduplication across redundant connections.
+   * @param handler - Callback function that receives the parsed message. The message can be either a JSON response
+   * or a binary response containing EVM, Solana, or parsed payload data.
+   */
   addMessageListener(handler: (event: JsonOrBinaryResponse) => void) {
     this.wsp.addMessageListener((data: WebSocket.Data) => {
       if (typeof data == "string") {
@@ -112,10 +118,12 @@ export class PythLazerClient {
   }
 
   /**
-   * Returns a promise that resolves when all WebSocket connections are down or attempting to reconnect
+   * Registers a handler function that will be called whenever all WebSocket connections are down or attempting to reconnect.
+   * The connections may still try to reconnect in the background. To shut down the pool, call `shutdown()`.
+   * @param handler - Function to be called when all connections are down
    */
-  onAllConnectionsDown(): Promise<void> {
-    return this.wsp.onAllConnectionsDown();
+  addAllConnectionsDownHandler(handler: () => void): void {
+    this.wsp.addAllConnectionsDownListener(handler);
   }
 
   shutdown(): void {

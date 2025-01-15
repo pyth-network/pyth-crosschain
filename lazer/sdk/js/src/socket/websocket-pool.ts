@@ -181,17 +181,11 @@ export class WebSocketPool {
   }
 
   /**
-   * Monitors if all websocket connections are currently down or in reconnecting state.
-   * Returns a promise that resolves when all connections are down.
+   * Calls the handler if all websocket connections are currently down or in reconnecting state.
+   * The connections may still try to reconnect in the background.
    */
-  onAllConnectionsDown(): Promise<void> {
-    return new Promise((resolve) => {
-      if (this.areAllConnectionsDown()) {
-        resolve();
-      } else {
-        this.allConnectionsDownListeners.push(resolve);
-      }
-    });
+  addAllConnectionsDownListener(handler: () => void): void {
+    this.allConnectionsDownListeners.push(handler);
   }
 
   private areAllConnectionsDown(): boolean {
@@ -206,9 +200,8 @@ export class WebSocketPool {
       this.wasAllDown = true;
       this.logger.error("All WebSocket connections are down or reconnecting");
       // Notify all listeners
-      while (this.allConnectionsDownListeners.length > 0) {
-        const listener = this.allConnectionsDownListeners.shift();
-        listener?.();
+      for (const listener of this.allConnectionsDownListeners) {
+        listener();
       }
     }
     // If at least one connection was restored
