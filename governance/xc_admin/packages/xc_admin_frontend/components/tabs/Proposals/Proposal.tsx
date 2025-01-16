@@ -179,7 +179,7 @@ export const Proposal = ({
       : contextCluster
 
   const {
-    squads,
+    walletSquads: squads,
     isLoading: isMultisigLoading,
     refreshData,
     readOnlySquads,

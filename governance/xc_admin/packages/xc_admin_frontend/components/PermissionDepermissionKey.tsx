@@ -37,12 +37,12 @@ const assetTypes = [
 const PermissionDepermissionKey = ({
   isPermission,
   pythProgramClient,
-  squads,
+  readOnlySquads,
   proposerServerUrl,
 }: {
   isPermission: boolean
   pythProgramClient?: Program<PythOracle>
-  squads?: SquadsMesh
+  readOnlySquads: SquadsMesh
   proposerServerUrl: string
 }) => {
   const [publisherKey, setPublisherKey] = useState(
@@ -74,9 +74,9 @@ const PermissionDepermissionKey = ({
   }
 
   const handleSubmitButton = async () => {
-    if (pythProgramClient && squads) {
+    if (pythProgramClient) {
       const instructions: TransactionInstruction[] = []
-      const multisigAuthority = squads.getAuthorityPDA(
+      const multisigAuthority = readOnlySquads.getAuthorityPDA(
         PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
         1
       )

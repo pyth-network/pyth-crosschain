@@ -22,7 +22,7 @@ export const MultisigContextProvider: React.FC<
 > = ({ children }) => {
   const {
     isLoading,
-    squads,
+    walletSquads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
@@ -39,13 +39,13 @@ export const MultisigContextProvider: React.FC<
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
       isLoading,
-      squads,
+      walletSquads,
       refreshData,
       connection,
       readOnlySquads,
     }),
     [
-      squads,
+      walletSquads,
       isLoading,
       upgradeMultisigAccount,
       priceFeedMultisigAccount,

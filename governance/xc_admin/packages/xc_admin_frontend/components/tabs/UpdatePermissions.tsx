@@ -110,7 +110,7 @@ const UpdatePermissions = () => {
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
   const { cluster } = useContext(ClusterContext)
-  const { isLoading: isMultisigLoading, squads } = useMultisigContext()
+  const { isLoading: isMultisigLoading, walletSquads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
@@ -239,12 +239,12 @@ const UpdatePermissions = () => {
   }
 
   const handleSendProposalButtonClick = () => {
-    if (pythProgramClient && finalPubkeyChanges && squads) {
+    if (pythProgramClient && finalPubkeyChanges && walletSquads) {
       const programDataAccount = PublicKey.findProgramAddressSync(
         [pythProgramClient?.programId.toBuffer()],
         BPF_UPGRADABLE_LOADER
       )[0]
-      const multisigAuthority = squads.getAuthorityPDA(
+      const multisigAuthority = walletSquads.getAuthorityPDA(
         UPGRADE_MULTISIG[getMultisigCluster(cluster)],
         1
       )
@@ -267,9 +267,9 @@ const UpdatePermissions = () => {
             setIsSendProposalButtonLoading(true)
             try {
               const vault = new MultisigVault(
-                squads.wallet as Wallet,
+                walletSquads.wallet as Wallet,
                 getMultisigCluster(cluster),
-                squads,
+                walletSquads,
                 UPGRADE_MULTISIG[getMultisigCluster(cluster)]
               )
 
@@ -335,17 +335,17 @@ const UpdatePermissions = () => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected && squads && connection) {
+    if (connected && walletSquads && connection) {
       const provider = new AnchorProvider(
         connection,
-        squads.wallet as Wallet,
+        walletSquads.wallet as Wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
         pythOracleProgram(getPythProgramKeyForCluster(cluster), provider)
       )
     }
-  }, [connection, connected, cluster, squads])
+  }, [connection, connected, cluster, walletSquads])
 
   return (
     <div className="relative">

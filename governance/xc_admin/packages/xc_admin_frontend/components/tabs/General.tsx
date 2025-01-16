@@ -899,13 +899,13 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           <PermissionDepermissionKey
             isPermission={true}
             pythProgramClient={pythProgramClient}
-            squads={readOnlySquads}
+            readOnlySquads={readOnlySquads}
             proposerServerUrl={proposerServerUrl}
           />
           <PermissionDepermissionKey
             isPermission={false}
             pythProgramClient={pythProgramClient}
-            squads={readOnlySquads}
+            readOnlySquads={readOnlySquads}
             proposerServerUrl={proposerServerUrl}
           />
         </div>

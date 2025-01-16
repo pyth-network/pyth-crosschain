@@ -15,7 +15,7 @@ import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
 export interface MultisigHookData {
   isLoading: boolean
-  squads: SquadsMesh | undefined
+  walletSquads: SquadsMesh | undefined
   readOnlySquads: SquadsMesh
   upgradeMultisigAccount: MultisigAccount | undefined
   priceFeedMultisigAccount: MultisigAccount | undefined
@@ -26,10 +26,10 @@ export interface MultisigHookData {
 }
 
 const getSortedProposals = async (
-  squads: SquadsMesh,
+  readOnlySquads: SquadsMesh,
   vault: PublicKey
 ): Promise<TransactionAccount[]> => {
-  const proposals = await getProposals(squads, vault)
+  const proposals = await getProposals(readOnlySquads, vault)
   return proposals.sort((a, b) => b.transactionIndex - a.transactionIndex)
 }
 
@@ -71,7 +71,7 @@ export const useMultisig = (): MultisigHookData => {
     })
   }, [connection])
 
-  const squads = useMemo(() => {
+  const walletSquads = useMemo(() => {
     if (!wallet) return undefined
     return new SquadsMesh({
       connection,
@@ -143,7 +143,7 @@ export const useMultisig = (): MultisigHookData => {
 
   return {
     isLoading,
-    squads,
+    walletSquads,
     readOnlySquads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
