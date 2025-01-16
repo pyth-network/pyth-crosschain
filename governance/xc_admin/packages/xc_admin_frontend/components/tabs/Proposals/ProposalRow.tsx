@@ -52,7 +52,7 @@ export const ProposalRow = ({
     const element = elementRef.current
     const observer = new IntersectionObserver(async (entries) => {
       if (entries[0].isIntersecting) {
-        if (isMultisigLoading || !connection) {
+        if (isMultisigLoading) {
           return
         }
 
@@ -74,7 +74,6 @@ export const ProposalRow = ({
             })
         }
 
-        if (!readOnlySquads) return
         // calculate instructions summary
         if (!instructions) {
           const proposalInstructions = (

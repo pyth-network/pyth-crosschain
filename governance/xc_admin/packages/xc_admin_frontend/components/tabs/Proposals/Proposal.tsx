@@ -238,7 +238,7 @@ export const Proposal = ({
   useEffect(() => {
     let isCancelled = false
     const fetchInstructions = async () => {
-      if (proposal && readOnlySquads) {
+      if (proposal) {
         const proposalInstructions = (
           await getManyProposalsInstructions(readOnlySquads, [proposal])
         )[0]

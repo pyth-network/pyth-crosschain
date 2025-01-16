@@ -287,12 +287,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   }
 
   const handleSendProposalButtonClick = async () => {
-    if (
-      pythProgramClient &&
-      dataChanges &&
-      !isMultisigLoading &&
-      readOnlySquads
-    ) {
+    if (pythProgramClient && dataChanges && !isMultisigLoading) {
       const instructions: TransactionInstruction[] = []
       const publisherInPriceStoreInitializationsVerified: PublicKey[] = []
 
@@ -859,7 +854,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   }
 
   useEffect(() => {
-    if (readOnlySquads && connection) {
+    if (connection) {
       const provider = new AnchorProvider(
         connection,
         readOnlySquads.wallet as Wallet,

@@ -85,7 +85,6 @@ export const useMultisig = (): MultisigHookData => {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        if (!readOnlySquads) return
         if (cancelled) return
         const upgradeMultisigAccount = await readOnlySquads.getMultisig(
           UPGRADE_MULTISIG[multisigCluster]
