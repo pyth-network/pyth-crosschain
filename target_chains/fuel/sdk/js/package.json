@@ -21,13 +21,14 @@
   },
   "scripts": {
     "usage-example": "ts-node src/examples/usage.ts",
-    "build": "pnpm run generate-fuel-types && tsc && copyfiles -u 1 \"src/**/*.d.ts\" lib && pnpm run format",
-    "format": "prettier --write \"src/**/*.ts\"",
+    "build": "pnpm run generate-fuel-types && tsc && copyfiles -u 1 \"src/**/*.d.ts\" lib",
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "fix:format": "prettier --write \"src/**/*.ts\"",
     "test:lint": "eslint src/",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src",
-    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && prettier --write \"./src/types/**/*.ts\""
+    "version": "pnpm run test:format && git add -A src",
+    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && pnpm run fix:format"
   },
   "keywords": [
     "pyth",
