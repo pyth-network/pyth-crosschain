@@ -41,10 +41,14 @@ const parser = yargs(hideBin(process.argv))
 
 async function getPythPriceFeedDetails(chain: EvmChain, config: Config) {
   // Get wormhole contract from store
-  const wormholeContract = await getOrDeployWormholeContract(chain, {
-    ...config,
-    saveContract: true,
-  }, ".cache-get-details");
+  const wormholeContract = await getOrDeployWormholeContract(
+    chain,
+    {
+      ...config,
+      saveContract: true,
+    },
+    ".cache-get-details"
+  );
 
   // Deploy PythUpgradable contract
   const pythImplAddr = await deployIfNotCached(
@@ -100,10 +104,12 @@ async function main() {
   };
 
   console.log(`Getting Pyth price feed details for chain ${chain.getId()}...`);
-  
+
   const details = await getPythPriceFeedDetails(chain, config);
-  
-  console.log(`\nPyth Price Feed Implementation Address: ${details.pythImplAddr}`);
+
+  console.log(
+    `\nPyth Price Feed Implementation Address: ${details.pythImplAddr}`
+  );
   console.log(`Pyth Init Data: ${details.pythInitData}`);
 }
 
