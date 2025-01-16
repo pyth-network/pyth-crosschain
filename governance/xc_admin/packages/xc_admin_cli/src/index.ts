@@ -959,7 +959,7 @@ multisigCommand(
     const updateInstruction = await lazerProgram.methods
       .update(trustedSigner, expiryTime)
       .accounts({
-        authority: await vault.getVaultAuthorityPDA(targetCluster),
+        topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
         storage: SOLANA_STORAGE_ID,
       })
       .instruction();

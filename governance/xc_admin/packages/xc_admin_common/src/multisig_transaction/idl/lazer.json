@@ -238,28 +238,13 @@
             "name": "Ed25519InstructionMustPrecedeCurrentInstruction"
           },
           {
-            "name": "LoadInstructionAtFailed",
-            "fields": [
-              {
-                "defined": "ProgramError"
-              }
-            ]
+            "name": "LoadInstructionAtFailed"
           },
           {
-            "name": "LoadCurrentIndexFailed",
-            "fields": [
-              {
-                "defined": "ProgramError"
-              }
-            ]
+            "name": "LoadCurrentIndexFailed"
           },
           {
-            "name": "ClockGetFailed",
-            "fields": [
-              {
-                "defined": "ProgramError"
-              }
-            ]
+            "name": "ClockGetFailed"
           },
           {
             "name": "InvalidEd25519InstructionProgramId"

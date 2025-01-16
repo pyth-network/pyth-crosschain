@@ -3,10 +3,11 @@
 ## Verifiable Build
 
 To build the program in a verifiable way, use [Solana Verify CLI](https://github.com/Ellipsis-Labs/solana-verifiable-build). This tool builds the program in
-a docker container to ensure that the resulting binary is deterministic and verifiable. Run the following command to build the program:
+a docker container to ensure that the resulting binary is deterministic and verifiable. Run the following command to build the program
+in [the lazer root directory](./../../):
 
 ```bash
-solana-verify build -- --features solana-program
+solana-verify build --library-name pyth_lazer_solana_contract
 ```
 
 Once the build is complete, the program binary will be located in the `target/deploy` directory.
