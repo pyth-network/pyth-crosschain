@@ -47,8 +47,6 @@ export const useMultisig = (): MultisigHookData => {
   const [priceFeedMultisigProposals, setPriceFeedMultisigProposals] = useState<
     TransactionAccount[]
   >([])
-  const [squads, setSquads] = useState<SquadsMesh | undefined>()
-  const [readOnlySquads, setReadOnlySquads] = useState<SquadsMesh | undefined>()
 
   const [urlsIndex, setUrlsIndex] = useState(0)
 
@@ -66,32 +64,20 @@ export const useMultisig = (): MultisigHookData => {
     })
   }, [urlsIndex, multisigCluster])
 
-  useEffect(() => {
-    if (wallet) {
-      setSquads(
-        new SquadsMesh({
-          connection,
-          wallet,
-        })
-      )
-    } else {
-      setSquads(
-        new SquadsMesh({
-          connection,
-          wallet: new NodeWallet(new Keypair()),
-        })
-      )
-    }
-  }, [wallet, connection])
-
-  useEffect(() => {
-    setReadOnlySquads(
-      new SquadsMesh({
-        connection,
-        wallet: new NodeWallet(new Keypair()),
-      })
-    )
+  const readOnlySquads = useMemo(() => {
+    return new SquadsMesh({
+      connection,
+      wallet: new NodeWallet(new Keypair()),
+    })
   }, [connection])
+
+  const squads = useMemo(() => {
+    if (!wallet) return undefined
+    return new SquadsMesh({
+      connection,
+      wallet,
+    })
+  }, [connection, wallet])
 
   const refreshData = useCallback(() => {
     let cancelled = false
