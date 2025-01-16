@@ -22,7 +22,7 @@ async function main() {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     try {
       const provider = await contract.getDefaultProvider();
-      const w3 = new Web3(contract.getChain().getRpcUrl());
+      const w3 = contract.getChain().getWeb3();
       const balance = await w3.eth.getBalance(provider);
       const keeperBalance = await w3.eth.getBalance(keeperAddress);
       let version = "unknown";
