@@ -16,12 +16,12 @@ import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 export interface MultisigHookData {
   isLoading: boolean
   squads: SquadsMesh | undefined
-  readOnlySquads: SquadsMesh | undefined
+  readOnlySquads: SquadsMesh
   upgradeMultisigAccount: MultisigAccount | undefined
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
-  connection?: Connection
+  connection: Connection
   refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void }
 }
 
