@@ -55,7 +55,7 @@ async function testLatency(
   const startTime = Date.now();
 
   const fromBlock = requestResponse.blockNumber;
-  const web3 = new Web3(contract.chain.getRpcUrl());
+  const web3 = contract.chain.getWeb3();
   const entropyContract = contract.getContract();
 
   // eslint-disable-next-line no-constant-condition
