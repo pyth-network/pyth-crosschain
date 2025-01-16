@@ -224,6 +224,7 @@ export const RECEIVER_CHAINS = {
   coredao_testnet_v2: 50114,
   bittensor_testnet: 50115,
   monad_devnet: 50116,
+  monad_testnet: 50117,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
