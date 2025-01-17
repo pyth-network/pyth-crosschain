@@ -69,6 +69,7 @@ pub struct KeeperMetrics {
     pub balance: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub collected_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub current_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub target_provider_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub total_gas_spent: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub total_gas_fee_spent: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub requests: Family<AccountLabel, Counter>,
@@ -81,8 +82,7 @@ pub struct KeeperMetrics {
     pub retry_count: Family<AccountLabel, Histogram>,
     pub final_gas_multiplier: Family<AccountLabel, Histogram>,
     pub final_fee_multiplier: Family<AccountLabel, Histogram>,
-    pub priority_fee_estimate: Family<AccountLabel, Histogram>,
-    pub estimated_keeper_fee: Family<AccountLabel, Histogram>,
+    pub gas_price_estimate: Family<AccountLabel, Gauge<f64, AtomicU64>>,
 }
 
 impl Default for KeeperMetrics {
@@ -93,6 +93,7 @@ impl Default for KeeperMetrics {
             balance: Family::default(),
             collected_fee: Family::default(),
             current_fee: Family::default(),
+            target_provider_fee: Family::default(),
             total_gas_spent: Family::default(),
             total_gas_fee_spent: Family::default(),
             requests: Family::default(),
@@ -121,12 +122,7 @@ impl Default for KeeperMetrics {
             final_fee_multiplier: Family::new_with_constructor(|| {
                 Histogram::new(vec![100.0, 110.0, 120.0, 140.0, 160.0, 180.0, 200.0].into_iter())
             }),
-            priority_fee_estimate: Family::new_with_constructor(|| {
-                Histogram::new(vec![0.0, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 100.0].into_iter())
-            }),
-            estimated_keeper_fee: Family::new_with_constructor(|| {
-                Histogram::new(vec![0.0, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0].into_iter())
-            }),
+            gas_price_estimate: Family::default(),
         }
     }
 }
@@ -197,6 +193,12 @@ impl KeeperMetrics {
         );
 
         writable_registry.register(
+            "target_provider_fee",
+            "Target fee in ETH -- differs from current_fee in that this is the goal, and current_fee is the on-chain value.",
+            keeper_metrics.target_provider_fee.clone(),
+        );
+
+        writable_registry.register(
             "total_gas_spent",
             "Total gas spent revealing requests",
             keeper_metrics.total_gas_spent.clone(),
@@ -239,15 +241,9 @@ impl KeeperMetrics {
         );
 
         writable_registry.register(
-            "priority_fee_estimate",
-            "Priority fee estimate in gwei",
-            keeper_metrics.priority_fee_estimate.clone(),
-        );
-
-        writable_registry.register(
-            "estimated_keeper_fee",
-            "Estimated keeper fee in wei before thresholds",
-            keeper_metrics.estimated_keeper_fee.clone(),
+            "gas_price_estimate",
+            "Gas price estimate for the blockchain (in gwei)",
+            keeper_metrics.gas_price_estimate.clone(),
         );
 
         keeper_metrics
@@ -1224,7 +1220,7 @@ pub async fn adjust_fee_wrapper(
     loop {
         if let Err(e) = adjust_fee_if_necessary(
             contract.clone(),
-            &chain_state,
+            chain_state.id.clone(),
             provider_address,
             legacy_tx,
             gas_limit,
@@ -1309,7 +1305,7 @@ pub async fn update_commitments_if_necessary(
 #[allow(clippy::too_many_arguments)]
 pub async fn adjust_fee_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
-    chain_state: &BlockchainState,
+    chain_id: ChainId,
     provider_address: Address,
     legacy_tx: bool,
     gas_limit: u64,
@@ -1332,15 +1328,20 @@ pub async fn adjust_fee_if_necessary(
     }
 
     // Calculate target window for the on-chain fee.
-    let max_callback_cost: u128 = estimate_tx_cost(
-        contract.clone(),
-        chain_state.clone(),
-        legacy_tx,
-        gas_limit.into(),
-        metrics.clone(),
-    )
-    .await
-    .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
+    let max_callback_cost: u128 = estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
+        .await
+        .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
+
+    let account_label = AccountLabel {
+        chain_id: chain_id.clone(),
+        address: provider_address.to_string(),
+    };
+
+    metrics
+        .gas_price_estimate
+        .get_or_create(&account_label)
+        .set((max_callback_cost / u128::from(gas_limit)) as f64 / 1e9);
+
     let target_fee_min = std::cmp::max(
         (max_callback_cost * u128::from(min_profit_pct)) / 100,
         min_fee_wei,
@@ -1349,17 +1350,10 @@ pub async fn adjust_fee_if_necessary(
         (max_callback_cost * u128::from(target_profit_pct)) / 100,
         min_fee_wei,
     );
-
-    // Track estimated keeper fee before thresholds
-    // Track estimated keeper fee before thresholds
-    let account_label = AccountLabel {
-        chain_id: chain_state.id.clone(),
-        address: chain_state.provider_address.to_string(),
-    };
     metrics
-        .estimated_keeper_fee
+        .target_provider_fee
         .get_or_create(&account_label)
-        .observe(target_fee as f64 / 1e18); // Convert to ETH units
+        .set(((max_callback_cost * u128::from(target_profit_pct)) / 100) as f64 / 1e18);
 
     let target_fee_max = std::cmp::max(
         (max_callback_cost * u128::from(max_profit_pct)) / 100,
@@ -1436,10 +1430,8 @@ pub async fn adjust_fee_if_necessary(
 /// Estimate the cost (in wei) of a transaction consuming gas_used gas.
 pub async fn estimate_tx_cost(
     contract: Arc<InstrumentedSignablePythContract>,
-    chain_state: BlockchainState,
     use_legacy_tx: bool,
     gas_used: u128,
-    metrics: Arc<KeeperMetrics>,
 ) -> Result<u128> {
     let middleware = contract.client();
 
@@ -1456,16 +1448,6 @@ pub async fn estimate_tx_cost(
         // and use whatever the gas oracle returns.
         let (max_fee_per_gas, max_priority_fee_per_gas) =
             middleware.estimate_eip1559_fees(None).await?;
-
-        // Track priority fee estimate in gwei
-        let account_label = AccountLabel {
-            chain_id: chain_state.id.clone(),
-            address: chain_state.provider_address.to_string(),
-        };
-        metrics
-            .priority_fee_estimate
-            .get_or_create(&account_label)
-            .observe(max_priority_fee_per_gas.as_u128() as f64 / 1e9); // Convert to gwei
 
         (max_fee_per_gas + max_priority_fee_per_gas)
             .try_into()
