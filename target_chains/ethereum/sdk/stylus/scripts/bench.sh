@@ -14,7 +14,7 @@ export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f
 export WALLER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 ls
 cd "nitro-testnode"
-./test-node.bash script send-l2 --to address_$WALLER_ADDRESS --ethamount 0.1    
+./test-node.bash script send-l2 --to address_$WALLER_ADDRESS --ethamount 0.1
 
 cd ..
 cd "pyth-mock-solidity"

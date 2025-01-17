@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script compiles Rust contracts to WebAssembly and deploys the .wasm binaries to a blockchain using `cargo stylus deploy`. 
+# This script compiles Rust contracts to WebAssembly and deploys the .wasm binaries to a blockchain using `cargo stylus deploy`.
 # It retrieves crate names from Cargo.toml files in the examples directory and automates the deployment process for each contract.
 
 set -e
@@ -13,7 +13,7 @@ export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f
 export WALLER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 
 cd "nitro-testnode"
-./test-node.bash script send-l2 --to address_$WALLER_ADDRESS --ethamount 0.1    
+./test-node.bash script send-l2 --to address_$WALLER_ADDRESS --ethamount 0.1
 
 
 cd ..

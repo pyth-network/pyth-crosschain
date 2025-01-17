@@ -6,8 +6,7 @@ import {console} from "forge-std/console.sol";
 
 contract MockPythSample is MockPyth {
     constructor(
-        uint validTimePeriod, uint singleUpdateFeeInWei
-    )  MockPyth(validTimePeriod, singleUpdateFeeInWei) {
-        
-    }
+        uint validTimePeriod,
+        uint singleUpdateFeeInWei
+    ) MockPyth(validTimePeriod, singleUpdateFeeInWei) {}
 }

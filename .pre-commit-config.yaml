@@ -165,7 +165,7 @@ repos:
         files: lazer
       - id: cargo-fmt-stylus-sdk
         name: Cargo format for Stylus SDK
-        language: "rust"        
+        language: "rust"
         entry: cargo +1.82.0 fmt --manifest-path ./target_chains/ethereum/sdk/stylus/Cargo.toml --all
         pass_filenames: false
         files: target_chains/ethereum/sdk/stylus

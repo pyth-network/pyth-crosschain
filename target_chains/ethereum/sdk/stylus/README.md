@@ -33,7 +33,6 @@ To consume prices, use the functions interface. Be sure to read the function doc
 
 For example, to read the latest price, call [`getPriceNoOlderThan`](https://github.com/pyth-network/pyth-crosschain/blob/stylus-sdk/target_chains/ethereum/sdk/stylus/contracts/src/pyth/functions.rs) with the Price ID of the price feed you are interested in:
 
-
 You can interact directly with the Pyth contract, which implements the IPyth functions, instead of using call functions:
 
 ```rust
@@ -61,7 +60,6 @@ impl ProxyCallsExample {
 
 [MockPyth](./mock.rs) is a mock contract that can be deployed locally to simulate Pyth contract behavior. To set and update price feeds, call `updatePriceFeeds` and provide an array of encoded price feeds as the argument. Encoded price feeds can be created using the `create_price_feed_update_data` function in the mock contract, which is also available in the functions module.
 
-
 ## Test Documentation
 
 ### Running Unit Tests for `pyth-stylus`
@@ -73,9 +71,9 @@ cargo test -p pyth-stylus --all-features
 ```
 
 This command will:
+
 - Target the `pyth-stylus` package specifically (`-p pyth-stylus`).
 - Enable **all features** defined in the package during the test run (`--all-features`).
-
 
 ### Running End-to-End Tests
 
@@ -91,7 +89,6 @@ To run the end-to-end tests for `pyth-stylus`, follow these steps:
    ```
    ./scripts/e2e-tests.sh
    ```
-
 
 ### Releases
 
