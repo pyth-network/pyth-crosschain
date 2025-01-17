@@ -45,6 +45,11 @@ abstract contract Pulse is IPulse, PulseState {
         bytes32[] calldata priceIds,
         uint256 callbackGasLimit
     ) external payable override returns (uint64 requestSequenceNumber) {
+        // NOTE: The 60-second future limit on publishTime prevents a DoS vector where
+        //      attackers could submit many low-fee requests for far-future updates when gas prices
+        //      are low, forcing executors to fulfill them later when gas prices might be much higher.
+        //      Since tx.gasprice is used to calculate fees, allowing far-future requests would make
+        //      the fee estimation unreliable.
         require(publishTime <= block.timestamp + 60, "Too far in future");
         if (priceIds.length > MAX_PRICE_IDS) {
             revert TooManyPriceIds(priceIds.length, MAX_PRICE_IDS);
@@ -98,7 +103,13 @@ abstract contract Pulse is IPulse, PulseState {
                 SafeCast.toUint64(req.publishTime)
             );
 
-        // Check if enough gas remains for the callback plus 50% overhead for cross-contract call (uses integer arithmetic to avoid floating point)
+        clearRequest(sequenceNumber);
+
+        // Check if enough gas remains for callback + events/cleanup
+        // We need extra gas beyond callbackGasLimit for:
+        // 1. Emitting success/failure events
+        // 2. Error handling in catch blocks
+        // 3. State cleanup operations
         if (gasleft() < (req.callbackGasLimit * 3) / 2) {
             revert InsufficientGas();
         }
@@ -129,8 +140,6 @@ abstract contract Pulse is IPulse, PulseState {
                 "low-level error (possibly out of gas)"
             );
         }
-
-        clearRequest(sequenceNumber);
     }
 
     function emitPriceUpdate(
