@@ -1,8 +1,6 @@
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
   AccountMeta,
-  Keypair,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
@@ -181,10 +179,10 @@ export const Proposal = ({
       : contextCluster
 
   const {
-    squads,
+    walletSquads: squads,
     isLoading: isMultisigLoading,
-    connection,
     refreshData,
+    readOnlySquads,
   } = useMultisigContext()
   const {
     priceAccountKeyToSymbolMapping,
@@ -240,11 +238,7 @@ export const Proposal = ({
   useEffect(() => {
     let isCancelled = false
     const fetchInstructions = async () => {
-      if (proposal && connection) {
-        const readOnlySquads = new SquadsMesh({
-          connection,
-          wallet: new NodeWallet(new Keypair()),
-        })
+      if (proposal) {
         const proposalInstructions = (
           await getManyProposalsInstructions(readOnlySquads, [proposal])
         )[0]
@@ -267,7 +261,7 @@ export const Proposal = ({
     return () => {
       isCancelled = true
     }
-  }, [cluster, proposal, squads, connection])
+  }, [cluster, proposal, readOnlySquads])
 
   const handleClick = async (
     instructionGenerator: (

@@ -15,20 +15,21 @@ import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
 export interface MultisigHookData {
   isLoading: boolean
-  squads: SquadsMesh | undefined
+  walletSquads: SquadsMesh | undefined
+  readOnlySquads: SquadsMesh
   upgradeMultisigAccount: MultisigAccount | undefined
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
-  connection?: Connection
+  connection: Connection
   refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void }
 }
 
 const getSortedProposals = async (
-  squads: SquadsMesh,
+  readOnlySquads: SquadsMesh,
   vault: PublicKey
 ): Promise<TransactionAccount[]> => {
-  const proposals = await getProposals(squads, vault)
+  const proposals = await getProposals(readOnlySquads, vault)
   return proposals.sort((a, b) => b.transactionIndex - a.transactionIndex)
 }
 
@@ -46,7 +47,6 @@ export const useMultisig = (): MultisigHookData => {
   const [priceFeedMultisigProposals, setPriceFeedMultisigProposals] = useState<
     TransactionAccount[]
   >([])
-  const [squads, setSquads] = useState<SquadsMesh | undefined>()
 
   const [urlsIndex, setUrlsIndex] = useState(0)
 
@@ -64,18 +64,20 @@ export const useMultisig = (): MultisigHookData => {
     })
   }, [urlsIndex, multisigCluster])
 
-  useEffect(() => {
-    if (wallet) {
-      setSquads(
-        new SquadsMesh({
-          connection,
-          wallet,
-        })
-      )
-    } else {
-      setSquads(undefined)
-    }
-  }, [wallet, urlsIndex, cluster, connection])
+  const readOnlySquads = useMemo(() => {
+    return new SquadsMesh({
+      connection,
+      wallet: new NodeWallet(new Keypair()),
+    })
+  }, [connection])
+
+  const walletSquads = useMemo(() => {
+    if (!wallet) return undefined
+    return new SquadsMesh({
+      connection,
+      wallet,
+    })
+  }, [connection, wallet])
 
   const refreshData = useCallback(() => {
     let cancelled = false
@@ -83,11 +85,6 @@ export const useMultisig = (): MultisigHookData => {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        // mock wallet to allow users to view proposals without connecting their wallet
-        const readOnlySquads = new SquadsMesh({
-          connection,
-          wallet: new NodeWallet(new Keypair()),
-        })
         if (cancelled) return
         const upgradeMultisigAccount = await readOnlySquads.getMultisig(
           UPGRADE_MULTISIG[multisigCluster]
@@ -146,7 +143,8 @@ export const useMultisig = (): MultisigHookData => {
 
   return {
     isLoading,
-    squads,
+    walletSquads,
+    readOnlySquads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
