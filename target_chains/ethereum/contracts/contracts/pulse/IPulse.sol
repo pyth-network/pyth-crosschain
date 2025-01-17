@@ -18,13 +18,17 @@ interface IPulse is PulseEvents {
     // Core functions
     /**
      * @notice Requests price updates with a callback
-     * @dev The msg.value must cover both the Pyth fee and gas costs
-     * Note: The actual gas required for execution will be 1.5x the callbackGasLimit
-     * to account for cross-contract call overhead + some gas for some other operations in the function before the callback
-     * @param publishTime The minimum publish time for price updates
-     * @param priceIds The price feed IDs to update
-     * @param callbackGasLimit Gas limit for the callback execution
+     * @dev The msg.value must be equal to getFee(callbackGasLimit)
+     * @param callbackGasLimit The amount of gas allocated for the callback execution
+     * @param publishTime The minimum publish time for price updates, it should be less than or equal to block.timestamp + 60
+     * @param priceIds The price feed IDs to update. Maximum 10 price feeds per request.
+     *        Requests requiring more feeds should be split into multiple calls.
      * @return sequenceNumber The sequence number assigned to this request
+     * @dev Security note: The 60-second future limit on publishTime prevents a DoS vector where
+     *      attackers could submit many low-fee requests for far-future updates when gas prices
+     *      are low, forcing executors to fulfill them later when gas prices might be much higher.
+     *      Since tx.gasprice is used to calculate fees, allowing far-future requests would make
+     *      the fee estimation unreliable.
      */
     function requestPriceUpdatesWithCallback(
         uint256 publishTime,
@@ -47,11 +51,22 @@ interface IPulse is PulseEvents {
     ) external payable;
 
     // Getters
+    /**
+     * @notice Gets the base fee charged by Pyth protocol
+     * @dev This is a fixed fee per request that goes to the Pyth protocol, separate from gas costs
+     * @return pythFeeInWei The base fee in wei that every request must pay
+     */
+    function getPythFeeInWei() external view returns (uint128 pythFeeInWei);
+
+    /**
+     * @notice Calculates the total fee required for a price update request
+     * @dev Total fee = base Pyth protocol fee + gas costs for callback
+     * @param callbackGasLimit The amount of gas allocated for callback execution
+     * @return feeAmount The total fee in wei that must be provided as msg.value
+     */
     function getFee(
         uint256 callbackGasLimit
     ) external view returns (uint128 feeAmount);
-
-    function getPythFeeInWei() external view returns (uint128 pythFeeInWei);
 
     function getAccruedFees() external view returns (uint128 accruedFeesInWei);
 
