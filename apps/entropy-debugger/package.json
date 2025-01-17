@@ -1,5 +1,5 @@
 {
-  "name": "@pythnetwork/entropy-debug",
+  "name": "@pythnetwork/entropy-debugger",
   "version": "0.0.0",
   "private": true,
   "type": "module",
