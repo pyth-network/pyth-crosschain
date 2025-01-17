@@ -143,17 +143,40 @@ export class PriceServiceConnection {
       return [];
     }
 
-    const response = await this.httpClient.get("/api/latest_price_feeds", {
+    const response = await this.httpClient.get("/v2/updates/price/latest", {
       params: {
         ids: priceIds,
         verbose: this.priceFeedRequestConfig.verbose,
         binary: this.priceFeedRequestConfig.binary,
       },
     });
-    const priceFeedsJson = response.data as any[];
-    return priceFeedsJson.map((priceFeedJson) =>
-      PriceFeed.fromJson(priceFeedJson)
-    );
+    // Transform v2 API response to match old format
+    const transformedPriceFeeds = response.data.parsed.map((item: any) => {
+      const priceFeedJson: any = {
+        id: item.id,
+        price: item.price,
+        ema_price: item.ema_price,
+      };
+
+      // Include metadata if verbose flag is set
+      if (this.priceFeedRequestConfig.verbose && item.metadata) {
+        priceFeedJson.metadata = item.metadata;
+      }
+
+      // Include VAA if binary flag is set
+      if (this.priceFeedRequestConfig.binary && response.data.binary?.data) {
+        const vaaIndex = response.data.parsed.findIndex(
+          (p: any) => p.id === item.id
+        );
+        if (vaaIndex >= 0 && vaaIndex < response.data.binary.data.length) {
+          priceFeedJson.vaa = response.data.binary.data[vaaIndex];
+        }
+      }
+
+      return PriceFeed.fromJson(priceFeedJson);
+    });
+
+    return transformedPriceFeeds;
   }
 
   /**
@@ -164,14 +187,37 @@ export class PriceServiceConnection {
    *
    * @param priceIds Array of hex-encoded price ids.
    * @returns Array of base64 encoded VAAs.
+   * @deprecated This method uses the v2 API endpoint which may return data in a different format.
+   * Please verify the response format when using this method.
+   */
+  /**
+   * Fetch latest VAA of given price ids.
+   * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price ids)
+   *
+   * This function is coupled to wormhole implementation.
+   *
+   * @param priceIds Array of hex-encoded price ids.
+   * @returns Array of base64 encoded VAAs.
+   * @deprecated This method uses the v2 API endpoint which may return data in a different format.
+   * Please verify the response format when using this method.
    */
   async getLatestVaas(priceIds: HexString[]): Promise<string[]> {
-    const response = await this.httpClient.get("/api/latest_vaas", {
+    const response = await this.httpClient.get("/v2/updates/price/latest", {
       params: {
         ids: priceIds,
+        binary: true, // Always request binary data for VAAs
       },
     });
-    return response.data;
+
+    // Extract VAAs from binary data array
+    if (
+      !response.data.binary?.data ||
+      !Array.isArray(response.data.binary.data)
+    ) {
+      return [];
+    }
+
+    return response.data.binary.data;
   }
 
   /**
@@ -185,18 +231,38 @@ export class PriceServiceConnection {
    * @param priceId Hex-encoded price id.
    * @param publishTime Epoch timestamp in seconds.
    * @returns Tuple of VAA and publishTime.
+   * @deprecated This method uses the v2 API endpoint which may return data in a different format.
+   * Please verify the response format when using this method.
    */
   async getVaa(
     priceId: HexString,
     publishTime: EpochTimeStamp
   ): Promise<[string, EpochTimeStamp]> {
-    const response = await this.httpClient.get("/api/get_vaa", {
-      params: {
-        id: priceId,
-        publish_time: publishTime,
-      },
-    });
-    return [response.data.vaa, response.data.publishTime];
+    const response = await this.httpClient.get(
+      `/v2/updates/price/${publishTime}`,
+      {
+        params: {
+          id: priceId,
+          binary: true, // Always request binary data for VAAs
+        },
+      }
+    );
+
+    // Extract VAA and publishTime from response
+    if (!response.data.binary?.data?.[0] || !response.data.parsed?.[0]) {
+      throw new Error(
+        "No VAA data found for the given price id and publish time"
+      );
+    }
+
+    const vaa = response.data.binary.data[0];
+    const actualPublishTime = response.data.parsed[0].price.publish_time;
+
+    if (actualPublishTime < publishTime) {
+      throw new Error("No VAA found after the specified publish time");
+    }
+
+    return [vaa, actualPublishTime];
   }
 
   /**
@@ -208,21 +274,51 @@ export class PriceServiceConnection {
    * @param priceId Hex-encoded price id.
    * @param publishTime Epoch timestamp in seconds.
    * @returns PriceFeed
+   * @deprecated This method uses the v2 API endpoint which may return data in a different format.
+   * Please verify the response format when using this method.
    */
   async getPriceFeed(
     priceId: HexString,
     publishTime: EpochTimeStamp
   ): Promise<PriceFeed> {
-    const response = await this.httpClient.get("/api/get_price_feed", {
-      params: {
-        id: priceId,
-        publish_time: publishTime,
-        verbose: this.priceFeedRequestConfig.verbose,
-        binary: this.priceFeedRequestConfig.binary,
-      },
-    });
+    const response = await this.httpClient.get(
+      `/v2/updates/price/${publishTime}`,
+      {
+        params: {
+          id: priceId,
+          verbose: this.priceFeedRequestConfig.verbose,
+          binary: this.priceFeedRequestConfig.binary,
+        },
+      }
+    );
 
-    return PriceFeed.fromJson(response.data);
+    // Extract price feed from response
+    if (!response.data.parsed?.[0]) {
+      throw new Error(
+        "No price feed data found for the given price id and publish time"
+      );
+    }
+
+    const priceFeedJson: any = {
+      id: response.data.parsed[0].id,
+      price: response.data.parsed[0].price,
+      ema_price: response.data.parsed[0].ema_price,
+    };
+
+    // Include metadata if verbose flag is set
+    if (
+      this.priceFeedRequestConfig.verbose &&
+      response.data.parsed[0].metadata
+    ) {
+      priceFeedJson.metadata = response.data.parsed[0].metadata;
+    }
+
+    // Include VAA if binary flag is set
+    if (this.priceFeedRequestConfig.binary && response.data.binary?.data?.[0]) {
+      priceFeedJson.vaa = response.data.binary.data[0];
+    }
+
+    return PriceFeed.fromJson(priceFeedJson);
   }
 
   /**
@@ -230,10 +326,26 @@ export class PriceServiceConnection {
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
    *
    * @returns Array of hex-encoded price ids.
+   * @deprecated This method uses the v2 API endpoint which may return data in a different format.
+   * Please verify the response format when using this method.
+   */
+  /**
+   * Fetch the list of available price feed ids.
+   * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
+   *
+   * @returns Array of hex-encoded price ids.
+   * @deprecated This method uses the v2 API endpoint which may return data in a different format.
+   * Please verify the response format when using this method.
    */
   async getPriceFeedIds(): Promise<HexString[]> {
-    const response = await this.httpClient.get("/api/price_feed_ids");
-    return response.data;
+    const response = await this.httpClient.get("/v2/price_feeds");
+
+    // Extract ids from response array
+    if (!Array.isArray(response.data)) {
+      return [];
+    }
+
+    return response.data.map((item: any) => item.id);
   }
 
   /**
