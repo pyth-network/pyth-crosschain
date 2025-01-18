@@ -10,7 +10,7 @@ use pyth_stylus::pyth::{
 use stylus_sdk::{abi::Bytes, alloy_primitives::U256, msg, prelude::*, stylus_proc::SolidityError};
 
 pub use sol::*;
-#[cfg_attr(coverage_nightly, coverage(off))]
+
 mod sol {
     use alloy_sol_types::sol;
 

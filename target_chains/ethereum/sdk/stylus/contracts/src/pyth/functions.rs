@@ -1,3 +1,4 @@
+#![allow(clippy::too_many_arguments)]
 use crate::pyth::mock::DecodeDataType;
 use crate::pyth::types::{
     getEmaPriceNoOlderThanCall, getEmaPriceUnsafeCall, getPriceNoOlderThanCall, getPriceUnsafeCall,
@@ -272,5 +273,5 @@ pub fn create_price_feed_update_data(
     };
 
     let price_feed_data_encoding = (price_feed_data, prev_publish_time);
-    return DecodeDataType::abi_encode(&price_feed_data_encoding);
+    DecodeDataType::abi_encode(&price_feed_data_encoding)
 }

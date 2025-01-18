@@ -2,7 +2,7 @@
 #![allow(clippy::pub_underscore_fields, clippy::module_name_repetitions)]
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 #![deny(rustdoc::broken_intra_doc_links)]
-
+#![allow(clippy::let_unit_value)]
 extern crate alloc;
 
 #[global_allocator]

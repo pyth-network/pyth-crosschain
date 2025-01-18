@@ -1,3 +1,5 @@
+#![allow(clippy::clone_on_copy)]
+#![allow(clippy::too_many_arguments)]
 use crate::pyth::errors::{Error, PriceFeedNotFound};
 use crate::pyth::events::PriceFeedUpdate;
 use crate::pyth::functions::create_price_feed_update_data;
@@ -11,7 +13,7 @@ use alloy_primitives::{Bytes, B256, U256};
 use alloy_sol_types::{sol_data::Uint as SolUInt, SolType, SolValue};
 use stylus_sdk::{abi::Bytes as AbiBytes, evm, msg, prelude::*};
 
-////Decode data type PriceFeed and uint64
+/// Decode data type PriceFeed and uint64
 pub type DecodeDataType = (PriceFeed, SolUInt<64>);
 
 sol_storage! {
@@ -169,7 +171,7 @@ impl MockPythContract {
         };
 
         let price_feed_data_encoding = (price_feed_data, prev_publish_time);
-        return DecodeDataType::abi_encode(&price_feed_data_encoding);
+        DecodeDataType::abi_encode(&price_feed_data_encoding)
     }
 }
 
@@ -248,12 +250,12 @@ pub fn create_price_feed_update_data_list() -> (Vec<Bytes>, Vec<B256>) {
             .update(x.as_bytes())
             .finalize()
             .to_vec();
-        return B256::from_slice(&x);
+        B256::from_slice(&x)
     });
     let mut price_feed_data_list = Vec::new();
-    for i in 0..3 {
+    for item in &id {
         let price_feed_data = create_price_feed_update_data(
-            id[i],
+            *item,
             100,
             100,
             100,
@@ -265,7 +267,7 @@ pub fn create_price_feed_update_data_list() -> (Vec<Bytes>, Vec<B256>) {
         let price_feed_data = Bytes::from(AbiBytes::from(price_feed_data).0);
         price_feed_data_list.push(price_feed_data);
     }
-    return (price_feed_data_list, id.to_vec());
+    (price_feed_data_list, id.to_vec())
 }
 
 #[cfg(all(test, feature = "std"))]

@@ -1,4 +1,5 @@
 #![cfg_attr(not(test), no_std, no_main)]
+#![allow(clippy::let_unit_value)]
 extern crate alloc;
 
 use alloc::vec;
