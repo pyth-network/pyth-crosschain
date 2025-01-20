@@ -124,15 +124,6 @@ abstract contract Pulse is IPulse, PulseState {
 
         clearRequest(sequenceNumber);
 
-        // Check if enough gas remains for callback + events/cleanup
-        // We need extra gas beyond callbackGasLimit for:
-        // 1. Emitting success/failure events
-        // 2. Error handling in catch blocks
-        // 3. State cleanup operations
-        if (gasleft() < (req.callbackGasLimit * 3) / 2) {
-            revert InsufficientGas();
-        }
-
         try
             IPulseConsumer(req.requester).pulseCallback{
                 gas: req.callbackGasLimit
