@@ -190,7 +190,7 @@ export class SolanaPricePusherJito implements IPricePusher {
   }
 
   private async sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async updatePriceFeed(
@@ -247,12 +247,12 @@ export class SolanaPricePusherJito implements IPricePusher {
           );
           break;
         } catch (err: any) {
-          if (err.code === 8 && err.details?.includes('Rate limit exceeded')) {
-            this.logger.warn('Rate limit hit, waiting before retry...');
+          if (err.code === 8 && err.details?.includes("Rate limit exceeded")) {
+            this.logger.warn("Rate limit hit, waiting before retry...");
             await this.sleep(1100); // Wait slightly more than 1 second
             retries--;
             if (retries === 0) {
-              this.logger.error('Max retries reached for rate limit');
+              this.logger.error("Max retries reached for rate limit");
               throw err;
             }
           } else {
