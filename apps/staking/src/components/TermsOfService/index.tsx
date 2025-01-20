@@ -7,7 +7,7 @@ export const TermsOfService = () => (
   <main className="mx-auto flex max-w-prose flex-col gap-10 py-6 md:gap-16 md:py-20">
     <div>
       <h1 className="text-3xl font-light md:text-4xl">Terms of Service</h1>
-      <h2 className="text-sm opacity-60">Last updated: November 2024</h2>
+      <h2 className="text-sm opacity-60">Last updated: January 2025</h2>
     </div>
     <dl className="flex list-inside list-[upper-alpha] flex-col gap-10 md:gap-16">
       <Section title="Scope">
@@ -65,9 +65,9 @@ export const TermsOfService = () => (
         </div>
 
         <Paragraph>
-          If you do not agree to these Terms, you are not permitted access or in
-          any way use the Services. In the event of any conflict between these
-          Terms, the{" "}
+          If you do not agree to these Terms, you are not permitted to access or
+          in any way use the Services. In the event of any conflict between
+          these Terms, the{" "}
           <Link
             href="https://pythdataassociation.com/terms-of-use"
             target="_blank"
@@ -122,14 +122,14 @@ export const TermsOfService = () => (
             </li>
             <li>comply with all applicable laws, rules and regulations;</li>
             <li>
-              not be person who is subject to national or international
-              sanctions or located or ordinarily resident in the Crimea and
-              Sevastopol Regions, Cuba, Iran, Democratic People’s Republic of
-              Korea (North Korea), Syria, Myanmar (Burma), Donetsk and Luhansk
-              Regions, or any other country to which the United States, the
-              United Kingdom, the European Union, Switzerland or any other
-              jurisdictions embargoes goods or imposes similar sanctions. This
-              list is not exhaustive—please refer to section H. for further
+              not be a person who is subject to national or international
+              sanctions or located or ordinarily resident of Cuba, Democratic
+              People’s Republic of Korea (North Korea), Iran, Myanmar (Burma),
+              Syria, the Crimea, Donetsk, Kherson, Luhansk, Sevastopol, and
+              Zaporizhzhia Regions, or any other country to which the United
+              States, the United Kingdom, the European Union, Switzerland or any
+              other jurisdictions embargoes goods or imposes similar sanctions.
+              This list is not exhaustive—please refer to section H. for further
               details on applicable restrictions;
             </li>
             <li>
@@ -145,7 +145,7 @@ export const TermsOfService = () => (
         </div>
         <Paragraph>
           The foregoing is a partial summary. You must read these Terms in their
-          entirety. In the event of any conflict or consistency on between this
+          entirety. In the event of any conflict or inconsistency between this
           Summary and any other part of these Terms, any other part of these
           Terms shall prevail.
         </Paragraph>
@@ -256,19 +256,18 @@ export const TermsOfService = () => (
           EXCEPT EXPLICTLY PROVIDED IN THESE TERMS, CERTAIN TOOLS AND/OR
           SERVICES ARE NOT DEVELOPED FOR, AND ARE NOT AVAILABLE TO PERSONS OR
           ENTITIES WHO RESIDE IN, ARE LOCATED IN, ARE INCORPORATED IN, OR HAVE A
-          REGISTERED OFFICE OR PRINCIPAL PLACE OF BUSINESS IN THE UNITED STATES
-          OF AMERICA OR THE UNITED KINGDOM (COLLECTIVELY, “
-          <strong>BLOCKED PERSONS</strong>”). MOREOVER, THE SERVICES ARE NOT
-          OFFERED TO PERSONS OR ENTITIES WHO RESIDE IN, ARE CITIZENS OF, ARE
-          LOCATED IN, ARE INCORPORATED IN, OR HAVE A REGISTERED OFFICE OR
-          PRINCIPAL PLACE OF BUSINESS IN ANY RESTRICTED JURISDICTION OR COUNTRY
-          SUBJECT TO ANY SANCTIONS OR RESTRICTIONS PURSUANT TO ANY APPLICABLE
-          LAW, INCLUDING CUBA, DEMOCRATIC PEOPLE’S REPUBLIC OF KOREA (NORTH
-          KOREA), IRAN, MYANMAR (BURMA), SYRIA, THE CRIMEA, DONETSK, KHERSON,
-          LUHANSK, SEVASTOPOL, AND ZAPORIZHZHIA REGIONS, OR ANY OTHER COUNTRY OR
-          REGION TO WHICH THE UNITED STATES, THE UNITED KINGDOM, THE EUROPEAN
-          UNION, SWITZERLAND OR ANY OTHER JURISDICTIONS EMBARGOES GOODS OR
-          IMPOSES SIMILAR SANCTIONS, INCLUDING THOSE LISTED ON OUR SERVICES
+          REGISTERED OFFICE OR PRINCIPAL PLACE OF BUSINESS IN THE UNITED KINGDOM
+          (COLLECTIVELY, “ <strong>BLOCKED PERSONS</strong>”). MOREOVER, THE
+          SERVICES ARE NOT OFFERED TO PERSONS OR ENTITIES WHO RESIDE IN, ARE
+          CITIZENS OF, ARE LOCATED IN, ARE INCORPORATED IN, OR HAVE A REGISTERED
+          OFFICE OR PRINCIPAL PLACE OF BUSINESS IN ANY RESTRICTED JURISDICTION
+          OR COUNTRY SUBJECT TO ANY SANCTIONS OR RESTRICTIONS PURSUANT TO ANY
+          APPLICABLE LAW, INCLUDING CUBA, DEMOCRATIC PEOPLE’S REPUBLIC OF KOREA
+          (NORTH KOREA), IRAN, MYANMAR (BURMA), SYRIA, THE CRIMEA, DONETSK,
+          KHERSON, LUHANSK, SEVASTOPOL, AND ZAPORIZHZHIA REGIONS, OR ANY OTHER
+          COUNTRY OR REGION TO WHICH THE UNITED STATES, THE UNITED KINGDOM, THE
+          EUROPEAN UNION, SWITZERLAND OR ANY OTHER JURISDICTIONS EMBARGOES GOODS
+          OR IMPOSES SIMILAR SANCTIONS, INCLUDING THOSE LISTED ON OUR SERVICES
           (COLLECTIVELY, THE “<strong>RESTRICTED JURISDICTIONS</strong>” AND
           EACH A “<strong>RESTRICTED JURISDICTION</strong>”) OR ANY PERSON
           OWNED, CONTROLLED, LOCATED IN OR ORGANIZED UNDER THE LAWS OF ANY
