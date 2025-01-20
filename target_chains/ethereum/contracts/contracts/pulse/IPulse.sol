@@ -9,7 +9,7 @@ import "./PulseState.sol";
 interface IPulseConsumer {
     function pulseCallback(
         uint64 sequenceNumber,
-        address updater,
+        address provider,
         PythStructs.PriceFeed[] memory priceFeeds
     ) external;
 }
@@ -33,7 +33,8 @@ interface IPulse is PulseEvents {
     function requestPriceUpdatesWithCallback(
         uint256 publishTime,
         bytes32[] calldata priceIds,
-        uint256 callbackGasLimit
+        uint256 callbackGasLimit,
+        address provider
     ) external payable returns (uint64 sequenceNumber);
 
     /**
@@ -62,10 +63,12 @@ interface IPulse is PulseEvents {
      * @notice Calculates the total fee required for a price update request
      * @dev Total fee = base Pyth protocol fee + gas costs for callback
      * @param callbackGasLimit The amount of gas allocated for callback execution
+     * @param provider The provider to use for the fee calculation
      * @return feeAmount The total fee in wei that must be provided as msg.value
      */
     function getFee(
-        uint256 callbackGasLimit
+        uint256 callbackGasLimit,
+        address provider
     ) external view returns (uint128 feeAmount);
 
     function getAccruedFees() external view returns (uint128 accruedFeesInWei);
@@ -74,8 +77,19 @@ interface IPulse is PulseEvents {
         uint64 sequenceNumber
     ) external view returns (PulseState.Request memory req);
 
-    // Add these functions to the IPulse interface
     function setFeeManager(address manager) external;
 
-    function withdrawAsFeeManager(uint128 amount) external;
+    function withdrawAsFeeManager(address provider, uint128 amount) external;
+
+    function registerProvider(uint128 feeInWei) external;
+
+    function setProviderFee(uint128 newFeeInWei) external;
+
+    function getProviderInfo(
+        address provider
+    ) external view returns (PulseState.ProviderInfo memory);
+
+    function getDefaultProvider() external view returns (address);
+
+    function setDefaultProvider(address provider) external;
 }

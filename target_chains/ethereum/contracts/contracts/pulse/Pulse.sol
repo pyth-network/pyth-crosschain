@@ -13,16 +13,22 @@ abstract contract Pulse is IPulse, PulseState {
         address admin,
         uint128 pythFeeInWei,
         address pythAddress,
+        address defaultProvider,
         bool prefillRequestStorage
     ) internal {
         require(admin != address(0), "admin is zero address");
         require(pythAddress != address(0), "pyth is zero address");
+        require(
+            defaultProvider != address(0),
+            "defaultProvider is zero address"
+        );
 
         _state.admin = admin;
         _state.accruedFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
         _state.pyth = pythAddress;
         _state.currentSequenceNumber = 1;
+        _state.defaultProvider = defaultProvider;
 
         if (prefillRequestStorage) {
             for (uint8 i = 0; i < NUM_REQUESTS; i++) {
@@ -43,8 +49,17 @@ abstract contract Pulse is IPulse, PulseState {
     function requestPriceUpdatesWithCallback(
         uint256 publishTime,
         bytes32[] calldata priceIds,
-        uint256 callbackGasLimit
+        uint256 callbackGasLimit,
+        address provider
     ) external payable override returns (uint64 requestSequenceNumber) {
+        if (provider == address(0)) {
+            provider = _state.defaultProvider;
+        }
+        require(
+            _state.providers[provider].isRegistered,
+            "Provider not registered"
+        );
+
         // NOTE: The 60-second future limit on publishTime prevents a DoS vector where
         //      attackers could submit many low-fee requests for far-future updates when gas prices
         //      are low, forcing executors to fulfill them later when gas prices might be much higher.
@@ -56,7 +71,7 @@ abstract contract Pulse is IPulse, PulseState {
         }
         requestSequenceNumber = _state.currentSequenceNumber++;
 
-        uint128 requiredFee = getFee(callbackGasLimit);
+        uint128 requiredFee = getFee(callbackGasLimit, provider);
         if (msg.value < requiredFee) revert InsufficientFee();
 
         Request storage req = allocRequest(requestSequenceNumber);
@@ -65,13 +80,17 @@ abstract contract Pulse is IPulse, PulseState {
         req.callbackGasLimit = callbackGasLimit;
         req.requester = msg.sender;
         req.numPriceIds = uint8(priceIds.length);
+        req.provider = provider;
 
         // Copy price IDs to storage
         for (uint8 i = 0; i < priceIds.length; i++) {
             req.priceIds[i] = priceIds[i];
         }
 
-        _state.accruedFeesInWei += SafeCast.toUint128(msg.value);
+        _state.providers[provider].accruedFeesInWei += SafeCast.toUint128(
+            msg.value - _state.pythFeeInWei
+        );
+        _state.accruedFeesInWei += _state.pythFeeInWei;
 
         emit PriceUpdateRequested(req, priceIds);
     }
@@ -171,10 +190,15 @@ abstract contract Pulse is IPulse, PulseState {
     }
 
     function getFee(
-        uint256 callbackGasLimit
+        uint256 callbackGasLimit,
+        address provider
     ) public view override returns (uint128 feeAmount) {
+        if (provider == address(0)) {
+            provider = _state.defaultProvider;
+        }
         uint128 baseFee = _state.pythFeeInWei;
-        uint256 gasFee = callbackGasLimit * tx.gasprice;
+        uint128 providerFeeInWei = _state.providers[provider].feeInWei;
+        uint256 gasFee = callbackGasLimit * providerFeeInWei;
         feeAmount = baseFee + SafeCast.toUint128(gasFee);
     }
 
@@ -271,21 +295,75 @@ abstract contract Pulse is IPulse, PulseState {
     }
 
     function setFeeManager(address manager) external override {
-        require(msg.sender == _state.admin, "Only admin can set fee manager");
-        address oldFeeManager = _state.feeManager;
-        _state.feeManager = manager;
-        emit FeeManagerUpdated(_state.admin, oldFeeManager, manager);
+        require(
+            _state.providers[msg.sender].isRegistered,
+            "Provider not registered"
+        );
+        address oldFeeManager = _state.providers[msg.sender].feeManager;
+        _state.providers[msg.sender].feeManager = manager;
+        emit FeeManagerUpdated(msg.sender, oldFeeManager, manager);
     }
 
-    function withdrawAsFeeManager(uint128 amount) external override {
-        require(msg.sender == _state.feeManager, "Only fee manager");
-        require(_state.accruedFeesInWei >= amount, "Insufficient balance");
+    function withdrawAsFeeManager(
+        address provider,
+        uint128 amount
+    ) external override {
+        require(
+            msg.sender == _state.providers[provider].feeManager,
+            "Only fee manager"
+        );
+        require(
+            _state.providers[provider].accruedFeesInWei >= amount,
+            "Insufficient balance"
+        );
 
-        _state.accruedFeesInWei -= amount;
+        _state.providers[provider].accruedFeesInWei -= amount;
 
         (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "Failed to send fees");
 
         emit FeesWithdrawn(msg.sender, amount);
+    }
+
+    function registerProvider(uint128 feeInWei) external override {
+        ProviderInfo storage provider = _state.providers[msg.sender];
+        require(!provider.isRegistered, "Provider already registered");
+        provider.feeInWei = feeInWei;
+        provider.isRegistered = true;
+        emit ProviderRegistered(msg.sender, feeInWei);
+    }
+
+    function setProviderFee(uint128 newFeeInWei) external override {
+        require(
+            _state.providers[msg.sender].isRegistered,
+            "Provider not registered"
+        );
+        uint128 oldFee = _state.providers[msg.sender].feeInWei;
+        _state.providers[msg.sender].feeInWei = newFeeInWei;
+        emit ProviderFeeUpdated(msg.sender, oldFee, newFeeInWei);
+    }
+
+    function getProviderInfo(
+        address provider
+    ) external view override returns (ProviderInfo memory) {
+        return _state.providers[provider];
+    }
+
+    function getDefaultProvider() external view override returns (address) {
+        return _state.defaultProvider;
+    }
+
+    function setDefaultProvider(address provider) external override {
+        require(
+            msg.sender == _state.admin,
+            "Only admin can set default provider"
+        );
+        require(
+            _state.providers[provider].isRegistered,
+            "Provider not registered"
+        );
+        address oldProvider = _state.defaultProvider;
+        _state.defaultProvider = provider;
+        emit DefaultProviderUpdated(oldProvider, provider);
     }
 }
