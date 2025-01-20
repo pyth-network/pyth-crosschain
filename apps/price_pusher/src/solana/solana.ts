@@ -100,7 +100,7 @@ export class SolanaPricePusher implements IPricePusher {
     private computeUnitPriceMicroLamports: number
   ) {}
 
-  async updatePriceFeed(priceIds: string[], _: number[]): Promise<void> {
+  async updatePriceFeed(priceIds: string[]): Promise<void> {
     if (priceIds.length === 0) {
       return;
     }
@@ -189,7 +189,7 @@ export class SolanaPricePusherJito implements IPricePusher {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async updatePriceFeed(priceIds: string[], _: number[]): Promise<void> {
+  async updatePriceFeed(priceIds: string[]): Promise<void> {
     const recentJitoTip = await this.getRecentJitoTipLamports();
     const jitoTip =
       this.dynamicJitoTips && recentJitoTip !== undefined
