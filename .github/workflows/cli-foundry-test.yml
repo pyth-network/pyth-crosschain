@@ -9,7 +9,6 @@ on:
       - main
     paths:
       - target_chains/ethereum/sdk/stylus/**
-
 env:
   FOUNDRY_PROFILE: ci
 
