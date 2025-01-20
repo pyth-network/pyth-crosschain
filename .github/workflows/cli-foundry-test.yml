@@ -3,7 +3,7 @@ name: foundry-test
 on:
   pull_request:
     paths:
-      - target_chains/ethereum/sdk/stylus/**                                                                 **
+      - target_chains/ethereum/sdk/stylus/**
   push:
     branches:
       - main
