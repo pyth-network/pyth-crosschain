@@ -5,11 +5,13 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { MAINNET_API_RPC } from "../../../../../config/server";
+import { tokensToString } from "../../../../../tokens";
 
 const querySchema = z.enum(["totalSupply", "circulatingSupply"]);
 
 export async function GET(req: NextRequest) {
   const isMainnet = req.nextUrl.searchParams.get("devnet") !== "true";
+  const asDecimal = req.nextUrl.searchParams.get("as_decimal") === "true";
   const stakingClient = new PythStakingClient({
     connection: new Connection(
       isMainnet && MAINNET_API_RPC !== undefined
@@ -34,9 +36,13 @@ export async function GET(req: NextRequest) {
 
   if (q === "circulatingSupply") {
     const circulatingSupply = await stakingClient.getCirculatingSupply();
-    return Response.json(Number(circulatingSupply));
+    return Response.json(
+      asDecimal ? tokensToString(circulatingSupply) : Number(circulatingSupply),
+    );
   } else {
     const pythMint = await stakingClient.getPythTokenMint();
-    return Response.json(Number(pythMint.supply));
+    return Response.json(
+      asDecimal ? tokensToString(pythMint.supply) : Number(pythMint.supply),
+    );
   }
 }
