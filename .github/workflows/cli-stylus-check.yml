@@ -1,4 +1,4 @@
-name: check
+name: stylus-check
 # This workflow runs whenever a PR is opened or updated, or a commit is pushed
 # to main. It runs several checks:
 # - fmt: checks that the code is formatted according to `rustfmt`.
