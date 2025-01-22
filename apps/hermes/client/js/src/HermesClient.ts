@@ -119,7 +119,7 @@ export class HermesClient {
     query?: string;
     filter?: string;
   }): Promise<PriceFeedMetadata[]> {
-    const url = new URL("v2/price_feeds", this.baseURL);
+    const url = this.buildURL("price_feeds");
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
@@ -144,7 +144,7 @@ export class HermesClient {
     encoding?: EncodingType;
     parsed?: boolean;
   }): Promise<PublisherCaps> {
-    const url = new URL("v2/updates/publisher_stake_caps/latest", this.baseURL);
+    const url = this.buildURL("updates/publisher_stake_caps/latest");
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
@@ -175,7 +175,7 @@ export class HermesClient {
       ignoreInvalidPriceIds?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const url = new URL("v2/updates/price/latest", this.baseURL);
+    const url = this.buildURL("updates/price/latest");
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -211,7 +211,7 @@ export class HermesClient {
       ignoreInvalidPriceIds?: boolean;
     }
   ): Promise<PriceUpdate> {
-    const url = new URL(`v2/updates/price/${publishTime}`, this.baseURL);
+    const url = this.buildURL(`updates/price/${publishTime}`);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -251,7 +251,7 @@ export class HermesClient {
       ignoreInvalidPriceIds?: boolean;
     }
   ): Promise<EventSource> {
-    const url = new URL("v2/updates/price/stream", this.baseURL);
+    const url = this.buildURL("updates/price/stream");
     ids.forEach((id) => {
       url.searchParams.append("ids[]", id);
     });
@@ -288,10 +288,7 @@ export class HermesClient {
       ignoreInvalidPriceIds?: boolean;
     }
   ): Promise<TwapsResponse> {
-    const url = new URL(
-      `v2/updates/twap/${window_seconds}/latest`,
-      this.baseURL
-    );
+    const url = this.buildURL(`updates/twap/${window_seconds}/latest`);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -313,5 +310,14 @@ export class HermesClient {
         url.searchParams.append(key, String(value));
       }
     });
+  }
+
+  private buildURL(endpoint: string) {
+    return new URL(
+      `./v2/${endpoint}`,
+      // We ensure the `baseURL` ends with a `/` so that URL doesn't resolve the
+      // path relative to the parent.
+      `${this.baseURL}${this.baseURL.endsWith("/") ? "" : "/"}`
+    );
   }
 }
