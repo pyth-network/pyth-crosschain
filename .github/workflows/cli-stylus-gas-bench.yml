@@ -1,4 +1,4 @@
-name: gas-bench
+name: stylus-gas-bench
 # This workflow checks that the compiled wasm binary of every example contract
 # can be deployed to Arbitrum Stylus.
 permissions:
