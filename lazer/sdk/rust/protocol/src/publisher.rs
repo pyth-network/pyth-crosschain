@@ -4,6 +4,7 @@
 
 use {
     super::router::{Price, PriceFeedId, TimestampUs},
+    derive_more::derive::From,
     serde::{Deserialize, Serialize},
 };
 
@@ -30,6 +31,21 @@ pub struct PriceFeedData {
     /// `None` if no value is currently available.
     #[serde(with = "crate::serde_price_as_i64")]
     pub best_ask_price: Option<Price>,
+}
+
+/// A response sent from the server to the publisher client.
+/// Currently only serde errors are reported back to the client.
+#[derive(Debug, Clone, Serialize, Deserialize, From)]
+#[serde(tag = "type")]
+#[serde(rename_all = "camelCase")]
+pub enum PublisherResponse {
+    UpdateDeserializationError(UpdateDeserializationErrorResponse),
+}
+/// Sent to the publisher if the binary data could not be parsed
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateDeserializationErrorResponse {
+    pub error: String,
 }
 
 #[test]

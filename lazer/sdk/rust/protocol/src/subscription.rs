@@ -67,7 +67,8 @@ pub struct SubscriptionErrorResponse {
     pub error: String,
 }
 
-/// Sent from the server if an error occured while serving data for an existing subscription.
+/// Sent from the server if an internal error occured while serving data for an existing subscription,
+/// or a client request sent a bad request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorResponse {
