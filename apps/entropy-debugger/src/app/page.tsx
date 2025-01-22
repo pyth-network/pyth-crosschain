@@ -212,7 +212,6 @@ const Info = ({ state }: { state: TxStateContext }) => {
             </pre>
             <button
               onClick={() => {
-                // eslint-disable-next-line n/no-unsupported-features/node-builtins
                 navigator.clipboard.writeText(state.data).catch(() => {
                   /* no-op on error */
                 });
