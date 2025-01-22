@@ -1,4 +1,4 @@
-name: check-wasm
+name: stylus-check-wasm
 # This workflow checks that the compiled wasm binary of every example contract
 # can be deployed to Arbitrum Stylus.
 on:
