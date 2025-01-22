@@ -855,3 +855,8 @@
   rpcUrl: https://rpc.monad-testnet.category.xyz/rpc/nSyzM1wlIgaALWzbh3oIg5rW65AC6yjqrslOE8wb
   networkId: 10143
   type: EvmChain
+- id: rabechain_mainnet
+  mainnet: true
+  networkId: 80094
+  rpcUrl: https://fluent-thrilling-scion.furtim-network.quiknode.pro/$ENV_RABECHAIN_API_KEY
+  type: EvmChain
