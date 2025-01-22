@@ -29,9 +29,6 @@ const SearchText = () => {
 };
 
 const SearchTextImpl = () => {
-  // This component can only ever render in the client so we can safely ignore
-  // this eslint rule.
-  // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const isMac = useMemo(() => navigator.userAgent.includes("Mac"), []);
   return isMac ? "⌘ K" : "Ctrl K";
 };
