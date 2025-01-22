@@ -4,7 +4,7 @@
 import { PythLazerClient } from "../src/index.js";
 
 // Ignore debug messages
-console.debug = () => {};
+console.debug = () => { };
 
 const client = await PythLazerClient.create(
   ["wss://pyth-lazer.dourolabs.app/v1/stream"],
@@ -62,7 +62,7 @@ await client.subscribe({
   type: "subscribe",
   subscriptionId: 2,
   priceFeedIds: [1, 2, 3, 4, 5],
-  properties: ["price"],
+  properties: ["price", "exponent", "publisherCount"],
   chains: ["evm"],
   deliveryFormat: "json",
   channel: "fixed_rate@200ms",

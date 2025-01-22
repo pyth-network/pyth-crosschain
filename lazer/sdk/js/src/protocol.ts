@@ -1,7 +1,7 @@
 export type Chain = "evm" | "solana";
 export type DeliveryFormat = "json" | "binary";
 export type JsonBinaryEncoding = "base64" | "hex";
-export type PriceFeedProperty = "price" | "bestBidPrice" | "bestAskPrice";
+export type PriceFeedProperty = "price" | "bestBidPrice" | "bestAskPrice" | "exponent" | "publisherCount";
 export type Channel = "real_time" | "fixed_rate@50ms" | "fixed_rate@200ms";
 
 export type Request =
@@ -26,7 +26,7 @@ export type ParsedFeedPayload = {
   price?: string | undefined;
   bestBidPrice?: string | undefined;
   bestAskPrice?: string | undefined;
-  publisher_count?: number | undefined;
+  publisherCount?: number | undefined;
   exponent?: number | undefined;
 };
 
