@@ -1,4 +1,4 @@
-name: foundry-test
+name: stylus-foundry-test
 
 on:
   pull_request:
