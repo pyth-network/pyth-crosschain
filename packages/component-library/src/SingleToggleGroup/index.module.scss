@@ -1,7 +1,7 @@
 @use "../theme";
 
 .singleToggleGroup {
-  gap: theme.spacing(2);
+  gap: theme.spacing(1);
 
   @include theme.row;
 

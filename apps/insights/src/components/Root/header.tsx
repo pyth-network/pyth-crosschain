@@ -1,3 +1,5 @@
+"use client";
+
 import { Lifebuoy } from "@phosphor-icons/react/dist/ssr/Lifebuoy";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Link } from "@pythnetwork/component-library/Link";
@@ -10,6 +12,7 @@ import { SearchButton } from "./search-button";
 import { SupportDrawer } from "./support-drawer";
 import { MainNavTabs } from "./tabs";
 import { ThemeSwitch } from "./theme-switch";
+import { MobileMenu } from "../MobileMenu/mobile-menu.v2";
 
 export const Header = ({ className, ...props }: ComponentProps<"header">) => (
   <header className={clsx(styles.header, className)} {...props}>
@@ -25,21 +28,26 @@ export const Header = ({ className, ...props }: ComponentProps<"header">) => (
         <MainNavTabs />
       </div>
       <div className={styles.rightMenu}>
-        <SupportDrawer>
-          <Button beforeIcon={Lifebuoy} variant="ghost" size="sm" rounded>
-            Support
-          </Button>
-        </SupportDrawer>
+        <div className={styles.hideOnMobile}>
+          <SupportDrawer>
+            <Button beforeIcon={Lifebuoy} variant="ghost" size="sm" rounded>
+              Support
+            </Button>
+          </SupportDrawer>
+        </div>
         <SearchButton />
-        <Button
-          href="https://docs.pyth.network"
-          size="sm"
-          rounded
-          target="_blank"
-        >
-          Dev Docs
-        </Button>
+        <div className={styles.hideOnMobile}>
+          <Button
+            href="https://docs.pyth.network"
+            size="sm"
+            rounded
+            target="_blank"
+          >
+            Dev Docs
+          </Button>
+        </div>
         <ThemeSwitch className={styles.themeSwitch ?? ""} />
+        <MobileMenu />
       </div>
     </div>
   </header>

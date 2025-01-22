@@ -1,3 +1,4 @@
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import {
   type Props as ButtonProps,
   Button,
@@ -21,10 +22,10 @@ export const Footer = () => (
         <div className={styles.divider} />
         <div className={styles.help}>
           <SupportDrawer>
-            <Link>Help</Link>
+            <Link>Support</Link>
           </SupportDrawer>
           <Link href="https://docs.pyth.network" target="_blank">
-            Documentation
+            Documentation <ArrowSquareOut />
           </Link>
         </div>
       </div>

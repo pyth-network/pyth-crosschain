@@ -1,7 +1,7 @@
 @use "../theme";
 
 .button {
-  display: inline flow-root;
+  display: flex;
   cursor: pointer;
   white-space: nowrap;
   font-weight: theme.font-weight("medium");
@@ -12,6 +12,9 @@
   text-decoration: none;
   outline-offset: 0;
   outline: theme.spacing(1) solid transparent;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
 
   .iconWrapper {
     display: inline-grid;

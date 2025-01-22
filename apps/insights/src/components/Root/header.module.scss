@@ -4,8 +4,11 @@
   position: sticky;
   top: 0;
   width: 100%;
-  background-color: theme.color("background", "nav-blur");
-  backdrop-filter: blur(32px);
+  background-color: theme.color("background", "primary");
+  border-bottom: 1px solid theme.color("background", "secondary");
+
+  // TODO: This causes that navigation is not fixed
+  // backdrop-filter: blur(32px);
 
   .content {
     height: 100%;
@@ -16,18 +19,23 @@
 
     .leftMenu {
       flex: none;
-      gap: theme.spacing(6);
+      gap: theme.spacing(4);
+      position: relative;
 
       @include theme.row;
 
       .logoLink {
         padding: theme.spacing(3);
-        margin: -#{theme.spacing(3)};
         color: theme.color("foreground");
 
+        @include theme.desktop {
+          position: absolute;
+          left: -#{theme.spacing(16)};
+        }
+
         .logoWrapper {
-          width: theme.spacing(9);
-          height: theme.spacing(9);
+          width: theme.spacing(8);
+          height: theme.spacing(8);
           position: relative;
 
           .logo {
@@ -52,33 +60,49 @@
 
     .rightMenu {
       flex: none;
+      position: relative;
       gap: theme.spacing(2);
 
       @include theme.row;
 
-      margin-right: -#{theme.button-padding("sm", false)};
-
       .themeSwitch {
-        margin-left: theme.spacing(1);
-      }
-    }
+        position: relative;
 
-    @media screen and (min-width: theme.$max-width + (2 * (theme.spacing(9) + theme.spacing(8) + theme.spacing(7)))) {
-      .leftMenu {
-        margin-left: -#{theme.spacing(9) + theme.spacing(7)};
-
-        .logoLink {
-          margin-right: -#{theme.spacing(2)};
+        @include theme.mobile {
+          display: none;
         }
-      }
 
-      .rightMenu {
-        margin-right: -#{theme.spacing(9) + theme.spacing(7)};
-
-        .themeSwitch {
-          margin-left: theme.spacing(5);
+        @include theme.desktop {
+          display: block;
+          position: absolute;
+          right: -#{theme.spacing(16)};
         }
       }
     }
+
+    // Reason: you can absolute position relatively to a container and disable this behavior on mobile
+    // @media screen and (min-width: #{theme.$max-width + (2 * (theme.spacing(9) + theme.spacing(8) + theme.spacing(7)))}) {
+    //   .leftMenu {
+    //     margin-left: -#{theme.spacing(9) + theme.spacing(7)};
+
+    //     .logoLink {
+    //       margin-right: -#{theme.spacing(2)};
+    //     }
+    //   }
+
+    //   .rightMenu {
+    //     margin-right: -#{theme.spacing(9) + theme.spacing(7)};
+
+    //     .themeSwitch {
+    //       margin-left: theme.spacing(5);
+    //     }
+    //   }
+    // }
+  }
+}
+
+.hideOnMobile {
+  @include theme.mobile {
+    display: none;
   }
 }

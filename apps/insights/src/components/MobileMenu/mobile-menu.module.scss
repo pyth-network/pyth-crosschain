@@ -1,0 +1,54 @@
+@use "@pythnetwork/component-library/theme";
+
+.mobileMenuTrigger {
+  display: none;
+
+  @include theme.mobile {
+    display: block;
+  }
+}
+
+.mobileMenuOverlay {
+  background: rgb(0 0 0 / 40%);
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+.mobileMenuContainer {
+  border-top-left-radius: theme.border-radius("2xl");
+  border-top-right-radius: theme.border-radius("2xl");
+  background: theme.color("background", "modal");
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(4);
+}
+
+.mobileMenuHandle {
+  background: theme.color("background", "secondary");
+  width: 33%;
+  height: 6px;
+  border-radius: theme.border-radius("full");
+  align-self: center;
+}
+
+.mobileThemeSwitcher {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobileThemeSwitcherFeedback {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: theme.spacing(3);
+  text-transform: capitalize;
+  font-weight: theme.font-weight("medium");
+}

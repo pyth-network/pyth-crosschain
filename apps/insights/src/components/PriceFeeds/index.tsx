@@ -23,6 +23,7 @@ import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { LivePrice } from "../LivePrices";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
+import { Stats } from "../Stats";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
 
@@ -48,7 +49,7 @@ export const PriceFeeds = async () => {
     <div className={styles.priceFeeds}>
       <h1 className={styles.header}>Price Feeds</h1>
       <div className={styles.body}>
-        <section className={styles.stats}>
+        <Stats>
           <StatCard
             variant="primary"
             header="Active Feeds"
@@ -74,7 +75,7 @@ export const PriceFeeds = async () => {
               corner={<Info weight="fill" />}
             />
           </AssetClassesDrawer>
-        </section>
+        </Stats>
         <YesterdaysPricesProvider
           feeds={Object.fromEntries(
             featuredRecentlyAdded.map(({ symbol, product }) => [
@@ -165,32 +166,34 @@ const FeaturedFeedsCard = <T extends ElementType>({
 }: FeaturedFeedsCardProps<T>) => (
   <Card {...props}>
     <div className={styles.featuredFeeds}>
-      {feeds.map((feed) => (
-        <Card
-          key={feed.product.price_account}
-          variant="tertiary"
-          {...(linkFeeds && {
-            href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
-          })}
-        >
-          <div className={styles.feedCardContents}>
-            <PriceFeedTag
-              symbol={feed.product.display_symbol}
-              description={feed.product.description}
-              icon={<PriceFeedIcon symbol={feed.product.display_symbol} />}
-            />
-            {showPrices && (
-              <div className={styles.prices}>
-                <LivePrice feedKey={feed.product.price_account} />
-                <ChangePercent
-                  className={styles.changePercent}
-                  feedKey={feed.product.price_account}
-                />
-              </div>
-            )}
-          </div>
-        </Card>
-      ))}
+      <Stats>
+        {feeds.map((feed) => (
+          <Card
+            key={feed.product.price_account}
+            variant="tertiary"
+            {...(linkFeeds && {
+              href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
+            })}
+          >
+            <div className={styles.feedCardContents}>
+              <PriceFeedTag
+                symbol={feed.product.display_symbol}
+                description={feed.product.description}
+                icon={<PriceFeedIcon symbol={feed.product.display_symbol} />}
+              />
+              {showPrices && (
+                <div className={styles.prices}>
+                  <LivePrice feedKey={feed.product.price_account} />
+                  <ChangePercent
+                    className={styles.changePercent}
+                    feedKey={feed.product.price_account}
+                  />
+                </div>
+              )}
+            </div>
+          </Card>
+        ))}
+      </Stats>
     </div>
   </Card>
 );
