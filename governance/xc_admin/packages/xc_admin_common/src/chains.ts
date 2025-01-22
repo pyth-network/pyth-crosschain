@@ -102,6 +102,8 @@ export const RECEIVER_CHAINS = {
   eventum_mainnet: 60073,
   threat_level_midnight: 60074,
   just_breathe: 60075,
+  rabechain_mainnet: 60076,
+
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
