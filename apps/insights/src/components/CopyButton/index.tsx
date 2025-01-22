@@ -27,7 +27,6 @@ export const CopyButton = ({ text, children, className, ...props }: Props) => {
   const [isCopied, setIsCopied] = useState(false);
   const logger = useLogger();
   const copy = useCallback(() => {
-    // eslint-disable-next-line n/no-unsupported-features/node-builtins
     navigator.clipboard
       .writeText(text)
       .then(() => {

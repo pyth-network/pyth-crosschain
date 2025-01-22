@@ -34,12 +34,12 @@
         grid-template-columns: max-content 1fr max-content;
         grid-template-rows: max-content max-content;
         text-align: left;
-        gap: theme.spacing(2) theme.spacing(4);
-        align-items: center;
+        gap: theme.spacing(1) theme.spacing(4);
+        align-items: start;
         width: 100%;
 
         .icon {
-          font-size: theme.spacing(8);
+          font-size: theme.spacing(6);
           color: theme.color("states", "data", "normal");
           grid-row: span 2 / span 2;
           display: grid;
@@ -47,17 +47,22 @@
         }
 
         .header {
-          @include theme.text("sm", "medium");
+          @include theme.h6;
 
+          line-height: 1.5;
           color: theme.color("heading");
         }
 
         .description {
-          @include theme.text("xs", "normal");
+          @include theme.text("sm", "normal");
 
+          line-height: 1.5;
           color: theme.color("muted");
           grid-column: 2;
           grid-row: 2;
+          word-wrap: break-word;
+          overflow: hidden;
+          max-width: 100%;
         }
 
         .caret {

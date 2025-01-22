@@ -16,6 +16,7 @@
   position: relative;
   padding: theme.spacing(1);
   isolation: isolate;
+  overflow: hidden;
 
   @at-root button#{&} {
     cursor: pointer;

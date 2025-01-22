@@ -80,6 +80,38 @@ $border-radius: (
   @return map-get-strict($border-radius, $radius);
 }
 
+$brakpoints: (
+  "xs": 480px,
+  "sm": 720px,
+  "md": 960px,
+  "lg": 1024px,
+  "xl": 1280px,
+  "2xl": 1536px,
+  "3xl": 1720px,
+);
+
+@function breakpoint($breakpoint) {
+  @return map-get-strict($brakpoints, $breakpoint);
+}
+
+@mixin mobile() {
+  @media screen and (max-width: breakpoint("md")) {
+    @content;
+  }
+}
+
+@mixin tablet() {
+  @media screen and (min-width: breakpoint("md")) {
+    @content;
+  }
+}
+
+@mixin desktop() {
+  @media screen and (min-width: breakpoint("3xl")) {
+    @content;
+  }
+}
+
 $color-pallette: (
   "black": #000,
   "white": #fff,
@@ -726,6 +758,10 @@ $max-width: 96rem;
   max-width: $max-width;
   padding: 0 spacing(6);
   box-sizing: content-box;
+
+  @include mobile {
+    padding: 0 spacing(4);
+  }
 }
 
 @mixin row {
@@ -777,6 +813,24 @@ $elevations: (
 
 @mixin h4 {
   font-size: font-size("xl");
+  font-style: normal;
+  font-weight: font-weight("medium");
+  line-height: 125%;
+  letter-spacing: letter-spacing("tight");
+  margin: 0;
+}
+
+@mixin h5 {
+  font-size: font-size("lg");
+  font-style: normal;
+  font-weight: font-weight("medium");
+  line-height: 125%;
+  letter-spacing: letter-spacing("tight");
+  margin: 0;
+}
+
+@mixin h6 {
+  font-size: font-size("base");
   font-style: normal;
   font-weight: font-weight("medium");
   line-height: 125%;

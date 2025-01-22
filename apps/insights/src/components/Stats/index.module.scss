@@ -1,0 +1,56 @@
+@use "@pythnetwork/component-library/theme";
+
+.statWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+
+  @include theme.mobile {
+    width: 100dvw; // Extend the width beyond the root padding
+    margin-left: -#{theme.spacing(4)};
+    margin-right: -#{theme.spacing(4)};
+    white-space: nowrap;
+    overflow: auto hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scroll-padding: theme.spacing(4);
+    left: 0;
+    right: 0;
+
+    // Optional: Hide scrollbars
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+.statsContainer {
+  gap: theme.spacing(2);
+  width: 100%;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+
+  > * {
+    display: flex;
+    width: 100%;
+    flex: 1 0 0;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 0;
+  }
+
+  @include theme.mobile {
+    width: max-content;
+    gap: theme.spacing(3);
+    padding: 0 theme.spacing(4);
+
+    > * {
+      width: 280px;
+      scroll-snap-align: start;
+    }
+  }
+}
