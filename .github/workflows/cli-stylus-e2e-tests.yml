@@ -7,7 +7,7 @@
 # - Spin up `nitro-testnode`
 #
 # Contract deployments and account funding happen on a per-test basis.
-name: e2e
+name: stylus-e2e-tests
 permissions:
   contents: read
 on:
