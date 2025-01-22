@@ -26,6 +26,8 @@ export type ParsedFeedPayload = {
   price?: string | undefined;
   bestBidPrice?: string | undefined;
   bestAskPrice?: string | undefined;
+  publisher_count?: number | undefined;
+  exponent?: number | undefined;
 };
 
 export type ParsedPayload = {
