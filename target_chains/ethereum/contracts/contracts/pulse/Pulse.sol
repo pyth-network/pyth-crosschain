@@ -29,6 +29,7 @@ abstract contract Pulse is IPulse, PulseState {
         _state.pyth = pythAddress;
         _state.currentSequenceNumber = 1;
         _state.defaultProvider = defaultProvider;
+        _state.exclusivityPeriodSeconds = 15; // Default to 15 seconds
 
         if (prefillRequestStorage) {
             for (uint8 i = 0; i < NUM_REQUESTS; i++) {
@@ -49,12 +50,9 @@ abstract contract Pulse is IPulse, PulseState {
     function requestPriceUpdatesWithCallback(
         uint256 publishTime,
         bytes32[] calldata priceIds,
-        uint256 callbackGasLimit,
-        address provider
+        uint256 callbackGasLimit
     ) external payable override returns (uint64 requestSequenceNumber) {
-        if (provider == address(0)) {
-            provider = _state.defaultProvider;
-        }
+        address provider = _state.defaultProvider;
         require(
             _state.providers[provider].isRegistered,
             "Provider not registered"
@@ -101,6 +99,16 @@ abstract contract Pulse is IPulse, PulseState {
         bytes32[] calldata priceIds
     ) external payable override {
         Request storage req = findActiveRequest(sequenceNumber);
+
+        // Check provider exclusivity using configurable period
+        if (
+            block.timestamp < req.publishTime + _state.exclusivityPeriodSeconds
+        ) {
+            require(
+                msg.sender == req.provider,
+                "Only assigned provider during exclusivity period"
+            );
+        }
 
         // Verify priceIds match
         require(
@@ -356,5 +364,19 @@ abstract contract Pulse is IPulse, PulseState {
         address oldProvider = _state.defaultProvider;
         _state.defaultProvider = provider;
         emit DefaultProviderUpdated(oldProvider, provider);
+    }
+
+    function setExclusivityPeriod(uint256 periodSeconds) external override {
+        require(
+            msg.sender == _state.admin,
+            "Only admin can set exclusivity period"
+        );
+        uint256 oldPeriod = _state.exclusivityPeriodSeconds;
+        _state.exclusivityPeriodSeconds = periodSeconds;
+        emit ExclusivityPeriodUpdated(oldPeriod, periodSeconds);
+    }
+
+    function getExclusivityPeriod() external view override returns (uint256) {
+        return _state.exclusivityPeriodSeconds;
     }
 }

@@ -33,6 +33,7 @@ contract PulseState {
         address pyth;
         uint64 currentSequenceNumber;
         address defaultProvider;
+        uint256 exclusivityPeriodSeconds;
         Request[NUM_REQUESTS] requests;
         mapping(bytes32 => Request) requestsOverflow;
         mapping(address => ProviderInfo) providers;
