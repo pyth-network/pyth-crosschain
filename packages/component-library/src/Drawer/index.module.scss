@@ -7,38 +7,34 @@
   z-index: 1;
 
   .drawer {
-    position: fixed;
-    top: theme.spacing(4);
-    bottom: theme.spacing(4);
-    right: theme.spacing(4);
-    width: 60%;
-    max-width: theme.spacing(160);
-    outline: none;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    padding-bottom: 0;
     background: theme.color("background", "primary");
-    border: 1px solid theme.color("border");
-    border-radius: theme.border-radius("3xl");
-    display: flex;
-    flex-flow: column nowrap;
-    overflow-y: hidden;
-    padding-bottom: theme.border-radius("3xl");
 
-    @include theme.mobile {
-      width: 100%;
-      inset: 0;
-      border-radius: 0;
-      border: none;
-      padding-bottom: 0;
-
-      // Remove if we don't want a gap on the top
-      // Will require to change the animation direction
-      // top: 5rem;
-      // border-top-left-radius: theme.border-radius("2xl");
-      // border-top-right-radius: theme.border-radius("2xl");
+    @include theme.breakpoint("sm") {
+      position: fixed;
+      top: theme.spacing(4);
+      bottom: theme.spacing(4);
+      right: theme.spacing(4);
+      width: 80%;
+      max-width: theme.spacing(160);
+      outline: none;
+      border: 1px solid theme.color("border");
+      border-radius: theme.border-radius("3xl");
+      display: flex;
+      flex-flow: column nowrap;
+      overflow-y: hidden;
+      padding-bottom: theme.border-radius("3xl");
+    }
+    @include theme.breakpoint("lg") {
+      width: 60%;
     }
 
     .heading {
-      padding: theme.spacing(4);
-      padding-left: theme.spacing(6);
+      padding: theme.spacing(3);
+      padding-left: theme.spacing(4);
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
@@ -47,9 +43,9 @@
       flex: none;
       border-bottom: 1px solid theme.color("border");
 
-      @include theme.mobile {
-        padding: theme.spacing(3);
-        padding-left: theme.spacing(4);
+      @include theme.breakpoint("sm") {
+        padding: theme.spacing(4);
+        padding-left: theme.spacing(6);
       }
 
       .title {
@@ -71,10 +67,10 @@
     .body {
       flex: 1;
       overflow: hidden auto;
-      padding: theme.spacing(6);
+      padding: theme.spacing(4);
 
-      @include theme.mobile {
-        padding: theme.spacing(4);
+      @include theme.breakpoint("sm") {
+        padding: theme.spacing(6);
       }
     }
 

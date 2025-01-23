@@ -2,39 +2,27 @@
 
 .footer {
   // SM
+  margin-top: theme.spacing(8);
+  padding-top: theme.spacing(8);
+  padding-bottom: theme.spacing(20);
   background: theme.color("background", "primary");
-
-  // XL
-  padding: theme.spacing(8) 0;
-
-  @include theme.mobile {
-    padding-bottom: theme.spacing(20);
-  }
 
   // bg-beige-100 sm:border-t sm:border-stone-300
 
   .topContent {
     display: flex;
     gap: theme.spacing(6);
-
-    // SM
-    flex-flow: row nowrap;
-    align-items: center;
+    flex-flow: column nowrap;
+    align-items: flex-start;
     justify-content: space-between;
 
-    @media screen and (max-width: theme.breakpoint("sm")) {
-      flex-flow: column nowrap;
-      align-items: flex-start;
-    }
-
     @include theme.max-width;
-
-    // XL
     margin-bottom: theme.spacing(6);
 
-    // py-6
-
-    // flex-col
+    @include theme.breakpoint("sm") {
+      flex-flow: row nowrap;
+      align-items: center;
+    }
 
     .left {
       display: flex;
@@ -95,10 +83,11 @@
   .bottomContent {
     display: flex;
     gap: theme.spacing(6);
-
-    // SM
-    flex-flow: row nowrap;
-    justify-content: space-between;
+    flex-flow: column;
+    @include theme.breakpoint("sm") {
+      flex-flow: row nowrap;
+      justify-content: space-between;
+    }
 
     // "flex-col
 

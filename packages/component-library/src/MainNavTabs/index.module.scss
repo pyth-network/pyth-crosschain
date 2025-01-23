@@ -1,33 +1,13 @@
 @use "../theme";
 
 .mainNavTabs {
+  isolation: isolate;
   gap: theme.spacing(2);
-
   @include theme.row;
-
-  @include theme.mobile {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 900;
-    padding: 0.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 3rem;
-    border-top: 1px solid theme.color("border");
-    background: theme.color("background", "primary");
-  }
 
   .tab {
     position: relative;
     outline: none;
-
-    @include theme.mobile {
-      flex-grow: 1;
-      text-align: center;
-    }
 
     .bubble {
       position: absolute;
@@ -59,21 +39,11 @@
         pointer-events: auto;
 
         &[data-hovered] .bubble {
-          background-color: theme.color(
-            "button",
-            "solid",
-            "background",
-            "hover"
-          );
+          background-color: theme.color("button", "solid", "background", "hover");
         }
 
         &[data-pressed] .bubble {
-          background-color: theme.color(
-            "button",
-            "solid",
-            "background",
-            "active"
-          );
+          background-color: theme.color("button", "solid", "background", "active");
         }
       }
     }
