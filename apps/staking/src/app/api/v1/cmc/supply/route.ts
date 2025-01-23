@@ -1,48 +1,50 @@
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { clusterApiUrl, Connection } from "@solana/web3.js";
+import { toNumber } from "dnum";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { MAINNET_API_RPC } from "../../../../../config/server";
-import { tokensToString } from "../../../../../tokens";
+import { DECIMALS } from "../../../../../tokens";
+
+export async function GET(req: NextRequest) {
+  const query = querySchema.safeParse(req.nextUrl.searchParams.get("q"));
+  if (query.error) {
+    return new Response(
+      "The 'q' query parameter must be one of 'totalSupply' or 'circulatingSupply'.",
+      { status: 400 },
+    );
+  } else {
+    const isMainnet = req.nextUrl.searchParams.get("devnet") !== "true";
+    const asDecimal = req.nextUrl.searchParams.get("as_decimal") === "true";
+    const circulating = query.data === "circulatingSupply";
+    const supply = await getSupply(isMainnet, circulating);
+    return Response.json(formatAmount(asDecimal, supply));
+  }
+}
 
 const querySchema = z.enum(["totalSupply", "circulatingSupply"]);
 
-export async function GET(req: NextRequest) {
-  const isMainnet = req.nextUrl.searchParams.get("devnet") !== "true";
-  const asDecimal = req.nextUrl.searchParams.get("as_decimal") === "true";
-  const stakingClient = new PythStakingClient({
-    connection: new Connection(
-      isMainnet && MAINNET_API_RPC !== undefined
-        ? MAINNET_API_RPC
-        : clusterApiUrl(WalletAdapterNetwork.Devnet),
-    ),
-  });
-
-  const query = querySchema.safeParse(req.nextUrl.searchParams.get("q"));
-  if (!query.success) {
-    return Response.json(
-      {
-        error:
-          "The 'q' query parameter must be one of 'totalSupply' or 'circulatingSupply'.",
-      },
-      {
-        status: 400,
-      },
-    );
-  }
-  const q = query.data;
-
-  if (q === "circulatingSupply") {
-    const circulatingSupply = await stakingClient.getCirculatingSupply();
-    return Response.json(
-      asDecimal ? tokensToString(circulatingSupply) : Number(circulatingSupply),
-    );
+const getSupply = async (isMainnet: boolean, circulating: boolean) => {
+  const client = isMainnet ? mainnetClient : devnetClient;
+  if (circulating) {
+    return client.getCirculatingSupply();
   } else {
-    const pythMint = await stakingClient.getPythTokenMint();
-    return Response.json(
-      asDecimal ? tokensToString(pythMint.supply) : Number(pythMint.supply),
-    );
+    const { supply } = await client.getPythTokenMint();
+    return supply;
   }
-}
+};
+
+const mainnetClient = new PythStakingClient({
+  connection: new Connection(
+    MAINNET_API_RPC ?? clusterApiUrl(WalletAdapterNetwork.Mainnet),
+  ),
+});
+
+const devnetClient = new PythStakingClient({
+  connection: new Connection(clusterApiUrl(WalletAdapterNetwork.Devnet)),
+});
+
+const formatAmount = (asDecimal: boolean, amount: bigint) =>
+  asDecimal ? toNumber([amount, DECIMALS]) : Number(amount);
