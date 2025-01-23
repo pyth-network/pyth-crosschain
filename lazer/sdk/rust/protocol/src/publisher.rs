@@ -38,7 +38,7 @@ pub struct PriceFeedData {
 #[derive(Debug, Clone, Serialize, Deserialize, From)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
-pub enum PublisherResponse {
+pub enum ServerResponse {
     UpdateDeserializationError(UpdateDeserializationErrorResponse),
 }
 /// Sent to the publisher if the binary data could not be parsed
