@@ -25,10 +25,12 @@ export const Header = ({ className, ...props }: ComponentProps<"header">) => (
           <div className={styles.logoLabel}>Pyth Homepage</div>
         </Link>
         <div className={styles.appName}>Insights</div>
-        <MainNavTabs />
+        <div className={styles.desktopNavigation}>
+          <MainNavTabs />
+        </div>
       </div>
       <div className={styles.rightMenu}>
-        <div className={styles.hideOnMobile}>
+        <div className={styles.desktopSupport}>
           <SupportDrawer>
             <Button beforeIcon={Lifebuoy} variant="ghost" size="sm" rounded>
               Support
@@ -36,7 +38,7 @@ export const Header = ({ className, ...props }: ComponentProps<"header">) => (
           </SupportDrawer>
         </div>
         <SearchButton />
-        <div className={styles.hideOnMobile}>
+        <div className={styles.desktopDocs}>
           <Button
             href="https://docs.pyth.network"
             size="sm"
