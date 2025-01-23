@@ -14,7 +14,8 @@ abstract contract Pulse is IPulse, PulseState {
         uint128 pythFeeInWei,
         address pythAddress,
         address defaultProvider,
-        bool prefillRequestStorage
+        bool prefillRequestStorage,
+        uint256 exclusivityPeriodSeconds
     ) internal {
         require(admin != address(0), "admin is zero address");
         require(pythAddress != address(0), "pyth is zero address");
@@ -29,7 +30,7 @@ abstract contract Pulse is IPulse, PulseState {
         _state.pyth = pythAddress;
         _state.currentSequenceNumber = 1;
         _state.defaultProvider = defaultProvider;
-        _state.exclusivityPeriodSeconds = 15; // Default to 15 seconds
+        _state.exclusivityPeriodSeconds = exclusivityPeriodSeconds;
 
         if (prefillRequestStorage) {
             for (uint8 i = 0; i < NUM_REQUESTS; i++) {

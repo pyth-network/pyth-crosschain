@@ -92,7 +92,15 @@ contract PulseTest is Test, PulseEvents {
         proxy = new ERC1967Proxy(address(_pulse), "");
         pulse = PulseUpgradeable(address(proxy));
 
-        pulse.initialize(owner, admin, PYTH_FEE, pyth, defaultProvider, false);
+        pulse.initialize(
+            owner,
+            admin,
+            PYTH_FEE,
+            pyth,
+            defaultProvider,
+            false,
+            15
+        );
         vm.prank(defaultProvider);
         pulse.registerProvider(DEFAULT_PROVIDER_FEE);
         consumer = new MockPulseConsumer();
