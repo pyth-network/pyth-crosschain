@@ -26,7 +26,7 @@ const MESSAGE_SIZE_LEN: u16 = 2;
 /// these fields that indicate the location of the signature data within data of other
 /// instructions within the same transaction.
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C)]
+#[repr(C, packed)]
 pub struct Ed25519SignatureOffsets {
     /// Offset to the ed25519 signature within the instruction data.
     pub signature_offset: u16,
