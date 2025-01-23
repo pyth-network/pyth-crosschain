@@ -15,14 +15,14 @@ export const I18nProvider = (
     () =>
       isSSR
         ? DEFAULT_LOCALE
-        : window.navigator.languages.find((locale) => {
+        : (window.navigator.languages.find((locale) => {
             const language = parse(locale).language;
             return (
               language !== undefined &&
               language !== null &&
               SUPPORTED_LANGUAGES.has(language)
             );
-          }) ?? DEFAULT_LOCALE,
+          }) ?? DEFAULT_LOCALE),
     [isSSR],
   );
 
