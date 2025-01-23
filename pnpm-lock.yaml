@@ -447,6 +447,9 @@ importers:
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.7.7)(zod@3.23.8)
+      bn.js:
+        specifier: ^5.2.1
+        version: 5.2.1
       eventsource:
         specifier: ^2.0.2
         version: 2.0.2
@@ -454,6 +457,9 @@ importers:
         specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
+      '@types/bn.js':
+        specifier: ^5.1.5
+        version: 5.1.6
       '@types/eventsource':
         specifier: ^1.1.15
         version: 1.1.15
