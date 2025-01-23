@@ -62,12 +62,10 @@ interface IPulse is PulseEvents {
      * @notice Calculates the total fee required for a price update request
      * @dev Total fee = base Pyth protocol fee + gas costs for callback
      * @param callbackGasLimit The amount of gas allocated for callback execution
-     * @param provider The provider to use for the fee calculation
      * @return feeAmount The total fee in wei that must be provided as msg.value
      */
     function getFee(
-        uint256 callbackGasLimit,
-        address provider
+        uint256 callbackGasLimit
     ) external view returns (uint128 feeAmount);
 
     function getAccruedFees() external view returns (uint128 accruedFeesInWei);

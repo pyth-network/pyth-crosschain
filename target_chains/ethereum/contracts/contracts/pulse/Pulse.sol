@@ -70,7 +70,7 @@ abstract contract Pulse is IPulse, PulseState {
         }
         requestSequenceNumber = _state.currentSequenceNumber++;
 
-        uint128 requiredFee = getFee(callbackGasLimit, provider);
+        uint128 requiredFee = getFee(callbackGasLimit);
         if (msg.value < requiredFee) revert InsufficientFee();
 
         Request storage req = allocRequest(requestSequenceNumber);
@@ -190,14 +190,12 @@ abstract contract Pulse is IPulse, PulseState {
     }
 
     function getFee(
-        uint256 callbackGasLimit,
-        address provider
+        uint256 callbackGasLimit
     ) public view override returns (uint128 feeAmount) {
-        if (provider == address(0)) {
-            provider = _state.defaultProvider;
-        }
         uint128 baseFee = _state.pythFeeInWei;
-        uint128 providerFeeInWei = _state.providers[provider].feeInWei;
+        uint128 providerFeeInWei = _state
+            .providers[_state.defaultProvider]
+            .feeInWei;
         uint256 gasFee = callbackGasLimit * providerFeeInWei;
         feeAmount = baseFee + SafeCast.toUint128(gasFee);
     }

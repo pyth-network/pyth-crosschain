@@ -159,16 +159,13 @@ contract PulseTest is Test, PulseEvents {
     }
 
     // Helper function to calculate total fee
-    function calculateTotalFee(
-        address provider
-    ) internal view returns (uint128) {
-        return pulse.getFee(CALLBACK_GAS_LIMIT, provider);
+    function calculateTotalFee() internal view returns (uint128) {
+        return pulse.getFee(CALLBACK_GAS_LIMIT);
     }
 
     // Helper function to setup consumer request
     function setupConsumerRequest(
-        address consumerAddress,
-        address provider
+        address consumerAddress
     )
         internal
         returns (
@@ -181,7 +178,7 @@ contract PulseTest is Test, PulseEvents {
         publishTime = block.timestamp;
         vm.deal(consumerAddress, 1 gwei);
 
-        uint128 totalFee = calculateTotalFee(provider);
+        uint128 totalFee = calculateTotalFee();
 
         vm.prank(consumerAddress);
         sequenceNumber = pulse.requestPriceUpdatesWithCallback{value: totalFee}(
@@ -202,7 +199,7 @@ contract PulseTest is Test, PulseEvents {
 
         // Fund the consumer contract with enough ETH for higher gas price
         vm.deal(address(consumer), 1 ether);
-        uint128 totalFee = calculateTotalFee(defaultProvider);
+        uint128 totalFee = calculateTotalFee();
 
         // Create the event data we expect to see
         PulseState.Request memory expectedRequest = PulseState.Request({
@@ -276,7 +273,7 @@ contract PulseTest is Test, PulseEvents {
 
         // Fund the consumer contract
         vm.deal(address(consumer), 1 gwei);
-        uint128 totalFee = calculateTotalFee(defaultProvider);
+        uint128 totalFee = calculateTotalFee();
 
         // Step 1: Make the request as consumer
         vm.prank(address(consumer));
@@ -353,7 +350,7 @@ contract PulseTest is Test, PulseEvents {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(failingConsumer), defaultProvider);
+        ) = setupConsumerRequest(address(failingConsumer));
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
@@ -381,7 +378,7 @@ contract PulseTest is Test, PulseEvents {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(failingConsumer), defaultProvider);
+        ) = setupConsumerRequest(address(failingConsumer));
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
@@ -408,7 +405,7 @@ contract PulseTest is Test, PulseEvents {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer), defaultProvider);
+        ) = setupConsumerRequest(address(consumer));
 
         // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
@@ -433,7 +430,7 @@ contract PulseTest is Test, PulseEvents {
         uint256 futureTime = block.timestamp + 10; // 10 seconds in future
         vm.deal(address(consumer), 1 gwei);
 
-        uint128 totalFee = calculateTotalFee(defaultProvider);
+        uint128 totalFee = calculateTotalFee();
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
@@ -468,7 +465,7 @@ contract PulseTest is Test, PulseEvents {
         uint256 farFutureTime = block.timestamp + 61; // Just over 1 minute
         vm.deal(address(consumer), 1 gwei);
 
-        uint128 totalFee = calculateTotalFee(defaultProvider);
+        uint128 totalFee = calculateTotalFee();
         vm.prank(address(consumer));
 
         vm.expectRevert("Too far in future");
@@ -484,7 +481,7 @@ contract PulseTest is Test, PulseEvents {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer), defaultProvider);
+        ) = setupConsumerRequest(address(consumer));
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
@@ -514,7 +511,7 @@ contract PulseTest is Test, PulseEvents {
             uint128 expectedFee = SafeCast.toUint128(
                 DEFAULT_PROVIDER_FEE * gasLimit
             ) + PYTH_FEE;
-            uint128 actualFee = pulse.getFee(gasLimit, defaultProvider);
+            uint128 actualFee = pulse.getFee(gasLimit);
             assertEq(
                 actualFee,
                 expectedFee,
@@ -524,7 +521,7 @@ contract PulseTest is Test, PulseEvents {
 
         // Test with zero gas limit
         uint128 expectedMinFee = PYTH_FEE;
-        uint128 actualMinFee = pulse.getFee(0, defaultProvider);
+        uint128 actualMinFee = pulse.getFee(0);
         assertEq(
             actualMinFee,
             expectedMinFee,
@@ -538,9 +535,11 @@ contract PulseTest is Test, PulseEvents {
         vm.deal(address(consumer), 1 gwei);
 
         vm.prank(address(consumer));
-        pulse.requestPriceUpdatesWithCallback{
-            value: calculateTotalFee(defaultProvider)
-        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT);
+        pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
+            block.timestamp,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
 
         // Get admin's balance before withdrawal
         uint256 adminBalanceBefore = admin.balance;
@@ -586,9 +585,11 @@ contract PulseTest is Test, PulseEvents {
         vm.deal(address(consumer), 1 gwei);
 
         vm.prank(address(consumer));
-        pulse.requestPriceUpdatesWithCallback{
-            value: calculateTotalFee(defaultProvider)
-        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT);
+        pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
+            block.timestamp,
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
 
         // Get provider's accrued fees instead of total fees
         PulseState.ProviderInfo memory providerInfo = pulse.getProviderInfo(
@@ -645,10 +646,7 @@ contract PulseTest is Test, PulseEvents {
         uint256 publishTime = block.timestamp;
 
         // Setup request
-        (uint64 sequenceNumber, , ) = setupConsumerRequest(
-            address(consumer),
-            defaultProvider
-        );
+        (uint64 sequenceNumber, , ) = setupConsumerRequest(address(consumer));
 
         // Create different priceIds
         bytes32[] memory wrongPriceIds = new bytes32[](2);
@@ -682,7 +680,7 @@ contract PulseTest is Test, PulseEvents {
         }
 
         vm.deal(address(consumer), 1 gwei);
-        uint128 totalFee = calculateTotalFee(defaultProvider);
+        uint128 totalFee = calculateTotalFee();
 
         vm.prank(address(consumer));
         vm.expectRevert(
@@ -752,7 +750,7 @@ contract PulseTest is Test, PulseEvents {
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
 
-        uint128 totalFee = pulse.getFee(CALLBACK_GAS_LIMIT, provider);
+        uint128 totalFee = pulse.getFee(CALLBACK_GAS_LIMIT);
 
         vm.deal(address(consumer), totalFee);
         vm.prank(address(consumer));
@@ -802,7 +800,7 @@ contract PulseTest is Test, PulseEvents {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer), defaultProvider);
+        ) = setupConsumerRequest(address(consumer));
 
         // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
@@ -832,7 +830,7 @@ contract PulseTest is Test, PulseEvents {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer), defaultProvider);
+        ) = setupConsumerRequest(address(consumer));
 
         // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
@@ -864,7 +862,7 @@ contract PulseTest is Test, PulseEvents {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer), defaultProvider);
+        ) = setupConsumerRequest(address(consumer));
 
         // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
