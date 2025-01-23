@@ -18,6 +18,7 @@ import { toHex } from "../../hex";
 import { getPublishers } from "../../services/clickhouse";
 import { Cluster, getData } from "../../services/pyth";
 import { LivePricesProvider } from "../LivePrices";
+import { MobileNavigation } from "../MobileNavigation/mobile-navigation";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 
@@ -65,6 +66,7 @@ export const Root = async ({ children }: Props) => {
             <TabPanel>{children}</TabPanel>
           </main>
           <Footer />
+          <MobileNavigation />
         </TabRoot>
       </SearchDialogProvider>
     </BaseRoot>

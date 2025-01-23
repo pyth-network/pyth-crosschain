@@ -1,0 +1,11 @@
+@use "@pythnetwork/component-library/theme";
+
+.mobileNavigation {
+    display: block;
+    padding: theme.spacing(2);
+    background: theme.color("background", "primary");
+    border-top: 1px solid theme.color("background", "secondary");
+    @include theme.breakpoint("md") {
+        display: none;
+    }
+}

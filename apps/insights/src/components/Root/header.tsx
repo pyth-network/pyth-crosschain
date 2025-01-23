@@ -12,7 +12,7 @@ import { SearchButton } from "./search-button";
 import { SupportDrawer } from "./support-drawer";
 import { MainNavTabs } from "./tabs";
 import { ThemeSwitch } from "./theme-switch";
-import { MobileMenu } from "../MobileMenu/mobile-menu.v2";
+import { MobileMenu } from "../MobileMenu/mobile-menu";
 
 export const Header = ({ className, ...props }: ComponentProps<"header">) => (
   <header className={clsx(styles.header, className)} {...props}>

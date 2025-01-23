@@ -97,8 +97,6 @@ $breakpoints: (
 @mixin breakpoint($point) {
   @media (min-width: map-get-strict($breakpoints, $point)) {
     @content;
-    background: lime;
-    outline: 1px solid purple;
   }
 }
 

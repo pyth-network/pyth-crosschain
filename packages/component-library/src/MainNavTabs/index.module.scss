@@ -6,6 +6,10 @@
   @include theme.row;
 
   .tab {
+    width: 100%;
+    @include theme.breakpoint("md") {
+      width: auto;
+    }
     position: relative;
     outline: none;
 
