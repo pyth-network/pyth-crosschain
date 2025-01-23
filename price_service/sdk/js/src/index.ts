@@ -16,7 +16,7 @@ export {
   AccumulatorUpdateData,
   parsePriceFeedMessage,
   parseTwapMessage,
-} from "@pythnetwork/hermes-client";
+} from "./AccumulatorUpdateData";
 
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.

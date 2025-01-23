@@ -36,6 +36,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/bn.js": "^5.1.5",
     "@types/eventsource": "^1.1.15",
     "@types/jest": "^29.4.0",
     "@types/node": "^20.14.2",
@@ -52,6 +53,7 @@
   },
   "dependencies": {
     "@zodios/core": "^10.9.6",
+    "bn.js": "^5.2.1",
     "eventsource": "^2.0.2",
     "zod": "^3.23.8"
   }
