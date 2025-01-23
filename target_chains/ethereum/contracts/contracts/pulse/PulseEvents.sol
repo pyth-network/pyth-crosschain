@@ -39,4 +39,9 @@ interface PulseEvents {
         uint128 newFee
     );
     event DefaultProviderUpdated(address oldProvider, address newProvider);
+
+    event ExclusivityPeriodUpdated(
+        uint256 oldPeriodSeconds,
+        uint256 newPeriodSeconds
+    );
 }

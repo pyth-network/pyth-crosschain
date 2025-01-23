@@ -179,8 +179,7 @@ contract PulseTest is Test, PulseEvents {
         sequenceNumber = pulse.requestPriceUpdatesWithCallback{value: totalFee}(
             publishTime,
             priceIds,
-            CALLBACK_GAS_LIMIT,
-            provider
+            CALLBACK_GAS_LIMIT
         );
 
         return (sequenceNumber, priceIds, publishTime);
@@ -226,8 +225,7 @@ contract PulseTest is Test, PulseEvents {
         pulse.requestPriceUpdatesWithCallback{value: totalFee}(
             publishTime,
             priceIds,
-            CALLBACK_GAS_LIMIT,
-            defaultProvider
+            CALLBACK_GAS_LIMIT
         );
 
         // Additional assertions to verify event data was stored correctly
@@ -260,8 +258,7 @@ contract PulseTest is Test, PulseEvents {
         pulse.requestPriceUpdatesWithCallback{value: PYTH_FEE}( // Intentionally low fee
             block.timestamp,
             priceIds,
-            CALLBACK_GAS_LIMIT,
-            defaultProvider
+            CALLBACK_GAS_LIMIT
         );
     }
 
@@ -277,7 +274,7 @@ contract PulseTest is Test, PulseEvents {
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
-        }(publishTime, priceIds, CALLBACK_GAS_LIMIT, defaultProvider);
+        }(publishTime, priceIds, CALLBACK_GAS_LIMIT);
 
         // Step 2: Create mock price feeds and setup Pyth response
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
@@ -432,7 +429,7 @@ contract PulseTest is Test, PulseEvents {
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
-        }(futureTime, priceIds, CALLBACK_GAS_LIMIT, defaultProvider);
+        }(futureTime, priceIds, CALLBACK_GAS_LIMIT);
 
         // Try to execute callback before the requested timestamp
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
@@ -470,8 +467,7 @@ contract PulseTest is Test, PulseEvents {
         pulse.requestPriceUpdatesWithCallback{value: totalFee}(
             farFutureTime,
             priceIds,
-            CALLBACK_GAS_LIMIT,
-            defaultProvider
+            CALLBACK_GAS_LIMIT
         );
     }
 
@@ -536,7 +532,7 @@ contract PulseTest is Test, PulseEvents {
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{
             value: calculateTotalFee(defaultProvider)
-        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT, defaultProvider);
+        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT);
 
         // Get admin's balance before withdrawal
         uint256 adminBalanceBefore = admin.balance;
@@ -584,7 +580,7 @@ contract PulseTest is Test, PulseEvents {
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{
             value: calculateTotalFee(defaultProvider)
-        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT, defaultProvider);
+        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT);
 
         // Get provider's accrued fees instead of total fees
         PulseState.ProviderInfo memory providerInfo = pulse.getProviderInfo(
@@ -691,8 +687,7 @@ contract PulseTest is Test, PulseEvents {
         pulse.requestPriceUpdatesWithCallback{value: totalFee}(
             block.timestamp,
             priceIds,
-            CALLBACK_GAS_LIMIT,
-            defaultProvider
+            CALLBACK_GAS_LIMIT
         );
     }
 
@@ -755,9 +750,130 @@ contract PulseTest is Test, PulseEvents {
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
-        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT, provider);
+        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT);
 
         PulseState.Request memory req = pulse.getRequest(sequenceNumber);
         assertEq(req.provider, provider);
+    }
+
+    function testExclusivityPeriod() public {
+        // Test initial value
+        assertEq(
+            pulse.getExclusivityPeriod(),
+            15,
+            "Initial exclusivity period should be 15 seconds"
+        );
+
+        // Test setting new value
+        vm.prank(admin);
+        vm.expectEmit();
+        emit ExclusivityPeriodUpdated(15, 30);
+        pulse.setExclusivityPeriod(30);
+
+        assertEq(
+            pulse.getExclusivityPeriod(),
+            30,
+            "Exclusivity period should be updated"
+        );
+    }
+
+    function testSetExclusivityPeriodUnauthorized() public {
+        vm.prank(address(0xdead));
+        vm.expectRevert("Only admin can set exclusivity period");
+        pulse.setExclusivityPeriod(30);
+    }
+
+    function testExecuteCallbackDuringExclusivity() public {
+        // Register a second provider
+        address secondProvider = address(0x456);
+        vm.prank(secondProvider);
+        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+
+        // Setup request
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer), defaultProvider);
+
+        // Setup mock data
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockParsePriceFeedUpdates(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Try to execute with second provider during exclusivity period
+        vm.prank(secondProvider);
+        vm.expectRevert("Only assigned provider during exclusivity period");
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+
+        // Original provider should succeed
+        vm.prank(defaultProvider);
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+    }
+
+    function testExecuteCallbackAfterExclusivity() public {
+        // Register a second provider
+        address secondProvider = address(0x456);
+        vm.prank(secondProvider);
+        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+
+        // Setup request
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer), defaultProvider);
+
+        // Setup mock data
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockParsePriceFeedUpdates(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Wait for exclusivity period to end
+        vm.warp(block.timestamp + pulse.getExclusivityPeriod() + 1);
+
+        // Second provider should now succeed
+        vm.prank(secondProvider);
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+    }
+
+    function testExecuteCallbackWithCustomExclusivityPeriod() public {
+        // Register a second provider
+        address secondProvider = address(0x456);
+        vm.prank(secondProvider);
+        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+
+        // Set custom exclusivity period
+        vm.prank(admin);
+        pulse.setExclusivityPeriod(30);
+
+        // Setup request
+        (
+            uint64 sequenceNumber,
+            bytes32[] memory priceIds,
+            uint256 publishTime
+        ) = setupConsumerRequest(address(consumer), defaultProvider);
+
+        // Setup mock data
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockParsePriceFeedUpdates(priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Try at 29 seconds (should fail for second provider)
+        vm.warp(block.timestamp + 29);
+        vm.prank(secondProvider);
+        vm.expectRevert("Only assigned provider during exclusivity period");
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+
+        // Try at 31 seconds (should succeed for second provider)
+        vm.warp(block.timestamp + 2);
+        vm.prank(secondProvider);
+        pulse.executeCallback(sequenceNumber, updateData, priceIds);
     }
 }
