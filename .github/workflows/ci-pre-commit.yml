@@ -25,6 +25,8 @@ jobs:
         run: |
           rustup install 1.66.1
           rustup install 1.73.0
+      - name: Install clang
+        run: sudo apt install clang
       - name: Install protoc
         uses: arduino/setup-protoc@v3
       - name: Install poetry
