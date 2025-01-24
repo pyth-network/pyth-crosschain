@@ -53,12 +53,44 @@ export class PythPriceListener implements IPriceListener {
     // Check health of the price feeds 5 second. If the price feeds are not updating
     // for more than 30s, throw an error.
     setInterval(() => {
-      if (
-        this.lastUpdated === undefined ||
-        this.lastUpdated < Date.now() - 30 * 1000
-      ) {
-        throw new Error("Hermes Price feeds are not updating.");
+      const now = Date.now();
+      const staleThreshold = now - 30 * 1000;
+
+      // Check if we've never received any updates
+      if (this.lastUpdated === undefined) {
+        this.logger.warn(
+          {
+            currentTime: now,
+          },
+          "No price feed updates have been received yet"
+        );
+        return;
       }
+
+      // Find stale price feeds
+      const staleFeeds = Array.from(this.latestPriceInfo.entries())
+        .filter(([, info]) => info.publishTime * 1000 < staleThreshold)
+        .map(([id, info]) => ({
+          id,
+          alias: this.priceIdToAlias.get(id),
+          lastPublishTime: info.publishTime,
+        }));
+
+      if (staleFeeds.length > 0) {
+        this.logger.warn(
+          {
+            staleFeeds,
+            currentTime: now,
+          },
+          `${staleFeeds.length} price feeds haven't updated in the last 30 seconds`
+        );
+      }
+      // if (
+      //   this.lastUpdated === undefined ||
+      //   this.lastUpdated < Date.now() - 30 * 1000
+      // ) {
+      //   throw new Error("Hermes Price feeds are not updating.");
+      // }
     }, 5000);
   }
 
