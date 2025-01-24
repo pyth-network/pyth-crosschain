@@ -136,7 +136,7 @@ abstract contract Pulse is IPulse, PulseState {
         try
             IPulseConsumer(req.requester).pulseCallback{
                 gas: req.callbackGasLimit
-            }(sequenceNumber, msg.sender, priceFeeds)
+            }(sequenceNumber, priceFeeds)
         {
             // Callback succeeded
             emitPriceUpdate(sequenceNumber, priceIds, priceFeeds);

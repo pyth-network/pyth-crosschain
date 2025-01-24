@@ -13,16 +13,13 @@ import "../contracts/pulse/PulseErrors.sol";
 
 contract MockPulseConsumer is IPulseConsumer {
     uint64 public lastSequenceNumber;
-    address public lastProvider;
     PythStructs.PriceFeed[] private _lastPriceFeeds;
 
     function pulseCallback(
         uint64 sequenceNumber,
-        address provider,
         PythStructs.PriceFeed[] memory priceFeeds
     ) external override {
         lastSequenceNumber = sequenceNumber;
-        lastProvider = provider;
         for (uint i = 0; i < priceFeeds.length; i++) {
             _lastPriceFeeds.push(priceFeeds[i]);
         }
@@ -40,7 +37,6 @@ contract MockPulseConsumer is IPulseConsumer {
 contract FailingPulseConsumer is IPulseConsumer {
     function pulseCallback(
         uint64,
-        address,
         PythStructs.PriceFeed[] memory
     ) external pure override {
         revert("callback failed");
@@ -52,7 +48,6 @@ contract CustomErrorPulseConsumer is IPulseConsumer {
 
     function pulseCallback(
         uint64,
-        address,
         PythStructs.PriceFeed[] memory
     ) external pure override {
         revert CustomError("callback failed");
@@ -324,7 +319,6 @@ contract PulseTest is Test, PulseEvents {
 
         // Verify callback was executed
         assertEq(consumer.lastSequenceNumber(), sequenceNumber);
-        assertEq(consumer.lastProvider(), defaultProvider);
 
         // Compare price feeds array length
         PythStructs.PriceFeed[] memory lastFeeds = consumer.lastPriceFeeds();

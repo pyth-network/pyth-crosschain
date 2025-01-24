@@ -9,7 +9,6 @@ import "./PulseState.sol";
 interface IPulseConsumer {
     function pulseCallback(
         uint64 sequenceNumber,
-        address provider,
         PythStructs.PriceFeed[] memory priceFeeds
     ) external;
 }
