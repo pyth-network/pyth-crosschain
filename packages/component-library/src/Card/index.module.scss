@@ -16,7 +16,6 @@
   position: relative;
   padding: theme.spacing(1);
   isolation: isolate;
-  overflow: hidden;
 
   @at-root button#{&} {
     cursor: pointer;
@@ -35,15 +34,23 @@
 
   .header {
     display: flex;
-    padding: theme.spacing(3) theme.spacing(4);
     position: relative;
+    flex-direction: column;
+    padding: theme.spacing(2);
+    gap: theme.spacing(4);
+
+    @include theme.breakpoint("lg") {
+      flex-direction: row;
+      padding: theme.spacing(3) theme.spacing(4);
+    }
 
     .title {
       color: theme.color("heading");
-      display: inline-flex;
+      display: flex;
       flex-flow: row nowrap;
       gap: theme.spacing(3);
       align-items: center;
+      flex-grow: 1;
 
       @include theme.text("lg", "medium");
 
@@ -55,14 +62,10 @@
     }
 
     .toolbar {
-      position: absolute;
-      right: theme.spacing(3);
-      top: 0;
-      bottom: theme.spacing(0);
+      &:empty {
+        display: none;
+      }
       display: flex;
-      flex-flow: row nowrap;
-      gap: theme.spacing(2);
-      align-items: center;
     }
   }
 

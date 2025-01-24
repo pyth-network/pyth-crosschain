@@ -166,34 +166,32 @@ const FeaturedFeedsCard = <T extends ElementType>({
 }: FeaturedFeedsCardProps<T>) => (
   <Card {...props}>
     <div className={styles.featuredFeeds}>
-      <Stats>
-        {feeds.map((feed) => (
-          <Card
-            key={feed.product.price_account}
-            variant="tertiary"
-            {...(linkFeeds && {
-              href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
-            })}
-          >
-            <div className={styles.feedCardContents}>
-              <PriceFeedTag
-                symbol={feed.product.display_symbol}
-                description={feed.product.description}
-                icon={<PriceFeedIcon symbol={feed.product.display_symbol} />}
-              />
-              {showPrices && (
-                <div className={styles.prices}>
-                  <LivePrice feedKey={feed.product.price_account} />
-                  <ChangePercent
-                    className={styles.changePercent}
-                    feedKey={feed.product.price_account}
-                  />
-                </div>
-              )}
-            </div>
-          </Card>
-        ))}
-      </Stats>
+      {feeds.map((feed) => (
+        <Card
+          key={feed.product.price_account}
+          variant="tertiary"
+          {...(linkFeeds && {
+            href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
+          })}
+        >
+          <div className={styles.feedCardContents}>
+            <PriceFeedTag
+              symbol={feed.product.display_symbol}
+              description={feed.product.description}
+              icon={<PriceFeedIcon symbol={feed.product.display_symbol} />}
+            />
+            {showPrices && (
+              <div className={styles.prices}>
+                <LivePrice feedKey={feed.product.price_account} />
+                <ChangePercent
+                  className={styles.changePercent}
+                  feedKey={feed.product.price_account}
+                />
+              </div>
+            )}
+          </div>
+        </Card>
+      ))}
     </div>
   </Card>
 );

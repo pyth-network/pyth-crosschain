@@ -16,6 +16,8 @@ import { useQueryState, parseAsString } from "nuqs";
 import { type ReactNode, Suspense, useCallback, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
+import styles from "./index.module.scss";
+import { PriceFeedItems } from "./price-feed-items";
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FeedKey } from "../FeedKey";
 import {
@@ -195,31 +197,31 @@ type PriceFeedsCardContents = Pick<Props, "id"> &
   (
     | { isLoading: true }
     | {
-        isLoading?: false;
-        numResults: number;
-        search: string;
-        sortDescriptor: SortDescriptor;
-        onSortChange: (newSort: SortDescriptor) => void;
-        assetClass: string;
-        assetClasses: string[];
-        numPages: number;
-        page: number;
-        pageSize: number;
-        onSearchChange: (newSearch: string) => void;
-        onAssetClassChange: (newAssetClass: string) => void;
-        onPageSizeChange: (newPageSize: number) => void;
-        onPageChange: (newPage: number) => void;
-        mkPageLink: (page: number) => string;
-        rows: RowConfig<
-          | "priceFeedName"
-          | "assetClass"
-          | "priceFeedId"
-          | "price"
-          | "confidenceInterval"
-          | "exponent"
-          | "numPublishers"
-        >[];
-      }
+      isLoading?: false;
+      numResults: number;
+      search: string;
+      sortDescriptor: SortDescriptor;
+      onSortChange: (newSort: SortDescriptor) => void;
+      assetClass: string;
+      assetClasses: string[];
+      numPages: number;
+      page: number;
+      pageSize: number;
+      onSearchChange: (newSearch: string) => void;
+      onAssetClassChange: (newAssetClass: string) => void;
+      onPageSizeChange: (newPageSize: number) => void;
+      onPageChange: (newPage: number) => void;
+      mkPageLink: (page: number) => string;
+      rows: RowConfig<
+        | "priceFeedName"
+        | "assetClass"
+        | "priceFeedId"
+        | "price"
+        | "confidenceInterval"
+        | "exponent"
+        | "numPublishers"
+      >[];
+    }
   );
 
 const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
@@ -237,7 +239,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       </>
     }
     toolbar={
-      <>
+      <div className={styles.toolbarContainer}>
         <Select<string>
           label="Asset Class"
           size="sm"
@@ -246,18 +248,18 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           {...(props.isLoading
             ? { isPending: true, options: [], buttonLabel: "Asset Class" }
             : {
-                optionGroups: [
-                  { name: "All", options: [""] },
-                  { name: "Asset classes", options: props.assetClasses },
-                ],
-                hideGroupLabel: true,
-                show: (value) => (value === "" ? "All" : value),
-                placement: "bottom end",
-                buttonLabel:
-                  props.assetClass === "" ? "Asset Class" : props.assetClass,
-                selectedKey: props.assetClass,
-                onSelectionChange: props.onAssetClassChange,
-              })}
+              optionGroups: [
+                { name: "All", options: [""] },
+                { name: "Asset classes", options: props.assetClasses },
+              ],
+              hideGroupLabel: true,
+              show: (value) => (value === "" ? "All" : value),
+              placement: "bottom end",
+              buttonLabel:
+                props.assetClass === "" ? "Asset Class" : props.assetClass,
+              selectedKey: props.assetClass,
+              onSelectionChange: props.onAssetClassChange,
+            })}
         />
         <SearchInput
           size="sm"
@@ -266,11 +268,11 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           {...(props.isLoading
             ? { isPending: true, isDisabled: true }
             : {
-                value: props.search,
-                onChange: props.onSearchChange,
-              })}
+              value: props.search,
+              onChange: props.onSearchChange,
+            })}
         />
-      </>
+      </div>
     }
     {...(!props.isLoading && {
       footer: (
@@ -286,6 +288,9 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       ),
     })}
   >
+
+    <PriceFeedItems />
+
     <Table
       rounded
       fill
@@ -344,21 +349,21 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       ]}
       {...(props.isLoading
         ? {
-            isLoading: true,
-          }
+          isLoading: true,
+        }
         : {
-            rows: props.rows,
-            sortDescriptor: props.sortDescriptor,
-            onSortChange: props.onSortChange,
-            emptyState: (
-              <NoResults
-                query={props.search}
-                onClearSearch={() => {
-                  props.onSearchChange("");
-                }}
-              />
-            ),
-          })}
+          rows: props.rows,
+          sortDescriptor: props.sortDescriptor,
+          onSortChange: props.onSortChange,
+          emptyState: (
+            <NoResults
+              query={props.search}
+              onClearSearch={() => {
+                props.onSearchChange("");
+              }}
+            />
+          ),
+        })}
     />
   </Card>
 );

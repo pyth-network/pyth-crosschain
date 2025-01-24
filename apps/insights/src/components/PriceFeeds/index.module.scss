@@ -5,9 +5,13 @@
 
   .header {
     @include theme.h3;
-
     color: theme.color("heading");
     font-weight: theme.font-weight("semibold");
+  }
+  .toolbarContainer {
+    display: flex;
+    flex-flow: row nowrap;
+    gap: theme.spacing(2);
   }
 
   .body {
@@ -23,12 +27,15 @@
     .featuredFeeds,
     .stats {
       display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
+      flex-flow: column nowrap;
+      align-items: stretch;
 
-      & > * {
-        flex: 1 1 0px;
-        width: 0;
+      @include theme.breakpoint("md") {
+        flex-flow: row nowrap;
+        & > * {
+          flex: 1 1 0px;
+          width: 0;
+        }
       }
     }
 

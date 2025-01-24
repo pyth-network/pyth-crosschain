@@ -6,10 +6,13 @@
   justify-content: space-between;
 
   .pageSizeSelect {
-    display: flex;
+    display: none;
     flex-flow: row nowrap;
     align-items: center;
     gap: theme.spacing(1);
+    @include theme.breakpoint("lg") {
+      display: flex;
+    }
 
     .loadingIndicator {
       width: theme.spacing(4);

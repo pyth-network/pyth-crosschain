@@ -1,8 +1,8 @@
 @use "@pythnetwork/component-library/theme";
 
 .priceFeedTag {
-  display: flex;
-  flex-flow: row nowrap;
+  display: grid;
+  grid-template-columns: theme.spacing(10) 1fr;
   gap: theme.spacing(3);
   align-items: center;
 
@@ -13,6 +13,8 @@
   }
 
   .nameAndDescription {
+    width: 100%;
+    position: relative;
     display: flex;
     flex-flow: column nowrap;
     gap: theme.spacing(1.5);
@@ -52,6 +54,8 @@
       color: theme.color("muted");
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap; // Add this line
+      width: 100%;
 
       @include theme.text("xs", "medium");
     }

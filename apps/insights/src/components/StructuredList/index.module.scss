@@ -1,0 +1,24 @@
+@use "@pythnetwork/component-library/theme";
+.structuredList {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(4);
+
+    .structuredListItem {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: theme.spacing(2);
+        align-items: center;
+        justify-content: space-between;
+        // font-size: theme.font-size("sm");
+        .structuredListItemLabel {
+            color: theme.color("muted");
+        }
+        .structuredListItemValue {
+            text-align: right;
+            place-items: end;
+            font-weight: theme.font-weight("medium");
+            color: theme.color("heading");
+        }
+    }
+}

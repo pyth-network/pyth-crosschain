@@ -1,8 +1,12 @@
 @use "../theme";
 
 .tableContainer {
+  display: none;
   background-color: theme.color("background", "primary");
   position: relative;
+  @include theme.breakpoint("lg") {
+    display: block;
+  }
 
   .loaderWrapper {
     position: absolute;
@@ -164,21 +168,11 @@
         }
 
         &[data-hovered] .cell {
-          background-color: theme.color(
-            "button",
-            "outline",
-            "background",
-            "hover"
-          );
+          background-color: theme.color("button", "outline", "background", "hover");
         }
 
         &[data-pressed] .cell {
-          background-color: theme.color(
-            "button",
-            "outline",
-            "background",
-            "active"
-          );
+          background-color: theme.color("button", "outline", "background", "active");
         }
       }
     }
