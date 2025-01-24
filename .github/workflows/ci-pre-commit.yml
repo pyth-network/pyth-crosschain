@@ -30,6 +30,7 @@ jobs:
         with:
           version: 14
           platform: x64
+      - run: c++ -v
       - name: Install protoc
         uses: arduino/setup-protoc@v3
       - name: Install poetry
