@@ -33,6 +33,44 @@ export class PythPriceListener implements IPriceListener {
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
   async start() {
+    // Set custom error handler for websocket errors
+    this.connection.onWsError = (error: Error) => {
+      if (error.message.includes("not found")) {
+        // Extract invalid feed IDs from error message
+        const match = error.message.match(/\[(.*?)\]/);
+        if (match) {
+          const invalidFeedIds = match[1].split(",").map((id) => {
+            // Remove '0x' prefix if present to match our stored IDs
+            return id.trim().replace(/^0x/, "");
+          });
+
+          // Log invalid feeds with their aliases
+          invalidFeedIds.forEach((id) => {
+            this.logger.error(
+              `Price feed ${id} (${this.priceIdToAlias.get(id)}) not found`
+            );
+          });
+
+          // Filter out invalid feeds and resubscribe with valid ones
+          const validFeeds = this.priceIds.filter(
+            (id) => !invalidFeedIds.includes(id)
+          );
+
+          this.priceIds = validFeeds;
+
+          if (validFeeds.length > 0) {
+            this.logger.info("Resubscribing with valid feeds only");
+            this.connection.subscribePriceFeedUpdates(
+              validFeeds,
+              this.onNewPriceFeed.bind(this)
+            );
+          }
+        }
+      } else {
+        this.logger.error("Websocket error occurred:", error);
+      }
+    };
+
     this.connection.subscribePriceFeedUpdates(
       this.priceIds,
       this.onNewPriceFeed.bind(this)
