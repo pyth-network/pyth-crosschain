@@ -15,6 +15,7 @@ export class PythPriceListener implements IPriceListener {
   private latestPriceInfo: Map<HexString, PriceInfo>;
   private logger: Logger;
   private lastUpdated: TimestampInMs | undefined;
+  private healthCheckInterval?: NodeJS.Timeout;
 
   constructor(
     connection: PriceServiceConnection,
@@ -47,7 +48,9 @@ export class PythPriceListener implements IPriceListener {
           // Log invalid feeds with their aliases
           invalidFeedIds.forEach((id) => {
             this.logger.error(
-              `Price feed ${id} (${this.priceIdToAlias.get(id)}) not found`
+              `Price feed ${id} (${this.priceIdToAlias.get(
+                id
+              )}) not found for subscribePriceFeedUpdates`
             );
           });
 
@@ -76,21 +79,66 @@ export class PythPriceListener implements IPriceListener {
       this.onNewPriceFeed.bind(this)
     );
 
-    const priceFeeds = await this.connection.getLatestPriceFeeds(this.priceIds);
-    priceFeeds?.forEach((priceFeed) => {
-      // Getting unchecked because although it might be old
-      // but might not be there on the target chain.
-      const latestAvailablePrice = priceFeed.getPriceUnchecked();
-      this.latestPriceInfo.set(priceFeed.id, {
-        price: latestAvailablePrice.price,
-        conf: latestAvailablePrice.conf,
-        publishTime: latestAvailablePrice.publishTime,
+    try {
+      const priceFeeds = await this.connection.getLatestPriceFeeds(
+        this.priceIds
+      );
+      priceFeeds?.forEach((priceFeed) => {
+        const latestAvailablePrice = priceFeed.getPriceUnchecked();
+        this.latestPriceInfo.set(priceFeed.id, {
+          price: latestAvailablePrice.price,
+          conf: latestAvailablePrice.conf,
+          publishTime: latestAvailablePrice.publishTime,
+        });
       });
-    });
+    } catch (error: any) {
+      // Always log the HTTP error first
+      this.logger.error("Failed to get latest price feeds:", error);
 
-    // Check health of the price feeds 5 second. If the price feeds are not updating
-    // for more than 30s, throw an error.
-    setInterval(() => {
+      if (error.response.data.includes("Price ids not found:")) {
+        // Extract invalid feed IDs from error message
+        const invalidFeedIds = error.response.data
+          .split("Price ids not found:")[1]
+          .split(",")
+          .map((id: string) => id.trim().replace(/^0x/, ""));
+
+        // Log invalid feeds with their aliases
+        invalidFeedIds.forEach((id: string) => {
+          this.logger.error(
+            `Price feed ${id} (${this.priceIdToAlias.get(
+              id
+            )}) not found for getLatestPriceFeeds`
+          );
+        });
+
+        // Filter out invalid feeds and retry
+        const validFeeds = this.priceIds.filter(
+          (id) => !invalidFeedIds.includes(id)
+        );
+
+        this.priceIds = validFeeds;
+
+        if (validFeeds.length > 0) {
+          this.logger.info(
+            "Retrying getLatestPriceFeeds with valid feeds only"
+          );
+          const validPriceFeeds = await this.connection.getLatestPriceFeeds(
+            validFeeds
+          );
+          validPriceFeeds?.forEach((priceFeed) => {
+            const latestAvailablePrice = priceFeed.getPriceUnchecked();
+            this.latestPriceInfo.set(priceFeed.id, {
+              price: latestAvailablePrice.price,
+              conf: latestAvailablePrice.conf,
+              publishTime: latestAvailablePrice.publishTime,
+            });
+          });
+        }
+      }
+    }
+
+    // Store health check interval reference
+    this.healthCheckInterval = setInterval(() => {
       if (
         this.lastUpdated === undefined ||
         this.lastUpdated < Date.now() - 30 * 1000
@@ -125,5 +173,11 @@ export class PythPriceListener implements IPriceListener {
 
   getLatestPriceInfo(priceId: string): PriceInfo | undefined {
     return this.latestPriceInfo.get(priceId);
+  }
+
+  cleanup() {
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+    }
   }
 }

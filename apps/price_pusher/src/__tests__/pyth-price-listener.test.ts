@@ -26,6 +26,10 @@ describe("PythPriceListener", () => {
   afterEach(() => {
     // Clean up websocket connection
     connection.closeWebSocket();
+    // Clean up health check interval
+    if (listener) {
+      listener.cleanup();
+    }
     // Restore original console.error
     console.error = originalConsoleError;
   });
@@ -43,28 +47,47 @@ describe("PythPriceListener", () => {
 
     listener = new PythPriceListener(connection, priceItems, logger);
 
-    // Should throw 404 for getLatestPriceFeeds
-    await expect(listener.start()).rejects.toMatchObject({
-      response: { status: 404 },
-    });
+    await listener.start();
 
-    // Wait for websocket connection and error handling to complete
+    // Wait for both error handlers to complete
     await new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        if (
-          (logger.error as jest.Mock).mock.calls.some((call) =>
-            call[0].includes(`Price feed ${invalidFeedId}`)
-          )
-        ) {
+        const errorCalls = (logger.error as jest.Mock).mock.calls;
+
+        // Check for both HTTP and websocket error logs
+        const hasHttpError = errorCalls.some(
+          (call) => call[0] === "Failed to get latest price feeds:"
+        );
+        const hasGetLatestError = errorCalls.some((call) =>
+          call[0].includes("not found for getLatestPriceFeeds")
+        );
+        const hasWsError = errorCalls.some((call) =>
+          call[0].includes("not found for subscribePriceFeedUpdates")
+        );
+
+        if (hasHttpError && hasGetLatestError && hasWsError) {
           clearInterval(checkInterval);
           resolve(true);
         }
       }, 100);
     });
 
+    // Verify HTTP error was logged
+    expect(logger.error).toHaveBeenCalledWith(
+      "Failed to get latest price feeds:",
+      expect.objectContaining({
+        message: "Request failed with status code 404",
+      })
+    );
+
     // Verify invalid feed error was logged
     expect(logger.error).toHaveBeenCalledWith(
-      `Price feed ${invalidFeedId} (INVALID/PRICE) not found`
+      `Price feed ${invalidFeedId} (INVALID/PRICE) not found for getLatestPriceFeeds`
+    );
+
+    // Verify invalid feed error was logged
+    expect(logger.error).toHaveBeenCalledWith(
+      `Price feed ${invalidFeedId} (INVALID/PRICE) not found for subscribePriceFeedUpdates`
     );
 
     // Verify resubscription message was logged
