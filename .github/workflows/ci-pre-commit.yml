@@ -27,8 +27,10 @@ jobs:
           rustup install 1.73.0
       - name: Install clang
         run: |
+          clang -v
           sudo apt-get update
           sudo apt install make clang pkg-config libssl-dev
+          clang -v
       - name: Install protoc
         uses: arduino/setup-protoc@v3
       - name: Install poetry
