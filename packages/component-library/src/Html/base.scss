@@ -10,10 +10,6 @@
   line-height: 1;
 }
 
-nextjs-portal {
-  display: none;
-}
-
 html {
   // We use `scrollbar-gutter: stable` which prevents the page from jumping when
   // adding or removing the scrollbar.  However, react-aria [tries to add a

@@ -26,7 +26,6 @@
       display: flex;
       flex-flow: column nowrap;
       overflow-y: hidden;
-      padding-bottom: theme.border-radius("3xl");
     }
     @include theme.breakpoint("lg") {
       width: 60%;
