@@ -29,6 +29,11 @@ abstract contract Pulse is IPulse, PulseState {
         _state.pythFeeInWei = pythFeeInWei;
         _state.pyth = pythAddress;
         _state.currentSequenceNumber = 1;
+
+        // Two-step initialization process:
+        // 1. Set the default provider address here
+        // 2. Provider must call registerProvider() in a separate transaction to set their fee
+        // This ensures the provider maintains control over their own fee settings
         _state.defaultProvider = defaultProvider;
         _state.exclusivityPeriodSeconds = exclusivityPeriodSeconds;
 
