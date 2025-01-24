@@ -51,12 +51,13 @@ describe("PythPriceListener", () => {
     // Mock subscription updates
     mockPriceServiceConnection.subscribePriceFeedUpdates.mockImplementation(
       (_, callback) => {
+        // Initial updates for both feeds
         callback(
           createMockSubscriptionFeed(
             TEST_FEEDS.BTC.id,
             TEST_FEEDS.BTC.price,
             TEST_FEEDS.BTC.conf,
-            currentTime + 30
+            currentTime
           ) as any
         );
 
@@ -65,9 +66,21 @@ describe("PythPriceListener", () => {
             TEST_FEEDS.ETH.id,
             TEST_FEEDS.ETH.price,
             TEST_FEEDS.ETH.conf,
-            currentTime - 60
+            currentTime
           ) as any
         );
+
+        // Continue updating only BTC price
+        setInterval(() => {
+          callback(
+            createMockSubscriptionFeed(
+              TEST_FEEDS.BTC.id,
+              TEST_FEEDS.BTC.price,
+              TEST_FEEDS.BTC.conf,
+              currentTime + 30
+            ) as any
+          );
+        }, 5000); // Update every 5 seconds to simulate the actual code
 
         return Promise.resolve();
       }
@@ -92,7 +105,7 @@ describe("PythPriceListener", () => {
           expect.objectContaining({
             id: "eth_feed",
             alias: "ETH/USD",
-            lastPublishTime: currentTime - 60,
+            lastPublishTime: currentTime,
           }),
         ]),
       }),
