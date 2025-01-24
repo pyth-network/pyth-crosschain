@@ -12,20 +12,6 @@ describe("PythPriceListener", () => {
   };
 
   // Test helpers
-  const createMockPriceFeed = (
-    id: string,
-    price: string,
-    conf: string,
-    publishTime: number
-  ) => ({
-    id,
-    getPriceUnchecked: () => ({
-      price,
-      conf,
-      publishTime,
-    }),
-  });
-
   const createMockSubscriptionFeed = (
     id: string,
     price: string,
@@ -62,7 +48,7 @@ describe("PythPriceListener", () => {
       logger
     );
 
-    // Mock subscription updates with cleaner helper functions
+    // Mock subscription updates
     mockPriceServiceConnection.subscribePriceFeedUpdates.mockImplementation(
       (_, callback) => {
         callback(
@@ -86,22 +72,6 @@ describe("PythPriceListener", () => {
         return Promise.resolve();
       }
     );
-
-    // Mock initial price feeds with cleaner helper functions
-    mockPriceServiceConnection.getLatestPriceFeeds.mockResolvedValue([
-      createMockPriceFeed(
-        TEST_FEEDS.BTC.id,
-        TEST_FEEDS.BTC.price,
-        TEST_FEEDS.BTC.conf,
-        currentTime + 30
-      ) as any,
-      createMockPriceFeed(
-        TEST_FEEDS.ETH.id,
-        TEST_FEEDS.ETH.price,
-        TEST_FEEDS.ETH.conf,
-        currentTime - 60
-      ) as any,
-    ]);
 
     await pythListener.start();
 
@@ -153,9 +123,6 @@ describe("PythPriceListener", () => {
     mockPriceServiceConnection.subscribePriceFeedUpdates.mockImplementation(
       () => Promise.resolve()
     );
-
-    // Mock initial price feeds with no data
-    mockPriceServiceConnection.getLatestPriceFeeds.mockResolvedValue([]);
 
     await pythListener.start();
 
