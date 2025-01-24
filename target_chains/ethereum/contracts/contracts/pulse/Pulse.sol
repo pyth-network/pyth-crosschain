@@ -192,12 +192,12 @@ abstract contract Pulse is IPulse, PulseState {
     function getFee(
         uint256 callbackGasLimit
     ) public view override returns (uint128 feeAmount) {
-        uint128 baseFee = _state.pythFeeInWei;
+        uint128 baseFee = _state.pythFeeInWei; // Fixed fee to Pyth
         uint128 providerFeeInWei = _state
             .providers[_state.defaultProvider]
-            .feeInWei;
-        uint256 gasFee = callbackGasLimit * providerFeeInWei;
-        feeAmount = baseFee + SafeCast.toUint128(gasFee);
+            .feeInWei; // Provider's per-gas rate
+        uint256 gasFee = callbackGasLimit * providerFeeInWei; // Total provider fee based on gas
+        feeAmount = baseFee + SafeCast.toUint128(gasFee); // Total fee user needs to pay
     }
 
     function getPythFeeInWei()
