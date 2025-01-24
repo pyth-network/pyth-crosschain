@@ -9,7 +9,6 @@ import "./PulseState.sol";
 interface IPulseConsumer {
     function pulseCallback(
         uint64 sequenceNumber,
-        address updater,
         PythStructs.PriceFeed[] memory priceFeeds
     ) external;
 }
@@ -74,8 +73,23 @@ interface IPulse is PulseEvents {
         uint64 sequenceNumber
     ) external view returns (PulseState.Request memory req);
 
-    // Add these functions to the IPulse interface
     function setFeeManager(address manager) external;
 
-    function withdrawAsFeeManager(uint128 amount) external;
+    function withdrawAsFeeManager(address provider, uint128 amount) external;
+
+    function registerProvider(uint128 feeInWei) external;
+
+    function setProviderFee(uint128 newFeeInWei) external;
+
+    function getProviderInfo(
+        address provider
+    ) external view returns (PulseState.ProviderInfo memory);
+
+    function getDefaultProvider() external view returns (address);
+
+    function setDefaultProvider(address provider) external;
+
+    function setExclusivityPeriod(uint256 periodSeconds) external;
+
+    function getExclusivityPeriod() external view returns (uint256);
 }

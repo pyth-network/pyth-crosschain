@@ -16,6 +16,14 @@ contract PulseState {
         uint8 numPriceIds; // Actual number of price IDs used
         uint256 callbackGasLimit;
         address requester;
+        address provider;
+    }
+
+    struct ProviderInfo {
+        uint128 feeInWei;
+        uint128 accruedFeesInWei;
+        address feeManager;
+        bool isRegistered;
     }
 
     struct State {
@@ -24,9 +32,11 @@ contract PulseState {
         uint128 accruedFeesInWei;
         address pyth;
         uint64 currentSequenceNumber;
-        address feeManager;
+        address defaultProvider;
+        uint256 exclusivityPeriodSeconds;
         Request[NUM_REQUESTS] requests;
         mapping(bytes32 => Request) requestsOverflow;
+        mapping(address => ProviderInfo) providers;
     }
 
     State internal _state;

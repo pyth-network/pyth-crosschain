@@ -8,7 +8,7 @@ interface PulseEvents {
 
     event PriceUpdateExecuted(
         uint64 indexed sequenceNumber,
-        address indexed updater,
+        address indexed provider,
         bytes32[] priceIds,
         int64[] prices,
         uint64[] conf,
@@ -20,7 +20,7 @@ interface PulseEvents {
 
     event PriceUpdateCallbackFailed(
         uint64 indexed sequenceNumber,
-        address indexed updater,
+        address indexed provider,
         bytes32[] priceIds,
         address requester,
         string reason
@@ -30,5 +30,18 @@ interface PulseEvents {
         address indexed admin,
         address oldFeeManager,
         address newFeeManager
+    );
+
+    event ProviderRegistered(address indexed provider, uint128 feeInWei);
+    event ProviderFeeUpdated(
+        address indexed provider,
+        uint128 oldFee,
+        uint128 newFee
+    );
+    event DefaultProviderUpdated(address oldProvider, address newProvider);
+
+    event ExclusivityPeriodUpdated(
+        uint256 oldPeriodSeconds,
+        uint256 newPeriodSeconds
     );
 }
