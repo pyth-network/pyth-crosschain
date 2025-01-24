@@ -216,6 +216,49 @@ async fn test_basic() {
 }
 
 #[tokio::test]
+async fn test_alignment() {
+    let mut setup = Setup::new().await;
+    let treasury = setup.create_treasury().await;
+
+    let mut transaction_init_contract = Transaction::new_with_payer(
+        &[Instruction::new_with_bytes(
+            pyth_lazer_solana_contract::ID,
+            &pyth_lazer_solana_contract::instruction::Initialize {
+                top_authority: setup.payer.pubkey(),
+                treasury,
+            }
+            .data(),
+            vec![
+                AccountMeta::new(setup.payer.pubkey(), true),
+                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
+                AccountMeta::new_readonly(system_program::ID, false),
+            ],
+        )],
+        Some(&setup.payer.pubkey()),
+    );
+    transaction_init_contract.sign(&[&setup.payer], setup.recent_blockhash);
+    setup
+        .banks_client
+        .process_transaction(transaction_init_contract)
+        .await
+        .unwrap();
+
+    let verifying_key =
+        hex::decode("f65210bee4fcf5b1cee1e537fabcfd95010297653b94af04d454fc473e94834f").unwrap();
+    let message = hex::decode(
+        "b9011a82d100f6ce88ef26fd5a74312b4bb19e18e74162ffbfe66a7204c6f7ee9085ad6b670ec96d167cfef\
+        ad437a1c79e67c75581c5cf99e64e680a1badeb3d88733d02f65210bee4fcf5b1cee1e537fabcfd950102976\
+        53b94af04d454fc473e94834f770075d3c79340d609f7652c06000303010000000400305680106309000002a\
+        023551b6309000001a62ab3056309000004f8ff02000000040021ae69754b00000002a04b8f764b000000018\
+        8b24b744b00000004f8ff060000000400377180d00500000002f2c19dd0050000000162c26ad00500000004f8ff",
+    )
+    .unwrap();
+
+    setup.set_trusted(verifying_key.try_into().unwrap()).await;
+    setup.verify_message(&message, treasury).await;
+}
+
+#[tokio::test]
 async fn test_rejects_wrong_offset() {
     let mut setup = Setup::new().await;
     let treasury = setup.create_treasury().await;
