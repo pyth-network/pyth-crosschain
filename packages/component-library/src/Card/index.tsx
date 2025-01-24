@@ -71,11 +71,8 @@ const cardProps = <T extends ElementType>({
       <div className={styles.cardHoverBackground} />
       {(Boolean(icon) || Boolean(title) || Boolean(toolbar)) && (
         <div className={styles.header}>
-          <h2 className={styles.title}>
-            {icon && <div className={styles.icon}>{icon}</div>}
-            {title}
-          </h2>
-          <div className={styles.toolbar}>{toolbar}</div>
+          <div className={styles.title}>{title}</div>
+          {toolbar && <div className={styles.toolbar}>{toolbar}</div>}
           {action && <div className={styles.action}>{action}</div>}
         </div>
       )}

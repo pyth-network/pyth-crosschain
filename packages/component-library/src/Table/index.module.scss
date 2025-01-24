@@ -88,7 +88,7 @@
 
       .cell {
         position: relative;
-        border-bottom: 1px solid theme.color("border");
+        border-bottom: 1px solid theme.color("background", "secondary");
         font-weight: theme.font-weight("medium");
 
         .divider {
@@ -169,21 +169,11 @@
         }
 
         &[data-hovered] .cell {
-          background-color: theme.color(
-            "button",
-            "outline",
-            "background",
-            "hover"
-          );
+          background-color: theme.color("button", "outline", "background", "hover");
         }
 
         &[data-pressed] .cell {
-          background-color: theme.color(
-            "button",
-            "outline",
-            "background",
-            "active"
-          );
+          background-color: theme.color("button", "outline", "background", "active");
         }
       }
     }

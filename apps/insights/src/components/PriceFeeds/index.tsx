@@ -19,6 +19,7 @@ import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
 import { Cluster, getData } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
+import { CardTitle } from "../CardTitle";
 import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { LivePrice } from "../LivePrices";
 import { PriceFeedIcon } from "../PriceFeedIcon";
@@ -85,16 +86,14 @@ export const PriceFeeds = async () => {
           )}
         >
           <FeaturedFeedsCard
-            title="Recently Added"
-            icon={<StackPlus />}
+            title={<CardTitle icon={<StackPlus />}>Recently added</CardTitle>}
             feeds={featuredRecentlyAdded}
             showPrices
             linkFeeds
           />
         </YesterdaysPricesProvider>
         <FeaturedFeedsCard
-          title="Coming Soon"
-          icon={<ClockCountdown />}
+          title={<CardTitle icon={<ClockCountdown />}>Coming soon</CardTitle>}
           feeds={featuredComingSoon}
           action={
             <DrawerTrigger>

@@ -1,0 +1,23 @@
+@use "@pythnetwork/component-library/theme";
+
+.cardTitle {
+    display: flex;
+    flex-flow: row nowrap;
+    gap: theme.spacing(3);
+    align-items: center;
+    justify-content: start;
+    flex-grow: 1;
+    .title {
+        color: theme.color("heading");
+        display: flex;
+        flex-flow: row nowrap;
+        gap: theme.spacing(3);
+        align-items: center;
+        @include theme.text("lg", "semibold");
+    }
+    .icon {
+        font-size: theme.spacing(6);
+        height: theme.spacing(6);
+        color: theme.color("button", "primary", "background", "normal");
+    }
+}

@@ -21,7 +21,7 @@
       width: 80%;
       max-width: theme.spacing(160);
       outline: none;
-      border: 1px solid theme.color("border");
+      border: 1px solid theme.color("background", "secondary");
       border-radius: theme.border-radius("3xl");
       display: flex;
       flex-flow: column nowrap;
@@ -41,7 +41,7 @@
       align-items: center;
       color: theme.color("heading");
       flex: none;
-      border-bottom: 1px solid theme.color("border");
+      border-bottom: 1px solid theme.color("background", "secondary");
 
       @include theme.breakpoint("sm") {
         padding: theme.spacing(4);

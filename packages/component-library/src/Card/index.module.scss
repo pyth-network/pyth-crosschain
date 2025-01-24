@@ -33,50 +33,53 @@
   }
 
   .header {
-    display: flex;
-    position: relative;
-    flex-direction: column;
-    padding: theme.spacing(4) theme.spacing(3);
-    gap: theme.spacing(4);
+    display: grid;
+    gap: theme.spacing(2);
+    grid-template-areas:
+      "title action"
+      "toolbar toolbar";
+    grid-template-columns: 1fr min-content;
+    padding: theme.spacing(3);
+    gap: theme.spacing(3);
 
     @include theme.breakpoint("lg") {
+      grid-template-columns: 1fr min-content min-content;
+      grid-template-areas: "title toolbar action";
+      align-items: flex-start;
       flex-direction: row;
-      padding: theme.spacing(3) theme.spacing(4);
+      padding: 0 theme.spacing(2);
+      height: theme.spacing(12);
     }
 
     .title {
-      color: theme.color("heading");
-      display: flex;
-      flex-flow: row nowrap;
-      gap: theme.spacing(3);
-      align-items: center;
-      flex-grow: 1;
-
-      @include theme.text("lg", "medium");
-
-      .icon {
-        font-size: theme.spacing(6);
-        height: theme.spacing(6);
-        color: theme.color("button", "primary", "background", "normal");
-      }
+      grid-area: title;
+      align-self: center;
     }
 
     .toolbar {
+      align-self: center;
+      grid-area: toolbar;
       &:empty {
         display: none;
       }
-
+      gap: theme.spacing(2);
       display: flex;
     }
 
     .action {
-      display: grid;
-      place-items: center;
-      height: 100%;
-      padding: 0 theme.spacing(2);
-      position: absolute;
-      top: 0;
-      right: 0;
+      align-self: center;
+      grid-area: action;
+      // display: grid;
+      // place-items: center;
+      // height: 100%;
+      // padding: 0 theme.spacing(2);
+      // position: absolute;
+      // top: 0;
+      // right: 0;
+      @include theme.breakpoint("md") {
+        position: static;
+        padding: 0;
+      }
     }
   }
 
