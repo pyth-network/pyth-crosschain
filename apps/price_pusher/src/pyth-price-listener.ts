@@ -85,12 +85,6 @@ export class PythPriceListener implements IPriceListener {
           `${staleFeeds.length} price feeds haven't updated in the last 30 seconds`
         );
       }
-      // if (
-      //   this.lastUpdated === undefined ||
-      //   this.lastUpdated < Date.now() - 30 * 1000
-      // ) {
-      //   throw new Error("Hermes Price feeds are not updating.");
-      // }
     }, 5000);
   }
 
