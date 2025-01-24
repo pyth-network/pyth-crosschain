@@ -96,9 +96,9 @@ export const PriceFeeds = async () => {
           title="Coming Soon"
           icon={<ClockCountdown />}
           feeds={featuredComingSoon}
-          toolbar={
+          action={
             <DrawerTrigger>
-              <Button size="xs" variant="outline">
+              <Button size="sm" variant="outline">
                 Show all
               </Button>
               <Drawer

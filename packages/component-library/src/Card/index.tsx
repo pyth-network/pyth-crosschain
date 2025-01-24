@@ -20,6 +20,7 @@ type OwnProps = {
   icon?: ReactNode | undefined;
   title?: ReactNode | undefined;
   toolbar?: ReactNode | ReactNode[] | undefined;
+  action?: ReactNode | undefined;
   footer?: ReactNode | undefined;
   nonInteractive?: boolean | undefined;
 };
@@ -59,6 +60,7 @@ const cardProps = <T extends ElementType>({
   title,
   toolbar,
   footer,
+  action,
   ...props
 }: Props<T>) => ({
   ...props,
@@ -74,6 +76,7 @@ const cardProps = <T extends ElementType>({
             {title}
           </h2>
           <div className={styles.toolbar}>{toolbar}</div>
+          {action && <div className={styles.action}>{action}</div>}
         </div>
       )}
       {children}

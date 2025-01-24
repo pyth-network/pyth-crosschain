@@ -28,6 +28,7 @@
         padding: theme.spacing(3);
         color: theme.color("foreground");
         position: relative;
+
         @include theme.breakpoint("3xl") {
           position: absolute;
           left: -#{theme.spacing(16)};
@@ -81,10 +82,12 @@
       }
     }
   }
+
   .desktopNavigation,
   .desktopSupport,
   .desktopDocs {
     display: none;
+
     @include theme.breakpoint("md") {
       display: block;
     }

@@ -15,9 +15,11 @@
 
     // Optional: Hide scrollbars
     scrollbar-width: none;
+
     &::-webkit-scrollbar {
       display: none;
     }
+
     @include theme.breakpoint("md") {
       width: 100%;
       position: relative;
@@ -26,6 +28,7 @@
       overflow: visible;
       margin: 0;
     }
+
     .statsItemsContainer {
       display: flex;
       flex-flow: row nowrap;

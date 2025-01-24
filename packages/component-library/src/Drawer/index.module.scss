@@ -27,6 +27,7 @@
       flex-flow: column nowrap;
       overflow-y: hidden;
     }
+
     @include theme.breakpoint("lg") {
       width: 60%;
     }

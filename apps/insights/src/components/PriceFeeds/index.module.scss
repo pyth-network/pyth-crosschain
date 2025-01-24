@@ -5,9 +5,11 @@
 
   .header {
     @include theme.h3;
+
     color: theme.color("heading");
     font-weight: theme.font-weight("semibold");
   }
+
   .toolbarContainer {
     display: flex;
     flex-flow: row nowrap;
@@ -32,6 +34,7 @@
 
       @include theme.breakpoint("md") {
         flex-flow: row nowrap;
+
         & > * {
           flex: 1 1 0px;
           width: 0;

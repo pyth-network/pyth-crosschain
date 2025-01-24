@@ -4,7 +4,8 @@
   display: none;
   background-color: theme.color("background", "primary");
   position: relative;
-  @include theme.breakpoint("lg") {
+
+  @include theme.breakpoint("md") {
     display: block;
   }
 
@@ -168,11 +169,21 @@
         }
 
         &[data-hovered] .cell {
-          background-color: theme.color("button", "outline", "background", "hover");
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "hover"
+          );
         }
 
         &[data-pressed] .cell {
-          background-color: theme.color("button", "outline", "background", "active");
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "active"
+          );
         }
       }
     }

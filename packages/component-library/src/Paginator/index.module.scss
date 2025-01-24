@@ -3,13 +3,18 @@
 .paginator {
   display: flex;
   flex-flow: row nowrap;
-  justify-content: space-between;
+  justify-content: center;
+
+  @include theme.breakpoint("lg") {
+    justify-content: space-between;
+  }
 
   .pageSizeSelect {
     display: none;
     flex-flow: row nowrap;
     align-items: center;
     gap: theme.spacing(1);
+
     @include theme.breakpoint("lg") {
       display: flex;
     }

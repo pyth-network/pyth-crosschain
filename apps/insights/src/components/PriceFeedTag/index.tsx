@@ -7,15 +7,15 @@ import styles from "./index.module.scss";
 type OwnProps =
   | { isLoading: true; compact?: boolean | undefined }
   | ({
-    isLoading?: false;
-    symbol: string;
-    icon: ReactNode;
-  } & (
+      isLoading?: false;
+      symbol: string;
+      icon: ReactNode;
+    } & (
       | { compact: true }
       | {
-        compact?: false;
-        description: string;
-      }
+          compact?: false;
+          description: string;
+        }
     ));
 
 type Props = Omit<ComponentProps<"div">, keyof OwnProps> & OwnProps;

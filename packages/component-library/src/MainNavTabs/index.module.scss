@@ -3,13 +3,16 @@
 .mainNavTabs {
   isolation: isolate;
   gap: theme.spacing(2);
+
   @include theme.row;
 
   .tab {
     width: 100%;
+
     @include theme.breakpoint("md") {
       width: auto;
     }
+
     position: relative;
     outline: none;
 
@@ -43,11 +46,21 @@
         pointer-events: auto;
 
         &[data-hovered] .bubble {
-          background-color: theme.color("button", "solid", "background", "hover");
+          background-color: theme.color(
+            "button",
+            "solid",
+            "background",
+            "hover"
+          );
         }
 
         &[data-pressed] .bubble {
-          background-color: theme.color("button", "solid", "background", "active");
+          background-color: theme.color(
+            "button",
+            "solid",
+            "background",
+            "active"
+          );
         }
       }
     }

@@ -23,7 +23,7 @@ $font-weight: (
   "semibold": 600,
   "bold": 700,
   "extrabold": 800,
-  "black": 900
+  "black": 900,
 );
 
 @function font-weight($weight) {
@@ -44,7 +44,7 @@ $font-size: (
   "6xl": 3.75rem,
   "7xl": 4.5rem,
   "8xl": 6rem,
-  "9xl": 8rem
+  "9xl": 8rem,
 );
 
 @function font-size($size: "base") {
@@ -57,7 +57,7 @@ $letter-spacing: (
   "normal": 0em,
   "wide": 0.025em,
   "wider": 0.05em,
-  "widest": 0.1em
+  "widest": 0.1em,
 );
 
 @function letter-spacing($spacing: "normal") {
@@ -73,7 +73,7 @@ $border-radius: (
   "xl": 0.75rem,
   "2xl": 1rem,
   "3xl": 1.5rem,
-  "full": 9999px
+  "full": 9999px,
 );
 
 @function border-radius($radius: "base") {
@@ -87,7 +87,7 @@ $breakpoints: (
   "lg": 1024px,
   "xl": 1280px,
   "2xl": 1536px,
-  "3xl": 1720px
+  "3xl": 1720px,
 );
 
 @function breakpoint-old($breakpoint) {
@@ -103,6 +103,7 @@ $breakpoints: (
 @mixin mobile() {
   @media screen and (max-width: breakpoint-old("md")) {
     @content;
+
     background: cyan;
   }
 }
@@ -110,6 +111,7 @@ $breakpoints: (
 @mixin tablet() {
   @media screen and (min-width: breakpoint-old("md")) {
     @content;
+
     background: orange;
   }
 }
@@ -117,6 +119,7 @@ $breakpoints: (
 @mixin desktop() {
   @media screen and (min-width: breakpoint-old("3xl")) {
     @content;
+
     background: pink;
   }
 }
@@ -135,7 +138,7 @@ $color-pallette: (
     700: #334155,
     800: #1e293b,
     900: #0f172a,
-    950: #020617
+    950: #020617,
   ),
   "gray": (
     50: #f9fafb,
@@ -148,7 +151,7 @@ $color-pallette: (
     700: #374151,
     800: #1f2937,
     900: #111827,
-    950: #030712
+    950: #030712,
   ),
   "zinc": (
     50: #fafafa,
@@ -161,7 +164,7 @@ $color-pallette: (
     700: #3f3f46,
     800: #27272a,
     900: #18181b,
-    950: #09090b
+    950: #09090b,
   ),
   "neutral": (
     50: #fafafa,
@@ -174,7 +177,7 @@ $color-pallette: (
     700: #404040,
     800: #262626,
     900: #171717,
-    950: #0a0a0a
+    950: #0a0a0a,
   ),
   "stone": (
     50: #fafaf9,
@@ -187,7 +190,7 @@ $color-pallette: (
     700: #44403c,
     800: #292524,
     900: #1c1917,
-    950: #0c0a09
+    950: #0c0a09,
   ),
   "red": (
     50: #fef2f2,
@@ -200,7 +203,7 @@ $color-pallette: (
     700: #b91c1c,
     800: #991b1b,
     900: #7f1d1d,
-    950: #450a0a
+    950: #450a0a,
   ),
   "orange": (
     50: #fff7ed,
@@ -213,7 +216,7 @@ $color-pallette: (
     700: #c2410c,
     800: #9a3412,
     900: #7c2d12,
-    950: #431407
+    950: #431407,
   ),
   "amber": (
     50: #fffbeb,
@@ -226,7 +229,7 @@ $color-pallette: (
     700: #b45309,
     800: #92400e,
     900: #78350f,
-    950: #451a03
+    950: #451a03,
   ),
   "yellow": (
     50: #fefce8,
@@ -239,7 +242,7 @@ $color-pallette: (
     700: #a16207,
     800: #854d0e,
     900: #713f12,
-    950: #422006
+    950: #422006,
   ),
   "lime": (
     50: #f7fee7,
@@ -252,7 +255,7 @@ $color-pallette: (
     700: #4d7c0f,
     800: #3f6212,
     900: #365314,
-    950: #1a2e05
+    950: #1a2e05,
   ),
   "green": (
     50: #f0fdf4,
@@ -265,7 +268,7 @@ $color-pallette: (
     700: #15803d,
     800: #166534,
     900: #14532d,
-    950: #052e16
+    950: #052e16,
   ),
   "emerald": (
     50: #ecfdf5,
@@ -278,7 +281,7 @@ $color-pallette: (
     700: #047857,
     800: #065f46,
     900: #064e3b,
-    950: #022c22
+    950: #022c22,
   ),
   "teal": (
     50: #f0fdfa,
@@ -291,7 +294,7 @@ $color-pallette: (
     700: #0f766e,
     800: #115e59,
     900: #134e4a,
-    950: #042f2e
+    950: #042f2e,
   ),
   "cyan": (
     50: #ecfeff,
@@ -304,7 +307,7 @@ $color-pallette: (
     700: #0e7490,
     800: #155e75,
     900: #164e63,
-    950: #083344
+    950: #083344,
   ),
   "sky": (
     50: #f0f9ff,
@@ -317,7 +320,7 @@ $color-pallette: (
     700: #0369a1,
     800: #075985,
     900: #0c4a6e,
-    950: #082f49
+    950: #082f49,
   ),
   "blue": (
     50: #eff6ff,
@@ -330,7 +333,7 @@ $color-pallette: (
     700: #1d4ed8,
     800: #1e40af,
     900: #1e3a8a,
-    950: #172554
+    950: #172554,
   ),
   "indigo": (
     50: #eef2ff,
@@ -343,7 +346,7 @@ $color-pallette: (
     700: #4338ca,
     800: #3730a3,
     900: #312e81,
-    950: #1e1b4b
+    950: #1e1b4b,
   ),
   "violet": (
     50: #f5f3ff,
@@ -356,7 +359,7 @@ $color-pallette: (
     700: #6d28d9,
     800: #5b21b6,
     900: #4c1d95,
-    950: #2e1065
+    950: #2e1065,
   ),
   "purple": (
     50: #faf5ff,
@@ -369,7 +372,7 @@ $color-pallette: (
     700: #7e22ce,
     800: #6b21a8,
     900: #581c87,
-    950: #3b0764
+    950: #3b0764,
   ),
   "fuchsia": (
     50: #fdf4ff,
@@ -382,7 +385,7 @@ $color-pallette: (
     700: #a21caf,
     800: #86198f,
     900: #701a75,
-    950: #4a044e
+    950: #4a044e,
   ),
   "pink": (
     50: #fdf2f8,
@@ -395,7 +398,7 @@ $color-pallette: (
     700: #be185d,
     800: #9d174d,
     900: #831843,
-    950: #500724
+    950: #500724,
   ),
   "rose": (
     50: #fff1f2,
@@ -408,7 +411,7 @@ $color-pallette: (
     700: #be123c,
     800: #9f1239,
     900: #881337,
-    950: #4c0519
+    950: #4c0519,
   ),
   "beige": (
     50: #f7f4f4,
@@ -421,7 +424,7 @@ $color-pallette: (
     700: #795c5c,
     800: #664e4e,
     900: #574545,
-    950: #2d2222
+    950: #2d2222,
   ),
   "steel": (
     50: #f8f9fc,
@@ -434,8 +437,8 @@ $color-pallette: (
     700: #333655,
     800: #25253e,
     900: #27253d,
-    950: #100e23
-  )
+    950: #100e23,
+  ),
 );
 
 @function pallette-color($color...) {
@@ -447,123 +450,198 @@ $color: (
   "background": (
     "primary": light-dark(pallette-color("white"), pallette-color("steel", 950)),
     "nav-blur":
-      light-dark(rgb(from pallette-color("white") r g b / 70%), rgb(from pallette-color("steel", 950) r g b / 70%)),
+      light-dark(
+        rgb(from pallette-color("white") r g b / 70%),
+        rgb(from pallette-color("steel", 950) r g b / 70%)
+      ),
     "modal": light-dark(pallette-color("white"), pallette-color("steel", 950)),
-    "secondary": light-dark(pallette-color("beige", 100), pallette-color("steel", 900)),
-    "card-highlight": light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
-    "card-secondary": light-dark(pallette-color("white"), pallette-color("steel", 950))
+    "secondary":
+      light-dark(pallette-color("beige", 100), pallette-color("steel", 900)),
+    "card-highlight":
+      light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
+    "card-secondary":
+      light-dark(pallette-color("white"), pallette-color("steel", 950)),
   ),
-  "foreground": light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
-  "heading": light-dark(pallette-color("steel", 800), pallette-color("steel", 200)),
-  "paragraph": light-dark(pallette-color("steel", 700), pallette-color("steel", 300)),
+  "foreground":
+    light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
+  "heading":
+    light-dark(pallette-color("steel", 800), pallette-color("steel", 200)),
+  "paragraph":
+    light-dark(pallette-color("steel", 700), pallette-color("steel", 300)),
   "link": (
-    "primary": light-dark(pallette-color("violet", 700), pallette-color("purple", 300)),
-    "normal": light-dark(pallette-color("steel", 800), pallette-color("steel", 50))
+    "primary":
+      light-dark(pallette-color("violet", 700), pallette-color("purple", 300)),
+    "normal":
+      light-dark(pallette-color("steel", 800), pallette-color("steel", 50)),
   ),
-  "highlight": light-dark(pallette-color("violet", 600), pallette-color("violet", 500)),
-  "muted": light-dark(pallette-color("stone", 500), pallette-color("steel", 400)),
-  "border": light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
+  "highlight":
+    light-dark(pallette-color("violet", 600), pallette-color("violet", 500)),
+  "muted":
+    light-dark(pallette-color("stone", 500), pallette-color("steel", 400)),
+  "border":
+    light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
   "selection": (
-    "background": light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
-    "foreground": light-dark(pallette-color("steel", 50), pallette-color("steel", 950))
+    "background":
+      light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
+    "foreground":
+      light-dark(pallette-color("steel", 50), pallette-color("steel", 950)),
   ),
   "states": (
     "success": (
-      "base": light-dark(pallette-color("emerald", 600), pallette-color("emerald", 500)),
-      "background": light-dark(pallette-color("emerald", 100), pallette-color("emerald", 950)),
-      "normal": light-dark(pallette-color("emerald", 600), pallette-color("emerald", 500)),
+      "base":
+        light-dark(
+          pallette-color("emerald", 600),
+          pallette-color("emerald", 500)
+        ),
+      "background":
+        light-dark(
+          pallette-color("emerald", 100),
+          pallette-color("emerald", 950)
+        ),
+      "normal":
+        light-dark(
+          pallette-color("emerald", 600),
+          pallette-color("emerald", 500)
+        ),
       "hover": pallette-color("emerald", 700),
       "active": pallette-color("emerald", 800),
-      "border": light-dark(pallette-color("emerald", 400), pallette-color("emerald", 800))
+      "border":
+        light-dark(
+          pallette-color("emerald", 400),
+          pallette-color("emerald", 800)
+        ),
     ),
     "error": (
       "base": light-dark(pallette-color("red", 600), pallette-color("red", 400)),
-      "color": light-dark(pallette-color("red", 500), pallette-color("red", 400)),
-      "background": light-dark(pallette-color("red", 100), pallette-color("red", 950)),
+      "color":
+        light-dark(pallette-color("red", 500), pallette-color("red", 400)),
+      "background":
+        light-dark(pallette-color("red", 100), pallette-color("red", 950)),
       "normal": pallette-color("red", 500),
       "hover": pallette-color("red", 600),
       "active": pallette-color("red", 700),
-      "border": light-dark(pallette-color("red", 400), pallette-color("red", 900))
+      "border":
+        light-dark(pallette-color("red", 400), pallette-color("red", 900)),
     ),
     "neutral": (
-      "normal": light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
-      "border": light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
-      "background": light-dark(pallette-color("white"), pallette-color("steel", 900))
+      "normal":
+        light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
+      "border":
+        light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
+      "background":
+        light-dark(pallette-color("white"), pallette-color("steel", 900)),
     ),
     "info": (
-      "background": light-dark(pallette-color("indigo", 100), pallette-color("indigo", 950)),
+      "background":
+        light-dark(pallette-color("indigo", 100), pallette-color("indigo", 950)),
       "background-opaque":
         light-dark(
           rgb(from pallette-color("indigo", 200) r g b / 80%),
           rgb(from pallette-color("indigo", 950) r g b / 80%)
         ),
-      "icon": light-dark(pallette-color("indigo", 600), pallette-color("indigo", 500)),
-      "normal": light-dark(pallette-color("indigo", 600), pallette-color("indigo", 400)),
-      "border": light-dark(pallette-color("indigo", 400), pallette-color("indigo", 800))
+      "icon":
+        light-dark(pallette-color("indigo", 600), pallette-color("indigo", 500)),
+      "normal":
+        light-dark(pallette-color("indigo", 600), pallette-color("indigo", 400)),
+      "border":
+        light-dark(pallette-color("indigo", 400), pallette-color("indigo", 800)),
     ),
     "warning": (
-      "normal": light-dark(pallette-color("orange", 600), pallette-color("orange", 400)),
-      "background": light-dark(pallette-color("orange", 100), pallette-color("orange", 950)),
-      "border": light-dark(pallette-color("orange", 400), pallette-color("orange", 700))
+      "normal":
+        light-dark(pallette-color("orange", 600), pallette-color("orange", 400)),
+      "background":
+        light-dark(pallette-color("orange", 100), pallette-color("orange", 950)),
+      "border":
+        light-dark(pallette-color("orange", 400), pallette-color("orange", 700)),
     ),
     "yellow": (
       "normal": pallette-color("yellow", 500),
-      "background": light-dark(pallette-color("yellow", 100), pallette-color("yellow", 900))
+      "background":
+        light-dark(pallette-color("yellow", 100), pallette-color("yellow", 900)),
     ),
     "lime": (
       "normal": pallette-color("lime", 500),
-      "background": light-dark(pallette-color("lime", 100), pallette-color("lime", 900))
+      "background":
+        light-dark(pallette-color("lime", 100), pallette-color("lime", 900)),
     ),
     "data": (
-      "normal": light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
-      "background": light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
-      "border": light-dark(pallette-color("violet", 200), pallette-color("violet", 800))
-    )
+      "normal":
+        light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
+      "background":
+        light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
+      "border":
+        light-dark(pallette-color("violet", 200), pallette-color("violet", 800)),
+    ),
   ),
-  "focus": light-dark(pallette-color("violet", 700), pallette-color("violet", 500)),
+  "focus":
+    light-dark(pallette-color("violet", 700), pallette-color("violet", 500)),
   "focus-dim":
-    light-dark(rgb(from pallette-color("violet", 700) r g b / 30%), rgb(from pallette-color("violet", 500) r g b / 30%)),
+    light-dark(
+      rgb(from pallette-color("violet", 700) r g b / 30%),
+      rgb(from pallette-color("violet", 500) r g b / 30%)
+    ),
   "forms": (
     "input": (
       "hover": (
-        "border": light-dark(pallette-color("stone", 400), pallette-color("steel", 500))
-      )
-    )
+        "border":
+          light-dark(pallette-color("stone", 400), pallette-color("steel", 500)),
+      ),
+    ),
   ),
   "chart": (
     "series": (
-      "primary": light-dark(pallette-color("violet", 500), pallette-color("violet", 400)),
-      "neutral": light-dark(pallette-color("stone", 500), pallette-color("steel", 300))
-    )
+      "primary":
+        light-dark(pallette-color("violet", 500), pallette-color("violet", 400)),
+      "neutral":
+        light-dark(pallette-color("stone", 500), pallette-color("steel", 300)),
+    ),
   ),
   "button": (
     "primary": (
       "foreground": pallette-color("white"),
       "background": (
-        "normal": light-dark(pallette-color("violet", 700), pallette-color("violet", 600)),
-        "hover": light-dark(pallette-color("violet", 800), pallette-color("violet", 700)),
-        "active": light-dark(pallette-color("violet", 900), pallette-color("violet", 800))
-      )
+        "normal":
+          light-dark(
+            pallette-color("violet", 700),
+            pallette-color("violet", 600)
+          ),
+        "hover":
+          light-dark(
+            pallette-color("violet", 800),
+            pallette-color("violet", 700)
+          ),
+        "active":
+          light-dark(
+            pallette-color("violet", 900),
+            pallette-color("violet", 800)
+          ),
+      ),
     ),
     "secondary": (
       "foreground": pallette-color("steel", 900),
       "background": (
         "normal": pallette-color("purple", 200),
         "hover": pallette-color("purple", 300),
-        "active": pallette-color("purple", 400)
-      )
+        "active": pallette-color("purple", 400),
+      ),
     ),
     "solid": (
-      "foreground": light-dark(pallette-color("steel", 50), pallette-color("steel", 900)),
+      "foreground":
+        light-dark(pallette-color("steel", 50), pallette-color("steel", 900)),
       "background": (
-        "normal": light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
-        "hover": light-dark(pallette-color("steel", 600), pallette-color("steel", 200)),
-        "active": light-dark(pallette-color("steel", 900), pallette-color("steel", 50))
-      )
+        "normal":
+          light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
+        "hover":
+          light-dark(pallette-color("steel", 600), pallette-color("steel", 200)),
+        "active":
+          light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
+      ),
     ),
     "outline": (
-      "border": light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
-      "foreground": light-dark(pallette-color("stone", 900), pallette-color("steel", 50)),
+      "border":
+        light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
+      "foreground":
+        light-dark(pallette-color("stone", 900), pallette-color("steel", 50)),
       "background": (
         "hover":
           light-dark(
@@ -574,14 +652,16 @@ $color: (
           light-dark(
             rgb(from pallette-color("beige", 950) r g b / 10%),
             rgb(from pallette-color("steel", 50) r g b / 10%)
-          )
-      )
+          ),
+      ),
     ),
     "disabled": (
-      "foreground": light-dark(pallette-color("stone", 400), pallette-color("steel", 400)),
-      "background": light-dark(pallette-color("stone", 200), pallette-color("steel", 600))
-    )
-  )
+      "foreground":
+        light-dark(pallette-color("stone", 400), pallette-color("steel", 400)),
+      "background":
+        light-dark(pallette-color("stone", 200), pallette-color("steel", 600)),
+    ),
+  ),
 );
 
 @function color($color-path...) {
@@ -595,7 +675,7 @@ $button-sizes: (
     "border-radius": border-radius("md"),
     "font-size": font-size("xxs"),
     "icon-size": spacing(4),
-    "gap": spacing(1)
+    "gap": spacing(1),
   ),
   "sm": (
     "padding": spacing(2),
@@ -603,7 +683,7 @@ $button-sizes: (
     "border-radius": border-radius("lg"),
     "font-size": font-size("sm"),
     "icon-size": spacing(5),
-    "gap": spacing(2)
+    "gap": spacing(2),
   ),
   "md": (
     "padding": spacing(3),
@@ -611,7 +691,7 @@ $button-sizes: (
     "border-radius": border-radius("xl"),
     "font-size": font-size("base"),
     "icon-size": spacing(6),
-    "gap": spacing(2)
+    "gap": spacing(2),
   ),
   "lg": (
     "padding": spacing(4),
@@ -619,8 +699,8 @@ $button-sizes: (
     "border-radius": border-radius("2xl"),
     "font-size": font-size("xl"),
     "icon-size": spacing(6),
-    "gap": spacing(3)
-  )
+    "gap": spacing(3),
+  ),
 );
 
 @function button-padding($size, $include-gap) {
@@ -709,21 +789,25 @@ $elevations: (
       0px 42px 17px 0px rgb(112 66 206 / 3%),
       0px 24px 14px 0px rgb(112 66 206 / 8%),
       0px 11px 11px 0px rgb(112 66 206 / 14%),
-      0px 3px 6px 0px rgb(112 66 206 / 17%)
-    )
+      0px 3px 6px 0px rgb(112 66 206 / 17%),
+    ),
   ),
   default: (
     1: (
       0px 4px 6px -4px rgb(from black r g b / 10%),
-      0px 10px 15px -3px rgb(from black r g b / 10%)
+      0px 10px 15px -3px rgb(from black r g b / 10%),
     ),
     2: (
-      0px 29px 12px 0px light-dark(rgb(from #564848 r g b / 2%), rgb(from black r g b / 8%)),
-      0px 16px 10px 0px light-dark(rgb(from #564848 r g b / 6%), rgb(from black r g b / 12%)),
-      0px 7px 7px 0px light-dark(rgb(from #564848 r g b / 12%), rgb(from black r g b / 20%)),
-      0px 2px 4px 0px light-dark(rgb(from #564848 r g b / 14%), rgb(from black r g b / 30%))
-    )
-  )
+      0px 29px 12px 0px
+        light-dark(rgb(from #564848 r g b / 2%), rgb(from black r g b / 8%)),
+      0px 16px 10px 0px
+        light-dark(rgb(from #564848 r g b / 6%), rgb(from black r g b / 12%)),
+      0px 7px 7px 0px
+        light-dark(rgb(from #564848 r g b / 12%), rgb(from black r g b / 20%)),
+      0px 2px 4px 0px
+        light-dark(rgb(from #564848 r g b / 14%), rgb(from black r g b / 30%)),
+    ),
+  ),
 );
 
 @mixin elevation($elevation...) {

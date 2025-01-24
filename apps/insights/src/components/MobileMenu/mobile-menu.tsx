@@ -6,10 +6,7 @@ import { useState, type ComponentProps } from "react";
 
 import styles from "./mobile-menu.module.scss";
 
-export const MobileMenu = ({
-  className,
-  ...props
-}: ComponentProps<"div">) => {
+export const MobileMenu = ({ className, ...props }: ComponentProps<"div">) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {

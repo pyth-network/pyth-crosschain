@@ -1,16 +1,22 @@
 @use "@pythnetwork/component-library/theme";
 
 .priceFeedItemsWrapper {
-    display: flex;
-    flex-flow: column nowrap;
-    gap: 0;
-    border-radius: theme.border-radius("xl");
-    background: theme.color("background", "card-secondary");
+  display: flex;
+  flex-flow: column nowrap;
+  gap: 0;
+  border-radius: theme.border-radius("xl");
+  background: theme.color("background", "card-secondary");
+
+  @include theme.breakpoint("md") {
+    display: none;
+  }
 }
+
 .priceFeedItem {
-    padding: theme.spacing(4);
-    position: relative;
-    &:not(:last-child) {
-        border-bottom: 1px solid theme.color("background", "secondary");
-    }
+  padding: theme.spacing(4);
+  position: relative;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid theme.color("background", "secondary");
+  }
 }

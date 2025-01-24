@@ -14,6 +14,7 @@
     justify-content: space-between;
 
     @include theme.max-width;
+
     margin-bottom: theme.spacing(6);
 
     @include theme.breakpoint("sm") {
@@ -77,6 +78,7 @@
     display: flex;
     gap: theme.spacing(6);
     flex-flow: column;
+
     @include theme.breakpoint("sm") {
       flex-flow: row nowrap;
       justify-content: space-between;
