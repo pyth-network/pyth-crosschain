@@ -19,8 +19,12 @@ import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
 import { Cluster, getData } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
-import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
+import { activeChains } from "../../static-data/stats";
 import { LivePrice } from "../LivePrices";
+import {
+  YesterdaysPricesProvider,
+  PriceFeedChangePercent,
+} from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 
@@ -62,7 +66,7 @@ export const PriceFeeds = async () => {
           />
           <StatCard
             header="Active Chains"
-            stat={priceFeedsStaticConfig.activeChains}
+            stat={activeChains.at(-1)?.chains}
             href="https://docs.pyth.network/price-feeds/contract-addresses"
             target="_blank"
             corner={<ArrowSquareOut weight="fill" />}
@@ -182,7 +186,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
             {showPrices && (
               <div className={styles.prices}>
                 <LivePrice feedKey={feed.product.price_account} />
-                <ChangePercent
+                <PriceFeedChangePercent
                   className={styles.changePercent}
                   feedKey={feed.product.price_account}
                 />
