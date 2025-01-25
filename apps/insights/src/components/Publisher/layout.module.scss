@@ -39,14 +39,6 @@
         margin-right: -#{theme.button-padding("xs", false)};
       }
 
-      .primarySparkChartLine {
-        color: theme.color("chart", "series", "primary");
-      }
-
-      .secondarySparkChartLine {
-        color: theme.color("chart", "series", "neutral");
-      }
-
       .activeDate {
         color: theme.color("muted");
       }

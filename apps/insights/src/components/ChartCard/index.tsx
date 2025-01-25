@@ -1,6 +1,7 @@
 "use client";
 
 import { StatCard } from "@pythnetwork/component-library/StatCard";
+import clsx from "clsx";
 import dynamic from "next/dynamic";
 import {
   type ElementType,
@@ -14,6 +15,8 @@ import {
 import { ResponsiveContainer, Tooltip, Line, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 
+import styles from "./index.module.scss";
+
 const LineChart = dynamic(
   () => import("recharts").then((recharts) => recharts.LineChart),
   {
@@ -25,7 +28,6 @@ const CHART_HEIGHT = 36;
 
 type OwnProps<T> = {
   chartClassName?: string | undefined;
-  lineClassName?: string | undefined;
   data: Point<T>[];
 };
 
@@ -43,8 +45,8 @@ type Props<T extends ElementType, U> = Omit<
   OwnProps<U>;
 
 export const ChartCard = <T extends ElementType, U>({
+  className,
   chartClassName,
-  lineClassName,
   data,
   stat,
   miniStat,
@@ -77,6 +79,7 @@ export const ChartCard = <T extends ElementType, U>({
 
   return (
     <StatCard
+      className={clsx(className, styles.chartCard)}
       {...props}
       stat={selectedPoint ? (selectedPoint.displayY ?? selectedPoint.y) : stat}
       miniStat={selectedDate ?? miniStat}
@@ -96,7 +99,7 @@ export const ChartCard = <T extends ElementType, U>({
             <Line
               type="monotone"
               dataKey="y"
-              className={lineClassName ?? ""}
+              className={styles.line ?? ""}
               stroke="currentColor"
               dot={false}
             />

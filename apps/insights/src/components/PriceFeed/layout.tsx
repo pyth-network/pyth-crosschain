@@ -15,7 +15,6 @@ import { PriceFeedSelect } from "./price-feed-select";
 import { ReferenceData } from "./reference-data";
 import { toHex } from "../../hex";
 import { Cluster, getData } from "../../services/pyth";
-import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { FeedKey } from "../FeedKey";
 import {
   LivePrice,
@@ -23,6 +22,10 @@ import {
   LiveLastUpdated,
   LiveValue,
 } from "../LivePrices";
+import {
+  YesterdaysPricesProvider,
+  PriceFeedChangePercent,
+} from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
@@ -166,7 +169,7 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
               <YesterdaysPricesProvider
                 feeds={{ [feed.symbol]: feed.product.price_account }}
               >
-                <ChangePercent feedKey={feed.product.price_account} />
+                <PriceFeedChangePercent feedKey={feed.product.price_account} />
               </YesterdaysPricesProvider>
             }
           />

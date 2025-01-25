@@ -16,7 +16,6 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { ActiveFeedsCard } from "./active-feeds-card";
-import { ChartCard } from "./chart-card";
 import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./layout.module.scss";
 import { OisApyHistory } from "./ois-apy-history";
@@ -29,7 +28,9 @@ import { getPublisherCaps } from "../../services/hermes";
 import { Cluster, getTotalFeedCount } from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
 import { Status } from "../../status";
+import { ChangePercent } from "../ChangePercent";
 import { ChangeValue } from "../ChangeValue";
+import { ChartCard } from "../ChartCard";
 import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 import { FormattedTokens } from "../FormattedTokens";
@@ -113,7 +114,6 @@ export const PublishersLayout = async ({ children, params }: Props) => {
             <ChartCard
               variant="primary"
               header="Publisher Ranking"
-              lineClassName={styles.primarySparkChartLine}
               corner={
                 <AlertTrigger>
                   <Button
@@ -162,7 +162,6 @@ export const PublishersLayout = async ({ children, params }: Props) => {
               <ChartCard
                 header="Median Score"
                 chartClassName={styles.medianScoreChart}
-                lineClassName={styles.secondarySparkChartLine}
                 corner={<Info weight="fill" />}
                 data={medianScoreHistory.map(({ time, score }) => ({
                   x: time,
@@ -187,25 +186,10 @@ export const PublishersLayout = async ({ children, params }: Props) => {
                 }
                 {...(previousMedianScore && {
                   miniStat: (
-                    <ChangeValue
-                      direction={getChangeDirection(
-                        previousMedianScore.score,
-                        currentMedianScore.score,
-                      )}
-                    >
-                      <FormattedNumber
-                        maximumSignificantDigits={2}
-                        value={
-                          (100 *
-                            Math.abs(
-                              currentMedianScore.score -
-                                previousMedianScore.score,
-                            )) /
-                          previousMedianScore.score
-                        }
-                      />
-                      %
-                    </ChangeValue>
+                    <ChangePercent
+                      currentValue={currentMedianScore.score}
+                      previousValue={previousMedianScore.score}
+                    />
                   ),
                 })}
               />
