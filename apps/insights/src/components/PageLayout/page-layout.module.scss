@@ -1,0 +1,24 @@
+@use "@pythnetwork/component-library/theme";
+
+.pageLayout {
+    @include theme.max-width;
+    display: flex;
+    gap: theme.spacing(6);
+    flex-direction: column;
+
+    .pageTitleContainer {
+        display: flex;
+        flex-flow: row nowrap;
+        gap: theme.spacing(3);
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+
+        .pageTitle {
+            @include theme.h3;
+            color: theme.color("heading");
+            font-weight: theme.font-weight("semibold");
+            flex-grow: 1;
+        }
+    }
+}

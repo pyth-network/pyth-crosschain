@@ -1,79 +1,74 @@
 @use "@pythnetwork/component-library/theme";
 @use "../Root/index.module.scss" as root;
 
-.publishers {
-  @include theme.max-width;
+.body {
+  display: flex;
+  flex-flow: column nowrap;
+  width: 100%;
 
-  .body {
+  @include theme.breakpoint("lg") {
+    flex-flow: row nowrap;
+    align-items: flex-start;
+    gap: theme.spacing(6);
+  }
+
+  .stats {
     display: flex;
-    flex-flow: column nowrap;
-    width: 100%;
+    flex-flow: column;
+    gap: theme.spacing(6);
+    align-items: stretch;
+    flex-grow: 1;
 
     @include theme.breakpoint("lg") {
-      flex-flow: row nowrap;
-      align-items: flex-start;
-      gap: theme.spacing(12);
-      margin-top: theme.spacing(6);
+      position: sticky;
+      top: root.$header-height;
     }
 
-    .stats {
-      display: flex;
-      flex-flow: column;
-      gap: theme.spacing(4);
-      align-items: stretch;
-      flex-grow: 1;
+    .averageMedianScoreExplainButton {
+      margin-top: -#{theme.button-padding("xs", false)};
+      margin-right: -#{theme.button-padding("xs", false)};
+    }
 
-      @include theme.breakpoint("lg") {
-        position: sticky;
-        top: root.$header-height;
-      }
-
-      .averageMedianScoreExplainButton {
-        margin-top: -#{theme.button-padding("xs", false)};
-        margin-right: -#{theme.button-padding("xs", false)};
-      }
-
-      .oisCard {
-        .oisPool {
-          .title {
-            font-size: theme.font-size("sm");
-            font-weight: theme.font-weight("normal");
-            color: theme.color("heading");
-            margin: 0;
-          }
-
-          .poolUsed {
-            margin: 0;
-            color: theme.color("heading");
-
-            @include theme.h3;
-          }
-
-          .poolTotal {
-            margin: 0;
-            color: theme.color("muted");
-            font-size: theme.font-size("sm");
-            font-weight: theme.font-weight("normal");
-          }
+    .oisCard {
+      .oisPool {
+        .title {
+          font-size: theme.font-size("sm");
+          font-weight: theme.font-weight("normal");
+          color: theme.color("heading");
+          margin: 0;
         }
 
-        .oisStats {
-          display: flex;
-          flex-flow: column;
-          gap: theme.spacing(1);
+        .poolUsed {
+          margin: 0;
+          color: theme.color("heading");
 
-          @include theme.breakpoint("lg") {
-            column-span: 2;
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
+          @include theme.h3;
+        }
+
+        .poolTotal {
+          margin: 0;
+          color: theme.color("muted");
+          font-size: theme.font-size("sm");
+          font-weight: theme.font-weight("normal");
+        }
+      }
+
+      .oisStats {
+        display: flex;
+        flex-flow: column;
+        gap: theme.spacing(1);
+
+        @include theme.breakpoint("lg") {
+          column-span: 2;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
     }
+  }
 
-    .publishersCard {
-      width: 60%;
-    }
+  .publishersCard {
+    width: 60%;
   }
 }
 

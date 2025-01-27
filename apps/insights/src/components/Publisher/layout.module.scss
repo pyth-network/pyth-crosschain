@@ -84,8 +84,7 @@
 
   .body {
     @include theme.max-width;
-
-    padding-top: theme.spacing(6);
+    margin-top: theme.spacing(6);
   }
 }
 

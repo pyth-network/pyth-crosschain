@@ -1,8 +1,9 @@
-import styles from "./index.module.scss";
-import { PageTitle } from "../PageTitle/page-title";
+import { Card } from "@pythnetwork/component-library/Card";
+
+import { PageLayout } from "../PageLayout/page-layout";
 
 export const Overview = () => (
-  <div className={styles.overview}>
-    <PageTitle>Overview</PageTitle>
-  </div>
+  <PageLayout title={"Overview"}>
+    <Card title="Overview"></Card>
+  </PageLayout>
 );

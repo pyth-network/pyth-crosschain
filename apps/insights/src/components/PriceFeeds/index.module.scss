@@ -1,76 +1,53 @@
 @use "@pythnetwork/component-library/theme";
 
-.priceFeeds {
-  @include theme.max-width;
+.toolbarContainer {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(2);
+}
 
-  .header {
-    @include theme.h3;
+.feedKey {
+  margin: 0 -#{theme.button-padding("xs", true)};
+}
 
-    color: theme.color("heading");
-    font-weight: theme.font-weight("semibold");
-  }
+.featuredFeeds {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;
 
-  .toolbarContainer {
-    display: flex;
+  @include theme.breakpoint("md") {
     flex-flow: row nowrap;
-    gap: theme.spacing(2);
-  }
 
-  .body {
+    & > * {
+      flex: 1 1 0px;
+      width: 0;
+    }
+  }
+}
+
+.featuredFeeds {
+  gap: theme.spacing(1);
+
+  .feedCardContents {
     display: flex;
     flex-flow: column nowrap;
+    justify-content: space-between;
+    align-items: stretch;
+    padding: theme.spacing(3);
     gap: theme.spacing(6);
-    margin-top: theme.spacing(6);
 
-    .feedKey {
-      margin: 0 -#{theme.button-padding("xs", true)};
-    }
-
-    .featuredFeeds,
-    .stats {
+    .prices {
       display: flex;
-      flex-flow: column nowrap;
-      align-items: stretch;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: center;
+      color: theme.color("heading");
+      font-weight: theme.font-weight("medium");
+      line-height: 1;
+      font-size: theme.font-size("base");
 
-      @include theme.breakpoint("md") {
-        flex-flow: row nowrap;
-
-        & > * {
-          flex: 1 1 0px;
-          width: 0;
-        }
-      }
-    }
-
-    .stats {
-      gap: theme.spacing(6);
-    }
-
-    .featuredFeeds {
-      gap: theme.spacing(1);
-
-      .feedCardContents {
-        display: flex;
-        flex-flow: column nowrap;
-        justify-content: space-between;
-        align-items: stretch;
-        padding: theme.spacing(3);
-        gap: theme.spacing(6);
-
-        .prices {
-          display: flex;
-          flex-flow: row nowrap;
-          justify-content: space-between;
-          align-items: center;
-          color: theme.color("heading");
-          font-weight: theme.font-weight("medium");
-          line-height: 1;
-          font-size: theme.font-size("base");
-
-          .changePercent {
-            font-size: theme.font-size("sm");
-          }
-        }
+      .changePercent {
+        font-size: theme.font-size("sm");
       }
     }
   }

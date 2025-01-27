@@ -22,7 +22,7 @@ import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-fe
 import { CardTitle } from "../CardTitle";
 import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { LivePrice } from "../LivePrices";
-import { PageTitle } from "../PageTitle/page-title";
+import { PageLayout } from "../PageLayout/page-layout";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { Stats } from "../Stats";
@@ -48,97 +48,94 @@ export const PriceFeeds = async () => {
   );
 
   return (
-    <div className={styles.priceFeeds}>
-      <PageTitle>Price Feeds</PageTitle>
-      <div className={styles.body}>
-        <Stats>
+    <PageLayout title={"Price Feeds"}>
+      <Stats>
+        <StatCard
+          variant="primary"
+          header="Active Feeds"
+          stat={priceFeeds.activeFeeds.length}
+          href={`#${PRICE_FEEDS_ANCHOR}`}
+          corner={<ArrowLineDown />}
+        />
+        <StatCard
+          header="Frequency"
+          stat={priceFeedsStaticConfig.updateFrequency}
+        />
+        <StatCard
+          header="Active Chains"
+          stat={priceFeedsStaticConfig.activeChains}
+          href="https://docs.pyth.network/price-feeds/contract-addresses"
+          target="_blank"
+          corner={<ArrowSquareOut weight="fill" />}
+        />
+        <AssetClassesDrawer numFeedsByAssetClass={numFeedsByAssetClass}>
           <StatCard
-            variant="primary"
-            header="Active Feeds"
-            stat={priceFeeds.activeFeeds.length}
-            href={`#${PRICE_FEEDS_ANCHOR}`}
-            corner={<ArrowLineDown />}
+            header="Asset Classes"
+            stat={Object.keys(numFeedsByAssetClass).length}
+            corner={<Info weight="fill" />}
           />
-          <StatCard
-            header="Frequency"
-            stat={priceFeedsStaticConfig.updateFrequency}
-          />
-          <StatCard
-            header="Active Chains"
-            stat={priceFeedsStaticConfig.activeChains}
-            href="https://docs.pyth.network/price-feeds/contract-addresses"
-            target="_blank"
-            corner={<ArrowSquareOut weight="fill" />}
-          />
-          <AssetClassesDrawer numFeedsByAssetClass={numFeedsByAssetClass}>
-            <StatCard
-              header="Asset Classes"
-              stat={Object.keys(numFeedsByAssetClass).length}
-              corner={<Info weight="fill" />}
-            />
-          </AssetClassesDrawer>
-        </Stats>
-        <YesterdaysPricesProvider
-          feeds={Object.fromEntries(
-            featuredRecentlyAdded.map(({ symbol, product }) => [
-              symbol,
-              product.price_account,
-            ]),
-          )}
-        >
-          <FeaturedFeedsCard
-            title={<CardTitle icon={<StackPlus />}>Recently added</CardTitle>}
-            feeds={featuredRecentlyAdded}
-            showPrices
-            linkFeeds
-          />
-        </YesterdaysPricesProvider>
+        </AssetClassesDrawer>
+      </Stats>
+      <YesterdaysPricesProvider
+        feeds={Object.fromEntries(
+          featuredRecentlyAdded.map(({ symbol, product }) => [
+            symbol,
+            product.price_account,
+          ]),
+        )}
+      >
         <FeaturedFeedsCard
-          title={<CardTitle icon={<ClockCountdown />}>Coming soon</CardTitle>}
-          feeds={featuredComingSoon}
-          action={
-            <DrawerTrigger>
-              <Button size="sm" variant="outline">
-                Show all
-              </Button>
-              <Drawer
-                fill
-                className={styles.comingSoonCard ?? ""}
-                title={
-                  <>
-                    <span>Coming Soon</span>
-                    <Badge>{priceFeeds.comingSoon.length}</Badge>
-                  </>
-                }
-              >
-                <ComingSoonList
-                  comingSoonFeeds={priceFeeds.comingSoon.map((feed) => ({
-                    id: feed.product.price_account,
-                    displaySymbol: feed.product.display_symbol,
-                    assetClass: feed.product.asset_type,
-                    icon: (
-                      <PriceFeedIcon symbol={feed.product.display_symbol} />
-                    ),
-                  }))}
-                />
-              </Drawer>
-            </DrawerTrigger>
-          }
+          title={<CardTitle icon={<StackPlus />}>Recently added</CardTitle>}
+          feeds={featuredRecentlyAdded}
+          showPrices
+          linkFeeds
         />
-        <PriceFeedsCard
-          id={PRICE_FEEDS_ANCHOR}
-          priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
-            symbol: feed.symbol,
-            icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
-            id: feed.product.price_account,
-            displaySymbol: feed.product.display_symbol,
-            assetClass: feed.product.asset_type,
-            exponent: feed.price.exponent,
-            numQuoters: feed.price.numQuoters,
-          }))}
-        />
-      </div>
-    </div>
+      </YesterdaysPricesProvider>
+      <FeaturedFeedsCard
+        title={<CardTitle icon={<ClockCountdown />}>Coming soon</CardTitle>}
+        feeds={featuredComingSoon}
+        action={
+          <DrawerTrigger>
+            <Button size="sm" variant="outline">
+              Show all
+            </Button>
+            <Drawer
+              fill
+              className={styles.comingSoonCard ?? ""}
+              title={
+                <>
+                  <span>Coming Soon</span>
+                  <Badge>{priceFeeds.comingSoon.length}</Badge>
+                </>
+              }
+            >
+              <ComingSoonList
+                comingSoonFeeds={priceFeeds.comingSoon.map((feed) => ({
+                  id: feed.product.price_account,
+                  displaySymbol: feed.product.display_symbol,
+                  assetClass: feed.product.asset_type,
+                  icon: (
+                    <PriceFeedIcon symbol={feed.product.display_symbol} />
+                  ),
+                }))}
+              />
+            </Drawer>
+          </DrawerTrigger>
+        }
+      />
+      <PriceFeedsCard
+        id={PRICE_FEEDS_ANCHOR}
+        priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
+          symbol: feed.symbol,
+          icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
+          id: feed.product.price_account,
+          displaySymbol: feed.product.display_symbol,
+          assetClass: feed.product.asset_type,
+          exponent: feed.price.exponent,
+          numQuoters: feed.price.numQuoters,
+        }))}
+      />
+    </PageLayout>
   );
 };
 

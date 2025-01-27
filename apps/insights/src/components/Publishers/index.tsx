@@ -19,7 +19,7 @@ import {
 } from "../../services/staking";
 import { CardTitle } from "../CardTitle";
 import { FormattedTokens } from "../FormattedTokens";
-import { PageTitle } from "../PageTitle/page-title";
+import { PageLayout } from "../PageLayout/page-layout";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { SemicircleMeter, Label } from "../SemicircleMeter";
@@ -36,8 +36,7 @@ export const Publishers = async () => {
   ]);
 
   return (
-    <div className={styles.publishers}>
-      <PageTitle>Publishers</PageTitle>
+    <PageLayout title={"Publishers"}>
       <div className={styles.body}>
         <section className={styles.stats}>
           <Stats>
@@ -174,7 +173,7 @@ export const Publishers = async () => {
           )}
         />
       </div>
-    </div>
+    </PageLayout >
   );
 };
 
