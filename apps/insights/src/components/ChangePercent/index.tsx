@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 
+import { omitKeys } from "../../omit-keys";
 import { ChangeValue } from "../ChangeValue";
 import { FormattedNumber } from "../FormattedNumber";
 
@@ -17,13 +18,13 @@ type PriceDifferenceProps = Omit<
       }
   );
 
-export const ChangePercent = ({ ...props }: PriceDifferenceProps) =>
+export const ChangePercent = (props: PriceDifferenceProps) =>
   props.isLoading ? (
     <ChangeValue {...props} />
   ) : (
     <ChangeValue
       direction={getDirection(props.currentValue, props.previousValue)}
-      {...props}
+      {...omitKeys(props, ["currentValue", "previousValue"])}
     >
       <FormattedNumber
         maximumFractionDigits={2}

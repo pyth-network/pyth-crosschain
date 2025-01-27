@@ -1,1 +1,1 @@
-export { Chart as default } from "../../../components/PriceFeed/chart";
+export { ChartPage as default } from "../../../components/PriceFeed/chart-page";

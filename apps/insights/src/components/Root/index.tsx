@@ -15,9 +15,9 @@ import {
   AMPLITUDE_API_KEY,
 } from "../../config/server";
 import { toHex } from "../../hex";
+import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
 import { getPublishers } from "../../services/clickhouse";
 import { Cluster, getData } from "../../services/pyth";
-import { LivePricesProvider } from "../LivePrices";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 
@@ -36,7 +36,7 @@ export const Root = async ({ children }: Props) => {
       amplitudeApiKey={AMPLITUDE_API_KEY}
       googleAnalyticsId={GOOGLE_ANALYTICS_ID}
       enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-      providers={[NuqsAdapter, LivePricesProvider]}
+      providers={[NuqsAdapter, LivePriceDataProvider]}
       className={styles.root}
     >
       <SearchDialogProvider

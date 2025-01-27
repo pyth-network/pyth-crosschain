@@ -16,7 +16,7 @@ import { useQueryState, parseAsString } from "nuqs";
 import { type ReactNode, Suspense, useCallback, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
-import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
+import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { FeedKey } from "../FeedKey";
 import {
   SKELETON_WIDTH,

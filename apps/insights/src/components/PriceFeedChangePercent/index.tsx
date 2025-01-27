@@ -3,9 +3,9 @@
 import { type ComponentProps, createContext, use } from "react";
 import { z } from "zod";
 
-import { StateType, useData } from "../../use-data";
+import { StateType, useData } from "../../hooks/use-data";
+import { useLivePriceData } from "../../hooks/use-live-price-data";
 import { ChangePercent } from "../ChangePercent";
-import { useLivePrice } from "../LivePrices";
 
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
@@ -105,7 +105,7 @@ const PriceFeedChangePercentLoaded = ({
   priorPrice,
   feedKey,
 }: PriceFeedChangePercentLoadedProps) => {
-  const { current } = useLivePrice(feedKey);
+  const { current } = useLivePriceData(feedKey);
 
   return current === undefined ? (
     <ChangePercent className={className} isLoading />

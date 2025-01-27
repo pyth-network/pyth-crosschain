@@ -723,7 +723,10 @@ $max-width: 96rem;
 
 @mixin max-width {
   margin: 0 auto;
-  max-width: $max-width;
+  max-width: min(
+    $max-width,
+    calc(200vw - spacing(12) - 100% - var(--scrollbar-width))
+  );
   padding: 0 spacing(6);
   box-sizing: content-box;
 }
