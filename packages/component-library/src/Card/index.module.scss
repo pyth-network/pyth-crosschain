@@ -64,8 +64,8 @@
       // height: 100%;
       // padding: 0 theme.spacing(2);
       position: absolute;
-      top: theme.spacing(2.5);
-      right: theme.spacing(2.5);
+      top: theme.spacing(1.5);
+      right: theme.spacing(1.5);
       @include theme.breakpoint("md") {
         position: static;
         padding: 0;

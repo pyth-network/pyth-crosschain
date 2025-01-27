@@ -12,12 +12,10 @@
         flex-flow: row nowrap;
         gap: theme.spacing(3);
         align-items: center;
-        @include theme.text("lg", "semibold");
-        // trunctate text
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        height: 2rem;
+        @include theme.text("base", "semibold");
+        @include theme.breakpoint("md") {
+            @include theme.text("lg", "semibold");
+        }
     }
     .icon {
         font-size: theme.spacing(6);
