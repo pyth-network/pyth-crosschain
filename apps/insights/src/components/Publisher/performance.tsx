@@ -14,6 +14,7 @@ import { TopFeedsTable } from "./top-feeds-table";
 import { getPublishers } from "../../services/clickhouse";
 import { Cluster, getTotalFeedCount } from "../../services/pyth";
 import { Status } from "../../status";
+import { CardTitle } from "../CardTitle";
 import { NoResults } from "../NoResults";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
@@ -47,7 +48,7 @@ export const Performance = async ({ params }: Props) => {
     notFound()
   ) : (
     <div className={styles.performance}>
-      <Card icon={<Broadcast />} title="Publishers Ranking">
+      <Card icon={<Broadcast />} title={<CardTitle>Publisher Ranking</CardTitle>}>
         <Table
           rounded
           fill
@@ -118,7 +119,7 @@ export const Performance = async ({ params }: Props) => {
           })}
         />
       </Card>
-      <Card icon={<Network />} title="High-Performing Feeds">
+      <Card title={<CardTitle icon={<Network />}>High-performing Feeds</CardTitle>}>
         <TopFeedsTable
           label="High-Performing Feeds"
           publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
@@ -138,7 +139,7 @@ export const Performance = async ({ params }: Props) => {
           )}
         />
       </Card>
-      <Card icon={<Network />} title="Low-Performing Feeds">
+      <Card title={<CardTitle icon={<Network />}>Low-performing Feeds</CardTitle>}>
         <TopFeedsTable
           label="Low-Performing Feeds"
           publisherScoreWidth={PUBLISHER_SCORE_WIDTH}

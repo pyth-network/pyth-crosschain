@@ -4,28 +4,30 @@
 .publishers {
   @include theme.max-width;
 
-  .header {
-    @include theme.h3;
-
-    color: theme.color("heading");
-    font-weight: theme.font-weight("semibold");
-  }
-
   .body {
     display: flex;
-    flex-flow: row nowrap;
-    gap: theme.spacing(12);
-    align-items: flex-start;
-    margin-top: theme.spacing(6);
+    flex-flow: column nowrap;
+    width: 100%;
+
+    @include theme.breakpoint("lg") {
+      flex-flow: row nowrap;
+      align-items: flex-start;
+      gap: theme.spacing(12);
+      margin-top: theme.spacing(6);
+    }
 
     .stats {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      outline: 1px solid red;
+      display: flex;
+      flex-flow: column;
       gap: theme.spacing(4);
-      align-items: center;
-      width: 40%;
-      position: sticky;
-      top: root.$header-height;
+      align-items: stretch;
+      flex-grow: 1;
+
+      @include theme.breakpoint("lg") {
+        position: sticky;
+        top: root.$header-height;
+      }
 
       .averageMedianScoreExplainButton {
         margin-top: -#{theme.button-padding("xs", false)};
@@ -33,8 +35,6 @@
       }
 
       .oisCard {
-        grid-column: span 2 / span 2;
-
         .oisPool {
           .title {
             font-size: theme.font-size("sm");
@@ -59,9 +59,15 @@
         }
 
         .oisStats {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          display: flex;
+          flex-flow: column;
           gap: theme.spacing(1);
+
+          @include theme.breakpoint("lg") {
+            column-span: 2;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
         }
       }
     }

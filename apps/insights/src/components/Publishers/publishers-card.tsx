@@ -14,6 +14,7 @@ import { type ReactNode, Suspense, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
+import { CardTitle } from "../CardTitle";
 import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
@@ -35,9 +36,9 @@ type Publisher = {
   inactiveFeeds: number;
   medianScore: number;
 } & (
-  | { name: string; icon: ReactNode }
-  | { name?: undefined; icon?: undefined }
-);
+    | { name: string; icon: ReactNode }
+    | { name?: undefined; icon?: undefined }
+  );
 
 export const PublishersCard = ({ publishers, ...props }: Props) => (
   <Suspense fallback={<PublishersCardContents isLoading {...props} />}>
@@ -155,22 +156,22 @@ type PublishersCardContentsProps = Pick<
   (
     | { isLoading: true }
     | {
-        isLoading?: false;
-        numResults: number;
-        search: string;
-        sortDescriptor: SortDescriptor;
-        numPages: number;
-        page: number;
-        pageSize: number;
-        onSearchChange: (newSearch: string) => void;
-        onSortChange: (newSort: SortDescriptor) => void;
-        onPageSizeChange: (newPageSize: number) => void;
-        onPageChange: (newPage: number) => void;
-        mkPageLink: (page: number) => string;
-        rows: RowConfig<
-          "ranking" | "name" | "activeFeeds" | "inactiveFeeds" | "medianScore"
-        >[];
-      }
+      isLoading?: false;
+      numResults: number;
+      search: string;
+      sortDescriptor: SortDescriptor;
+      numPages: number;
+      page: number;
+      pageSize: number;
+      onSearchChange: (newSearch: string) => void;
+      onSortChange: (newSort: SortDescriptor) => void;
+      onPageSizeChange: (newPageSize: number) => void;
+      onPageChange: (newPage: number) => void;
+      mkPageLink: (page: number) => string;
+      rows: RowConfig<
+        "ranking" | "name" | "activeFeeds" | "inactiveFeeds" | "medianScore"
+      >[];
+    }
   );
 
 const PublishersCardContents = ({
@@ -180,16 +181,12 @@ const PublishersCardContents = ({
 }: PublishersCardContentsProps) => (
   <Card
     className={className}
-    icon={<Broadcast />}
     title={
-      <>
-        <span>Publishers</span>
-        {!props.isLoading && (
-          <Badge style="filled" variant="neutral" size="md">
-            {props.numResults}
-          </Badge>
-        )}
-      </>
+      <CardTitle badge={!props.isLoading && (
+        <Badge style="filled" variant="neutral" size="md">
+          {props.numResults}
+        </Badge>
+      )} icon={<Broadcast />}>Publishers</CardTitle>
     }
     toolbar={
       <SearchInput
@@ -199,9 +196,9 @@ const PublishersCardContents = ({
         {...(props.isLoading
           ? { isPending: true, isDisabled: true }
           : {
-              value: props.search,
-              onChange: props.onSearchChange,
-            })}
+            value: props.search,
+            onChange: props.onSearchChange,
+          })}
       />
     }
     {...(!props.isLoading && {
@@ -264,21 +261,21 @@ const PublishersCardContents = ({
       ]}
       {...(props.isLoading
         ? {
-            isLoading: true,
-          }
+          isLoading: true,
+        }
         : {
-            rows: props.rows,
-            sortDescriptor: props.sortDescriptor,
-            onSortChange: props.onSortChange,
-            emptyState: (
-              <NoResults
-                query={props.search}
-                onClearSearch={() => {
-                  props.onSearchChange("");
-                }}
-              />
-            ),
-          })}
+          rows: props.rows,
+          sortDescriptor: props.sortDescriptor,
+          onSortChange: props.onSortChange,
+          emptyState: (
+            <NoResults
+              query={props.search}
+              onClearSearch={() => {
+                props.onSearchChange("");
+              }}
+            />
+          ),
+        })}
     />
   </Card>
 );

@@ -17,10 +17,13 @@ import {
   getClaimableRewards,
   getDistributedRewards,
 } from "../../services/staking";
+import { CardTitle } from "../CardTitle";
 import { FormattedTokens } from "../FormattedTokens";
+import { PageTitle } from "../PageTitle/page-title";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { SemicircleMeter, Label } from "../SemicircleMeter";
+import { Stats } from "../Stats";
 import { TokenIcon } from "../TokenIcon";
 
 const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
@@ -34,63 +37,65 @@ export const Publishers = async () => {
 
   return (
     <div className={styles.publishers}>
-      <h1 className={styles.header}>Publishers</h1>
+      <PageTitle>Publishers</PageTitle>
       <div className={styles.body}>
         <section className={styles.stats}>
-          <StatCard
-            variant="primary"
-            header="Active Publishers"
-            stat={publishers.length}
-          />
-          <StatCard
-            header="Avg. Median Score"
-            corner={
-              <AlertTrigger>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  beforeIcon={(props) => <Info weight="fill" {...props} />}
-                  rounded
-                  hideText
-                  className={styles.averageMedianScoreExplainButton ?? ""}
-                >
-                  Explain Average Median Score
-                </Button>
-                <Alert title="Average Median Score" icon={<Lightbulb />}>
-                  <p className={styles.averageMedianScoreDescription}>
-                    Each <b>Price Feed Component</b> that a <b>Publisher</b>{" "}
-                    provides has an associated <b>Score</b>, which is determined
-                    by that component{"'"}s <b>Uptime</b>,{" "}
-                    <b>Price Deviation</b>, and <b>Staleness</b>. The publisher
-                    {"'"}s <b>Median Score</b> measures the 50th percentile of
-                    the <b>Score</b> across all of that publisher{"'"}s{" "}
-                    <b>Price Feed Components</b>. The{" "}
-                    <b>Average Median Score</b> is the average of the{" "}
-                    <b>Median Scores</b> of all publishers who contribute to the
-                    Pyth Network.
-                  </p>
+          <Stats>
+            <StatCard
+              variant="primary"
+              header="Active Publishers"
+              stat={publishers.length}
+            />
+            <StatCard
+              header="Avg. Median Score"
+              corner={
+                <AlertTrigger>
                   <Button
+                    variant="ghost"
                     size="xs"
-                    variant="solid"
-                    href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
-                    target="_blank"
+                    beforeIcon={(props) => <Info weight="fill" {...props} />}
+                    rounded
+                    hideText
+                    className={styles.averageMedianScoreExplainButton ?? ""}
                   >
-                    Learn more
+                    Explain Average Median Score
                   </Button>
-                </Alert>
-              </AlertTrigger>
-            }
-            stat={(
-              publishers.reduce(
-                (sum, publisher) => sum + publisher.medianScore,
-                0,
-              ) / publishers.length
-            ).toFixed(2)}
-          />
+                  <Alert title="Average Median Score" icon={<Lightbulb />}>
+                    <p className={styles.averageMedianScoreDescription}>
+                      Each <b>Price Feed Component</b> that a <b>Publisher</b>{" "}
+                      provides has an associated <b>Score</b>, which is determined
+                      by that component{"'"}s <b>Uptime</b>,{" "}
+                      <b>Price Deviation</b>, and <b>Staleness</b>. The publisher
+                      {"'"}s <b>Median Score</b> measures the 50th percentile of
+                      the <b>Score</b> across all of that publisher{"'"}s{" "}
+                      <b>Price Feed Components</b>. The{" "}
+                      <b>Average Median Score</b> is the average of the{" "}
+                      <b>Median Scores</b> of all publishers who contribute to the
+                      Pyth Network.
+                    </p>
+                    <Button
+                      size="xs"
+                      variant="solid"
+                      href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
+                      target="_blank"
+                    >
+                      Learn more
+                    </Button>
+                  </Alert>
+                </AlertTrigger>
+              }
+              stat={(
+                publishers.reduce(
+                  (sum, publisher) => sum + publisher.medianScore,
+                  0,
+                ) / publishers.length
+              ).toFixed(2)}
+            />
+          </Stats>
           <Card
-            title="Oracle Integrity Staking (OIS)"
+            title={<CardTitle>OIS</CardTitle>}
             className={styles.oisCard}
-            toolbar={
+            action={
               <Button
                 href="https://staking.pyth.network"
                 target="_blank"

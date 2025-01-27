@@ -40,6 +40,7 @@ import { PublisherKey } from "../PublisherKey";
 import { PublisherTag } from "../PublisherTag";
 import { ScoreHistory } from "../ScoreHistory";
 import { SemicircleMeter } from "../SemicircleMeter";
+import { Stats } from "../Stats";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
 
@@ -110,264 +111,266 @@ export const PublishersLayout = async ({ children, params }: Props) => {
             />
           </div>
           <section className={styles.stats}>
-            <ChartCard
-              variant="primary"
-              header="Publisher Ranking"
-              lineClassName={styles.primarySparkChartLine}
-              corner={
-                <AlertTrigger>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    beforeIcon={(props) => <Info weight="fill" {...props} />}
-                    rounded
-                    hideText
-                    className={styles.publisherRankingExplainButton ?? ""}
-                  >
-                    Explain Publisher Ranking
-                  </Button>
-                  <Alert title="Publisher Ranking" icon={<Lightbulb />}>
-                    <p className={styles.publisherRankingExplainDescription}>
-                      Each <b>Publisher</b> receives a <b>Ranking</b> which is
-                      derived from the number of price feeds the{" "}
-                      <b>Publisher</b> is actively publishing.
-                    </p>
-                  </Alert>
-                </AlertTrigger>
-              }
-              data={rankingHistory.map(({ timestamp, rank }) => ({
-                x: timestamp,
-                y: rank,
-                displayX: (
-                  <span className={styles.activeDate}>
-                    <FormattedDate value={timestamp} />
-                  </span>
-                ),
-              }))}
-              stat={currentRanking.rank}
-              {...(previousRanking && {
-                miniStat: (
-                  <ChangeValue
-                    direction={getChangeDirection(
-                      currentRanking.rank,
-                      previousRanking.rank,
-                    )}
-                  >
-                    {Math.abs(currentRanking.rank - previousRanking.rank)}
-                  </ChangeValue>
-                ),
-              })}
-            />
-            <DrawerTrigger>
+            <Stats>
               <ChartCard
-                header="Median Score"
-                chartClassName={styles.medianScoreChart}
-                lineClassName={styles.secondarySparkChartLine}
-                corner={<Info weight="fill" />}
-                data={medianScoreHistory.map(({ time, score }) => ({
-                  x: time,
-                  y: score,
+                variant="primary"
+                header="Publisher Ranking"
+                lineClassName={styles.primarySparkChartLine}
+                corner={
+                  <AlertTrigger>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      beforeIcon={(props) => <Info weight="fill" {...props} />}
+                      rounded
+                      hideText
+                      className={styles.publisherRankingExplainButton ?? ""}
+                    >
+                      Explain Publisher Ranking
+                    </Button>
+                    <Alert title="Publisher Ranking" icon={<Lightbulb />}>
+                      <p className={styles.publisherRankingExplainDescription}>
+                        Each <b>Publisher</b> receives a <b>Ranking</b> which is
+                        derived from the number of price feeds the{" "}
+                        <b>Publisher</b> is actively publishing.
+                      </p>
+                    </Alert>
+                  </AlertTrigger>
+                }
+                data={rankingHistory.map(({ timestamp, rank }) => ({
+                  x: timestamp,
+                  y: rank,
                   displayX: (
                     <span className={styles.activeDate}>
-                      <FormattedDate value={time} />
+                      <FormattedDate value={timestamp} />
                     </span>
                   ),
-                  displayY: (
-                    <FormattedNumber
-                      maximumSignificantDigits={5}
-                      value={score}
-                    />
-                  ),
                 }))}
-                stat={
-                  <FormattedNumber
-                    maximumSignificantDigits={5}
-                    value={currentMedianScore.score}
-                  />
-                }
-                {...(previousMedianScore && {
+                stat={currentRanking.rank}
+                {...(previousRanking && {
                   miniStat: (
                     <ChangeValue
                       direction={getChangeDirection(
-                        previousMedianScore.score,
-                        currentMedianScore.score,
+                        currentRanking.rank,
+                        previousRanking.rank,
                       )}
                     >
-                      <FormattedNumber
-                        maximumSignificantDigits={2}
-                        value={
-                          (100 *
-                            Math.abs(
-                              currentMedianScore.score -
-                                previousMedianScore.score,
-                            )) /
-                          previousMedianScore.score
-                        }
-                      />
-                      %
+                      {Math.abs(currentRanking.rank - previousRanking.rank)}
                     </ChangeValue>
                   ),
                 })}
               />
-              <Drawer
-                title="Median Score"
-                className={styles.medianScoreDrawer ?? ""}
-                bodyClassName={styles.medianScoreDrawerBody}
-                footerClassName={styles.medianScoreDrawerFooter}
-                footer={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
-                    target="_blank"
-                    beforeIcon={BookOpenText}
-                  >
-                    Documentation
-                  </Button>
-                }
-              >
-                <ScoreHistory isMedian scoreHistory={medianScoreHistory} />
-                <InfoBox icon={<Ranking />} header="Publisher Score">
-                  Each price feed a publisher provides has an associated score,
-                  which is determined by the component{"'"}s uptime, price
-                  deviation, and staleness. This panel shows the median for each
-                  score across all price feeds published by this publisher, as
-                  well as the overall median score across all those feeds.
-                </InfoBox>
-              </Drawer>
-            </DrawerTrigger>
-            <ActiveFeedsCard
-              publisherKey={key}
-              activeFeeds={
-                priceFeeds.filter((feed) => feed.status === Status.Active)
-                  .length
-              }
-              totalFeeds={totalFeedsCount}
-            />
-            <DrawerTrigger>
-              <StatCard
-                header="OIS Pool Allocation"
-                stat={
-                  <span
-                    className={styles.oisAllocation}
-                    data-is-overallocated={
-                      Number(oisStats.poolUtilization) > oisStats.maxPoolSize
-                        ? ""
-                        : undefined
-                    }
-                  >
+              <DrawerTrigger>
+                <ChartCard
+                  header="Median Score"
+                  chartClassName={styles.medianScoreChart}
+                  lineClassName={styles.secondarySparkChartLine}
+                  corner={<Info weight="fill" />}
+                  data={medianScoreHistory.map(({ time, score }) => ({
+                    x: time,
+                    y: score,
+                    displayX: (
+                      <span className={styles.activeDate}>
+                        <FormattedDate value={time} />
+                      </span>
+                    ),
+                    displayY: (
+                      <FormattedNumber
+                        maximumSignificantDigits={5}
+                        value={score}
+                      />
+                    ),
+                  }))}
+                  stat={
                     <FormattedNumber
-                      maximumFractionDigits={2}
-                      value={
-                        (100 * Number(oisStats.poolUtilization)) /
-                        oisStats.maxPoolSize
-                      }
+                      maximumSignificantDigits={5}
+                      value={currentMedianScore.score}
                     />
-                    %
-                  </span>
-                }
-                corner={<Info weight="fill" />}
-              >
-                <Meter
-                  value={Number(oisStats.poolUtilization)}
-                  maxValue={oisStats.maxPoolSize}
-                  label="OIS Pool"
-                  startLabel={
-                    <span className={styles.tokens}>
-                      <TokenIcon />
-                      <span>
-                        <FormattedTokens tokens={oisStats.poolUtilization} />
-                      </span>
-                    </span>
                   }
-                  endLabel={
-                    <span className={styles.tokens}>
-                      <TokenIcon />
-                      <span>
-                        <FormattedTokens
-                          tokens={BigInt(oisStats.maxPoolSize)}
+                  {...(previousMedianScore && {
+                    miniStat: (
+                      <ChangeValue
+                        direction={getChangeDirection(
+                          previousMedianScore.score,
+                          currentMedianScore.score,
+                        )}
+                      >
+                        <FormattedNumber
+                          maximumSignificantDigits={2}
+                          value={
+                            (100 *
+                              Math.abs(
+                                currentMedianScore.score -
+                                previousMedianScore.score,
+                              )) /
+                            previousMedianScore.score
+                          }
                         />
-                      </span>
-                    </span>
-                  }
+                        %
+                      </ChangeValue>
+                    ),
+                  })}
                 />
-              </StatCard>
-              <Drawer
-                title="OIS Pool Allocation"
-                className={styles.oisDrawer ?? ""}
-                bodyClassName={styles.oisDrawerBody}
-                footerClassName={styles.oisDrawerFooter}
-                footer={
-                  <>
-                    <Button
-                      variant="solid"
-                      size="sm"
-                      href="https://staking.pyth.network"
-                      target="_blank"
-                      beforeIcon={Browsers}
-                    >
-                      Open Staking App
-                    </Button>
+                <Drawer
+                  title="Median Score"
+                  className={styles.medianScoreDrawer ?? ""}
+                  bodyClassName={styles.medianScoreDrawerBody}
+                  footerClassName={styles.medianScoreDrawerFooter}
+                  footer={
                     <Button
                       variant="outline"
                       size="sm"
-                      href="https://docs.pyth.network/home/oracle-integrity-staking"
+                      href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                       target="_blank"
                       beforeIcon={BookOpenText}
                     >
                       Documentation
                     </Button>
-                  </>
+                  }
+                >
+                  <ScoreHistory isMedian scoreHistory={medianScoreHistory} />
+                  <InfoBox icon={<Ranking />} header="Publisher Score">
+                    Each price feed a publisher provides has an associated score,
+                    which is determined by the component{"'"}s uptime, price
+                    deviation, and staleness. This panel shows the median for each
+                    score across all price feeds published by this publisher, as
+                    well as the overall median score across all those feeds.
+                  </InfoBox>
+                </Drawer>
+              </DrawerTrigger>
+              <ActiveFeedsCard
+                publisherKey={key}
+                activeFeeds={
+                  priceFeeds.filter((feed) => feed.status === Status.Active)
+                    .length
                 }
-              >
-                <SemicircleMeter
-                  width={420}
-                  height={420}
-                  value={Number(oisStats.poolUtilization)}
-                  maxValue={oisStats.maxPoolSize}
-                  className={styles.oisMeter ?? ""}
-                  aria-label="OIS Pool Utilization"
-                >
-                  <TokenIcon className={styles.oisMeterIcon} />
-                  <div className={styles.oisMeterLabel}>OIS Pool</div>
-                </SemicircleMeter>
+                totalFeeds={totalFeedsCount}
+              />
+              <DrawerTrigger>
                 <StatCard
-                  header="Total Staked"
-                  variant="secondary"
-                  nonInteractive
+                  header="OIS Pool Allocation"
                   stat={
+                    <span
+                      className={styles.oisAllocation}
+                      data-is-overallocated={
+                        Number(oisStats.poolUtilization) > oisStats.maxPoolSize
+                          ? ""
+                          : undefined
+                      }
+                    >
+                      <FormattedNumber
+                        maximumFractionDigits={2}
+                        value={
+                          (100 * Number(oisStats.poolUtilization)) /
+                          oisStats.maxPoolSize
+                        }
+                      />
+                      %
+                    </span>
+                  }
+                  corner={<Info weight="fill" />}
+                >
+                  <Meter
+                    value={Number(oisStats.poolUtilization)}
+                    maxValue={oisStats.maxPoolSize}
+                    label="OIS Pool"
+                    startLabel={
+                      <span className={styles.tokens}>
+                        <TokenIcon />
+                        <span>
+                          <FormattedTokens tokens={oisStats.poolUtilization} />
+                        </span>
+                      </span>
+                    }
+                    endLabel={
+                      <span className={styles.tokens}>
+                        <TokenIcon />
+                        <span>
+                          <FormattedTokens
+                            tokens={BigInt(oisStats.maxPoolSize)}
+                          />
+                        </span>
+                      </span>
+                    }
+                  />
+                </StatCard>
+                <Drawer
+                  title="OIS Pool Allocation"
+                  className={styles.oisDrawer ?? ""}
+                  bodyClassName={styles.oisDrawerBody}
+                  footerClassName={styles.oisDrawerFooter}
+                  footer={
                     <>
-                      <TokenIcon />
-                      <FormattedTokens tokens={oisStats.poolUtilization} />
+                      <Button
+                        variant="solid"
+                        size="sm"
+                        href="https://staking.pyth.network"
+                        target="_blank"
+                        beforeIcon={Browsers}
+                      >
+                        Open Staking App
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        href="https://docs.pyth.network/home/oracle-integrity-staking"
+                        target="_blank"
+                        beforeIcon={BookOpenText}
+                      >
+                        Documentation
+                      </Button>
                     </>
                   }
-                />
-                <StatCard
-                  header="Pool Capacity"
-                  variant="secondary"
-                  nonInteractive
-                  stat={
-                    <>
-                      <TokenIcon />
-                      <FormattedTokens tokens={BigInt(oisStats.maxPoolSize)} />
-                    </>
-                  }
-                />
-                <OisApyHistory apyHistory={oisStats.apyHistory ?? []} />
-                <InfoBox
-                  icon={<ShieldChevron />}
-                  header="Oracle Integrity Staking (OIS)"
                 >
-                  OIS allows anyone to help secure Pyth and protect DeFi.
-                  Through decentralized staking rewards and slashing, OIS
-                  incentivizes Pyth publishers to maintain high-quality data
-                  contributions. PYTH holders can stake to publishers to further
-                  reinforce oracle security. Rewards are programmatically
-                  distributed to high quality publishers and the stakers
-                  supporting them to strengthen oracle integrity.
-                </InfoBox>
-              </Drawer>
-            </DrawerTrigger>
+                  <SemicircleMeter
+                    width={420}
+                    height={420}
+                    value={Number(oisStats.poolUtilization)}
+                    maxValue={oisStats.maxPoolSize}
+                    className={styles.oisMeter ?? ""}
+                    aria-label="OIS Pool Utilization"
+                  >
+                    <TokenIcon className={styles.oisMeterIcon} />
+                    <div className={styles.oisMeterLabel}>OIS Pool</div>
+                  </SemicircleMeter>
+                  <StatCard
+                    header="Total Staked"
+                    variant="secondary"
+                    nonInteractive
+                    stat={
+                      <>
+                        <TokenIcon />
+                        <FormattedTokens tokens={oisStats.poolUtilization} />
+                      </>
+                    }
+                  />
+                  <StatCard
+                    header="Pool Capacity"
+                    variant="secondary"
+                    nonInteractive
+                    stat={
+                      <>
+                        <TokenIcon />
+                        <FormattedTokens tokens={BigInt(oisStats.maxPoolSize)} />
+                      </>
+                    }
+                  />
+                  <OisApyHistory apyHistory={oisStats.apyHistory ?? []} />
+                  <InfoBox
+                    icon={<ShieldChevron />}
+                    header="Oracle Integrity Staking (OIS)"
+                  >
+                    OIS allows anyone to help secure Pyth and protect DeFi.
+                    Through decentralized staking rewards and slashing, OIS
+                    incentivizes Pyth publishers to maintain high-quality data
+                    contributions. PYTH holders can stake to publishers to further
+                    reinforce oracle security. Rewards are programmatically
+                    distributed to high quality publishers and the stakers
+                    supporting them to strengthen oracle integrity.
+                  </InfoBox>
+                </Drawer>
+              </DrawerTrigger>
+            </Stats>
           </section>
         </section>
         <TabRoot>

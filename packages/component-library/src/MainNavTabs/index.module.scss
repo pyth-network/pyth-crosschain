@@ -1,20 +1,19 @@
 @use "../theme";
 
 .mainNavTabs {
-  isolation: isolate;
   gap: theme.spacing(2);
+  z-index: 1;
 
   @include theme.row;
 
   .tab {
     width: 100%;
-
+    position: relative;
+    outline: none;
+    z-index: 1;
     @include theme.breakpoint("md") {
       width: auto;
     }
-
-    position: relative;
-    outline: none;
 
     .bubble {
       position: absolute;
@@ -46,21 +45,11 @@
         pointer-events: auto;
 
         &[data-hovered] .bubble {
-          background-color: theme.color(
-            "button",
-            "solid",
-            "background",
-            "hover"
-          );
+          background-color: theme.color("button", "solid", "background", "hover");
         }
 
         &[data-pressed] .bubble {
-          background-color: theme.color(
-            "button",
-            "solid",
-            "background",
-            "active"
-          );
+          background-color: theme.color("button", "solid", "background", "active");
         }
       }
     }

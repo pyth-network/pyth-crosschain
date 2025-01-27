@@ -5,8 +5,6 @@
   top: 0;
   width: 100%;
   background-color: theme.color("background", "primary");
-  border-bottom: 1px solid theme.color("background", "secondary");
-
   // TODO: This causes that navigation is not fixed
   // backdrop-filter: blur(32px);
 
@@ -87,7 +85,6 @@
   .desktopSupport,
   .desktopDocs {
     display: none;
-
     @include theme.breakpoint("md") {
       display: block;
     }

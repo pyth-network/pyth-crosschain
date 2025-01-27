@@ -33,32 +33,22 @@
   }
 
   .header {
-    display: grid;
-    gap: theme.spacing(2);
-    grid-template-areas:
-      "title action"
-      "toolbar toolbar";
-    grid-template-columns: 1fr min-content;
+    position: relative;
+    display: flex;
     padding: theme.spacing(3);
     gap: theme.spacing(3);
+    flex-direction: column;
+    justify-content: flex-start;
 
     @include theme.breakpoint("lg") {
-      grid-template-columns: 1fr min-content min-content;
-      grid-template-areas: "title toolbar action";
-      align-items: flex-start;
-      flex-direction: row;
       padding: 0 theme.spacing(2);
       height: theme.spacing(12);
-    }
-
-    .title {
-      grid-area: title;
-      align-self: center;
+      justify-content: space-between;
+      flex-flow: row nowrap;
+      align-items: center;
     }
 
     .toolbar {
-      align-self: center;
-      grid-area: toolbar;
       &:empty {
         display: none;
       }
@@ -73,9 +63,9 @@
       // place-items: center;
       // height: 100%;
       // padding: 0 theme.spacing(2);
-      // position: absolute;
-      // top: 0;
-      // right: 0;
+      position: absolute;
+      top: theme.spacing(2.5);
+      right: theme.spacing(2.5);
       @include theme.breakpoint("md") {
         position: static;
         padding: 0;

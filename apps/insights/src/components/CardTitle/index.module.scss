@@ -5,8 +5,7 @@
     flex-flow: row nowrap;
     gap: theme.spacing(3);
     align-items: center;
-    justify-content: start;
-    flex-grow: 1;
+    justify-content: flex-start;
     .title {
         color: theme.color("heading");
         display: flex;
@@ -14,6 +13,11 @@
         gap: theme.spacing(3);
         align-items: center;
         @include theme.text("lg", "semibold");
+        // trunctate text
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        height: 2rem;
     }
     .icon {
         font-size: theme.spacing(6);

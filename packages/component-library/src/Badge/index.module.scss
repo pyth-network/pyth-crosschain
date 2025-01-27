@@ -1,7 +1,9 @@
 @use "../theme";
 
 .badge {
-  display: inline flow-root;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: theme.border-radius("3xl");
   transition-property: color, background-color, border-color;
   transition-duration: 100ms;
@@ -9,6 +11,7 @@
   white-space: nowrap;
   border-width: 1px;
   border-style: solid;
+  flex-shrink: 1;
 
   &[data-size="xs"] {
     line-height: theme.spacing(4);

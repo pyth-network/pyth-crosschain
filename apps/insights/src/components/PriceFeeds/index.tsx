@@ -22,6 +22,7 @@ import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-fe
 import { CardTitle } from "../CardTitle";
 import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
 import { LivePrice } from "../LivePrices";
+import { PageTitle } from "../PageTitle/page-title";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { Stats } from "../Stats";
@@ -48,7 +49,7 @@ export const PriceFeeds = async () => {
 
   return (
     <div className={styles.priceFeeds}>
-      <h1 className={styles.header}>Price Feeds</h1>
+      <PageTitle>Price Feeds</PageTitle>
       <div className={styles.body}>
         <Stats>
           <StatCard

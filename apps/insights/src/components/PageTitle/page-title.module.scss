@@ -1,0 +1,7 @@
+@use "@pythnetwork/component-library/theme";
+
+.pageTitle {
+    @include theme.h3;
+    color: theme.color("heading");
+    font-weight: theme.font-weight("semibold");
+}
