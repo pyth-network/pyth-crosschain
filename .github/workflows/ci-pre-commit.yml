@@ -30,6 +30,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
+      - name: Install g++ 12
+        run: |
+          sudo apt-get install g++-12
+          echo "CXX=/usr/bin/g++-12" >> "${GITHUB_ENV}"
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
