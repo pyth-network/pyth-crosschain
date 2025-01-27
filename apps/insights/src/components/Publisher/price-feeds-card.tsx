@@ -14,9 +14,9 @@ import { useFilter, useCollator } from "react-aria";
 
 import { useSelectPriceFeed } from "./price-feed-drawer-provider";
 import styles from "./price-feeds-card.module.scss";
+import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import { Status as StatusType } from "../../status";
-import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FormattedNumber } from "../FormattedNumber";
 import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";

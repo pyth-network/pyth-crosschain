@@ -255,6 +255,36 @@ export const getPublisherMedianScoreHistory = cache(
   },
 );
 
+export const getHistoricalPrices = cache(
+  async (symbol: string, until: string) =>
+    safeQuery(
+      z.array(
+        z.strictObject({
+          timestamp: z.number(),
+          price: z.number(),
+          confidence: z.number(),
+        }),
+      ),
+      {
+        query: `
+          SELECT toUnixTimestamp(time) AS timestamp, avg(price) AS price, avg(confidence) AS confidence
+          FROM prices
+          WHERE cluster = 'pythnet'
+          AND symbol = {symbol: String}
+          AND version = 2
+          AND time > fromUnixTimestamp(toInt64({until: String})) - INTERVAL 5 MINUTE
+          AND time < fromUnixTimestamp(toInt64({until: String}))
+          AND publisher = ''
+          GROUP BY time
+          ORDER BY time ASC
+        `,
+        query_params: { symbol, until },
+      },
+    ),
+  ["price-history"],
+  {},
+);
+
 const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
   schema: ZodSchema<Output, Def, Input>,
   query: Omit<Parameters<typeof client.query>[0], "format">,

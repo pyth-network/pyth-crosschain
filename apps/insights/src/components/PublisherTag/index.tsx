@@ -4,6 +4,7 @@ import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
 import styles from "./index.module.scss";
+import { omitKeys } from "../../omit-keys";
 import { PublisherKey } from "../PublisherKey";
 
 type Props = ComponentProps<"div"> & { compact?: boolean | undefined } & (
@@ -68,14 +69,4 @@ const Contents = (props: Props) => {
   } else {
     return <PublisherKey publisherKey={props.publisherKey} size="sm" />;
   }
-};
-
-const omitKeys = <T extends Record<string, unknown>>(
-  obj: T,
-  keys: string[],
-) => {
-  const omitSet = new Set(keys);
-  return Object.fromEntries(
-    Object.entries(obj).filter(([key]) => !omitSet.has(key)),
-  );
 };

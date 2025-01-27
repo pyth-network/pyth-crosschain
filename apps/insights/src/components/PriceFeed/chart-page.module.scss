@@ -3,6 +3,8 @@
 .chartCard {
   .chart {
     background: theme.color("background", "primary");
-    border-radius: theme.border-radius("lg");
+    height: theme.spacing(140);
+    border-radius: theme.border-radius("xl");
+    overflow: hidden;
   }
 }

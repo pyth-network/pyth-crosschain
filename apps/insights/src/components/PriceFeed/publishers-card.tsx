@@ -16,9 +16,9 @@ import { type ReactNode, Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import styles from "./publishers-card.module.scss";
+import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import { Status as StatusType } from "../../status";
-import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
 import { FormattedNumber } from "../FormattedNumber";
 import { NoResults } from "../NoResults";
 import { PriceComponentDrawer } from "../PriceComponentDrawer";

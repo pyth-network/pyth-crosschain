@@ -7,9 +7,9 @@ import { type ReactNode, useState, useRef, useCallback } from "react";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
+import { StateType, useData } from "../../hooks/use-data";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import type { Status } from "../../status";
-import { StateType, useData } from "../../use-data";
 import { LiveConfidence, LivePrice, LiveComponentValue } from "../LivePrices";
 import { Score } from "../Score";
 import { ScoreHistory as ScoreHistoryComponent } from "../ScoreHistory";
