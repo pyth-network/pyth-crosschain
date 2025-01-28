@@ -163,7 +163,6 @@ pub enum JsonBinaryEncoding {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Channel {
-    RealTime,
     FixedRate(FixedRate),
 }
 
@@ -173,7 +172,6 @@ impl Serialize for Channel {
         S: serde::Serializer,
     {
         match self {
-            Channel::RealTime => serializer.serialize_str("real_time"),
             Channel::FixedRate(fixed_rate) => {
                 serializer.serialize_str(&format!("fixed_rate@{}ms", fixed_rate.value_ms()))
             }
@@ -184,7 +182,6 @@ impl Serialize for Channel {
 mod channel_ids {
     use super::ChannelId;
 
-    pub const REAL_TIME: ChannelId = ChannelId(1);
     pub const FIXED_RATE_50: ChannelId = ChannelId(2);
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
     pub const FIXED_RATE_1: ChannelId = ChannelId(4);
@@ -193,7 +190,6 @@ mod channel_ids {
 impl Channel {
     pub fn id(&self) -> ChannelId {
         match self {
-            Channel::RealTime => channel_ids::REAL_TIME,
             Channel::FixedRate(fixed_rate) => match fixed_rate.value_ms() {
                 1 => channel_ids::FIXED_RATE_1,
                 50 => channel_ids::FIXED_RATE_50,
@@ -212,9 +208,7 @@ fn id_supports_all_fixed_rates() {
 }
 
 fn parse_channel(value: &str) -> Option<Channel> {
-    if value == "real_time" {
-        Some(Channel::RealTime)
-    } else if let Some(rest) = value.strip_prefix("fixed_rate@") {
+    if let Some(rest) = value.strip_prefix("fixed_rate@") {
         let ms_value = rest.strip_suffix("ms")?;
         Some(Channel::FixedRate(FixedRate::from_ms(
             ms_value.parse().ok()?,
