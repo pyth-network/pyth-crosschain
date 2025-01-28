@@ -187,6 +187,7 @@ mod channel_ids {
     pub const REAL_TIME: ChannelId = ChannelId(1);
     pub const FIXED_RATE_50: ChannelId = ChannelId(2);
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
+    pub const FIXED_RATE_1: ChannelId = ChannelId(4);
 }
 
 impl Channel {
@@ -194,6 +195,7 @@ impl Channel {
         match self {
             Channel::RealTime => channel_ids::REAL_TIME,
             Channel::FixedRate(fixed_rate) => match fixed_rate.value_ms() {
+                1 => channel_ids::FIXED_RATE_1,
                 50 => channel_ids::FIXED_RATE_50,
                 200 => channel_ids::FIXED_RATE_200,
                 _ => panic!("unknown channel: {self:?}"),
@@ -242,7 +244,7 @@ impl FixedRate {
     // - Values are sorted.
     // - 1 second contains a whole number of each interval.
     // - all intervals are divisable by the smallest interval.
-    pub const ALL: [Self; 2] = [Self { ms: 50 }, Self { ms: 200 }];
+    pub const ALL: [Self; 3] = [Self { ms: 1 }, Self { ms: 50 }, Self { ms: 200 }];
     pub const MIN: Self = Self::ALL[0];
 
     pub fn from_ms(value: u32) -> Option<Self> {
@@ -270,7 +272,7 @@ fn fixed_rate_values() {
             "1 s must contain whole number of intervals"
         );
         assert!(
-            value.ms % FixedRate::MIN.ms == 0,
+            value.value_us() % FixedRate::MIN.value_us() == 0,
             "the interval's borders must be a subset of the minimal interval's borders"
         );
     }
