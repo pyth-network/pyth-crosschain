@@ -13,7 +13,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Need to grab the history of the PR
           fetch-depth: 0
@@ -25,9 +25,18 @@ jobs:
         run: |
           rustup install 1.66.1
           rustup install 1.73.0
+      - name: Install clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install make clang pkg-config libssl-dev
+      - name: Set up Clang
+        uses: egor-tensin/setup-clang@v1
+        with:
+          version: 15
+          platform: x64
+      - run: c++ -v
       - name: Install protoc
         uses: arduino/setup-protoc@v3
-      - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
       - name: Install g++ 12
@@ -45,8 +54,8 @@ jobs:
           key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}
-        with:
-          # Run only on files changed in the PR
-          extra_args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
+        # with:
+        #   # Run only on files changed in the PR
+        #   extra_args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name != 'pull_request' }}
