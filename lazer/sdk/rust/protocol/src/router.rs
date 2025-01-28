@@ -182,9 +182,9 @@ impl Serialize for Channel {
 mod channel_ids {
     use super::ChannelId;
 
+    pub const FIXED_RATE_1: ChannelId = ChannelId(1);
     pub const FIXED_RATE_50: ChannelId = ChannelId(2);
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
-    pub const FIXED_RATE_1: ChannelId = ChannelId(4);
 }
 
 impl Channel {
@@ -208,7 +208,9 @@ fn id_supports_all_fixed_rates() {
 }
 
 fn parse_channel(value: &str) -> Option<Channel> {
-    if let Some(rest) = value.strip_prefix("fixed_rate@") {
+    if value == "real_time" {
+        Some(Channel::FixedRate(FixedRate::MIN))
+    } else if let Some(rest) = value.strip_prefix("fixed_rate@") {
         let ms_value = rest.strip_suffix("ms")?;
         Some(Channel::FixedRate(FixedRate::from_ms(
             ms_value.parse().ok()?,
