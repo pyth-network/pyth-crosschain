@@ -22,6 +22,9 @@ jobs:
   nostd:
     runs-on: ubuntu-latest
     name: ${{ matrix.target }}
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
     strategy:
       matrix:
         target: [wasm32-unknown-unknown]

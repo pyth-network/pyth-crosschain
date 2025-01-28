@@ -5,7 +5,7 @@ on:
     tags:
       - pythnet-stylus-sdk-v*
 jobs:
-  publish-pythnet-sdk:
+  publish-pythnet-stylus-sdk:
     name: Publish Pythnet Stylus SDK
     runs-on: ubuntu-latest
     steps:

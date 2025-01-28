@@ -28,6 +28,9 @@ jobs:
   required:
     name: tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
     steps:
       - uses: actions/checkout@v4
 

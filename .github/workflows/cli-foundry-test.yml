@@ -15,6 +15,9 @@ jobs:
   check:
     name: Foundry project
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

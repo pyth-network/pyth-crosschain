@@ -29,6 +29,9 @@ jobs:
   fmt:
     runs-on: ubuntu-latest
     name: nightly / fmt
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,6 +51,9 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     name: ${{ matrix.toolchain }} / clippy
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
     permissions:
       contents: read
       checks: write
@@ -81,6 +87,9 @@ jobs:
     # platforms.
     runs-on: ubuntu-latest
     name: nightly / doc
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
     steps:
       - uses: actions/checkout@v4
         with:
@@ -101,6 +110,9 @@ jobs:
     # are all additive which is required for feature unification.
     runs-on: ubuntu-latest
     name: ubuntu / stable / features
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
     steps:
       - uses: actions/checkout@v4
         with:
@@ -124,6 +136,9 @@ jobs:
   typos:
     runs-on: ubuntu-latest
     name: ubuntu / stable / typos
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
     steps:
       - name: Checkout Actions Repository
         uses: actions/checkout@v4
