@@ -26,7 +26,6 @@ jobs:
         working-directory: target_chains/ethereum/sdk/stylus
     steps:
       - uses: actions/checkout@v4
-
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -34,7 +33,6 @@ jobs:
           toolchain: nightly-2024-01-01
           target: x86_64-unknown-linux-gnu
           rustflags: ""
-
       - name: Install cargo-stylus
         run: cargo install cargo-stylus@0.5.8
 
@@ -42,18 +40,14 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-
       - name: Install solc
         run: |
           curl -LO https://github.com/ethereum/solidity/releases/download/v0.8.24/solc-static-linux
           sudo mv solc-static-linux /usr/bin/solc
           sudo chmod a+x /usr/bin/solc
-      
       - uses: pnpm/action-setup@v4
         name: Install pnpm
-
       - name: Setup nitro node
         run: ./scripts/nitro-testnode.sh -d -i
-
       - name: run benches
         run: ./scripts/bench.sh
