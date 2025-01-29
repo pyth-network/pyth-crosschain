@@ -267,7 +267,7 @@ export const EntropyDeployments = {
     delay: "1 block",
     gasLimit: "500K",
     network: "mainnet",
-    rpc: "https://rpc.ankr.com/klaytn",
+    rpc: "https://rpc.ankr.com/kaia",
     nativeCurrency: "KLAY",
   },
   "kaia-testnet": {
@@ -276,7 +276,7 @@ export const EntropyDeployments = {
     delay: "",
     gasLimit: "500K",
     network: "testnet",
-    rpc: "https://rpc.ankr.com/klaytn_testnet",
+    rpc: "https://rpc.ankr.com/kaia_testnet",
     nativeCurrency: "KLAY",
   },
   "tabi-testnet": {

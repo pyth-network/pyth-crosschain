@@ -198,8 +198,8 @@ export const NETWORK_INFO = {
     contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   },
   [1001]: {
-    name: "klaytn_testnet",
-    rpcUrl: "https://rpc.ankr.com/klaytn_testnet",
+    name: "kaia_testnet",
+    rpcUrl: "https://rpc.ankr.com/kaia_testnet",
     isMainnet: false,
     contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   },
@@ -420,8 +420,8 @@ export const NETWORK_INFO = {
     contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   },
   [8217]: {
-    name: "klaytn",
-    rpcUrl: "https://rpc.ankr.com/klaytn",
+    name: "kaia",
+    rpcUrl: "https://rpc.ankr.com/kaia",
     isMainnet: true,
     contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   },
