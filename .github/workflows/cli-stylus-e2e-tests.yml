@@ -43,7 +43,7 @@ jobs:
           rustflags: ""
 
       - name: Install cargo-stylus
-        run: cargo install cargo-stylus@0.5.3
+        run: cargo install cargo-stylus@0.5.8
 
       - name: Install solc
         run: |
@@ -53,5 +53,6 @@ jobs:
 
       - name: Setup nitro node
         run: ./scripts/nitro-testnode.sh -d -i
+
       - name: run integration tests
         run: ./scripts/e2e-tests.sh

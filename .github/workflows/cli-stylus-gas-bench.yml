@@ -36,7 +36,7 @@ jobs:
           rustflags: ""
 
       - name: Install cargo-stylus
-        run: cargo install cargo-stylus@0.5.3
+        run: cargo install cargo-stylus@0.5.8
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1

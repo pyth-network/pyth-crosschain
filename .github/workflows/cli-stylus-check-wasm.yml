@@ -35,7 +35,7 @@ jobs:
           rustflags: ""
 
       - name: Install cargo-stylus
-        run: cargo install cargo-stylus@0.5.3
+        run: cargo install cargo-stylus@0.5.8
 
       - name: Run wasm check
         run: ./scripts/check-wasm.sh

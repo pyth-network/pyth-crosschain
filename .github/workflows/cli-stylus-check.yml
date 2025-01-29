@@ -101,6 +101,8 @@ jobs:
           toolchain: nightly-2024-01-01
           target: x86_64-unknown-linux-gnu
           rustflags: ""
+      - name: Install cargo-stylus
+        run: cargo install cargo-stylus@0.5.8
 
       - name: Cargo doc
         run: cargo doc --no-deps --all-features
