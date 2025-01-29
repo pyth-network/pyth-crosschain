@@ -173,6 +173,9 @@ impl Serialize for Channel {
     {
         match self {
             Channel::FixedRate(fixed_rate) => {
+                if *fixed_rate == FixedRate::MIN {
+                    return serializer.serialize_str("real_time");
+                }
                 serializer.serialize_str(&format!("fixed_rate@{}ms", fixed_rate.value_ms()))
             }
         }
