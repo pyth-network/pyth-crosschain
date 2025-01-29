@@ -8,13 +8,11 @@
   text-align: center;
   padding: theme.spacing(24) 0;
 
-  .searchIcon {
+  .icon {
     display: grid;
     place-content: center;
     padding: theme.spacing(4);
-    background: theme.color("background", "card-highlight");
     font-size: theme.spacing(6);
-    color: theme.color("highlight");
     border-radius: theme.border-radius("full");
   }
 
@@ -33,6 +31,15 @@
       @include theme.text("sm", "normal");
 
       color: theme.color("paragraph");
+    }
+  }
+
+  @each $variant in ("success", "error", "warning", "info", "data") {
+    &[data-variant="#{$variant}"] {
+      .icon {
+        background: theme.color("states", $variant, "background");
+        color: theme.color("states", $variant, "normal");
+      }
     }
   }
 }

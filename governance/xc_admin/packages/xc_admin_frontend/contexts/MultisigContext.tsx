@@ -1,18 +1,17 @@
 import React, { createContext, useContext, useMemo } from 'react'
 import { MultisigHookData, useMultisig } from '../hooks/useMultisig'
 
-const MultisigContext = createContext<MultisigHookData>({
-  upgradeMultisigAccount: undefined,
-  priceFeedMultisigAccount: undefined,
-  upgradeMultisigProposals: [],
-  priceFeedMultisigProposals: [],
-  isLoading: true,
-  squads: undefined,
-  refreshData: undefined,
-  connection: undefined,
-})
+const MultisigContext = createContext<MultisigHookData | undefined>(undefined)
 
-export const useMultisigContext = () => useContext(MultisigContext)
+export const useMultisigContext = () => {
+  const context = useContext(MultisigContext)
+  if (!context) {
+    throw new Error(
+      'useMultisigContext must be used within a MultisigContext.Provider'
+    )
+  }
+  return context
+}
 
 interface MultisigContextProviderProps {
   children?: React.ReactNode
@@ -23,13 +22,14 @@ export const MultisigContextProvider: React.FC<
 > = ({ children }) => {
   const {
     isLoading,
-    squads,
+    walletSquads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
     refreshData,
     connection,
+    readOnlySquads,
   } = useMultisig()
 
   const value = useMemo(
@@ -39,12 +39,13 @@ export const MultisigContextProvider: React.FC<
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
       isLoading,
-      squads,
+      walletSquads,
       refreshData,
       connection,
+      readOnlySquads,
     }),
     [
-      squads,
+      walletSquads,
       isLoading,
       upgradeMultisigAccount,
       priceFeedMultisigAccount,
@@ -52,6 +53,7 @@ export const MultisigContextProvider: React.FC<
       priceFeedMultisigProposals,
       refreshData,
       connection,
+      readOnlySquads,
     ]
   )
 

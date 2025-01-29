@@ -136,9 +136,7 @@ export const WormholeInstructionView = ({
                                     ? parsedInstruction.args[key]
                                     : parsedInstruction.args[key] instanceof
                                       Uint8Array
-                                    ? parsedInstruction.args[key].toString(
-                                        'hex'
-                                      )
+                                    ? parsedInstruction.args[key].toString()
                                     : typeof parsedInstruction.args[key] ===
                                       'bigint'
                                     ? parsedInstruction.args[key].toString()

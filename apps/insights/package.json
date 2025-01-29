@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "scripts": {
     "build": "next build",
@@ -35,18 +35,19 @@
     "clsx": "catalog:",
     "cryptocurrency-icons": "catalog:",
     "dnum": "catalog:",
+    "lightweight-charts": "catalog:",
     "motion": "catalog:",
     "next": "catalog:",
     "next-themes": "catalog:",
     "nuqs": "catalog:",
     "react": "catalog:",
     "react-aria": "catalog:",
-    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "recharts": "catalog:",
     "superjson": "catalog:",
     "swr": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zod-validation-error": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

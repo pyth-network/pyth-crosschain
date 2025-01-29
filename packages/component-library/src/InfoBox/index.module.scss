@@ -1,0 +1,38 @@
+@use "../theme";
+
+.infoBox {
+  grid-column: span 2 / span 2;
+  background: theme.color("states", "info", "background");
+  padding: theme.spacing(4);
+  border-radius: theme.border-radius("xl");
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(1);
+
+  .icon {
+    flex: none;
+    font-size: theme.spacing(6);
+    color: theme.color("states", "info", "icon");
+  }
+
+  .body {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(2);
+    padding: 0 theme.spacing(2);
+
+    .header {
+      @include theme.text("base", "medium");
+
+      color: theme.color("heading");
+      line-height: theme.spacing(6);
+    }
+
+    .contents {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("paragraph");
+      line-height: theme.spacing(6);
+    }
+  }
+}

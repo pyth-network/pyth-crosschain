@@ -5,6 +5,7 @@ use {
     crate::router::{ChannelId, Price},
     anyhow::bail,
     byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BE, LE},
+    serde::{Deserialize, Serialize},
     std::{
         io::{Cursor, Read, Write},
         num::NonZeroI64,
@@ -32,13 +33,16 @@ pub enum PayloadPropertyValue {
     Price(Option<Price>),
     BestBidPrice(Option<Price>),
     BestAskPrice(Option<Price>),
+    PublisherCount(Option<u16>),
+    Exponent(i16),
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AggregatedPriceFeedData {
     pub price: Option<Price>,
     pub best_bid_price: Option<Price>,
     pub best_ask_price: Option<Price>,
+    pub publisher_count: Option<u16>,
 }
 
 pub const PAYLOAD_FORMAT_MAGIC: u32 = 2479346549;
@@ -47,7 +51,7 @@ impl PayloadData {
     pub fn new(
         timestamp_us: TimestampUs,
         channel_id: ChannelId,
-        feeds: &[(PriceFeedId, AggregatedPriceFeedData)],
+        feeds: &[(PriceFeedId, i16, AggregatedPriceFeedData)],
         requested_properties: &[PriceFeedProperty],
     ) -> Self {
         Self {
@@ -55,7 +59,7 @@ impl PayloadData {
             channel_id,
             feeds: feeds
                 .iter()
-                .map(|(feed_id, feed)| PayloadFeedData {
+                .map(|(feed_id, exponent, feed)| PayloadFeedData {
                     feed_id: *feed_id,
                     properties: requested_properties
                         .iter()
@@ -66,6 +70,12 @@ impl PayloadData {
                             }
                             PriceFeedProperty::BestAskPrice => {
                                 PayloadPropertyValue::BestAskPrice(feed.best_ask_price)
+                            }
+                            PriceFeedProperty::PublisherCount => {
+                                PayloadPropertyValue::PublisherCount(feed.publisher_count)
+                            }
+                            PriceFeedProperty::Exponent => {
+                                PayloadPropertyValue::Exponent(*exponent)
                             }
                         })
                         .collect(),
@@ -95,6 +105,14 @@ impl PayloadData {
                     PayloadPropertyValue::BestAskPrice(price) => {
                         writer.write_u8(PriceFeedProperty::BestAskPrice as u8)?;
                         write_option_price::<BO>(&mut writer, *price)?;
+                    }
+                    PayloadPropertyValue::PublisherCount(count) => {
+                        writer.write_u8(PriceFeedProperty::PublisherCount as u8)?;
+                        write_option_u16::<BO>(&mut writer, *count)?;
+                    }
+                    PayloadPropertyValue::Exponent(exponent) => {
+                        writer.write_u8(PriceFeedProperty::Exponent as u8)?;
+                        writer.write_i16::<BO>(*exponent)?;
                     }
                 }
             }
@@ -134,6 +152,10 @@ impl PayloadData {
                     PayloadPropertyValue::BestBidPrice(read_option_price::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::BestAskPrice as u8 {
                     PayloadPropertyValue::BestAskPrice(read_option_price::<BO>(&mut reader)?)
+                } else if property == PriceFeedProperty::PublisherCount as u8 {
+                    PayloadPropertyValue::PublisherCount(read_option_u16::<BO>(&mut reader)?)
+                } else if property == PriceFeedProperty::Exponent as u8 {
+                    PayloadPropertyValue::Exponent(reader.read_i16::<BO>()?)
                 } else {
                     bail!("unknown property");
                 };
@@ -159,6 +181,18 @@ fn write_option_price<BO: ByteOrder>(
 fn read_option_price<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<Price>> {
     let value = NonZeroI64::new(reader.read_i64::<BO>()?);
     Ok(value.map(Price))
+}
+
+fn write_option_u16<BO: ByteOrder>(
+    mut writer: impl Write,
+    value: Option<u16>,
+) -> std::io::Result<()> {
+    writer.write_u16::<BO>(value.unwrap_or(0))
+}
+
+fn read_option_u16<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<u16>> {
+    let value = reader.read_u16::<BO>()?;
+    Ok(Some(value))
 }
 
 pub const BINARY_UPDATE_FORMAT_MAGIC: u32 = 1937213467;

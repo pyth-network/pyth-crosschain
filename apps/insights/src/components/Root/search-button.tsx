@@ -6,11 +6,22 @@ import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { useMemo } from "react";
 import { useIsSSR } from "react-aria";
 
-export const SearchButton = () => (
-  <Button beforeIcon={MagnifyingGlass} variant="outline" size="sm" rounded>
-    <SearchText />
-  </Button>
-);
+import { useToggleSearchDialog } from "./search-dialog";
+
+export const SearchButton = () => {
+  const toggleSearchDialog = useToggleSearchDialog();
+  return (
+    <Button
+      onPress={toggleSearchDialog}
+      beforeIcon={MagnifyingGlass}
+      variant="outline"
+      size="sm"
+      rounded
+    >
+      <SearchText />
+    </Button>
+  );
+};
 
 const SearchText = () => {
   const isSSR = useIsSSR();
@@ -18,9 +29,6 @@ const SearchText = () => {
 };
 
 const SearchTextImpl = () => {
-  // This component can only ever render in the client so we can safely ignore
-  // this eslint rule.
-  // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const isMac = useMemo(() => navigator.userAgent.includes("Mac"), []);
   return isMac ? "⌘ K" : "Ctrl K";
 };

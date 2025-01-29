@@ -10,8 +10,8 @@ import {
 import { OverlayTriggerStateContext } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { UnstyledButton } from "../UnstyledButton/index.js";
-import { UnstyledLink } from "../UnstyledLink/index.js";
+import { Button } from "../unstyled/Button/index.js";
+import { Link } from "../unstyled/Link/index.js";
 
 export const VARIANTS = ["primary", "secondary", "tertiary"] as const;
 
@@ -21,6 +21,7 @@ type OwnProps = {
   title?: ReactNode | undefined;
   toolbar?: ReactNode | ReactNode[] | undefined;
   footer?: ReactNode | undefined;
+  nonInteractive?: boolean | undefined;
 };
 
 export type Props<T extends ElementType> = Omit<
@@ -31,16 +32,20 @@ export type Props<T extends ElementType> = Omit<
 
 export const Card = (
   props:
-    | Props<"div">
-    | Props<typeof UnstyledLink>
-    | Props<typeof UnstyledButton>,
+    | (Props<"div"> & { nonInteractive?: true })
+    | Props<typeof Link>
+    | Props<typeof Button>,
 ) => {
   const overlayState = use(OverlayTriggerStateContext);
 
-  if (overlayState !== null || "onPress" in props) {
-    return <UnstyledButton {...cardProps(props)} />;
+  if (props.nonInteractive) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { nonInteractive, ...otherProps } = props;
+    return <div {...cardProps(otherProps)} />;
   } else if ("href" in props) {
-    return <UnstyledLink {...cardProps(props)} />;
+    return <Link {...cardProps(props)} />;
+  } else if (overlayState !== null || "onPress" in props) {
+    return <Button {...cardProps(props)} />;
   } else {
     return <div {...cardProps(props)} />;
   }

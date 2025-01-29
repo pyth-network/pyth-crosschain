@@ -1,4 +1,5 @@
 import WebSocket from "isomorphic-ws";
+import { dummyLogger, type Logger } from "ts-log";
 
 import {
   BINARY_UPDATE_FORMAT_MAGIC,
@@ -9,6 +10,7 @@ import {
   type Response,
   SOLANA_FORMAT_MAGIC_BE,
 } from "./protocol.js";
+import { WebSocketPool } from "./socket/websocket-pool.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -28,52 +30,65 @@ const UINT32_NUM_BYTES = 4;
 const UINT64_NUM_BYTES = 8;
 
 export class PythLazerClient {
-  ws: WebSocket;
+  private constructor(private readonly wsp: WebSocketPool) {}
 
-  constructor(url: string, token: string) {
-    const finalUrl = new URL(url);
-    finalUrl.searchParams.append("ACCESS_TOKEN", token);
-    this.ws = new WebSocket(finalUrl);
+  /**
+   * Creates a new PythLazerClient instance.
+   * @param urls - List of WebSocket URLs of the Pyth Lazer service
+   * @param token - The access token for authentication
+   * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream. The connections will round-robin across the provided URLs.
+   * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
+   */
+  static async create(
+    urls: string[],
+    token: string,
+    numConnections = 3,
+    logger: Logger = dummyLogger
+  ): Promise<PythLazerClient> {
+    const wsp = await WebSocketPool.create(urls, token, numConnections, logger);
+    return new PythLazerClient(wsp);
   }
 
+  /**
+   * Adds a message listener that receives either JSON or binary responses from the WebSocket connections.
+   * The listener will be called for each message received, with deduplication across redundant connections.
+   * @param handler - Callback function that receives the parsed message. The message can be either a JSON response
+   * or a binary response containing EVM, Solana, or parsed payload data.
+   */
   addMessageListener(handler: (event: JsonOrBinaryResponse) => void) {
-    this.ws.addEventListener("message", (event: WebSocket.MessageEvent) => {
-      if (typeof event.data == "string") {
+    this.wsp.addMessageListener((data: WebSocket.Data) => {
+      if (typeof data == "string") {
         handler({
           type: "json",
-          value: JSON.parse(event.data) as Response,
+          value: JSON.parse(data) as Response,
         });
-      } else if (Buffer.isBuffer(event.data)) {
+      } else if (Buffer.isBuffer(data)) {
         let pos = 0;
-        const magic = event.data
-          .subarray(pos, pos + UINT32_NUM_BYTES)
-          .readUint32BE();
+        const magic = data.subarray(pos, pos + UINT32_NUM_BYTES).readUint32BE();
         pos += UINT32_NUM_BYTES;
         if (magic != BINARY_UPDATE_FORMAT_MAGIC) {
           throw new Error("binary update format magic mismatch");
         }
         // TODO: some uint64 values may not be representable as Number.
         const subscriptionId = Number(
-          event.data.subarray(pos, pos + UINT64_NUM_BYTES).readBigInt64BE()
+          data.subarray(pos, pos + UINT64_NUM_BYTES).readBigInt64BE()
         );
         pos += UINT64_NUM_BYTES;
 
         const value: BinaryResponse = { subscriptionId };
-        while (pos < event.data.length) {
-          const len = event.data
-            .subarray(pos, pos + UINT16_NUM_BYTES)
-            .readUint16BE();
+        while (pos < data.length) {
+          const len = data.subarray(pos, pos + UINT16_NUM_BYTES).readUint16BE();
           pos += UINT16_NUM_BYTES;
-          const magic = event.data
+          const magic = data
             .subarray(pos, pos + UINT32_NUM_BYTES)
             .readUint32BE();
           if (magic == EVM_FORMAT_MAGIC) {
-            value.evm = event.data.subarray(pos, pos + len);
+            value.evm = data.subarray(pos, pos + len);
           } else if (magic == SOLANA_FORMAT_MAGIC_BE) {
-            value.solana = event.data.subarray(pos, pos + len);
+            value.solana = data.subarray(pos, pos + len);
           } else if (magic == PARSED_FORMAT_MAGIC) {
             value.parsed = JSON.parse(
-              event.data.subarray(pos + UINT32_NUM_BYTES, pos + len).toString()
+              data.subarray(pos + UINT32_NUM_BYTES, pos + len).toString()
             ) as ParsedPayload;
           } else {
             throw new Error("unknown magic: " + magic.toString());
@@ -87,7 +102,31 @@ export class PythLazerClient {
     });
   }
 
-  send(request: Request) {
-    this.ws.send(JSON.stringify(request));
+  async subscribe(request: Request): Promise<void> {
+    if (request.type !== "subscribe") {
+      throw new Error("Request must be a subscribe request");
+    }
+    await this.wsp.addSubscription(request);
+  }
+
+  async unsubscribe(subscriptionId: number): Promise<void> {
+    await this.wsp.removeSubscription(subscriptionId);
+  }
+
+  async send(request: Request): Promise<void> {
+    await this.wsp.sendRequest(request);
+  }
+
+  /**
+   * Registers a handler function that will be called whenever all WebSocket connections are down or attempting to reconnect.
+   * The connections may still try to reconnect in the background. To shut down the pool, call `shutdown()`.
+   * @param handler - Function to be called when all connections are down
+   */
+  addAllConnectionsDownListener(handler: () => void): void {
+    this.wsp.addAllConnectionsDownListener(handler);
+  }
+
+  shutdown(): void {
+    this.wsp.shutdown();
   }
 }

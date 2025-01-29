@@ -1,9 +1,13 @@
 import finazonColor from "./icons/color/finazon.svg";
 import sentioColor from "./icons/color/sentio.svg";
 import wooColor from "./icons/color/woo.svg";
+import ltpDark from "./icons/dark/ltp.svg";
+import ltpLight from "./icons/light/ltp.svg";
 import blocksize from "./icons/monochrome/blocksize.svg";
 import elfomo from "./icons/monochrome/elfomo.svg";
 import finazonMonochrome from "./icons/monochrome/finazon.svg";
+import gluex from "./icons/monochrome/gluex.svg";
+import ltpMonochrome from "./icons/monochrome/ltp.svg";
 import sentioMonochrome from "./icons/monochrome/sentio.svg";
 import wooMonochrome from "./icons/monochrome/woo.svg";
 
@@ -12,7 +16,6 @@ export const knownPublishers = {
     name: "BLOCKSIZE",
     icon: {
       monochrome: blocksize,
-      color: blocksize,
     },
   },
   "89ijemG1TUL2kdV2RtCrhXzY5QhyKHsWqCmP5iobvLUF": {
@@ -33,7 +36,6 @@ export const knownPublishers = {
     name: "Elfomo",
     icon: {
       monochrome: elfomo,
-      color: elfomo,
     },
   },
   DANa2ZYtyUcSW8W8C25ZfscKdBra53npt2frmh7fUucf: {
@@ -43,7 +45,21 @@ export const knownPublishers = {
       color: wooColor,
     },
   },
-};
+  GUcFC3NBuVSf9rdQqW3t2sBcP6sEp269rtPxxGyvAHoM: {
+    name: "LTP",
+    icon: {
+      monochrome: ltpMonochrome,
+      dark: ltpDark,
+      light: ltpLight,
+    },
+  },
+  "7JZm3iUVZTVTnK1Z6XqCGxUY51w1j3XkHAkA2rNpPGCo": {
+    name: "GlueX Protocol",
+    icon: {
+      monochrome: gluex,
+    },
+  },
+} as const;
 
 export const lookup = (value: string) =>
   value in knownPublishers

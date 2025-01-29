@@ -16,6 +16,7 @@ import {
   ModalOverlay,
   Dialog,
   DialogTrigger,
+  Select,
 } from "react-aria-components";
 
 import { useSetOverlayVisible } from "../overlay-visible-context.js";
@@ -35,9 +36,32 @@ export const ModalDialogTrigger = (
     [setAnimation],
   );
 
+  useEffect(() => {
+    if (props.defaultOpen) {
+      setAnimation("visible");
+    }
+  }, [props.defaultOpen]);
+
   return (
     <ModalAnimationContext value={[animation, setAnimation]}>
       <DialogTrigger onOpenChange={handleOpenChange} {...props} />
+    </ModalAnimationContext>
+  );
+};
+
+export const ModalSelect = (props: ComponentProps<typeof DialogTrigger>) => {
+  const [animation, setAnimation] = useState<AnimationState>("unmounted");
+
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      setAnimation(isOpen ? "visible" : "hidden");
+    },
+    [setAnimation],
+  );
+
+  return (
+    <ModalAnimationContext value={[animation, setAnimation]}>
+      <Select onOpenChange={handleOpenChange} {...props} />
     </ModalAnimationContext>
   );
 };
@@ -54,6 +78,7 @@ type OwnProps = Pick<ComponentProps<typeof Modal>, "children"> &
     overlayVariants?:
       | ComponentProps<typeof MotionModalOverlay>["variants"]
       | undefined;
+    onCloseFinish?: (() => void) | undefined;
   };
 
 type Props = Omit<ComponentProps<typeof MotionDialog>, keyof OwnProps> &
@@ -62,6 +87,7 @@ type Props = Omit<ComponentProps<typeof MotionDialog>, keyof OwnProps> &
 export const ModalDialog = ({
   isOpen,
   onOpenChange,
+  onCloseFinish,
   overlayClassName,
   overlayVariants,
   children,
@@ -82,6 +108,7 @@ export const ModalDialog = ({
   const endAnimation = (animation: AnimationState) => {
     if (animation === "hidden") {
       hideOverlay();
+      onCloseFinish?.();
     }
     setAnimation((a) => {
       return animation === "hidden" && a === "hidden" ? "unmounted" : a;
@@ -106,14 +133,14 @@ export const ModalDialog = ({
       isExiting={animation === "hidden"}
       onAnimationStart={startAnimation}
       onAnimationComplete={endAnimation}
-      initial="hidden"
+      initial="unmounted"
       animate={animation}
       {...(onOpenChange && { onOpenChange })}
       {...(overlayVariants && { variants: overlayVariants })}
       {...(overlayClassName && { className: overlayClassName })}
       {...(isOpen !== undefined && { isOpen })}
     >
-      <Modal>
+      <Modal style={{ height: 0 }}>
         {(...args) => (
           <MotionDialog {...props}>
             {typeof children === "function" ? children(...args) : children}

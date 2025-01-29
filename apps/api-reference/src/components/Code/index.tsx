@@ -54,7 +54,6 @@ type CopyButtonProps = Omit<HTMLAttributes<HTMLElement>, "children"> & {
 const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
   const [isCopied, setIsCopied] = useState(false);
   const copy = useCallback(() => {
-    // eslint-disable-next-line n/no-unsupported-features/node-builtins
     navigator.clipboard
       .writeText(children)
       .then(() => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@pythnetwork/component-library/Badge";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { Table } from "@pythnetwork/component-library/Table";
@@ -7,18 +8,18 @@ import { type ReactNode, useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
 
 import styles from "./coming-soon-list.module.scss";
+import { NoResults } from "../NoResults";
+import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
   comingSoonFeeds: ComingSoonPriceFeed[];
 };
 
 type ComingSoonPriceFeed = {
-  symbol: string;
   id: string;
   displaySymbol: string;
-  assetClassAsString: string;
-  priceFeedName: ReactNode;
-  assetClass: ReactNode;
+  icon: ReactNode;
+  assetClass: string;
 };
 
 export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
@@ -29,9 +30,7 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
   const assetClasses = useMemo(
     () =>
       [
-        ...new Set(
-          comingSoonFeeds.map((priceFeed) => priceFeed.assetClassAsString),
-        ),
+        ...new Set(comingSoonFeeds.map((priceFeed) => priceFeed.assetClass)),
       ].sort((a, b) => collator.compare(a, b)),
     [comingSoonFeeds, collator],
   );
@@ -45,7 +44,7 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
   const feedsFilteredByAssetClass = useMemo(
     () =>
       assetClass
-        ? sortedFeeds.filter((feed) => feed.assetClassAsString === assetClass)
+        ? sortedFeeds.filter((feed) => feed.assetClass === assetClass)
         : sortedFeeds,
     [assetClass, sortedFeeds],
   );
@@ -54,15 +53,24 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
       search === ""
         ? feedsFilteredByAssetClass
         : feedsFilteredByAssetClass.filter((feed) =>
-            filter.contains(feed.symbol, search),
+            filter.contains(feed.displaySymbol, search),
           ),
     [search, feedsFilteredByAssetClass, filter],
   );
   const rows = useMemo(
     () =>
-      filteredFeeds.map(({ id, priceFeedName, assetClass }) => ({
+      filteredFeeds.map(({ id, displaySymbol, assetClass, icon }) => ({
         id,
-        data: { priceFeedName, assetClass },
+        data: {
+          priceFeedName: (
+            <PriceFeedTag compact symbol={displaySymbol} icon={icon} />
+          ),
+          assetClass: (
+            <Badge variant="neutral" style="outline" size="xs">
+              {assetClass.toUpperCase()}
+            </Badge>
+          ),
+        },
       })),
     [filteredFeeds],
   );
@@ -71,9 +79,10 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
       <div className={styles.searchBar}>
         <SearchInput
           size="sm"
-          defaultValue={search}
+          value={search}
           onChange={setSearch}
-          width={40}
+          width={50}
+          placeholder="Feed symbol"
         />
         <Select
           optionGroups={[
@@ -94,17 +103,30 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
       </div>
       <Table
         fill
-        label="Asset Classes"
+        stickyHeader
+        label="Coming Soon"
         className={styles.priceFeeds ?? ""}
+        emptyState={
+          <NoResults
+            query={search}
+            onClearSearch={() => {
+              setSearch("");
+            }}
+          />
+        }
         columns={[
           {
             id: "priceFeedName",
             name: "PRICE FEED",
             isRowHeader: true,
-            fill: true,
             alignment: "left",
           },
-          { id: "assetClass", name: "ASSET CLASS", alignment: "right" },
+          {
+            id: "assetClass",
+            name: "ASSET CLASS",
+            alignment: "right",
+            width: 40,
+          },
         ]}
         rows={rows}
       />

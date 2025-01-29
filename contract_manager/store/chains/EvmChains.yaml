@@ -842,11 +842,21 @@
   type: EvmChain
 - id: monad_devnet
   mainnet: false
-  rpcUrl: https://devnet1.monad.xyz/rpc/X67JTUmM4cBeq25KAqV0uJd8Wf00a1ul
-  networkId: 41454
+  rpcUrl: https://rpc-devnet.monadinfra.com/rpc/dT2y6zgpggQ20WuJZ3corhJwfh9NwJPM
+  networkId: 20143
   type: EvmChain
 - id: coredao_testnet_v2
   mainnet: false
   rpcUrl: https://rpc.test2.btcs.network
   networkId: 1114
+  type: EvmChain
+- id: monad_testnet
+  mainnet: false
+  rpcUrl: https://rpc.monad-testnet.category.xyz/rpc/nSyzM1wlIgaALWzbh3oIg5rW65AC6yjqrslOE8wb
+  networkId: 10143
+  type: EvmChain
+- id: rabechain_mainnet
+  mainnet: true
+  networkId: 80094
+  rpcUrl: https://fluent-thrilling-scion.furtim-network.quiknode.pro/$ENV_RABECHAIN_API_KEY
   type: EvmChain

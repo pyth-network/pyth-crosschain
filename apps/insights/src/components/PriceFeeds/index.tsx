@@ -11,17 +11,21 @@ import {
 } from "@pythnetwork/component-library/Card";
 import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
-import { type ElementType } from "react";
+import type { ElementType } from "react";
 
 import { AssetClassesDrawer } from "./asset-classes-drawer";
 import { ComingSoonList } from "./coming-soon-list";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { getData } from "../../services/pyth";
+import { Cluster, getData } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
-import { YesterdaysPricesProvider, ChangePercent } from "../ChangePercent";
-import { FeedKey } from "../FeedKey";
-import { LivePrice, LiveConfidence, LiveValue } from "../LivePrices";
+import { activeChains } from "../../static-data/stats";
+import { LivePrice } from "../LivePrices";
+import {
+  YesterdaysPricesProvider,
+  PriceFeedChangePercent,
+} from "../PriceFeedChangePercent";
+import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
@@ -62,7 +66,7 @@ export const PriceFeeds = async () => {
           />
           <StatCard
             header="Active Chains"
-            stat={priceFeedsStaticConfig.activeChains}
+            stat={activeChains.at(-1)?.chains}
             href="https://docs.pyth.network/price-feeds/contract-addresses"
             target="_blank"
             corner={<ArrowSquareOut weight="fill" />}
@@ -75,9 +79,16 @@ export const PriceFeeds = async () => {
             />
           </AssetClassesDrawer>
         </section>
-        <YesterdaysPricesProvider feeds={featuredRecentlyAdded}>
+        <YesterdaysPricesProvider
+          feeds={Object.fromEntries(
+            featuredRecentlyAdded.map(({ symbol, product }) => [
+              symbol,
+              product.price_account,
+            ]),
+          )}
+        >
           <FeaturedFeedsCard
-            title="Recently added"
+            title="Recently Added"
             icon={<StackPlus />}
             feeds={featuredRecentlyAdded}
             showPrices
@@ -85,7 +96,7 @@ export const PriceFeeds = async () => {
           />
         </YesterdaysPricesProvider>
         <FeaturedFeedsCard
-          title="Coming soon"
+          title="Coming Soon"
           icon={<ClockCountdown />}
           feeds={featuredComingSoon}
           toolbar={
@@ -94,6 +105,7 @@ export const PriceFeeds = async () => {
                 Show all
               </Button>
               <Drawer
+                fill
                 className={styles.comingSoonCard ?? ""}
                 title={
                   <>
@@ -104,15 +116,11 @@ export const PriceFeeds = async () => {
               >
                 <ComingSoonList
                   comingSoonFeeds={priceFeeds.comingSoon.map((feed) => ({
-                    symbol: feed.symbol,
                     id: feed.product.price_account,
                     displaySymbol: feed.product.display_symbol,
-                    assetClassAsString: feed.product.asset_type,
-                    priceFeedName: <PriceFeedTag compact feed={feed} />,
-                    assetClass: (
-                      <Badge variant="neutral" style="outline" size="xs">
-                        {feed.product.asset_type.toUpperCase()}
-                      </Badge>
+                    assetClass: feed.product.asset_type,
+                    icon: (
+                      <PriceFeedIcon symbol={feed.product.display_symbol} />
                     ),
                   }))}
                 />
@@ -122,31 +130,14 @@ export const PriceFeeds = async () => {
         />
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
-          nameLoadingSkeleton={<PriceFeedTag compact isLoading />}
           priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
             symbol: feed.symbol,
+            icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
             id: feed.product.price_account,
             displaySymbol: feed.product.display_symbol,
-            assetClassAsString: feed.product.asset_type,
-            exponent: <LiveValue field="exponent" feed={feed} />,
-            numPublishers: <LiveValue field="numQuoters" feed={feed} />,
-            price: <LivePrice feed={feed} />,
-            confidenceInterval: <LiveConfidence feed={feed} />,
-            weeklySchedule: feed.product.weekly_schedule,
-            priceFeedName: <PriceFeedTag compact feed={feed} />,
-            assetClass: (
-              <Badge variant="neutral" style="outline" size="xs">
-                {feed.product.asset_type.toUpperCase()}
-              </Badge>
-            ),
-            priceFeedId: (
-              <FeedKey
-                className={styles.feedKey ?? ""}
-                size="xs"
-                variant="ghost"
-                feed={feed}
-              />
-            ),
+            assetClass: feed.product.asset_type,
+            exponent: feed.price.exponent,
+            numQuoters: feed.price.numQuoters,
           }))}
         />
       </div>
@@ -187,11 +178,18 @@ const FeaturedFeedsCard = <T extends ElementType>({
           })}
         >
           <div className={styles.feedCardContents}>
-            <PriceFeedTag feed={feed} />
+            <PriceFeedTag
+              symbol={feed.product.display_symbol}
+              description={feed.product.description}
+              icon={<PriceFeedIcon symbol={feed.product.display_symbol} />}
+            />
             {showPrices && (
               <div className={styles.prices}>
-                <LivePrice feed={feed} />
-                <ChangePercent className={styles.changePercent} feed={feed} />
+                <LivePrice feedKey={feed.product.price_account} />
+                <PriceFeedChangePercent
+                  className={styles.changePercent}
+                  feedKey={feed.product.price_account}
+                />
               </div>
             )}
           </div>
@@ -202,7 +200,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
 );
 
 const getPriceFeeds = async () => {
-  const priceFeeds = await getData();
+  const priceFeeds = await getData(Cluster.Pythnet);
   const activeFeeds = priceFeeds.filter((feed) => isActive(feed));
   const comingSoon = priceFeeds.filter((feed) => !isActive(feed));
   return { activeFeeds, comingSoon };

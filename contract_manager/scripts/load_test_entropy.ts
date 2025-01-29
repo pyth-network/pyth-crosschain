@@ -76,7 +76,7 @@ async function main() {
   const contract = findEntropyContract(chain);
   const provider = await contract.getDefaultProvider();
   const fee = await contract.getFee(provider);
-  const web3 = new Web3(contract.chain.getRpcUrl());
+  const web3 = contract.chain.getWeb3();
   const testerContract = new web3.eth.Contract(ABI, argv.testerAddress);
   const { address } = web3.eth.accounts.wallet.add(privateKey);
   const transactionObject = testerContract.methods.batchRequests(

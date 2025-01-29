@@ -12,11 +12,11 @@ import clsx from "clsx";
 import { motion } from "motion/react";
 import { useTheme } from "next-themes";
 import {
+  type ReactNode,
   type ElementType,
   useCallback,
   useRef,
   useMemo,
-  type ComponentType,
 } from "react";
 import { useIsSSR } from "react-aria";
 
@@ -62,26 +62,26 @@ const IconPath = ({ className, ...props }: Omit<IconProps, "offset">) => {
     <div className={className} />
   ) : (
     <div className={clsx(styles.iconPath, className)}>
-      <IconMovement icon={Desktop} offset={offsets.desktop} {...props} />
-      <IconMovement icon={Sun} offset={offsets.sun} {...props} />
-      <IconMovement icon={Moon} offset={offsets.moon} {...props} />
+      <IconMovement icon={<Desktop {...props} />} offset={offsets.desktop} />
+      <IconMovement icon={<Sun {...props} />} offset={offsets.sun} />
+      <IconMovement icon={<Moon {...props} />} offset={offsets.moon} />
     </div>
   );
 };
 
-type IconMovementProps = Omit<IconProps, "offset"> & {
-  icon: ComponentType<IconProps>;
+type IconMovementProps = {
+  icon: ReactNode;
   offset: string;
 };
 
-const IconMovement = ({ icon: Icon, offset, ...props }: IconMovementProps) => (
+const IconMovement = ({ icon, offset }: IconMovementProps) => (
   <motion.div
     className={styles.iconMovement}
     animate={{ offsetDistance: offset }}
     transition={{ type: "spring", bounce: 0.35, duration: 0.6 }}
     initial={false}
   >
-    <Icon className={styles.icon} {...props} />
+    {icon}
   </motion.div>
 );
 

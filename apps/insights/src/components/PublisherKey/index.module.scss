@@ -1,0 +1,9 @@
+@use "@pythnetwork/component-library/theme";
+
+.publisherKey {
+  @each $size, $values in theme.$button-sizes {
+    &[data-size="#{$size}"] {
+      margin: 0 -#{theme.button-padding($size, true)};
+    }
+  }
+}

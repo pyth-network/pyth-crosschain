@@ -1,0 +1,157 @@
+@use "@pythnetwork/component-library/theme";
+
+.scoreHistory {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(6);
+
+  .scoreHistoryChart {
+    grid-column: span 2 / span 2;
+    border-radius: theme.border-radius("2xl");
+    border: 1px solid theme.color("border");
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(4);
+
+    .top {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin: theme.spacing(4);
+
+      .left {
+        display: flex;
+        flex-flow: column nowrap;
+        gap: theme.spacing(1);
+
+        .header {
+          color: theme.color("heading");
+
+          @include theme.text("sm", "medium");
+        }
+
+        .subheader {
+          color: theme.color("muted");
+
+          @include theme.text("xs", "normal");
+        }
+      }
+    }
+
+    .chart {
+      border-bottom-left-radius: theme.border-radius("2xl");
+      border-bottom-right-radius: theme.border-radius("2xl");
+      overflow: hidden;
+
+      .score,
+      .uptimeScore,
+      .deviationScore,
+      .stalledScore {
+        transition: opacity 100ms linear;
+        opacity: 0.2;
+      }
+
+      .score {
+        color: theme.color("states", "data", "normal");
+      }
+
+      .uptimeScore {
+        color: theme.color("states", "info", "normal");
+      }
+
+      .deviationScore {
+        color: theme.color("states", "lime", "normal");
+      }
+
+      .stalledScore {
+        color: theme.color("states", "warning", "normal");
+      }
+    }
+
+    &:not([data-focused-score], [data-hovered-score]) {
+      .score,
+      .uptimeScore,
+      .deviationScore,
+      .stalledScore {
+        opacity: 1;
+      }
+    }
+
+    &[data-hovered-score="uptime"],
+    &[data-focused-score="uptime"] {
+      .uptimeScore {
+        opacity: 1;
+      }
+    }
+
+    &[data-hovered-score="deviation"],
+    &[data-focused-score="deviation"] {
+      .deviationScore {
+        opacity: 1;
+      }
+    }
+
+    &[data-hovered-score="stalled"],
+    &[data-focused-score="stalled"] {
+      .stalledScore {
+        opacity: 1;
+      }
+    }
+
+    &[data-hovered-score="final"],
+    &[data-focused-score="final"] {
+      .score {
+        opacity: 1;
+      }
+    }
+  }
+
+  .rankingBreakdown {
+    .legendCell,
+    .scoreCell {
+      vertical-align: top;
+    }
+
+    .uptimeLegend,
+    .deviationLegend,
+    .stalledLegend,
+    .finalScoreLegend {
+      width: theme.spacing(4);
+      height: theme.spacing(4);
+      border-radius: theme.border-radius("full");
+    }
+
+    .uptimeLegend {
+      background: theme.color("states", "info", "normal");
+    }
+
+    .deviationLegend {
+      background: theme.color("states", "lime", "normal");
+    }
+
+    .stalledLegend {
+      background: theme.color("states", "warning", "normal");
+    }
+
+    .finalScoreLegend {
+      background: theme.color("states", "data", "normal");
+    }
+
+    .metric {
+      display: flex;
+      flex-flow: column nowrap;
+      gap: theme.spacing(2);
+      overflow: hidden;
+
+      .metricDescription {
+        color: theme.color("muted");
+
+        @include theme.text("sm", "normal");
+
+        white-space: normal;
+        line-height: 1.2;
+      }
+    }
+  }
+}

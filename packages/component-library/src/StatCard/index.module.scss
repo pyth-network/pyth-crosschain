@@ -1,15 +1,24 @@
 @use "../theme";
 
 .statCard {
-  height: theme.spacing(22);
-
-  .cardContents {
+  .cardContents,
+  .top {
     display: flex;
     flex-flow: column nowrap;
     justify-content: space-between;
-    height: 100%;
+  }
+
+  .top {
+    height: theme.spacing(15);
+  }
+
+  .cardContents {
     padding: theme.spacing(3);
     padding-bottom: theme.spacing(2);
+    justify-content: space-between;
+    gap: theme.spacing(4);
+    height: 100%;
+    width: 100%;
 
     .corner {
       position: absolute;
@@ -18,28 +27,65 @@
       display: flex;
     }
 
-    .header {
+    .header,
+    .dualHeader {
       color: theme.color("muted");
-      text-align: left;
 
       @include theme.text("sm", "medium");
     }
 
-    .bottom {
+    .header {
+      text-align: left;
+    }
+
+    .dualHeader {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stats {
       display: flex;
       flex-flow: row nowrap;
       justify-content: space-between;
       align-items: center;
 
       .stat {
-        @include theme.h3;
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        gap: theme.spacing(3);
+      }
 
+      .mainStat {
+        @include theme.text("2xl", "medium");
+
+        letter-spacing: theme.letter-spacing("tighter");
+        line-height: theme.spacing(8);
+        height: theme.spacing(8);
+        display: flex;
+        align-items: center;
         color: theme.color("heading");
+        flex-grow: 1;
+        text-align: left;
       }
 
       .miniStat {
         @include theme.text("sm", "medium");
       }
+
+      &[data-small] {
+        .mainStat {
+          font-size: theme.font-size("lg");
+        }
+      }
+    }
+  }
+
+  &[data-variant="primary"] {
+    .cardContents .header {
+      color: theme.color("states", "data", "normal");
     }
   }
 }

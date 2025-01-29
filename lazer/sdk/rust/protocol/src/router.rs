@@ -8,7 +8,7 @@ use {
     serde::{de::Error, Deserialize, Serialize},
     std::{
         num::NonZeroI64,
-        ops::{Add, Deref, DerefMut, Div, Mul, Sub},
+        ops::{Add, Deref, DerefMut, Div, Sub},
         time::{SystemTime, UNIX_EPOCH},
     },
 };
@@ -46,9 +46,6 @@ impl TimestampUs {
 pub struct Price(pub NonZeroI64);
 
 impl Price {
-    // TODO: define exponent in price feed metadata instead
-    pub const TMP_EXPONENT: u32 = 8;
-
     pub fn from_integer(value: i64, exponent: u32) -> anyhow::Result<Price> {
         let coef = 10i64.checked_pow(exponent).context("overflow")?;
         let value = value.checked_mul(coef).context("overflow")?;
@@ -77,13 +74,20 @@ impl Price {
     pub fn into_inner(self) -> NonZeroI64 {
         self.0
     }
-}
 
-impl TryInto<f64> for Price {
-    type Error = anyhow::Error;
+    pub fn to_f64(self, exponent: u32) -> anyhow::Result<f64> {
+        Ok(self.0.get() as f64 / 10i64.checked_pow(exponent).context("overflow")? as f64)
+    }
 
-    fn try_into(self) -> Result<f64, Self::Error> {
-        Ok(self.0.get() as f64 / 10i64.checked_pow(Self::TMP_EXPONENT).context("overflow")? as f64)
+    pub fn mul(self, rhs: Price, rhs_exponent: u32) -> anyhow::Result<Price> {
+        let left_value = i128::from(self.0.get());
+        let right_value = i128::from(rhs.0.get());
+
+        let value = left_value * right_value / 10i128.pow(rhs_exponent);
+        let value = value.try_into()?;
+        NonZeroI64::new(value)
+            .context("zero price is unsupported")
+            .map(Self)
     }
 }
 
@@ -121,27 +125,14 @@ impl Div<i64> for Price {
     }
 }
 
-impl Mul<Price> for Price {
-    type Output = Option<Price>;
-    fn mul(self, rhs: Price) -> Self::Output {
-        let left_value = i128::from(self.0.get());
-        let right_value = i128::from(rhs.0.get());
-
-        let value = left_value * right_value / 10i128.pow(Price::TMP_EXPONENT);
-        let value = match value.try_into() {
-            Ok(value) => value,
-            Err(_) => return None,
-        };
-        NonZeroI64::new(value).map(Self)
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PriceFeedProperty {
     Price,
     BestBidPrice,
     BestAskPrice,
+    PublisherCount,
+    Exponent,
     // More fields may be added later.
 }
 
@@ -196,6 +187,7 @@ mod channel_ids {
     pub const REAL_TIME: ChannelId = ChannelId(1);
     pub const FIXED_RATE_50: ChannelId = ChannelId(2);
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
+    pub const FIXED_RATE_1: ChannelId = ChannelId(4);
 }
 
 impl Channel {
@@ -203,6 +195,7 @@ impl Channel {
         match self {
             Channel::RealTime => channel_ids::REAL_TIME,
             Channel::FixedRate(fixed_rate) => match fixed_rate.value_ms() {
+                1 => channel_ids::FIXED_RATE_1,
                 50 => channel_ids::FIXED_RATE_50,
                 200 => channel_ids::FIXED_RATE_200,
                 _ => panic!("unknown channel: {self:?}"),
@@ -251,7 +244,7 @@ impl FixedRate {
     // - Values are sorted.
     // - 1 second contains a whole number of each interval.
     // - all intervals are divisable by the smallest interval.
-    pub const ALL: [Self; 2] = [Self { ms: 50 }, Self { ms: 200 }];
+    pub const ALL: [Self; 3] = [Self { ms: 1 }, Self { ms: 50 }, Self { ms: 200 }];
     pub const MIN: Self = Self::ALL[0];
 
     pub fn from_ms(value: u32) -> Option<Self> {
@@ -279,7 +272,7 @@ fn fixed_rate_values() {
             "1 s must contain whole number of intervals"
         );
         assert!(
-            value.ms % FixedRate::MIN.ms == 0,
+            value.value_us() % FixedRate::MIN.value_us() == 0,
             "the interval's borders must be a subset of the minimal interval's borders"
         );
     }
@@ -403,12 +396,19 @@ pub struct ParsedFeedPayload {
     #[serde(with = "crate::serde_str::option_price")]
     #[serde(default)]
     pub best_ask_price: Option<Price>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub publisher_count: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub exponent: Option<i16>,
     // More fields may be added later.
 }
 
 impl ParsedFeedPayload {
     pub fn new(
         price_feed_id: PriceFeedId,
+        exponent: Option<i16>,
         data: &AggregatedPriceFeedData,
         properties: &[PriceFeedProperty],
     ) -> Self {
@@ -417,6 +417,8 @@ impl ParsedFeedPayload {
             price: None,
             best_bid_price: None,
             best_ask_price: None,
+            publisher_count: None,
+            exponent: None,
         };
         for &property in properties {
             match property {
@@ -429,17 +431,29 @@ impl ParsedFeedPayload {
                 PriceFeedProperty::BestAskPrice => {
                     output.best_ask_price = data.best_ask_price;
                 }
+                PriceFeedProperty::PublisherCount => {
+                    output.publisher_count = data.publisher_count;
+                }
+                PriceFeedProperty::Exponent => {
+                    output.exponent = exponent;
+                }
             }
         }
         output
     }
 
-    pub fn new_full(price_feed_id: PriceFeedId, data: &AggregatedPriceFeedData) -> Self {
+    pub fn new_full(
+        price_feed_id: PriceFeedId,
+        exponent: Option<i16>,
+        data: &AggregatedPriceFeedData,
+    ) -> Self {
         Self {
             price_feed_id,
             price: data.price,
             best_bid_price: data.best_bid_price,
             best_ask_price: data.best_ask_price,
+            publisher_count: data.publisher_count,
+            exponent,
         }
     }
 }

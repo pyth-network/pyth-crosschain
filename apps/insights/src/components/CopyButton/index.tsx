@@ -7,8 +7,9 @@ import {
   type Props as ButtonProps,
   Button,
 } from "@pythnetwork/component-library/Button";
+import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
 import clsx from "clsx";
-import { type ElementType, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import styles from "./index.module.scss";
 
@@ -16,22 +17,16 @@ type OwnProps = {
   text: string;
 };
 
-type Props<T extends ElementType> = Omit<
-  ButtonProps<T>,
+type Props = Omit<
+  ButtonProps<typeof UnstyledButton>,
   keyof OwnProps | "onPress" | "afterIcon"
 > &
   OwnProps;
 
-export const CopyButton = <T extends ElementType>({
-  text,
-  children,
-  className,
-  ...props
-}: Props<T>) => {
+export const CopyButton = ({ text, children, className, ...props }: Props) => {
   const [isCopied, setIsCopied] = useState(false);
   const logger = useLogger();
   const copy = useCallback(() => {
-    // eslint-disable-next-line n/no-unsupported-features/node-builtins
     navigator.clipboard
       .writeText(text)
       .then(() => {

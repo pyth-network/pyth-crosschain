@@ -5,14 +5,19 @@ import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
-import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
+import {
+  type RowConfig,
+  type SortDescriptor,
+  Table,
+} from "@pythnetwork/component-library/Table";
 import { type ReactNode, Suspense, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
-import type { SortDescriptor } from "react-aria-components";
 
-import { useQueryParamFilterPagination } from "../../use-query-param-filter-pagination";
+import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { NoResults } from "../NoResults";
+import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
+import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 
 const PUBLISHER_SCORE_WIDTH = 24;
@@ -25,13 +30,14 @@ type Props = {
 
 type Publisher = {
   id: string;
-  nameAsString: string | undefined;
-  name: ReactNode;
   ranking: number;
   activeFeeds: number;
   inactiveFeeds: number;
   medianScore: number;
-};
+} & (
+  | { name: string; icon: ReactNode }
+  | { name?: undefined; icon?: undefined }
+);
 
 export const PublishersCard = ({ publishers, ...props }: Props) => (
   <Suspense fallback={<PublishersCardContents isLoading {...props} />}>
@@ -59,8 +65,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
     publishers,
     (publisher, search) =>
       filter.contains(publisher.id, search) ||
-      (publisher.nameAsString !== undefined &&
-        filter.contains(publisher.nameAsString, search)),
+      (publisher.name !== undefined && filter.contains(publisher.name, search)),
     (a, b, { column, direction }) => {
       switch (column) {
         case "ranking":
@@ -75,7 +80,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
         case "name": {
           return (
             (direction === "descending" ? -1 : 1) *
-            collator.compare(a.nameAsString ?? a.id, b.nameAsString ?? b.id)
+            collator.compare(a.name ?? a.id, b.name ?? b.id)
           );
         }
 
@@ -91,17 +96,36 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
 
   const rows = useMemo(
     () =>
-      paginatedItems.map(({ id, ranking, medianScore, ...data }) => ({
-        id,
-        href: "#",
-        data: {
-          ...data,
-          ranking: <Ranking>{ranking}</Ranking>,
-          medianScore: (
-            <Score score={medianScore} width={PUBLISHER_SCORE_WIDTH} />
-          ),
-        },
-      })),
+      paginatedItems.map(
+        ({
+          id,
+          ranking,
+          medianScore,
+          activeFeeds,
+          inactiveFeeds,
+          ...publisher
+        }) => ({
+          id,
+          href: `/publishers/${id}`,
+          data: {
+            ranking: <Ranking>{ranking}</Ranking>,
+            name: (
+              <PublisherTag
+                publisherKey={id}
+                {...(publisher.name && {
+                  name: publisher.name,
+                  icon: publisher.icon,
+                })}
+              />
+            ),
+            activeFeeds,
+            inactiveFeeds,
+            medianScore: (
+              <Score score={medianScore} width={PUBLISHER_SCORE_WIDTH} />
+            ),
+          },
+        }),
+      ),
     [paginatedItems],
   );
 
@@ -170,7 +194,8 @@ const PublishersCardContents = ({
     toolbar={
       <SearchInput
         size="sm"
-        width={40}
+        width={60}
+        placeholder="Publisher key or name"
         {...(props.isLoading
           ? { isPending: true, isDisabled: true }
           : {
@@ -197,11 +222,12 @@ const PublishersCardContents = ({
       rounded
       fill
       label="Publishers"
+      stickyHeader={rootStyles.headerHeight}
       columns={[
         {
           id: "ranking",
           name: "RANKING",
-          width: 30,
+          width: 25,
           loadingSkeleton: <Ranking isLoading />,
           allowsSorting: true,
         },
@@ -217,14 +243,14 @@ const PublishersCardContents = ({
           id: "activeFeeds",
           name: "ACTIVE FEEDS",
           alignment: "center",
-          width: 40,
+          width: 30,
           allowsSorting: true,
         },
         {
           id: "inactiveFeeds",
           name: "INACTIVE FEEDS",
           alignment: "center",
-          width: 45,
+          width: 30,
           allowsSorting: true,
         },
         {
@@ -244,7 +270,7 @@ const PublishersCardContents = ({
             rows: props.rows,
             sortDescriptor: props.sortDescriptor,
             onSortChange: props.onSortChange,
-            renderEmptyState: () => (
+            emptyState: (
               <NoResults
                 query={props.search}
                 onClearSearch={() => {

@@ -1,0 +1,102 @@
+@use "@pythnetwork/component-library/theme";
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(from black r g b / 30%);
+  z-index: 1;
+
+  .searchMenu {
+    position: relative;
+    top: theme.spacing(32);
+    margin: 0 auto;
+    outline: none;
+    background: theme.color("background", "secondary");
+    border-radius: theme.border-radius("2xl");
+    padding: theme.spacing(1);
+    max-height: theme.spacing(120);
+    display: flex;
+    flex-flow: column nowrap;
+    flex-grow: 1;
+    gap: theme.spacing(1);
+    width: min-content;
+
+    .searchBar,
+    .left {
+      flex: none;
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+    }
+
+    .searchBar {
+      justify-content: space-between;
+      padding: theme.spacing(1);
+    }
+
+    .left {
+      gap: theme.spacing(2);
+    }
+
+    .body {
+      background: theme.color("background", "primary");
+      border-radius: theme.border-radius("xl");
+      flex-grow: 1;
+      overflow: hidden;
+      display: flex;
+
+      .listbox {
+        outline: none;
+        overflow: auto;
+        flex-grow: 1;
+
+        .item {
+          padding: theme.spacing(3) theme.spacing(4);
+          display: flex;
+          flex-flow: row nowrap;
+          align-items: center;
+          cursor: pointer;
+          transition: background-color 100ms linear;
+          outline: none;
+          text-decoration: none;
+          border-top: 1px solid theme.color("background", "secondary");
+
+          &[data-is-first] {
+            border-top: none;
+          }
+
+          & > *:last-child {
+            flex-shrink: 0;
+          }
+
+          &[data-focused] {
+            background-color: theme.color(
+              "button",
+              "outline",
+              "background",
+              "hover"
+            );
+          }
+
+          &[data-pressed] {
+            background-color: theme.color(
+              "button",
+              "outline",
+              "background",
+              "active"
+            );
+          }
+
+          .itemType {
+            flex-shrink: 0;
+            margin-right: theme.spacing(6);
+          }
+
+          .itemTag {
+            flex-grow: 1;
+          }
+        }
+      }
+    }
+  }
+}

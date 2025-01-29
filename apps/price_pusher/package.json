@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-pusher",
-  "version": "8.3.1",
+  "version": "8.3.3",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
@@ -24,6 +24,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "test:lint": "eslint src/",
     "start": "node lib/index.js",
+    "test": "jest",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",

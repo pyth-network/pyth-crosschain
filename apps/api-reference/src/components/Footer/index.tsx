@@ -44,7 +44,7 @@ export const Footer = ({
     >
       <MaxWidth className="flex h-16 items-center justify-between text-xs font-light text-neutral-600 dark:text-neutral-400">
         <div className="flex h-full items-center gap-4">
-          <span>© 2024 Pyth Data Association</span>
+          <span>© 2025 Pyth Data Association</span>
         </div>
         <div className="flex h-full items-center gap-6">
           {SOCIAL_LINKS.map(({ name, icon: Icon, href }) => (

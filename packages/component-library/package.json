@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "exports": {
     "./*": "./src/*/index.tsx",
@@ -22,6 +22,7 @@
     "test:types": "tsc"
   },
   "peerDependencies": {
+    "next": "catalog:",
     "react": "catalog:"
   },
   "dependencies": {
@@ -51,6 +52,7 @@
     "css-loader": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",
+    "next": "catalog:",
     "postcss": "catalog:",
     "postcss-loader": "catalog:",
     "prettier": "catalog:",

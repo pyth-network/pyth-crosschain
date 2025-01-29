@@ -31,6 +31,7 @@
       align-items: center;
       color: theme.color("heading");
       flex: none;
+      border-bottom: 1px solid theme.color("border");
 
       .title {
         @include theme.h4;
@@ -39,11 +40,38 @@
         flex-flow: row nowrap;
         gap: theme.spacing(3);
       }
+
+      .headingEnd {
+        display: flex;
+        flex-flow: row nowrap;
+        gap: theme.spacing(3);
+        align-items: center;
+      }
     }
 
     .body {
       flex: 1;
       overflow-y: auto;
+      padding: theme.spacing(6);
+    }
+
+    &[data-fill] {
+      .heading {
+        border: none;
+      }
+
+      .body {
+        padding: 0;
+      }
+    }
+
+    &[data-has-footer] {
+      padding-bottom: 0;
+
+      .footer {
+        border-top: 1px solid theme.color("border");
+        padding: theme.spacing(4);
+      }
     }
   }
 }

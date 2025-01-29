@@ -1,0 +1,83 @@
+@use "../theme";
+
+.switch {
+  cursor: pointer;
+  line-height: theme.spacing(4);
+
+  .indicator {
+    flex: none;
+    width: theme.spacing(6);
+    height: theme.spacing(4);
+    background: theme.color("border");
+    border-radius: theme.border-radius("2xl");
+    display: inline-flex;
+    align-items: center;
+    padding: 0 theme.spacing(0.5);
+    justify-content: flex-start;
+    transition-property: background-color, border-color, outline-color;
+    transition-duration: 100ms;
+    transition-timing-function: linear;
+    border: 1px solid transparent;
+    outline-offset: 0;
+    outline: theme.spacing(1) solid transparent;
+
+    .dot {
+      width: theme.spacing(2.5);
+      height: theme.spacing(2.5);
+      background-color: theme.color("background", "primary");
+      border-radius: theme.border-radius("full");
+      transition: background-color 100ms linear;
+    }
+  }
+
+  .label {
+    @include theme.text("sm", "normal");
+
+    display: inline-block;
+    margin: 0 theme.spacing(2);
+  }
+
+  &[data-hovered] {
+    .indicator {
+      background-color: theme.color("forms", "input", "hover", "border");
+    }
+  }
+
+  &[data-selected] {
+    .indicator {
+      justify-content: flex-end;
+      background-color: theme.color(
+        "button",
+        "primary",
+        "background",
+        "normal"
+      );
+    }
+  }
+
+  &[data-disabled],
+  &[data-pending] {
+    .indicator {
+      background-color: theme.color("button", "disabled", "background");
+
+      .dot {
+        background-color: theme.color("button", "disabled", "foreground");
+      }
+    }
+  }
+
+  &[data-disabled] {
+    cursor: not-allowed;
+  }
+
+  &[data-pending] {
+    cursor: wait;
+  }
+
+  &[data-focus-visible] {
+    .indicator {
+      border-color: theme.color("focus");
+      outline-color: theme.color("focus-dim");
+    }
+  }
+}

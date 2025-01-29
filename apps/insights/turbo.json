@@ -11,7 +11,9 @@
         "AMPLITUDE_API_KEY",
         "CLICKHOUSE_URL",
         "CLICKHOUSE_USERNAME",
-        "CLICKHOUSE_PASSWORD"
+        "CLICKHOUSE_PASSWORD",
+        "SOLANA_RPC",
+        "DISABLE_ACCESSIBILITY_REPORTING"
       ]
     },
     "fix:lint": {

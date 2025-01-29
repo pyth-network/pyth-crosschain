@@ -32,7 +32,10 @@ const priceIds = [
 ];
 
 // Get price feeds
-const priceFeeds = await connection.getPriceFeeds("btc", "crypto");
+const priceFeeds = await connection.getPriceFeeds({
+  query: "btc",
+  filter: "crypto",
+});
 console.log(priceFeeds);
 
 // Latest price updates
@@ -44,7 +47,7 @@ console.log(priceUpdates);
 
 ```typescript
 // Streaming price updates
-const eventSource = await connection.getStreamingPriceUpdates(priceIds);
+const eventSource = await connection.getPriceUpdatesStream(priceIds);
 
 eventSource.onmessage = (event) => {
   console.log("Received price update:", event.data);

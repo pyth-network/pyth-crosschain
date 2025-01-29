@@ -47,6 +47,19 @@ export const Stats = ({ className, ...props }: HTMLProps<HTMLDivElement>) => {
           OIS Rewards Distributed
         </div>
       </div>
+      <div className="border-l border-neutral-600/50" />
+      <div className="flex-1 sm:flex-none">
+        {state.type === StateType.Loaded ? (
+          <Tokens className="mb-1 text-xl font-semibold leading-none">
+            {state.data.totalGovernance}
+          </Tokens>
+        ) : (
+          <Loading />
+        )}
+        <div className="text-xs leading-none text-pythpurple-400">
+          Pyth Governance Total Staked
+        </div>
+      </div>
     </div>
   );
 };
@@ -57,12 +70,14 @@ const Loading = () => (
 
 const fetchStats = async (connection: Connection) => {
   const client = new PythStakingClient({ connection });
-  const [poolData, rewardCustodyAccount] = await Promise.all([
+  const [targetAccount, poolData, rewardCustodyAccount] = await Promise.all([
+    client.getTargetAccount(),
     client.getPoolDataAccount(),
     client.getRewardCustodyAccount(),
   ]);
 
   return {
+    totalGovernance: targetAccount.locked + targetAccount.deltaLocked,
     totalStaked:
       sumDelegations(poolData.delState) + sumDelegations(poolData.selfDelState),
     rewardsDistributed:

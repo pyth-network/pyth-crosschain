@@ -102,6 +102,8 @@ export const RECEIVER_CHAINS = {
   eventum_mainnet: 60073,
   threat_level_midnight: 60074,
   just_breathe: 60075,
+  rabechain_mainnet: 60076,
+
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
@@ -224,6 +226,7 @@ export const RECEIVER_CHAINS = {
   coredao_testnet_v2: 50114,
   bittensor_testnet: 50115,
   monad_devnet: 50116,
+  monad_testnet: 50117,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

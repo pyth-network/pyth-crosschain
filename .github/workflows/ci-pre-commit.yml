@@ -30,6 +30,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
+      - name: Install g++ 12
+        run: |
+          sudo apt-get install g++-12
+          echo "CXX=/usr/bin/g++-12" >> "${GITHUB_ENV}"
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -39,9 +43,6 @@ jobs:
         with:
           path: ~/.cache/pypoetry
           key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
-      - name: Install poetry dependencies
-        run: poetry -C express_relay/sdk/python/express_relay install
-        shell: sh
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}
         with:

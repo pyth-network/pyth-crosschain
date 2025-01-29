@@ -6,24 +6,30 @@ import yargs from "yargs/yargs";
 import { readFileSync } from "fs";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
-// This script initializes the program and updates the trusted signer
+// This script initializes the program. It should be run once after the program is deployed. Additionally, if the
+// top authority be the same as the given keypair and the trusted signer and expiry time are provided, the trusted
+// signer will be updated.
 //
-// There are some assumptions made in this script:
-// 1. The program id is derived from the idl file (pytd...).
-// 2. The keypair provided is the top authority keypair
+// Note: the program id is derived from the idl file (pytd...). Run `anchor test` to generate it.
 async function main() {
   let argv = await yargs(process.argv.slice(2))
     .options({
       url: { type: "string", demandOption: true },
       "keypair-path": { type: "string", demandOption: true },
-      "trusted-signer": { type: "string", demandOption: true },
-      "expiry-time-seconds": { type: "number", demandOption: true },
+      "top-authority": { type: "string", demandOption: true },
+      treasury: { type: "string", demandOption: true },
+      "trusted-signer": { type: "string", demandOption: false },
+      "expiry-time-seconds": { type: "number", demandOption: false },
     })
     .parse();
 
   const keypair = anchor.web3.Keypair.fromSecretKey(
     new Uint8Array(JSON.parse(readFileSync(argv.keypairPath, "ascii")))
   );
+
+  const topAuthority = new anchor.web3.PublicKey(argv.topAuthority);
+  const treasury = new anchor.web3.PublicKey(argv.treasury);
+
   const wallet = new NodeWallet(keypair);
   const connection = new anchor.web3.Connection(argv.url, {
     commitment: "confirmed",
@@ -39,21 +45,27 @@ async function main() {
   if (storage.length === 0) {
     console.log("Initializing the program");
     await program.methods
-      .initialize(keypair.publicKey, anchor.web3.PublicKey.unique())
+      .initialize(topAuthority, treasury)
       .accounts({
         payer: wallet.publicKey,
       })
       .rpc();
   }
 
-  console.log("Updating the trusted signer");
-  await program.methods
-    .update(
-      new anchor.web3.PublicKey(argv.trustedSigner),
-      new anchor.BN(argv.expiryTimeSeconds)
-    )
-    .accounts({})
-    .rpc();
+  if (
+    topAuthority.equals(wallet.publicKey) &&
+    argv.trustedSigner &&
+    argv.expiryTimeSeconds
+  ) {
+    console.log("Updating the trusted signer");
+    await program.methods
+      .update(
+        new anchor.web3.PublicKey(argv.trustedSigner),
+        new anchor.BN(argv.expiryTimeSeconds)
+      )
+      .accounts({})
+      .rpc();
+  }
 }
 
 main();

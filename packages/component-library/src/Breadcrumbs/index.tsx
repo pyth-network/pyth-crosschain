@@ -3,15 +3,15 @@
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import { House } from "@phosphor-icons/react/dist/ssr/House";
 import clsx from "clsx";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import styles from "./index.module.scss";
 import { Button } from "../Button/index.js";
 import { Link } from "../Link/index.js";
 import {
-  UnstyledBreadcrumbs,
-  UnstyledBreadcrumb,
-} from "../UnstyledBreadcrumbs/index.js";
+  Breadcrumbs as UnstyledBreadcrumbs,
+  Breadcrumb,
+} from "../unstyled/Breadcrumbs/index.js";
 
 type OwnProps = {
   label: string;
@@ -20,7 +20,7 @@ type OwnProps = {
       href: string;
       label: string;
     }[],
-    { label: string },
+    { label: ReactNode },
   ];
 };
 type Props = Omit<ComponentProps<typeof UnstyledBreadcrumbs>, keyof OwnProps> &
@@ -30,14 +30,11 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
   <nav aria-label={label}>
     <UnstyledBreadcrumbs
       className={clsx(styles.breadcrumbs, className)}
-      items={items.map((item) => ({
-        id: "href" in item ? item.href : item.label,
-        ...item,
-      }))}
+      items={items.map((item, i) => ({ id: i, ...item }))}
       {...props}
     >
       {(item) => (
-        <UnstyledBreadcrumb className={styles.breadcrumb ?? ""}>
+        <Breadcrumb className={styles.breadcrumb ?? ""}>
           {"href" in item ? (
             <>
               {item.href === "/" ? (
@@ -65,7 +62,7 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
           ) : (
             <div className={styles.current}>{item.label}</div>
           )}
-        </UnstyledBreadcrumb>
+        </Breadcrumb>
       )}
     </UnstyledBreadcrumbs>
   </nav>

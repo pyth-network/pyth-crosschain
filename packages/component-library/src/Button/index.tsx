@@ -7,8 +7,8 @@ import type {
 } from "react";
 
 import styles from "./index.module.scss";
-import { UnstyledButton } from "../UnstyledButton/index.js";
-import { UnstyledLink } from "../UnstyledLink/index.js";
+import { Button as UnstyledButton } from "../unstyled/Button/index.js";
+import { Link } from "../unstyled/Link/index.js";
 
 export const VARIANTS = [
   "primary",
@@ -38,17 +38,13 @@ export type Props<T extends ElementType> = Omit<
   OwnProps;
 
 export const Button = (
-  props: Props<typeof UnstyledButton> | Props<typeof UnstyledLink>,
+  props: Props<typeof UnstyledButton> | Props<typeof Link>,
 ) =>
   "href" in props ? (
-    <UnstyledLink {...buttonProps(props)} />
+    <Link {...buttonProps(props)} />
   ) : (
     <UnstyledButton {...buttonProps(props)} />
   );
-
-type ButtonImplProps = OwnProps & {
-  className?: Parameters<typeof clsx>[0];
-};
 
 const buttonProps = ({
   variant = "primary",
@@ -59,9 +55,9 @@ const buttonProps = ({
   beforeIcon,
   afterIcon,
   hideText = false,
-  ...inputProps
-}: ButtonImplProps) => ({
-  ...inputProps,
+  ...otherProps
+}: OwnProps & { className?: Parameters<typeof clsx>[0] }) => ({
+  ...otherProps,
   "data-variant": variant,
   "data-size": size,
   "data-rounded": rounded ? "" : undefined,

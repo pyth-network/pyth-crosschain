@@ -6,7 +6,9 @@
   transition-property: color, background-color, border-color;
   transition-duration: 100ms;
   transition-timing-function: linear;
-  border: 1px solid var(--badge-color);
+  white-space: nowrap;
+  border-width: 1px;
+  border-style: solid;
 
   &[data-size="xs"] {
     line-height: theme.spacing(4);
@@ -34,20 +36,31 @@
 
   @each $variant in ("neutral", "info", "warning", "error", "data", "success") {
     &[data-variant="#{$variant}"] {
-      --badge-color: #{theme.color("states", $variant, "normal")};
+      border-color: theme.color("states", $variant, "normal");
+
+      &[data-style="filled"] {
+        background: theme.color("states", $variant, "normal");
+      }
+
+      &[data-style="outline"] {
+        color: theme.color("states", $variant, "normal");
+      }
     }
   }
 
   &[data-variant="muted"] {
-    --badge-color: #{theme.color("muted")};
+    border-color: theme.color("muted");
+
+    &[data-style="filled"] {
+      background: theme.color("muted");
+    }
+
+    &[data-style="outline"] {
+      color: theme.color("muted");
+    }
   }
 
   &[data-style="filled"] {
     color: theme.color("background", "primary");
-    background: var(--badge-color);
-  }
-
-  &[data-style="outline"] {
-    color: var(--badge-color);
   }
 }

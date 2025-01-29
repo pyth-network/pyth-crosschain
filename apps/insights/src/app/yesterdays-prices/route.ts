@@ -1,25 +1,11 @@
 import type { NextRequest } from "next/server";
-import { z } from "zod";
 
-import { client } from "../../services/clickhouse";
+import { getYesterdaysPrices } from "../../services/clickhouse";
 
 export async function GET(req: NextRequest) {
   const symbols = req.nextUrl.searchParams.getAll("symbols");
-  const rows = await client.query({
-    query:
-      "select symbol, price from insights_yesterdays_prices(symbols={symbols: Array(String)})",
-    query_params: { symbols },
-  });
-  const result = await rows.json();
-  const data = schema.parse(result.data);
+  const data = await getYesterdaysPrices(symbols);
   return Response.json(
     Object.fromEntries(data.map(({ symbol, price }) => [symbol, price])),
   );
 }
-
-const schema = z.array(
-  z.object({
-    symbol: z.string(),
-    price: z.number(),
-  }),
-);
