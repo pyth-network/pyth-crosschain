@@ -29,7 +29,7 @@ export MOCK_PYTH_ADDRESS=$deployed_to
 cd ..
 # Output the captured address
 
-NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-01-01}
+NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-09-05}
 cargo +"$NIGHTLY_TOOLCHAIN" build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
 
 # No need to compile benchmarks with `--release`

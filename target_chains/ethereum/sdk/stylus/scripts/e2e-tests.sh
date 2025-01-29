@@ -28,7 +28,7 @@ export MOCK_PYTH_ADDRESS=$deployed_to
 cd ..
 
 # Run e2e tests
-NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-01-01}
+NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-09-05}
 cargo +"$NIGHTLY_TOOLCHAIN" build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
 
 export RPC_URL=http://localhost:8547
