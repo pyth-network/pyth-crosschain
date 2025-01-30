@@ -56,7 +56,7 @@ pub enum BinaryResponse {
 /// ```
 pub struct LazerClient {
     endpoint: Url,
-    access_token: Option<String>,
+    access_token: String,
     ws_sender: Option<futures_util::stream::SplitSink<
         tokio_tungstenite::WebSocketStream<
             tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
@@ -70,11 +70,11 @@ impl LazerClient {
     ///
     /// # Arguments
     /// * `endpoint` - The WebSocket URL of the Lazer service
-    /// * `access_token` - Optional access token for authentication
+    /// * `access_token` - Access token for authentication
     ///
     /// # Returns
     /// Returns a new client instance (not yet connected)
-    pub fn new(endpoint: &str, access_token: Option<String>) -> Result<Self> {
+    pub fn new(endpoint: &str, access_token: String) -> Result<Self> {
         let endpoint = Url::parse(endpoint)?;
         Ok(Self {
             endpoint,
@@ -91,12 +91,10 @@ impl LazerClient {
         let url = self.endpoint.clone();
         let mut request = tokio_tungstenite::tungstenite::client::IntoClientRequest::into_client_request(url)?;
         
-        if let Some(token) = &self.access_token {
-            request.headers_mut().insert(
-                "Authorization",
-                format!("Bearer {}", token).parse().unwrap(),
-            );
-        }
+        request.headers_mut().insert(
+            "Authorization",
+            format!("Bearer {}", self.access_token).parse().unwrap(),
+        );
 
         let (ws_stream, _) = connect_async(request).await?;
         let (ws_sender, ws_receiver) = ws_stream.split();

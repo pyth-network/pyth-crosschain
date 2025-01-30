@@ -8,10 +8,10 @@ use pyth_lazer_sdk::LazerClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Create and start the client with optional access token
+    // Create and start the client
     let mut client = LazerClient::new(
         "wss://hermes.pyth.network",
-        Some("YOUR_ACCESS_TOKEN".to_string()),
+        "YOUR_ACCESS_TOKEN".to_string(),
     )?;
     let mut stream = client.start().await?;
 
