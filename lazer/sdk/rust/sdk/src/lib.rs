@@ -1,4 +1,5 @@
 use anyhow::Result;
+use base64::Engine;
 use futures_util::{SinkExt, StreamExt};
 use pyth_lazer_protocol::{
     message::{EvmMessage, SolanaMessage},
