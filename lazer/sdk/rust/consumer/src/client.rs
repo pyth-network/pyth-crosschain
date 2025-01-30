@@ -8,7 +8,6 @@ use {
         },
         subscription::{Request, Response, SubscribeRequest, SubscriptionId, UnsubscribeRequest},
     },
-    serde_json,
     std::{
         collections::HashMap,
         sync::Arc,
@@ -108,24 +107,21 @@ impl PythLazerConsumer {
         message: Message,
         cache: &Arc<Mutex<TtlCache<String, ()>>>,
     ) -> Result<()> {
-        match message {
-            Message::Text(text) => {
-                if let Ok(response) = serde_json::from_str::<Response>(&text) {
-                    let msg_key = format!("{:?}", &response);
-                    let mut cache = cache.lock().await;
+        if let Message::Text(text) = message {
+            if let Ok(response) = serde_json::from_str::<Response>(&text) {
+                let msg_key = format!("{:?}", &response);
+                let mut cache = cache.lock().await;
 
-                    if cache.contains_key(&msg_key) {
-                        return Ok(());
-                    }
+                if cache.contains_key(&msg_key) {
+                    return Ok(());
+                }
 
-                    cache.insert(msg_key, (), DEDUP_TTL);
+                cache.insert(msg_key, (), DEDUP_TTL);
 
-                    if let Err(e) = self.tx.send(response) {
-                        return Err(anyhow!("Failed to forward message: {}", e));
-                    }
+                if let Err(e) = self.tx.send(response) {
+                    return Err(anyhow!("Failed to forward message: {}", e));
                 }
             }
-            _ => {}
         }
         Ok(())
     }
