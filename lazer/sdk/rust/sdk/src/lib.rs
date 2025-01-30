@@ -166,7 +166,7 @@ impl LazerClient {
             }
         });
 
-        Ok((client, response_stream))
+        Ok(response_stream)
     }
 
     /// Subscribes to price feed updates
