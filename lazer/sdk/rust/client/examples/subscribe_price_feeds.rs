@@ -14,10 +14,10 @@ async fn main() -> anyhow::Result<()> {
         "YOUR_ACCESS_TOKEN",
     )?;
     let mut stream = client.start().await?;
-
     // Create subscription request
+    let subscription_id = SubscriptionId(1);
     let subscription_request = SubscribeRequest {
-        subscription_id: SubscriptionId(1),
+        subscription_id,
         params: SubscriptionParams::new(SubscriptionParamsRepr {
             price_feed_ids: vec![PriceFeedId(1), PriceFeedId(2), PriceFeedId(3)],
             properties: vec![PriceFeedProperty::Price],
@@ -36,25 +36,20 @@ async fn main() -> anyhow::Result<()> {
 
     println!("Subscribed to BTC/USD price feed. Waiting for updates...");
 
-    // Process the first 100 updates
+    // Process the first 50 updates
     let mut count = 0;
     while let Some(msg) = stream.next().await {
         println!("Received update: {:?}", msg?);
         count += 1;
-        if count >= 100 {
+        if count >= 50 {
             break;
         }
     }
 
-    // Unsubscribe from all feeds before exiting
-    for feed_id in 1..=3 {
-        client.unsubscribe(SubscriptionId(feed_id)).await?;
-        println!("Unsubscribed from feed {}", feed_id);
-        // Add a small delay between unsubscribe requests
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    }
+    // Unsubscribe before exiting
+    client.unsubscribe(subscription_id).await?;
+    println!("Unsubscribed from {:?}", subscription_id);
 
-    // Wait a moment to ensure unsubscribe messages are sent
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
     Ok(())
 }
