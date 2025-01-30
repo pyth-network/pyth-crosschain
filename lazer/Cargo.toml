@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
   "sdk/rust/protocol",
-  "sdk/rust/consumer",
+  "sdk/rust/sdk",
   "contracts/solana/programs/pyth-lazer-solana-contract",
 ]
 

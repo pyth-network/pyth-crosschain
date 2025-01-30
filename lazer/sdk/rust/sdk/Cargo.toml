@@ -1,8 +1,8 @@
 [package]
-name = "pyth-lazer-consumer"
+name = "pyth-lazer-sdk"
 version = "0.1.0"
 edition = "2021"
-description = "A Rust consumer SDK for Pyth Lazer"
+description = "A Rust SDK for Pyth Lazer"
 license = "Apache-2.0"
 
 [dependencies]

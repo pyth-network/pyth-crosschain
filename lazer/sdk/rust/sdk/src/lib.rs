@@ -2,9 +2,13 @@ use anyhow::Result;
 use futures_util::{SinkExt, StreamExt};
 use pyth_lazer_protocol::{
     message::{EvmMessage, SolanaMessage},
-    payload::{BINARY_UPDATE_FORMAT_MAGIC, EVM_FORMAT_MAGIC, PARSED_FORMAT_MAGIC, SOLANA_FORMAT_MAGIC_BE},
+    payload::{
+        BINARY_UPDATE_FORMAT_MAGIC, EVM_FORMAT_MAGIC, PARSED_FORMAT_MAGIC, SOLANA_FORMAT_MAGIC_BE,
+    },
     router::{JsonBinaryData, JsonBinaryEncoding, JsonUpdate},
-    subscription::{Request, Response, SubscriptionId, StreamUpdatedResponse, ErrorResponse, UnsubscribeRequest},
+    subscription::{
+        ErrorResponse, Request, Response, StreamUpdatedResponse, SubscriptionId, UnsubscribeRequest,
+    },
 };
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
@@ -21,27 +25,27 @@ pub enum BinaryResponse {
 }
 
 /// A WebSocket client for consuming Pyth Lazer price feed updates
-/// 
+///
 /// This client provides a simple interface to:
 /// - Connect to a Lazer WebSocket endpoint
 /// - Subscribe to price feed updates
 /// - Receive updates as a stream of messages
-/// 
+///
 /// # Example
 /// ```no_run
-/// use pyth_lazer_consumer::LazerConsumerClient;
-/// use protocol::subscription::{Request, SubscribeRequest, SubscriptionParams};
-/// 
+/// use pyth_lazer_sdk::LazerClient;
+/// use pyth_lazer_protocol::subscription::{Request, SubscribeRequest, SubscriptionParams};
+///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
 ///     let (mut client, mut stream) = LazerConsumerClient::start("wss://endpoint").await?;
-///     
+///
 ///     // Subscribe to price feeds
 ///     client.subscribe(Request::Subscribe(SubscribeRequest {
 ///         subscription_id: SubscriptionId(1),
 ///         params: SubscriptionParams { /* ... */ },
 ///     })).await?;
-///     
+///
 ///     // Process updates
 ///     while let Some(msg) = stream.next().await {
 ///         println!("Received: {:?}", msg?);
@@ -49,16 +53,16 @@ pub enum BinaryResponse {
 ///     Ok(())
 /// }
 /// ```
-pub struct LazerConsumerClient {
+pub struct LazerClient {
     ws_sender: futures_util::stream::SplitSink<
         tokio_tungstenite::WebSocketStream<
-            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
         >,
         Message,
     >,
 }
 
-impl LazerConsumerClient {
+impl LazerClient {
     /// Starts a new WebSocket connection to the Lazer endpoint
     ///
     /// # Arguments
@@ -68,7 +72,9 @@ impl LazerConsumerClient {
     /// Returns a tuple containing:
     /// - The client instance for sending requests
     /// - A stream of responses from the server
-    pub async fn start(url: &str) -> Result<(Self, impl futures_util::Stream<Item = Result<Response>>)> {
+    pub async fn start(
+        url: &str,
+    ) -> Result<(Self, impl futures_util::Stream<Item = Result<Response>>)> {
         let url = Url::parse(url)?;
         let (ws_stream, _) = connect_async(url).await?;
         let (ws_sender, ws_receiver) = ws_stream.split();
@@ -87,7 +93,8 @@ impl LazerConsumerClient {
                         anyhow::bail!("binary update format magic mismatch");
                     }
 
-                    let subscription_id = SubscriptionId(u64::from_be_bytes(data[pos..pos + 8].try_into()?));
+                    let subscription_id =
+                        SubscriptionId(u64::from_be_bytes(data[pos..pos + 8].try_into()?));
                     pos += 8;
 
                     let mut evm = None;
@@ -98,13 +105,15 @@ impl LazerConsumerClient {
                         let len = u16::from_be_bytes(data[pos..pos + 2].try_into()?) as usize;
                         pos += 2;
                         let magic = u32::from_be_bytes(data[pos..pos + 4].try_into()?);
-                        
+
                         match magic {
                             EVM_FORMAT_MAGIC => {
-                                evm = Some(EvmMessage::deserialize_slice(&data[pos..pos + len])?);
+                                evm =
+                                    Some(EvmMessage::deserialize_slice(&data[pos..pos + len])?);
                             }
                             SOLANA_FORMAT_MAGIC_BE => {
-                                solana = Some(SolanaMessage::deserialize_slice(&data[pos..pos + len])?);
+                                solana =
+                                    Some(SolanaMessage::deserialize_slice(&data[pos..pos + len])?);
                             }
                             PARSED_FORMAT_MAGIC => {
                                 parsed = Some(serde_json::from_slice(&data[pos + 4..pos + len])?);
@@ -156,9 +165,7 @@ impl LazerConsumerClient {
     /// # Arguments
     /// * `subscription_id` - The ID of the subscription to cancel
     pub async fn unsubscribe(&mut self, subscription_id: SubscriptionId) -> Result<()> {
-        let request = Request::Unsubscribe(UnsubscribeRequest {
-            subscription_id,
-        });
+        let request = Request::Unsubscribe(UnsubscribeRequest { subscription_id });
         let msg = serde_json::to_string(&request)?;
         self.ws_sender.send(Message::Text(msg)).await?;
         Ok(())
