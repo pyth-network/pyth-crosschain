@@ -357,7 +357,7 @@ pub async fn run_keeper_threads(
             chain_eth_config.escalation_policy.clone(),
             metrics.clone(),
             fulfilled_requests_cache.clone(),
-            chain_eth_config.clone(),
+            chain_eth_config.block_delays.clone(),
         )
         .in_current_span(),
     );
@@ -979,7 +979,7 @@ pub async fn process_new_blocks(
     escalation_policy: EscalationPolicyConfig,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
-    chain_eth_config: EthereumConfig,
+    block_delays: Vec<u64>,
 ) {
     tracing::info!("Waiting for new block ranges to process");
     loop {
@@ -998,10 +998,10 @@ pub async fn process_new_blocks(
             .await;
 
             // Then process with each configured delay
-            for delay in &chain_eth_config.block_delays {
+            for delay in &block_delays {
                 let adjusted_range = BlockRange {
-                    from: block_range.from + delay,
-                    to: block_range.to + delay,
+                    from: block_range.from.saturating_sub(*delay),
+                    to: block_range.to.saturating_sub(*delay),
                 };
                 process_block_range(
                     adjusted_range,
