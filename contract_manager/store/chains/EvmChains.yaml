@@ -860,3 +860,8 @@
   networkId: 80094
   rpcUrl: https://fluent-thrilling-scion.furtim-network.quiknode.pro/$ENV_RABECHAIN_API_KEY
   type: EvmChain
+- id: story_mainnet
+  mainnet: true
+  rpcUrl: https://homer.storyrpc.io
+  networkId: 1514
+  type: EvmChain

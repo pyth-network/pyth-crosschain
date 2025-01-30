@@ -104,6 +104,7 @@ export const RECEIVER_CHAINS = {
   threat_level_midnight: 60074,
   just_breathe: 60075,
   rabechain_mainnet: 60076,
+  story_mainnet: 60077,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
