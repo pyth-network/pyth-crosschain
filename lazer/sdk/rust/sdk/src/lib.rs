@@ -128,11 +128,11 @@ impl LazerClient {
                         payload: JsonUpdate {
                             evm: evm.map(|m| JsonBinaryData {
                                 encoding: JsonBinaryEncoding::Base64,
-                                data: base64::encode(&m.payload),
+                                data: base64::engine::general_purpose::STANDARD.encode(&m.payload),
                             }),
                             solana: solana.map(|m| JsonBinaryData {
                                 encoding: JsonBinaryEncoding::Base64,
-                                data: base64::encode(&m.payload),
+                                data: base64::engine::general_purpose::STANDARD.encode(&m.payload),
                             }),
                             parsed,
                         },
