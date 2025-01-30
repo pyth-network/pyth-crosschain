@@ -34,11 +34,11 @@ contract PythLazerTest is Test {
 
     function test_verify() public {
         // Prepare dummy update and signer
-        address trustedSigner = 0xEfEf56cD66896f6799A90A4e4d512C330c094e44;
+        address trustedSigner = 0xb8d50f0bAE75BF6E03c104903d7C3aFc4a6596Da;
         vm.prank(address(1));
         pythLazer.updateTrustedSigner(trustedSigner, 3000000000000000);
         bytes
-            memory update = hex"2a22999a577d3cc0202197939d736bc0dcf71b9dde7b9470e4d16fa8e2120c0787a1c0d744d0c39cc372af4d1ecf2d09e84160ca905f3f597d20e2eec144a446a0459ad600001c93c7d3750006240af373971c01010000000201000000000005f5e100";
+            memory update = hex"2a22999aed58a242c6d87eb403d70e5e6fa0ea4df23ed63ce26f22f473b9dff4e90f36c80fd1b8805ea3aa341c02cb3a5a0fb57d429594fc2297aa68d722396cd94f6d0901003493c7d37500062cf1e903393801010000000505000000000000503cc5020000000000503cf7010000000000503c9303000104fff6";
 
         uint256 fee = pythLazer.verification_fee();
 
