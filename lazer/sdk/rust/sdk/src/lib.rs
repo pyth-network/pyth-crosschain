@@ -109,8 +109,7 @@ impl LazerClient {
 
                         match magic {
                             EVM_FORMAT_MAGIC => {
-                                evm =
-                                    Some(EvmMessage::deserialize_slice(&data[pos..pos + len])?);
+                                evm = Some(EvmMessage::deserialize_slice(&data[pos..pos + len])?);
                             }
                             SOLANA_FORMAT_MAGIC_BE => {
                                 solana =
