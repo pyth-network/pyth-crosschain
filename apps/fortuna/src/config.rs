@@ -177,6 +177,16 @@ pub struct EthereumConfig {
     /// Maximum number of hashes to record in a request.
     /// This should be set according to the maximum gas limit the provider supports for callbacks.
     pub max_num_hashes: Option<u32>,
+
+    /// A list of delays (in blocks) that indicates how many blocks should be delayed
+    /// before we process a block. For retry logic, we can process blocks multiple times
+    /// at each specified delay. For example: [5, 10, 20].
+    #[serde(default = "default_block_delays")]
+    pub block_delays: Vec<u64>,
+}
+
+fn default_block_delays() -> Vec<u64> {
+    vec![5]
 }
 
 fn default_priority_fee_multiplier_pct() -> u64 {
@@ -341,14 +351,6 @@ pub struct KeeperConfig {
     /// This key *does not need to be a registered provider*. In particular, production deployments
     /// should ensure this is a different key in order to reduce the severity of security breaches.
     pub private_key: SecretString,
-
-    /// Number of blocks to wait before processing new blocks (in addition to reveal_delay_blocks)
-    #[serde(default = "default_delay_blocks")]
-    pub delay_blocks: u64,
-}
-
-fn default_delay_blocks() -> u64 {
-    5
 }
 
 // A secret is a string that can be provided either as a literal in the config,
