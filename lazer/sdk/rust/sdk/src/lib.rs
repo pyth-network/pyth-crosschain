@@ -55,32 +55,48 @@ pub enum BinaryResponse {
 /// }
 /// ```
 pub struct LazerClient {
-    ws_sender: futures_util::stream::SplitSink<
+    endpoint: Url,
+    access_token: Option<String>,
+    ws_sender: Option<futures_util::stream::SplitSink<
         tokio_tungstenite::WebSocketStream<
             tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
         >,
         Message,
-    >,
+    >>,
 }
 
 impl LazerClient {
-    /// Starts a new WebSocket connection to the Lazer endpoint
+    /// Creates a new Lazer client instance
     ///
     /// # Arguments
-    /// * `url` - The WebSocket URL of the Lazer service
+    /// * `endpoint` - The WebSocket URL of the Lazer service
+    /// * `access_token` - Optional access token for authentication
     ///
     /// # Returns
-    /// Returns a tuple containing:
-    /// - The client instance for sending requests
-    /// - A stream of responses from the server
-    pub async fn start(
-        url: &str,
-    ) -> Result<(Self, impl futures_util::Stream<Item = Result<Response>>)> {
-        let url = Url::parse(url)?;
+    /// Returns a new client instance (not yet connected)
+    pub fn new(endpoint: &str, access_token: Option<String>) -> Result<Self> {
+        let endpoint = Url::parse(endpoint)?;
+        Ok(Self {
+            endpoint,
+            access_token,
+            ws_sender: None,
+        })
+    }
+
+    /// Starts the WebSocket connection
+    ///
+    /// # Returns
+    /// Returns a stream of responses from the server
+    pub async fn start(&mut self) -> Result<impl futures_util::Stream<Item = Result<Response>>> {
+        let mut url = self.endpoint.clone();
+        if let Some(token) = &self.access_token {
+            url.query_pairs_mut().append_pair("token", token);
+        }
+
         let (ws_stream, _) = connect_async(url).await?;
         let (ws_sender, ws_receiver) = ws_stream.split();
 
-        let client = Self { ws_sender };
+        self.ws_sender = Some(ws_sender);
         let response_stream = ws_receiver.map(|msg| -> Result<Response> {
             let msg = msg?;
             match msg {
@@ -155,9 +171,13 @@ impl LazerClient {
     /// # Arguments
     /// * `request` - A subscription request containing feed IDs and parameters
     pub async fn subscribe(&mut self, request: Request) -> Result<()> {
-        let msg = serde_json::to_string(&request)?;
-        self.ws_sender.send(Message::Text(msg)).await?;
-        Ok(())
+        if let Some(sender) = &mut self.ws_sender {
+            let msg = serde_json::to_string(&request)?;
+            sender.send(Message::Text(msg)).await?;
+            Ok(())
+        } else {
+            anyhow::bail!("WebSocket connection not started")
+        }
     }
 
     /// Unsubscribes from a previously subscribed feed
@@ -165,9 +185,13 @@ impl LazerClient {
     /// # Arguments
     /// * `subscription_id` - The ID of the subscription to cancel
     pub async fn unsubscribe(&mut self, subscription_id: SubscriptionId) -> Result<()> {
-        let request = Request::Unsubscribe(UnsubscribeRequest { subscription_id });
-        let msg = serde_json::to_string(&request)?;
-        self.ws_sender.send(Message::Text(msg)).await?;
-        Ok(())
+        if let Some(sender) = &mut self.ws_sender {
+            let request = Request::Unsubscribe(UnsubscribeRequest { subscription_id });
+            let msg = serde_json::to_string(&request)?;
+            sender.send(Message::Text(msg)).await?;
+            Ok(())
+        } else {
+            anyhow::bail!("WebSocket connection not started")
+        }
     }
 }

@@ -8,8 +8,11 @@ use pyth_lazer_sdk::LazerClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let (mut client, mut stream) = LazerClient::start("lazer_endpoint").await?;
+    // Create and start the client
+    let mut client = LazerClient::new("lazer_endpoint", None)?;
+    let mut stream = client.start().await?;
 
+    // Create subscription request
     let subscription_request = SubscribeRequest {
         subscription_id: SubscriptionId(1),
         params: SubscriptionParams::new(SubscriptionParamsRepr {
@@ -40,9 +43,11 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    // Unsubscribe before exiting
-    client.unsubscribe(SubscriptionId(1)).await?;
-    println!("Unsubscribed from feed");
+    // Unsubscribe from all feeds before exiting
+    for feed_id in 1..=3 {
+        client.unsubscribe(SubscriptionId(feed_id)).await?;
+        println!("Unsubscribed from feed {}", feed_id);
+    }
 
     Ok(())
 }
