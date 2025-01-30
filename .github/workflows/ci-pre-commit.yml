@@ -27,6 +27,8 @@ jobs:
           rustup install 1.73.0
       - name: Install protoc
         uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
