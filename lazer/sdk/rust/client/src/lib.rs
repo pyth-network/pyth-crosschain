@@ -32,29 +32,6 @@ pub enum BinaryResponse {
 /// - Subscribe to price feed updates
 /// - Receive updates as a stream of messages
 ///
-/// # Example
-/// ```no_run
-/// use pyth_lazer_sdk::LazerClient;
-/// use pyth_lazer_protocol::subscription::{Request, SubscribeRequest, SubscriptionParams};
-///
-/// #[tokio::main]
-/// async fn main() -> anyhow::Result<()> {
-///     let mut client = LazerClient::new("wss://endpoint", "YOUR_ACCESS_TOKEN".to_string())?;
-///     let mut stream = client.start().await?;
-///
-///     // Subscribe to price feeds
-///     client.subscribe(Request::Subscribe(SubscribeRequest {
-///         subscription_id: SubscriptionId(1),
-///         params: SubscriptionParams { /* ... */ },
-///     })).await?;
-///
-///     // Process updates
-///     while let Some(msg) = stream.next().await {
-///         println!("Received: {:?}", msg?);
-///     }
-///     Ok(())
-/// }
-/// ```
 pub struct LazerClient {
     endpoint: Url,
     access_token: String,

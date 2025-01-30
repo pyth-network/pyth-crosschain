@@ -1,10 +1,10 @@
 use futures_util::StreamExt;
+use pyth_lazer_client::LazerClient;
 use pyth_lazer_protocol::router::{
     Chain, Channel, DeliveryFormat, FixedRate, JsonBinaryEncoding, PriceFeedId, PriceFeedProperty,
     SubscriptionParams, SubscriptionParamsRepr,
 };
 use pyth_lazer_protocol::subscription::{Request, SubscribeRequest, SubscriptionId};
-use pyth_lazer_sdk::LazerClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
