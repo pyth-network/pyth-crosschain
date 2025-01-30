@@ -57,12 +57,14 @@ pub enum BinaryResponse {
 pub struct LazerClient {
     endpoint: Url,
     access_token: String,
-    ws_sender: Option<futures_util::stream::SplitSink<
-        tokio_tungstenite::WebSocketStream<
-            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+    ws_sender: Option<
+        futures_util::stream::SplitSink<
+            tokio_tungstenite::WebSocketStream<
+                tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+            >,
+            Message,
         >,
-        Message,
-    >>,
+    >,
 }
 
 impl LazerClient {
@@ -74,8 +76,9 @@ impl LazerClient {
     ///
     /// # Returns
     /// Returns a new client instance (not yet connected)
-    pub fn new(endpoint: &str, access_token: String) -> Result<Self> {
+    pub fn new(endpoint: &str, access_token: &str) -> Result<Self> {
         let endpoint = Url::parse(endpoint)?;
+        let access_token = access_token.to_string();
         Ok(Self {
             endpoint,
             access_token,
@@ -89,8 +92,9 @@ impl LazerClient {
     /// Returns a stream of responses from the server
     pub async fn start(&mut self) -> Result<impl futures_util::Stream<Item = Result<Response>>> {
         let url = self.endpoint.clone();
-        let mut request = tokio_tungstenite::tungstenite::client::IntoClientRequest::into_client_request(url)?;
-        
+        let mut request =
+            tokio_tungstenite::tungstenite::client::IntoClientRequest::into_client_request(url)?;
+
         request.headers_mut().insert(
             "Authorization",
             format!("Bearer {}", self.access_token).parse().unwrap(),
@@ -166,7 +170,7 @@ impl LazerClient {
             }
         });
 
-        Ok((client, response_stream))
+        Ok(response_stream)
     }
 
     /// Subscribes to price feed updates

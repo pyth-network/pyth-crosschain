@@ -10,8 +10,8 @@ use pyth_lazer_sdk::LazerClient;
 async fn main() -> anyhow::Result<()> {
     // Create and start the client
     let mut client = LazerClient::new(
-        "wss://hermes.pyth.network",
-        "YOUR_ACCESS_TOKEN".to_string(),
+        "wss://pyth-lazer.dourolabs.app/v1/stream",
+        "YOUR_ACCESS_TOKEN",
     )?;
     let mut stream = client.start().await?;
 
@@ -36,12 +36,12 @@ async fn main() -> anyhow::Result<()> {
 
     println!("Subscribed to BTC/USD price feed. Waiting for updates...");
 
-    // Process the first 5 updates
+    // Process the first 100 updates
     let mut count = 0;
     while let Some(msg) = stream.next().await {
         println!("Received update: {:?}", msg?);
         count += 1;
-        if count >= 5 {
+        if count >= 100 {
             break;
         }
     }
