@@ -1,13 +1,13 @@
 import { Options } from "yargs";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { PythPriceListener } from "../pyth-price-listener";
 import { TonPriceListener, TonPricePusher } from "./ton";
 import { Controller } from "../controller";
 import { Address, TonClient } from "@ton/ton";
 import fs from "fs";
 import pino from "pino";
+import { HermesClient } from "@pythnetwork/hermes-client";
 
 export default {
   command: "ton",
@@ -29,11 +29,10 @@ export default {
       required: true,
     } as Options,
     ...options.priceConfigFile,
-    ...options.priceServiceEndpoint,
+    ...options.hermesEndpoint,
     ...options.pushingFrequency,
     ...options.pollingFrequency,
     ...options.logLevel,
-    ...options.priceServiceConnectionLogLevel,
     ...options.controllerLogLevel,
   },
   handler: async function (argv: any) {
@@ -42,11 +41,10 @@ export default {
       privateKeyFile,
       pythContractAddress,
       priceConfigFile,
-      priceServiceEndpoint,
+      hermesEndpoint,
       pushingFrequency,
       pollingFrequency,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
@@ -54,20 +52,12 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-      }
-    );
+    const hermesClient = new HermesClient(hermesEndpoint);
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger.child({ module: "PythPriceListener" })
     );
@@ -89,7 +79,7 @@ export default {
       client,
       privateKey,
       contractAddress,
-      priceServiceConnection,
+      hermesClient,
       logger.child({ module: "TonPricePusher" })
     );
 

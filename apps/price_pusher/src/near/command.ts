@@ -1,4 +1,4 @@
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
@@ -33,12 +33,11 @@ export default {
       required: false,
     } as Options,
     ...options.priceConfigFile,
-    ...options.priceServiceEndpoint,
+    ...options.hermesEndpoint,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
-    ...options.priceServiceConnectionLogLevel,
     ...options.controllerLogLevel,
   },
   handler: function (argv: any) {
@@ -49,32 +48,23 @@ export default {
       accountId,
       privateKeyPath,
       priceConfigFile,
-      priceServiceEndpoint,
+      hermesEndpoint,
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-      }
-    );
+    const hermesClient = new HermesClient(hermesEndpoint);
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger
     );
@@ -98,7 +88,7 @@ export default {
 
     const nearPusher = new NearPricePusher(
       nearAccount,
-      priceServiceConnection,
+      hermesClient,
       logger.child({ module: "NearPricePusher" })
     );
 

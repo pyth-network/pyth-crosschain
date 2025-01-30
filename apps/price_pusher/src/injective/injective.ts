@@ -1,7 +1,4 @@
-import {
-  HexString,
-  PriceServiceConnection,
-} from "@pythnetwork/price-service-client";
+import { HexString, HermesClient } from "@pythnetwork/hermes-client";
 import {
   IPricePusher,
   PriceInfo,
@@ -100,7 +97,7 @@ export class InjectivePricePusher implements IPricePusher {
   private account: Account | null = null;
 
   constructor(
-    private priceServiceConnection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private pythContractAddress: string,
     private grpcEndpoint: string,
     private logger: Logger,
@@ -187,7 +184,10 @@ export class InjectivePricePusher implements IPricePusher {
   }
 
   async getPriceFeedUpdateObject(priceIds: string[]): Promise<any> {
-    const vaas = await this.priceServiceConnection.getLatestVaas(priceIds);
+    const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
+      encoding: "base64",
+    });
+    const vaas = response.binary.data;
 
     return {
       update_price_feeds: {

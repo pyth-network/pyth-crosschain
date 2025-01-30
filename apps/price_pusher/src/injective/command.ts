@@ -1,4 +1,4 @@
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import fs from "fs";
@@ -35,13 +35,12 @@ export default {
       type: "number",
     } as Options,
     ...options.priceConfigFile,
-    ...options.priceServiceEndpoint,
+    ...options.hermesEndpoint,
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
-    ...options.priceServiceConnectionLogLevel,
     ...options.controllerLogLevel,
   },
   handler: function (argv: any) {
@@ -51,14 +50,13 @@ export default {
       gasMultiplier,
       grpcEndpoint,
       priceConfigFile,
-      priceServiceEndpoint,
+      hermesEndpoint,
       mnemonicFile,
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
       network,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
@@ -69,21 +67,13 @@ export default {
     }
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-      }
-    );
+    const hermesClient = new HermesClient(hermesEndpoint);
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger.child({ module: "PythPriceListener" })
     );
@@ -98,7 +88,7 @@ export default {
       }
     );
     const injectivePusher = new InjectivePricePusher(
-      priceServiceConnection,
+      hermesClient,
       pythContractAddress,
       grpcEndpoint,
       logger.child({ module: "InjectivePricePusher" }),

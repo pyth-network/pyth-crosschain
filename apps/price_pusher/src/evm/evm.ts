@@ -128,7 +128,7 @@ export class EvmPricePusher implements IPricePusher {
   private lastPushAttempt: PushAttempt | undefined;
 
   constructor(
-    private connection: HermesClient,
+    private hermesClient: HermesClient,
     private client: SuperWalletClient,
     private pythContract: PythContract,
     private logger: Logger,
@@ -155,7 +155,6 @@ export class EvmPricePusher implements IPricePusher {
 
     if (priceIds.length !== pubTimesToPush.length)
       throw new Error("Invalid arguments");
-
 
     const priceFeedUpdateData = (await this.getPriceFeedsUpdateData(
       priceIds
@@ -410,7 +409,7 @@ export class EvmPricePusher implements IPricePusher {
   private async getPriceFeedsUpdateData(
     priceIds: HexString[]
   ): Promise<string[]> {
-    const response = await this.connection.getLatestPriceUpdates(priceIds, {
+    const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
       encoding: "hex",
       ignoreInvalidPriceIds: true,
     });

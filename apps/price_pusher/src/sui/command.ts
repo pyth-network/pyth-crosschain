@@ -1,4 +1,4 @@
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import fs from "fs";
@@ -65,19 +65,18 @@ export default {
       default: 0,
     } as Options,
     ...options.priceConfigFile,
-    ...options.priceServiceEndpoint,
+    ...options.hermesEndpoint,
     ...options.mnemonicFile,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
-    ...options.priceServiceConnectionLogLevel,
     ...options.controllerLogLevel,
   },
   handler: async function (argv: any) {
     const {
       endpoint,
       priceConfigFile,
-      priceServiceEndpoint,
+      hermesEndpoint,
       mnemonicFile,
       pushingFrequency,
       pollingFrequency,
@@ -88,25 +87,14 @@ export default {
       gasBudget,
       accountIndex,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-        priceFeedRequestConfig: {
-          binary: true,
-        },
-      }
-    );
+    const hermesClient = new HermesClient(hermesEndpoint);
+
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const keypair = Ed25519Keypair.deriveKeypair(
       mnemonic,
@@ -121,7 +109,7 @@ export default {
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger.child({ module: "PythPriceListener" })
     );
@@ -135,7 +123,7 @@ export default {
       { pollingFrequency }
     );
     const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
-      priceServiceConnection,
+      hermesClient,
       logger.child({ module: "SuiPricePusher" }),
       pythStateId,
       wormholeStateId,

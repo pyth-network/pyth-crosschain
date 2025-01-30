@@ -1,7 +1,4 @@
-import {
-  HexString,
-  HermesClient,
-} from "@pythnetwork/hermes-client";
+import { HexString, HermesClient } from "@pythnetwork/hermes-client";
 import { PriceInfo, IPriceListener, PriceItem } from "./interface";
 import { Logger } from "pino";
 
@@ -33,9 +30,7 @@ export class PythPriceListener implements IPriceListener {
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
   async start() {
-    this.connection.getPriceUpdatesStream(
-      this.priceIds,
-    );
+    this.connection.getPriceUpdatesStream(this.priceIds);
 
     try {
       const priceUpdates = await this.connection.getLatestPriceUpdates(

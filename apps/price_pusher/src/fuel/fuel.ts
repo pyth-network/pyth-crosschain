@@ -1,4 +1,4 @@
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   ChainPriceListener,
   IPricePusher,
@@ -78,7 +78,7 @@ export class FuelPricePusher implements IPricePusher {
   constructor(
     private wallet: Wallet,
     private pythContractId: string,
-    private priceServiceConnection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private logger: Logger
   ) {
     this.contract = new Contract(
@@ -99,17 +99,16 @@ export class FuelPricePusher implements IPricePusher {
 
     let priceFeedUpdateData: string[];
     try {
-      priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
-        priceIds
-      );
+      const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
+        encoding: "base64",
+      });
+      priceFeedUpdateData = response.binary.data;
     } catch (err: any) {
       this.logger.error(err, "getPriceFeedsUpdateData failed");
       return;
     }
 
-    const updateData = priceFeedUpdateData.map((data) =>
-      arrayify(Buffer.from(data, "base64"))
-    );
+    const updateData = priceFeedUpdateData.map((data) => arrayify(data));
 
     try {
       const updateFee = await this.contract.functions

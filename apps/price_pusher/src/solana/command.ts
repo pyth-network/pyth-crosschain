@@ -1,7 +1,6 @@
 import { Options } from "yargs";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { PythPriceListener } from "../pyth-price-listener";
 import {
   SolanaPriceListener,
@@ -20,6 +19,7 @@ import {
 } from "jito-ts/dist/sdk/block-engine/searcher";
 import pino from "pino";
 import { Logger } from "pino";
+import { HermesClient } from "@pythnetwork/hermes-client";
 
 export default {
   command: "solana",
@@ -82,12 +82,11 @@ export default {
       default: 6,
     } as Options,
     ...options.priceConfigFile,
-    ...options.priceServiceEndpoint,
+    ...options.hermesEndpoint,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
-    ...options.priceServiceConnectionLogLevel,
     ...options.controllerLogLevel,
   },
   handler: function (argv: any) {
@@ -97,7 +96,7 @@ export default {
       shardId,
       computeUnitPriceMicroLamports,
       priceConfigFile,
-      priceServiceEndpoint,
+      hermesEndpoint,
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
@@ -109,7 +108,6 @@ export default {
       jitoBundleSize,
       updatesPerJitoBundle,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
@@ -117,20 +115,12 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-      }
-    );
+    const hermesClient = new HermesClient(hermesEndpoint);
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger.child({ module: "PythPriceListener" })
     );
@@ -156,7 +146,7 @@ export default {
       const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
       solanaPricePusher = new SolanaPricePusherJito(
         pythSolanaReceiver,
-        priceServiceConnection,
+        hermesClient,
         logger.child({ module: "SolanaPricePusherJito" }),
         shardId,
         jitoTipLamports,
@@ -171,7 +161,7 @@ export default {
     } else {
       solanaPricePusher = new SolanaPricePusher(
         pythSolanaReceiver,
-        priceServiceConnection,
+        hermesClient,
         logger.child({ module: "SolanaPricePusher" }),
         shardId,
         computeUnitPriceMicroLamports

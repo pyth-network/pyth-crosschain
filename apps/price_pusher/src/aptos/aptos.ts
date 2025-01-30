@@ -6,7 +6,7 @@ import {
 } from "../interface";
 import { AptosAccount, AptosClient } from "aptos";
 import { DurationInSeconds } from "../utils";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { Logger } from "pino";
 
 export class AptosPriceListener extends ChainPriceListener {
@@ -89,7 +89,7 @@ export class AptosPricePusher implements IPricePusher {
   private sequenceNumberLocked: boolean;
 
   constructor(
-    private priceServiceConnection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private logger: Logger,
     private pythContractAddress: string,
     private endpoint: string,
@@ -107,11 +107,12 @@ export class AptosPricePusher implements IPricePusher {
    * @returns Array of price update data.
    */
   async getPriceFeedsUpdateData(priceIds: string[]): Promise<number[][]> {
-    // Fetch the latest price feed update VAAs from the price service
-    const latestVaas = await this.priceServiceConnection.getLatestVaas(
-      priceIds
+    const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
+      encoding: "base64",
+    });
+    return response.binary.data.map((data) =>
+      Array.from(Buffer.from(data, "base64"))
     );
-    return latestVaas.map((vaa) => Array.from(Buffer.from(vaa, "base64")));
   }
 
   async updatePriceFeed(
