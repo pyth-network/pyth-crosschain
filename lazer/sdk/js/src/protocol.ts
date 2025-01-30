@@ -7,7 +7,7 @@ export type PriceFeedProperty =
   | "bestAskPrice"
   | "exponent"
   | "publisherCount";
-export type Channel = "fixed_rate@1ms" | "fixed_rate@50ms" | "fixed_rate@200ms";
+export type Channel = "real_time" | "fixed_rate@50ms" | "fixed_rate@200ms";
 
 export type Request =
   | {

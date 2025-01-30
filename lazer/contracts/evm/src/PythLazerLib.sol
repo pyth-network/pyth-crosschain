@@ -15,7 +15,7 @@ library PythLazerLib {
 
     enum Channel {
         Invalid,
-        FixedRate1,
+        RealTime,
         FixedRate50,
         FixedRate200
     }
