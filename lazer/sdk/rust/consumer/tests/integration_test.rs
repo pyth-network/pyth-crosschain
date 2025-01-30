@@ -5,7 +5,6 @@ use {
         router::{JsonUpdate, PriceFeedId},
         subscription::{StreamUpdatedResponse, SubscribedResponse, SubscriptionId},
     },
-    serde_json,
     std::{sync::Arc, time::Duration},
     tokio::sync::Mutex,
     tokio_tungstenite::tungstenite::Message,

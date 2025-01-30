@@ -3,7 +3,6 @@ use {
     pyth_lazer_consumer::{
         Chain, DeliveryFormat, PriceFeedId, PriceFeedProperty, PythLazerConsumer, Response,
     },
-    tokio,
 };
 
 #[tokio::main]
@@ -31,21 +30,18 @@ async fn main() -> Result<()> {
     // Receive updates
     let mut rx = consumer.subscribe_to_updates();
     while let Ok(update) = rx.recv().await {
-        match update {
-            Response::StreamUpdated(update) => {
-                println!(
-                    "Received update for subscription {}",
-                    update.subscription_id.0
-                );
-                if let Some(parsed) = update.payload.parsed {
-                    for feed in parsed.price_feeds {
-                        println!("  Feed ID: {:?}", feed.price_feed_id);
-                        println!("  Price: {:?}", feed.price);
-                        println!("  Exponent: {:?}", feed.exponent);
-                    }
+        if let Response::StreamUpdated(update) = update {
+            println!(
+                "Received update for subscription {}",
+                update.subscription_id.0
+            );
+            if let Some(parsed) = update.payload.parsed {
+                for feed in parsed.price_feeds {
+                    println!("  Feed ID: {:?}", feed.price_feed_id);
+                    println!("  Price: {:?}", feed.price);
+                    println!("  Exponent: {:?}", feed.exponent);
                 }
             }
-            _ => {}
         }
     }
 
