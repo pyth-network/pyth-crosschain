@@ -8,8 +8,11 @@ use pyth_lazer_sdk::LazerClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Create and start the client
-    let mut client = LazerClient::new("lazer_endpoint", None)?;
+    // Create and start the client with optional access token
+    let mut client = LazerClient::new(
+        "wss://hermes.pyth.network",
+        Some("YOUR_ACCESS_TOKEN".to_string()),
+    )?;
     let mut stream = client.start().await?;
 
     // Create subscription request
@@ -47,7 +50,11 @@ async fn main() -> anyhow::Result<()> {
     for feed_id in 1..=3 {
         client.unsubscribe(SubscriptionId(feed_id)).await?;
         println!("Unsubscribed from feed {}", feed_id);
+        // Add a small delay between unsubscribe requests
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
     }
 
+    // Wait a moment to ensure unsubscribe messages are sent
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
     Ok(())
 }

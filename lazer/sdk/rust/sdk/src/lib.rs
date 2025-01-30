@@ -88,12 +88,17 @@ impl LazerClient {
     /// # Returns
     /// Returns a stream of responses from the server
     pub async fn start(&mut self) -> Result<impl futures_util::Stream<Item = Result<Response>>> {
-        let mut url = self.endpoint.clone();
+        let url = self.endpoint.clone();
+        let mut request = tokio_tungstenite::tungstenite::client::IntoClientRequest::into_client_request(url)?;
+        
         if let Some(token) = &self.access_token {
-            url.query_pairs_mut().append_pair("token", token);
+            request.headers_mut().insert(
+                "Authorization",
+                format!("Bearer {}", token).parse().unwrap(),
+            );
         }
 
-        let (ws_stream, _) = connect_async(url).await?;
+        let (ws_stream, _) = connect_async(request).await?;
         let (ws_sender, ws_receiver) = ws_stream.split();
 
         self.ws_sender = Some(ws_sender);
