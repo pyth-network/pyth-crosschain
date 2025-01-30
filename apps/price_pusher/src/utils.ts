@@ -1,4 +1,4 @@
-import { HexString } from "@pythnetwork/price-service-client";
+import { HexString } from "@pythnetwork/hermes-client";
 
 export type PctNumber = number;
 export type DurationInSeconds = number;

@@ -1,4 +1,4 @@
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import fs from "fs";
 import { Options } from "yargs";
 import * as options from "../options";
@@ -85,7 +85,7 @@ export default {
     const {
       endpoint,
       priceConfigFile,
-      priceServiceEndpoint,
+      hermesEndpoint,
       mnemonicFile,
       pythContractAddress,
       pushingFrequency,
@@ -97,29 +97,20 @@ export default {
       gasLimit,
       updateFeeMultiplier,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-      }
-    );
+    const hermesClient = new HermesClient(hermesEndpoint);
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger.child({ module: "PythPriceListener" })
     );
@@ -152,7 +143,7 @@ export default {
       txSpeed
     );
     const evmPusher = new EvmPricePusher(
-      priceServiceConnection,
+      hermesClient,
       client,
       pythContract,
       logger.child({ module: "EvmPricePusher" }),

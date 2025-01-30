@@ -13,10 +13,10 @@ import {
 import { PythAbi } from "./pyth-abi";
 import { Logger } from "pino";
 import {
-  PriceServiceConnection,
+  HermesClient,
   HexString,
   UnixTimestamp,
-} from "@pythnetwork/price-service-client";
+} from "@pythnetwork/hermes-client";
 import { CustomGasStation } from "./custom-gas-station";
 import { PushAttempt } from "../common";
 import {
@@ -128,7 +128,7 @@ export class EvmPricePusher implements IPricePusher {
   private lastPushAttempt: PushAttempt | undefined;
 
   constructor(
-    private connection: PriceServiceConnection,
+    private connection: HermesClient,
     private client: SuperWalletClient,
     private pythContract: PythContract,
     private logger: Logger,
@@ -156,10 +156,9 @@ export class EvmPricePusher implements IPricePusher {
     if (priceIds.length !== pubTimesToPush.length)
       throw new Error("Invalid arguments");
 
-    const priceIdsWith0x = priceIds.map((priceId) => addLeading0x(priceId));
 
     const priceFeedUpdateData = (await this.getPriceFeedsUpdateData(
-      priceIdsWith0x
+      priceIds
     )) as `0x${string}`[];
 
     let updateFee;
@@ -226,6 +225,8 @@ export class EvmPricePusher implements IPricePusher {
     const pubTimesToPushParam = pubTimesToPush.map((pubTime) =>
       BigInt(pubTime)
     );
+
+    const priceIdsWith0x = priceIds.map((priceId) => addLeading0x(priceId));
 
     try {
       const { request } =
@@ -409,9 +410,10 @@ export class EvmPricePusher implements IPricePusher {
   private async getPriceFeedsUpdateData(
     priceIds: HexString[]
   ): Promise<string[]> {
-    const latestVaas = await this.connection.getLatestVaas(priceIds);
-    return latestVaas.map(
-      (vaa) => "0x" + Buffer.from(vaa, "base64").toString("hex")
-    );
+    const response = await this.connection.getLatestPriceUpdates(priceIds, {
+      encoding: "hex",
+      ignoreInvalidPriceIds: true,
+    });
+    return response.binary.data;
   }
 }

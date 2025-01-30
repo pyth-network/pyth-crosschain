@@ -1,11 +1,9 @@
 import {
   HexString,
   HermesClient,
-  PriceUpdate,
 } from "@pythnetwork/hermes-client";
 import { PriceInfo, IPriceListener, PriceItem } from "./interface";
 import { Logger } from "pino";
-import { PriceFeed } from "@pythnetwork/price-service-sdk";
 
 type TimestampInMs = number & { readonly _: unique symbol };
 

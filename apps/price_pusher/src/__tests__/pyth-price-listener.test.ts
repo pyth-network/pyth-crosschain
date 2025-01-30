@@ -1,10 +1,10 @@
 import { PythPriceListener } from "../pyth-price-listener";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { Logger } from "pino";
 
 describe("PythPriceListener", () => {
   let logger: Logger;
-  let connection: PriceServiceConnection;
+  let connection: HermesClient;
   let listener: PythPriceListener;
   let originalConsoleError: typeof console.error;
 
@@ -20,12 +20,10 @@ describe("PythPriceListener", () => {
     } as unknown as Logger;
 
     // Use real Hermes beta endpoint for testing
-    connection = new PriceServiceConnection("https://hermes.pyth.network");
+    connection = new HermesClient("https://hermes.pyth.network");
   });
 
   afterEach(() => {
-    // Clean up websocket connection
-    connection.closeWebSocket();
     // Clean up health check interval
     if (listener) {
       listener.cleanup();
