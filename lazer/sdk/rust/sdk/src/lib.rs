@@ -39,7 +39,8 @@ pub enum BinaryResponse {
 ///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
-///     let (mut client, mut stream) = LazerConsumerClient::start("wss://endpoint").await?;
+///     let mut client = LazerClient::new("wss://endpoint", "YOUR_ACCESS_TOKEN".to_string())?;
+///     let mut stream = client.start().await?;
 ///
 ///     // Subscribe to price feeds
 ///     client.subscribe(Request::Subscribe(SubscribeRequest {
