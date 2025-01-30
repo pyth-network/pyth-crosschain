@@ -1036,6 +1036,7 @@ pub async fn process_new_blocks(
 }
 
 #[tracing::instrument(skip_all)]
+#[allow(clippy::too_many_arguments)]
 pub async fn process_new_blocks_delayed(
     chain_state: BlockchainState,
     mut rx: mpsc::Receiver<BlockRange>,
