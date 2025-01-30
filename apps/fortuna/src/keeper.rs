@@ -250,7 +250,7 @@ impl KeeperMetrics {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BlockRange {
     pub from: BlockNumber,
     pub to: BlockNumber,
@@ -346,7 +346,8 @@ pub async fn run_keeper_threads(
         )
         .in_current_span(),
     );
-    // Spawn a thread that listens for block ranges on the `rx` channel and processes the events for those blocks.
+
+    // Spawn a thread for block processing with configured delays
     spawn(
         process_new_blocks(
             chain_state.clone(),
@@ -356,6 +357,7 @@ pub async fn run_keeper_threads(
             chain_eth_config.escalation_policy.clone(),
             metrics.clone(),
             fulfilled_requests_cache.clone(),
+            chain_eth_config.block_delays.clone(),
         )
         .in_current_span(),
     );
@@ -965,8 +967,10 @@ pub async fn watch_blocks(
     }
 }
 
-/// It waits on rx channel to receive block ranges and then calls process_block_range to process them.
+/// It waits on rx channel to receive block ranges and then calls process_block_range to process them
+/// for each configured block delay.
 #[tracing::instrument(skip_all)]
+#[allow(clippy::too_many_arguments)]
 pub async fn process_new_blocks(
     chain_state: BlockchainState,
     mut rx: mpsc::Receiver<BlockRange>,
@@ -975,12 +979,14 @@ pub async fn process_new_blocks(
     escalation_policy: EscalationPolicyConfig,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    block_delays: Vec<u64>,
 ) {
     tracing::info!("Waiting for new block ranges to process");
     loop {
         if let Some(block_range) = rx.recv().await {
+            // Process blocks immediately first
             process_block_range(
-                block_range,
+                block_range.clone(),
                 Arc::clone(&contract),
                 gas_limit,
                 escalation_policy.clone(),
@@ -990,6 +996,25 @@ pub async fn process_new_blocks(
             )
             .in_current_span()
             .await;
+
+            // Then process with each configured delay
+            for delay in &block_delays {
+                let adjusted_range = BlockRange {
+                    from: block_range.from.saturating_sub(*delay),
+                    to: block_range.to.saturating_sub(*delay),
+                };
+                process_block_range(
+                    adjusted_range,
+                    Arc::clone(&contract),
+                    gas_limit,
+                    escalation_policy.clone(),
+                    chain_state.clone(),
+                    metrics.clone(),
+                    fulfilled_requests_cache.clone(),
+                )
+                .in_current_span()
+                .await;
+            }
         }
     }
 }

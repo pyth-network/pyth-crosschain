@@ -177,6 +177,16 @@ pub struct EthereumConfig {
     /// Maximum number of hashes to record in a request.
     /// This should be set according to the maximum gas limit the provider supports for callbacks.
     pub max_num_hashes: Option<u32>,
+
+    /// A list of delays (in blocks) that indicates how many blocks should be delayed
+    /// before we process a block. For retry logic, we can process blocks multiple times
+    /// at each specified delay. For example: [5, 10, 20].
+    #[serde(default = "default_block_delays")]
+    pub block_delays: Vec<u64>,
+}
+
+fn default_block_delays() -> Vec<u64> {
+    vec![5]
 }
 
 fn default_priority_fee_multiplier_pct() -> u64 {
