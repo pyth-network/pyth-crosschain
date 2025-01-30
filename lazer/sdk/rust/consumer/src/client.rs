@@ -3,7 +3,7 @@ use {
     futures_util::{SinkExt, StreamExt},
     pyth_lazer_protocol::{
         router::{
-            Channel, Chain, DeliveryFormat, FixedRate, PriceFeedId, PriceFeedProperty,
+            Chain, Channel, DeliveryFormat, FixedRate, PriceFeedId, PriceFeedProperty,
             SubscriptionParams, SubscriptionParamsRepr,
         },
         subscription::{Request, Response, SubscribeRequest, SubscriptionId, UnsubscribeRequest},
@@ -14,17 +14,15 @@ use {
         sync::Arc,
         time::{Duration, Instant},
     },
-    ttl_cache::TtlCache,
     tokio::{
         net::TcpStream,
         sync::{broadcast, Mutex},
     },
     tokio_tungstenite::{
-        connect_async,
-        tungstenite::protocol::Message,
-        WebSocketStream, MaybeTlsStream,
+        connect_async, tungstenite::protocol::Message, MaybeTlsStream, WebSocketStream,
     },
     tracing::{debug, error, info, warn},
+    ttl_cache::TtlCache,
 };
 
 const CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
@@ -115,7 +113,7 @@ impl PythLazerConsumer {
                 if let Ok(response) = serde_json::from_str::<Response>(&text) {
                     let msg_key = format!("{:?}", &response);
                     let mut cache = cache.lock().await;
-                    
+
                     if cache.contains_key(&msg_key) {
                         return Ok(());
                     }
@@ -137,15 +135,17 @@ impl PythLazerConsumer {
     pub async fn new(urls: Vec<String>, token: String) -> Result<Self> {
         let (tx, _) = broadcast::channel(TICKER_STREAM_CHANNEL_SIZE);
         let (stream_tx, _) = broadcast::channel(STREAM_POOL_CHANNEL_SIZE);
-        let num_connections = urls.len().min(MAX_NUM_CONNECTIONS).max(DEFAULT_NUM_CONNECTIONS);
-        
+        let num_connections = urls
+            .len()
+            .clamp(DEFAULT_NUM_CONNECTIONS, MAX_NUM_CONNECTIONS);
+
         let mut connections = Vec::with_capacity(num_connections);
         for i in 0..num_connections {
             let url = urls[i % urls.len()].clone();
             let connection = ConnectionState::new(i, url);
             connections.push(Arc::new(Mutex::new(connection)));
         }
-        
+
         let consumer = Self {
             urls,
             token,
@@ -156,16 +156,16 @@ impl PythLazerConsumer {
             message_cache: Arc::new(Mutex::new(TtlCache::new(DEDUP_CACHE_SIZE))),
             reconnect_attempts: Arc::new(Mutex::new(HashMap::new())),
         };
-        
+
         Ok(consumer)
     }
 
     fn exponential_backoff(attempts: usize) -> Duration {
         use rand::Rng;
-        
+
         const BASE_DELAY: u64 = 100; // 100ms
         const MAX_DELAY: u64 = 30_000; // 30s
-        
+
         let base_delay = (2u64.pow(attempts as u32) * BASE_DELAY).min(MAX_DELAY);
         let jitter = rand::thread_rng().gen_range(0..=(base_delay / 10)); // 10% jitter
         Duration::from_millis(base_delay.saturating_add(jitter))
@@ -177,7 +177,7 @@ impl PythLazerConsumer {
                 let mut attempts_guard = self.reconnect_attempts.lock().await;
                 *attempts_guard.entry(connection.id).or_insert(0)
             };
-            
+
             match self.connect_single(connection).await {
                 Ok(_) => {
                     debug!("Connection {} established successfully", connection.id);
@@ -191,13 +191,15 @@ impl PythLazerConsumer {
                         let mut attempts_guard = self.reconnect_attempts.lock().await;
                         *attempts_guard.entry(connection.id).or_insert(0) += 1;
                     }
-                    
+
                     let backoff = Self::exponential_backoff(attempt_count + 1);
                     warn!(
                         "Connection {} backing off for {:?} (attempt {})",
-                        connection.id, backoff, attempt_count + 1
+                        connection.id,
+                        backoff,
+                        attempt_count + 1
                     );
-                    
+
                     tokio::time::sleep(backoff).await;
 
                     // Reset attempts if we've tried too many times
@@ -215,27 +217,31 @@ impl PythLazerConsumer {
     }
 
     async fn connect_single(&self, connection: &mut ConnectionState) -> Result<()> {
-        debug!("Attempting to connect to {} (connection {})", connection.url, connection.id);
-        
+        debug!(
+            "Attempting to connect to {} (connection {})",
+            connection.url, connection.id
+        );
+
         let request = http::Request::builder()
             .uri(&connection.url)
             .header("Authorization", format!("Bearer {}", self.token))
             .body(())?;
 
-        let (ws_stream, _) = match tokio::time::timeout(
-            CONNECTION_TIMEOUT,
-            connect_async(request),
-        ).await {
-            Ok(Ok(result)) => result,
-            Ok(Err(e)) => {
-                connection.mark_error();
-                return Err(anyhow!("WebSocket connection failed: {}", e));
-            }
-            Err(_) => {
-                connection.mark_error();
-                return Err(anyhow!("Connection timed out after {:?}", CONNECTION_TIMEOUT));
-            }
-        };
+        let (ws_stream, _) =
+            match tokio::time::timeout(CONNECTION_TIMEOUT, connect_async(request)).await {
+                Ok(Ok(result)) => result,
+                Ok(Err(e)) => {
+                    connection.mark_error();
+                    return Err(anyhow!("WebSocket connection failed: {}", e));
+                }
+                Err(_) => {
+                    connection.mark_error();
+                    return Err(anyhow!(
+                        "Connection timed out after {:?}",
+                        CONNECTION_TIMEOUT
+                    ));
+                }
+            };
 
         let (write, read) = ws_stream.split();
         connection.write = Some(write);
@@ -247,7 +253,10 @@ impl PythLazerConsumer {
         let connection_id = connection.id;
         let message_handler = tokio::spawn(async move {
             if let Err(e) = Self::handle_messages(read, tx, cache).await {
-                error!("Message handler for connection {} failed: {}", connection_id, e);
+                error!(
+                    "Message handler for connection {} failed: {}",
+                    connection_id, e
+                );
             }
         });
 
@@ -261,7 +270,10 @@ impl PythLazerConsumer {
                 );
                 let msg = serde_json::to_string(&Request::Subscribe(request.clone()))?;
                 if let Err(e) = write.send(Message::Text(msg)).await {
-                    error!("Failed to resubscribe on connection {}: {}", connection.id, e);
+                    error!(
+                        "Failed to resubscribe on connection {}: {}",
+                        connection.id, e
+                    );
                     connection.mark_error();
                     return Err(e.into());
                 }
@@ -290,10 +302,13 @@ impl PythLazerConsumer {
                 tokio::time::sleep(RECONNECT_WAIT).await;
                 continue;
             }
-            
+
             // If we get here, the connection was closed gracefully
-            warn!("Connection {} closed, waiting {} seconds before reconnecting...", 
-                  connection.id, RECONNECT_WAIT.as_secs());
+            warn!(
+                "Connection {} closed, waiting {} seconds before reconnecting...",
+                connection.id,
+                RECONNECT_WAIT.as_secs()
+            );
             tokio::time::sleep(RECONNECT_WAIT).await;
         }
     }
@@ -301,23 +316,23 @@ impl PythLazerConsumer {
     pub async fn connect(&mut self) -> Result<()> {
         let num_connections = self.urls.len().min(MAX_NUM_CONNECTIONS);
         let mut connections = Vec::with_capacity(num_connections);
-        
+
         for i in 0..num_connections {
             let url = self.urls[i % self.urls.len()].clone();
             let connection = ConnectionState::new(i, url);
             connections.push(Arc::new(Mutex::new(connection)));
         }
-        
+
         *self.connections.lock().await = connections.clone();
-        
+
         for (i, connection) in connections.into_iter().enumerate() {
             let consumer = self.clone();
-            
+
             // Stagger connection attempts
             if i > 0 {
                 tokio::time::sleep(RECONNECT_STAGGER).await;
             }
-            
+
             tokio::spawn(async move {
                 let conn = connection.lock().await.clone();
                 consumer.run_connection_loop(conn).await;
@@ -343,7 +358,6 @@ impl PythLazerConsumer {
         chains: Option<Vec<Chain>>,
         delivery_format: Option<DeliveryFormat>,
     ) -> Result<()> {
-
         let params = SubscriptionParams::new(SubscriptionParamsRepr {
             price_feed_ids: feed_ids,
             properties: properties.unwrap_or_else(|| vec![PriceFeedProperty::Price]),
@@ -370,7 +384,10 @@ impl PythLazerConsumer {
             }
         }
 
-        self.active_subscriptions.lock().await.insert(subscription_id, request);
+        self.active_subscriptions
+            .lock()
+            .await
+            .insert(subscription_id, request);
         Ok(())
     }
 
@@ -382,13 +399,12 @@ impl PythLazerConsumer {
         while let Some(msg) = read.next().await {
             match msg {
                 Ok(Message::Text(text)) => {
-                    
                     match serde_json::from_str::<Response>(&text) {
                         Ok(response) => {
                             // Check if we've seen this message recently
                             let msg_key = format!("{:?}", &response);
                             let mut cache = cache.lock().await;
-                            
+
                             if cache.contains_key(&msg_key) {
                                 debug!("Dropping duplicate message");
                                 continue;
@@ -422,7 +438,7 @@ impl PythLazerConsumer {
                                 error!("Failed to forward message to ticker stream: {}", e);
                                 return Err(anyhow!("Failed to forward message: {}", e));
                             }
-                            
+
                             // Also send to the stream pool for redundancy
                             if let Err(e) = tx.send(response) {
                                 error!("Failed to forward message to stream pool: {}", e);
@@ -470,7 +486,10 @@ impl PythLazerConsumer {
             }
         }
 
-        self.active_subscriptions.lock().await.remove(&subscription_id);
+        self.active_subscriptions
+            .lock()
+            .await
+            .remove(&subscription_id);
         Ok(())
     }
 
@@ -482,8 +501,4 @@ impl PythLazerConsumer {
     pub fn subscribe_to_stream_pool(&self) -> broadcast::Receiver<Response> {
         self.stream_tx.subscribe()
     }
-
-
-
-
 }

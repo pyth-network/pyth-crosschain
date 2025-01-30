@@ -1,6 +1,8 @@
 use {
     anyhow::Result,
-    pyth_lazer_consumer::{Chain, DeliveryFormat, PriceFeedId, PriceFeedProperty, PythLazerConsumer, Response},
+    pyth_lazer_consumer::{
+        Chain, DeliveryFormat, PriceFeedId, PriceFeedProperty, PythLazerConsumer, Response,
+    },
     tokio,
 };
 
@@ -31,7 +33,10 @@ async fn main() -> Result<()> {
     while let Ok(update) = rx.recv().await {
         match update {
             Response::StreamUpdated(update) => {
-                println!("Received update for subscription {}", update.subscription_id.0);
+                println!(
+                    "Received update for subscription {}",
+                    update.subscription_id.0
+                );
                 if let Some(parsed) = update.payload.parsed {
                     for feed in parsed.price_feeds {
                         println!("  Feed ID: {:?}", feed.price_feed_id);

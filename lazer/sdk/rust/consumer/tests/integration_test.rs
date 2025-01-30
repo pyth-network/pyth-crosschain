@@ -1,15 +1,15 @@
 use {
     anyhow::Result,
-    std::{sync::Arc, time::Duration},
-    tokio::sync::Mutex,
-    ttl_cache::TtlCache,
-    tokio_tungstenite::tungstenite::Message,
     pyth_lazer_consumer::{Chain, DeliveryFormat, PriceFeedProperty, PythLazerConsumer, Response},
     pyth_lazer_protocol::{
         router::{JsonUpdate, PriceFeedId},
-        subscription::{SubscribedResponse, SubscriptionId, StreamUpdatedResponse},
+        subscription::{StreamUpdatedResponse, SubscribedResponse, SubscriptionId},
     },
     serde_json,
+    std::{sync::Arc, time::Duration},
+    tokio::sync::Mutex,
+    tokio_tungstenite::tungstenite::Message,
+    ttl_cache::TtlCache,
 };
 
 // Test helper trait
@@ -49,26 +49,35 @@ async fn test_subscription_lifecycle() -> Result<()> {
     let delivery_format = Some(DeliveryFormat::Json);
 
     consumer
-        .subscribe(subscription_id, feed_ids, properties, chains, delivery_format)
+        .subscribe(
+            subscription_id,
+            feed_ids,
+            properties,
+            chains,
+            delivery_format,
+        )
         .await?;
 
     // Verify subscription was created
     let mut rx = consumer.subscribe_to_updates();
-    
+
     // Simulate subscription confirmation
     let subscribed_response = Response::Subscribed(SubscribedResponse {
         subscription_id: SubscriptionId(1),
     });
     let confirmation = Message::Text(serde_json::to_string(&subscribed_response).unwrap());
     consumer.handle_message(confirmation);
-    
+
     // Wait a short time for the message to be processed
     tokio::time::sleep(Duration::from_millis(100)).await;
-    
+
     // Try to receive the confirmation message
     let result = rx.try_recv();
-    assert!(result.is_ok(), "Expected to receive subscription confirmation");
-    
+    assert!(
+        result.is_ok(),
+        "Expected to receive subscription confirmation"
+    );
+
     if let Ok(Response::Subscribed(response)) = result {
         assert_eq!(response.subscription_id, SubscriptionId(1));
     } else {
@@ -108,22 +117,16 @@ async fn test_message_deduplication() -> Result<()> {
 
     let message = Message::Text(serde_json::to_string(&stream_update).unwrap());
     let cache = Arc::new(Mutex::new(TtlCache::new(100)));
-    
+
     consumer.process_message(message.clone(), &cache).await?;
     consumer.process_message(message, &cache).await?;
 
     // Wait for the first message
-    let result = tokio::time::timeout(
-        Duration::from_secs(1),
-        rx.recv()
-    ).await;
+    let result = tokio::time::timeout(Duration::from_secs(1), rx.recv()).await;
     assert!(result.is_ok(), "Expected to receive first message");
 
     // Try to receive a second message (should fail due to deduplication)
-    let result = tokio::time::timeout(
-        Duration::from_millis(100),
-        rx.recv()
-    ).await;
+    let result = tokio::time::timeout(Duration::from_millis(100), rx.recv()).await;
     assert!(result.is_err(), "Should not receive duplicate message");
 
     Ok(())
