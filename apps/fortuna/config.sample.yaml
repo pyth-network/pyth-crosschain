@@ -78,3 +78,6 @@ keeper:
     value: 0xabcd
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
+  
+  # Number of blocks to wait before processing new blocks (in addition to reveal_delay_blocks)
+  delay_blocks: 5

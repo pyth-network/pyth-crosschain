@@ -335,7 +335,7 @@ pub async fn run_keeper_threads(
         .in_current_span(),
     );
 
-    let (tx, rx) = mpsc::channel::<BlockRange>(1000);
+    let (tx, _rx) = mpsc::channel::<BlockRange>(1000);
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
     spawn(
         watch_blocks_wrapper(
@@ -346,16 +346,57 @@ pub async fn run_keeper_threads(
         )
         .in_current_span(),
     );
-    // Spawn a thread that listens for block ranges on the `rx` channel and processes the events for those blocks.
+    // Create channels for both immediate and delayed block processing
+    let (tx_immediate, rx_immediate) = mpsc::channel::<BlockRange>(1000);
+    let (tx_delayed, rx_delayed) = mpsc::channel::<BlockRange>(1000);
+
+    // Spawn a thread to watch for new blocks and send the range of blocks to both channels
+    spawn(
+        watch_blocks_wrapper(
+            chain_state.clone(),
+            latest_safe_block,
+            tx_immediate,
+            chain_eth_config.geth_rpc_wss.clone(),
+        )
+        .in_current_span(),
+    );
+
+    // Clone the tx_delayed channel for the second watch_blocks_wrapper
+    spawn(
+        watch_blocks_wrapper(
+            chain_state.clone(),
+            latest_safe_block,
+            tx_delayed,
+            chain_eth_config.geth_rpc_wss.clone(),
+        )
+        .in_current_span(),
+    );
+
+    // Spawn a thread for immediate block processing
     spawn(
         process_new_blocks(
             chain_state.clone(),
-            rx,
+            rx_immediate,
             Arc::clone(&contract),
             gas_limit,
             chain_eth_config.escalation_policy.clone(),
             metrics.clone(),
             fulfilled_requests_cache.clone(),
+        )
+        .in_current_span(),
+    );
+
+    // Spawn a thread for delayed block processing
+    spawn(
+        process_new_blocks_delayed(
+            chain_state.clone(),
+            rx_delayed,
+            Arc::clone(&contract),
+            gas_limit,
+            chain_eth_config.escalation_policy.clone(),
+            metrics.clone(),
+            fulfilled_requests_cache.clone(),
+            5,
         )
         .in_current_span(),
     );
@@ -981,6 +1022,43 @@ pub async fn process_new_blocks(
         if let Some(block_range) = rx.recv().await {
             process_block_range(
                 block_range,
+                Arc::clone(&contract),
+                gas_limit,
+                escalation_policy.clone(),
+                chain_state.clone(),
+                metrics.clone(),
+                fulfilled_requests_cache.clone(),
+            )
+            .in_current_span()
+            .await;
+        }
+    }
+}
+
+#[tracing::instrument(skip_all)]
+pub async fn process_new_blocks_delayed(
+    chain_state: BlockchainState,
+    mut rx: mpsc::Receiver<BlockRange>,
+    contract: Arc<InstrumentedSignablePythContract>,
+    gas_limit: U256,
+    escalation_policy: EscalationPolicyConfig,
+    metrics: Arc<KeeperMetrics>,
+    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    delay_blocks: u64,
+) {
+    tracing::info!(
+        "Waiting for new block ranges to process with {} block delay",
+        delay_blocks
+    );
+    loop {
+        if let Some(block_range) = rx.recv().await {
+            let from_block_after_delay = block_range.from + delay_blocks;
+            let adjusted_range = BlockRange {
+                from: from_block_after_delay,
+                to: block_range.to + delay_blocks,
+            };
+            process_block_range(
+                adjusted_range,
                 Arc::clone(&contract),
                 gas_limit,
                 escalation_policy.clone(),

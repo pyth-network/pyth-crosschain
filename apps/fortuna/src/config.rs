@@ -341,6 +341,14 @@ pub struct KeeperConfig {
     /// This key *does not need to be a registered provider*. In particular, production deployments
     /// should ensure this is a different key in order to reduce the severity of security breaches.
     pub private_key: SecretString,
+
+    /// Number of blocks to wait before processing new blocks (in addition to reveal_delay_blocks)
+    #[serde(default = "default_delay_blocks")]
+    pub delay_blocks: u64,
+}
+
+fn default_delay_blocks() -> u64 {
+    5
 }
 
 // A secret is a string that can be provided either as a literal in the config,
