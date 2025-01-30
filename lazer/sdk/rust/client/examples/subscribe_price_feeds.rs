@@ -41,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
     while let Some(msg) = stream.next().await {
         println!("Received update: {:?}", msg?);
         count += 1;
-        if count >= 50 {
+        if count >= 10 {
             break;
         }
     }
@@ -51,5 +51,6 @@ async fn main() -> anyhow::Result<()> {
     println!("Unsubscribed from {:?}", subscription_id);
 
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    client.close().await?;
     Ok(())
 }

@@ -179,4 +179,15 @@ impl LazerClient {
             anyhow::bail!("WebSocket connection not started")
         }
     }
+
+    /// Closes the WebSocket connection
+    pub async fn close(&mut self) -> Result<()> {
+        if let Some(sender) = &mut self.ws_sender {
+            sender.send(Message::Close(None)).await?;
+            self.ws_sender = None;
+            Ok(())
+        } else {
+            anyhow::bail!("WebSocket connection not started")
+        }
+    }
 }
