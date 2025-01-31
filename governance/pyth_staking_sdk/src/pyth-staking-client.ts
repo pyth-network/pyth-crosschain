@@ -688,7 +688,7 @@ export class PythStakingClient {
 
   async getAdvanceDelegationRecordInstructions(
     stakeAccountPositions: PublicKey,
-    payer?: PublicKey
+    payer?: PublicKey,
   ) {
     const poolData = await this.getPoolDataAccount();
     const stakeAccountPositionsData = await this.getStakeAccountPositions(
@@ -796,10 +796,13 @@ export class PythStakingClient {
     );
   }
 
-  public async getClaimableRewards(stakeAccountPositions: PublicKey, simulationPayer?: PublicKey) {
+  public async getClaimableRewards(
+    stakeAccountPositions: PublicKey,
+    simulationPayer?: PublicKey,
+  ) {
     const instructions = await this.getAdvanceDelegationRecordInstructions(
       stakeAccountPositions,
-      simulationPayer
+      simulationPayer,
     );
 
     let totalRewards = 0n;
