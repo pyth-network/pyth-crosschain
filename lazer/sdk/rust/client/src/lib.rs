@@ -1,30 +1,10 @@
 use anyhow::Result;
-use base64::Engine;
 use futures_util::{SinkExt, StreamExt};
-use pyth_lazer_protocol::{
-    message::{EvmMessage, SolanaMessage},
-    payload::{
-        BINARY_UPDATE_FORMAT_MAGIC, EVM_FORMAT_MAGIC, PARSED_FORMAT_MAGIC, SOLANA_FORMAT_MAGIC_BE,
-    },
-    router::{JsonBinaryData, JsonBinaryEncoding, JsonUpdate},
-    subscription::{
-        ErrorResponse, Request, Response, StreamUpdatedResponse, SubscriptionId, UnsubscribeRequest,
-    },
+use pyth_lazer_protocol::subscription::{
+    ErrorResponse, Request, Response, SubscriptionId, UnsubscribeRequest,
 };
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
-
-/// Response type for binary messages containing chain-specific data
-#[derive(Debug)]
-pub enum BinaryResponse {
-    /// EVM chain message with payload and signature
-    Evm(EvmMessage),
-    /// Solana chain message with payload and signature
-    Solana(SolanaMessage),
-    /// Parsed JSON payload for human-readable format
-    Parsed(serde_json::Value),
-}
-
 /// A WebSocket client for consuming Pyth Lazer price feed updates
 ///
 /// This client provides a simple interface to:
@@ -86,59 +66,7 @@ impl LazerClient {
             let msg = msg?;
             match msg {
                 Message::Text(text) => Ok(serde_json::from_str(&text)?),
-                Message::Binary(data) => {
-                    let mut pos = 0;
-                    let magic = u32::from_be_bytes(data[pos..pos + 4].try_into()?);
-                    pos += 4;
-
-                    if magic != BINARY_UPDATE_FORMAT_MAGIC {
-                        anyhow::bail!("binary update format magic mismatch");
-                    }
-
-                    let subscription_id =
-                        SubscriptionId(u64::from_be_bytes(data[pos..pos + 8].try_into()?));
-                    pos += 8;
-
-                    let mut evm = None;
-                    let mut solana = None;
-                    let mut parsed = None;
-
-                    while pos < data.len() {
-                        let len = u16::from_be_bytes(data[pos..pos + 2].try_into()?) as usize;
-                        pos += 2;
-                        let magic = u32::from_be_bytes(data[pos..pos + 4].try_into()?);
-
-                        match magic {
-                            EVM_FORMAT_MAGIC => {
-                                evm = Some(EvmMessage::deserialize_slice(&data[pos..pos + len])?);
-                            }
-                            SOLANA_FORMAT_MAGIC_BE => {
-                                solana =
-                                    Some(SolanaMessage::deserialize_slice(&data[pos..pos + len])?);
-                            }
-                            PARSED_FORMAT_MAGIC => {
-                                parsed = Some(serde_json::from_slice(&data[pos + 4..pos + len])?);
-                            }
-                            _ => anyhow::bail!("unknown magic: {}", magic),
-                        }
-                        pos += len;
-                    }
-
-                    Ok(Response::StreamUpdated(StreamUpdatedResponse {
-                        subscription_id,
-                        payload: JsonUpdate {
-                            evm: evm.map(|m| JsonBinaryData {
-                                encoding: JsonBinaryEncoding::Base64,
-                                data: base64::engine::general_purpose::STANDARD.encode(&m.payload),
-                            }),
-                            solana: solana.map(|m| JsonBinaryData {
-                                encoding: JsonBinaryEncoding::Base64,
-                                data: base64::engine::general_purpose::STANDARD.encode(&m.payload),
-                            }),
-                            parsed,
-                        },
-                    }))
-                }
+                Message::Binary(data) => Ok(Response::from_binary(&data)?),
                 Message::Close(_) => Ok(Response::Error(ErrorResponse {
                     error: "WebSocket connection closed".to_string(),
                 })),

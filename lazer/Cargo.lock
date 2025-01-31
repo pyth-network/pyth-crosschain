@@ -731,6 +731,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "base64ct"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3757,7 +3763,7 @@ name = "pyth-lazer-client"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "base64 0.21.7",
+ "base64 0.22.1",
  "futures-util",
  "pyth-lazer-protocol 0.4.0",
  "serde",
@@ -3788,6 +3794,7 @@ version = "0.4.0"
 dependencies = [
  "alloy-primitives",
  "anyhow",
+ "base64 0.22.1",
  "bincode",
  "bs58 0.5.1",
  "byteorder",
@@ -3798,6 +3805,7 @@ dependencies = [
  "libsecp256k1 0.7.1",
  "rust_decimal",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
