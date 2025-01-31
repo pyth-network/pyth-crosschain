@@ -164,7 +164,7 @@ export class EvmPricePusher implements IPricePusher {
 
     try {
       updateFee = await this.pythContract.read.getUpdateFee([
-        priceFeedUpdateData,
+        priceFeedUpdateData.map((data) => addLeading0x(data)),
       ]);
       updateFee = BigInt(
         Math.round(Number(updateFee) * (this.updateFeeMultiplier || 1))
