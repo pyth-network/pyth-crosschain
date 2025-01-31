@@ -3765,7 +3765,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "futures-util",
- "pyth-lazer-protocol 0.4.0",
+ "pyth-lazer-protocol 0.4.1",
  "serde",
  "serde_json",
  "tokio",
@@ -3790,7 +3790,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "alloy-primitives",
  "anyhow",
