@@ -130,78 +130,10 @@ impl Default for KeeperMetrics {
 impl KeeperMetrics {
     pub async fn new(
         registry: Arc<RwLock<Registry>>,
-        chain_ids: Vec<String>,
-        provider_addresses: Vec<Address>,
+        chain_labels: Vec<(String, Address)>,
     ) -> Self {
         let mut writable_registry = registry.write().await;
         let keeper_metrics = KeeperMetrics::default();
-        
-        // Initialize metrics for each chain_id and provider_address pair
-        for (chain_id, provider_address) in chain_ids.into_iter().zip(provider_addresses) {
-            let account_label = AccountLabel {
-                chain_id,
-                address: provider_address.to_string(),
-            };
-
-            // Pre-initialize metrics with the account label
-            let _ = keeper_metrics
-                .current_sequence_number
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .end_sequence_number
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .balance
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .collected_fee
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .current_fee
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .target_provider_fee
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .total_gas_spent
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .total_gas_fee_spent
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .requests
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .requests_processed
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .requests_processed_success
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .requests_processed_failure
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .requests_reprocessed
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .reveals
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .request_duration_ms
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .retry_count
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .final_gas_multiplier
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .final_fee_multiplier
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .gas_price_estimate
-                .get_or_create(&account_label);
-        }
 
         writable_registry.register(
             "current_sequence_number",
@@ -316,6 +248,60 @@ impl KeeperMetrics {
             "Gas price estimate for the blockchain (in gwei)",
             keeper_metrics.gas_price_estimate.clone(),
         );
+
+        // *Important*: When adding a new metric:
+        // 1. Register it above using `writable_registry.register(...)`
+        // 2. Add a get_or_create call in the loop below to initialize it for each chain/provider pair
+        for (chain_id, provider_address) in chain_labels {
+            let account_label = AccountLabel {
+                chain_id,
+                address: provider_address.to_string(),
+            };
+
+            let _ = keeper_metrics
+                .current_sequence_number
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .end_sequence_number
+                .get_or_create(&account_label);
+            let _ = keeper_metrics.balance.get_or_create(&account_label);
+            let _ = keeper_metrics.collected_fee.get_or_create(&account_label);
+            let _ = keeper_metrics.current_fee.get_or_create(&account_label);
+            let _ = keeper_metrics
+                .target_provider_fee
+                .get_or_create(&account_label);
+            let _ = keeper_metrics.total_gas_spent.get_or_create(&account_label);
+            let _ = keeper_metrics
+                .total_gas_fee_spent
+                .get_or_create(&account_label);
+            let _ = keeper_metrics.requests.get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests_processed
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests_processed_success
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests_processed_failure
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests_reprocessed
+                .get_or_create(&account_label);
+            let _ = keeper_metrics.reveals.get_or_create(&account_label);
+            let _ = keeper_metrics
+                .request_duration_ms
+                .get_or_create(&account_label);
+            let _ = keeper_metrics.retry_count.get_or_create(&account_label);
+            let _ = keeper_metrics
+                .final_gas_multiplier
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .final_fee_multiplier
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .gas_price_estimate
+                .get_or_create(&account_label);
+        }
 
         keeper_metrics
     }

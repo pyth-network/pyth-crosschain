@@ -104,9 +104,11 @@ pub async fn run_keeper(
 ) -> Result<()> {
     let mut handles = Vec::new();
     let keeper_metrics = Arc::new({
-        let chain_ids: Vec<String> = chains.keys().map(|id| id.clone()).collect();
-        let provider_addresses: Vec<Address> = chains.values().map(|state| state.provider_address).collect();
-        KeeperMetrics::new(metrics_registry.clone(), chain_ids, provider_addresses).await
+        let chain_labels: Vec<(String, Address)> = chains
+            .iter()
+            .map(|(id, state)| (id.clone(), state.provider_address))
+            .collect();
+        KeeperMetrics::new(metrics_registry.clone(), chain_labels).await
     });
     for (chain_id, chain_config) in chains {
         let chain_eth_config = config
