@@ -38,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
                 ],
                 chains: vec![Chain::Solana],
                 delivery_format: DeliveryFormat::Json,
-                json_binary_encoding: JsonBinaryEncoding::default(),
+                json_binary_encoding: JsonBinaryEncoding::Base64,
                 parsed: true,
                 channel: Channel::FixedRate(
                     FixedRate::from_ms(200).expect("unsupported update rate"),
@@ -59,7 +59,7 @@ async fn main() -> anyhow::Result<()> {
                 ],
                 chains: vec![Chain::Evm, Chain::Solana],
                 delivery_format: DeliveryFormat::Binary,
-                json_binary_encoding: JsonBinaryEncoding::default(),
+                json_binary_encoding: JsonBinaryEncoding::Base64,
                 parsed: false,
                 channel: Channel::FixedRate(
                     FixedRate::from_ms(50).expect("unsupported update rate"),
