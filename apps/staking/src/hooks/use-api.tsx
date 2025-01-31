@@ -96,7 +96,13 @@ const State = {
       dashboardDataCacheKey,
 
       loadData: () =>
-        api.loadData(client, pythnetClient, hermesClient, account, simulationPayer ? new PublicKey(simulationPayer) : undefined),
+        api.loadData(
+          client,
+          pythnetClient,
+          hermesClient,
+          account,
+          simulationPayer ? new PublicKey(simulationPayer) : undefined,
+        ),
 
       claim: bindApi(api.claim),
       deposit: bindApi(api.deposit),
@@ -146,7 +152,11 @@ export const ApiProvider = ({
   return <ApiContext.Provider value={state} {...props} />;
 };
 
-const useApiContext = (hermesUrl: string, pythnetRpcUrl: string, simulationPayer: string | undefined) => {
+const useApiContext = (
+  hermesUrl: string,
+  pythnetRpcUrl: string,
+  simulationPayer: string | undefined,
+) => {
   const wallet = useWallet();
   const { connection } = useConnection();
   const { isMainnet } = useNetwork();

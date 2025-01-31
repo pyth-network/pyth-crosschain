@@ -83,7 +83,11 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
             walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
             mainnetRpc={MAINNET_RPC}
           >
-            <ApiProvider hermesUrl={HERMES_URL} pythnetRpcUrl={PYTHNET_RPC} simulationPayer={SIMULATION_PAYER}>
+            <ApiProvider
+              hermesUrl={HERMES_URL}
+              pythnetRpcUrl={PYTHNET_RPC}
+              simulationPayer={SIMULATION_PAYER}
+            >
               <ToastProvider>
                 <html lang={lang} {...props} />
               </ToastProvider>
