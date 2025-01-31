@@ -1,10 +1,13 @@
+use base64::Engine;
 use futures_util::StreamExt;
 use pyth_lazer_client::LazerClient;
+use pyth_lazer_protocol::message::{EvmMessage, SolanaMessage};
+use pyth_lazer_protocol::payload::PayloadData;
 use pyth_lazer_protocol::router::{
     Chain, Channel, DeliveryFormat, FixedRate, JsonBinaryEncoding, PriceFeedId, PriceFeedProperty,
     SubscriptionParams, SubscriptionParamsRepr,
 };
-use pyth_lazer_protocol::subscription::{Request, SubscribeRequest, SubscriptionId};
+use pyth_lazer_protocol::subscription::{Request, Response, SubscribeRequest, SubscriptionId};
 
 fn get_lazer_access_token() -> String {
     // Place your access token in your env at LAZER_ACCESS_TOKEN or set it here
@@ -75,7 +78,44 @@ async fn main() -> anyhow::Result<()> {
     // Process the first few updates
     let mut count = 0;
     while let Some(msg) = stream.next().await {
-        println!("Received update: {:?}", msg?);
+        // The stream gives us base64-encoded binary messages. We need to decode, parse, and verify them.
+        match msg? {
+            Response::StreamUpdated(update) => {
+                if let Some(evm_data) = update.payload.evm {
+                    // Decode binary data
+                    let binary_data =
+                        base64::engine::general_purpose::STANDARD.decode(&evm_data.data)?;
+                    let evm_message = EvmMessage::deserialize_slice(&binary_data)?;
+
+                    // Parse and verify the EVM message
+                    let payload = parse_and_verify_evm_message(&evm_message);
+                    println!("EVM payload: {payload:?}\n");
+                }
+
+                if let Some(solana_data) = update.payload.solana {
+                    // Decode binary data
+                    let binary_data =
+                        base64::engine::general_purpose::STANDARD.decode(&solana_data.data)?;
+                    let solana_message = SolanaMessage::deserialize_slice(&binary_data)?;
+
+                    // Parse and verify the Solana message
+                    let payload = parse_and_verify_solana_message(&solana_message);
+                    println!("Solana payload: {payload:?}\n");
+                }
+
+                if let Some(parsed) = update.payload.parsed {
+                    // Parsed payloads (`parsed: true`) are already decoded and ready to use
+                    for feed in parsed.price_feeds {
+                        println!(
+                            "Parsed payload: {:?}: {:?} at {:?}\n",
+                            feed.price_feed_id, feed, parsed.timestamp_us
+                        );
+                    }
+                }
+            }
+            _ => println!("Received non-update message"),
+        }
+
         count += 1;
         if count >= 50 {
             break;
@@ -91,4 +131,28 @@ async fn main() -> anyhow::Result<()> {
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
     client.close().await?;
     Ok(())
+}
+
+fn parse_and_verify_solana_message(solana_message: &SolanaMessage) -> anyhow::Result<PayloadData> {
+    // Verify signature using the pubkey
+    let public_key = ed25519_dalek::VerifyingKey::from_bytes(&solana_message.public_key)?;
+    public_key.verify_strict(
+        &solana_message.payload,
+        &ed25519_dalek::Signature::from_bytes(&solana_message.signature),
+    )?;
+
+    let payload = PayloadData::deserialize_slice_le(&solana_message.payload)?;
+    Ok(payload)
+}
+
+fn parse_and_verify_evm_message(evm_message: &EvmMessage) -> anyhow::Result<PayloadData> {
+    // Recover pubkey from message
+    libsecp256k1::recover(
+        &libsecp256k1::Message::parse(&alloy_primitives::keccak256(&evm_message.payload)),
+        &libsecp256k1::Signature::parse_standard(&evm_message.signature)?,
+        &libsecp256k1::RecoveryId::parse(evm_message.recovery_id)?,
+    )?;
+
+    let payload = PayloadData::deserialize_slice_be(&evm_message.payload)?;
+    Ok(payload)
 }

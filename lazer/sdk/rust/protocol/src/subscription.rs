@@ -3,7 +3,6 @@
 
 use {
     crate::{
-        message::{EvmMessage, SolanaMessage},
         payload::{
             BINARY_UPDATE_FORMAT_MAGIC, EVM_FORMAT_MAGIC, PARSED_FORMAT_MAGIC,
             SOLANA_FORMAT_MAGIC_BE,
@@ -79,10 +78,18 @@ impl Response {
 
             match magic {
                 EVM_FORMAT_MAGIC => {
-                    evm = Some(EvmMessage::deserialize_slice(&data[pos..pos + len])?);
+                    evm = Some(JsonBinaryData {
+                        encoding: JsonBinaryEncoding::Base64,
+                        data: base64::engine::general_purpose::STANDARD
+                            .encode(&data[pos..pos + len]),
+                    });
                 }
                 SOLANA_FORMAT_MAGIC_BE => {
-                    solana = Some(SolanaMessage::deserialize_slice(&data[pos..pos + len])?);
+                    solana = Some(JsonBinaryData {
+                        encoding: JsonBinaryEncoding::Base64,
+                        data: base64::engine::general_purpose::STANDARD
+                            .encode(&data[pos..pos + len]),
+                    });
                 }
                 PARSED_FORMAT_MAGIC => {
                     parsed = Some(serde_json::from_slice(&data[pos + 4..pos + len])?);
@@ -95,19 +102,14 @@ impl Response {
         Ok(Response::StreamUpdated(StreamUpdatedResponse {
             subscription_id,
             payload: JsonUpdate {
-                evm: evm.map(|m| JsonBinaryData {
-                    encoding: JsonBinaryEncoding::Base64,
-                    data: base64::engine::general_purpose::STANDARD.encode(&m.payload),
-                }),
-                solana: solana.map(|m| JsonBinaryData {
-                    encoding: JsonBinaryEncoding::Base64,
-                    data: base64::engine::general_purpose::STANDARD.encode(&m.payload),
-                }),
+                evm,
+                solana,
                 parsed,
             },
         }))
     }
 }
+
 /// Sent from the server after a successul subscription.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -3762,9 +3762,15 @@ dependencies = [
 name = "pyth-lazer-client"
 version = "0.1.0"
 dependencies = [
+ "alloy-primitives",
  "anyhow",
  "base64 0.22.1",
+ "bincode",
+ "bs58 0.5.1",
+ "ed25519-dalek 2.1.1",
  "futures-util",
+ "hex",
+ "libsecp256k1 0.7.1",
  "pyth-lazer-protocol 0.4.1",
  "serde",
  "serde_json",
