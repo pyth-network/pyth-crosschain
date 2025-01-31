@@ -144,25 +144,63 @@ impl KeeperMetrics {
             };
 
             // Pre-initialize metrics with the account label
-            keeper_metrics.current_sequence_number.get_or_create(&account_label);
-            keeper_metrics.end_sequence_number.get_or_create(&account_label);
-            keeper_metrics.balance.get_or_create(&account_label);
-            keeper_metrics.collected_fee.get_or_create(&account_label);
-            keeper_metrics.current_fee.get_or_create(&account_label);
-            keeper_metrics.target_provider_fee.get_or_create(&account_label);
-            keeper_metrics.total_gas_spent.get_or_create(&account_label);
-            keeper_metrics.total_gas_fee_spent.get_or_create(&account_label);
-            keeper_metrics.requests.get_or_create(&account_label);
-            keeper_metrics.requests_processed.get_or_create(&account_label);
-            keeper_metrics.requests_processed_success.get_or_create(&account_label);
-            keeper_metrics.requests_processed_failure.get_or_create(&account_label);
-            keeper_metrics.requests_reprocessed.get_or_create(&account_label);
-            keeper_metrics.reveals.get_or_create(&account_label);
-            keeper_metrics.request_duration_ms.get_or_create(&account_label);
-            keeper_metrics.retry_count.get_or_create(&account_label);
-            keeper_metrics.final_gas_multiplier.get_or_create(&account_label);
-            keeper_metrics.final_fee_multiplier.get_or_create(&account_label);
-            keeper_metrics.gas_price_estimate.get_or_create(&account_label);
+            let _ = keeper_metrics
+                .current_sequence_number
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .end_sequence_number
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .balance
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .collected_fee
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .current_fee
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .target_provider_fee
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .total_gas_spent
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .total_gas_fee_spent
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests_processed
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests_processed_success
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests_processed_failure
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .requests_reprocessed
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .reveals
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .request_duration_ms
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .retry_count
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .final_gas_multiplier
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .final_fee_multiplier
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .gas_price_estimate
+                .get_or_create(&account_label);
         }
 
         writable_registry.register(
