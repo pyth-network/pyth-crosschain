@@ -28,7 +28,6 @@ import { MaxWidth } from "../MaxWidth";
 import { ReportAccessibility } from "../ReportAccessibility";
 import { RouterProvider } from "../RouterProvider";
 import { WalletProvider } from "../WalletProvider";
-import { PublicKey } from "@solana/web3.js";
 
 const redHatText = Red_Hat_Text({
   subsets: ["latin"],
