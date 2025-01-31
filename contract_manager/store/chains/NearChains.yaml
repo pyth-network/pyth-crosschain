@@ -1,0 +1,8 @@
+- id: near_testnet
+  wormholeChainName: near_testnet
+  mainnet: false
+  type: NearChain
+- id: near
+  wormholeChainName: near
+  mainnet: true
+  type: NearChain

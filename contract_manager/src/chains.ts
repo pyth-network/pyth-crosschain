@@ -858,3 +858,51 @@ export class TonChain extends Chain {
     return Number(balance) / 10 ** 9;
   }
 }
+
+export class NearChain extends Chain {
+  static type = "NearChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  static fromJson(parsed: ChainConfig & { networkId: number }): NearChain {
+    if (parsed.type !== NearChain.type) throw new Error("Invalid type");
+    return new NearChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.nativeToken,
+    );
+  }
+
+  getType(): string {
+    return TonChain.type;
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      type: TonChain.type,
+    };
+  }
+
+  generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer {
+    throw new Error("governance is unsupported on Near")
+  }
+
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    throw new Error("unsupported")
+  }
+
+  getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    throw new Error("unsupported")
+  }
+}
