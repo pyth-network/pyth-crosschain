@@ -688,6 +688,7 @@ export class PythStakingClient {
 
   async getAdvanceDelegationRecordInstructions(
     stakeAccountPositions: PublicKey,
+    payer?: PublicKey
   ) {
     const poolData = await this.getPoolDataAccount();
     const stakeAccountPositionsData = await this.getStakeAccountPositions(
@@ -745,7 +746,7 @@ export class PythStakingClient {
         this.integrityPoolProgram.methods
           .advanceDelegationRecord()
           .accountsPartial({
-            payer: this.wallet.publicKey,
+            payer: payer ?? this.wallet.publicKey,
             publisher: pubkey,
             publisherStakeAccountPositions: stakeAccount,
             publisherStakeAccountCustody: stakeAccount
@@ -795,16 +796,17 @@ export class PythStakingClient {
     );
   }
 
-  public async getClaimableRewards(stakeAccountPositions: PublicKey) {
+  public async getClaimableRewards(stakeAccountPositions: PublicKey, simulationPayer?: PublicKey) {
     const instructions = await this.getAdvanceDelegationRecordInstructions(
       stakeAccountPositions,
+      simulationPayer
     );
 
     let totalRewards = 0n;
 
     for (const instruction of instructions.advanceDelegationRecordInstructions) {
       const tx = new Transaction().add(instruction);
-      tx.feePayer = this.wallet.publicKey;
+      tx.feePayer = simulationPayer ?? this.wallet.publicKey;
       const res = await this.connection.simulateTransaction(tx);
       const val = res.value.returnData?.data[0];
       if (val === undefined) {

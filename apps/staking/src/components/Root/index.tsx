@@ -14,6 +14,7 @@ import {
   MAINNET_RPC,
   HERMES_URL,
   PYTHNET_RPC,
+  SIMULATION_PAYER,
 } from "../../config/server";
 import { ApiProvider } from "../../hooks/use-api";
 import { LoggerProvider } from "../../hooks/use-logger";
@@ -27,6 +28,7 @@ import { MaxWidth } from "../MaxWidth";
 import { ReportAccessibility } from "../ReportAccessibility";
 import { RouterProvider } from "../RouterProvider";
 import { WalletProvider } from "../WalletProvider";
+import { PublicKey } from "@solana/web3.js";
 
 const redHatText = Red_Hat_Text({
   subsets: ["latin"],
@@ -82,7 +84,7 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
             walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
             mainnetRpc={MAINNET_RPC}
           >
-            <ApiProvider hermesUrl={HERMES_URL} pythnetRpcUrl={PYTHNET_RPC}>
+            <ApiProvider hermesUrl={HERMES_URL} pythnetRpcUrl={PYTHNET_RPC} simulationPayer={SIMULATION_PAYER}>
               <ToastProvider>
                 <html lang={lang} {...props} />
               </ToastProvider>

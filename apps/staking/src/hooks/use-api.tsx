@@ -4,7 +4,7 @@ import { HermesClient } from "@pythnetwork/hermes-client";
 import { PythnetClient, PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useLocalStorageValue } from "@react-hookz/web";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Connection, type PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { type ComponentProps, createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
 
@@ -65,6 +65,7 @@ const State = {
     pythnetClient: PythnetClient,
     hermesClient: HermesClient,
     account: PublicKey,
+    simulationPayer: string | undefined,
     allAccounts: [PublicKey, ...PublicKey[]],
     selectAccount: (account: PublicKey) => void,
     mutate: ReturnType<typeof useSWRConfig>["mutate"],
@@ -95,7 +96,7 @@ const State = {
       dashboardDataCacheKey,
 
       loadData: () =>
-        api.loadData(client, pythnetClient, hermesClient, account),
+        api.loadData(client, pythnetClient, hermesClient, account, simulationPayer ? new PublicKey(simulationPayer) : undefined),
 
       claim: bindApi(api.claim),
       deposit: bindApi(api.deposit),
@@ -131,19 +132,21 @@ type ApiProviderProps = Omit<
 > & {
   pythnetRpcUrl: string;
   hermesUrl: string;
+  simulationPayer: string | undefined;
 };
 
 export const ApiProvider = ({
   hermesUrl,
   pythnetRpcUrl,
+  simulationPayer,
   ...props
 }: ApiProviderProps) => {
-  const state = useApiContext(hermesUrl, pythnetRpcUrl);
+  const state = useApiContext(hermesUrl, pythnetRpcUrl, simulationPayer);
 
   return <ApiContext.Provider value={state} {...props} />;
 };
 
-const useApiContext = (hermesUrl: string, pythnetRpcUrl: string) => {
+const useApiContext = (hermesUrl: string, pythnetRpcUrl: string, simulationPayer: string | undefined) => {
   const wallet = useWallet();
   const { connection } = useConnection();
   const { isMainnet } = useNetwork();
@@ -235,6 +238,7 @@ const useApiContext = (hermesUrl: string, pythnetRpcUrl: string) => {
                 pythnetClient,
                 hermesClient,
                 selectedAccount ?? firstAccount,
+                simulationPayer,
                 [firstAccount, ...otherAccounts],
                 (account: PublicKey) => {
                   localStorageValue.set(account.toBase58());
