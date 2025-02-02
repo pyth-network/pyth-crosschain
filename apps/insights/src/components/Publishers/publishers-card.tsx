@@ -3,6 +3,7 @@
 import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
+import { Link } from "@pythnetwork/component-library/Link";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import {
@@ -14,18 +15,19 @@ import { type ReactNode, Suspense, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
+import { ExplainActive, ExplainInactive } from "../Explanations";
 import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 
-const PUBLISHER_SCORE_WIDTH = 24;
+const PUBLISHER_SCORE_WIDTH = 38;
 
 type Props = {
   className?: string | undefined;
-  nameLoadingSkeleton: ReactNode;
   publishers: Publisher[];
+  explainAverage: ReactNode;
 };
 
 type Publisher = {
@@ -33,7 +35,7 @@ type Publisher = {
   ranking: number;
   activeFeeds: number;
   inactiveFeeds: number;
-  medianScore: number;
+  averageScore: number;
 } & (
   | { name: string; icon: ReactNode }
   | { name?: undefined; icon?: undefined }
@@ -71,7 +73,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
         case "ranking":
         case "activeFeeds":
         case "inactiveFeeds":
-        case "medianScore": {
+        case "averageScore": {
           return (
             (direction === "descending" ? -1 : 1) * (a[column] - b[column])
           );
@@ -100,7 +102,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
         ({
           id,
           ranking,
-          medianScore,
+          averageScore,
           activeFeeds,
           inactiveFeeds,
           ...publisher
@@ -118,10 +120,21 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
                 })}
               />
             ),
-            activeFeeds,
-            inactiveFeeds,
-            medianScore: (
-              <Score score={medianScore} width={PUBLISHER_SCORE_WIDTH} />
+            activeFeeds: (
+              <Link href={`/publishers/${id}/price-feeds?status=Active`} invert>
+                {activeFeeds}
+              </Link>
+            ),
+            inactiveFeeds: (
+              <Link
+                href={`/publishers/${id}/price-feeds?status=Inactive`}
+                invert
+              >
+                {inactiveFeeds}
+              </Link>
+            ),
+            averageScore: (
+              <Score score={averageScore} width={PUBLISHER_SCORE_WIDTH} />
             ),
           },
         }),
@@ -148,10 +161,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
   );
 };
 
-type PublishersCardContentsProps = Pick<
-  Props,
-  "className" | "nameLoadingSkeleton"
-> &
+type PublishersCardContentsProps = Pick<Props, "className" | "explainAverage"> &
   (
     | { isLoading: true }
     | {
@@ -168,14 +178,14 @@ type PublishersCardContentsProps = Pick<
         onPageChange: (newPage: number) => void;
         mkPageLink: (page: number) => string;
         rows: RowConfig<
-          "ranking" | "name" | "activeFeeds" | "inactiveFeeds" | "medianScore"
+          "ranking" | "name" | "activeFeeds" | "inactiveFeeds" | "averageScore"
         >[];
       }
   );
 
 const PublishersCardContents = ({
   className,
-  nameLoadingSkeleton,
+  explainAverage,
   ...props
 }: PublishersCardContentsProps) => (
   <Card
@@ -236,26 +246,41 @@ const PublishersCardContents = ({
           name: "NAME / ID",
           isRowHeader: true,
           alignment: "left",
-          loadingSkeleton: nameLoadingSkeleton,
+          loadingSkeleton: <PublisherTag isLoading />,
           allowsSorting: true,
         },
         {
           id: "activeFeeds",
-          name: "ACTIVE FEEDS",
+          name: (
+            <>
+              ACTIVE FEEDS
+              <ExplainActive />
+            </>
+          ),
           alignment: "center",
           width: 30,
           allowsSorting: true,
         },
         {
           id: "inactiveFeeds",
-          name: "INACTIVE FEEDS",
+          name: (
+            <>
+              INACTIVE FEEDS
+              <ExplainInactive />
+            </>
+          ),
           alignment: "center",
           width: 30,
           allowsSorting: true,
         },
         {
-          id: "medianScore",
-          name: "MEDIAN SCORE",
+          id: "averageScore",
+          name: (
+            <>
+              AVERAGE SCORE
+              {explainAverage}
+            </>
+          ),
           alignment: "right",
           width: PUBLISHER_SCORE_WIDTH,
           loadingSkeleton: <Score isLoading width={PUBLISHER_SCORE_WIDTH} />,

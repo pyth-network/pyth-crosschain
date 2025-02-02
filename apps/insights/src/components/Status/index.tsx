@@ -14,10 +14,10 @@ const getVariant = (status: StatusType) => {
       return "success";
     }
     case StatusType.Inactive: {
-      return "disabled";
+      return "error";
     }
     case StatusType.Unranked: {
-      return "error";
+      return "disabled";
     }
   }
 };

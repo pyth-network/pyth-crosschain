@@ -17,7 +17,7 @@ import {
 import { toHex } from "../../hex";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
 import { getPublishers } from "../../services/clickhouse";
-import { Cluster, getData } from "../../services/pyth";
+import { Cluster, getFeeds } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 
@@ -26,8 +26,8 @@ type Props = {
 };
 
 export const Root = async ({ children }: Props) => {
-  const [data, publishers] = await Promise.all([
-    getData(Cluster.Pythnet),
+  const [feeds, publishers] = await Promise.all([
+    getFeeds(Cluster.Pythnet),
     getPublishers(),
   ]);
 
@@ -40,7 +40,7 @@ export const Root = async ({ children }: Props) => {
       className={styles.root}
     >
       <SearchDialogProvider
-        feeds={data.map((feed) => ({
+        feeds={feeds.map((feed) => ({
           id: feed.symbol,
           key: toHex(feed.product.price_account),
           displaySymbol: feed.product.display_symbol,
@@ -51,7 +51,7 @@ export const Root = async ({ children }: Props) => {
           const knownPublisher = lookupPublisher(publisher.key);
           return {
             id: publisher.key,
-            medianScore: publisher.medianScore,
+            averageScore: publisher.averageScore,
             ...(knownPublisher && {
               name: knownPublisher.name,
               icon: <PublisherIcon knownPublisher={knownPublisher} />,
