@@ -8,11 +8,6 @@ import type { PythPriceCallback } from "@pythnetwork/client/lib/PythConnection";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 
-import { cache } from "../cache";
-
-const ONE_MINUTE_IN_SECONDS = 60;
-const ONE_HOUR_IN_SECONDS = 60 * ONE_MINUTE_IN_SECONDS;
-
 export enum Cluster {
   Pythnet,
   PythtestConformance,
@@ -55,67 +50,55 @@ const clients = {
   [Cluster.PythtestConformance]: mkClient(Cluster.PythtestConformance),
 } as const;
 
-export const getPublishersForFeed = cache(
-  async (cluster: Cluster, symbol: string) => {
-    const data = await clients[cluster].getData();
-    return data.productPrice
-      .get(symbol)
-      ?.priceComponents.map(({ publisher }) => publisher.toBase58());
-  },
-  ["publishers-for-feed"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+export const getPublishersForFeed = async (
+  cluster: Cluster,
+  symbol: string,
+) => {
+  const data = await clients[cluster].getData();
+  return data.productPrice
+    .get(symbol)
+    ?.priceComponents.map(({ publisher }) => publisher.toBase58());
+};
 
-export const getFeeds = cache(
-  async (cluster: Cluster) => {
-    const data = await clients[cluster].getData();
-    return priceFeedsSchema.parse(
-      data.symbols
-        .filter(
-          (symbol) =>
-            data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
-        )
-        .map((symbol) => ({
-          symbol,
-          product: data.productFromSymbol.get(symbol),
-          price: data.productPrice.get(symbol),
-        })),
-    );
-  },
-  ["pyth-data"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+export const getFeeds = async (cluster: Cluster) => {
+  const data = await clients[cluster].getData();
+  return priceFeedsSchema.parse(
+    data.symbols
+      .filter(
+        (symbol) =>
+          data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
+      )
+      .map((symbol) => ({
+        symbol,
+        product: data.productFromSymbol.get(symbol),
+        price: data.productPrice.get(symbol),
+      })),
+  );
+};
 
-export const getFeedsForPublisher = cache(
-  async (cluster: Cluster, publisher: string) => {
-    const data = await clients[cluster].getData();
-    return priceFeedsSchema.parse(
-      data.symbols
-        .filter(
-          (symbol) =>
-            data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
-        )
-        .map((symbol) => ({
-          symbol,
-          product: data.productFromSymbol.get(symbol),
-          price: data.productPrice.get(symbol),
-        }))
-        .filter(({ price }) =>
-          price?.priceComponents.some(
-            (component) => component.publisher.toBase58() === publisher,
-          ),
+export const getFeedsForPublisher = async (
+  cluster: Cluster,
+  publisher: string,
+) => {
+  const data = await clients[cluster].getData();
+  return priceFeedsSchema.parse(
+    data.symbols
+      .filter(
+        (symbol) =>
+          data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
+      )
+      .map((symbol) => ({
+        symbol,
+        product: data.productFromSymbol.get(symbol),
+        price: data.productPrice.get(symbol),
+      }))
+      .filter(({ price }) =>
+        price?.priceComponents.some(
+          (component) => component.publisher.toBase58() === publisher,
         ),
-    );
-  },
-  ["pyth-data"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+      ),
+  );
+};
 
 const priceFeedsSchema = z.array(
   z.object({

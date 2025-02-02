@@ -5,3 +5,5 @@ export { PriceFeeds as default } from "../../components/PriceFeeds";
 export const metadata: Metadata = {
   title: "Price Feeds",
 };
+
+export const revalidate = 3600;
