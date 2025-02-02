@@ -14,7 +14,7 @@ import styles from "./layout.module.scss";
 import { PriceFeedSelect } from "./price-feed-select";
 import { ReferenceData } from "./reference-data";
 import { toHex } from "../../hex";
-import { Cluster, getData } from "../../services/pyth";
+import { Cluster, getFeeds } from "../../services/pyth";
 import { FeedKey } from "../FeedKey";
 import {
   LivePrice,
@@ -38,12 +38,12 @@ type Props = {
 };
 
 export const PriceFeedLayout = async ({ children, params }: Props) => {
-  const [{ slug }, data] = await Promise.all([
+  const [{ slug }, fees] = await Promise.all([
     params,
-    getData(Cluster.Pythnet),
+    getFeeds(Cluster.Pythnet),
   ]);
   const symbol = decodeURIComponent(slug);
-  const feed = data.find((item) => item.symbol === symbol);
+  const feed = fees.find((item) => item.symbol === symbol);
 
   return feed ? (
     <div className={styles.priceFeedLayout}>
@@ -65,7 +65,7 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
         </div>
         <div className={styles.headerRow}>
           <PriceFeedSelect
-            feeds={data
+            feeds={fees
               .filter((feed) => feed.symbol !== symbol)
               .map((feed) => ({
                 id: feed.symbol,

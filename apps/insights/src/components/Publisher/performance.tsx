@@ -4,6 +4,7 @@ import { Network } from "@phosphor-icons/react/dist/ssr/Network";
 import { SmileySad } from "@phosphor-icons/react/dist/ssr/SmileySad";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
+import { Link } from "@pythnetwork/component-library/Link";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
@@ -12,8 +13,13 @@ import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./performance.module.scss";
 import { TopFeedsTable } from "./top-feeds-table";
 import { getPublishers } from "../../services/clickhouse";
-import { Cluster, getTotalFeedCount } from "../../services/pyth";
+import { Cluster } from "../../services/pyth";
 import { Status } from "../../status";
+import {
+  ExplainActive,
+  ExplainInactive,
+  ExplainAverage,
+} from "../Explanations";
 import { NoResults } from "../NoResults";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
@@ -32,10 +38,9 @@ type Props = {
 
 export const Performance = async ({ params }: Props) => {
   const { key } = await params;
-  const [publishers, priceFeeds, totalFeeds] = await Promise.all([
+  const [publishers, priceFeeds] = await Promise.all([
     getPublishers(),
     getPriceFeeds(Cluster.Pythnet, key),
-    getTotalFeedCount(Cluster.Pythnet),
   ]);
   const slicedPublishers = sliceAround(
     publishers,
@@ -66,19 +71,34 @@ export const Performance = async ({ params }: Props) => {
             },
             {
               id: "activeFeeds",
-              name: "ACTIVE FEEDS",
+              name: (
+                <>
+                  ACTIVE FEEDS
+                  <ExplainActive />
+                </>
+              ),
               alignment: "center",
               width: 30,
             },
             {
               id: "inactiveFeeds",
-              name: "INACTIVE FEEDS",
+              name: (
+                <>
+                  INACTIVE FEEDS
+                  <ExplainInactive />
+                </>
+              ),
               alignment: "center",
               width: 30,
             },
             {
-              id: "medianScore",
-              name: "MEDIAN SCORE",
+              id: "averageScore",
+              name: (
+                <>
+                  AVERAGE SCORE
+                  <ExplainAverage scoreTime={publishers[0]?.scoreTime} />
+                </>
+              ),
               alignment: "right",
               width: PUBLISHER_SCORE_WIDTH,
             },
@@ -93,12 +113,26 @@ export const Performance = async ({ params }: Props) => {
                     {publisher.rank}
                   </Ranking>
                 ),
-                activeFeeds: publisher.numSymbols,
-                inactiveFeeds: totalFeeds - publisher.numSymbols,
-                medianScore: (
+                activeFeeds: (
+                  <Link
+                    href={`/publishers/${publisher.key}/price-feeds?status=Active`}
+                    invert
+                  >
+                    {publisher.activeFeeds}
+                  </Link>
+                ),
+                inactiveFeeds: (
+                  <Link
+                    href={`/publishers/${publisher.key}/price-feeds?status=Inactive`}
+                    invert
+                  >
+                    {publisher.inactiveFeeds}
+                  </Link>
+                ),
+                averageScore: (
                   <Score
                     width={PUBLISHER_SCORE_WIDTH}
-                    score={publisher.medianScore}
+                    score={publisher.averageScore}
                   />
                 ),
                 name: (

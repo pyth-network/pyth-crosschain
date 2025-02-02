@@ -1,36 +1,39 @@
+import { ArrowsOutSimple } from "@phosphor-icons/react/dist/ssr/ArrowsOutSimple";
 import { BookOpenText } from "@phosphor-icons/react/dist/ssr/BookOpenText";
 import { Browsers } from "@phosphor-icons/react/dist/ssr/Browsers";
-import { Info } from "@phosphor-icons/react/dist/ssr/Info";
-import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb";
-import { Ranking } from "@phosphor-icons/react/dist/ssr/Ranking";
 import { ShieldChevron } from "@phosphor-icons/react/dist/ssr/ShieldChevron";
-import { Alert, AlertTrigger } from "@pythnetwork/component-library/Alert";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Breadcrumbs } from "@pythnetwork/component-library/Breadcrumbs";
 import { Button } from "@pythnetwork/component-library/Button";
 import { DrawerTrigger, Drawer } from "@pythnetwork/component-library/Drawer";
 import { InfoBox } from "@pythnetwork/component-library/InfoBox";
+import { Link } from "@pythnetwork/component-library/Link";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { ActiveFeedsCard } from "./active-feeds-card";
 import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./layout.module.scss";
 import { OisApyHistory } from "./ois-apy-history";
 import { PriceFeedDrawerProvider } from "./price-feed-drawer-provider";
 import {
   getPublisherRankingHistory,
-  getPublisherMedianScoreHistory,
+  getPublisherAverageScoreHistory,
+  getPublishers,
 } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
-import { Cluster, getTotalFeedCount } from "../../services/pyth";
+import { Cluster } from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
-import { Status } from "../../status";
 import { ChangePercent } from "../ChangePercent";
 import { ChangeValue } from "../ChangeValue";
 import { ChartCard } from "../ChartCard";
+import { Explain } from "../Explain";
+import {
+  ExplainAverage,
+  ExplainActive,
+  ExplainInactive,
+} from "../Explanations";
 import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 import { FormattedTokens } from "../FormattedTokens";
@@ -39,7 +42,6 @@ import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherKey } from "../PublisherKey";
 import { PublisherTag } from "../PublisherTag";
-import { ScoreHistory } from "../ScoreHistory";
 import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
@@ -55,26 +57,27 @@ export const PublishersLayout = async ({ children, params }: Props) => {
   const { key } = await params;
   const [
     rankingHistory,
-    medianScoreHistory,
-    totalFeedsCount,
+    averageScoreHistory,
     oisStats,
     priceFeeds,
+    publishers,
   ] = await Promise.all([
     getPublisherRankingHistory(key),
-    getPublisherMedianScoreHistory(key),
-    getTotalFeedCount(Cluster.Pythnet),
+    getPublisherAverageScoreHistory(key),
     getOisStats(key),
     getPriceFeeds(Cluster.Pythnet, key),
+    getPublishers(),
   ]);
 
   const currentRanking = rankingHistory.at(-1);
   const previousRanking = rankingHistory.at(-2);
 
-  const currentMedianScore = medianScoreHistory.at(-1);
-  const previousMedianScore = medianScoreHistory.at(-2);
+  const currentAverageScore = averageScoreHistory.at(-1);
+  const previousAverageScore = averageScoreHistory.at(-2);
   const knownPublisher = lookup(key);
+  const publisher = publishers.find((publisher) => publisher.key === key);
 
-  return currentRanking && currentMedianScore ? (
+  return publisher && currentRanking && currentAverageScore ? (
     <PriceFeedDrawerProvider
       publisherKey={key}
       priceFeeds={priceFeeds.map(({ feed, ranking, status }) => ({
@@ -115,25 +118,13 @@ export const PublishersLayout = async ({ children, params }: Props) => {
               variant="primary"
               header="Publisher Ranking"
               corner={
-                <AlertTrigger>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    beforeIcon={(props) => <Info weight="fill" {...props} />}
-                    rounded
-                    hideText
-                    className={styles.publisherRankingExplainButton ?? ""}
-                  >
-                    Explain Publisher Ranking
-                  </Button>
-                  <Alert title="Publisher Ranking" icon={<Lightbulb />}>
-                    <p className={styles.publisherRankingExplainDescription}>
-                      Each <b>Publisher</b> receives a <b>Ranking</b> which is
-                      derived from the number of price feeds the{" "}
-                      <b>Publisher</b> is actively publishing.
-                    </p>
-                  </Alert>
-                </AlertTrigger>
+                <Explain size="xs" title="Publisher Ranking">
+                  <p>
+                    Each <b>Publisher</b> receives a <b>Ranking</b> which is
+                    derived from the number of price feeds the <b>Publisher</b>{" "}
+                    is actively publishing.
+                  </p>
+                </Explain>
               }
               data={rankingHistory.map(({ timestamp, rank }) => ({
                 x: timestamp,
@@ -158,76 +149,94 @@ export const PublishersLayout = async ({ children, params }: Props) => {
                 ),
               })}
             />
-            <DrawerTrigger>
-              <ChartCard
-                header="Median Score"
-                chartClassName={styles.medianScoreChart}
-                corner={<Info weight="fill" />}
-                data={medianScoreHistory.map(({ time, score }) => ({
-                  x: time,
-                  y: score,
-                  displayX: (
-                    <span className={styles.activeDate}>
-                      <FormattedDate value={time} />
-                    </span>
-                  ),
-                  displayY: (
-                    <FormattedNumber
-                      maximumSignificantDigits={5}
-                      value={score}
-                    />
-                  ),
-                }))}
-                stat={
+            <ChartCard
+              header="Average Score"
+              chartClassName={styles.averageScoreChart}
+              corner={<ExplainAverage />}
+              data={averageScoreHistory.map(({ time, averageScore }) => ({
+                x: time,
+                y: averageScore,
+                displayX: (
+                  <span className={styles.activeDate}>
+                    <FormattedDate value={time} />
+                  </span>
+                ),
+                displayY: (
                   <FormattedNumber
                     maximumSignificantDigits={5}
-                    value={currentMedianScore.score}
+                    value={averageScore}
                   />
-                }
-                {...(previousMedianScore && {
-                  miniStat: (
-                    <ChangePercent
-                      currentValue={currentMedianScore.score}
-                      previousValue={previousMedianScore.score}
-                    />
-                  ),
-                })}
-              />
-              <Drawer
-                title="Median Score"
-                className={styles.medianScoreDrawer ?? ""}
-                bodyClassName={styles.medianScoreDrawerBody}
-                footerClassName={styles.medianScoreDrawerFooter}
-                footer={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
-                    target="_blank"
-                    beforeIcon={BookOpenText}
-                  >
-                    Documentation
-                  </Button>
-                }
-              >
-                <ScoreHistory isMedian scoreHistory={medianScoreHistory} />
-                <InfoBox icon={<Ranking />} header="Publisher Score">
-                  Each price feed a publisher provides has an associated score,
-                  which is determined by the component{"'"}s uptime, price
-                  deviation, and staleness. This panel shows the median for each
-                  score across all price feeds published by this publisher, as
-                  well as the overall median score across all those feeds.
-                </InfoBox>
-              </Drawer>
-            </DrawerTrigger>
-            <ActiveFeedsCard
-              publisherKey={key}
-              activeFeeds={
-                priceFeeds.filter((feed) => feed.status === Status.Active)
-                  .length
+                ),
+              }))}
+              stat={
+                <FormattedNumber
+                  maximumSignificantDigits={5}
+                  value={currentAverageScore.averageScore}
+                />
               }
-              totalFeeds={totalFeedsCount}
+              {...(previousAverageScore && {
+                miniStat: (
+                  <ChangePercent
+                    currentValue={currentAverageScore.averageScore}
+                    previousValue={previousAverageScore.averageScore}
+                  />
+                ),
+              })}
             />
+            <StatCard
+              header1={
+                <>
+                  Active Feeds
+                  <ExplainActive />
+                </>
+              }
+              header2={
+                <>
+                  <ExplainInactive />
+                  Inactive Feeds
+                </>
+              }
+              stat1={
+                <Link
+                  href={`/publishers/${key}/price-feeds?status=Active`}
+                  invert
+                >
+                  {publisher.activeFeeds}
+                </Link>
+              }
+              stat2={
+                <Link
+                  href={`/publishers/${key}/price-feeds?status=Inactive`}
+                  invert
+                >
+                  {publisher.inactiveFeeds}
+                </Link>
+              }
+              miniStat1={
+                <>
+                  <FormattedNumber
+                    maximumFractionDigits={1}
+                    value={(100 * publisher.activeFeeds) / priceFeeds.length}
+                  />
+                  %
+                </>
+              }
+              miniStat2={
+                <>
+                  <FormattedNumber
+                    maximumFractionDigits={1}
+                    value={(100 * publisher.inactiveFeeds) / priceFeeds.length}
+                  />
+                  %
+                </>
+              }
+            >
+              <Meter
+                value={publisher.activeFeeds}
+                maxValue={priceFeeds.length}
+                label="Active Feeds"
+              />
+            </StatCard>
             <DrawerTrigger>
               <StatCard
                 header="OIS Pool Allocation"
@@ -250,7 +259,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
                     %
                   </span>
                 }
-                corner={<Info weight="fill" />}
+                corner={<ArrowsOutSimple />}
               >
                 <Meter
                   value={Number(oisStats.poolUtilization)}

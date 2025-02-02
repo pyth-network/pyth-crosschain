@@ -2,6 +2,7 @@ import { getPriceFeeds } from "./get-price-feeds";
 import { PriceFeedsCard } from "./price-feeds-card";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
+import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
   params: Promise<{
@@ -12,22 +13,34 @@ type Props = {
 export const PriceFeeds = async ({ params }: Props) => {
   const { key } = await params;
   const feeds = await getPriceFeeds(Cluster.Pythnet, key);
+  const metricsTime = feeds.find((feed) => feed.ranking !== undefined)?.ranking
+    ?.time;
 
   return (
     <PriceFeedsCard
-      priceFeeds={feeds.map(({ ranking, feed, status }) => ({
+      label="Price Feeds"
+      searchPlaceholder="Feed symbol"
+      metricsTime={metricsTime}
+      nameLoadingSkeleton={<PriceFeedTag compact isLoading />}
+      priceComponents={feeds.map(({ ranking, feed, status }) => ({
         id: `${feed.product.price_account}-${ClusterToName[Cluster.Pythnet]}`,
+        feedKey: feed.product.price_account,
         symbol: feed.symbol,
-        displaySymbol: feed.product.display_symbol,
         score: ranking?.final_score,
-        icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
         uptimeScore: ranking?.uptime_score,
-        deviationPenalty: ranking?.deviation_penalty ?? undefined,
         deviationScore: ranking?.deviation_score,
-        stalledPenalty: ranking?.stalled_penalty,
         stalledScore: ranking?.stalled_score,
         cluster: Cluster.Pythnet,
         status,
+        publisherKey: key,
+        name: (
+          <PriceFeedTag
+            compact
+            symbol={feed.product.display_symbol}
+            icon={<PriceFeedIcon symbol={feed.product.display_symbol} />}
+          />
+        ),
+        nameAsString: feed.product.display_symbol,
       }))}
     />
   );

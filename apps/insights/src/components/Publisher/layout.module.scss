@@ -30,13 +30,8 @@
         width: 0;
       }
 
-      .medianScoreChart svg {
+      .averageScoreChart svg {
         cursor: pointer;
-      }
-
-      .publisherRankingExplainButton {
-        margin-top: -#{theme.button-padding("xs", false)};
-        margin-right: -#{theme.button-padding("xs", false)};
       }
 
       .activeDate {
@@ -81,14 +76,6 @@
   }
 }
 
-.publisherRankingExplainDescription {
-  margin: 0;
-
-  b {
-    font-weight: theme.font-weight("semibold");
-  }
-}
-
 .oisDrawer {
   .oisDrawerBody {
     display: grid;
@@ -118,19 +105,5 @@
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: center;
-  }
-}
-
-.medianScoreDrawer {
-  .medianScoreDrawerFooter {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: flex-end;
-  }
-
-  .medianScoreDrawerBody {
-    display: flex;
-    flex-flow: column nowrap;
-    gap: theme.spacing(6);
   }
 }
