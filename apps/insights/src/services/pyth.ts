@@ -55,7 +55,20 @@ const clients = {
   [Cluster.PythtestConformance]: mkClient(Cluster.PythtestConformance),
 } as const;
 
-export const getData = cache(
+export const getPublishersForFeed = cache(
+  async (cluster: Cluster, symbol: string) => {
+    const data = await clients[cluster].getData();
+    return data.productPrice
+      .get(symbol)
+      ?.priceComponents.map(({ publisher }) => publisher.toBase58());
+  },
+  ["publishers-for-feed"],
+  {
+    revalidate: ONE_HOUR_IN_SECONDS,
+  },
+);
+
+export const getFeeds = cache(
   async (cluster: Cluster) => {
     const data = await clients[cluster].getData();
     return priceFeedsSchema.parse(
@@ -69,6 +82,33 @@ export const getData = cache(
           product: data.productFromSymbol.get(symbol),
           price: data.productPrice.get(symbol),
         })),
+    );
+  },
+  ["pyth-data"],
+  {
+    revalidate: ONE_HOUR_IN_SECONDS,
+  },
+);
+
+export const getFeedsForPublisher = cache(
+  async (cluster: Cluster, publisher: string) => {
+    const data = await clients[cluster].getData();
+    return priceFeedsSchema.parse(
+      data.symbols
+        .filter(
+          (symbol) =>
+            data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
+        )
+        .map((symbol) => ({
+          symbol,
+          product: data.productFromSymbol.get(symbol),
+          price: data.productPrice.get(symbol),
+        }))
+        .filter(({ price }) =>
+          price?.priceComponents.some(
+            (component) => component.publisher.toBase58() === publisher,
+          ),
+        ),
     );
   },
   ["pyth-data"],
@@ -104,19 +144,9 @@ const priceFeedsSchema = z.array(
       minPublishers: z.number(),
       lastSlot: z.bigint(),
       validSlot: z.bigint(),
-      priceComponents: z.array(
-        z.object({
-          publisher: z.instanceof(PublicKey).transform((key) => key.toBase58()),
-        }),
-      ),
     }),
   }),
 );
-
-export const getTotalFeedCount = async (cluster: Cluster) => {
-  const pythData = await getData(cluster);
-  return pythData.filter(({ price }) => price.numComponentPrices > 0).length;
-};
 
 export const getAssetPricesFromAccounts = (
   cluster: Cluster,

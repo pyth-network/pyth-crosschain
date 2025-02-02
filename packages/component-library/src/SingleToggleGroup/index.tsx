@@ -2,28 +2,57 @@
 
 import clsx from "clsx";
 import { motion } from "motion/react";
-import { type ComponentProps, useId } from "react";
-import { ToggleButtonGroup, ToggleButton } from "react-aria-components";
+import { type ComponentProps, useId, useMemo } from "react";
+import {
+  type Key,
+  ToggleButtonGroup,
+  ToggleButton,
+} from "react-aria-components";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
 
 type OwnProps = {
+  selectedKey?: Key | undefined;
+  onSelectionChange?: (newValue: Key) => void;
   items: ComponentProps<typeof ToggleButton>[];
 };
 type Props = Omit<
   ComponentProps<typeof ToggleButtonGroup>,
-  keyof OwnProps | "selectionMode"
+  keyof OwnProps | "selectionMode" | "selectedKeys"
 > &
   OwnProps;
 
-export const SingleToggleGroup = ({ className, items, ...props }: Props) => {
+export const SingleToggleGroup = ({
+  selectedKey,
+  onSelectionChange,
+  className,
+  items,
+  ...props
+}: Props) => {
   const id = useId();
+
+  const handleSelectionChange = useMemo(
+    () =>
+      onSelectionChange
+        ? (set: Set<Key>) => {
+            const { value } = set.values().next();
+            if (value !== undefined) {
+              onSelectionChange(value);
+            }
+          }
+        : undefined,
+    [onSelectionChange],
+  );
 
   return (
     <ToggleButtonGroup
       className={clsx(styles.singleToggleGroup, className)}
       selectionMode="single"
+      {...(handleSelectionChange && {
+        onSelectionChange: handleSelectionChange,
+      })}
+      {...(selectedKey !== undefined && { selectedKeys: [selectedKey] })}
       {...props}
     >
       {items.map(({ className: tabClassName, children, ...toggleButton }) => (

@@ -4,11 +4,33 @@
 .publishers {
   @include theme.max-width;
 
-  .header {
-    @include theme.h3;
+  .headerContainer {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: space-between;
 
-    color: theme.color("heading");
-    font-weight: theme.font-weight("semibold");
+    .header {
+      @include theme.h3;
+
+      color: theme.color("heading");
+      font-weight: theme.font-weight("semibold");
+    }
+
+    .rankingsLastUpdated {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("muted");
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(1);
+      align-items: center;
+      line-height: normal;
+
+      .clockIcon {
+        font-size: theme.spacing(5);
+      }
+    }
   }
 
   .body {
@@ -23,7 +45,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: theme.spacing(4);
       align-items: center;
-      width: 40%;
+      width: 30%;
       position: sticky;
       top: root.$header-height;
 
@@ -67,15 +89,7 @@
     }
 
     .publishersCard {
-      width: 60%;
+      width: 70%;
     }
-  }
-}
-
-.averageMedianScoreDescription {
-  margin: 0;
-
-  b {
-    font-weight: theme.font-weight("semibold");
   }
 }

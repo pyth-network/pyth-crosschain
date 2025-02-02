@@ -33,7 +33,7 @@ export const NoResults = ({ onClearSearch, ...props }: Props) => (
       <p className={styles.body}>
         {"body" in props
           ? props.body
-          : `We couldn't find any results for "${props.query}".`}
+          : `We couldn't find any results for ${props.query === "" ? "your query" : `"${props.query}"`}.`}
       </p>
     </div>
     {onClearSearch && (

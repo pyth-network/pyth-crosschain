@@ -3,6 +3,7 @@
 .meter {
   line-height: 0;
   width: calc(theme.spacing(1) * var(--width));
+  display: grid;
 
   .score {
     height: theme.spacing(6);

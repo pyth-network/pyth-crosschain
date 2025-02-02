@@ -1,7 +1,7 @@
 import { ArrowLineDown } from "@phosphor-icons/react/dist/ssr/ArrowLineDown";
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
+import { ArrowsOutSimple } from "@phosphor-icons/react/dist/ssr/ArrowsOutSimple";
 import { ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
-import { Info } from "@phosphor-icons/react/dist/ssr/Info";
 import { StackPlus } from "@phosphor-icons/react/dist/ssr/StackPlus";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Button } from "@pythnetwork/component-library/Button";
@@ -17,7 +17,7 @@ import { AssetClassesDrawer } from "./asset-classes-drawer";
 import { ComingSoonList } from "./coming-soon-list";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { Cluster, getData } from "../../services/pyth";
+import { Cluster, getFeeds } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
 import { activeChains } from "../../static-data/stats";
 import { LivePrice } from "../LivePrices";
@@ -75,7 +75,7 @@ export const PriceFeeds = async () => {
             <StatCard
               header="Asset Classes"
               stat={Object.keys(numFeedsByAssetClass).length}
-              corner={<Info weight="fill" />}
+              corner={<ArrowsOutSimple />}
             />
           </AssetClassesDrawer>
         </section>
@@ -200,7 +200,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
 );
 
 const getPriceFeeds = async () => {
-  const priceFeeds = await getData(Cluster.Pythnet);
+  const priceFeeds = await getFeeds(Cluster.Pythnet);
   const activeFeeds = priceFeeds.filter((feed) => isActive(feed));
   const comingSoon = priceFeeds.filter((feed) => !isActive(feed));
   return { activeFeeds, comingSoon };

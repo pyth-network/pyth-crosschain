@@ -51,7 +51,7 @@ type Props = {
   }[];
   publishers: ({
     id: string;
-    medianScore: number;
+    averageScore: number;
   } & (
     | { name: string; icon: ReactNode }
     | { name?: undefined; icon?: undefined }
@@ -68,10 +68,6 @@ export const SearchDialogProvider = ({
   const [type, setType] = useState<ResultType | "">("");
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
-
-  const updateSelectedType = useCallback((set: Set<ResultType | "">) => {
-    setType(set.values().next().value ?? "");
-  }, []);
 
   const close = useCallback(() => {
     searchDialogState.close();
@@ -165,9 +161,9 @@ export const SearchDialogProvider = ({
               autoFocus
             />
             <SingleToggleGroup
-              selectedKeys={[type]}
+              selectedKey={type}
               // @ts-expect-error react-aria coerces everything to Key for some reason...
-              onSelectionChange={updateSelectedType}
+              onSelectionChange={setType}
               items={[
                 { id: "", children: "All" },
                 { id: ResultType.PriceFeed, children: "Price Feeds" },
@@ -257,7 +253,7 @@ export const SearchDialogProvider = ({
                           icon: result.icon,
                         })}
                       />
-                      <Score score={result.medianScore} />
+                      <Score score={result.averageScore} />
                     </>
                   )}
                 </ListBoxItem>

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Chart } from "./chart";
 import styles from "./chart-page.module.scss";
-import { Cluster, getData } from "../../services/pyth";
+import { Cluster, getFeeds } from "../../services/pyth";
 
 type Props = {
   params: Promise<{
@@ -12,12 +12,12 @@ type Props = {
 };
 
 export const ChartPage = async ({ params }: Props) => {
-  const [{ slug }, data] = await Promise.all([
+  const [{ slug }, feeds] = await Promise.all([
     params,
-    getData(Cluster.Pythnet),
+    getFeeds(Cluster.Pythnet),
   ]);
   const symbol = decodeURIComponent(slug);
-  const feed = data.find((item) => item.symbol === symbol);
+  const feed = feeds.find((item) => item.symbol === symbol);
 
   return feed ? (
     <Card title="Chart" className={styles.chartCard}>

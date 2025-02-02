@@ -75,10 +75,10 @@ export const StatCard = <T extends ElementType>({
             </>
           ) : (
             <>
-              <h2 className={styles.dualHeader}>
-                <span>{props.header1}</span>
-                <span>{props.header2}</span>
-              </h2>
+              <div className={styles.dualHeader}>
+                <h2 className={styles.header}>{props.header1}</h2>
+                <h2 className={styles.header}>{props.header2}</h2>
+              </div>
               <div className={styles.stats}>
                 <div className={styles.stat}>
                   <div className={styles.mainStat}>{props.stat1}</div>

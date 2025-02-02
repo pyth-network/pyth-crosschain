@@ -4,6 +4,7 @@ import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState, useRef, useCallback } from "react";
+import { RouterProvider } from "react-aria";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
@@ -78,14 +79,11 @@ export const PriceComponentDrawer = ({
         <>
           {headingExtra}
           <StatusComponent status={status} />
-          <Button
-            size="sm"
-            variant="outline"
-            onPress={handleOpenFeed}
-            href={navigateHref}
-          >
-            {navigateButtonText}
-          </Button>
+          <RouterProvider navigate={handleOpenFeed}>
+            <Button size="sm" variant="outline" href={navigateHref}>
+              {navigateButtonText}
+            </Button>
+          </RouterProvider>
         </>
       }
       isOpen={isFeedDrawerOpen}

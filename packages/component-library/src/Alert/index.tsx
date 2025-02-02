@@ -17,6 +17,7 @@ export const CLOSE_DURATION_IN_MS = CLOSE_DURATION_IN_S * 1000;
 type OwnProps = Pick<ComponentProps<typeof ModalDialog>, "children"> & {
   icon?: ReactNode | undefined;
   title: ReactNode;
+  bodyClassName?: string | undefined;
 };
 
 type Props = Omit<
@@ -30,6 +31,7 @@ export const Alert = ({
   title,
   children,
   className,
+  bodyClassName,
   ...props
 }: Props) => (
   <ModalDialog
@@ -65,7 +67,7 @@ export const Alert = ({
           {icon && <div className={styles.icon}>{icon}</div>}
           <div>{title}</div>
         </Heading>
-        <div className={styles.body}>
+        <div className={clsx(styles.body, bodyClassName)}>
           {typeof children === "function" ? children(...args) : children}
         </div>
       </>

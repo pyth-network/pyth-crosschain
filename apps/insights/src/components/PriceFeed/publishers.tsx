@@ -3,9 +3,15 @@ import { notFound } from "next/navigation";
 
 import { PublishersCard } from "./publishers-card";
 import { getRankingsBySymbol } from "../../services/clickhouse";
-import { Cluster, ClusterToName, getData } from "../../services/pyth";
+import {
+  Cluster,
+  ClusterToName,
+  getFeeds,
+  getPublishersForFeed,
+} from "../../services/pyth";
 import { getStatus } from "../../status";
 import { PublisherIcon } from "../PublisherIcon";
+import { PublisherTag } from "../PublisherTag";
 
 type Props = {
   params: Promise<{
@@ -16,66 +22,76 @@ type Props = {
 export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
-  const [pythnetData, pythnetPublishers, pythtestConformancePublishers] =
+  const [feeds, pythnetPublishers, pythtestConformancePublishers] =
     await Promise.all([
-      getData(Cluster.Pythnet),
+      getFeeds(Cluster.Pythnet),
       getPublishers(Cluster.Pythnet, symbol),
       getPublishers(Cluster.PythtestConformance, symbol),
     ]);
-  const feed = pythnetData.find((item) => item.symbol === symbol);
+  const feed = feeds.find((feed) => feed.symbol === symbol);
+  const publishers = [...pythnetPublishers, ...pythtestConformancePublishers];
+  const metricsTime = pythnetPublishers.find(
+    (publisher) => publisher.ranking !== undefined,
+  )?.ranking?.time;
 
-  return feed !== undefined &&
-    (pythnetPublishers !== undefined ||
-      pythtestConformancePublishers !== undefined) ? (
-    <PublishersCard
-      symbol={symbol}
-      feedKey={feed.product.price_account}
-      publishers={[
-        ...(pythnetPublishers ?? []),
-        ...(pythtestConformancePublishers ?? []),
-      ]}
-    />
-  ) : (
+  return feed === undefined ? (
     notFound()
+  ) : (
+    <PublishersCard
+      label="Publishers"
+      searchPlaceholder="Publisher key or name"
+      metricsTime={metricsTime}
+      nameLoadingSkeleton={<PublisherTag isLoading />}
+      priceComponents={publishers.map(
+        ({ ranking, publisher, status, cluster, knownPublisher }) => ({
+          id: `${publisher}-${ClusterToName[Cluster.Pythnet]}`,
+          feedKey: feed.product.price_account,
+          score: ranking?.final_score,
+          uptimeScore: ranking?.uptime_score,
+          deviationScore: ranking?.deviation_score,
+          stalledScore: ranking?.stalled_score,
+          cluster,
+          status,
+          publisherKey: publisher,
+          symbol,
+          rank: ranking?.final_rank,
+          name: (
+            <PublisherTag
+              publisherKey={publisher}
+              {...(knownPublisher && {
+                name: knownPublisher.name,
+                icon: <PublisherIcon knownPublisher={knownPublisher} />,
+              })}
+            />
+          ),
+          nameAsString: `${knownPublisher?.name ?? ""}${publisher}`,
+        }),
+      )}
+    />
   );
 };
 
 const getPublishers = async (cluster: Cluster, symbol: string) => {
-  const [data, rankings] = await Promise.all([
-    getData(cluster),
+  const [publishers, rankings] = await Promise.all([
+    getPublishersForFeed(cluster, symbol),
     getRankingsBySymbol(symbol),
   ]);
 
-  return data
-    .find((feed) => feed.symbol === symbol)
-    ?.price.priceComponents.map(({ publisher }) => {
+  return (
+    publishers?.map((publisher) => {
       const ranking = rankings.find(
         (ranking) =>
           ranking.publisher === publisher &&
           ranking.cluster === ClusterToName[cluster],
       );
 
-      //if (!ranking) {
-      //  console.log(`No ranking for publisher: ${publisher} in cluster ${ClusterToName[cluster]}`);
-      //}
-
-      const knownPublisher = publisher ? lookupPublisher(publisher) : undefined;
       return {
-        id: `${publisher}-${ClusterToName[Cluster.Pythnet]}`,
-        publisherKey: publisher,
-        score: ranking?.final_score,
-        uptimeScore: ranking?.uptime_score,
-        deviationPenalty: ranking?.deviation_penalty ?? undefined,
-        deviationScore: ranking?.deviation_score,
-        stalledPenalty: ranking?.stalled_penalty,
-        stalledScore: ranking?.stalled_score,
-        rank: ranking?.final_rank,
-        cluster,
+        ranking,
+        publisher,
         status: getStatus(ranking),
-        ...(knownPublisher && {
-          name: knownPublisher.name,
-          icon: <PublisherIcon knownPublisher={knownPublisher} />,
-        }),
+        cluster,
+        knownPublisher: lookupPublisher(publisher),
       };
-    });
+    }) ?? []
+  );
 };
