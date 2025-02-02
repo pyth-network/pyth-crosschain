@@ -29,6 +29,8 @@ sonic_devnet = []
 sonic_testnet = []
 atlas_testnet = []
 mantis_mainnet = []
+sonic_mainnet = []
+
 
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}

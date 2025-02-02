@@ -39,6 +39,11 @@ chains:
     target_profit_pct: 20
     max_profit_pct: 100
 
+    # A list of block delays for processing blocks multiple times. Each number represents
+    # how many blocks to wait before processing. For example, [5, 10, 20] means process
+    # blocks after 5 blocks, then again after 10 blocks, and finally after 20 blocks.
+    block_delays: [5, 10, 20]
+
     # Historical commitments -- delete this block for local development purposes
     commitments:
       # prettier-ignore
