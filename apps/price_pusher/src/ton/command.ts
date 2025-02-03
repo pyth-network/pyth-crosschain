@@ -8,6 +8,7 @@ import { Address, TonClient } from "@ton/ton";
 import fs from "fs";
 import pino from "pino";
 import { HermesClient } from "@pythnetwork/hermes-client";
+import { filterInvalidPriceItems } from "../utils";
 
 export default {
   command: "ton",
@@ -29,7 +30,7 @@ export default {
       required: true,
     } as Options,
     ...options.priceConfigFile,
-    ...options.hermesEndpoint,
+    ...options.priceServiceEndpoint,
     ...options.pushingFrequency,
     ...options.pollingFrequency,
     ...options.logLevel,
@@ -41,7 +42,7 @@ export default {
       privateKeyFile,
       pythContractAddress,
       priceConfigFile,
-      hermesEndpoint,
+      priceServiceEndpoint,
       pushingFrequency,
       pollingFrequency,
       logLevel,
@@ -52,9 +53,23 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
-    const hermesClient = new HermesClient(hermesEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint);
 
-    const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+
+    // Better to filter out invalid price items before creating the pyth listener
+    const { existingPriceItems, invalidPriceItems } =
+      await filterInvalidPriceItems(hermesClient, priceItems);
+
+    if (invalidPriceItems.length > 0) {
+      logger.error(
+        `Invalid price id submitted for: ${invalidPriceItems
+          .map(({ alias }) => alias)
+          .join(", ")}`
+      );
+    }
+
+    priceItems = existingPriceItems;
 
     const pythListener = new PythPriceListener(
       hermesClient,

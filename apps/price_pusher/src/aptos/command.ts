@@ -12,7 +12,7 @@ import {
 } from "./aptos";
 import { AptosAccount } from "aptos";
 import pino from "pino";
-
+import { filterInvalidPriceItems } from "../utils";
 export default {
   command: "aptos",
   describe: "run price pusher for aptos",
@@ -33,7 +33,7 @@ export default {
       default: 2,
     } as Options,
     ...options.priceConfigFile,
-    ...options.hermesEndpoint,
+    ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
@@ -41,12 +41,12 @@ export default {
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
-  handler: function (argv: any) {
+  handler: async function (argv: any) {
     // FIXME: type checks for this
     const {
       endpoint,
       priceConfigFile,
-      hermesEndpoint,
+      priceServiceEndpoint,
       mnemonicFile,
       pythContractAddress,
       pushingFrequency,
@@ -59,7 +59,7 @@ export default {
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(hermesEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint);
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const account = AptosAccount.fromDerivePath(
@@ -68,7 +68,21 @@ export default {
     );
     logger.info(`Pushing from account address: ${account.address()}`);
 
-    const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+
+    // Better to filter out invalid price items before creating the pyth listener
+    const { existingPriceItems, invalidPriceItems } =
+      await filterInvalidPriceItems(hermesClient, priceItems);
+
+    if (invalidPriceItems.length > 0) {
+      logger.error(
+        `Invalid price id submitted for: ${invalidPriceItems
+          .map(({ alias }) => alias)
+          .join(", ")}`
+      );
+    }
+
+    priceItems = existingPriceItems;
 
     const pythListener = new PythPriceListener(
       hermesClient,

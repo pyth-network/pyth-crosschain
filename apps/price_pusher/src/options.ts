@@ -1,7 +1,7 @@
 import { Options } from "yargs";
 
-export const hermesEndpoint = {
-  "hermes-endpoint": {
+export const priceServiceEndpoint = {
+  "price-service-endpoint": {
     description:
       "Endpoint URL for the hermes client. e.g: https://endpoint/example",
     type: "string",

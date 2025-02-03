@@ -10,7 +10,7 @@ import { getCustomGasStation } from "./custom-gas-station";
 import pino from "pino";
 import { createClient } from "./super-wallet";
 import { createPythContract } from "./pyth-contract";
-import { isWsEndpoint } from "../utils";
+import { isWsEndpoint, filterInvalidPriceItems } from "../utils";
 
 export default {
   command: "evm",
@@ -71,7 +71,7 @@ export default {
       default: 1,
     } as Options,
     ...options.priceConfigFile,
-    ...options.hermesEndpoint,
+    ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
@@ -84,7 +84,7 @@ export default {
     const {
       endpoint,
       priceConfigFile,
-      hermesEndpoint,
+      priceServiceEndpoint,
       mnemonicFile,
       pythContractAddress,
       pushingFrequency,
@@ -98,15 +98,32 @@ export default {
       logLevel,
       controllerLogLevel,
     } = argv;
+    console.log("***** priceServiceEndpoint *****", priceServiceEndpoint);
 
-    const logger = pino({ level: logLevel });
+    const logger = pino({
+      level: logLevel,
+    });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(hermesEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint);
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
 
-    const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+
+    // Better to filter out invalid price items before creating the pyth listener
+    const { existingPriceItems, invalidPriceItems } =
+      await filterInvalidPriceItems(hermesClient, priceItems);
+
+    if (invalidPriceItems.length > 0) {
+      logger.error(
+        `Invalid price id submitted for: ${invalidPriceItems
+          .map(({ alias }) => alias)
+          .join(", ")}`
+      );
+    }
+
+    priceItems = existingPriceItems;
 
     const pythListener = new PythPriceListener(
       hermesClient,

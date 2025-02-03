@@ -6,6 +6,7 @@ import { Controller } from "../controller";
 import { Options } from "yargs";
 import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
 import pino from "pino";
+import { filterInvalidPriceItems } from "../utils";
 
 export default {
   command: "near",
@@ -33,14 +34,14 @@ export default {
       required: false,
     } as Options,
     ...options.priceConfigFile,
-    ...options.hermesEndpoint,
+    ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
-  handler: function (argv: any) {
+  handler: async function (argv: any) {
     // FIXME: type checks for this
     const {
       nodeUrl,
@@ -48,7 +49,7 @@ export default {
       accountId,
       privateKeyPath,
       priceConfigFile,
-      hermesEndpoint,
+      priceServiceEndpoint,
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
@@ -59,9 +60,23 @@ export default {
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(hermesEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint);
 
-    const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+
+    // Better to filter out invalid price items before creating the pyth listener
+    const { existingPriceItems, invalidPriceItems } =
+      await filterInvalidPriceItems(hermesClient, priceItems);
+
+    if (invalidPriceItems.length > 0) {
+      logger.error(
+        `Invalid price id submitted for: ${invalidPriceItems
+          .map(({ alias }) => alias)
+          .join(", ")}`
+      );
+    }
+
+    priceItems = existingPriceItems;
 
     const pythListener = new PythPriceListener(
       hermesClient,

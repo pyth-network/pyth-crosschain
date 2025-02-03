@@ -8,6 +8,7 @@ import { Options } from "yargs";
 import { SuiPriceListener, SuiPricePusher } from "./sui";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import pino from "pino";
+import { filterInvalidPriceItems } from "../utils";
 
 export default {
   command: "sui",
@@ -65,7 +66,7 @@ export default {
       default: 0,
     } as Options,
     ...options.priceConfigFile,
-    ...options.hermesEndpoint,
+    ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
@@ -76,7 +77,7 @@ export default {
     const {
       endpoint,
       priceConfigFile,
-      hermesEndpoint,
+      priceServiceEndpoint,
       mnemonicFile,
       pushingFrequency,
       pollingFrequency,
@@ -93,7 +94,7 @@ export default {
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const hermesClient = new HermesClient(hermesEndpoint);
+    const hermesClient = new HermesClient(priceServiceEndpoint);
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const keypair = Ed25519Keypair.deriveKeypair(
@@ -106,7 +107,21 @@ export default {
         .toSuiAddress()}`
     );
 
-    const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+
+    // Better to filter out invalid price items before creating the pyth listener
+    const { existingPriceItems, invalidPriceItems } =
+      await filterInvalidPriceItems(hermesClient, priceItems);
+
+    if (invalidPriceItems.length > 0) {
+      logger.error(
+        `Invalid price id submitted for: ${invalidPriceItems
+          .map(({ alias }) => alias)
+          .join(", ")}`
+      );
+    }
+
+    priceItems = existingPriceItems;
 
     const pythListener = new PythPriceListener(
       hermesClient,

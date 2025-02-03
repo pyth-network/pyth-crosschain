@@ -160,11 +160,15 @@ export class EvmPricePusher implements IPricePusher {
       priceIds
     )) as `0x${string}`[];
 
+    const priceFeedUpdateDataWith0x = priceFeedUpdateData.map((data) =>
+      addLeading0x(data)
+    );
+
     let updateFee;
 
     try {
       updateFee = await this.pythContract.read.getUpdateFee([
-        priceFeedUpdateData.map((data) => addLeading0x(data)),
+        priceFeedUpdateDataWith0x,
       ]);
       updateFee = BigInt(
         Math.round(Number(updateFee) * (this.updateFeeMultiplier || 1))
@@ -230,7 +234,7 @@ export class EvmPricePusher implements IPricePusher {
     try {
       const { request } =
         await this.pythContract.simulate.updatePriceFeedsIfNecessary(
-          [priceFeedUpdateData, priceIdsWith0x, pubTimesToPushParam],
+          [priceFeedUpdateDataWith0x, priceIdsWith0x, pubTimesToPushParam],
           {
             value: updateFee,
             gasPrice: BigInt(Math.ceil(gasPrice)),

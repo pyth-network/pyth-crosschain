@@ -34,40 +34,6 @@ export class PythPriceListener implements IPriceListener {
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
   async start() {
-    const priceMetadata = await this.hermesClient.getPriceFeeds();
-    const allPriceIds = priceMetadata.map((priceMetadata) => priceMetadata.id);
-
-    // Filter out invalid price ids
-    const { existingPriceIds, invalidPriceIds } = this.priceIds.reduce<{
-      existingPriceIds: string[];
-      invalidPriceIds: string[];
-    }>(
-      (acc, id) => {
-        if (allPriceIds.includes(id)) {
-          acc.existingPriceIds.push(id);
-        } else {
-          acc.invalidPriceIds.push(id);
-        }
-        return acc;
-      },
-      { existingPriceIds: [], invalidPriceIds: [] }
-    );
-
-    const invalidPriceIdsWithAlias = invalidPriceIds.map((id) =>
-      this.priceIdToAlias.get(id)
-    );
-    this.logger.error(
-      `Invalid price id submitted for: ${invalidPriceIdsWithAlias.join(", ")}`
-    );
-
-    this.priceIds = existingPriceIds;
-    // TODO: We can just remove the invalid price ids from the map
-    this.priceIdToAlias = new Map(
-      existingPriceIds.map(
-        (id) => [id, this.priceIdToAlias.get(id)] as [HexString, string]
-      )
-    );
-
     const eventSource = await this.hermesClient.getPriceUpdatesStream(
       this.priceIds,
       {
@@ -90,6 +56,7 @@ export class PythPriceListener implements IPriceListener {
             ? undefined
             : priceUpdate.price;
         if (currentPrice === undefined) {
+          this.logger.debug("Price is older than 60s, skipping");
           return;
         }
 
@@ -109,27 +76,6 @@ export class PythPriceListener implements IPriceListener {
       eventSource.close();
     };
 
-    // try {
-    //   const priceUpdates = await this.hermesClient.getLatestPriceUpdates(
-    //     this.priceIds,
-    //     {
-    //       encoding: "hex",
-    //       parsed: true,
-    //       ignoreInvalidPriceIds: true,
-    //     }
-    //   );
-    //   priceUpdates.parsed?.forEach((priceUpdate) => {
-    //     this.latestPriceInfo.set(priceUpdate.id, {
-    //       price: priceUpdate.price.price,
-    //       conf: priceUpdate.price.conf,
-    //       publishTime: priceUpdate.price.publish_time,
-    //     });
-    //   });
-    // } catch (error: any) {
-    //   // Always log the HTTP error first
-    //   this.logger.error("Failed to get latest price feeds:", error);
-    // }
-
     // Store health check interval reference
     this.healthCheckInterval = setInterval(() => {
       if (
@@ -141,7 +87,7 @@ export class PythPriceListener implements IPriceListener {
     }, 5000);
   }
 
-  getLatestPriceInfo(priceId: string): PriceInfo | undefined {
+  getLatestPriceInfo(priceId: HexString): PriceInfo | undefined {
     return this.latestPriceInfo.get(priceId);
   }
 
