@@ -1,8 +1,4 @@
 #!/bin/bash
-# This Bash script deploys and benchmarks a mock Pyth contract in a simulated Ethereum environment.
-# It sends an L2 transaction using a test node, captures the deployed contract address, and compiles Rust-based contracts to WebAssembly.
-# Finally, it runs benchmarking to measure gas usage and performance.
-
 set -e
 
 MYDIR=$(realpath "$(dirname "$0")")
@@ -27,13 +23,43 @@ deployed_to=$(
 
 export MOCK_PYTH_ADDRESS=$deployed_to
 cd ..
-# Output the captured address
 
-NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-09-05}
-cargo +"$NIGHTLY_TOOLCHAIN" build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
+
+MYDIR=$(realpath "$(dirname "$0")")
+cd "$MYDIR"
+cd ..
+
+# Optimize contract's wasm binary by crate name.
+opt_wasm () {
+  local CONTRACT_CRATE_NAME=$1
+  local CONTRACT_BIN_NAME="${CONTRACT_CRATE_NAME//-/_}.wasm"
+  local CONTRACT_OPT_BIN_NAME="${CONTRACT_CRATE_NAME//-/_}_opt.wasm"
+
+  echo
+  echo "Optimizing $CONTRACT_CRATE_NAME WASM binary"
+  # https://rustwasm.github.io/book/reference/code-size.html#use-the-wasm-opt-tool
+  wasm-opt -O3 -o ./target/wasm32-unknown-unknown/release/"$CONTRACT_OPT_BIN_NAME" ./target/wasm32-unknown-unknown/release/"$CONTRACT_BIN_NAME"
+}
+
+# Retrieve all alphanumeric contract's crate names in `./examples` directory.
+get_example_crate_names () {
+  # shellcheck disable=SC2038
+  # NOTE: optimistically relying on the 'name = ' string at Cargo.toml file
+  find ./examples -maxdepth 2 -type f -name "Cargo.toml" | xargs grep 'name = ' | grep -oE '".*"' | tr -d "'\""
+}
+
+cargo build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
+
+# Optimize contract's wasm for gas usage.
+for CRATE_NAME in $(get_example_crate_names)
+do
+  opt_wasm "$CRATE_NAME"
+done
+
+export RPC_URL=http://localhost:8547
 
 # No need to compile benchmarks with `--release`
-# since this only runs the benchmarking code and the contracts have already been compiled with `--release`
+# since this only runs the benchmarking code and the contracts have already been compiled with `--release`.
 cargo run -p benches
 
 echo "NOTE: To measure non cached contract's gas usage correctly,

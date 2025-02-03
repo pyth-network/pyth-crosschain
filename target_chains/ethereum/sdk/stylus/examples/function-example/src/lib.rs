@@ -12,31 +12,26 @@ use pyth_stylus::pyth::{
         get_price_unsafe, get_update_fee, get_valid_time_period, update_price_feeds,
     },
     mock::create_price_feed_update_data_list,
-    types::{StoragePrice, StoragePriceFeed},
+    types::StoragePrice
 };
 use stylus_sdk::{
-    console,
-    prelude::{entrypoint, public, sol_storage, SolidityError},
+    prelude::{entrypoint, public, storage}, 
+    storage::{StorageAddress, StorageB256}, 
+    stylus_proc::SolidityError
 };
 
-sol_storage! {
-    #[entrypoint]
-    struct FunctionCallsExample {
-        address pyth_address;
-        bytes32 price_id;
-        StoragePrice price;
-        StoragePriceFeed price_feed;
-        StoragePrice ema_price;
-        StoragePriceFeed ema_price_feed;
-    }
+
+#[entrypoint]
+#[storage]
+struct FunctionCallsExample {
+    pyth_address: StorageAddress,
+    price_id: StorageB256,
+    price: StoragePrice
 }
 
 sol! {
-
     error ArraySizeNotMatch();
-
     error CallFailed();
-
 }
 
 #[derive(SolidityError)]

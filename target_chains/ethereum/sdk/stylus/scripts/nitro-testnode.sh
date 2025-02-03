@@ -1,8 +1,4 @@
 #!/bin/bash
-# This script manages the Nitro test node for deployment and testing purposes.
-# It supports initializing the test node, running it in detached mode, or shutting it down.
-# Options include cloning the Nitro test node repo if not present, and starting or stopping Docker containers as needed.
-
 
 MYDIR=$(realpath "$(dirname "$0")")
 cd "$MYDIR" || exit
@@ -55,7 +51,7 @@ then
   git clone --recurse-submodules https://github.com/OffchainLabs/nitro-testnode.git
   cd ./nitro-testnode || exit
   git pull origin release --recurse-submodules
-  git checkout d4244cd5c2cb56ca3d11c23478ef9642f8ebf472 || exit
+  git checkout af851769d52cab38bc3733dbd0a4db6120fa7864 || exit
 
   ./test-node.bash --no-run --init || exit
 fi

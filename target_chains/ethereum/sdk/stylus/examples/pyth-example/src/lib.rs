@@ -7,7 +7,11 @@ use pyth_stylus::pyth::{
     pyth_contract::{IPyth, PythContract},
     types::Price,
 };
-use stylus_sdk::{abi::Bytes, alloy_primitives::U256, msg, prelude::*, stylus_proc::SolidityError};
+use stylus_sdk::{
+    abi::Bytes, alloy_primitives::U256, msg, 
+    storage::StorageB256, stylus_proc::SolidityError,
+    prelude::{entrypoint, public, storage},
+};
 
 pub use sol::*;
 
@@ -27,16 +31,16 @@ pub enum Error {
     InsufficientFee(InsufficientFee),
 }
 
-sol_storage! {
-    #[entrypoint]
-    struct PythInheritExample {
-        PythContract pyth;
-        bytes32 eth_usd_price_id;
-    }
+#[entrypoint]
+#[storage]
+struct PythExample {
+    #[borrow]
+    pyth:PythContract,
+    eth_usd_price_id : StorageB256,
 }
 
 #[public]
-impl PythInheritExample {
+impl PythExample {
     fn mint(&mut self) -> Result<(), Vec<u8>> {
         // Get the price if it is not older than 60 seconds.
         let price = self

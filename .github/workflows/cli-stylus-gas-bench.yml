@@ -40,6 +40,10 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+          
+      - name: Install wasm-opt
+        run: cargo install wasm-opt@0.116.1
+
       - name: Install solc
         run: |
           curl -LO https://github.com/ethereum/solidity/releases/download/v0.8.24/solc-static-linux

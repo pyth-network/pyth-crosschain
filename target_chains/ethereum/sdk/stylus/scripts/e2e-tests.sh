@@ -1,7 +1,5 @@
 #!/bin/bash
-# This script automates the deployment and testing of Rust-based smart contracts.
-# It sends L2 transactions, deploys the MockPyth contract using Forge, and captures its address.
-# Finally, it compiles contracts to WebAssembly and runs end-to-end tests using a nightly Rust toolchain.
+set -e
 
 MYDIR=$(realpath "$(dirname "$0")")
 cd "$MYDIR"
@@ -27,11 +25,16 @@ deployed_to=$(
 export MOCK_PYTH_ADDRESS=$deployed_to
 cd ..
 
-# Run e2e tests
-NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN:-nightly-2024-09-05}
-cargo +"$NIGHTLY_TOOLCHAIN" build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
+# Navigate to project root
+cd "$(dirname "$(realpath "$0")")/.."
+
+cargo build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
 
 export RPC_URL=http://localhost:8547
-# We should use stable here once nitro-testnode is updated and the contracts fit
-# the size limit. Work tracked [here](https://github.com/OpenZeppelin/rust-contracts-stylus/issues/87)
-cargo +"$NIGHTLY_TOOLCHAIN" test --features std,e2e --test "*"
+
+# If any arguments are set, just pass them as-is to the cargo test command
+if [[ $# -eq 0 ]]; then
+    cargo test --features e2e --test "*"
+else
+    cargo test --features e2e "$@"
+fi

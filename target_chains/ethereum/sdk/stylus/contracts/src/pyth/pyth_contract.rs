@@ -1,4 +1,4 @@
-use crate::pyth::functions::{
+pub use crate::pyth::functions::{
     get_ema_price_no_older_than, get_ema_price_unsafe, get_price_no_older_than, get_price_unsafe,
     get_update_fee, get_valid_time_period, parse_price_feed_updates,
     parse_price_feed_updates_unique, update_price_feeds, update_price_feeds_if_necessary,
@@ -6,7 +6,7 @@ use crate::pyth::functions::{
 use alloc::vec::Vec;
 use alloy_primitives::{Bytes, B256, U256};
 use alloy_sol_types::SolValue;
-use stylus_sdk::{abi::Bytes as AbiBytes, prelude::*, storage::TopLevelStorage};
+use stylus_sdk::{abi::Bytes as AbiBytes, prelude::*, storage::{StorageAddress, TopLevelStorage}};
 /// `IPyth` is a trait that defines methods for interacting with the Pyth contract.
 pub trait IPyth {
     /// The Error Type for the Pyth Contract.
@@ -131,13 +131,10 @@ pub trait IPyth {
     ) -> Result<Vec<u8>, Self::Error>;
 }
 
-sol_storage! {
-    /// `PythContract` represents the contract that interacts with the Pyth oracle.
-    /// This struct contains only the address of the Pyth contract.
-    pub struct PythContract {
-        /// `_ipyth` is the address of the deployed Pyth contract.
-        address _ipyth;
-    }
+
+#[storage]
+pub struct PythContract {
+   pub  _ipyth : StorageAddress,
 }
 
 unsafe impl TopLevelStorage for PythContract {}
@@ -165,7 +162,7 @@ impl IPyth for PythContract {
     }
 
     fn get_ema_price_no_older_than(&mut self, id: B256, age: U256) -> Result<Vec<u8>, Self::Error> {
-        let price = get_ema_price_no_older_than(self, self._ipyth.get(), id, age)?;
+        let price = get_ema_price_no_older_than(self,self._ipyth.get(), id, age)?;
         let data = price.abi_encode();
         Ok(data)
     }

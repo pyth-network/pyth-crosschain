@@ -4,14 +4,13 @@ extern crate alloc;
 use alloc::vec;
 use alloc::vec::Vec;
 use pyth_stylus::pyth::pyth_contract::PythContract;
-use stylus_sdk::prelude::{entrypoint, public, sol_storage};
+use stylus_sdk::prelude::{entrypoint, public, storage};
 
-sol_storage! {
-    #[entrypoint]
-    struct ExtendPythExample {
-        #[borrow]
-        PythContract pyth
-    }
+#[entrypoint]
+#[storage]
+struct ExtendPythExample {
+    #[borrow]
+    pyth: PythContract,
 }
 
 #[public]
