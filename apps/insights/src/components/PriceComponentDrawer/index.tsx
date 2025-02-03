@@ -93,12 +93,14 @@ export const PriceComponentDrawer = ({
         <StatCard
           nonInteractive
           header="Aggregate Price"
+          small
           stat={<LivePrice feedKey={feedKey} />}
         />
         <StatCard
           nonInteractive
           header="Publisher Price"
           variant="primary"
+          small
           stat={<LivePrice feedKey={feedKey} publisherKey={publisherKey} />}
         />
         <StatCard
