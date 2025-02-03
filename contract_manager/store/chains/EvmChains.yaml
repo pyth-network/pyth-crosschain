@@ -85,7 +85,6 @@
   rpcUrl: https://rpc.ankr.com/fantom
   networkId: 250
   type: EvmChain
-  nativeToken: FTM
 - id: mumbai
   mainnet: false
   rpcUrl: https://polygon-testnet.blastapi.io/$ENV_BLAST_API_KEY
@@ -797,7 +796,7 @@
   type: EvmChain
 - id: mathematician_in_heart
   mainnet: true
-  rpcUrl: https://redacted.master.dev/
+  rpcUrl: https://api-efe16d37.ml.eeffc03e557f4daf.com/
   networkId: 2741
   type: EvmChain
 - id: eventum_testnet
