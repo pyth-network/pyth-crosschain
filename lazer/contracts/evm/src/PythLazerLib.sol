@@ -8,7 +8,9 @@ library PythLazerLib {
     enum PriceFeedProperty {
         Price,
         BestBidPrice,
-        BestAskPrice
+        BestAskPrice,
+        PublisherCount,
+        Exponent
     }
 
     enum Channel {
@@ -71,6 +73,24 @@ library PythLazerLib {
     ) public pure returns (uint64 value, uint16 new_pos) {
         value = uint64(bytes8(update[pos:pos + 8]));
         pos += 8;
+        new_pos = pos;
+    }
+
+    function parseFeedValueUint16(
+        bytes calldata update,
+        uint16 pos
+    ) public pure returns (uint16 value, uint16 new_pos) {
+        value = uint16(bytes2(update[pos:pos + 2]));
+        pos += 2;
+        new_pos = pos;
+    }
+
+    function parseFeedValueInt16(
+        bytes calldata update,
+        uint16 pos
+    ) public pure returns (int16 value, uint16 new_pos) {
+        value = int16(uint16(bytes2(update[pos:pos + 2])));
+        pos += 2;
         new_pos = pos;
     }
 
