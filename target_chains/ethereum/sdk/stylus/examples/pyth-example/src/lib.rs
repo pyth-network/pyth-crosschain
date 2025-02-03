@@ -8,9 +8,12 @@ use pyth_stylus::pyth::{
     types::Price,
 };
 use stylus_sdk::{
-    abi::Bytes, alloy_primitives::U256, msg, 
-    storage::StorageB256, stylus_proc::SolidityError,
+    abi::Bytes,
+    alloy_primitives::U256,
+    msg,
     prelude::{entrypoint, public, storage},
+    storage::StorageB256,
+    stylus_proc::SolidityError,
 };
 
 pub use sol::*;
@@ -35,8 +38,8 @@ pub enum Error {
 #[storage]
 struct PythExample {
     #[borrow]
-    pyth:PythContract,
-    eth_usd_price_id : StorageB256,
+    pyth: PythContract,
+    eth_usd_price_id: StorageB256,
 }
 
 #[public]

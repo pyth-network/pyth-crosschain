@@ -11,20 +11,22 @@ use crate::{
 use alloc::vec::Vec;
 use alloy_primitives::{Bytes, B256, U256};
 use alloy_sol_types::{sol_data::Uint as SolUInt, SolType, SolValue};
-use stylus_sdk::storage::{StorageUint, StorageMap};
-use stylus_sdk::{abi::Bytes as AbiBytes, evm, msg, prelude::{storage, public}};
+use stylus_sdk::storage::{StorageMap, StorageUint};
+use stylus_sdk::{
+    abi::Bytes as AbiBytes,
+    evm, msg,
+    prelude::{public, storage},
+};
 
 /// Decode data type PriceFeed and uint64
 pub type DecodeDataType = (PriceFeed, SolUInt<64>);
 
-
 #[storage]
 pub struct MockPythContract {
-    single_update_fee_in_wei : StorageUint<256, 4>,
-    valid_time_period: StorageUint<256,4>,
-    price_feeds: StorageMap<B256, StoragePriceFeed> ,
+    single_update_fee_in_wei: StorageUint<256, 4>,
+    valid_time_period: StorageUint<256, 4>,
+    price_feeds: StorageMap<B256, StoragePriceFeed>,
 }
-
 
 #[public]
 impl MockPythContract {

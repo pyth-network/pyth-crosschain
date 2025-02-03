@@ -4,9 +4,9 @@ use std::assert_eq;
 
 use abi::ExtendPyth;
 use alloy::{primitives::U256, sol};
-use stylus_sdk::alloy_primitives::{Address, FixedBytes};
 use alloy_sol_types::SolValue;
 use e2e::{env, Account, ReceiptExt};
+use stylus_sdk::alloy_primitives::{Address, FixedBytes};
 
 use crate::ExtendPythExample::constructorCall;
 use eyre::Result;

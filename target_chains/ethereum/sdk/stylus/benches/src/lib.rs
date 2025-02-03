@@ -47,7 +47,7 @@ async fn deploy(
     let sol_path = args.as_ref().map(|_| {
         manifest_dir
             .join("examples")
-            .join( format!("{}-example",contract_name))
+            .join(format!("{}-example", contract_name))
             .join("src")
             .join("constructor.sol")
     });
