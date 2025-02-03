@@ -10,7 +10,7 @@ use eyre::WrapErr;
 use koba::config::{Deploy, Generate, PrivateKey};
 use serde::Deserialize;
 
-pub mod extend_pyth;
+pub mod extend_pyth_example;
 pub mod report;
 
 #[derive(Debug, Deserialize)]
@@ -47,11 +47,10 @@ async fn deploy(
     let sol_path = args.as_ref().map(|_| {
         manifest_dir
             .join("examples")
-            .join(contract_name)
+            .join( format!("{}-example",contract_name))
             .join("src")
             .join("constructor.sol")
     });
-
     let pk = account.pk();
     let config = Deploy {
         generate_config: Generate {
