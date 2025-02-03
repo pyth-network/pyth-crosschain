@@ -25,3 +25,4 @@ crate-type = ["lib", "cdylib"]
 
 [features]
 e2e = []
+export-abi = []

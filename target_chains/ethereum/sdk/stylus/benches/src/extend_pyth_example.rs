@@ -96,6 +96,7 @@ pub async fn run_with(cache_opt: CacheOpt) -> eyre::Result<Vec<FunctionReport>> 
 
 async fn deploy(account: &Account, cache_opt: CacheOpt) -> eyre::Result<Address> {
     let pyth_addr = env("MOCK_PYTH_ADDRESS")?;
+    println!("Pyth address: {}", pyth_addr);
     let address = Address::from_str(&pyth_addr)?;
     let args = ExtendPythExample::constructorCall {
         _pythAddress: address,
