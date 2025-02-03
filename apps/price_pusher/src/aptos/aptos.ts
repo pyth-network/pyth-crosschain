@@ -227,7 +227,7 @@ export class AptosPricePusher implements IPricePusher {
           );
           return this.lastSequenceNumber;
         } catch (e: any) {
-          throw new Error("Failed to retrieve sequence number");
+          throw new Error("Failed to retrieve sequence number" + e);
         } finally {
           this.sequenceNumberLocked = false;
         }
