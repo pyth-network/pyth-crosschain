@@ -26,19 +26,15 @@ jobs:
         working-directory: target_chains/ethereum/sdk/stylus
     steps:
       - uses: actions/checkout@v4
-
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           rustflags: ""
-
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-
       - name: Install cargo-stylus
         run: cargo install cargo-stylus@0.5.8
-
       - name: Run wasm check
         run: ./scripts/check-wasm.sh

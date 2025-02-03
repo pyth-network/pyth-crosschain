@@ -32,15 +32,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
           rustflags: ""
-
       - name: Add rust targets ${{ matrix.target }}
         run: rustup target add ${{ matrix.target }}
-
       - name: Cargo check
         run: cargo check --release --target ${{ matrix.target }} --no-default-features
