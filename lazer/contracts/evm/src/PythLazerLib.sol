@@ -9,8 +9,8 @@ library PythLazerLib {
         Price,
         BestBidPrice,
         BestAskPrice,
-        Exponent,
         PublisherCount
+        Exponent,
     }
 
     enum Channel {
