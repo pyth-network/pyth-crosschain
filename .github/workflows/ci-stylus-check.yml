@@ -77,5 +77,4 @@ jobs:
         uses: giraffate/clippy-action@v1
         with:
           reporter: "github-pr-check"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          
+          github_token: ${{ secrets.GITHUB_TOKEN }} 
