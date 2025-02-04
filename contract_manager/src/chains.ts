@@ -36,6 +36,7 @@ import {
 } from "@ton/ton";
 import { keyPairFromSeed } from "@ton/crypto";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
+import * as nearAPI from "near-api-js";
 
 /**
  * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
@@ -895,14 +896,31 @@ export class NearChain extends Chain {
   }
 
   generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer {
-    throw new Error("governance is unsupported on Near")
-  }
-
-  getAccountAddress(privateKey: PrivateKey): Promise<string> {
     throw new Error("unsupported")
   }
 
-  getAccountBalance(privateKey: PrivateKey): Promise<number> {
-    throw new Error("unsupported")
+  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    return Buffer.from(Ed25519Keypair.fromSecretKey(
+      Buffer.from(privateKey, "hex")
+    ).getPublicKey().toRawBytes()).toString("hex");
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const accountId = await this.getAccountAddress(privateKey);
+    const { connect, keyStores, KeyPair, utils } = nearAPI;
+
+    const myKeyStore = new keyStores.InMemoryKeyStore();
+    // const keyPair = KeyPair.fromString(privateKey);
+    // await myKeyStore.setKey("testnet", accountId, keyPair);
+    const networkId = this.mainnet ? "mainnet" : "testnet";
+    const connectionConfig = {
+      networkId: this.mainnet ? "mainnet" : "testnet",
+      keyStore: myKeyStore,
+      nodeUrl: `https://rpc.${networkId}.near.org`,
+    };
+    const nearConnection = await connect(connectionConfig);
+    const account = await nearConnection.account(accountId);
+    const balance = await account.getAccountBalance();
+    return Number(balance.available) / 1e24;
   }
 }
