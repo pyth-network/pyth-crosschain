@@ -228,8 +228,8 @@ impl<'de> Deserialize<'de> for Channel {
     where
         D: serde::Deserializer<'de>,
     {
-        let value = <&str>::deserialize(deserializer)?;
-        parse_channel(value).ok_or_else(|| D::Error::custom("unknown channel"))
+        let value = <String>::deserialize(deserializer)?;
+        parse_channel(&value).ok_or_else(|| D::Error::custom("unknown channel"))
     }
 }
 
