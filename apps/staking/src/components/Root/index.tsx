@@ -14,7 +14,7 @@ import {
   MAINNET_RPC,
   HERMES_URL,
   PYTHNET_RPC,
-  SIMULATION_PAYER,
+  SIMULATION_PAYER_ADDRESS,
 } from "../../config/server";
 import { ApiProvider } from "../../hooks/use-api";
 import { LoggerProvider } from "../../hooks/use-logger";
@@ -86,7 +86,7 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
             <ApiProvider
               hermesUrl={HERMES_URL}
               pythnetRpcUrl={PYTHNET_RPC}
-              simulationPayer={SIMULATION_PAYER}
+              simulationPayerAddress={SIMULATION_PAYER_ADDRESS}
             >
               <ToastProvider>
                 <html lang={lang} {...props} />

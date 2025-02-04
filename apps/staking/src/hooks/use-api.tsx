@@ -65,7 +65,7 @@ const State = {
     pythnetClient: PythnetClient,
     hermesClient: HermesClient,
     account: PublicKey,
-    simulationPayer: string | undefined,
+    simulationPayer: PublicKey,
     allAccounts: [PublicKey, ...PublicKey[]],
     selectAccount: (account: PublicKey) => void,
     mutate: ReturnType<typeof useSWRConfig>["mutate"],
@@ -101,7 +101,7 @@ const State = {
           pythnetClient,
           hermesClient,
           account,
-          simulationPayer ? new PublicKey(simulationPayer) : undefined,
+          simulationPayer,
         ),
 
       claim: bindApi(api.claim),
@@ -138,16 +138,16 @@ type ApiProviderProps = Omit<
 > & {
   pythnetRpcUrl: string;
   hermesUrl: string;
-  simulationPayer: string | undefined;
+  simulationPayerAddress: string;
 };
 
 export const ApiProvider = ({
   hermesUrl,
   pythnetRpcUrl,
-  simulationPayer,
+  simulationPayerAddress,
   ...props
 }: ApiProviderProps) => {
-  const state = useApiContext(hermesUrl, pythnetRpcUrl, simulationPayer);
+  const state = useApiContext(hermesUrl, pythnetRpcUrl, simulationPayerAddress);
 
   return <ApiContext.Provider value={state} {...props} />;
 };
@@ -155,7 +155,7 @@ export const ApiProvider = ({
 const useApiContext = (
   hermesUrl: string,
   pythnetRpcUrl: string,
-  simulationPayer: string | undefined,
+  simulationPayerAddress: string,
 ) => {
   const wallet = useWallet();
   const { connection } = useConnection();
@@ -165,6 +165,10 @@ const useApiContext = (
   const pythnetClient = useMemo(
     () => new PythnetClient(new Connection(pythnetRpcUrl)),
     [pythnetRpcUrl],
+  );
+  const simulationPayer = useMemo(
+    () => new PublicKey(simulationPayerAddress),
+    [simulationPayerAddress],
   );
   const pythStakingClient = useMemo(
     () =>
