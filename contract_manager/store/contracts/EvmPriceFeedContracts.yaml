@@ -481,3 +481,6 @@
 - chain: story_mainnet
   address: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134"
   type: EvmPriceFeedContract
+- chain: bittensor_testnet
+  address: "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1"
+  type: EvmPriceFeedContract

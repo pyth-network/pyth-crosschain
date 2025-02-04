@@ -475,3 +475,6 @@
 - chain: story_mainnet
   address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
   type: EvmWormholeContract
+- chain: bittensor_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
