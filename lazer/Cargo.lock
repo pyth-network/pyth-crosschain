@@ -3760,7 +3760,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-client"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "alloy-primitives",
  "anyhow",
@@ -3771,7 +3771,7 @@ dependencies = [
  "futures-util",
  "hex",
  "libsecp256k1 0.7.1",
- "pyth-lazer-protocol 0.4.1",
+ "pyth-lazer-protocol 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "tokio",
@@ -3809,6 +3809,22 @@ dependencies = [
  "hex",
  "itertools 0.13.0",
  "libsecp256k1 0.7.1",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "pyth-lazer-protocol"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c9bbddb1201109b5b5f2d78ecb67ddee69148a4f4feed6935870013b3ac6bbb"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "byteorder",
+ "derive_more",
+ "itertools 0.13.0",
  "rust_decimal",
  "serde",
  "serde_json",
