@@ -15,7 +15,6 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
 import * as fs from "fs";
@@ -32,9 +31,6 @@ import {
   REMOTE_EXECUTOR_ADDRESS,
   envOrErr,
   PriceStoreMultisigInstruction,
-  findDetermisticPublisherBufferAddress,
-  PRICE_STORE_BUFFER_SPACE,
-  PRICE_STORE_PROGRAM_ID,
   createDeterministicPublisherBufferAccountInstruction,
 } from "@pythnetwork/xc-admin-common";
 
@@ -101,15 +97,18 @@ async function run() {
       ) {
         const preInstructions: TransactionInstruction[] = [];
 
-        console.log(`Found VAA ${lastSequenceNumber}, relaying ...`);
+        console.log(`Found VAA ${lastSequenceNumber}, relaying vaa ...`);
+
         await postVaaSolana(
           provider.connection,
           signTransactionFactory(KEYPAIR),
           WORMHOLE_ADDRESS[CLUSTER]!,
           provider.wallet.publicKey,
           Buffer.from(response.vaaBytes, "base64"),
-          { commitment: COMMITMENT }
+          { commitment: COMMITMENT, maxRetries: 10 }
         );
+
+        console.log(`VAA ${lastSequenceNumber} relayed. executing ...`);
 
         let extraAccountMetas: AccountMeta[] = [
           { pubkey: executorKey, isSigner: false, isWritable: true },
@@ -128,6 +127,10 @@ async function run() {
           );
 
           const parsedInstruction = multisigParser.parseInstruction(ix);
+
+          console.log("Parsed instruction:");
+          console.dir(parsedInstruction, { depth: null });
+
           if (
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addProduct"
@@ -200,7 +203,7 @@ async function run() {
             .postInstructions([
               ComputeBudgetProgram.setComputeUnitLimit({ units: 1000000 }),
             ])
-            .rpc({ skipPreflight: true });
+            .rpc({ skipPreflight: false });
         } catch (e) {
           if (SKIP_FAILED_REMOTE_INSTRUCTIONS) {
             console.error(e);
