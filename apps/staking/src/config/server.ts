@@ -76,7 +76,7 @@ export const GOVERNANCE_ONLY_REGIONS = transformOr(
 export const PROXYCHECK_API_KEY = demandInProduction("PROXYCHECK_API_KEY");
 // This needs to be a public key that has SOL in it all the time, it will be used as a payer in the transaction simulation to compute the claimable rewards
 // such simulation fails when the payer has no funds.
-export const SIMULATION_PAYER = process.env.SIMULATION_PAYER;
+export const SIMULATION_PAYER = getOr("SIMULATION_PAYER", "E5KR7yfb9UyVB6ZhmhQki1rM1eBcxHvyGKFZakAC5uc");
 class MissingEnvironmentError extends Error {
   constructor(name: string) {
     super(`Missing environment variable: ${name}!`);
