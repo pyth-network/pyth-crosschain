@@ -15,7 +15,7 @@ export default {
   describe:
     "Run price pusher for sui. Most of the arguments below are" +
     "network specific, so there's one set of values for mainnet and" +
-    "another for testnet. See config.sui..sample.json for the " +
+    " another for testnet. See config.sui.mainnet.sample.json for the " +
     "appropriate values for your network. ",
   builder: {
     endpoint: {
