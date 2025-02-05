@@ -14,8 +14,9 @@ import {
   GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
 } from "../../config/server";
-import { toHex } from "../../hex";
+// import { toHex } from "../../hex";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
+import { PriceFeedsProvider as PriceFeedsProviderImpl } from "../../hooks/use-price-feeds";
 import { getPublishers } from "../../services/clickhouse";
 import { Cluster, getFeeds } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
@@ -26,27 +27,17 @@ type Props = {
 };
 
 export const Root = async ({ children }: Props) => {
-  const [feeds, publishers] = await Promise.all([
-    getFeeds(Cluster.Pythnet),
-    getPublishers(),
-  ]);
+  const publishers = await getPublishers();
 
   return (
     <BaseRoot
       amplitudeApiKey={AMPLITUDE_API_KEY}
       googleAnalyticsId={GOOGLE_ANALYTICS_ID}
       enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-      providers={[NuqsAdapter, LivePriceDataProvider]}
+      providers={[NuqsAdapter, LivePriceDataProvider, PriceFeedsProvider]}
       className={styles.root}
     >
       <SearchDialogProvider
-        feeds={feeds.map((feed) => ({
-          id: feed.symbol,
-          key: toHex(feed.product.price_account),
-          displaySymbol: feed.product.display_symbol,
-          icon: <PriceFeedIcon symbol={feed.symbol} />,
-          assetClass: feed.product.asset_type,
-        }))}
         publishers={publishers.map((publisher) => {
           const knownPublisher = lookupPublisher(publisher.key);
           return {
@@ -68,5 +59,26 @@ export const Root = async ({ children }: Props) => {
         </TabRoot>
       </SearchDialogProvider>
     </BaseRoot>
+  );
+};
+
+const PriceFeedsProvider = async ({ children }: { children: ReactNode }) => {
+  const feeds = await getFeeds(Cluster.Pythnet);
+
+  const feedMap = new Map(
+    feeds.map((feed) => [
+      feed.symbol,
+      {
+        displaySymbol: feed.product.display_symbol,
+        icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
+        description: feed.product.description,
+        key: feed.product.price_account,
+        assetClass: feed.product.asset_type,
+      },
+    ]),
+  );
+
+  return (
+    <PriceFeedsProviderImpl value={feedMap}>{children}</PriceFeedsProviderImpl>
   );
 };

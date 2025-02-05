@@ -26,6 +26,8 @@ import {
 import { useCollator, useFilter } from "react-aria";
 
 import styles from "./search-dialog.module.scss";
+import { usePriceFeeds } from "../../hooks/use-price-feeds";
+import { AssetClassTag } from "../AssetClassTag";
 import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherTag } from "../PublisherTag";
@@ -42,13 +44,6 @@ const SearchDialogOpenContext = createContext<
 
 type Props = {
   children: ReactNode;
-  feeds: {
-    id: string;
-    key: string;
-    displaySymbol: string;
-    icon: ReactNode;
-    assetClass: string;
-  }[];
   publishers: ({
     id: string;
     averageScore: number;
@@ -58,16 +53,13 @@ type Props = {
   ))[];
 };
 
-export const SearchDialogProvider = ({
-  children,
-  feeds,
-  publishers,
-}: Props) => {
+export const SearchDialogProvider = ({ children, publishers }: Props) => {
   const searchDialogState = useSearchDialogStateContext();
   const [search, setSearch] = useState("");
   const [type, setType] = useState<ResultType | "">("");
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const feeds = usePriceFeeds();
 
   const close = useCallback(() => {
     searchDialogState.close();
@@ -92,9 +84,13 @@ export const SearchDialogProvider = ({
         ...(type === ResultType.Publisher
           ? []
           : feeds
-              .filter((feed) => filter.contains(feed.displaySymbol, search))
-              .map((feed) => ({
+              .entries()
+              .filter(([, { displaySymbol }]) =>
+                filter.contains(displaySymbol, search),
+              )
+              .map(([symbol, feed]) => ({
                 type: ResultType.PriceFeed as const,
+                id: symbol,
                 ...feed,
               }))),
         ...(type === ResultType.PriceFeed
@@ -234,13 +230,10 @@ export const SearchDialogProvider = ({
                     <>
                       <PriceFeedTag
                         compact
-                        symbol={result.displaySymbol}
-                        icon={result.icon}
+                        symbol={result.id}
                         className={styles.itemTag}
                       />
-                      <Badge variant="neutral" style="outline" size="xs">
-                        {result.assetClass.toUpperCase()}
-                      </Badge>
+                      <AssetClassTag symbol={result.id} />
                     </>
                   ) : (
                     <>

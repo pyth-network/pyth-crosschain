@@ -21,7 +21,6 @@ import {
   ExplainAverage,
 } from "../Explanations";
 import { NoResults } from "../NoResults";
-import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
@@ -212,13 +211,7 @@ const getFeedRows = (
     .map(({ feed, ranking }) => ({
       id: ranking.symbol,
       data: {
-        asset: (
-          <PriceFeedTag
-            compact
-            symbol={feed.product.display_symbol}
-            icon={<PriceFeedIcon symbol={feed.symbol} />}
-          />
-        ),
+        asset: <PriceFeedTag compact symbol={feed.symbol} />,
         assetClass: (
           <Badge variant="neutral" style="outline" size="xs">
             {feed.product.asset_type.toUpperCase()}
