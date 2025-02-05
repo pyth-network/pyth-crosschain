@@ -73,4 +73,3 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
           rustflags: ""
-          
