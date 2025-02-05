@@ -208,8 +208,8 @@ export class NearPriceFeedContract extends PriceFeedContract {
       senderAddress,
       senderPrivateKey
     );
-    let results = [];
-    for (let vaa of vaas) {
+    const results = [];
+    for (const vaa of vaas) {
       const outcome = await account.functionCall({
         contractId: this.address,
         methodName: "update_price_feeds",
