@@ -68,3 +68,4 @@ jobs:
 
           # Run Integration Tests
           ./scripts/e2e-tests.sh
+          rm .env

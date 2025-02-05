@@ -8,11 +8,11 @@ cd "$MYDIR"
 
 export RPC_URL=http://localhost:8547
 export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-export WALLER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+export WALLET_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 
 cd ..
 cd "nitro-testnode"
-./test-node.bash script send-l2 --to address_$WALLER_ADDRESS --ethamount 0.1
+./test-node.bash script send-l2 --to address_$WALLET_ADDRESS --ethamount 0.1
 
 cd ..
 cd "pyth-mock-solidity"
@@ -29,6 +29,7 @@ else
   echo "Skipping MockPyth deployment in CI"
 fi
 
+env
 # Navigate to project root
 cd "$(dirname "$(realpath "$0")")/.."
 

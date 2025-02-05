@@ -65,3 +65,4 @@ jobs:
           echo "MOCK_PYTH_ADDRESS=$deployed_to" >> .env
           cd ..
           ./scripts/bench.sh
+          rm .env
