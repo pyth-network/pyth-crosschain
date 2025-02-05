@@ -9,7 +9,7 @@ use {
         CLAIM_RECORD_SEED, EXECUTOR_KEY_SEED,
     },
     anchor_lang::{
-        prelude::{AccountMeta, ProgramError, Pubkey, Rent, UpgradeableLoaderState},
+        prelude::{AccountMeta, ProgramError, Pubkey, Rent},
         solana_program::hash::Hash,
         AccountDeserialize, AnchorDeserialize, AnchorSerialize,
         InstructionData as AnchorInstructionData, Key, Owner, ToAccountMetas,
@@ -18,7 +18,14 @@ use {
         read_file, BanksClient, BanksClientError, ProgramTest, ProgramTestBanksClientExt,
     },
     solana_sdk::{
-        account::Account, bpf_loader, bpf_loader_upgradeable, instruction::{Instruction, InstructionError}, signature::Keypair, signer::Signer, stake_history::Epoch, system_instruction, transaction::{Transaction, TransactionError}
+        account::Account,
+        bpf_loader,
+        instruction::{Instruction, InstructionError},
+        signature::Keypair,
+        signer::Signer,
+        stake_history::Epoch,
+        system_instruction,
+        transaction::{Transaction, TransactionError},
     },
     std::{collections::HashMap, path::Path},
     wormhole_sdk::Chain,
@@ -47,7 +54,7 @@ pub enum VaaAttack {
 impl ExecutorBench {
     /// Deploys the executor program as upgradable
     pub fn new() -> ExecutorBench {
-        let mut bpf_data = read_file(
+        let bpf_data = read_file(
             std::env::current_dir()
                 .unwrap()
                 .join(Path::new("../../target/deploy/remote_executor.so")),
@@ -227,7 +234,16 @@ impl ExecutorSimulator {
         signers: &Vec<&Keypair>,
         executor_attack: ExecutorAttack,
     ) -> Result<(), BanksClientError> {
-        let posted_vaa_data: AnchorVaa = AnchorVaa::try_from_slice(&self.banks_client.get_account(*posted_vaa_address).await.unwrap().unwrap().data[..]).unwrap();
+        let posted_vaa_data: AnchorVaa = AnchorVaa::try_from_slice(
+            &self
+                .banks_client
+                .get_account(*posted_vaa_address)
+                .await
+                .unwrap()
+                .unwrap()
+                .data[..],
+        )
+        .unwrap();
 
         let mut account_metas = crate::accounts::ExecutePostedVaa::populate(
             &self.program_id,

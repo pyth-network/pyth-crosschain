@@ -23,7 +23,6 @@ jobs:
           toolchain: 1.82.0
       - name: Install Rust versions
         run: |
-          rustup install 1.66.1
           rustup install 1.73.0
       - name: Install protoc
         uses: arduino/setup-protoc@v3
