@@ -13,7 +13,6 @@ import type { ReactNode } from "react";
 import styles from "./layout.module.scss";
 import { PriceFeedSelect } from "./price-feed-select";
 import { ReferenceData } from "./reference-data";
-import { toHex } from "../../hex";
 import { Cluster, getFeeds } from "../../services/pyth";
 import { FeedKey } from "../FeedKey";
 import {
@@ -26,7 +25,6 @@ import {
   YesterdaysPricesProvider,
   PriceFeedChangePercent,
 } from "../PriceFeedChangePercent";
-import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 
@@ -38,12 +36,12 @@ type Props = {
 };
 
 export const PriceFeedLayout = async ({ children, params }: Props) => {
-  const [{ slug }, fees] = await Promise.all([
+  const [{ slug }, feeds] = await Promise.all([
     params,
     getFeeds(Cluster.Pythnet),
   ]);
   const symbol = decodeURIComponent(slug);
-  const feed = fees.find((item) => item.symbol === symbol);
+  const feed = feeds.find((item) => item.symbol === symbol);
 
   return feed ? (
     <div className={styles.priceFeedLayout}>
@@ -64,22 +62,8 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           </div>
         </div>
         <div className={styles.headerRow}>
-          <PriceFeedSelect
-            feeds={fees
-              .filter((feed) => feed.symbol !== symbol)
-              .map((feed) => ({
-                id: feed.symbol,
-                key: toHex(feed.product.price_account),
-                displaySymbol: feed.product.display_symbol,
-                icon: <PriceFeedIcon symbol={feed.symbol} />,
-                assetClass: feed.product.asset_type,
-              }))}
-          >
-            <PriceFeedTag
-              symbol={feed.product.display_symbol}
-              description={feed.product.description}
-              icon={<PriceFeedIcon symbol={feed.symbol} />}
-            />
+          <PriceFeedSelect>
+            <PriceFeedTag symbol={feed.symbol} />
           </PriceFeedSelect>
           <div className={styles.rightGroup}>
             <FeedKey

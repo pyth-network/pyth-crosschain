@@ -1,7 +1,6 @@
 import { getPriceFeeds } from "./get-price-feeds";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { Cluster, ClusterToName } from "../../services/pyth";
-import { PriceFeedIcon } from "../PriceFeedIcon";
+import { Cluster } from "../../services/pyth";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
@@ -22,25 +21,14 @@ export const PriceFeeds = async ({ params }: Props) => {
       searchPlaceholder="Feed symbol"
       metricsTime={metricsTime}
       nameLoadingSkeleton={<PriceFeedTag compact isLoading />}
-      priceComponents={feeds.map(({ ranking, feed, status }) => ({
-        id: `${feed.product.price_account}-${ClusterToName[Cluster.Pythnet]}`,
-        feedKey: feed.product.price_account,
+      publisherKey={key}
+      priceFeeds={feeds.map(({ ranking, feed, status }) => ({
         symbol: feed.symbol,
         score: ranking?.final_score,
         uptimeScore: ranking?.uptime_score,
         deviationScore: ranking?.deviation_score,
         stalledScore: ranking?.stalled_score,
-        cluster: Cluster.Pythnet,
         status,
-        publisherKey: key,
-        name: (
-          <PriceFeedTag
-            compact
-            symbol={feed.product.display_symbol}
-            icon={<PriceFeedIcon symbol={feed.product.display_symbol} />}
-          />
-        ),
-        nameAsString: feed.product.display_symbol,
       }))}
     />
   );
