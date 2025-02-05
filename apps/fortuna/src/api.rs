@@ -5,7 +5,6 @@ use {
     },
     anyhow::Result,
     axum::{
-        body::Body,
         http::StatusCode,
         response::{IntoResponse, Response},
         routing::get,
@@ -146,7 +145,7 @@ impl IntoResponse for RestError {
     }
 }
 
-pub fn routes(state: ApiState) -> Router<(), Body> {
+pub fn routes(state: ApiState) -> Router {
     Router::new()
         .route("/", get(index))
         .route("/live", get(live))

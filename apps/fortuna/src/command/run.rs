@@ -29,6 +29,7 @@ use {
         time::{Duration, SystemTime, UNIX_EPOCH},
     },
     tokio::{
+        net::TcpListener,
         spawn,
         sync::{watch, RwLock},
         time,
@@ -78,11 +79,10 @@ pub async fn run_api(
         .layer(CorsLayer::permissive());
 
     tracing::info!("Starting server on: {:?}", &socket_addr);
-    // Binds the axum's server to the configured address and port. This is a blocking call and will
-    // not return until the server is shutdown.
-    axum::Server::try_bind(&socket_addr)?
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(async {
+    let listener = TcpListener::bind(&socket_addr).await?;
+
+    axum::serve(listener, app)
+        .with_graceful_shutdown(async move {
             // It can return an error or an Ok(()). In both cases, we would shut down.
             // As Ok(()) means, exit signal (ctrl + c) was received.
             // And Err(e) means, the sender was dropped which should not be the case.
