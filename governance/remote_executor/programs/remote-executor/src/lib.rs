@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use {
-    anchor_lang::{prelude::*, solana_program::borsh::get_packed_len, system_program},
+    anchor_lang::{prelude::*, system_program},
     error::ExecutorError,
     state::{claim_record::ClaimRecord, posted_vaa::AnchorVaa},
     wormhole_sdk::Chain::{self, Solana},
@@ -65,7 +65,7 @@ pub struct ExecutePostedVaa<'info> {
     #[account(constraint = Chain::from(posted_vaa.emitter_chain) == Solana @ ExecutorError::EmitterChainNotSolana, constraint = posted_vaa.sequence > claim_record.sequence @ExecutorError::NonIncreasingSequence, constraint = (&posted_vaa.magic == b"vaa" || &posted_vaa.magic == b"msg" || &posted_vaa.magic == b"msu") @ExecutorError::PostedVaaHeaderWrongMagicNumber )]
     pub posted_vaa: Account<'info, AnchorVaa>,
     /// The reason claim_record has different seeds than executor_key is that executor key might need to pay in the CPI, so we want it to be a native wallet
-    #[account(init_if_needed, space = 8 + get_packed_len::<ClaimRecord>(), payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
+    #[account(init_if_needed, space = 8 + ClaimRecord::LEN, payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     pub claim_record: Account<'info, ClaimRecord>,
     pub system_program: Program<'info, System>,
     // Additional accounts passed to the instruction will be passed down to the CPIs. Very importantly executor_key needs to be passed as it will be the signer of the CPIs.

@@ -9,3 +9,7 @@ use anchor_lang::{
 pub struct ClaimRecord {
     pub sequence: u64,
 }
+
+impl ClaimRecord {
+    pub const LEN: usize = 8;
+}
