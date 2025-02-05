@@ -898,8 +898,12 @@ export class NearChain extends Chain {
     };
   }
 
-  generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer {
-    throw new Error("unsupported");
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param codeHash hex string of the 32 byte code hash for the new contract without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(codeHash: string): Buffer {
+    return new UpgradeContract256Bit(this.wormholeChainName, codeHash).encode();
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {

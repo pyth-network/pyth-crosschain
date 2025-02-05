@@ -36,7 +36,7 @@ import {
   StarknetPriceFeedContract,
   StarknetWormholeContract,
 } from "./contracts/starknet";
-import { NearPriceFeedContract } from "./contracts/near";
+import { NearPriceFeedContract, NearWormholeContract } from "./contracts/near";
 
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
@@ -160,6 +160,7 @@ export class Store {
       [TonPriceFeedContract.type]: TonPriceFeedContract,
       [TonWormholeContract.type]: TonWormholeContract,
       [NearPriceFeedContract.type]: NearPriceFeedContract,
+      [NearWormholeContract.type]: NearWormholeContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));

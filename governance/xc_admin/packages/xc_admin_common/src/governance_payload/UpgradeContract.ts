@@ -34,7 +34,7 @@ export class CosmosUpgradeContract extends PythGovernanceActionImpl {
   }
 }
 
-// Used by Aptos, Sui and Starknet
+// Used by Aptos, Sui, Near, and Starknet
 export class UpgradeContract256Bit extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
     BufferLayout.struct([BufferLayoutExt.hexBytes(32, "hash")]);
