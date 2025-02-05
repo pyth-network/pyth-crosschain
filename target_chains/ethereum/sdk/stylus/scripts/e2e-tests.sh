@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+if [ -z "$CI" ]; then
+
 MYDIR=$(realpath "$(dirname "$0")")
 cd "$MYDIR"
 
@@ -21,9 +23,11 @@ deployed_to=$(
   --broadcast \
   | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1
 )
-
 export MOCK_PYTH_ADDRESS=$deployed_to
 cd ..
+else
+  echo "Skipping MockPyth deployment in CI"
+fi
 
 # Navigate to project root
 cd "$(dirname "$(realpath "$0")")/.."
