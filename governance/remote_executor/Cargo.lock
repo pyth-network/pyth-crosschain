@@ -3286,7 +3286,6 @@ dependencies = [
  "anchor-lang",
  "bincode",
  "boolinator",
- "borsh 0.9.3",
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program-test",
