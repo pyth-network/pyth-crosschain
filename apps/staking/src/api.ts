@@ -106,6 +106,7 @@ export const loadData = async (
   pythnetClient: PythnetClient,
   hermesClient: HermesClient,
   stakeAccount?: PublicKey | undefined,
+  simulationPayer?: PublicKey,
 ): Promise<Data> =>
   stakeAccount === undefined
     ? loadDataNoStakeAccount(client, pythnetClient, hermesClient)
@@ -114,6 +115,7 @@ export const loadData = async (
         pythnetClient,
         hermesClient,
         stakeAccount,
+        simulationPayer,
       );
 
 const loadDataNoStakeAccount = async (
@@ -149,6 +151,7 @@ const loadDataForStakeAccount = async (
   pythnetClient: PythnetClient,
   hermesClient: HermesClient,
   stakeAccount: PublicKey,
+  simulationPayer?: PublicKey,
 ): Promise<Data> => {
   const [
     { publishers, ...baseInfo },
@@ -160,7 +163,7 @@ const loadDataForStakeAccount = async (
     loadBaseInfo(client, pythnetClient, hermesClient),
     client.getStakeAccountCustody(stakeAccount),
     client.getUnlockSchedule(stakeAccount),
-    client.getClaimableRewards(stakeAccount),
+    client.getClaimableRewards(stakeAccount, simulationPayer),
     client.getStakeAccountPositions(stakeAccount),
   ]);
 
