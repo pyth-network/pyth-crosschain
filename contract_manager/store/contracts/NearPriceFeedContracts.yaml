@@ -1,0 +1,6 @@
+- chain: near
+  address: pyth-oracle.near
+  type: NearPriceFeedContract
+- chain: near_testnet
+  address: pyth-oracle.testnet
+  type: NearPriceFeedContract

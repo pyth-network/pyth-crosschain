@@ -37,6 +37,7 @@ import {
 import { keyPairFromSeed } from "@ton/crypto";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
 import * as nearAPI from "near-api-js";
+import * as bs58 from "bs58";
 
 /**
  * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
@@ -862,14 +863,16 @@ export class TonChain extends Chain {
 
 export class NearChain extends Chain {
   static type = "NearChain";
+  networkId: string;
 
   constructor(
     id: string,
     mainnet: boolean,
     wormholeChainName: string,
-    nativeToken: TokenId | undefined,
+    nativeToken: TokenId | undefined
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
+    this.networkId = this.mainnet ? "mainnet" : "testnet";
   }
 
   static fromJson(parsed: ChainConfig & { networkId: number }): NearChain {
@@ -878,7 +881,7 @@ export class NearChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
-      parsed.nativeToken,
+      parsed.nativeToken
     );
   }
 
@@ -896,31 +899,41 @@ export class NearChain extends Chain {
   }
 
   generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer {
-    throw new Error("unsupported")
+    throw new Error("unsupported");
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    return Buffer.from(Ed25519Keypair.fromSecretKey(
-      Buffer.from(privateKey, "hex")
-    ).getPublicKey().toRawBytes()).toString("hex");
+    return Buffer.from(
+      Ed25519Keypair.fromSecretKey(Buffer.from(privateKey, "hex"))
+        .getPublicKey()
+        .toRawBytes()
+    ).toString("hex");
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const accountId = await this.getAccountAddress(privateKey);
-    const { connect, keyStores, KeyPair, utils } = nearAPI;
-
-    const myKeyStore = new keyStores.InMemoryKeyStore();
-    // const keyPair = KeyPair.fromString(privateKey);
-    // await myKeyStore.setKey("testnet", accountId, keyPair);
-    const networkId = this.mainnet ? "mainnet" : "testnet";
-    const connectionConfig = {
-      networkId: this.mainnet ? "mainnet" : "testnet",
-      keyStore: myKeyStore,
-      nodeUrl: `https://rpc.${networkId}.near.org`,
-    };
-    const nearConnection = await connect(connectionConfig);
-    const account = await nearConnection.account(accountId);
+    const account = await this.getNearAccount(accountId);
     const balance = await account.getAccountBalance();
     return Number(balance.available) / 1e24;
+  }
+
+  async getNearAccount(
+    accountId: string,
+    senderPrivateKey?: PrivateKey
+  ): Promise<nearAPI.Account> {
+    const keyStore = new nearAPI.keyStores.InMemoryKeyStore();
+    if (typeof senderPrivateKey !== "undefined") {
+      const key = bs58.encode(Buffer.from(senderPrivateKey, "hex"));
+      const keyPair = nearAPI.KeyPair.fromString(key);
+      const address = await this.getAccountAddress(senderPrivateKey);
+      await keyStore.setKey(this.networkId, address, keyPair);
+    }
+    const connectionConfig = {
+      networkId: this.networkId,
+      keyStore,
+      nodeUrl: `https://rpc.${this.networkId}.near.org`,
+    };
+    const nearConnection = await nearAPI.connect(connectionConfig);
+    return await nearConnection.account(accountId);
   }
 }
