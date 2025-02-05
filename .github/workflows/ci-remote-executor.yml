@@ -23,4 +23,4 @@ jobs:
           sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Run executor tests
-        run: cargo test-bpf --manifest-path ./governance/remote_executor/Cargo.toml
+        run: cargo test-sbf --manifest-path ./governance/remote_executor/Cargo.toml
