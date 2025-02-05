@@ -4,9 +4,9 @@ import { PriceItem } from "./interface";
 export type PctNumber = number;
 export type DurationInSeconds = number;
 export const txSpeeds = ["slow", "standard", "fast"] as const;
-export type TxSpeed = (typeof txSpeeds)[number];
+export type TxSpeed = typeof txSpeeds[number];
 export const customGasChainIds = [137] as const;
-export type CustomGasChainId = (typeof customGasChainIds)[number];
+export type CustomGasChainId = typeof customGasChainIds[number];
 
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
