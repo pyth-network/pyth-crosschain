@@ -3771,7 +3771,7 @@ dependencies = [
  "futures-util",
  "hex",
  "libsecp256k1 0.7.1",
- "pyth-lazer-protocol 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-protocol 0.4.2",
  "serde",
  "serde_json",
  "tokio",
@@ -3797,6 +3797,22 @@ dependencies = [
 [[package]]
 name = "pyth-lazer-protocol"
 version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5cd53ba66994759d71af72343b4036016d4d59f75308b73a084bde4f8753e433"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "byteorder",
+ "derive_more",
+ "itertools 0.13.0",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "pyth-lazer-protocol"
+version = "0.5.0"
 dependencies = [
  "alloy-primitives",
  "anyhow",
@@ -3809,22 +3825,6 @@ dependencies = [
  "hex",
  "itertools 0.13.0",
  "libsecp256k1 0.7.1",
- "rust_decimal",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "pyth-lazer-protocol"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5cd53ba66994759d71af72343b4036016d4d59f75308b73a084bde4f8753e433"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "byteorder",
- "derive_more",
- "itertools 0.13.0",
  "rust_decimal",
  "serde",
  "serde_json",
