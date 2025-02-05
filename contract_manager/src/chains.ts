@@ -875,7 +875,7 @@ export class NearChain extends Chain {
     this.networkId = this.mainnet ? "mainnet" : "testnet";
   }
 
-  static fromJson(parsed: ChainConfig & { networkId: number }): NearChain {
+  static fromJson(parsed: ChainConfig): NearChain {
     if (parsed.type !== NearChain.type) throw new Error("Invalid type");
     return new NearChain(
       parsed.id,
