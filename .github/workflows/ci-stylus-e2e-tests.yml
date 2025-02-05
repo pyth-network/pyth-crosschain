@@ -51,7 +51,7 @@ jobs:
           sudo chmod a+x /usr/bin/solc
       - name: Setup nitro node
         run: ./scripts/nitro-testnode.sh -d -i
-      - name: Run tests
+      - name: run e2e tests
         run: |
           # Set up environment variables
           echo "RPC_URL=http://localhost:8547" >> $GITHUB_ENV
