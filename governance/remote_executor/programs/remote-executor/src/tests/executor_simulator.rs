@@ -18,14 +18,7 @@ use {
         read_file, BanksClient, BanksClientError, ProgramTest, ProgramTestBanksClientExt,
     },
     solana_sdk::{
-        account::Account,
-        bpf_loader_upgradeable,
-        instruction::{Instruction, InstructionError},
-        signature::Keypair,
-        signer::Signer,
-        stake_history::Epoch,
-        system_instruction,
-        transaction::{Transaction, TransactionError},
+        account::Account, bpf_loader, bpf_loader_upgradeable, instruction::{Instruction, InstructionError}, signature::Keypair, signer::Signer, stake_history::Epoch, system_instruction, transaction::{Transaction, TransactionError}
     },
     std::{collections::HashMap, path::Path},
     wormhole_sdk::Chain,
@@ -62,42 +55,16 @@ impl ExecutorBench {
 
         let mut program_test = ProgramTest::default();
         let program_key = crate::id();
-        let programdata_key = Pubkey::new_unique();
-
-        let upgrade_authority_keypair = Keypair::new();
-
-        let program_deserialized = UpgradeableLoaderState::Program {
-            programdata_address: programdata_key,
-        };
-        let programdata_deserialized = UpgradeableLoaderState::ProgramData {
-            slot: 1,
-            upgrade_authority_address: Some(upgrade_authority_keypair.pubkey()),
-        };
-
-        // Program contains a pointer to progradata
-        let program_vec = bincode::serialize(&program_deserialized).unwrap();
-        // Programdata contains a header and the binary of the program
-        let mut programdata_vec = bincode::serialize(&programdata_deserialized).unwrap();
-        programdata_vec.append(&mut bpf_data);
 
         let program_account = Account {
-            lamports: Rent::default().minimum_balance(program_vec.len()),
-            data: program_vec,
-            owner: bpf_loader_upgradeable::ID,
+            lamports: Rent::default().minimum_balance(bpf_data.len()),
+            data: bpf_data,
+            owner: bpf_loader::ID,
             executable: true,
             rent_epoch: Epoch::default(),
         };
-        let programdata_account = Account {
-            lamports: Rent::default().minimum_balance(programdata_vec.len()),
-            data: programdata_vec,
-            owner: bpf_loader_upgradeable::ID,
-            executable: false,
-            rent_epoch: Epoch::default(),
-        };
 
-        // Add both accounts to program test, now the program is deployed as upgradable
         program_test.add_account(program_key, program_account);
-        program_test.add_account(programdata_key, programdata_account);
 
         ExecutorBench {
             program_test,
@@ -260,16 +227,12 @@ impl ExecutorSimulator {
         signers: &Vec<&Keypair>,
         executor_attack: ExecutorAttack,
     ) -> Result<(), BanksClientError> {
-        let posted_vaa_data: AnchorVaa = self
-            .banks_client
-            .get_account_data_with_borsh(*posted_vaa_address)
-            .await
-            .unwrap();
+        let posted_vaa_data: AnchorVaa = AnchorVaa::try_from_slice(&self.banks_client.get_account(*posted_vaa_address).await.unwrap().unwrap().data[..]).unwrap();
 
         let mut account_metas = crate::accounts::ExecutePostedVaa::populate(
             &self.program_id,
             &self.payer.pubkey(),
-            &Pubkey::new(&posted_vaa_data.emitter_address),
+            &Pubkey::from(posted_vaa_data.emitter_address),
             posted_vaa_address,
         )
         .to_account_metas(None);
