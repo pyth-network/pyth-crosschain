@@ -51,19 +51,24 @@ jobs:
           sudo chmod a+x /usr/bin/solc
       - name: Setup nitro node
         run: ./scripts/nitro-testnode.sh -d -i
-      - name: Set up Environment
+      - name: Run tests
         run: |
+          # Set up environment variables
           echo "RPC_URL=http://localhost:8547" >> $GITHUB_ENV
           echo "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" >> $GITHUB_ENV
           echo "WALLER_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" >> $GITHUB_ENV
-      - name: Deploy Mock Pyth Contract
-        run: |
-          cd pyth-mock-solidity
-          deployed_to=$(forge script ./script/MockPyth.s.sol:MockPythScript \
-            --rpc-url "$RPC_URL" \
-            --private-key "$PRIVATE_KEY" \
-            --broadcast \
-            | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1)
-          echo "MOCK_PYTH_ADDRESS=$deployed_to" >> $GITHUB_ENV
-      - name: run integration tests
-        run: ./scripts/e2e-tests.sh
+
+          # Deploy Mock Pyth Contract only if not running in CI
+          if [ -z "$CI" ]; then
+            cd pyth-mock-solidity
+            deployed_to=$(forge script ./script/MockPyth.s.sol:MockPythScript \
+              --rpc-url "$RPC_URL" \
+              --private-key "$PRIVATE_KEY" \
+              --broadcast \
+              | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1)
+            echo "MOCK_PYTH_ADDRESS=$deployed_to" >> $GITHUB_ENV
+            cd ..
+          fi
+
+          # Run Integration Tests
+          ./scripts/e2e-tests.sh
