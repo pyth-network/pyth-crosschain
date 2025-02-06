@@ -36,6 +36,22 @@ import PermissionDepermissionKey from '../PermissionDepermissionKey'
 import { PriceRawConfig } from '../../hooks/usePyth'
 import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
+const MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA = 369
+const MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA = 403 // upd product has one account less
+
+const checkSizeOfProductInstruction = (
+  instruction: TransactionInstruction,
+  maxSize: number,
+  symbol: string
+) => {
+  const size = instruction.data.length
+  if (size > maxSize) {
+    throw new Error(
+      `A symbol metadata is too big to be sent in a transaction (${size} > ${maxSize} bytes). Please reduce the size of the symbol metadata for ${symbol}.`
+    )
+  }
+}
+
 const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const [data, setData] = useState<any>({})
   const [dataChanges, setDataChanges] = useState<Record<string, any>>()
@@ -340,16 +356,20 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             )
           )[0]
           // create add product account instruction
-          instructions.push(
-            await pythProgramClient.methods
-              .addProduct({ ...newChanges.metadata })
-              .accounts({
-                fundingAccount,
-                tailMappingAccount: rawConfig.mappingAccounts[0].address,
-                productAccount: productAccountKey,
-              })
-              .instruction()
+          const instruction = await pythProgramClient.methods
+            .addProduct({ ...newChanges.metadata })
+            .accounts({
+              fundingAccount,
+              tailMappingAccount: rawConfig.mappingAccounts[0].address,
+              productAccount: productAccountKey,
+            })
+            .instruction()
+          checkSizeOfProductInstruction(
+            instruction,
+            MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA,
+            symbol
           )
+          instructions.push(instruction)
 
           // deterministically generate price account key
           const priceAccountKey: PublicKey = (
@@ -478,15 +498,19 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             JSON.stringify(prev.metadata) !==
             JSON.stringify(newChanges.metadata)
           ) {
+            const instruction = await pythProgramClient.methods
+              .updProduct({ symbol, ...newChanges.metadata }) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
+              .accounts({
+                fundingAccount,
+                productAccount: new PublicKey(prev.address),
+              })
+              .instruction()
             // create update product account instruction
-            instructions.push(
-              await pythProgramClient.methods
-                .updProduct({ symbol, ...newChanges.metadata }) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
-                .accounts({
-                  fundingAccount,
-                  productAccount: new PublicKey(prev.address),
-                })
-                .instruction()
+            instructions.push(instruction)
+            checkSizeOfProductInstruction(
+              instruction,
+              MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA,
+              symbol
             )
           }
 
