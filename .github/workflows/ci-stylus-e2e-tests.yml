@@ -60,6 +60,7 @@ jobs:
           cat .env
           cd pyth-mock-solidity
           echo "$PRIVATE_KEY"
+          echo "$WALLET_ADDRESS"
           deployed_to=$(forge script ./script/MockPyth.s.sol:MockPythScript \
             --rpc-url "$RPC_URL" \
             --private-key "$PRIVATE_KEY" \
