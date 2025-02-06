@@ -4,6 +4,7 @@ version                    = "0.1.0"
 authors                    = ["Pyth Data Association"]
 edition                    = "2021"
 description                = "A Pyth Receiver for Near"
+repository                 = "https://github.com/pyth-network/pyth-crosschain"
 
 [lib]
 name                       = "pyth"
@@ -47,3 +48,9 @@ lto                        = "fat"
 debug                      = false
 panic                      = "abort"
 overflow-checks            = true
+
+[package.metadata.near.reproducible_build]
+image                   = "sourcescan/cargo-near:0.13.3-rust-1.84.1"
+image_digest            = "sha256:baa712c5d2b7522d38175e36330d336ad2c4ce32bfaaa41af94ce40407ecd803"
+passed_env              = []
+container_build_command = ["cargo", "near", "build", "non-reproducible-wasm", "--locked"]
