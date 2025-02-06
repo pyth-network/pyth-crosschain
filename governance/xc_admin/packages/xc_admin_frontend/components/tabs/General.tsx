@@ -505,13 +505,12 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 productAccount: new PublicKey(prev.address),
               })
               .instruction()
-            // create update product account instruction
-            instructions.push(instruction)
             checkSizeOfProductInstruction(
               instruction,
               MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA,
               symbol
             )
+            instructions.push(instruction)
           }
 
           if (
