@@ -304,6 +304,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
   const handleSendProposalButtonClick = async () => {
     const handleSendProposalButtonClickAsync = async () => {
+      setIsSendProposalButtonLoading(true)
       if (pythProgramClient && dataChanges && !isMultisigLoading) {
         const instructions: TransactionInstruction[] = []
         const publisherInPriceStoreInitializationsVerified: PublicKey[] = []
@@ -613,7 +614,6 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           }
         }
 
-        setIsSendProposalButtonLoading(true)
         const response = await axios.post(proposerServerUrl + '/api/propose', {
           instructions,
           cluster,
