@@ -5,13 +5,12 @@ import {
   PriceItem,
 } from "../interface";
 import { DurationInSeconds } from "../utils";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui/client";
 import { Logger } from "pino";
-
+import { HermesClient } from "@pythnetwork/hermes-client";
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config
 const MAX_NUM_GAS_OBJECTS_IN_PTB = 256;
@@ -111,7 +110,7 @@ export class SuiPricePusher implements IPricePusher {
     private readonly signer: Ed25519Keypair,
     private readonly provider: SuiClient,
     private logger: Logger,
-    private priceServiceConnection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private gasBudget: number,
     private gasPool: SuiObjectRef[],
     private pythClient: SuiPythClient
@@ -157,7 +156,7 @@ export class SuiPricePusher implements IPricePusher {
    * The gas coins of the wallet for the provided keypair will be merged and then evenly split into `numGasObjects`.
    */
   static async createWithAutomaticGasPool(
-    priceServiceConnection: PriceServiceConnection,
+    hermesClient: HermesClient,
     logger: Logger,
     pythStateId: string,
     wormholeStateId: string,
@@ -193,7 +192,7 @@ export class SuiPricePusher implements IPricePusher {
       keypair,
       provider,
       logger,
-      priceServiceConnection,
+      hermesClient,
       gasBudget,
       gasPool,
       pythClient
@@ -223,15 +222,18 @@ export class SuiPricePusher implements IPricePusher {
 
     await Promise.all(
       priceIdChunks.map(async (priceIdChunk) => {
-        const vaas = await this.priceServiceConnection.getLatestVaas(
-          priceIdChunk
+        const response = await this.hermesClient.getLatestPriceUpdates(
+          priceIdChunk,
+          {
+            encoding: "base64",
+          }
         );
-        if (vaas.length !== 1) {
+        if (response.binary.data.length !== 1) {
           throw new Error(
-            `Expected a single VAA for all priceIds ${priceIdChunk} but received ${vaas.length} VAAs: ${vaas}`
+            `Expected a single VAA for all priceIds ${priceIdChunk} but received ${response.binary.data.length} VAAs: ${response.binary.data}`
           );
         }
-        const vaa = vaas[0];
+        const vaa = response.binary.data[0];
         const tx = new Transaction();
         await this.pythClient.updatePriceFeeds(
           tx,

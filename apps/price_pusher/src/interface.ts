@@ -1,4 +1,4 @@
-import { HexString, UnixTimestamp } from "@pythnetwork/price-service-client";
+import { HexString, UnixTimestamp } from "@pythnetwork/hermes-client";
 import { DurationInSeconds } from "./utils";
 
 export type PriceItem = {

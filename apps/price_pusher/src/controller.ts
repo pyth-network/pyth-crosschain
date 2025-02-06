@@ -1,4 +1,4 @@
-import { UnixTimestamp } from "@pythnetwork/price-service-client";
+import { UnixTimestamp } from "@pythnetwork/hermes-client";
 import { DurationInSeconds, sleep } from "./utils";
 import { IPriceListener, IPricePusher } from "./interface";
 import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";

@@ -3,7 +3,7 @@ import { Options } from "yargs";
 export const priceServiceEndpoint = {
   "price-service-endpoint": {
     description:
-      "Endpoint URL for the price service. e.g: https://endpoint/example",
+      "Endpoint URL for the hermes client. e.g: https://endpoint/example",
     type: "string",
     required: true,
   } as Options,
@@ -63,16 +63,6 @@ export const logLevel = {
     type: "string",
     required: false,
     default: "info",
-    choices: ["trace", "debug", "info", "warn", "error"],
-  } as Options,
-};
-
-export const priceServiceConnectionLogLevel = {
-  "price-service-connection-log-level": {
-    description: "Log level for the price service connection.",
-    type: "string",
-    required: false,
-    default: "warn",
     choices: ["trace", "debug", "info", "warn", "error"],
   } as Options,
 };
