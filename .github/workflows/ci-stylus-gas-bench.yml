@@ -55,7 +55,6 @@ jobs:
           echo "RPC_URL=http://localhost:8547" >> .env
           echo "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" >> .env
           echo "WALLET_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" >> .env
-
           cd pyth-mock-solidity
           deployed_to=$(forge script ./script/MockPyth.s.sol:MockPythScript \
             --rpc-url "$RPC_URL" \
@@ -65,4 +64,3 @@ jobs:
           echo "MOCK_PYTH_ADDRESS=$deployed_to" >> .env
           cd ..
           ./scripts/bench.sh
-          rm .env
