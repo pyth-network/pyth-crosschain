@@ -63,4 +63,5 @@ jobs:
             | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1)
           echo "MOCK_PYTH_ADDRESS=$deployed_to" >> .env
           cd ..
+          # Run Benchmarks
           ./scripts/bench.sh

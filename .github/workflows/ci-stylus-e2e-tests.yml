@@ -69,5 +69,4 @@ jobs:
           echo "MOCK_PYTH_ADDRESS=$deployed_to" >> .env
           cd ..
           # Run Integration Tests
-          ./scripts/e2e-tests.sh
-          
+          ./scripts/e2e-tests.sh 
