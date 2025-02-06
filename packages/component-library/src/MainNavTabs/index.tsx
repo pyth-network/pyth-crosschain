@@ -21,6 +21,9 @@ export const MainNavTabs = ({ className, pathname, ...props }: Props) => {
       aria-label="Main Navigation"
       className={clsx(styles.mainNavTabs, className)}
       dependencies={[pathname]}
+      data-selectable={
+        props.items.every((tab) => tab.href !== pathname) ? "" : undefined
+      }
       {...props}
     >
       {({ className: tabClassName, children, ...tab }) => (
@@ -29,7 +32,6 @@ export const MainNavTabs = ({ className, pathname, ...props }: Props) => {
           data-size="sm"
           data-variant="ghost"
           data-rounded
-          data-selectable={pathname === tab.href ? undefined : ""}
           {...tab}
         >
           {(args) => (
