@@ -28,6 +28,6 @@ INIT_JSON=$(echo "$INIT_ARGS" | jq -c '.' -M)
 # Deploy..
 near deploy \
 	--accountId "pyth.testnet" \
-	--wasmFile pyth.wasm \
+	--wasmFile pyth_near.wasm \
 	--initFunction new \
 	--initArgs "$INIT_JSON"
