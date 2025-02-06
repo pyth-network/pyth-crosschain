@@ -2929,6 +2929,7 @@ dependencies = [
  "pyth-sdk 0.7.0",
  "pyth-wormhole-attester-sdk",
  "pythnet-sdk",
+ "schemars",
  "serde",
  "serde_json",
  "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25)",
