@@ -37,8 +37,8 @@ catalogs:
       specifier: 2.1.7
       version: 2.1.7
     '@pythnetwork/client':
-      specifier: 2.22.0
-      version: 2.22.0
+      specifier: 2.22.1
+      version: 2.22.1
     '@react-hookz/web':
       specifier: 24.0.4
       version: 24.0.4
@@ -239,8 +239,8 @@ importers:
         specifier: ^14.2.4
         version: 14.2.6(next@15.1.2(@babel/core@7.25.8)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.80.7))(react@19.0.0)
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/pyth-sdk-solidity':
         specifier: workspace:^
         version: link:../../target_chains/ethereum/sdk/solidity
@@ -510,7 +510,7 @@ importers:
         version: link:../../packages/app-logger
       '@pythnetwork/client':
         specifier: 'catalog:'
-        version: 2.22.0(@solana/web3.js@1.95.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 2.22.1(@solana/web3.js@1.95.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/component-library':
         specifier: workspace:*
         version: link:../../packages/component-library
@@ -941,8 +941,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(svelte@4.2.18)(typescript@5.5.4)
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/cosmwasm-deploy-tools':
         specifier: workspace:*
         version: link:../target_chains/cosmwasm/tools
@@ -1056,8 +1056,8 @@ importers:
         specifier: ^0.30.1
         version: 0.30.1(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/solana-utils':
         specifier: workspace:*
         version: link:../../target_chains/solana/sdk/js/solana_utils
@@ -1123,8 +1123,8 @@ importers:
         specifier: ^0.25.0
         version: 0.25.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/xc-admin-common':
         specifier: workspace:*
         version: link:../xc_admin_common
@@ -1154,8 +1154,8 @@ importers:
         specifier: ^1.10.72
         version: 1.14.7(bufferutil@4.0.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/xc-admin-common':
         specifier: workspace:*
         version: link:../xc_admin_common
@@ -1182,8 +1182,8 @@ importers:
         specifier: ^1.10.72
         version: 1.14.7(bufferutil@4.0.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/xc-admin-common':
         specifier: workspace:*
         version: link:../xc_admin_common
@@ -1225,8 +1225,8 @@ importers:
         specifier: ^6.29.5
         version: 6.29.5
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/pyth-lazer-sdk':
         specifier: workspace:*
         version: link:../../../../lazer/sdk/js
@@ -1270,8 +1270,8 @@ importers:
         specifier: ^0.25.0
         version: 0.25.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/pyth-lazer-sdk':
         specifier: workspace:*
         version: link:../../../../lazer/sdk/js
@@ -1340,8 +1340,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@pythnetwork/client':
-        specifier: ^2.22.0
-        version: 2.22.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: 'catalog:'
+        version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/solana-utils':
         specifier: workspace:^
         version: link:../../../../target_chains/solana/sdk/js/solana_utils
@@ -6259,6 +6259,11 @@ packages:
 
   '@pythnetwork/client@2.22.0':
     resolution: {integrity: sha512-Cyv23YqewKUL1pcm99jfmdetUa2aaUXjyRF9jvSeFcY895FddRu7uSWftYiaevsnx7vn4WbJgQR6ExxH+aONow==}
+    peerDependencies:
+      '@solana/web3.js': 1.92.3
+
+  '@pythnetwork/client@2.22.1':
+    resolution: {integrity: sha512-/RjUB7BMWl42Hr3qSezmO+tsOPBdtrNNXkjskJgZx0kYi+O1UlAweWuwjWBXTNOqlL9jab24odomx8KCAzFjtg==}
     peerDependencies:
       '@solana/web3.js': 1.92.3
 
@@ -27360,7 +27365,18 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@pythnetwork/client@2.22.0(@solana/web3.js@1.95.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+  '@pythnetwork/client@2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@coral-xyz/borsh': 0.28.0(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
+      '@solana/web3.js': 1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      buffer: 6.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  '@pythnetwork/client@2.22.1(@solana/web3.js@1.95.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@coral-xyz/borsh': 0.28.0(@solana/web3.js@1.95.4(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
