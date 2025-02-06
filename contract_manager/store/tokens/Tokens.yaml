@@ -18,10 +18,6 @@
   pythId: c415de8d2eba7db216527dff4b60e8f3a5311c740dadb233e13e12547e226750
   decimals: 18
   type: token
-- id: FTM
-  pythId: 5c6c0d2386e3352356c3ab84434fafb5ea067ac2678a38a338c4a69ddc4bdb0c
-  decimals: 18
-  type: token
 - id: DAI
   pythId: b0948a5e5313200c632b51bb5ca32f6de0d36e9950a942d19751e833f70dabfd
   decimals: 18

@@ -39,13 +39,13 @@ repos:
       - id: cargo-fmt-remote-executor
         name: Cargo format for remote executor
         language: "rust"
-        entry: cargo +1.66.1 fmt --manifest-path ./governance/remote_executor/Cargo.toml --all
+        entry: cargo +1.73.0 fmt --manifest-path ./governance/remote_executor/Cargo.toml --all
         pass_filenames: false
         files: governance/remote_executor
       - id: cargo-clippy-remote-executor
         name: Cargo clippy for remote executor
         language: "rust"
-        entry: cargo +1.66.1 clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests -- --deny warnings
+        entry: cargo +1.73.0 clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: governance/remote_executor
       # Hooks for cosmwasm contract

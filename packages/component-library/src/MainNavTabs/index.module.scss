@@ -34,28 +34,18 @@
     &[data-selected] {
       color: theme.color("button", "solid", "foreground");
       pointer-events: none;
+    }
+  }
 
-      &[data-selectable] {
-        pointer-events: auto;
+  &[data-selectable] .tab[data-selected] {
+    pointer-events: auto;
 
-        &[data-hovered] .bubble {
-          background-color: theme.color(
-            "button",
-            "solid",
-            "background",
-            "hover"
-          );
-        }
+    &[data-hovered] .bubble {
+      background-color: theme.color("button", "solid", "background", "hover");
+    }
 
-        &[data-pressed] .bubble {
-          background-color: theme.color(
-            "button",
-            "solid",
-            "background",
-            "active"
-          );
-        }
-      }
+    &[data-pressed] .bubble {
+      background-color: theme.color("button", "solid", "background", "active");
     }
   }
 }

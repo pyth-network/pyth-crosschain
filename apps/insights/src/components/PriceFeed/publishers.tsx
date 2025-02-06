@@ -22,14 +22,17 @@ type Props = {
 export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
-  const [feeds, pythnetPublishers, pythtestConformancePublishers] =
-    await Promise.all([
-      getFeeds(Cluster.Pythnet),
-      getPublishers(Cluster.Pythnet, symbol),
-      getPublishers(Cluster.PythtestConformance, symbol),
-    ]);
+  const [
+    feeds,
+    pythnetPublishers, // , pythtestConformancePublishers
+  ] = await Promise.all([
+    getFeeds(Cluster.Pythnet),
+    getPublishers(Cluster.Pythnet, symbol),
+    // getPublishers(Cluster.PythtestConformance, symbol),
+  ]);
   const feed = feeds.find((feed) => feed.symbol === symbol);
-  const publishers = [...pythnetPublishers, ...pythtestConformancePublishers];
+  // const publishers = [...pythnetPublishers, ...pythtestConformancePublishers];
+  const publishers = [...pythnetPublishers];
   const metricsTime = pythnetPublishers.find(
     (publisher) => publisher.ranking !== undefined,
   )?.ranking?.time;

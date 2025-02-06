@@ -4,34 +4,29 @@ import { createClient } from "@clickhouse/client";
 import { z, type ZodSchema, type ZodTypeDef } from "zod";
 
 import { Cluster, ClusterToName } from "./pyth";
-import { cache } from "../cache";
 import { CLICKHOUSE } from "../config/server";
 
 const client = createClient(CLICKHOUSE);
 
-const ONE_MINUTE_IN_SECONDS = 60;
-const ONE_HOUR_IN_SECONDS = 60 * ONE_MINUTE_IN_SECONDS;
-
-export const getPublishers = cache(
-  async () =>
-    safeQuery(
-      z.array(
-        z.strictObject({
-          key: z.string(),
-          rank: z.number(),
-          activeFeeds: z
-            .string()
-            .transform((value) => Number.parseInt(value, 10)),
-          inactiveFeeds: z
-            .string()
-            .transform((value) => Number.parseInt(value, 10)),
-          averageScore: z.number(),
-          timestamp: z.string().transform((value) => new Date(`${value} UTC`)),
-          scoreTime: z.string().transform((value) => new Date(value)),
-        }),
-      ),
-      {
-        query: `
+export const getPublishers = async () =>
+  safeQuery(
+    z.array(
+      z.strictObject({
+        key: z.string(),
+        rank: z.number(),
+        activeFeeds: z
+          .string()
+          .transform((value) => Number.parseInt(value, 10)),
+        inactiveFeeds: z
+          .string()
+          .transform((value) => Number.parseInt(value, 10)),
+        averageScore: z.number(),
+        timestamp: z.string().transform((value) => new Date(`${value} UTC`)),
+        scoreTime: z.string().transform((value) => new Date(value)),
+      }),
+    ),
+    {
+      query: `
           WITH score_data AS (
             SELECT
               publisher,
@@ -68,19 +63,13 @@ export const getPublishers = cache(
           )
           ORDER BY rank ASC, timestamp
         `,
-        query_params: { cluster: "pythnet" },
-      },
-    ),
-  ["publishers"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+      query_params: { cluster: "pythnet" },
+    },
+  );
 
-export const getRankingsByPublisher = cache(
-  async (publisherKey: string) =>
-    safeQuery(rankingsSchema, {
-      query: `
+export const getRankingsByPublisher = async (publisherKey: string) =>
+  safeQuery(rankingsSchema, {
+    query: `
       SELECT
           time,
           symbol,
@@ -100,18 +89,12 @@ export const getRankingsByPublisher = cache(
           cluster ASC,
           publisher ASC
       `,
-      query_params: { publisherKey },
-    }),
-  ["rankingsByPublisher"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+    query_params: { publisherKey },
+  });
 
-export const getRankingsBySymbol = cache(
-  async (symbol: string) =>
-    safeQuery(rankingsSchema, {
-      query: `
+export const getRankingsBySymbol = async (symbol: string) =>
+  safeQuery(rankingsSchema, {
+    query: `
         SELECT
           time,
           symbol,
@@ -131,13 +114,8 @@ export const getRankingsBySymbol = cache(
           cluster ASC,
           publisher ASC
       `,
-      query_params: { symbol },
-    }),
-  ["rankingsBySymbol"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+    query_params: { symbol },
+  });
 
 const rankingsSchema = z.array(
   z.strictObject({
@@ -153,17 +131,16 @@ const rankingsSchema = z.array(
   }),
 );
 
-export const getYesterdaysPrices = cache(
-  async (symbols: string[]) =>
-    safeQuery(
-      z.array(
-        z.object({
-          symbol: z.string(),
-          price: z.number(),
-        }),
-      ),
-      {
-        query: `
+export const getYesterdaysPrices = async (symbols: string[]) =>
+  safeQuery(
+    z.array(
+      z.object({
+        symbol: z.string(),
+        price: z.number(),
+      }),
+    ),
+    {
+      query: `
           SELECT symbol, price
           FROM prices
           WHERE cluster = 'pythnet'
@@ -173,26 +150,20 @@ export const getYesterdaysPrices = cache(
           ORDER BY time ASC
           LIMIT 1 BY symbol
         `,
-        query_params: { symbols },
-      },
-    ),
-  ["yesterdays-prices"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+      query_params: { symbols },
+    },
+  );
 
-export const getPublisherRankingHistory = cache(
-  async (key: string) =>
-    safeQuery(
-      z.array(
-        z.strictObject({
-          timestamp: z.string().transform((value) => new Date(value)),
-          rank: z.number(),
-        }),
-      ),
-      {
-        query: `
+export const getPublisherRankingHistory = async (key: string) =>
+  safeQuery(
+    z.array(
+      z.strictObject({
+        timestamp: z.string().transform((value) => new Date(value)),
+        rank: z.number(),
+      }),
+    ),
+    {
+      query: `
           SELECT * FROM (
             SELECT timestamp, rank
             FROM publishers_ranking
@@ -203,27 +174,27 @@ export const getPublisherRankingHistory = cache(
           )
           ORDER BY timestamp ASC
         `,
-        query_params: { key },
-      },
-    ),
-  ["publisher-ranking-history"],
-  { revalidate: ONE_HOUR_IN_SECONDS },
-);
+      query_params: { key },
+    },
+  );
 
-export const getFeedScoreHistory = cache(
-  async (cluster: Cluster, publisherKey: string, symbol: string) =>
-    safeQuery(
-      z.array(
-        z.strictObject({
-          time: z.string().transform((value) => new Date(value)),
-          score: z.number(),
-          uptimeScore: z.number(),
-          deviationScore: z.number(),
-          stalledScore: z.number(),
-        }),
-      ),
-      {
-        query: `
+export const getFeedScoreHistory = async (
+  cluster: Cluster,
+  publisherKey: string,
+  symbol: string,
+) =>
+  safeQuery(
+    z.array(
+      z.strictObject({
+        time: z.string().transform((value) => new Date(value)),
+        score: z.number(),
+        uptimeScore: z.number(),
+        deviationScore: z.number(),
+        stalledScore: z.number(),
+      }),
+    ),
+    {
+      query: `
           SELECT * FROM (
             SELECT
               time,
@@ -240,31 +211,29 @@ export const getFeedScoreHistory = cache(
           )
           ORDER BY time ASC
         `,
-        query_params: {
-          cluster: ClusterToName[cluster],
-          publisherKey,
-          symbol,
-        },
+      query_params: {
+        cluster: ClusterToName[cluster],
+        publisherKey,
+        symbol,
       },
-    ),
-  ["feed-score-history"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+    },
+  );
 
-export const getFeedPriceHistory = cache(
-  async (cluster: Cluster, publisherKey: string, symbol: string) =>
-    safeQuery(
-      z.array(
-        z.strictObject({
-          time: z.string().transform((value) => new Date(value)),
-          price: z.number(),
-          confidence: z.number(),
-        }),
-      ),
-      {
-        query: `
+export const getFeedPriceHistory = async (
+  cluster: Cluster,
+  publisherKey: string,
+  symbol: string,
+) =>
+  safeQuery(
+    z.array(
+      z.strictObject({
+        time: z.string().transform((value) => new Date(value)),
+        price: z.number(),
+        confidence: z.number(),
+      }),
+    ),
+    {
+      query: `
           SELECT * FROM (
             SELECT time, price, confidence
             FROM prices
@@ -276,30 +245,24 @@ export const getFeedPriceHistory = cache(
           )
           ORDER BY time ASC
         `,
-        query_params: {
-          cluster: ClusterToName[cluster],
-          publisherKey,
-          symbol,
-        },
+      query_params: {
+        cluster: ClusterToName[cluster],
+        publisherKey,
+        symbol,
       },
-    ),
-  ["feed-price-history"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+    },
+  );
 
-export const getPublisherAverageScoreHistory = cache(
-  async (key: string) =>
-    safeQuery(
-      z.array(
-        z.strictObject({
-          time: z.string().transform((value) => new Date(value)),
-          averageScore: z.number(),
-        }),
-      ),
-      {
-        query: `
+export const getPublisherAverageScoreHistory = async (key: string) =>
+  safeQuery(
+    z.array(
+      z.strictObject({
+        time: z.string().transform((value) => new Date(value)),
+        averageScore: z.number(),
+      }),
+    ),
+    {
+      query: `
           SELECT * FROM (
             SELECT
               time,
@@ -313,27 +276,21 @@ export const getPublisherAverageScoreHistory = cache(
           )
           ORDER BY time ASC
         `,
-        query_params: { key },
-      },
-    ),
-  ["publisher-average-score-history"],
-  {
-    revalidate: ONE_HOUR_IN_SECONDS,
-  },
-);
+      query_params: { key },
+    },
+  );
 
-export const getHistoricalPrices = cache(
-  async (symbol: string, until: string) =>
-    safeQuery(
-      z.array(
-        z.strictObject({
-          timestamp: z.number(),
-          price: z.number(),
-          confidence: z.number(),
-        }),
-      ),
-      {
-        query: `
+export const getHistoricalPrices = async (symbol: string, until: string) =>
+  safeQuery(
+    z.array(
+      z.strictObject({
+        timestamp: z.number(),
+        price: z.number(),
+        confidence: z.number(),
+      }),
+    ),
+    {
+      query: `
           SELECT toUnixTimestamp(time) AS timestamp, avg(price) AS price, avg(confidence) AS confidence
           FROM prices
           WHERE cluster = 'pythnet'
@@ -345,12 +302,9 @@ export const getHistoricalPrices = cache(
           GROUP BY time
           ORDER BY time ASC
         `,
-        query_params: { symbol, until },
-      },
-    ),
-  ["price-history"],
-  {},
-);
+      query_params: { symbol, until },
+    },
+  );
 
 const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
   schema: ZodSchema<Output, Def, Input>,

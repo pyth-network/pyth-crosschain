@@ -93,13 +93,7 @@ const PriceFeedDrawerProviderImpl = ({
           status={selectedFeed.status}
           navigateButtonText="Open Feed"
           navigateHref={feedHref}
-          title={
-            <PriceFeedTag
-              symbol={selectedFeed.displaySymbol}
-              description={selectedFeed.description}
-              icon={selectedFeed.icon}
-            />
-          }
+          title={<PriceFeedTag symbol={selectedFeed.symbol} />}
         />
       )}
     </PriceFeedDrawerContext>

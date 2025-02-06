@@ -1,11 +1,11 @@
 "use client";
 
-import { Badge } from "@pythnetwork/component-library/Badge";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useMemo } from "react";
 import { useCollator } from "react-aria";
 
 import styles from "./reference-data.module.scss";
+import { AssetClassTag } from "../AssetClassTag";
 import { LiveValue } from "../LivePrices";
 
 type Props = {
@@ -42,11 +42,7 @@ export const ReferenceData = ({ feed }: Props) => {
     () =>
       [
         ...Object.entries({
-          "Asset Type": (
-            <Badge variant="neutral" style="outline" size="xs">
-              {feed.assetClass.toUpperCase()}
-            </Badge>
-          ),
+          "Asset Type": <AssetClassTag symbol={feed.symbol} />,
           Base: feed.base,
           Description: feed.description,
           Symbol: feed.symbol,

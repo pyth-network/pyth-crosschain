@@ -115,14 +115,9 @@ export const PriceFeeds = async () => {
                 }
               >
                 <ComingSoonList
-                  comingSoonFeeds={priceFeeds.comingSoon.map((feed) => ({
-                    id: feed.product.price_account,
-                    displaySymbol: feed.product.display_symbol,
-                    assetClass: feed.product.asset_type,
-                    icon: (
-                      <PriceFeedIcon symbol={feed.product.display_symbol} />
-                    ),
-                  }))}
+                  comingSoonSymbols={priceFeeds.comingSoon.map(
+                    ({ symbol }) => symbol,
+                  )}
                 />
               </Drawer>
             </DrawerTrigger>
@@ -178,11 +173,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
           })}
         >
           <div className={styles.feedCardContents}>
-            <PriceFeedTag
-              symbol={feed.product.display_symbol}
-              description={feed.product.description}
-              icon={<PriceFeedIcon symbol={feed.product.display_symbol} />}
-            />
+            <PriceFeedTag symbol={feed.symbol} />
             {showPrices && (
               <div className={styles.prices}>
                 <LivePrice feedKey={feed.product.price_account} />

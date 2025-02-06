@@ -117,6 +117,14 @@ impl Add<Price> for Price {
     }
 }
 
+impl Sub<Price> for Price {
+    type Output = Option<Price>;
+    fn sub(self, rhs: Price) -> Self::Output {
+        let value = self.0.get().saturating_sub(rhs.0.get());
+        NonZeroI64::new(value).map(Self)
+    }
+}
+
 impl Div<i64> for Price {
     type Output = Option<Price>;
     fn div(self, rhs: i64) -> Self::Output {
@@ -228,8 +236,8 @@ impl<'de> Deserialize<'de> for Channel {
     where
         D: serde::Deserializer<'de>,
     {
-        let value = <&str>::deserialize(deserializer)?;
-        parse_channel(value).ok_or_else(|| D::Error::custom("unknown channel"))
+        let value = <String>::deserialize(deserializer)?;
+        parse_channel(&value).ok_or_else(|| D::Error::custom("unknown channel"))
     }
 }
 
