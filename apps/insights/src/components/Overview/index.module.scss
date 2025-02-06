@@ -64,3 +64,11 @@
     }
   }
 }
+
+html[data-theme="dark"] .lightImage {
+  display: none;
+}
+
+html[data-theme="light"] .darkImage {
+  display: none;
+}

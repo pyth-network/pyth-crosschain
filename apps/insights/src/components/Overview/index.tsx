@@ -4,8 +4,10 @@ import { CrossfadeTabPanels } from "@pythnetwork/component-library/CrossfadeTabP
 import { Tabs } from "@pythnetwork/component-library/unstyled/Tabs";
 
 import styles from "./index.module.scss";
-import PriceFeeds from "./price-feeds.svg";
-import Publishers from "./publishers.svg";
+import PriceFeedsDark from "./price-feeds-dark.svg";
+import PriceFeedsLight from "./price-feeds-light.svg";
+import PublishersDark from "./publishers-dark.svg";
+import PublishersLight from "./publishers-light.svg";
 import { TabList } from "./tab-list";
 import {
   totalVolumeTraded,
@@ -138,8 +140,24 @@ export const Overview = () => (
       </section>
       <CrossfadeTabPanels
         items={[
-          { id: "publishers", children: <Publishers /> },
-          { id: "price feeds", children: <PriceFeeds /> },
+          {
+            id: "publishers",
+            children: (
+              <>
+                <PublishersDark className={styles.darkImage} />
+                <PublishersLight className={styles.lightImage} />
+              </>
+            ),
+          },
+          {
+            id: "price feeds",
+            children: (
+              <>
+                <PriceFeedsDark className={styles.darkImage} />
+                <PriceFeedsLight className={styles.lightImage} />
+              </>
+            ),
+          },
         ]}
       />
     </Tabs>
