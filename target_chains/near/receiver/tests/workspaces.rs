@@ -1,7 +1,7 @@
 use {
     near_sdk::json_types::{I64, U128, U64},
     near_workspaces::types::{Gas, NearToken},
-    pyth::{
+    pyth_near::{
         governance::{GovernanceAction, GovernanceInstruction, GovernanceModule},
         state::{Chain, Price, PriceIdentifier, Source},
     },

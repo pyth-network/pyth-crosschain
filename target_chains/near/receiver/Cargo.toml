@@ -7,7 +7,7 @@ description                = "A Pyth Receiver for Near"
 repository                 = "https://github.com/pyth-network/pyth-crosschain"
 
 [lib]
-name                       = "pyth"
+name                       = "pyth_near"
 crate-type                 = ["cdylib", "lib"]
 
 [features]
