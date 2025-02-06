@@ -59,13 +59,13 @@ jobs:
           echo "WALLET_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" >> .env
           cat .env
           cd pyth-mock-solidity
+          echo "$PRIVATE_KEY"
           deployed_to=$(forge script ./script/MockPyth.s.sol:MockPythScript \
             --rpc-url "$RPC_URL" \
             --private-key "$PRIVATE_KEY" \
             --broadcast \
             | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1)
           echo "MOCK_PYTH_ADDRESS=$deployed_to" >> .env
-
           # Run Integration Tests
           ./scripts/e2e-tests.sh
           rm .env
