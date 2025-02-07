@@ -34,7 +34,7 @@ use {
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
-        messages::{Message, PriceFeedMessage},
+        messages::{Message, PriceFeedMessage, PriceStatus},
         wire::{
             from_slice,
             v1::{
@@ -533,17 +533,34 @@ fn parse_batch_attestation(deps: &Deps, env: &Env, data: &Binary) -> StdResult<V
 }
 
 fn create_price_feed_from_price_attestation(price_feed_message: &PriceFeedMessage) -> PriceFeed {
+    let (publish_time, price, conf, ema_price, ema_conf) = match price_feed_message.status {
+        PriceStatus::Trading => (
+            price_feed_message.publish_time,
+            price_feed_message.price,
+            price_feed_message.conf,
+            price_feed_message.ema_price,
+            price_feed_message.ema_conf,
+        ),
+        _ => (
+            price_feed_message.prev_publish_time,
+            price_feed_message.prev_publish_time,
+            price_feed_message.conf,
+            price_feed_message.prev_publish_time,
+            price_feed_message.conf,
+        ),
+    };
+
     let current_price = Price {
-        price: price_feed_message.price,
-        conf: price_feed_message.conf,
+        price,
+        conf,
         expo: price_feed_message.exponent,
-        publish_time: price_feed_message.publish_time,
+        publish_time,
     };
     let ema_price = Price {
-        price: price_feed_message.ema_price,
-        conf: price_feed_message.ema_conf,
+        price: ema_price,
+        conf: ema_conf,
         expo: price_feed_message.exponent,
-        publish_time: price_feed_message.publish_time,
+        publish_time,
     };
     PriceFeed::new(
         PriceIdentifier::new(price_feed_message.feed_id),
