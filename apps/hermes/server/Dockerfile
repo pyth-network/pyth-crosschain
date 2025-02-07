@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install --yes \
 # Build
 WORKDIR /src
 COPY apps/hermes/server apps/hermes/server
-COPY pythnet/pythnet_sdk pythnet/pythnet_sdk
+COPY sdks/pythnet_sdk/rust sdks/pythnet_sdk/rust
 
 
 WORKDIR /src/apps/hermes/server

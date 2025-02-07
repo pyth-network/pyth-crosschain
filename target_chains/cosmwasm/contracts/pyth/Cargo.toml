@@ -39,12 +39,12 @@ byteorder = "1.4.3"
 cosmwasm-schema = "1.1.9"
 osmosis-std = "0.15.2"
 pyth-sdk-cw = { path = "../../sdk/rust" }
-pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
+pythnet-sdk = { path = "../../../../sdks/pythnet_sdk/rust" }
 wormhole-cosmwasm =  {git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25"}
 
 [dev-dependencies]
 cosmwasm-vm = { version = "1.0.0", default-features = false }
 serde_json = "1.0"
-pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }
+pythnet-sdk = { path = "../../../../sdks/pythnet_sdk/rust", features = ["test-utils"] }
 serde_wormhole = "0.1.0"
 wormhole-vaas-serde = "0.1.0"
