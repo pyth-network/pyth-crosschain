@@ -3,6 +3,9 @@ on:
   push:
     tags:
       - fortuna-v*
+  pull_request:
+    paths:
+      - "apps/fortuna/**"
   workflow_dispatch:
     inputs:
       dispatch_description:
@@ -47,6 +50,6 @@ jobs:
         with:
           context: .
           file: "./apps/fortuna/Dockerfile"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.metadata_fortuna.outputs.tags }}
           labels: ${{ steps.metadata_fortuna.outputs.labels }}

@@ -2,7 +2,9 @@ name: xc_admin_frontend Docker Image
 on:
   push:
     branches: [main]
-    paths: [governance/xc_admin/**]
+    paths: ["governance/xc_admin/**"]
+  pull_request:
+    paths: ["governance/xc_admin/**"]
 permissions:
   contents: read
   id-token: write

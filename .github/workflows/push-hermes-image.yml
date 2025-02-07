@@ -3,6 +3,9 @@ on:
   push:
     tags:
       - hermes-v*
+  pull_request:
+    paths:
+      - "apps/hermes/server/**"
   workflow_dispatch:
     inputs:
       dispatch_description:
@@ -38,7 +41,9 @@ jobs:
           AWS_REGION: us-east-1
       - run: |
           DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f apps/hermes/server/Dockerfile .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          fi
         env:
           ECR_REGISTRY: public.ecr.aws
           ECR_REPOSITORY: pyth-network/hermes
