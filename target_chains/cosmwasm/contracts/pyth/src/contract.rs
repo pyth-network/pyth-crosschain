@@ -31,7 +31,7 @@ use {
         error::PythContractError, ExecuteMsg, Price, PriceFeed, PriceFeedResponse, PriceIdentifier,
         QueryMsg,
     },
-    pyth_wormhole_attester_sdk::{BatchPriceAttestation, PriceAttestation, PriceStatus},
+    pythnet_sdk::legacy::{BatchPriceAttestation, PriceAttestation, PriceStatus},
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -753,7 +753,7 @@ mod test {
         },
         pyth_sdk::UnixTimestamp,
         pyth_sdk_cw::PriceIdentifier,
-        pyth_wormhole_attester_sdk::PriceAttestation,
+        pythnet_sdk::legacy::PriceAttestation,
         pythnet_sdk::{
             accumulators::{merkle::MerkleTree, Accumulator},
             messages::{PriceFeedMessage, TwapMessage},
