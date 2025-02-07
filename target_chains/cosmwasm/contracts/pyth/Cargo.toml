@@ -33,13 +33,12 @@ generic-array = { version = "0.14.4" }
 hex = "0.4.2"
 lazy_static = "1.4.0"
 bigint = "4"
-pyth-wormhole-attester-sdk = { path = "../../../../wormhole_attester/sdk/rust" }
 pyth-sdk = "0.7.0"
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 byteorder = "1.4.3"
 cosmwasm-schema = "1.1.9"
 osmosis-std = "0.15.2"
 pyth-sdk-cw = { path = "../../sdk/rust" }
-pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 wormhole-cosmwasm =  {git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25"}
 
 [dev-dependencies]

@@ -5,8 +5,9 @@ use {
         governance::{GovernanceAction, GovernanceInstruction, GovernanceModule},
         state::{Chain, Price, PriceIdentifier, Source},
     },
-    pyth_wormhole_attester_sdk::{
-        BatchPriceAttestation, Identifier, PriceAttestation, PriceStatus,
+    pythnet_sdk::{
+        messages::{Message, PriceFeedMessage, P2W_MAGIC},
+        wire::v1::PriceStatus,
     },
     pythnet_sdk::test_utils::{
         create_accumulator_message, create_dummy_price_feed_message, create_vaa_from_payload,

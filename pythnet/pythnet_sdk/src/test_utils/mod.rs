@@ -2,7 +2,7 @@ use {
     crate::{
         accumulators::{merkle::MerkleTree, Accumulator},
         hashers::{keccak256::Keccak256, keccak256_160::Keccak160, Hasher},
-        messages::{FeedId, Message, PriceFeedMessage, TwapMessage},
+        messages::{FeedId, Message, PriceFeedMessage, PriceStatus, TwapMessage},
         wire::{
             to_vec,
             v1::{
@@ -92,6 +92,7 @@ pub fn create_dummy_feed_id(value: i64) -> FeedId {
 
 pub fn create_dummy_price_feed_message_with_feed_id(value: i64, feed_id: FeedId) -> Message {
     let msg = PriceFeedMessage {
+        status: PriceStatus::Unknown,
         feed_id,
         price: value,
         conf: value as u64,

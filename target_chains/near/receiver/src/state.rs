@@ -4,7 +4,6 @@ use {
         json_types::{I64, U64},
         serde::{Deserialize, Serialize},
     },
-    pyth_wormhole_attester_sdk::PriceAttestation,
     pythnet_sdk::messages::PriceFeedMessage,
     schemars::{gen::SchemaGenerator, schema::Schema, JsonSchema},
     wormhole_sdk::Chain as WormholeChain,
@@ -124,21 +123,21 @@ pub struct PriceFeed {
     pub ema_price: Price,
 }
 
-impl From<&PriceAttestation> for PriceFeed {
-    fn from(price_attestation: &PriceAttestation) -> Self {
+impl From<&PriceFeedMessage> for PriceFeed {
+    fn from(price_feed_message: &PriceFeedMessage) -> Self {
         Self {
-            id: PriceIdentifier(price_attestation.price_id.to_bytes()),
+            id: PriceIdentifier(price_feed_message.feed_id),
             price: Price {
-                price: price_attestation.price.into(),
-                conf: price_attestation.conf.into(),
-                expo: price_attestation.expo,
-                publish_time: price_attestation.publish_time,
+                price: price_feed_message.price.into(),
+                conf: price_feed_message.conf.into(),
+                expo: price_feed_message.exponent,
+                publish_time: price_feed_message.publish_time,
             },
             ema_price: Price {
-                price: price_attestation.ema_price.into(),
-                conf: price_attestation.ema_conf.into(),
-                expo: price_attestation.expo,
-                publish_time: price_attestation.publish_time,
+                price: price_feed_message.ema_price.into(),
+                conf: price_feed_message.ema_conf.into(),
+                expo: price_feed_message.exponent,
+                publish_time: price_feed_message.publish_time,
             },
         }
     }

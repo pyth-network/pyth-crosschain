@@ -31,11 +31,10 @@ use {
         error::PythContractError, ExecuteMsg, Price, PriceFeed, PriceFeedResponse, PriceIdentifier,
         QueryMsg,
     },
-    pyth_wormhole_attester_sdk::{BatchPriceAttestation, PriceAttestation, PriceStatus},
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
-        messages::Message,
+        messages::{Message, PriceFeedMessage},
         wire::{
             from_slice,
             v1::{
@@ -518,52 +517,39 @@ fn parse_batch_attestation(deps: &Deps, env: &Env, data: &Binary) -> StdResult<V
     let state = config_read(deps.storage).load()?;
     verify_vaa_from_data_source(&state, &vaa)?;
     let data = &vaa.payload;
-    let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
+    let messages: Vec<Message> = from_slice::<byteorder::BigEndian, _>(&data[..])
         .map_err(|_| PythContractError::InvalidUpdatePayload)?;
     let mut feeds = vec![];
 
     // Update prices
-    for price_attestation in batch_attestation.price_attestations.iter() {
-        let price_feed = create_price_feed_from_price_attestation(price_attestation);
-        feeds.push(price_feed);
+    for message in messages.iter() {
+        if let Message::PriceFeedMessage(price_feed_message) = message {
+            let price_feed = create_price_feed_from_price_attestation(price_feed_message);
+            feeds.push(price_feed);
+        }
     }
 
     Ok(feeds)
 }
 
-fn create_price_feed_from_price_attestation(price_attestation: &PriceAttestation) -> PriceFeed {
-    match price_attestation.status {
-        PriceStatus::Trading => PriceFeed::new(
-            PriceIdentifier::new(price_attestation.price_id.to_bytes()),
-            Price {
-                price: price_attestation.price,
-                conf: price_attestation.conf,
-                expo: price_attestation.expo,
-                publish_time: price_attestation.publish_time,
-            },
-            Price {
-                price: price_attestation.ema_price,
-                conf: price_attestation.ema_conf,
-                expo: price_attestation.expo,
-                publish_time: price_attestation.publish_time,
-            },
-        ),
-        _ => PriceFeed::new(
-            PriceIdentifier::new(price_attestation.price_id.to_bytes()),
-            Price {
-                price: price_attestation.prev_price,
-                conf: price_attestation.prev_conf,
-                expo: price_attestation.expo,
-                publish_time: price_attestation.prev_publish_time,
-            },
-            Price {
-                price: price_attestation.ema_price,
-                conf: price_attestation.ema_conf,
-                expo: price_attestation.expo,
-                publish_time: price_attestation.prev_publish_time,
-            },
-        ),
-    }
+fn create_price_feed_from_price_attestation(price_feed_message: &PriceFeedMessage) -> PriceFeed {
+    let current_price = Price {
+        price: price_feed_message.price,
+        conf: price_feed_message.conf,
+        expo: price_feed_message.exponent,
+        publish_time: price_feed_message.publish_time,
+    };
+    let ema_price = Price {
+        price: price_feed_message.ema_price,
+        conf: price_feed_message.ema_conf,
+        expo: price_feed_message.exponent,
+        publish_time: price_feed_message.publish_time,
+    };
+    PriceFeed::new(
+        PriceIdentifier::new(price_feed_message.feed_id),
+        current_price,
+        ema_price,
+    )
 }
 
 /// Returns true if the price_feed is newer than the stored one.
@@ -753,10 +739,9 @@ mod test {
         },
         pyth_sdk::UnixTimestamp,
         pyth_sdk_cw::PriceIdentifier,
-        pyth_wormhole_attester_sdk::PriceAttestation,
         pythnet_sdk::{
             accumulators::{merkle::MerkleTree, Accumulator},
-            messages::{PriceFeedMessage, TwapMessage},
+            messages::{PriceFeedMessage, PriceStatus, TwapMessage},
             test_utils::{
                 create_accumulator_message, create_accumulator_message_from_updates,
                 create_dummy_price_feed_message, create_vaa_from_payload, DEFAULT_CHAIN_ID,
@@ -839,14 +824,14 @@ mod test {
     fn create_batch_price_update_msg(
         emitter_address: Address,
         emitter_chain: Chain,
-        attestations: Vec<PriceAttestation>,
+        attestations: Vec<PriceFeedMessage>,
     ) -> Binary {
-        let batch_attestation = BatchPriceAttestation {
-            price_attestations: attestations,
-        };
-
+        let messages = attestations
+            .into_iter()
+            .map(Message::PriceFeedMessage)
+            .collect::<Vec<_>>();
         let vaa = create_vaa_from_payload(
-            &batch_attestation.serialize().unwrap(),
+            &to_vec::<_, byteorder::BigEndian>(&messages).unwrap(),
             emitter_address,
             emitter_chain,
             0,
@@ -855,7 +840,7 @@ mod test {
     }
 
     fn create_batch_price_update_msg_from_attestations(
-        attestations: Vec<PriceAttestation>,
+        attestations: Vec<PriceFeedMessage>,
     ) -> Binary {
         create_batch_price_update_msg(
             DEFAULT_DATA_SOURCE.address,
@@ -915,7 +900,7 @@ mod test {
         config_info: &ConfigInfo,
         emitter_address: Address,
         emitter_chain: Chain,
-        attestations: Vec<PriceAttestation>,
+        attestations: Vec<PriceFeedMessage>,
     ) -> StdResult<(usize, Vec<PriceFeed>)> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(config_info).unwrap();
@@ -1053,7 +1038,7 @@ mod test {
         let (mut deps, _env) = setup_test();
         config(&mut deps.storage).save(&config_info).unwrap();
         let data = [create_batch_price_update_msg_from_attestations(vec![
-            PriceAttestation::default(),
+            PriceFeedMessage::default(),
         ])];
         check_sufficient_fee(&deps.as_ref(), &data);
 
@@ -1183,7 +1168,7 @@ mod test {
         );
 
         let batch_msg =
-            create_batch_price_update_msg_from_attestations(vec![PriceAttestation::default()]);
+            create_batch_price_update_msg_from_attestations(vec![PriceFeedMessage::default()]);
         let msg = create_accumulator_message(
             &[&feed1, &feed2, &feed3],
             &[&feed1, &feed2, &feed3],
@@ -1477,23 +1462,19 @@ mod test {
 
     #[test]
     fn test_create_price_feed_from_price_attestation_status_trading() {
-        let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+        let price_feed_message = PriceFeedMessage {
+            feed_id: [0u8; 32],
             price: 100,
             conf: 100,
-            expo: 100,
+            exponent: 100,
+            publish_time: 100,
+            prev_publish_time: 0,
             ema_price: 100,
             ema_conf: 100,
             status: PriceStatus::Trading,
-            attestation_time: 100,
-            publish_time: 100,
-            prev_publish_time: 99,
-            prev_price: 99,
-            prev_conf: 99,
-            ..Default::default()
         };
 
-        let price_feed = create_price_feed_from_price_attestation(&price_attestation);
+        let price_feed = create_price_feed_from_price_attestation(&price_feed_message);
         let price = price_feed.get_price_unchecked();
         let ema_price = price_feed.get_ema_price_unchecked();
 
@@ -1526,64 +1507,56 @@ mod test {
     }
 
     fn test_create_price_feed_from_price_attestation_not_trading(status: PriceStatus) {
-        let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+        let price_feed_message = PriceFeedMessage {
+            feed_id: [0u8; 32],
             price: 100,
             conf: 100,
-            expo: 100,
+            exponent: 100,
+            publish_time: 100,
+            prev_publish_time: 0,
             ema_price: 100,
             ema_conf: 100,
             status,
-            attestation_time: 100,
-            publish_time: 100,
-            prev_publish_time: 99,
-            prev_price: 99,
-            prev_conf: 99,
-            ..Default::default()
         };
 
-        let price_feed = create_price_feed_from_price_attestation(&price_attestation);
+        let price_feed = create_price_feed_from_price_attestation(&price_feed_message);
 
         let price = price_feed.get_price_unchecked();
         let ema_price = price_feed.get_ema_price_unchecked();
 
         // for price
-        assert_eq!(price.price, 99);
-        assert_eq!(price.conf, 99);
+        assert_eq!(price.price, 100);
+        assert_eq!(price.conf, 100);
         assert_eq!(price.expo, 100);
-        assert_eq!(price.publish_time, 99);
+        assert_eq!(price.publish_time, 100);
 
         // for ema
         assert_eq!(ema_price.price, 100);
         assert_eq!(ema_price.conf, 100);
         assert_eq!(ema_price.expo, 100);
-        assert_eq!(ema_price.publish_time, 99);
+        assert_eq!(ema_price.publish_time, 100);
     }
 
     #[test]
     fn test_parse_batch_attestation_status_not_trading() {
         let (mut deps, env) = setup_test();
 
-        let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+        let price_feed_message = PriceFeedMessage {
+            feed_id: [0u8; 32],
             price: 100,
             conf: 100,
-            expo: 100,
+            exponent: 100,
+            publish_time: 100,
+            prev_publish_time: 99,
             ema_price: 100,
             ema_conf: 100,
             status: PriceStatus::Auction,
-            attestation_time: 100,
-            publish_time: 100,
-            prev_publish_time: 99,
-            prev_price: 99,
-            prev_conf: 99,
-            ..Default::default()
         };
 
         config(&mut deps.storage)
             .save(&default_config_info())
             .unwrap();
-        let msg = create_batch_price_update_msg_from_attestations(vec![price_attestation]);
+        let msg = create_batch_price_update_msg_from_attestations(vec![price_feed_message]);
         let feeds = parse_batch_attestation(&deps.as_ref(), &env, &msg).unwrap();
         assert_eq!(feeds.len(), 1);
         let price = feeds[0].get_price_unchecked();
@@ -1606,26 +1579,22 @@ mod test {
     fn test_parse_batch_attestation_status_trading() {
         let (mut deps, env) = setup_test();
 
-        let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+        let price_feed_message = PriceFeedMessage {
+            feed_id: [0u8; 32],
             price: 100,
             conf: 100,
-            expo: 100,
+            exponent: 100,
+            publish_time: 100,
+            prev_publish_time: 99,
             ema_price: 100,
             ema_conf: 100,
             status: PriceStatus::Trading,
-            attestation_time: 100,
-            publish_time: 100,
-            prev_publish_time: 99,
-            prev_price: 99,
-            prev_conf: 99,
-            ..Default::default()
         };
 
         config(&mut deps.storage)
             .save(&default_config_info())
             .unwrap();
-        let msg = create_batch_price_update_msg_from_attestations(vec![price_attestation]);
+        let msg = create_batch_price_update_msg_from_attestations(vec![price_feed_message]);
         let feeds = parse_batch_attestation(&deps.as_ref(), &env, &msg).unwrap();
         assert_eq!(feeds.len(), 1);
         let price = feeds[0].get_price_unchecked();
@@ -1650,7 +1619,17 @@ mod test {
             &default_config_info(),
             DEFAULT_DATA_SOURCE.address,
             DEFAULT_DATA_SOURCE.chain,
-            vec![PriceAttestation::default()],
+            vec![PriceFeedMessage {
+                feed_id: [0u8; 32],
+                price: 0,
+                conf: 0,
+                exponent: 0,
+                publish_time: 0,
+                prev_publish_time: 0,
+                ema_price: 0,
+                ema_conf: 0,
+                status: PriceStatus::Unknown,
+            }],
         );
         assert!(result.is_ok());
     }
@@ -1661,7 +1640,17 @@ mod test {
             &default_config_info(),
             WRONG_SOURCE.address,
             DEFAULT_DATA_SOURCE.chain,
-            vec![PriceAttestation::default()],
+            vec![PriceFeedMessage {
+                feed_id: [0u8; 32],
+                price: 0,
+                conf: 0,
+                exponent: 0,
+                publish_time: 0,
+                prev_publish_time: 0,
+                ema_price: 0,
+                ema_conf: 0,
+                status: PriceStatus::Unknown,
+            }],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
     }
@@ -1672,7 +1661,7 @@ mod test {
             &default_config_info(),
             DEFAULT_DATA_SOURCE.address,
             WRONG_SOURCE.chain,
-            vec![PriceAttestation::default()],
+            vec![PriceFeedMessage::default()],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
     }

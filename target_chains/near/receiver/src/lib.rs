@@ -11,11 +11,10 @@ use {
         log, near_bindgen, AccountId, BorshStorageKey, Duration, Gas, NearToken, PanicOnDefault,
         Promise, StorageUsage,
     },
-    pyth_wormhole_attester_sdk::{BatchPriceAttestation, P2W_MAGIC},
     pythnet_sdk::{
+        messages::{Message, PriceFeedMessage, P2W_MAGIC},
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
-        messages::Message,
         wire::{
             from_slice,
             v1::{
@@ -260,12 +259,14 @@ impl Pyth {
             return Err(Error::InvalidVaa);
         }
 
-        // Verify the PriceAttestation's are new enough, and if so, store them.
+        // Verify the price messages are new enough, and if so, store them.
         let mut count_updates = 0;
-        let batch = BatchPriceAttestation::deserialize(bytes).unwrap();
-        for price_attestation in &batch.price_attestations {
-            if self.update_price_feed_if_new(PriceFeed::from(price_attestation)) {
-                count_updates += 1;
+        let messages = Vec::<Message>::try_from_slice(bytes).unwrap();
+        for message in messages {
+            if let Message::PriceFeedMessage(price_feed_message) = message {
+                if self.update_price_feed_if_new(PriceFeed::from(&price_feed_message)) {
+                    count_updates += 1;
+                }
             }
         }
 

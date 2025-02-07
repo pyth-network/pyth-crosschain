@@ -49,6 +49,9 @@ pub enum Message {
 /// we can't associate it with a specific feed, so we use a feed id that is not used by any price feed
 pub const PUBLISHER_STAKE_CAPS_MESSAGE_FEED_ID: FeedId = [1u8; 32];
 
+/// Magic bytes used to identify price feed messages in the protocol
+pub const P2W_MAGIC: &[u8; 4] = b"P2WH";
+
 impl Message {
     pub fn publish_time(&self) -> i64 {
         match self {
@@ -82,6 +85,28 @@ impl Arbitrary for Message {
 pub type FeedId = [u8; 32];
 pub type Pubkey = [u8; 32];
 
+#[derive(
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    BorshSerialize,
+    BorshDeserialize,
+    BorshSchema,
+    Default,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum PriceStatus {
+    Trading = 1,
+    #[default]
+    Unknown = 2,
+    Halted = 3,
+    Auction = 4,
+}
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, BorshSchema)]
 #[cfg_attr(feature = "solana-program", derive(AnchorSerialize, AnchorDeserialize))]
@@ -113,6 +138,23 @@ pub struct PriceFeedMessage {
     pub prev_publish_time: i64,
     pub ema_price: i64,
     pub ema_conf: u64,
+    pub status: PriceStatus,
+}
+
+impl Default for PriceFeedMessage {
+    fn default() -> Self {
+        Self {
+            feed_id: [0u8; 32],
+            price: 0,
+            conf: 0,
+            exponent: 0,
+            publish_time: 0,
+            prev_publish_time: 0,
+            ema_price: 0,
+            ema_conf: 0,
+            status: PriceStatus::Unknown,
+        }
+    }
 }
 
 #[cfg(feature = "quickcheck")]
@@ -134,6 +176,7 @@ impl Arbitrary for PriceFeedMessage {
             prev_publish_time: publish_time.saturating_sub(i64::arbitrary(g)),
             ema_price: i64::arbitrary(g),
             ema_conf: u64::arbitrary(g),
+            status: PriceStatus::Unknown,
         }
     }
 }
@@ -222,7 +265,7 @@ impl Arbitrary for PublisherStakeCap {
 mod tests {
 
     use crate::{
-        messages::{Message, PriceFeedMessage},
+        messages::{Message, PriceFeedMessage, PriceStatus},
         wire::Serializer,
     };
 
@@ -239,6 +282,7 @@ mod tests {
             prev_publish_time: 1,
             ema_price: 1,
             ema_conf: 1,
+            status: PriceStatus::Unknown,
         });
         let mut buffer = Vec::new();
         let mut cursor = std::io::Cursor::new(&mut buffer);

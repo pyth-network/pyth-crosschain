@@ -2,7 +2,7 @@ use {
     crate::state::PythDataSource,
     byteorder::{BigEndian, ReadBytesExt, WriteBytesExt},
     cosmwasm_std::Binary,
-    pyth_wormhole_attester_sdk::ErrBox,
+    pythnet_sdk::error::Error as PythError,
     schemars::JsonSchema,
     serde::{Deserialize, Serialize},
     std::{convert::TryFrom, io::Write},
@@ -21,11 +21,11 @@ pub enum GovernanceModule {
 }
 
 impl GovernanceModule {
-    pub fn from_u8(x: u8) -> Result<GovernanceModule, ErrBox> {
+    pub fn from_u8(x: u8) -> Result<GovernanceModule, PythError> {
         match x {
             0 => Ok(GovernanceModule::Executor),
             1 => Ok(GovernanceModule::Target),
-            _ => Err(format!("Invalid governance module: {x}",).into()),
+            _ => Err(PythError::InvalidInput),
         }
     }
 
@@ -76,26 +76,29 @@ pub struct GovernanceInstruction {
 }
 
 impl GovernanceInstruction {
-    pub fn deserialize(mut bytes: impl ReadBytesExt) -> Result<Self, ErrBox> {
+    pub fn deserialize(mut bytes: impl ReadBytesExt) -> Result<Self, PythError> {
         let mut magic_vec = vec![0u8; PYTH_GOVERNANCE_MAGIC.len()];
-        bytes.read_exact(magic_vec.as_mut_slice())?;
+        bytes
+            .read_exact(magic_vec.as_mut_slice())
+            .map_err(|_| PythError::InvalidInput)?;
 
         if magic_vec.as_slice() != PYTH_GOVERNANCE_MAGIC {
-            return Err(format!(
-                "Invalid magic {magic_vec:02X?}, expected {PYTH_GOVERNANCE_MAGIC:02X?}",
-            )
-            .into());
+            return Err(PythError::InvalidInput);
         }
 
-        let module_num = bytes.read_u8()?;
+        let module_num = bytes.read_u8().map_err(|_| PythError::InvalidInput)?;
         let module = GovernanceModule::from_u8(module_num)?;
 
-        let action_type: u8 = bytes.read_u8()?;
-        let target_chain_id: u16 = bytes.read_u16::<BigEndian>()?;
+        let action_type: u8 = bytes.read_u8().map_err(|_| PythError::InvalidInput)?;
+        let target_chain_id: u16 = bytes
+            .read_u16::<BigEndian>()
+            .map_err(|_| PythError::InvalidInput)?;
 
         let action: Result<GovernanceAction, String> = match action_type {
             0 => {
-                let code_id = bytes.read_u64::<BigEndian>()?;
+                let code_id = bytes
+                    .read_u64::<BigEndian>()
+                    .map_err(|_| PythError::InvalidInput)?;
                 Ok(GovernanceAction::UpgradeContract { code_id })
             }
             1 => {
@@ -156,7 +159,7 @@ impl GovernanceInstruction {
         })
     }
 
-    pub fn serialize(&self) -> Result<Vec<u8>, ErrBox> {
+    pub fn serialize(&self) -> Result<Vec<u8>, PythError> {
         let mut buf = vec![];
 
         buf.write_all(PYTH_GOVERNANCE_MAGIC)?;
