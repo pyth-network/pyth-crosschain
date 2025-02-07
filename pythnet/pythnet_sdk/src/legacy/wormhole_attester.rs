@@ -431,7 +431,7 @@ impl PriceAttestation {
 /// using `cargo test -- --nocapture`.
 #[cfg(test)]
 mod tests {
-    use {super::*, pyth_sdk_solana::state::PriceStatus};
+    use super::*;
 
     fn mock_attestation(prod: Option<[u8; 32]>, price: Option<[u8; 32]>) -> PriceAttestation {
         let product_id_bytes = prod.unwrap_or([21u8; 32]);
