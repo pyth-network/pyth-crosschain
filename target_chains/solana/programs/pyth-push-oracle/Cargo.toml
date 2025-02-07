@@ -17,7 +17,7 @@ test-bpf = []
 
 [dependencies]
 anchor-lang = { workspace = true }
-pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
+pythnet-sdk = { path = "../../../../sdks/pythnet_sdk/rust" }
 solana-program = { workspace = true }
 byteorder = "1.4.3"
 pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
