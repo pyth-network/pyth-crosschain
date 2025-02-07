@@ -19,9 +19,6 @@ jobs:
           components: rustfmt, clippy
           override: true
       - uses: actions/checkout@v3
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "target_chains/starknet/tools/test_vaas -> target"
       - name: Install Scarb
         uses: software-mansion/setup-scarb@v1
         with:

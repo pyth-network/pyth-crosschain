@@ -18,9 +18,6 @@ jobs:
         working-directory: target_chains/sui/contracts/
     steps:
       - uses: actions/checkout@v3
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "target_chains/sui/contracts -> target"
 
       - name: Update rust
         run: rustup update stable
