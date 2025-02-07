@@ -888,7 +888,7 @@ export class NearChain extends Chain {
   }
 
   getType(): string {
-    return TonChain.type;
+    return NearChain.type;
   }
 
   toJson(): KeyValueConfig {
