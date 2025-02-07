@@ -1,4 +1,4 @@
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import fs from "fs";
@@ -8,13 +8,14 @@ import { Options } from "yargs";
 import { SuiPriceListener, SuiPricePusher } from "./sui";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import pino from "pino";
+import { filterInvalidPriceItems } from "../utils";
 
 export default {
   command: "sui",
   describe:
     "Run price pusher for sui. Most of the arguments below are" +
     "network specific, so there's one set of values for mainnet and" +
-    "another for testnet. See config.sui..sample.json for the " +
+    " another for testnet. See config.sui.mainnet.sample.json for the " +
     "appropriate values for your network. ",
   builder: {
     endpoint: {
@@ -70,7 +71,6 @@ export default {
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
-    ...options.priceServiceConnectionLogLevel,
     ...options.controllerLogLevel,
   },
   handler: async function (argv: any) {
@@ -88,25 +88,14 @@ export default {
       gasBudget,
       accountIndex,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-        priceFeedRequestConfig: {
-          binary: true,
-        },
-      }
-    );
+    const hermesClient = new HermesClient(priceServiceEndpoint);
+
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const keypair = Ed25519Keypair.deriveKeypair(
       mnemonic,
@@ -118,10 +107,24 @@ export default {
         .toSuiAddress()}`
     );
 
-    const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+
+    // Better to filter out invalid price items before creating the pyth listener
+    const { existingPriceItems, invalidPriceItems } =
+      await filterInvalidPriceItems(hermesClient, priceItems);
+
+    if (invalidPriceItems.length > 0) {
+      logger.error(
+        `Invalid price id submitted for: ${invalidPriceItems
+          .map(({ alias }) => alias)
+          .join(", ")}`
+      );
+    }
+
+    priceItems = existingPriceItems;
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger.child({ module: "PythPriceListener" })
     );
@@ -135,7 +138,7 @@ export default {
       { pollingFrequency }
     );
     const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
-      priceServiceConnection,
+      hermesClient,
       logger.child({ module: "SuiPricePusher" }),
       pythStateId,
       wormholeStateId,

@@ -8,10 +8,7 @@ import {
   ChainPriceListener,
   PriceItem,
 } from "../interface";
-import {
-  PriceServiceConnection,
-  HexString,
-} from "@pythnetwork/price-service-client";
+import { HermesClient, HexString } from "@pythnetwork/hermes-client";
 import { DurationInSeconds } from "../utils";
 
 import { Account, Connection, KeyPair } from "near-api-js";
@@ -64,7 +61,7 @@ export class NearPriceListener extends ChainPriceListener {
 export class NearPricePusher implements IPricePusher {
   constructor(
     private account: NearAccount,
-    private connection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private logger: Logger
   ) {}
 
@@ -132,8 +129,10 @@ export class NearPricePusher implements IPricePusher {
   private async getPriceFeedsUpdateData(
     priceIds: HexString[]
   ): Promise<string[]> {
-    const latestVaas = await this.connection.getLatestVaas(priceIds);
-    return latestVaas.map((vaa) => Buffer.from(vaa, "base64").toString("hex"));
+    const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
+      encoding: "base64",
+    });
+    return response.binary.data;
   }
 }
 

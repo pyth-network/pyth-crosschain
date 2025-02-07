@@ -1,13 +1,14 @@
 import { Options } from "yargs";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { PythPriceListener } from "../pyth-price-listener";
 import { TonPriceListener, TonPricePusher } from "./ton";
 import { Controller } from "../controller";
 import { Address, TonClient } from "@ton/ton";
 import fs from "fs";
 import pino from "pino";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import { filterInvalidPriceItems } from "../utils";
 
 export default {
   command: "ton",
@@ -33,7 +34,6 @@ export default {
     ...options.pushingFrequency,
     ...options.pollingFrequency,
     ...options.logLevel,
-    ...options.priceServiceConnectionLogLevel,
     ...options.controllerLogLevel,
   },
   handler: async function (argv: any) {
@@ -46,7 +46,6 @@ export default {
       pushingFrequency,
       pollingFrequency,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
@@ -54,20 +53,26 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-      }
-    );
+    const hermesClient = new HermesClient(priceServiceEndpoint);
 
-    const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+
+    // Better to filter out invalid price items before creating the pyth listener
+    const { existingPriceItems, invalidPriceItems } =
+      await filterInvalidPriceItems(hermesClient, priceItems);
+
+    if (invalidPriceItems.length > 0) {
+      logger.error(
+        `Invalid price id submitted for: ${invalidPriceItems
+          .map(({ alias }) => alias)
+          .join(", ")}`
+      );
+    }
+
+    priceItems = existingPriceItems;
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger.child({ module: "PythPriceListener" })
     );
@@ -89,7 +94,7 @@ export default {
       client,
       privateKey,
       contractAddress,
-      priceServiceConnection,
+      hermesClient,
       logger.child({ module: "TonPricePusher" })
     );
 

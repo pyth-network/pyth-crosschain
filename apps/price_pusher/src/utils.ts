@@ -1,4 +1,5 @@
-import { HexString } from "@pythnetwork/price-service-client";
+import { HermesClient, HexString } from "@pythnetwork/hermes-client";
+import { PriceItem } from "./interface";
 
 export type PctNumber = number;
 export type DurationInSeconds = number;
@@ -54,3 +55,32 @@ export const assertDefined = <T>(value: T | undefined): T => {
     return value;
   }
 };
+
+export async function filterInvalidPriceItems(
+  hermesClient: HermesClient,
+  priceItems: PriceItem[]
+): Promise<{
+  existingPriceItems: PriceItem[];
+  invalidPriceItems: PriceItem[];
+}> {
+  const priceMetadata = await hermesClient.getPriceFeeds();
+  const allPriceIds = priceMetadata.map((priceMetadata) => priceMetadata.id);
+
+  // Filter out invalid price ids
+  const { existingPriceItems, invalidPriceItems } = priceItems.reduce<{
+    existingPriceItems: PriceItem[];
+    invalidPriceItems: PriceItem[];
+  }>(
+    (acc, item) => {
+      if (allPriceIds.includes(item.id)) {
+        acc.existingPriceItems.push(item);
+      } else {
+        acc.invalidPriceItems.push(item);
+      }
+      return acc;
+    },
+    { existingPriceItems: [], invalidPriceItems: [] }
+  );
+
+  return { existingPriceItems, invalidPriceItems };
+}

@@ -203,8 +203,7 @@ human-readable logs, you can pipe the output of the program to `pino-pretty`. Se
 
 You can configure the log level of some of the modules of the price pusher as well. The available modules are PriceServiceConnection, which
 is responsible for connecting to the Hermes price service, and Controller, which is responsible for checking the prices from the Hermes
-and the on-chain Pyth contract and deciding whether to push a new price. You can configure the log level of these modules by passing the
-`--price-service-connection-log-level` and `--controller-log-level` arguments, respectively.
+and the on-chain Pyth contract and deciding whether to push a new price. You can configure the log level of these modules by passing the `--controller-log-level` arguments, respectively.
 
 ### Example
 

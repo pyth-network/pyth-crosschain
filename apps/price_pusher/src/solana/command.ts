@@ -1,7 +1,6 @@
 import { Options } from "yargs";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { PythPriceListener } from "../pyth-price-listener";
 import {
   SolanaPriceListener,
@@ -20,7 +19,8 @@ import {
 } from "jito-ts/dist/sdk/block-engine/searcher";
 import pino from "pino";
 import { Logger } from "pino";
-
+import { HermesClient } from "@pythnetwork/hermes-client";
+import { filterInvalidPriceItems } from "../utils";
 export default {
   command: "solana",
   describe: "run price pusher for solana",
@@ -87,10 +87,9 @@ export default {
     ...options.pollingFrequency,
     ...options.pushingFrequency,
     ...options.logLevel,
-    ...options.priceServiceConnectionLogLevel,
     ...options.controllerLogLevel,
   },
-  handler: function (argv: any) {
+  handler: async function (argv: any) {
     const {
       endpoint,
       keypairFile,
@@ -109,7 +108,6 @@ export default {
       jitoBundleSize,
       updatesPerJitoBundle,
       logLevel,
-      priceServiceConnectionLogLevel,
       controllerLogLevel,
     } = argv;
 
@@ -117,20 +115,26 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
-    const priceServiceConnection = new PriceServiceConnection(
-      priceServiceEndpoint,
-      {
-        logger: logger.child(
-          { module: "PriceServiceConnection" },
-          { level: priceServiceConnectionLogLevel }
-        ),
-      }
-    );
+    const hermesClient = new HermesClient(priceServiceEndpoint);
 
-    const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+
+    // Better to filter out invalid price items before creating the pyth listener
+    const { existingPriceItems, invalidPriceItems } =
+      await filterInvalidPriceItems(hermesClient, priceItems);
+
+    if (invalidPriceItems.length > 0) {
+      logger.error(
+        `Invalid price id submitted for: ${invalidPriceItems
+          .map(({ alias }) => alias)
+          .join(", ")}`
+      );
+    }
+
+    priceItems = existingPriceItems;
 
     const pythListener = new PythPriceListener(
-      priceServiceConnection,
+      hermesClient,
       priceItems,
       logger.child({ module: "PythPriceListener" })
     );
@@ -156,7 +160,7 @@ export default {
       const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
       solanaPricePusher = new SolanaPricePusherJito(
         pythSolanaReceiver,
-        priceServiceConnection,
+        hermesClient,
         logger.child({ module: "SolanaPricePusherJito" }),
         shardId,
         jitoTipLamports,
@@ -171,7 +175,7 @@ export default {
     } else {
       solanaPricePusher = new SolanaPricePusher(
         pythSolanaReceiver,
-        priceServiceConnection,
+        hermesClient,
         logger.child({ module: "SolanaPricePusher" }),
         shardId,
         computeUnitPriceMicroLamports

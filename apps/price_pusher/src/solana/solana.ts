@@ -6,7 +6,7 @@ import {
   PriceItem,
 } from "../interface";
 import { DurationInSeconds } from "../utils";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   sendTransactions,
   sendTransactionsJito,
@@ -94,7 +94,7 @@ export class SolanaPriceListener extends ChainPriceListener {
 export class SolanaPricePusher implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
-    private priceServiceConnection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private logger: Logger,
     private shardId: number,
     private computeUnitPriceMicroLamports: number
@@ -114,9 +114,13 @@ export class SolanaPricePusher implements IPricePusher {
 
     let priceFeedUpdateData;
     try {
-      priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
-        shuffledPriceIds
+      const response = await this.hermesClient.getLatestPriceUpdates(
+        shuffledPriceIds,
+        {
+          encoding: "base64",
+        }
       );
+      priceFeedUpdateData = response.binary.data;
     } catch (err: any) {
       this.logger.error(err, "getPriceFeedsUpdateData failed:");
       return;
@@ -152,7 +156,7 @@ export class SolanaPricePusher implements IPricePusher {
 export class SolanaPricePusherJito implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
-    private priceServiceConnection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private logger: Logger,
     private shardId: number,
     private defaultJitoTipLamports: number,
@@ -201,9 +205,10 @@ export class SolanaPricePusherJito implements IPricePusher {
 
     let priceFeedUpdateData: string[];
     try {
-      priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
-        priceIds
-      );
+      const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
+        encoding: "base64",
+      });
+      priceFeedUpdateData = response.binary.data;
     } catch (err: any) {
       this.logger.error(err, "getPriceFeedsUpdateData failed");
       return;

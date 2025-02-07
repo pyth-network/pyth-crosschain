@@ -15,7 +15,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@headlessui/react": "^2.2.0",
-    "@pythnetwork/client": "^2.22.0",
+    "@pythnetwork/client": "catalog:",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",
     "@radix-ui/react-label": "^2.0.0",
