@@ -1,6 +1,6 @@
 [package]
 name                       = "pyth-near"
-version                    = "0.1.0"
+version                    = "0.1.1"
 authors                    = ["Pyth Data Association"]
 edition                    = "2021"
 description                = "A Pyth Receiver for Near"
