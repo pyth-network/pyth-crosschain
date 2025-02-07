@@ -1,10 +1,10 @@
 pub mod accumulators;
 pub mod error;
 pub mod hashers;
+pub mod legacy;
 pub mod messages;
 pub mod wire;
 pub mod wormhole;
-pub mod legacy;
 
 #[cfg(feature = "test-utils")]
 pub mod test_utils;

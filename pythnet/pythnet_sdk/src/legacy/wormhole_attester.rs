@@ -36,8 +36,6 @@ pub const P2W_FORMAT_HDR_SIZE: u16 = 1;
 
 pub const PUBKEY_LEN: usize = 32;
 
-
-
 /// Decides the format of following bytes
 #[repr(u8)]
 pub enum PayloadId {
@@ -256,8 +254,6 @@ impl BatchPriceAttestation {
 // On-chain data types
 
 impl PriceAttestation {
-
-
     /// Serialize this attestation according to the Pyth-over-wormhole serialization format
     pub fn serialize(&self) -> Vec<u8> {
         // A nifty trick to get us yelled at if we forget to serialize a field
