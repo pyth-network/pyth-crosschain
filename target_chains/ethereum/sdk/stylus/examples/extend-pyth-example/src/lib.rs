@@ -19,6 +19,6 @@ impl ExtendPythExample {
     /// Returns a vector of bytes containing the data.
     fn get_data(&self) -> Vec<u8> {
         // just reteun data
-        vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11]
     }
 }
