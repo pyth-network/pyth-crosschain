@@ -863,16 +863,16 @@ export class TonChain extends Chain {
 
 export class NearChain extends Chain {
   static type = "NearChain";
-  networkId: string;
 
   constructor(
     id: string,
     mainnet: boolean,
     wormholeChainName: string,
-    nativeToken: TokenId | undefined
+    nativeToken: TokenId | undefined,
+    private rpcUrl: string,
+    private networkId: string
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
-    this.networkId = this.mainnet ? "mainnet" : "testnet";
   }
 
   static fromJson(parsed: ChainConfig): NearChain {
@@ -881,7 +881,9 @@ export class NearChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
-      parsed.nativeToken
+      parsed.nativeToken,
+      parsed.rpcUrl,
+      parsed.networkId
     );
   }
 
@@ -894,7 +896,9 @@ export class NearChain extends Chain {
       id: this.id,
       wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
-      type: TonChain.type,
+      type: NearChain.type,
+      rpcUrl: this.rpcUrl,
+      networkId: this.networkId,
     };
   }
 
@@ -935,7 +939,7 @@ export class NearChain extends Chain {
     const connectionConfig = {
       networkId: this.networkId,
       keyStore,
-      nodeUrl: `https://rpc.${this.networkId}.near.org`,
+      nodeUrl: this.rpcUrl,
     };
     const nearConnection = await nearAPI.connect(connectionConfig);
     return await nearConnection.account(accountId);
