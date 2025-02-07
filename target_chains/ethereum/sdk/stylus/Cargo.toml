@@ -1,0 +1,92 @@
+[workspace]
+members = [
+  "contracts",
+  "examples/pyth-example",
+  "examples/extend-pyth-example",
+  "examples/function-example",
+  "benches"
+]
+default-members = [
+  "contracts",
+  "examples/pyth-example",
+  "examples/extend-pyth-example",
+  "examples/function-example",
+]
+
+# Explicitly set the resolver to version 2, which is the default for packages
+# with edition >= 2021.
+# https://doc.rust-lang.org/edition-guide/rust-2021/default-cargo-resolver.html
+resolver = "2"
+
+[workspace.package]
+authors = ["Ifechukwu Daniel"]
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/pyth-network/pyth-crosschain"
+version = "0.1.0"
+
+[workspace.lints.rust]
+missing_docs = "warn"
+unreachable_pub = "warn"
+rust_2021_compatibility = { level = "warn", priority = -1 }
+
+
+[workspace.dependencies]
+# stylus-related
+stylus-sdk = { version = "0.6.0", default-features = false }
+mini-alloc = "0.4.2"
+
+alloy = { version = "0.1.4", features = [
+  "contract",
+  "network",
+  "providers",
+  "provider-http",
+  "rpc-client",
+  "rpc-types-eth",
+  "signer-local",
+  "getrandom",
+] }
+# Even though `alloy` includes `alloy-primitives` and `alloy-sol-types` we need
+# to keep both versions for compatibility with the Stylus SDK. Once they start
+# using `alloy` we can remove these.
+alloy-primitives = { version = "0.7.6", default-features = false }
+alloy-sol-types = { version = "0.7.6", default-features = false }
+alloy-sol-macro = { version = "0.7.6", default-features = false }
+alloy-sol-macro-expander = { version = "0.7.6", default-features = false }
+alloy-sol-macro-input = { version = "0.7.6", default-features = false }
+
+dotenv = "0.15.0"
+const-hex = { version = "1.11.1", default-features = false }
+eyre = "0.6.8"
+keccak-const = "0.2.0"
+koba = "0.2.0"
+once_cell = "1.19.0"
+rand = "0.8.5"
+regex = "1.10.4"
+tiny-keccak = { version = "2.0.2", features = ["keccak"] }
+tokio = { version = "1.12.0", features = ["full"] }
+futures = "0.3.30"
+
+# procedural macros
+syn = { version = "2.0.58", features = ["full"] }
+proc-macro2 = "1.0.79"
+quote = "1.0.35"
+
+# members
+motsu = "0.1.0"
+e2e = { git = "https://github.com/Ifechukwudaniel/e2e-stylus"}
+pyth-stylus ={path ="contracts"}
+
+[profile.release]
+codegen-units = 1
+panic = "abort"
+opt-level = "z"
+strip = true
+lto = true
+debug = false
+rpath = false
+debug-assertions = false
+incremental = false
+
+[profile.dev]
+panic = "abort"

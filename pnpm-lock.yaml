@@ -2426,6 +2426,12 @@ importers:
         specifier: ^0.8.25
         version: 0.8.26(debug@4.3.7)
 
+  target_chains/ethereum/sdk/stylus/pyth-mock-solidity:
+    dependencies:
+      '@pythnetwork/pyth-sdk-solidity':
+        specifier: ^4.0.0
+        version: 4.0.0
+
   target_chains/fuel/sdk/js:
     dependencies:
       fuels:
@@ -6276,6 +6282,9 @@ packages:
 
   '@pythnetwork/price-service-sdk@1.7.1':
     resolution: {integrity: sha512-xr2boVXTyv1KUt/c6llUTfbv2jpud99pWlMJbFaHGUBoygQsByuy7WbjIJKZ+0Blg1itLZl0Lp/pJGGg8SdJoQ==}
+
+  '@pythnetwork/pyth-sdk-solidity@4.0.0':
+    resolution: {integrity: sha512-Cy2MvSN1Oh5YpIYmZd2In6/gfXbGjnpazmXKioTuq07Drp4Rl2XHcvtqHdgilplCl32IG4pU+XoRafpexID08A==}
 
   '@pythnetwork/pyth-starknet-js@0.2.1':
     resolution: {integrity: sha512-hLPmWUkLJxYI/f1nGvhk37Hp76uYL+8g12PuJSSH7GIdN9V3ts/wgL4TdI55FbC2Ypnx3WXjVQgTpQyOhhrpyg==}
@@ -27412,6 +27421,8 @@ snapshots:
   '@pythnetwork/price-service-sdk@1.7.1':
     dependencies:
       bn.js: 5.2.1
+
+  '@pythnetwork/pyth-sdk-solidity@4.0.0': {}
 
   '@pythnetwork/pyth-starknet-js@0.2.1': {}
 

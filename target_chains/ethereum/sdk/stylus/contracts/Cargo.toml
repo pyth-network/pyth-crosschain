@@ -1,0 +1,33 @@
+[package]
+name = "pyth-stylus"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+alloy-primitives.workspace = true
+alloy-sol-types.workspace = true
+alloy-sol-macro.workspace = true
+alloy-sol-macro-expander.workspace = true
+alloy-sol-macro-input.workspace = true
+stylus-sdk.workspace = true
+mini-alloc.workspace = true
+keccak-const.workspace = true
+
+[dev-dependencies]
+motsu.workspace = true
+alloy-primitives = { workspace = true, features = ["arbitrary"] }
+
+[features]
+# Enables using the standard library. This is not included in the default
+# features, because this crate is meant to be used in a `no_std` environment.
+# Currently, the std feature is only used for testing purposes.
+std = []
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[lints]
+workspace = true
