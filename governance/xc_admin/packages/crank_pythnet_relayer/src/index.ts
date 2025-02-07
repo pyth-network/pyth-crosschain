@@ -105,7 +105,7 @@ async function run() {
           WORMHOLE_ADDRESS[CLUSTER]!,
           provider.wallet.publicKey,
           Buffer.from(response.vaaBytes, "base64"),
-          { commitment: COMMITMENT, maxRetries: 10 }
+          { commitment: COMMITMENT }
         );
 
         console.log(`VAA ${lastSequenceNumber} relayed. executing ...`);
