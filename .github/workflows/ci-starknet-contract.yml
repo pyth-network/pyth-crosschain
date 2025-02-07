@@ -2,12 +2,11 @@ name: Starknet contract
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-starknet-contract.yml
       - target_chains/starknet/contracts/**
   push:
     branches:
       - main
-    paths:
-      - target_chains/starknet/contracts/**
 jobs:
   check:
     name: Starknet Foundry tests

@@ -1,12 +1,11 @@
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-sui-contract.yml
       - target_chains/sui/contracts/**
   push:
     branches:
       - main
-    paths:
-      - target_chains/sui/contracts/**
 
 name: Sui Contracts
 

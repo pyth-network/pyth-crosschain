@@ -2,6 +2,7 @@ name: Turbo build
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-turbo-build.yml
       - "**.tsx?"
       - "**.jsx?"
       - "**.json"
@@ -11,14 +12,6 @@ on:
       - "**/tsconfig.json"
   push:
     branches: [main]
-    paths:
-      - "**.tsx?"
-      - "**.jsx?"
-      - "**.json"
-      - "**.sol"
-      - "**/package.json"
-      - "**/package-lock.json"
-      - "**/tsconfig.json"
 jobs:
   build:
     runs-on: ubuntu-latest

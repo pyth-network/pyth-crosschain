@@ -3,14 +3,12 @@ name: Test Solana Contract
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-solana-contract.yml
       - target_chains/solana/**
       - pythnet/pythnet_sdk/**
   push:
     branches:
       - main
-    paths:
-      - target_chains/solana/**
-      - pythnet/pythnet_sdk/**
 
 env:
   CARGO_TERM_COLOR: always

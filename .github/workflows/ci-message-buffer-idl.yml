@@ -2,12 +2,11 @@ name: Message Buffer IDL Check
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-message-buffer-idl.yml
       - pythnet/message_buffer/**
   push:
     branches:
       - main
-    paths:
-      - pythnet/message_buffer/**
 jobs:
   abi-check:
     name: Check Message Buffer IDL files are up to date

@@ -4,12 +4,11 @@ name: stylus-check-wasm
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-stylus-check-wasm.yml
       - target_chains/ethereum/sdk/stylus/**
   push:
     branches:
       - main
-    paths:
-      - target_chains/ethereum/sdk/stylus/**
 permissions:
   contents: read
 concurrency:

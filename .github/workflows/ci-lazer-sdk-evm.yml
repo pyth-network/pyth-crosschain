@@ -3,10 +3,9 @@ on:
   push:
     branches:
       - main
-    paths:
-      - lazer/contracts/evm/**
   pull_request:
     paths:
+      - .github/workflows/ci-lazer-sdk-evm.yml
       - lazer/contracts/evm/**
 
 jobs:

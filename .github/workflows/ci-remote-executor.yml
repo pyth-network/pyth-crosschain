@@ -2,10 +2,11 @@ name: Check Remote Executor
 
 on:
   pull_request:
-    paths: [governance/remote_executor/**]
+    paths:
+      - .github/workflows/ci-remote-executor.yml
+      - governance/remote_executor/**
   push:
     branches: [main]
-    paths: [governance/remote_executor/**]
 jobs:
   test:
     runs-on: ubuntu-latest

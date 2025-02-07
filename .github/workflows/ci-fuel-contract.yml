@@ -3,12 +3,11 @@ name: Test Fuel Contract
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-fuel-contract.yml
       - target_chains/fuel/**
   push:
     branches:
       - main
-    paths:
-      - target_chains/fuel/**
 
 env:
   CARGO_TERM_COLOR: always

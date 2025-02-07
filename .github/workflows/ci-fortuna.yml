@@ -2,10 +2,11 @@ name: Check Fortuna
 
 on:
   pull_request:
-    paths: [apps/fortuna/**]
+    paths:
+      - .github/workflows/ci-fortuna.yml
+      - apps/fortuna/**
   push:
     branches: [main]
-    paths: [apps/fortuna/**]
 jobs:
   test:
     runs-on: ubuntu-latest

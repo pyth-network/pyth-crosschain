@@ -14,12 +14,11 @@ permissions:
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-stylus-check.yml
       - target_chains/ethereum/sdk/stylus/**
   push:
     branches:
       - main
-    paths:
-      - target_chains/ethereum/sdk/stylus/**
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true

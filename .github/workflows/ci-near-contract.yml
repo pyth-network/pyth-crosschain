@@ -9,10 +9,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - target_chains/near/**
-      - wormhole_attester/sdk/rust/**
-      - .github/workflows/ci-near-contract.yml
 
 env:
   CARGO_TERM_COLOR: always

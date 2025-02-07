@@ -3,12 +3,11 @@ name: stylus-foundry-test
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-foundry-test.yml
       - target_chains/ethereum/sdk/stylus/**
   push:
     branches:
       - main
-    paths:
-      - target_chains/ethereum/sdk/stylus/**
 env:
   FOUNDRY_PROFILE: ci
 jobs:

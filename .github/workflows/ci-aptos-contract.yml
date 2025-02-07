@@ -1,12 +1,11 @@
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-aptos-contract.yml
       - target_chains/aptos/contracts/**
   push:
     branches:
       - main
-    paths:
-      - target_chains/aptos/contracts/**
 
 name: Aptos Contract
 

@@ -2,10 +2,11 @@ name: Check Starknet Tools
 
 on:
   pull_request:
-    paths: [target_chains/starknet/tools/**]
+    paths:
+      - .github/workflows/ci-starknet-tools.yml
+      - target_chains/starknet/tools/**
   push:
     branches: [main]
-    paths: [target_chains/starknet/tools/**]
 jobs:
   test:
     runs-on: ubuntu-latest
