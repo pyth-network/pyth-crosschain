@@ -33,7 +33,7 @@ generic-array = { version = "0.14.4" }
 hex = "0.4.2"
 lazy_static = "1.4.0"
 bigint = "4"
-pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 pyth-sdk = "0.7.0"
 byteorder = "1.4.3"
 cosmwasm-schema = "1.1.9"
@@ -43,6 +43,7 @@ wormhole-cosmwasm =  {git = "https://github.com/wormhole-foundation/wormhole", t
 
 [dev-dependencies]
 cosmwasm-vm = { version = "1.0.0", default-features = false }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = ["test-utils"] }
 serde_json = "1.0"
 serde_wormhole = "0.1.0"
 wormhole-vaas-serde = "0.1.0"
