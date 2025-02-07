@@ -21,6 +21,9 @@ jobs:
         working-directory: target_chains/solana
     steps:
       - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "target_chains/solana -> target"
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
