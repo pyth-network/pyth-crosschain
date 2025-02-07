@@ -1478,7 +1478,7 @@ mod test {
     #[test]
     fn test_create_price_feed_from_price_attestation_status_trading() {
         let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+            price_id: pythnet_sdk::legacy::Identifier::new([0u8; 32]),
             price: 100,
             conf: 100,
             expo: 100,
@@ -1527,7 +1527,7 @@ mod test {
 
     fn test_create_price_feed_from_price_attestation_not_trading(status: PriceStatus) {
         let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+            price_id: pythnet_sdk::legacy::Identifier::new([0u8; 32]),
             price: 100,
             conf: 100,
             expo: 100,
@@ -1565,7 +1565,7 @@ mod test {
         let (mut deps, env) = setup_test();
 
         let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+            price_id: pythnet_sdk::legacy::Identifier::new([0u8; 32]),
             price: 100,
             conf: 100,
             expo: 100,
@@ -1607,7 +1607,7 @@ mod test {
         let (mut deps, env) = setup_test();
 
         let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+            price_id: pythnet_sdk::legacy::Identifier::new([0u8; 32]),
             price: 100,
             conf: 100,
             expo: 100,
