@@ -138,8 +138,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
               }
             }),
           }
-          // these fields are immutable and should not be updated
-          delete symbolToData[product.metadata.symbol].metadata.symbol
+          // this field is immutable and should not be updated
           delete symbolToData[product.metadata.symbol].metadata.price_account
         })
       setExistingSymbols(new Set(Object.keys(symbolToData)))
@@ -184,22 +183,50 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           if (!isValidJson(fileData as string)) return
           const fileDataParsed = sortData(JSON.parse(fileData as string))
           const changes: Record<string, any> = {}
+
+          const renamedSymbols: Record<string, string> = {}
+
+          // Go through existing symbols and map the product address to the symbol
+          const productAddressToSymbol: Record<string, string> = {}
+          Object.keys(data).forEach((symbol) => {
+            productAddressToSymbol[data[symbol].address] = symbol
+          })
+
           Object.keys(fileDataParsed).forEach((symbol) => {
             // remove duplicate publishers
             fileDataParsed[symbol].priceAccounts[0].publishers = [
               ...new Set(fileDataParsed[symbol].priceAccounts[0].publishers),
             ]
+            // Set the symbol in metadata to make sure its consistent with on-chain metadata
+            // and sort it to make sure comparisons are easier
+            fileDataParsed[symbol].metadata.symbol = symbol
+            fileDataParsed[symbol].metadata = sortObjectByKeys(
+              fileDataParsed[symbol].metadata
+            )
+
             if (!existingSymbols.has(symbol)) {
-              // if symbol is not in existing symbols, create new entry
-              changes[symbol] = { new: {} }
-              changes[symbol].new = { ...fileDataParsed[symbol] }
-              changes[symbol].new.metadata = {
-                ...changes[symbol].new.metadata,
-                symbol,
+              // if symbol is not in the existing symbols, there are two cases as described below:
+              // 1. symbol is renamed. in this case, there is an address in
+              // the symbol data that matches an address in the existing data
+              // 2. otherwise, symbol is new
+              if (
+                fileDataParsed[symbol].address !== undefined &&
+                productAddressToSymbol[fileDataParsed[symbol].address] !==
+                  undefined
+              ) {
+                const oldSymbol =
+                  productAddressToSymbol[fileDataParsed[symbol].address]
+                renamedSymbols[oldSymbol] = symbol
+                changes[symbol] = { prev: {}, new: {} }
+                changes[symbol].prev = { ...data[oldSymbol] }
+                changes[symbol].new = { ...fileDataParsed[symbol] }
+              } else {
+                changes[symbol] = { new: {} }
+                changes[symbol].new = { ...fileDataParsed[symbol] }
+                // these fields are generated deterministically and should not be updated
+                delete changes[symbol].new.address
+                delete changes[symbol].new.priceAccounts[0].address
               }
-              // these fields are generated deterministically and should not be updated
-              delete changes[symbol].new.address
-              delete changes[symbol].new.priceAccounts[0].address
             } else if (
               // if symbol is in existing symbols, check if data is different
               JSON.stringify(data[symbol]) !==
@@ -212,7 +239,10 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           })
           // check if any existing symbols are not in uploaded json
           Object.keys(data).forEach((symbol) => {
-            if (!fileDataParsed[symbol]) {
+            if (
+              !fileDataParsed[symbol] &&
+              renamedSymbols[symbol] === undefined
+            ) {
               changes[symbol] = { prev: {} }
               changes[symbol].prev = { ...data[symbol] }
             }
@@ -291,43 +321,41 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
       const instructions: TransactionInstruction[] = []
       const publisherInPriceStoreInitializationsVerified: PublicKey[] = []
 
-      for (const symbol of Object.keys(dataChanges)) {
-        const multisigAuthority = readOnlySquads.getAuthorityPDA(
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
-          1
-        )
-        const fundingAccount = isRemote
-          ? mapKey(multisigAuthority)
-          : multisigAuthority
+      const multisigAuthority = readOnlySquads.getAuthorityPDA(
+        PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
+        1
+      )
+      const fundingAccount = isRemote
+        ? mapKey(multisigAuthority)
+        : multisigAuthority
 
-        const initPublisherInPriceStore = async (publisherKey: PublicKey) => {
-          // Ignore this step if Price Store is not initialized (or not deployed)
-          if (!connection || !(await isPriceStoreInitialized(connection))) {
-            return
-          }
-
-          if (
-            publisherInPriceStoreInitializationsVerified.every(
-              (el) => !el.equals(publisherKey)
-            )
-          ) {
-            if (
-              !connection ||
-              !(await isPriceStorePublisherInitialized(
-                connection,
-                publisherKey
-              ))
-            ) {
-              instructions.push(
-                await createDetermisticPriceStoreInitializePublisherInstruction(
-                  fundingAccount,
-                  publisherKey
-                )
-              )
-            }
-            publisherInPriceStoreInitializationsVerified.push(publisherKey)
-          }
+      const initPublisherInPriceStore = async (publisherKey: PublicKey) => {
+        // Ignore this step if Price Store is not initialized (or not deployed)
+        if (!connection || !(await isPriceStoreInitialized(connection))) {
+          return
         }
+
+        if (
+          publisherInPriceStoreInitializationsVerified.every(
+            (el) => !el.equals(publisherKey)
+          )
+        ) {
+          if (
+            !connection ||
+            !(await isPriceStorePublisherInitialized(connection, publisherKey))
+          ) {
+            instructions.push(
+              await createDetermisticPriceStoreInitializePublisherInstruction(
+                fundingAccount,
+                publisherKey
+              )
+            )
+          }
+          publisherInPriceStoreInitializationsVerified.push(publisherKey)
+        }
+      }
+
+      for (const symbol of Object.keys(dataChanges)) {
         const { prev, new: newChanges } = dataChanges[symbol]
         // if prev is undefined, it means that the symbol is new
         if (!prev) {
@@ -425,6 +453,25 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 .instruction()
             )
           }
+
+          // If maxLatency is set and is not 0, create update maxLatency instruction
+          if (
+            newChanges.priceAccounts[0].maxLatency !== undefined &&
+            newChanges.priceAccounts[0].maxLatency !== 0
+          ) {
+            instructions.push(
+              await pythProgramClient.methods
+                .setMaxLatency(
+                  newChanges.priceAccounts[0].maxLatency,
+                  [0, 0, 0]
+                )
+                .accounts({
+                  priceAccount: priceAccountKey,
+                  fundingAccount,
+                })
+                .instruction()
+            )
+          }
         } else if (!newChanges) {
           const priceAccount = new PublicKey(prev.priceAccounts[0].address)
 
@@ -481,7 +528,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             // create update product account instruction
             instructions.push(
               await pythProgramClient.methods
-                .updProduct({ symbol, ...newChanges.metadata }) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
+                .updProduct(newChanges.metadata)
                 .accounts({
                   fundingAccount,
                   productAccount: new PublicKey(prev.address),
