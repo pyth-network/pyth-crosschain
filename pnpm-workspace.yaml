@@ -40,7 +40,7 @@ catalog:
   "@cprussin/tsconfig": 3.0.1
   "@next/third-parties": 15.0.2
   "@phosphor-icons/react": 2.1.7
-  "@pythnetwork/client": 2.22.0
+  "@pythnetwork/client": 2.22.1
   "@react-hookz/web": 24.0.4
   "@solana/web3.js": 1.95.4
   "@storybook/addon-essentials": 8.3.5
