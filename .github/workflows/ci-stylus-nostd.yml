@@ -37,9 +37,6 @@ jobs:
         with:
           toolchain: stable
           rustflags: ""
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "target_chains/ethereum/sdk/stylus -> target"
       - name: Add rust targets ${{ matrix.target }}
         run: rustup target add ${{ matrix.target }}
       - name: Cargo check

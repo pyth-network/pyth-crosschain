@@ -18,9 +18,6 @@ jobs:
           toolchain: 1.73.0
           components: rustfmt, clippy
           override: true
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "governance/remote_executor -> target"
       - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
