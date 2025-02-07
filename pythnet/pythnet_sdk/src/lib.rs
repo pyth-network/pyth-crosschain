@@ -4,6 +4,7 @@ pub mod hashers;
 pub mod messages;
 pub mod wire;
 pub mod wormhole;
+pub mod legacy;
 
 #[cfg(feature = "test-utils")]
 pub mod test_utils;

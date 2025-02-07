@@ -7,11 +7,6 @@
 //! the probable adversarial scenarios.
 
 pub use pyth_sdk::{Identifier, PriceStatus, UnixTimestamp};
-#[cfg(feature = "solana")]
-use {
-    pyth_sdk_solana::state::PriceAccount,
-    solitaire::{Derive, Info},
-};
 use {
     serde::{Deserialize, Serialize, Serializer},
     std::{convert::TryInto, io::Read, iter::Iterator, mem},
@@ -41,9 +36,7 @@ pub const P2W_FORMAT_HDR_SIZE: u16 = 1;
 
 pub const PUBKEY_LEN: usize = 32;
 
-/// Emmitter Address to wormhole is a PDA with seed p2w-emmiter from attestation contract
-#[cfg(feature = "solana")]
-pub type P2WEmitter<'b> = Derive<Info<'b>, "p2w-emitter">;
+
 
 /// Decides the format of following bytes
 #[repr(u8)]
@@ -263,47 +256,7 @@ impl BatchPriceAttestation {
 // On-chain data types
 
 impl PriceAttestation {
-    #[cfg(feature = "solana")]
-    pub fn from_pyth_price_bytes(
-        price_id: Identifier,
-        attestation_time: UnixTimestamp,
-        last_attested_publish_time: UnixTimestamp,
-        value: &[u8],
-    ) -> Result<Self, ErrBox> {
-        let price_struct = pyth_sdk_solana::state::load_price_account(value)?;
-        Ok(Self::from_pyth_price_struct(
-            price_id,
-            attestation_time,
-            last_attested_publish_time,
-            price_struct,
-        ))
-    }
-    #[cfg(feature = "solana")]
-    pub fn from_pyth_price_struct(
-        price_id: Identifier,
-        attestation_time: UnixTimestamp,
-        last_attested_publish_time: UnixTimestamp,
-        price: &PriceAccount,
-    ) -> Self {
-        PriceAttestation {
-            product_id: Identifier::new(price.prod.val),
-            price_id,
-            price: price.agg.price,
-            conf: price.agg.conf,
-            expo: price.expo,
-            ema_price: price.ema_price.val,
-            ema_conf: price.ema_conf.val as u64,
-            status: price.agg.status,
-            num_publishers: price.num_qt,
-            max_num_publishers: price.num,
-            attestation_time,
-            publish_time: price.timestamp,
-            prev_publish_time: price.prev_timestamp,
-            prev_price: price.prev_price,
-            prev_conf: price.prev_conf,
-            last_attested_publish_time,
-        }
-    }
+
 
     /// Serialize this attestation according to the Pyth-over-wormhole serialization format
     pub fn serialize(&self) -> Vec<u8> {

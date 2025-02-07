@@ -4,7 +4,7 @@ use {
         json_types::{I64, U64},
         serde::{Deserialize, Serialize},
     },
-    pyth_wormhole_attester_sdk::PriceAttestation,
+    pythnet_sdk::legacy::PriceAttestation,
     pythnet_sdk::messages::PriceFeedMessage,
     schemars::{gen::SchemaGenerator, schema::Schema, JsonSchema},
     wormhole_sdk::Chain as WormholeChain,

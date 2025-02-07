@@ -20,9 +20,8 @@ near-sdk                   = { version = "5.5.0", features = ["legacy"] }
 nom                        = { version = "7.1.2" }
 num-traits                 = { version = "0.2.15" }
 num-derive                 = { version = "0.3.3" }
-pyth-wormhole-attester-sdk = { path = "../../../wormhole_attester/sdk/rust" }
+pythnet-sdk = { path = "../../../pythnet/pythnet_sdk" }
 pyth-sdk                   = { version = "0.7.0" }
-pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk" }
 schemars                   = { version = "0.8.21" }
 serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 strum                      = { version = "0.24.1", features = ["derive"] }
