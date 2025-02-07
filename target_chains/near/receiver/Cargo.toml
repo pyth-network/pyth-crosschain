@@ -4,9 +4,10 @@ version                    = "0.1.0"
 authors                    = ["Pyth Data Association"]
 edition                    = "2021"
 description                = "A Pyth Receiver for Near"
+repository                 = "https://github.com/pyth-network/pyth-crosschain"
 
 [lib]
-name                       = "pyth"
+name                       = "pyth_near"
 crate-type                 = ["cdylib", "lib"]
 
 [features]
@@ -22,6 +23,7 @@ num-derive                 = { version = "0.3.3" }
 pyth-wormhole-attester-sdk = { path = "../../../wormhole_attester/sdk/rust" }
 pyth-sdk                   = { version = "0.7.0" }
 pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk" }
+schemars                   = { version = "0.8.21" }
 serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 strum                      = { version = "0.24.1", features = ["derive"] }
 thiserror                  = { version = "1.0.38" }
@@ -47,3 +49,9 @@ lto                        = "fat"
 debug                      = false
 panic                      = "abort"
 overflow-checks            = true
+
+[package.metadata.near.reproducible_build]
+image                   = "sourcescan/cargo-near:0.13.3-rust-1.84.1"
+image_digest            = "sha256:baa712c5d2b7522d38175e36330d336ad2c4ce32bfaaa41af94ce40407ecd803"
+passed_env              = []
+container_build_command = ["cargo", "near", "build", "non-reproducible-wasm", "--locked"]
