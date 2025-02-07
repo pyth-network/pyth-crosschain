@@ -1,6 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
+  AptosWormholeContract,
   CosmWasmPriceFeedContract,
   DefaultStore,
   EvmPriceFeedContract,
@@ -29,7 +30,10 @@ async function main() {
   const chains = argv.chain;
 
   for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
-    if (contract instanceof SuiWormholeContract) {
+    if (
+      contract instanceof SuiWormholeContract ||
+      contract instanceof AptosWormholeContract
+    ) {
       if (chains && !chains.includes(contract.getChain().getId())) {
         continue;
       }

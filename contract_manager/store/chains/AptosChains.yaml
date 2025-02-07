@@ -29,3 +29,8 @@
   mainnet: false
   rpcUrl: https://aptos.testnet.bardock.movementlabs.xyz/v1
   type: AptosChain
+- id: movement_mainnet
+  wormholeChainName: movement_mainnet
+  mainnet: true
+  rpcUrl: https://mainnet.movementnetwork.xyz/v1
+  type: AptosChain

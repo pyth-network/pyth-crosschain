@@ -76,6 +76,10 @@ export class AptosWormholeContract extends WormholeContract {
     return Number(data.chain_id.number);
   }
 
+  public getChain(): AptosChain {
+    return this.chain;
+  }
+
   async getGuardianSet(): Promise<string[]> {
     const data = await this.getState();
     const client = this.chain.getClient();
