@@ -36,6 +36,9 @@ jobs:
         working-directory: target_chains/near/receiver
     steps:
       - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "target_chains/near/receiver -> target"
       - run: sudo apt-get install -y libudev-dev
       - run: cargo +stable install --locked cargo-near@0.13.3
       - run: cargo near build reproducible-wasm
