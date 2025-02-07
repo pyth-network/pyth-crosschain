@@ -25,6 +25,17 @@ jobs:
         run: |
           rustup install 1.73.0
           rustup install 1.66.1
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('.pre-commit-config.yaml') }}-1.82.0-1.73.0-1.66.1
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('.pre-commit-config.yaml') }}-
+            ${{ runner.os }}-cargo-
       - name: Install protoc
         uses: arduino/setup-protoc@v3
         with:
