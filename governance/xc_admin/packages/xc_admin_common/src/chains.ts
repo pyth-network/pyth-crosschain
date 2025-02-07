@@ -11,6 +11,9 @@ import { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
 export const RECEIVER_CHAINS = {
   unset: 0, // The global chain id. For messages that are not chain specific.
 
+  // On the following networks we use Wormhole's contract
+  near: 15,
+
   // On the following networks we use our own version of Wormhole receiver contract
   ethereum: 2,
   bsc: 4,

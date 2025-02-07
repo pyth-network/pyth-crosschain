@@ -36,6 +36,8 @@ import {
 } from "@ton/ton";
 import { keyPairFromSeed } from "@ton/crypto";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
+import * as nearAPI from "near-api-js";
+import * as bs58 from "bs58";
 
 /**
  * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
@@ -856,5 +858,90 @@ export class TonChain extends Chain {
     const provider = await this.getContractProvider(wallet.address.toString());
     const balance = await wallet.getBalance(provider);
     return Number(balance) / 10 ** 9;
+  }
+}
+
+export class NearChain extends Chain {
+  static type = "NearChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    private rpcUrl: string,
+    private networkId: string
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  static fromJson(parsed: ChainConfig): NearChain {
+    if (parsed.type !== NearChain.type) throw new Error("Invalid type");
+    return new NearChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.nativeToken,
+      parsed.rpcUrl,
+      parsed.networkId
+    );
+  }
+
+  getType(): string {
+    return NearChain.type;
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      type: NearChain.type,
+      rpcUrl: this.rpcUrl,
+      networkId: this.networkId,
+    };
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param codeHash hex string of the 32 byte code hash for the new contract without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(codeHash: string): Buffer {
+    return new UpgradeContract256Bit(this.wormholeChainName, codeHash).encode();
+  }
+
+  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    return Buffer.from(
+      Ed25519Keypair.fromSecretKey(Buffer.from(privateKey, "hex"))
+        .getPublicKey()
+        .toRawBytes()
+    ).toString("hex");
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const accountId = await this.getAccountAddress(privateKey);
+    const account = await this.getNearAccount(accountId);
+    const balance = await account.getAccountBalance();
+    return Number(balance.available) / 1e24;
+  }
+
+  async getNearAccount(
+    accountId: string,
+    senderPrivateKey?: PrivateKey
+  ): Promise<nearAPI.Account> {
+    const keyStore = new nearAPI.keyStores.InMemoryKeyStore();
+    if (typeof senderPrivateKey !== "undefined") {
+      const key = bs58.encode(Buffer.from(senderPrivateKey, "hex"));
+      const keyPair = nearAPI.KeyPair.fromString(key);
+      const address = await this.getAccountAddress(senderPrivateKey);
+      await keyStore.setKey(this.networkId, address, keyPair);
+    }
+    const connectionConfig = {
+      networkId: this.networkId,
+      keyStore,
+      nodeUrl: this.rpcUrl,
+    };
+    const nearConnection = await nearAPI.connect(connectionConfig);
+    return await nearConnection.account(accountId);
   }
 }

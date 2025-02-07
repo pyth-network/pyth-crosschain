@@ -1015,6 +1015,9 @@ importers:
       fuels:
         specifier: ^0.94.0
         version: 0.94.5(encoding@0.1.13)
+      near-api-js:
+        specifier: ^3.0.2
+        version: 3.0.4(encoding@0.1.13)
       ramda:
         specifier: ^0.30.1
         version: 0.30.1
