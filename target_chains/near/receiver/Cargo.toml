@@ -22,7 +22,7 @@ num-traits                 = { version = "0.2.15" }
 num-derive                 = { version = "0.3.3" }
 pyth-wormhole-attester-sdk = { path = "../../../wormhole_attester/sdk/rust" }
 pyth-sdk                   = { version = "0.7.0" }
-pythnet-sdk                = { path = "../../../pythnet/pythnet_sdk" }
+pythnet-sdk                = { path = "../../../sdks/pythnet_sdk/rust" }
 schemars                   = { version = "0.8.21" }
 serde_wormhole             = { git = "https://github.com/wormhole-foundation/wormhole", tag="rust-sdk-2024-01-25" }
 strum                      = { version = "0.24.1", features = ["derive"] }

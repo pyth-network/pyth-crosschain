@@ -13,7 +13,7 @@ anchor-client = { workspace = true }
 clap = { version = "3.2.22", features = ["derive"] }
 pyth-solana-receiver = { path = "../programs/pyth-solana-receiver" }
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana" } # Used for initializing the wormhole receiver
-pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.0.0" }
+pythnet-sdk = { path = "../../../sdks/pythnet_sdk/rust", version = "2.0.0" }
 wormhole-vaas-serde = { workspace = true }
 serde_wormhole = { workspace = true }
 hex = "0.4.3"

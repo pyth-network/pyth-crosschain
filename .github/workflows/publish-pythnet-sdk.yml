@@ -15,4 +15,4 @@ jobs:
       - run: cargo publish --token ${CARGO_REGISTRY_TOKEN}
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        working-directory: "pythnet/pythnet_sdk"
+        working-directory: "sdks/pythnet_sdk/rust"

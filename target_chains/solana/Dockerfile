@@ -8,7 +8,7 @@ FROM backpackapp/build:v0.29.0@sha256:9aee169b2d8b89b4a4243419ae35c176773136e78d
 
 WORKDIR /workspace
 
-COPY pythnet/pythnet_sdk pythnet/pythnet_sdk
+COPY sdks/pythnet_sdk/rust sdks/pythnet_sdk/rust
 COPY target_chains/solana target_chains/solana
 
 WORKDIR /workspace/target_chains/solana

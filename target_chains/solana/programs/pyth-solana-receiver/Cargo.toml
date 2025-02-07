@@ -17,7 +17,7 @@ test-bpf = []
 
 [dependencies]
 anchor-lang = { workspace = true }
-pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk", features = [
+pythnet-sdk = { path = "../../../../sdks/pythnet_sdk/rust", features = [
     "solana-program",
 ] }
 solana-program = { workspace = true }
