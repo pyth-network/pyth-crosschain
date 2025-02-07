@@ -889,7 +889,7 @@ export const NETWORK_INFO = {
   },
   [80_094]: {
     name: "berachain_mainnet",
-    rpcUrl: "https://rpc.berachain.com'",
+    rpcUrl: "https://rpc.berachain.com",
     isMainnet: true,
     contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   },

@@ -40,7 +40,7 @@
     "react-dom": "catalog:",
     "react-markdown": "^9.0.1",
     "shiki": "^1.7.0",
-    "viem": "^2.21.32",
+    "viem": "^2.22.23",
     "wagmi": "^2.10.4",
     "zod": "^3.23.8"
   },
