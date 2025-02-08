@@ -4,10 +4,6 @@
   "exclude": ["node_modules", "**/__tests__/*"],
   "compilerOptions": {
     "rootDir": "src/",
-    "outDir": "./lib",
-    "baseUrl": ".",
-    "paths": {
-      "@pythnetwork/xc-admin-common": ["../xc_admin_common/src"]
-    }
+    "outDir": "./lib"
   }
 }
