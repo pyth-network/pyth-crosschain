@@ -1129,7 +1129,7 @@ importers:
         specifier: 'catalog:'
         version: 2.22.1(@solana/web3.js@1.92.3(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/xc-admin-common':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../xc_admin_common
       '@solana/web3.js':
         specifier: 1.92.3
