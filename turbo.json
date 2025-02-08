@@ -4,7 +4,7 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "build:cjs", "build:esm"],
+      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
@@ -14,8 +14,7 @@
         "!prettier.config.js",
         "!vercel.json"
       ],
-      "outputs": ["dist/**", "lib/**"],
-      "topological": true
+      "outputs": ["dist/**", "lib/**"]
     },
     "build:cjs": {
       "outputs": ["dist/cjs/**"]
