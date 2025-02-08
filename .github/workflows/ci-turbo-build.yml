@@ -24,5 +24,7 @@ jobs:
         name: Install pnpm
         with:
           run_install: true
+      - name: Cache for Turbo
+        uses: rharkor/caching-for-turbo@v1.5
       - name: Build
         run: pnpm build:ci
