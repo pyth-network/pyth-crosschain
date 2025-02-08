@@ -8,9 +8,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - target_chains/cosmwasm/**
-      - wormhole_attester/sdk/rust/**
 
 env:
   CARGO_TERM_COLOR: always

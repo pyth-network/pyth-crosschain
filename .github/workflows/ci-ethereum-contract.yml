@@ -6,9 +6,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - target_chains/ethereum/contracts/**
-      - governance/xc_admin/packages/xc_admin_common/**
 
 name: Ethereum Contract
 

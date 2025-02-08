@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - lazer/**
   pull_request:
     paths:
       - lazer/**
