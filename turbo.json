@@ -14,7 +14,8 @@
         "!prettier.config.js",
         "!vercel.json"
       ],
-      "outputs": ["dist/**", "lib/**"]
+      "outputs": ["dist/**", "lib/**"],
+      "topological": true
     },
     "build:cjs": {
       "outputs": ["dist/cjs/**"]
