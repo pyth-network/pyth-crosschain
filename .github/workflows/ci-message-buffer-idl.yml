@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "pythnet/message_buffer -> target"
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
