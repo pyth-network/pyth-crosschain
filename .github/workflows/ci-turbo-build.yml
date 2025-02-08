@@ -9,7 +9,6 @@ on:
       - "**/package.json"
       - "**/package-lock.json"
       - "**/tsconfig.json"
-      - ".github/workflows/ci-turbo-build.yml"
   push:
     branches: [main]
 jobs:
