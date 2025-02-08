@@ -35,26 +35,27 @@
       "cache": false
     },
     "test": {
-      "dependsOn": [
-        "test:types",
-        "test:unit",
-        "test:integration",
-        "test:format",
-        "test:lint"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": []
     },
-    "test:format": {},
+    "test:format": {
+      "outputs": []
+    },
     "test:lint": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": []
     },
     "test:types": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": []
     },
     "test:unit": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": []
     },
     "test:integration": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": []
     }
   }
 }
