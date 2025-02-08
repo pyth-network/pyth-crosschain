@@ -7,14 +7,14 @@
     "pnpm": "^9.15.3"
   },
   "scripts": {
-    "build:ci": "turbo build --concurrency=\"100%\" --filter=!./apps/api-reference --filter=!./apps/insights --filter=!./apps/staking",
+    "build:ci": "turbo build --concurrency=100\\% --filter=!./apps/api-reference --filter=!./apps/insights --filter=!./apps/staking",
     "example:hermes-client": "pnpm i && turbo example --filter @pythnetwork/hermes-client --ui stream",
     "fix": "pnpm i && turbo fix",
     "publish": "lerna publish from-package --no-private --no-git-tag-version --yes",
     "start:dev": "pnpm i && turbo start:dev",
     "start:prod": "pnpm i && turbo start:prod",
     "test": "pnpm i && turbo test",
-    "test:ci": "turbo test --concurrency=\"100%\""
+    "test:ci": "turbo test --concurrency=100\\%"
   },
   "devDependencies": {
     "lerna": "^8.1.8",
