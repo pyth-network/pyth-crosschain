@@ -2,7 +2,6 @@ name: Turbo test
 on:
   pull_request:
     paths:
-      - .github/workflows/ci-turbo-test.yml
       - "**.tsx?"
       - "**.jsx?"
       - "**.json"

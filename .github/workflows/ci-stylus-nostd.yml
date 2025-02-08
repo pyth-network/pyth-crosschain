@@ -7,7 +7,6 @@ permissions:
 on:
   pull_request:
     paths:
-      - .github/workflows/ci-stylus-nostd.yml
       - target_chains/ethereum/sdk/stylus/**
   push:
     branches:

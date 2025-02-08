@@ -2,7 +2,6 @@ name: Turbo build
 on:
   pull_request:
     paths:
-      - .github/workflows/ci-turbo-build.yml
       - "**.tsx?"
       - "**.jsx?"
       - "**.json"

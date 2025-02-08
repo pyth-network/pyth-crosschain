@@ -3,7 +3,6 @@ name: Test Fuel Contract
 on:
   pull_request:
     paths:
-      - .github/workflows/ci-fuel-contract.yml
       - target_chains/fuel/**
   push:
     branches:

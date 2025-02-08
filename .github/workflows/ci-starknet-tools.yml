@@ -3,7 +3,6 @@ name: Check Starknet Tools
 on:
   pull_request:
     paths:
-      - .github/workflows/ci-starknet-tools.yml
       - target_chains/starknet/tools/**
   push:
     branches: [main]
