@@ -23,5 +23,10 @@ jobs:
         name: Install pnpm
         with:
           run_install: true
+      - name: Enable Turbo Remote Caching
+        uses: actions/setup-node@v4
+        with:
+          token: ${{ secrets.TURBO_TOKEN }}
+          team: pythnetwork
       - name: Build
         run: pnpm build:ci
