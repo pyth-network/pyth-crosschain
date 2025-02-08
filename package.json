@@ -14,7 +14,7 @@
     "start:dev": "pnpm i && turbo start:dev",
     "start:prod": "pnpm i && turbo start:prod",
     "test": "pnpm i && turbo test",
-    "test:ci": "turbo test"
+    "test:ci": "turbo test --concurrency=10 --parallel"
   },
   "devDependencies": {
     "lerna": "^8.1.8",
