@@ -146,7 +146,11 @@ export const LiveValue = <T extends keyof PriceData>({
 }: LiveValueProps<T>) => {
   const { current } = useLivePriceData(feedKey);
 
-  return current?.[field]?.toString() ?? defaultValue;
+  return current !== undefined || defaultValue !== undefined ? (
+    (current?.[field]?.toString() ?? defaultValue)
+  ) : (
+    <Skeleton width={SKELETON_WIDTH} />
+  );
 };
 
 type LiveComponentValueProps<T extends keyof PriceComponent["latest"]> = {
@@ -164,7 +168,11 @@ export const LiveComponentValue = <T extends keyof PriceComponent["latest"]>({
 }: LiveComponentValueProps<T>) => {
   const { current } = useLivePriceComponent(feedKey, publisherKey);
 
-  return current?.latest[field].toString() ?? defaultValue;
+  return current !== undefined || defaultValue !== undefined ? (
+    (current?.latest[field].toString() ?? defaultValue)
+  ) : (
+    <Skeleton width={SKELETON_WIDTH} />
+  );
 };
 
 const isToday = (date: Date) => {

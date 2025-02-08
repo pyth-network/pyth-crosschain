@@ -16,14 +16,17 @@ import {
 
 type Publisher = ComponentProps<
   typeof ResolvedPriceComponentsCard
->["priceComponents"][number] & {
-  rank?: number | undefined;
-};
+>["priceComponents"][number] &
+  Pick<ComponentProps<typeof PriceComponentDrawer>, "rank"> & {
+    firstEvaluation?: Date | undefined;
+  };
 
 type Props = Omit<
   ComponentProps<typeof ResolvedPriceComponentsCard>,
-  "onPriceComponentAction"
->;
+  "onPriceComponentAction" | "priceComponents"
+> & {
+  priceComponents: Publisher[];
+};
 
 export const PublishersCard = ({ priceComponents, ...props }: Props) => (
   <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
@@ -94,6 +97,7 @@ const ResolvedPublishersCard = ({ priceComponents, ...props }: Props) => {
           score={selectedPublisher.score}
           status={selectedPublisher.status}
           title={selectedPublisher.name}
+          firstEvaluation={selectedPublisher.firstEvaluation ?? new Date()}
           navigateButtonText="Open Publisher"
           navigateHref={`/publishers/${selectedPublisher.publisherKey}`}
         />

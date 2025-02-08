@@ -37,14 +37,14 @@ import { Status as StatusComponent } from "../Status";
 
 const SCORE_WIDTH = 32;
 
-type Props = {
+type Props<T extends PriceComponent> = {
   className?: string | undefined;
-  priceComponents: PriceComponent[];
+  priceComponents: T[];
   metricsTime?: Date | undefined;
   nameLoadingSkeleton: ReactNode;
   label: string;
   searchPlaceholder: string;
-  onPriceComponentAction: (component: PriceComponent) => void;
+  onPriceComponentAction: (component: T) => void;
 };
 
 type PriceComponent = {
@@ -62,11 +62,11 @@ type PriceComponent = {
   nameAsString: string;
 };
 
-export const PriceComponentsCard = ({
+export const PriceComponentsCard = <T extends PriceComponent>({
   priceComponents,
   onPriceComponentAction,
   ...props
-}: Props) => (
+}: Props<T>) => (
   <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
     <ResolvedPriceComponentsCard
       priceComponents={priceComponents}
@@ -76,11 +76,11 @@ export const PriceComponentsCard = ({
   </Suspense>
 );
 
-export const ResolvedPriceComponentsCard = ({
+export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
   priceComponents,
   onPriceComponentAction,
   ...props
-}: Props) => {
+}: Props<T>) => {
   const logger = useLogger();
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
@@ -278,8 +278,8 @@ export const ResolvedPriceComponentsCard = ({
   );
 };
 
-type PriceComponentsCardProps = Pick<
-  Props,
+type PriceComponentsCardProps<T extends PriceComponent> = Pick<
+  Props<T>,
   | "className"
   | "metricsTime"
   | "nameLoadingSkeleton"
@@ -309,14 +309,14 @@ type PriceComponentsCardProps = Pick<
       }
   );
 
-export const PriceComponentsCardContents = ({
+export const PriceComponentsCardContents = <T extends PriceComponent>({
   className,
   metricsTime,
   nameLoadingSkeleton,
   label,
   searchPlaceholder,
   ...props
-}: PriceComponentsCardProps) => {
+}: PriceComponentsCardProps<T>) => {
   const collator = useCollator();
   return (
     <Card
@@ -485,7 +485,7 @@ const otherColumns = ({
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#uptime-1"
                     size="xs"
-                    variant="outline"
+                    variant="solid"
                     target="_blank"
                   >
                     Read more
@@ -511,7 +511,7 @@ const otherColumns = ({
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#price-deviation-1"
                     size="xs"
-                    variant="outline"
+                    variant="solid"
                     target="_blank"
                   >
                     Read more
@@ -538,7 +538,7 @@ const otherColumns = ({
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#lack-of-stalled-prices-1"
                     size="xs"
-                    variant="outline"
+                    variant="solid"
                     target="_blank"
                   >
                     Read more
@@ -572,7 +572,7 @@ const otherColumns = ({
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                     size="xs"
-                    variant="outline"
+                    variant="solid"
                     target="_blank"
                   >
                     Read more
