@@ -300,7 +300,7 @@ async fn test_stale_threshold() {
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Failed to get UNIX timestamp")
         .as_secs()
-        - DEFAULT_VALID_TIME_PERIOD;
+        - (DEFAULT_VALID_TIME_PERIOD + 1);
 
     // Submit a Price Attestation to the contract.
     let vaa = create_vaa_from_payload(
