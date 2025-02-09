@@ -70,49 +70,71 @@ export const getPublishers = async () =>
 export const getRankingsByPublisher = async (publisherKey: string) =>
   safeQuery(rankingsSchema, {
     query: `
-      SELECT
-          time,
-          symbol,
-          cluster,
-          publisher,
-          uptime_score,
-          deviation_score,
-          stalled_score,
-          final_score,
-          final_rank
+      WITH first_rankings AS (
+        SELECT publisher, symbol, min(time) AS first_ranking_time
         FROM publisher_quality_ranking
-        WHERE time = (SELECT max(time) FROM publisher_quality_ranking)
-        AND publisher = {publisherKey: String}
-        AND interval_days = 1
-        ORDER BY
-          symbol ASC,
-          cluster ASC,
-          publisher ASC
-      `,
+        WHERE interval_days = 1
+        GROUP BY (publisher, symbol)
+      )
+
+      SELECT
+        time,
+        symbol,
+        cluster,
+        publisher,
+        first_ranking_time,
+        uptime_score,
+        deviation_score,
+        stalled_score,
+        final_score,
+        final_rank
+      FROM publisher_quality_ranking
+      JOIN first_rankings
+        ON first_rankings.publisher = publisher_quality_ranking.publisher
+        AND first_rankings.symbol = publisher_quality_ranking.symbol
+      WHERE time = (SELECT max(time) FROM publisher_quality_ranking)
+      AND publisher = {publisherKey: String}
+      AND interval_days = 1
+      ORDER BY
+        symbol ASC,
+        cluster ASC,
+        publisher ASC
+    `,
     query_params: { publisherKey },
   });
 
 export const getRankingsBySymbol = async (symbol: string) =>
   safeQuery(rankingsSchema, {
     query: `
-        SELECT
-          time,
-          symbol,
-          cluster,
-          publisher,
-          uptime_score,
-          deviation_score,
-          stalled_score,
-          final_score,
-          final_rank
+      WITH first_rankings AS (
+        SELECT publisher, symbol, min(time) AS first_ranking_time
         FROM publisher_quality_ranking
-        WHERE time = (SELECT max(time) FROM publisher_quality_ranking)
-        AND symbol = {symbol: String}
-        AND interval_days = 1
-        ORDER BY
-          symbol ASC,
-          cluster ASC,
-          publisher ASC
+        WHERE interval_days = 1
+        GROUP BY (publisher, symbol)
+      )
+
+      SELECT
+        time,
+        symbol,
+        cluster,
+        publisher,
+      first_ranking_time,
+        uptime_score,
+        deviation_score,
+        stalled_score,
+        final_score,
+        final_rank
+      FROM publisher_quality_ranking
+      JOIN first_rankings
+        ON first_rankings.publisher = publisher_quality_ranking.publisher
+        AND first_rankings.symbol = publisher_quality_ranking.symbol
+      WHERE time = (SELECT max(time) FROM publisher_quality_ranking)
+      AND symbol = {symbol: String}
+      AND interval_days = 1
+      ORDER BY
+        symbol ASC,
+        cluster ASC,
+        publisher ASC
       `,
     query_params: { symbol },
   });
@@ -120,6 +142,7 @@ export const getRankingsBySymbol = async (symbol: string) =>
 const rankingsSchema = z.array(
   z.strictObject({
     time: z.string().transform((time) => new Date(time)),
+    first_ranking_time: z.string().transform((time) => new Date(time)),
     symbol: z.string(),
     cluster: z.enum(["pythnet", "pythtest-conformance"]),
     publisher: z.string(),
@@ -182,6 +205,8 @@ export const getFeedScoreHistory = async (
   cluster: Cluster,
   publisherKey: string,
   symbol: string,
+  from: string,
+  to: string,
 ) =>
   safeQuery(
     z.array(
@@ -195,26 +220,27 @@ export const getFeedScoreHistory = async (
     ),
     {
       query: `
-          SELECT * FROM (
-            SELECT
-              time,
-              final_score AS score,
-              uptime_score AS uptimeScore,
-              deviation_score AS deviationScore,
-              stalled_score AS stalledScore
-            FROM publisher_quality_ranking
-            WHERE publisher = {publisherKey: String}
-            AND cluster = {cluster: String}
-            AND symbol = {symbol: String}
-            ORDER BY time DESC
-            LIMIT 30
-          )
-          ORDER BY time ASC
-        `,
+        SELECT
+          time,
+          final_score AS score,
+          uptime_score AS uptimeScore,
+          deviation_score AS deviationScore,
+          stalled_score AS stalledScore
+        FROM publisher_quality_ranking
+        WHERE publisher = {publisherKey: String}
+        AND cluster = {cluster: String}
+        AND symbol = {symbol: String}
+        AND interval_days = 1
+        AND time >= toDateTime64({from: String}, 3)
+        AND time <= toDateTime64({to: String}, 3)
+        ORDER BY time ASC
+      `,
       query_params: {
         cluster: ClusterToName[cluster],
         publisherKey,
         symbol,
+        from,
+        to,
       },
     },
   );

@@ -25,10 +25,10 @@ type PriceFeedDrawerProviderProps = Omit<
   "value"
 > & {
   publisherKey: string;
-  priceFeeds: PriceFeeds[];
+  priceFeeds: PriceFeed[];
 };
 
-type PriceFeeds = {
+type PriceFeed = {
   symbol: string;
   displaySymbol: string;
   description: string;
@@ -37,6 +37,7 @@ type PriceFeeds = {
   score: number | undefined;
   rank: number | undefined;
   status: Status;
+  firstEvaluation: Date | undefined;
 };
 
 export const PriceFeedDrawerProvider = (
@@ -91,6 +92,7 @@ const PriceFeedDrawerProviderImpl = ({
           score={selectedFeed.score}
           symbol={selectedFeed.symbol}
           status={selectedFeed.status}
+          firstEvaluation={selectedFeed.firstEvaluation ?? new Date()}
           navigateButtonText="Open Feed"
           navigateHref={feedHref}
           title={<PriceFeedTag symbol={selectedFeed.symbol} />}
