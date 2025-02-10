@@ -27,9 +27,11 @@ repos:
     hooks:
       - id: pnpm-fix-format
         name: Format files using pnpm fix:format
-        entry: bash -c 'npm i -g pnpm && pnpm install && pnpm turbo fix:format'
-        language: system
+        entry: bash -c 'npm install -g pnpm@9.15.4 && pnpm install && pnpm turbo fix:format'
+        language: node
+        language_version: "22.11.0"
         pass_filenames: false
+        additional_dependencies: []
   - repo: local
     hooks:
       # Hooks for the remote executor
