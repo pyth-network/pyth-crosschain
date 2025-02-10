@@ -46,4 +46,4 @@ jobs:
         with:
           name: pyth_near.wasm
           path: target_chains/near/receiver/target/near/pyth_near.wasm
-          retention-days: 365
+          retention-days: 90
