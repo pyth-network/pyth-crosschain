@@ -27,15 +27,13 @@ repos:
     hooks:
       - id: pnpm-fix-format
         name: Format files using pnpm fix:format
-        entry: bash -c 'pnpm install && pnpm exec prettier --write .'
+        entry: bash -c 'cd $(git rev-parse --show-toplevel) && pnpm install --no-frozen-lockfile && pnpm turbo run fix:format --filter=!./packages/fonts'
         language: node
         language_version: "22.11.0"
         pass_filenames: false
         additional_dependencies:
           - "pnpm@9.15.4"
-          - "prettier@2.7.1"
-          - "prettier-plugin-solidity@1.0.0-rc.1"
-        files: \.(js|jsx|ts|tsx|json|md|mdx|sol)$
+          - "turbo@2.2.3"
         exclude: >
           (?x)^(
             target_chains/sui/vendor/|
