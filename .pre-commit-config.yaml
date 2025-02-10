@@ -27,7 +27,7 @@ repos:
     hooks:
       - id: pnpm-fix-format
         name: Format files using pnpm fix:format
-        entry: pnpm turbo fix:format
+        entry: bash -c 'npm i -g pnpm && pnpm install && pnpm turbo fix:format'
         language: system
         pass_filenames: false
   - repo: local
