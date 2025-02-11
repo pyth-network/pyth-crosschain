@@ -108,6 +108,7 @@ export const RECEIVER_CHAINS = {
   just_breathe: 60075,
   berachain_mainnet: 60076,
   movement_mainnet: 60077,
+  story_mainnet: 60078,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
