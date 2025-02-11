@@ -478,3 +478,6 @@
 - chain: berachain_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
+- chain: story_mainnet
+  address: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134"
+  type: EvmPriceFeedContract
