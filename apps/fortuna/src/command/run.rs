@@ -5,7 +5,7 @@ use {
         command::register_provider::CommitmentMetadata,
         config::{Commitment, Config, EthereumConfig, RunOptions},
         eth_utils::traced_client::{RpcMetrics, TracedClient},
-        keeper::{self, KeeperMetrics},
+        keeper::{self, keeper_metrics::KeeperMetrics},
         state::{HashChainState, PebbleHashChain},
     },
     anyhow::{anyhow, Error, Result},
