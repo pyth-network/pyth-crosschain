@@ -11,9 +11,9 @@ use {
         state::{HashChainState, PebbleHashChain},
     },
     alloy::primitives::Address,
+    alloy::rpc::types::BlockNumberOrTag,
     anyhow::{anyhow, Error, Result},
     axum::Router,
-    ethers::{middleware::Middleware, types::BlockNumber},
     futures::future::join_all,
     prometheus_client::{
         encoding::EncodeLabelSet,
@@ -326,7 +326,7 @@ pub async fn check_block_timestamp_lag(
         };
 
     const INF_LAG: i64 = 1000000; // value that definitely triggers an alert
-    let lag = match provider.get_block(BlockNumber::Latest).await {
+    let lag = match provider.get_block(BlockNumberOrTag::Latest).await {
         Ok(block) => match block {
             Some(block) => {
                 let block_timestamp = block.timestamp;

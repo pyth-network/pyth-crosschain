@@ -3,10 +3,6 @@
 
 use {
     axum::async_trait,
-    ethers::{
-        providers::{Middleware, MiddlewareError, PendingTransaction},
-        types::{transaction::eip2718::TypedTransaction, *},
-    },
     std::sync::atomic::{AtomicBool, AtomicU64, Ordering},
     thiserror::Error,
 };

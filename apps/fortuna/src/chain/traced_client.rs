@@ -2,10 +2,6 @@ use {
     crate::api::ChainId,
     anyhow::Result,
     axum::async_trait,
-    ethers::{
-        prelude::Http,
-        providers::{HttpClientError, JsonRpcClient, Provider},
-    },
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{counter::Counter, family::Family, histogram::Histogram},
