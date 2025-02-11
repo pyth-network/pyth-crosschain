@@ -10,12 +10,10 @@ use {
         keeper::{self, KeeperMetrics},
         state::{HashChainState, PebbleHashChain},
     },
+    alloy::primitives::Address,
     anyhow::{anyhow, Error, Result},
     axum::Router,
-    ethers::{
-        middleware::Middleware,
-        types::{Address, BlockNumber},
-    },
+    ethers::{middleware::Middleware, types::BlockNumber},
     futures::future::join_all,
     prometheus_client::{
         encoding::EncodeLabelSet,

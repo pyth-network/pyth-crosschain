@@ -13,7 +13,6 @@ bincode = "1.3.3"
 byteorder = "1.5.0"
 clap = { version = "4.4.6", features = ["derive", "cargo", "env"] }
 ethabi = "18.0.0"
-ethers = { version = "2.0.14", features = ["ws"] }
 futures = { version = "0.3.28" }
 hex = "0.4.3"
 prometheus-client = { version = "0.21.2" }
@@ -42,6 +41,7 @@ chrono = { version = "0.4.38", features = [
 backoff = { version = "0.4.0", features = ["futures", "tokio"] }
 thiserror = "1.0.61"
 futures-locks = "0.7.1"
+eyre = "0.6.12"
 
 
 [dev-dependencies]

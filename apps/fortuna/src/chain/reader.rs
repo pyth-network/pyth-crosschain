@@ -1,7 +1,8 @@
 use {
+    alloy::primitives::{Address, U256},
+    alloy::rpc::types::BlockNumberOrTag,
     anyhow::Result,
     axum::async_trait,
-    ethers::types::{Address, BlockNumber as EthersBlockNumber, U256},
 };
 
 pub type BlockNumber = u64;
@@ -19,12 +20,12 @@ pub enum BlockStatus {
     Safe,
 }
 
-impl From<BlockStatus> for EthersBlockNumber {
+impl From<BlockStatus> for BlockNumberOrTag {
     fn from(val: BlockStatus) -> Self {
         match val {
-            BlockStatus::Latest => EthersBlockNumber::Latest,
-            BlockStatus::Finalized => EthersBlockNumber::Finalized,
-            BlockStatus::Safe => EthersBlockNumber::Safe,
+            BlockStatus::Latest => BlockNumberOrTag::Latest,
+            BlockStatus::Finalized => BlockNumberOrTag::Finalized,
+            BlockStatus::Safe => BlockNumberOrTag::Safe,
         }
     }
 }
@@ -80,9 +81,9 @@ pub struct Request {
 pub mod mock {
     use {
         crate::chain::reader::{BlockNumber, BlockStatus, EntropyReader, Request},
+        alloy::primitives::{Address, U256},
         anyhow::Result,
         axum::async_trait,
-        ethers::types::{Address, U256},
         std::sync::RwLock,
     };
 

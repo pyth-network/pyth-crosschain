@@ -3,6 +3,7 @@ use {
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},
         state::HashChainState,
     },
+    alloy::primitives::Address,
     anyhow::Result,
     axum::{
         http::StatusCode,
@@ -10,7 +11,6 @@ use {
         routing::get,
         Router,
     },
-    ethers::core::types::Address,
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{counter::Counter, family::Family},
@@ -177,18 +177,18 @@ mod test {
             chain::reader::{mock::MockEntropyReader, BlockStatus},
             state::{HashChainState, PebbleHashChain},
         },
+        alloy::primitives::Address,
         axum::http::StatusCode,
         axum_test::{TestResponse, TestServer},
-        ethers::prelude::Address,
         lazy_static::lazy_static,
         prometheus_client::registry::Registry,
         std::{collections::HashMap, sync::Arc},
         tokio::sync::RwLock,
     };
 
-    const PROVIDER: Address = Address::zero();
+    const PROVIDER: Address = Address::ZERO;
     lazy_static! {
-        static ref OTHER_PROVIDER: Address = Address::from_low_u64_be(1);
+        static ref OTHER_PROVIDER: Address = Address::with_last_byte(1);
         // Note: these chains are immutable. They are wrapped in Arc because we need Arcs to
         // initialize the BlockchainStates below, but they aren't cloneable (nor do they need to be cloned).
         static ref ETH_CHAIN: Arc<HashChainState> = Arc::new(HashChainState::from_chain_at_offset(
