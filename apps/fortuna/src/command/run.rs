@@ -1,12 +1,10 @@
 use {
     crate::{
         api::{self, BlockchainState, ChainId},
-        chain::{
-            ethereum::InstrumentedPythContract,
-            traced_client::{RpcMetrics, TracedClient},
-        },
+        chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
         config::{Commitment, Config, EthereumConfig, RunOptions},
+        eth_utils::traced_client::{RpcMetrics, TracedClient},
         keeper::{self, KeeperMetrics},
         state::{HashChainState, PebbleHashChain},
     },

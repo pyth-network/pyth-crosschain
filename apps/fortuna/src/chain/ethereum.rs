@@ -1,14 +1,16 @@
 use {
     crate::{
         api::ChainId,
-        chain::{
+        chain::reader::{
+            self, BlockNumber, BlockStatus, EntropyReader, RequestedWithCallbackEvent,
+        },
+        config::EthereumConfig,
+        eth_utils::{
             eth_gas_oracle::EthProviderOracle,
             legacy_tx_middleware::LegacyTxMiddleware,
             nonce_manager::NonceManagerMiddleware,
-            reader::{self, BlockNumber, BlockStatus, EntropyReader, RequestedWithCallbackEvent},
             traced_client::{RpcMetrics, TracedClient},
         },
-        config::EthereumConfig,
     },
     anyhow::{anyhow, Error, Result},
     axum::async_trait,
