@@ -92,4 +92,24 @@ interface IPulse is PulseEvents {
     function setExclusivityPeriod(uint256 periodSeconds) external;
 
     function getExclusivityPeriod() external view returns (uint256);
+
+    /**
+     * @notice Gets the last N active requests
+     * @param count Maximum number of active requests to return
+     * @return requests Array of active requests, ordered from newest to oldest
+     * @return actualCount Number of active requests found (may be less than count)
+     * @dev Gas Usage: This function's gas cost scales linearly with the number of requests
+     *      that need to be scanned to find active ones. Each iteration costs approximately:
+     *      - 2300 gas for the storage read
+     *      - Additional gas for array operations
+     *      For example, if active requests are sparse (many completed requests between active ones),
+     *      scanning for 100 active requests might need to iterate through 1000+ sequence numbers.
+     *      Consider using smaller count values for gas-sensitive operations.
+     */
+    function getLastActiveRequests(
+        uint256 count
+    )
+        external
+        view
+        returns (PulseState.Request[] memory requests, uint256 actualCount);
 }

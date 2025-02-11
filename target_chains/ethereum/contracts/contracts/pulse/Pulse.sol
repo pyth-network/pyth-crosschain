@@ -293,7 +293,7 @@ abstract contract Pulse is IPulse, PulseState {
         }
     }
 
-    function isActive(Request storage req) internal view returns (bool) {
+    function isActive(Request memory req) internal pure returns (bool) {
         return req.sequenceNumber != 0;
     }
 
@@ -382,5 +382,37 @@ abstract contract Pulse is IPulse, PulseState {
 
     function getExclusivityPeriod() external view override returns (uint256) {
         return _state.exclusivityPeriodSeconds;
+    }
+
+    function getLastActiveRequests(
+        uint256 count
+    )
+        external
+        view
+        override
+        returns (Request[] memory requests, uint256 actualCount)
+    {
+        requests = new Request[](count);
+        actualCount = 0;
+
+        // Start from the most recent sequence number and work backwards
+        uint64 currentSeq = _state.currentSequenceNumber - 1;
+
+        // Continue until we find enough active requests or run out of sequence numbers
+        while (actualCount < count && currentSeq > 0) {
+            Request memory req = findRequest(currentSeq);
+            if (isActive(req)) {
+                requests[actualCount] = req;
+                actualCount++;
+            }
+            currentSeq--;
+        }
+
+        // If we found fewer requests than asked for, resize the array
+        if (actualCount < count) {
+            assembly {
+                mstore(requests, actualCount)
+            }
+        }
     }
 }
