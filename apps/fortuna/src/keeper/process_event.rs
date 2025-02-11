@@ -1,20 +1,15 @@
 use {
     super::keeper_metrics::{AccountLabel, KeeperMetrics},
     crate::{
-        api::{self, BlockchainState},
-        chain::utils::send_and_confirm,
-        chain::{
-            ethereum::{InstrumentedSignablePythContract, PythContractCall},
-            reader::RequestedWithCallbackEvent,
-        },
+        api::BlockchainState,
+        chain::{ethereum::InstrumentedSignablePythContract, reader::RequestedWithCallbackEvent},
         config::EscalationPolicyConfig,
     },
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
     ethers::middleware::Middleware,
     ethers::signers::Signer,
-    ethers::signers::Wallet,
-    ethers::types::{Address, U256},
+    ethers::types::U256,
     std::sync::{atomic::AtomicU64, Arc},
     tokio::time::{timeout, Duration},
     tracing::{self, Instrument},

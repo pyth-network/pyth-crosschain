@@ -1,12 +1,8 @@
 use {
     crate::{
-        api::BlockchainState,
-        chain::ethereum::{InstrumentedSignablePythContract, PythContractCall},
-        chain::utils::estimate_tx_cost,
-        chain::utils::send_and_confirm,
-        keeper::AccountLabel,
-        keeper::ChainId,
-        keeper::KeeperMetrics,
+        api::BlockchainState, chain::ethereum::InstrumentedSignablePythContract,
+        chain::utils::estimate_tx_cost, chain::utils::send_and_confirm, keeper::AccountLabel,
+        keeper::ChainId, keeper::KeeperMetrics,
     },
     anyhow::{anyhow, Result},
     ethers::{

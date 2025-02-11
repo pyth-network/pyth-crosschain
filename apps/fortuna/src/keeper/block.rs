@@ -1,34 +1,22 @@
 use {
     crate::{
-        api::{self, BlockchainState, ChainId},
-        chain::{
-            ethereum::{
-                InstrumentedPythContract, InstrumentedSignablePythContract, PythContractCall,
-            },
-            reader::{BlockNumber, RequestedWithCallbackEvent},
-        },
+        api::{self, BlockchainState},
+        chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
         config::EscalationPolicyConfig,
-        config::EthereumConfig,
-        eth_utils::traced_client::{RpcMetrics, TracedClient},
         keeper::keeper_metrics::KeeperMetrics,
         keeper::process_event::process_event_with_backoff,
     },
     anyhow::{anyhow, Result},
-    backoff::ExponentialBackoff,
     ethers::{
         providers::{Middleware, Provider, Ws},
-        signers::Signer,
-        types::{Address, U256},
+        types::U256,
     },
     futures::StreamExt,
-    std::{
-        collections::HashSet,
-        sync::{atomic::AtomicU64, Arc},
-    },
+    std::{collections::HashSet, sync::Arc},
     tokio::{
         spawn,
         sync::{mpsc, RwLock},
-        time::{self, timeout, Duration},
+        time::{self, Duration},
     },
     tracing::{self, Instrument},
 };

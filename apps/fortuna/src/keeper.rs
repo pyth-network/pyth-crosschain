@@ -1,15 +1,9 @@
 use {
     crate::{
-        api::{self, BlockchainState, ChainId},
-        chain::{
-            ethereum::{
-                InstrumentedPythContract, InstrumentedSignablePythContract, PythContractCall,
-            },
-            reader::{BlockNumber, RequestedWithCallbackEvent},
-        },
-        config::EscalationPolicyConfig,
+        api::{BlockchainState, ChainId},
+        chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
         config::EthereumConfig,
-        eth_utils::traced_client::{RpcMetrics, TracedClient},
+        eth_utils::traced_client::RpcMetrics,
         keeper::block::{
             get_latest_safe_block, process_backlog, process_new_blocks, watch_blocks_wrapper,
             BlockRange,
@@ -20,23 +14,13 @@ use {
         keeper::track::track_balance,
         keeper::track::track_provider,
     },
-    anyhow::{anyhow, Result},
-    backoff::ExponentialBackoff,
-    ethers::{
-        providers::{Middleware, Provider, Ws},
-        signers::Signer,
-        types::{Address, U256},
-    },
-    futures::StreamExt,
+    ethers::{signers::Signer, types::U256},
     keeper_metrics::{AccountLabel, KeeperMetrics},
-    std::{
-        collections::HashSet,
-        sync::{atomic::AtomicU64, Arc},
-    },
+    std::{collections::HashSet, sync::Arc},
     tokio::{
         spawn,
         sync::{mpsc, RwLock},
-        time::{self, timeout, Duration},
+        time::{self, Duration},
     },
     tracing::{self, Instrument},
 };
