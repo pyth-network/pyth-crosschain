@@ -4,11 +4,6 @@ use {
         config::{Config, EthereumConfig, InspectOptions},
     },
     anyhow::Result,
-    ethers::{
-        contract::Multicall,
-        middleware::Middleware,
-        prelude::{Http, Provider},
-    },
 };
 
 pub async fn inspect(opts: &InspectOptions) -> Result<()> {

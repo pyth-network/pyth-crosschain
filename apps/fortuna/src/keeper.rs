@@ -11,13 +11,10 @@ use {
         config::EscalationPolicyConfig,
         config::EthereumConfig,
     },
+    alloy::primitives::{Address, U256},
+    alloy::providers::Provider,
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
-    ethers::{
-        providers::{Middleware, Provider, Ws},
-        signers::Signer,
-        types::{Address, U256},
-    },
     futures::StreamExt,
     prometheus_client::{
         encoding::EncodeLabelSet,

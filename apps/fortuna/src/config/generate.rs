@@ -1,7 +1,7 @@
 use {
     crate::{api::ChainId, config::ConfigOptions},
+    alloy::primitives::Address,
     clap::Args,
-    ethers::types::Address,
     reqwest::Url,
 };
 

@@ -1,7 +1,7 @@
 use {
     crate::api::ChainId,
+    alloy::primitives::Address,
     anyhow::{ensure, Result},
-    ethers::types::Address,
     sha3::{Digest, Keccak256},
 };
 
@@ -54,8 +54,8 @@ impl PebbleHashChain {
         let mut input: Vec<u8> = vec![];
         input.extend_from_slice(&hex::decode(secret.trim())?);
         input.extend_from_slice(chain_id.as_bytes());
-        input.extend_from_slice(provider_address.as_bytes());
-        input.extend_from_slice(contract_address.as_bytes());
+        input.extend_from_slice(provider_address.as_slice());
+        input.extend_from_slice(contract_address.as_slice());
         input.extend_from_slice(random);
 
         let secret: [u8; 32] = Keccak256::digest(input).into();

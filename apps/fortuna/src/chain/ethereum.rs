@@ -9,26 +9,24 @@ use {
         },
         config::EthereumConfig,
     },
+    alloy::{
+        primitives::Address,
+        providers::{Provider, ProviderBuilder},
+        sol,
+        sol_types::SolEventInterface,
+    },
     anyhow::{anyhow, Error, Result},
     axum::async_trait,
-    ethers::{
-        abi::RawLog,
-        contract::{abigen, ContractCall, EthLogDecode},
-        core::types::Address,
-        middleware::{gas_oracle::GasOracleMiddleware, MiddlewareError, SignerMiddleware},
-        prelude::{BlockId, JsonRpcClient, PendingTransaction, TransactionRequest},
-        providers::{Http, Middleware, Provider},
-        signers::{LocalWallet, Signer},
-        types::{transaction::eip2718::TypedTransaction, BlockNumber as EthersBlockNumber, U256},
-    },
     sha3::{Digest, Keccak256},
     std::sync::Arc,
     thiserror::Error,
+    url::Url,
 };
 
 // TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
 // contract in the same repo.
-abigen!(
+sol!(
+    #[sol(rpc)]
     PythRandom,
     "../../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
 );
@@ -39,7 +37,7 @@ pub type MiddlewaresWrapper<T> = LegacyTxMiddleware<
         EthProviderOracle<Provider<T>>,
     >,
 >;
-pub type SignablePythContractInner<T> = PythRandom<MiddlewaresWrapper<T>>;
+pub type SignablePythContractInner<T> = PythRandom::PythRandomInstance<MiddlewaresWrapper<T>>;
 pub type SignablePythContract = SignablePythContractInner<Http>;
 pub type InstrumentedSignablePythContract = SignablePythContractInner<TracedClient>;
 
@@ -47,6 +45,8 @@ pub type PythContractCall = ContractCall<MiddlewaresWrapper<TracedClient>, ()>;
 
 pub type PythContract = PythRandom<Provider<Http>>;
 pub type InstrumentedPythContract = PythRandom<Provider<TracedClient>>;
+
+pub type SignablePythContractInner<T, P> = PythRandom::PythRandomInstance<T, P>;
 
 /// Middleware that converts a transaction into a legacy transaction if use_legacy_tx is true.
 /// We can not use TransformerMiddleware because keeper calls fill_transaction first which bypasses
@@ -127,15 +127,15 @@ impl<M: Middleware> Middleware for LegacyTxMiddleware<M> {
     }
 }
 
-impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
+impl<T: JsonRpcClient + 'static + Clone, P: Provider> SignablePythContractInner<T, P> {
     /// Get the wallet that signs transactions sent to this contract.
     pub fn wallet(&self) -> LocalWallet {
         self.client().inner().inner().inner().signer().clone()
     }
 
     /// Get the underlying provider that communicates with the blockchain.
-    pub fn provider(&self) -> Provider<T> {
-        self.client().inner().inner().inner().provider().clone()
+    pub fn provider(&self) -> Box<dyn Provider<T>> {
+        Box::new(self.client().provider().clone())
     }
 
     /// Submit a request for a random number to the contract.
@@ -148,7 +148,7 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         user_randomness: &[u8; 32],
         use_blockhash: bool,
     ) -> Result<u64> {
-        let fee = self.get_fee(*provider).call().await?;
+        let fee = self.getFee(*provider).call().await?;
 
         let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
 
@@ -161,8 +161,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         {
             // Extract Log from TransactionReceipt.
             let l: RawLog = r.logs[0].clone().into();
-            if let PythRandomEvents::RequestedFilter(r) = PythRandomEvents::decode_log(&l)? {
-                Ok(r.request.sequence_number)
+            if let PythRandom::PythRandomEvents::Requested(r) =
+                PythRandom::PythRandomEvents::decode_log(&l, true)?.data
+            {
+                Ok(r.request.sequenceNumber)
             } else {
                 Err(anyhow!("No log with sequence number"))
             }
@@ -193,10 +195,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
             .await?
         {
-            if let PythRandomEvents::RevealedFilter(r) =
-                PythRandomEvents::decode_log(&r.logs[0].clone().into())?
+            if let PythRandom::PythRandomEvents::Revealed(r) =
+                PythRandom::PythRandomEvents::decode_log(&r.logs[0].clone().into(), true)?.data
             {
-                Ok(r.random_number)
+                Ok(r.randomNumber.into())
             } else {
                 Err(anyhow!("No log with randomnumber"))
             }
@@ -234,8 +236,9 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
 
 impl SignablePythContract {
     pub async fn from_config(chain_config: &EthereumConfig, private_key: &str) -> Result<Self> {
-        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
-        Self::from_config_and_provider(chain_config, private_key, provider).await
+        let p = ProviderBuilder::new().on_http(Url::parse(&chain_config.geth_rpc_addr)?);
+        // let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+        Self::from_config_and_provider(chain_config, private_key, p).await
     }
 }
 

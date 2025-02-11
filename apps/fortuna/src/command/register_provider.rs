@@ -5,12 +5,11 @@ use {
         config::{Config, EthereumConfig, ProviderConfig, RegisterProviderOptions},
         state::PebbleHashChain,
     },
-    anyhow::{anyhow, Result},
-    ethers::{
-        abi::Bytes,
-        signers::{LocalWallet, Signer},
-        types::U256,
+    alloy::{
+        primitives::{Address, Bytes, U256},
+        signers::local::PrivateKeySigner,
     },
+    anyhow::{anyhow, Result},
     std::sync::Arc,
 };
 
@@ -55,7 +54,7 @@ pub async fn register_provider_from_config(
     let chain = PebbleHashChain::from_config(
         &secret,
         chain_id,
-        &private_key_string.parse::<LocalWallet>()?.address(),
+        &Address::from(private_key_string.parse::<PrivateKeySigner>()?.address()),
         &chain_config.contract_addr,
         &random,
         commitment_length,
@@ -76,11 +75,9 @@ pub async fn register_provider_from_config(
     let call = contract.register(
         fee_in_wei,
         commitment,
-        bincode::serialize(&commitment_metadata)?.into(),
+        Bytes::from(bincode::serialize(&commitment_metadata)?),
         commitment_length,
-        // Use Bytes to serialize the uri. Most users will be using JS/TS to deserialize this uri.
-        // Bincode is a different encoding mechanisms, and I didn't find any JS/TS library to parse bincode.
-        Bytes::from(uri.as_str()).into(),
+        Bytes::from(uri.as_bytes()),
     );
     let mut gas_estimate = call.estimate_gas().await?;
     let gas_multiplier = U256::from(2); //TODO: smarter gas estimation

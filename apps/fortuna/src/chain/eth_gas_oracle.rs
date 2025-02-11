@@ -1,13 +1,9 @@
 use {
+    alloy::primitives::{I256, U256},
+    alloy::providers::Provider,
+    alloy::rpc::client::RpcClient,
     axum::async_trait,
-    ethers::{
-        prelude::{
-            gas_oracle::{GasOracleError, Result},
-            GasOracle,
-        },
-        providers::Middleware,
-        types::{I256, U256},
-    },
+    eyre::Result,
 };
 
 // The default fee estimation logic in ethers.rs includes some hardcoded constants that do not
@@ -33,17 +29,15 @@ pub const SURGE_THRESHOLD_3: u64 = 200_000;
 /// under it.
 pub const EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE: i64 = 200;
 
-/// Gas oracle from a [`Middleware`] implementation such as an
-/// Ethereum RPC provider.
 #[derive(Clone, Debug)]
 #[must_use]
-pub struct EthProviderOracle<M: Middleware> {
-    provider: M,
+pub struct EthProviderOracle {
+    provider: Box<dyn Provider<RpcClient>>,
     priority_fee_multiplier_pct: u64,
 }
 
-impl<M: Middleware> EthProviderOracle<M> {
-    pub fn new(provider: M, priority_fee_multiplier_pct: u64) -> Self {
+impl EthProviderOracle {
+    pub fn new(provider: Box<dyn Provider<RpcClient>>, priority_fee_multiplier_pct: u64) -> Self {
         Self {
             provider,
             priority_fee_multiplier_pct,
@@ -53,10 +47,7 @@ impl<M: Middleware> EthProviderOracle<M> {
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<M: Middleware> GasOracle for EthProviderOracle<M>
-where
-    M::Error: 'static,
-{
+impl GasOracle for EthProviderOracle {
     async fn fetch(&self) -> Result<U256> {
         self.provider
             .get_gas_price()
@@ -67,7 +58,7 @@ where
     async fn estimate_eip1559_fees(&self) -> Result<(U256, U256)> {
         let (max_fee_per_gas, max_priority_fee_per_gas) = self
             .provider
-            .estimate_eip1559_fees(Some(eip1559_default_estimator))
+            .estimate_eip1559_fees(None)
             .await
             .map_err(|err| GasOracleError::ProviderError(Box::new(err)))?;
 

@@ -3,9 +3,9 @@ use {
         api::ChainId,
         chain::reader::{BlockNumber, BlockStatus},
     },
+    alloy::primitives::Address,
     anyhow::{anyhow, Result},
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
-    ethers::types::Address,
     std::{collections::HashMap, fs},
 };
 pub use {
