@@ -41,6 +41,7 @@ pub type MiddlewaresWrapper<T> = LegacyTxMiddleware<
         EthProviderOracle<Provider<T>>,
     >,
 >;
+
 pub type SignablePythContractInner<T> = PythRandom<MiddlewaresWrapper<T>>;
 pub type SignablePythContract = SignablePythContractInner<Http>;
 pub type InstrumentedSignablePythContract = SignablePythContractInner<TracedClient>;

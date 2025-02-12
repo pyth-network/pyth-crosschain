@@ -13,6 +13,7 @@ use {
 
 const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
 
+#[derive(Debug)]
 pub struct SubmitTxResult {
     pub num_retries: u64,
     pub gas_multiplier: u64,
