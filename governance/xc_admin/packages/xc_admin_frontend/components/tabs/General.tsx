@@ -36,6 +36,7 @@ import PermissionDepermissionKey from '../PermissionDepermissionKey'
 import { PriceRawConfig } from '../../hooks/usePyth'
 import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
+// These are the values such that a transaction adding a remote addProduct or updProduct instruction to a proposal are exactly 1232 bytes
 const MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA = 369
 const MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA = 403 // upd product has one account less
 
@@ -302,7 +303,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     return isValid
   }
 
-  const handleSendProposalButtonClick = async () => {
+  const handleSendProposalButtonClick = () => {
     const handleSendProposalButtonClickAsync = async () => {
       setIsSendProposalButtonLoading(true)
       if (pythProgramClient && dataChanges && !isMultisigLoading) {
