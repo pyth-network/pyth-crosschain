@@ -3,8 +3,7 @@ use {
     crate::{
         api::BlockchainState,
         chain::{ethereum::InstrumentedSignablePythContract, reader::RequestedWithCallbackEvent},
-        config::EscalationPolicyConfig,
-        eth_utils::utils::submit_tx_with_backoff,
+        eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
     },
     anyhow::{anyhow, Result},
     ethers::types::U256,
@@ -21,7 +20,7 @@ pub async fn process_event_with_backoff(
     chain_state: BlockchainState,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
-    escalation_policy: EscalationPolicyConfig,
+    escalation_policy: EscalationPolicy,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
     // ignore requests that are not for the configured provider

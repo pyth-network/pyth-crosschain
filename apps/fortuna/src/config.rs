@@ -2,6 +2,7 @@ use {
     crate::{
         api::ChainId,
         chain::reader::{BlockNumber, BlockStatus},
+        eth_utils::utils::EscalationPolicy,
     },
     anyhow::{anyhow, Result},
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
@@ -259,39 +260,15 @@ impl Default for EscalationPolicyConfig {
 }
 
 impl EscalationPolicyConfig {
-    pub fn get_gas_multiplier_pct(&self, num_retries: u64) -> u64 {
-        self.apply_escalation_policy(
-            num_retries,
-            self.initial_gas_multiplier_pct,
-            self.gas_multiplier_pct,
-            self.gas_multiplier_cap_pct,
-        )
-    }
-
-    pub fn get_fee_multiplier_pct(&self, num_retries: u64) -> u64 {
-        self.apply_escalation_policy(
-            num_retries,
-            100,
-            self.fee_multiplier_pct,
-            self.fee_multiplier_cap_pct,
-        )
-    }
-
-    fn apply_escalation_policy(
-        &self,
-        num_retries: u64,
-        initial: u64,
-        multiplier: u64,
-        cap: u64,
-    ) -> u64 {
-        let mut current = initial;
-        let mut i = 0;
-        while i < num_retries && current < cap {
-            current = current.saturating_mul(multiplier) / 100;
-            i += 1;
+    pub fn to_policy(&self) -> EscalationPolicy {
+        EscalationPolicy {
+            gas_limit_tolerance_pct: self.gas_limit_tolerance_pct,
+            initial_gas_multiplier_pct: self.initial_gas_multiplier_pct,
+            gas_multiplier_pct: self.gas_multiplier_pct,
+            gas_multiplier_cap_pct: self.gas_multiplier_cap_pct,
+            fee_multiplier_pct: self.fee_multiplier_pct,
+            fee_multiplier_cap_pct: self.fee_multiplier_cap_pct,
         }
-
-        current.min(cap)
     }
 }
 

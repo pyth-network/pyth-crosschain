@@ -1,5 +1,4 @@
 use {
-    crate::config::EscalationPolicyConfig,
     crate::eth_utils::nonce_manager::NonceManaged,
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
@@ -20,6 +19,65 @@ pub struct SubmitTxResult {
     pub fee_multiplier: u64,
     pub duration: Duration,
     pub receipt: Result<TransactionReceipt, anyhow::Error>,
+}
+
+#[derive(Clone, Debug)]
+pub struct EscalationPolicy {
+    // The keeper will perform the callback as long as the tx is within this percentage of the configured gas limit.
+    // Default value is 110, meaning a 10% tolerance over the configured value.
+    pub gas_limit_tolerance_pct: u64,
+
+    /// The initial gas multiplier to apply to the tx gas estimate
+    pub initial_gas_multiplier_pct: u64,
+
+    /// The gas multiplier to apply to the tx gas estimate during backoff retries.
+    /// The gas on each successive retry is multiplied by this value, with the maximum multiplier capped at `gas_multiplier_cap_pct`.
+    pub gas_multiplier_pct: u64,
+    /// The maximum gas multiplier to apply to the tx gas estimate during backoff retries.
+    pub gas_multiplier_cap_pct: u64,
+
+    /// The fee multiplier to apply to the fee during backoff retries.
+    /// The initial fee is 100% of the estimate (which itself may be padded based on our chain configuration)
+    /// The fee on each successive retry is multiplied by this value, with the maximum multiplier capped at `fee_multiplier_cap_pct`.
+    pub fee_multiplier_pct: u64,
+    pub fee_multiplier_cap_pct: u64,
+}
+
+impl EscalationPolicy {
+    pub fn get_gas_multiplier_pct(&self, num_retries: u64) -> u64 {
+        self.apply_escalation_policy(
+            num_retries,
+            self.initial_gas_multiplier_pct,
+            self.gas_multiplier_pct,
+            self.gas_multiplier_cap_pct,
+        )
+    }
+
+    pub fn get_fee_multiplier_pct(&self, num_retries: u64) -> u64 {
+        self.apply_escalation_policy(
+            num_retries,
+            100,
+            self.fee_multiplier_pct,
+            self.fee_multiplier_cap_pct,
+        )
+    }
+
+    fn apply_escalation_policy(
+        &self,
+        num_retries: u64,
+        initial: u64,
+        multiplier: u64,
+        cap: u64,
+    ) -> u64 {
+        let mut current = initial;
+        let mut i = 0;
+        while i < num_retries && current < cap {
+            current = current.saturating_mul(multiplier) / 100;
+            i += 1;
+        }
+
+        current.min(cap)
+    }
 }
 
 pub async fn send_and_confirm<A: Middleware>(contract_call: ContractCall<A, ()>) -> Result<()> {
@@ -86,7 +144,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     middleware: Arc<T>,
     call: ContractCall<T, ()>,
     gas_limit: U256,
-    escalation_policy: EscalationPolicyConfig,
+    escalation_policy: EscalationPolicy,
 ) -> Result<SubmitTxResult> {
     let start_time = std::time::Instant::now();
 
