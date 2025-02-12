@@ -1,12 +1,12 @@
 services:
   contract-deployer:
     build:
-      context: ../../ # Build context is set to the root of the monorepo
-      dockerfile: apps/contract-deployer/Dockerfile
+      context: ./
+      dockerfile: ./Dockerfile
     ports:
       - "8501:8501"
     volumes:
-      - ../../:/app # Mount the entire monorepo. TODO: pull from GH
+      - ./:/app # Mount the entire monorepo. TODO: pull from GH
     environment:
       - STREAMLIT_SERVER_PORT=8501
       - STREAMLIT_SERVER_ADDRESS=0.0.0.0

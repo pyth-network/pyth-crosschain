@@ -1,6 +1,8 @@
 # Use Node.js as base image since we need both Node.js and Python
 FROM node:22-bullseye-slim
 
+RUN ls
+
 # Install Python and other system dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
@@ -11,23 +13,21 @@ RUN apt-get update && apt-get install -y \
 # Install specific pnpm version
 RUN npm install -g pnpm@9.15.3
 
-WORKDIR /app
-
-# Copy the entire monorepo
-COPY . .
-
 # Install dependencies and build the monorepo
 RUN pnpm install
 
 # Install uv and Python dependencies
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-RUN uv pip install --no-cache -r apps/contract-deployer/requirements.txt
+FROM python:3.11-slim-bookworm
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Set working directory to the contract-deployer app
-WORKDIR /app/apps/contract-deployer
+# Install Python and other system dependencies
+RUN apt-get update && apt-get install -y git
 
 # Expose the port Streamlit runs on
 EXPOSE 8501
 
+WORKDIR /app
+
 # Command to run the application
-CMD ["uvx", "streamlit", "run", "server.py", "--server.address", "0.0.0.0"]
+CMD ["uv", "run", "server.py"]
+# Infinite loop to keep container running

@@ -50,11 +50,11 @@ def main():
             st.error(f"An unexpected error occurred: {e}")
 
 
-def initialize():
-    pass
-
-
 if __name__ == "__main__":
-    # st.set_page_config(layout="wide")
-    initialize()
+    # Enable running the app without `streamlit run`
+    # https://github.com/streamlit/streamlit/issues/9450#issuecomment-2386348596
+    if "__streamlitmagic__" not in locals():
+        import streamlit.web.bootstrap
+
+        streamlit.web.bootstrap.run(__file__, False, [], {})
     main()
