@@ -20,14 +20,17 @@ RUN pnpm install
 FROM python:3.11-slim-bookworm
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Install Python and other system dependencies
+# Install git
 RUN apt-get update && apt-get install -y git
 
 # Expose the port Streamlit runs on
 EXPOSE 8501
 
+# Expect source code to be mounted to /app
+COPY . /app
 WORKDIR /app
 
-# Command to run the application
+# Install deps
+RUN pwd && ls -la && uv sync
+
 CMD ["uv", "run", "server.py"]
-# Infinite loop to keep container running
