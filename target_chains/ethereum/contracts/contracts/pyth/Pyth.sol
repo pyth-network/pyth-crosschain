@@ -383,6 +383,16 @@ abstract contract Pyth is
                     revert PythErrors.InvalidUpdateData();
                 }
 
+                for (uint j = 0; j < numUpdatesFirst; j++) {
+                    PythInternalStructs.TwapPriceInfo memory twapPriceInfoFirst;
+                    PythInternalStructs.TwapPriceInfo memory twapPriceInfoSecond;
+                    bytes32 priceIdFirst;
+                    bytes32 priceIdSecond;
+
+                    (offsetFirst, twapPriceInfoFirst, priceIdFirst) = extractPriceInfoFromMerkleProof(digestFirst, encodedFirst, offsetFirst);
+                    (offsetSecond, twapPriceInfoSecond, priceIdSecond) = extractPriceInfoFromMerkleProof(digestSecond, encodedSecond, offsetSecond);
+                }
+
                 
             } else {
                 revert PythErrors.InvalidUpdateData();
