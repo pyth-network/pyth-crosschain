@@ -100,7 +100,7 @@ interface IPulse is PulseEvents {
      * @return actualCount Number of active requests found (may be less than count)
      * @dev Gas Usage: This function's gas cost scales linearly with the number of requests
      *      that need to be scanned to find active ones. Each iteration costs approximately:
-     *      - 2300 gas for the storage read
+     *      - 2100 gas for cold storage reads, 100 gas for warm storage reads (SLOAD)
      *      - Additional gas for array operations
      *      For example, if active requests are sparse (many completed requests between active ones),
      *      scanning for 100 active requests might need to iterate through 1000+ sequence numbers.
