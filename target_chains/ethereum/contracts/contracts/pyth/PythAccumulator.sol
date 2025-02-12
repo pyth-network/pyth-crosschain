@@ -25,7 +25,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     enum MessageType {
-        PriceFeed
+        PriceFeed,
+        TwapPriceFeed
     }
 
     // This method is also used by batch attestation but moved here
@@ -262,6 +263,11 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     encodedMessage,
                     1
                 );
+            } else if (messageType == MessageType.TwapPriceFeed) {
+                (twapPriceInfo, priceId) = parseTwapPriceFeedMessage(
+                    encodedMessage,
+                    1
+                );
             } else {
                 revert PythErrors.InvalidUpdateData();
             }
@@ -334,6 +340,70 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 revert PythErrors.InvalidUpdateData();
         }
     }
+
+    function parseTwapPriceFeedMessage(
+        bytes calldata encodedTwapPriceFeed,
+        uint offset
+    )
+        private
+        pure
+        returns (
+            PythInternalStructs.TwapPriceInfo memory twapPriceInfo,
+            bytes32 priceId
+        )
+    {
+        unchecked {
+            priceId = UnsafeCalldataBytesLib.toBytes32(
+                encodedPriceFeed,
+                offset
+            );
+            offset += 32;
+
+            twapPriceInfo.cumulativePrice = int128(
+                UnsafeCalldataBytesLib.toUint64(encodedPriceFeed, offset)
+            );
+            offset += 16;
+
+            twapPriceInfo.cumulativeConf = UnsafeCalldataBytesLib.toUint128(
+                encodedPriceFeed,
+                offset
+            );
+            offset += 16;
+
+            twapPriceInfo.numDownSlots = UnsafeCalldataBytesLib.toUint64(
+                encodedPriceFeed,
+                offset
+            );
+            offset += 8;
+
+            twapPriceInfo.publishSlot = UnsafeCalldataBytesLib.toUint64(
+                encodedPriceFeed,
+                offset
+            );
+            offset += 8;
+
+            twapPriceInfo.publishTime = UnsafeCalldataBytesLib.toUint64(
+                encodedPriceFeed,
+                offset
+            );
+            offset += 8;
+
+            twapPriceInfo.prevPublishTime = UnsafeCalldataBytesLib.toUint64(
+                encodedPriceFeed,
+                offset
+            );
+            offset += 8;
+
+            twapPriceInfo.expo = int32(
+                UnsafeCalldataBytesLib.toUint32(encodedPriceFeed, offset)
+            );
+            offset += 4;
+
+            if (offset > encodedPriceFeed.length)
+                revert PythErrors.InvalidUpdateData();
+        }
+    }
+
 
     function updatePriceInfosFromAccumulatorUpdate(
         bytes calldata accumulatorUpdate

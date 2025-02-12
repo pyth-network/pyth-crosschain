@@ -30,4 +30,17 @@ contract PythStructs {
         // Latest available exponentially-weighted moving average price
         Price emaPrice;
     }
-}
+
+    struct TwapPriceFeed {
+        // The price ID.
+        bytes32 id;
+        // Start time of the TWAP
+        uint startTime;
+        // End time of the TWAP
+        uint endTime;
+        // TWAP price
+        Price cumulativePrice;
+        // Down slot ratio
+        uint32 downSlotRatio;
+    }
+1}

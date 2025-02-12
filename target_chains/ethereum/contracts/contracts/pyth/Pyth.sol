@@ -308,6 +308,88 @@ abstract contract Pyth is
             );
     }
 
+    function parseTwapPriceFeedUpdates(
+        bytes[2][] calldata updateData,
+        bytes32[] calldata priceIds,
+        unit8 windowSize
+    )
+        external
+        payable
+        override
+        returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds)
+    {
+        {
+            revert(updateData.length != 2, PythErrors.InvalidUpdateData());
+            uint requiredFee = getUpdateFee(updateData[0]);
+
+            // Check if the two updateData contains the same number of priceUpdates
+            if (requiredFee != getUpdateFee(updateData[1])) {
+                revert PythErrors.InvalidUpdateData();
+            }
+            if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
+        }
+
+        // Parse the updateData
+        twapPriceFeeds = new PythStructs.TwapPriceFeed[](priceIds.length);
+        for (uint i = 0; i < updateData[0].length; i++) {
+            if (
+                (updateData[0][i].length > 4 &&
+                    UnsafeCalldataBytesLib.toUint32(updateData[0][i], 0) ==
+                    ACCUMULATOR_MAGIC) &&
+                (updateData[1][i].length > 4 &&
+                    UnsafeCalldataBytesLib.toUint32(updateData[1][i], 0) ==
+                    ACCUMULATOR_MAGIC)
+            ) {
+                // Parse the accumulator update
+                uint offsetFirst;
+                uint offsetSecond;
+                {
+                    UpdateType updateType;
+                    (offsetFirst, updateType) = extractUpdateTypeFromAccumulatorHeader(updateData[0][i]);
+                    if (updateType != UpdateType.WormholeMerkle) {
+                        revert PythErrors.InvalidUpdateData();
+                    }
+                    (offsetSecond, updateType) = extractUpdateTypeFromAccumulatorHeader(updateData[1][i]);
+                    if (updateType != UpdateType.WormholeMerkle) {
+                        revert PythErrors.InvalidUpdateData();
+                    }
+                }
+
+                bytes20 digestFirst;
+                bytes20 digestSecond;
+                uint8 numUpdatesFirst;
+                uint8 numUpdatesSecond;
+                bytes calldata encodedFirst;
+                bytes calldata encodedSecond;
+                (
+                    offsetFirst,
+                    digestFirst,
+                    numUpdates,
+                    encodedFirst
+                ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
+                    updateData[0][i],
+                    offsetFirst
+                );
+                (
+                    offsetSecond,
+                    digestSecond,
+                    numUpdates,
+                    encodedSecond
+                ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
+                    updateData[1][i],
+                    offsetSecond);
+
+                if (numUpdatesFirst != numUpdatesSecond) {
+                    revert PythErrors.InvalidUpdateData();
+                }
+
+                
+            } else {
+                revert PythErrors.InvalidUpdateData();
+            }
+        }
+    }
+
     function parsePriceFeedUpdatesUnique(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
