@@ -111,11 +111,21 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           <StatCard
             variant="primary"
             header="Aggregated Price"
-            stat={<LivePrice feedKey={feed.product.price_account} />}
+            stat={
+              <LivePrice
+                feedKey={feed.product.price_account}
+                cluster={Cluster.Pythnet}
+              />
+            }
           />
           <StatCard
             header="Confidence"
-            stat={<LiveConfidence feedKey={feed.product.price_account} />}
+            stat={
+              <LiveConfidence
+                feedKey={feed.product.price_account}
+                cluster={Cluster.Pythnet}
+              />
+            }
             corner={
               <AlertTrigger>
                 <Button
@@ -159,7 +169,12 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           />
           <StatCard
             header="Last Updated"
-            stat={<LiveLastUpdated feedKey={feed.product.price_account} />}
+            stat={
+              <LiveLastUpdated
+                feedKey={feed.product.price_account}
+                cluster={Cluster.Pythnet}
+              />
+            }
           />
         </section>
       </section>
@@ -177,6 +192,7 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
                   <Badge size="xs" style="filled" variant="neutral">
                     <LiveValue
                       feedKey={feed.product.price_account}
+                      cluster={Cluster.Pythnet}
                       field="numComponentPrices"
                       defaultValue={feed.price.numComponentPrices}
                     />

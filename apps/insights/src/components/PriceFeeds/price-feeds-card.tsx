@@ -18,6 +18,7 @@ import { useFilter, useCollator } from "react-aria";
 
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
+import { Cluster } from "../../services/pyth";
 import { AssetClassTag } from "../AssetClassTag";
 import { FeedKey } from "../FeedKey";
 import {
@@ -128,12 +129,15 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
           numPublishers: (
             <LiveValue
               field="numQuoters"
+              cluster={Cluster.Pythnet}
               feedKey={key}
               defaultValue={numQuoters}
             />
           ),
-          price: <LivePrice feedKey={key} />,
-          confidenceInterval: <LiveConfidence feedKey={key} />,
+          price: <LivePrice feedKey={key} cluster={Cluster.Pythnet} />,
+          confidenceInterval: (
+            <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
+          ),
           priceFeedName: <PriceFeedTag compact symbol={symbol} />,
           assetClass: <AssetClassTag symbol={symbol} />,
           priceFeedId: <FeedKey size="xs" variant="ghost" feedKey={key} />,

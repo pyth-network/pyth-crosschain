@@ -20,6 +20,12 @@ import {
   getAssetPricesFromAccounts,
 } from "../services/pyth";
 
+type MapKey = string;
+type FeedKey = { key: string; cluster: Cluster };
+
+const createMapKey = (key: string, cluster: Cluster): MapKey =>
+  `${key}-${cluster.toString()}`;
+
 export const SKELETON_WIDTH = 20;
 
 const LivePriceDataContext = createContext<
@@ -37,19 +43,23 @@ export const LivePriceDataProvider = (props: LivePriceDataProviderProps) => {
   return <LivePriceDataContext value={priceData} {...props} />;
 };
 
-export const useLivePriceData = (feedKey: string) => {
+export const useLivePriceData = (
+  feedKey: string,
+  cluster: Cluster = Cluster.Pythnet,
+) => {
   const { priceData, prevPriceData, addSubscription, removeSubscription } =
     useLivePriceDataContext();
 
   useEffect(() => {
-    addSubscription(feedKey);
+    addSubscription(feedKey, cluster);
     return () => {
-      removeSubscription(feedKey);
+      removeSubscription(feedKey, cluster);
     };
-  }, [addSubscription, removeSubscription, feedKey]);
+  }, [addSubscription, removeSubscription, feedKey, cluster]);
 
-  const current = priceData.get(feedKey);
-  const prev = prevPriceData.get(feedKey);
+  const mapKey = createMapKey(feedKey, cluster);
+  const current = priceData.get(mapKey);
+  const prev = prevPriceData.get(mapKey);
 
   return { current, prev };
 };
@@ -57,8 +67,9 @@ export const useLivePriceData = (feedKey: string) => {
 export const useLivePriceComponent = (
   feedKey: string,
   publisherKeyAsBase58: string,
+  cluster: Cluster = Cluster.Pythnet,
 ) => {
-  const { current, prev } = useLivePriceData(feedKey);
+  const { current, prev } = useLivePriceData(feedKey, cluster);
   const publisherKey = useMemo(
     () => new PublicKey(publisherKeyAsBase58),
     [publisherKeyAsBase58],
@@ -75,10 +86,10 @@ export const useLivePriceComponent = (
 };
 
 const usePriceData = () => {
-  const feedSubscriptions = useMap<string, number>([]);
-  const [feedKeys, setFeedKeys] = useState<string[]>([]);
-  const prevPriceData = useMap<string, PriceData>([]);
-  const priceData = useMap<string, PriceData>([]);
+  const feedSubscriptions = useMap<MapKey, number>([]);
+  const [feedKeys, setFeedKeys] = useState<FeedKey[]>([]);
+  const prevPriceData = useMap<MapKey, PriceData>([]);
+  const priceData = useMap<MapKey, PriceData>([]);
   const logger = useLogger();
 
   useEffect(() => {
@@ -86,17 +97,37 @@ const usePriceData = () => {
     // there's any symbol that isn't currently publishing prices (e.g. the
     // markets are closed), we will still display the last published price for
     // that symbol.
-    const uninitializedFeedKeys = feedKeys.filter((key) => !priceData.has(key));
-    if (uninitializedFeedKeys.length > 0) {
-      getAssetPricesFromAccounts(
-        Cluster.Pythnet,
-        uninitializedFeedKeys.map((key) => new PublicKey(key)),
+    const uninitializedFeeds = feedKeys.filter(
+      ({ key, cluster }) => !priceData.has(createMapKey(key, cluster)),
+    );
+    if (uninitializedFeeds.length > 0) {
+      const feedsByCluster: Record<Cluster, string[]> = {
+        [Cluster.Pythnet]: [],
+        [Cluster.PythtestConformance]: [],
+      };
+      for (const { key, cluster } of uninitializedFeeds) {
+        feedsByCluster[cluster].push(key);
+      }
+
+      Promise.all(
+        Object.entries(feedsByCluster).map(([cluster, keys]) =>
+          getAssetPricesFromAccounts(
+            Number(cluster) as Cluster,
+            keys.map((key) => new PublicKey(key)),
+          ),
+        ),
       )
-        .then((initialPrices) => {
-          for (const [i, price] of initialPrices.entries()) {
-            const key = uninitializedFeedKeys[i];
-            if (key && !priceData.has(key)) {
-              priceData.set(key, price);
+        .then((clusterPrices) => {
+          for (const [clusterIndex, prices] of clusterPrices.entries()) {
+            const cluster = Number(
+              Object.keys(feedsByCluster)[clusterIndex],
+            ) as Cluster;
+            const keys = feedsByCluster[cluster];
+            for (const [i, price] of prices.entries()) {
+              const key = keys[i];
+              if (key && !priceData.has(createMapKey(key, cluster))) {
+                priceData.set(createMapKey(key, cluster), price);
+              }
             }
           }
         })
@@ -106,48 +137,82 @@ const usePriceData = () => {
     }
 
     // Then, we create a subscription to update prices live.
-    const connection = subscribe(
-      Cluster.Pythnet,
-      feedKeys.map((key) => new PublicKey(key)),
-      ({ price_account }, data) => {
-        if (price_account) {
-          const prevData = priceData.get(price_account);
-          if (prevData) {
-            prevPriceData.set(price_account, prevData);
-          }
-          priceData.set(price_account, data);
-        }
+    const connections: Record<
+      Cluster,
+      { keys: string[]; accounts: Map<string, MapKey> }
+    > = {
+      [Cluster.Pythnet]: {
+        keys: [],
+        accounts: new Map(),
+      },
+      [Cluster.PythtestConformance]: {
+        keys: [],
+        accounts: new Map(),
+      },
+    };
+    for (const { key, cluster } of feedKeys) {
+      connections[cluster].keys.push(key);
+      connections[cluster].accounts.set(key, createMapKey(key, cluster));
+    }
+
+    const subscriptions = Object.entries(connections).map(
+      ([clusterStr, { keys, accounts }]) => {
+        const cluster = Number(clusterStr) as Cluster;
+        return subscribe(
+          cluster,
+          keys.map((key) => new PublicKey(key)),
+          ({ price_account }, data) => {
+            if (price_account) {
+              const mapKey = accounts.get(price_account);
+              if (mapKey) {
+                const prevData = priceData.get(mapKey);
+                if (prevData) {
+                  prevPriceData.set(mapKey, prevData);
+                }
+                priceData.set(mapKey, data);
+              }
+            }
+          },
+        );
       },
     );
 
-    connection.start().catch((error: unknown) => {
-      logger.error("Failed to subscribe to prices", error);
-    });
+    Promise.all(subscriptions.map((conn) => conn.start())).catch(
+      (error: unknown) => {
+        logger.error("Failed to subscribe to prices", error);
+      },
+    );
     return () => {
-      connection.stop().catch((error: unknown) => {
-        logger.error("Failed to unsubscribe from price updates", error);
-      });
+      Promise.all(subscriptions.map((conn) => conn.stop())).catch(
+        (error: unknown) => {
+          logger.error("Failed to unsubscribe from price updates", error);
+        },
+      );
     };
   }, [feedKeys, logger, priceData, prevPriceData]);
 
   const addSubscription = useCallback(
-    (key: string) => {
-      const current = feedSubscriptions.get(key) ?? 0;
-      feedSubscriptions.set(key, current + 1);
+    (key: string, cluster: Cluster) => {
+      const mapKey = createMapKey(key, cluster);
+      const current = feedSubscriptions.get(mapKey) ?? 0;
+      feedSubscriptions.set(mapKey, current + 1);
       if (current === 0) {
-        setFeedKeys((prev) => [...new Set([...prev, key])]);
+        setFeedKeys((prev) => [...prev, { key, cluster }]);
       }
     },
     [feedSubscriptions],
   );
 
   const removeSubscription = useCallback(
-    (key: string) => {
-      const current = feedSubscriptions.get(key);
+    (key: string, cluster: Cluster) => {
+      const mapKey = createMapKey(key, cluster);
+      const current = feedSubscriptions.get(mapKey);
       if (current) {
-        feedSubscriptions.set(key, current - 1);
+        feedSubscriptions.set(mapKey, current - 1);
         if (current === 1) {
-          setFeedKeys((prev) => prev.filter((elem) => elem !== key));
+          setFeedKeys((prev) =>
+            prev.filter((elem) => elem.key !== key || elem.cluster !== cluster),
+          );
         }
       }
     },

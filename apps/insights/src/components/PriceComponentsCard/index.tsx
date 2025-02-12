@@ -212,18 +212,21 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
                     field="publishSlot"
+                    cluster={Cluster.Pythnet}
                   />
                 ),
                 price: (
                   <LivePrice
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
+                    cluster={Cluster.Pythnet}
                   />
                 ),
                 confidence: (
                   <LiveConfidence
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
+                    cluster={Cluster.Pythnet}
                   />
                 ),
               }),

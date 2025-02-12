@@ -121,21 +121,31 @@ export const PriceComponentDrawer = ({
           nonInteractive
           header="Aggregate Price"
           small
-          stat={<LivePrice feedKey={feedKey} />}
+          stat={<LivePrice feedKey={feedKey} cluster={Cluster.Pythnet} />}
         />
         <StatCard
           nonInteractive
           header="Publisher Price"
           variant="primary"
           small
-          stat={<LivePrice feedKey={feedKey} publisherKey={publisherKey} />}
+          stat={
+            <LivePrice
+              feedKey={feedKey}
+              publisherKey={publisherKey}
+              cluster={Cluster.Pythnet}
+            />
+          }
         />
         <StatCard
           nonInteractive
           header="Publisher Confidence"
           small
           stat={
-            <LiveConfidence feedKey={feedKey} publisherKey={publisherKey} />
+            <LiveConfidence
+              feedKey={feedKey}
+              publisherKey={publisherKey}
+              cluster={Cluster.Pythnet}
+            />
           }
         />
         <StatCard
@@ -147,6 +157,7 @@ export const PriceComponentDrawer = ({
               feedKey={feedKey}
               publisherKey={publisherKey}
               field="publishSlot"
+              cluster={Cluster.Pythnet}
             />
           }
         />
