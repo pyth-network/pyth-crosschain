@@ -5,7 +5,7 @@ use {
         governance::{GovernanceAction, GovernanceInstruction, GovernanceModule},
         state::{Chain, Price, PriceIdentifier, Source},
     },
-    pyth_wormhole_attester_sdk::{
+    pythnet_sdk::legacy::{
         BatchPriceAttestation, Identifier, PriceAttestation, PriceStatus,
     },
     pythnet_sdk::test_utils::{

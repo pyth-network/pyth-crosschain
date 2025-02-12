@@ -18,6 +18,7 @@ module pyth::batch_price_attestation {
 
     const MAGIC: u64 = 0x50325748; // "P2WH" (Pyth2Wormhole) raw ASCII bytes
 
+    /// @notice This struct is based on the legacy wormhole attester implementation in pythnet_sdk
     struct BatchPriceAttestation {
         header: Header,
         attestation_size: u64,

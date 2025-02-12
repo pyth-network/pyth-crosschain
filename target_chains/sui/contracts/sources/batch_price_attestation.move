@@ -20,6 +20,7 @@ module pyth::batch_price_attestation {
     const E_INVALID_ATTESTATION_MAGIC_VALUE: u64 = 0;
     const E_INVALID_BATCH_ATTESTATION_HEADER_SIZE: u64 = 1;
 
+    /// @notice This struct is based on the legacy wormhole attester implementation in pythnet_sdk
     struct BatchPriceAttestation {
         header: Header,
         attestation_size: u64,

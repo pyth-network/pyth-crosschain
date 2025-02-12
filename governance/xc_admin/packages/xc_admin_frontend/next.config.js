@@ -4,9 +4,6 @@ const path = require('path')
 const nextConfig = {
   reactStrictMode: true,
   output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
-  experimental: {
-    externalDir: true,
-  },
   webpack(config, { isServer }) {
     config.experiments = { asyncWebAssembly: true }
     config.resolve.fallback = { fs: false }
