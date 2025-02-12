@@ -42,21 +42,21 @@ pub async fn process_event_with_backoff(
         .reveal(event.sequence_number)
         .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
 
-    let contract_call = contract
-        .reveal_with_callback(
-            event.provider_address,
-            event.sequence_number,
-            event.user_random_number,
-            provider_revelation,
-        );
+    let contract_call = contract.reveal_with_callback(
+        event.provider_address,
+        event.sequence_number,
+        event.user_random_number,
+        provider_revelation,
+    );
 
     let success = submit_tx_with_backoff(
         contract.client(),
         contract_call,
         gas_limit,
         escalation_policy,
-    ).await;
-    
+    )
+    .await;
+
     metrics
         .requests_processed
         .get_or_create(&account_label)
@@ -96,12 +96,12 @@ pub async fn process_event_with_backoff(
                 if let Some(gas_used) = receipt.gas_used {
                     let gas_used_float = gas_used.as_u128() as f64 / 1e18;
                     metrics
-                       .total_gas_spent
+                        .total_gas_spent
                         .get_or_create(&account_label)
                         .inc_by(gas_used_float);
-            
+
                     if let Some(gas_price) = receipt.effective_gas_price {
-                       let gas_fee = (gas_used * gas_price).as_u128() as f64 / 1e18;
+                        let gas_fee = (gas_used * gas_price).as_u128() as f64 / 1e18;
                         metrics
                             .total_gas_fee_spent
                             .get_or_create(&account_label)

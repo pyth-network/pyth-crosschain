@@ -2,8 +2,11 @@
 // Copied from: https://github.com/gakonst/ethers-rs/blob/34ed9e372e66235aed7074bc3f5c14922b139242/ethers-middleware/src/nonce_manager.rs
 
 use {
+    super::legacy_tx_middleware::LegacyTxMiddleware,
     axum::async_trait,
+    ethers::prelude::GasOracle,
     ethers::{
+        middleware::gas_oracle::GasOracleMiddleware,
         providers::{Middleware, MiddlewareError, PendingTransaction},
         types::{transaction::eip2718::TypedTransaction, *},
     },
@@ -72,15 +75,6 @@ where
         Ok(nonce)
     } // guard dropped here
 
-    /// Resets the initialized flag so the next usage of the manager will reinitialize the nonce
-    /// based on the chain state.
-    /// This is useful when the RPC does not return an error if the transaction is submitted with
-    /// an incorrect nonce.
-    /// This is the only new method compared to the original NonceManagerMiddleware.
-    pub fn reset(&self) {
-        self.initialized.store(false, Ordering::SeqCst);
-    }
-
     async fn get_transaction_count_with_manager(
         &self,
         block: Option<BlockId>,
@@ -97,6 +91,33 @@ where
         }
 
         Ok(self.next())
+    }
+}
+
+pub trait NonceManaged {
+    fn reset(&self);
+}
+
+impl<M: Middleware> NonceManaged for NonceManagerMiddleware<M> {
+    /// Resets the initialized flag so the next usage of the manager will reinitialize the nonce
+    /// based on the chain state.
+    /// This is useful when the RPC does not return an error if the transaction is submitted with
+    /// an incorrect nonce.
+    /// This is the only new method compared to the original NonceManagerMiddleware.
+    fn reset(&self) {
+        self.initialized.store(false, Ordering::SeqCst);
+    }
+}
+
+impl<M: NonceManaged + Middleware, G: GasOracle> NonceManaged for GasOracleMiddleware<M, G> {
+    fn reset(&self) {
+        self.inner().reset();
+    }
+}
+
+impl<T: NonceManaged + Middleware> NonceManaged for LegacyTxMiddleware<T> {
+    fn reset(&self) {
+        self.inner().reset();
     }
 }
 

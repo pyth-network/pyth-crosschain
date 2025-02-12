@@ -1,14 +1,15 @@
 use {
-    anyhow::{anyhow, Result},
-    ethers::{contract::ContractCall, middleware::Middleware},
-    ethers::types::U256,
-    ethers::types::TransactionReceipt,
-    std::sync::Arc,
-    tracing,
-    std::sync::atomic::AtomicU64, 
     crate::config::EscalationPolicyConfig,
-    tokio::time::{timeout, Duration},
+    crate::eth_utils::nonce_manager::NonceManaged,
+    anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
+    ethers::types::TransactionReceipt,
+    ethers::types::U256,
+    ethers::{contract::ContractCall, middleware::Middleware},
+    std::sync::atomic::AtomicU64,
+    std::sync::Arc,
+    tokio::time::{timeout, Duration},
+    tracing,
 };
 
 const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
@@ -81,7 +82,7 @@ pub async fn estimate_tx_cost<T: Middleware + 'static>(
     Ok(gas_price * gas_used)
 }
 
-pub async fn submit_tx_with_backoff<T: Middleware + 'static>(
+pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     middleware: Arc<T>,
     call: ContractCall<T, ()>,
     gas_limit: U256,
@@ -110,7 +111,8 @@ pub async fn submit_tx_with_backoff<T: Middleware + 'static>(
                 gas_limit,
                 gas_multiplier_pct,
                 fee_multiplier_pct,
-            ).await
+            )
+            .await
         },
         |e, dur| {
             let retry_number = num_retries.load(std::sync::atomic::Ordering::Relaxed);
@@ -125,11 +127,11 @@ pub async fn submit_tx_with_backoff<T: Middleware + 'static>(
     )
     .await;
 
-    let duration = start_time.elapsed();    
+    let duration = start_time.elapsed();
     let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
 
     Ok(SubmitTxResult {
-        num_retries: num_retries,
+        num_retries,
         gas_multiplier: escalation_policy.get_gas_multiplier_pct(num_retries),
         fee_multiplier: escalation_policy.get_fee_multiplier_pct(num_retries),
         duration,
@@ -141,7 +143,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + 'static>(
 /// submits the transaction if the gas estimate is below the gas limit.
 /// It will return a permanent or transient error depending on the error type and whether
 /// retry is possible or not.
-pub async fn submit_tx<T: Middleware + 'static>(
+pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     client: Arc<T>,
     call: &ContractCall<T, ()>,
     gas_limit: U256,
@@ -149,8 +151,7 @@ pub async fn submit_tx<T: Middleware + 'static>(
     gas_estimate_multiplier_pct: u64,
     fee_estimate_multiplier_pct: u64,
 ) -> Result<TransactionReceipt, backoff::Error<anyhow::Error>> {
-    
-    let gas_estimate_res = call.estimate_gas().await;        
+    let gas_estimate_res = call.estimate_gas().await;
 
     let gas_estimate = gas_estimate_res.map_err(|e| {
         // we consider the error transient even if it is a contract revert since
@@ -173,7 +174,7 @@ pub async fn submit_tx<T: Middleware + 'static>(
     // the padded gas estimate doesn't exceed the maximum amount of gas we are willing to use.
     let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
 
-    let call = call.gas(gas_estimate);
+    let call = call.clone().gas(gas_estimate);
 
     let mut transaction = call.tx.clone();
 
@@ -207,8 +208,7 @@ pub async fn submit_tx<T: Middleware + 'static>(
         })?;
 
     let reset_nonce = || {
-        let nonce_manager = client.inner().inner();
-        nonce_manager.reset();
+        client.reset();
     };
 
     let pending_receipt = timeout(
