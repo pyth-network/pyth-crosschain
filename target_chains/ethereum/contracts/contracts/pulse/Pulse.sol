@@ -164,6 +164,14 @@ abstract contract Pulse is IPulse, PulseState {
                 "low-level error (possibly out of gas)"
             );
         }
+
+        // After successful callback, update firstUnfulfilledSeq if needed
+        while (
+            _state.firstUnfulfilledSeq < _state.currentSequenceNumber &&
+            !isActive(findRequest(_state.firstUnfulfilledSeq))
+        ) {
+            _state.firstUnfulfilledSeq++;
+        }
     }
 
     function emitPriceUpdate(
@@ -384,7 +392,7 @@ abstract contract Pulse is IPulse, PulseState {
         return _state.exclusivityPeriodSeconds;
     }
 
-    function getLastActiveRequests(
+    function getFirstActiveRequests(
         uint256 count
     )
         external
@@ -395,17 +403,19 @@ abstract contract Pulse is IPulse, PulseState {
         requests = new Request[](count);
         actualCount = 0;
 
-        // Start from the most recent sequence number and work backwards
-        uint64 currentSeq = _state.currentSequenceNumber - 1;
+        // Start from the first unfulfilled sequence and work forwards
+        uint64 currentSeq = _state.firstUnfulfilledSeq;
 
-        // Continue until we find enough active requests or run out of sequence numbers
-        while (actualCount < count && currentSeq > 0) {
+        // Continue until we find enough active requests or reach current sequence
+        while (
+            actualCount < count && currentSeq < _state.currentSequenceNumber
+        ) {
             Request memory req = findRequest(currentSeq);
             if (isActive(req)) {
                 requests[actualCount] = req;
                 actualCount++;
             }
-            currentSeq--;
+            currentSeq++;
         }
 
         // If we found fewer requests than asked for, resize the array

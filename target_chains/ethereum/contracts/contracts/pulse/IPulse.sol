@@ -94,19 +94,18 @@ interface IPulse is PulseEvents {
     function getExclusivityPeriod() external view returns (uint256);
 
     /**
-     * @notice Gets the last N active requests
+     * @notice Gets the first N active requests
      * @param count Maximum number of active requests to return
-     * @return requests Array of active requests, ordered from newest to oldest
+     * @return requests Array of active requests, ordered from oldest to newest
      * @return actualCount Number of active requests found (may be less than count)
      * @dev Gas Usage: This function's gas cost scales linearly with the number of requests
-     *      that need to be scanned to find active ones. Each iteration costs approximately:
+     *      between firstUnfulfilledSeq and currentSequenceNumber. Each iteration costs approximately:
      *      - 2100 gas for cold storage reads, 100 gas for warm storage reads (SLOAD)
      *      - Additional gas for array operations
-     *      For example, if active requests are sparse (many completed requests between active ones),
-     *      scanning for 100 active requests might need to iterate through 1000+ sequence numbers.
-     *      Consider using smaller count values for gas-sensitive operations.
+     *      The function starts from firstUnfulfilledSeq (all requests before this are fulfilled)
+     *      and scans forward until it finds enough active requests or reaches currentSequenceNumber.
      */
-    function getLastActiveRequests(
+    function getFirstActiveRequests(
         uint256 count
     )
         external

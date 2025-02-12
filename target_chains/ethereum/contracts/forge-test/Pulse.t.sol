@@ -877,7 +877,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         pulse.executeCallback(sequenceNumber, updateData, priceIds);
     }
 
-    function test_getLastActiveRequests() public {
+    function test_getFirstActiveRequests() public {
         // Setup test data
         (
             bytes32[] memory priceIds,
@@ -955,41 +955,41 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     // Split test scenarios into separate functions
     function checkMoreThanAvailable() private {
         (PulseState.Request[] memory requests, uint256 count) = pulse
-            .getLastActiveRequests(10);
+            .getFirstActiveRequests(10);
         assertEq(count, 3, "Should find 3 active requests");
         assertEq(requests.length, 3, "Array should be resized to 3");
         assertEq(
             requests[0].sequenceNumber,
-            5,
-            "First request should be newest"
+            1,
+            "First request should be oldest"
         );
         assertEq(requests[1].sequenceNumber, 3, "Second request should be #3");
-        assertEq(requests[2].sequenceNumber, 1, "Third request should be #1");
+        assertEq(requests[2].sequenceNumber, 5, "Third request should be #5");
     }
 
     function checkExactNumber() private {
         (PulseState.Request[] memory requests, uint256 count) = pulse
-            .getLastActiveRequests(3);
+            .getFirstActiveRequests(3);
         assertEq(count, 3, "Should find 3 active requests");
         assertEq(requests.length, 3, "Array should match requested size");
     }
 
     function checkFewerThanAvailable() private {
         (PulseState.Request[] memory requests, uint256 count) = pulse
-            .getLastActiveRequests(2);
+            .getFirstActiveRequests(2);
         assertEq(count, 2, "Should find 2 active requests");
         assertEq(requests.length, 2, "Array should match requested size");
         assertEq(
             requests[0].sequenceNumber,
-            5,
-            "First request should be newest"
+            1,
+            "First request should be oldest"
         );
         assertEq(requests[1].sequenceNumber, 3, "Second request should be #3");
     }
 
     function checkZeroRequest() private {
         (PulseState.Request[] memory requests, uint256 count) = pulse
-            .getLastActiveRequests(0);
+            .getFirstActiveRequests(0);
         assertEq(count, 0, "Should find 0 active requests");
         assertEq(requests.length, 0, "Array should be empty");
     }
@@ -1008,12 +1008,12 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
     function checkEmptyState() private {
         (PulseState.Request[] memory requests, uint256 count) = pulse
-            .getLastActiveRequests(10);
+            .getFirstActiveRequests(10);
         assertEq(count, 0, "Should find 0 active requests");
         assertEq(requests.length, 0, "Array should be empty");
     }
 
-    function test_getLastActiveRequests_GasUsage() public {
+    function test_getFirstActiveRequests_GasUsage() public {
         // Setup test data
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
@@ -1050,11 +1050,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         // Measure gas for different request counts
         uint256 gas1 = gasleft();
-        pulse.getLastActiveRequests(5);
+        pulse.getFirstActiveRequests(5);
         uint256 gas1Used = gas1 - gasleft();
 
         uint256 gas2 = gasleft();
-        pulse.getLastActiveRequests(10);
+        pulse.getFirstActiveRequests(10);
         uint256 gas2Used = gas2 - gasleft();
 
         // Log gas usage for analysis
