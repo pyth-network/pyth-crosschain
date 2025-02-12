@@ -9,10 +9,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - target_chains/near/**
-      - wormhole_attester/sdk/rust/**
-      - .github/workflows/ci-near-contract.yml
 
 env:
   CARGO_TERM_COLOR: always
@@ -26,6 +22,9 @@ jobs:
         working-directory: target_chains/near/receiver
     steps:
       - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "target_chains/near/receiver -> target"
       - name: Test
         run: ./workspace-test.sh
   reproducible-build:
@@ -36,6 +35,9 @@ jobs:
         working-directory: target_chains/near/receiver
     steps:
       - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "target_chains/near/receiver -> target"
       - run: sudo apt-get install -y libudev-dev
       - run: cargo +stable install --locked cargo-near@0.13.3
       - run: cargo near build reproducible-wasm
@@ -44,4 +46,4 @@ jobs:
         with:
           name: pyth_near.wasm
           path: target_chains/near/receiver/target/near/pyth_near.wasm
-          retention-days: 365
+          retention-days: 90

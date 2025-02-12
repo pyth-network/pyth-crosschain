@@ -9,13 +9,13 @@ set -euo pipefail
 # Setup rust to build wasm.
 rustup target add wasm32-unknown-unknown
 
-cargo build --release --target wasm32-unknown-unknown
+cargo build --release --target wasm32-unknown-unknown --locked
 cp target/wasm32-unknown-unknown/release/pyth_near.wasm .
 
 (
     cd ../wormhole-stub
-    cargo build --release --target wasm32-unknown-unknown
+    cargo build --release --target wasm32-unknown-unknown --locked
     cp target/wasm32-unknown-unknown/release/wormhole_stub.wasm ../receiver
 )
 
-RUST_LOG=info cargo test
+RUST_LOG=info cargo test --locked

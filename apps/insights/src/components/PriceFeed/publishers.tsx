@@ -58,6 +58,7 @@ export const Publishers = async ({ params }: Props) => {
           publisherKey: publisher,
           symbol,
           rank: ranking?.final_rank,
+          firstEvaluation: ranking?.first_ranking_time,
           name: (
             <PublisherTag
               publisherKey={publisher}

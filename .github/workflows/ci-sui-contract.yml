@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - target_chains/sui/contracts/**
 
 name: Sui Contracts
 
@@ -19,12 +17,16 @@ jobs:
         working-directory: target_chains/sui/contracts/
     steps:
       - uses: actions/checkout@v3
-
-      - name: Update rust
-        run: rustup update stable
-
-      - name: Install Sui CLI
-        run: cargo install --locked --git https://github.com/MystenLabs/sui.git --rev 041c5f2bae2fe52079e44b70514333532d69f4e6 sui
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.77.0
+          override: true
+      - uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: sui
+          git: https://github.com/MystenLabs/sui.git
+          rev: 041c5f2bae2fe52079e44b70514333532d69f4e6
 
       - name: Run tests
         run: sui move test

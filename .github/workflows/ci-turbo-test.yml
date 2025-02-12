@@ -11,14 +11,6 @@ on:
       - "**/tsconfig.json"
   push:
     branches: [main]
-    paths:
-      - "**.tsx?"
-      - "**.jsx?"
-      - "**.json"
-      - "**.sol"
-      - "**/package.json"
-      - "**/package-lock.json"
-      - "**/tsconfig.json"
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -30,6 +22,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: 1.81.0
+      - uses: Swatinem/rust-cache@v2
       - name: Install Solana Cli
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
@@ -44,5 +37,7 @@ jobs:
         name: Install pnpm
         with:
           run_install: true
+      - name: Cache for Turbo
+        uses: rharkor/caching-for-turbo@v1.5
       - name: Test
         run: pnpm test:ci
