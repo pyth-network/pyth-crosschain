@@ -877,7 +877,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         pulse.executeCallback(sequenceNumber, updateData, priceIds);
     }
 
-    function test_getFirstActiveRequests() public {
+    function testGetFirstActiveRequests() public {
         // Setup test data
         (
             bytes32[] memory priceIds,
@@ -1013,7 +1013,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         assertEq(requests.length, 0, "Array should be empty");
     }
 
-    function test_getFirstActiveRequests_GasUsage() public {
+    function testGetFirstActiveRequestsGasUsage() public {
         // Setup test data
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
