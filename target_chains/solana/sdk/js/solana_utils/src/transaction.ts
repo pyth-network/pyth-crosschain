@@ -332,6 +332,11 @@ export class TransactionBuilder {
             false
           );
           if (sizeWithInstruction > PACKET_DATA_SIZE) {
+            if (instructionsToSend.length == 0) {
+              throw new Error(
+                `An instruction is too big to be sent in a transaction (${sizeWithInstruction} > ${PACKET_DATA_SIZE} bytes)`
+              );
+            }
             break;
           }
           instructionsToSend.push(instruction);
