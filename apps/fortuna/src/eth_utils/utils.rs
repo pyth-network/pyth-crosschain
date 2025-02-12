@@ -81,6 +81,7 @@ impl EscalationPolicy {
     }
 }
 
+/// Send a transaction and wait for the receipt to ensure that it was confirmed on chain.
 pub async fn send_and_confirm<A: Middleware>(contract_call: ContractCall<A, ()>) -> Result<()> {
     let call_name = contract_call.function.name.as_str();
     let pending_tx = contract_call
@@ -141,6 +142,13 @@ pub async fn estimate_tx_cost<T: Middleware + 'static>(
     Ok(gas_price * gas_used)
 }
 
+/// Submit a transaction, retrying on failure according to a configurable backoff policy.
+/// The transaction is retried with exponentially increasing delay between retries, and
+/// similarly escalating gas and fee multipliers.
+/// The gas_limit parameter is the maximum gas that we expect the transaction to use -- if the gas estimate for
+/// the transaction exceeds this limit, the transaction is not submitted.
+/// Note however that any gas_escalation policy is applied to the estimate, so the actual gas used may exceed the limit.
+/// The transaction is retried until it is confirmed on chain or the maximum number of retries is reached.
 pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     middleware: Arc<T>,
     call: ContractCall<T, ()>,
@@ -198,8 +206,8 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     })
 }
 
-/// Process a callback on a chain. It estimates the gas for the reveal with callback and
-/// submits the transaction if the gas estimate is below the gas limit.
+/// Submit a transaction to the blockchain. It estimates the gas for the transaction,
+/// pads both the gas and fee estimates using the provided multipliers, and submits the transaction.
 /// It will return a permanent or transient error depending on the error type and whether
 /// retry is possible or not.
 pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
@@ -219,7 +227,7 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
         backoff::Error::transient(anyhow!("Error estimating gas for reveal: {:?}", e))
     })?;
 
-    // The gas limit on the simulated transaction is the configured gas limit on the chain,
+    // The gas limit on the simulated transaction is the maximum expected tx gas estimate,
     // but we are willing to pad the gas a bit to ensure reliable submission.
     if gas_estimate > gas_limit {
         return Err(backoff::Error::permanent(anyhow!(
@@ -229,12 +237,10 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
         )));
     }
 
-    // Pad the gas estimate after checking it against the simulation gas limit, ensuring that
-    // the padded gas estimate doesn't exceed the maximum amount of gas we are willing to use.
+    // Pad the gas estimate after checking it against the simulation gas limit.
     let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
 
     let call = call.clone().gas(gas_estimate);
-
     let mut transaction = call.tx.clone();
 
     // manually fill the tx with the gas info, so we can log the details in case of error
