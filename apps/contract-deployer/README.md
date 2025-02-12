@@ -1,4 +1,4 @@
 # Contract Deployer
 
 Currently only EVM chains are supported.
-Run the webapp with: `uvx streamlit run server.py`
+Install uv, then run the webapp with: `uvx streamlit run server.py`
