@@ -1,8 +1,8 @@
 use {
     crate::{
         api::BlockchainState, chain::ethereum::InstrumentedSignablePythContract,
-        chain::utils::estimate_tx_cost, chain::utils::send_and_confirm, keeper::AccountLabel,
-        keeper::ChainId, keeper::KeeperMetrics,
+        eth_utils::utils::estimate_tx_cost, eth_utils::utils::send_and_confirm,
+        keeper::AccountLabel, keeper::ChainId, keeper::KeeperMetrics,
     },
     anyhow::{anyhow, Result},
     ethers::{
@@ -152,7 +152,8 @@ pub async fn adjust_fee_if_necessary(
     }
 
     // Calculate target window for the on-chain fee.
-    let max_callback_cost: u128 = estimate_tx_cost(contract.clone(), legacy_tx, gas_limit.into())
+    let middleware = contract.client();
+    let max_callback_cost: u128 = estimate_tx_cost(middleware, legacy_tx, gas_limit.into())
         .await
         .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
 

@@ -1,12 +1,11 @@
 use {
-    crate::chain::ethereum::{InstrumentedSignablePythContract, PythContractCall},
     anyhow::{anyhow, Result},
-    ethers::middleware::Middleware,
+    ethers::{contract::ContractCall, middleware::Middleware},
     std::sync::Arc,
     tracing,
 };
 
-pub async fn send_and_confirm(contract_call: PythContractCall) -> Result<()> {
+pub async fn send_and_confirm<A: Middleware>(contract_call: ContractCall<A, ()>) -> Result<()> {
     let call_name = contract_call.function.name.as_str();
     let pending_tx = contract_call
         .send()
@@ -39,13 +38,11 @@ pub async fn send_and_confirm(contract_call: PythContractCall) -> Result<()> {
 }
 
 /// Estimate the cost (in wei) of a transaction consuming gas_used gas.
-pub async fn estimate_tx_cost(
-    contract: Arc<InstrumentedSignablePythContract>,
+pub async fn estimate_tx_cost<T: Middleware + 'static>(
+    middleware: Arc<T>,
     use_legacy_tx: bool,
     gas_used: u128,
 ) -> Result<u128> {
-    let middleware = contract.client();
-
     let gas_price: u128 = if use_legacy_tx {
         middleware
             .get_gas_price()

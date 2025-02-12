@@ -1,7 +1,7 @@
 use {
     crate::{
         api::BlockchainState, chain::ethereum::InstrumentedSignablePythContract,
-        chain::utils::send_and_confirm, keeper::block::get_latest_safe_block,
+        eth_utils::utils::send_and_confirm, keeper::block::get_latest_safe_block,
     },
     anyhow::{anyhow, Result},
     std::sync::Arc,

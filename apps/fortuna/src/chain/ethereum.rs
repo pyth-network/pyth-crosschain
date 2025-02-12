@@ -16,7 +16,7 @@ use {
     axum::async_trait,
     ethers::{
         abi::RawLog,
-        contract::{abigen, ContractCall, EthLogDecode},
+        contract::{abigen, EthLogDecode},
         core::types::Address,
         middleware::{gas_oracle::GasOracleMiddleware, SignerMiddleware},
         prelude::JsonRpcClient,
@@ -44,8 +44,6 @@ pub type MiddlewaresWrapper<T> = LegacyTxMiddleware<
 pub type SignablePythContractInner<T> = PythRandom<MiddlewaresWrapper<T>>;
 pub type SignablePythContract = SignablePythContractInner<Http>;
 pub type InstrumentedSignablePythContract = SignablePythContractInner<TracedClient>;
-
-pub type PythContractCall = ContractCall<MiddlewaresWrapper<TracedClient>, ()>;
 
 pub type PythContract = PythRandom<Provider<Http>>;
 pub type InstrumentedPythContract = PythRandom<Provider<TracedClient>>;
