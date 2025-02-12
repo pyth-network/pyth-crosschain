@@ -8,236 +8,15 @@ import { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
 
 // For evm networks, always add a new chain id, for the other networks If there is already a chain id in wormhole sdk,
 // use that for mainnet, and else add a chain id for mainnet too. Also add an id for testnet.
-export const RECEIVER_CHAINS = {
-  unset: 0, // The global chain id. For messages that are not chain specific.
-
-  // On the following networks we use Wormhole's contract
-  near: 15,
-
-  // On the following networks we use our own version of Wormhole receiver contract
-  ethereum: 2,
-  bsc: 4,
-  polygon: 5,
-  avalanche: 6,
-  aurora: 9,
-  fantom: 10,
-  celo: 14,
-  injective: 19,
-  arbitrum: 23,
-  optimism: 24,
-
-  // SVM chains
-  eclipse_devnet: 40001,
-  eclipse_testnet: 40002,
-  eclipse_mainnet: 40003,
-  mantis_testnet: 40004,
-  sonic_devnet: 40005,
-  sonic_testnet: 40006,
-  atlas_testnet: 40007,
-  mantis_mainnet: 40008,
-  sonic_mainnet: 40009,
-
-  cronos: 60001,
-  kcc: 60002,
-  zksync: 60003,
-  shimmer: 60004,
-  gnosis: 60005,
-  evmos: 60006,
-  neon: 60007,
-  polygon_zkevm: 60008,
-  canto: 60009,
-  meter: 60010,
-  mantle: 60011,
-  conflux_espace: 60012,
-  osmosis: 60014,
-  sei_pacific_1: 60017,
-  neutron: 60019,
-  juno: 60020,
-  kava: 60022,
-  wemix: 60023,
-  linea: 60024,
-  eos: 60026,
-  syndr: 60027,
-  scroll: 60028,
-  ronin: 60029,
-  horizen_eon: 60030,
-  boba: 60031,
-  manta: 60032,
-  chiliz: 60033,
-  zetachain: 60034,
-  astar_zkevm: 60035,
-  coredao: 60036,
-  viction: 60037,
-  stacks: 60038,
-  mode: 60039,
-  bttc: 60040,
-  zkfair: 60041,
-  hedera: 60042,
-  filecoin: 60043,
-  lightlink_phoenix: 60044,
-  injective_inevm: 60045,
-  blast: 60046,
-  merlin: 60047,
-  parallel: 60048,
-  iota: 60049,
-  flow_previewnet: 60050,
-  starknet: 60051,
-  opbnb: 60052,
-  gravity: 60053,
-  polynomial: 60054,
-  etherlink: 60055,
-  klaytn: 60056,
-  kinto: 60057,
-  b3_mainnet: 60058,
-  cronos_zkevm_mainnet: 60059,
-  idex_xchain_mainnet: 60060,
-  apechain_mainnet: 60061,
-  flow_mainnet: 60062,
-  sanko: 60063,
-  skate: 60064,
-  morph: 60065,
-  superseed_mainnet: 60066,
-  fuel_mainnet: 60067, // Note: Currently deployed at 50084 (fuel_testnet) but we should use 60067 for future deployments
-  hemi_mainnet: 60068,
-  ton_mainnet: 60069,
-  horse_dream: 60070,
-  mathematician_in_heart: 60071,
-  fantom_sonic_mainnet: 60072,
-  eventum_mainnet: 60073,
-  threat_level_midnight: 60074,
-  just_breathe: 60075,
-  berachain_mainnet: 60076,
-  movement_mainnet: 60077,
-  story_mainnet: 60078,
-
-  // Testnets as a separate chain ids (to use stable data sources and governance for them)
-  injective_testnet: 60013,
-  osmosis_testnet_4: 60015,
-  osmosis_testnet_5: 60016,
-  sei_testnet_atlantic_2: 60018,
-  juno_testnet: 60021,
-  neutron_testnet_pion_1: 60025,
-
-  linea_goerli: 50001,
-  fuji: 50002, // Avalanche testnet
-  base_goerli: 50003,
-  cronos_testnet: 50004,
-  zksync_goerli: 50005,
-  canto_testnet: 50006,
-  polygon_zkevm_testnet: 50007,
-  aurora_testnet: 50008,
-  mantle_sepolia: 50009,
-  fantom_testnet: 50010,
-  mumbai: 50011, // Polygon testnet
-  neon_devnet: 50012,
-  chiado: 50013, // Gnosis testnet
-  kava_testnet: 50014,
-  evmos_testnet: 50015,
-  bsc_testnet: 50016,
-  conflux_espace_testnet: 50017,
-  optimism_goerli: 50018,
-  wemix_testnet: 50019,
-  celo_alfajores_testnet: 50020,
-  syndr_nitro_testnet: 50021,
-  kcc_testnet: 50022,
-  eos_testnet: 50023,
-  meter_testnet: 50024,
-  shimmer_testnet: 50025,
-  scroll_sepolia: 50026,
-  saigon: 50027, // Ronin testnet
-  horizen_gobi: 50028,
-  sepolia: 50029, // Ethereum latest testnet
-  arbitrum_sepolia: 50030, // Arbitrum latest testnet
-  boba_goerli: 50031,
-  manta_testnet: 50032,
-  optimism_sepolia: 50033,
-  chiliz_spicy: 50034, // Chiliz testnet
-  zetachain_testnet: 50035,
-  astar_zkevm_testnet: 50036,
-  coredao_testnet: 50037,
-  viction_testnet: 50038,
-  stacks_testnet: 50039,
-  mode_testnet: 50040,
-  bttc_testnet: 50041,
-  zksync_sepolia: 50042,
-  base_sepolia: 50043,
-  movement_evm_devnet: 50044,
-  movement_m1_devnet: 50045,
-  zkfair_testnet: 50046,
-  blast_s2_testnet: 50047,
-  hedera_testnet: 50048,
-  filecoin_calibration: 50049, // Filecoin testnet
-  lightlink_pegasus_testnet: 50050,
-  fantom_sonic_testnet: 50052,
-  dela_deperp_testnet: 50053,
-  injective_inevm_testnet: 50054,
-  idex_xchain_testnet: 50055,
-  berachain_testnet: 50056, // Deprecated
-  merlin_testnet: 50057,
-  manta_sepolia: 50058,
-  polygon_blackberry: 50059, // Gelato shared testnet
-  arbitrum_blueberry: 50060, // Gelato shared testnet
-  optimism_celestia_raspberry: 50061, // Gelato shared testnet
-  parallel_testnet: 50062,
-  polynomial_testnet: 50063,
-  linea_sepolia: 50064,
-  rol_testnet: 50065,
-  morph_testnet: 50066,
-  sei_evm_devnet: 50067,
-  boba_sepolia: 50068,
-  astar_zkyoto_testnet: 50069,
-  xion_testnet: 50070,
-  taiko_hekla: 50071,
-  olive_testnet: 50072,
-  orange_testnet: 50073,
-  polygon_amoy: 50074,
-  starknet_sepolia: 50075,
-  movement_m2_devnet: 50076,
-  taiko_mainnet: 50077,
-  sei_evm_mainnet: 50078,
-  kakarot_sepolia: 50079,
-  dela_mithreum_deperp_testnet: 50080,
-  berachain_testnet_v2: 50081,
-  opbnb_testnet: 50082,
-  etherlink_testnet: 50083,
-  fuel_testnet: 50084,
-  sei_evm_testnet: 50085,
-  klaytn_testnet: 50086,
-  morph_holesky_testnet: 50087,
-  tabi_testnet: 50088,
-  movement_suzuka_testnet: 50089,
-  b3_testnet: 50090,
-  cronos_zkevm_testnet: 50091,
-  reya_testnet: 50092,
-  movement_evm_devnet_imola: 50093,
-  flow_testnet: 50094,
-  apechain_testnet: 50095,
-  soneium_minato_testnet: 50096,
-  nighthawk: 50097,
-  unichain_sepolia: 50099,
-  abstract_testnet: 50100,
-  sanko_testnet: 50101,
-  skate_testnet: 50102,
-  movement_porto_testnet: 50103,
-  ton_testnet: 50104,
-  kraken_ink_testnet: 50105,
-  ethena_testnet: 50106,
-  superseed_testnet: 50107,
-  happy_bird_song_ends_with_tio: 50108,
-  hyperevm_testnet: 50109,
-  eventum_testnet: 50110,
-  fantom_sonic_devnet: 50111,
-  movement_bardock_testnet: 50112,
-  story_testnet: 50113,
-  coredao_testnet_v2: 50114,
-  bittensor_testnet: 50115,
-  monad_devnet: 50116,
-  monad_testnet: 50117,
-};
+import receiverChainsJson from "./receiver_chains.json";
 
 // If there is any overlapping value the receiver chain will replace the wormhole
 // value and that is an expected behavior.
-export const CHAINS = { ...WORMHOLE_CHAINS, ...RECEIVER_CHAINS };
+export const CHAINS = {
+  ...WORMHOLE_CHAINS,
+  ...receiverChainsJson.mainnet,
+  ...receiverChainsJson.non_mainnet,
+};
 export declare type ChainName = keyof typeof CHAINS;
 export declare type ChainId = typeof CHAINS[ChainName];
 
@@ -245,10 +24,12 @@ export function toChainId(chainName: ChainName): ChainId {
   return CHAINS[chainName];
 }
 
-const CHAIN_ID_TO_NAME = Object.entries(CHAINS).reduce((obj, [name, id]) => {
-  obj[id] = name;
+const CHAIN_ID_TO_NAME: Record<number, ChainName> = Object.entries(
+  CHAINS
+).reduce((obj, [name, id]) => {
+  obj[id as number] = name as ChainName;
   return obj;
-}, {} as any);
+}, {} as Record<number, ChainName>);
 
 export function toChainName(chainId: ChainId): ChainName {
   return CHAIN_ID_TO_NAME[chainId];

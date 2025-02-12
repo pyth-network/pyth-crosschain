@@ -1,0 +1,7 @@
+[project]
+name = "contract-deployer"
+version = "0.1.0"
+description = "Webapp utility to deploy Pyth contracts to EVM chains and generate a PR"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["streamlit-tags>=1.2.8", "streamlit>=1.42.0"]
