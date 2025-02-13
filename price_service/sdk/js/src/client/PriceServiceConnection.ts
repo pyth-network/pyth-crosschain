@@ -1,10 +1,12 @@
-import { HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
+import type { HexString, PriceFeedRequestConfig, PriceServiceConnectionConfig, PriceFeedUpdateCallback } from "../types.js";
+import { PriceFeed } from "../schemas/PriceFeed.js";
+import type { PriceFeedRequestConfig, PriceServiceConnectionConfig, PriceFeedUpdateCallback } from "../types.js";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import * as WebSocket from "isomorphic-ws";
 import { Logger } from "ts-log";
-import { ResilientWebSocket } from "./ResillientWebSocket";
-import { makeWebsocketUrl, removeLeading0xIfExists } from "./utils";
+import { ResilientWebSocket } from "./ResillientWebSocket.js";
+import { makeWebsocketUrl, removeLeading0xIfExists } from "./utils.js";
 
 export type DurationInMs = number;
 

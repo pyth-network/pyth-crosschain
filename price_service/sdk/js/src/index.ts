@@ -18,10 +18,14 @@ export {
   parseTwapMessage,
 } from "./AccumulatorUpdateData.js";
 
-export type { PriceFeedRequestConfig } from "./client/PriceServiceConnection.js";
-export type { PriceServiceConnectionConfig } from "./client/PriceServiceConnection.js";
-export type { PriceFeedUpdateCallback } from "./client/PriceServiceConnection.js";
+export type {
+  PriceFeedRequestConfig,
+  PriceServiceConnectionConfig,
+  PriceFeedUpdateCallback,
+  HexString,
+} from "./types.js";
 export { PriceServiceConnection } from "./client/PriceServiceConnection.js";
+export { Price, PriceFeed, PriceFeedMetadata } from "./schemas/PriceFeed.js";
 
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.
