@@ -1,6 +1,5 @@
 import type { HexString, PriceFeedRequestConfig, PriceServiceConnectionConfig, PriceFeedUpdateCallback } from "../types.js";
 import { PriceFeed } from "../schemas/PriceFeed.js";
-import type { PriceFeedRequestConfig, PriceServiceConnectionConfig, PriceFeedUpdateCallback } from "../types.js";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import * as WebSocket from "isomorphic-ws";

@@ -7,6 +7,8 @@ export interface PriceFeedRequestConfig {
 export interface PriceServiceConnectionConfig {
   url: string;
   priceFeedRequestConfig?: PriceFeedRequestConfig;
+  timeout?: number;
+  httpRetries?: number;
 }
 
 export type PriceFeedUpdateCallback = (priceFeed: any) => void;

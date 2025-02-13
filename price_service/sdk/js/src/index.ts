@@ -25,7 +25,6 @@ export type {
   HexString,
 } from "./types.js";
 export { PriceServiceConnection } from "./client/PriceServiceConnection.js";
-export { Price, PriceFeed, PriceFeedMetadata } from "./schemas/PriceFeed.js";
 
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.
