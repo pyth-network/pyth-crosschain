@@ -1,0 +1,15 @@
+services:
+  contract-deployer:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - type: bind
+        source: ./
+        target: /app
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    restart: unless-stopped

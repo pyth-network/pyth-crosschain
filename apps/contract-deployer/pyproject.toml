@@ -1,0 +1,12 @@
+[project]
+name = "contract-deployer"
+version = "0.1.0"
+description = "Webapp utility to deploy Pyth contracts to EVM chains and generate a PR"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pygit2>=1.17.0",
+    "pygithub>=2.5.0",
+    "pyyaml>=6.0.2",
+    "streamlit>=1.42.0",
+]
