@@ -16,11 +16,9 @@ export class AptosPriceServiceConnection extends PriceServiceConnection {
    */
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<number[][]> {
     // Fetch the latest price feeds from the price service
-    const priceFeeds: PriceFeed[] = await this.getLatestPriceFeeds(priceIds);
-    return priceFeeds
-      .map((feed: PriceFeed) => feed.getVAA())
-      .filter((vaa: string | undefined): vaa is string => vaa !== undefined)
-      .map((vaa: string) => Array.from(Buffer.from(vaa, "base64")));
+    // Use getLatestVaas directly since we only need the VAAs
+    const vaas = await this.getLatestVaas(priceIds);
+    return vaas.map((vaa: string) => Array.from(Buffer.from(vaa, "base64")));
   }
 
   /**
