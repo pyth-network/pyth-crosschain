@@ -1,4 +1,4 @@
-export { AptosPriceServiceConnection } from "./AptosPriceServiceConnection";
+export { AptosPriceServiceConnection } from "./AptosPriceServiceConnection.js";
 
 export {
   DurationInMs,
@@ -7,4 +7,4 @@ export {
   PriceFeed,
   PriceServiceConnectionConfig,
   UnixTimestamp,
-} from "@pythnetwork/price-service-client";
+} from "@pythnetwork/price-service-sdk";

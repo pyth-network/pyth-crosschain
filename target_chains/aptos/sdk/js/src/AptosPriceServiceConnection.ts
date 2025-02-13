@@ -1,6 +1,7 @@
 import {
   PriceServiceConnection,
   HexString,
+  PriceFeed,
 } from "@pythnetwork/price-service-sdk";
 import { BCS } from "aptos";
 import { Buffer } from "buffer";
@@ -14,9 +15,12 @@ export class AptosPriceServiceConnection extends PriceServiceConnection {
    * @returns Array of price update data.
    */
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<number[][]> {
-    // Fetch the latest price feed update VAAs from the price service
-    const latestVaas = await this.getLatestVaas(priceIds);
-    return latestVaas.map((vaa) => Array.from(Buffer.from(vaa, "base64")));
+    // Fetch the latest price feeds from the price service
+    const priceFeeds: PriceFeed[] = await this.getLatestPriceFeeds(priceIds);
+    return priceFeeds
+      .map((feed: PriceFeed) => feed.getVAA())
+      .filter((vaa: string | undefined): vaa is string => vaa !== undefined)
+      .map((vaa: string) => Array.from(Buffer.from(vaa, "base64")));
   }
 
   /**
