@@ -3,7 +3,7 @@ import {
   HexString,
   PriceFeed,
   PriceServiceConnectionConfig,
-} from "@pythnetwork/price-service-sdk/lib/index.js";
+} from "@pythnetwork/price-service-sdk";
 import { BCS } from "aptos";
 import { Buffer } from "buffer";
 
