@@ -22,9 +22,9 @@ export type {
   PriceFeedRequestConfig,
   PriceServiceConnectionConfig,
   PriceFeedUpdateCallback,
-  HexString,
 } from "./types.js";
 export { PriceServiceConnection } from "./client/PriceServiceConnection.js";
+export { HexString } from "./types.js";
 
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.

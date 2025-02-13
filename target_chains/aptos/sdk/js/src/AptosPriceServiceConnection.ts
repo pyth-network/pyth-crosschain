@@ -1,5 +1,5 @@
-import { PriceServiceConnection } from "@pythnetwork/price-service-sdk";
-import type { HexString } from "@pythnetwork/price-service-sdk";
+import { PriceServiceConnection } from "@pythnetwork/price-service-sdk/lib/client/PriceServiceConnection.js";
+import { HexString } from "@pythnetwork/price-service-sdk/lib/types.js";
 import { BCS } from "aptos";
 import { Buffer } from "buffer";
 
