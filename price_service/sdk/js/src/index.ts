@@ -3,7 +3,7 @@ import {
   Price as JsonPrice,
   PriceFeed as JsonPriceFeed,
   PriceFeedMetadata as JsonPriceFeedMetadata,
-} from "./schemas/PriceFeed";
+} from "./schemas/PriceFeed.js";
 
 export type UnixTimestamp = number;
 export type DurationInSeconds = number;
@@ -16,7 +16,7 @@ export {
   AccumulatorUpdateData,
   parsePriceFeedMessage,
   parseTwapMessage,
-} from "./AccumulatorUpdateData";
+} from "./AccumulatorUpdateData.js";
 
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.

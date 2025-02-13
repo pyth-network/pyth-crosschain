@@ -6,8 +6,17 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/index.d.ts"
+    }
+  },
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "files": [
     "lib/**/*"
   ],
@@ -20,7 +29,9 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm run build:esm && pnpm run build:cjs",
+    "build:esm": "tsc",
+    "build:cjs": "tsc --module commonjs --outDir lib/cjs",
     "example-client": "pnpm run build && node lib/examples/EvmPriceServiceClient.js",
     "example-relay": "pnpm run build && node lib/examples/EvmRelay.js",
     "example-benchmark": "pnpm run build && node lib/examples/EvmBenchmark.js",

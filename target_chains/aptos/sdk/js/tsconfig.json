@@ -1,13 +1,10 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
-    "declaration": true,
-    "outDir": "./lib",
     "rootDir": "src/",
-    "strict": true,
-    "esModuleInterop": true
+    "outDir": "./lib",
+    "module": "node16",
+    "moduleResolution": "node16"
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/__tests__/*"]

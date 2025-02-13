@@ -6,8 +6,17 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/index.d.ts"
+    }
+  },
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "files": [
     "lib/**/*"
   ],
@@ -21,7 +30,9 @@
   },
   "scripts": {
     "usage-example": "ts-node src/examples/usage.ts",
-    "build": "pnpm run generate-fuel-types && tsc && copyfiles -u 1 \"src/**/*.d.ts\" lib",
+    "build": "pnpm run generate-fuel-types && pnpm run build:esm && pnpm run build:cjs",
+    "build:esm": "tsc && copyfiles -u 1 \"src/**/*.d.ts\" lib",
+    "build:cjs": "tsc --module commonjs --outDir lib/cjs",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "test:lint": "eslint src/",

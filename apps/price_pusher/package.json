@@ -3,8 +3,17 @@
   "version": "9.0.0",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/index.d.ts"
+    }
+  },
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "files": [
     "lib/**/*"
   ],
@@ -20,10 +29,12 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm run build:esm && pnpm run build:cjs",
+    "build:esm": "tsc",
+    "build:cjs": "tsc --module commonjs --outDir lib/cjs",
     "format": "prettier --write \"src/**/*.ts\"",
     "test:lint": "eslint src/",
-    "start": "node lib/index.js",
+    "start": "node lib/cjs/index.js",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
