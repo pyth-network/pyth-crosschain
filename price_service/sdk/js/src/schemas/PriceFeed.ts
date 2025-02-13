@@ -10,7 +10,7 @@
 /**
  * Represents an aggregate price from Pyth publisher feeds.
  */
-export interface PriceFeed {
+export class PriceFeed {
   /**
    * Exponentially-weighted moving average Price
    */
@@ -31,6 +31,18 @@ export interface PriceFeed {
    * VAA of the price
    */
   vaa?: string;
+
+  constructor(data: any) {
+    this.ema_price = data.ema_price;
+    this.id = data.id;
+    this.metadata = data.metadata;
+    this.price = data.price;
+    this.vaa = data.vaa;
+  }
+
+  static fromJson(json: any): PriceFeed {
+    return new PriceFeed(Convert.toPriceFeed(json));
+  }
 }
 
 /**
@@ -40,7 +52,7 @@ export interface PriceFeed {
  *
  * Price
  */
-export interface Price {
+export class Price {
   /**
    * Confidence interval around the price.
    */
@@ -57,6 +69,17 @@ export interface Price {
    * Publish Time of the price
    */
   publish_time: number;
+
+  constructor(data: any) {
+    this.conf = data.conf;
+    this.expo = data.expo;
+    this.price = data.price;
+    this.publish_time = data.publish_time;
+  }
+
+  static fromJson(json: any): Price {
+    return new Price(Convert.toPrice(json));
+  }
 }
 
 /**
