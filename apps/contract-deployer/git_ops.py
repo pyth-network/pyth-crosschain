@@ -54,6 +54,7 @@ class GitOps(object):
         self.repo.index.write()
 
         tree = self.repo.index.write_tree()
+        # TODO we should sign this commit
         self.repo.create_commit('HEAD', self.signature, self.signature, commit_message, tree, [self.repo.head.target])
         self.repo.remotes[0].push([f'refs/heads/{self.branch_name}:refs/heads/{self.branch_name}'],
                                   callbacks=self.auth_callback)
