@@ -263,18 +263,66 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     encodedMessage,
                     1
                 );
-            } else if (messageType == MessageType.TwapPriceFeed) {
-                (twapPriceInfo, priceId) = parseTwapPriceFeedMessage(
-                    encodedMessage,
-                    1
-                );
-            } else {
-                revert PythErrors.InvalidUpdateData();
-            }
+            } else revert PythErrors.InvalidUpdateData();
 
             return (endOffset, priceInfo, priceId, prevPublishTime);
         }
     }
+
+    function extractTwapPriceInfoFromMerkleProof(
+        bytes20 digest,
+        bytes calldata encoded,
+        uint offset
+    )
+        internal
+        pure
+        returns (
+            uint endOffset,
+            PythInternalStructs.TwapPriceInfo memory twapPriceInfo,
+            bytes32 priceId
+        )
+        // TODO: Add the logic to extract the twap price info from the merkle proof
+    {
+                unchecked {
+            bytes calldata encodedMessage;
+            uint16 messageSize = UnsafeCalldataBytesLib.toUint16(
+                encoded,
+                offset
+            );
+            offset += 2;
+
+            encodedMessage = UnsafeCalldataBytesLib.slice(
+                encoded,
+                offset,
+                messageSize
+            );
+            offset += messageSize;
+
+            bool valid;
+            (valid, endOffset) = MerkleTree.isProofValid(
+                encoded,
+                offset,
+                digest,
+                encodedMessage
+            );
+            if (!valid) {
+                revert PythErrors.InvalidUpdateData();
+            }
+
+            MessageType messageType = MessageType(
+                UnsafeCalldataBytesLib.toUint8(encodedMessage, 0)
+            );
+            if (messageType == MessageType.TwapPriceFeed) {
+                (twapPriceInfo, priceId) = parseTwapPriceFeedMessage(
+                    encodedMessage,
+                    1
+                );
+            } else revert PythErrors.InvalidUpdateData();
+
+            return (endOffset, twapPriceInfo, priceId);
+        }
+    }
+        
 
     function parsePriceFeedMessage(
         bytes calldata encodedPriceFeed,
@@ -354,52 +402,52 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     {
         unchecked {
             priceId = UnsafeCalldataBytesLib.toBytes32(
-                encodedPriceFeed,
+                encodedTwapPriceFeed,
                 offset
             );
             offset += 32;
 
             twapPriceInfo.cumulativePrice = int128(
-                UnsafeCalldataBytesLib.toUint64(encodedPriceFeed, offset)
+                UnsafeCalldataBytesLib.toUint128(encodedTwapPriceFeed, offset)
             );
             offset += 16;
 
             twapPriceInfo.cumulativeConf = UnsafeCalldataBytesLib.toUint128(
-                encodedPriceFeed,
+                encodedTwapPriceFeed,
                 offset
             );
             offset += 16;
 
             twapPriceInfo.numDownSlots = UnsafeCalldataBytesLib.toUint64(
-                encodedPriceFeed,
+                encodedTwapPriceFeed,
                 offset
             );
             offset += 8;
 
             twapPriceInfo.publishSlot = UnsafeCalldataBytesLib.toUint64(
-                encodedPriceFeed,
+                encodedTwapPriceFeed,
                 offset
             );
             offset += 8;
 
             twapPriceInfo.publishTime = UnsafeCalldataBytesLib.toUint64(
-                encodedPriceFeed,
+                encodedTwapPriceFeed,
                 offset
             );
             offset += 8;
 
             twapPriceInfo.prevPublishTime = UnsafeCalldataBytesLib.toUint64(
-                encodedPriceFeed,
+                encodedTwapPriceFeed,
                 offset
             );
             offset += 8;
 
             twapPriceInfo.expo = int32(
-                UnsafeCalldataBytesLib.toUint32(encodedPriceFeed, offset)
+                UnsafeCalldataBytesLib.toUint32(encodedTwapPriceFeed, offset)
             );
             offset += 4;
 
-            if (offset > encodedPriceFeed.length)
+            if (offset > encodedTwapPriceFeed.length)
                 revert PythErrors.InvalidUpdateData();
         }
     }

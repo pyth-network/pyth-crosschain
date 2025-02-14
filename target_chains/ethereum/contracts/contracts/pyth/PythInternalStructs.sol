@@ -34,8 +34,8 @@ contract PythInternalStructs {
         // slot 2
         uint64 numDownSlots;
         uint64 publishSlot;
-        int64 publishTime;
-        int64 prevPublishTime;
+        uint64 publishTime;
+        uint64 prevPublishTime;
         // slot 3
         
         int32 expo;

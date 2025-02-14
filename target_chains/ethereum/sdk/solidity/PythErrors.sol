@@ -45,4 +45,8 @@ library PythErrors {
     // The wormhole address to set in SetWormholeAddress governance is invalid.
     // Signature: 0x13d3ed82
     error InvalidWormholeAddressToSet();
+    // The twap update data is invalid.
+    error InvalidTwapUpdateData();
+    // The twap update data set is invalid.
+    error InvalidTwapUpdateDataSet();
 }
