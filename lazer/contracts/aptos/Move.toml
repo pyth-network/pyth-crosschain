@@ -1,0 +1,9 @@
+[package]
+name = "pyth_lazer"
+version = "0.1.0"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "mainnet" }
+
+[addresses]
+pyth_lazer = "_"
