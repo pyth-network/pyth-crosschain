@@ -39,8 +39,8 @@ contract PythStructs {
         // End time of the TWAP
         uint endTime;
         // TWAP price
-        Price cumulativePrice;
+        Price twap;
         // Down slot ratio
         uint32 downSlotRatio;
     }
-1}
+}

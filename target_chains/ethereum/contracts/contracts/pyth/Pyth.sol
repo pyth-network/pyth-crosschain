@@ -311,15 +311,16 @@ abstract contract Pyth is
     function parseTwapPriceFeedUpdates(
         bytes[2][] calldata updateData,
         bytes32[] calldata priceIds,
-        unit8 windowSize
+        uint8 windowSize
     )
         external
         payable
-        override
         returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds)
     {
         {
-            revert(updateData.length != 2, PythErrors.InvalidUpdateData());
+            if (updateData.length != 2) {
+                revert PythErrors.InvalidUpdateData();
+            }
             uint requiredFee = getUpdateFee(updateData[0]);
 
             // Check if the two updateData contains the same number of priceUpdates
@@ -330,6 +331,7 @@ abstract contract Pyth is
         }
 
         // Parse the updateData
+        unchecked {
         twapPriceFeeds = new PythStructs.TwapPriceFeed[](priceIds.length);
         for (uint i = 0; i < updateData[0].length; i++) {
             if (
@@ -341,6 +343,7 @@ abstract contract Pyth is
                     ACCUMULATOR_MAGIC)
             ) {
                 // Parse the accumulator update
+                // I believe the offset will be same for both updateData[0][i] and updateData[1][i]
                 uint offsetFirst;
                 uint offsetSecond;
                 {
@@ -364,7 +367,7 @@ abstract contract Pyth is
                 (
                     offsetFirst,
                     digestFirst,
-                    numUpdates,
+                    numUpdatesFirst,
                     encodedFirst
                 ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
                     updateData[0][i],
@@ -373,12 +376,12 @@ abstract contract Pyth is
                 (
                     offsetSecond,
                     digestSecond,
-                    numUpdates,
+                    numUpdatesSecond,
                     encodedSecond
                 ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
                     updateData[1][i],
                     offsetSecond);
-
+                // I believe this check is redundant
                 if (numUpdatesFirst != numUpdatesSecond) {
                     revert PythErrors.InvalidUpdateData();
                 }
@@ -389,14 +392,85 @@ abstract contract Pyth is
                     bytes32 priceIdFirst;
                     bytes32 priceIdSecond;
 
-                    (offsetFirst, twapPriceInfoFirst, priceIdFirst) = extractPriceInfoFromMerkleProof(digestFirst, encodedFirst, offsetFirst);
-                    (offsetSecond, twapPriceInfoSecond, priceIdSecond) = extractPriceInfoFromMerkleProof(digestSecond, encodedSecond, offsetSecond);
-                }
+                    (offsetFirst, twapPriceInfoFirst, priceIdFirst) = extractTwapPriceInfoFromMerkleProof(digestFirst, encodedFirst, offsetFirst);
+                    (offsetSecond, twapPriceInfoSecond, priceIdSecond) = extractTwapPriceInfoFromMerkleProof(digestSecond, encodedSecond, offsetSecond);
 
+                    require(priceIdFirst == priceIdSecond, PythErrors.InvalidTwapUpdateDataSet());
                 
+                    // No Updates here.
+                    // check whether caller requested for this data
+                    uint k = findIndexOfPriceId(priceIds, priceIdFirst);
+                    if (k == priceIds.length || twapPriceFeeds[k].id != 0) {
+                        continue;
+                    }
+
+                    // Since we have already validated the twap price info, we can directly use it
+                    validateTwapPriceInfo(twapPriceInfoFirst, twapPriceInfoSecond);
+
+                    // Now we will calcualte the cumulative price and cumulative conf
+                    // for the first and second priceId
+                    // I believe the cumulative price and cumulative conf will be same for both priceIdFirst and priceIdSecond
+                    // because they are both from the same accumulator update
+                    uint64 slotDiff = twapPriceInfoSecond.publishSlot - twapPriceInfoFirst.publishSlot;
+                    int128 priceDiff = twapPriceInfoSecond.price - twapPriceInfoFirst.price;
+                    uint128 confDiff = twapPriceInfoSecond.conf - twapPriceInfoFirst.conf;
+
+                    // Now we will calculate the twap price and twap conf
+                    // for the first and second priceId
+                    int128 twapPrice = priceDiff / slotDiff;
+                    uint128 twapConf = confDiff / slotDiff;
+
+                    twapPriceFeeds[k].id = priceIdFirst;
+                    twapPriceFeeds[k].twap.price = twapPrice;
+                    twapPriceFeeds[k].twap.conf = twapConf;
+                    twapPriceFeeds[k].twap.expo = twapPriceInfoFirst.expo;
+                    twapPriceFeeds[k].twap.publishTime = twapPriceInfoSecond.publishTime;
+                    twapPriceFeeds[k].startTime = twapPriceInfoFirst.publishTime;
+                    twapPriceFeeds[k].endTime = twapPriceInfoSecond.publishTime;
+                    //TODO: Calculate the downSlotRatio
+                }
+            if (offsetFirst != encodedFirst.length) {
+                    revert PythErrors.InvalidTwapUpdateData();
+                }
+                if (offsetSecond != encodedSecond.length) {
+                    revert PythErrors.InvalidTwapUpdateData();
+                }
+                if (offsetFirst != offsetSecond) {
+                    revert PythErrors.InvalidTwapUpdateData();
+                } else {
+                    revert PythErrors.InvalidUpdateData();
+                }
             } else {
                 revert PythErrors.InvalidUpdateData();
             }
+        }
+
+            for (uint k = 0; k < priceIds.length; k++) {
+                if (twapPriceFeeds[k].id == 0) {
+                    revert PythErrors.PriceFeedNotFoundWithinRange();
+                }
+            }
+        }
+    }
+
+    function validateTwapPriceInfo(
+        PythInternalStructs.TwapPriceInfo memory twapPriceInfoFirst,
+        PythInternalStructs.TwapPriceInfo memory twapPriceInfoSecond
+    ) private pure {
+        if (twapPriceInfoFirst.expo != twapPriceInfoSecond.expo) {
+            revert PythErrors.InvalidTwapUpdateDataSet();
+        }
+        if (twapPriceInfoFirst.publishSlot > twapPriceInfoSecond.publishSlot) {
+            revert PythErrors.InvalidTwapUpdateDataSet();
+        }
+        if (twapPriceInfoFirst.prevPublishTime > twapPriceInfoFirst.publishTime) {
+            revert PythErrors.InvalidTwapUpdateData();
+        }
+        if (twapPriceInfoSecond.prevPublishTime > twapPriceInfoSecond.publishTime) {
+            revert PythErrors.InvalidTwapUpdateDataSet();
+        }
+        if (twapPriceInfoFirst.publishTime > twapPriceInfoSecond.publishTime) {
+            revert PythErrors.InvalidTwapUpdateDataSet();
         }
     }
 
