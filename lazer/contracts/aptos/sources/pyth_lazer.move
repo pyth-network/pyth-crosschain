@@ -5,7 +5,7 @@ module pyth_lazer::pyth_lazer {
     use aptos_framework::coin;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_std::ed25519;
-    
+
     /// Error codes
     const ENO_PERMISSIONS: u64 = 1;
     const EINVALID_SIGNER: u64 = 2;
@@ -68,7 +68,7 @@ module pyth_lazer::pyth_lazer {
         let num_signers = storage.num_trusted_signers;
         let i = 0;
         let found = false;
-        
+
         while (i < num_signers) {
             let signer_info = vector::borrow(&storage.trusted_signers, (i as u64));
             if (signer_info.pubkey == trusted_signer) {
@@ -106,7 +106,7 @@ module pyth_lazer::pyth_lazer {
         public_key: vector<u8>,
     ) acquires Storage {
         let storage = borrow_global<Storage>(@pyth_lazer);
-        
+
         // Verify fee payment
         assert!(coin::balance<AptosCoin>(signer::address_of(account)) >= storage.single_update_fee, EINSUFFICIENT_FEE);
         coin::transfer<AptosCoin>(account, storage.treasury, storage.single_update_fee);
