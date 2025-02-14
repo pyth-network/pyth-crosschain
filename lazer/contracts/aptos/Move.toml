@@ -1,0 +1,13 @@
+[package]
+name = "pyth_lazer"
+version = "0.1.0"
+license = "UNLICENSED"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "mainnet" }
+
+[addresses]
+pyth_lazer = "0x123"  # Using TOP_AUTHORITY address for testing
+
+# For more details on Move.toml configuration, see:
+# https://move-language.github.io/move/packages.html
