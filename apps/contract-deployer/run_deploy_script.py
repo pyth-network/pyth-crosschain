@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import subprocess
 
 import streamlit as st
@@ -12,7 +13,7 @@ def build_deploy_command(chain_name):
     return f"./deploy.sh {chain_name}"
 
 
-def run_deploy_script(chain_name: str):
+def run_deploy_script(chain_name: str, repo_base_dir: Path):
     # Create a placeholder for the output
 
     with st.expander("Deployment logs", expanded=True):
@@ -26,14 +27,14 @@ def run_deploy_script(chain_name: str):
         [
             "bash",
             "-c",
-            f"source ~/.nvm/nvm.sh && nvm use 22.11.0 && {deploy_command}",
+            deploy_command,
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
         bufsize=1,
         universal_newlines=True,
-        cwd="/Users/tejasbadadare/dev/pyth-crosschain/target_chains/ethereum/contracts",
+        cwd=(repo_base_dir.joinpath("target_chains/ethereum/contracts")).as_posix(),
         env=env,
     )
 
