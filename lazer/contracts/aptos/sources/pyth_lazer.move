@@ -1,9 +1,10 @@
 module pyth_lazer::pyth_lazer {
     use std::vector;
-    use aptos_framework::account;
+    use std::signer;
     use aptos_framework::timestamp;
-    use aptos_framework::coin::{Self, AptosCoin};
-    use aptos_framework::ed25519;
+    use aptos_framework::coin;
+    use aptos_framework::aptos_coin::AptosCoin;
+    use aptos_std::ed25519;
     
     /// Error codes
     const ENO_PERMISSIONS: u64 = 1;
@@ -60,8 +61,8 @@ module pyth_lazer::pyth_lazer {
         trusted_signer: vector<u8>,
         expires_at: u64,
     ) acquires Storage {
-        let storage = borrow_global_mut<Storage>(account::get_signer_capability_address(account));
-        assert!(account::get_signer_capability_address(account) == storage.top_authority, ENO_PERMISSIONS);
+        let storage = borrow_global_mut<Storage>(@pyth_lazer);
+        assert!(signer::address_of(account) == storage.top_authority, ENO_PERMISSIONS);
         assert!(vector::length(&trusted_signer) == ED25519_PUBLIC_KEY_LENGTH, EINVALID_SIGNER);
 
         let num_signers = storage.num_trusted_signers;
@@ -104,19 +105,29 @@ module pyth_lazer::pyth_lazer {
         signature: vector<u8>,
         public_key: vector<u8>,
     ) acquires Storage {
-        let storage = borrow_global<Storage>(account::get_signer_capability_address(account));
+        let storage = borrow_global<Storage>(@pyth_lazer);
         
         // Verify fee payment
-        assert!(aptos_framework::coin::balance<AptosCoin>(account::get_signer_capability_address(account)) >= storage.single_update_fee, EINSUFFICIENT_FEE);
-        aptos_framework::coin::transfer<AptosCoin>(account, storage.treasury, storage.single_update_fee);
-
-        // Verify signature
-        assert!(ed25519::verify_signature(&public_key, &message, &signature), EINVALID_SIGNATURE);
+        assert!(coin::balance<AptosCoin>(signer::address_of(account)) >= storage.single_update_fee, EINSUFFICIENT_FEE);
+        coin::transfer<AptosCoin>(account, storage.treasury, storage.single_update_fee);
 
         // Verify signer is trusted and not expired
         let i = 0;
         let valid = false;
         while (i < storage.num_trusted_signers) {
+            let signer_info = vector::borrow(&storage.trusted_signers, (i as u64));
+            if (signer_info.pubkey == public_key && signer_info.expires_at > timestamp::now_seconds()) {
+                valid = true;
+                break
+            };
+            i = i + 1;
+        };
+        assert!(valid, EINVALID_SIGNER);
+
+        // Verify signature
+        let sig = ed25519::new_signature_from_bytes(signature);
+        let pk = ed25519::new_unvalidated_public_key_from_bytes(public_key);
+        assert!(ed25519::signature_verify_strict(&sig, &pk, message), EINVALID_SIGNATURE);
             let signer_info = vector::borrow(&storage.trusted_signers, (i as u64));
             if (signer_info.pubkey == public_key && signer_info.expires_at > timestamp::now_seconds()) {
                 valid = true;
