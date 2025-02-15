@@ -403,6 +403,7 @@ export const EntropyDeployments = {
     gasLimit: "500K",
     network: "testnet",
     nativeCurrency: "MON",
+    rpc: "https://rpc.devnet1.monad.xyz",
   },
   "monad-testnet": {
     address: "0x36825bf3fbdf5a29e2d5148bfe7dcf7b5639e320",
