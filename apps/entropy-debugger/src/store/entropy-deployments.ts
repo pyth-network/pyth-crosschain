@@ -9,6 +9,15 @@ export type EntropyDeployment = {
 };
 
 export const EntropyDeployments = {
+  "berachain-mainnet": {
+    address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    network: "mainnet",
+    explorer: "https://berascan.com/address/$ADDRESS",
+    delay: "1 block",
+    gasLimit: "2.5M",
+    rpc: "https://rpc.berachain.com",
+    nativeCurrency: "BERA",
+  },
   blast: {
     address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     network: "mainnet",
@@ -168,7 +177,7 @@ export const EntropyDeployments = {
     delay: "",
     address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     explorer: "https://bartio.beratrail.io/address/$ADDRESS",
-    gasLimit: "500K",
+    gasLimit: "2.5M",
     nativeCurrency: "BERA",
   },
   "coredao-testnet": {
@@ -386,6 +395,32 @@ export const EntropyDeployments = {
     network: "mainnet",
     rpc: "https://rpc.soniclabs.com",
     nativeCurrency: "S",
+  },
+  "monad-devnet": {
+    address: "0x36825bf3fbdf5a29e2d5148bfe7dcf7b5639e320",
+    explorer: "https://brightstar-884.devnet1.monad.xyz/address/$ADDRESS",
+    delay: "",
+    gasLimit: "500K",
+    network: "testnet",
+    nativeCurrency: "MON",
+  },
+  "monad-testnet": {
+    address: "0x36825bf3fbdf5a29e2d5148bfe7dcf7b5639e320",
+    explorer: "https://testnet.monadexplorer.com/address/$ADDRESS",
+    delay: "",
+    gasLimit: "500K",
+    network: "testnet",
+    nativeCurrency: "MON",
+    rpc: "https://testnet-rpc.monad.xyz",
+  },
+  abstract: {
+    address: "0x5a4a369F4db5df2054994AF031b7b23949b98c0e",
+    explorer: "https://abscan.org/address/$ADDRESS",
+    delay: "1 block",
+    gasLimit: "500K",
+    network: "mainnet",
+    rpc: "https://api.mainnet.abs.xyz",
+    nativeCurrency: "ETH",
   },
 } as const satisfies Record<string, EntropyDeployment>;
 
