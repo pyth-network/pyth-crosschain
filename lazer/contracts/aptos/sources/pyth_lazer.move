@@ -15,7 +15,7 @@ module pyth_lazer::pyth_lazer {
     const EINSUFFICIENT_FEE: u64 = 6;
 
     /// Constants
-    const MAX_NUM_TRUSTED_SIGNERS: u8 = 5;
+    const MAX_NUM_TRUSTED_SIGNERS: u8 = 2;
     const ED25519_PUBLIC_KEY_LENGTH: u64 = 32;
 
     /// Stores information about a trusted signer including their public key and expiration
@@ -28,7 +28,7 @@ module pyth_lazer::pyth_lazer {
     struct Storage has key {
         top_authority: address,
         treasury: address,
-        single_update_fee: u64,  // Fee in APT token (1 wei)
+        single_update_fee: u64,
         num_trusted_signers: u8,
         trusted_signers: vector<TrustedSignerInfo>,
     }
@@ -48,14 +48,14 @@ module pyth_lazer::pyth_lazer {
         let storage = Storage {
             top_authority,
             treasury,
-            single_update_fee: 1, // 1 wei in Aptos native token
+            single_update_fee: 1, // Nominal fee
             num_trusted_signers: 0,
             trusted_signers: vector::empty(),
         };
         move_to(account, storage);
     }
 
-    /// Update a trusted signer's information or remove them
+    /// Upsert a trusted signer's information or remove them
     public entry fun update_trusted_signer(
         account: &signer,
         trusted_signer: vector<u8>,
@@ -128,13 +128,5 @@ module pyth_lazer::pyth_lazer {
         let sig = ed25519::new_signature_from_bytes(signature);
         let pk = ed25519::new_unvalidated_public_key_from_bytes(public_key);
         assert!(ed25519::signature_verify_strict(&sig, &pk, message), EINVALID_SIGNATURE);
-            let signer_info = vector::borrow(&storage.trusted_signers, (i as u64));
-            if (signer_info.pubkey == public_key && signer_info.expires_at > timestamp::now_seconds()) {
-                valid = true;
-                break
-            };
-            i = i + 1;
-        };
-        assert!(valid, EINVALID_SIGNER);
     }
 }
