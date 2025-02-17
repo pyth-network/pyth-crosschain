@@ -27,6 +27,16 @@ jobs:
           rustup install 1.66.1
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            target_chains/ethereum/sdk/stylus
+            target_chains/cosmwasm
+            target_chains/fuel/contracts
+            target_chains/solana
+            governance/remote_executor
+            lazer
+            pythnet/message_buffer
+            pythnet/stake_caps_parameters
       - name: Install protoc
         uses: arduino/setup-protoc@v3
         with:
