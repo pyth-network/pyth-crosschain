@@ -9,4 +9,4 @@ rev = "mainnet"
 subdir = "aptos-framework"
 
 [addresses]
-pyth_lazer = "0x123" # Using TOP_AUTHORITY address for testing
+pyth_lazer = "0x8731685005cfb169b4da4bbfab0c91c5ba59508bbd6d26990ee2be7225cb34d1" # Temporary key during development
