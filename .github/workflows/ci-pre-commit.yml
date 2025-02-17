@@ -48,9 +48,3 @@ jobs:
           path: ~/.cache/pypoetry
           key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
       - uses: pre-commit/action@v3.0.0
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          # Run only on files changed in the PR
-          extra_args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
-      - uses: pre-commit/action@v3.0.0
-        if: ${{ github.event_name != 'pull_request' }}

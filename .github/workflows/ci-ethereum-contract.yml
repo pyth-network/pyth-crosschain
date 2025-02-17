@@ -30,7 +30,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1.1.1
         with:
-          version: nightly
+          version: 0.2.0
 
       - name: Install Forge dependencies
         run: pnpm run install-forge-deps
