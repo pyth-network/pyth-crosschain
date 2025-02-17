@@ -72,12 +72,12 @@ export default {
       default: LAMPORTS_PER_SOL / 100,
     } as Options,
     "jito-bundle-size": {
-      description: "Number of transactions in each bundle",
+      description: "Number of transactions in each Jito bundle",
       type: "number",
-      default: 2,
+      default: 5,
     } as Options,
     "updates-per-jito-bundle": {
-      description: "Number of transactions in each bundle",
+      description: "Number of price updates in each Jito bundle",
       type: "number",
       default: 6,
     } as Options,
