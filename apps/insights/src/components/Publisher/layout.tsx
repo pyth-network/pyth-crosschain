@@ -97,6 +97,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
         score: ranking?.final_score,
         rank: ranking?.final_rank,
         firstEvaluation: ranking?.first_ranking_time,
+        assetClass: feed.product.asset_type,
         status,
       }))}
     >

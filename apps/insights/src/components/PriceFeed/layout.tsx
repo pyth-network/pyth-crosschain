@@ -26,6 +26,7 @@ import {
   PriceFeedChangePercent,
 } from "../PriceFeedChangePercent";
 import { PriceFeedTag } from "../PriceFeedTag";
+import { PriceName } from "../PriceName";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 
 type Props = {
@@ -110,7 +111,11 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
         <section className={styles.stats}>
           <StatCard
             variant="primary"
-            header="Aggregated Price"
+            header={
+              <>
+                Aggregated <PriceName assetClass={feed.product.asset_type} />
+              </>
+            }
             stat={
               <LivePrice
                 feedKey={feed.product.price_account}
@@ -158,7 +163,11 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
             }
           />
           <StatCard
-            header="1-Day Price Change"
+            header={
+              <>
+                1-Day <PriceName assetClass={feed.product.asset_type} /> Change
+              </>
+            }
             stat={
               <YesterdaysPricesProvider
                 feeds={{ [feed.symbol]: feed.product.price_account }}

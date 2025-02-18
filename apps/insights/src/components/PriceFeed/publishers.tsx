@@ -52,6 +52,7 @@ export const Publishers = async ({ params }: Props) => {
       nameLoadingSkeleton={<PublisherTag isLoading />}
       symbol={symbol}
       displaySymbol={feed.product.display_symbol}
+      assetClass={feed.product.asset_type}
       priceComponents={publishers.map(
         ({ ranking, publisher, status, cluster, knownPublisher }) => ({
           id: `${publisher}-${ClusterToName[cluster]}`,

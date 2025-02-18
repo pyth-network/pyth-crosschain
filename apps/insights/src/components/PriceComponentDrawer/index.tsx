@@ -31,6 +31,7 @@ import { StateType, useData } from "../../hooks/use-data";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import type { Status } from "../../status";
 import { LiveConfidence, LivePrice, LiveComponentValue } from "../LivePrices";
+import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
 
@@ -48,6 +49,7 @@ type Props = {
   publisherKey: string;
   symbol: string;
   displaySymbol: string;
+  assetClass: string;
   feedKey: string;
   score: number | undefined;
   rank: number | undefined;
@@ -63,6 +65,7 @@ export const PriceComponentDrawer = ({
   onClose,
   symbol,
   displaySymbol,
+  assetClass,
   feedKey,
   score,
   rank,
@@ -135,13 +138,21 @@ export const PriceComponentDrawer = ({
       <div className={styles.stats}>
         <StatCard
           nonInteractive
-          header="Aggregate Price"
+          header={
+            <>
+              Aggregated <PriceName assetClass={assetClass} />
+            </>
+          }
           small
           stat={<LivePrice feedKey={feedKey} cluster={cluster} />}
         />
         <StatCard
           nonInteractive
-          header="Publisher Price"
+          header={
+            <>
+              Publisher <PriceName assetClass={assetClass} />
+            </>
+          }
           variant="primary"
           small
           stat={
