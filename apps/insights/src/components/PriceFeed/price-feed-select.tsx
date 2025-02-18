@@ -20,6 +20,7 @@ import { useCollator, useFilter } from "react-aria";
 
 import styles from "./price-feed-select.module.scss";
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
+import { Cluster } from "../../services/pyth";
 import { AssetClassTag } from "../AssetClassTag";
 import { PriceFeedTag } from "../PriceFeedTag";
 
@@ -42,7 +43,7 @@ export const PriceFeedSelect = ({ children }: Props) => {
               ([, { displaySymbol, assetClass, key }]) =>
                 filter.contains(displaySymbol, search) ||
                 filter.contains(assetClass, search) ||
-                filter.contains(key, search),
+                filter.contains(key[Cluster.Pythnet], search),
             ),
     [feeds, search, filter],
   );

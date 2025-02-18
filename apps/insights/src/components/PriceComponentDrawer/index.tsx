@@ -1,6 +1,8 @@
+import { Flask } from "@phosphor-icons/react/dist/ssr/Flask";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Drawer } from "@pythnetwork/component-library/Drawer";
+import { InfoBox } from "@pythnetwork/component-library/InfoBox";
 import { Select } from "@pythnetwork/component-library/Select";
 import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
@@ -45,28 +47,32 @@ type Props = {
   headingExtra?: ReactNode | undefined;
   publisherKey: string;
   symbol: string;
+  displaySymbol: string;
   feedKey: string;
   score: number | undefined;
   rank: number | undefined;
   status: Status;
-  navigateButtonText: string;
+  identifiesPublisher?: boolean | undefined;
   navigateHref: string;
   firstEvaluation: Date;
+  cluster: Cluster;
 };
 
 export const PriceComponentDrawer = ({
   publisherKey,
   onClose,
   symbol,
+  displaySymbol,
   feedKey,
   score,
   rank,
   title,
   status,
   headingExtra,
-  navigateButtonText,
   navigateHref,
   firstEvaluation,
+  cluster,
+  identifiesPublisher,
 }: Props) => {
   const goToPriceFeedPageOnClose = useRef<boolean>(false);
   const [isFeedDrawerOpen, setIsFeedDrawerOpen] = useState(true);
@@ -93,7 +99,7 @@ export const PriceComponentDrawer = ({
   const { selectedPeriod, setSelectedPeriod, evaluationPeriods } =
     useEvaluationPeriods(firstEvaluation);
   const scoreHistoryState = useData(
-    [Cluster.Pythnet, publisherKey, symbol, selectedPeriod],
+    [cluster, publisherKey, symbol, selectedPeriod],
     getScoreHistory,
   );
 
@@ -108,7 +114,7 @@ export const PriceComponentDrawer = ({
           <StatusComponent status={status} />
           <RouterProvider navigate={handleOpenFeed}>
             <Button size="sm" variant="outline" href={navigateHref}>
-              {navigateButtonText}
+              Open {identifiesPublisher ? "Publisher" : "Feed"}
             </Button>
           </RouterProvider>
         </>
@@ -116,26 +122,46 @@ export const PriceComponentDrawer = ({
       isOpen={isFeedDrawerOpen}
       bodyClassName={styles.priceComponentDrawer}
     >
+      {cluster === Cluster.PythtestConformance && (
+        <InfoBox
+          icon={<Flask />}
+          header={`This publisher is in test`}
+          className={styles.testFeedMessage}
+        >
+          This is a test publisher. Its prices are not included in the Pyth
+          aggregate price for {displaySymbol}.
+        </InfoBox>
+      )}
       <div className={styles.stats}>
         <StatCard
           nonInteractive
           header="Aggregate Price"
           small
-          stat={<LivePrice feedKey={feedKey} />}
+          stat={<LivePrice feedKey={feedKey} cluster={cluster} />}
         />
         <StatCard
           nonInteractive
           header="Publisher Price"
           variant="primary"
           small
-          stat={<LivePrice feedKey={feedKey} publisherKey={publisherKey} />}
+          stat={
+            <LivePrice
+              feedKey={feedKey}
+              publisherKey={publisherKey}
+              cluster={cluster}
+            />
+          }
         />
         <StatCard
           nonInteractive
           header="Publisher Confidence"
           small
           stat={
-            <LiveConfidence feedKey={feedKey} publisherKey={publisherKey} />
+            <LiveConfidence
+              feedKey={feedKey}
+              publisherKey={publisherKey}
+              cluster={cluster}
+            />
           }
         />
         <StatCard
@@ -147,6 +173,7 @@ export const PriceComponentDrawer = ({
               feedKey={feedKey}
               publisherKey={publisherKey}
               field="publishSlot"
+              cluster={cluster}
             />
           }
         />

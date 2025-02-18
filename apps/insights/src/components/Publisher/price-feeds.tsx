@@ -1,17 +1,25 @@
+import { notFound } from "next/navigation";
+
 import { getPriceFeeds } from "./get-price-feeds";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { Cluster } from "../../services/pyth";
+import { parseCluster } from "../../services/pyth";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
   params: Promise<{
+    cluster: string;
     key: string;
   }>;
 };
 
 export const PriceFeeds = async ({ params }: Props) => {
-  const { key } = await params;
-  const feeds = await getPriceFeeds(Cluster.Pythnet, key);
+  const { key, cluster } = await params;
+  const parsedCluster = parseCluster(cluster);
+
+  if (parsedCluster === undefined) {
+    notFound();
+  }
+  const feeds = await getPriceFeeds(parsedCluster, key);
   const metricsTime = feeds.find((feed) => feed.ranking !== undefined)?.ranking
     ?.time;
 
@@ -22,6 +30,7 @@ export const PriceFeeds = async ({ params }: Props) => {
       metricsTime={metricsTime}
       nameLoadingSkeleton={<PriceFeedTag compact isLoading />}
       publisherKey={key}
+      cluster={parsedCluster}
       priceFeeds={feeds.map(({ ranking, feed, status }) => ({
         symbol: feed.symbol,
         score: ranking?.final_score,

@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useCollator } from "react-aria";
 
 import styles from "./reference-data.module.scss";
+import { Cluster } from "../../services/pyth";
 import { AssetClassTag } from "../AssetClassTag";
 import { LiveValue } from "../LivePrices";
 
@@ -74,6 +75,7 @@ export const ReferenceData = ({ feed }: Props) => {
                   feedKey={feed.feedKey}
                   field={value}
                   defaultValue={feed[value]}
+                  cluster={Cluster.Pythnet}
                 />
               </span>,
             ] as const,

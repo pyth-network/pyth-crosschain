@@ -2,6 +2,8 @@
 
 import { type ReactNode, type ComponentProps, createContext, use } from "react";
 
+import type { Cluster } from "../services/pyth";
+
 const PriceFeedsContext = createContext<undefined | PriceFeeds>(undefined);
 
 export const PriceFeedsProvider = (
@@ -23,7 +25,7 @@ export type PriceFeed = {
   displaySymbol: string;
   icon: ReactNode;
   description: string;
-  key: string;
+  key: Record<Cluster, string>;
   assetClass: string;
 };
 

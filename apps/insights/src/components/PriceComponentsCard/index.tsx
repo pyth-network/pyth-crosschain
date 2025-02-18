@@ -17,7 +17,6 @@ import { useQueryState, parseAsStringEnum, parseAsBoolean } from "nuqs";
 import { type ReactNode, Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
-import styles from "./index.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import {
@@ -45,12 +44,12 @@ type Props<T extends PriceComponent> = {
   label: string;
   searchPlaceholder: string;
   onPriceComponentAction: (component: T) => void;
+  toolbarExtra?: ReactNode;
 };
 
 type PriceComponent = {
   id: string;
   score: number | undefined;
-  symbol: string;
   uptimeScore: number | undefined;
   deviationScore: number | undefined;
   stalledScore: number | undefined;
@@ -172,16 +171,7 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
       paginatedItems.map((component) => ({
         id: component.id,
         data: {
-          name: (
-            <div className={styles.componentName}>
-              {component.name}
-              {component.cluster === Cluster.PythtestConformance && (
-                <Badge variant="muted" style="filled" size="xs">
-                  test
-                </Badge>
-              )}
-            </div>
-          ),
+          name: component.name,
           ...(showQuality
             ? {
                 score: component.score !== undefined && (
@@ -212,18 +202,21 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
                     field="publishSlot"
+                    cluster={component.cluster}
                   />
                 ),
                 price: (
                   <LivePrice
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
+                    cluster={component.cluster}
                   />
                 ),
                 confidence: (
                   <LiveConfidence
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
+                    cluster={component.cluster}
                   />
                 ),
               }),
@@ -285,6 +278,7 @@ type PriceComponentsCardProps<T extends PriceComponent> = Pick<
   | "nameLoadingSkeleton"
   | "label"
   | "searchPlaceholder"
+  | "toolbarExtra"
 > &
   (
     | { isLoading: true }
@@ -315,6 +309,7 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
   nameLoadingSkeleton,
   label,
   searchPlaceholder,
+  toolbarExtra,
   ...props
 }: PriceComponentsCardProps<T>) => {
   const collator = useCollator();
@@ -333,6 +328,7 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
       }
       toolbar={
         <>
+          {toolbarExtra}
           <Select<StatusName | "">
             label="Status"
             size="sm"

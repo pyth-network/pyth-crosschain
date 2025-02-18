@@ -6,3 +6,5 @@ const client = new HermesClient("https://hermes.pyth.network");
 
 export const getPublisherCaps = async () =>
   client.getLatestPublisherCaps({ parsed: true });
+
+export const foo = async () => client.getPriceFeeds({});
