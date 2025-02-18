@@ -26,6 +26,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
+            apps/fortuna
+            apps/hermes
             target_chains/ethereum/sdk/stylus
             target_chains/cosmwasm
             target_chains/fuel/contracts
@@ -33,6 +35,7 @@ jobs:
             governance/remote_executor
             lazer
             pythnet/message_buffer
+            pythnet/pythnet_sdk
             pythnet/stake_caps_parameters
       - name: Install protoc
         uses: arduino/setup-protoc@v3
