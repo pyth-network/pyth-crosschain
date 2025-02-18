@@ -59,7 +59,7 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
     const knownPublisher = lookupPublisher(publisher.key);
 
     return {
-      id: publisher.key,
+      publisherKey: publisher.key,
       averageScore: publisher.averageScore,
       cluster,
       ...(knownPublisher && {
