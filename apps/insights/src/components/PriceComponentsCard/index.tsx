@@ -510,6 +510,12 @@ const otherColumns = ({
                     Deviation measures how close a publisher{"'"}s quote is to
                     what Pyth believes to be the true market quote.
                   </p>
+                  <p>
+                    Note that publishers must have an uptime of at least 50% to
+                    be ranked. If a publisher{"'"}s uptime is less than 50%,
+                    then the deviation and the stalled score of the publisher
+                    will be 0 to reflect their ineligibility.
+                  </p>
                   {metricsTime && <EvaluationTime scoreTime={metricsTime} />}
                   <Button
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#price-deviation-1"
@@ -536,6 +542,12 @@ const otherColumns = ({
                     A feed is considered stalled if it is publishing the same
                     value repeatedly for the quote. This score component is
                     reduced each time a feed is stalled.
+                  </p>
+                  <p>
+                    Note that publishers must have an uptime of at least 50% to
+                    be ranked. If a publisher{"'"}s uptime is less than 50%,
+                    then the deviation and the stalled score of the publisher
+                    will be 0 to reflect their ineligibility.
                   </p>
                   {metricsTime && <EvaluationTime scoreTime={metricsTime} />}
                   <Button
