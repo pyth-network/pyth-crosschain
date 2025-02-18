@@ -36,15 +36,15 @@ export const PriceFeedSelect = ({ children }: Props) => {
   const filteredFeeds = useMemo(
     () =>
       search === ""
-        ? feeds.entries()
-        : feeds
-            .entries()
-            .filter(
-              ([, { displaySymbol, assetClass, key }]) =>
-                filter.contains(displaySymbol, search) ||
-                filter.contains(assetClass, search) ||
-                filter.contains(key[Cluster.Pythnet], search),
-            ),
+        ? // This is inefficient but Safari doesn't support `Iterator.filter`, see
+          // https://bugs.webkit.org/show_bug.cgi?id=248650
+          [...feeds.entries()]
+        : [...feeds.entries()].filter(
+            ([, { displaySymbol, assetClass, key }]) =>
+              filter.contains(displaySymbol, search) ||
+              filter.contains(assetClass, search) ||
+              filter.contains(key[Cluster.Pythnet], search),
+          ),
     [feeds, search, filter],
   );
   const sortedFeeds = useMemo(
