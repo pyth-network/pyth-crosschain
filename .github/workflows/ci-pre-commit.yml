@@ -13,10 +13,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          # Need to grab the history of the PR
-          fetch-depth: 0
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: default
@@ -29,6 +26,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
+            apps/fortuna
+            apps/hermes/server
             target_chains/ethereum/sdk/stylus
             target_chains/cosmwasm
             target_chains/fuel/contracts
@@ -36,12 +35,12 @@ jobs:
             governance/remote_executor
             lazer
             pythnet/message_buffer
+            pythnet/pythnet_sdk
             pythnet/stake_caps_parameters
       - name: Install protoc
         uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
       - name: Install g++ 12
