@@ -27,7 +27,7 @@ jobs:
         with:
           workspaces: |
             apps/fortuna
-            apps/hermes
+            apps/hermes/server
             target_chains/ethereum/sdk/stylus
             target_chains/cosmwasm
             target_chains/fuel/contracts
