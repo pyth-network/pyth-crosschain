@@ -67,6 +67,12 @@ export type PythTransactionBuilderConfig = {
 };
 
 /**
+ * A stable treasury ID. This ID's corresponding treasury address
+ * can be cached in an account lookup table in order to reduce the overall txn size.
+ */
+export const DEFAULT_TREASURY_ID = 0;
+
+/**
  * A builder class to build transactions that:
  * - Post price updates (fully or partially verified) or update price feed accounts
  * - Consume price updates in a consumer program
@@ -470,9 +476,10 @@ export class PythSolanaReceiver {
    * Get a new transaction builder to build transactions that interact with the Pyth Solana Receiver program and consume price updates
    */
   newTransactionBuilder(
-    config: PythTransactionBuilderConfig
+    config: PythTransactionBuilderConfig,
+    address_lookup_account?: AddressLookupTableAccount
   ): PythTransactionBuilder {
-    return new PythTransactionBuilder(this, config);
+    return new PythTransactionBuilder(this, config, address_lookup_account);
   }
 
   /**
@@ -497,7 +504,7 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
-    const treasuryId = getRandomTreasuryId();
+    const treasuryId = DEFAULT_TREASURY_ID;
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -730,7 +737,7 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
-    const treasuryId = getRandomTreasuryId();
+    const treasuryId = DEFAULT_TREASURY_ID;
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(

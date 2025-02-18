@@ -42,10 +42,11 @@ export const VAA_START = 46;
  *
  * The first one writes the first `VAA_SPLIT_INDEX` bytes and the second one writes the rest.
  *
- * This number was chosen as the biggest number such that one can still call `createInstruction`, `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction.
+ * This number was chosen as the biggest number such that one can still call `createInstruction`,
+ * `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction, while using an address lookup table.
  * This way, the packing of the instructions to post an encoded vaa is more efficient.
  */
-export const VAA_SPLIT_INDEX = 755;
+export const VAA_SPLIT_INDEX = 700;
 
 /**
  * Trim the number of signatures of a VAA.

@@ -81,6 +81,11 @@ export default {
       type: "number",
       default: 6,
     } as Options,
+    "address-lookup-table-account": {
+      description: "The pubkey of the ALT to use when updating price feeds",
+      type: "string",
+      optional: true,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
@@ -107,6 +112,7 @@ export default {
       maxJitoTipLamports,
       jitoBundleSize,
       updatesPerJitoBundle,
+      addressLookupTableAccount,
       logLevel,
       controllerLogLevel,
     } = argv;
@@ -145,11 +151,20 @@ export default {
       )
     );
 
+    const connection = new Connection(endpoint, "processed");
     const pythSolanaReceiver = new PythSolanaReceiver({
-      connection: new Connection(endpoint, "processed"),
+      connection,
       wallet,
       pushOracleProgramId: new PublicKey(pythContractAddress),
     });
+
+    // Fetch the account lookup table if provided
+    const lookupTableAccount =
+      (
+        await connection.getAddressLookupTable(
+          new PublicKey(addressLookupTableAccount)
+        )
+      ).value ?? undefined;
 
     let solanaPricePusher;
     if (jitoTipLamports) {
@@ -168,7 +183,8 @@ export default {
         maxJitoTipLamports,
         jitoClient,
         jitoBundleSize,
-        updatesPerJitoBundle
+        updatesPerJitoBundle,
+        lookupTableAccount
       );
 
       onBundleResult(jitoClient, logger.child({ module: "JitoClient" }));
@@ -178,7 +194,8 @@ export default {
         hermesClient,
         logger.child({ module: "SolanaPricePusher" }),
         shardId,
-        computeUnitPriceMicroLamports
+        computeUnitPriceMicroLamports,
+        lookupTableAccount
       );
     }
 
