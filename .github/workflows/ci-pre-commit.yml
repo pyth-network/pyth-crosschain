@@ -13,10 +13,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          # Need to grab the history of the PR
-          fetch-depth: 0
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: default
@@ -25,6 +22,20 @@ jobs:
         run: |
           rustup install 1.73.0
           rustup install 1.66.1
+      - name: Install protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Install g++ 12
+        run: |
+          sudo apt-get install g++-12
+          echo "CXX=/usr/bin/g++-12" >> "${GITHUB_ENV}"
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+        id: setup_python
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
@@ -37,21 +48,6 @@ jobs:
             lazer
             pythnet/message_buffer
             pythnet/stake_caps_parameters
-      - name: Install protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry
-      - name: Install g++ 12
-        run: |
-          sudo apt-get install g++-12
-          echo "CXX=/usr/bin/g++-12" >> "${GITHUB_ENV}"
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-        id: setup_python
       - name: Cache Poetry cache
         uses: actions/cache@v3
         with:
