@@ -13,15 +13,14 @@ const getLabels = (assetClass?: string | undefined) => {
   if (assetClass === undefined) {
     return LABELS.ambiguous;
   } else {
-    const lowercaseAssetClass = assetClass.toLowerCase();
-    return lowercaseAssetClass in LABELS
-      ? LABELS[lowercaseAssetClass as keyof typeof LABELS]
+    return assetClass in LABELS
+      ? LABELS[assetClass as keyof typeof LABELS]
       : LABELS.default;
   }
 };
 
 const LABELS = {
-  rates: {
+  Rates: {
     plural: {
       upcase: "YIELDS",
       title: "Yields",
