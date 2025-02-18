@@ -38,7 +38,6 @@ import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 import { FormattedTokens } from "../FormattedTokens";
 import { Meter } from "../Meter";
-import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherKey } from "../PublisherKey";
 import { PublisherTag } from "../PublisherTag";
@@ -90,14 +89,9 @@ export const PublishersLayout = async ({ children, params }: Props) => {
       publisherKey={key}
       priceFeeds={priceFeeds.map(({ feed, ranking, status }) => ({
         symbol: feed.symbol,
-        displaySymbol: feed.product.display_symbol,
-        description: feed.product.description,
-        icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
-        feedKey: feed.product.price_account,
         score: ranking?.final_score,
         rank: ranking?.final_rank,
         firstEvaluation: ranking?.first_ranking_time,
-        assetClass: feed.product.asset_type,
         status,
       }))}
     >

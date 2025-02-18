@@ -81,7 +81,12 @@ const PriceFeedsProvider = async ({ children }: { children: ReactNode }) => {
       feed.symbol,
       {
         displaySymbol: feed.product.display_symbol,
-        icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
+        icon: (
+          <PriceFeedIcon
+            assetClass={feed.product.asset_type}
+            symbol={feed.product.display_symbol}
+          />
+        ),
         description: feed.product.description,
         key: {
           [Cluster.Pythnet]: feed.product.price_account,
