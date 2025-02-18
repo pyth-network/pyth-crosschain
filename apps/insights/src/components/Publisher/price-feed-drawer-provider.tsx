@@ -12,6 +12,7 @@ import {
   use,
 } from "react";
 
+import type { Cluster } from "../../services/pyth";
 import type { Status } from "../../status";
 import { PriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceFeedTag } from "../PriceFeedTag";
@@ -25,6 +26,7 @@ type PriceFeedDrawerProviderProps = Omit<
   "value"
 > & {
   publisherKey: string;
+  cluster: Cluster;
   priceFeeds: PriceFeed[];
 };
 
@@ -52,6 +54,7 @@ const PriceFeedDrawerProviderImpl = ({
   publisherKey,
   priceFeeds,
   children,
+  cluster,
 }: PriceFeedDrawerProviderProps) => {
   const logger = useLogger();
   const [selectedSymbol, setSelectedSymbol] = useQueryState(
@@ -91,11 +94,12 @@ const PriceFeedDrawerProviderImpl = ({
           rank={selectedFeed.rank}
           score={selectedFeed.score}
           symbol={selectedFeed.symbol}
+          displaySymbol={selectedFeed.displaySymbol}
           status={selectedFeed.status}
           firstEvaluation={selectedFeed.firstEvaluation ?? new Date()}
-          navigateButtonText="Open Feed"
           navigateHref={feedHref}
           title={<PriceFeedTag symbol={selectedFeed.symbol} />}
+          cluster={cluster}
         />
       )}
     </PriceFeedDrawerContext>

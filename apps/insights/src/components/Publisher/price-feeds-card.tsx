@@ -4,7 +4,7 @@ import { type ComponentProps, useCallback } from "react";
 
 import { useSelectPriceFeed } from "./price-feed-drawer-provider";
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
-import { Cluster, ClusterToName } from "../../services/pyth";
+import type { Cluster } from "../../services/pyth";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PriceFeedTag } from "../PriceFeedTag";
 
@@ -13,6 +13,7 @@ type Props = Omit<
   "onPriceComponentAction" | "priceComponents"
 > & {
   publisherKey: string;
+  cluster: Cluster;
   priceFeeds: (Pick<
     ComponentProps<typeof PriceComponentsCard>["priceComponents"][number],
     "score" | "uptimeScore" | "deviationScore" | "stalledScore" | "status"
@@ -24,6 +25,7 @@ type Props = Omit<
 export const PriceFeedsCard = ({
   priceFeeds,
   publisherKey,
+  cluster,
   ...props
 }: Props) => {
   const feeds = usePriceFeeds();
@@ -39,14 +41,14 @@ export const PriceFeedsCard = ({
         const contextFeed = feeds.get(feed.symbol);
         if (contextFeed) {
           return {
-            id: `${contextFeed.key}-${ClusterToName[Cluster.Pythnet]}`,
-            feedKey: contextFeed.key,
+            id: contextFeed.key[cluster],
+            feedKey: contextFeed.key[cluster],
             symbol: feed.symbol,
             score: feed.score,
             uptimeScore: feed.uptimeScore,
             deviationScore: feed.deviationScore,
             stalledScore: feed.stalledScore,
-            cluster: Cluster.Pythnet,
+            cluster,
             status: feed.status,
             publisherKey,
             name: <PriceFeedTag compact symbol={feed.symbol} />,

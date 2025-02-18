@@ -9,6 +9,7 @@ import styles from "./index.module.scss";
 import { PublishersCard } from "./publishers-card";
 import { getPublishers } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
+import { Cluster } from "../../services/pyth";
 import {
   getDelState,
   getClaimableRewards,
@@ -24,13 +25,15 @@ import { TokenIcon } from "../TokenIcon";
 const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
 
 export const Publishers = async () => {
-  const [publishers, oisStats] = await Promise.all([
-    getPublishers(),
-    getOisStats(),
-  ]);
+  const [pythnetPublishers, pythtestConformancePublishers, oisStats] =
+    await Promise.all([
+      getPublishers(Cluster.Pythnet),
+      getPublishers(Cluster.PythtestConformance),
+      getOisStats(),
+    ]);
 
-  const rankingTime = publishers[0]?.timestamp;
-  const scoreTime = publishers[0]?.scoreTime;
+  const rankingTime = pythnetPublishers[0]?.timestamp;
+  const scoreTime = pythnetPublishers[0]?.scoreTime;
 
   return (
     <div className={styles.publishers}>
@@ -56,16 +59,16 @@ export const Publishers = async () => {
           <StatCard
             variant="primary"
             header="Active Publishers"
-            stat={publishers.length}
+            stat={pythnetPublishers.length}
           />
           <StatCard
             header="Average Feed Score"
             corner={<ExplainAverage scoreTime={scoreTime} />}
             stat={(
-              publishers.reduce(
+              pythnetPublishers.reduce(
                 (sum, publisher) => sum + publisher.averageScore,
                 0,
-              ) / publishers.length
+              ) / pythnetPublishers.length
             ).toFixed(2)}
           />
           <Card
@@ -132,26 +135,37 @@ export const Publishers = async () => {
         <PublishersCard
           className={styles.publishersCard}
           explainAverage={<ExplainAverage scoreTime={scoreTime} />}
-          publishers={publishers.map(
-            ({ key, rank, inactiveFeeds, activeFeeds, averageScore }) => {
-              const knownPublisher = lookupPublisher(key);
-              return {
-                id: key,
-                ranking: rank,
-                activeFeeds: activeFeeds,
-                inactiveFeeds: inactiveFeeds,
-                averageScore,
-                ...(knownPublisher && {
-                  name: knownPublisher.name,
-                  icon: <PublisherIcon knownPublisher={knownPublisher} />,
-                }),
-              };
-            },
+          pythnetPublishers={pythnetPublishers.map((publisher) =>
+            toTableRow(publisher),
+          )}
+          pythtestConformancePublishers={pythtestConformancePublishers.map(
+            (publisher) => toTableRow(publisher),
           )}
         />
       </div>
     </div>
   );
+};
+
+const toTableRow = ({
+  key,
+  rank,
+  inactiveFeeds,
+  activeFeeds,
+  averageScore,
+}: Awaited<ReturnType<typeof getPublishers>>[number]) => {
+  const knownPublisher = lookupPublisher(key);
+  return {
+    id: key,
+    ranking: rank,
+    activeFeeds: activeFeeds,
+    inactiveFeeds: inactiveFeeds,
+    averageScore,
+    ...(knownPublisher && {
+      name: knownPublisher.name,
+      icon: <PublisherIcon knownPublisher={knownPublisher} />,
+    }),
+  };
 };
 
 const getOisStats = async () => {

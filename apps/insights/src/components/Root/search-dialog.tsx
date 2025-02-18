@@ -27,6 +27,7 @@ import { useCollator, useFilter } from "react-aria";
 
 import styles from "./search-dialog.module.scss";
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
+import { Cluster, ClusterToName } from "../../services/pyth";
 import { AssetClassTag } from "../AssetClassTag";
 import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
@@ -47,6 +48,7 @@ type Props = {
   publishers: ({
     id: string;
     averageScore: number;
+    cluster: Cluster;
   } & (
     | { name: string; icon: ReactNode }
     | { name?: undefined; icon?: undefined }
@@ -208,7 +210,7 @@ export const SearchDialogProvider = ({ children, publishers }: Props) => {
                       : (result.name ?? result.id)
                   }
                   className={styles.item ?? ""}
-                  href={`${result.type === ResultType.PriceFeed ? "/price-feeds" : "/publishers"}/${encodeURIComponent(result.id)}`}
+                  href={`${result.type === ResultType.PriceFeed ? "/price-feeds" : `/publishers/${ClusterToName[result.cluster]}`}/${encodeURIComponent(result.id)}`}
                   data-is-first={result.id === results[0]?.id ? "" : undefined}
                 >
                   <div className={styles.itemType}>
@@ -240,6 +242,7 @@ export const SearchDialogProvider = ({ children, publishers }: Props) => {
                       <PublisherTag
                         className={styles.itemTag}
                         compact
+                        cluster={result.cluster}
                         publisherKey={result.id}
                         {...(result.name && {
                           name: result.name,

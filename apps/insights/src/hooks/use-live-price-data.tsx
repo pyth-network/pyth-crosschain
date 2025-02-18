@@ -37,9 +37,9 @@ export const LivePriceDataProvider = (props: LivePriceDataProviderProps) => {
   return <LivePriceDataContext value={priceData} {...props} />;
 };
 
-export const useLivePriceData = (feedKey: string) => {
+export const useLivePriceData = (cluster: Cluster, feedKey: string) => {
   const { priceData, prevPriceData, addSubscription, removeSubscription } =
-    useLivePriceDataContext();
+    useLivePriceDataContext()[cluster];
 
   useEffect(() => {
     addSubscription(feedKey);
@@ -55,10 +55,11 @@ export const useLivePriceData = (feedKey: string) => {
 };
 
 export const useLivePriceComponent = (
+  cluster: Cluster,
   feedKey: string,
   publisherKeyAsBase58: string,
 ) => {
-  const { current, prev } = useLivePriceData(feedKey);
+  const { current, prev } = useLivePriceData(cluster, feedKey);
   const publisherKey = useMemo(
     () => new PublicKey(publisherKeyAsBase58),
     [publisherKeyAsBase58],
@@ -75,6 +76,16 @@ export const useLivePriceComponent = (
 };
 
 const usePriceData = () => {
+  const pythnetPriceData = usePriceDataForCluster(Cluster.Pythnet);
+  const pythtestPriceData = usePriceDataForCluster(Cluster.PythtestConformance);
+
+  return {
+    [Cluster.Pythnet]: pythnetPriceData,
+    [Cluster.PythtestConformance]: pythtestPriceData,
+  };
+};
+
+const usePriceDataForCluster = (cluster: Cluster) => {
   const feedSubscriptions = useMap<string, number>([]);
   const [feedKeys, setFeedKeys] = useState<string[]>([]);
   const prevPriceData = useMap<string, PriceData>([]);
@@ -89,7 +100,7 @@ const usePriceData = () => {
     const uninitializedFeedKeys = feedKeys.filter((key) => !priceData.has(key));
     if (uninitializedFeedKeys.length > 0) {
       getAssetPricesFromAccounts(
-        Cluster.Pythnet,
+        cluster,
         uninitializedFeedKeys.map((key) => new PublicKey(key)),
       )
         .then((initialPrices) => {
@@ -107,7 +118,7 @@ const usePriceData = () => {
 
     // Then, we create a subscription to update prices live.
     const connection = subscribe(
-      Cluster.Pythnet,
+      cluster,
       feedKeys.map((key) => new PublicKey(key)),
       ({ price_account }, data) => {
         if (price_account) {
@@ -128,7 +139,7 @@ const usePriceData = () => {
         logger.error("Failed to unsubscribe from price updates", error);
       });
     };
-  }, [feedKeys, logger, priceData, prevPriceData]);
+  }, [feedKeys, logger, priceData, prevPriceData, cluster]);
 
   const addSubscription = useCallback(
     (key: string) => {

@@ -176,7 +176,10 @@ const FeaturedFeedsCard = <T extends ElementType>({
             <PriceFeedTag symbol={feed.symbol} />
             {showPrices && (
               <div className={styles.prices}>
-                <LivePrice feedKey={feed.product.price_account} />
+                <LivePrice
+                  feedKey={feed.product.price_account}
+                  cluster={Cluster.Pythnet}
+                />
                 <PriceFeedChangePercent
                   className={styles.changePercent}
                   feedKey={feed.product.price_account}

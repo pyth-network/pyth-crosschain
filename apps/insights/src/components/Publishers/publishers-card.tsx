@@ -1,20 +1,25 @@
 "use client";
 
 import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
+import { Database } from "@phosphor-icons/react/dist/ssr/Database";
+import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Link } from "@pythnetwork/component-library/Link";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
+import { Select } from "@pythnetwork/component-library/Select";
 import {
   type RowConfig,
   type SortDescriptor,
   Table,
 } from "@pythnetwork/component-library/Table";
-import { type ReactNode, Suspense, useMemo } from "react";
+import { useQueryState, parseAsStringEnum } from "nuqs";
+import { type ReactNode, Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
+import { CLUSTER_NAMES } from "../../services/pyth";
 import { ExplainActive, ExplainInactive } from "../Explanations";
 import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
@@ -26,7 +31,8 @@ const PUBLISHER_SCORE_WIDTH = 38;
 
 type Props = {
   className?: string | undefined;
-  publishers: Publisher[];
+  pythnetPublishers: Publisher[];
+  pythtestConformancePublishers: Publisher[];
   explainAverage: ReactNode;
 };
 
@@ -41,15 +47,33 @@ type Publisher = {
   | { name?: undefined; icon?: undefined }
 );
 
-export const PublishersCard = ({ publishers, ...props }: Props) => (
+export const PublishersCard = ({
+  pythnetPublishers,
+  pythtestConformancePublishers,
+  ...props
+}: Props) => (
   <Suspense fallback={<PublishersCardContents isLoading {...props} />}>
-    <ResolvedPublishersCard publishers={publishers} {...props} />
+    <ResolvedPublishersCard
+      pythnetPublishers={pythnetPublishers}
+      pythtestConformancePublishers={pythtestConformancePublishers}
+      {...props}
+    />
   </Suspense>
 );
 
-const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
+const ResolvedPublishersCard = ({
+  pythnetPublishers,
+  pythtestConformancePublishers,
+  ...props
+}: Props) => {
+  const logger = useLogger();
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const [cluster, setCluster] = useQueryState(
+    "cluster",
+    parseAsStringEnum([...CLUSTER_NAMES]).withDefault("pythnet"),
+  );
+
   const {
     search,
     sortDescriptor,
@@ -64,7 +88,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
     numPages,
     mkPageLink,
   } = useQueryParamFilterPagination(
-    publishers,
+    cluster === "pythnet" ? pythnetPublishers : pythtestConformancePublishers,
     (publisher, search) =>
       filter.contains(publisher.id, search) ||
       (publisher.name !== undefined && filter.contains(publisher.name, search)),
@@ -108,7 +132,7 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
           ...publisher
         }) => ({
           id,
-          href: `/publishers/${id}`,
+          href: `/publishers/${cluster}/${id}`,
           data: {
             ranking: <Ranking>{ranking}</Ranking>,
             name: (
@@ -121,13 +145,16 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
               />
             ),
             activeFeeds: (
-              <Link href={`/publishers/${id}/price-feeds?status=Active`} invert>
+              <Link
+                href={`/publishers/${cluster}/${id}/price-feeds?status=Active`}
+                invert
+              >
                 {activeFeeds}
               </Link>
             ),
             inactiveFeeds: (
               <Link
-                href={`/publishers/${id}/price-feeds?status=Inactive`}
+                href={`/publishers/${cluster}/${id}/price-feeds?status=Inactive`}
                 invert
               >
                 {inactiveFeeds}
@@ -139,7 +166,17 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
           },
         }),
       ),
-    [paginatedItems],
+    [paginatedItems, cluster],
+  );
+
+  const updateCluster = useCallback(
+    (newCluster: (typeof CLUSTER_NAMES)[number]) => {
+      updatePage(1);
+      setCluster(newCluster).catch((error: unknown) => {
+        logger.error("Failed to update asset class", error);
+      });
+    },
+    [updatePage, setCluster, logger],
   );
 
   return (
@@ -155,6 +192,8 @@ const ResolvedPublishersCard = ({ publishers, ...props }: Props) => {
       onPageSizeChange={updatePageSize}
       onPageChange={updatePage}
       mkPageLink={mkPageLink}
+      cluster={cluster}
+      onChangeCluster={updateCluster}
       rows={rows}
       {...props}
     />
@@ -177,6 +216,8 @@ type PublishersCardContentsProps = Pick<Props, "className" | "explainAverage"> &
         onPageSizeChange: (newPageSize: number) => void;
         onPageChange: (newPage: number) => void;
         mkPageLink: (page: number) => string;
+        cluster: (typeof CLUSTER_NAMES)[number];
+        onChangeCluster: (value: (typeof CLUSTER_NAMES)[number]) => void;
         rows: RowConfig<
           "ranking" | "name" | "activeFeeds" | "inactiveFeeds" | "averageScore"
         >[];
@@ -202,17 +243,34 @@ const PublishersCardContents = ({
       </>
     }
     toolbar={
-      <SearchInput
-        size="sm"
-        width={60}
-        placeholder="Publisher key or name"
-        {...(props.isLoading
-          ? { isPending: true, isDisabled: true }
-          : {
-              value: props.search,
-              onChange: props.onSearchChange,
-            })}
-      />
+      <>
+        <Select
+          label="Cluster"
+          size="sm"
+          variant="outline"
+          hideLabel
+          options={CLUSTER_NAMES}
+          icon={Database}
+          {...(props.isLoading
+            ? { isPending: true, buttonLabel: "Cluster" }
+            : {
+                placement: "bottom end",
+                selectedKey: props.cluster,
+                onSelectionChange: props.onChangeCluster,
+              })}
+        />
+        <SearchInput
+          size="sm"
+          width={60}
+          placeholder="Publisher key or name"
+          {...(props.isLoading
+            ? { isPending: true, isDisabled: true }
+            : {
+                value: props.search,
+                onChange: props.onSearchChange,
+              })}
+        />
+      </>
     }
     {...(!props.isLoading && {
       footer: (

@@ -27,7 +27,10 @@ type Props = {
 };
 
 export const Root = async ({ children }: Props) => {
-  const publishers = await getPublishers();
+  const publishers = await Promise.all([
+    getPublishersForSearchDialog(Cluster.Pythnet),
+    getPublishersForSearchDialog(Cluster.PythtestConformance),
+  ]);
 
   return (
     <BaseRoot
@@ -37,19 +40,7 @@ export const Root = async ({ children }: Props) => {
       providers={[NuqsAdapter, LivePriceDataProvider, PriceFeedsProvider]}
       className={styles.root}
     >
-      <SearchDialogProvider
-        publishers={publishers.map((publisher) => {
-          const knownPublisher = lookupPublisher(publisher.key);
-          return {
-            id: publisher.key,
-            averageScore: publisher.averageScore,
-            ...(knownPublisher && {
-              name: knownPublisher.name,
-              icon: <PublisherIcon knownPublisher={knownPublisher} />,
-            }),
-          };
-        })}
-      >
+      <SearchDialogProvider publishers={publishers.flat()}>
         <TabRoot className={styles.tabRoot ?? ""}>
           <Header className={styles.header} />
           <main className={styles.main}>
@@ -62,17 +53,43 @@ export const Root = async ({ children }: Props) => {
   );
 };
 
+const getPublishersForSearchDialog = async (cluster: Cluster) => {
+  const publishers = await getPublishers(cluster);
+  return publishers.map((publisher) => {
+    const knownPublisher = lookupPublisher(publisher.key);
+
+    return {
+      id: publisher.key,
+      averageScore: publisher.averageScore,
+      cluster,
+      ...(knownPublisher && {
+        name: knownPublisher.name,
+        icon: <PublisherIcon knownPublisher={knownPublisher} />,
+      }),
+    };
+  });
+};
+
 const PriceFeedsProvider = async ({ children }: { children: ReactNode }) => {
-  const feeds = await getFeeds(Cluster.Pythnet);
+  const [pythnetFeeds, pythtestConformanceFeeds] = await Promise.all([
+    getFeeds(Cluster.Pythnet),
+    getFeeds(Cluster.PythtestConformance),
+  ]);
 
   const feedMap = new Map(
-    feeds.map((feed) => [
+    pythnetFeeds.map((feed) => [
       feed.symbol,
       {
         displaySymbol: feed.product.display_symbol,
         icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
         description: feed.product.description,
-        key: feed.product.price_account,
+        key: {
+          [Cluster.Pythnet]: feed.product.price_account,
+          [Cluster.PythtestConformance]:
+            pythtestConformanceFeeds.find(
+              (conformanceFeed) => conformanceFeed.symbol === feed.symbol,
+            )?.product.price_account ?? "",
+        },
         assetClass: feed.product.asset_type,
       },
     ]),

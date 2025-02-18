@@ -15,6 +15,7 @@ import { z } from "zod";
 
 import theme from "./theme.module.scss";
 import { useLivePriceData } from "../../hooks/use-live-price-data";
+import { Cluster } from "../../services/pyth";
 
 type Props = {
   symbol: string;
@@ -38,7 +39,7 @@ const useChart = (symbol: string, feedId: string) => {
 
 const useChartElem = (symbol: string, feedId: string) => {
   const logger = useLogger();
-  const { current } = useLivePriceData(feedId);
+  const { current } = useLivePriceData(Cluster.Pythnet, feedId);
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<ChartRefContents | undefined>(undefined);
   const earliestDateRef = useRef<bigint | undefined>(undefined);
