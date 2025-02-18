@@ -29,6 +29,7 @@ import {
 } from "../LivePrices";
 import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
+import { PriceName } from "../PriceName";
 import rootStyles from "../Root/index.module.scss";
 
 type Props = {
@@ -317,7 +318,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
         },
         {
           id: "price",
-          name: "PRICE",
+          name: <PriceName uppercase />,
           alignment: "right",
           width: 40,
           loadingSkeletonWidth: SKELETON_WIDTH,

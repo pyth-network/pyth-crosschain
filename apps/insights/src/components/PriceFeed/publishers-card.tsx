@@ -26,6 +26,7 @@ type Props = Omit<
   priceComponents: Publisher[];
   symbol: string;
   displaySymbol: string;
+  assetClass: string;
 };
 
 export const PublishersCard = ({
@@ -48,6 +49,7 @@ const ResolvedPublishersCard = ({
   priceComponents,
   symbol,
   displaySymbol,
+  assetClass,
   ...props
 }: Props) => {
   const logger = useLogger();
@@ -91,6 +93,7 @@ const ResolvedPublishersCard = ({
       <ResolvedPriceComponentsCard
         onPriceComponentAction={onPriceComponentAction}
         priceComponents={componentsFilteredByCluster}
+        assetClass={assetClass}
         toolbarExtra={
           <Switch
             isSelected={includeTestFeeds}
@@ -115,6 +118,7 @@ const ResolvedPublishersCard = ({
           cluster={selectedPublisher.cluster}
           firstEvaluation={selectedPublisher.firstEvaluation ?? new Date()}
           navigateHref={`/publishers/${ClusterToName[selectedPublisher.cluster]}/${selectedPublisher.publisherKey}`}
+          assetClass={assetClass}
           identifiesPublisher
         />
       )}

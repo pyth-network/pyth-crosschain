@@ -40,6 +40,7 @@ type PriceFeed = {
   rank: number | undefined;
   status: Status;
   firstEvaluation: Date | undefined;
+  assetClass: string;
 };
 
 export const PriceFeedDrawerProvider = (
@@ -100,6 +101,7 @@ const PriceFeedDrawerProviderImpl = ({
           navigateHref={feedHref}
           title={<PriceFeedTag symbol={selectedFeed.symbol} />}
           cluster={cluster}
+          assetClass={selectedFeed.assetClass}
         />
       )}
     </PriceFeedDrawerContext>

@@ -30,6 +30,7 @@ import { EvaluationTime } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
 import { LivePrice, LiveConfidence, LiveComponentValue } from "../LivePrices";
 import { NoResults } from "../NoResults";
+import { PriceName } from "../PriceName";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
@@ -45,6 +46,7 @@ type Props<T extends PriceComponent> = {
   searchPlaceholder: string;
   onPriceComponentAction: (component: T) => void;
   toolbarExtra?: ReactNode;
+  assetClass?: string | undefined;
 };
 
 type PriceComponent = {
@@ -279,6 +281,7 @@ type PriceComponentsCardProps<T extends PriceComponent> = Pick<
   | "label"
   | "searchPlaceholder"
   | "toolbarExtra"
+  | "assetClass"
 > &
   (
     | { isLoading: true }
@@ -369,7 +372,10 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
               },
             })}
             items={[
-              { id: "prices", children: "Prices" },
+              {
+                id: "prices",
+                children: <PriceName assetClass={props.assetClass} plural />,
+              },
               { id: "quality", children: "Quality" },
             ]}
           />
@@ -456,8 +462,9 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
 
 const otherColumns = ({
   metricsTime,
+  assetClass,
   ...props
-}: { metricsTime?: Date | undefined } & (
+}: { metricsTime?: Date | undefined; assetClass?: string | undefined } & (
   | { isLoading: true }
   | { isLoading?: false; showQuality: boolean }
 )) => {
@@ -500,8 +507,8 @@ const otherColumns = ({
                 DEVIATION SCORE
                 <Explain size="xs" title="Deviation">
                   <p>
-                    Deviation measures how close a publisher{"'"}s price is to
-                    what Pyth believes to be the true market price.
+                    Deviation measures how close a publisher{"'"}s quote is to
+                    what Pyth believes to be the true market quote.
                   </p>
                   {metricsTime && <EvaluationTime scoreTime={metricsTime} />}
                   <Button
@@ -527,7 +534,7 @@ const otherColumns = ({
                 <Explain size="xs" title="Stalled">
                   <p>
                     A feed is considered stalled if it is publishing the same
-                    value repeatedly for the price. This score component is
+                    value repeatedly for the quote. This score component is
                     reduced each time a feed is stalled.
                   </p>
                   {metricsTime && <EvaluationTime scoreTime={metricsTime} />}
@@ -584,7 +591,12 @@ const otherColumns = ({
         ]
       : [
           { id: "slot", name: "SLOT", alignment: "left" as const, width: 40 },
-          { id: "price", name: "PRICE", alignment: "left" as const, width: 40 },
+          {
+            id: "price",
+            name: <PriceName assetClass={assetClass} uppercase />,
+            alignment: "left" as const,
+            width: 40,
+          },
           {
             id: "confidence",
             name: "CONFIDENCE INTERVAL",
