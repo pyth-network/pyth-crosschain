@@ -66,12 +66,6 @@ module pyth_lazer::pyth_lazer_tests {
     }
 
     #[test]
-    fun test_initialize() {
-        let (_top_authority, _treasury, _) = setup();
-        // Contract is already initialized in setup
-    }
-
-    #[test]
     fun test_verify_message_succeeds() {
         let (top_authority, _treasury, user) = setup();
 

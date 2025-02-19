@@ -9,22 +9,22 @@ This package is built using the Move language and Aptos framework.
 Install Aptos CLI and set it up:
 
 ```shell
-$ brew install aptos
-$ aptos --version
-$ aptos init --network devnet
+brew install aptos
+aptos --version
+aptos init --network devnet
 ```
 
 Compile the contract and run tests:
 
 ```shell
-$ aptos move compile
-$ aptos move test
+aptos move compile
+aptos move test
 ```
 
 Deploy to the network configured in your aptos profile:
 
 ```shell
-$ aptos move publish
+aptos move publish
 ```
 
 Invoke deployed contract functions on-chain:
