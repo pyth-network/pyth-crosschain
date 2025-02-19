@@ -48,10 +48,10 @@ jobs:
           key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
       # Install Aptos CLI for Lazer contract formatting and linting
       - name: Download Aptos CLI
-        run: wget https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v3.1.0/aptos-cli-3.1.0-Ubuntu-22.04-x86_64.zip
+        run: wget https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v6.1.1/aptos-cli-6.1.1-Ubuntu-22.04-x86_64.zip
       - name: Install Aptos CLI
         run: |
-          unzip aptos-cli-3.1.0-Ubuntu-22.04-x86_64.zip
+          aptos-cli-6.1.1-Ubuntu-22.04-x86_64.zip
           sudo mv aptos /usr/local/bin/
           chmod +x /usr/local/bin/aptos
           aptos update movefmt
