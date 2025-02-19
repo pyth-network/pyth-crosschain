@@ -8,7 +8,6 @@ on:
 env:
   PYTHON_VERSION: "3.11"
   POETRY_VERSION: "1.4.2"
-
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -47,6 +46,15 @@ jobs:
         with:
           path: ~/.cache/pypoetry
           key: poetry-cache-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ env.POETRY_VERSION }}
+      # Install Aptos CLI for Lazer contract formatting and linting
+      - name: Download Aptos CLI
+        run: wget https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v3.1.0/aptos-cli-3.1.0-Ubuntu-22.04-x86_64.zip
+      - name: Install Aptos CLI
+        run: |
+          unzip aptos-cli-3.1.0-Ubuntu-22.04-x86_64.zip
+          sudo mv aptos /usr/local/bin/
+          chmod +x /usr/local/bin/aptos
+          aptos update movefmt
       - uses: pre-commit/action@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}
         with:
