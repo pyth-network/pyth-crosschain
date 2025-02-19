@@ -115,7 +115,7 @@ export class HermesClient {
     query?: string;
     assetType?: AssetType;
     fetchOptions?: RequestInit;
-  }): Promise<PriceFeedMetadata[]> {
+  } = {}): Promise<PriceFeedMetadata[]> {
     const url = this.buildURL("price_feeds");
     if (options) {
       const transformedOptions = camelToSnakeCaseObject(options);
