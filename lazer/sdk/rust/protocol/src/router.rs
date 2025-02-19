@@ -141,6 +141,7 @@ pub enum PriceFeedProperty {
     BestAskPrice,
     PublisherCount,
     Exponent,
+    Confidence,
     // More fields may be added later.
 }
 
@@ -409,6 +410,9 @@ pub struct ParsedFeedPayload {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub exponent: Option<i16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub confidence: Option<Price>,
     // More fields may be added later.
 }
 
@@ -426,6 +430,7 @@ impl ParsedFeedPayload {
             best_ask_price: None,
             publisher_count: None,
             exponent: None,
+            confidence: None,
         };
         for &property in properties {
             match property {
@@ -444,6 +449,9 @@ impl ParsedFeedPayload {
                 PriceFeedProperty::Exponent => {
                     output.exponent = exponent;
                 }
+                PriceFeedProperty::Confidence => {
+                    output.confidence = data.confidence;
+                }
             }
         }
         output
@@ -461,6 +469,7 @@ impl ParsedFeedPayload {
             best_ask_price: data.best_ask_price,
             publisher_count: data.publisher_count,
             exponent,
+            confidence: data.confidence,
         }
     }
 }
