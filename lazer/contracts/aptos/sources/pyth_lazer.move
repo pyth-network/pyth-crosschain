@@ -38,9 +38,7 @@ module pyth_lazer::pyth_lazer {
 
     /// Initialize the Lazer contract with top authority and treasury. One-time operation.
     public entry fun initialize(
-        account: &signer,
-        top_authority: address,
-        treasury: address,
+        account: &signer, top_authority: address, treasury: address
     ) {
         // Initialize must be called by the contract account
         assert!(signer::address_of(account) == @pyth_lazer, ENO_PERMISSIONS);
@@ -77,7 +75,7 @@ module pyth_lazer::pyth_lazer {
         let valid = false;
         while (i < storage.trusted_signers.length()) {
             let signer_info = vector::borrow(&storage.trusted_signers, (i as u64));
-            if (signer_info.pubkey == trusted_signer
+            if (&signer_info.pubkey == &trusted_signer
                 && signer_info.expires_at > timestamp::now_seconds()) {
                 valid = true;
                 break
@@ -94,6 +92,7 @@ module pyth_lazer::pyth_lazer {
             EINVALID_SIGNATURE
         );
     }
+
     /// Upsert a trusted signer's information or remove them
     public entry fun update_trusted_signer(
         account: &signer, trusted_signer: vector<u8>, expires_at: u64
@@ -111,7 +110,7 @@ module pyth_lazer::pyth_lazer {
 
         while (i < num_signers) {
             let signer_info = vector::borrow(&storage.trusted_signers, (i as u64));
-            if (signer_info.pubkey == trusted_signer) {
+            if (&signer_info.pubkey == &trusted_signer) {
                 found = true;
                 break
             };
@@ -140,6 +139,7 @@ module pyth_lazer::pyth_lazer {
         let storage = borrow_global<Storage>(@pyth_lazer);
         storage.trusted_signers
     }
+
     /// Signer pubkey getter
     public fun get_signer_pubkey(info: &TrustedSignerInfo): vector<u8> {
         info.pubkey
@@ -149,6 +149,4 @@ module pyth_lazer::pyth_lazer {
     public fun get_signer_expires_at(info: &TrustedSignerInfo): u64 {
         info.expires_at
     }
-
-
 }

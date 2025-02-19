@@ -151,3 +151,15 @@ repos:
         entry: cargo +1.82.0 clippy --manifest-path ./target_chains/ethereum/sdk/stylus/Cargo.toml  --all-targets -- --deny warnings
         pass_filenames: false
         files: target_chains/ethereum/sdk/stylus
+      - id: fmt-aptos-lazer
+        name: Format Aptos Lazer contracts
+        language: system
+        entry: aptos move fmt --package-path lazer/contracts/aptos
+        pass_filenames: false
+        files: lazer/contracts/aptos
+      - id: lint-aptos-lazer
+        name: Lint Aptos Lazer contracts
+        language: system
+        entry: aptos move lint --package-dir lazer/contracts/aptos --check-test-code
+        pass_filenames: false
+        files: lazer/contracts/aptos
