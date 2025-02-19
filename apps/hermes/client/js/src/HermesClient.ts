@@ -1,4 +1,4 @@
-import EventSource from "eventsource";
+import { EventSource } from "eventsource";
 import { schemas } from "./zodSchemas";
 import { z } from "zod";
 import { camelToSnakeCaseObject } from "./utils";
@@ -152,7 +152,8 @@ export class HermesClient {
     }
     return await this.httpRequest(
       url.toString(),
-      schemas.LatestPublisherStakeCapsUpdateDataResponse
+      schemas.LatestPublisherStakeCapsUpdateDataResponse,
+      fetchOptions
     );
   }
 
@@ -265,7 +266,16 @@ export class HermesClient {
       this.appendUrlSearchParams(url, transformedOptions);
     }
 
-    return new EventSource(url.toString(), { headers: this.headers });
+    return new EventSource(url.toString(), {
+      fetch: (input, init) =>
+        fetch(input, {
+          ...init,
+          headers: {
+            ...init?.headers,
+            ...this.headers,
+          },
+        }),
+    });
   }
 
   /**
