@@ -2,7 +2,7 @@
 
 This package is built using the Move language and Aptos framework.
 
-`PythLazer` is an Aptos on-chain contract that allows consumers to easily verify Pyth Lazer updates for use on-chain.
+`PythLazer` is an Aptos contract that allows consumers to easily verify Pyth Lazer updates for use on-chain.
 
 ### Build, test, deploy
 

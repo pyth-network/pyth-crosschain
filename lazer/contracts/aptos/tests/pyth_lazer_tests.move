@@ -7,9 +7,6 @@ module pyth_lazer::pyth_lazer_tests {
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_std::ed25519;
     use pyth_lazer::pyth_lazer;
-    use std::vector;
-    use std::debug;
-    use std::string::{String,utf8};
 
     // Test accounts
     const TOP_AUTHORITY: address = @0x3374049c3b46a907ff2fc6b62af51975fb9dc572b7e73eb1b255ed5edcd7cee0;
@@ -139,7 +136,7 @@ module pyth_lazer::pyth_lazer_tests {
     #[test]
     #[expected_failure(abort_code = pyth_lazer::EINSUFFICIENT_FEE)]
     fun test_insufficient_fee() {
-        let (top_authority, _treasury, user) = setup();
+        let (_top_authority, _treasury, user) = setup();
 
         // Drain user's balance
         let user_balance = coin::balance<AptosCoin>(signer::address_of(&user));
