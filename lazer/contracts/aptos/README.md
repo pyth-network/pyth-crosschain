@@ -9,7 +9,7 @@ This package is built using the Move language and Aptos framework.
 Install Aptos CLI and set it up:
 
 ```shell
-$ brew install
+$ brew install aptos
 $ aptos --version
 $ aptos init --network devnet
 ```
