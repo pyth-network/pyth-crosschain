@@ -160,6 +160,6 @@ repos:
       - id: lint-aptos-lazer
         name: Lint Aptos Lazer contracts
         language: system
-        entry: aptos move lint --package-dir lazer/contracts/aptos --check-test-code
+        entry: aptos move lint --package-dir lazer/contracts/aptos --check-test-code --dev
         pass_filenames: false
         files: lazer/contracts/aptos
