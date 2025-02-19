@@ -864,3 +864,8 @@
   rpcUrl: https://homer.storyrpc.io
   networkId: 1514
   type: EvmChain
+- id: hyperEVM
+  mainnet: true
+  rpcUrl: https://rpc.hyperliquid.xyz/evm
+  networkId: 999
+  type: EvmChain
