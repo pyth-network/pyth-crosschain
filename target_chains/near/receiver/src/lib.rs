@@ -11,7 +11,7 @@ use {
         log, near_bindgen, AccountId, BorshStorageKey, Duration, Gas, NearToken, PanicOnDefault,
         Promise, StorageUsage,
     },
-    pyth_wormhole_attester_sdk::{BatchPriceAttestation, P2W_MAGIC},
+    pythnet_sdk::legacy::{BatchPriceAttestation, P2W_MAGIC},
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,

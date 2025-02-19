@@ -1,12 +1,18 @@
 import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
+import { Badge } from "@pythnetwork/component-library/Badge";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
 import styles from "./index.module.scss";
+import { omitKeys } from "../../omit-keys";
+import { Cluster } from "../../services/pyth";
 import { PublisherKey } from "../PublisherKey";
 
-type Props = ComponentProps<"div"> & { compact?: boolean | undefined } & (
+type Props = ComponentProps<"div"> & {
+  compact?: boolean | undefined;
+  cluster?: Cluster | undefined;
+} & (
     | { isLoading: true }
     | ({
         isLoading?: false;
@@ -36,6 +42,16 @@ export const PublisherTag = ({ className, ...props }: Props) => (
       <div className={styles.icon}>{props.icon ?? <UndisclosedIcon />}</div>
     )}
     <Contents {...props} />
+    {props.cluster === Cluster.PythtestConformance && (
+      <Badge
+        variant="muted"
+        style="filled"
+        size="xs"
+        className={styles.testBadge}
+      >
+        test
+      </Badge>
+    )}
   </div>
 );
 
@@ -68,14 +84,4 @@ const Contents = (props: Props) => {
   } else {
     return <PublisherKey publisherKey={props.publisherKey} size="sm" />;
   }
-};
-
-const omitKeys = <T extends Record<string, unknown>>(
-  obj: T,
-  keys: string[],
-) => {
-  const omitSet = new Set(keys);
-  return Object.fromEntries(
-    Object.entries(obj).filter(([key]) => !omitSet.has(key)),
-  );
 };

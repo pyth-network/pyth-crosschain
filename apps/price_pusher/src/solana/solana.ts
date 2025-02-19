@@ -6,7 +6,7 @@ import {
   PriceItem,
 } from "../interface";
 import { DurationInSeconds } from "../utils";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   sendTransactions,
   sendTransactionsJito,
@@ -94,17 +94,13 @@ export class SolanaPriceListener extends ChainPriceListener {
 export class SolanaPricePusher implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
-    private priceServiceConnection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private logger: Logger,
     private shardId: number,
     private computeUnitPriceMicroLamports: number
   ) {}
 
-  async updatePriceFeed(
-    priceIds: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _pubTimesToPush: number[]
-  ): Promise<void> {
+  async updatePriceFeed(priceIds: string[]): Promise<void> {
     if (priceIds.length === 0) {
       return;
     }
@@ -118,9 +114,13 @@ export class SolanaPricePusher implements IPricePusher {
 
     let priceFeedUpdateData;
     try {
-      priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
-        shuffledPriceIds
+      const response = await this.hermesClient.getLatestPriceUpdates(
+        shuffledPriceIds,
+        {
+          encoding: "base64",
+        }
       );
+      priceFeedUpdateData = response.binary.data;
     } catch (err: any) {
       this.logger.error(err, "getPriceFeedsUpdateData failed:");
       return;
@@ -156,7 +156,7 @@ export class SolanaPricePusher implements IPricePusher {
 export class SolanaPricePusherJito implements IPricePusher {
   constructor(
     private pythSolanaReceiver: PythSolanaReceiver,
-    private priceServiceConnection: PriceServiceConnection,
+    private hermesClient: HermesClient,
     private logger: Logger,
     private shardId: number,
     private defaultJitoTipLamports: number,
@@ -189,11 +189,11 @@ export class SolanaPricePusherJito implements IPricePusher {
     }
   }
 
-  async updatePriceFeed(
-    priceIds: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _pubTimesToPush: number[]
-  ): Promise<void> {
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async updatePriceFeed(priceIds: string[]): Promise<void> {
     const recentJitoTip = await this.getRecentJitoTipLamports();
     const jitoTip =
       this.dynamicJitoTips && recentJitoTip !== undefined
@@ -205,9 +205,10 @@ export class SolanaPricePusherJito implements IPricePusher {
 
     let priceFeedUpdateData: string[];
     try {
-      priceFeedUpdateData = await this.priceServiceConnection.getLatestVaas(
-        priceIds
-      );
+      const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
+        encoding: "base64",
+      });
+      priceFeedUpdateData = response.binary.data;
     } catch (err: any) {
       this.logger.error(err, "getPriceFeedsUpdateData failed");
       return;
@@ -234,11 +235,32 @@ export class SolanaPricePusherJito implements IPricePusher {
         jitoBundleSize: this.jitoBundleSize,
       });
 
-      await sendTransactionsJito(
-        transactions,
-        this.searcherClient,
-        this.pythSolanaReceiver.wallet
-      );
+      let retries = 60;
+      while (retries > 0) {
+        try {
+          await sendTransactionsJito(
+            transactions,
+            this.searcherClient,
+            this.pythSolanaReceiver.wallet
+          );
+          break;
+        } catch (err: any) {
+          if (err.code === 8 && err.details?.includes("Rate limit exceeded")) {
+            this.logger.warn("Rate limit hit, waiting before retry...");
+            await this.sleep(1100); // Wait slightly more than 1 second
+            retries--;
+            if (retries === 0) {
+              this.logger.error("Max retries reached for rate limit");
+              throw err;
+            }
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      // Add a delay between bundles to avoid rate limiting
+      await this.sleep(1100);
     }
   }
 }

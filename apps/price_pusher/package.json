@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-pusher",
-  "version": "8.3.1",
+  "version": "9.0.0",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
@@ -60,7 +60,7 @@
     "@injectivelabs/networks": "^1.14.6",
     "@injectivelabs/sdk-ts": "1.10.72",
     "@mysten/sui": "^1.3.0",
-    "@pythnetwork/price-service-client": "workspace:*",
+    "@pythnetwork/hermes-client": "^1.3.1",
     "@pythnetwork/price-service-sdk": "workspace:^",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",

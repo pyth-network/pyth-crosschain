@@ -27,15 +27,14 @@
       display: flex;
     }
 
-    .header,
-    .dualHeader {
+    .header {
       color: theme.color("muted");
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: theme.spacing(2);
 
       @include theme.text("sm", "medium");
-    }
-
-    .header {
-      text-align: left;
     }
 
     .dualHeader {

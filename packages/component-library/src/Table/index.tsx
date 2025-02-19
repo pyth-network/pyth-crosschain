@@ -119,7 +119,7 @@ export const Table = <T extends string>({
             >
               {({ allowsSorting, sort, sortDirection }) => (
                 <>
-                  {column.name}
+                  <div className={styles.name}>{column.name}</div>
                   {allowsSorting && (
                     <Button
                       className={styles.sortButton ?? ""}

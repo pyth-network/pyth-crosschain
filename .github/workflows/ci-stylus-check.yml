@@ -1,0 +1,73 @@
+name: stylus-check
+# This workflow runs whenever a PR is opened or updated, or a commit is pushed
+# to main. It runs several checks:
+# - fmt: checks that the code is formatted according to `rustfmt`.
+# - clippy: checks that the code does not contain any `clippy` warnings.
+# - doc: checks that the code can be documented without errors.
+# - hack: check combinations of feature flags.
+# - typos: checks for typos across the repo.
+permissions:
+  contents: read
+# This configuration allows maintainers of this repo to create a branch and
+# pull request based on the new branch. Restricting the push trigger to the
+# main branch ensures that the PR only gets built once.
+on:
+  pull_request:
+    paths:
+      - target_chains/ethereum/sdk/stylus/**
+  push:
+    branches:
+      - main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    name: nightly / fmt
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install rust
+        # We run in nightly to make use of some features only available there.
+        # Check out `rustfmt.toml` to see which ones.
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly
+          components: rustfmt
+          rustflags: ""
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+  clippy:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.toolchain }} / clippy
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
+    permissions:
+      contents: read
+      checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # Get early warning of new lints which are regularly introduced in beta
+        # channels.
+        toolchain: [stable, beta]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install rust ${{ matrix.toolchain }}
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: clippy
+          rustflags: ""

@@ -1,13 +1,11 @@
 #![allow(clippy::just_underscores_and_digits)]
 
-use {anyhow::Result, clap::Parser, std::io::IsTerminal};
-
-pub mod api;
-pub mod chain;
-pub mod command;
-pub mod config;
-pub mod keeper;
-pub mod state;
+use {
+    anyhow::Result,
+    clap::Parser,
+    fortuna::{command, config},
+    std::io::IsTerminal,
+};
 
 // Server TODO list:
 // - Tests

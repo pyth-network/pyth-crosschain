@@ -2,8 +2,6 @@ import { Program } from '@coral-xyz/anchor'
 import { Dialog, Menu, Transition } from '@headlessui/react'
 import { PythOracle } from '@pythnetwork/client/lib/anchor'
 import * as Label from '@radix-ui/react-label'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import axios from 'axios'
@@ -39,12 +37,12 @@ const assetTypes = [
 const PermissionDepermissionKey = ({
   isPermission,
   pythProgramClient,
-  squads,
+  readOnlySquads,
   proposerServerUrl,
 }: {
   isPermission: boolean
   pythProgramClient?: Program<PythOracle>
-  squads?: SquadsMesh
+  readOnlySquads: SquadsMesh
   proposerServerUrl: string
 }) => {
   const [publisherKey, setPublisherKey] = useState(
@@ -56,7 +54,6 @@ const PermissionDepermissionKey = ({
   const [priceAccounts, setPriceAccounts] = useState<PublicKey[]>([])
   const { cluster } = useContext(ClusterContext)
   const { rawConfig, dataIsLoading, connection } = usePythContext()
-  const { connected } = useWallet()
 
   // get current input value
 
@@ -77,9 +74,9 @@ const PermissionDepermissionKey = ({
   }
 
   const handleSubmitButton = async () => {
-    if (pythProgramClient && squads) {
+    if (pythProgramClient) {
       const instructions: TransactionInstruction[] = []
-      const multisigAuthority = squads.getAuthorityPDA(
+      const multisigAuthority = readOnlySquads.getAuthorityPDA(
         PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
         1
       )
@@ -265,22 +262,16 @@ const PermissionDepermissionKey = ({
                       />
                     </div>
                     <div className="mt-6">
-                      {!connected ? (
-                        <div className="flex justify-center">
-                          <WalletModalButton className="action-btn text-base" />
-                        </div>
-                      ) : (
-                        <button
-                          className="action-btn text-base"
-                          onClick={handleSubmitButton}
-                        >
-                          {isSubmitButtonLoading ? (
-                            <Spinner />
-                          ) : (
-                            'Submit Proposal'
-                          )}
-                        </button>
-                      )}
+                      <button
+                        className="action-btn text-base"
+                        onClick={handleSubmitButton}
+                      >
+                        {isSubmitButtonLoading ? (
+                          <Spinner />
+                        ) : (
+                          'Submit Proposal'
+                        )}
+                      </button>
                     </div>
                   </div>
                 </Dialog.Panel>

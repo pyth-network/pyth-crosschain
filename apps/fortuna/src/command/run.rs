@@ -1,13 +1,11 @@
 use {
     crate::{
         api::{self, BlockchainState, ChainId},
-        chain::{
-            ethereum::InstrumentedPythContract,
-            traced_client::{RpcMetrics, TracedClient},
-        },
+        chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
         config::{Commitment, Config, EthereumConfig, RunOptions},
-        keeper::{self, KeeperMetrics},
+        eth_utils::traced_client::{RpcMetrics, TracedClient},
+        keeper::{self, keeper_metrics::KeeperMetrics},
         state::{HashChainState, PebbleHashChain},
     },
     anyhow::{anyhow, Error, Result},
@@ -103,7 +101,13 @@ pub async fn run_keeper(
     rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<()> {
     let mut handles = Vec::new();
-    let keeper_metrics = Arc::new(KeeperMetrics::new(metrics_registry).await);
+    let keeper_metrics: Arc<KeeperMetrics> = Arc::new({
+        let chain_labels: Vec<(String, Address)> = chains
+            .iter()
+            .map(|(id, state)| (id.clone(), state.provider_address))
+            .collect();
+        KeeperMetrics::new(metrics_registry.clone(), chain_labels).await
+    });
     for (chain_id, chain_config) in chains {
         let chain_eth_config = config
             .chains

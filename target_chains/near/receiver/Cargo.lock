@@ -2916,7 +2916,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-near"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "byteorder",
  "hex",
@@ -2927,8 +2927,8 @@ dependencies = [
  "num-derive",
  "num-traits",
  "pyth-sdk 0.7.0",
- "pyth-wormhole-attester-sdk",
  "pythnet-sdk",
+ "schemars",
  "serde",
  "serde_json",
  "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole?tag=rust-sdk-2024-01-25)",
@@ -2965,17 +2965,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-wormhole-attester-sdk"
-version = "0.1.2"
-dependencies = [
- "hex",
- "pyth-sdk 0.5.0",
- "serde",
-]
-
-[[package]]
 name = "pythnet-sdk"
-version = "2.3.0"
+version = "2.3.1"
 dependencies = [
  "bincode",
  "borsh 0.10.4",
@@ -2984,6 +2975,7 @@ dependencies = [
  "fast-math",
  "hex",
  "libsecp256k1",
+ "pyth-sdk 0.5.0",
  "rand",
  "rustc_version",
  "serde",

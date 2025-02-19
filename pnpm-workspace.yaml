@@ -2,9 +2,6 @@ packages:
   - "apps/*"
   - "packages/*"
   - "apps/hermes/client/js"
-  - "express_relay/examples/easy_lend"
-  - "express_relay/sdk/js"
-  - "express_relay/sdk/solidity"
   - "governance/xc_admin/packages/*"
   - "governance/pyth_staking_sdk"
   - "price_service/sdk/js"
@@ -19,6 +16,7 @@ packages:
   - "target_chains/ethereum/entropy_sdk/solidity"
   - "target_chains/ethereum/sdk/js"
   - "target_chains/ethereum/sdk/solidity"
+  - "target_chains/ethereum/sdk/stylus/pyth-mock-solidity"
   - "target_chains/ethereum/examples/coin_flip/app"
   - "target_chains/fuel/sdk/js"
   - "target_chains/starknet/sdk/js"
@@ -43,7 +41,8 @@ catalog:
   "@cprussin/tsconfig": 3.0.1
   "@next/third-parties": 15.0.2
   "@phosphor-icons/react": 2.1.7
-  "@pythnetwork/client": 2.22.0
+  "@pythnetwork/pyth-sdk-solidity": 4.0.0
+  "@pythnetwork/client": 2.22.1
   "@react-hookz/web": 24.0.4
   "@solana/web3.js": 1.95.4
   "@storybook/addon-essentials": 8.3.5
@@ -68,6 +67,7 @@ catalog:
   eslint: 9.13.0
   framer-motion: 11.11.10
   jest: 29.7.0
+  lightweight-charts: ^4.2.3
   modern-normalize: 3.0.1
   motion: 11.14.4
   next-themes: 0.3.0

@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@pythnetwork/component-library/Badge";
 import { DropdownCaretDown } from "@pythnetwork/component-library/DropdownCaretDown";
 import {
   Virtualizer,
@@ -20,39 +19,44 @@ import { type ReactNode, useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
 
 import styles from "./price-feed-select.module.scss";
+import { usePriceFeeds } from "../../hooks/use-price-feeds";
+import { Cluster } from "../../services/pyth";
+import { AssetClassTag } from "../AssetClassTag";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
   children: ReactNode;
-  feeds: {
-    id: string;
-    key: string;
-    displaySymbol: string;
-    icon: ReactNode;
-    assetClass: string;
-  }[];
 };
 
-export const PriceFeedSelect = ({ children, feeds }: Props) => {
+export const PriceFeedSelect = ({ children }: Props) => {
+  const feeds = usePriceFeeds();
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [search, setSearch] = useState("");
-  const sortedFeeds = useMemo(
-    () =>
-      feeds.sort((a, b) => collator.compare(a.displaySymbol, b.displaySymbol)),
-    [feeds, collator],
-  );
   const filteredFeeds = useMemo(
     () =>
       search === ""
-        ? sortedFeeds
-        : sortedFeeds.filter(
-            (feed) =>
-              filter.contains(feed.displaySymbol, search) ||
-              filter.contains(feed.assetClass, search) ||
-              filter.contains(feed.key, search),
+        ? // This is inefficient but Safari doesn't support `Iterator.filter`, see
+          // https://bugs.webkit.org/show_bug.cgi?id=248650
+          [...feeds.entries()]
+        : [...feeds.entries()].filter(
+            ([, { displaySymbol, assetClass, key }]) =>
+              filter.contains(displaySymbol, search) ||
+              filter.contains(assetClass, search) ||
+              filter.contains(key[Cluster.Pythnet], search),
           ),
-    [sortedFeeds, search, filter],
+    [feeds, search, filter],
+  );
+  const sortedFeeds = useMemo(
+    () =>
+      // eslint-disable-next-line unicorn/no-useless-spread
+      [
+        ...filteredFeeds.map(([symbol, { displaySymbol }]) => ({
+          id: symbol,
+          displaySymbol,
+        })),
+      ].toSorted((a, b) => collator.compare(a.displaySymbol, b.displaySymbol)),
+    [filteredFeeds, collator],
   );
   return (
     <Select
@@ -80,22 +84,20 @@ export const PriceFeedSelect = ({ children, feeds }: Props) => {
           </SearchField>
           <Virtualizer layout={new ListLayout()}>
             <ListBox
-              items={filteredFeeds}
+              items={sortedFeeds}
               className={styles.listbox ?? ""}
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus={false}
             >
-              {({ assetClass, id, displaySymbol, icon }) => (
+              {({ id, displaySymbol }) => (
                 <ListBoxItem
                   textValue={displaySymbol}
                   className={styles.priceFeed ?? ""}
                   href={`/price-feeds/${encodeURIComponent(id)}`}
-                  data-is-first={id === filteredFeeds[0]?.id ? "" : undefined}
+                  data-is-first={id === sortedFeeds[0]?.id ? "" : undefined}
                 >
-                  <PriceFeedTag compact symbol={displaySymbol} icon={icon} />
-                  <Badge variant="neutral" style="outline" size="xs">
-                    {assetClass.toUpperCase()}
-                  </Badge>
+                  <PriceFeedTag compact symbol={id} />
+                  <AssetClassTag symbol={id} />
                 </ListBoxItem>
               )}
             </ListBox>

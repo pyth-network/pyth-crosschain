@@ -14,6 +14,7 @@ import {
   ListBox,
   ListBoxItem,
 } from "@pythnetwork/component-library/unstyled/ListBox";
+import { useRouter } from "next/navigation";
 import {
   type ReactNode,
   useState,
@@ -23,9 +24,12 @@ import {
   use,
   useMemo,
 } from "react";
-import { useCollator, useFilter } from "react-aria";
+import { RouterProvider, useCollator, useFilter } from "react-aria";
 
 import styles from "./search-dialog.module.scss";
+import { usePriceFeeds } from "../../hooks/use-price-feeds";
+import { Cluster, ClusterToName } from "../../services/pyth";
+import { AssetClassTag } from "../AssetClassTag";
 import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherTag } from "../PublisherTag";
@@ -42,52 +46,60 @@ const SearchDialogOpenContext = createContext<
 
 type Props = {
   children: ReactNode;
-  feeds: {
-    id: string;
-    key: string;
-    displaySymbol: string;
-    icon: ReactNode;
-    assetClass: string;
-  }[];
   publishers: ({
-    id: string;
-    medianScore: number;
+    publisherKey: string;
+    averageScore: number;
+    cluster: Cluster;
   } & (
     | { name: string; icon: ReactNode }
     | { name?: undefined; icon?: undefined }
   ))[];
 };
 
-export const SearchDialogProvider = ({
-  children,
-  feeds,
-  publishers,
-}: Props) => {
+export const SearchDialogProvider = ({ children, publishers }: Props) => {
   const searchDialogState = useSearchDialogStateContext();
   const [search, setSearch] = useState("");
   const [type, setType] = useState<ResultType | "">("");
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const feeds = usePriceFeeds();
 
-  const updateSelectedType = useCallback((set: Set<ResultType | "">) => {
-    setType(set.values().next().value ?? "");
-  }, []);
-
-  const close = useCallback(() => {
-    searchDialogState.close();
-    setTimeout(() => {
-      setSearch("");
-      setType("");
-    }, CLOSE_DURATION_IN_MS);
-  }, [searchDialogState, setSearch, setType]);
+  const close = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        searchDialogState.close();
+        setTimeout(() => {
+          setSearch("");
+          setType("");
+          resolve();
+        }, CLOSE_DURATION_IN_MS);
+      }),
+    [searchDialogState, setSearch, setType],
+  );
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
-        close();
+        close().catch(() => {
+          /* no-op since this actually can't fail */
+        });
       }
     },
     [close],
+  );
+
+  const router = useRouter();
+  const handleOpenItem = useCallback(
+    (href: string) => {
+      close()
+        .then(() => {
+          router.push(href);
+        })
+        .catch(() => {
+          /* no-op since this actually can't fail */
+        });
+    },
+    [close, router],
   );
 
   const results = useMemo(
@@ -95,28 +107,42 @@ export const SearchDialogProvider = ({
       [
         ...(type === ResultType.Publisher
           ? []
-          : feeds
-              .filter((feed) => filter.contains(feed.displaySymbol, search))
-              .map((feed) => ({
+          : // This is inefficient but Safari doesn't support `Iterator.filter`,
+            // see https://bugs.webkit.org/show_bug.cgi?id=248650
+            [...feeds.entries()]
+              .filter(([, { displaySymbol }]) =>
+                filter.contains(displaySymbol, search),
+              )
+              .map(([symbol, { assetClass, displaySymbol }]) => ({
                 type: ResultType.PriceFeed as const,
-                ...feed,
+                id: symbol,
+                assetClass,
+                displaySymbol,
               }))),
         ...(type === ResultType.PriceFeed
           ? []
           : publishers
               .filter(
                 (publisher) =>
-                  filter.contains(publisher.id, search) ||
+                  filter.contains(publisher.publisherKey, search) ||
                   (publisher.name && filter.contains(publisher.name, search)),
               )
               .map((publisher) => ({
                 type: ResultType.Publisher as const,
+                id: [
+                  ClusterToName[publisher.cluster],
+                  publisher.publisherKey,
+                ].join(":"),
                 ...publisher,
               }))),
       ].sort((a, b) =>
         collator.compare(
-          a.type === ResultType.PriceFeed ? a.displaySymbol : (a.name ?? a.id),
-          b.type === ResultType.PriceFeed ? b.displaySymbol : (b.name ?? b.id),
+          a.type === ResultType.PriceFeed
+            ? a.displaySymbol
+            : (a.name ?? a.publisherKey),
+          b.type === ResultType.PriceFeed
+            ? b.displaySymbol
+            : (b.name ?? b.publisherKey),
         ),
       ),
     [feeds, publishers, collator, filter, search, type],
@@ -165,9 +191,9 @@ export const SearchDialogProvider = ({
               autoFocus
             />
             <SingleToggleGroup
-              selectedKeys={[type]}
+              selectedKey={type}
               // @ts-expect-error react-aria coerces everything to Key for some reason...
-              onSelectionChange={updateSelectedType}
+              onSelectionChange={setType}
               items={[
                 { id: "", children: "All" },
                 { id: ResultType.PriceFeed, children: "Price Feeds" },
@@ -188,82 +214,87 @@ export const SearchDialogProvider = ({
           </Button>
         </div>
         <div className={styles.body}>
-          <Virtualizer layout={new ListLayout()}>
-            <ListBox
-              aria-label="Search"
-              items={results}
-              className={styles.listbox ?? ""}
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus={false}
-              // @ts-expect-error looks like react-aria isn't exposing this
-              // property in the typescript types correctly...
-              shouldFocusOnHover
-              onAction={close}
-              emptyState={
-                <NoResults
-                  query={search}
-                  onClearSearch={() => {
-                    setSearch("");
-                  }}
-                />
-              }
-            >
-              {(result) => (
-                <ListBoxItem
-                  textValue={
-                    result.type === ResultType.PriceFeed
-                      ? result.displaySymbol
-                      : (result.name ?? result.id)
-                  }
-                  className={styles.item ?? ""}
-                  href={`${result.type === ResultType.PriceFeed ? "/price-feeds" : "/publishers"}/${encodeURIComponent(result.id)}`}
-                  data-is-first={result.id === results[0]?.id ? "" : undefined}
-                >
-                  <div className={styles.itemType}>
-                    <Badge
-                      variant={
-                        result.type === ResultType.PriceFeed
-                          ? "warning"
-                          : "info"
-                      }
-                      style="filled"
-                      size="xs"
-                    >
-                      {result.type === ResultType.PriceFeed
-                        ? "PRICE FEED"
-                        : "PUBLISHER"}
-                    </Badge>
-                  </div>
-                  {result.type === ResultType.PriceFeed ? (
-                    <>
-                      <PriceFeedTag
-                        compact
-                        symbol={result.displaySymbol}
-                        icon={result.icon}
-                        className={styles.itemTag}
-                      />
-                      <Badge variant="neutral" style="outline" size="xs">
-                        {result.assetClass.toUpperCase()}
+          <RouterProvider navigate={handleOpenItem}>
+            <Virtualizer layout={new ListLayout()}>
+              <ListBox
+                aria-label="Search"
+                items={results}
+                className={styles.listbox ?? ""}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus={false}
+                // @ts-expect-error looks like react-aria isn't exposing this
+                // property in the typescript types correctly...
+                shouldFocusOnHover
+                emptyState={
+                  <NoResults
+                    query={search}
+                    onClearSearch={() => {
+                      setSearch("");
+                    }}
+                  />
+                }
+              >
+                {(result) => (
+                  <ListBoxItem
+                    textValue={
+                      result.type === ResultType.PriceFeed
+                        ? result.displaySymbol
+                        : (result.name ?? result.publisherKey)
+                    }
+                    className={styles.item ?? ""}
+                    href={
+                      result.type === ResultType.PriceFeed
+                        ? `/price-feeds/${encodeURIComponent(result.id)}`
+                        : `/publishers/${ClusterToName[result.cluster]}/${encodeURIComponent(result.publisherKey)}`
+                    }
+                    data-is-first={
+                      result.id === results[0]?.id ? "" : undefined
+                    }
+                  >
+                    <div className={styles.itemType}>
+                      <Badge
+                        variant={
+                          result.type === ResultType.PriceFeed
+                            ? "warning"
+                            : "info"
+                        }
+                        style="filled"
+                        size="xs"
+                      >
+                        {result.type === ResultType.PriceFeed
+                          ? "PRICE FEED"
+                          : "PUBLISHER"}
                       </Badge>
-                    </>
-                  ) : (
-                    <>
-                      <PublisherTag
-                        className={styles.itemTag}
-                        compact
-                        publisherKey={result.id}
-                        {...(result.name && {
-                          name: result.name,
-                          icon: result.icon,
-                        })}
-                      />
-                      <Score score={result.medianScore} />
-                    </>
-                  )}
-                </ListBoxItem>
-              )}
-            </ListBox>
-          </Virtualizer>
+                    </div>
+                    {result.type === ResultType.PriceFeed ? (
+                      <>
+                        <PriceFeedTag
+                          compact
+                          symbol={result.id}
+                          className={styles.itemTag}
+                        />
+                        <AssetClassTag symbol={result.id} />
+                      </>
+                    ) : (
+                      <>
+                        <PublisherTag
+                          className={styles.itemTag}
+                          compact
+                          cluster={result.cluster}
+                          publisherKey={result.publisherKey}
+                          {...(result.name && {
+                            name: result.name,
+                            icon: result.icon,
+                          })}
+                        />
+                        <Score score={result.averageScore} />
+                      </>
+                    )}
+                  </ListBoxItem>
+                )}
+              </ListBox>
+            </Virtualizer>
+          </RouterProvider>
         </div>
       </ModalDialog>
     </>

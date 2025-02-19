@@ -2,7 +2,15 @@
 //! used across publishers, agents and routers.
 
 use {
-    crate::router::{JsonUpdate, SubscriptionParams},
+    crate::{
+        payload::{
+            BINARY_UPDATE_FORMAT_MAGIC, EVM_FORMAT_MAGIC, PARSED_FORMAT_MAGIC,
+            SOLANA_FORMAT_MAGIC_BE,
+        },
+        router::{JsonBinaryData, JsonBinaryEncoding, JsonUpdate, SubscriptionParams},
+    },
+    anyhow::bail,
+    base64::Engine,
     derive_more::From,
     serde::{Deserialize, Serialize},
 };
@@ -33,7 +41,7 @@ pub struct UnsubscribeRequest {
     pub subscription_id: SubscriptionId,
 }
 
-/// A response sent from the server to the client.
+/// A JSON response sent from the server to the client.
 #[derive(Debug, Clone, Serialize, Deserialize, From)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
@@ -43,6 +51,63 @@ pub enum Response {
     Unsubscribed(UnsubscribedResponse),
     SubscriptionError(SubscriptionErrorResponse),
     StreamUpdated(StreamUpdatedResponse),
+}
+
+impl Response {
+    /// Parse a binary server message into a Response
+    pub fn from_binary(data: &[u8]) -> anyhow::Result<Self> {
+        let mut pos = 0;
+        let magic = u32::from_be_bytes(data[pos..pos + 4].try_into()?);
+        pos += 4;
+
+        if magic != BINARY_UPDATE_FORMAT_MAGIC {
+            bail!("binary update format magic mismatch");
+        }
+
+        let subscription_id = SubscriptionId(u64::from_be_bytes(data[pos..pos + 8].try_into()?));
+        pos += 8;
+
+        let mut evm = None;
+        let mut solana = None;
+        let mut parsed = None;
+
+        while pos < data.len() {
+            let len = u16::from_be_bytes(data[pos..pos + 2].try_into()?) as usize;
+            pos += 2;
+            let magic = u32::from_be_bytes(data[pos..pos + 4].try_into()?);
+
+            match magic {
+                EVM_FORMAT_MAGIC => {
+                    evm = Some(JsonBinaryData {
+                        encoding: JsonBinaryEncoding::Base64,
+                        data: base64::engine::general_purpose::STANDARD
+                            .encode(&data[pos..pos + len]),
+                    });
+                }
+                SOLANA_FORMAT_MAGIC_BE => {
+                    solana = Some(JsonBinaryData {
+                        encoding: JsonBinaryEncoding::Base64,
+                        data: base64::engine::general_purpose::STANDARD
+                            .encode(&data[pos..pos + len]),
+                    });
+                }
+                PARSED_FORMAT_MAGIC => {
+                    parsed = Some(serde_json::from_slice(&data[pos + 4..pos + len])?);
+                }
+                _ => bail!("unknown magic: {}", magic),
+            }
+            pos += len;
+        }
+
+        Ok(Response::StreamUpdated(StreamUpdatedResponse {
+            subscription_id,
+            payload: JsonUpdate {
+                evm,
+                solana,
+                parsed,
+            },
+        }))
+    }
 }
 
 /// Sent from the server after a successul subscription.
@@ -67,7 +132,8 @@ pub struct SubscriptionErrorResponse {
     pub error: String,
 }
 
-/// Sent from the server if an error occured while serving data for an existing subscription.
+/// Sent from the server if an internal error occured while serving data for an existing subscription,
+/// or a client request sent a bad request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorResponse {

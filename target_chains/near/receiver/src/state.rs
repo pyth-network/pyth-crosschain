@@ -4,8 +4,9 @@ use {
         json_types::{I64, U64},
         serde::{Deserialize, Serialize},
     },
-    pyth_wormhole_attester_sdk::PriceAttestation,
+    pythnet_sdk::legacy::PriceAttestation,
     pythnet_sdk::messages::PriceFeedMessage,
+    schemars::{gen::SchemaGenerator, schema::Schema, JsonSchema},
     wormhole_sdk::Chain as WormholeChain,
 };
 
@@ -68,6 +69,20 @@ impl near_sdk::serde::Serialize for PriceIdentifier {
     }
 }
 
+impl JsonSchema for PriceIdentifier {
+    fn is_referenceable() -> bool {
+        false
+    }
+
+    fn schema_name() -> String {
+        String::schema_name()
+    }
+
+    fn json_schema(gen: &mut SchemaGenerator) -> Schema {
+        String::json_schema(gen)
+    }
+}
+
 /// A price with a degree of uncertainty, represented as a price +- a confidence interval.
 ///
 /// The confidence interval roughly corresponds to the standard error of a normal distribution.
@@ -79,6 +94,10 @@ impl near_sdk::serde::Serialize for PriceIdentifier {
 #[derive(BorshDeserialize, BorshSerialize, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
+// I64 and U64 only implement JsonSchema when "abi" feature is enabled in near_sdk,
+// but unconditionally enabling this feature doesn't work, so we have to make this impl
+// conditional.
+#[cfg_attr(abi, derive(JsonSchema))]
 pub struct Price {
     pub price: I64,
     /// Confidence interval around the price
@@ -161,6 +180,7 @@ impl From<&PriceFeedMessage> for PriceFeed {
     PartialEq,
     PartialOrd,
     Serialize,
+    JsonSchema,
 )]
 #[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
@@ -197,6 +217,7 @@ impl From<Chain> for u16 {
     PartialEq,
     PartialOrd,
     Serialize,
+    JsonSchema,
 )]
 #[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]

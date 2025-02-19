@@ -1,0 +1,44 @@
+# This workflow checks whether the library is able to run without the std
+# library. See `check.yml` for information about how the concurrency
+# cancellation and workflow triggering works.
+name: stylus-no-std
+permissions:
+  contents: read
+on:
+  pull_request:
+    paths:
+      - target_chains/ethereum/sdk/stylus/**
+  push:
+    branches:
+      - main
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  nostd:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.target }}
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
+    strategy:
+      matrix:
+        target: [wasm32-unknown-unknown]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          rustflags: ""
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "target_chains/ethereum/sdk/stylus -> target"
+      - name: Add rust targets ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
+      - name: Cargo check
+        run: cargo check --release --target ${{ matrix.target }} --no-default-features

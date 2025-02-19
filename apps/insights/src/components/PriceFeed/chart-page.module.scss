@@ -1,0 +1,10 @@
+@use "@pythnetwork/component-library/theme";
+
+.chartCard {
+  .chart {
+    background: theme.color("background", "primary");
+    height: theme.spacing(140);
+    border-radius: theme.border-radius("xl");
+    overflow: hidden;
+  }
+}

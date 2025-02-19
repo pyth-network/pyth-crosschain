@@ -11,6 +11,9 @@ import { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
 export const RECEIVER_CHAINS = {
   unset: 0, // The global chain id. For messages that are not chain specific.
 
+  // On the following networks we use Wormhole's contract
+  near: 15,
+
   // On the following networks we use our own version of Wormhole receiver contract
   ethereum: 2,
   bsc: 4,
@@ -32,6 +35,7 @@ export const RECEIVER_CHAINS = {
   sonic_testnet: 40006,
   atlas_testnet: 40007,
   mantis_mainnet: 40008,
+  sonic_mainnet: 40009,
 
   cronos: 60001,
   kcc: 60002,
@@ -102,6 +106,11 @@ export const RECEIVER_CHAINS = {
   eventum_mainnet: 60073,
   threat_level_midnight: 60074,
   just_breathe: 60075,
+  berachain_mainnet: 60076,
+  movement_mainnet: 60077,
+  story_mainnet: 60078,
+  hyperEVM: 60079,
+
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
   osmosis_testnet_4: 60015,
@@ -224,6 +233,7 @@ export const RECEIVER_CHAINS = {
   coredao_testnet_v2: 50114,
   bittensor_testnet: 50115,
   monad_devnet: 50116,
+  monad_testnet: 50117,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

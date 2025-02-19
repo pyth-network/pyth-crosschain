@@ -9,16 +9,17 @@
     flex-flow: column nowrap;
     gap: theme.spacing(8);
 
-    .headerRow,
-    .rightGroup,
+    .breadcrumbRow,
     .stats {
       display: flex;
       flex-flow: row nowrap;
+      align-items: center;
     }
 
-    .headerRow,
-    .rightGroup {
+    .breadcrumbRow {
       align-items: center;
+      justify-content: space-between;
+      margin-bottom: -#{theme.spacing(2)};
     }
 
     .stats {
@@ -28,23 +29,6 @@
       & > * {
         flex: 1 1 0px;
         width: 0;
-      }
-
-      .medianScoreChart svg {
-        cursor: pointer;
-      }
-
-      .publisherRankingExplainButton {
-        margin-top: -#{theme.button-padding("xs", false)};
-        margin-right: -#{theme.button-padding("xs", false)};
-      }
-
-      .primarySparkChartLine {
-        color: theme.color("chart", "series", "primary");
-      }
-
-      .secondarySparkChartLine {
-        color: theme.color("chart", "series", "neutral");
       }
 
       .activeDate {
@@ -61,18 +45,6 @@
         color: theme.color("states", "error", "base");
       }
     }
-
-    .headerRow {
-      justify-content: space-between;
-    }
-
-    .rightGroup {
-      gap: theme.spacing(2);
-    }
-
-    .breadcrumbs {
-      margin-bottom: -#{theme.spacing(2)};
-    }
   }
 
   .priceFeedsTabLabel {
@@ -86,14 +58,6 @@
     @include theme.max-width;
 
     padding-top: theme.spacing(6);
-  }
-}
-
-.publisherRankingExplainDescription {
-  margin: 0;
-
-  b {
-    font-weight: theme.font-weight("semibold");
   }
 }
 
@@ -126,19 +90,5 @@
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: center;
-  }
-}
-
-.medianScoreDrawer {
-  .medianScoreDrawerFooter {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: flex-end;
-  }
-
-  .medianScoreDrawerBody {
-    display: flex;
-    flex-flow: column nowrap;
-    gap: theme.spacing(6);
   }
 }

@@ -887,6 +887,12 @@ export const NETWORK_INFO = {
     isMainnet: false,
     contractAddress: "0x96124d1F6E44FfDf1fb5D6d74BB2DE1B7Fbe7376",
   },
+  [80_094]: {
+    name: "berachain_mainnet",
+    rpcUrl: "https://rpc.berachain.com",
+    isMainnet: true,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
 } satisfies Record<number, NetworkInfo>;
 
 export const NETWORK_IDS = Object.keys(NETWORK_INFO).map((key) =>

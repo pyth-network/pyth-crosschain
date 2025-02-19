@@ -1,4 +1,3 @@
-import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
@@ -7,10 +6,8 @@ import { ClusterContext } from '../../../contexts/ClusterContext'
 import { useMultisigContext } from '../../../contexts/MultisigContext'
 import { StatusTag } from './StatusTag'
 import { getInstructionsSummary, getProposalStatus } from './utils'
-
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { AccountMeta, Keypair } from '@solana/web3.js'
+import { AccountMeta } from '@solana/web3.js'
 import {
   MultisigParser,
   getManyProposalsInstructions,
@@ -28,7 +25,11 @@ export const ProposalRow = ({
     useState<(readonly [string, number])[]>()
   const status = getProposalStatus(proposal, multisig)
   const { cluster } = useContext(ClusterContext)
-  const { isLoading: isMultisigLoading, connection } = useMultisigContext()
+  const {
+    isLoading: isMultisigLoading,
+    connection,
+    readOnlySquads,
+  } = useMultisigContext()
   const router = useRouter()
   const elementRef = useRef(null)
   const { publicKey: walletPublicKey } = useWallet()
@@ -51,7 +52,7 @@ export const ProposalRow = ({
     const element = elementRef.current
     const observer = new IntersectionObserver(async (entries) => {
       if (entries[0].isIntersecting) {
-        if (isMultisigLoading || !connection) {
+        if (isMultisigLoading) {
           return
         }
 
@@ -75,10 +76,6 @@ export const ProposalRow = ({
 
         // calculate instructions summary
         if (!instructions) {
-          const readOnlySquads = new SquadsMesh({
-            connection,
-            wallet: new NodeWallet(new Keypair()),
-          })
           const proposalInstructions = (
             await getManyProposalsInstructions(readOnlySquads, [proposal])
           )[0]
@@ -130,7 +127,15 @@ export const ProposalRow = ({
         observer.unobserve(element)
       }
     }
-  }, [time, cluster, proposal, connection, isMultisigLoading, instructions])
+  }, [
+    time,
+    cluster,
+    proposal,
+    connection,
+    readOnlySquads,
+    isMultisigLoading,
+    instructions,
+  ])
 
   const handleClickIndividualProposal = useCallback(
     (proposalPubkey: string) => {

@@ -1,11 +1,11 @@
 use {
     near_sdk::json_types::{I64, U128, U64},
     near_workspaces::types::{Gas, NearToken},
-    pyth::{
+    pyth_near::{
         governance::{GovernanceAction, GovernanceInstruction, GovernanceModule},
         state::{Chain, Price, PriceIdentifier, Source},
     },
-    pyth_wormhole_attester_sdk::{
+    pythnet_sdk::legacy::{
         BatchPriceAttestation, Identifier, PriceAttestation, PriceStatus,
     },
     pythnet_sdk::test_utils::{
@@ -27,9 +27,9 @@ async fn initialize_chain() -> (
 
     // Deploy Pyth
     let contract = worker
-        .dev_deploy(&std::fs::read("pyth.wasm").expect("Failed to find pyth.wasm"))
+        .dev_deploy(&std::fs::read("pyth_near.wasm").expect("Failed to find pyth_near.wasm"))
         .await
-        .expect("Failed to deploy pyth.wasm");
+        .expect("Failed to deploy pyth_near.wasm");
 
     // Deploy Wormhole Stub, this is a dummy contract that always verifies VAA's correctly so we
     // can test the ext_wormhole API.
@@ -300,7 +300,7 @@ async fn test_stale_threshold() {
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Failed to get UNIX timestamp")
         .as_secs()
-        - DEFAULT_VALID_TIME_PERIOD;
+        - (DEFAULT_VALID_TIME_PERIOD + 1);
 
     // Submit a Price Attestation to the contract.
     let vaa = create_vaa_from_payload(

@@ -47,7 +47,7 @@ console.log(priceUpdates);
 
 ```typescript
 // Streaming price updates
-const eventSource = await connection.getStreamingPriceUpdates(priceIds);
+const eventSource = await connection.getPriceUpdatesStream(priceIds);
 
 eventSource.onmessage = (event) => {
   console.log("Received price update:", event.data);

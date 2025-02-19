@@ -1,7 +1,6 @@
 import { AnchorProvider, Idl, Program } from '@coral-xyz/anchor'
 import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
-import { useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import messageBuffer from 'message_buffer/idl/message_buffer.json'
 import { MessageBuffer } from 'message_buffer/idl/message_buffer'
@@ -37,6 +36,23 @@ import PermissionDepermissionKey from '../PermissionDepermissionKey'
 import { PriceRawConfig } from '../../hooks/usePyth'
 import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
+// These are the values such that a transaction adding a remote addProduct or updProduct instruction to a proposal are exactly 1232 bytes
+const MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA = 369
+const MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA = 403 // upd product has one account less
+
+const checkSizeOfProductInstruction = (
+  instruction: TransactionInstruction,
+  maxSize: number,
+  symbol: string
+) => {
+  const size = instruction.data.length
+  if (size > maxSize) {
+    throw new Error(
+      `A symbol metadata is too big to be sent in a transaction (${size} > ${maxSize} bytes). Please reduce the size of the symbol metadata for ${symbol}.`
+    )
+  }
+}
+
 const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const [data, setData] = useState<any>({})
   const [dataChanges, setDataChanges] = useState<Record<string, any>>()
@@ -46,9 +62,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     useState(false)
   const { cluster } = useContext(ClusterContext)
   const isRemote: boolean = isRemoteCluster(cluster) // Move to multisig context
-  const { isLoading: isMultisigLoading, squads } = useMultisigContext()
+  const { isLoading: isMultisigLoading, readOnlySquads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
-  const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
     useState<Program<PythOracle>>()
 
@@ -288,62 +303,63 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     return isValid
   }
 
-  const handleSendProposalButtonClick = async () => {
-    if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
-      const instructions: TransactionInstruction[] = []
-      const publisherInPriceStoreInitializationsVerified: PublicKey[] = []
+  const handleSendProposalButtonClick = () => {
+    const handleSendProposalButtonClickAsync = async () => {
+      setIsSendProposalButtonLoading(true)
+      if (pythProgramClient && dataChanges && !isMultisigLoading) {
+        const instructions: TransactionInstruction[] = []
+        const publisherInPriceStoreInitializationsVerified: PublicKey[] = []
 
-      for (const symbol of Object.keys(dataChanges)) {
-        const multisigAuthority = squads.getAuthorityPDA(
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
-          1
-        )
-        const fundingAccount = isRemote
-          ? mapKey(multisigAuthority)
-          : multisigAuthority
+        for (const symbol of Object.keys(dataChanges)) {
+          const multisigAuthority = readOnlySquads.getAuthorityPDA(
+            PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
+            1
+          )
+          const fundingAccount = isRemote
+            ? mapKey(multisigAuthority)
+            : multisigAuthority
 
-        const initPublisherInPriceStore = async (publisherKey: PublicKey) => {
-          // Ignore this step if Price Store is not initialized (or not deployed)
-          if (!connection || !(await isPriceStoreInitialized(connection))) {
-            return
-          }
-
-          if (
-            publisherInPriceStoreInitializationsVerified.every(
-              (el) => !el.equals(publisherKey)
-            )
-          ) {
-            if (
-              !connection ||
-              !(await isPriceStorePublisherInitialized(
-                connection,
-                publisherKey
-              ))
-            ) {
-              instructions.push(
-                await createDetermisticPriceStoreInitializePublisherInstruction(
-                  fundingAccount,
-                  publisherKey
-                )
-              )
+          const initPublisherInPriceStore = async (publisherKey: PublicKey) => {
+            // Ignore this step if Price Store is not initialized (or not deployed)
+            if (!connection || !(await isPriceStoreInitialized(connection))) {
+              return
             }
-            publisherInPriceStoreInitializationsVerified.push(publisherKey)
+
+            if (
+              publisherInPriceStoreInitializationsVerified.every(
+                (el) => !el.equals(publisherKey)
+              )
+            ) {
+              if (
+                !connection ||
+                !(await isPriceStorePublisherInitialized(
+                  connection,
+                  publisherKey
+                ))
+              ) {
+                instructions.push(
+                  await createDetermisticPriceStoreInitializePublisherInstruction(
+                    fundingAccount,
+                    publisherKey
+                  )
+                )
+              }
+              publisherInPriceStoreInitializationsVerified.push(publisherKey)
+            }
           }
-        }
-        const { prev, new: newChanges } = dataChanges[symbol]
-        // if prev is undefined, it means that the symbol is new
-        if (!prev) {
-          // deterministically generate product account key
-          const productAccountKey: PublicKey = (
-            await findDetermisticAccountAddress(
-              AccountType.Product,
-              symbol,
-              cluster
-            )
-          )[0]
-          // create add product account instruction
-          instructions.push(
-            await pythProgramClient.methods
+          const { prev, new: newChanges } = dataChanges[symbol]
+          // if prev is undefined, it means that the symbol is new
+          if (!prev) {
+            // deterministically generate product account key
+            const productAccountKey: PublicKey = (
+              await findDetermisticAccountAddress(
+                AccountType.Product,
+                symbol,
+                cluster
+              )
+            )[0]
+            // create add product account instruction
+            const instruction = await pythProgramClient.methods
               .addProduct({ ...newChanges.metadata })
               .accounts({
                 fundingAccount,
@@ -351,244 +367,254 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                 productAccount: productAccountKey,
               })
               .instruction()
-          )
-
-          // deterministically generate price account key
-          const priceAccountKey: PublicKey = (
-            await findDetermisticAccountAddress(
-              AccountType.Price,
-              symbol,
-              cluster
+            checkSizeOfProductInstruction(
+              instruction,
+              MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA,
+              symbol
             )
-          )[0]
-          // create add price account instruction
-          instructions.push(
-            await pythProgramClient.methods
-              .addPrice(newChanges.priceAccounts[0].expo, 1)
-              .accounts({
-                fundingAccount,
-                productAccount: productAccountKey,
-                priceAccount: priceAccountKey,
-              })
-              .instruction()
-          )
+            instructions.push(instruction)
 
-          if (isMessageBufferAvailable(cluster) && messageBufferClient) {
-            // create create buffer instruction for the price account
-            instructions.push(
-              await messageBufferClient.methods
-                .createBuffer(
-                  getPythOracleMessageBufferCpiAuth(cluster),
-                  priceAccountKey,
-                  MESSAGE_BUFFER_BUFFER_SIZE
-                )
-                .accounts({
-                  admin: fundingAccount,
-                  payer: PRICE_FEED_OPS_KEY,
-                })
-                .remainingAccounts([
-                  {
-                    pubkey: getMessageBufferAddressForPrice(
-                      cluster,
-                      priceAccountKey
-                    ),
-                    isSigner: false,
-                    isWritable: true,
-                  },
-                ])
-                .instruction()
-            )
-          }
-
-          // create add publisher instruction if there are any publishers
-          for (const publisherKey of newChanges.priceAccounts[0].publishers) {
-            const publisherPubKey = new PublicKey(publisherKey)
+            // deterministically generate price account key
+            const priceAccountKey: PublicKey = (
+              await findDetermisticAccountAddress(
+                AccountType.Price,
+                symbol,
+                cluster
+              )
+            )[0]
+            // create add price account instruction
             instructions.push(
               await pythProgramClient.methods
-                .addPublisher(publisherPubKey)
+                .addPrice(newChanges.priceAccounts[0].expo, 1)
                 .accounts({
                   fundingAccount,
+                  productAccount: productAccountKey,
                   priceAccount: priceAccountKey,
                 })
                 .instruction()
             )
-            await initPublisherInPriceStore(publisherPubKey)
-          }
 
-          // create set min publisher instruction if there are any publishers
-          if (newChanges.priceAccounts[0].minPub !== undefined) {
+            if (isMessageBufferAvailable(cluster) && messageBufferClient) {
+              // create create buffer instruction for the price account
+              instructions.push(
+                await messageBufferClient.methods
+                  .createBuffer(
+                    getPythOracleMessageBufferCpiAuth(cluster),
+                    priceAccountKey,
+                    MESSAGE_BUFFER_BUFFER_SIZE
+                  )
+                  .accounts({
+                    admin: fundingAccount,
+                    payer: PRICE_FEED_OPS_KEY,
+                  })
+                  .remainingAccounts([
+                    {
+                      pubkey: getMessageBufferAddressForPrice(
+                        cluster,
+                        priceAccountKey
+                      ),
+                      isSigner: false,
+                      isWritable: true,
+                    },
+                  ])
+                  .instruction()
+              )
+            }
+
+            // create add publisher instruction if there are any publishers
+            for (const publisherKey of newChanges.priceAccounts[0].publishers) {
+              const publisherPubKey = new PublicKey(publisherKey)
+              instructions.push(
+                await pythProgramClient.methods
+                  .addPublisher(publisherPubKey)
+                  .accounts({
+                    fundingAccount,
+                    priceAccount: priceAccountKey,
+                  })
+                  .instruction()
+              )
+              await initPublisherInPriceStore(publisherPubKey)
+            }
+
+            // create set min publisher instruction if there are any publishers
+            if (newChanges.priceAccounts[0].minPub !== undefined) {
+              instructions.push(
+                await pythProgramClient.methods
+                  .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+                  .accounts({
+                    priceAccount: priceAccountKey,
+                    fundingAccount,
+                  })
+                  .instruction()
+              )
+            }
+          } else if (!newChanges) {
+            const priceAccount = new PublicKey(prev.priceAccounts[0].address)
+
+            // if new is undefined, it means that the symbol is deleted
+            // create delete price account instruction
             instructions.push(
               await pythProgramClient.methods
-                .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+                .delPrice()
                 .accounts({
-                  priceAccount: priceAccountKey,
                   fundingAccount,
+                  productAccount: new PublicKey(prev.address),
+                  priceAccount,
                 })
                 .instruction()
             )
-          }
-        } else if (!newChanges) {
-          const priceAccount = new PublicKey(prev.priceAccounts[0].address)
 
-          // if new is undefined, it means that the symbol is deleted
-          // create delete price account instruction
-          instructions.push(
-            await pythProgramClient.methods
-              .delPrice()
-              .accounts({
-                fundingAccount,
-                productAccount: new PublicKey(prev.address),
-                priceAccount,
-              })
-              .instruction()
-          )
-
-          // create delete product account instruction
-          instructions.push(
-            await pythProgramClient.methods
-              .delProduct()
-              .accounts({
-                fundingAccount,
-                mappingAccount: rawConfig.mappingAccounts[0].address,
-                productAccount: new PublicKey(prev.address),
-              })
-              .instruction()
-          )
-
-          if (isMessageBufferAvailable(cluster) && messageBufferClient) {
-            // create delete buffer instruction for the price buffer
+            // create delete product account instruction
             instructions.push(
-              await messageBufferClient.methods
-                .deleteBuffer(
-                  getPythOracleMessageBufferCpiAuth(cluster),
-                  priceAccount
-                )
+              await pythProgramClient.methods
+                .delProduct()
                 .accounts({
-                  admin: fundingAccount,
-                  payer: PRICE_FEED_OPS_KEY,
-                  messageBuffer: getMessageBufferAddressForPrice(
-                    cluster,
+                  fundingAccount,
+                  mappingAccount: rawConfig.mappingAccounts[0].address,
+                  productAccount: new PublicKey(prev.address),
+                })
+                .instruction()
+            )
+
+            if (isMessageBufferAvailable(cluster) && messageBufferClient) {
+              // create delete buffer instruction for the price buffer
+              instructions.push(
+                await messageBufferClient.methods
+                  .deleteBuffer(
+                    getPythOracleMessageBufferCpiAuth(cluster),
                     priceAccount
-                  ),
-                })
-                .instruction()
-            )
-          }
-        } else {
-          // check if metadata has changed
-          if (
-            JSON.stringify(prev.metadata) !==
-            JSON.stringify(newChanges.metadata)
-          ) {
-            // create update product account instruction
-            instructions.push(
-              await pythProgramClient.methods
+                  )
+                  .accounts({
+                    admin: fundingAccount,
+                    payer: PRICE_FEED_OPS_KEY,
+                    messageBuffer: getMessageBufferAddressForPrice(
+                      cluster,
+                      priceAccount
+                    ),
+                  })
+                  .instruction()
+              )
+            }
+          } else {
+            // check if metadata has changed
+            if (
+              JSON.stringify(prev.metadata) !==
+              JSON.stringify(newChanges.metadata)
+            ) {
+              const instruction = await pythProgramClient.methods
                 .updProduct({ symbol, ...newChanges.metadata }) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
                 .accounts({
                   fundingAccount,
                   productAccount: new PublicKey(prev.address),
                 })
                 .instruction()
-            )
-          }
+              checkSizeOfProductInstruction(
+                instruction,
+                MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA,
+                symbol
+              )
+              instructions.push(instruction)
+            }
 
-          if (
-            JSON.stringify(prev.priceAccounts[0].expo) !==
-            JSON.stringify(newChanges.priceAccounts[0].expo)
-          ) {
-            // create update exponent instruction
-            instructions.push(
-              await pythProgramClient.methods
-                .setExponent(newChanges.priceAccounts[0].expo, 1)
-                .accounts({
-                  fundingAccount,
-                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
-                })
-                .instruction()
-            )
-          }
+            if (
+              JSON.stringify(prev.priceAccounts[0].expo) !==
+              JSON.stringify(newChanges.priceAccounts[0].expo)
+            ) {
+              // create update exponent instruction
+              instructions.push(
+                await pythProgramClient.methods
+                  .setExponent(newChanges.priceAccounts[0].expo, 1)
+                  .accounts({
+                    fundingAccount,
+                    priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                  })
+                  .instruction()
+              )
+            }
 
-          // check if maxLatency has changed
-          if (
-            prev.priceAccounts[0].maxLatency !==
-            newChanges.priceAccounts[0].maxLatency
-          ) {
-            // create update product account instruction
-            instructions.push(
-              await pythProgramClient.methods
-                .setMaxLatency(
-                  newChanges.priceAccounts[0].maxLatency,
-                  [0, 0, 0]
-                )
-                .accounts({
-                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
-                  fundingAccount,
-                })
-                .instruction()
-            )
-          }
+            // check if maxLatency has changed
+            if (
+              prev.priceAccounts[0].maxLatency !==
+              newChanges.priceAccounts[0].maxLatency
+            ) {
+              // create update product account instruction
+              instructions.push(
+                await pythProgramClient.methods
+                  .setMaxLatency(
+                    newChanges.priceAccounts[0].maxLatency,
+                    [0, 0, 0]
+                  )
+                  .accounts({
+                    priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                    fundingAccount,
+                  })
+                  .instruction()
+              )
+            }
 
-          // check if publishers have changed
-          const publisherKeysToAdd =
-            newChanges.priceAccounts[0].publishers.filter(
-              (newPublisher: string) =>
-                !prev.priceAccounts[0].publishers.includes(newPublisher)
-            )
-          // check if there are any publishers to remove by comparing prev and new
-          const publisherKeysToRemove = prev.priceAccounts[0].publishers.filter(
-            (prevPublisher: string) =>
-              !newChanges.priceAccounts[0].publishers.includes(prevPublisher)
-          )
+            // check if publishers have changed
+            const publisherKeysToAdd =
+              newChanges.priceAccounts[0].publishers.filter(
+                (newPublisher: string) =>
+                  !prev.priceAccounts[0].publishers.includes(newPublisher)
+              )
+            // check if there are any publishers to remove by comparing prev and new
+            const publisherKeysToRemove =
+              prev.priceAccounts[0].publishers.filter(
+                (prevPublisher: string) =>
+                  !newChanges.priceAccounts[0].publishers.includes(
+                    prevPublisher
+                  )
+              )
 
-          // add instructions to remove publishers
+            // add instructions to remove publishers
 
-          for (const publisherKey of publisherKeysToRemove) {
-            instructions.push(
-              await pythProgramClient.methods
-                .delPublisher(new PublicKey(publisherKey))
-                .accounts({
-                  fundingAccount,
-                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
-                })
-                .instruction()
-            )
-          }
+            for (const publisherKey of publisherKeysToRemove) {
+              instructions.push(
+                await pythProgramClient.methods
+                  .delPublisher(new PublicKey(publisherKey))
+                  .accounts({
+                    fundingAccount,
+                    priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                  })
+                  .instruction()
+              )
+            }
 
-          // add instructions to add new publishers
-          for (const publisherKey of publisherKeysToAdd) {
-            const publisherPubKey = new PublicKey(publisherKey)
-            instructions.push(
-              await pythProgramClient.methods
-                .addPublisher(publisherPubKey)
-                .accounts({
-                  fundingAccount,
-                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
-                })
-                .instruction()
-            )
-            await initPublisherInPriceStore(publisherPubKey)
-          }
+            // add instructions to add new publishers
+            for (const publisherKey of publisherKeysToAdd) {
+              const publisherPubKey = new PublicKey(publisherKey)
+              instructions.push(
+                await pythProgramClient.methods
+                  .addPublisher(publisherPubKey)
+                  .accounts({
+                    fundingAccount,
+                    priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                  })
+                  .instruction()
+              )
+              await initPublisherInPriceStore(publisherPubKey)
+            }
 
-          // check if minPub has changed
-          if (
-            prev.priceAccounts[0].minPub !== newChanges.priceAccounts[0].minPub
-          ) {
-            // create update product account instruction
-            instructions.push(
-              await pythProgramClient.methods
-                .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
-                .accounts({
-                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
-                  fundingAccount,
-                })
-                .instruction()
-            )
+            // check if minPub has changed
+            if (
+              prev.priceAccounts[0].minPub !==
+              newChanges.priceAccounts[0].minPub
+            ) {
+              // create update product account instruction
+              instructions.push(
+                await pythProgramClient.methods
+                  .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+                  .accounts({
+                    priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                    fundingAccount,
+                  })
+                  .instruction()
+              )
+            }
           }
         }
-      }
 
-      setIsSendProposalButtonLoading(true)
-      try {
         const response = await axios.post(proposerServerUrl + '/api/propose', {
           instructions,
           cluster,
@@ -597,15 +623,17 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSendProposalButtonLoading(false)
         closeModal()
-      } catch (error: any) {
-        if (error.response) {
-          toast.error(capitalizeFirstLetter(error.response.data))
-        } else {
-          toast.error(capitalizeFirstLetter(error.message))
-        }
-        setIsSendProposalButtonLoading(false)
       }
     }
+
+    handleSendProposalButtonClickAsync().catch((error) => {
+      if (error.response) {
+        toast.error(capitalizeFirstLetter(error.response.data))
+      } else {
+        toast.error(capitalizeFirstLetter(error.message))
+      }
+      setIsSendProposalButtonLoading(false)
+    })
   }
 
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
@@ -845,23 +873,21 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             <button
               className="action-btn text-base"
               onClick={handleSendProposalButtonClick}
-              disabled={isSendProposalButtonLoading || !squads}
+              disabled={isSendProposalButtonLoading}
             >
               {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
             </button>
-            {!squads && <div>Please connect your wallet</div>}
           </>
         )}
       </>
     )
   }
 
-  // create anchor wallet when connected
   useEffect(() => {
-    if (connected && squads && connection) {
+    if (connection) {
       const provider = new AnchorProvider(
         connection,
-        squads.wallet as Wallet,
+        readOnlySquads.wallet as Wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
@@ -878,7 +904,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         )
       }
     }
-  }, [connection, connected, cluster, squads])
+  }, [connection, cluster, readOnlySquads])
 
   return (
     <div className="relative">
@@ -903,13 +929,13 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           <PermissionDepermissionKey
             isPermission={true}
             pythProgramClient={pythProgramClient}
-            squads={squads}
+            readOnlySquads={readOnlySquads}
             proposerServerUrl={proposerServerUrl}
           />
           <PermissionDepermissionKey
             isPermission={false}
             pythProgramClient={pythProgramClient}
-            squads={squads}
+            readOnlySquads={readOnlySquads}
             proposerServerUrl={proposerServerUrl}
           />
         </div>

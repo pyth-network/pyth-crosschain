@@ -62,6 +62,10 @@
     }
   }
 
+  .testBadge {
+    margin-left: theme.spacing(4);
+  }
+
   &[data-loading] {
     .icon {
       border-radius: theme.border-radius("full");

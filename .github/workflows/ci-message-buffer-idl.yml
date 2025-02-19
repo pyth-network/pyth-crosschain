@@ -6,8 +6,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - pythnet/message_buffer/**
 jobs:
   abi-check:
     name: Check Message Buffer IDL files are up to date
@@ -18,6 +16,9 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "pythnet/message_buffer -> target"
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -25,6 +26,8 @@ jobs:
           components: rustfmt, clippy
       - name: Install Solana
         run: |
+          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
           sh -c "$(curl -sSfL https://release.solana.com/v1.14.18/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Install Anchor

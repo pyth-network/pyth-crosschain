@@ -2,15 +2,18 @@ name: Check Hermes Server
 
 on:
   pull_request:
-    paths: [apps/hermes/server/**]
+    paths:
+      - apps/hermes/server/**
   push:
     branches: [main]
-    paths: [apps/hermes/server/**]
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "apps/hermes/server -> target"
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -19,5 +22,7 @@ jobs:
           override: true
       - name: Install protoc
         uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run executor tests
         run: cargo test --manifest-path ./apps/hermes/server/Cargo.toml

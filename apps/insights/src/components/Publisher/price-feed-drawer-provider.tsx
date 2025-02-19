@@ -3,7 +3,6 @@
 import { useLogger } from "@pythnetwork/app-logger";
 import { parseAsString, useQueryState } from "nuqs";
 import {
-  type ReactNode,
   type ComponentProps,
   Suspense,
   createContext,
@@ -12,6 +11,8 @@ import {
   use,
 } from "react";
 
+import { usePriceFeeds } from "../../hooks/use-price-feeds";
+import type { Cluster } from "../../services/pyth";
 import type { Status } from "../../status";
 import { PriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceFeedTag } from "../PriceFeedTag";
@@ -25,18 +26,16 @@ type PriceFeedDrawerProviderProps = Omit<
   "value"
 > & {
   publisherKey: string;
-  priceFeeds: PriceFeeds[];
+  cluster: Cluster;
+  priceFeeds: PriceFeed[];
 };
 
-type PriceFeeds = {
+type PriceFeed = {
   symbol: string;
-  displaySymbol: string;
-  description: string;
-  icon: ReactNode;
-  feedKey: string;
   score: number | undefined;
   rank: number | undefined;
   status: Status;
+  firstEvaluation: Date | undefined;
 };
 
 export const PriceFeedDrawerProvider = (
@@ -51,7 +50,9 @@ const PriceFeedDrawerProviderImpl = ({
   publisherKey,
   priceFeeds,
   children,
+  cluster,
 }: PriceFeedDrawerProviderProps) => {
+  const contextPriceFeeds = usePriceFeeds();
   const logger = useLogger();
   const [selectedSymbol, setSelectedSymbol] = useQueryState(
     "price-feed",
@@ -67,10 +68,22 @@ const PriceFeedDrawerProviderImpl = ({
     },
     [setSelectedSymbol, logger],
   );
-  const selectedFeed = useMemo(
-    () => priceFeeds.find((feed) => feed.symbol === selectedSymbol),
-    [selectedSymbol, priceFeeds],
-  );
+  const selectedFeed = useMemo(() => {
+    if (selectedSymbol === "") {
+      return;
+    } else {
+      const feed = priceFeeds.find((feed) => feed.symbol === selectedSymbol);
+      const contextFeed = contextPriceFeeds.get(selectedSymbol);
+
+      return feed === undefined || contextFeed === undefined
+        ? undefined
+        : {
+            ...feed,
+            ...contextFeed,
+            feedKey: contextFeed.key[cluster],
+          };
+    }
+  }, [selectedSymbol, priceFeeds, contextPriceFeeds, cluster]);
   const handleClose = useCallback(() => {
     updateSelectedSymbol("");
   }, [updateSelectedSymbol]);
@@ -90,16 +103,13 @@ const PriceFeedDrawerProviderImpl = ({
           rank={selectedFeed.rank}
           score={selectedFeed.score}
           symbol={selectedFeed.symbol}
+          displaySymbol={selectedFeed.displaySymbol}
           status={selectedFeed.status}
-          navigateButtonText="Open Feed"
+          firstEvaluation={selectedFeed.firstEvaluation ?? new Date()}
           navigateHref={feedHref}
-          title={
-            <PriceFeedTag
-              symbol={selectedFeed.displaySymbol}
-              description={selectedFeed.description}
-              icon={selectedFeed.icon}
-            />
-          }
+          title={<PriceFeedTag symbol={selectedFeed.symbol} />}
+          cluster={cluster}
+          assetClass={selectedFeed.assetClass}
         />
       )}
     </PriceFeedDrawerContext>

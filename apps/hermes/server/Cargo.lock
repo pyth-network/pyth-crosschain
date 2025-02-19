@@ -1868,7 +1868,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hermes"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1895,7 +1895,7 @@ dependencies = [
  "prometheus-client",
  "prost",
  "prost-build",
- "pyth-sdk",
+ "pyth-sdk 0.8.0",
  "pyth-sdk-solana",
  "pythnet-sdk",
  "rand 0.8.5",
@@ -3200,6 +3200,19 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5c805ba3dfb5b7ed6a8ffa62ec38391f485a79c7cf6b3b11d3bd44fb0325824"
+dependencies = [
+ "borsh 0.9.3",
+ "borsh-derive 0.9.3",
+ "hex",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "pyth-sdk"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e7aeef4d5f0a9c98ff5af2ddd84a8b89919c512188305b497a9eb9afa97a949"
@@ -3214,16 +3227,16 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk-solana"
-version = "0.10.2"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9301b3c3db3766fd1dd0c5769a706d886265b3f56772ac279365bdd807d3076"
+checksum = "65841f3d9d5a025ca32999463f720ba16da2dfe9ffe5b668b2e26dd4239dfa9e"
 dependencies = [
  "borsh 0.10.3",
  "borsh-derive 0.10.3",
  "bytemuck",
  "num-derive 0.3.3",
  "num-traits",
- "pyth-sdk",
+ "pyth-sdk 0.8.0",
  "serde",
  "solana-program",
  "thiserror",
@@ -3239,6 +3252,7 @@ dependencies = [
  "byteorder",
  "fast-math",
  "hex",
+ "pyth-sdk 0.5.0",
  "rustc_version",
  "serde",
  "sha3 0.10.8",

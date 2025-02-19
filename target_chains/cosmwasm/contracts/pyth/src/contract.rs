@@ -31,7 +31,7 @@ use {
         error::PythContractError, ExecuteMsg, Price, PriceFeed, PriceFeedResponse, PriceIdentifier,
         QueryMsg,
     },
-    pyth_wormhole_attester_sdk::{BatchPriceAttestation, PriceAttestation, PriceStatus},
+    pythnet_sdk::legacy::{BatchPriceAttestation, PriceAttestation, PriceStatus},
     pythnet_sdk::{
         accumulators::merkle::MerkleRoot,
         hashers::keccak256_160::Keccak160,
@@ -753,7 +753,7 @@ mod test {
         },
         pyth_sdk::UnixTimestamp,
         pyth_sdk_cw::PriceIdentifier,
-        pyth_wormhole_attester_sdk::PriceAttestation,
+        pythnet_sdk::legacy::PriceAttestation,
         pythnet_sdk::{
             accumulators::{merkle::MerkleTree, Accumulator},
             messages::{PriceFeedMessage, TwapMessage},
@@ -1478,7 +1478,7 @@ mod test {
     #[test]
     fn test_create_price_feed_from_price_attestation_status_trading() {
         let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+            price_id: pythnet_sdk::legacy::Identifier::new([0u8; 32]),
             price: 100,
             conf: 100,
             expo: 100,
@@ -1527,7 +1527,7 @@ mod test {
 
     fn test_create_price_feed_from_price_attestation_not_trading(status: PriceStatus) {
         let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+            price_id: pythnet_sdk::legacy::Identifier::new([0u8; 32]),
             price: 100,
             conf: 100,
             expo: 100,
@@ -1565,7 +1565,7 @@ mod test {
         let (mut deps, env) = setup_test();
 
         let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+            price_id: pythnet_sdk::legacy::Identifier::new([0u8; 32]),
             price: 100,
             conf: 100,
             expo: 100,
@@ -1607,7 +1607,7 @@ mod test {
         let (mut deps, env) = setup_test();
 
         let price_attestation = PriceAttestation {
-            price_id: pyth_wormhole_attester_sdk::Identifier::new([0u8; 32]),
+            price_id: pythnet_sdk::legacy::Identifier::new([0u8; 32]),
             price: 100,
             conf: 100,
             expo: 100,

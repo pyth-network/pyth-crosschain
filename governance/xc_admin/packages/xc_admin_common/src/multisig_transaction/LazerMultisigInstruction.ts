@@ -8,10 +8,6 @@ import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { Idl, BorshInstructionCoder } from "@coral-xyz/anchor";
 import lazerIdl from "./idl/lazer.json";
 
-export const LAZER_PROGRAM_ID = new PublicKey(
-  "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt"
-);
-
 export class LazerMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.Lazer;
   readonly name: string;

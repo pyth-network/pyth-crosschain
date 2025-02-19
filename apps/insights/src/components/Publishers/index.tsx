@@ -1,7 +1,5 @@
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
-import { Info } from "@phosphor-icons/react/dist/ssr/Info";
-import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb";
-import { Alert, AlertTrigger } from "@pythnetwork/component-library/Alert";
+import { ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
@@ -11,80 +9,66 @@ import styles from "./index.module.scss";
 import { PublishersCard } from "./publishers-card";
 import { getPublishers } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
-import { Cluster, getData } from "../../services/pyth";
+import { Cluster } from "../../services/pyth";
 import {
   getDelState,
   getClaimableRewards,
   getDistributedRewards,
 } from "../../services/staking";
+import { ExplainAverage } from "../Explanations";
+import { FormattedDate } from "../FormattedDate";
 import { FormattedTokens } from "../FormattedTokens";
 import { PublisherIcon } from "../PublisherIcon";
-import { PublisherTag } from "../PublisherTag";
 import { SemicircleMeter, Label } from "../SemicircleMeter";
 import { TokenIcon } from "../TokenIcon";
 
 const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
 
 export const Publishers = async () => {
-  const [publishers, totalFeeds, oisStats] = await Promise.all([
-    getPublishers(),
-    getTotalFeedCount(),
-    getOisStats(),
-  ]);
+  const [pythnetPublishers, pythtestConformancePublishers, oisStats] =
+    await Promise.all([
+      getPublishers(Cluster.Pythnet),
+      getPublishers(Cluster.PythtestConformance),
+      getOisStats(),
+    ]);
+
+  const rankingTime = pythnetPublishers[0]?.timestamp;
+  const scoreTime = pythnetPublishers[0]?.scoreTime;
 
   return (
     <div className={styles.publishers}>
-      <h1 className={styles.header}>Publishers</h1>
+      <div className={styles.headerContainer}>
+        <h1 className={styles.header}>Publishers</h1>
+        {rankingTime && (
+          <div className={styles.rankingsLastUpdated}>
+            <span>
+              Rankings last updated{" "}
+              <FormattedDate
+                value={rankingTime}
+                dateStyle="long"
+                timeStyle="long"
+                timeZone="utc"
+              />
+            </span>
+            <ClockCountdown className={styles.clockIcon} />
+          </div>
+        )}
+      </div>
       <div className={styles.body}>
         <section className={styles.stats}>
           <StatCard
             variant="primary"
             header="Active Publishers"
-            stat={publishers.length}
+            stat={pythnetPublishers.length}
           />
           <StatCard
-            header="Avg. Median Score"
-            corner={
-              <AlertTrigger>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  beforeIcon={(props) => <Info weight="fill" {...props} />}
-                  rounded
-                  hideText
-                  className={styles.averageMedianScoreExplainButton ?? ""}
-                >
-                  Explain Average Median Score
-                </Button>
-                <Alert title="Average Median Score" icon={<Lightbulb />}>
-                  <p className={styles.averageMedianScoreDescription}>
-                    Each <b>Price Feed Component</b> that a <b>Publisher</b>{" "}
-                    provides has an associated <b>Score</b>, which is determined
-                    by that component{"'"}s <b>Uptime</b>,{" "}
-                    <b>Price Deviation</b>, and <b>Staleness</b>. The publisher
-                    {"'"}s <b>Median Score</b> measures the 50th percentile of
-                    the <b>Score</b> across all of that publisher{"'"}s{" "}
-                    <b>Price Feed Components</b>. The{" "}
-                    <b>Average Median Score</b> is the average of the{" "}
-                    <b>Median Scores</b> of all publishers who contribute to the
-                    Pyth Network.
-                  </p>
-                  <Button
-                    size="xs"
-                    variant="solid"
-                    href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
-                    target="_blank"
-                  >
-                    Learn more
-                  </Button>
-                </Alert>
-              </AlertTrigger>
-            }
+            header="Average Feed Score"
+            corner={<ExplainAverage scoreTime={scoreTime} />}
             stat={(
-              publishers.reduce(
-                (sum, publisher) => sum + publisher.medianScore,
+              pythnetPublishers.reduce(
+                (sum, publisher) => sum + publisher.averageScore,
                 0,
-              ) / publishers.length
+              ) / pythnetPublishers.length
             ).toFixed(2)}
           />
           <Card
@@ -150,22 +134,12 @@ export const Publishers = async () => {
         </section>
         <PublishersCard
           className={styles.publishersCard}
-          nameLoadingSkeleton={<PublisherTag isLoading />}
-          publishers={publishers.map(
-            ({ key, rank, numSymbols, medianScore }) => {
-              const knownPublisher = lookupPublisher(key);
-              return {
-                id: key,
-                ranking: rank,
-                activeFeeds: numSymbols,
-                inactiveFeeds: totalFeeds - numSymbols,
-                medianScore: medianScore,
-                ...(knownPublisher && {
-                  name: knownPublisher.name,
-                  icon: <PublisherIcon knownPublisher={knownPublisher} />,
-                }),
-              };
-            },
+          explainAverage={<ExplainAverage scoreTime={scoreTime} />}
+          pythnetPublishers={pythnetPublishers.map((publisher) =>
+            toTableRow(publisher),
+          )}
+          pythtestConformancePublishers={pythtestConformancePublishers.map(
+            (publisher) => toTableRow(publisher),
           )}
         />
       </div>
@@ -173,9 +147,25 @@ export const Publishers = async () => {
   );
 };
 
-const getTotalFeedCount = async () => {
-  const pythData = await getData(Cluster.Pythnet);
-  return pythData.filter(({ price }) => price.numComponentPrices > 0).length;
+const toTableRow = ({
+  key,
+  rank,
+  inactiveFeeds,
+  activeFeeds,
+  averageScore,
+}: Awaited<ReturnType<typeof getPublishers>>[number]) => {
+  const knownPublisher = lookupPublisher(key);
+  return {
+    id: key,
+    ranking: rank,
+    activeFeeds: activeFeeds,
+    inactiveFeeds: inactiveFeeds,
+    averageScore,
+    ...(knownPublisher && {
+      name: knownPublisher.name,
+      icon: <PublisherIcon knownPublisher={knownPublisher} />,
+    }),
+  };
 };
 
 const getOisStats = async () => {

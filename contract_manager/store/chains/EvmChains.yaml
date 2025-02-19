@@ -85,7 +85,6 @@
   rpcUrl: https://rpc.ankr.com/fantom
   networkId: 250
   type: EvmChain
-  nativeToken: FTM
 - id: mumbai
   mainnet: false
   rpcUrl: https://polygon-testnet.blastapi.io/$ENV_BLAST_API_KEY
@@ -797,7 +796,7 @@
   type: EvmChain
 - id: mathematician_in_heart
   mainnet: true
-  rpcUrl: https://redacted.master.dev/
+  rpcUrl: https://api-efe16d37.ml.eeffc03e557f4daf.com/
   networkId: 2741
   type: EvmChain
 - id: eventum_testnet
@@ -842,11 +841,31 @@
   type: EvmChain
 - id: monad_devnet
   mainnet: false
-  rpcUrl: https://devnet1.monad.xyz/rpc/X67JTUmM4cBeq25KAqV0uJd8Wf00a1ul
-  networkId: 41454
+  rpcUrl: https://rpc-devnet.monadinfra.com/rpc/dT2y6zgpggQ20WuJZ3corhJwfh9NwJPM
+  networkId: 20143
   type: EvmChain
 - id: coredao_testnet_v2
   mainnet: false
   rpcUrl: https://rpc.test2.btcs.network
   networkId: 1114
+  type: EvmChain
+- id: monad_testnet
+  mainnet: false
+  rpcUrl: https://rpc.monad-testnet.category.xyz/rpc/nSyzM1wlIgaALWzbh3oIg5rW65AC6yjqrslOE8wb
+  networkId: 10143
+  type: EvmChain
+- id: berachain_mainnet
+  mainnet: true
+  networkId: 80094
+  rpcUrl: https://fluent-thrilling-scion.furtim-network.quiknode.pro/$ENV_RABECHAIN_API_KEY
+  type: EvmChain
+- id: story_mainnet
+  mainnet: true
+  rpcUrl: https://homer.storyrpc.io
+  networkId: 1514
+  type: EvmChain
+- id: hyperEVM
+  mainnet: true
+  rpcUrl: https://rpc.hyperliquid.xyz/evm
+  networkId: 999
   type: EvmChain

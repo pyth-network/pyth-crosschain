@@ -14,10 +14,11 @@ import {
   GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
 } from "../../config/server";
-import { toHex } from "../../hex";
+// import { toHex } from "../../hex";
+import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
+import { PriceFeedsProvider as PriceFeedsProviderImpl } from "../../hooks/use-price-feeds";
 import { getPublishers } from "../../services/clickhouse";
-import { Cluster, getData } from "../../services/pyth";
-import { LivePricesProvider } from "../LivePrices";
+import { Cluster, getFeeds } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 
@@ -26,9 +27,9 @@ type Props = {
 };
 
 export const Root = async ({ children }: Props) => {
-  const [data, publishers] = await Promise.all([
-    getData(Cluster.Pythnet),
-    getPublishers(),
+  const publishers = await Promise.all([
+    getPublishersForSearchDialog(Cluster.Pythnet),
+    getPublishersForSearchDialog(Cluster.PythtestConformance),
   ]);
 
   return (
@@ -36,29 +37,10 @@ export const Root = async ({ children }: Props) => {
       amplitudeApiKey={AMPLITUDE_API_KEY}
       googleAnalyticsId={GOOGLE_ANALYTICS_ID}
       enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-      providers={[NuqsAdapter, LivePricesProvider]}
+      providers={[NuqsAdapter, LivePriceDataProvider, PriceFeedsProvider]}
       className={styles.root}
     >
-      <SearchDialogProvider
-        feeds={data.map((feed) => ({
-          id: feed.symbol,
-          key: toHex(feed.product.price_account),
-          displaySymbol: feed.product.display_symbol,
-          icon: <PriceFeedIcon symbol={feed.symbol} />,
-          assetClass: feed.product.asset_type,
-        }))}
-        publishers={publishers.map((publisher) => {
-          const knownPublisher = lookupPublisher(publisher.key);
-          return {
-            id: publisher.key,
-            medianScore: publisher.medianScore,
-            ...(knownPublisher && {
-              name: knownPublisher.name,
-              icon: <PublisherIcon knownPublisher={knownPublisher} />,
-            }),
-          };
-        })}
-      >
+      <SearchDialogProvider publishers={publishers.flat()}>
         <TabRoot className={styles.tabRoot ?? ""}>
           <Header className={styles.header} />
           <main className={styles.main}>
@@ -68,5 +50,57 @@ export const Root = async ({ children }: Props) => {
         </TabRoot>
       </SearchDialogProvider>
     </BaseRoot>
+  );
+};
+
+const getPublishersForSearchDialog = async (cluster: Cluster) => {
+  const publishers = await getPublishers(cluster);
+  return publishers.map((publisher) => {
+    const knownPublisher = lookupPublisher(publisher.key);
+
+    return {
+      publisherKey: publisher.key,
+      averageScore: publisher.averageScore,
+      cluster,
+      ...(knownPublisher && {
+        name: knownPublisher.name,
+        icon: <PublisherIcon knownPublisher={knownPublisher} />,
+      }),
+    };
+  });
+};
+
+const PriceFeedsProvider = async ({ children }: { children: ReactNode }) => {
+  const [pythnetFeeds, pythtestConformanceFeeds] = await Promise.all([
+    getFeeds(Cluster.Pythnet),
+    getFeeds(Cluster.PythtestConformance),
+  ]);
+
+  const feedMap = new Map(
+    pythnetFeeds.map((feed) => [
+      feed.symbol,
+      {
+        displaySymbol: feed.product.display_symbol,
+        icon: (
+          <PriceFeedIcon
+            assetClass={feed.product.asset_type}
+            symbol={feed.product.display_symbol}
+          />
+        ),
+        description: feed.product.description,
+        key: {
+          [Cluster.Pythnet]: feed.product.price_account,
+          [Cluster.PythtestConformance]:
+            pythtestConformanceFeeds.find(
+              (conformanceFeed) => conformanceFeed.symbol === feed.symbol,
+            )?.product.price_account ?? "",
+        },
+        assetClass: feed.product.asset_type,
+      },
+    ]),
+  );
+
+  return (
+    <PriceFeedsProviderImpl value={feedMap}>{children}</PriceFeedsProviderImpl>
   );
 };

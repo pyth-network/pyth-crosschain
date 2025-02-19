@@ -117,6 +117,14 @@ impl Add<Price> for Price {
     }
 }
 
+impl Sub<Price> for Price {
+    type Output = Option<Price>;
+    fn sub(self, rhs: Price) -> Self::Output {
+        let value = self.0.get().saturating_sub(rhs.0.get());
+        NonZeroI64::new(value).map(Self)
+    }
+}
+
 impl Div<i64> for Price {
     type Output = Option<Price>;
     fn div(self, rhs: i64) -> Self::Output {
@@ -163,7 +171,6 @@ pub enum JsonBinaryEncoding {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Channel {
-    RealTime,
     FixedRate(FixedRate),
 }
 
@@ -173,8 +180,10 @@ impl Serialize for Channel {
         S: serde::Serializer,
     {
         match self {
-            Channel::RealTime => serializer.serialize_str("real_time"),
             Channel::FixedRate(fixed_rate) => {
+                if *fixed_rate == FixedRate::MIN {
+                    return serializer.serialize_str("real_time");
+                }
                 serializer.serialize_str(&format!("fixed_rate@{}ms", fixed_rate.value_ms()))
             }
         }
@@ -184,7 +193,7 @@ impl Serialize for Channel {
 mod channel_ids {
     use super::ChannelId;
 
-    pub const REAL_TIME: ChannelId = ChannelId(1);
+    pub const FIXED_RATE_1: ChannelId = ChannelId(1);
     pub const FIXED_RATE_50: ChannelId = ChannelId(2);
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
 }
@@ -192,8 +201,8 @@ mod channel_ids {
 impl Channel {
     pub fn id(&self) -> ChannelId {
         match self {
-            Channel::RealTime => channel_ids::REAL_TIME,
             Channel::FixedRate(fixed_rate) => match fixed_rate.value_ms() {
+                1 => channel_ids::FIXED_RATE_1,
                 50 => channel_ids::FIXED_RATE_50,
                 200 => channel_ids::FIXED_RATE_200,
                 _ => panic!("unknown channel: {self:?}"),
@@ -211,7 +220,7 @@ fn id_supports_all_fixed_rates() {
 
 fn parse_channel(value: &str) -> Option<Channel> {
     if value == "real_time" {
-        Some(Channel::RealTime)
+        Some(Channel::FixedRate(FixedRate::MIN))
     } else if let Some(rest) = value.strip_prefix("fixed_rate@") {
         let ms_value = rest.strip_suffix("ms")?;
         Some(Channel::FixedRate(FixedRate::from_ms(
@@ -227,8 +236,8 @@ impl<'de> Deserialize<'de> for Channel {
     where
         D: serde::Deserializer<'de>,
     {
-        let value = <&str>::deserialize(deserializer)?;
-        parse_channel(value).ok_or_else(|| D::Error::custom("unknown channel"))
+        let value = <String>::deserialize(deserializer)?;
+        parse_channel(&value).ok_or_else(|| D::Error::custom("unknown channel"))
     }
 }
 
@@ -242,7 +251,7 @@ impl FixedRate {
     // - Values are sorted.
     // - 1 second contains a whole number of each interval.
     // - all intervals are divisable by the smallest interval.
-    pub const ALL: [Self; 2] = [Self { ms: 50 }, Self { ms: 200 }];
+    pub const ALL: [Self; 3] = [Self { ms: 1 }, Self { ms: 50 }, Self { ms: 200 }];
     pub const MIN: Self = Self::ALL[0];
 
     pub fn from_ms(value: u32) -> Option<Self> {
@@ -270,7 +279,7 @@ fn fixed_rate_values() {
             "1 s must contain whole number of intervals"
         );
         assert!(
-            value.ms % FixedRate::MIN.ms == 0,
+            value.value_us() % FixedRate::MIN.value_us() == 0,
             "the interval's borders must be a subset of the minimal interval's borders"
         );
     }

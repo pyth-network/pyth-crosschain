@@ -2,7 +2,7 @@ use {
     crate::state::PythDataSource,
     byteorder::{BigEndian, ReadBytesExt, WriteBytesExt},
     cosmwasm_std::Binary,
-    pyth_wormhole_attester_sdk::ErrBox,
+    pythnet_sdk::legacy::ErrBox,
     schemars::JsonSchema,
     serde::{Deserialize, Serialize},
     std::{convert::TryFrom, io::Write},
