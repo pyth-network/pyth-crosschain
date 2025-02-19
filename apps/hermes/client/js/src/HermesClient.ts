@@ -104,7 +104,7 @@ export class HermesClient {
    *
    * @param options Optional parameters:
    *        - query: String to filter the price feeds. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive. Example: "bitcoin".
-   *        - filter: String to filter the price feeds by asset type. Possible values are "crypto", "equity", "fx", "metal", "rates". Filter string is case insensitive.
+   *        - assetType: String to filter the price feeds by asset type. Possible values are "crypto", "equity", "fx", "metal", "rates", "crypto_redemption_rate". Filter string is case insensitive.
    *
    * @returns Array of PriceFeedMetadata objects.
    */
@@ -113,12 +113,13 @@ export class HermesClient {
     ...options
   }: {
     query?: string;
-    filter?: string;
+    assetType?: AssetType;
     fetchOptions?: RequestInit;
   } = {}): Promise<PriceFeedMetadata[]> {
     const url = this.buildURL("price_feeds");
     if (options) {
-      this.appendUrlSearchParams(url, options);
+      const transformedOptions = camelToSnakeCaseObject(options);
+      this.appendUrlSearchParams(url, transformedOptions);
     }
     return await this.httpRequest(
       url.toString(),

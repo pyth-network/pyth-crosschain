@@ -34,7 +34,7 @@ const priceIds = [
 // Get price feeds
 const priceFeeds = await connection.getPriceFeeds({
   query: "btc",
-  filter: "crypto",
+  assetType: "crypto",
 });
 console.log(priceFeeds);
 
