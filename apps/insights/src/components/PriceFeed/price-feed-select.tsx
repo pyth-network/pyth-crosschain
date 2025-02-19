@@ -20,6 +20,7 @@ import { useCollator, useFilter } from "react-aria";
 
 import styles from "./price-feed-select.module.scss";
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
+import { Cluster } from "../../services/pyth";
 import { AssetClassTag } from "../AssetClassTag";
 import { PriceFeedTag } from "../PriceFeedTag";
 
@@ -35,15 +36,15 @@ export const PriceFeedSelect = ({ children }: Props) => {
   const filteredFeeds = useMemo(
     () =>
       search === ""
-        ? feeds.entries()
-        : feeds
-            .entries()
-            .filter(
-              ([, { displaySymbol, assetClass, key }]) =>
-                filter.contains(displaySymbol, search) ||
-                filter.contains(assetClass, search) ||
-                filter.contains(key, search),
-            ),
+        ? // This is inefficient but Safari doesn't support `Iterator.filter`, see
+          // https://bugs.webkit.org/show_bug.cgi?id=248650
+          [...feeds.entries()]
+        : [...feeds.entries()].filter(
+            ([, { displaySymbol, assetClass, key }]) =>
+              filter.contains(displaySymbol, search) ||
+              filter.contains(assetClass, search) ||
+              filter.contains(key[Cluster.Pythnet], search),
+          ),
     [feeds, search, filter],
   );
   const sortedFeeds = useMemo(

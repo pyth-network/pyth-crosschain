@@ -36,7 +36,6 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/eventsource": "^1.1.15",
     "@types/jest": "^29.4.0",
     "@types/node": "^20.14.2",
     "@types/yargs": "^17.0.10",
@@ -52,7 +51,7 @@
   },
   "dependencies": {
     "@zodios/core": "^10.9.6",
-    "eventsource": "^2.0.2",
+    "eventsource": "^3.0.5",
     "zod": "^3.23.8"
   }
 }

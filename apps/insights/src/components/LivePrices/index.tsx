@@ -11,24 +11,32 @@ import {
   useLivePriceComponent,
   useLivePriceData,
 } from "../../hooks/use-live-price-data";
+import type { Cluster } from "../../services/pyth";
 
 export const SKELETON_WIDTH = 20;
 
 export const LivePrice = ({
-  feedKey,
   publisherKey,
+  ...props
 }: {
   feedKey: string;
   publisherKey?: string | undefined;
+  cluster: Cluster;
 }) =>
-  publisherKey ? (
-    <LiveComponentPrice feedKey={feedKey} publisherKey={publisherKey} />
+  publisherKey === undefined ? (
+    <LiveAggregatePrice {...props} />
   ) : (
-    <LiveAggregatePrice feedKey={feedKey} />
+    <LiveComponentPrice {...props} publisherKey={publisherKey} />
   );
 
-const LiveAggregatePrice = ({ feedKey }: { feedKey: string }) => {
-  const { prev, current } = useLivePriceData(feedKey);
+const LiveAggregatePrice = ({
+  feedKey,
+  cluster,
+}: {
+  feedKey: string;
+  cluster: Cluster;
+}) => {
+  const { prev, current } = useLivePriceData(cluster, feedKey);
   return (
     <Price current={current?.aggregate.price} prev={prev?.aggregate.price} />
   );
@@ -37,11 +45,17 @@ const LiveAggregatePrice = ({ feedKey }: { feedKey: string }) => {
 const LiveComponentPrice = ({
   feedKey,
   publisherKey,
+  cluster,
 }: {
   feedKey: string;
   publisherKey: string;
+  cluster: Cluster;
 }) => {
-  const { prev, current } = useLivePriceComponent(feedKey, publisherKey);
+  const { prev, current } = useLivePriceComponent(
+    cluster,
+    feedKey,
+    publisherKey,
+  );
   return <Price current={current?.latest.price} prev={prev?.latest.price} />;
 };
 
@@ -67,31 +81,40 @@ const Price = ({
 };
 
 export const LiveConfidence = ({
-  feedKey,
   publisherKey,
+  ...props
 }: {
   feedKey: string;
   publisherKey?: string | undefined;
+  cluster: Cluster;
 }) =>
   publisherKey === undefined ? (
-    <LiveAggregateConfidence feedKey={feedKey} />
+    <LiveAggregateConfidence {...props} />
   ) : (
-    <LiveComponentConfidence feedKey={feedKey} publisherKey={publisherKey} />
+    <LiveComponentConfidence {...props} publisherKey={publisherKey} />
   );
 
-const LiveAggregateConfidence = ({ feedKey }: { feedKey: string }) => {
-  const { current } = useLivePriceData(feedKey);
+const LiveAggregateConfidence = ({
+  feedKey,
+  cluster,
+}: {
+  feedKey: string;
+  cluster: Cluster;
+}) => {
+  const { current } = useLivePriceData(cluster, feedKey);
   return <Confidence confidence={current?.aggregate.confidence} />;
 };
 
 const LiveComponentConfidence = ({
   feedKey,
   publisherKey,
+  cluster,
 }: {
   feedKey: string;
   publisherKey: string;
+  cluster: Cluster;
 }) => {
-  const { current } = useLivePriceComponent(feedKey, publisherKey);
+  const { current } = useLivePriceComponent(cluster, feedKey, publisherKey);
   return <Confidence confidence={current?.latest.confidence} />;
 };
 
@@ -110,8 +133,14 @@ const Confidence = ({ confidence }: { confidence?: number | undefined }) => {
   );
 };
 
-export const LiveLastUpdated = ({ feedKey }: { feedKey: string }) => {
-  const { current } = useLivePriceData(feedKey);
+export const LiveLastUpdated = ({
+  feedKey,
+  cluster,
+}: {
+  feedKey: string;
+  cluster: Cluster;
+}) => {
+  const { current } = useLivePriceData(cluster, feedKey);
   const formatterWithDate = useDateFormatter({
     dateStyle: "short",
     timeStyle: "medium",
@@ -137,14 +166,16 @@ type LiveValueProps<T extends keyof PriceData> = {
   field: T;
   feedKey: string;
   defaultValue?: ReactNode | undefined;
+  cluster: Cluster;
 };
 
 export const LiveValue = <T extends keyof PriceData>({
   feedKey,
   field,
   defaultValue,
+  cluster,
 }: LiveValueProps<T>) => {
-  const { current } = useLivePriceData(feedKey);
+  const { current } = useLivePriceData(cluster, feedKey);
 
   return current !== undefined || defaultValue !== undefined ? (
     (current?.[field]?.toString() ?? defaultValue)
@@ -158,6 +189,7 @@ type LiveComponentValueProps<T extends keyof PriceComponent["latest"]> = {
   feedKey: string;
   publisherKey: string;
   defaultValue?: ReactNode | undefined;
+  cluster: Cluster;
 };
 
 export const LiveComponentValue = <T extends keyof PriceComponent["latest"]>({
@@ -165,8 +197,9 @@ export const LiveComponentValue = <T extends keyof PriceComponent["latest"]>({
   field,
   publisherKey,
   defaultValue,
+  cluster,
 }: LiveComponentValueProps<T>) => {
-  const { current } = useLivePriceComponent(feedKey, publisherKey);
+  const { current } = useLivePriceComponent(cluster, feedKey, publisherKey);
 
   return current !== undefined || defaultValue !== undefined ? (
     (current?.latest[field].toString() ?? defaultValue)

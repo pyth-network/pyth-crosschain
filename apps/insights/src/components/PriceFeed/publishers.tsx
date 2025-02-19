@@ -23,16 +23,21 @@ export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
   const [
-    feeds,
-    pythnetPublishers, // , pythtestConformancePublishers
+    pythnetFeeds,
+    pythtestConformanceFeeds,
+    pythnetPublishers,
+    pythtestConformancePublishers,
   ] = await Promise.all([
     getFeeds(Cluster.Pythnet),
+    getFeeds(Cluster.PythtestConformance),
     getPublishers(Cluster.Pythnet, symbol),
-    // getPublishers(Cluster.PythtestConformance, symbol),
+    getPublishers(Cluster.PythtestConformance, symbol),
   ]);
-  const feed = feeds.find((feed) => feed.symbol === symbol);
-  // const publishers = [...pythnetPublishers, ...pythtestConformancePublishers];
-  const publishers = [...pythnetPublishers];
+  const feed = pythnetFeeds.find((feed) => feed.symbol === symbol);
+  const testFeed = pythtestConformanceFeeds.find(
+    (feed) => feed.symbol === symbol,
+  );
+  const publishers = [...pythnetPublishers, ...pythtestConformancePublishers];
   const metricsTime = pythnetPublishers.find(
     (publisher) => publisher.ranking !== undefined,
   )?.ranking?.time;
@@ -45,10 +50,16 @@ export const Publishers = async ({ params }: Props) => {
       searchPlaceholder="Publisher key or name"
       metricsTime={metricsTime}
       nameLoadingSkeleton={<PublisherTag isLoading />}
+      symbol={symbol}
+      displaySymbol={feed.product.display_symbol}
+      assetClass={feed.product.asset_type}
       priceComponents={publishers.map(
         ({ ranking, publisher, status, cluster, knownPublisher }) => ({
-          id: `${publisher}-${ClusterToName[Cluster.Pythnet]}`,
-          feedKey: feed.product.price_account,
+          id: `${publisher}-${ClusterToName[cluster]}`,
+          feedKey:
+            cluster === Cluster.Pythnet
+              ? feed.product.price_account
+              : (testFeed?.product.price_account ?? ""),
           score: ranking?.final_score,
           uptimeScore: ranking?.uptime_score,
           deviationScore: ranking?.deviation_score,
@@ -56,12 +67,12 @@ export const Publishers = async ({ params }: Props) => {
           cluster,
           status,
           publisherKey: publisher,
-          symbol,
           rank: ranking?.final_rank,
           firstEvaluation: ranking?.first_ranking_time,
           name: (
             <PublisherTag
               publisherKey={publisher}
+              cluster={cluster}
               {...(knownPublisher && {
                 name: knownPublisher.name,
                 icon: <PublisherIcon knownPublisher={knownPublisher} />,

@@ -13,7 +13,7 @@ import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./performance.module.scss";
 import { TopFeedsTable } from "./top-feeds-table";
 import { getPublishers } from "../../services/clickhouse";
-import { Cluster } from "../../services/pyth";
+import { ClusterToName, parseCluster } from "../../services/pyth";
 import { Status } from "../../status";
 import {
   ExplainActive,
@@ -31,15 +31,21 @@ const PUBLISHER_SCORE_WIDTH = 24;
 
 type Props = {
   params: Promise<{
+    cluster: string;
     key: string;
   }>;
 };
 
 export const Performance = async ({ params }: Props) => {
-  const { key } = await params;
+  const { key, cluster } = await params;
+  const parsedCluster = parseCluster(cluster);
+
+  if (parsedCluster === undefined) {
+    notFound();
+  }
   const [publishers, priceFeeds] = await Promise.all([
-    getPublishers(),
-    getPriceFeeds(Cluster.Pythnet, key),
+    getPublishers(parsedCluster),
+    getPriceFeeds(parsedCluster, key),
   ]);
   const slicedPublishers = sliceAround(
     publishers,
@@ -114,7 +120,7 @@ export const Performance = async ({ params }: Props) => {
                 ),
                 activeFeeds: (
                   <Link
-                    href={`/publishers/${publisher.key}/price-feeds?status=Active`}
+                    href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Active`}
                     invert
                   >
                     {publisher.activeFeeds}
@@ -122,7 +128,7 @@ export const Performance = async ({ params }: Props) => {
                 ),
                 inactiveFeeds: (
                   <Link
-                    href={`/publishers/${publisher.key}/price-feeds?status=Inactive`}
+                    href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Inactive`}
                     invert
                   >
                     {publisher.inactiveFeeds}
@@ -136,6 +142,7 @@ export const Performance = async ({ params }: Props) => {
                 ),
                 name: (
                   <PublisherTag
+                    cluster={parsedCluster}
                     publisherKey={publisher.key}
                     {...(knownPublisher && {
                       name: knownPublisher.name,
@@ -145,7 +152,7 @@ export const Performance = async ({ params }: Props) => {
                 ),
               },
               ...(publisher.key !== key && {
-                href: `/publishers/${publisher.key}`,
+                href: `/publishers/${ClusterToName[parsedCluster]}/${publisher.key}`,
               }),
             };
           })}

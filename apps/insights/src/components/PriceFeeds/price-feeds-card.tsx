@@ -18,6 +18,7 @@ import { useFilter, useCollator } from "react-aria";
 
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
+import { Cluster } from "../../services/pyth";
 import { AssetClassTag } from "../AssetClassTag";
 import { FeedKey } from "../FeedKey";
 import {
@@ -28,6 +29,7 @@ import {
 } from "../LivePrices";
 import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
+import { PriceName } from "../PriceName";
 import rootStyles from "../Root/index.module.scss";
 
 type Props = {
@@ -65,7 +67,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
             ...feed,
             assetClass: contextFeed.assetClass,
             displaySymbol: contextFeed.displaySymbol,
-            key: contextFeed.key,
+            key: contextFeed.key[Cluster.Pythnet],
           };
         } else {
           throw new NoSuchFeedError(feed.symbol);
@@ -123,17 +125,25 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
         href: `/price-feeds/${encodeURIComponent(symbol)}`,
         data: {
           exponent: (
-            <LiveValue field="exponent" feedKey={key} defaultValue={exponent} />
+            <LiveValue
+              field="exponent"
+              feedKey={key}
+              defaultValue={exponent}
+              cluster={Cluster.Pythnet}
+            />
           ),
           numPublishers: (
             <LiveValue
               field="numQuoters"
               feedKey={key}
               defaultValue={numQuoters}
+              cluster={Cluster.Pythnet}
             />
           ),
-          price: <LivePrice feedKey={key} />,
-          confidenceInterval: <LiveConfidence feedKey={key} />,
+          price: <LivePrice feedKey={key} cluster={Cluster.Pythnet} />,
+          confidenceInterval: (
+            <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
+          ),
           priceFeedName: <PriceFeedTag compact symbol={symbol} />,
           assetClass: <AssetClassTag symbol={symbol} />,
           priceFeedId: <FeedKey size="xs" variant="ghost" feedKey={key} />,
@@ -308,7 +318,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
         },
         {
           id: "price",
-          name: "PRICE",
+          name: <PriceName uppercase />,
           alignment: "right",
           width: 40,
           loadingSkeletonWidth: SKELETON_WIDTH,

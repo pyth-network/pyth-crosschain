@@ -23,7 +23,7 @@ import {
   getPublishers,
 } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
-import { Cluster } from "../../services/pyth";
+import { Cluster, ClusterToName, parseCluster } from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
 import { ChangePercent } from "../ChangePercent";
 import { ChangeValue } from "../ChangeValue";
@@ -38,7 +38,6 @@ import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 import { FormattedTokens } from "../FormattedTokens";
 import { Meter } from "../Meter";
-import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherKey } from "../PublisherKey";
 import { PublisherTag } from "../PublisherTag";
@@ -49,12 +48,19 @@ import { TokenIcon } from "../TokenIcon";
 type Props = {
   children: ReactNode;
   params: Promise<{
+    cluster: string;
     key: string;
   }>;
 };
 
 export const PublishersLayout = async ({ children, params }: Props) => {
-  const { key } = await params;
+  const { cluster, key } = await params;
+  const parsedCluster = parseCluster(cluster);
+
+  if (parsedCluster === undefined) {
+    notFound();
+  }
+
   const [
     rankingHistory,
     averageScoreHistory,
@@ -62,11 +68,11 @@ export const PublishersLayout = async ({ children, params }: Props) => {
     priceFeeds,
     publishers,
   ] = await Promise.all([
-    getPublisherRankingHistory(key),
-    getPublisherAverageScoreHistory(key),
+    getPublisherRankingHistory(parsedCluster, key),
+    getPublisherAverageScoreHistory(parsedCluster, key),
     getOisStats(key),
-    getPriceFeeds(Cluster.Pythnet, key),
-    getPublishers(),
+    getPriceFeeds(parsedCluster, key),
+    getPublishers(parsedCluster),
   ]);
 
   const currentRanking = rankingHistory.at(-1);
@@ -79,13 +85,10 @@ export const PublishersLayout = async ({ children, params }: Props) => {
 
   return publisher && currentRanking && currentAverageScore ? (
     <PriceFeedDrawerProvider
+      cluster={parsedCluster}
       publisherKey={key}
       priceFeeds={priceFeeds.map(({ feed, ranking, status }) => ({
         symbol: feed.symbol,
-        displaySymbol: feed.product.display_symbol,
-        description: feed.product.description,
-        icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
-        feedKey: feed.product.price_account,
         score: ranking?.final_score,
         rank: ranking?.final_rank,
         firstEvaluation: ranking?.first_ranking_time,
@@ -94,7 +97,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
     >
       <div className={styles.publisherLayout}>
         <section className={styles.header}>
-          <div className={styles.headerRow}>
+          <div className={styles.breadcrumbRow}>
             <Breadcrumbs
               className={styles.breadcrumbs ?? ""}
               label="Breadcrumbs"
@@ -105,15 +108,14 @@ export const PublishersLayout = async ({ children, params }: Props) => {
               ]}
             />
           </div>
-          <div className={styles.headerRow}>
-            <PublisherTag
-              publisherKey={key}
-              {...(knownPublisher && {
-                name: knownPublisher.name,
-                icon: <PublisherIcon knownPublisher={knownPublisher} />,
-              })}
-            />
-          </div>
+          <PublisherTag
+            cluster={parsedCluster}
+            publisherKey={key}
+            {...(knownPublisher && {
+              name: knownPublisher.name,
+              icon: <PublisherIcon knownPublisher={knownPublisher} />,
+            })}
+          />
           <section className={styles.stats}>
             <ChartCard
               variant="primary"
@@ -152,7 +154,6 @@ export const PublishersLayout = async ({ children, params }: Props) => {
             />
             <ChartCard
               header="Average Score"
-              chartClassName={styles.averageScoreChart}
               corner={<ExplainAverage />}
               data={averageScoreHistory.map(({ time, averageScore }) => ({
                 x: time,
@@ -199,7 +200,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
               }
               stat1={
                 <Link
-                  href={`/publishers/${key}/price-feeds?status=Active`}
+                  href={`/publishers/${ClusterToName[parsedCluster]}/${key}/price-feeds?status=Active`}
                   invert
                 >
                   {publisher.activeFeeds}
@@ -207,7 +208,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
               }
               stat2={
                 <Link
-                  href={`/publishers/${key}/price-feeds?status=Inactive`}
+                  href={`/publishers/${ClusterToName[parsedCluster]}/${key}/price-feeds?status=Inactive`}
                   invert
                 >
                   {publisher.inactiveFeeds}
@@ -238,136 +239,140 @@ export const PublishersLayout = async ({ children, params }: Props) => {
                 label="Active Feeds"
               />
             </StatCard>
-            <DrawerTrigger>
-              <StatCard
-                header="OIS Pool Allocation"
-                stat={
-                  <span
-                    className={styles.oisAllocation}
-                    data-is-overallocated={
-                      Number(oisStats.poolUtilization) > oisStats.maxPoolSize
-                        ? ""
-                        : undefined
-                    }
-                  >
-                    <FormattedNumber
-                      maximumFractionDigits={2}
-                      value={
-                        (100 * Number(oisStats.poolUtilization)) /
-                        oisStats.maxPoolSize
+            {parsedCluster === Cluster.Pythnet && (
+              <DrawerTrigger>
+                <StatCard
+                  header="OIS Pool Allocation"
+                  stat={
+                    <span
+                      className={styles.oisAllocation}
+                      data-is-overallocated={
+                        Number(oisStats.poolUtilization) > oisStats.maxPoolSize
+                          ? ""
+                          : undefined
                       }
-                    />
-                    %
-                  </span>
-                }
-                corner={<ArrowsOutSimple />}
-              >
-                <Meter
-                  value={Number(oisStats.poolUtilization)}
-                  maxValue={oisStats.maxPoolSize}
-                  label="OIS Pool"
-                  startLabel={
-                    <span className={styles.tokens}>
-                      <TokenIcon />
-                      <span>
-                        <FormattedTokens tokens={oisStats.poolUtilization} />
-                      </span>
+                    >
+                      <FormattedNumber
+                        maximumFractionDigits={2}
+                        value={
+                          (100 * Number(oisStats.poolUtilization)) /
+                          oisStats.maxPoolSize
+                        }
+                      />
+                      %
                     </span>
                   }
-                  endLabel={
-                    <span className={styles.tokens}>
-                      <TokenIcon />
-                      <span>
+                  corner={<ArrowsOutSimple />}
+                >
+                  <Meter
+                    value={Number(oisStats.poolUtilization)}
+                    maxValue={oisStats.maxPoolSize}
+                    label="OIS Pool"
+                    startLabel={
+                      <span className={styles.tokens}>
+                        <TokenIcon />
+                        <span>
+                          <FormattedTokens tokens={oisStats.poolUtilization} />
+                        </span>
+                      </span>
+                    }
+                    endLabel={
+                      <span className={styles.tokens}>
+                        <TokenIcon />
+                        <span>
+                          <FormattedTokens
+                            tokens={BigInt(oisStats.maxPoolSize)}
+                          />
+                        </span>
+                      </span>
+                    }
+                  />
+                </StatCard>
+                <Drawer
+                  title="OIS Pool Allocation"
+                  className={styles.oisDrawer ?? ""}
+                  bodyClassName={styles.oisDrawerBody}
+                  footerClassName={styles.oisDrawerFooter}
+                  footer={
+                    <>
+                      <Button
+                        variant="solid"
+                        size="sm"
+                        href="https://staking.pyth.network"
+                        target="_blank"
+                        beforeIcon={Browsers}
+                      >
+                        Open Staking App
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        href="https://docs.pyth.network/home/oracle-integrity-staking"
+                        target="_blank"
+                        beforeIcon={BookOpenText}
+                      >
+                        Documentation
+                      </Button>
+                    </>
+                  }
+                >
+                  <SemicircleMeter
+                    width={420}
+                    height={420}
+                    value={Number(oisStats.poolUtilization)}
+                    maxValue={oisStats.maxPoolSize}
+                    className={styles.oisMeter ?? ""}
+                    aria-label="OIS Pool Utilization"
+                  >
+                    <TokenIcon className={styles.oisMeterIcon} />
+                    <div className={styles.oisMeterLabel}>OIS Pool</div>
+                  </SemicircleMeter>
+                  <StatCard
+                    header="Total Staked"
+                    variant="secondary"
+                    nonInteractive
+                    stat={
+                      <>
+                        <TokenIcon />
+                        <FormattedTokens tokens={oisStats.poolUtilization} />
+                      </>
+                    }
+                  />
+                  <StatCard
+                    header="Pool Capacity"
+                    variant="secondary"
+                    nonInteractive
+                    stat={
+                      <>
+                        <TokenIcon />
                         <FormattedTokens
                           tokens={BigInt(oisStats.maxPoolSize)}
                         />
-                      </span>
-                    </span>
-                  }
-                />
-              </StatCard>
-              <Drawer
-                title="OIS Pool Allocation"
-                className={styles.oisDrawer ?? ""}
-                bodyClassName={styles.oisDrawerBody}
-                footerClassName={styles.oisDrawerFooter}
-                footer={
-                  <>
-                    <Button
-                      variant="solid"
-                      size="sm"
-                      href="https://staking.pyth.network"
-                      target="_blank"
-                      beforeIcon={Browsers}
-                    >
-                      Open Staking App
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      href="https://docs.pyth.network/home/oracle-integrity-staking"
-                      target="_blank"
-                      beforeIcon={BookOpenText}
-                    >
-                      Documentation
-                    </Button>
-                  </>
-                }
-              >
-                <SemicircleMeter
-                  width={420}
-                  height={420}
-                  value={Number(oisStats.poolUtilization)}
-                  maxValue={oisStats.maxPoolSize}
-                  className={styles.oisMeter ?? ""}
-                  aria-label="OIS Pool Utilization"
-                >
-                  <TokenIcon className={styles.oisMeterIcon} />
-                  <div className={styles.oisMeterLabel}>OIS Pool</div>
-                </SemicircleMeter>
-                <StatCard
-                  header="Total Staked"
-                  variant="secondary"
-                  nonInteractive
-                  stat={
-                    <>
-                      <TokenIcon />
-                      <FormattedTokens tokens={oisStats.poolUtilization} />
-                    </>
-                  }
-                />
-                <StatCard
-                  header="Pool Capacity"
-                  variant="secondary"
-                  nonInteractive
-                  stat={
-                    <>
-                      <TokenIcon />
-                      <FormattedTokens tokens={BigInt(oisStats.maxPoolSize)} />
-                    </>
-                  }
-                />
-                <OisApyHistory apyHistory={oisStats.apyHistory ?? []} />
-                <InfoBox
-                  icon={<ShieldChevron />}
-                  header="Oracle Integrity Staking (OIS)"
-                >
-                  OIS allows anyone to help secure Pyth and protect DeFi.
-                  Through decentralized staking rewards and slashing, OIS
-                  incentivizes Pyth publishers to maintain high-quality data
-                  contributions. PYTH holders can stake to publishers to further
-                  reinforce oracle security. Rewards are programmatically
-                  distributed to high quality publishers and the stakers
-                  supporting them to strengthen oracle integrity.
-                </InfoBox>
-              </Drawer>
-            </DrawerTrigger>
+                      </>
+                    }
+                  />
+                  <OisApyHistory apyHistory={oisStats.apyHistory ?? []} />
+                  <InfoBox
+                    icon={<ShieldChevron />}
+                    header="Oracle Integrity Staking (OIS)"
+                  >
+                    OIS allows anyone to help secure Pyth and protect DeFi.
+                    Through decentralized staking rewards and slashing, OIS
+                    incentivizes Pyth publishers to maintain high-quality data
+                    contributions. PYTH holders can stake to publishers to
+                    further reinforce oracle security. Rewards are
+                    programmatically distributed to high quality publishers and
+                    the stakers supporting them to strengthen oracle integrity.
+                  </InfoBox>
+                </Drawer>
+              </DrawerTrigger>
+            )}
           </section>
         </section>
         <TabRoot>
           <Tabs
             label="Price Feed Navigation"
-            prefix={`/publishers/${key}`}
+            prefix={`/publishers/${ClusterToName[parsedCluster]}/${key}`}
             items={[
               { segment: undefined, children: "Performance" },
               {

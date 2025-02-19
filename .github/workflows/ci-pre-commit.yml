@@ -12,10 +12,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          # Need to grab the history of the PR
-          fetch-depth: 0
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: default
@@ -26,11 +23,23 @@ jobs:
           rustup install 1.66.1
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            apps/fortuna
+            apps/hermes/server
+            target_chains/ethereum/sdk/stylus
+            target_chains/cosmwasm
+            target_chains/fuel/contracts
+            target_chains/solana
+            governance/remote_executor
+            lazer
+            pythnet/message_buffer
+            pythnet/pythnet_sdk
+            pythnet/stake_caps_parameters
       - name: Install protoc
         uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
       - name: Install g++ 12
@@ -56,9 +65,3 @@ jobs:
           chmod +x /usr/local/bin/aptos
           aptos update movefmt
       - uses: pre-commit/action@v3.0.0
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          # Run only on files changed in the PR
-          extra_args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
-      - uses: pre-commit/action@v3.0.0
-        if: ${{ github.event_name != 'pull_request' }}

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { StateType, useData } from "../../hooks/use-data";
 import { useLivePriceData } from "../../hooks/use-live-price-data";
+import { Cluster } from "../../services/pyth";
 import { ChangePercent } from "../ChangePercent";
 
 const ONE_SECOND_IN_MS = 1000;
@@ -105,7 +106,7 @@ const PriceFeedChangePercentLoaded = ({
   priorPrice,
   feedKey,
 }: PriceFeedChangePercentLoadedProps) => {
-  const { current } = useLivePriceData(feedKey);
+  const { current } = useLivePriceData(Cluster.Pythnet, feedKey);
 
   return current === undefined ? (
     <ChangePercent className={className} isLoading />

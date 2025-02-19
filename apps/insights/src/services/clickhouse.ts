@@ -8,7 +8,7 @@ import { CLICKHOUSE } from "../config/server";
 
 const client = createClient(CLICKHOUSE);
 
-export const getPublishers = async () =>
+export const getPublishers = async (cluster: Cluster) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -63,7 +63,7 @@ export const getPublishers = async () =>
           )
           ORDER BY rank ASC, timestamp
         `,
-      query_params: { cluster: "pythnet" },
+      query_params: { cluster: ClusterToName[cluster] },
     },
   );
 
@@ -118,7 +118,7 @@ export const getRankingsBySymbol = async (symbol: string) =>
         symbol,
         cluster,
         publisher,
-      first_ranking_time,
+        first_ranking_time,
         uptime_score,
         deviation_score,
         stalled_score,
@@ -177,7 +177,10 @@ export const getYesterdaysPrices = async (symbols: string[]) =>
     },
   );
 
-export const getPublisherRankingHistory = async (key: string) =>
+export const getPublisherRankingHistory = async (
+  cluster: Cluster,
+  key: string,
+) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -191,13 +194,13 @@ export const getPublisherRankingHistory = async (key: string) =>
             SELECT timestamp, rank
             FROM publishers_ranking
             WHERE publisher = {key: String}
-            AND cluster = 'pythnet'
+            AND cluster = {cluster: String}
             ORDER BY timestamp DESC
             LIMIT 30
           )
           ORDER BY timestamp ASC
         `,
-      query_params: { key },
+      query_params: { key, cluster: ClusterToName[cluster] },
     },
   );
 
@@ -279,7 +282,10 @@ export const getFeedPriceHistory = async (
     },
   );
 
-export const getPublisherAverageScoreHistory = async (key: string) =>
+export const getPublisherAverageScoreHistory = async (
+  cluster: Cluster,
+  key: string,
+) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -295,14 +301,14 @@ export const getPublisherAverageScoreHistory = async (key: string) =>
               avg(final_score) AS averageScore
             FROM publisher_quality_ranking
             WHERE publisher = {key: String}
-            AND cluster = 'pythnet'
+            AND cluster = {cluster: String}
             GROUP BY time
             ORDER BY time DESC
             LIMIT 30
           )
           ORDER BY time ASC
         `,
-      query_params: { key },
+      query_params: { key, cluster: ClusterToName[cluster] },
     },
   );
 

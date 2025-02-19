@@ -31,6 +31,11 @@ export const toCluster = (name: (typeof CLUSTER_NAMES)[number]): Cluster => {
   }
 };
 
+export const parseCluster = (name: string): Cluster | undefined =>
+  (CLUSTER_NAMES as readonly string[]).includes(name)
+    ? toCluster(name as (typeof CLUSTER_NAMES)[number])
+    : undefined;
+
 const mkConnection = (cluster: Cluster) =>
   new Connection(getPythClusterApiUrl(ClusterToName[cluster]));
 

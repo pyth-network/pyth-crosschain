@@ -20,6 +20,17 @@ const parser = yargs(hideBin(process.argv))
       type: "string",
       desc: "Hermes endpoint to use, defaults to https://hermes.pyth.network",
     },
+    encoding: {
+      type: "string",
+      desc: "Encoding to use for the price feeds (hex or base64), defaults to hex",
+      choices: ["hex", "base64"],
+      default: "hex",
+    },
+    "chunk-size": {
+      type: "number",
+      desc: "Chunk size to use for the price feeds, defaults to 150",
+      default: 150,
+    },
   });
 
 // This script is intended to update all pricefeeds after we deploy pyth pricefeeds contract.
@@ -32,6 +43,7 @@ async function main() {
   );
   const contract = DefaultStore.contracts[argv.contract];
   const privateKey = toPrivateKey(argv["private-key"]);
+  const encoding = argv.encoding || "hex";
 
   priceFeedsMetadata = await client.getPriceFeeds();
 
@@ -40,8 +52,13 @@ async function main() {
 
   // We can adjust the chunk size based on the chain. Don't exceed 150 for now.
   // TODO: Add a check for the chain's block gas limit and adjust the chunk size accordingly.
-  const chunkSize = 150;
+  const chunkSize = argv.chunkSize;
   for (let i = 0; i < priceFeedIds.length; i += chunkSize) {
+    console.log(
+      `Processing chunk ${i / chunkSize + 1} of ${Math.ceil(
+        priceFeedIds.length / chunkSize
+      )}`
+    );
     const chunk = priceFeedIds.slice(i, i + chunkSize);
     console.log(`length: ${chunk.length}`);
     const updates = await client.getLatestPriceUpdates(chunk, {
@@ -50,7 +67,11 @@ async function main() {
     console.log(
       await contract.executeUpdatePriceFeed(
         privateKey,
-        updates.binary.data.map((update) => Buffer.from(update, "hex"))
+        updates.binary.data.map((update) =>
+          encoding === "hex"
+            ? Buffer.from(update, "hex")
+            : Buffer.from(update, "base64")
+        )
       )
     );
   }

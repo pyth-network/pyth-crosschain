@@ -26,6 +26,7 @@ import {
   PriceFeedChangePercent,
 } from "../PriceFeedChangePercent";
 import { PriceFeedTag } from "../PriceFeedTag";
+import { PriceName } from "../PriceName";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 
 type Props = {
@@ -110,12 +111,26 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
         <section className={styles.stats}>
           <StatCard
             variant="primary"
-            header="Aggregated Price"
-            stat={<LivePrice feedKey={feed.product.price_account} />}
+            header={
+              <>
+                Aggregated <PriceName assetClass={feed.product.asset_type} />
+              </>
+            }
+            stat={
+              <LivePrice
+                feedKey={feed.product.price_account}
+                cluster={Cluster.Pythnet}
+              />
+            }
           />
           <StatCard
             header="Confidence"
-            stat={<LiveConfidence feedKey={feed.product.price_account} />}
+            stat={
+              <LiveConfidence
+                feedKey={feed.product.price_account}
+                cluster={Cluster.Pythnet}
+              />
+            }
             corner={
               <AlertTrigger>
                 <Button
@@ -148,7 +163,11 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
             }
           />
           <StatCard
-            header="1-Day Price Change"
+            header={
+              <>
+                1-Day <PriceName assetClass={feed.product.asset_type} /> Change
+              </>
+            }
             stat={
               <YesterdaysPricesProvider
                 feeds={{ [feed.symbol]: feed.product.price_account }}
@@ -159,7 +178,12 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           />
           <StatCard
             header="Last Updated"
-            stat={<LiveLastUpdated feedKey={feed.product.price_account} />}
+            stat={
+              <LiveLastUpdated
+                feedKey={feed.product.price_account}
+                cluster={Cluster.Pythnet}
+              />
+            }
           />
         </section>
       </section>
@@ -179,6 +203,7 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
                       feedKey={feed.product.price_account}
                       field="numComponentPrices"
                       defaultValue={feed.price.numComponentPrices}
+                      cluster={Cluster.Pythnet}
                     />
                   </Badge>
                 </div>

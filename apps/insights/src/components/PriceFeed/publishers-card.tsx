@@ -1,18 +1,16 @@
 "use client";
 
 import { useLogger } from "@pythnetwork/app-logger";
-import {
-  useQueryState,
-  parseAsString, // , parseAsBoolean
-} from "nuqs";
+import { Switch } from "@pythnetwork/component-library/Switch";
+import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
 import { type ComponentProps, Suspense, useCallback, useMemo } from "react";
 
+import { Cluster, ClusterToName } from "../../services/pyth";
 import { PriceComponentDrawer } from "../PriceComponentDrawer";
 import {
   PriceComponentsCardContents,
   ResolvedPriceComponentsCard,
 } from "../PriceComponentsCard";
-// import { Cluster } from "../../services/pyth";
 
 type Publisher = ComponentProps<
   typeof ResolvedPriceComponentsCard
@@ -26,80 +24,102 @@ type Props = Omit<
   "onPriceComponentAction" | "priceComponents"
 > & {
   priceComponents: Publisher[];
+  symbol: string;
+  displaySymbol: string;
+  assetClass: string;
 };
 
-export const PublishersCard = ({ priceComponents, ...props }: Props) => (
+export const PublishersCard = ({
+  priceComponents,
+  symbol,
+  displaySymbol,
+  ...props
+}: Props) => (
   <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
-    <ResolvedPublishersCard priceComponents={priceComponents} {...props} />
+    <ResolvedPublishersCard
+      priceComponents={priceComponents}
+      symbol={symbol}
+      displaySymbol={displaySymbol}
+      {...props}
+    />
   </Suspense>
 );
 
-const ResolvedPublishersCard = ({ priceComponents, ...props }: Props) => {
-  // const logger = useLogger();
+const ResolvedPublishersCard = ({
+  priceComponents,
+  symbol,
+  displaySymbol,
+  assetClass,
+  ...props
+}: Props) => {
+  const logger = useLogger();
   const { handleClose, selectedPublisher, updateSelectedPublisherKey } =
     usePublisherDrawer(priceComponents);
   const onPriceComponentAction = useCallback(
-    ({ publisherKey }: Publisher) => {
-      updateSelectedPublisherKey(publisherKey);
+    ({ publisherKey, cluster }: Publisher) => {
+      updateSelectedPublisherKey(
+        [ClusterToName[cluster], publisherKey].join(":"),
+      );
     },
     [updateSelectedPublisherKey],
   );
-  // const [includeTestFeeds, setIncludeTestFeeds] = useQueryState(
-  //   "includeTestFeeds",
-  //   parseAsBoolean.withDefault(false),
-  // );
-  // const componentsFilteredByCluster = useMemo(
-  //   () =>
-  //     includeTestFeeds
-  //       ? priceComponents
-  //       : priceComponents.filter(
-  //           (component) => component.cluster === Cluster.Pythnet,
-  //         ),
-  //   [includeTestFeeds, priceComponents],
-  // );
-  // const updateIncludeTestFeeds = useCallback(
-  //   (newValue: boolean) => {
-  //     setIncludeTestFeeds(newValue).catch((error: unknown) => {
-  //       logger.error(
-  //         "Failed to update include test components query param",
-  //         error,
-  //       );
-  //     });
-  //   },
-  //   [setIncludeTestFeeds, logger],
-  // );
-  //         <Switch
-  //           {...(props.isLoading
-  //             ? { isLoading: true }
-  //             : {
-  //                 isSelected: props.includeTestFeeds,
-  //                 onChange: props.onIncludeTestFeedsChange,
-  //               })}
-  //         >
-  //           Show test feeds
-  //         </Switch>
+  const [includeTestFeeds, setIncludeTestFeeds] = useQueryState(
+    "includeTestFeeds",
+    parseAsBoolean.withDefault(false),
+  );
+  const componentsFilteredByCluster = useMemo(
+    () =>
+      includeTestFeeds
+        ? priceComponents
+        : priceComponents.filter(
+            (component) => component.cluster === Cluster.Pythnet,
+          ),
+    [includeTestFeeds, priceComponents],
+  );
+  const updateIncludeTestFeeds = useCallback(
+    (newValue: boolean) => {
+      setIncludeTestFeeds(newValue).catch((error: unknown) => {
+        logger.error(
+          "Failed to update include test components query param",
+          error,
+        );
+      });
+    },
+    [setIncludeTestFeeds, logger],
+  );
 
   return (
     <>
       <ResolvedPriceComponentsCard
         onPriceComponentAction={onPriceComponentAction}
-        // priceComponents={componentsFilteredByCluster}
-        priceComponents={priceComponents}
+        priceComponents={componentsFilteredByCluster}
+        assetClass={assetClass}
+        toolbarExtra={
+          <Switch
+            isSelected={includeTestFeeds}
+            onChange={updateIncludeTestFeeds}
+          >
+            Include test publishers
+          </Switch>
+        }
         {...props}
       />
       {selectedPublisher && (
         <PriceComponentDrawer
           publisherKey={selectedPublisher.publisherKey}
           onClose={handleClose}
-          symbol={selectedPublisher.symbol}
+          symbol={symbol}
+          displaySymbol={displaySymbol}
           feedKey={selectedPublisher.feedKey}
           rank={selectedPublisher.rank}
           score={selectedPublisher.score}
           status={selectedPublisher.status}
           title={selectedPublisher.name}
+          cluster={selectedPublisher.cluster}
           firstEvaluation={selectedPublisher.firstEvaluation ?? new Date()}
-          navigateButtonText="Open Publisher"
-          navigateHref={`/publishers/${selectedPublisher.publisherKey}`}
+          navigateHref={`/publishers/${ClusterToName[selectedPublisher.cluster]}/${selectedPublisher.publisherKey}`}
+          assetClass={assetClass}
+          identifiesPublisher
         />
       )}
     </>
@@ -122,13 +142,14 @@ const usePublisherDrawer = (publishers: Publisher[]) => {
     },
     [setSelectedPublisher, logger],
   );
-  const selectedPublisher = useMemo(
-    () =>
-      publishers.find(
-        (publisher) => publisher.publisherKey === selectedPublisherKey,
-      ),
-    [selectedPublisherKey, publishers],
-  );
+  const selectedPublisher = useMemo(() => {
+    const [cluster, publisherKey] = selectedPublisherKey.split(":");
+    return publishers.find(
+      (publisher) =>
+        publisher.publisherKey === publisherKey &&
+        ClusterToName[publisher.cluster] === cluster,
+    );
+  }, [selectedPublisherKey, publishers]);
   const handleClose = useCallback(() => {
     updateSelectedPublisherKey("");
   }, [updateSelectedPublisherKey]);

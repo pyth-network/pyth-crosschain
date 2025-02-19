@@ -10,6 +10,7 @@ import { Select } from "@pythnetwork/component-library/Select";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
 import {
   type RowConfig,
+  type ColumnConfig,
   type SortDescriptor,
   Table,
 } from "@pythnetwork/component-library/Table";
@@ -17,7 +18,6 @@ import { useQueryState, parseAsStringEnum, parseAsBoolean } from "nuqs";
 import { type ReactNode, Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
-import styles from "./index.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import {
@@ -31,13 +31,14 @@ import { EvaluationTime } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
 import { LivePrice, LiveConfidence, LiveComponentValue } from "../LivePrices";
 import { NoResults } from "../NoResults";
+import { PriceName } from "../PriceName";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
 
 const SCORE_WIDTH = 32;
 
-type Props<T extends PriceComponent> = {
+type Props<U extends string, T extends PriceComponent & Record<U, unknown>> = {
   className?: string | undefined;
   priceComponents: T[];
   metricsTime?: Date | undefined;
@@ -45,12 +46,15 @@ type Props<T extends PriceComponent> = {
   label: string;
   searchPlaceholder: string;
   onPriceComponentAction: (component: T) => void;
+  toolbarExtra?: ReactNode;
+  assetClass?: string | undefined;
+  extraColumns?: ColumnConfig<U>[] | undefined;
+  nameWidth?: number | undefined;
 };
 
 type PriceComponent = {
   id: string;
   score: number | undefined;
-  symbol: string;
   uptimeScore: number | undefined;
   deviationScore: number | undefined;
   stalledScore: number | undefined;
@@ -62,11 +66,14 @@ type PriceComponent = {
   nameAsString: string;
 };
 
-export const PriceComponentsCard = <T extends PriceComponent>({
+export const PriceComponentsCard = <
+  U extends string,
+  T extends PriceComponent & Record<U, unknown>,
+>({
   priceComponents,
   onPriceComponentAction,
   ...props
-}: Props<T>) => (
+}: Props<U, T>) => (
   <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
     <ResolvedPriceComponentsCard
       priceComponents={priceComponents}
@@ -76,11 +83,14 @@ export const PriceComponentsCard = <T extends PriceComponent>({
   </Suspense>
 );
 
-export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
+export const ResolvedPriceComponentsCard = <
+  U extends string,
+  T extends PriceComponent & Record<U, unknown>,
+>({
   priceComponents,
   onPriceComponentAction,
   ...props
-}: Props<T>) => {
+}: Props<U, T>) => {
   const logger = useLogger();
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
@@ -172,15 +182,12 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
       paginatedItems.map((component) => ({
         id: component.id,
         data: {
-          name: (
-            <div className={styles.componentName}>
-              {component.name}
-              {component.cluster === Cluster.PythtestConformance && (
-                <Badge variant="muted" style="filled" size="xs">
-                  test
-                </Badge>
-              )}
-            </div>
+          name: component.name,
+          ...Object.fromEntries(
+            props.extraColumns?.map((column) => [
+              column.id,
+              component[column.id],
+            ]) ?? [],
           ),
           ...(showQuality
             ? {
@@ -212,18 +219,21 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
                     field="publishSlot"
+                    cluster={component.cluster}
                   />
                 ),
                 price: (
                   <LivePrice
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
+                    cluster={component.cluster}
                   />
                 ),
                 confidence: (
                   <LiveConfidence
                     feedKey={component.feedKey}
                     publisherKey={component.publisherKey}
+                    cluster={component.cluster}
                   />
                 ),
               }),
@@ -233,7 +243,7 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
           onPriceComponentAction(component);
         },
       })),
-    [paginatedItems, showQuality, onPriceComponentAction],
+    [paginatedItems, showQuality, onPriceComponentAction, props.extraColumns],
   );
 
   const updateStatus = useCallback(
@@ -278,13 +288,20 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
   );
 };
 
-type PriceComponentsCardProps<T extends PriceComponent> = Pick<
-  Props<T>,
+type PriceComponentsCardProps<
+  U extends string,
+  T extends PriceComponent & Record<U, unknown>,
+> = Pick<
+  Props<U, T>,
   | "className"
   | "metricsTime"
   | "nameLoadingSkeleton"
   | "label"
   | "searchPlaceholder"
+  | "toolbarExtra"
+  | "assetClass"
+  | "extraColumns"
+  | "nameWidth"
 > &
   (
     | { isLoading: true }
@@ -309,14 +326,20 @@ type PriceComponentsCardProps<T extends PriceComponent> = Pick<
       }
   );
 
-export const PriceComponentsCardContents = <T extends PriceComponent>({
+export const PriceComponentsCardContents = <
+  U extends string,
+  T extends PriceComponent & Record<U, unknown>,
+>({
   className,
   metricsTime,
   nameLoadingSkeleton,
   label,
   searchPlaceholder,
+  toolbarExtra,
+  extraColumns,
+  nameWidth,
   ...props
-}: PriceComponentsCardProps<T>) => {
+}: PriceComponentsCardProps<U, T>) => {
   const collator = useCollator();
   return (
     <Card
@@ -333,6 +356,7 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
       }
       toolbar={
         <>
+          {toolbarExtra}
           <Select<StatusName | "">
             label="Status"
             size="sm"
@@ -373,7 +397,10 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
               },
             })}
             items={[
-              { id: "prices", children: "Prices" },
+              {
+                id: "prices",
+                children: <PriceName assetClass={props.assetClass} plural />,
+              },
               { id: "quality", children: "Quality" },
             ]}
           />
@@ -406,7 +433,9 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
             isRowHeader: true,
             loadingSkeleton: nameLoadingSkeleton,
             allowsSorting: true,
+            ...(nameWidth !== undefined && { width: nameWidth }),
           },
+          ...(extraColumns ?? []),
           ...otherColumns(props),
           {
             id: "status",
@@ -460,8 +489,9 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
 
 const otherColumns = ({
   metricsTime,
+  assetClass,
   ...props
-}: { metricsTime?: Date | undefined } & (
+}: { metricsTime?: Date | undefined; assetClass?: string | undefined } & (
   | { isLoading: true }
   | { isLoading?: false; showQuality: boolean }
 )) => {
@@ -504,8 +534,14 @@ const otherColumns = ({
                 DEVIATION SCORE
                 <Explain size="xs" title="Deviation">
                   <p>
-                    Deviation measures how close a publisher{"'"}s price is to
-                    what Pyth believes to be the true market price.
+                    Deviation measures how close a publisher{"'"}s quote is to
+                    what Pyth believes to be the true market quote.
+                  </p>
+                  <p>
+                    Note that publishers must have an uptime of at least 50% to
+                    be ranked. If a publisher{"'"}s uptime is less than 50%,
+                    then the deviation and the stalled score of the publisher
+                    will be 0 to reflect their ineligibility.
                   </p>
                   {metricsTime && <EvaluationTime scoreTime={metricsTime} />}
                   <Button
@@ -531,8 +567,14 @@ const otherColumns = ({
                 <Explain size="xs" title="Stalled">
                   <p>
                     A feed is considered stalled if it is publishing the same
-                    value repeatedly for the price. This score component is
+                    value repeatedly for the quote. This score component is
                     reduced each time a feed is stalled.
+                  </p>
+                  <p>
+                    Note that publishers must have an uptime of at least 50% to
+                    be ranked. If a publisher{"'"}s uptime is less than 50%,
+                    then the deviation and the stalled score of the publisher
+                    will be 0 to reflect their ineligibility.
                   </p>
                   {metricsTime && <EvaluationTime scoreTime={metricsTime} />}
                   <Button
@@ -588,7 +630,12 @@ const otherColumns = ({
         ]
       : [
           { id: "slot", name: "SLOT", alignment: "left" as const, width: 40 },
-          { id: "price", name: "PRICE", alignment: "left" as const, width: 40 },
+          {
+            id: "price",
+            name: <PriceName assetClass={assetClass} uppercase />,
+            alignment: "left" as const,
+            width: 40,
+          },
           {
             id: "confidence",
             name: "CONFIDENCE INTERVAL",

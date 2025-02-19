@@ -3,6 +3,7 @@ on:
     paths:
       - target_chains/ethereum/contracts/**
       - governance/xc_admin/packages/xc_admin_common/**
+      - .github/workflows/ci-ethereum-contract.yml
   push:
     branches:
       - main
@@ -28,9 +29,9 @@ jobs:
           run_install: true
 
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1.1.1
+        uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: v0.3.0
 
       - name: Install Forge dependencies
         run: pnpm run install-forge-deps

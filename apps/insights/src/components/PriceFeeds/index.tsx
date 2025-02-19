@@ -25,7 +25,6 @@ import {
   YesterdaysPricesProvider,
   PriceFeedChangePercent,
 } from "../PriceFeedChangePercent";
-import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
@@ -127,10 +126,6 @@ export const PriceFeeds = async () => {
           id={PRICE_FEEDS_ANCHOR}
           priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
             symbol: feed.symbol,
-            icon: <PriceFeedIcon symbol={feed.product.display_symbol} />,
-            id: feed.product.price_account,
-            displaySymbol: feed.product.display_symbol,
-            assetClass: feed.product.asset_type,
             exponent: feed.price.exponent,
             numQuoters: feed.price.numQuoters,
           }))}
@@ -176,7 +171,10 @@ const FeaturedFeedsCard = <T extends ElementType>({
             <PriceFeedTag symbol={feed.symbol} />
             {showPrices && (
               <div className={styles.prices}>
-                <LivePrice feedKey={feed.product.price_account} />
+                <LivePrice
+                  feedKey={feed.product.price_account}
+                  cluster={Cluster.Pythnet}
+                />
                 <PriceFeedChangePercent
                   className={styles.changePercent}
                   feedKey={feed.product.price_account}
