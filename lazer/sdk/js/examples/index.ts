@@ -62,7 +62,7 @@ await client.subscribe({
   type: "subscribe",
   subscriptionId: 2,
   priceFeedIds: [1, 2, 3, 4, 5],
-  properties: ["price", "exponent", "publisherCount"],
+  properties: ["price", "exponent", "publisherCount", "confidence"],
   chains: ["evm"],
   deliveryFormat: "json",
   channel: "fixed_rate@200ms",
