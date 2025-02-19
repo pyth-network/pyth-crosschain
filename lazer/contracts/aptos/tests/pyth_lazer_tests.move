@@ -1,15 +1,17 @@
 #[test_only]
 module pyth_lazer::pyth_lazer_tests {
     use std::signer;
+    use std::vector;
     use aptos_framework::account;
     use aptos_framework::coin;
     use aptos_framework::timestamp;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_std::ed25519;
-    use pyth_lazer::pyth_lazer;
+    use pyth_lazer::pyth_lazer::{Self, EINVALID_SIGNER, EINSUFFICIENT_FEE};
 
     // Test accounts
-    const TOP_AUTHORITY: address = @0x3374049c3b46a907ff2fc6b62af51975fb9dc572b7e73eb1b255ed5edcd7cee0;
+    const TOP_AUTHORITY: address =
+        @0x3374049c3b46a907ff2fc6b62af51975fb9dc572b7e73eb1b255ed5edcd7cee0;
     const TREASURY: address = @0x456;
     const USER: address = @0x789;
 
@@ -20,13 +22,14 @@ module pyth_lazer::pyth_lazer_tests {
 
     #[test_only]
     fun setup_aptos_coin(framework: &signer): coin::MintCapability<AptosCoin> {
-        let (burn_cap, freeze_cap, mint_cap) = coin::initialize<AptosCoin>(
-            framework,
-            std::string::utf8(b"Aptos Coin"),
-            std::string::utf8(b"APT"),
-            8,
-            false,
-        );
+        let (burn_cap, freeze_cap, mint_cap) =
+            coin::initialize<AptosCoin>(
+                framework,
+                std::string::utf8(b"Aptos Coin"),
+                std::string::utf8(b"APT"),
+                8,
+                false
+            );
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_freeze_cap(freeze_cap);
         mint_cap
@@ -69,7 +72,7 @@ module pyth_lazer::pyth_lazer_tests {
     }
 
     #[test]
-    fun test_verify_message_success() {
+    fun test_verify_message_succeeds() {
         let (top_authority, _treasury, user) = setup();
 
         // Add a valid signer
@@ -79,33 +82,25 @@ module pyth_lazer::pyth_lazer_tests {
         // Create a valid ed25519 signature
         let signature = ed25519::new_signature_from_bytes(TEST_SIGNATURE);
         let pubkey = ed25519::new_unvalidated_public_key_from_bytes(TEST_PUBKEY);
-        assert!(ed25519::signature_verify_strict(&signature, &pubkey, TEST_MESSAGE), 0);
+        assert!(
+            ed25519::signature_verify_strict(&signature, &pubkey, TEST_MESSAGE),
+            0
+        );
 
         // This should succeed as we have a valid signer and sufficient fee
-        pyth_lazer::verify_message(&user, TEST_MESSAGE, TEST_SIGNATURE, TEST_PUBKEY);
+        pyth_lazer::verify_message(
+            &user,
+            TEST_MESSAGE,
+            TEST_SIGNATURE,
+            TEST_PUBKEY
+        );
     }
 
     #[test]
-    fun test_update_add_signer() {
+    fun test_add_update_remove_signers_succeeds() {
         let (top_authority, _treasury, _) = setup();
 
-        // Add signer
-        let expires_at = timestamp::now_seconds() + 1000;
-        pyth_lazer::update_trusted_signer(&top_authority, TEST_PUBKEY, expires_at);
-
-        // Update signer
-        let new_expires_at = timestamp::now_seconds() + 2000;
-        pyth_lazer::update_trusted_signer(&top_authority, TEST_PUBKEY, new_expires_at);
-
-        // Remove signer
-        pyth_lazer::update_trusted_signer(&top_authority, TEST_PUBKEY, 0);
-    }
-
-    #[test]
-    #[expected_failure(abort_code = pyth_lazer::ENO_SPACE)]
-    fun test_max_signers() {
-        let (top_authority, _treasury, _) = setup();
-
+        // Add multiple signers
         let expires_at = timestamp::now_seconds() + 1000;
         let pubkey1 = x"1111111111111111111111111111111111111111111111111111111111111111";
         let pubkey2 = x"2222222222222222222222222222222222222222222222222222222222222222";
@@ -113,13 +108,44 @@ module pyth_lazer::pyth_lazer_tests {
 
         pyth_lazer::update_trusted_signer(&top_authority, pubkey1, expires_at);
         pyth_lazer::update_trusted_signer(&top_authority, pubkey2, expires_at);
-        // This should fail as we already have 2 signers
         pyth_lazer::update_trusted_signer(&top_authority, pubkey3, expires_at);
+
+        // Verify signers were added
+        let trusted_signers = pyth_lazer::get_trusted_signers();
+        assert!(vector::length(&trusted_signers) == 3, 0);
+
+        // Verify first signer
+        let signer_info = vector::borrow(&trusted_signers, 0);
+        let signer_pubkey = pyth_lazer::get_signer_pubkey(signer_info);
+        let signer_expires_at = pyth_lazer::get_signer_expires_at(signer_info);
+        assert!(signer_pubkey == pubkey1, 0);
+        assert!(signer_expires_at == expires_at, 0);
+
+        // Update second signer
+        let new_expires_at = timestamp::now_seconds() + 2000;
+        pyth_lazer::update_trusted_signer(&top_authority, pubkey2, new_expires_at);
+
+        // Verify second signer was updated
+        let trusted_signers = pyth_lazer::get_trusted_signers();
+        let signer_info = vector::borrow(&trusted_signers, 1);
+        let signer_pubkey = pyth_lazer::get_signer_pubkey(signer_info);
+        let signer_expires_at = pyth_lazer::get_signer_expires_at(signer_info);
+        assert!(signer_pubkey == pubkey2, 0);
+        assert!(signer_expires_at == new_expires_at, 0);
+
+        // Remove all signers
+        pyth_lazer::update_trusted_signer(&top_authority, pubkey1, 0);
+        pyth_lazer::update_trusted_signer(&top_authority, pubkey2, 0);
+        pyth_lazer::update_trusted_signer(&top_authority, pubkey3, 0);
+
+        // Verify all signers were removed
+        let trusted_signers = pyth_lazer::get_trusted_signers();
+        assert!(vector::length(&trusted_signers) == 0, 0);
     }
 
     #[test]
-    #[expected_failure(abort_code = pyth_lazer::EINVALID_SIGNER)]
-    fun test_expired_signer() {
+    #[expected_failure(abort_code = EINVALID_SIGNER)]
+    fun test_expired_signer_throws_error() {
         let (top_authority, _treasury, user) = setup();
 
         // Add signer that expires in 1000 seconds
@@ -130,12 +156,17 @@ module pyth_lazer::pyth_lazer_tests {
         timestamp::fast_forward_seconds(2000);
 
         // This should fail as the signer is expired
-        pyth_lazer::verify_message(&user, TEST_MESSAGE, TEST_SIGNATURE, TEST_PUBKEY);
+        pyth_lazer::verify_message(
+            &user,
+            TEST_MESSAGE,
+            TEST_SIGNATURE,
+            TEST_PUBKEY
+        );
     }
 
     #[test]
-    #[expected_failure(abort_code = pyth_lazer::EINSUFFICIENT_FEE)]
-    fun test_insufficient_fee() {
+    #[expected_failure(abort_code = EINSUFFICIENT_FEE)]
+    fun test_insufficient_fee_throws_error() {
         let (_top_authority, _treasury, user) = setup();
 
         // Drain user's balance
@@ -143,6 +174,11 @@ module pyth_lazer::pyth_lazer_tests {
         coin::transfer<AptosCoin>(&user, TREASURY, user_balance);
 
         // This should fail due to insufficient fee
-        pyth_lazer::verify_message(&user, TEST_MESSAGE, TEST_SIGNATURE, TEST_PUBKEY);
+        pyth_lazer::verify_message(
+            &user,
+            TEST_MESSAGE,
+            TEST_SIGNATURE,
+            TEST_PUBKEY
+        );
     }
 }
