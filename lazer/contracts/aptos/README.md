@@ -4,11 +4,33 @@ This package is built using the Move language and Aptos framework.
 
 `PythLazer` is an Aptos on-chain contract that allows consumers to easily verify Pyth Lazer updates for use on-chain.
 
-### Build and Test
+### Build, test, deploy
+
+Install Aptos CLI and set it up:
+
+```shell
+$ brew install
+$ aptos --version
+$ aptos init --network devnet
+```
+
+Compile the contract and run tests:
 
 ```shell
 $ aptos move compile
 $ aptos move test
+```
+
+Deploy to the network configured in your aptos profile:
+
+```shell
+$ aptos move publish
+```
+
+Invoke deployed contract functions on-chain:
+
+```shell
+aptos move run --function-id 'default::pyth_lazer::update_trusted_signer' --args 'hex:0x8731685005cfb169b4da4bbfab0c91c5ba59508bbd6d26990ee2be7225cb34d1' 'u64:9999999999'
 ```
 
 ### Error Handling

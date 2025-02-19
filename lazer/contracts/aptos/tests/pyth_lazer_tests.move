@@ -1,23 +1,25 @@
 #[test_only]
 module pyth_lazer::pyth_lazer_tests {
     use std::signer;
-    use std::string;
     use aptos_framework::account;
     use aptos_framework::coin;
     use aptos_framework::timestamp;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_std::ed25519;
     use pyth_lazer::pyth_lazer;
+    use std::vector;
+    use std::debug;
+    use std::string::{String,utf8};
 
     // Test accounts
-    const TOP_AUTHORITY: address = @0x123;
+    const TOP_AUTHORITY: address = @0x3374049c3b46a907ff2fc6b62af51975fb9dc572b7e73eb1b255ed5edcd7cee0;
     const TREASURY: address = @0x456;
     const USER: address = @0x789;
 
     // Test data
-    const TEST_PUBKEY: vector<u8> = x"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-    const TEST_MESSAGE: vector<u8> = x"deadbeef";
-    const TEST_SIGNATURE: vector<u8> = x"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    const TEST_PUBKEY: vector<u8> = x"3374049c3b46a907ff2fc6b62af51975fb9dc572b7e73eb1b255ed5edcd7cee0";
+    const TEST_MESSAGE: vector<u8> = b"test message";
+    const TEST_SIGNATURE: vector<u8> = x"20ebb15d70abc18abf636d77fa86a89e32596f90569b09e732b556bbc2f8afea07feff8d1beb18f7acd7ef1d3f914163fe03a3b4206f61f932e2d22a21278a01";
 
     #[test_only]
     fun setup_aptos_coin(framework: &signer): coin::MintCapability<AptosCoin> {
@@ -36,6 +38,7 @@ module pyth_lazer::pyth_lazer_tests {
     fun setup(): (signer, signer, signer) {
         // Create test accounts
         let framework = account::create_account_for_test(@aptos_framework);
+        let lazer_contract = account::create_account_for_test(@pyth_lazer);
         let top_authority = account::create_account_for_test(TOP_AUTHORITY);
         let treasury = account::create_account_for_test(TREASURY);
         let user = account::create_account_for_test(USER);
@@ -57,15 +60,32 @@ module pyth_lazer::pyth_lazer_tests {
         timestamp::set_time_has_started_for_testing(&framework);
 
         // Initialize contract
-        pyth_lazer::initialize(&top_authority, TOP_AUTHORITY, TREASURY);
+        pyth_lazer::initialize(&lazer_contract, TOP_AUTHORITY, TREASURY);
 
         (top_authority, treasury, user)
     }
 
     #[test]
     fun test_initialize() {
-        let (top_authority, _treasury, _) = setup();
+        let (_top_authority, _treasury, _) = setup();
         // Contract is already initialized in setup
+    }
+
+    #[test]
+    fun test_verify_message_success() {
+        let (top_authority, _treasury, user) = setup();
+
+        // Add a valid signer
+        let expires_at = timestamp::now_seconds() + 1000;
+        pyth_lazer::update_trusted_signer(&top_authority, TEST_PUBKEY, expires_at);
+
+        // Create a valid ed25519 signature
+        let signature = ed25519::new_signature_from_bytes(TEST_SIGNATURE);
+        let pubkey = ed25519::new_unvalidated_public_key_from_bytes(TEST_PUBKEY);
+        assert!(ed25519::signature_verify_strict(&signature, &pubkey, TEST_MESSAGE), 0);
+
+        // This should succeed as we have a valid signer and sufficient fee
+        pyth_lazer::verify_message(&user, TEST_MESSAGE, TEST_SIGNATURE, TEST_PUBKEY);
     }
 
     #[test]
