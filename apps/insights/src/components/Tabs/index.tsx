@@ -9,7 +9,7 @@ import { useSelectedLayoutSegment, usePathname } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
-import { LayoutTransition } from "../LayoutTransition";
+// import { LayoutTransition } from "../LayoutTransition";
 
 export const TabRoot = (
   props: Omit<ComponentProps<typeof UnstyledTabs>, "selectedKey">,
@@ -44,42 +44,43 @@ export const Tabs = ({ prefix, items, ...props }: TabsProps) => {
   return <TabList pathname={pathname} items={mappedItems} {...props} />;
 };
 
-export const TabPanel = ({
-  children,
-  ...props
-}: Omit<ComponentProps<typeof UnstyledTabPanel>, "id">) => {
+export const TabPanel = (
+  props: Omit<ComponentProps<typeof UnstyledTabPanel>, "id">,
+) => {
   const tabId = useSelectedLayoutSegment() ?? "";
 
-  return (
-    <UnstyledTabPanel key="tabpanel" id={tabId} {...props}>
-      {(args) => (
-        <LayoutTransition
-          variants={{
-            initial: ({ segment }) => ({
-              opacity: 0,
-              x: segment === null ? "-2%" : "2%",
-            }),
-            exit: ({ segment }) => ({
-              opacity: 0,
-              x: segment === null ? "2%" : "-2%",
-              transition: {
-                x: { type: "spring", bounce: 0 },
-              },
-            }),
-          }}
-          initial="initial"
-          animate={{
-            opacity: 1,
-            x: 0,
-            transition: {
-              x: { type: "spring", bounce: 0 },
-            },
-          }}
-          exit="exit"
-        >
-          {typeof children === "function" ? children(args) : children}
-        </LayoutTransition>
-      )}
-    </UnstyledTabPanel>
-  );
+  return <UnstyledTabPanel key="tabpanel" id={tabId} {...props} />;
+
+  // return (
+  //   <UnstyledTabPanel key="tabpanel" id={tabId} {...props}>
+  //     {(args) => (
+  //       <LayoutTransition
+  //         variants={{
+  //           initial: ({ segment }) => ({
+  //             opacity: 0,
+  //             x: segment === null ? "-2%" : "2%",
+  //           }),
+  //           exit: ({ segment }) => ({
+  //             opacity: 0,
+  //             x: segment === null ? "2%" : "-2%",
+  //             transition: {
+  //               x: { type: "spring", bounce: 0 },
+  //             },
+  //           }),
+  //         }}
+  //         initial="initial"
+  //         animate={{
+  //           opacity: 1,
+  //           x: 0,
+  //           transition: {
+  //             x: { type: "spring", bounce: 0 },
+  //           },
+  //         }}
+  //         exit="exit"
+  //       >
+  //         {typeof children === "function" ? children(args) : children}
+  //       </LayoutTransition>
+  //     )}
+  //   </UnstyledTabPanel>
+  // );
 };
