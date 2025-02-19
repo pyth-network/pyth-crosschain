@@ -6,7 +6,6 @@ module pyth_lazer::pyth_lazer_tests {
     use aptos_framework::coin;
     use aptos_framework::timestamp;
     use aptos_framework::aptos_coin::AptosCoin;
-    use aptos_std::ed25519;
     use pyth_lazer::pyth_lazer::{
         Self,
         EINVALID_SIGNER,
@@ -77,14 +76,6 @@ module pyth_lazer::pyth_lazer_tests {
         // Add a valid signer
         let expires_at = timestamp::now_seconds() + 1000;
         pyth_lazer::update_trusted_signer(&top_authority, TEST_PUBKEY, expires_at);
-
-        // Create a valid ed25519 signature
-        let signature = ed25519::new_signature_from_bytes(TEST_SIGNATURE);
-        let pubkey = ed25519::new_unvalidated_public_key_from_bytes(TEST_PUBKEY);
-        assert!(
-            ed25519::signature_verify_strict(&signature, &pubkey, TEST_MESSAGE),
-            0
-        );
 
         // This should succeed as we have a valid signer and sufficient fee
         pyth_lazer::verify_message(
