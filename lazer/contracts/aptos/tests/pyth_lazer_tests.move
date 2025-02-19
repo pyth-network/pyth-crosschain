@@ -7,7 +7,12 @@ module pyth_lazer::pyth_lazer_tests {
     use aptos_framework::timestamp;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_std::ed25519;
-    use pyth_lazer::pyth_lazer::{Self, EINVALID_SIGNER, EINSUFFICIENT_FEE};
+    use pyth_lazer::pyth_lazer::{
+        Self,
+        EINVALID_SIGNER,
+        EINSUFFICIENT_FEE,
+        EINVALID_SIGNATURE
+    };
 
     // Test accounts
     const TOP_AUTHORITY: address =
@@ -66,7 +71,7 @@ module pyth_lazer::pyth_lazer_tests {
     }
 
     #[test]
-    fun test_verify_message_succeeds() {
+    fun test_verify_valid_message_succeeds() {
         let (top_authority, _treasury, user) = setup();
 
         // Add a valid signer
@@ -85,6 +90,28 @@ module pyth_lazer::pyth_lazer_tests {
         pyth_lazer::verify_message(
             &user,
             TEST_MESSAGE,
+            TEST_SIGNATURE,
+            TEST_PUBKEY
+        );
+    }
+
+    #[test]
+    #[expected_failure(abort_code = EINVALID_SIGNATURE)]
+    fun test_verify_invalid_message_fails() {
+        let (top_authority, _treasury, user) = setup();
+
+        // Add a valid signer
+        let expires_at = timestamp::now_seconds() + 1000;
+        pyth_lazer::update_trusted_signer(&top_authority, TEST_PUBKEY, expires_at);
+
+        // Use a different message than what was signed
+        let invalid_message = b"different message";
+
+        // This should fail with EINVALID_SIGNATURE since the signature
+        // was created for TEST_MESSAGE, not invalid_message
+        pyth_lazer::verify_message(
+            &user,
+            invalid_message,
             TEST_SIGNATURE,
             TEST_PUBKEY
         );
