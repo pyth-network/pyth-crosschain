@@ -167,7 +167,7 @@ impl MessageBufferTestContext {
                 Err(e.into())
             }
             Err(e) => {
-                println!("proces_ixs Error: {:?}", e);
+                println!("process_ixs Error: {:?}", e);
                 panic!("Non Custom Ix Error in process_ixs{:?}", e);
             }
             Ok(_) => Ok(()),
