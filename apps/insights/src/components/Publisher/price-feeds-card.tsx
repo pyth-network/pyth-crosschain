@@ -5,6 +5,7 @@ import { type ComponentProps, useCallback } from "react";
 import { useSelectPriceFeed } from "./price-feed-drawer-provider";
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
 import type { Cluster } from "../../services/pyth";
+import { AssetClassTag } from "../AssetClassTag";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PriceFeedTag } from "../PriceFeedTag";
 
@@ -37,6 +38,15 @@ export const PriceFeedsCard = ({
   return (
     <PriceComponentsCard
       onPriceComponentAction={onPriceComponentAction}
+      extraColumns={[
+        {
+          id: "assetClass",
+          name: "ASSET CLASS",
+          alignment: "left",
+          allowsSorting: true,
+        },
+      ]}
+      nameWidth={90}
       priceComponents={priceFeeds.map((feed) => {
         const contextFeed = feeds.get(feed.symbol);
         if (contextFeed) {
@@ -53,6 +63,7 @@ export const PriceFeedsCard = ({
             publisherKey,
             name: <PriceFeedTag compact symbol={feed.symbol} />,
             nameAsString: contextFeed.displaySymbol,
+            assetClass: <AssetClassTag symbol={feed.symbol} />,
           };
         } else {
           throw new NoSuchFeedError(feed.symbol);

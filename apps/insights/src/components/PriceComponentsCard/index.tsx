@@ -10,6 +10,7 @@ import { Select } from "@pythnetwork/component-library/Select";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
 import {
   type RowConfig,
+  type ColumnConfig,
   type SortDescriptor,
   Table,
 } from "@pythnetwork/component-library/Table";
@@ -37,7 +38,7 @@ import { Status as StatusComponent } from "../Status";
 
 const SCORE_WIDTH = 32;
 
-type Props<T extends PriceComponent> = {
+type Props<U extends string, T extends PriceComponent & Record<U, unknown>> = {
   className?: string | undefined;
   priceComponents: T[];
   metricsTime?: Date | undefined;
@@ -47,6 +48,8 @@ type Props<T extends PriceComponent> = {
   onPriceComponentAction: (component: T) => void;
   toolbarExtra?: ReactNode;
   assetClass?: string | undefined;
+  extraColumns?: ColumnConfig<U>[] | undefined;
+  nameWidth?: number | undefined;
 };
 
 type PriceComponent = {
@@ -63,11 +66,14 @@ type PriceComponent = {
   nameAsString: string;
 };
 
-export const PriceComponentsCard = <T extends PriceComponent>({
+export const PriceComponentsCard = <
+  U extends string,
+  T extends PriceComponent & Record<U, unknown>,
+>({
   priceComponents,
   onPriceComponentAction,
   ...props
-}: Props<T>) => (
+}: Props<U, T>) => (
   <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
     <ResolvedPriceComponentsCard
       priceComponents={priceComponents}
@@ -77,11 +83,14 @@ export const PriceComponentsCard = <T extends PriceComponent>({
   </Suspense>
 );
 
-export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
+export const ResolvedPriceComponentsCard = <
+  U extends string,
+  T extends PriceComponent & Record<U, unknown>,
+>({
   priceComponents,
   onPriceComponentAction,
   ...props
-}: Props<T>) => {
+}: Props<U, T>) => {
   const logger = useLogger();
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
@@ -174,6 +183,12 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
         id: component.id,
         data: {
           name: component.name,
+          ...Object.fromEntries(
+            props.extraColumns?.map((column) => [
+              column.id,
+              component[column.id],
+            ]) ?? [],
+          ),
           ...(showQuality
             ? {
                 score: component.score !== undefined && (
@@ -228,7 +243,7 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
           onPriceComponentAction(component);
         },
       })),
-    [paginatedItems, showQuality, onPriceComponentAction],
+    [paginatedItems, showQuality, onPriceComponentAction, props.extraColumns],
   );
 
   const updateStatus = useCallback(
@@ -273,8 +288,11 @@ export const ResolvedPriceComponentsCard = <T extends PriceComponent>({
   );
 };
 
-type PriceComponentsCardProps<T extends PriceComponent> = Pick<
-  Props<T>,
+type PriceComponentsCardProps<
+  U extends string,
+  T extends PriceComponent & Record<U, unknown>,
+> = Pick<
+  Props<U, T>,
   | "className"
   | "metricsTime"
   | "nameLoadingSkeleton"
@@ -282,6 +300,8 @@ type PriceComponentsCardProps<T extends PriceComponent> = Pick<
   | "searchPlaceholder"
   | "toolbarExtra"
   | "assetClass"
+  | "extraColumns"
+  | "nameWidth"
 > &
   (
     | { isLoading: true }
@@ -306,15 +326,20 @@ type PriceComponentsCardProps<T extends PriceComponent> = Pick<
       }
   );
 
-export const PriceComponentsCardContents = <T extends PriceComponent>({
+export const PriceComponentsCardContents = <
+  U extends string,
+  T extends PriceComponent & Record<U, unknown>,
+>({
   className,
   metricsTime,
   nameLoadingSkeleton,
   label,
   searchPlaceholder,
   toolbarExtra,
+  extraColumns,
+  nameWidth,
   ...props
-}: PriceComponentsCardProps<T>) => {
+}: PriceComponentsCardProps<U, T>) => {
   const collator = useCollator();
   return (
     <Card
@@ -408,7 +433,9 @@ export const PriceComponentsCardContents = <T extends PriceComponent>({
             isRowHeader: true,
             loadingSkeleton: nameLoadingSkeleton,
             allowsSorting: true,
+            ...(nameWidth !== undefined && { width: nameWidth }),
           },
+          ...(extraColumns ?? []),
           ...otherColumns(props),
           {
             id: "status",
