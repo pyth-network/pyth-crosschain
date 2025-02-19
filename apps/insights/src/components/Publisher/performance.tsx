@@ -8,7 +8,7 @@ import { Link } from "@pythnetwork/component-library/Link";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
+import type { ReactNode, ComponentProps } from "react";
 
 import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./performance.module.scss";
@@ -119,100 +119,153 @@ export const Performance = async ({ params }: Props) => {
   return rows === undefined ? (
     notFound()
   ) : (
-    <div className={styles.performance}>
-      <Card
-        icon={<Broadcast />}
-        title="Publishers Ranking"
-        className={styles.publishersRankingCard ?? ""}
-      >
-        <EntityList
-          label="Publishers Ranking"
-          className={styles.publishersRankingList ?? ""}
-          fields={[
-            { id: "ranking", name: "Ranking" },
-            { id: "averageScore", name: "Average Score" },
-            { id: "activeFeeds", name: "Active Feeds" },
-            { id: "inactiveFeeds", name: "Inactive Feeds" },
-          ]}
-          rows={rows.map((row) => ({
-            ...row,
-            textValue: row.nameAsString,
-            header: row.data.name,
-          }))}
-        />
-        <Table
-          rounded
-          fill
-          className={styles.publishersRankingTable ?? ""}
-          label="Publishers Ranking"
-          columns={[
-            {
-              id: "ranking",
-              name: "RANKING",
-              width: 25,
-            },
-            {
-              id: "name",
-              name: "NAME / ID",
-              isRowHeader: true,
-              alignment: "left",
-            },
-            {
-              id: "activeFeeds",
-              name: (
-                <>
-                  ACTIVE FEEDS
-                  <ExplainActive />
-                </>
-              ),
-              alignment: "center",
-              width: 30,
-            },
-            {
-              id: "inactiveFeeds",
-              name: (
-                <>
-                  INACTIVE FEEDS
-                  <ExplainInactive />
-                </>
-              ),
-              alignment: "center",
-              width: 30,
-            },
-            {
-              id: "averageScore",
-              name: (
-                <>
-                  AVERAGE SCORE
-                  <ExplainAverage scoreTime={publishers[0]?.scoreTime} />
-                </>
-              ),
-              alignment: "right",
-              width: PUBLISHER_SCORE_WIDTH,
-            },
-          ]}
-          rows={rows}
-        />
-      </Card>
-      <TopFeedsCard
-        title="High-Performing"
-        emptyIcon={<SmileySad />}
-        emptyHeader="Oh no!"
-        emptyBody="This publisher has no high performing feeds"
-        emptyVariant="error"
-        feeds={highPerformingFeeds}
-      />
-      <TopFeedsCard
-        title="Low-Performing"
-        emptyIcon={<Confetti />}
-        emptyHeader="Looking good!"
-        emptyBody="This publisher has no low performing feeds"
-        emptyVariant="success"
-        feeds={lowPerformingFeeds}
-      />
-    </div>
+    <PerformanceImpl
+      publishers={rows}
+      highPerformingFeeds={highPerformingFeeds}
+      lowPerformingFeeds={lowPerformingFeeds}
+      averageScoreTime={publishers[0]?.scoreTime}
+    />
   );
 };
+
+export const PerformanceLoading = () => <PerformanceImpl isLoading />;
+
+type PerformanceImplProps =
+  | { isLoading: true }
+  | {
+      isLoading?: false;
+      publishers: (NonNullable<
+        ComponentProps<
+          typeof Table<
+            | "ranking"
+            | "averageScore"
+            | "activeFeeds"
+            | "inactiveFeeds"
+            | "name"
+          >
+        >["rows"]
+      >[number] & {
+        nameAsString: string;
+      })[];
+      highPerformingFeeds: ReturnType<typeof getFeedRows>;
+      lowPerformingFeeds: ReturnType<typeof getFeedRows>;
+      averageScoreTime?: Date | undefined;
+    };
+
+const PerformanceImpl = (props: PerformanceImplProps) => (
+  <div className={styles.performance}>
+    <Card
+      icon={<Broadcast />}
+      title="Publishers Ranking"
+      className={styles.publishersRankingCard ?? ""}
+    >
+      <EntityList
+        label="Publishers Ranking"
+        className={styles.publishersRankingList ?? ""}
+        fields={[
+          { id: "ranking", name: "Ranking" },
+          { id: "averageScore", name: "Average Score" },
+          { id: "activeFeeds", name: "Active Feeds" },
+          { id: "inactiveFeeds", name: "Inactive Feeds" },
+        ]}
+        {...(props.isLoading
+          ? { isLoading: true }
+          : {
+              rows: props.publishers.map((publisher) => ({
+                ...publisher,
+                textValue: publisher.nameAsString,
+                header: publisher.data.name,
+              })),
+            })}
+      />
+      <Table
+        rounded
+        fill
+        className={styles.publishersRankingTable ?? ""}
+        label="Publishers Ranking"
+        columns={[
+          {
+            id: "ranking",
+            name: "RANKING",
+            width: 25,
+          },
+          {
+            id: "name",
+            name: "NAME / ID",
+            isRowHeader: true,
+            alignment: "left",
+          },
+          {
+            id: "activeFeeds",
+            name: (
+              <>
+                ACTIVE FEEDS
+                <ExplainActive />
+              </>
+            ),
+            alignment: "center",
+            width: 30,
+          },
+          {
+            id: "inactiveFeeds",
+            name: (
+              <>
+                INACTIVE FEEDS
+                <ExplainInactive />
+              </>
+            ),
+            alignment: "center",
+            width: 30,
+          },
+          {
+            id: "averageScore",
+            name: (
+              <>
+                AVERAGE SCORE
+                <ExplainAverage
+                  {...(!props.isLoading && {
+                    scoreTime: props.averageScoreTime,
+                  })}
+                />
+              </>
+            ),
+            alignment: "right",
+            width: PUBLISHER_SCORE_WIDTH,
+          },
+        ]}
+        {...(props.isLoading
+          ? { isLoading: true }
+          : {
+              rows: props.publishers,
+            })}
+      />
+    </Card>
+    <TopFeedsCard
+      title="High-Performing"
+      emptyIcon={<SmileySad />}
+      emptyHeader="Oh no!"
+      emptyBody="This publisher has no high performing feeds"
+      emptyVariant="error"
+      {...(props.isLoading
+        ? { isLoading: true }
+        : {
+            feeds: props.highPerformingFeeds,
+          })}
+    />
+    <TopFeedsCard
+      title="Low-Performing"
+      emptyIcon={<Confetti />}
+      emptyHeader="Looking good!"
+      emptyBody="This publisher has no low performing feeds"
+      emptyVariant="success"
+      {...(props.isLoading
+        ? { isLoading: true }
+        : {
+            feeds: props.lowPerformingFeeds,
+          })}
+    />
+  </div>
+);
 
 const getFeedRows = (
   priceFeeds: (Omit<
@@ -271,8 +324,10 @@ type TopFeedsCardProps = {
   emptyHeader: string;
   emptyBody: string;
   emptyVariant: NoResultsVariant;
-  feeds: ReturnType<typeof getFeedRows>;
-};
+} & (
+  | { isLoading: true }
+  | { isLoading?: false | undefined; feeds: ReturnType<typeof getFeedRows> }
+);
 
 const TopFeedsCard = ({
   title,
@@ -280,21 +335,21 @@ const TopFeedsCard = ({
   emptyHeader,
   emptyBody,
   emptyVariant,
-  feeds,
+  ...props
 }: TopFeedsCardProps) => (
   <Card icon={<Network />} title={`${title} Feeds`}>
-    {feeds.length === 0 ? (
+    {props.isLoading || props.feeds.length > 0 ? (
+      <TopFeedsTable
+        label={`${title} Feeds`}
+        publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
+        {...(props.isLoading ? { isLoading: true } : { rows: props.feeds })}
+      />
+    ) : (
       <NoResults
         icon={emptyIcon}
         header={emptyHeader}
         body={emptyBody}
         variant={emptyVariant}
-      />
-    ) : (
-      <TopFeedsTable
-        label={`${title} Feeds`}
-        publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
-        rows={feeds}
       />
     )}
   </Card>

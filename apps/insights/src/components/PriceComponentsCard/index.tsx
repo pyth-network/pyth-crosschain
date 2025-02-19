@@ -347,11 +347,9 @@ export const PriceComponentsCardContents = <
       title={
         <>
           <span>{label}</span>
-          {!props.isLoading && (
-            <Badge style="filled" variant="neutral" size="md">
-              {props.numResults}
-            </Badge>
-          )}
+          <Badge style="filled" variant="neutral" size="md">
+            {!props.isLoading && props.numResults}
+          </Badge>
         </>
       }
       toolbar={
