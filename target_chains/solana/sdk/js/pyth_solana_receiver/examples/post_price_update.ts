@@ -26,7 +26,18 @@ async function main() {
     `Sending transactions from account: ${keypair.publicKey.toBase58()}`
   );
   const wallet = new Wallet(keypair);
-  const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+  // Optionally use an account lookup table to reduce tx sizes.
+  const addressLookupTableAccount = new PublicKey(
+    "5DNCErWQFBdvCxWQXaC1mrEFsvL3ftrzZ2gVZWNybaSX"
+  );
+  // Use a stable treasury ID of 0, since its address is indexed in the address lookup table.
+  // This is a tx size optimization and is optional. If not provided, a random treasury account will be used.
+  const treasuryId = 1;
+  const pythSolanaReceiver = new PythSolanaReceiver({
+    connection,
+    wallet,
+    treasuryId,
+  });
 
   // Get the price update from hermes
   const priceUpdateData = await getPriceUpdateData();
@@ -35,9 +46,15 @@ async function main() {
   // If closeUpdateAccounts = true, the builder will automatically generate instructions to close the ephemeral price update accounts
   // at the end of the transaction. Closing the accounts will reclaim their rent.
   // The example is using closeUpdateAccounts = false so you can easily look up the price update account in an explorer.
-  const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
-    closeUpdateAccounts: false,
-  });
+  const lookupTableAccount =
+    (await connection.getAddressLookupTable(addressLookupTableAccount)).value ??
+    undefined;
+  const transactionBuilder = pythSolanaReceiver.newTransactionBuilder(
+    {
+      closeUpdateAccounts: false,
+    },
+    lookupTableAccount
+  );
   // Post the price updates to ephemeral accounts, one per price feed.
   await transactionBuilder.addPostPriceUpdates(priceUpdateData);
   console.log(

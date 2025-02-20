@@ -14,7 +14,7 @@ import {
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import { Logger } from "pino";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { AddressLookupTableAccount, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const HEALTH_CHECK_TIMEOUT_SECONDS = 60;
 
@@ -97,7 +97,8 @@ export class SolanaPricePusher implements IPricePusher {
     private hermesClient: HermesClient,
     private logger: Logger,
     private shardId: number,
-    private computeUnitPriceMicroLamports: number
+    private computeUnitPriceMicroLamports: number,
+    private addressLookupTableAccount?: AddressLookupTableAccount
   ) {}
 
   async updatePriceFeed(priceIds: string[]): Promise<void> {
@@ -126,9 +127,12 @@ export class SolanaPricePusher implements IPricePusher {
       return;
     }
 
-    const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
-      closeUpdateAccounts: true,
-    });
+    const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder(
+      {
+        closeUpdateAccounts: true,
+      },
+      this.addressLookupTableAccount
+    );
     await transactionBuilder.addUpdatePriceFeed(
       priceFeedUpdateData,
       this.shardId
@@ -164,7 +168,8 @@ export class SolanaPricePusherJito implements IPricePusher {
     private maxJitoTipLamports: number,
     private searcherClient: SearcherClient,
     private jitoBundleSize: number,
-    private updatesPerJitoBundle: number
+    private updatesPerJitoBundle: number,
+    private addressLookupTableAccount?: AddressLookupTableAccount
   ) {}
 
   async getRecentJitoTipLamports(): Promise<number | undefined> {
@@ -215,9 +220,12 @@ export class SolanaPricePusherJito implements IPricePusher {
     }
 
     for (let i = 0; i < priceIds.length; i += this.updatesPerJitoBundle) {
-      const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder({
-        closeUpdateAccounts: true,
-      });
+      const transactionBuilder = this.pythSolanaReceiver.newTransactionBuilder(
+        {
+          closeUpdateAccounts: true,
+        },
+        this.addressLookupTableAccount
+      );
       await transactionBuilder.addUpdatePriceFeed(
         priceFeedUpdateData.map((x) => {
           return sliceAccumulatorUpdateData(

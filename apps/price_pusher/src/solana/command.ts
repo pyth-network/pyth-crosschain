@@ -81,6 +81,17 @@ export default {
       type: "number",
       default: 6,
     } as Options,
+    "address-lookup-table-account": {
+      description: "The pubkey of the ALT to use when updating price feeds",
+      type: "string",
+      optional: true,
+    } as Options,
+    "treasury-id": {
+      description:
+        "The treasuryId to use. Useful when the corresponding treasury account is indexed in the ALT passed to --address-lookup-table-account. This is a tx size optimization and is optional; if not set, a random treasury account will be used.",
+      type: "number",
+      optional: true,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
@@ -107,6 +118,8 @@ export default {
       maxJitoTipLamports,
       jitoBundleSize,
       updatesPerJitoBundle,
+      addressLookupTableAccount,
+      treasuryId,
       logLevel,
       controllerLogLevel,
     } = argv;
@@ -145,11 +158,20 @@ export default {
       )
     );
 
+    const connection = new Connection(endpoint, "processed");
     const pythSolanaReceiver = new PythSolanaReceiver({
-      connection: new Connection(endpoint, "processed"),
+      connection,
       wallet,
       pushOracleProgramId: new PublicKey(pythContractAddress),
+      treasuryId: treasuryId,
     });
+
+    // Fetch the account lookup table if provided
+    const lookupTableAccount = addressLookupTableAccount
+      ? await connection
+          .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
+          .then((result) => result.value ?? undefined)
+      : undefined;
 
     let solanaPricePusher;
     if (jitoTipLamports) {
@@ -168,7 +190,8 @@ export default {
         maxJitoTipLamports,
         jitoClient,
         jitoBundleSize,
-        updatesPerJitoBundle
+        updatesPerJitoBundle,
+        lookupTableAccount
       );
 
       onBundleResult(jitoClient, logger.child({ module: "JitoClient" }));
@@ -178,7 +201,8 @@ export default {
         hermesClient,
         logger.child({ module: "SolanaPricePusher" }),
         shardId,
-        computeUnitPriceMicroLamports
+        computeUnitPriceMicroLamports,
+        lookupTableAccount
       );
     }
 

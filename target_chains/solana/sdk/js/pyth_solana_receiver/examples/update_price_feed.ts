@@ -11,6 +11,7 @@ const SOL_PRICE_FEED_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 const ETH_PRICE_FEED_ID =
   "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace";
+const PRICE_FEED_IDS = [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID];
 
 let keypairFile = "";
 if (process.env["SOLANA_KEYPAIR"]) {
@@ -26,24 +27,45 @@ async function main() {
     `Sending transactions from account: ${keypair.publicKey.toBase58()}`
   );
   const wallet = new Wallet(keypair);
-  const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+
+  // Optionally use an account lookup table to reduce tx sizes.
+  const addressLookupTableAccount = new PublicKey(
+    "5DNCErWQFBdvCxWQXaC1mrEFsvL3ftrzZ2gVZWNybaSX"
+  );
+  // Use a stable treasury ID of 0, since its address is indexed in the address lookup table.
+  // This is a tx size optimization and is optional. If not provided, a random treasury account will be used.
+  const treasuryId = 1;
+  const pythSolanaReceiver = new PythSolanaReceiver({
+    connection,
+    wallet,
+    treasuryId,
+  });
 
   // Get the price update from hermes
-  const priceUpdateData = await getPriceUpdateData();
+  const priceUpdateData = await getPriceUpdateData(PRICE_FEED_IDS);
   console.log(`Posting price update: ${priceUpdateData}`);
 
   // The shard indicates which set of price feed accounts you wish to update.
   const shardId = 1;
+  const lookupTableAccount =
+    (await connection.getAddressLookupTable(addressLookupTableAccount)).value ??
+    undefined;
+  const transactionBuilder = pythSolanaReceiver.newTransactionBuilder(
+    {},
+    lookupTableAccount
+  );
 
-  const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({});
   // Update the price feed accounts for the feed ids in priceUpdateData (in this example, SOL and ETH) and shard id.
   await transactionBuilder.addUpdatePriceFeed(priceUpdateData, shardId);
-  console.log(
-    "The SOL/USD price update will get posted to:",
-    pythSolanaReceiver
-      .getPriceFeedAccountAddress(shardId, SOL_PRICE_FEED_ID)
-      .toBase58()
-  );
+  // Print all price feed accounts that will be updated
+  for (const priceFeedId of PRICE_FEED_IDS) {
+    console.log(
+      `The ${priceFeedId} price update will get posted to:`,
+      pythSolanaReceiver
+        .getPriceFeedAccountAddress(shardId, priceFeedId)
+        .toBase58()
+    );
+  }
 
   await transactionBuilder.addPriceConsumerInstructions(
     async (
@@ -69,16 +91,12 @@ async function main() {
 }
 
 // Fetch price update data from Hermes
-async function getPriceUpdateData() {
-  const priceServiceConnection = new HermesClient(
-    "https://hermes.pyth.network/",
-    {}
-  );
+async function getPriceUpdateData(price_feed_ids: string[]) {
+  const hermesClient = new HermesClient("https://hermes.pyth.network/", {});
 
-  const response = await priceServiceConnection.getLatestPriceUpdates(
-    [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
-    { encoding: "base64" }
-  );
+  const response = await hermesClient.getLatestPriceUpdates(price_feed_ids, {
+    encoding: "base64",
+  });
 
   return response.binary.data;
 }
