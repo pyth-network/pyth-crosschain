@@ -74,4 +74,12 @@ module pyth::data_source {
     public fun emitter_address(data_source: &DataSource): ExternalAddress{
         data_source.emitter_address
     }
+
+    #[test_only]
+    public fun new_data_source_for_test(emitter_chain: u64, emitter_address: ExternalAddress): DataSource {
+        DataSource {
+            emitter_chain,
+            emitter_address,
+        }
+    }
 }

@@ -365,6 +365,31 @@ module pyth::state {
         sui::dynamic_field::add(&mut self.id, CurrentDigest {}, bytes32::from_bytes(b"new build"));
     }
 
+    #[test_only]
+    public fun register_price_info_object_for_test(self: &mut State, price_identifier: PriceIdentifier, id: ID) {
+        price_info::add(&mut self.id, price_identifier, id);
+    }
+
+    #[test_only]
+    public fun new_state_for_test(
+        upgrade_cap: UpgradeCap,
+        governance_data_source: DataSource,
+        stale_price_threshold: u64,
+        base_update_fee: u64,
+        ctx: &mut TxContext
+    ): State {
+        State {
+            id: object::new(ctx),
+            upgrade_cap,
+            governance_data_source,
+            stale_price_threshold,
+            base_update_fee,
+            fee_recipient_address: tx_context::sender(ctx),
+            last_executed_governance_sequence: 0,
+            consumed_vaas: consumed_vaas::new(ctx),
+        }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     //
     //  Deprecated
