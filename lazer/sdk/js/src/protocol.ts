@@ -6,7 +6,8 @@ export type PriceFeedProperty =
   | "bestBidPrice"
   | "bestAskPrice"
   | "exponent"
-  | "publisherCount";
+  | "publisherCount"
+  | "confidence";
 export type Channel = "real_time" | "fixed_rate@50ms" | "fixed_rate@200ms";
 
 export type Request =
@@ -33,6 +34,7 @@ export type ParsedFeedPayload = {
   bestAskPrice?: string | undefined;
   publisherCount?: number | undefined;
   exponent?: number | undefined;
+  confidence?: string | undefined;
 };
 
 export type ParsedPayload = {

@@ -35,6 +35,7 @@ pub enum PayloadPropertyValue {
     BestAskPrice(Option<Price>),
     PublisherCount(Option<u16>),
     Exponent(i16),
+    Confidence(Option<Price>),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -78,6 +79,9 @@ impl PayloadData {
                             PriceFeedProperty::Exponent => {
                                 PayloadPropertyValue::Exponent(*exponent)
                             }
+                            PriceFeedProperty::Confidence => {
+                                PayloadPropertyValue::Confidence(feed.confidence)
+                            }
                         })
                         .collect(),
                 })
@@ -114,6 +118,10 @@ impl PayloadData {
                     PayloadPropertyValue::Exponent(exponent) => {
                         writer.write_u8(PriceFeedProperty::Exponent as u8)?;
                         writer.write_i16::<BO>(*exponent)?;
+                    }
+                    PayloadPropertyValue::Confidence(confidence) => {
+                        writer.write_u8(PriceFeedProperty::Confidence as u8)?;
+                        write_option_price::<BO>(&mut writer, *confidence)?;
                     }
                 }
             }
@@ -157,6 +165,8 @@ impl PayloadData {
                     PayloadPropertyValue::PublisherCount(read_option_u16::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::Exponent as u8 {
                     PayloadPropertyValue::Exponent(reader.read_i16::<BO>()?)
+                } else if property == PriceFeedProperty::Confidence as u8 {
+                    PayloadPropertyValue::Confidence(read_option_price::<BO>(&mut reader)?)
                 } else {
                     bail!("unknown property");
                 };

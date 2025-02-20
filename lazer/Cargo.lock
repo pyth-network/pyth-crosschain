@@ -3771,33 +3771,13 @@ dependencies = [
  "futures-util",
  "hex",
  "libsecp256k1 0.7.1",
- "pyth-lazer-protocol 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-protocol 0.5.0",
  "serde",
  "serde_json",
  "tokio",
  "tokio-tungstenite",
  "tracing",
  "url",
-]
-
-[[package]]
-name = "pyth-lazer-protocol"
-version = "0.5.0"
-dependencies = [
- "alloy-primitives",
- "anyhow",
- "base64 0.22.1",
- "bincode",
- "bs58 0.5.1",
- "byteorder",
- "derive_more",
- "ed25519-dalek 2.1.1",
- "hex",
- "itertools 0.13.0",
- "libsecp256k1 0.7.1",
- "rust_decimal",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -3817,6 +3797,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-lazer-protocol"
+version = "0.5.1"
+dependencies = [
+ "alloy-primitives",
+ "anyhow",
+ "base64 0.22.1",
+ "bincode",
+ "bs58 0.5.1",
+ "byteorder",
+ "derive_more",
+ "ed25519-dalek 2.1.1",
+ "hex",
+ "itertools 0.13.0",
+ "libsecp256k1 0.7.1",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "pyth-lazer-solana-contract"
 version = "0.3.0"
 dependencies = [
@@ -3824,7 +3824,7 @@ dependencies = [
  "bytemuck",
  "byteorder",
  "hex",
- "pyth-lazer-protocol 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-protocol 0.5.0",
  "solana-program-test",
  "solana-sdk",
  "thiserror 2.0.3",
