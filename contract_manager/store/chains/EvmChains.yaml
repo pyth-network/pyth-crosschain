@@ -869,3 +869,8 @@
   rpcUrl: https://rpc.hyperliquid.xyz/evm
   networkId: 999
   type: EvmChain
+- id: bittensor_mainnet
+  mainnet: true
+  rpcUrl: https://bittensor-finney.api.onfinality.io/public
+  networkId: 964
+  type: EvmChain
