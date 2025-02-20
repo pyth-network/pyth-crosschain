@@ -88,7 +88,12 @@ export class NearWormholeContract extends WormholeContract {
 export class NearPriceFeedContract extends PriceFeedContract {
   public static type = "NearPriceFeedContract";
 
-  constructor(public chain: NearChain, public address: string) {
+  constructor(
+    public chain: NearChain,
+    public address: string,
+    public governanceDataSource: DataSource,
+    public lastExecutedGovernanceSequence: number
+  ) {
     super();
   }
 
@@ -108,13 +113,22 @@ export class NearPriceFeedContract extends PriceFeedContract {
     return {
       chain: this.chain.getId(),
       address: this.address,
+      governanceDataSourceChain: this.governanceDataSource.emitterChain,
+      governanceDataSourceAddress: this.governanceDataSource.emitterAddress,
+      lastExecutedGovernanceSequence: this.lastExecutedGovernanceSequence,
       type: NearPriceFeedContract.type,
     };
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: {
+      type: string;
+      address: string;
+      governanceDataSourceAddress: string;
+      governanceDataSourceChain: number;
+      lastExecutedGovernanceSequence: number;
+    }
   ): NearPriceFeedContract {
     if (parsed.type !== NearPriceFeedContract.type) {
       throw new Error("Invalid type");
@@ -122,7 +136,15 @@ export class NearPriceFeedContract extends PriceFeedContract {
     if (!(chain instanceof NearChain)) {
       throw new Error(`Wrong chain type ${chain}`);
     }
-    return new NearPriceFeedContract(chain, parsed.address);
+    return new NearPriceFeedContract(
+      chain,
+      parsed.address,
+      {
+        emitterAddress: parsed.governanceDataSourceAddress,
+        emitterChain: parsed.governanceDataSourceChain,
+      },
+      parsed.lastExecutedGovernanceSequence
+    );
   }
 
   async getContractNearAccount(
@@ -251,14 +273,12 @@ export class NearPriceFeedContract extends PriceFeedContract {
   getBaseUpdateFee(): Promise<{ amount: string; denom?: string }> {
     throw new Error("near contract doesn't implement getBaseUpdateFee method");
   }
-  getLastExecutedGovernanceSequence(): Promise<number> {
-    throw new Error(
-      "near contract doesn't implement getLastExecutedGovernanceSequence method"
-    );
+  async getLastExecutedGovernanceSequence(): Promise<number> {
+    // near contract doesn't implement getLastExecutedGovernanceSequence method
+    return this.lastExecutedGovernanceSequence;
   }
-  getGovernanceDataSource(): Promise<DataSource> {
-    throw new Error(
-      "near contract doesn't implement getGovernanceDataSource method"
-    );
+  async getGovernanceDataSource(): Promise<DataSource> {
+    // near contract doesn't implement getGovernanceDataSource method
+    return this.governanceDataSource;
   }
 }
