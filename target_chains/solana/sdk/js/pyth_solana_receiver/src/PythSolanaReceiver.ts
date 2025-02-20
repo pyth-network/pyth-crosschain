@@ -436,20 +436,29 @@ export class PythSolanaReceiver {
   readonly receiver: Program<PythSolanaReceiverProgram>;
   readonly wormhole: Program<WormholeCoreBridgeSolana>;
   readonly pushOracle: Program<PythPushOracle>;
-
+  readonly treasuryId?: number;
   constructor({
     connection,
     wallet,
     wormholeProgramId = DEFAULT_WORMHOLE_PROGRAM_ID,
     receiverProgramId = DEFAULT_RECEIVER_PROGRAM_ID,
     pushOracleProgramId = DEFAULT_PUSH_ORACLE_PROGRAM_ID,
+    treasuryId = undefined,
   }: {
     connection: Connection;
     wallet: Wallet;
     wormholeProgramId?: PublicKey;
     receiverProgramId?: PublicKey;
     pushOracleProgramId?: PublicKey;
+    // Optionally provide a treasuryId to always use a specific treasury account.
+    // This can be useful when using an ALT to reduce tx size.
+    // If not provided, treasury accounts will be randomly selected.
+    treasuryId?: number;
   }) {
+    if (treasuryId !== undefined && (treasuryId < 0 || treasuryId > 255)) {
+      throw new Error("treasuryId must be between 0 and 255");
+    }
+
     this.connection = connection;
     this.wallet = wallet;
     this.provider = new AnchorProvider(this.connection, this.wallet, {
@@ -470,6 +479,7 @@ export class PythSolanaReceiver {
       pushOracleProgramId,
       this.provider
     );
+    this.treasuryId = treasuryId;
   }
 
   /**
@@ -477,9 +487,9 @@ export class PythSolanaReceiver {
    */
   newTransactionBuilder(
     config: PythTransactionBuilderConfig,
-    address_lookup_account?: AddressLookupTableAccount
+    addressLookupAccount?: AddressLookupTableAccount
   ): PythTransactionBuilder {
-    return new PythTransactionBuilder(this, config, address_lookup_account);
+    return new PythTransactionBuilder(this, config, addressLookupAccount);
   }
 
   /**
@@ -504,7 +514,7 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
-    const treasuryId = DEFAULT_TREASURY_ID;
+    const treasuryId = this.treasuryId ?? getRandomTreasuryId();
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -572,7 +582,7 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
-    const treasuryId = getRandomTreasuryId();
+    const treasuryId = this.treasuryId ?? getRandomTreasuryId();
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
@@ -643,7 +653,7 @@ export class PythSolanaReceiver {
     const priceFeedIdToTwapUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
-    const treasuryId = getRandomTreasuryId();
+    const treasuryId = this.treasuryId ?? getRandomTreasuryId();
 
     if (twapUpdateDataArray.length !== 2) {
       throw new Error(
@@ -737,7 +747,7 @@ export class PythSolanaReceiver {
     const priceFeedIdToPriceUpdateAccount: Record<string, PublicKey> = {};
     const closeInstructions: InstructionWithEphemeralSigners[] = [];
 
-    const treasuryId = DEFAULT_TREASURY_ID;
+    const treasuryId = this.treasuryId ?? getRandomTreasuryId();
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(

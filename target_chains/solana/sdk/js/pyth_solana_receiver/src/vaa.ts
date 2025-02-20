@@ -46,7 +46,7 @@ export const VAA_START = 46;
  * `initEncodedVaa` and `writeEncodedVaa` in a single Solana transaction, while using an address lookup table.
  * This way, the packing of the instructions to post an encoded vaa is more efficient.
  */
-export const VAA_SPLIT_INDEX = 700;
+export const VAA_SPLIT_INDEX = 721;
 
 /**
  * Trim the number of signatures of a VAA.
