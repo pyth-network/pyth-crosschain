@@ -86,6 +86,12 @@ export default {
       type: "string",
       optional: true,
     } as Options,
+    "treasury-id": {
+      description:
+        "The treasuryId to use. Useful when the corresponding treasury account is indexed in the ALT passed to --address-lookup-table-account. This is a tx size optimization and is optional; if not set, a random treasury account will be used.",
+      type: "number",
+      optional: true,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.pythContractAddress,
@@ -113,6 +119,7 @@ export default {
       jitoBundleSize,
       updatesPerJitoBundle,
       addressLookupTableAccount,
+      treasuryId,
       logLevel,
       controllerLogLevel,
     } = argv;
@@ -156,15 +163,15 @@ export default {
       connection,
       wallet,
       pushOracleProgramId: new PublicKey(pythContractAddress),
+      treasuryId: treasuryId,
     });
 
     // Fetch the account lookup table if provided
-    const lookupTableAccount =
-      (
-        await connection.getAddressLookupTable(
-          new PublicKey(addressLookupTableAccount)
-        )
-      ).value ?? undefined;
+    const lookupTableAccount = addressLookupTableAccount
+      ? await connection
+          .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
+          .then((result) => result.value ?? undefined)
+      : undefined;
 
     let solanaPricePusher;
     if (jitoTipLamports) {
