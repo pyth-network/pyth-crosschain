@@ -7,6 +7,7 @@ import {
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
 } from "@heroicons/react/24/outline";
+import type { lookup } from "@pythnetwork/known-publishers";
 import { calculateApy } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
@@ -21,8 +22,6 @@ import {
   type SetStateAction,
   type HTMLAttributes,
   type FormEvent,
-  type ComponentType,
-  type SVGProps,
 } from "react";
 import { useFilter, useCollator } from "react-aria";
 import {
@@ -1171,12 +1170,7 @@ type PublisherProps = {
   totalStaked: bigint;
   isSelf?: boolean | undefined;
   publisher: {
-    identity:
-      | {
-          name: string;
-          icon: ComponentType<SVGProps<SVGSVGElement>>;
-        }
-      | undefined;
+    identity: ReturnType<typeof lookup>;
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
@@ -1723,7 +1717,7 @@ const PublisherIdentity = ({
   props.children.identity ? (
     <span className={clsx(className, withNameClassName)}>
       <span>
-        {createElement(props.children.identity.icon, {
+        {createElement(props.children.identity.icon.monochrome, {
           className: "mr-2 inline-block h-[20px] align-sub",
         })}
         <span className="mr-[0.5em]">{props.children.identity.name}</span>

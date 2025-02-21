@@ -25,6 +25,7 @@
     "@heroicons/react": "^2.1.4",
     "@next/third-parties": "^14.2.5",
     "@pythnetwork/hermes-client": "workspace:*",
+    "@pythnetwork/known-publishers": "workspace:*",
     "@pythnetwork/staking-sdk": "workspace:*",
     "@react-aria/toast": "3.0.0-beta.16",
     "@react-hookz/web": "^24.0.4",
