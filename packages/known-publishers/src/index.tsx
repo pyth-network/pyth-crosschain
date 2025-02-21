@@ -1,4 +1,5 @@
 import finazonColor from "./icons/color/finazon.svg";
+import orcaColor from "./icons/color/orca.svg";
 import sentioColor from "./icons/color/sentio.svg";
 import wooColor from "./icons/color/woo.svg";
 import ltpDark from "./icons/dark/ltp.svg";
@@ -8,6 +9,7 @@ import elfomo from "./icons/monochrome/elfomo.svg";
 import finazonMonochrome from "./icons/monochrome/finazon.svg";
 import gluex from "./icons/monochrome/gluex.svg";
 import ltpMonochrome from "./icons/monochrome/ltp.svg";
+import orcaMonochrome from "./icons/monochrome/orca.svg";
 import sentioMonochrome from "./icons/monochrome/sentio.svg";
 import wooMonochrome from "./icons/monochrome/woo.svg";
 
@@ -57,6 +59,13 @@ export const knownPublishers = {
     name: "GlueX Protocol",
     icon: {
       monochrome: gluex,
+    },
+  },
+  J5tVeMzhJf5EWH2Y8fNiREpmBaBEhUxVk9evcWBmkcNT: {
+    name: "Orca",
+    icon: {
+      color: orcaColor,
+      monochrome: orcaMonochrome,
     },
   },
 } as const;

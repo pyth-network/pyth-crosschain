@@ -1,4 +1,5 @@
 import type { HermesClient, PublisherCaps } from "@pythnetwork/hermes-client";
+import { lookup } from "@pythnetwork/known-publishers";
 import {
   epochToDate,
   extractPublisherData,
@@ -11,8 +12,6 @@ import {
 } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import { z } from "zod";
-
-import { KNOWN_PUBLISHERS } from "./known-publishers";
 
 const publishersRankingSchema = z
   .object({
@@ -49,9 +48,7 @@ type Data = {
   m: bigint;
   z: bigint;
   integrityStakingPublishers: {
-    identity:
-      | (typeof KNOWN_PUBLISHERS)[keyof typeof KNOWN_PUBLISHERS]
-      | undefined;
+    identity: ReturnType<typeof lookup>;
     publicKey: PublicKey;
     stakeAccount: PublicKey | undefined;
     selfStake: bigint;
@@ -270,12 +267,7 @@ const loadPublisherData = async (
 
     return {
       apyHistory,
-      identity: (
-        KNOWN_PUBLISHERS as Record<
-          string,
-          (typeof KNOWN_PUBLISHERS)[keyof typeof KNOWN_PUBLISHERS]
-        >
-      )[publisher.pubkey.toBase58()],
+      identity: lookup(publisher.pubkey.toBase58()),
       numFeeds: numberOfSymbols ?? 0,
       poolCapacity: getPublisherCap(publisherCaps, publisher.pubkey),
       poolUtilization: publisher.totalDelegation,
