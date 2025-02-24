@@ -1,7 +1,9 @@
 use base64::Engine;
 use futures_util::StreamExt;
 use pyth_lazer_client::{AnyResponse, LazerClient};
-use pyth_lazer_protocol::message::{EvmMessage, LeEcdsaMessage, Message, SolanaMessage};
+use pyth_lazer_protocol::message::{
+    EvmMessage, LeEcdsaMessage, LeUnsignedMessage, Message, SolanaMessage,
+};
 use pyth_lazer_protocol::payload::PayloadData;
 use pyth_lazer_protocol::router::{
     Channel, DeliveryFormat, FixedRate, Format, JsonBinaryEncoding, PriceFeedId, PriceFeedProperty,
@@ -62,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
                 formats: vec![Format::Evm, Format::Solana],
                 delivery_format: DeliveryFormat::Binary,
                 json_binary_encoding: JsonBinaryEncoding::Base64,
-                parsed: true,
+                parsed: false,
                 channel: Channel::FixedRate(
                     FixedRate::from_ms(50).expect("unsupported update rate"),
                 ),
@@ -107,12 +109,44 @@ async fn main() -> anyhow::Result<()> {
                         println!("Solana payload: {payload:?}");
                     }
 
+                    if let Some(data) = update.payload.le_ecdsa {
+                        // Decode binary data
+                        let binary_data =
+                            base64::engine::general_purpose::STANDARD.decode(&data.data)?;
+                        let message = LeEcdsaMessage::deserialize_slice(&binary_data)?;
+
+                        // Parse and verify the message
+                        let payload = parse_and_verify_le_ecdsa_message(&message);
+                        println!("LeEcdsa payload: {payload:?}");
+                    }
+
+                    if let Some(data) = update.payload.le_unsigned {
+                        // Decode binary data
+                        let binary_data =
+                            base64::engine::general_purpose::STANDARD.decode(&data.data)?;
+                        let message = LeUnsignedMessage::deserialize_slice(&binary_data)?;
+
+                        // Parse the message
+                        let payload = PayloadData::deserialize_slice_le(&message.payload)?;
+                        println!("LE unsigned payload: {payload:?}");
+                    }
+
                     if let Some(parsed) = update.payload.parsed {
                         // Parsed payloads (`parsed: true`) are already decoded and ready to use
                         for feed in parsed.price_feeds {
                             println!(
                                 "Parsed payload: {:?}: {:?} at {:?}",
                                 feed.price_feed_id, feed, parsed.timestamp_us
+                            );
+                        }
+                    }
+
+                    if let Some(json) = update.payload.json {
+                        // JSON format payloads are already decoded and ready to use
+                        for feed in json.price_feeds {
+                            println!(
+                                "JSON payload: {:?}: {:?} at {:?}",
+                                feed.price_feed_id, feed, json.timestamp_us
                             );
                         }
                     }
@@ -144,7 +178,7 @@ async fn main() -> anyhow::Result<()> {
                         Message::Json(message) => {
                             for feed in message.price_feeds {
                                 println!(
-                                    "Parsed payload: {:?}: {:?} at {:?}",
+                                    "JSON payload: {:?}: {:?} at {:?}",
                                     feed.price_feed_id, feed, message.timestamp_us
                                 );
                             }
@@ -186,11 +220,15 @@ fn parse_and_verify_solana_message(solana_message: &SolanaMessage) -> anyhow::Re
 
 fn parse_and_verify_evm_message(evm_message: &EvmMessage) -> anyhow::Result<PayloadData> {
     // Recover pubkey from message
-    libsecp256k1::recover(
+    let public_key = libsecp256k1::recover(
         &libsecp256k1::Message::parse(&alloy_primitives::keccak256(&evm_message.payload)),
         &libsecp256k1::Signature::parse_standard(&evm_message.signature)?,
         &libsecp256k1::RecoveryId::parse(evm_message.recovery_id)?,
     )?;
+    println!(
+        "evm address recovered from signature: {:?}",
+        hex::encode(&alloy_primitives::keccak256(&public_key.serialize()[1..])[12..])
+    );
 
     let payload = PayloadData::deserialize_slice_be(&evm_message.payload)?;
     Ok(payload)
@@ -198,11 +236,15 @@ fn parse_and_verify_evm_message(evm_message: &EvmMessage) -> anyhow::Result<Payl
 
 fn parse_and_verify_le_ecdsa_message(message: &LeEcdsaMessage) -> anyhow::Result<PayloadData> {
     // Recover pubkey from message
-    libsecp256k1::recover(
+    let public_key = libsecp256k1::recover(
         &libsecp256k1::Message::parse(&alloy_primitives::keccak256(&message.payload)),
         &libsecp256k1::Signature::parse_standard(&message.signature)?,
         &libsecp256k1::RecoveryId::parse(message.recovery_id)?,
     )?;
+    println!(
+        "evm address recovered from signature: {:?}",
+        hex::encode(&alloy_primitives::keccak256(&public_key.serialize()[1..])[12..])
+    );
 
     let payload = PayloadData::deserialize_slice_le(&message.payload)?;
     Ok(payload)
