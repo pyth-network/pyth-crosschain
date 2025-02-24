@@ -1,8 +1,8 @@
 # Vendored dependencies for SUI contract
 
-This directory contains the wormhole dependencies used for deploying Pyth contracts on the chains
-that Wormhole is not officially deployed on. For each network, a slightly different variant of the
-code should be used that has the `CHAIN_ID` and `Move.toml` modified. Therefore, we are storing
+This directory contains the wormhole dependencies used for deploying Pyth contracts on the chains that Wormhole is not
+officially deployed on. For each network, a slightly different variant of the code should be used that has the
+`CHAIN_ID` constant (in `wormhole/sources/state.move`) and `Move.toml` modified. Therefore, we are storing
 each of them in a separate directory.
 
 The Wormhole contract is taken out of commit

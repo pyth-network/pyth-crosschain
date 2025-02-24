@@ -42,7 +42,7 @@ module wormhole::state {
     const E_INVALID_BUILD_DIGEST: u64 = 1;
 
     /// Sui's chain ID is hard-coded to one value.
-    const CHAIN_ID: u16 = 50076;
+    const CHAIN_ID: u16 = 50118;
 
     /// Capability reflecting that the current build version is used to invoke
     /// state methods.
