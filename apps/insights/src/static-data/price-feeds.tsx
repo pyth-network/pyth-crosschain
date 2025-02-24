@@ -7,5 +7,5 @@ export const priceFeeds = {
     "Commodities.WTI1M",
     "Crypto.1INCH/USD",
   ],
-  featuredComingSoon: ["Crypto.ION/USD", "Equity.NL.BCOIN/USD"],
+  featuredComingSoon: ["Rates.US1Y"],
 };

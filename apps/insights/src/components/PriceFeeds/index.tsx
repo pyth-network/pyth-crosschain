@@ -210,21 +210,9 @@ const filterFeeds = <T extends { symbol: string }>(
   feeds: T[],
   symbols: string[],
 ): T[] =>
-  symbols.map((symbol) => {
-    const feed = feeds.find((feed) => feed.symbol === symbol);
-    if (feed) {
-      return feed;
-    } else {
-      throw new NoSuchFeedError(symbol);
-    }
-  });
+  symbols
+    .map((symbol) => feeds.find((feed) => feed.symbol === symbol))
+    .filter((feed) => feed !== undefined);
 
 const isActive = (feed: { price: { minPublishers: number } }) =>
   feed.price.minPublishers <= 50;
-
-class NoSuchFeedError extends Error {
-  constructor(symbol: string) {
-    super(`No feed exists named ${symbol}`);
-    this.name = "NoSuchFeedError";
-  }
-}
