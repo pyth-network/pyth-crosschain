@@ -11,6 +11,11 @@ import {
 } from "@pythnetwork/component-library/Card";
 import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
+import { TabList } from "@pythnetwork/component-library/TabList";
+import {
+  TabPanel as UnstyledTabPanel,
+  Tabs as UnstyledTabs,
+} from "@pythnetwork/component-library/unstyled/Tabs";
 import type { ElementType } from "react";
 
 import { AssetClassesDrawer } from "./asset-classes-drawer";
@@ -20,6 +25,7 @@ import { PriceFeedsCard } from "./price-feeds-card";
 import { Cluster, getFeeds } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
 import { activeChains } from "../../static-data/stats";
+import { Cards } from "../Cards";
 import { LivePrice } from "../LivePrices";
 import {
   YesterdaysPricesProvider,
@@ -41,7 +47,7 @@ export const PriceFeeds = async () => {
       ({ symbol }) =>
         !priceFeedsStaticConfig.featuredComingSoon.includes(symbol),
     ),
-  ].slice(0, 5);
+  ].slice(0, 6);
   const featuredRecentlyAdded = filterFeeds(
     priceFeeds.activeFeeds,
     priceFeedsStaticConfig.featuredRecentlyAdded,
@@ -50,77 +56,38 @@ export const PriceFeeds = async () => {
   return (
     <div className={styles.priceFeeds}>
       <h1 className={styles.header}>Price Feeds</h1>
-      <div className={styles.body}>
-        <section className={styles.stats}>
+      <Cards className={styles.cards}>
+        <StatCard
+          variant="primary"
+          header="Active Feeds"
+          stat={priceFeeds.activeFeeds.length}
+          href={`#${PRICE_FEEDS_ANCHOR}`}
+          corner={<ArrowLineDown />}
+        />
+        <StatCard
+          header="Frequency"
+          stat={priceFeedsStaticConfig.updateFrequency}
+        />
+        <StatCard
+          header="Active Chains"
+          stat={activeChains.at(-1)?.chains}
+          href="https://docs.pyth.network/price-feeds/contract-addresses"
+          target="_blank"
+          corner={<ArrowSquareOut weight="fill" />}
+        />
+        <AssetClassesDrawer numFeedsByAssetClass={numFeedsByAssetClass}>
           <StatCard
-            variant="primary"
-            header="Active Feeds"
-            stat={priceFeeds.activeFeeds.length}
-            href={`#${PRICE_FEEDS_ANCHOR}`}
-            corner={<ArrowLineDown />}
+            header="Asset Classes"
+            stat={Object.keys(numFeedsByAssetClass).length}
+            corner={<ArrowsOutSimple />}
           />
-          <StatCard
-            header="Frequency"
-            stat={priceFeedsStaticConfig.updateFrequency}
-          />
-          <StatCard
-            header="Active Chains"
-            stat={activeChains.at(-1)?.chains}
-            href="https://docs.pyth.network/price-feeds/contract-addresses"
-            target="_blank"
-            corner={<ArrowSquareOut weight="fill" />}
-          />
-          <AssetClassesDrawer numFeedsByAssetClass={numFeedsByAssetClass}>
-            <StatCard
-              header="Asset Classes"
-              stat={Object.keys(numFeedsByAssetClass).length}
-              corner={<ArrowsOutSimple />}
-            />
-          </AssetClassesDrawer>
-        </section>
-        <YesterdaysPricesProvider
-          feeds={Object.fromEntries(
-            featuredRecentlyAdded.map(({ symbol, product }) => [
-              symbol,
-              product.price_account,
-            ]),
-          )}
-        >
-          <FeaturedFeedsCard
-            title="Recently Added"
-            icon={<StackPlus />}
-            feeds={featuredRecentlyAdded}
-            showPrices
-            linkFeeds
-          />
-        </YesterdaysPricesProvider>
-        <FeaturedFeedsCard
-          title="Coming Soon"
-          icon={<ClockCountdown />}
-          feeds={featuredComingSoon}
-          toolbar={
-            <DrawerTrigger>
-              <Button size="xs" variant="outline">
-                Show all
-              </Button>
-              <Drawer
-                fill
-                className={styles.comingSoonCard ?? ""}
-                title={
-                  <>
-                    <span>Coming Soon</span>
-                    <Badge>{priceFeeds.comingSoon.length}</Badge>
-                  </>
-                }
-              >
-                <ComingSoonList
-                  comingSoonSymbols={priceFeeds.comingSoon.map(
-                    ({ symbol }) => symbol,
-                  )}
-                />
-              </Drawer>
-            </DrawerTrigger>
-          }
+        </AssetClassesDrawer>
+      </Cards>
+      <section className={styles.bigScreenBody}>
+        <FeaturedFeeds
+          allComingSoon={priceFeeds.comingSoon}
+          featuredComingSoon={featuredComingSoon.slice(0, 5)}
+          featuredRecentlyAdded={featuredRecentlyAdded.slice(0, 5)}
         />
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
@@ -130,10 +97,94 @@ export const PriceFeeds = async () => {
             numQuoters: feed.price.numQuoters,
           }))}
         />
-      </div>
+      </section>
+      <UnstyledTabs className={styles.smallScreenBody ?? ""}>
+        <TabList
+          label="Price Feeds Navigation"
+          items={[
+            { children: "Price Feeds", id: "feeds" },
+            { children: "Highlights", id: "highlights" },
+          ]}
+        />
+        <UnstyledTabPanel id="feeds" className={styles.tabPanel ?? ""}>
+          <PriceFeedsCard
+            id={PRICE_FEEDS_ANCHOR}
+            priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
+              symbol: feed.symbol,
+              exponent: feed.price.exponent,
+              numQuoters: feed.price.numQuoters,
+            }))}
+          />
+        </UnstyledTabPanel>
+        <UnstyledTabPanel id="highlights" className={styles.tabPanel ?? ""}>
+          <FeaturedFeeds
+            allComingSoon={priceFeeds.comingSoon}
+            featuredComingSoon={featuredComingSoon}
+            featuredRecentlyAdded={featuredRecentlyAdded}
+          />
+        </UnstyledTabPanel>
+      </UnstyledTabs>
     </div>
   );
 };
+
+type FeaturedFeedsProps = {
+  featuredRecentlyAdded: FeaturedFeed[];
+  featuredComingSoon: FeaturedFeed[];
+  allComingSoon: { symbol: string }[];
+};
+
+const FeaturedFeeds = ({
+  featuredRecentlyAdded,
+  featuredComingSoon,
+  allComingSoon,
+}: FeaturedFeedsProps) => (
+  <>
+    <YesterdaysPricesProvider
+      feeds={Object.fromEntries(
+        featuredRecentlyAdded.map(({ symbol, product }) => [
+          symbol,
+          product.price_account,
+        ]),
+      )}
+    >
+      <FeaturedFeedsCard
+        title="Recently Added"
+        icon={<StackPlus />}
+        feeds={featuredRecentlyAdded}
+        showPrices
+        linkFeeds
+      />
+    </YesterdaysPricesProvider>
+    <FeaturedFeedsCard
+      title="Coming Soon"
+      icon={<ClockCountdown />}
+      feeds={featuredComingSoon}
+      toolbarAlwaysOnTop
+      toolbar={
+        <DrawerTrigger>
+          <Button size="xs" variant="outline">
+            Show all
+          </Button>
+          <Drawer
+            fill
+            className={styles.comingSoonCard ?? ""}
+            title={
+              <>
+                <span>Coming Soon</span>
+                <Badge>{allComingSoon.length}</Badge>
+              </>
+            }
+          >
+            <ComingSoonList
+              comingSoonSymbols={allComingSoon.map(({ symbol }) => symbol)}
+            />
+          </Drawer>
+        </DrawerTrigger>
+      }
+    />
+  </>
+);
 
 type FeaturedFeedsCardProps<T extends ElementType> = Omit<
   CardProps<T>,
@@ -141,14 +192,16 @@ type FeaturedFeedsCardProps<T extends ElementType> = Omit<
 > & {
   showPrices?: boolean | undefined;
   linkFeeds?: boolean | undefined;
-  feeds: {
-    symbol: string;
-    product: {
-      display_symbol: string;
-      price_account: string;
-      description: string;
-    };
-  }[];
+  feeds: FeaturedFeed[];
+};
+
+type FeaturedFeed = {
+  symbol: string;
+  product: {
+    display_symbol: string;
+    price_account: string;
+    description: string;
+  };
 };
 
 const FeaturedFeedsCard = <T extends ElementType>({
@@ -158,7 +211,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
   ...props
 }: FeaturedFeedsCardProps<T>) => (
   <Card {...props}>
-    <div className={styles.featuredFeeds}>
+    <div className={styles.featuredFeedsCard}>
       {feeds.map((feed) => (
         <Card
           key={feed.product.price_account}

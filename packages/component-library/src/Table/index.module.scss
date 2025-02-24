@@ -164,6 +164,7 @@
         outline: theme.spacing(0.5) solid transparent;
         outline-offset: -#{theme.spacing(0.5)};
         transition: outline-color 100ms linear;
+        -webkit-tap-highlight-color: transparent;
 
         &[data-focus-visible] {
           outline: theme.spacing(0.5) solid theme.color("focus");

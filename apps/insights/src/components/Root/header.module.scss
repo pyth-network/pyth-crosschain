@@ -15,10 +15,14 @@
     @include theme.max-width;
 
     .leftMenu {
-      flex: none;
-      gap: theme.spacing(6);
-
       @include theme.row;
+
+      flex: none;
+      gap: theme.spacing(3);
+
+      @include theme.breakpoint("sm") {
+        gap: theme.spacing(6);
+      }
 
       .logoLink {
         padding: theme.spacing(3);
@@ -26,9 +30,14 @@
         color: theme.color("foreground");
 
         .logoWrapper {
-          width: theme.spacing(9);
-          height: theme.spacing(9);
+          width: theme.spacing(8);
+          height: theme.spacing(8);
           position: relative;
+
+          @include theme.breakpoint("sm") {
+            width: theme.spacing(9);
+            height: theme.spacing(9);
+          }
 
           .logo {
             position: absolute;
@@ -48,15 +57,56 @@
         font-weight: theme.font-weight("semibold");
         color: theme.color("heading");
       }
+
+      .mainNavTabs {
+        display: none;
+
+        @include theme.breakpoint("sm") {
+          display: flex;
+        }
+      }
     }
 
     .rightMenu {
-      flex: none;
-      gap: theme.spacing(2);
-
       @include theme.row;
 
+      flex: none;
+      gap: theme.spacing(3);
       margin-right: -#{theme.button-padding("sm", false)};
+
+      @include theme.breakpoint("lg") {
+        gap: theme.spacing(2);
+      }
+
+      .supportButton,
+      .themeSwitch,
+      .mainCta {
+        display: none;
+
+        @include theme.breakpoint("lg") {
+          display: unset;
+        }
+      }
+
+      .outlineSearchButton {
+        display: none;
+
+        @include theme.breakpoint("md") {
+          display: unset;
+        }
+      }
+
+      .ghostSearchButton {
+        @include theme.breakpoint("md") {
+          display: none;
+        }
+      }
+
+      .mobileMenu {
+        @include theme.breakpoint("lg") {
+          display: none;
+        }
+      }
 
       .themeSwitch {
         margin-left: theme.spacing(1);
