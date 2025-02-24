@@ -16,7 +16,7 @@ export const SIZES = ["xs", "sm", "md", "lg"] as const;
 type Props = ComponentProps<typeof SearchField> & {
   label?: string | undefined;
   size?: (typeof SIZES)[number] | undefined;
-  width: number;
+  width?: number | undefined;
   isPending?: boolean | undefined;
   placeholder?: string;
 };
@@ -33,8 +33,9 @@ export const SearchInput = ({
   <SearchField
     aria-label={label ?? "Search"}
     className={clsx(styles.searchInput, className)}
-    style={{ "--width": width } as CSSProperties}
     data-size={size}
+    data-static-width={width === undefined ? undefined : ""}
+    {...(width && { style: { "--width": width } as CSSProperties })}
     {...(isPending && { "data-pending": "" })}
     {...props}
   >

@@ -1,46 +1,78 @@
-import type { Icon } from "@phosphor-icons/react";
-import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
-import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
+"use client";
+
+import { Lifebuoy } from "@phosphor-icons/react/dist/ssr/Lifebuoy";
 import { List } from "@phosphor-icons/react/dist/ssr/List";
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
-import { PresentationChart } from "@phosphor-icons/react/dist/ssr/PresentationChart";
-import type { ComponentProps, ReactNode } from "react";
+import { Button } from "@pythnetwork/component-library/Button";
+import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
+import { useCallback, useState, useRef } from "react";
 
-import { NavLink } from "./nav-link";
+import styles from "./mobile-menu.module.scss";
+import { SupportDrawer } from "./support-drawer";
+import { ThemeSwitch } from "./theme-switch";
 
-export const MobileMenu = () => (
-  <nav className="contents lg:hidden">
-    <ul className="sticky bottom-0 isolate z-20 flex size-full flex-row items-stretch bg-white dark:bg-steel-950">
-      <MobileMenuItem title="Overview" icon={PresentationChart} href="/" />
-      <MobileMenuItem title="Publishers" icon={Broadcast} href="/publishers" />
-      <MobileMenuItem
-        title="Price Feeds"
-        icon={ChartLine}
-        href="/price-feeds"
-      />
-      <MobileMenuItem title="Search" icon={MagnifyingGlass} href="/" />
-      <MobileMenuItem title="More" icon={List} href="/" />
-    </ul>
-  </nav>
-);
-
-type MobileMenuItemProps = ComponentProps<typeof NavLink> & {
-  title: ReactNode;
-  icon: Icon;
+type Props = {
+  className?: string | undefined;
 };
 
-const MobileMenuItem = ({
-  title,
-  icon: Icon,
-  ...props
-}: MobileMenuItemProps) => (
-  <li className="contents">
-    <NavLink
-      className="flex grow basis-0 flex-col items-center gap-2 py-4 outline-none transition duration-100 data-[focus-visible]:bg-black/5 data-[hovered]:bg-black/5 data-[pressed]:bg-black/10 data-[selected]:bg-steel-900 data-[selected]:text-steel-50 dark:data-[selected]:bg-steel-50 dark:data-[selected]:text-steel-900"
-      {...props}
-    >
-      <Icon className="size-5" />
-      <div className="text-center text-xs font-medium">{title}</div>
-    </NavLink>
-  </li>
-);
+export const MobileMenu = ({ className }: Props) => {
+  const [isSupportDrawerOpen, setSupportDrawerOpen] = useState(false);
+  const openSupportDrawerOnClose = useRef(false);
+  const setOpenSupportDrawerOnClose = useCallback(() => {
+    openSupportDrawerOnClose.current = true;
+  }, []);
+  const maybeOpenSupportDrawer = useCallback(() => {
+    if (openSupportDrawerOnClose.current) {
+      setSupportDrawerOpen(true);
+      openSupportDrawerOnClose.current = false;
+    }
+  }, [setSupportDrawerOpen]);
+
+  return (
+    <>
+      <DrawerTrigger>
+        <Button
+          className={className ?? ""}
+          beforeIcon={List}
+          variant="ghost"
+          size="sm"
+          rounded
+          hideText
+        >
+          Menu
+        </Button>
+        <Drawer hideHeading title="Menu" onCloseFinish={maybeOpenSupportDrawer}>
+          <div className={styles.mobileMenu}>
+            <div className={styles.buttons}>
+              <Button
+                slot="close"
+                beforeIcon={Lifebuoy}
+                variant="ghost"
+                size="md"
+                rounded
+                onPress={setOpenSupportDrawerOnClose}
+              >
+                Support
+              </Button>
+              <Button
+                href="https://docs.pyth.network"
+                size="md"
+                rounded
+                target="_blank"
+              >
+                Dev Docs
+              </Button>
+            </div>
+            <div className={styles.theme}>
+              <span className={styles.themeLabel}>Theme</span>
+              <ThemeSwitch />
+            </div>
+          </div>
+        </Drawer>
+      </DrawerTrigger>
+      <SupportDrawer
+        isOpen={isSupportDrawerOpen}
+        onOpenChange={setSupportDrawerOpen}
+      />
+    </>
+  );
+};

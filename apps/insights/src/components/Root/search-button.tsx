@@ -3,27 +3,28 @@
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import { useMemo } from "react";
+import { type ComponentProps, useMemo } from "react";
 import { useIsSSR } from "react-aria";
 
 import { useToggleSearchDialog } from "./search-dialog";
 
-export const SearchButton = () => {
+type Props = ComponentProps<typeof Button>;
+
+export const SearchButton = (props: Props) => {
   const toggleSearchDialog = useToggleSearchDialog();
+
   return (
     <Button
       onPress={toggleSearchDialog}
       beforeIcon={MagnifyingGlass}
-      variant="outline"
       size="sm"
       rounded
-    >
-      <SearchText />
-    </Button>
+      {...props}
+    />
   );
 };
 
-const SearchText = () => {
+export const SearchShortcutText = () => {
   const isSSR = useIsSSR();
   return isSSR ? <Skeleton width={7} /> : <SearchTextImpl />;
 };

@@ -1,0 +1,15 @@
+@use "@pythnetwork/component-library/theme";
+
+.list {
+  @include theme.breakpoint("lg") {
+    display: none;
+  }
+}
+
+.table {
+  display: none;
+
+  @include theme.breakpoint("lg") {
+    display: unset;
+  }
+}

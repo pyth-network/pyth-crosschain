@@ -8,6 +8,7 @@ import { Link } from "@pythnetwork/component-library/Link";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./performance.module.scss";
@@ -15,12 +16,13 @@ import { TopFeedsTable } from "./top-feeds-table";
 import { getPublishers } from "../../services/clickhouse";
 import { ClusterToName, parseCluster } from "../../services/pyth";
 import { Status } from "../../status";
+import { EntityList } from "../EntityList";
 import {
   ExplainActive,
   ExplainInactive,
   ExplainAverage,
 } from "../Explanations";
-import { NoResults } from "../NoResults";
+import { type Variant as NoResultsVariant, NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
@@ -52,15 +54,95 @@ export const Performance = async ({ params }: Props) => {
     (publisher) => publisher.key === key,
     2,
   );
+  const rows = slicedPublishers?.map((publisher) => {
+    const knownPublisher = lookup(publisher.key);
+    return {
+      id: publisher.key,
+      nameAsString: knownPublisher?.name ?? publisher.key,
+      data: {
+        ranking: (
+          <Ranking isCurrent={publisher.key === key} className={styles.ranking}>
+            {publisher.rank}
+          </Ranking>
+        ),
+        activeFeeds: (
+          <Link
+            href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Active`}
+            invert
+          >
+            {publisher.activeFeeds}
+          </Link>
+        ),
+        inactiveFeeds: (
+          <Link
+            href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Inactive`}
+            invert
+          >
+            {publisher.inactiveFeeds}
+          </Link>
+        ),
+        averageScore: (
+          <Score width={PUBLISHER_SCORE_WIDTH} score={publisher.averageScore} />
+        ),
+        name: (
+          <PublisherTag
+            cluster={parsedCluster}
+            publisherKey={publisher.key}
+            {...(knownPublisher && {
+              name: knownPublisher.name,
+              icon: <PublisherIcon knownPublisher={knownPublisher} />,
+            })}
+          />
+        ),
+      },
+      ...(publisher.key !== key && {
+        href: `/publishers/${ClusterToName[parsedCluster]}/${publisher.key}`,
+      }),
+    };
+  });
 
-  return slicedPublishers === undefined ? (
+  const highPerformingFeeds = getFeedRows(
+    priceFeeds
+      .filter((feed) => hasRanking(feed))
+      .filter(({ ranking }) => ranking.final_score > 0.9)
+      .sort((a, b) => b.ranking.final_score - a.ranking.final_score),
+  );
+
+  const lowPerformingFeeds = getFeedRows(
+    priceFeeds
+      .filter((feed) => hasRanking(feed))
+      .filter(({ ranking }) => ranking.final_score < 0.7)
+      .sort((a, b) => a.ranking.final_score - b.ranking.final_score),
+  );
+
+  return rows === undefined ? (
     notFound()
   ) : (
     <div className={styles.performance}>
-      <Card icon={<Broadcast />} title="Publishers Ranking">
+      <Card
+        icon={<Broadcast />}
+        title="Publishers Ranking"
+        className={styles.publishersRankingCard ?? ""}
+      >
+        <EntityList
+          label="Publishers Ranking"
+          className={styles.publishersRankingList ?? ""}
+          fields={[
+            { id: "ranking", name: "Ranking" },
+            { id: "averageScore", name: "Average Score" },
+            { id: "activeFeeds", name: "Active Feeds" },
+            { id: "inactiveFeeds", name: "Inactive Feeds" },
+          ]}
+          rows={rows.map((row) => ({
+            ...row,
+            textValue: row.nameAsString,
+            header: row.data.name,
+          }))}
+        />
         <Table
           rounded
           fill
+          className={styles.publishersRankingTable ?? ""}
           label="Publishers Ranking"
           columns={[
             {
@@ -108,96 +190,25 @@ export const Performance = async ({ params }: Props) => {
               width: PUBLISHER_SCORE_WIDTH,
             },
           ]}
-          rows={slicedPublishers.map((publisher) => {
-            const knownPublisher = lookup(publisher.key);
-            return {
-              id: publisher.key,
-              data: {
-                ranking: (
-                  <Ranking isCurrent={publisher.key === key}>
-                    {publisher.rank}
-                  </Ranking>
-                ),
-                activeFeeds: (
-                  <Link
-                    href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Active`}
-                    invert
-                  >
-                    {publisher.activeFeeds}
-                  </Link>
-                ),
-                inactiveFeeds: (
-                  <Link
-                    href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Inactive`}
-                    invert
-                  >
-                    {publisher.inactiveFeeds}
-                  </Link>
-                ),
-                averageScore: (
-                  <Score
-                    width={PUBLISHER_SCORE_WIDTH}
-                    score={publisher.averageScore}
-                  />
-                ),
-                name: (
-                  <PublisherTag
-                    cluster={parsedCluster}
-                    publisherKey={publisher.key}
-                    {...(knownPublisher && {
-                      name: knownPublisher.name,
-                      icon: <PublisherIcon knownPublisher={knownPublisher} />,
-                    })}
-                  />
-                ),
-              },
-              ...(publisher.key !== key && {
-                href: `/publishers/${ClusterToName[parsedCluster]}/${publisher.key}`,
-              }),
-            };
-          })}
+          rows={rows}
         />
       </Card>
-      <Card icon={<Network />} title="High-Performing Feeds">
-        <TopFeedsTable
-          label="High-Performing Feeds"
-          publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
-          emptyState={
-            <NoResults
-              icon={<SmileySad />}
-              header="Oh no!"
-              body="This publisher has no high performing feeds"
-              variant="error"
-            />
-          }
-          rows={getFeedRows(
-            priceFeeds
-              .filter((feed) => hasRanking(feed))
-              .filter(({ ranking }) => ranking.final_score > 0.9)
-              .sort((a, b) => b.ranking.final_score - a.ranking.final_score),
-          )}
-        />
-      </Card>
-      <Card icon={<Network />} title="Low-Performing Feeds">
-        <TopFeedsTable
-          label="Low-Performing Feeds"
-          publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
-          emptyState={
-            <NoResults
-              icon={<Confetti />}
-              header="Looking good!"
-              body="This publisher has no low performing feeds"
-              variant="success"
-            />
-          }
-          rows={getFeedRows(
-            priceFeeds
-              .filter((feed) => hasRanking(feed))
-              .filter(({ ranking }) => ranking.final_score < 0.7)
-              .sort((a, b) => a.ranking.final_score - b.ranking.final_score),
-          )}
-        />
-      </Card>
+      <TopFeedsCard
+        title="High-Performing"
+        emptyIcon={<SmileySad />}
+        emptyHeader="Oh no!"
+        emptyBody="This publisher has no high performing feeds"
+        emptyVariant="error"
+        feeds={highPerformingFeeds}
+      />
+      <TopFeedsCard
+        title="Low-Performing"
+        emptyIcon={<Confetti />}
+        emptyHeader="Looking good!"
+        emptyBody="This publisher has no low performing feeds"
+        emptyVariant="success"
+        feeds={lowPerformingFeeds}
+      />
     </div>
   );
 };
@@ -216,7 +227,8 @@ const getFeedRows = (
     .filter((feed) => feed.status === Status.Active)
     .slice(0, 20)
     .map(({ feed, ranking }) => ({
-      id: ranking.symbol,
+      id: feed.symbol,
+      textValue: feed.symbol,
       data: {
         asset: <PriceFeedTag compact symbol={feed.symbol} />,
         assetClass: (
@@ -251,3 +263,38 @@ const sliceAround = <T,>(
 const hasRanking = <T,>(feed: {
   ranking: T | undefined;
 }): feed is { ranking: T } => feed.ranking !== undefined;
+
+type TopFeedsCardProps = {
+  title: string;
+  emptyIcon: ReactNode;
+  emptyHeader: string;
+  emptyBody: string;
+  emptyVariant: NoResultsVariant;
+  feeds: ReturnType<typeof getFeedRows>;
+};
+
+const TopFeedsCard = ({
+  title,
+  emptyIcon,
+  emptyHeader,
+  emptyBody,
+  emptyVariant,
+  feeds,
+}: TopFeedsCardProps) => (
+  <Card icon={<Network />} title={`${title} Feeds`}>
+    {feeds.length === 0 ? (
+      <NoResults
+        icon={emptyIcon}
+        header={emptyHeader}
+        body={emptyBody}
+        variant={emptyVariant}
+      />
+    ) : (
+      <TopFeedsTable
+        label={`${title} Feeds`}
+        publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
+        rows={feeds}
+      />
+    )}
+  </Card>
+);
