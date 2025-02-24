@@ -1,13 +1,14 @@
 use base64::Engine;
 use futures_util::StreamExt;
-use pyth_lazer_client::LazerClient;
-use pyth_lazer_protocol::message::{EvmMessage, SolanaMessage};
+use pyth_lazer_client::{AnyResponse, LazerClient};
+use pyth_lazer_protocol::message::{EvmMessage, LeEcdsaMessage, Message, SolanaMessage};
 use pyth_lazer_protocol::payload::PayloadData;
 use pyth_lazer_protocol::router::{
-    Chain, Channel, DeliveryFormat, FixedRate, JsonBinaryEncoding, PriceFeedId, PriceFeedProperty,
+    Channel, DeliveryFormat, FixedRate, Format, JsonBinaryEncoding, PriceFeedId, PriceFeedProperty,
     SubscriptionParams, SubscriptionParamsRepr,
 };
 use pyth_lazer_protocol::subscription::{Request, Response, SubscribeRequest, SubscriptionId};
+use tokio::pin;
 
 fn get_lazer_access_token() -> String {
     // Place your access token in your env at LAZER_ACCESS_TOKEN or set it here
@@ -22,7 +23,8 @@ async fn main() -> anyhow::Result<()> {
         "wss://pyth-lazer.dourolabs.app/v1/stream",
         &get_lazer_access_token(),
     )?;
-    let mut stream = client.start().await?;
+    let stream = client.start().await?;
+    pin!(stream);
 
     let subscription_requests = vec![
         // Example subscription: Parsed JSON feed targeting Solana
@@ -36,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
                     PriceFeedProperty::BestAskPrice,
                     PriceFeedProperty::BestBidPrice,
                 ],
-                chains: vec![Chain::Solana],
+                formats: vec![Format::Solana],
                 delivery_format: DeliveryFormat::Json,
                 json_binary_encoding: JsonBinaryEncoding::Base64,
                 parsed: true,
@@ -57,10 +59,10 @@ async fn main() -> anyhow::Result<()> {
                     PriceFeedProperty::BestAskPrice,
                     PriceFeedProperty::BestBidPrice,
                 ],
-                chains: vec![Chain::Evm, Chain::Solana],
+                formats: vec![Format::Evm, Format::Solana],
                 delivery_format: DeliveryFormat::Binary,
                 json_binary_encoding: JsonBinaryEncoding::Base64,
-                parsed: false,
+                parsed: true,
                 channel: Channel::FixedRate(
                     FixedRate::from_ms(50).expect("unsupported update rate"),
                 ),
@@ -80,41 +82,78 @@ async fn main() -> anyhow::Result<()> {
     while let Some(msg) = stream.next().await {
         // The stream gives us base64-encoded binary messages. We need to decode, parse, and verify them.
         match msg? {
-            Response::StreamUpdated(update) => {
-                if let Some(evm_data) = update.payload.evm {
-                    // Decode binary data
-                    let binary_data =
-                        base64::engine::general_purpose::STANDARD.decode(&evm_data.data)?;
-                    let evm_message = EvmMessage::deserialize_slice(&binary_data)?;
+            AnyResponse::Json(msg) => match msg {
+                Response::StreamUpdated(update) => {
+                    println!("Received a JSON update for {:?}", update.subscription_id);
+                    if let Some(evm_data) = update.payload.evm {
+                        // Decode binary data
+                        let binary_data =
+                            base64::engine::general_purpose::STANDARD.decode(&evm_data.data)?;
+                        let evm_message = EvmMessage::deserialize_slice(&binary_data)?;
 
-                    // Parse and verify the EVM message
-                    let payload = parse_and_verify_evm_message(&evm_message);
-                    println!("EVM payload: {payload:?}\n");
+                        // Parse and verify the EVM message
+                        let payload = parse_and_verify_evm_message(&evm_message);
+                        println!("EVM payload: {payload:?}");
+                    }
+
+                    if let Some(solana_data) = update.payload.solana {
+                        // Decode binary data
+                        let binary_data =
+                            base64::engine::general_purpose::STANDARD.decode(&solana_data.data)?;
+                        let solana_message = SolanaMessage::deserialize_slice(&binary_data)?;
+
+                        // Parse and verify the Solana message
+                        let payload = parse_and_verify_solana_message(&solana_message);
+                        println!("Solana payload: {payload:?}");
+                    }
+
+                    if let Some(parsed) = update.payload.parsed {
+                        // Parsed payloads (`parsed: true`) are already decoded and ready to use
+                        for feed in parsed.price_feeds {
+                            println!(
+                                "Parsed payload: {:?}: {:?} at {:?}",
+                                feed.price_feed_id, feed, parsed.timestamp_us
+                            );
+                        }
+                    }
                 }
-
-                if let Some(solana_data) = update.payload.solana {
-                    // Decode binary data
-                    let binary_data =
-                        base64::engine::general_purpose::STANDARD.decode(&solana_data.data)?;
-                    let solana_message = SolanaMessage::deserialize_slice(&binary_data)?;
-
-                    // Parse and verify the Solana message
-                    let payload = parse_and_verify_solana_message(&solana_message);
-                    println!("Solana payload: {payload:?}\n");
-                }
-
-                if let Some(parsed) = update.payload.parsed {
-                    // Parsed payloads (`parsed: true`) are already decoded and ready to use
-                    for feed in parsed.price_feeds {
-                        println!(
-                            "Parsed payload: {:?}: {:?} at {:?}\n",
-                            feed.price_feed_id, feed, parsed.timestamp_us
-                        );
+                msg => println!("Received non-update message: {msg:?}"),
+            },
+            AnyResponse::Binary(msg) => {
+                println!("Received a binary update for {:?}", msg.subscription_id);
+                for message in msg.messages {
+                    match message {
+                        Message::Evm(message) => {
+                            // Parse and verify the EVM message
+                            let payload = parse_and_verify_evm_message(&message);
+                            println!("EVM payload: {payload:?}");
+                        }
+                        Message::Solana(message) => {
+                            // Parse and verify the Solana message
+                            let payload = parse_and_verify_solana_message(&message);
+                            println!("Solana payload: {payload:?}");
+                        }
+                        Message::LeEcdsa(message) => {
+                            let payload = parse_and_verify_le_ecdsa_message(&message);
+                            println!("LeEcdsa payload: {payload:?}");
+                        }
+                        Message::LeUnsigned(message) => {
+                            let payload = PayloadData::deserialize_slice_le(&message.payload)?;
+                            println!("LeUnsigned payload: {payload:?}");
+                        }
+                        Message::Json(message) => {
+                            for feed in message.price_feeds {
+                                println!(
+                                    "Parsed payload: {:?}: {:?} at {:?}",
+                                    feed.price_feed_id, feed, message.timestamp_us
+                                );
+                            }
+                        }
                     }
                 }
             }
-            _ => println!("Received non-update message"),
         }
+        println!();
 
         count += 1;
         if count >= 50 {
@@ -122,7 +161,7 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    // Unsubscribe before exiting
+    // Unsubscribe example
     for sub_id in [SubscriptionId(1), SubscriptionId(2)] {
         client.unsubscribe(sub_id).await?;
         println!("Unsubscribed from {:?}", sub_id);
@@ -154,5 +193,17 @@ fn parse_and_verify_evm_message(evm_message: &EvmMessage) -> anyhow::Result<Payl
     )?;
 
     let payload = PayloadData::deserialize_slice_be(&evm_message.payload)?;
+    Ok(payload)
+}
+
+fn parse_and_verify_le_ecdsa_message(message: &LeEcdsaMessage) -> anyhow::Result<PayloadData> {
+    // Recover pubkey from message
+    libsecp256k1::recover(
+        &libsecp256k1::Message::parse(&alloy_primitives::keccak256(&message.payload)),
+        &libsecp256k1::Signature::parse_standard(&message.signature)?,
+        &libsecp256k1::RecoveryId::parse(message.recovery_id)?,
+    )?;
+
+    let payload = PayloadData::deserialize_slice_le(&message.payload)?;
     Ok(payload)
 }
