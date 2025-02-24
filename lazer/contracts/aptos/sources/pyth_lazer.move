@@ -16,6 +16,14 @@ module pyth_lazer::pyth_lazer {
     /// Constants
     const ED25519_PUBLIC_KEY_LENGTH: u64 = 32;
 
+    /// Admin capability - holder of this resource can perform admin actions, such as key rotations
+    struct AdminCapability has key, store {}
+
+    /// Stores the admin capability until it's claimed
+    struct PendingAdminCapability has key {
+        admin: address
+    }
+
     /// Stores information about a trusted signer including their public key and expiration
     struct TrustedSignerInfo has store, drop, copy {
         pubkey: vector<u8>, // Ed25519 public key (32 bytes)
@@ -24,7 +32,6 @@ module pyth_lazer::pyth_lazer {
 
     /// Main storage for the Lazer contract
     struct Storage has key {
-        top_authority: address,
         treasury: address,
         single_update_fee: u64,
         trusted_signers: vector<TrustedSignerInfo>
@@ -38,19 +45,31 @@ module pyth_lazer::pyth_lazer {
 
     /// Initialize the Lazer contract with top authority and treasury. One-time operation.
     public entry fun initialize(
-        account: &signer, top_authority: address, treasury: address
+        account: &signer, admin: address, treasury: address
     ) {
         // Initialize must be called by the contract account
         assert!(signer::address_of(account) == @pyth_lazer, ENO_PERMISSIONS);
         let storage = Storage {
-            top_authority,
             treasury,
             single_update_fee: 1, // Nominal fee
             trusted_signers: vector::empty()
         };
+
+        // Store the pending admin capability
+        move_to(account, PendingAdminCapability { admin });
+
         // Can only be called once. If storage already exists in @pyth_lazer,
         // this operation will fail (one-time initialization).
         move_to(account, storage);
+    }
+
+    /// Allows the designated admin to claim their capability
+    public entry fun claim_admin_capability(account: &signer) acquires PendingAdminCapability {
+        let pending = borrow_global<PendingAdminCapability>(@pyth_lazer);
+        assert!(signer::address_of(account) == pending.admin, ENO_PERMISSIONS);
+
+        // Create and move the admin capability to the claiming account
+        move_to(account, AdminCapability {});
     }
 
     /// Verify a message signature and collect fee
@@ -97,13 +116,18 @@ module pyth_lazer::pyth_lazer {
     public entry fun update_trusted_signer(
         account: &signer, trusted_signer: vector<u8>, expires_at: u64
     ) acquires Storage {
-        let storage = borrow_global_mut<Storage>(@pyth_lazer);
-        assert!(signer::address_of(account) == storage.top_authority, ENO_PERMISSIONS);
+        // Verify admin capability
+        assert!(
+            exists<AdminCapability>(signer::address_of(account)),
+            ENO_PERMISSIONS
+        );
+
         assert!(
             vector::length(&trusted_signer) == ED25519_PUBLIC_KEY_LENGTH,
             EINVALID_SIGNER
         );
 
+        let storage = borrow_global_mut<Storage>(@pyth_lazer);
         let num_signers = storage.trusted_signers.length();
         let i = 0;
         let found = false;

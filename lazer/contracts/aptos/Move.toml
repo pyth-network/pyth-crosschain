@@ -3,10 +3,8 @@ name = "pyth_lazer"
 version = "0.1.0"
 license = "UNLICENSED"
 
-[dependencies.AptosFramework]
-git = "https://github.com/aptos-labs/aptos-framework.git"
-rev = "mainnet"
-subdir = "aptos-framework"
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-framework", rev = "mainnet" }
 
 [addresses]
 pyth_lazer = "_"
