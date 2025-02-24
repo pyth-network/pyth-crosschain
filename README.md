@@ -146,14 +146,14 @@ New packages should be configured with a few requirements in mind:
 
 3. If you are writing a package that will be published:
 
-   - Make sure you are dual-exporting cjs and esm correctly, see [how the lazer
-     sdk package builds](./lazer/sdk/js/package.json) (in particular look at the
+   - Make sure you are dual-exporting cjs and esm correctly, see [how the laser
+     sdk package builds](./laser/sdk/js/package.json) (in particular look at the
      `build:cjs` and `build:esm` tasks) for an example for how to do this
 
    - Ensure you have properly configured [subpath
      exports](https://nodejs.org/api/packages.html#subpath-exports) to reference
      the esm and cjs outputs so that your package can be consumed correctly in
-     both environments. Again, see [the lazer sdk](./lazer/sdk/js/package.json)
+     both environments. Again, see [the laser sdk](./laser/sdk/js/package.json)
      as an example for doing this correctly.
 
    - Ensure you have set a `main` and `types` property on your `package.json`
