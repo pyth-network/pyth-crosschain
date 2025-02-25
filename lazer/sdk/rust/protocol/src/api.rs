@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::router::{
-    Chain, Channel, JsonBinaryEncoding, JsonUpdate, PriceFeedId, PriceFeedProperty,
+    Channel, Format, JsonBinaryEncoding, JsonUpdate, PriceFeedId, PriceFeedProperty,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9,7 +9,9 @@ use crate::router::{
 pub struct LatestPriceRequest {
     pub price_feed_ids: Vec<PriceFeedId>,
     pub properties: Vec<PriceFeedProperty>,
-    pub chains: Vec<Chain>,
+    // "chains" was renamed to "formats". "chains" is still supported for compatibility.
+    #[serde(alias = "chains")]
+    pub formats: Vec<Format>,
     #[serde(default)]
     pub json_binary_encoding: JsonBinaryEncoding,
     /// If `true`, the stream update will contain a JSON object containing

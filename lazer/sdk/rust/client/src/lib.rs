@@ -1,10 +1,13 @@
 use anyhow::Result;
-use futures_util::{SinkExt, StreamExt};
-use pyth_lazer_protocol::subscription::{
-    ErrorResponse, Request, Response, SubscriptionId, UnsubscribeRequest,
+use derive_more::From;
+use futures_util::{SinkExt, StreamExt, TryStreamExt};
+use pyth_lazer_protocol::{
+    binary_update::BinaryWsUpdate,
+    subscription::{ErrorResponse, Request, Response, SubscriptionId, UnsubscribeRequest},
 };
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
+
 /// A WebSocket client for consuming Pyth Lazer price feed updates
 ///
 /// This client provides a simple interface to:
@@ -23,6 +26,12 @@ pub struct LazerClient {
             Message,
         >,
     >,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, From)]
+pub enum AnyResponse {
+    Json(Response),
+    Binary(BinaryWsUpdate),
 }
 
 impl LazerClient {
@@ -48,7 +57,7 @@ impl LazerClient {
     ///
     /// # Returns
     /// Returns a stream of responses from the server
-    pub async fn start(&mut self) -> Result<impl futures_util::Stream<Item = Result<Response>>> {
+    pub async fn start(&mut self) -> Result<impl futures_util::Stream<Item = Result<AnyResponse>>> {
         let url = self.endpoint.clone();
         let mut request =
             tokio_tungstenite::tungstenite::client::IntoClientRequest::into_client_request(url)?;
@@ -62,19 +71,27 @@ impl LazerClient {
         let (ws_sender, ws_receiver) = ws_stream.split();
 
         self.ws_sender = Some(ws_sender);
-        let response_stream = ws_receiver.map(|msg| -> Result<Response> {
-            let msg = msg?;
-            match msg {
-                Message::Text(text) => Ok(serde_json::from_str(&text)?),
-                Message::Binary(data) => Ok(Response::from_binary(&data)?),
-                Message::Close(_) => Ok(Response::Error(ErrorResponse {
-                    error: "WebSocket connection closed".to_string(),
-                })),
-                _ => Ok(Response::Error(ErrorResponse {
-                    error: "Unexpected message type".to_string(),
-                })),
-            }
-        });
+        let response_stream =
+            ws_receiver
+                .map_err(anyhow::Error::from)
+                .try_filter_map(|msg| async {
+                    let r: Result<Option<AnyResponse>> = match msg {
+                        Message::Text(text) => {
+                            Ok(Some(serde_json::from_str::<Response>(&text)?.into()))
+                        }
+                        Message::Binary(data) => {
+                            Ok(Some(BinaryWsUpdate::deserialize_slice(&data)?.into()))
+                        }
+                        Message::Close(_) => Ok(Some(
+                            Response::Error(ErrorResponse {
+                                error: "WebSocket connection closed".to_string(),
+                            })
+                            .into(),
+                        )),
+                        _ => Ok(None),
+                    };
+                    r
+                });
 
         Ok(response_stream)
     }

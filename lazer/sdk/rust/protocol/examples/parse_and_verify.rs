@@ -1,9 +1,12 @@
 use {
     anyhow::bail,
-    byteorder::{ReadBytesExt, BE},
+    byteorder::{ReadBytesExt, LE},
     pyth_lazer_protocol::{
-        message::{EvmMessage, SolanaMessage},
-        payload::{PayloadData, EVM_FORMAT_MAGIC, SOLANA_FORMAT_MAGIC_BE},
+        message::{
+            format_magics_le::{EVM_FORMAT_MAGIC, SOLANA_FORMAT_MAGIC},
+            EvmMessage, SolanaMessage,
+        },
+        payload::PayloadData,
     },
     std::io::{stdin, BufRead, Cursor},
 };
@@ -12,8 +15,8 @@ fn main() -> anyhow::Result<()> {
     println!("Reading hex encoded payloads from stdin...");
     for line in stdin().lock().lines() {
         let message = hex::decode(line?.trim())?;
-        let magic = Cursor::new(&message).read_u32::<BE>()?;
-        if magic == SOLANA_FORMAT_MAGIC_BE {
+        let magic = Cursor::new(&message).read_u32::<LE>()?;
+        if magic == SOLANA_FORMAT_MAGIC {
             println!("this is a solana payload");
             let message = SolanaMessage::deserialize_slice(&message)?;
             println!(
