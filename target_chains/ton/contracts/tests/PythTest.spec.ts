@@ -1299,13 +1299,40 @@ describe("PythTest", () => {
       CUSTOM_PAYLOAD
     );
 
-    // Verify transaction success and message count
+    // Verify transaction success but error response sent
     expect(result.transactions).toHaveTransaction({
       from: deployer.address,
       to: pythTest.address,
-      success: false,
-      exitCode: 2020, // ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE
+      success: true,
     });
+
+    // Find the error response message - it's in the second transaction's outMessages
+    const errorTx = result.transactions[1]; // The PythTest contract transaction
+    expect(errorTx.outMessages.values().length).toBeGreaterThan(0);
+
+    const errorMessage = errorTx.outMessages.values()[0];
+    expect(errorMessage).toBeDefined();
+
+    const cs = errorMessage.body.beginParse();
+
+    // Verify error response format
+    const op = cs.loadUint(32);
+    expect(op).toBe(0x10002); // OP_RESPONSE_ERROR
+
+    const errorCode = cs.loadUint(32);
+    expect(errorCode).toBe(2020); // ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE
+
+    const originalOp = cs.loadUint(32);
+    expect(originalOp).toBe(6); // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+
+    // Verify custom payload is preserved
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    expect(
+      Buffer.from(
+        customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length)
+      ).toString("hex")
+    ).toBe(CUSTOM_PAYLOAD.toString("hex"));
   });
 
   it("should fail to parse unique price feed updates", async () => {
@@ -1324,13 +1351,40 @@ describe("PythTest", () => {
       CUSTOM_PAYLOAD
     );
 
-    // Verify transaction success and message count
+    // Verify transaction success but error response sent
     expect(result.transactions).toHaveTransaction({
       from: deployer.address,
       to: pythTest.address,
-      success: false,
-      exitCode: 2020, // ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE
+      success: true,
     });
+
+    // Find the error response message - it's in the second transaction's outMessages
+    const errorTx = result.transactions[1]; // The PythTest contract transaction
+    expect(errorTx.outMessages.values().length).toBeGreaterThan(0);
+
+    const errorMessage = errorTx.outMessages.values()[0];
+    expect(errorMessage).toBeDefined();
+
+    const cs = errorMessage.body.beginParse();
+
+    // Verify error response format
+    const op = cs.loadUint(32);
+    expect(op).toBe(0x10002); // OP_RESPONSE_ERROR
+
+    const errorCode = cs.loadUint(32);
+    expect(errorCode).toBe(2020); // ERROR_PRICE_FEED_NOT_FOUND_WITHIN_RANGE
+
+    const originalOp = cs.loadUint(32);
+    expect(originalOp).toBe(6); // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+
+    // Verify custom payload is preserved
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    expect(
+      Buffer.from(
+        customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length)
+      ).toString("hex")
+    ).toBe(CUSTOM_PAYLOAD.toString("hex"));
   });
 
   it("should successfully parse price feed updates in price ids order", async () => {
