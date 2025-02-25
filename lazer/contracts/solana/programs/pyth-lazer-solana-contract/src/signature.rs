@@ -1,7 +1,7 @@
 use {
     crate::Storage,
     anchor_lang::{
-        prelude::{borsh, AccountInfo, Clock, ProgramError, Pubkey, SolanaSysvar},
+        prelude::{borsh, AccountInfo, ProgramError, Pubkey},
         solana_program::{
             ed25519_program, program_memory::sol_memcmp, pubkey::PUBKEY_BYTES, sysvar,
         },
@@ -9,6 +9,7 @@ use {
     },
     bytemuck::{cast_slice, checked::try_cast_slice, Pod, Zeroable},
     byteorder::{ByteOrder, LE},
+    pyth_lazer_protocol::message::format_magics_le::SOLANA_FORMAT_MAGIC,
     thiserror::Error,
 };
 
@@ -172,8 +173,6 @@ pub fn verify_message(
     ed25519_instruction_index: u16,
     signature_index: u8,
 ) -> Result<VerifiedMessage, SignatureVerificationError> {
-    const SOLANA_FORMAT_MAGIC_LE: u32 = 2182742457;
-
     let self_instruction_index =
         sysvar::instructions::load_current_index_checked(instructions_sysvar)
             .map_err(SignatureVerificationError::LoadCurrentIndexFailed)?;
@@ -237,7 +236,7 @@ pub fn verify_message(
     }
 
     let magic = LE::read_u32(&message_data[..MAGIC_LEN.into()]);
-    if magic != SOLANA_FORMAT_MAGIC_LE {
+    if magic != SOLANA_FORMAT_MAGIC {
         return Err(SignatureVerificationError::FormatMagicMismatch);
     }
 
@@ -294,13 +293,10 @@ pub fn verify_message(
             .ok_or(SignatureVerificationError::MessageOffsetOverflow)?;
         &message_data[start..end]
     };
-    let now = Clock::get()
-        .map_err(SignatureVerificationError::ClockGetFailed)?
-        .unix_timestamp;
+
     if !storage
-        .initialized_trusted_signers()
-        .iter()
-        .any(|s| s.pubkey.as_ref() == public_key && s.expires_at > now)
+        .is_trusted(&public_key.try_into().expect("invalid pubkey len"))
+        .map_err(SignatureVerificationError::ClockGetFailed)?
     {
         return Err(SignatureVerificationError::NotTrustedSigner);
     }

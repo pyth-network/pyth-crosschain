@@ -1,6 +1,6 @@
 use {
     anchor_lang::{prelude::AccountMeta, InstructionData},
-    pyth_lazer_solana_contract::ed25519_program_args,
+    pyth_lazer_solana_contract::{ed25519_program_args, EvmAddress},
     solana_program_test::{BanksClient, BanksClientError, ProgramTest},
     solana_sdk::{
         ed25519_program,
@@ -37,31 +37,32 @@ struct Setup {
     banks_client: BanksClient,
     payer: Keypair,
     recent_blockhash: Hash,
+    treasury: Pubkey,
 }
 
 impl Setup {
     async fn with_program_test(program_test: ProgramTest) -> Self {
         let (banks_client, payer, recent_blockhash) = program_test.start().await;
-        Self {
+        let mut setup = Self {
+            treasury: Pubkey::create_with_seed(&payer.pubkey(), "treasury", &system_program::ID)
+                .unwrap(),
             banks_client,
             payer,
             recent_blockhash,
-        }
+        };
+        setup.create_treasury().await;
+        setup
     }
 
     async fn new() -> Self {
         Self::with_program_test(program_test()).await
     }
 
-    async fn create_treasury(&mut self) -> Pubkey {
-        let treasury =
-            Pubkey::create_with_seed(&self.payer.pubkey(), "treasury", &system_program::ID)
-                .unwrap();
-
+    async fn create_treasury(&mut self) {
         let mut transaction_create_treasury = Transaction::new_with_payer(
             &[system_instruction::create_account_with_seed(
                 &self.payer.pubkey(),
-                &treasury,
+                &self.treasury,
                 &self.payer.pubkey(),
                 "treasury",
                 10_000_000,
@@ -75,7 +76,30 @@ impl Setup {
             .process_transaction(transaction_create_treasury)
             .await
             .unwrap();
-        treasury
+    }
+
+    async fn init_contract(&mut self) {
+        let mut transaction_init_contract = Transaction::new_with_payer(
+            &[Instruction::new_with_bytes(
+                pyth_lazer_solana_contract::ID,
+                &pyth_lazer_solana_contract::instruction::Initialize {
+                    top_authority: self.payer.pubkey(),
+                    treasury: self.treasury,
+                }
+                .data(),
+                vec![
+                    AccountMeta::new(self.payer.pubkey(), true),
+                    AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
+                    AccountMeta::new_readonly(system_program::ID, false),
+                ],
+            )],
+            Some(&self.payer.pubkey()),
+        );
+        transaction_init_contract.sign(&[&self.payer], self.recent_blockhash);
+        self.banks_client
+            .process_transaction(transaction_init_contract)
+            .await
+            .unwrap();
     }
 
     async fn set_trusted(&mut self, verifying_key: Pubkey) {
@@ -101,23 +125,44 @@ impl Setup {
             .unwrap();
     }
 
-    async fn verify_message(&mut self, message: &[u8], treasury: Pubkey) {
+    async fn set_trusted_ecdsa(&mut self, verifying_key: EvmAddress) {
+        let mut transaction_set_trusted = Transaction::new_with_payer(
+            &[Instruction::new_with_bytes(
+                pyth_lazer_solana_contract::ID,
+                &pyth_lazer_solana_contract::instruction::UpdateEcdsaSigner {
+                    trusted_signer: verifying_key,
+                    expires_at: i64::MAX,
+                }
+                .data(),
+                vec![
+                    AccountMeta::new(self.payer.pubkey(), true),
+                    AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
+                ],
+            )],
+            Some(&self.payer.pubkey()),
+        );
+        transaction_set_trusted.sign(&[&self.payer], self.recent_blockhash);
+        self.banks_client
+            .process_transaction(transaction_set_trusted)
+            .await
+            .unwrap();
+    }
+
+    async fn verify_message(&mut self, message: &[u8]) {
         let treasury_starting_lamports = self
             .banks_client
-            .get_account(treasury)
+            .get_account(self.treasury)
             .await
             .unwrap()
             .unwrap()
             .lamports;
 
         // 8 bytes for Anchor header, 4 bytes for Vec length.
-        self.verify_message_with_offset(message, treasury, 12)
-            .await
-            .unwrap();
+        self.verify_message_with_offset(message, 12).await.unwrap();
 
         assert_eq!(
             self.banks_client
-                .get_account(treasury)
+                .get_account(self.treasury)
                 .await
                 .unwrap()
                 .unwrap()
@@ -129,7 +174,6 @@ impl Setup {
     async fn verify_message_with_offset(
         &mut self,
         message: &[u8],
-        treasury: Pubkey,
         message_offset: u16,
     ) -> Result<(), BanksClientError> {
         // Instruction #0 will be ed25519 instruction;
@@ -159,7 +203,7 @@ impl Setup {
                     vec![
                         AccountMeta::new(self.payer.pubkey(), true),
                         AccountMeta::new_readonly(pyth_lazer_solana_contract::STORAGE_ID, false),
-                        AccountMeta::new(treasury, false),
+                        AccountMeta::new(self.treasury, false),
                         AccountMeta::new_readonly(system_program::ID, false),
                         AccountMeta::new_readonly(sysvar::instructions::ID, false),
                     ],
@@ -172,35 +216,54 @@ impl Setup {
             .process_transaction(transaction_verify)
             .await
     }
+
+    async fn verify_message_ecdsa(&mut self, message: &[u8]) {
+        let treasury_starting_lamports = self
+            .banks_client
+            .get_account(self.treasury)
+            .await
+            .unwrap()
+            .unwrap()
+            .lamports;
+
+        let mut transaction_verify = Transaction::new_with_payer(
+            &[Instruction::new_with_bytes(
+                pyth_lazer_solana_contract::ID,
+                &pyth_lazer_solana_contract::instruction::VerifyEcdsaMessage {
+                    message_data: message.to_vec(),
+                }
+                .data(),
+                vec![
+                    AccountMeta::new(self.payer.pubkey(), true),
+                    AccountMeta::new_readonly(pyth_lazer_solana_contract::STORAGE_ID, false),
+                    AccountMeta::new(self.treasury, false),
+                    AccountMeta::new_readonly(system_program::ID, false),
+                ],
+            )],
+            Some(&self.payer.pubkey()),
+        );
+        transaction_verify.sign(&[&self.payer], self.recent_blockhash);
+        self.banks_client
+            .process_transaction(transaction_verify)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            self.banks_client
+                .get_account(self.treasury)
+                .await
+                .unwrap()
+                .unwrap()
+                .lamports,
+            treasury_starting_lamports + 1,
+        );
+    }
 }
 
 #[tokio::test]
 async fn test_basic() {
     let mut setup = Setup::new().await;
-    let treasury = setup.create_treasury().await;
-
-    let mut transaction_init_contract = Transaction::new_with_payer(
-        &[Instruction::new_with_bytes(
-            pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::Initialize {
-                top_authority: setup.payer.pubkey(),
-                treasury,
-            }
-            .data(),
-            vec![
-                AccountMeta::new(setup.payer.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
-                AccountMeta::new_readonly(system_program::ID, false),
-            ],
-        )],
-        Some(&setup.payer.pubkey()),
-    );
-    transaction_init_contract.sign(&[&setup.payer], setup.recent_blockhash);
-    setup
-        .banks_client
-        .process_transaction(transaction_init_contract)
-        .await
-        .unwrap();
+    setup.init_contract().await;
 
     let verifying_key =
         hex::decode("74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214").unwrap();
@@ -212,36 +275,13 @@ async fn test_basic() {
     .unwrap();
 
     setup.set_trusted(verifying_key.try_into().unwrap()).await;
-    setup.verify_message(&message, treasury).await;
+    setup.verify_message(&message).await;
 }
 
 #[tokio::test]
 async fn test_alignment() {
     let mut setup = Setup::new().await;
-    let treasury = setup.create_treasury().await;
-
-    let mut transaction_init_contract = Transaction::new_with_payer(
-        &[Instruction::new_with_bytes(
-            pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::Initialize {
-                top_authority: setup.payer.pubkey(),
-                treasury,
-            }
-            .data(),
-            vec![
-                AccountMeta::new(setup.payer.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
-                AccountMeta::new_readonly(system_program::ID, false),
-            ],
-        )],
-        Some(&setup.payer.pubkey()),
-    );
-    transaction_init_contract.sign(&[&setup.payer], setup.recent_blockhash);
-    setup
-        .banks_client
-        .process_transaction(transaction_init_contract)
-        .await
-        .unwrap();
+    setup.init_contract().await;
 
     let verifying_key =
         hex::decode("f65210bee4fcf5b1cee1e537fabcfd95010297653b94af04d454fc473e94834f").unwrap();
@@ -255,36 +295,13 @@ async fn test_alignment() {
     .unwrap();
 
     setup.set_trusted(verifying_key.try_into().unwrap()).await;
-    setup.verify_message(&message, treasury).await;
+    setup.verify_message(&message).await;
 }
 
 #[tokio::test]
 async fn test_rejects_wrong_offset() {
     let mut setup = Setup::new().await;
-    let treasury = setup.create_treasury().await;
-
-    let mut transaction_init_contract = Transaction::new_with_payer(
-        &[Instruction::new_with_bytes(
-            pyth_lazer_solana_contract::ID,
-            &pyth_lazer_solana_contract::instruction::Initialize {
-                top_authority: setup.payer.pubkey(),
-                treasury,
-            }
-            .data(),
-            vec![
-                AccountMeta::new(setup.payer.pubkey(), true),
-                AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
-                AccountMeta::new_readonly(system_program::ID, false),
-            ],
-        )],
-        Some(&setup.payer.pubkey()),
-    );
-    transaction_init_contract.sign(&[&setup.payer], setup.recent_blockhash);
-    setup
-        .banks_client
-        .process_transaction(transaction_init_contract)
-        .await
-        .unwrap();
+    setup.init_contract().await;
 
     let verifying_key =
         hex::decode("74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214").unwrap();
@@ -324,7 +341,7 @@ async fn test_rejects_wrong_offset() {
     setup.set_trusted(verifying_key.try_into().unwrap()).await;
     setup.set_trusted(verifying_key_2.try_into().unwrap()).await;
     let err = setup
-        .verify_message_with_offset(&message, treasury, 12 + 130)
+        .verify_message_with_offset(&message, 12 + 130)
         .await
         .unwrap_err();
     assert!(matches!(
@@ -334,4 +351,21 @@ async fn test_rejects_wrong_offset() {
             InstructionError::InvalidInstructionData
         ))
     ));
+}
+
+#[tokio::test]
+async fn test_ecdsa() {
+    let mut setup = Setup::new().await;
+    setup.init_contract().await;
+
+    let verifying_key = hex::decode("b8d50f0bae75bf6e03c104903d7c3afc4a6596da").unwrap();
+    let message = hex::decode(
+        "e4bd474dd4b822eca4509650613e58b21db858e60750ab3498d4a484028785981740adf42cd558bb4f9efd5157bcbb60a1939470ead091b82b63641ad962c7a537db4eb300310075d3c793c0afe900e42e060003010100000004000054e616b201000004f8ff020035dc1cb2010000010073f010b2010000",
+    )
+    .unwrap();
+
+    setup
+        .set_trusted_ecdsa(verifying_key.try_into().unwrap())
+        .await;
+    setup.verify_message_ecdsa(&message).await;
 }
