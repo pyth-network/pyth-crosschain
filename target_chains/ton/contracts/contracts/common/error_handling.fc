@@ -1,0 +1,44 @@
+#include "op.fc";
+#include "errors.fc";
+#include "constants.fc";
+
+() emit_error(int error_code, int op, slice sender_address, cell custom_payload) impure inline {
+    ;; Create error message cell with context
+    cell msg = begin_cell()
+        .store_uint(OP_RESPONSE_ERROR, 32)
+        .store_uint(error_code, 32)
+        .store_uint(op, 32)
+        .store_ref(custom_payload)
+    .end_cell();
+
+    ;; Send error response back to sender
+    var msg = begin_cell()
+        .store_uint(0x18, 6)            ;; nobounce
+        .store_slice(sender_address)     ;; to_addr
+        .store_coins(0)                  ;; value
+        .store_uint(1, MSG_SERIALIZE_BITS) ;; msg header
+        .store_ref(msg)                  ;; error info
+    .end_cell();
+
+    send_raw_message(msg, 64);
+}
+
+() emit_success(slice sender_address, cell result, cell custom_payload) impure inline {
+    ;; Create success message cell
+    cell msg = begin_cell()
+        .store_uint(OP_RESPONSE_SUCCESS, 32)
+        .store_ref(result)              ;; Result data
+        .store_ref(custom_payload)      ;; Original custom payload
+    .end_cell();
+
+    ;; Send success response
+    var msg = begin_cell()
+        .store_uint(0x18, 6)            ;; nobounce
+        .store_slice(sender_address)     ;; to_addr
+        .store_coins(0)                  ;; value
+        .store_uint(1, MSG_SERIALIZE_BITS) ;; msg header
+        .store_ref(msg)                  ;; success info
+    .end_cell();
+
+    send_raw_message(msg, 64);
+}

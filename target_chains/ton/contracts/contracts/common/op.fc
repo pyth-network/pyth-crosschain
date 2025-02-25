@@ -4,3 +4,7 @@ const int OP_EXECUTE_GOVERNANCE_ACTION = 3;
 const int OP_UPGRADE_CONTRACT = 4;
 const int OP_PARSE_PRICE_FEED_UPDATES = 5;
 const int OP_PARSE_UNIQUE_PRICE_FEED_UPDATES = 6;
+
+;; Response op codes
+const int OP_RESPONSE_SUCCESS = 0x10001;
+const int OP_RESPONSE_ERROR = 0x10002;
