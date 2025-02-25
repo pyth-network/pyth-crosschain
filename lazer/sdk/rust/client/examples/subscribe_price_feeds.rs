@@ -140,16 +140,6 @@ async fn main() -> anyhow::Result<()> {
                             );
                         }
                     }
-
-                    if let Some(json) = update.payload.json {
-                        // JSON format payloads are already decoded and ready to use
-                        for feed in json.price_feeds {
-                            println!(
-                                "JSON payload: {:?}: {:?} at {:?}",
-                                feed.price_feed_id, feed, json.timestamp_us
-                            );
-                        }
-                    }
                 }
                 msg => println!("Received non-update message: {msg:?}"),
             },

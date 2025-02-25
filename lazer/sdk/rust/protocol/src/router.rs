@@ -160,7 +160,6 @@ pub enum DeliveryFormat {
 pub enum Format {
     Evm,
     Solana,
-    Json,
     LeEcdsa,
     LeUnsigned,
 }
@@ -373,10 +372,6 @@ pub struct JsonUpdate {
     /// Present unless `parsed = false` is specified in subscription params.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parsed: Option<ParsedPayload>,
-    /// Only present if `Json` is present in `formats` in subscription params.
-    /// It has the same content as `parsed`, so it's advised to only request one of them.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub json: Option<ParsedPayload>,
     /// Only present if `Evm` is present in `formats` in subscription params.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evm: Option<JsonBinaryData>,
