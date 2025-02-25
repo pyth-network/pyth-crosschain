@@ -14,12 +14,15 @@ import {
   type SortDescriptor,
   Table,
 } from "@pythnetwork/component-library/Table";
+import clsx from "clsx";
 import { useQueryState, parseAsStringEnum } from "nuqs";
 import { type ReactNode, Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
+import styles from "./publishers-card.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { CLUSTER_NAMES } from "../../services/pyth";
+import { EntityList } from "../EntityList";
 import { ExplainActive, ExplainInactive } from "../Explanations";
 import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
@@ -230,7 +233,7 @@ const PublishersCardContents = ({
   ...props
 }: PublishersCardContentsProps) => (
   <Card
-    className={className}
+    className={clsx(styles.publishersCard, className)}
     icon={<Broadcast />}
     title={
       <>
@@ -242,8 +245,21 @@ const PublishersCardContents = ({
         )}
       </>
     }
+    toolbarClassName={styles.toolbar}
     toolbar={
       <>
+        <SearchInput
+          size="sm"
+          width={60}
+          placeholder="Publisher key or name"
+          className={styles.searchInput ?? ""}
+          {...(props.isLoading
+            ? { isPending: true, isDisabled: true }
+            : {
+                value: props.search,
+                onChange: props.onSearchChange,
+              })}
+        />
         <Select
           label="Cluster"
           size="sm"
@@ -257,17 +273,6 @@ const PublishersCardContents = ({
                 placement: "bottom end",
                 selectedKey: props.cluster,
                 onSelectionChange: props.onChangeCluster,
-              })}
-        />
-        <SearchInput
-          size="sm"
-          width={60}
-          placeholder="Publisher key or name"
-          {...(props.isLoading
-            ? { isPending: true, isDisabled: true }
-            : {
-                value: props.search,
-                onChange: props.onSearchChange,
               })}
         />
       </>
@@ -286,11 +291,35 @@ const PublishersCardContents = ({
       ),
     })}
   >
+    <EntityList
+      className={styles.entityList ?? ""}
+      headerLoadingSkeleton={<PublisherTag isLoading />}
+      fields={[
+        { id: "averageScore", name: "Average Score" },
+        { id: "activeFeeds", name: "Active Feeds" },
+        { id: "inactiveFeeds", name: "Inactive Feeds" },
+      ]}
+      isLoading={props.isLoading}
+      rows={
+        props.isLoading
+          ? []
+          : props.rows.map((row) => ({
+              ...row,
+              header: (
+                <>
+                  {row.data.name}
+                  <div className={styles.rankingWraper}>{row.data.ranking}</div>
+                </>
+              ),
+            }))
+      }
+    />
     <Table
       rounded
       fill
       label="Publishers"
       stickyHeader={rootStyles.headerHeight}
+      className={styles.table ?? ""}
       columns={[
         {
           id: "ranking",

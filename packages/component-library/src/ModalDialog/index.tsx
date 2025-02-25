@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, type PanInfo } from "motion/react";
 import {
   type ComponentProps,
   type Dispatch,
@@ -12,6 +12,7 @@ import {
   useEffect,
 } from "react";
 import {
+  type ModalRenderProps,
   Modal,
   ModalOverlay,
   Dialog,
@@ -79,6 +80,11 @@ type OwnProps = Pick<ComponentProps<typeof Modal>, "children"> &
       | ComponentProps<typeof MotionModalOverlay>["variants"]
       | undefined;
     onCloseFinish?: (() => void) | undefined;
+    onDragEnd?: (
+      e: MouseEvent | TouchEvent | PointerEvent,
+      panInfo: PanInfo,
+      modalState: ModalRenderProps,
+    ) => void;
   };
 
 type Props = Omit<ComponentProps<typeof MotionDialog>, keyof OwnProps> &
@@ -91,6 +97,7 @@ export const ModalDialog = ({
   overlayClassName,
   overlayVariants,
   children,
+  onDragEnd,
   ...props
 }: Props) => {
   const contextAnimationState = use(ModalAnimationContext);
@@ -142,7 +149,14 @@ export const ModalDialog = ({
     >
       <Modal style={{ height: 0 }}>
         {(...args) => (
-          <MotionDialog {...props}>
+          <MotionDialog
+            {...props}
+            {...(onDragEnd && {
+              onDragEnd: (e, info) => {
+                onDragEnd(e, info, args[0]);
+              },
+            })}
+          >
             {typeof children === "function" ? children(...args) : children}
           </MotionDialog>
         )}

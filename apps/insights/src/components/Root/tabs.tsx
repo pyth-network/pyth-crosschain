@@ -19,28 +19,11 @@ export const TabRoot = (
 };
 
 export const MainNavTabs = (
-  props: Omit<
-    ComponentProps<typeof MainNavTabsComponent>,
-    "pathname" | "items"
-  >,
+  props: Omit<ComponentProps<typeof MainNavTabsComponent>, "pathname">,
 ) => {
   const pathname = usePathname();
 
-  return (
-    <MainNavTabsComponent
-      pathname={pathname}
-      items={[
-        { href: "/", id: "", children: "Overview" },
-        { href: "/publishers", id: "publishers", children: "Publishers" },
-        {
-          href: "/price-feeds",
-          id: "price-feeds",
-          children: "Price Feeds",
-        },
-      ]}
-      {...props}
-    />
-  );
+  return <MainNavTabsComponent pathname={pathname} {...props} />;
 };
 
 export const TabPanel = ({

@@ -55,83 +55,23 @@ export const Publishers = async () => {
         )}
       </div>
       <div className={styles.body}>
-        <section className={styles.stats}>
-          <StatCard
-            variant="primary"
-            header="Active Publishers"
-            stat={pythnetPublishers.length}
-          />
-          <StatCard
-            header="Average Feed Score"
-            corner={<ExplainAverage scoreTime={scoreTime} />}
-            stat={(
-              pythnetPublishers.reduce(
-                (sum, publisher) => sum + publisher.averageScore,
-                0,
-              ) / pythnetPublishers.length
-            ).toFixed(2)}
-          />
-          <Card
-            title="Oracle Integrity Staking (OIS)"
-            className={styles.oisCard}
-            toolbar={
-              <Button
-                href="https://staking.pyth.network"
-                target="_blank"
-                size="sm"
-                variant="outline"
-                afterIcon={ArrowSquareOut}
-              >
-                Staking App
-              </Button>
-            }
-          >
-            <SemicircleMeter
-              width={340}
-              height={340}
-              value={Number(oisStats.totalStaked)}
-              maxValue={oisStats.maxPoolSize ?? 0}
-              className={styles.oisPool ?? ""}
-            >
-              <Label className={styles.title}>PYTH Staking Pool</Label>
-              <p className={styles.poolUsed}>
-                <FormattedTokens
-                  mode="wholePart"
-                  tokens={oisStats.totalStaked}
-                />
-              </p>
-              <p className={styles.poolTotal}>
-                /{" "}
-                <FormattedTokens
-                  mode="wholePart"
-                  tokens={BigInt(oisStats.maxPoolSize ?? 0)}
-                />
-              </p>
-            </SemicircleMeter>
-            <div className={styles.oisStats}>
-              <StatCard
-                header="Total Staked"
-                variant="tertiary"
-                stat={
-                  <>
-                    <TokenIcon />
-                    <FormattedTokens tokens={oisStats.totalStaked} />
-                  </>
-                }
-              />
-              <StatCard
-                header="Total Rewards Distributed"
-                variant="tertiary"
-                stat={
-                  <>
-                    <TokenIcon />
-                    <FormattedTokens tokens={oisStats.rewardsDistributed} />
-                  </>
-                }
-              />
-            </div>
-          </Card>
-        </section>
+        <StatCard
+          variant="primary"
+          header="Active Publishers"
+          stat={pythnetPublishers.length}
+          className={styles.statCard ?? ""}
+        />
+        <StatCard
+          header="Average Feed Score"
+          corner={<ExplainAverage scoreTime={scoreTime} />}
+          className={styles.statCard ?? ""}
+          stat={(
+            pythnetPublishers.reduce(
+              (sum, publisher) => sum + publisher.averageScore,
+              0,
+            ) / pythnetPublishers.length
+          ).toFixed(2)}
+        />
         <PublishersCard
           className={styles.publishersCard}
           explainAverage={<ExplainAverage scoreTime={scoreTime} />}
@@ -142,6 +82,63 @@ export const Publishers = async () => {
             (publisher) => toTableRow(publisher),
           )}
         />
+        <Card
+          title="Oracle Integrity Staking (OIS)"
+          className={styles.oisCard}
+          toolbar={
+            <Button
+              href="https://staking.pyth.network"
+              target="_blank"
+              size="sm"
+              variant="outline"
+              afterIcon={ArrowSquareOut}
+            >
+              Staking App
+            </Button>
+          }
+        >
+          <SemicircleMeter
+            width={340}
+            height={340}
+            value={Number(oisStats.totalStaked)}
+            maxValue={oisStats.maxPoolSize ?? 0}
+            className={styles.oisPool ?? ""}
+          >
+            <Label className={styles.title}>PYTH Staking Pool</Label>
+            <p className={styles.poolUsed}>
+              <FormattedTokens mode="wholePart" tokens={oisStats.totalStaked} />
+            </p>
+            <p className={styles.poolTotal}>
+              /{" "}
+              <FormattedTokens
+                mode="wholePart"
+                tokens={BigInt(oisStats.maxPoolSize ?? 0)}
+              />
+            </p>
+          </SemicircleMeter>
+          <div className={styles.oisStats}>
+            <StatCard
+              header="Total Staked"
+              variant="tertiary"
+              stat={
+                <>
+                  <TokenIcon />
+                  <FormattedTokens tokens={oisStats.totalStaked} />
+                </>
+              }
+            />
+            <StatCard
+              header="Total Rewards Distributed"
+              variant="tertiary"
+              stat={
+                <>
+                  <TokenIcon />
+                  <FormattedTokens tokens={oisStats.rewardsDistributed} />
+                </>
+              }
+            />
+          </div>
+        </Card>
       </div>
     </div>
   );

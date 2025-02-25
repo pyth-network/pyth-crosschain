@@ -12,6 +12,8 @@
   text-decoration: none;
   outline-offset: 0;
   outline: theme.spacing(1) solid transparent;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
 
   .iconWrapper {
     display: inline-grid;

@@ -22,6 +22,8 @@ type OwnProps = {
   toolbar?: ReactNode | ReactNode[] | undefined;
   footer?: ReactNode | undefined;
   nonInteractive?: boolean | undefined;
+  toolbarClassName?: string | undefined;
+  toolbarAlwaysOnTop?: boolean | undefined;
 };
 
 export type Props<T extends ElementType> = Omit<
@@ -59,6 +61,8 @@ const cardProps = <T extends ElementType>({
   title,
   toolbar,
   footer,
+  toolbarClassName,
+  toolbarAlwaysOnTop,
   ...props
 }: Props<T>) => ({
   ...props,
@@ -73,7 +77,14 @@ const cardProps = <T extends ElementType>({
             {icon && <div className={styles.icon}>{icon}</div>}
             {title}
           </h2>
-          <div className={styles.toolbar}>{toolbar}</div>
+          {toolbar && (
+            <div
+              className={clsx(styles.toolbar, toolbarClassName)}
+              data-always-on-top={toolbarAlwaysOnTop ? "" : undefined}
+            >
+              {toolbar}
+            </div>
+          )}
         </div>
       )}
       {children}

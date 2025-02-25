@@ -15,6 +15,7 @@ import {
   activePublishers,
   activeFeeds,
 } from "../../static-data/stats";
+import { Cards } from "../Cards";
 import { ChangePercent } from "../ChangePercent";
 import { ChartCard } from "../ChartCard";
 import { FormattedDate } from "../FormattedDate";
@@ -23,7 +24,7 @@ import { FormattedNumber } from "../FormattedNumber";
 export const Overview = () => (
   <div className={styles.overview}>
     <h1 className={styles.header}>Overview</h1>
-    <section className={styles.stats}>
+    <Cards>
       <ChartCard
         header="Total Volume Traded"
         variant="primary"
@@ -104,44 +105,21 @@ export const Overview = () => (
         }
         stat={activeChains.at(-1)?.chains}
       />
-    </section>
+    </Cards>
     <Tabs orientation="vertical" className={styles.overviewMainContent ?? ""}>
-      <section>
+      <section className={styles.intro}>
         <Badge>INSIGHTS</Badge>
         <p className={styles.headline}>Get the most from the Pyth Network</p>
         <p className={styles.message}>
           Insights Hub delivers transparency over the network status and
-          performance, and maximize productivity while integrating.
+          performance, and maximizes productivity while integrating.
         </p>
-        <TabList
-          label="test"
-          className={styles.tabList ?? ""}
-          items={[
-            {
-              id: "publishers",
-              header: "Publishers",
-              body: "Get insights about quality, ranking, and performance of each Publisher contributing to the network.",
-            },
-            {
-              id: "price feeds",
-              header: "Price Feeds",
-              body: "See information about every price feed's price, performance, components, and technical aspects all in one place for a better integration experience.",
-            },
-          ]}
-        />
-        <div className={styles.buttons}>
-          <Button href="/publishers" variant="solid" size="md">
-            Publishers
-          </Button>
-          <Button href="/price-feeds" variant="outline" size="md">
-            Price Feeds
-          </Button>
-        </div>
       </section>
       <CrossfadeTabPanels
         items={[
           {
             id: "publishers",
+            className: styles.imagePanel ?? "",
             children: (
               <>
                 <PublishersDark className={styles.darkImage} />
@@ -151,6 +129,7 @@ export const Overview = () => (
           },
           {
             id: "price feeds",
+            className: styles.imagePanel ?? "",
             children: (
               <>
                 <PriceFeedsDark className={styles.darkImage} />
@@ -160,6 +139,30 @@ export const Overview = () => (
           },
         ]}
       />
+      <TabList
+        label="test"
+        className={styles.tabList ?? ""}
+        items={[
+          {
+            id: "publishers",
+            header: "Publishers",
+            body: "Get insights about quality, ranking, and performance of each Publisher contributing to the network.",
+          },
+          {
+            id: "price feeds",
+            header: "Price Feeds",
+            body: "See information about every price feed's price, performance, components, and technical aspects all in one place for a better integration experience.",
+          },
+        ]}
+      />
+      <div className={styles.buttons}>
+        <Button href="/publishers" variant="solid" size="md">
+          Publishers
+        </Button>
+        <Button href="/price-feeds" variant="outline" size="md">
+          Price Feeds
+        </Button>
+      </div>
     </Tabs>
   </div>
 );

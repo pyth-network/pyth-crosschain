@@ -2,12 +2,12 @@
 
 .priceFeedLayout {
   .header {
-    @include theme.max-width;
-
     margin-bottom: theme.spacing(6);
     display: flex;
     flex-flow: column nowrap;
     gap: theme.spacing(6);
+
+    @include theme.max-width;
 
     .headerRow,
     .rightGroup,
@@ -48,9 +48,9 @@
   }
 
   .body {
-    @include theme.max-width;
-
     padding-top: theme.spacing(6);
+
+    @include theme.max-width;
   }
 }
 

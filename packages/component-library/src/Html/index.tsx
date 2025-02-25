@@ -3,27 +3,15 @@
 import { sans } from "@pythnetwork/fonts";
 import clsx from "clsx";
 import {
-  type ComponentProps,
   type CSSProperties,
+  type ComponentProps,
   useState,
   useEffect,
 } from "react";
 
-import {
-  OverlayVisibleContextProvider,
-  useIsOverlayVisible,
-} from "../overlay-visible-context.js";
-
 import "./base.scss";
 
-export const Html = (props: ComponentProps<"html">) => (
-  <OverlayVisibleContextProvider>
-    <HtmlInner {...props} />
-  </OverlayVisibleContextProvider>
-);
-
-const HtmlInner = ({ className, lang, ...props }: ComponentProps<"html">) => {
-  const isOverlayVisible = useIsOverlayVisible();
+export const Html = ({ className, lang, ...props }: ComponentProps<"html">) => {
   const scrollbarWidth = useScrollbarWidth();
 
   return (
@@ -35,7 +23,6 @@ const HtmlInner = ({ className, lang, ...props }: ComponentProps<"html">) => {
           "--scrollbar-width": `${scrollbarWidth.toString()}px`,
         } as CSSProperties
       }
-      data-overlay-visible={isOverlayVisible ? "" : undefined}
       {...props}
     />
   );

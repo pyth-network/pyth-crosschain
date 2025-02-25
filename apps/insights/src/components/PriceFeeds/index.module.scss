@@ -1,67 +1,89 @@
 @use "@pythnetwork/component-library/theme";
 
 .priceFeeds {
-  @include theme.max-width;
-
   .header {
-    @include theme.h3;
-
     color: theme.color("heading");
-    font-weight: theme.font-weight("semibold");
+
+    @include theme.h3;
+    @include theme.max-width;
   }
 
-  .body {
-    display: flex;
+  .cards {
+    @include theme.max-width;
+  }
+
+  .featuredFeedsCard {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: theme.spacing(1);
+
+    @include theme.breakpoint("sm") {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include theme.breakpoint("md") {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @include theme.breakpoint("lg") {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    & > * {
+      min-width: 0;
+    }
+
+    .feedCardContents {
+      display: flex;
+      flex-flow: column nowrap;
+      justify-content: space-between;
+      align-items: stretch;
+      padding: theme.spacing(3);
+      gap: theme.spacing(6);
+
+      .prices {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        align-items: center;
+        color: theme.color("heading");
+        font-weight: theme.font-weight("medium");
+        line-height: 1;
+        font-size: theme.font-size("base");
+
+        .changePercent {
+          font-size: theme.font-size("sm");
+        }
+      }
+    }
+  }
+
+  .bigScreenBody {
+    display: none;
     flex-flow: column nowrap;
     gap: theme.spacing(6);
     margin-top: theme.spacing(6);
+    width: 100%;
 
-    .feedKey {
-      margin: 0 -#{theme.button-padding("xs", true)};
-    }
+    @include theme.max-width;
 
-    .featuredFeeds,
-    .stats {
+    @include theme.breakpoint("lg") {
       display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
+    }
+  }
 
-      & > * {
-        flex: 1 1 0px;
-        width: 0;
-      }
+  .smallScreenBody {
+    @include theme.breakpoint("lg") {
+      display: none;
     }
 
-    .stats {
+    .tabPanel {
+      padding: theme.spacing(4) 0;
+      display: flex;
+      flex-flow: column nowrap;
       gap: theme.spacing(6);
-    }
 
-    .featuredFeeds {
-      gap: theme.spacing(1);
-
-      .feedCardContents {
-        display: flex;
-        flex-flow: column nowrap;
-        justify-content: space-between;
-        align-items: stretch;
-        padding: theme.spacing(3);
-        gap: theme.spacing(6);
-
-        .prices {
-          display: flex;
-          flex-flow: row nowrap;
-          justify-content: space-between;
-          align-items: center;
-          color: theme.color("heading");
-          font-weight: theme.font-weight("medium");
-          line-height: 1;
-          font-size: theme.font-size("base");
-
-          .changePercent {
-            font-size: theme.font-size("sm");
-          }
-        }
-      }
+      @include theme.max-width;
     }
   }
 }

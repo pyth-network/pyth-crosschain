@@ -1,0 +1,41 @@
+@use "@pythnetwork/component-library/theme";
+
+.publishersCard {
+  .toolbar {
+    .searchInput {
+      flex-grow: 1;
+    }
+  }
+
+  .table {
+    display: none;
+
+    @include theme.breakpoint("lg") {
+      display: unset;
+    }
+  }
+
+  .entityList {
+    @include theme.breakpoint("lg") {
+      display: none;
+    }
+
+    @include theme.breakpoint("sm") {
+      dl > *:nth-child(1) {
+        order: 2;
+      }
+
+      dl > *:nth-child(2) {
+        order: 1;
+      }
+
+      dl > *:nth-child(3) {
+        order: 3;
+      }
+    }
+
+    .rankingWraper {
+      width: theme.spacing(15);
+    }
+  }
+}

@@ -1,19 +1,35 @@
 @use "@pythnetwork/component-library/theme";
 
 .error {
-  @include theme.max-width;
-
   display: flex;
   flex-flow: column nowrap;
   gap: theme.spacing(12);
   align-items: center;
   text-align: center;
-  padding: theme.spacing(36) theme.spacing(0);
+  padding-top: theme.spacing(8);
+  padding-bottom: theme.spacing(8);
+
+  @include theme.max-width;
+
+  @include theme.breakpoint("sm") {
+    padding-top: theme.spacing(18);
+    padding-bottom: theme.spacing(18);
+  }
+
+  @include theme.breakpoint("lg") {
+    padding-top: theme.spacing(36);
+    padding-bottom: theme.spacing(36);
+  }
 
   .errorIcon {
-    font-size: theme.spacing(20);
-    height: theme.spacing(20);
+    font-size: theme.spacing(14);
+    height: theme.spacing(14);
     color: theme.color("states", "error", "color");
+
+    @include theme.breakpoint("sm") {
+      font-size: theme.spacing(20);
+      height: theme.spacing(20);
+    }
   }
 
   .text {

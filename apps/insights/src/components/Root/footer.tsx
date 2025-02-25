@@ -2,6 +2,7 @@ import {
   type Props as ButtonProps,
   Button,
 } from "@pythnetwork/component-library/Button";
+import { DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { Link } from "@pythnetwork/component-library/Link";
 import type { ComponentProps, ElementType } from "react";
 
@@ -13,22 +14,23 @@ import Wordmark from "./wordmark.svg";
 export const Footer = () => (
   <footer className={styles.footer}>
     <div className={styles.topContent}>
-      <div className={styles.left}>
+      <div className={styles.main}>
         <Link href="https://www.pyth.network" className={styles.logoLink ?? ""}>
           <Wordmark className={styles.logo} />
           <div className={styles.logoLabel}>Pyth Homepage</div>
         </Link>
         <div className={styles.divider} />
         <div className={styles.help}>
-          <SupportDrawer>
+          <DrawerTrigger>
             <Link>Help</Link>
-          </SupportDrawer>
+            <SupportDrawer />
+          </DrawerTrigger>
           <Link href="https://docs.pyth.network" target="_blank">
             Documentation
           </Link>
         </div>
       </div>
-      <div className={styles.right}>
+      <div className={styles.socialLinks}>
         {socialLinks.map(({ name, ...props }) => (
           <SocialLink {...props} key={name}>
             {name}

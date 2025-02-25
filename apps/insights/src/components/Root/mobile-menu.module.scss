@@ -1,0 +1,30 @@
+@use "@pythnetwork/component-library/theme";
+
+.mobileMenu {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;
+  gap: theme.spacing(6);
+  justify-content: space-between;
+
+  .buttons {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
+    gap: theme.spacing(6);
+  }
+
+  .theme {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: theme.spacing(2);
+
+    .themeLabel {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("muted");
+    }
+  }
+}

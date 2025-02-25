@@ -39,6 +39,7 @@
 
   &[data-selectable] .tab[data-selected] {
     pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
 
     &[data-hovered] .bubble {
       background-color: theme.color("button", "solid", "background", "hover");
