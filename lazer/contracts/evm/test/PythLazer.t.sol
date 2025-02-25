@@ -3,18 +3,26 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {PythLazer} from "../src/PythLazer.sol";
+import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract PythLazerTest is Test {
     PythLazer public pythLazer;
+    address owner;
 
     function setUp() public {
-        pythLazer = new PythLazer();
-        pythLazer.initialize(address(1));
+        owner = address(1);
+        PythLazer pythLazerImpl = new PythLazer();
+        TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
+            address(pythLazerImpl),
+            owner,
+            abi.encodeWithSelector(PythLazer.initialize.selector, owner)
+        );
+        pythLazer = PythLazer(address(proxy));
     }
 
     function test_update_add_signer() public {
         assert(!pythLazer.isValidSigner(address(2)));
-        vm.prank(address(1));
+        vm.prank(owner);
         pythLazer.updateTrustedSigner(address(2), block.timestamp + 1000);
         assert(pythLazer.isValidSigner(address(2)));
         skip(2000);
@@ -23,11 +31,11 @@ contract PythLazerTest is Test {
 
     function test_update_remove_signer() public {
         assert(!pythLazer.isValidSigner(address(2)));
-        vm.prank(address(1));
+        vm.prank(owner);
         pythLazer.updateTrustedSigner(address(2), block.timestamp + 1000);
         assert(pythLazer.isValidSigner(address(2)));
 
-        vm.prank(address(1));
+        vm.prank(owner);
         pythLazer.updateTrustedSigner(address(2), 0);
         assert(!pythLazer.isValidSigner(address(2)));
     }
@@ -35,7 +43,7 @@ contract PythLazerTest is Test {
     function test_verify() public {
         // Prepare dummy update and signer
         address trustedSigner = 0xb8d50f0bAE75BF6E03c104903d7C3aFc4a6596Da;
-        vm.prank(address(1));
+        vm.prank(owner);
         pythLazer.updateTrustedSigner(trustedSigner, 3000000000000000);
         bytes
             memory update = hex"2a22999a9ee4e2a3df5affd0ad8c7c46c96d3b5ef197dd653bedd8f44a4b6b69b767fbc66341e80b80acb09ead98c60d169b9a99657ebada101f447378f227bffbc69d3d01003493c7d37500062cf28659c1e801010000000605000000000005f5e10002000000000000000001000000000000000003000104fff8";
