@@ -72,7 +72,12 @@ module pyth_lazer::pyth_lazer {
         move_to(account, AdminCapability {});
     }
 
-    /// Verify a message signature and collect fee from the signer
+    /// Verify a message signature and collect fee.
+    ///
+    /// This is a convenience wrapper around verify_message(), which allows you to verify an update
+    /// using an entry function. If possible, it is recommended to use update_price_feeds() instead,
+    /// which avoids the need to pass a signer account. update_price_feeds_with_funder() should only
+    /// be used when you need to call an entry function.
     public entry fun verify_message_with_funder(
         account: &signer,
         message: vector<u8>,
@@ -92,6 +97,8 @@ module pyth_lazer::pyth_lazer {
     }
 
     /// Verify a message signature with provided fee
+    /// The provided `fee` must contain enough coins to pay a single update fee, which
+    /// can be queried by calling calling get_update_fee().
     public fun verify_message(
         message: vector<u8>,
         signature: vector<u8>,
@@ -179,6 +186,12 @@ module pyth_lazer::pyth_lazer {
     public fun get_trusted_signers(): vector<TrustedSignerInfo> acquires Storage {
         let storage = borrow_global<Storage>(@pyth_lazer);
         storage.trusted_signers
+    }
+
+    /// Returns the fee required to verify a message
+    public fun get_update_fee(): u64 acquires Storage {
+        let storage = borrow_global<Storage>(@pyth_lazer);
+        storage.single_update_fee
     }
 
     /// Signer pubkey getter
