@@ -37,6 +37,7 @@ contract PulseState {
         Request[NUM_REQUESTS] requests;
         mapping(bytes32 => Request) requestsOverflow;
         mapping(address => ProviderInfo) providers;
+        uint64 firstUnfulfilledSeq; // All sequences before this are fulfilled
     }
 
     State internal _state;

@@ -164,6 +164,14 @@ abstract contract Pulse is IPulse, PulseState {
                 "low-level error (possibly out of gas)"
             );
         }
+
+        // After successful callback, update firstUnfulfilledSeq if needed
+        while (
+            _state.firstUnfulfilledSeq < _state.currentSequenceNumber &&
+            !isActive(findRequest(_state.firstUnfulfilledSeq))
+        ) {
+            _state.firstUnfulfilledSeq++;
+        }
     }
 
     function emitPriceUpdate(
@@ -293,7 +301,7 @@ abstract contract Pulse is IPulse, PulseState {
         }
     }
 
-    function isActive(Request storage req) internal view returns (bool) {
+    function isActive(Request memory req) internal pure returns (bool) {
         return req.sequenceNumber != 0;
     }
 
@@ -382,5 +390,39 @@ abstract contract Pulse is IPulse, PulseState {
 
     function getExclusivityPeriod() external view override returns (uint256) {
         return _state.exclusivityPeriodSeconds;
+    }
+
+    function getFirstActiveRequests(
+        uint256 count
+    )
+        external
+        view
+        override
+        returns (Request[] memory requests, uint256 actualCount)
+    {
+        requests = new Request[](count);
+        actualCount = 0;
+
+        // Start from the first unfulfilled sequence and work forwards
+        uint64 currentSeq = _state.firstUnfulfilledSeq;
+
+        // Continue until we find enough active requests or reach current sequence
+        while (
+            actualCount < count && currentSeq < _state.currentSequenceNumber
+        ) {
+            Request memory req = findRequest(currentSeq);
+            if (isActive(req)) {
+                requests[actualCount] = req;
+                actualCount++;
+            }
+            currentSeq++;
+        }
+
+        // If we found fewer requests than asked for, resize the array
+        if (actualCount < count) {
+            assembly {
+                mstore(requests, actualCount)
+            }
+        }
     }
 }
