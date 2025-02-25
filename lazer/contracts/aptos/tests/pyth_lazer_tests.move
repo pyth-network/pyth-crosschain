@@ -83,7 +83,7 @@ module pyth_lazer::pyth_lazer_tests {
         let initial_balance = coin::balance<AptosCoin>(signer::address_of(&user));
 
         // This should succeed as we have a valid signer and sufficient fee
-        pyth_lazer::verify_message(
+        pyth_lazer::verify_message_with_funder(
             &user,
             TEST_MESSAGE,
             TEST_SIGNATURE,
@@ -109,7 +109,7 @@ module pyth_lazer::pyth_lazer_tests {
 
         // This should fail with EINVALID_SIGNATURE since the signature
         // was created for TEST_MESSAGE, not invalid_message
-        pyth_lazer::verify_message(
+        pyth_lazer::verify_message_with_funder(
             &user,
             invalid_message,
             TEST_SIGNATURE,
@@ -187,7 +187,7 @@ module pyth_lazer::pyth_lazer_tests {
         timestamp::fast_forward_seconds(2000);
 
         // This should fail as the signer is expired
-        pyth_lazer::verify_message(
+        pyth_lazer::verify_message_with_funder(
             &user,
             TEST_MESSAGE,
             TEST_SIGNATURE,
@@ -205,7 +205,7 @@ module pyth_lazer::pyth_lazer_tests {
         coin::transfer<AptosCoin>(&user, signer::address_of(&_treasury), balance);
 
         // This should fail due to insufficient fee
-        pyth_lazer::verify_message(
+        pyth_lazer::verify_message_with_funder(
             &user,
             TEST_MESSAGE,
             TEST_SIGNATURE,

@@ -72,8 +72,8 @@ module pyth_lazer::pyth_lazer {
         move_to(account, AdminCapability {});
     }
 
-    /// Verify a message signature and collect fee
-    public entry fun verify_message(
+    /// Verify a message signature and collect fee from the signer
+    public entry fun verify_message_with_funder(
         account: &signer,
         message: vector<u8>,
         signature: vector<u8>,
@@ -87,7 +87,24 @@ module pyth_lazer::pyth_lazer {
                 >= storage.single_update_fee,
             EINSUFFICIENT_FEE
         );
-        coin::transfer<AptosCoin>(account, storage.treasury, storage.single_update_fee);
+        let fee = coin::withdraw<AptosCoin>(account, storage.single_update_fee);
+        verify_message(message, signature, trusted_signer, fee);
+    }
+
+    /// Verify a message signature with provided fee
+    public fun verify_message(
+        message: vector<u8>,
+        signature: vector<u8>,
+        trusted_signer: vector<u8>,
+        fee: coin::Coin<AptosCoin>
+    ) acquires Storage {
+        let storage = borrow_global<Storage>(@pyth_lazer);
+
+        // Verify fee amount
+        assert!(coin::value(&fee) >= storage.single_update_fee, EINSUFFICIENT_FEE);
+
+        // Transfer fee to treasury
+        coin::deposit(storage.treasury, fee);
 
         // Verify signer is trusted and not expired
         let i = 0;
