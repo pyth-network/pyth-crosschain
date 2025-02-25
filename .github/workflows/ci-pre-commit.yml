@@ -2,6 +2,7 @@ name: Pre-commit checks
 
 on:
   pull_request:
+    branches: "**"
   push:
     branches: [main]
 
@@ -36,9 +37,9 @@ jobs:
             pythnet/message_buffer
             pythnet/pythnet_sdk
             pythnet/stake_caps_parameters
-        # We only save the cache from runs on `main` because the cache is ~5GB, and the total Github Cache limit is 10GB.
-        # Branches have their own caches, so saving this cache on PRs can result in evicting the main cache.
-        save-if: ${{ github.ref == 'refs/heads/main' }}
+          # We only save the cache from runs on `main` because the cache is ~5GB, and the total Github Cache limit is 10GB.
+          # Branches have their own caches, so saving this cache on PRs can result in evicting the main cache.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install protoc
         uses: arduino/setup-protoc@v3
         with:
