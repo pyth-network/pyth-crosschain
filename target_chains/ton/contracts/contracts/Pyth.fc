@@ -8,6 +8,7 @@
 #include "common/gas.fc";
 #include "common/op.fc";
 #include "./Wormhole.fc";
+#include "common/error_handling.fc";
 
 cell store_price(int price, int conf, int expo, int publish_time) {
     return begin_cell()
@@ -369,18 +370,28 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
 }
 
 () parse_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int min_publish_time, int max_publish_time, slice sender_address, slice target_address, slice custom_payload) impure {
-    load_data();
+    ;; Wrap entire function in try-catch
+    cell custom_payload_cell = begin_cell().store_slice(custom_payload).end_cell();
 
-    ;; Load price_ids tuple
-    int price_ids_len = price_ids_slice~load_uint(8);
-    tuple price_ids = empty_tuple();
-    repeat(price_ids_len) {
-        int price_id = price_ids_slice~load_uint(256);
-        price_ids~tpush(price_id);
+    try {
+        load_data();
+
+        ;; Load price_ids tuple
+        int price_ids_len = price_ids_slice~load_uint(8);
+        tuple price_ids = empty_tuple();
+        repeat(price_ids_len) {
+            int price_id = price_ids_slice~load_uint(256);
+            price_ids~tpush(price_id);
+        }
+        tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, min_publish_time, max_publish_time, false);
+        send_price_feeds_response(price_feeds, msg_value, OP_PARSE_PRICE_FEED_UPDATES,
+            sender_address, target_address, custom_payload);
+
+    } catch (_, error_code) {
+        ;; Handle any unexpected errors
+        emit_error(error_code, OP_PARSE_PRICE_FEED_UPDATES,
+            sender_address, custom_payload_cell);
     }
-
-    tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, min_publish_time, max_publish_time, false);
-    send_price_feeds_response(price_feeds, msg_value, OP_PARSE_PRICE_FEED_UPDATES, sender_address, target_address, custom_payload);
 }
 
 () parse_unique_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int publish_time, int max_staleness, slice sender_address, slice target_address, slice custom_payload) impure {
