@@ -20,7 +20,7 @@ module pyth_lazer::pyth_lazer {
     struct AdminCapability has key, store {}
 
     /// Stores the admin capability until it's claimed
-    struct PendingAdminCapability has key {
+    struct PendingAdminCapability has key, drop {
         admin: address
     }
 
@@ -70,6 +70,10 @@ module pyth_lazer::pyth_lazer {
 
         // Create and move the admin capability to the claiming account
         move_to(account, AdminCapability {});
+
+        // Clean up the pending admin capability
+        let PendingAdminCapability { admin: _ } =
+            move_from<PendingAdminCapability>(@pyth_lazer);
     }
 
     /// Verify a message signature and collect fee.
