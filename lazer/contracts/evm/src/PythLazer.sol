@@ -3,10 +3,15 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[100] internal trustedSigners;
     uint256 public verification_fee;
+
+    constructor() {
+        _disableInitializers();
+    }
 
     struct TrustedSignerInfo {
         address pubkey;
@@ -17,10 +22,6 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         __Ownable_init(_topAuthority);
         __UUPSUpgradeable_init();
 
-        verification_fee = 1 wei;
-    }
-
-    function migrate() public onlyOwner {
         verification_fee = 1 wei;
     }
 
@@ -91,7 +92,7 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         }
         payload = update[71:71 + payload_len];
         bytes32 hash = keccak256(payload);
-        signer = ecrecover(
+        (signer, , ) = ECDSA.tryRecover(
             hash,
             uint8(update[68]) + 27,
             bytes32(update[4:36]),

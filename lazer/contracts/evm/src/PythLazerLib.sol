@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {console} from "forge-std/console.sol";
 import {PythLazer} from "./PythLazer.sol";
 
 library PythLazerLib {
