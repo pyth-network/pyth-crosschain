@@ -37,6 +37,7 @@ pub enum PayloadPropertyValue {
     Exponent(i16),
     Confidence(Option<Price>),
     FundingRate(Option<i64>),
+    FundingTimestamp(Option<u64>),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -47,6 +48,7 @@ pub struct AggregatedPriceFeedData {
     pub publisher_count: u16,
     pub confidence: Option<Price>,
     pub funding_rate: Option<i64>,
+    pub funding_timestamp: Option<u64>,
 }
 
 pub const PAYLOAD_FORMAT_MAGIC: u32 = 2479346549;
@@ -86,6 +88,9 @@ impl PayloadData {
                             }
                             PriceFeedProperty::FundingRate => {
                                 PayloadPropertyValue::FundingRate(feed.funding_rate)
+                            }
+                            PriceFeedProperty::FundingTimestamp => {
+                                PayloadPropertyValue::FundingTimestamp(feed.funding_timestamp)
                             }
                         })
                         .collect(),
@@ -131,6 +136,10 @@ impl PayloadData {
                     PayloadPropertyValue::FundingRate(rate) => {
                         writer.write_u8(PriceFeedProperty::FundingRate as u8)?;
                         write_option_i64::<BO>(&mut writer, *rate)?;
+                    }
+                    PayloadPropertyValue::FundingTimestamp(timestamp) => {
+                        writer.write_u8(PriceFeedProperty::FundingTimestamp as u8)?;
+                        write_option_u64::<BO>(&mut writer, *timestamp)?;
                     }
                 }
             }
@@ -178,6 +187,8 @@ impl PayloadData {
                     PayloadPropertyValue::Confidence(read_option_price::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::FundingRate as u8 {
                     PayloadPropertyValue::FundingRate(read_option_i64::<BO>(&mut reader)?)
+                } else if property == PriceFeedProperty::FundingTimestamp as u8 {
+                    PayloadPropertyValue::FundingTimestamp(read_option_u64::<BO>(&mut reader)?)
                 } else {
                     bail!("unknown property");
                 };
@@ -225,6 +236,31 @@ fn read_option_i64<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Opti
     let present = reader.read_u8()? != 0;
     if present {
         Ok(Some(reader.read_i64::<BO>()?))
+    } else {
+        Ok(None)
+    }
+}
+
+fn write_option_u64<BO: ByteOrder>(
+    mut writer: impl Write,
+    value: Option<u64>,
+) -> std::io::Result<()> {
+    match value {
+        Some(value) => {
+            writer.write_u8(1)?;
+            writer.write_u64::<BO>(value)
+        }
+        None => {
+            writer.write_u8(0)?;
+            Ok(())
+        }
+    }
+}
+
+fn read_option_u64<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<u64>> {
+    let present = reader.read_u8()? != 0;
+    if present {
+        Ok(Some(reader.read_u64::<BO>()?))
     } else {
         Ok(None)
     }

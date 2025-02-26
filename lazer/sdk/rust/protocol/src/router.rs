@@ -143,6 +143,7 @@ pub enum PriceFeedProperty {
     Exponent,
     Confidence,
     FundingRate,
+    FundingTimestamp,
     // More fields may be added later.
 }
 
@@ -410,6 +411,9 @@ pub struct ParsedFeedPayload {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub funding_rate: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub funding_timestamp: Option<u64>,
     // More fields may be added later.
 }
 
@@ -429,6 +433,7 @@ impl ParsedFeedPayload {
             exponent: None,
             confidence: None,
             funding_rate: None,
+            funding_timestamp: None,
         };
         for &property in properties {
             match property {
@@ -453,6 +458,9 @@ impl ParsedFeedPayload {
                 PriceFeedProperty::FundingRate => {
                     output.funding_rate = data.funding_rate;
                 }
+                PriceFeedProperty::FundingTimestamp => {
+                    output.funding_timestamp = data.funding_timestamp;
+                }
             }
         }
         output
@@ -472,6 +480,7 @@ impl ParsedFeedPayload {
             exponent,
             confidence: data.confidence,
             funding_rate: data.funding_rate,
+            funding_timestamp: data.funding_timestamp,
         }
     }
 }
