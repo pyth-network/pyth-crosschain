@@ -1,0 +1,52 @@
+[package]
+name = "argus"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "argus"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0.75"
+axum = { version = "0.6.20", features = ["json", "ws", "macros"] }
+axum-macros = { version = "0.3.8" }
+base64 = { version = "0.21.0" }
+bincode = "1.3.3"
+byteorder = "1.5.0"
+clap = { version = "4.4.6", features = ["derive", "cargo", "env"] }
+ethabi = "18.0.0"
+ethers = { version = "2.0.14", features = ["ws"] }
+futures = { version = "0.3.28" }
+hex = "0.4.3"
+prometheus-client = { version = "0.21.2" }
+pythnet-sdk = { path = "../../pythnet/pythnet_sdk", features = ["strum"] }
+rand = "0.8.5"
+reqwest = { version = "0.11.22", features = ["json", "blocking"] }
+serde = { version = "1.0.188", features = ["derive"] }
+serde_qs = { version = "0.12.0", features = ["axum"] }
+serde_json = "1.0.107"
+serde_with = { version = "3.4.0", features = ["hex", "base64"] }
+serde_yaml = "0.9.25"
+sha3 = "0.10.8"
+tokio = { version = "1.33.0", features = ["full"] }
+tower-http = { version = "0.4.0", features = ["cors"] }
+tracing = { version = "0.1.37", features = ["log"] }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+utoipa = { version = "3.4.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "3.1.4", features = ["axum"] }
+once_cell = "1.18.0"
+lazy_static = "1.4.0"
+url = "2.5.0"
+chrono = { version = "0.4.38", features = [
+  "clock",
+  "std",
+], default-features = false }
+backoff = { version = "0.4.0", features = ["futures", "tokio"] }
+thiserror = "1.0.61"
+futures-locks = "0.7.1"
+fortuna = { path = "../fortuna" }
+
+
+[dev-dependencies]
+axum-test = "13.1.1"
