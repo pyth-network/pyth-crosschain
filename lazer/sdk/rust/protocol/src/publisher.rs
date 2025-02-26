@@ -31,6 +31,9 @@ pub struct PriceFeedData {
     /// `None` if no value is currently available.
     #[serde(with = "crate::serde_price_as_i64")]
     pub best_ask_price: Option<Price>,
+    /// Last known value of the funding rate of this feed.
+    /// `None` if no value is currently available.
+    pub funding_rate: Option<i64>,
 }
 
 /// A response sent from the server to the publisher client.
@@ -57,6 +60,7 @@ fn price_feed_data_serde() {
         4, 0, 0, 0, 0, 0, 0, 0, // price
         5, 0, 0, 0, 0, 0, 0, 0, // best_bid_price
         6, 2, 0, 0, 0, 0, 0, 0, // best_ask_price
+        1, 7, 3, 0, 0, 0, 0, 0, 0, // funding_rate
     ];
 
     let expected = PriceFeedData {
@@ -66,6 +70,7 @@ fn price_feed_data_serde() {
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: Some(Price(5.try_into().unwrap())),
         best_ask_price: Some(Price((2 * 256 + 6).try_into().unwrap())),
+        funding_rate: Some(3 * 256 + 7),
     };
     assert_eq!(
         bincode::deserialize::<PriceFeedData>(&data).unwrap(),
@@ -80,6 +85,7 @@ fn price_feed_data_serde() {
         4, 0, 0, 0, 0, 0, 0, 0, // price
         0, 0, 0, 0, 0, 0, 0, 0, // best_bid_price
         0, 0, 0, 0, 0, 0, 0, 0, // best_ask_price
+        0, // funding_rate
     ];
     let expected2 = PriceFeedData {
         price_feed_id: PriceFeedId(1),
@@ -88,6 +94,7 @@ fn price_feed_data_serde() {
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: None,
         best_ask_price: None,
+        funding_rate: None,
     };
     assert_eq!(
         bincode::deserialize::<PriceFeedData>(&data2).unwrap(),

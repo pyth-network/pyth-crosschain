@@ -142,6 +142,7 @@ pub enum PriceFeedProperty {
     PublisherCount,
     Exponent,
     Confidence,
+    FundingRate,
     // More fields may be added later.
 }
 
@@ -383,13 +384,6 @@ pub struct ParsedPayload {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NatsPayload {
-    pub payload: ParsedPayload,
-    pub channel: Channel,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ParsedFeedPayload {
     pub price_feed_id: PriceFeedId,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -413,6 +407,9 @@ pub struct ParsedFeedPayload {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub confidence: Option<Price>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub funding_rate: Option<i64>,
     // More fields may be added later.
 }
 
@@ -431,6 +428,7 @@ impl ParsedFeedPayload {
             publisher_count: None,
             exponent: None,
             confidence: None,
+            funding_rate: None,
         };
         for &property in properties {
             match property {
@@ -444,13 +442,16 @@ impl ParsedFeedPayload {
                     output.best_ask_price = data.best_ask_price;
                 }
                 PriceFeedProperty::PublisherCount => {
-                    output.publisher_count = data.publisher_count;
+                    output.publisher_count = Some(data.publisher_count);
                 }
                 PriceFeedProperty::Exponent => {
                     output.exponent = exponent;
                 }
                 PriceFeedProperty::Confidence => {
                     output.confidence = data.confidence;
+                }
+                PriceFeedProperty::FundingRate => {
+                    output.funding_rate = data.funding_rate;
                 }
             }
         }
@@ -467,9 +468,10 @@ impl ParsedFeedPayload {
             price: data.price,
             best_bid_price: data.best_bid_price,
             best_ask_price: data.best_ask_price,
-            publisher_count: data.publisher_count,
+            publisher_count: Some(data.publisher_count),
             exponent,
             confidence: data.confidence,
+            funding_rate: data.funding_rate,
         }
     }
 }
