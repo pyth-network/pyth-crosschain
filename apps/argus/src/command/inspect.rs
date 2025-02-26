@@ -9,6 +9,7 @@ use {
         middleware::Middleware,
         prelude::{Http, Provider},
     },
+    std::time::{Duration, SystemTime},
 };
 
 pub async fn inspect(opts: &InspectOptions) -> Result<()> {
@@ -42,11 +43,23 @@ async fn inspect_chain(
         > 0;
 
     let contract = PythContract::from_config(chain_config)?;
-    let entropy_provider = contract.get_default_provider().call().await?;
-    let provider_info = contract.get_provider_info(entropy_provider).call().await?;
-    let mut current_request_number = provider_info.sequence_number;
-    println!("Initial request number: {}", current_request_number);
+
+    // Get the current sequence number directly from the contract's storage
+    let current_sequence_number = contract.get_current_sequence_number().await?;
+
+    // The current sequence number is the next one to be assigned, so subtract 1 to get the latest
+    let latest_sequence_number = current_sequence_number.saturating_sub(1);
+    let mut current_request_number = latest_sequence_number;
+
+    println!("Latest sequence number: {}", current_request_number);
+
+    if current_request_number == 0 {
+        println!("No requests found");
+        return Ok(());
+    }
+
     let last_request_number = current_request_number.saturating_sub(num_requests);
+
     if multicall_exists {
         println!("Using multicall");
         let mut multicall = Multicall::new(
@@ -60,26 +73,20 @@ async fn inspect_chain(
                 if current_request_number == 0 {
                     break;
                 }
-                multicall.add_call(
-                    contract.get_request(entropy_provider, current_request_number),
-                    false,
-                );
+                multicall.add_call(contract.get_request(current_request_number), false);
                 current_request_number -= 1;
             }
             let return_data: Vec<Request> = multicall.call_array().await?;
             for request in return_data {
-                process_request(rpc_provider.clone(), request).await?;
+                process_request(request).await?;
             }
             println!("Current request number: {}", current_request_number);
         }
     } else {
         println!("Multicall not deployed in this chain, fetching requests one by one");
         while current_request_number > last_request_number {
-            let request = contract
-                .get_request(entropy_provider, current_request_number)
-                .call()
-                .await?;
-            process_request(rpc_provider.clone(), request).await?;
+            let request = contract.get_request(current_request_number).call().await?;
+            process_request(request).await?;
             current_request_number -= 1;
             if current_request_number % 100 == 0 {
                 println!("Current request number: {}", current_request_number);
@@ -89,17 +96,26 @@ async fn inspect_chain(
     Ok(())
 }
 
-async fn process_request(rpc_provider: Provider<Http>, request: Request) -> Result<()> {
-    if request.sequence_number != 0 && request.is_request_with_callback {
-        let block = rpc_provider
-            .get_block(request.block_number)
-            .await?
-            .expect("Block not found");
-        let datetime = chrono::DateTime::from_timestamp(block.timestamp.as_u64() as i64, 0)
-            .expect("Invalid timestamp");
+async fn process_request(request: Request) -> Result<()> {
+    if request.sequence_number != 0 {
+        // Convert publish_time to a datetime
+        let publish_time = request.publish_time.as_u64();
+        let datetime = if publish_time > 0 {
+            match SystemTime::UNIX_EPOCH.checked_add(Duration::from_secs(publish_time)) {
+                Some(time) => format!("{:?}", time),
+                None => "Invalid time".to_string(),
+            }
+        } else {
+            "N/A".to_string()
+        };
+
         println!(
-            "{} sequence_number:{} block_number:{} requester:{}",
-            datetime, request.sequence_number, request.block_number, request.requester
+            "{} sequence_number:{} publish_time:{} requester:{} price_ids:{}",
+            datetime,
+            request.sequence_number,
+            request.publish_time,
+            request.requester,
+            request.price_ids.len()
         );
     }
     Ok(())

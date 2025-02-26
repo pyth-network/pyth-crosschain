@@ -7,7 +7,6 @@ use {
             get_latest_safe_block, process_backlog, process_new_blocks, watch_blocks_wrapper,
             BlockRange,
         },
-        keeper::commitment::update_commitments_loop,
         keeper::fee::adjust_fee_wrapper,
         keeper::fee::withdraw_fees_wrapper,
         keeper::track::track_balance,
@@ -26,7 +25,6 @@ use {
 };
 
 pub(crate) mod block;
-pub(crate) mod commitment;
 pub(crate) mod fee;
 pub(crate) mod keeper_metrics;
 pub(crate) mod process_event;
@@ -163,8 +161,6 @@ pub async fn run_keeper_threads(
         )
         .in_current_span(),
     );
-
-    spawn(update_commitments_loop(contract.clone(), chain_state.clone()).in_current_span());
 
     // Spawn a thread to track the provider info and the balance of the keeper
     spawn(

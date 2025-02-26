@@ -15,7 +15,7 @@ pub async fn get_request(opts: &GetRequestOptions) -> Result<()> {
     )?);
 
     let r = contract
-        .get_request(opts.provider, opts.sequence)
+        .get_request(opts.sequence)
         .call()
         .await?;
     tracing::info!("Found request: {:?}", r);

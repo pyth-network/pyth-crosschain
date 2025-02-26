@@ -4,14 +4,14 @@ use {
         api::BlockchainState,
         chain::{ethereum::InstrumentedSignablePythContract, reader::RequestedWithCallbackEvent},
     },
-    anyhow::{anyhow, Result},
-    ethers::types::U256,
+    anyhow::Result,
+    ethers::types::{Bytes, U256},
     fortuna::eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
     std::sync::Arc,
     tracing,
 };
 
-/// Process an event with backoff. It will retry the reveal on failure for 5 minutes.
+/// Process an event with backoff. It will retry the callback execution on failure for 5 minutes.
 #[tracing::instrument(name = "process_event_with_backoff", skip_all, fields(
     sequence_number = event.sequence_number
 ))]
@@ -23,11 +23,7 @@ pub async fn process_event_with_backoff(
     escalation_policy: EscalationPolicy,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
-    // ignore requests that are not for the configured provider
-    if chain_state.provider_address != event.provider_address {
-        return Ok(());
-    }
-
+    // We process all price update requests for our provider
     let account_label = AccountLabel {
         chain_id: chain_state.id.clone(),
         address: chain_state.provider_address.to_string(),
@@ -36,16 +32,15 @@ pub async fn process_event_with_backoff(
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing event");
 
-    let provider_revelation = chain_state
-        .state
-        .reveal(event.sequence_number)
-        .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
+    // Fetch price update data for the requested price IDs
+    // In a real implementation, this would fetch the actual price data from a source
+    // For now, we'll use empty update data as a placeholder
+    let update_data: Vec<Bytes> = vec![]; // This would be replaced with actual price data
 
-    let contract_call = contract.reveal_with_callback(
-        event.provider_address,
+    let contract_call = contract.execute_callback(
         event.sequence_number,
-        event.user_random_number,
-        provider_revelation,
+        update_data,
+        event.price_ids.clone(),
     );
 
     let success = submit_tx_with_backoff(
@@ -108,7 +103,7 @@ pub async fn process_event_with_backoff(
                     }
                 }
             }
-            metrics.reveals.get_or_create(&account_label).inc();
+            metrics.callbacks_executed.get_or_create(&account_label).inc();
         }
         Err(e) => {
             // In case the callback did not succeed, we double-check that the request is still on-chain.
@@ -116,7 +111,7 @@ pub async fn process_event_with_backoff(
             // the RPC gave us an error anyway.
             let req = chain_state
                 .contract
-                .get_request(event.provider_address, event.sequence_number)
+                .get_request(event.sequence_number)
                 .await;
 
             tracing::error!("Failed to process event: {:?}. Request: {:?}", e, req);

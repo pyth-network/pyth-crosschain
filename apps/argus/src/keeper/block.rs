@@ -45,11 +45,8 @@ pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber
             .await
         {
             Ok(latest_confirmed_block) => {
-                tracing::info!(
-                    "Fetched latest safe block {}",
-                    latest_confirmed_block - chain_state.reveal_delay_blocks
-                );
-                return latest_confirmed_block - chain_state.reveal_delay_blocks;
+                tracing::info!("Fetched latest safe block {}", latest_confirmed_block);
+                return latest_confirmed_block;
             }
             Err(e) => {
                 tracing::error!("Error while getting block number. error: {:?}", e);

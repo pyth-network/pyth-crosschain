@@ -17,8 +17,6 @@ pub struct AccountLabel {
 }
 
 pub struct KeeperMetrics {
-    pub current_sequence_number: Family<AccountLabel, Gauge>,
-    pub end_sequence_number: Family<AccountLabel, Gauge>,
     pub balance: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub collected_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub current_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
@@ -30,7 +28,7 @@ pub struct KeeperMetrics {
     pub requests_processed_success: Family<AccountLabel, Counter>,
     pub requests_processed_failure: Family<AccountLabel, Counter>,
     pub requests_reprocessed: Family<AccountLabel, Counter>,
-    pub reveals: Family<AccountLabel, Counter>,
+    pub callbacks_executed: Family<AccountLabel, Counter>,
     pub request_duration_ms: Family<AccountLabel, Histogram>,
     pub retry_count: Family<AccountLabel, Histogram>,
     pub final_gas_multiplier: Family<AccountLabel, Histogram>,
@@ -41,8 +39,6 @@ pub struct KeeperMetrics {
 impl Default for KeeperMetrics {
     fn default() -> Self {
         Self {
-            current_sequence_number: Family::default(),
-            end_sequence_number: Family::default(),
             balance: Family::default(),
             collected_fee: Family::default(),
             current_fee: Family::default(),
@@ -54,7 +50,7 @@ impl Default for KeeperMetrics {
             requests_processed_success: Family::default(),
             requests_processed_failure: Family::default(),
             requests_reprocessed: Family::default(),
-            reveals: Family::default(),
+            callbacks_executed: Family::default(),
             request_duration_ms: Family::new_with_constructor(|| {
                 Histogram::new(
                     vec![
@@ -88,46 +84,35 @@ impl KeeperMetrics {
         let mut writable_registry = registry.write().await;
         let keeper_metrics = KeeperMetrics::default();
 
-        writable_registry.register(
-            "current_sequence_number",
-            "The sequence number for a new request",
-            keeper_metrics.current_sequence_number.clone(),
-        );
-
-        writable_registry.register(
-            "end_sequence_number",
-            "The sequence number for the end request",
-            keeper_metrics.end_sequence_number.clone(),
-        );
 
         writable_registry.register(
             "requests",
-            "Number of requests received through events",
+            "Number of price update requests received through events",
             keeper_metrics.requests.clone(),
         );
 
         writable_registry.register(
             "requests_processed",
-            "Number of requests processed",
+            "Number of price update requests processed",
             keeper_metrics.requests_processed.clone(),
         );
 
         writable_registry.register(
             "requests_processed_success",
-            "Number of requests processed successfully",
+            "Number of price update requests processed successfully",
             keeper_metrics.requests_processed_success.clone(),
         );
 
         writable_registry.register(
             "requests_processed_failure",
-            "Number of requests processed with failure",
+            "Number of price update requests processed with failure",
             keeper_metrics.requests_processed_failure.clone(),
         );
 
         writable_registry.register(
-            "reveal",
-            "Number of reveals",
-            keeper_metrics.reveals.clone(),
+            "callbacks_executed",
+            "Number of price update callbacks executed",
+            keeper_metrics.callbacks_executed.clone(),
         );
 
         writable_registry.register(
@@ -156,19 +141,19 @@ impl KeeperMetrics {
 
         writable_registry.register(
             "total_gas_spent",
-            "Total gas spent revealing requests",
+            "Total gas spent executing callbacks",
             keeper_metrics.total_gas_spent.clone(),
         );
 
         writable_registry.register(
             "total_gas_fee_spent",
-            "Total amount of ETH spent on gas for revealing requests",
+            "Total amount of ETH spent on gas for executing callbacks",
             keeper_metrics.total_gas_fee_spent.clone(),
         );
 
         writable_registry.register(
             "requests_reprocessed",
-            "Number of requests reprocessed",
+            "Number of price update requests reprocessed",
             keeper_metrics.requests_reprocessed.clone(),
         );
 
@@ -211,12 +196,6 @@ impl KeeperMetrics {
                 address: provider_address.to_string(),
             };
 
-            let _ = keeper_metrics
-                .current_sequence_number
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .end_sequence_number
-                .get_or_create(&account_label);
             let _ = keeper_metrics.balance.get_or_create(&account_label);
             let _ = keeper_metrics.collected_fee.get_or_create(&account_label);
             let _ = keeper_metrics.current_fee.get_or_create(&account_label);
@@ -240,7 +219,7 @@ impl KeeperMetrics {
             let _ = keeper_metrics
                 .requests_reprocessed
                 .get_or_create(&account_label);
-            let _ = keeper_metrics.reveals.get_or_create(&account_label);
+            let _ = keeper_metrics.callbacks_executed.get_or_create(&account_label);
             let _ = keeper_metrics
                 .request_duration_ms
                 .get_or_create(&account_label);

@@ -51,6 +51,15 @@ pub trait PulseReader: Send + Sync {
         to_block: BlockNumber,
     ) -> Result<Vec<RequestedWithCallbackEvent>>;
 
+    /// Alias for get_price_update_requested_events to maintain compatibility with existing code
+    async fn get_request_with_callback_events(
+        &self,
+        from_block: BlockNumber,
+        to_block: BlockNumber,
+    ) -> Result<Vec<RequestedWithCallbackEvent>> {
+        self.get_price_update_requested_events(from_block, to_block).await
+    }
+
     /// Estimate the gas required to execute a callback for price updates.
     async fn estimate_execute_callback_gas(
         &self,
@@ -104,10 +113,9 @@ pub mod mock {
                 requests: RwLock::new(
                     requests
                         .iter()
-                        .map(|&(a, s, b, c, ref p, t)| Request {
+                        .map(|&(a, s, _, c, ref p, t)| Request {
                             requester: a,
                             sequence_number: s,
-                            block_number: b,
                             callback_gas_limit: c,
                             price_ids: p.clone(),
                             publish_time: t,
@@ -122,7 +130,6 @@ pub mod mock {
             &self,
             requester: Address,
             sequence: u64,
-            block_number: BlockNumber,
             callback_gas_limit: U256,
             price_ids: Vec<[u8; 32]>,
             publish_time: U256,
@@ -130,7 +137,6 @@ pub mod mock {
             self.requests.write().unwrap().push(Request {
                 requester,
                 sequence_number: sequence,
-                block_number,
                 callback_gas_limit,
                 price_ids,
                 publish_time,

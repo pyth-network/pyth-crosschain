@@ -271,3 +271,28 @@ impl<T: JsonRpcClient + 'static> PulseReader for Pulse<Provider<T>> {
         result.map_err(|e| e.into())
     }
 }
+
+impl<T: JsonRpcClient + 'static> Pulse<Provider<T>> {
+    /// Get the current sequence number from the contract.
+    ///
+    /// This method directly accesses the contract's storage to get the currentSequenceNumber.
+    pub async fn get_current_sequence_number(&self) -> Result<u64> {
+        // The currentSequenceNumber is stored in the State struct at slot 0, offset 32 bytes
+        // (after admin, pythFeeInWei, accruedFeesInWei, and pyth)
+        let storage_slot = ethers::types::H256::zero();
+        let storage_value = self.client().get_storage_at(
+            self.address(),
+            storage_slot,
+            None,
+        ).await?;
+
+        // H256 is always 32 bytes, so we don't need to check the length
+
+        // The currentSequenceNumber is stored at offset 32 bytes in the storage slot
+        // Extract the last 8 bytes (u64) from the 32-byte value
+        let mut u64_bytes = [0u8; 8];
+        u64_bytes.copy_from_slice(&storage_value.as_bytes()[24..32]);
+
+        Ok(u64::from_be_bytes(u64_bytes))
+    }
+}

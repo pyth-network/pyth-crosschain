@@ -10,7 +10,6 @@ use {
         types::{Address, U256},
     },
     fortuna::eth_utils::utils::{estimate_tx_cost, send_and_confirm},
-
     std::sync::Arc,
     tokio::time::{self, Duration},
     tracing::{self, Instrument},
@@ -88,8 +87,8 @@ pub async fn adjust_fee_wrapper(
 ) {
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
-    // The sequence number where the keeper last updated the on-chain fee. None if we haven't observed it yet.
-    let mut sequence_number_of_last_fee_update: Option<u64> = None;
+    // Track when we last updated the fee
+    let mut last_fee_update_time: Option<u64> = None;
     loop {
         if let Err(e) = adjust_fee_if_necessary(
             contract.clone(),
@@ -102,13 +101,13 @@ pub async fn adjust_fee_wrapper(
             max_profit_pct,
             min_fee_wei,
             &mut high_water_pnl,
-            &mut sequence_number_of_last_fee_update,
+            &mut last_fee_update_time,
             metrics.clone(),
         )
         .in_current_span()
         .await
         {
-            tracing::error!("Withdrawing fees. error: {:?}", e);
+            tracing::error!("Adjusting fees. error: {:?}", e);
         }
         time::sleep(poll_interval).await;
     }
@@ -123,7 +122,7 @@ pub async fn adjust_fee_wrapper(
 ///   factor prevents the on-chain fee from changing with every single gas price fluctuation.
 ///   Profit scalars are specified in percentage units, min_profit = (min_profit_pct + 100) / 100
 /// - either the fee is increasing or the keeper is earning a profit -- i.e., fees only decrease when the keeper is profitable
-/// - at least one random number has been requested since the last fee update
+/// - at least some time has passed since the last fee update
 ///
 /// These conditions are intended to make sure that the keeper is profitable while also minimizing the number of fee
 /// update transactions.
@@ -139,7 +138,7 @@ pub async fn adjust_fee_if_necessary(
     max_profit_pct: u64,
     min_fee_wei: u128,
     high_water_pnl: &mut Option<U256>,
-    sequence_number_of_last_fee_update: &mut Option<u64>,
+    last_fee_update_time: &mut Option<u64>,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
     let provider_info = contract
@@ -200,17 +199,22 @@ pub async fn adjust_fee_if_necessary(
         None => false,
     };
 
-    // Determine if the chain has seen activity since the last fee update.
-    let is_chain_active: bool = match sequence_number_of_last_fee_update {
-        Some(n) => provider_info.sequence_number > *n,
-        None => {
-            // We don't want to adjust the fees on server start for unused chains, hence false here.
-            false
-        }
+    // Get current timestamp to determine if enough time has passed since last update
+    let current_time = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    // Determine if enough time has passed since the last fee update
+    // We'll use a 10-minute minimum interval between fee updates
+    const MIN_FEE_UPDATE_INTERVAL: u64 = 600; // 10 minutes
+    let is_update_time = match last_fee_update_time {
+        Some(last_time) => current_time.saturating_sub(*last_time) >= MIN_FEE_UPDATE_INTERVAL,
+        None => true, // First run, allow update
     };
 
     let provider_fee: u128 = provider_info.fee_in_wei;
-    if is_chain_active
+    if is_update_time
         && ((provider_fee > target_fee_max && can_reduce_fees) || provider_fee < target_fee_min)
     {
         tracing::info!(
@@ -218,19 +222,19 @@ pub async fn adjust_fee_if_necessary(
             provider_fee,
             target_fee
         );
-        let contract_call = contract.set_provider_fee_as_fee_manager(provider_address, target_fee);
+        let contract_call = contract.set_provider_fee(target_fee);
         send_and_confirm(contract_call).await?;
 
-        *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
+        *last_fee_update_time = Some(current_time);
     } else {
         tracing::info!(
-            "Skipping fee adjustment. Current: {:?} Target: {:?} [{:?}, {:?}] Current Sequence Number: {:?} Last updated sequence number {:?} Current pnl: {:?} High water pnl: {:?}",
+            "Skipping fee adjustment. Current: {:?} Target: {:?} [{:?}, {:?}] Last update time: {:?} Current time: {:?} Current pnl: {:?} High water pnl: {:?}",
             provider_fee,
             target_fee,
             target_fee_min,
             target_fee_max,
-            provider_info.sequence_number,
-            sequence_number_of_last_fee_update,
+            last_fee_update_time,
+            current_time,
             current_pnl,
             high_water_pnl
         )
@@ -242,13 +246,10 @@ pub async fn adjust_fee_if_necessary(
         high_water_pnl.unwrap_or(U256::from(0)),
     ));
 
-    // Update sequence number on server start.
-    match sequence_number_of_last_fee_update {
-        Some(_) => (),
-        None => {
-            *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
-        }
-    };
+    // Initialize last_fee_update_time on first run
+    if last_fee_update_time.is_none() {
+        *last_fee_update_time = Some(current_time);
+    }
 
     Ok(())
 }

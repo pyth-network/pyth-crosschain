@@ -1,8 +1,6 @@
 use {
     super::keeper_metrics::{AccountLabel, KeeperMetrics},
-    crate::{
-        api::ChainId, chain::ethereum::InstrumentedPythContract,
-    },
+    crate::{api::ChainId, chain::ethereum::InstrumentedPythContract},
     ethers::middleware::Middleware,
     ethers::{providers::Provider, types::Address},
     fortuna::eth_utils::traced_client::TracedClient,
@@ -41,7 +39,7 @@ pub async fn track_balance(
         .set(balance);
 }
 
-/// tracks the collected fees and the hashchain data of the given provider address on the given chain
+/// tracks the collected fees and provider information on the given chain
 /// if there is a error the function will just return
 #[tracing::instrument(skip_all)]
 pub async fn track_provider(
@@ -63,9 +61,7 @@ pub async fn track_provider(
     let collected_fee = provider_info.accrued_fees_in_wei as f64 / 1e18;
     let current_fee: f64 = provider_info.fee_in_wei as f64 / 1e18;
 
-    let current_sequence_number = provider_info.sequence_number;
-    let end_sequence_number = provider_info.end_sequence_number;
-
+    // Track the provider's fee information
     metrics
         .collected_fee
         .get_or_create(&AccountLabel {
@@ -81,22 +77,4 @@ pub async fn track_provider(
             address: provider_address.to_string(),
         })
         .set(current_fee);
-
-    metrics
-        .current_sequence_number
-        .get_or_create(&AccountLabel {
-            chain_id: chain_id.clone(),
-            address: provider_address.to_string(),
-        })
-        // sequence_number type on chain is u64 but practically it will take
-        // a long time for it to cross the limits of i64.
-        // currently prometheus only supports i64 for Gauge types
-        .set(current_sequence_number as i64);
-    metrics
-        .end_sequence_number
-        .get_or_create(&AccountLabel {
-            chain_id: chain_id.clone(),
-            address: provider_address.to_string(),
-        })
-        .set(end_sequence_number as i64);
 }

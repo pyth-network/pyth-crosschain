@@ -1,15 +1,14 @@
 use {
     crate::{
-        api::GetRandomValueResponse,
-        chain::ethereum::SignablePythContract,
+        chain::ethereum::{PulseEvents, SignablePythContract},
         config::{Config, GenerateOptions},
     },
-    anyhow::Result,
-    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
+    anyhow::{anyhow, Result},
+    ethers::{contract::EthLogDecode, types::Bytes},
     std::sync::Arc,
 };
 
-/// Run the entire random number generation protocol to produce a random number.
+/// Request a price update from the Pulse contract and execute the callback.
 pub async fn generate(opts: &GenerateOptions) -> Result<()> {
     let contract = Arc::new(
         SignablePythContract::from_config(
@@ -19,45 +18,63 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
         .await?,
     );
 
-    let user_randomness = rand::random::<[u8; 32]>();
-    let provider = opts.provider;
+    // Define the price IDs we want to update
+    // In a real implementation, these would come from configuration or command line arguments
+    let price_ids: Vec<[u8; 32]> = vec![];
+    if price_ids.is_empty() {
+        return Err(anyhow!("No price IDs specified for update"));
+    }
 
-    // Request a random number on the contract
+    // Request a price update on the contract
+    // The publish_time would typically be the current time or a specific time in the future
+    let publish_time = chrono::Utc::now().timestamp() as u64;
+    let callback_gas_limit = 500000; // Example gas limit for the callback
+
     let sequence_number = contract
-        .request_wrapper(&provider, &user_randomness, opts.blockhash)
-        .await?;
-
-    tracing::info!(sequence_number = sequence_number, "random number requested",);
-
-    // Get the committed value from the provider
-    let resp = reqwest::get(opts.url.join(&format!(
-        "/v1/chains/{}/revelations/{}",
-        opts.chain_id, sequence_number
-    ))?)
-    .await?
-    .json::<GetRandomValueResponse>()
-    .await?;
-
-    tracing::info!(
-        response = base64_standard_engine.encode(resp.value.data()),
-        "Retrieved the provider's random value.",
-    );
-    let provider_randomness = resp.value.data();
-
-    // Submit the provider's and our values to the contract to reveal the random number.
-    let random_value = contract
-        .reveal_wrapper(
-            &provider,
-            sequence_number,
-            &user_randomness,
-            provider_randomness,
+        .request_price_updates_with_callback(
+            publish_time.into(),
+            price_ids.clone(),
+            callback_gas_limit.into(),
         )
+        .send()
+        .await?
+        .await?
+        .ok_or_else(|| anyhow!("Failed to get transaction receipt"))?
+        .logs
+        .iter()
+        .find_map(|log| {
+            let raw_log = ethers::abi::RawLog::from(log.clone());
+            if let Ok(PulseEvents::PriceUpdateRequestedFilter(event_data)) =
+                PulseEvents::decode_log(&raw_log)
+            {
+                Some(event_data.request.sequence_number)
+            } else {
+                None
+            }
+        })
+        .ok_or_else(|| anyhow!("Failed to find sequence number in transaction logs"))?;
+
+    tracing::info!(sequence_number = sequence_number, "Price update requested");
+
+    // In a real implementation, we would fetch price data from a source
+    // For this example, we'll use empty update data
+    let update_data: Vec<Bytes> = vec![];
+
+    // Execute the callback with the price data
+    let result = contract
+        .execute_callback(sequence_number, update_data, price_ids)
+        .send()
+        .await?
         .await?;
 
-    tracing::info!(
-        number = base64_standard_engine.encode(random_value),
-        "Random number generated."
-    );
+    if let Some(receipt) = result {
+        tracing::info!(
+            transaction_hash = ?receipt.transaction_hash,
+            "Price update callback executed successfully"
+        );
+    } else {
+        tracing::error!("Price update callback failed: no receipt returned");
+    }
 
     Ok(())
 }
