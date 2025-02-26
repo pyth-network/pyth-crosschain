@@ -36,6 +36,46 @@ pub struct PriceFeedData {
     pub funding_rate: Option<i64>,
 }
 
+/// Old Represents a binary (bincode-serialized) stream update sent
+/// from the publisher to the router.
+/// Superseded by `PriceFeedData`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PriceFeedDataV0 {
+    pub price_feed_id: PriceFeedId,
+    /// Timestamp of the last update provided by the source of the prices
+    /// (like an exchange). If unavailable, this value is set to `publisher_timestamp_us`.
+    pub source_timestamp_us: TimestampUs,
+    /// Timestamp of the last update provided by the publisher.
+    pub publisher_timestamp_us: TimestampUs,
+    /// Last known value of the best executable price of this price feed.
+    /// `None` if no value is currently available.
+    #[serde(with = "crate::serde_price_as_i64")]
+    pub price: Option<Price>,
+    /// Last known value of the best bid price of this price feed.
+    /// `None` if no value is currently available.
+    #[serde(with = "crate::serde_price_as_i64")]
+    pub best_bid_price: Option<Price>,
+    /// Last known value of the best ask price of this price feed.
+    /// `None` if no value is currently available.
+    #[serde(with = "crate::serde_price_as_i64")]
+    pub best_ask_price: Option<Price>,
+}
+
+impl From<PriceFeedDataV0> for PriceFeedData {
+    fn from(v0: PriceFeedDataV0) -> Self {
+        Self {
+            price_feed_id: v0.price_feed_id,
+            source_timestamp_us: v0.source_timestamp_us,
+            publisher_timestamp_us: v0.publisher_timestamp_us,
+            price: v0.price,
+            best_bid_price: v0.best_bid_price,
+            best_ask_price: v0.best_ask_price,
+            funding_rate: None,
+        }
+    }
+}
+
 /// A response sent from the server to the publisher client.
 /// Currently only serde errors are reported back to the client.
 #[derive(Debug, Clone, Serialize, Deserialize, From)]
