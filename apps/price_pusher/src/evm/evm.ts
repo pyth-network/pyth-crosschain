@@ -188,10 +188,11 @@ export class EvmPricePusher implements IPricePusher {
     // are using this to remain compatible with the networks that doesn't
     // support this transaction type.
     let gasPrice =
-      this.gasPrice !== undefined
-        ? this.gasPrice
-        : Number(await this.customGasStation?.getCustomGasPrice()) ||
-          Number(await this.client.getGasPrice());
+      this.gasPrice ??
+      Number(
+        await (this.customGasStation?.getCustomGasPrice() ??
+          this.client.getGasPrice())
+      );
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
     if (this.pusherAddress === undefined) {
