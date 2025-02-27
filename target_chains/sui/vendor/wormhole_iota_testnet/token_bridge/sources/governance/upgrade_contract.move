@@ -8,8 +8,8 @@
 /// 3.  Upgrade.
 /// 4.  Commit upgrade.
 module token_bridge::upgrade_contract {
-    use sui::object::{ID};
-    use sui::package::{UpgradeReceipt, UpgradeTicket};
+    use iota::object::{ID};
+    use iota::package::{UpgradeReceipt, UpgradeTicket};
     use wormhole::bytes32::{Self, Bytes32};
     use wormhole::cursor::{Self};
     use wormhole::governance_message::{Self, DecreeTicket, DecreeReceipt};
@@ -50,15 +50,15 @@ module token_bridge::upgrade_contract {
     }
 
     /// Redeem governance VAA to issue an `UpgradeTicket` for the upgrade given
-    /// a contract upgrade VAA. This governance message is only relevant for Sui
+    /// a contract upgrade VAA. This governance message is only relevant for Iota
     /// because a contract upgrade is only relevant to one particular network
-    /// (in this case Sui), whose build digest is encoded in this message.
+    /// (in this case Iota), whose build digest is encoded in this message.
     public fun authorize_upgrade(
         token_bridge_state: &mut State,
         receipt: DecreeReceipt<GovernanceWitness>
     ): UpgradeTicket {
         // current package checking when consuming VAA hashes. This is because
-        // upgrades are protected by the Sui VM, enforcing the latest package
+        // upgrades are protected by the Iota VM, enforcing the latest package
         // is the one performing the upgrade.
         let consumed =
             state::borrow_mut_consumed_vaas_unchecked(token_bridge_state);
@@ -72,7 +72,7 @@ module token_bridge::upgrade_contract {
 
     /// Finalize the upgrade that ran to produce the given `receipt`. This
     /// method invokes `state::commit_upgrade` which interacts with
-    /// `sui::package`.
+    /// `iota::package`.
     public fun commit_upgrade(
         self: &mut State,
         receipt: UpgradeReceipt,
@@ -80,7 +80,7 @@ module token_bridge::upgrade_contract {
         let (old_contract, new_contract) = state::commit_upgrade(self, receipt);
 
         // Emit an event reflecting package ID change.
-        sui::event::emit(ContractUpgraded { old_contract, new_contract });
+        iota::event::emit(ContractUpgraded { old_contract, new_contract });
     }
 
     /// Privileged method only to be used by this module and `migrate` module.

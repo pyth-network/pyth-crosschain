@@ -2,12 +2,12 @@
 
 #[test_only]
 module token_bridge::coin_wrapped_7 {
-    use sui::balance::{Balance};
-    use sui::coin::{CoinMetadata, TreasuryCap};
-    use sui::package::{UpgradeCap};
-    use sui::test_scenario::{Self, Scenario};
-    use sui::transfer::{Self};
-    use sui::tx_context::{Self, TxContext};
+    use iota::balance::{Balance};
+    use iota::coin::{CoinMetadata, TreasuryCap};
+    use iota::package::{UpgradeCap};
+    use iota::test_scenario::{Self, Scenario};
+    use iota::transfer::{Self};
+    use iota::tx_context::{Self, TxContext};
 
     use token_bridge::asset_meta::{Self, AssetMeta};
     use token_bridge::create_wrapped::{Self, WrappedAssetSetup};

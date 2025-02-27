@@ -4,8 +4,8 @@
 /// Wormhole messages. Its external address is determined by the capability's
 /// `id`, which is a 32-byte vector.
 module wormhole::emitter {
-    use sui::object::{Self, ID, UID};
-    use sui::tx_context::{TxContext};
+    use iota::object::{Self, ID, UID};
+    use iota::tx_context::{TxContext};
 
     use wormhole::state::{Self, State};
 
@@ -21,7 +21,7 @@ module wormhole::emitter {
         emitter_cap: ID
     }
 
-    /// `EmitterCap` is a Sui object that gives a user or smart contract the
+    /// `EmitterCap` is a Iota object that gives a user or smart contract the
     /// capability to send Wormhole messages. For every Wormhole message
     /// emitted, a unique `sequence` is used.
     struct EmitterCap has key, store {
@@ -41,7 +41,7 @@ module wormhole::emitter {
                 sequence: 0
             };
 
-        sui::event::emit(
+        iota::event::emit(
             EmitterCreated { emitter_cap: object::id(&cap)}
         );
 
@@ -69,7 +69,7 @@ module wormhole::emitter {
     public fun destroy(wormhole_state: &State, cap: EmitterCap) {
         state::assert_latest_only(wormhole_state);
 
-        sui::event::emit(
+        iota::event::emit(
             EmitterDestroyed { emitter_cap: object::id(&cap) }
         );
 
@@ -86,7 +86,7 @@ module wormhole::emitter {
     #[test_only]
     public fun dummy(): EmitterCap {
         EmitterCap {
-            id: object::new(&mut sui::tx_context::dummy()),
+            id: object::new(&mut iota::tx_context::dummy()),
             sequence: 0
         }
     }
@@ -94,8 +94,8 @@ module wormhole::emitter {
 
 #[test_only]
 module wormhole::emitter_tests {
-    use sui::object::{Self};
-    use sui::test_scenario::{Self};
+    use iota::object::{Self};
+    use iota::test_scenario::{Self};
 
     use wormhole::emitter::{Self};
     use wormhole::state::{Self};

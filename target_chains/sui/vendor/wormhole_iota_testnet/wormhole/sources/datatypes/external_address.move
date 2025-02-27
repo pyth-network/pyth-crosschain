@@ -3,7 +3,7 @@
 /// This module implements a custom type for a 32-byte standardized address,
 /// which is meant to represent an address from any other network.
 module wormhole::external_address {
-    use sui::object::{Self, ID};
+    use iota::object::{Self, ID};
     use wormhole::bytes32::{Self, Bytes32};
     use wormhole::cursor::{Cursor};
 
@@ -55,7 +55,7 @@ module wormhole::external_address {
 
     /// Destroy `ExternalAddress` to represent its underlying data as `address`.
     public fun to_address(ext: ExternalAddress): address {
-        sui::address::from_bytes(to_bytes(ext))
+        iota::address::from_bytes(to_bytes(ext))
     }
 
     /// Create `ExternalAddress` from `address`.

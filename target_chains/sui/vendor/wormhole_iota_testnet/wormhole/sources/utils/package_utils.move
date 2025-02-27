@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache 2
 
 /// This module implements utilities that supplement those methods implemented
-/// in `sui::package`.
+/// in `iota::package`.
 module wormhole::package_utils {
     use std::type_name::{Self, TypeName};
-    use sui::dynamic_field::{Self as field};
-    use sui::object::{Self, ID, UID};
-    use sui::package::{Self, UpgradeCap, UpgradeTicket, UpgradeReceipt};
+    use iota::dynamic_field::{Self as field};
+    use iota::object::{Self, ID, UID};
+    use iota::package::{Self, UpgradeCap, UpgradeTicket, UpgradeReceipt};
 
     use wormhole::bytes32::{Self, Bytes32};
 
@@ -70,8 +70,8 @@ module wormhole::package_utils {
         expected_version: u64
     ) {
         let expected_package =
-            sui::address::from_bytes(
-                sui::hex::decode(
+            iota::address::from_bytes(
+                iota::hex::decode(
                     std::ascii::into_bytes(
                         std::type_name::get_address(
                             &std::type_name::get<T>()
@@ -156,7 +156,7 @@ module wormhole::package_utils {
         update_package_info_from_pending(id);
     }
 
-    /// Helper for `sui::package::authorize_upgrade` to modify pending package
+    /// Helper for `iota::package::authorize_upgrade` to modify pending package
     /// info by updating its digest.
     ///
     /// NOTE: This digest will be copied over when `migrate_version` is called.
@@ -178,7 +178,7 @@ module wormhole::package_utils {
         )
     }
 
-    /// Helper for `sui::package::commit_upgrade` to modify pending package info
+    /// Helper for `iota::package::commit_upgrade` to modify pending package info
     /// by updating its package ID with from what exists in the `UpgradeCap`.
     /// This method returns the last package and the upgraded package IDs.
     ///
@@ -276,8 +276,8 @@ module wormhole::package_utils {
 
 #[test_only]
 module wormhole::package_utils_tests {
-    use sui::object::{Self, UID};
-    use sui::tx_context::{Self};
+    use iota::object::{Self, UID};
+    use iota::tx_context::{Self};
 
     use wormhole::package_utils::{Self};
     use wormhole::version_control::{Self};

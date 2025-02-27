@@ -2,10 +2,10 @@
 
 #[test_only]
 module coins::coin {
-    use sui::object::{Self};
-    use sui::package::{Self};
-    use sui::transfer::{Self};
-    use sui::tx_context::{Self, TxContext};
+    use iota::object::{Self};
+    use iota::package::{Self};
+    use iota::transfer::{Self};
+    use iota::tx_context::{Self, TxContext};
 
     use token_bridge::create_wrapped::{Self};
 
@@ -43,9 +43,9 @@ module coins::coin {
 
 #[test_only]
 module coins::coin_tests {
-    use sui::coin::{Self};
-    use sui::package::{UpgradeCap};
-    use sui::test_scenario::{Self};
+    use iota::coin::{Self};
+    use iota::package::{UpgradeCap};
+    use iota::test_scenario::{Self};
     use token_bridge::create_wrapped::{Self, WrappedAssetSetup};
     use token_bridge::state::{Self};
     use token_bridge::token_bridge_scenario::{

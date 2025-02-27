@@ -29,10 +29,10 @@ module wormhole::set_fee {
         )
     }
 
-    /// Redeem governance VAA to configure Wormhole message fee amount in SUI
-    /// denomination. This governance message is only relevant for Sui because
+    /// Redeem governance VAA to configure Wormhole message fee amount in IOTA
+    /// denomination. This governance message is only relevant for Iota because
     /// fee administration is only relevant to one particular network (in this
-    /// case Sui).
+    /// case Iota).
     ///
     /// NOTE: This method is guarded by a minimum build version check. This
     /// method could break backward compatibility on an upgrade.
@@ -76,8 +76,8 @@ module wormhole::set_fee {
 
 #[test_only]
 module wormhole::set_fee_tests {
-    use sui::balance::{Self};
-    use sui::test_scenario::{Self};
+    use iota::balance::{Self};
+    use iota::test_scenario::{Self};
 
     use wormhole::bytes::{Self};
     use wormhole::cursor::{Self};

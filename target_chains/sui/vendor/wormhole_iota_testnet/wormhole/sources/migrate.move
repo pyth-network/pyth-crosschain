@@ -8,8 +8,8 @@
 /// any of Wormhole's methods by enforcing the current build version as their
 /// required minimum version.
 module wormhole::migrate {
-    use sui::clock::{Clock};
-    use sui::object::{ID};
+    use iota::clock::{Clock};
+    use iota::object::{ID};
 
     use wormhole::governance_message::{Self};
     use wormhole::state::{Self, State};
@@ -94,7 +94,7 @@ module wormhole::migrate {
 
         // Finally emit an event reflecting a successful migrate.
         let package = state::current_package(&latest_only, wormhole_state);
-        sui::event::emit(MigrateComplete { package });
+        iota::event::emit(MigrateComplete { package });
     }
 
     #[test_only]
@@ -105,7 +105,7 @@ module wormhole::migrate {
 
 #[test_only]
 module wormhole::migrate_tests {
-    use sui::test_scenario::{Self};
+    use iota::test_scenario::{Self};
 
     use wormhole::state::{Self};
     use wormhole::wormhole_scenario::{

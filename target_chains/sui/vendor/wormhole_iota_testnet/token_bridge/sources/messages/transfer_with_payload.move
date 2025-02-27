@@ -11,7 +11,7 @@
 /// modules for more details.
 module token_bridge::transfer_with_payload {
     use std::vector::{Self};
-    use sui::object::{Self, ID};
+    use iota::object::{Self, ID};
     use wormhole::bytes::{Self};
     use wormhole::cursor::{Self};
     use wormhole::external_address::{Self, ExternalAddress};
@@ -208,7 +208,7 @@ module token_bridge::transfer_with_payload {
 #[test_only]
 module token_bridge::transfer_with_payload_tests {
     use std::vector::{Self};
-    use sui::object::{Self};
+    use iota::object::{Self};
     use wormhole::emitter::{Self};
     use wormhole::external_address::{Self};
 

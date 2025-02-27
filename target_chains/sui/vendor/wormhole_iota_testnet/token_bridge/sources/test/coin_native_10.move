@@ -3,11 +3,11 @@
 #[test_only]
 module token_bridge::coin_native_10 {
     use std::option::{Self};
-    use sui::balance::{Self, Balance};
-    use sui::coin::{Self, CoinMetadata, TreasuryCap};
-    use sui::test_scenario::{Self, Scenario};
-    use sui::transfer::{Self};
-    use sui::tx_context::{TxContext};
+    use iota::balance::{Self, Balance};
+    use iota::coin::{Self, CoinMetadata, TreasuryCap};
+    use iota::test_scenario::{Self, Scenario};
+    use iota::transfer::{Self};
+    use iota::tx_context::{TxContext};
 
     use token_bridge::native_asset::{Self};
     use token_bridge::state::{Self};
@@ -15,7 +15,7 @@ module token_bridge::coin_native_10 {
 
     struct COIN_NATIVE_10 has drop {}
 
-    // This module creates a Sui-native token for testing purposes,
+    // This module creates a Iota-native token for testing purposes,
     // for example in complete_transfer, where we create a native coin,
     // mint some and deposit in the token bridge, then complete transfer
     // and ultimately transfer a portion of those native coins to a recipient.

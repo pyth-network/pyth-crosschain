@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache 2
 
 /// This module implements a custom type that keeps track of info relating to
-/// assets (coin types) native to Sui. Token Bridge takes custody of these
+/// assets (coin types) native to Iota. Token Bridge takes custody of these
 /// assets when someone invokes a token transfer outbound. Likewise, Token
 /// Bridge releases some of its balance from its custody of when someone redeems
-/// an inbound token transfer intended for Sui.
+/// an inbound token transfer intended for Iota.
 ///
 /// See `token_registry` module for more details.
 module token_bridge::native_asset {
-    use sui::balance::{Self, Balance};
-    use sui::coin::{Self, CoinMetadata};
-    use sui::object::{Self};
+    use iota::balance::{Self, Balance};
+    use iota::coin::{Self, CoinMetadata};
+    use iota::object::{Self};
     use wormhole::external_address::{Self, ExternalAddress};
     use wormhole::state::{chain_id};
 
@@ -65,7 +65,7 @@ module token_bridge::native_asset {
         balance::value(&self.custody)
     }
 
-    /// Retrieve canonical token chain ID (Sui's) and token address.
+    /// Retrieve canonical token chain ID (Iota's) and token address.
     public fun canonical_info<C>(
         self: &NativeAsset<C>
     ): (u16, ExternalAddress) {
@@ -123,10 +123,10 @@ module token_bridge::native_asset {
 
 #[test_only]
 module token_bridge::native_asset_tests {
-    use sui::balance::{Self};
-    use sui::coin::{Self};
-    use sui::object::{Self};
-    use sui::test_scenario::{Self};
+    use iota::balance::{Self};
+    use iota::coin::{Self};
+    use iota::object::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::external_address::{Self};
     use wormhole::state::{chain_id};
 

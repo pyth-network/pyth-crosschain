@@ -1,8 +1,8 @@
 module coins::coin_8 {
     use std::option::{Self};
-    use sui::coin::{Self, TreasuryCap, CoinMetadata};
-    use sui::transfer::{Self};
-    use sui::tx_context::{Self, TxContext};
+    use iota::coin::{Self, TreasuryCap, CoinMetadata};
+    use iota::transfer::{Self};
+    use iota::tx_context::{Self, TxContext};
 
     /// The type identifier of coin. The coin will have a type
     /// tag of kind: `Coin<package_object::coin_8::COIN_8>`
@@ -47,7 +47,7 @@ module coins::coin_8 {
 
 #[test_only]
 module coins::coin_8_tests {
-    use sui::test_scenario::{Self};
+    use iota::test_scenario::{Self};
 
     use coins::coin_8::{Self};
 

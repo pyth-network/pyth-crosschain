@@ -32,9 +32,9 @@
 /// See `transfer_with_payload` module for serialization and deserialization of
 /// Wormhole message payload.
 module token_bridge::complete_transfer_with_payload {
-    use sui::coin::{Self, Coin};
-    use sui::object::{Self};
-    use sui::tx_context::{TxContext};
+    use iota::coin::{Self, Coin};
+    use iota::object::{Self};
+    use iota::tx_context::{TxContext};
     use wormhole::emitter::{EmitterCap};
 
     use token_bridge::complete_transfer::{Self};
@@ -183,9 +183,9 @@ module token_bridge::complete_transfer_with_payload {
 
 #[test_only]
 module token_bridge::complete_transfer_with_payload_tests {
-    use sui::coin::{Self};
-    use sui::object::{Self};
-    use sui::test_scenario::{Self};
+    use iota::coin::{Self};
+    use iota::object::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::emitter::{Self};
     use wormhole::state::{chain_id};
     use wormhole::wormhole_scenario::{new_emitter, parse_and_verify_vaa};
@@ -229,7 +229,7 @@ module token_bridge::complete_transfer_with_payload_tests {
         let wormhole_fee = 350;
         set_up_wormhole_and_token_bridge(scenario, wormhole_fee);
 
-        // Register Sui as a foreign emitter.
+        // Register Iota as a foreign emitter.
         let expected_source_chain = 2;
         register_dummy_emitter(scenario, expected_source_chain);
 
@@ -710,7 +710,7 @@ module token_bridge::complete_transfer_with_payload_tests {
         let wormhole_fee = 350;
         set_up_wormhole_and_token_bridge(scenario, wormhole_fee);
 
-        // Register Sui as a foreign emitter.
+        // Register Iota as a foreign emitter.
         let expected_source_chain = 2;
         register_dummy_emitter(scenario, expected_source_chain);
 

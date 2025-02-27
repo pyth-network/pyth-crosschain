@@ -4,10 +4,10 @@
 /// initialize `State` as a shared object.
 module wormhole::setup {
     use std::vector::{Self};
-    use sui::object::{Self, UID};
-    use sui::package::{Self, UpgradeCap};
-    use sui::transfer::{Self};
-    use sui::tx_context::{Self, TxContext};
+    use iota::object::{Self, UID};
+    use iota::package::{Self, UpgradeCap};
+    use iota::transfer::{Self};
+    use iota::tx_context::{Self, TxContext};
 
     use wormhole::cursor::{Self};
     use wormhole::state::{Self};
@@ -35,7 +35,7 @@ module wormhole::setup {
         // This will be created and sent to the transaction sender
         // automatically when the contract is published.
         transfer::public_transfer(
-            sui::package::test_publish(object::id_from_address(@wormhole), ctx),
+            iota::package::test_publish(object::id_from_address(@wormhole), ctx),
             tx_context::sender(ctx)
         );
     }
@@ -99,9 +99,9 @@ module wormhole::setup {
 module wormhole::setup_tests {
     use std::option::{Self};
     use std::vector::{Self};
-    use sui::package::{Self};
-    use sui::object::{Self};
-    use sui::test_scenario::{Self};
+    use iota::package::{Self};
+    use iota::object::{Self};
+    use iota::test_scenario::{Self};
 
     use wormhole::bytes32::{Self};
     use wormhole::cursor::{Self};

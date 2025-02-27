@@ -1,5 +1,5 @@
 module wormhole::consumed_vaas {
-    use sui::tx_context::{TxContext};
+    use iota::tx_context::{TxContext};
 
     use wormhole::bytes32::{Bytes32};
     use wormhole::set::{Self, Set};

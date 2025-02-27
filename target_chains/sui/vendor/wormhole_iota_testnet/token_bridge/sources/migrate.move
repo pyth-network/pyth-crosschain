@@ -8,7 +8,7 @@
 /// any of Token Bridge's methods by enforcing the current build version as
 /// their required minimum version.
 module token_bridge::migrate {
-    use sui::object::{ID};
+    use iota::object::{ID};
     use wormhole::governance_message::{Self, DecreeReceipt};
 
     use token_bridge::state::{Self, State};
@@ -75,7 +75,7 @@ module token_bridge::migrate {
 
         // Finally emit an event reflecting a successful migrate.
         let package = state::current_package(&latest_only, token_bridge_state);
-        sui::event::emit(MigrateComplete { package });
+        iota::event::emit(MigrateComplete { package });
     }
 
     #[test_only]
@@ -86,7 +86,7 @@ module token_bridge::migrate {
 
 #[test_only]
 module token_bridge::migrate_tests {
-    use sui::test_scenario::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::wormhole_scenario::{
         parse_and_verify_vaa,
         verify_governance_vaa

@@ -3,10 +3,10 @@
 /// This module implements the mechanism to publish the Token Bridge contract
 /// and initialize `State` as a shared object.
 module token_bridge::setup {
-    use sui::object::{Self, UID};
-    use sui::package::{Self, UpgradeCap};
-    use sui::transfer::{Self};
-    use sui::tx_context::{Self, TxContext};
+    use iota::object::{Self, UID};
+    use iota::package::{Self, UpgradeCap};
+    use iota::transfer::{Self};
+    use iota::tx_context::{Self, TxContext};
     use wormhole::emitter::{EmitterCap};
 
     use token_bridge::state::{Self};
@@ -29,8 +29,8 @@ module token_bridge::setup {
 
     #[test_only]
     public fun init_test_only(ctx: &mut TxContext) {
-        // NOTE: This exists to mock up sui::package for proposed upgrades.
-        use sui::package::{Self};
+        // NOTE: This exists to mock up iota::package for proposed upgrades.
+        use iota::package::{Self};
 
         init(ctx);
 

@@ -3,9 +3,9 @@
 /// This module implements handling a governance VAA to enact transferring some
 /// amount of collected fees to an intended recipient.
 module wormhole::transfer_fee {
-    use sui::coin::{Self};
-    use sui::transfer::{Self};
-    use sui::tx_context::{TxContext};
+    use iota::coin::{Self};
+    use iota::transfer::{Self};
+    use iota::tx_context::{TxContext};
 
     use wormhole::bytes32::{Self};
     use wormhole::cursor::{Self};
@@ -37,8 +37,8 @@ module wormhole::transfer_fee {
 
     /// Redeem governance VAA to transfer collected Wormhole fees to the
     /// recipient encoded in its Wormhole governance message. This governance
-    /// message is only relevant for Sui because fee administration is only
-    /// relevant to one particular network (in this case Sui).
+    /// message is only relevant for Iota because fee administration is only
+    /// relevant to one particular network (in this case Iota).
     ///
     /// NOTE: This method is guarded by a minimum build version check. This
     /// method could break backward compatibility on an upgrade.
@@ -66,7 +66,7 @@ module wormhole::transfer_fee {
         governance_payload: vector<u8>,
         ctx: &mut TxContext
     ): u64 {
-        // Deserialize the payload as amount to withdraw and to whom SUI should
+        // Deserialize the payload as amount to withdraw and to whom IOTA should
         // be sent.
         let TransferFee { amount, recipient } = deserialize(governance_payload);
 
@@ -106,10 +106,10 @@ module wormhole::transfer_fee {
 
 #[test_only]
 module wormhole::transfer_fee_tests {
-    use sui::balance::{Self};
-    use sui::coin::{Self, Coin};
-    use sui::sui::{SUI};
-    use sui::test_scenario::{Self};
+    use iota::balance::{Self};
+    use iota::coin::{Self, Coin};
+    use iota::iota::{IOTA};
+    use iota::test_scenario::{Self};
 
     use wormhole::bytes::{Self};
     use wormhole::bytes32::{Self};
@@ -192,7 +192,7 @@ module wormhole::transfer_fee_tests {
 
         // Verify that the recipient received the withdrawal.
         let withdrawn_coin =
-            test_scenario::take_from_address<Coin<SUI>>(scenario, recipient);
+            test_scenario::take_from_address<Coin<IOTA>>(scenario, recipient);
         assert!(coin::value(&withdrawn_coin) == withdrawn, 0);
 
         // And there is still a balance on Wormhole's fee collector.
@@ -321,7 +321,7 @@ module wormhole::transfer_fee_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = sui::balance::ENotEnough)]
+    #[expected_failure(abort_code = iota::balance::ENotEnough)]
     fun test_cannot_transfer_fee_insufficient_balance() {
         // Testing this method.
         use wormhole::transfer_fee::{transfer_fee};

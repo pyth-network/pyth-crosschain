@@ -38,7 +38,7 @@ module wormhole::version_control {
     //
     ////////////////////////////////////////////////////////////////////////////
 
-    /// First published package on Sui mainnet.
+    /// First published package on Iota mainnet.
     struct V__0_2_0 has store, drop, copy {}
 
     // Dummy.

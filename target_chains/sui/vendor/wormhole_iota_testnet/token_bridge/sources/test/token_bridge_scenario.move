@@ -3,9 +3,9 @@
 #[test_only]
 module token_bridge::token_bridge_scenario {
     use std::vector::{Self};
-    use sui::balance::{Self};
-    use sui::package::{UpgradeCap};
-    use sui::test_scenario::{Self, Scenario};
+    use iota::balance::{Self};
+    use iota::package::{UpgradeCap};
+    use iota::test_scenario::{Self, Scenario};
     use wormhole::external_address::{Self};
     use wormhole::wormhole_scenario::{
         deployer,

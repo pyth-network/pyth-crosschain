@@ -6,7 +6,7 @@
 /// mind that the current guardian set has no expiration.
 module wormhole::update_guardian_set {
     use std::vector::{Self};
-    use sui::clock::{Clock};
+    use iota::clock::{Clock};
 
     use wormhole::bytes::{Self};
     use wormhole::cursor::{Self};
@@ -104,7 +104,7 @@ module wormhole::update_guardian_set {
             guardian_set::new(new_index, guardians)
         );
 
-        sui::event::emit(GuardianSetAdded { new_index });
+        iota::event::emit(GuardianSetAdded { new_index });
 
         new_index
     }
@@ -136,8 +136,8 @@ module wormhole::update_guardian_set {
 #[test_only]
 module wormhole::update_guardian_set_tests {
     use std::vector::{Self};
-    use sui::clock::{Self};
-    use sui::test_scenario::{Self};
+    use iota::clock::{Self};
+    use iota::test_scenario::{Self};
 
     use wormhole::bytes::{Self};
     use wormhole::cursor::{Self};

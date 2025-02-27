@@ -1,10 +1,10 @@
 /// A simple contracts that demonstrates how to send messages with wormhole.
 module core_messages::sender {
-    use sui::clock::{Clock};
-    use sui::coin::{Self};
-    use sui::object::{Self, UID};
-    use sui::transfer::{Self};
-    use sui::tx_context::{TxContext};
+    use iota::clock::{Clock};
+    use iota::coin::{Self};
+    use iota::object::{Self, UID};
+    use iota::transfer::{Self};
+    use iota::tx_context::{TxContext};
     use wormhole::emitter::{Self, EmitterCap};
     use wormhole::state::{State as WormholeState};
 
@@ -74,7 +74,7 @@ module core_messages::sender {
 
 #[test_only]
 module core_messages::sender_test {
-    use sui::test_scenario::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::wormhole_scenario::{
         return_clock,
         return_state,

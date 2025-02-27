@@ -26,16 +26,16 @@
 /// `PrepareTransferWithPayload`.
 ///
 /// NOTE: Only assets that exist in the `TokenRegistry` can be bridged out,
-/// which are native Sui assets that have been attested for via `attest_token`
+/// which are native Iota assets that have been attested for via `attest_token`
 /// and wrapped foreign assets that have been created using foreign asset
 /// metadata via the `create_wrapped` module.
 ///
 /// See `transfer_with_payload` module for serialization and deserialization of
 /// Wormhole message payload.
 module token_bridge::transfer_tokens_with_payload {
-    use sui::balance::{Balance};
-    use sui::coin::{Coin};
-    use sui::object::{Self, ID};
+    use iota::balance::{Balance};
+    use iota::coin::{Coin};
+    use iota::object::{Self, ID};
     use wormhole::bytes32::{Self};
     use wormhole::emitter::{EmitterCap};
     use wormhole::external_address::{Self};
@@ -109,7 +109,7 @@ module token_bridge::transfer_tokens_with_payload {
 
     /// `transfer_tokens_with_payload` is the only method that can unpack the
     /// members of `TransferTicket`. This method takes the balance
-    /// from this type and bridges this asset out of Sui by either joining its
+    /// from this type and bridges this asset out of Iota by either joining its
     /// balance in the Token Bridge's custody for native assets or burning its
     /// balance for wrapped assets.
     ///
@@ -228,9 +228,9 @@ module token_bridge::transfer_tokens_with_payload {
 
 #[test_only]
 module token_bridge::transfer_tokens_with_payload_tests {
-    use sui::coin::{Self};
-    use sui::object::{Self};
-    use sui::test_scenario::{Self};
+    use iota::coin::{Self};
+    use iota::object::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::bytes32::{Self};
     use wormhole::emitter::{Self};
     use wormhole::external_address::{Self};

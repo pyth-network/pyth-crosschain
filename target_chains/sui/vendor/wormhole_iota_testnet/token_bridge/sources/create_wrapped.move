@@ -27,16 +27,16 @@
 /// See `state` and `wrapped_asset` modules for more details.
 ///
 /// References:
-/// https://examples.sui.io/basics/one-time-witness.html
+/// https://examples.iota.io/basics/one-time-witness.html
 module token_bridge::create_wrapped {
     use std::ascii::{Self};
     use std::option::{Self};
     use std::type_name::{Self};
-    use sui::coin::{Self, TreasuryCap, CoinMetadata};
-    use sui::object::{Self, UID};
-    use sui::package::{UpgradeCap};
-    use sui::transfer::{Self};
-    use sui::tx_context::{TxContext};
+    use iota::coin::{Self, TreasuryCap, CoinMetadata};
+    use iota::object::{Self, UID};
+    use iota::package::{UpgradeCap};
+    use iota::transfer::{Self};
+    use iota::tx_context::{TxContext};
 
     use token_bridge::asset_meta::{Self};
     use token_bridge::normalized_amount::{max_decimals};
@@ -102,7 +102,7 @@ module token_bridge::create_wrapped {
         // resembles the same check for `coin::create_currency`.
         // Technically this check is redundant as it's performed by
         // `coin::create_currency` below, but it doesn't hurt.
-        assert!(sui::types::is_one_time_witness(&witness), E_BAD_WITNESS);
+        assert!(iota::types::is_one_time_witness(&witness), E_BAD_WITNESS);
 
         // Ensure that the decimals passed into this method do not exceed max
         // decimals (see `normalized_amount` module).
@@ -174,7 +174,7 @@ module token_bridge::create_wrapped {
 
         // `register_wrapped_asset` uses `token_registry::add_new_wrapped`,
         // which will check whether the asset has already been registered and if
-        // the token chain ID is not Sui's.
+        // the token chain ID is not Iota's.
         //
         // If both of these conditions are met, `register_wrapped_asset` will
         // succeed and the new wrapped coin will be registered.
@@ -242,7 +242,7 @@ module token_bridge::create_wrapped {
             );
 
         let upgrade_cap =
-            sui::package::test_publish(
+            iota::package::test_publish(
                 object::id_from_address(@token_bridge),
                 ctx
             );
@@ -280,10 +280,10 @@ module token_bridge::create_wrapped {
 
 #[test_only]
 module token_bridge::create_wrapped_tests {
-    use sui::coin::{Self};
-    use sui::test_scenario::{Self};
-    use sui::test_utils::{Self};
-    use sui::tx_context::{Self};
+    use iota::coin::{Self};
+    use iota::test_scenario::{Self};
+    use iota::test_utils::{Self};
+    use iota::tx_context::{Self};
     use wormhole::wormhole_scenario::{parse_and_verify_vaa};
 
     use token_bridge::asset_meta::{Self};

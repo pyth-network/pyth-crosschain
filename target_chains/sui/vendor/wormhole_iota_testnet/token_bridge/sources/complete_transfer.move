@@ -28,9 +28,9 @@
 /// See `transfer` module for serialization and deserialization of Wormhole
 /// message payload.
 module token_bridge::complete_transfer {
-    use sui::balance::{Self, Balance};
-    use sui::coin::{Self, Coin};
-    use sui::tx_context::{Self, TxContext};
+    use iota::balance::{Self, Balance};
+    use iota::coin::{Self, Coin};
+    use iota::tx_context::{Self, TxContext};
     use wormhole::external_address::{Self, ExternalAddress};
 
     use token_bridge::native_asset::{Self};
@@ -44,7 +44,7 @@ module token_bridge::complete_transfer {
     // Requires `handle_complete_transfer`.
     friend token_bridge::complete_transfer_with_payload;
 
-    /// Transfer not intended to be received on Sui.
+    /// Transfer not intended to be received on Iota.
     const E_TARGET_NOT_SUI: u64 = 0;
     /// Input token info does not match registered info.
     const E_CANONICAL_TOKEN_INFO_MISMATCH: u64 = 1;
@@ -133,7 +133,7 @@ module token_bridge::complete_transfer {
     /// wrapped asset or withdraws balance from native asset custody.
     ///
     /// Depending on whether this coin is a Token Bridge wrapped asset or a
-    /// natively existing asset on Sui, the coin is either minted or withdrawn
+    /// natively existing asset on Iota, the coin is either minted or withdrawn
     /// from Token Bridge's custody.
     public(friend) fun verify_and_bridge_out<CoinType>(
         latest_only: &LatestOnly,
@@ -146,7 +146,7 @@ module token_bridge::complete_transfer {
         VerifiedAsset<CoinType>,
         Balance<CoinType>
     ) {
-        // Verify that the intended chain ID for this transfer is for Sui.
+        // Verify that the intended chain ID for this transfer is for Iota.
         assert!(
             target_chain == wormhole::state::chain_id(),
             E_TARGET_NOT_SUI
@@ -197,8 +197,8 @@ module token_bridge::complete_transfer {
     public(friend) fun emit_transfer_redeemed(msg: &TokenBridgeMessage): u16 {
         let emitter_chain = vaa::emitter_chain(msg);
 
-        // Emit Sui event with `TransferRedeemed`.
-        sui::event::emit(
+        // Emit Iota event with `TransferRedeemed`.
+        iota::event::emit(
             TransferRedeemed {
                 emitter_chain,
                 emitter_address: vaa::emitter_address(msg),
@@ -257,7 +257,7 @@ module token_bridge::complete_transfer {
         };
 
         // Transfer tokens to the recipient.
-        sui::transfer::public_transfer(
+        iota::transfer::public_transfer(
             coin::from_balance(bridged_out, ctx),
             recipient
         );
@@ -277,8 +277,8 @@ module token_bridge::complete_transfer {
 
 #[test_only]
 module token_bridge::complete_transfer_tests {
-    use sui::coin::{Self, Coin};
-    use sui::test_scenario::{Self};
+    use iota::coin::{Self, Coin};
+    use iota::test_scenario::{Self};
     use wormhole::state::{chain_id};
     use wormhole::wormhole_scenario::{parse_and_verify_vaa};
 
@@ -1148,7 +1148,7 @@ module token_bridge::complete_transfer_tests {
         test_scenario::next_tx(scenario, tx_relayer);
 
         // NOTE: this call should revert since the target chain encoded is
-        // chain 69 instead of chain 21 (Sui).
+        // chain 69 instead of chain 21 (Iota).
         let receipt =
             authorize_transfer<COIN_WRAPPED_12>(
                 &mut token_bridge_state,

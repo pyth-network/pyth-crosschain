@@ -25,7 +25,7 @@ module wormhole::governance_message {
     const E_INVALID_GOVERNANCE_ACTION: u64 = 5;
     /// Governance target chain not indicative of global action.
     const E_GOVERNANCE_TARGET_CHAIN_NONZERO: u64 = 6;
-    /// Governance target chain not indicative of actino specifically for Sui
+    /// Governance target chain not indicative of actino specifically for Iota
     /// Wormhole contract.
     const E_GOVERNANCE_TARGET_CHAIN_NOT_SUI: u64 = 7;
 
@@ -66,7 +66,7 @@ module wormhole::governance_message {
     }
 
     /// This method prepares `DecreeTicket` for local governance action. This
-    /// means the VAA encodes target chain ID == 21 (Sui's).
+    /// means the VAA encodes target chain ID == 21 (Iota's).
     public fun authorize_verify_local<T: drop>(
         _witness: T,
         governance_chain: u16,
@@ -162,7 +162,7 @@ module wormhole::governance_message {
         assert!(action == parsed_action, E_INVALID_GOVERNANCE_ACTION);
 
         // Target chain, which determines whether the governance VAA applies to
-        // all chains or Sui.
+        // all chains or Iota.
         if (global) {
             assert!(chain == 0, E_GOVERNANCE_TARGET_CHAIN_NONZERO);
         } else {
@@ -204,8 +204,8 @@ module wormhole::governance_message {
 
 #[test_only]
 module wormhole::governance_message_tests {
-    use sui::test_scenario::{Self};
-    use sui::tx_context::{Self};
+    use iota::test_scenario::{Self};
+    use iota::tx_context::{Self};
 
     use wormhole::bytes32::{Self};
     use wormhole::consumed_vaas::{Self};

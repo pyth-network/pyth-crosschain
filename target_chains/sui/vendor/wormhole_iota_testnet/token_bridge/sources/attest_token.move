@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2
 
 /// This module implements the method `attest_token` which allows someone
-/// to send asset metadata of a coin type native to Sui. Part of this process
+/// to send asset metadata of a coin type native to Iota. Part of this process
 /// is registering this asset in the `TokenRegistry`.
 ///
 /// NOTE: If an asset has not been attested for, it cannot be bridged using
@@ -10,7 +10,7 @@
 /// See `asset_meta` module for serialization and deserialization of Wormhole
 /// message payload.
 module token_bridge::attest_token {
-    use sui::coin::{CoinMetadata};
+    use iota::coin::{CoinMetadata};
     use wormhole::publish_message::{MessageTicket};
 
     use token_bridge::asset_meta::{Self};
@@ -26,7 +26,7 @@ module token_bridge::attest_token {
 
     /// `attest_token` takes `CoinMetadata` of a coin type and generates a
     /// `MessageTicket` with encoded asset metadata for a foreign Token Bridge
-    /// contract to consume and create a wrapped asset reflecting this Sui
+    /// contract to consume and create a wrapped asset reflecting this Iota
     /// asset. Asset metadata is encoded using `AssetMeta`.
     ///
     /// See `token_registry` and `asset_meta` module for more info.
@@ -110,8 +110,8 @@ module token_bridge::attest_token {
 module token_bridge::attest_token_tests {
     use std::ascii::{Self};
     use std::string::{Self};
-    use sui::coin::{Self};
-    use sui::test_scenario::{Self};
+    use iota::coin::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::publish_message::{Self};
     use wormhole::state::{chain_id};
 

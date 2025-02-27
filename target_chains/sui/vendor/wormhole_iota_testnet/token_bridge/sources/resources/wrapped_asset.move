@@ -8,9 +8,9 @@
 /// See `create_wrapped` and 'token_registry' modules for more details.
 module token_bridge::wrapped_asset {
     use std::string::{String};
-    use sui::balance::{Self, Balance};
-    use sui::coin::{Self, TreasuryCap, CoinMetadata};
-    use sui::package::{Self, UpgradeCap};
+    use iota::balance::{Self, Balance};
+    use iota::coin::{Self, TreasuryCap, CoinMetadata};
+    use iota::package::{Self, UpgradeCap};
     use wormhole::external_address::{ExternalAddress};
     use wormhole::state::{chain_id};
 
@@ -23,7 +23,7 @@ module token_bridge::wrapped_asset {
     friend token_bridge::token_registry;
     friend token_bridge::transfer_tokens;
 
-    /// Token chain ID matching Sui's are not allowed.
+    /// Token chain ID matching Iota's are not allowed.
     const E_SUI_CHAIN: u64 = 0;
     /// Canonical token info does match `AssetMeta` payload.
     const E_ASSET_META_MISMATCH: u64 = 1;
@@ -73,7 +73,7 @@ module token_bridge::wrapped_asset {
             name
         ) = asset_meta::unpack(token_meta);
 
-        // Protect against adding `AssetMeta` which has Sui's chain ID.
+        // Protect against adding `AssetMeta` which has Iota's chain ID.
         assert!(token_chain != chain_id(), E_SUI_CHAIN);
 
         // Set metadata.
@@ -136,7 +136,7 @@ module token_bridge::wrapped_asset {
         // have not changed (because changing this info is not desirable, as
         // this change means the supply changed on its native network).
         //
-        // NOTE: This implicitly verifies that `token_chain` is not Sui's
+        // NOTE: This implicitly verifies that `token_chain` is not Iota's
         // because this was checked already when the asset was first added.
         let (expected_chain, expected_address) = canonical_info<C>(self);
         assert!(
@@ -258,7 +258,7 @@ module token_bridge::wrapped_asset {
             decimals: _,
             upgrade_cap
         } = asset;
-        sui::test_utils::destroy(treasury_cap);
+        iota::test_utils::destroy(treasury_cap);
 
         let ForeignInfo {
             token_chain: _,
@@ -267,18 +267,18 @@ module token_bridge::wrapped_asset {
             symbol: _
         } = info;
 
-        sui::package::make_immutable(upgrade_cap);
+        iota::package::make_immutable(upgrade_cap);
     }
 }
 
 #[test_only]
 module token_bridge::wrapped_asset_tests {
     use std::string::{Self};
-    use sui::balance::{Self};
-    use sui::coin::{Self, CoinMetadata};
-    use sui::object::{Self};
-    use sui::package::{Self};
-    use sui::test_scenario::{Self};
+    use iota::balance::{Self};
+    use iota::coin::{Self, CoinMetadata};
+    use iota::object::{Self};
+    use iota::package::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::external_address::{Self};
     use wormhole::state::{chain_id};
 
@@ -580,7 +580,7 @@ module token_bridge::wrapped_asset_tests {
         // Ignore effects.
         test_scenario::next_tx(scenario, caller);
 
-        // Sui's chain ID is not allowed.
+        // Iota's chain ID is not allowed.
         let invalid_meta =
             asset_meta::new(
                 external_address::default(),

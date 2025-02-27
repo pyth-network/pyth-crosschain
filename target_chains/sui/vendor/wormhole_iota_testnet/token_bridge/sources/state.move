@@ -6,10 +6,10 @@
 /// accessing registered assets and verifying `VAA` intended for Token Bridge by
 /// checking the emitter against its own registered emitters.
 module token_bridge::state {
-    use sui::object::{Self, ID, UID};
-    use sui::package::{UpgradeCap, UpgradeReceipt, UpgradeTicket};
-    use sui::table::{Self, Table};
-    use sui::tx_context::{TxContext};
+    use iota::object::{Self, ID, UID};
+    use iota::package::{UpgradeCap, UpgradeReceipt, UpgradeTicket};
+    use iota::table::{Self, Table};
+    use iota::tx_context::{TxContext};
     use wormhole::bytes32::{Self, Bytes32};
     use wormhole::consumed_vaas::{Self, ConsumedVAAs};
     use wormhole::emitter::{EmitterCap};
@@ -173,7 +173,7 @@ module token_bridge::state {
     public fun test_upgrade(self: &mut State) {
         let test_digest = bytes32::from_bytes(b"new build");
         let ticket = authorize_upgrade(self, test_digest);
-        let receipt = sui::package::test_upgrade(ticket);
+        let receipt = iota::package::test_upgrade(ticket);
         commit_upgrade(self, receipt);
     }
 
@@ -306,7 +306,7 @@ module token_bridge::state {
 
     /// Issue an `UpgradeTicket` for the upgrade.
     ///
-    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// NOTE: The Iota VM performs a check that this method is executed from the
     /// latest published package. If someone were to try to execute this using
     /// a stale build, the transaction will revert with `PackageUpgradeError`,
     /// specifically `PackageIDDoesNotMatch`.
@@ -320,7 +320,7 @@ module token_bridge::state {
 
     /// Finalize the upgrade that ran to produce the given `receipt`.
     ///
-    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// NOTE: The Iota VM performs a check that this method is executed from the
     /// latest published package. If someone were to try to execute this using
     /// a stale build, the transaction will revert with `PackageUpgradeError`,
     /// specifically `PackageIDDoesNotMatch`.

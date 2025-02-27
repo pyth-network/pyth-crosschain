@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: Apache 2
 
-/// This module implements a container that collects fees in SUI denomination.
+/// This module implements a container that collects fees in IOTA denomination.
 /// The `FeeCollector` requires that the fee deposited is exactly equal to the
 /// `fee_amount` configured.
 module wormhole::fee_collector {
-    use sui::balance::{Self, Balance};
-    use sui::coin::{Self, Coin};
-    use sui::sui::{SUI};
-    use sui::tx_context::{TxContext};
+    use iota::balance::{Self, Balance};
+    use iota::coin::{Self, Coin};
+    use iota::iota::{IOTA};
+    use iota::tx_context::{TxContext};
 
     /// Amount deposited is not exactly the amount configured.
     const E_INCORRECT_FEE: u64 = 0;
 
-    /// Container for configured `fee_amount` and `balance` of SUI collected.
+    /// Container for configured `fee_amount` and `balance` of IOTA collected.
     struct FeeCollector has store {
         fee_amount: u64,
-        balance: Balance<SUI>
+        balance: Balance<IOTA>
     }
 
     /// Create new `FeeCollector` with specified amount to collect.
@@ -28,37 +28,37 @@ module wormhole::fee_collector {
         self.fee_amount
     }
 
-    /// Retrieve current SUI balance.
+    /// Retrieve current IOTA balance.
     public fun balance_value(self: &FeeCollector): u64 {
         balance::value(&self.balance)
     }
 
-    /// Take `Balance<SUI>` and add it to current collected balance.
-    public fun deposit_balance(self: &mut FeeCollector, fee: Balance<SUI>) {
+    /// Take `Balance<IOTA>` and add it to current collected balance.
+    public fun deposit_balance(self: &mut FeeCollector, fee: Balance<IOTA>) {
         assert!(balance::value(&fee) == self.fee_amount, E_INCORRECT_FEE);
         balance::join(&mut self.balance, fee);
     }
 
-    /// Take `Coin<SUI>` and add it to current collected balance.
-    public fun deposit(self: &mut FeeCollector, fee: Coin<SUI>) {
+    /// Take `Coin<IOTA>` and add it to current collected balance.
+    public fun deposit(self: &mut FeeCollector, fee: Coin<IOTA>) {
         deposit_balance(self, coin::into_balance(fee))
     }
 
-    /// Create `Balance<SUI>` of some `amount` by taking from collected balance.
+    /// Create `Balance<IOTA>` of some `amount` by taking from collected balance.
     public fun withdraw_balance(
         self: &mut FeeCollector,
         amount: u64
-    ): Balance<SUI> {
-        // This will trigger `sui::balance::ENotEnough` if amount > balance.
+    ): Balance<IOTA> {
+        // This will trigger `iota::balance::ENotEnough` if amount > balance.
         balance::split(&mut self.balance, amount)
     }
 
-    /// Create `Coin<SUI>` of some `amount` by taking from collected balance.
+    /// Create `Coin<IOTA>` of some `amount` by taking from collected balance.
     public fun withdraw(
         self: &mut FeeCollector,
         amount: u64,
         ctx: &mut TxContext
-    ): Coin<SUI> {
+    ): Coin<IOTA> {
         coin::from_balance(withdraw_balance(self, amount), ctx)
     }
 
@@ -76,8 +76,8 @@ module wormhole::fee_collector {
 
 #[test_only]
 module wormhole::fee_collector_tests {
-    use sui::coin::{Self};
-    use sui::tx_context::{Self};
+    use iota::coin::{Self};
+    use iota::tx_context::{Self};
 
     use wormhole::fee_collector::{Self};
 
@@ -146,7 +146,7 @@ module wormhole::fee_collector_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = sui::balance::ENotEnough)]
+    #[expected_failure(abort_code = iota::balance::ENotEnough)]
     public fun test_cannot_withdraw_more_than_balance() {
         let ctx = &mut tx_context::dummy();
 

@@ -9,9 +9,9 @@
 /// validate them with this test-only Wormhole instance.
 module wormhole::wormhole_scenario {
     use std::vector::{Self};
-    use sui::clock::{Self, Clock};
-    use sui::package::{UpgradeCap};
-    use sui::test_scenario::{Self, Scenario};
+    use iota::clock::{Self, Clock};
+    use iota::package::{UpgradeCap};
+    use iota::test_scenario::{Self, Scenario};
 
     use wormhole::emitter::{EmitterCap};
     use wormhole::governance_message::{Self, DecreeTicket, DecreeReceipt};

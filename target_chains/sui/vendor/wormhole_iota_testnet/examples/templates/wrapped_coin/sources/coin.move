@@ -1,6 +1,6 @@
 module wrapped_coin::coin {
-    use sui::transfer::{Self};
-    use sui::tx_context::{Self, TxContext};
+    use iota::transfer::{Self};
+    use iota::tx_context::{Self, TxContext};
 
     use token_bridge::create_wrapped::{Self};
 

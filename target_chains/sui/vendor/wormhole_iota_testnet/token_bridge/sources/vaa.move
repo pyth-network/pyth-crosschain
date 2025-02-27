@@ -11,7 +11,7 @@
 /// in its `State`. If the encoded VAA passes through `parse_and_verify` again,
 /// it will abort.
 module token_bridge::vaa {
-    use sui::table::{Self};
+    use iota::table::{Self};
     use wormhole::external_address::{ExternalAddress};
     use wormhole::vaa::{Self, VAA};
 
@@ -141,7 +141,7 @@ module token_bridge::vaa {
 
 #[test_only]
 module token_bridge::vaa_tests {
-    use sui::test_scenario::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::external_address::{Self};
     use wormhole::wormhole_scenario::{parse_and_verify_vaa};
 

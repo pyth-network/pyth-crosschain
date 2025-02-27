@@ -6,7 +6,7 @@ module wormhole::bytes32 {
     use std::option::{Self};
     use std::string::{Self, String};
     use std::vector::{Self};
-    use sui::bcs::{Self};
+    use iota::bcs::{Self};
 
     use wormhole::bytes::{Self};
     use wormhole::cursor::{Self, Cursor};
@@ -106,12 +106,12 @@ module wormhole::bytes32 {
 
     /// Destroy `Bytes32` to represent its underlying data as `address`.
     public fun to_address(value: Bytes32): address {
-        sui::address::from_bytes(to_bytes(value))
+        iota::address::from_bytes(to_bytes(value))
     }
 
     /// Create `Bytes32` from `address`.
     public fun from_address(addr: address): Bytes32 {
-        new(sui::address::to_bytes(addr))
+        new(iota::address::to_bytes(addr))
     }
 
     public fun from_utf8(str: String): Bytes32 {

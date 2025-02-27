@@ -8,7 +8,7 @@
 /// For inbound transfers, this amount will be denormalized (scaled by the same
 /// decimal difference).
 module token_bridge::normalized_amount {
-    use sui::math::{Self};
+    use iota::math::{Self};
     use wormhole::bytes32::{Self};
     use wormhole::cursor::{Cursor};
 

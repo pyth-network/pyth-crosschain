@@ -22,8 +22,8 @@
 module wormhole::vaa {
     use std::option::{Self};
     use std::vector::{Self};
-    use sui::clock::{Clock};
-    use sui::hash::{keccak256};
+    use iota::clock::{Clock};
+    use iota::hash::{keccak256};
 
     use wormhole::bytes::{Self};
     use wormhole::bytes32::{Self, Bytes32};
@@ -262,7 +262,7 @@ module wormhole::vaa {
     }
 
     fun double_keccak256(buf: vector<u8>): Bytes32 {
-        use sui::hash::{keccak256};
+        use iota::hash::{keccak256};
 
         bytes32::new(keccak256(&keccak256(&buf)))
     }
@@ -369,7 +369,7 @@ module wormhole::vaa {
 #[test_only]
 module wormhole::vaa_tests {
     use std::vector::{Self};
-    use sui::test_scenario::{Self};
+    use iota::test_scenario::{Self};
 
     use wormhole::bytes32::{Self};
     use wormhole::cursor::{Self};
@@ -587,12 +587,12 @@ module wormhole::vaa_tests {
         };
 
         let expected_message_hash =
-            bytes32::new(sui::hash::keccak256(&body_buf));
+            bytes32::new(iota::hash::keccak256(&body_buf));
         assert!(vaa::compute_message_hash(&parsed) == expected_message_hash, 0);
 
         let expected_digest =
             bytes32::new(
-                sui::hash::keccak256(&sui::hash::keccak256(&body_buf))
+                iota::hash::keccak256(&iota::hash::keccak256(&body_buf))
             );
         assert!(vaa::digest(&parsed) == expected_digest, 0);
 

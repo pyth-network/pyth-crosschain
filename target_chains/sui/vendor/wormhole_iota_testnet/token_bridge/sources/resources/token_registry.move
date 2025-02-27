@@ -8,12 +8,12 @@
 module token_bridge::token_registry {
     use std::ascii::{String};
     use std::type_name::{Self};
-    use sui::coin::{TreasuryCap, CoinMetadata};
-    use sui::dynamic_field::{Self};
-    use sui::object::{Self, UID};
-    use sui::package::{UpgradeCap};
-    use sui::table::{Self, Table};
-    use sui::tx_context::{TxContext};
+    use iota::coin::{TreasuryCap, CoinMetadata};
+    use iota::dynamic_field::{Self};
+    use iota::object::{Self, UID};
+    use iota::package::{UpgradeCap};
+    use iota::table::{Self, Table};
+    use iota::tx_context::{TxContext};
     use wormhole::external_address::{Self, ExternalAddress};
 
     use token_bridge::asset_meta::{Self, AssetMeta};
@@ -210,7 +210,7 @@ module token_bridge::token_registry {
             token_meta,
             coin_meta,
             treasury_cap,
-            sui::package::test_publish(
+            iota::package::test_publish(
                 object::id_from_address(@token_bridge),
                 ctx
             )
@@ -223,7 +223,7 @@ module token_bridge::token_registry {
     /// NOTE: This method does not verify if `CoinType` is already in the
     /// registry because `attest_token` already takes care of this check. If
     /// This method were to be called on an already-registered asset, this
-    /// will throw with an error from `sui::dynamic_field` reflectina duplicate
+    /// will throw with an error from `iota::dynamic_field` reflectina duplicate
     /// field.
     ///
     /// See `attest_token` module for more info.
@@ -338,9 +338,9 @@ module token_bridge::token_registry {
 #[test_only]
 module token_bridge::token_registry_tests {
     use std::type_name::{Self};
-    use sui::balance::{Self};
-    use sui::coin::{CoinMetadata};
-    use sui::test_scenario::{Self};
+    use iota::balance::{Self};
+    use iota::coin::{CoinMetadata};
+    use iota::test_scenario::{Self};
     use wormhole::external_address::{Self};
     use wormhole::state::{chain_id};
 
@@ -585,7 +585,7 @@ module token_bridge::token_registry_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = sui::dynamic_field::EFieldAlreadyExists)]
+    #[expected_failure(abort_code = iota::dynamic_field::EFieldAlreadyExists)]
     /// In this negative test case, we try to register a native token twice.
     fun test_cannot_add_new_native_again() {
         let caller = person();
@@ -613,7 +613,7 @@ module token_bridge::token_registry_tests {
         // You shall not pass!
         //
         // NOTE: We don't have a custom error for this. This will trigger a
-        // `sui::dynamic_field` error.
+        // `iota::dynamic_field` error.
         token_registry::add_new_native_test_only(
             &mut registry,
             &coin_meta
@@ -623,7 +623,7 @@ module token_bridge::token_registry_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = sui::dynamic_field::EFieldTypeMismatch)]
+    #[expected_failure(abort_code = iota::dynamic_field::EFieldTypeMismatch)]
     // In this negative test case, we attempt to deposit a wrapped token into
     // a TokenRegistry object, resulting in failure. A wrapped coin can
     // only be minted and burned, not deposited.
@@ -672,7 +672,7 @@ module token_bridge::token_registry_tests {
         // You shall not pass!
         //
         // NOTE: We don't have a custom error for this. This will trigger a
-        // `sui::dynamic_field` error.
+        // `iota::dynamic_field` error.
         native_asset::deposit_test_only(
             token_registry::borrow_mut_native_test_only<COIN_WRAPPED_7>(
                 &mut registry
@@ -684,7 +684,7 @@ module token_bridge::token_registry_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = sui::dynamic_field::EFieldTypeMismatch)]
+    #[expected_failure(abort_code = iota::dynamic_field::EFieldTypeMismatch)]
     // In this negative test case, we attempt to deposit a wrapped token into
     // a TokenRegistry object, resulting in failure. A wrapped coin can
     // only be minted and burned, not deposited.
@@ -715,7 +715,7 @@ module token_bridge::token_registry_tests {
         // You shall not pass!
         //
         // NOTE: We don't have a custom error for this. This will trigger a
-        // `sui::dynamic_field` error.
+        // `iota::dynamic_field` error.
         let minted =
             wrapped_asset::mint_test_only(
                 token_registry::borrow_mut_wrapped_test_only<COIN_NATIVE_10>(

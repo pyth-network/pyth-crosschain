@@ -23,15 +23,15 @@
 /// implement `prepare_transfer` in his contract to produce `PrepareTransfer`.
 ///
 /// NOTE: Only assets that exist in the `TokenRegistry` can be bridged out,
-/// which are native Sui assets that have been attested for via `attest_token`
+/// which are native Iota assets that have been attested for via `attest_token`
 /// and wrapped foreign assets that have been created using foreign asset
 /// metadata via the `create_wrapped` module.
 ///
 /// See `transfer` module for serialization and deserialization of Wormhole
 /// message payload.
 module token_bridge::transfer_tokens {
-    use sui::balance::{Self, Balance};
-    use sui::coin::{Self, Coin};
+    use iota::balance::{Self, Balance};
+    use iota::coin::{Self, Coin};
     use wormhole::bytes32::{Self};
     use wormhole::external_address::{Self, ExternalAddress};
     use wormhole::publish_message::{MessageTicket};
@@ -109,7 +109,7 @@ module token_bridge::transfer_tokens {
 
     /// `transfer_tokens` is the only method that can unpack the members of
     /// `TransferTicket`. This method takes the balance from this type and
-    /// bridges this asset out of Sui by either joining its balance in the Token
+    /// bridges this asset out of Iota by either joining its balance in the Token
     /// Bridge's custody for native assets or burning its balance for wrapped
     /// assets.
     ///
@@ -158,7 +158,7 @@ module token_bridge::transfer_tokens {
     /// Modify coin based on the decimals of a given coin type, which may
     /// leave some amount if the decimals lead to truncating the coin's balance.
     /// This method returns the extracted balance (which will be bridged out of
-    /// Sui) and the normalized amount, which will be encoded in the token
+    /// Iota) and the normalized amount, which will be encoded in the token
     /// transfer payload.
     ///
     /// NOTE: This is a privileged method, which only this and the
@@ -248,7 +248,7 @@ module token_bridge::transfer_tokens {
         // Disallow `relayer_fee` to be greater than the `Coin` object's value.
         // Keep in mind that the relayer fee is evaluated against the truncated
         // amount.
-        let amount = sui::balance::value(&bridged_in);
+        let amount = iota::balance::value(&bridged_in);
         assert!(relayer_fee <= amount, E_RELAYER_FEE_EXCEEDS_AMOUNT);
 
         // Handle funds and get canonical token info for encoded transfer.
@@ -304,8 +304,8 @@ module token_bridge::transfer_tokens {
 
 #[test_only]
 module token_bridge::transfer_token_tests {
-    use sui::coin::{Self};
-    use sui::test_scenario::{Self};
+    use iota::coin::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::bytes32::{Self};
     use wormhole::external_address::{Self};
     use wormhole::publish_message::{Self};
@@ -870,7 +870,7 @@ module token_bridge::transfer_token_tests {
                 scenario,
                 sender
             );
-        sui::test_utils::destroy(treasury_cap);
+        iota::test_utils::destroy(treasury_cap);
 
         // NOTE: This test purposely doesn't `attest` COIN_WRAPPED_7.
         let transfer_amount = 42069;

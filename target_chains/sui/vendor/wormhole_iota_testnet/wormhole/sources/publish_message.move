@@ -24,15 +24,15 @@
 /// implement `prepare_message` in his contract to produce `MessageTicket`,
 /// which `publish_message` consumes.
 module wormhole::publish_message {
-    use sui::coin::{Self, Coin};
-    use sui::clock::{Self, Clock};
-    use sui::object::{Self, ID};
-    use sui::sui::{SUI};
+    use iota::coin::{Self, Coin};
+    use iota::clock::{Self, Clock};
+    use iota::object::{Self, ID};
+    use iota::iota::{IOTA};
 
     use wormhole::emitter::{Self, EmitterCap};
     use wormhole::state::{Self, State};
 
-    /// This type is emitted via `sui::event` module. Guardians pick up this
+    /// This type is emitted via `iota::event` module. Guardians pick up this
     /// observation and attest to its existence.
     struct WormholeMessage has drop, copy {
         /// `EmitterCap` object ID.
@@ -89,7 +89,7 @@ module wormhole::publish_message {
         }
     }
 
-    /// `publish_message` emits a message as a Sui event. This method uses the
+    /// `publish_message` emits a message as a Iota event. This method uses the
     /// input `EmitterCap` as the registered sender of the
     /// `WormholeMessage`. It also produces a new sequence for this emitter.
     ///
@@ -106,7 +106,7 @@ module wormhole::publish_message {
     /// See `prepare_message` for more details.
     public fun publish_message(
         wormhole_state: &mut State,
-        message_fee: Coin<SUI>,
+        message_fee: Coin<IOTA>,
         prepared_msg: MessageTicket,
         the_clock: &Clock
     ): u64 {
@@ -132,11 +132,11 @@ module wormhole::publish_message {
         // Truncate to seconds.
         let timestamp = clock::timestamp_ms(the_clock) / 1000;
 
-        // Sui is an instant finality chain, so we don't need confirmations.
+        // Iota is an instant finality chain, so we don't need confirmations.
         let consistency_level = 0;
 
-        // Emit Sui event with `WormholeMessage`.
-        sui::event::emit(
+        // Emit Iota event with `WormholeMessage`.
+        iota::event::emit(
             WormholeMessage {
                 sender,
                 sequence,
@@ -164,8 +164,8 @@ module wormhole::publish_message {
 
 #[test_only]
 module wormhole::publish_message_tests {
-    use sui::coin::{Self};
-    use sui::test_scenario::{Self};
+    use iota::coin::{Self};
+    use iota::test_scenario::{Self};
 
     use wormhole::emitter::{Self, EmitterCap};
     use wormhole::fee_collector::{Self};
@@ -259,7 +259,7 @@ module wormhole::publish_message_tests {
             // Clean up.
             return_state(worm_state);
             return_clock(the_clock);
-            sui::transfer::public_transfer(emitter_cap, user);
+            iota::transfer::public_transfer(emitter_cap, user);
         };
 
         // Grab the `TransactionEffects` of the previous transaction.

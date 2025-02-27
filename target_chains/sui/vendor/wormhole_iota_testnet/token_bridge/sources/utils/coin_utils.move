@@ -5,9 +5,9 @@
 /// between `Coin` and `Balance` avoiding unnecessary object creation and
 /// destruction.
 module token_bridge::coin_utils {
-    use sui::balance::{Self, Balance};
-    use sui::coin::{Self, Coin};
-    use sui::tx_context::{TxContext};
+    use iota::balance::{Self, Balance};
+    use iota::coin::{Self, Coin};
+    use iota::tx_context::{TxContext};
 
     /// Method similar to `coin::take` where an amount is split from a `Coin`
     /// object's inner balance.
@@ -42,7 +42,7 @@ module token_bridge::coin_utils {
         if (coin::value(&the_coin) == 0) {
             coin::destroy_zero(the_coin);
         } else {
-            sui::pay::keep(the_coin, ctx)
+            iota::pay::keep(the_coin, ctx)
         }
     }
 }

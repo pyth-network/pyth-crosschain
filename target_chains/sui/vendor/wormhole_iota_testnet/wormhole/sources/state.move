@@ -8,13 +8,13 @@
 /// emitters for Wormhole integrators.
 module wormhole::state {
     use std::vector::{Self};
-    use sui::balance::{Balance};
-    use sui::clock::{Clock};
-    use sui::object::{Self, ID, UID};
-    use sui::package::{UpgradeCap, UpgradeReceipt, UpgradeTicket};
-    use sui::sui::{SUI};
-    use sui::table::{Self, Table};
-    use sui::tx_context::{TxContext};
+    use iota::balance::{Balance};
+    use iota::clock::{Clock};
+    use iota::object::{Self, ID, UID};
+    use iota::package::{UpgradeCap, UpgradeReceipt, UpgradeTicket};
+    use iota::iota::{IOTA};
+    use iota::table::{Self, Table};
+    use iota::tx_context::{TxContext};
 
     use wormhole::bytes32::{Self, Bytes32};
     use wormhole::consumed_vaas::{Self, ConsumedVAAs};
@@ -41,7 +41,7 @@ module wormhole::state {
     /// Build digest does not agree with current implementation.
     const E_INVALID_BUILD_DIGEST: u64 = 1;
 
-    /// Sui's chain ID is hard-coded to one value.
+    /// Iota's chain ID is hard-coded to one value.
     const CHAIN_ID: u16 = 50118;
 
     /// Capability reflecting that the current build version is used to invoke
@@ -166,7 +166,7 @@ module wormhole::state {
         self.guardian_set_index
     }
 
-    /// Retrieve how long after a Guardian set can live for in terms of Sui
+    /// Retrieve how long after a Guardian set can live for in terms of Iota
     /// timestamp (in seconds).
     public fun guardian_set_seconds_to_live(self: &State): u32 {
         self.guardian_set_seconds_to_live
@@ -199,7 +199,7 @@ module wormhole::state {
     }
 
     #[test_only]
-    public fun deposit_fee_test_only(self: &mut State, fee: Balance<SUI>) {
+    public fun deposit_fee_test_only(self: &mut State, fee: Balance<IOTA>) {
         deposit_fee(&assert_latest_only(self), self, fee)
     }
 
@@ -220,7 +220,7 @@ module wormhole::state {
     public fun test_upgrade(self: &mut State) {
         let test_digest = bytes32::from_bytes(b"new build");
         let ticket = authorize_upgrade(self, test_digest);
-        let receipt = sui::package::test_upgrade(ticket);
+        let receipt = iota::package::test_upgrade(ticket);
         commit_upgrade(self, receipt);
     }
 
@@ -270,7 +270,7 @@ module wormhole::state {
     public(friend) fun deposit_fee(
         _: &LatestOnly,
         self: &mut State,
-        fee: Balance<SUI>
+        fee: Balance<IOTA>
     ) {
         fee_collector::deposit_balance(&mut self.fee_collector, fee);
     }
@@ -283,7 +283,7 @@ module wormhole::state {
         _: &LatestOnly,
         self: &mut State,
         amount: u64
-    ): Balance<SUI> {
+    ): Balance<IOTA> {
         fee_collector::withdraw_balance(&mut self.fee_collector, amount)
     }
 
@@ -378,7 +378,7 @@ module wormhole::state {
 
     /// Issue an `UpgradeTicket` for the upgrade.
     ///
-    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// NOTE: The Iota VM performs a check that this method is executed from the
     /// latest published package. If someone were to try to execute this using
     /// a stale build, the transaction will revert with `PackageUpgradeError`,
     /// specifically `PackageIDDoesNotMatch`.
@@ -392,7 +392,7 @@ module wormhole::state {
 
     /// Finalize the upgrade that ran to produce the given `receipt`.
     ///
-    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// NOTE: The Iota VM performs a check that this method is executed from the
     /// latest published package. If someone were to try to execute this using
     /// a stale build, the transaction will revert with `PackageUpgradeError`,
     /// specifically `PackageIDDoesNotMatch`.

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache 2
 
 /// This module implements a custom type that resembles the set data structure.
-/// `Set` leverages `sui::table` to store unique keys of the same type.
+/// `Set` leverages `iota::table` to store unique keys of the same type.
 ///
 /// NOTE: Items added to this data structure cannot be removed.
 module wormhole::set {
-    use sui::table::{Self, Table};
-    use sui::tx_context::{TxContext};
+    use iota::table::{Self, Table};
+    use iota::tx_context::{TxContext};
 
     /// Explicit error if key already exists in `Set`.
     const E_KEY_ALREADY_EXISTS: u64 = 0;
@@ -54,7 +54,7 @@ module wormhole::set {
 
 #[test_only]
 module wormhole::set_tests {
-    use sui::tx_context::{Self};
+    use iota::tx_context::{Self};
 
     use wormhole::set::{Self};
 

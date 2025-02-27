@@ -3,7 +3,7 @@
 /// This module implements handling a governance VAA to enact registering a
 /// foreign Token Bridge for a particular chain ID.
 module token_bridge::register_chain {
-    use sui::table::{Self};
+    use iota::table::{Self};
     use wormhole::bytes::{Self};
     use wormhole::cursor::{Self};
     use wormhole::external_address::{Self, ExternalAddress};
@@ -143,8 +143,8 @@ module token_bridge::register_chain {
 
 #[test_only]
 module token_bridge::register_chain_tests {
-    use sui::table::{Self};
-    use sui::test_scenario::{Self};
+    use iota::table::{Self};
+    use iota::test_scenario::{Self};
     use wormhole::bytes::{Self};
     use wormhole::cursor::{Self};
     use wormhole::external_address::{Self};

@@ -9,7 +9,7 @@
 /// configured, which defines how long the past Guardian set can be active.
 module wormhole::guardian_set {
     use std::vector::{Self};
-    use sui::clock::{Self, Clock};
+    use iota::clock::{Self, Clock};
 
     use wormhole::guardian::{Self, Guardian};
 

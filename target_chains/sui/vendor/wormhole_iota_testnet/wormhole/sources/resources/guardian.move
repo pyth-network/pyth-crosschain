@@ -3,8 +3,8 @@
 /// This module implements a `Guardian` that warehouses a 20-byte public key.
 module wormhole::guardian {
     use std::vector::{Self};
-    use sui::hash::{Self};
-    use sui::ecdsa_k1::{Self};
+    use iota::hash::{Self};
+    use iota::ecdsa_k1::{Self};
 
     use wormhole::bytes20::{Self, Bytes20};
     use wormhole::guardian_signature::{Self, GuardianSignature};

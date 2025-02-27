@@ -28,7 +28,7 @@ module token_bridge::string_utils {
     /// out at `ascii::string(bytes)`. For input strings that contain non-ascii
     /// characters, we will swap the non-ascii character with `?`.
     ///
-    /// Note that while the Sui spec limits symbols to only use ascii
+    /// Note that while the Iota spec limits symbols to only use ascii
     /// characters, the token bridge spec does allow utf8 symbols.
     public fun to_ascii(s: &String): ascii::String {
         let buf = *string::bytes(s);

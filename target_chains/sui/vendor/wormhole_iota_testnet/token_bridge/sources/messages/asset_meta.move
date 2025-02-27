@@ -5,7 +5,7 @@
 module token_bridge::asset_meta {
     use std::string::{Self, String};
     use std::vector::{Self};
-    use sui::coin::{Self, CoinMetadata};
+    use iota::coin::{Self, CoinMetadata};
     use wormhole::bytes::{Self};
     use wormhole::bytes32::{Self};
     use wormhole::external_address::{Self, ExternalAddress};
