@@ -365,6 +365,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
                   />
                   <OisApyHistory apyHistory={oisStats.apyHistory ?? []} />
                   <InfoBox
+                    className={styles.oisInfoBox}
                     icon={<ShieldChevron />}
                     header="Oracle Integrity Staking (OIS)"
                   >
