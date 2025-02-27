@@ -1,21 +1,21 @@
-import { Chain, SuiChain } from "../chains";
+import { Chain, IotaChain } from "../chains";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
 import { PriceFeedContract, PrivateKey, TxResult } from "../base";
-import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
-import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { Transaction } from "@mysten/sui/transactions";
+import { IotaPythClient } from "@pythnetwork/pyth-iota-js";
+import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
+import { Transaction } from "@iota/iota-sdk/transactions";
 import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 
 type ObjectId = string;
 
-export class SuiPriceFeedContract extends PriceFeedContract {
-  static type = "SuiPriceFeedContract";
-  private client: SuiPythClient;
+export class IotaPriceFeedContract extends PriceFeedContract {
+  static type = "IotaPriceFeedContract";
+  private client: IotaPythClient;
 
   /**
-   * Given the ids of the pyth state and wormhole state, create a new SuiPriceFeedContract
+   * Given the ids of the pyth state and wormhole state, create a new IotaPriceFeedContract
    * The package ids are derived based on the state ids
    *
    * @param chain the chain which this contract is deployed on
@@ -23,12 +23,12 @@ export class SuiPriceFeedContract extends PriceFeedContract {
    * @param wormholeStateId id of the wormhole state for the wormhole contract that pyth binds to
    */
   constructor(
-    public chain: SuiChain,
+    public chain: IotaChain,
     public stateId: string,
     public wormholeStateId: string
   ) {
     super();
-    this.client = new SuiPythClient(
+    this.client = new IotaPythClient(
       this.getProvider(),
       this.stateId,
       this.wormholeStateId
@@ -38,12 +38,12 @@ export class SuiPriceFeedContract extends PriceFeedContract {
   static fromJson(
     chain: Chain,
     parsed: { type: string; stateId: string; wormholeStateId: string }
-  ): SuiPriceFeedContract {
-    if (parsed.type !== SuiPriceFeedContract.type)
+  ): IotaPriceFeedContract {
+    if (parsed.type !== IotaPriceFeedContract.type)
       throw new Error("Invalid type");
-    if (!(chain instanceof SuiChain))
+    if (!(chain instanceof IotaChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new SuiPriceFeedContract(
+    return new IotaPriceFeedContract(
       chain,
       parsed.stateId,
       parsed.wormholeStateId
@@ -51,10 +51,10 @@ export class SuiPriceFeedContract extends PriceFeedContract {
   }
 
   getType(): string {
-    return SuiPriceFeedContract.type;
+    return IotaPriceFeedContract.type;
   }
 
-  getChain(): SuiChain {
+  getChain(): IotaChain {
     return this.chain;
   }
 
@@ -63,7 +63,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       chain: this.chain.getId(),
       stateId: this.stateId,
       wormholeStateId: this.wormholeStateId,
-      type: SuiPriceFeedContract.type,
+      type: IotaPriceFeedContract.type,
     };
   }
 
@@ -180,7 +180,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const tx = new Transaction();
     await this.client.updatePriceFeeds(tx, vaas, feedIds);
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, "hex")
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -192,7 +192,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const tx = new Transaction();
     await this.client.createPriceFeed(tx, vaas);
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, "hex")
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
 
     const result = await this.executeTransaction(tx, keypair);
@@ -204,7 +204,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     vaa: Buffer
   ): Promise<TxResult> {
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, "hex")
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
     const tx = new Transaction();
     const packageId = await this.getPythPackageId();
@@ -277,7 +277,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
       arguments: [
         tx.object(this.wormholeStateId),
         tx.pure.arguments(Array.from(vaa)),
-        tx.object(SUI_CLOCK_OBJECT_ID),
+        tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });
 
@@ -297,7 +297,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
    */
   private async executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
     const provider = this.getProvider();
-    tx.setSender(keypair.toSuiAddress());
+    tx.setSender(keypair.toIotaAddress());
     const dryRun = await provider.dryRunTransactionBlock({
       transactionBlock: await tx.build({ client: provider }),
     });
@@ -405,23 +405,23 @@ export class SuiPriceFeedContract extends PriceFeedContract {
   }
 }
 
-export class SuiWormholeContract extends WormholeContract {
-  public static type = "SuiWormholeContract";
-  private client: SuiPythClient;
+export class IotaWormholeContract extends WormholeContract {
+  public static type = "IotaWormholeContract";
+  private client: IotaPythClient;
 
   getId(): string {
-    return `${this.chain.getId()}_${this.address}`;
+    return `${this.chain.getId()}_${this.stateId}`;
   }
 
   getType(): string {
-    return SuiWormholeContract.type;
+    return IotaWormholeContract.type;
   }
 
   toJson() {
     return {
       chain: this.chain.getId(),
-      address: this.address,
-      type: SuiWormholeContract.type,
+      stateId: this.stateId,
+      type: IotaWormholeContract.type,
     };
   }
 
@@ -432,24 +432,20 @@ export class SuiWormholeContract extends WormholeContract {
       address: string;
       stateId: string;
     }
-  ): SuiWormholeContract {
-    if (parsed.type !== SuiWormholeContract.type)
+  ): IotaWormholeContract {
+    if (parsed.type !== IotaWormholeContract.type)
       throw new Error("Invalid type");
-    if (!(chain instanceof SuiChain))
+    if (!(chain instanceof IotaChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new SuiWormholeContract(chain, parsed.address, parsed.stateId);
+    return new IotaWormholeContract(chain, parsed.stateId);
   }
 
-  constructor(
-    public chain: SuiChain,
-    public address: string,
-    public stateId: string
-  ) {
+  constructor(public chain: IotaChain, public stateId: string) {
     super();
-    this.client = new SuiPythClient(
+    this.client = new IotaPythClient(
       this.chain.getProvider(),
       // HACK:
-      // We're using the SuiPythClient to work with the Wormhole contract
+      // We're using the IotaPythClient to work with the Wormhole contract
       // so there is no Pyth contract here, passing empty string to type-
       // check.
       "",
@@ -463,7 +459,7 @@ export class SuiWormholeContract extends WormholeContract {
   }
 
   // There doesn't seem to be a way to get a value out of any function call
-  // via a Sui transaction due to the linear nature of the language, this is
+  // via a Iota transaction due to the linear nature of the language, this is
   // enforced at the TransactionBlock level by only allowing you to receive
   // receipts.
   async getChainId(): Promise<number> {
@@ -472,7 +468,7 @@ export class SuiWormholeContract extends WormholeContract {
 
   // NOTE: There's no way to getChain() on the main interface, should update
   // that interface.
-  public getChain(): SuiChain {
+  public getChain(): IotaChain {
     return this.chain;
   }
 
@@ -493,8 +489,8 @@ export class SuiWormholeContract extends WormholeContract {
       target: `${corePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(coreObjectId),
-        tx.pure(uint8ArrayToBCS(vaa)),
-        tx.object(SUI_CLOCK_OBJECT_ID),
+        tx.pure(uint8ArrayToBCS(new Uint8Array(vaa))),
+        tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });
 
@@ -516,12 +512,12 @@ export class SuiWormholeContract extends WormholeContract {
       arguments: [
         tx.object(coreObjectId),
         decreeReceipt,
-        tx.object(SUI_CLOCK_OBJECT_ID),
+        tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });
 
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, "hex")
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -551,7 +547,7 @@ export class SuiWormholeContract extends WormholeContract {
    */
   private async executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
     const provider = this.chain.getProvider();
-    tx.setSender(keypair.toSuiAddress());
+    tx.setSender(keypair.toIotaAddress());
     const dryRun = await provider.dryRunTransactionBlock({
       transactionBlock: await tx.build({ client: provider }),
     });

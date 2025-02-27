@@ -1,0 +1,3 @@
+- chain: iota_testnet
+  stateId: "0x8bc490f69520a97ca1b3de864c96aa2265a0cf5d90f5f3f016b2eddf0cf2af2b"
+  type: IotaWormholeContract
