@@ -63,9 +63,6 @@ impl Rate {
         let coef = 10i64.checked_pow(exponent).context("overflow")?;
         let coef = Decimal::from_i64(coef).context("overflow")?;
         let value = value.checked_mul(coef).context("overflow")?;
-        if !value.is_integer() {
-            bail!("price value is more precise than available exponent");
-        }
         let value: i64 = value.try_into().context("overflow")?;
         Ok(Self(value))
     }
