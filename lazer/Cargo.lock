@@ -3772,7 +3772,7 @@ dependencies = [
  "futures-util",
  "hex",
  "libsecp256k1 0.7.1",
- "pyth-lazer-protocol 0.6.0",
+ "pyth-lazer-protocol 0.6.1",
  "serde",
  "serde_json",
  "tokio",
@@ -3799,7 +3799,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "alloy-primitives",
  "anyhow",

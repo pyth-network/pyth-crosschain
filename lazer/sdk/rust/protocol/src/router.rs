@@ -43,6 +43,33 @@ impl TimestampUs {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[repr(transparent)]
+pub struct Rate(pub i64);
+
+impl Rate {
+    pub fn parse_str(value: &str, exponent: u32) -> anyhow::Result<Self> {
+        let value: Decimal = value.parse()?;
+        let coef = 10i64.checked_pow(exponent).context("overflow")?;
+        let coef = Decimal::from_i64(coef).context("overflow")?;
+        let value = value.checked_mul(coef).context("overflow")?;
+        if !value.is_integer() {
+            bail!("price value is more precise than available exponent");
+        }
+        let value: i64 = value.try_into().context("overflow")?;
+        Ok(Self(value))
+    }
+
+    pub fn from_f64(value: f64, exponent: u32) -> anyhow::Result<Self> {
+        let value = Decimal::from_f64(value).context("overflow")?;
+        let coef = 10i64.checked_pow(exponent).context("overflow")?;
+        let coef = Decimal::from_i64(coef).context("overflow")?;
+        let value = value.checked_mul(coef).context("overflow")?;
+        let value: i64 = value.try_into().context("overflow")?;
+        Ok(Self(value))
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[repr(transparent)]
 pub struct Price(pub NonZeroI64);
 
 impl Price {
@@ -77,6 +104,12 @@ impl Price {
 
     pub fn to_f64(self, exponent: u32) -> anyhow::Result<f64> {
         Ok(self.0.get() as f64 / 10i64.checked_pow(exponent).context("overflow")? as f64)
+    }
+
+    pub fn from_f64(value: f64, exponent: u32) -> anyhow::Result<Self> {
+        let value = (value * 10f64.powi(exponent as i32)) as i64;
+        let value = NonZeroI64::new(value).context("zero price is unsupported")?;
+        Ok(Self(value))
     }
 
     pub fn mul(self, rhs: Price, rhs_exponent: u32) -> anyhow::Result<Price> {
@@ -142,6 +175,8 @@ pub enum PriceFeedProperty {
     PublisherCount,
     Exponent,
     Confidence,
+    FundingRate,
+    FundingTimestamp,
     // More fields may be added later.
 }
 
@@ -396,13 +431,6 @@ pub struct ParsedPayload {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NatsPayload {
-    pub payload: ParsedPayload,
-    pub channel: Channel,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ParsedFeedPayload {
     pub price_feed_id: PriceFeedId,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -426,6 +454,12 @@ pub struct ParsedFeedPayload {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub confidence: Option<Price>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub funding_rate: Option<Rate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub funding_timestamp: Option<TimestampUs>,
     // More fields may be added later.
 }
 
@@ -444,6 +478,8 @@ impl ParsedFeedPayload {
             publisher_count: None,
             exponent: None,
             confidence: None,
+            funding_rate: None,
+            funding_timestamp: None,
         };
         for &property in properties {
             match property {
@@ -457,13 +493,19 @@ impl ParsedFeedPayload {
                     output.best_ask_price = data.best_ask_price;
                 }
                 PriceFeedProperty::PublisherCount => {
-                    output.publisher_count = data.publisher_count;
+                    output.publisher_count = Some(data.publisher_count);
                 }
                 PriceFeedProperty::Exponent => {
                     output.exponent = exponent;
                 }
                 PriceFeedProperty::Confidence => {
                     output.confidence = data.confidence;
+                }
+                PriceFeedProperty::FundingRate => {
+                    output.funding_rate = data.funding_rate;
+                }
+                PriceFeedProperty::FundingTimestamp => {
+                    output.funding_timestamp = data.funding_timestamp;
                 }
             }
         }
@@ -480,9 +522,11 @@ impl ParsedFeedPayload {
             price: data.price,
             best_bid_price: data.best_bid_price,
             best_ask_price: data.best_ask_price,
-            publisher_count: data.publisher_count,
+            publisher_count: Some(data.publisher_count),
             exponent,
             confidence: data.confidence,
+            funding_rate: data.funding_rate,
+            funding_timestamp: data.funding_timestamp,
         }
     }
 }

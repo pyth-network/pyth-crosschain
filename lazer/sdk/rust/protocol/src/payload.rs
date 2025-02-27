@@ -2,7 +2,7 @@
 
 use {
     super::router::{PriceFeedId, PriceFeedProperty, TimestampUs},
-    crate::router::{ChannelId, Price},
+    crate::router::{ChannelId, Price, Rate},
     anyhow::bail,
     byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BE, LE},
     serde::{Deserialize, Serialize},
@@ -33,9 +33,11 @@ pub enum PayloadPropertyValue {
     Price(Option<Price>),
     BestBidPrice(Option<Price>),
     BestAskPrice(Option<Price>),
-    PublisherCount(Option<u16>),
+    PublisherCount(u16),
     Exponent(i16),
     Confidence(Option<Price>),
+    FundingRate(Option<Rate>),
+    FundingTimestamp(Option<TimestampUs>),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -43,8 +45,10 @@ pub struct AggregatedPriceFeedData {
     pub price: Option<Price>,
     pub best_bid_price: Option<Price>,
     pub best_ask_price: Option<Price>,
-    pub publisher_count: Option<u16>,
+    pub publisher_count: u16,
     pub confidence: Option<Price>,
+    pub funding_rate: Option<Rate>,
+    pub funding_timestamp: Option<TimestampUs>,
 }
 
 /// First bytes of a payload's encoding
@@ -84,6 +88,12 @@ impl PayloadData {
                             PriceFeedProperty::Confidence => {
                                 PayloadPropertyValue::Confidence(feed.confidence)
                             }
+                            PriceFeedProperty::FundingRate => {
+                                PayloadPropertyValue::FundingRate(feed.funding_rate)
+                            }
+                            PriceFeedProperty::FundingTimestamp => {
+                                PayloadPropertyValue::FundingTimestamp(feed.funding_timestamp)
+                            }
                         })
                         .collect(),
                 })
@@ -115,7 +125,7 @@ impl PayloadData {
                     }
                     PayloadPropertyValue::PublisherCount(count) => {
                         writer.write_u8(PriceFeedProperty::PublisherCount as u8)?;
-                        write_option_u16::<BO>(&mut writer, *count)?;
+                        writer.write_u16::<BO>(*count)?;
                     }
                     PayloadPropertyValue::Exponent(exponent) => {
                         writer.write_u8(PriceFeedProperty::Exponent as u8)?;
@@ -124,6 +134,14 @@ impl PayloadData {
                     PayloadPropertyValue::Confidence(confidence) => {
                         writer.write_u8(PriceFeedProperty::Confidence as u8)?;
                         write_option_price::<BO>(&mut writer, *confidence)?;
+                    }
+                    PayloadPropertyValue::FundingRate(rate) => {
+                        writer.write_u8(PriceFeedProperty::FundingRate as u8)?;
+                        write_option_rate::<BO>(&mut writer, *rate)?;
+                    }
+                    PayloadPropertyValue::FundingTimestamp(timestamp) => {
+                        writer.write_u8(PriceFeedProperty::FundingTimestamp as u8)?;
+                        write_option_timestamp::<BO>(&mut writer, *timestamp)?;
                     }
                 }
             }
@@ -164,11 +182,17 @@ impl PayloadData {
                 } else if property == PriceFeedProperty::BestAskPrice as u8 {
                     PayloadPropertyValue::BestAskPrice(read_option_price::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::PublisherCount as u8 {
-                    PayloadPropertyValue::PublisherCount(read_option_u16::<BO>(&mut reader)?)
+                    PayloadPropertyValue::PublisherCount(reader.read_u16::<BO>()?)
                 } else if property == PriceFeedProperty::Exponent as u8 {
                     PayloadPropertyValue::Exponent(reader.read_i16::<BO>()?)
                 } else if property == PriceFeedProperty::Confidence as u8 {
                     PayloadPropertyValue::Confidence(read_option_price::<BO>(&mut reader)?)
+                } else if property == PriceFeedProperty::FundingRate as u8 {
+                    PayloadPropertyValue::FundingRate(read_option_rate::<BO>(&mut reader)?)
+                } else if property == PriceFeedProperty::FundingTimestamp as u8 {
+                    PayloadPropertyValue::FundingTimestamp(read_option_timestamp::<BO>(
+                        &mut reader,
+                    )?)
                 } else {
                     bail!("unknown property");
                 };
@@ -196,14 +220,54 @@ fn read_option_price<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Op
     Ok(value.map(Price))
 }
 
-fn write_option_u16<BO: ByteOrder>(
+fn write_option_rate<BO: ByteOrder>(
     mut writer: impl Write,
-    value: Option<u16>,
+    value: Option<Rate>,
 ) -> std::io::Result<()> {
-    writer.write_u16::<BO>(value.unwrap_or(0))
+    match value {
+        Some(value) => {
+            writer.write_u8(1)?;
+            writer.write_i64::<BO>(value.0)
+        }
+        None => {
+            writer.write_u8(0)?;
+            Ok(())
+        }
+    }
 }
 
-fn read_option_u16<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<u16>> {
-    let value = reader.read_u16::<BO>()?;
-    Ok(Some(value))
+fn read_option_rate<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<Rate>> {
+    let present = reader.read_u8()? != 0;
+    if present {
+        Ok(Some(Rate(reader.read_i64::<BO>()?)))
+    } else {
+        Ok(None)
+    }
+}
+
+fn write_option_timestamp<BO: ByteOrder>(
+    mut writer: impl Write,
+    value: Option<TimestampUs>,
+) -> std::io::Result<()> {
+    match value {
+        Some(value) => {
+            writer.write_u8(1)?;
+            writer.write_u64::<BO>(value.0)
+        }
+        None => {
+            writer.write_u8(0)?;
+            Ok(())
+        }
+    }
+}
+
+fn read_option_timestamp<BO: ByteOrder>(
+    mut reader: impl Read,
+) -> std::io::Result<Option<TimestampUs>> {
+    let present = reader.read_u8()? != 0;
+    if present {
+        Ok(Some(TimestampUs(reader.read_u64::<BO>()?)))
+    } else {
+        Ok(None)
+    }
 }
