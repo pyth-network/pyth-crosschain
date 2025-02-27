@@ -21,15 +21,12 @@ pub struct PriceFeedDataV2 {
     pub publisher_timestamp_us: TimestampUs,
     /// Last known value of the best executable price of this price feed.
     /// `None` if no value is currently available.
-    #[serde(with = "crate::serde_price_as_i64")]
     pub price: Option<Price>,
     /// Last known value of the best bid price of this price feed.
     /// `None` if no value is currently available.
-    #[serde(with = "crate::serde_price_as_i64")]
     pub best_bid_price: Option<Price>,
     /// Last known value of the best ask price of this price feed.
     /// `None` if no value is currently available.
-    #[serde(with = "crate::serde_price_as_i64")]
     pub best_ask_price: Option<Price>,
     /// Last known value of the funding rate of this feed.
     /// `None` if no value is currently available.
@@ -92,7 +89,7 @@ pub struct UpdateDeserializationErrorResponse {
 }
 
 #[test]
-fn price_feed_data_serde() {
+fn price_feed_data_v1_serde() {
     let data = [
         1, 0, 0, 0, // price_feed_id
         2, 0, 0, 0, 0, 0, 0, 0, // source_timestamp_us
@@ -100,20 +97,18 @@ fn price_feed_data_serde() {
         4, 0, 0, 0, 0, 0, 0, 0, // price
         5, 0, 0, 0, 0, 0, 0, 0, // best_bid_price
         6, 2, 0, 0, 0, 0, 0, 0, // best_ask_price
-        1, 7, 3, 0, 0, 0, 0, 0, 0, // funding_rate
     ];
 
-    let expected = PriceFeedDataV2 {
+    let expected = PriceFeedDataV1 {
         price_feed_id: PriceFeedId(1),
         source_timestamp_us: TimestampUs(2),
         publisher_timestamp_us: TimestampUs(3),
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: Some(Price(5.try_into().unwrap())),
         best_ask_price: Some(Price((2 * 256 + 6).try_into().unwrap())),
-        funding_rate: Some(3 * 256 + 7),
     };
     assert_eq!(
-        bincode::deserialize::<PriceFeedDataV2>(&data).unwrap(),
+        bincode::deserialize::<PriceFeedDataV1>(&data).unwrap(),
         expected
     );
     assert_eq!(bincode::serialize(&expected).unwrap(), data);
@@ -125,7 +120,57 @@ fn price_feed_data_serde() {
         4, 0, 0, 0, 0, 0, 0, 0, // price
         0, 0, 0, 0, 0, 0, 0, 0, // best_bid_price
         0, 0, 0, 0, 0, 0, 0, 0, // best_ask_price
+    ];
+    let expected2 = PriceFeedDataV1 {
+        price_feed_id: PriceFeedId(1),
+        source_timestamp_us: TimestampUs(2),
+        publisher_timestamp_us: TimestampUs(3),
+        price: Some(Price(4.try_into().unwrap())),
+        best_bid_price: None,
+        best_ask_price: None,
+    };
+    assert_eq!(
+        bincode::deserialize::<PriceFeedDataV1>(&data2).unwrap(),
+        expected2
+    );
+    assert_eq!(bincode::serialize(&expected2).unwrap(), data2);
+}
+
+#[test]
+fn price_feed_data_v2_serde() {
+    let data = [
+        1, 0, 0, 0, // price_feed_id
+        2, 0, 0, 0, 0, 0, 0, 0, // source_timestamp_us
+        3, 0, 0, 0, 0, 0, 0, 0, // publisher_timestamp_us
+        1, 4, 0, 0, 0, 0, 0, 0, 0, // price
+        1, 5, 0, 0, 0, 0, 0, 0, 0, // best_bid_price
+        1, 6, 2, 0, 0, 0, 0, 0, 0, // best_ask_price
         0, // funding_rate
+    ];
+
+    let expected = PriceFeedDataV2 {
+        price_feed_id: PriceFeedId(1),
+        source_timestamp_us: TimestampUs(2),
+        publisher_timestamp_us: TimestampUs(3),
+        price: Some(Price(4.try_into().unwrap())),
+        best_bid_price: Some(Price(5.try_into().unwrap())),
+        best_ask_price: Some(Price((2 * 256 + 6).try_into().unwrap())),
+        funding_rate: None,
+    };
+    assert_eq!(
+        bincode::deserialize::<PriceFeedDataV2>(&data).unwrap(),
+        expected
+    );
+    assert_eq!(bincode::serialize(&expected).unwrap(), data);
+
+    let data2 = [
+        1, 0, 0, 0, // price_feed_id
+        2, 0, 0, 0, 0, 0, 0, 0, // source_timestamp_us
+        3, 0, 0, 0, 0, 0, 0, 0, // publisher_timestamp_us
+        1, 4, 0, 0, 0, 0, 0, 0, 0, // price
+        0, // best_bid_price
+        0, // best_ask_price
+        1, 7, 3, 0, 0, 0, 0, 0, 0, // funding_rate
     ];
     let expected2 = PriceFeedDataV2 {
         price_feed_id: PriceFeedId(1),
@@ -134,7 +179,7 @@ fn price_feed_data_serde() {
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: None,
         best_ask_price: None,
-        funding_rate: None,
+        funding_rate: Some(3 * 256 + 7),
     };
     assert_eq!(
         bincode::deserialize::<PriceFeedDataV2>(&data2).unwrap(),
