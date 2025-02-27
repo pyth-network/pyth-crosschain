@@ -12,7 +12,7 @@ use {
 /// from the publisher to the router.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PriceFeedData {
+pub struct PriceFeedDataV2 {
     pub price_feed_id: PriceFeedId,
     /// Timestamp of the last update provided by the source of the prices
     /// (like an exchange). If unavailable, this value is set to `publisher_timestamp_us`.
@@ -41,7 +41,7 @@ pub struct PriceFeedData {
 /// Superseded by `PriceFeedData`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PriceFeedDataV0 {
+pub struct PriceFeedDataV1 {
     pub price_feed_id: PriceFeedId,
     /// Timestamp of the last update provided by the source of the prices
     /// (like an exchange). If unavailable, this value is set to `publisher_timestamp_us`.
@@ -62,8 +62,8 @@ pub struct PriceFeedDataV0 {
     pub best_ask_price: Option<Price>,
 }
 
-impl From<PriceFeedDataV0> for PriceFeedData {
-    fn from(v0: PriceFeedDataV0) -> Self {
+impl From<PriceFeedDataV1> for PriceFeedDataV2 {
+    fn from(v0: PriceFeedDataV1) -> Self {
         Self {
             price_feed_id: v0.price_feed_id,
             source_timestamp_us: v0.source_timestamp_us,
@@ -103,7 +103,7 @@ fn price_feed_data_serde() {
         1, 7, 3, 0, 0, 0, 0, 0, 0, // funding_rate
     ];
 
-    let expected = PriceFeedData {
+    let expected = PriceFeedDataV2 {
         price_feed_id: PriceFeedId(1),
         source_timestamp_us: TimestampUs(2),
         publisher_timestamp_us: TimestampUs(3),
@@ -113,7 +113,7 @@ fn price_feed_data_serde() {
         funding_rate: Some(3 * 256 + 7),
     };
     assert_eq!(
-        bincode::deserialize::<PriceFeedData>(&data).unwrap(),
+        bincode::deserialize::<PriceFeedDataV2>(&data).unwrap(),
         expected
     );
     assert_eq!(bincode::serialize(&expected).unwrap(), data);
@@ -127,7 +127,7 @@ fn price_feed_data_serde() {
         0, 0, 0, 0, 0, 0, 0, 0, // best_ask_price
         0, // funding_rate
     ];
-    let expected2 = PriceFeedData {
+    let expected2 = PriceFeedDataV2 {
         price_feed_id: PriceFeedId(1),
         source_timestamp_us: TimestampUs(2),
         publisher_timestamp_us: TimestampUs(3),
@@ -137,7 +137,7 @@ fn price_feed_data_serde() {
         funding_rate: None,
     };
     assert_eq!(
-        bincode::deserialize::<PriceFeedData>(&data2).unwrap(),
+        bincode::deserialize::<PriceFeedDataV2>(&data2).unwrap(),
         expected2
     );
     assert_eq!(bincode::serialize(&expected2).unwrap(), data2);
