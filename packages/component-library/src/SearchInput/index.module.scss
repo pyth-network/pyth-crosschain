@@ -6,8 +6,11 @@
   gap: theme.spacing(2);
   position: relative;
   display: inline-block;
-  width: calc(theme.spacing(1) * var(--width));
   color: theme.color("button", "outline", "foreground");
+
+  &[data-static-width] {
+    width: calc(theme.spacing(1) * var(--width));
+  }
 
   .input {
     display: inline-block;

@@ -5,8 +5,8 @@ import type { ReactNode } from "react";
 
 import { Footer } from "./footer";
 import { Header } from "./header";
-// import { MobileMenu } from "./mobile-menu";
 import styles from "./index.module.scss";
+import { MobileNavTabs } from "./mobile-nav-tabs";
 import { SearchDialogProvider } from "./search-dialog";
 import { TabRoot, TabPanel } from "./tabs";
 import {
@@ -14,13 +14,22 @@ import {
   GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
 } from "../../config/server";
-// import { toHex } from "../../hex";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
 import { PriceFeedsProvider as PriceFeedsProviderImpl } from "../../hooks/use-price-feeds";
 import { getPublishers } from "../../services/clickhouse";
 import { Cluster, getFeeds } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
+
+export const TABS = [
+  { href: "/", id: "", children: "Overview" },
+  { href: "/publishers", id: "publishers", children: "Publishers" },
+  {
+    href: "/price-feeds",
+    id: "price-feeds",
+    children: "Price Feeds",
+  },
+];
 
 type Props = {
   children: ReactNode;
@@ -42,11 +51,12 @@ export const Root = async ({ children }: Props) => {
     >
       <SearchDialogProvider publishers={publishers.flat()}>
         <TabRoot className={styles.tabRoot ?? ""}>
-          <Header className={styles.header} />
+          <Header className={styles.header} tabs={TABS} />
           <main className={styles.main}>
             <TabPanel>{children}</TabPanel>
           </main>
           <Footer />
+          <MobileNavTabs tabs={TABS} className={styles.mobileNavTabs} />
         </TabRoot>
       </SearchDialogProvider>
     </BaseRoot>

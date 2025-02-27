@@ -2,35 +2,27 @@
 
 .publisherLayout {
   .header {
-    @include theme.max-width;
-
-    margin-bottom: theme.spacing(6);
+    margin-bottom: theme.spacing(4);
     display: flex;
     flex-flow: column nowrap;
-    gap: theme.spacing(8);
+    gap: theme.spacing(4);
 
-    .breadcrumbRow,
-    .stats {
-      display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
+    @include theme.max-width;
+
+    @include theme.breakpoint("sm") {
+      margin-bottom: theme.spacing(6);
+      gap: theme.spacing(6);
     }
 
     .breadcrumbRow {
+      display: flex;
+      flex-flow: row nowrap;
       align-items: center;
       justify-content: space-between;
       margin-bottom: -#{theme.spacing(2)};
     }
 
     .stats {
-      align-items: stretch;
-      gap: theme.spacing(6);
-
-      & > * {
-        flex: 1 1 0px;
-        width: 0;
-      }
-
       .activeDate {
         color: theme.color("muted");
       }
@@ -55,9 +47,9 @@
   }
 
   .body {
-    @include theme.max-width;
-
     padding-top: theme.spacing(6);
+
+    @include theme.max-width;
   }
 }
 
@@ -68,9 +60,9 @@
     grid-template-rows: repeat(4, max-content);
     gap: theme.spacing(4);
 
-    .oisMeter {
+    .oisMeter,
+    .smallOisMeter {
       grid-column: span 2 / span 2;
-      margin-bottom: -#{theme.spacing(12)};
 
       .oisMeterIcon {
         font-size: theme.spacing(6);
@@ -81,6 +73,24 @@
         color: theme.color("heading");
 
         @include theme.text("xl", "medium");
+      }
+    }
+
+    .smallOisMeter {
+      margin-top: -#{theme.spacing(12)};
+      margin-bottom: -#{theme.spacing(8)};
+
+      @include theme.breakpoint("md") {
+        display: none;
+      }
+    }
+
+    .oisMeter {
+      margin-bottom: -#{theme.spacing(12)};
+      display: none;
+
+      @include theme.breakpoint("md") {
+        display: grid;
       }
     }
   }

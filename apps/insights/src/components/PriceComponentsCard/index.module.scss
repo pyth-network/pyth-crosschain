@@ -1,0 +1,89 @@
+@use "@pythnetwork/component-library/theme";
+
+.priceComponentsCard {
+  .toolbar {
+    width: 100%;
+    display: flex;
+    flex-flow: column-reverse nowrap;
+    gap: theme.spacing(2);
+    padding-bottom: theme.spacing(2);
+
+    @include theme.breakpoint("sm") {
+      align-items: center;
+      flex-flow: row nowrap;
+      padding-bottom: unset;
+    }
+
+    .toolbarSection {
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(2);
+
+      &[data-section="search"] {
+        @include theme.breakpoint("sm") {
+          flex-grow: 1;
+        }
+      }
+
+      &[data-section="mode"] {
+        display: none;
+
+        @include theme.breakpoint("xl") {
+          display: block;
+        }
+      }
+    }
+
+    .searchInput {
+      flex-grow: 1;
+    }
+  }
+
+  .table {
+    display: none;
+
+    @include theme.breakpoint("xl") {
+      display: unset;
+    }
+  }
+
+  .entityList {
+    @include theme.breakpoint("xl") {
+      display: none;
+    }
+
+    @include theme.breakpoint("sm") {
+      dl > *:nth-child(1) {
+        order: 1;
+      }
+
+      dl > *:nth-child(2) {
+        order: 3;
+      }
+
+      dl > *:nth-child(3) {
+        order: 5;
+      }
+
+      dl > *:nth-child(4) {
+        order: 2;
+      }
+
+      dl > *:nth-child(5) {
+        order: 4;
+      }
+
+      dl > *:nth-child(6) {
+        order: 6;
+      }
+
+      dl > *:nth-child(7) {
+        order: 8;
+      }
+
+      dl > *:nth-child(8) {
+        order: 7;
+      }
+    }
+  }
+}

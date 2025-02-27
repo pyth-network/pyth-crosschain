@@ -16,6 +16,7 @@
   position: relative;
   padding: theme.spacing(1);
   isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
 
   @at-root button#{&} {
     cursor: pointer;
@@ -34,8 +35,10 @@
 
   .header {
     display: flex;
-    padding: theme.spacing(3) theme.spacing(4);
+
+    // padding: theme.spacing(3) theme.spacing(4);
     position: relative;
+    flex-flow: column nowrap;
 
     .title {
       color: theme.color("heading");
@@ -43,6 +46,7 @@
       flex-flow: row nowrap;
       gap: theme.spacing(3);
       align-items: center;
+      padding: theme.spacing(3);
 
       @include theme.text("lg", "medium");
 
@@ -54,14 +58,30 @@
     }
 
     .toolbar {
-      position: absolute;
-      right: theme.spacing(3);
-      top: 0;
-      bottom: theme.spacing(0);
       display: flex;
       flex-flow: row nowrap;
-      gap: theme.spacing(4);
+      gap: theme.spacing(2);
       align-items: center;
+      justify-content: center;
+      padding: theme.spacing(1.5);
+
+      @include theme.breakpoint("lg") {
+        position: absolute;
+        right: theme.spacing(3);
+        top: 0;
+        bottom: theme.spacing(0);
+        gap: theme.spacing(4);
+        justify-content: unset;
+        padding: 0;
+      }
+
+      &[data-always-on-top] {
+        position: absolute;
+        right: theme.spacing(3);
+        top: 0;
+        bottom: theme.spacing(0);
+        gap: theme.spacing(4);
+      }
     }
   }
 

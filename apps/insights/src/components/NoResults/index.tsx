@@ -16,7 +16,7 @@ type Props = {
     }
 );
 
-type Variant = "success" | "error" | "warning" | "info" | "data";
+export type Variant = "success" | "error" | "warning" | "info" | "data";
 
 export const NoResults = ({ onClearSearch, ...props }: Props) => (
   <div

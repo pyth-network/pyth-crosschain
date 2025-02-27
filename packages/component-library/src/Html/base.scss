@@ -2,8 +2,7 @@
 @use "../theme";
 
 :root {
-  color: theme.color("foreground");
-  background: theme.color("background", "primary");
+  background: black;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
@@ -11,26 +10,7 @@
 }
 
 html {
-  // We use `scrollbar-gutter: stable` which prevents the page from jumping when
-  // adding or removing the scrollbar.  However, react-aria [tries to add a
-  // padding](https://github.com/adobe/react-spectrum/issues/5470) to the html
-  // element when opening/closing popovers and does not account for
-  // `scrollbar-gutter`, and there's no way (yet) to disable that behavior.
-  // Forcing the padding to zero here effectively prevents that behavior from
-  // causing the page to jump.
-  // TODO Remove this when a fix for
-  // https://github.com/adobe/react-spectrum/issues/5470 lands in react-aria
-  scrollbar-gutter: stable;
   padding-right: 0 !important;
-
-  // We also have to disable `scrollbar-gutter: stable` when overlays are
-  // visible, because chrome leaves an unsightly gap rather than letting the
-  // modal backgrop fill the page even though it's fixed position.
-  &[data-overlay-visible] {
-    scrollbar-gutter: auto;
-    padding-right: var(--scrollbar-width) !important;
-    overflow: hidden;
-  }
 }
 
 *::selection {

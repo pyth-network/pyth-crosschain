@@ -1,3 +1,4 @@
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { Flask } from "@phosphor-icons/react/dist/ssr/Flask";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
@@ -113,17 +114,41 @@ export const PriceComponentDrawer = ({
       title={title}
       headingExtra={
         <>
-          {headingExtra}
-          <StatusComponent status={status} />
+          <div className={styles.bigScreenBadges}>
+            {headingExtra}
+            <StatusComponent status={status} />
+          </div>
           <RouterProvider navigate={handleOpenFeed}>
-            <Button size="sm" variant="outline" href={navigateHref}>
+            <Button
+              size="sm"
+              variant="ghost"
+              href={navigateHref}
+              hideText
+              beforeIcon={ArrowSquareOut}
+              rounded
+              className={styles.ghostOpenButton ?? ""}
+            >
+              Open {identifiesPublisher ? "Publisher" : "Feed"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              href={navigateHref}
+              className={styles.outlineOpenButton ?? ""}
+            >
               Open {identifiesPublisher ? "Publisher" : "Feed"}
             </Button>
           </RouterProvider>
         </>
       }
+      headingAfter={
+        <div className={styles.badges}>
+          {headingExtra}
+          <StatusComponent status={status} />
+        </div>
+      }
       isOpen={isFeedDrawerOpen}
-      bodyClassName={styles.priceComponentDrawer}
+      className={styles.priceComponentDrawer ?? ""}
     >
       {cluster === Cluster.PythtestConformance && (
         <InfoBox
@@ -491,10 +516,80 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
         Score details for{" "}
         {currentPoint && dateFormatter.format(currentPoint.time)}
       </h3>
+      <ul className={styles.smallLegend}>
+        <li>
+          <Metric
+            component="uptime"
+            name={SCORE_COMPONENT_TO_LABEL.uptime}
+            description="Percentage of time a publisher is available and active"
+          />
+          <dl>
+            <div className={styles.weight}>
+              <dt>Weight</dt>
+              <dd>40%</dd>
+            </div>
+            <div className={styles.scoreValue}>
+              <dt>Score</dt>
+              <dd>{numberFormatter.format(currentPoint?.uptimeScore ?? 0)}</dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <Metric
+            component="deviation"
+            name={SCORE_COMPONENT_TO_LABEL.deviation}
+            description="Deviations that occur between a publishers' price and the aggregate price"
+          />
+          <dl>
+            <div className={styles.weight}>
+              <dt>Weight</dt>
+              <dd>40%</dd>
+            </div>
+            <div className={styles.scoreValue}>
+              <dt>Score</dt>
+              <dd>
+                {numberFormatter.format(currentPoint?.deviationScore ?? 0)}
+              </dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <Metric
+            component="stalled"
+            name={SCORE_COMPONENT_TO_LABEL.stalled}
+            description="Penalizes publishers reporting the same value for the price"
+          />
+          <dl>
+            <div className={styles.weight}>
+              <dt>Weight</dt>
+              <dd>20%</dd>
+            </div>
+            <div className={styles.scoreValue}>
+              <dt>Score</dt>
+              <dd>{numberFormatter.format(currentPoint?.stalledScore ?? 0)}</dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <Metric
+            component="final"
+            name={SCORE_COMPONENT_TO_LABEL.final}
+            description="The aggregate score, calculated by combining the other three score components"
+          />
+          <dl>
+            <div className={styles.weight}></div>
+            <div className={styles.scoreValue}>
+              <dt>Score</dt>
+              <dd>{numberFormatter.format(currentPoint?.score ?? 0)}</dd>
+            </div>
+          </dl>
+        </li>
+      </ul>
       <Table
         label="Score Breakdown"
         rounded
         fill
+        className={styles.legendTable ?? ""}
         columns={[
           {
             id: "metric",

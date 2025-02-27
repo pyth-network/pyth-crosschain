@@ -719,16 +719,24 @@ $button-sizes: (
   }
 }
 
-$max-width: 96rem;
+$max-width: spacing(372);
+$max-width-padding: var(--max-width-padding);
 
 @mixin max-width {
-  margin: 0 auto;
-  max-width: min(
-    $max-width,
-    calc(200vw - spacing(12) - 100% - var(--scrollbar-width))
-  );
-  padding: 0 spacing(6);
-  box-sizing: content-box;
+  & {
+    --max-width-padding: #{spacing(4)};
+
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: $max-width-padding;
+    padding-right: $max-width-padding;
+    width: 100%;
+    max-width: $max-width;
+  }
+
+  @include breakpoint("sm") {
+    --max-width-padding: #{spacing(6)};
+  }
 }
 
 @mixin row {
@@ -770,12 +778,14 @@ $elevations: (
 }
 
 @mixin h3 {
-  font-size: font-size("2xl");
-  font-style: normal;
-  font-weight: font-weight("medium");
+  @include text("xl", "semibold");
+
   line-height: 125%;
   letter-spacing: letter-spacing("tighter");
-  margin: 0;
+
+  @include breakpoint("sm") {
+    font-size: font-size("2xl");
+  }
 }
 
 @mixin h4 {
@@ -793,4 +803,18 @@ $elevations: (
   margin: 0;
   font-style: normal;
   line-height: 1;
+}
+
+$breakpoints: (
+  "sm": 640px,
+  "md": 768px,
+  "lg": 1024px,
+  "xl": 1280px,
+  "2xl": 1536px,
+);
+
+@mixin breakpoint($point) {
+  @media (min-width: map-get-strict($breakpoints, $point)) {
+    @content;
+  }
 }

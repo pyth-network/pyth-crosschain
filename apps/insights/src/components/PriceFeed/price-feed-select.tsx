@@ -15,6 +15,7 @@ import { Popover } from "@pythnetwork/component-library/unstyled/Popover";
 import { SearchField } from "@pythnetwork/component-library/unstyled/SearchField";
 import { Select } from "@pythnetwork/component-library/unstyled/Select";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
+import clsx from "clsx";
 import { type ReactNode, useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
 
@@ -25,10 +26,11 @@ import { AssetClassTag } from "../AssetClassTag";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
+  className: string | undefined;
   children: ReactNode;
 };
 
-export const PriceFeedSelect = ({ children }: Props) => {
+export const PriceFeedSelect = ({ children, className }: Props) => {
   const feeds = usePriceFeeds();
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
@@ -61,7 +63,7 @@ export const PriceFeedSelect = ({ children }: Props) => {
   return (
     <Select
       aria-label="Select a Price Feed"
-      className={styles.priceFeedSelect ?? ""}
+      className={clsx(className, styles.priceFeedSelect)}
     >
       <Button className={styles.trigger ?? ""}>
         {children}
