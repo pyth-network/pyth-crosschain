@@ -1,6 +1,11 @@
 @use "@pythnetwork/component-library/theme";
 
 .priceComponentDrawer {
+  .priceComponentDrawerBody {
+    grid-template-rows: max-content max-content;
+    grid-template-columns: 100%;
+  }
+
   .badges {
     @include theme.breakpoint("lg") {
       display: none;
