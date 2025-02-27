@@ -157,9 +157,11 @@ pub enum DeliveryFormat {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum Chain {
+pub enum Format {
     Evm,
     Solana,
+    LeEcdsa,
+    LeUnsigned,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
@@ -291,12 +293,14 @@ fn fixed_rate_values() {
 pub struct SubscriptionParamsRepr {
     pub price_feed_ids: Vec<PriceFeedId>,
     pub properties: Vec<PriceFeedProperty>,
-    pub chains: Vec<Chain>,
+    // "chains" was renamed to "formats". "chains" is still supported for compatibility.
+    #[serde(alias = "chains")]
+    pub formats: Vec<Format>,
     #[serde(default)]
     pub delivery_format: DeliveryFormat,
     #[serde(default)]
     pub json_binary_encoding: JsonBinaryEncoding,
-    /// If `true`, the stream update will contain a JSON object containing
+    /// If `true`, the stream update will contain a `parsed` JSON field containing
     /// all data of the update.
     #[serde(default = "default_parsed")]
     pub parsed: bool,
@@ -325,8 +329,8 @@ impl SubscriptionParams {
         if !value.price_feed_ids.iter().all_unique() {
             return Err("duplicate price feed ids specified");
         }
-        if !value.chains.iter().all_unique() {
-            return Err("duplicate chains specified");
+        if !value.formats.iter().all_unique() {
+            return Err("duplicate formats or chains specified");
         }
         if value.properties.is_empty() {
             return Err("no properties specified");
@@ -365,12 +369,21 @@ pub struct JsonBinaryData {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JsonUpdate {
+    /// Present unless `parsed = false` is specified in subscription params.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parsed: Option<ParsedPayload>,
+    /// Only present if `Evm` is present in `formats` in subscription params.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evm: Option<JsonBinaryData>,
+    /// Only present if `Solana` is present in `formats` in subscription params.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub solana: Option<JsonBinaryData>,
+    /// Only present if `LeEcdsa` is present in `formats` in subscription params.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub le_ecdsa: Option<JsonBinaryData>,
+    /// Only present if `LeUnsigned` is present in `formats` in subscription params.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub le_unsigned: Option<JsonBinaryData>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
