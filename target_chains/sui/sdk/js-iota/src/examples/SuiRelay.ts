@@ -1,12 +1,12 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { IotaClient } from "@iota/iota-sdk/client";
+import { Transaction } from "@iota/iota-sdk/transactions";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 
 import { Buffer } from "buffer";
-import { SuiPythClient } from "../client";
-import { SuiPriceServiceConnection } from "../index";
+import { IotaPythClient } from "../client";
+import { IotaPriceServiceConnection } from "../index";
 
 const argvPromise = yargs(hideBin(process.argv))
   .option("feed-id", {
@@ -38,7 +38,7 @@ const argvPromise = yargs(hideBin(process.argv))
   }).argv;
 
 export function getProvider(url: string) {
-  return new SuiClient({ url });
+  return new IotaClient({ url });
 }
 async function run() {
   if (process.env.SUI_KEY === undefined) {
@@ -48,14 +48,14 @@ async function run() {
   const argv = await argvPromise;
 
   // Fetch the latest price feed update data from the Price Service
-  const connection = new SuiPriceServiceConnection(argv["hermes"]);
+  const connection = new IotaPriceServiceConnection(argv["hermes"]);
   const feeds = argv["feed-id"] as string[];
 
   const provider = getProvider(argv["full-node"]);
   const wormholeStateId = argv["wormhole-state-id"];
   const pythStateId = argv["pyth-state-id"];
 
-  const client = new SuiPythClient(provider, pythStateId, wormholeStateId);
+  const client = new IotaPythClient(provider, pythStateId, wormholeStateId);
   const newFeeds = [];
   const existingFeeds = [];
   for (const feed of feeds) {

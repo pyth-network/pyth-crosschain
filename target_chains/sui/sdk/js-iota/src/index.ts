@@ -1,5 +1,5 @@
-export { SuiPriceServiceConnection } from "./SuiPriceServiceConnection";
-export { SuiPythClient } from "./client";
+export { IotaPriceServiceConnection } from "./SuiPriceServiceConnection";
+export { IotaPythClient } from "./client";
 
 export {
   DurationInMs,

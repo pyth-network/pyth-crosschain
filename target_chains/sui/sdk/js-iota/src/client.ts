@@ -1,21 +1,21 @@
-import { SuiClient } from "@mysten/sui/client";
-import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
-import { Transaction } from "@mysten/sui/transactions";
-import { bcs } from "@mysten/sui/bcs";
+import { IotaClient } from "@iota/iota-sdk/client";
+import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
+import { Transaction } from "@iota/iota-sdk/transactions";
+import { bcs } from "@iota/iota-sdk/bcs";
 import { HexString } from "@pythnetwork/price-service-client";
 import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
 export type ObjectId = string;
 
-export class SuiPythClient {
+export class IotaPythClient {
   private pythPackageId: ObjectId | undefined;
   private wormholePackageId: ObjectId | undefined;
   private priceTableInfo: { id: ObjectId; fieldType: ObjectId } | undefined;
   private priceFeedObjectIdCache: Map<HexString, ObjectId> = new Map();
   private baseUpdateFee: number | undefined;
   constructor(
-    public provider: SuiClient,
+    public provider: IotaClient,
     public pythStateId: ObjectId,
     public wormholeStateId: ObjectId
   ) {
@@ -96,7 +96,7 @@ export class SuiPythClient {
               })
               .toBytes()
           ),
-          tx.object(SUI_CLOCK_OBJECT_ID),
+          tx.object(IOTA_CLOCK_OBJECT_ID),
         ],
       });
       verifiedVaas.push(verifiedVaa);
@@ -138,7 +138,7 @@ export class SuiPythClient {
             .toBytes()
         ),
         verifiedVaas[0],
-        tx.object(SUI_CLOCK_OBJECT_ID),
+        tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });
 
@@ -164,7 +164,7 @@ export class SuiPythClient {
           priceUpdatesHotPotato,
           tx.object(priceInfoObjectId),
           coins[coinId],
-          tx.object(SUI_CLOCK_OBJECT_ID),
+          tx.object(IOTA_CLOCK_OBJECT_ID),
         ],
       });
       coinId++;
@@ -198,7 +198,7 @@ export class SuiPythClient {
             .toBytes()
         ),
         verifiedVaas[0],
-        tx.object(SUI_CLOCK_OBJECT_ID),
+        tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });
   }
