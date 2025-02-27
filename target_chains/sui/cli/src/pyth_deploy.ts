@@ -6,6 +6,7 @@ import { Ed25519Keypair } from "@mysten/sui/dist/cjs/keypairs/ed25519";
 import { execSync } from "child_process";
 import { DataSource } from "@pythnetwork/xc-admin-common";
 import { SuiClient } from "@mysten/sui/client";
+import { bcs } from "@mysten/sui/dist/cjs/bcs";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
@@ -109,19 +110,31 @@ export async function initPyth(
   const tx = new Transaction();
 
   const baseUpdateFee = tx.pure.u64(1);
-  const dataSourceEmitterAddresses = tx.pure.arguments(
-    config.dataSources.map((dataSource) => [
-      ...Buffer.from(dataSource.emitterAddress, "hex"),
-    ])
+  const dataSourceEmitterAddresses = tx.pure(
+    bcs
+      .vector(bcs.vector(bcs.u8()))
+      .serialize(
+        config.dataSources.map((dataSource) => [
+          ...Buffer.from(dataSource.emitterAddress, "hex"),
+        ])
+      )
   );
-  const dataSourceEmitterChainIds = tx.pure.arguments(
-    config.dataSources.map((dataSource) => dataSource.emitterChain)
+  const dataSourceEmitterChainIds = tx.pure(
+    bcs
+      .vector(bcs.u64())
+      .serialize(
+        config.dataSources.map((dataSource) => dataSource.emitterChain)
+      )
   );
-  const governanceEmitterAddress = tx.pure.arguments([
-    ...Buffer.from(config.governanceDataSource.emitterAddress, "hex"),
-  ]);
-  const governanceEmitterChainId = tx.pure.arguments(
-    config.governanceDataSource.emitterChain
+  const governanceEmitterAddress = tx.pure(
+    bcs
+      .vector(bcs.u8())
+      .serialize([
+        ...Buffer.from(config.governanceDataSource.emitterAddress, "hex"),
+      ])
+  );
+  const governanceEmitterChainId = tx.pure(
+    bcs.u64().serialize(config.governanceDataSource.emitterChain)
   );
   const stalePriceThreshold = tx.pure.u64(60);
   tx.moveCall({

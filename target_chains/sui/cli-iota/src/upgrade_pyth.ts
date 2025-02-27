@@ -1,10 +1,14 @@
-import { Transaction } from "@mysten/sui/transactions";
-import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
-import { SuiClient } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@iota/iota-sdk/transactions";
+import {
+  fromB64,
+  NANOS_PER_IOTA,
+  normalizeIotaObjectId,
+} from "@iota/iota-sdk/utils";
+import { IotaClient } from "@iota/iota-sdk/client";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 
 import { execSync } from "child_process";
-import { SuiPriceFeedContract } from "@pythnetwork/contract-manager";
+import { IotaPriceFeedContract } from "@pythnetwork/contract-manager";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {
@@ -20,7 +24,7 @@ export function buildForBytecodeAndDigest(packagePath: string) {
   return {
     modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
-      normalizeSuiObjectId(d)
+      normalizeIotaObjectId(d)
     ),
     digest: Buffer.from(buildOutput.digest),
   };
@@ -28,11 +32,11 @@ export function buildForBytecodeAndDigest(packagePath: string) {
 
 export async function upgradePyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: IotaClient,
   modules: number[][],
   dependencies: string[],
   signedVaa: Buffer,
-  contract: SuiPriceFeedContract
+  contract: IotaPriceFeedContract
 ) {
   const pythPackage = await contract.getPackageId(contract.stateId);
 
@@ -64,7 +68,7 @@ export async function upgradePyth(
     arguments: [tx.object(contract.stateId), upgradeReceipt],
   });
 
-  tx.setGasBudget(MIST_PER_SUI / 4n); // 0.25 SUI
+  tx.setGasBudget(NANOS_PER_IOTA / 4n); // 0.25 SUI
 
   return provider.signAndExecuteTransaction({
     signer: keypair,
@@ -78,9 +82,9 @@ export async function upgradePyth(
 
 export async function migratePyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: IotaClient,
   signedUpgradeVaa: Buffer,
-  contract: SuiPriceFeedContract,
+  contract: IotaPriceFeedContract,
   pythPackageOld: string
 ) {
   const pythPackage = await contract.getPackageId(contract.stateId);
@@ -98,7 +102,7 @@ export async function migratePyth(
     arguments: [tx.object(contract.stateId), verificationReceipt as any],
   });
 
-  tx.setGasBudget(MIST_PER_SUI / 10n); //0.1 SUI
+  tx.setGasBudget(NANOS_PER_IOTA / 10n); //0.1 SUI
 
   return provider.signAndExecuteTransaction({
     signer: keypair,

@@ -1,15 +1,20 @@
-import { Transaction } from "@mysten/sui/transactions";
+import { Transaction } from "@iota/iota-sdk/transactions";
 
-import { MIST_PER_SUI, normalizeSuiObjectId, fromB64 } from "@mysten/sui/utils";
+import {
+  NANOS_PER_IOTA,
+  normalizeIotaObjectId,
+  fromB64,
+} from "@iota/iota-sdk/utils";
 
-import { Ed25519Keypair } from "@mysten/sui/dist/cjs/keypairs/ed25519";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { execSync } from "child_process";
 import { DataSource } from "@pythnetwork/xc-admin-common";
-import { SuiClient } from "@mysten/sui/client";
+import { IotaClient } from "@iota/iota-sdk/client";
+import { bcs } from "@iota/iota-sdk/bcs";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: IotaClient,
   packagePath: string
 ): Promise<{ packageId: string; upgradeCapId: string; deployerCapId: string }> {
   // Build contracts
@@ -18,7 +23,7 @@ export async function publishPackage(
     dependencies: string[];
   } = JSON.parse(
     execSync(
-      `sui move build --dump-bytecode-as-base64 --path ${__dirname}/${packagePath} 2> /dev/null`,
+      `iota move build --dump-bytecode-as-base64 --path ${__dirname}/${packagePath} 2> /dev/null`,
       {
         encoding: "utf-8",
       }
@@ -31,17 +36,17 @@ export async function publishPackage(
   // const transactionBlock = new TransactionBlock();
   const txb = new Transaction();
 
-  txb.setGasBudget(MIST_PER_SUI / 2n); // 0.5 SUI
+  txb.setGasBudget(NANOS_PER_IOTA / 2n); // 0.5 SUI
 
   const [upgradeCap] = txb.publish({
     modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
-      normalizeSuiObjectId(d)
+      normalizeIotaObjectId(d)
     ),
   });
 
   // Transfer upgrade capability to deployer
-  txb.transferObjects([upgradeCap], txb.pure.address(keypair.toSuiAddress()));
+  txb.transferObjects([upgradeCap], txb.pure.address(keypair.toIotaAddress()));
 
   // Execute transactions
   const result = await provider.signAndExecuteTransaction({
@@ -97,7 +102,7 @@ export async function publishPackage(
 
 export async function initPyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: IotaClient,
   pythPackageId: string,
   deployerCapId: string,
   upgradeCapId: string,
@@ -109,19 +114,31 @@ export async function initPyth(
   const tx = new Transaction();
 
   const baseUpdateFee = tx.pure.u64(1);
-  const dataSourceEmitterAddresses = tx.pure.arguments(
-    config.dataSources.map((dataSource) => [
-      ...Buffer.from(dataSource.emitterAddress, "hex"),
-    ])
+  const dataSourceEmitterAddresses = tx.pure(
+    bcs
+      .vector(bcs.vector(bcs.u8()))
+      .serialize(
+        config.dataSources.map((dataSource) => [
+          ...Buffer.from(dataSource.emitterAddress, "hex"),
+        ])
+      )
   );
-  const dataSourceEmitterChainIds = tx.pure.arguments(
-    config.dataSources.map((dataSource) => dataSource.emitterChain)
+  const dataSourceEmitterChainIds = tx.pure(
+    bcs
+      .vector(bcs.u64())
+      .serialize(
+        config.dataSources.map((dataSource) => dataSource.emitterChain)
+      )
   );
-  const governanceEmitterAddress = tx.pure.arguments([
-    ...Buffer.from(config.governanceDataSource.emitterAddress, "hex"),
-  ]);
-  const governanceEmitterChainId = tx.pure.arguments(
-    config.governanceDataSource.emitterChain
+  const governanceEmitterAddress = tx.pure(
+    bcs
+      .vector(bcs.u8())
+      .serialize([
+        ...Buffer.from(config.governanceDataSource.emitterAddress, "hex"),
+      ])
+  );
+  const governanceEmitterChainId = tx.pure(
+    bcs.u64().serialize(config.governanceDataSource.emitterChain)
   );
   const stalePriceThreshold = tx.pure.u64(60);
   tx.moveCall({
@@ -138,7 +155,7 @@ export async function initPyth(
     ],
   });
 
-  tx.setGasBudget(MIST_PER_SUI / 10n); // 0.1 sui
+  tx.setGasBudget(NANOS_PER_IOTA / 10n); // 0.1 sui
 
   let result = await provider.signAndExecuteTransaction({
     signer: keypair,

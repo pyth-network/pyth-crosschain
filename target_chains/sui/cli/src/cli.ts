@@ -35,6 +35,7 @@ const OPTIONS = {
   },
   endpoint: {
     type: "string",
+    default: "https://hermes.pyth.network",
     desc: "Price service endpoint to use, defaults to https://hermes.pyth.network for mainnet and https://hermes-beta.pyth.network for testnet",
   },
   "feed-id": {
@@ -50,16 +51,6 @@ function getContract(contractId: string): SuiPriceFeedContract {
     throw new Error(`Contract ${contractId} not found`);
   }
   return contract;
-}
-
-function getPriceService(
-  contract: SuiPriceFeedContract,
-  endpointOverride: string | undefined
-): PriceServiceConnection {
-  const defaultEndpoint = contract.getChain().isMainnet()
-    ? "https://hermes.pyth.network"
-    : "https://hermes-beta.pyth.network";
-  return new PriceServiceConnection(endpointOverride || defaultEndpoint);
 }
 
 yargs(hideBin(process.argv))
@@ -80,7 +71,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = getPriceService(contract, argv.endpoint);
+      const priceService = new PriceServiceConnection(argv.endpoint);
       const feedIds = argv["feed-id"] as string[];
       const vaas = await priceService.getLatestVaas(feedIds);
       const digest = await contract.executeCreatePriceFeed(
@@ -106,7 +97,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = getPriceService(contract, argv.endpoint);
+      const priceService = new PriceServiceConnection(argv.endpoint);
       const feedIds = await priceService.getPriceFeedIds();
       const BATCH_SIZE = 10;
       for (let i = 0; i < feedIds.length; i += BATCH_SIZE) {
@@ -170,7 +161,7 @@ yargs(hideBin(process.argv))
       const walletPrivateKey = argv["private-key"];
       const chain = DefaultStore.chains[argv.chain] as SuiChain;
       const keypair = Ed25519Keypair.fromSecretKey(
-        Buffer.from(walletPrivateKey, "hex")
+        new Uint8Array(Buffer.from(walletPrivateKey, "hex"))
       );
       const result = await publishPackage(
         keypair,
@@ -206,7 +197,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = getPriceService(contract, argv.endpoint);
+      const priceService = new PriceServiceConnection(argv.endpoint);
       const feedIds = argv["feed-id"] as string[];
       const vaas = await priceService.getLatestVaas(feedIds);
       const digest = await contract.executeUpdatePriceFeedWithFeeds(
@@ -239,7 +230,7 @@ yargs(hideBin(process.argv))
     async (argv) => {
       const contract = getContract(argv.contract);
       const keypair = Ed25519Keypair.fromSecretKey(
-        Buffer.from(argv["private-key"], "hex")
+        new Uint8Array(Buffer.from(argv["private-key"], "hex"))
       );
 
       const pythContractsPath = resolve(`${__dirname}/${argv.path}`);

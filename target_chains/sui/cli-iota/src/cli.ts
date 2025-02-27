@@ -3,13 +3,13 @@ import { hideBin } from "yargs/helpers";
 import {
   DefaultStore,
   getDefaultDeploymentConfig,
-  SuiChain,
-  SuiPriceFeedContract,
+  IotaChain,
+  IotaPriceFeedContract,
 } from "@pythnetwork/contract-manager";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
 import { initPyth, publishPackage } from "./pyth_deploy";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { resolve } from "path";
 import {
   buildForBytecodeAndDigest,
@@ -26,15 +26,16 @@ const OPTIONS = {
   contract: {
     type: "string",
     demandOption: true,
-    desc: "Contract to use for the command (e.g sui_testnet_0xe8c2ddcd5b10e8ed98e53b12fcf8f0f6fd9315f810ae61fa4001858851f21c88)",
+    desc: "Contract to use for the command (e.g FIXME)",
   },
   path: {
     type: "string",
     default: "../../contracts",
-    desc: "Path to the sui contracts, will use ../../contracts by default",
+    desc: "Path to the iota contracts, will use ../../contracts by default",
   },
   endpoint: {
     type: "string",
+    default: "https://hermes.pyth.network",
     desc: "Price service endpoint to use, defaults to https://hermes.pyth.network for mainnet and https://hermes-beta.pyth.network for testnet",
   },
   "feed-id": {
@@ -44,22 +45,12 @@ const OPTIONS = {
   },
 } as const;
 
-function getContract(contractId: string): SuiPriceFeedContract {
-  const contract = DefaultStore.contracts[contractId] as SuiPriceFeedContract;
+function getContract(contractId: string): IotaPriceFeedContract {
+  const contract = DefaultStore.contracts[contractId] as IotaPriceFeedContract;
   if (!contract) {
     throw new Error(`Contract ${contractId} not found`);
   }
   return contract;
-}
-
-function getPriceService(
-  contract: SuiPriceFeedContract,
-  endpointOverride: string | undefined
-): PriceServiceConnection {
-  const defaultEndpoint = contract.getChain().isMainnet()
-    ? "https://hermes.pyth.network"
-    : "https://hermes-beta.pyth.network";
-  return new PriceServiceConnection(endpointOverride || defaultEndpoint);
 }
 
 yargs(hideBin(process.argv))
@@ -80,7 +71,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = getPriceService(contract, argv.endpoint);
+      const priceService = new PriceServiceConnection(argv.endpoint);
       const feedIds = argv["feed-id"] as string[];
       const vaas = await priceService.getLatestVaas(feedIds);
       const digest = await contract.executeCreatePriceFeed(
@@ -106,7 +97,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = getPriceService(contract, argv.endpoint);
+      const priceService = new PriceServiceConnection(argv.endpoint);
       const feedIds = await priceService.getPriceFeedIds();
       const BATCH_SIZE = 10;
       for (let i = 0; i < feedIds.length; i += BATCH_SIZE) {
@@ -138,7 +129,7 @@ yargs(hideBin(process.argv))
         digest: number[];
       } = JSON.parse(
         execSync(
-          `sui move build --dump-bytecode-as-base64 --path ${__dirname}/${argv.path} 2> /dev/null`,
+          `iota move build --dump-bytecode-as-base64 --path ${__dirname}/${argv.path} 2> /dev/null`,
           {
             encoding: "utf-8",
           }
@@ -158,26 +149,26 @@ yargs(hideBin(process.argv))
           chain: {
             type: "string",
             demandOption: true,
-            desc: "Chain to deploy the code to. Can be sui_mainnet or sui_testnet",
+            desc: "Chain to deploy the code to. Can be iota_mainnet or iota_testnet",
           },
           path: OPTIONS.path,
         })
         .usage(
-          "$0 deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet] --path <path-to-contracts>"
+          "$0 deploy --private-key <private-key> --chain [iota_mainnet|iota_testnet] --path <path-to-contracts>"
         );
     },
     async (argv) => {
       const walletPrivateKey = argv["private-key"];
-      const chain = DefaultStore.chains[argv.chain] as SuiChain;
+      const chain = DefaultStore.chains[argv.chain] as IotaChain;
       const keypair = Ed25519Keypair.fromSecretKey(
-        Buffer.from(walletPrivateKey, "hex")
+        new Uint8Array(Buffer.from(walletPrivateKey, "hex"))
       );
       const result = await publishPackage(
         keypair,
         chain.getProvider(),
         argv.path
       );
-      const deploymentType = chain.isMainnet() ? "stable" : "beta";
+      const deploymentType = "stable";
       const config = getDefaultDeploymentConfig(deploymentType);
       await initPyth(
         keypair,
@@ -206,7 +197,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const priceService = getPriceService(contract, argv.endpoint);
+      const priceService = new PriceServiceConnection(argv.endpoint);
       const feedIds = argv["feed-id"] as string[];
       const vaas = await priceService.getLatestVaas(feedIds);
       const digest = await contract.executeUpdatePriceFeedWithFeeds(
@@ -239,7 +230,7 @@ yargs(hideBin(process.argv))
     async (argv) => {
       const contract = getContract(argv.contract);
       const keypair = Ed25519Keypair.fromSecretKey(
-        Buffer.from(argv["private-key"], "hex")
+        new Uint8Array(Buffer.from(argv["private-key"], "hex"))
       );
 
       const pythContractsPath = resolve(`${__dirname}/${argv.path}`);
