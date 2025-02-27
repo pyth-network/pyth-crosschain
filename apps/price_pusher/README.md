@@ -101,7 +101,10 @@ pnpm run start evm --endpoint wss://example-rpc.com \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
     [--polling-frequency 5] \
-    [--override-gas-price-multiplier 1.1]
+    [--override-gas-price-multiplier 1.1] \
+    [--override-gas-price-multiplier-cap 5] \
+    [--gas-limit 1000000] \
+    [--gas-price 160000000]
 
 # For Injective
 pnpm run start injective --grpc-endpoint https://grpc-endpoint.com \
