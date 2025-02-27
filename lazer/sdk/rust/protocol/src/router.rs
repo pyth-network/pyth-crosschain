@@ -79,6 +79,12 @@ impl Price {
         Ok(self.0.get() as f64 / 10i64.checked_pow(exponent).context("overflow")? as f64)
     }
 
+    pub fn from_f64(value: f64, exponent: u32) -> anyhow::Result<Self> {
+        let value = (value * 10f64.powi(exponent as i32)) as i64;
+        let value = NonZeroI64::new(value).context("zero price is unsupported")?;
+        Ok(Self(value))
+    }
+
     pub fn mul(self, rhs: Price, rhs_exponent: u32) -> anyhow::Result<Price> {
         let left_value = i128::from(self.0.get());
         let right_value = i128::from(rhs.0.get());
