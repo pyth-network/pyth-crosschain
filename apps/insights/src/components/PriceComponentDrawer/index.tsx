@@ -149,6 +149,7 @@ export const PriceComponentDrawer = ({
       }
       isOpen={isFeedDrawerOpen}
       className={styles.priceComponentDrawer ?? ""}
+      bodyClassName={styles.priceComponentDrawerBody ?? ""}
     >
       {cluster === Cluster.PythtestConformance && (
         <InfoBox
