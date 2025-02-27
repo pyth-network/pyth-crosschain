@@ -93,6 +93,10 @@
         display: grid;
       }
     }
+
+    .oisInfoBox {
+      grid-column: span 2 / span 2;
+    }
   }
 
   .oisDrawerFooter {
