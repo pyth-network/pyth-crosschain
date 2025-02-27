@@ -43,6 +43,36 @@ impl TimestampUs {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[repr(transparent)]
+pub struct Rate(pub i64);
+
+impl Rate {
+    pub fn parse_str(value: &str, exponent: u32) -> anyhow::Result<Self> {
+        let value: Decimal = value.parse()?;
+        let coef = 10i64.checked_pow(exponent).context("overflow")?;
+        let coef = Decimal::from_i64(coef).context("overflow")?;
+        let value = value.checked_mul(coef).context("overflow")?;
+        if !value.is_integer() {
+            bail!("price value is more precise than available exponent");
+        }
+        let value: i64 = value.try_into().context("overflow")?;
+        Ok(Self(value))
+    }
+
+    pub fn from_f64(value: f64, exponent: u32) -> anyhow::Result<Self> {
+        let value = Decimal::from_f64(value).context("overflow")?;
+        let coef = 10i64.checked_pow(exponent).context("overflow")?;
+        let coef = Decimal::from_i64(coef).context("overflow")?;
+        let value = value.checked_mul(coef).context("overflow")?;
+        if !value.is_integer() {
+            bail!("price value is more precise than available exponent");
+        }
+        let value: i64 = value.try_into().context("overflow")?;
+        Ok(Self(value))
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[repr(transparent)]
 pub struct Price(pub NonZeroI64);
 
 impl Price {
@@ -416,10 +446,10 @@ pub struct ParsedFeedPayload {
     pub confidence: Option<Price>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub funding_rate: Option<i64>,
+    pub funding_rate: Option<Rate>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub funding_timestamp: Option<u64>,
+    pub funding_timestamp: Option<TimestampUs>,
     // More fields may be added later.
 }
 

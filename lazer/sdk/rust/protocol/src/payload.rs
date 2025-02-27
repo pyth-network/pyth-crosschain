@@ -2,7 +2,7 @@
 
 use {
     super::router::{PriceFeedId, PriceFeedProperty, TimestampUs},
-    crate::router::{ChannelId, Price},
+    crate::router::{ChannelId, Price, Rate},
     anyhow::bail,
     byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BE, LE},
     serde::{Deserialize, Serialize},
@@ -36,8 +36,8 @@ pub enum PayloadPropertyValue {
     PublisherCount(u16),
     Exponent(i16),
     Confidence(Option<Price>),
-    FundingRate(Option<i64>),
-    FundingTimestamp(Option<u64>),
+    FundingRate(Option<Rate>),
+    FundingTimestamp(Option<TimestampUs>),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -47,8 +47,8 @@ pub struct AggregatedPriceFeedData {
     pub best_ask_price: Option<Price>,
     pub publisher_count: u16,
     pub confidence: Option<Price>,
-    pub funding_rate: Option<i64>,
-    pub funding_timestamp: Option<u64>,
+    pub funding_rate: Option<Rate>,
+    pub funding_timestamp: Option<TimestampUs>,
 }
 
 pub const PAYLOAD_FORMAT_MAGIC: u32 = 2479346549;
@@ -135,11 +135,11 @@ impl PayloadData {
                     }
                     PayloadPropertyValue::FundingRate(rate) => {
                         writer.write_u8(PriceFeedProperty::FundingRate as u8)?;
-                        write_option_i64::<BO>(&mut writer, *rate)?;
+                        write_option_rate::<BO>(&mut writer, *rate)?;
                     }
                     PayloadPropertyValue::FundingTimestamp(timestamp) => {
                         writer.write_u8(PriceFeedProperty::FundingTimestamp as u8)?;
-                        write_option_u64::<BO>(&mut writer, *timestamp)?;
+                        write_option_timestamp::<BO>(&mut writer, *timestamp)?;
                     }
                 }
             }
@@ -186,9 +186,11 @@ impl PayloadData {
                 } else if property == PriceFeedProperty::Confidence as u8 {
                     PayloadPropertyValue::Confidence(read_option_price::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::FundingRate as u8 {
-                    PayloadPropertyValue::FundingRate(read_option_i64::<BO>(&mut reader)?)
+                    PayloadPropertyValue::FundingRate(read_option_rate::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::FundingTimestamp as u8 {
-                    PayloadPropertyValue::FundingTimestamp(read_option_u64::<BO>(&mut reader)?)
+                    PayloadPropertyValue::FundingTimestamp(read_option_timestamp::<BO>(
+                        &mut reader,
+                    )?)
                 } else {
                     bail!("unknown property");
                 };
@@ -216,14 +218,14 @@ fn read_option_price<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Op
     Ok(value.map(Price))
 }
 
-fn write_option_i64<BO: ByteOrder>(
+fn write_option_rate<BO: ByteOrder>(
     mut writer: impl Write,
-    value: Option<i64>,
+    value: Option<Rate>,
 ) -> std::io::Result<()> {
     match value {
         Some(value) => {
             writer.write_u8(1)?;
-            writer.write_i64::<BO>(value)
+            writer.write_i64::<BO>(value.0)
         }
         None => {
             writer.write_u8(0)?;
@@ -232,23 +234,23 @@ fn write_option_i64<BO: ByteOrder>(
     }
 }
 
-fn read_option_i64<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<i64>> {
+fn read_option_rate<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<Rate>> {
     let present = reader.read_u8()? != 0;
     if present {
-        Ok(Some(reader.read_i64::<BO>()?))
+        Ok(Some(Rate(reader.read_i64::<BO>()?)))
     } else {
         Ok(None)
     }
 }
 
-fn write_option_u64<BO: ByteOrder>(
+fn write_option_timestamp<BO: ByteOrder>(
     mut writer: impl Write,
-    value: Option<u64>,
+    value: Option<TimestampUs>,
 ) -> std::io::Result<()> {
     match value {
         Some(value) => {
             writer.write_u8(1)?;
-            writer.write_u64::<BO>(value)
+            writer.write_u64::<BO>(value.0)
         }
         None => {
             writer.write_u8(0)?;
@@ -257,10 +259,12 @@ fn write_option_u64<BO: ByteOrder>(
     }
 }
 
-fn read_option_u64<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<u64>> {
+fn read_option_timestamp<BO: ByteOrder>(
+    mut reader: impl Read,
+) -> std::io::Result<Option<TimestampUs>> {
     let present = reader.read_u8()? != 0;
     if present {
-        Ok(Some(reader.read_u64::<BO>()?))
+        Ok(Some(TimestampUs(reader.read_u64::<BO>()?)))
     } else {
         Ok(None)
     }

@@ -3,7 +3,7 @@
 //! eliminating WebSocket overhead.
 
 use {
-    super::router::{Price, PriceFeedId, TimestampUs},
+    super::router::{Price, PriceFeedId, Rate, TimestampUs},
     derive_more::derive::From,
     serde::{Deserialize, Serialize},
 };
@@ -30,7 +30,7 @@ pub struct PriceFeedDataV2 {
     pub best_ask_price: Option<Price>,
     /// Last known value of the funding rate of this feed.
     /// `None` if no value is currently available.
-    pub funding_rate: Option<i64>,
+    pub funding_rate: Option<Rate>,
 }
 
 /// Old Represents a binary (bincode-serialized) stream update sent
@@ -179,7 +179,7 @@ fn price_feed_data_v2_serde() {
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: None,
         best_ask_price: None,
-        funding_rate: Some(3 * 256 + 7),
+        funding_rate: Some(Rate(3 * 256 + 7)),
     };
     assert_eq!(
         bincode::deserialize::<PriceFeedDataV2>(&data2).unwrap(),
