@@ -1,7 +1,6 @@
 @use "../theme";
 
 .infoBox {
-  grid-column: span 2 / span 2;
   background: theme.color("states", "info", "background");
   padding: theme.spacing(4);
   border-radius: theme.border-radius("xl");

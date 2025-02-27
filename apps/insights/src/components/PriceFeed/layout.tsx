@@ -1,7 +1,4 @@
-import { Info } from "@phosphor-icons/react/dist/ssr/Info";
-import { Lightbulb } from "@phosphor-icons/react/dist/ssr/Lightbulb";
 import { ListDashes } from "@phosphor-icons/react/dist/ssr/ListDashes";
-import { Alert, AlertTrigger } from "@pythnetwork/component-library/Alert";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Breadcrumbs } from "@pythnetwork/component-library/Breadcrumbs";
 import { Button } from "@pythnetwork/component-library/Button";
@@ -14,6 +11,8 @@ import styles from "./layout.module.scss";
 import { PriceFeedSelect } from "./price-feed-select";
 import { ReferenceData } from "./reference-data";
 import { Cluster, getFeeds } from "../../services/pyth";
+import { Cards } from "../Cards";
+import { Explain } from "../Explain";
 import { FeedKey } from "../FeedKey";
 import {
   LivePrice,
@@ -63,9 +62,10 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           </div>
         </div>
         <div className={styles.headerRow}>
-          <PriceFeedSelect>
+          <PriceFeedSelect className={styles.priceFeedSelect}>
             <PriceFeedTag symbol={feed.symbol} />
           </PriceFeedSelect>
+          <PriceFeedTag className={styles.priceFeedTag} symbol={feed.symbol} />
           <div className={styles.rightGroup}>
             <FeedKey
               variant="ghost"
@@ -108,7 +108,7 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
             </DrawerTrigger>
           </div>
         </div>
-        <section className={styles.stats}>
+        <Cards>
           <StatCard
             variant="primary"
             header={
@@ -132,34 +132,22 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
               />
             }
             corner={
-              <AlertTrigger>
+              <Explain size="xs" title="Confidence">
+                <p>
+                  <b>Confidence</b> is how far from the aggregate price Pyth
+                  believes the true price might be. It reflects a combination of
+                  the confidence of individual quoters and how well individual
+                  quoters agree with each other.
+                </p>
                 <Button
-                  variant="ghost"
                   size="xs"
-                  beforeIcon={(props) => <Info weight="fill" {...props} />}
-                  rounded
-                  hideText
-                  className={styles.confidenceExplainButton ?? ""}
+                  variant="solid"
+                  href="https://docs.pyth.network/price-feeds/best-practices#confidence-intervals"
+                  target="_blank"
                 >
-                  Explain Confidence
+                  Learn more
                 </Button>
-                <Alert title="Confidence" icon={<Lightbulb />}>
-                  <p className={styles.confidenceDescription}>
-                    <b>Confidence</b> is how far from the aggregate price Pyth
-                    believes the true price might be. It reflects a combination
-                    of the confidence of individual quoters and how well
-                    individual quoters agree with each other.
-                  </p>
-                  <Button
-                    size="xs"
-                    variant="solid"
-                    href="https://docs.pyth.network/price-feeds/best-practices#confidence-intervals"
-                    target="_blank"
-                  >
-                    Learn more
-                  </Button>
-                </Alert>
-              </AlertTrigger>
+              </Explain>
             }
           />
           <StatCard
@@ -185,7 +173,7 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
               />
             }
           />
-        </section>
+        </Cards>
       </section>
       <TabRoot>
         <Tabs

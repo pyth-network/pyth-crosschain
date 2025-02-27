@@ -58,6 +58,8 @@
           color: theme.color("muted");
           grid-column: 2;
           grid-row: 2;
+          text-overflow: ellipsis;
+          overflow: hidden;
         }
 
         .caret {

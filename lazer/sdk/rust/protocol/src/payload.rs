@@ -51,6 +51,8 @@ pub struct AggregatedPriceFeedData {
     pub funding_timestamp: Option<TimestampUs>,
 }
 
+/// First bytes of a payload's encoding
+/// (in LE or BE depending on the byte order used for encoding the rest of the payload)
 pub const PAYLOAD_FORMAT_MAGIC: u32 = 2479346549;
 
 impl PayloadData {
@@ -269,10 +271,3 @@ fn read_option_timestamp<BO: ByteOrder>(
         Ok(None)
     }
 }
-
-pub const BINARY_UPDATE_FORMAT_MAGIC: u32 = 1937213467;
-
-pub const PARSED_FORMAT_MAGIC: u32 = 2584795844;
-pub const EVM_FORMAT_MAGIC: u32 = 706910618;
-pub const SOLANA_FORMAT_MAGIC_BE: u32 = 3103857282;
-pub const SOLANA_FORMAT_MAGIC_LE: u32 = u32::swap_bytes(SOLANA_FORMAT_MAGIC_BE);

@@ -4,71 +4,97 @@
   @include theme.max-width;
 
   .header {
-    @include theme.h3;
-
     color: theme.color("heading");
-    font-weight: theme.font-weight("semibold");
-    margin-bottom: theme.spacing(6);
-  }
 
-  .stats {
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: stretch;
-    gap: theme.spacing(6);
-
-    & > * {
-      flex: 1 1 0px;
-      width: 0;
-    }
-
-    .publishersChart,
-    .priceFeedsChart {
-      & svg {
-        cursor: pointer;
-      }
-    }
+    @include theme.h3;
   }
 
   .overviewMainContent {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: theme.spacing(40);
     align-items: center;
-    padding: theme.spacing(18) 0;
+    padding-top: theme.spacing(6);
+    padding-bottom: theme.spacing(30);
 
-    .headline {
-      @include theme.text("3xl", "medium");
-
-      color: theme.color("heading");
-      line-height: 125%;
-      margin-top: theme.spacing(8);
-      margin-bottom: theme.spacing(4);
+    @include theme.breakpoint("md") {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: theme.spacing(20);
+      padding-top: theme.spacing(12);
     }
 
-    .message {
-      @include theme.text("base", "normal");
+    @include theme.breakpoint("xl") {
+      column-gap: theme.spacing(40);
+    }
 
-      color: theme.color("heading");
-      line-height: 150%;
+    .intro {
+      margin-bottom: theme.spacing(6);
+
+      .headline {
+        @include theme.text("3xl", "medium");
+
+        color: theme.color("heading");
+        line-height: 125%;
+        margin-top: theme.spacing(8);
+        margin-bottom: theme.spacing(4);
+      }
+
+      .message {
+        @include theme.text("base", "normal");
+
+        color: theme.color("heading");
+        line-height: 150%;
+      }
     }
 
     .tabList {
-      margin: theme.spacing(12) 0;
+      margin: theme.spacing(6) 0;
+
+      @include theme.breakpoint("md") {
+        margin: theme.spacing(12) 0;
+        grid-column: 1;
+        grid-row: 2;
+      }
+    }
+
+    .imagePanel {
+      display: flex;
+      place-content: center;
+
+      @include theme.breakpoint("md") {
+        grid-row: span 3 / span 3;
+        grid-column: 2;
+      }
+
+      .darkImage,
+      .lightImage {
+        max-height: theme.spacing(80);
+
+        @include theme.breakpoint("md") {
+          max-height: theme.spacing(120);
+        }
+      }
+
+      .lightImage {
+        @at-root html[data-theme="dark"] & {
+          display: none;
+        }
+      }
+
+      .darkImage {
+        @at-root html[data-theme="light"] & {
+          display: none;
+        }
+      }
     }
 
     .buttons {
       display: flex;
       flex-flow: row nowrap;
       gap: theme.spacing(3);
+
+      @include theme.breakpoint("md") {
+        grid-column: 1;
+        grid-row: 3;
+      }
     }
   }
-}
-
-html[data-theme="dark"] .lightImage {
-  display: none;
-}
-
-html[data-theme="light"] .darkImage {
-  display: none;
 }

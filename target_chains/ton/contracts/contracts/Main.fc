@@ -5,7 +5,25 @@
 #include "Wormhole.fc";
 #include "Pyth.fc";
 
+;; @title Pyth Network Price Oracle Contract for TON
+;; @notice This contract serves as the main entry point for the Pyth Network price oracle on TON.
+;; @dev The contract handles various operations including:
+;;      - Updating guardian sets for Wormhole message verification
+;;      - Updating price feeds with the latest price data
+;;      - Executing governance actions
+;;      - Upgrading the contract code
+;;      - Parsing price feed updates for clients
+;;
+;; The contract uses Wormhole's cross-chain messaging protocol to verify price updates
+;; and governance actions. It maintains a dictionary of price feeds indexed by price ID.
+;; Each price feed contains the current price, confidence interval, exponent, and publish time.
+
 ;; Internal message handler
+;; @param my_balance - Current contract balance
+;; @param msg_value - Amount of TON sent with the message
+;; @param in_msg_full - Full incoming message cell
+;; @param in_msg_body - Message body as a slice
+;; @returns () - No return value
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
     if (in_msg_body.slice_empty?()) { ;; ignore empty messages
         return ();
@@ -26,14 +44,32 @@
 
     ;; * The remainder of the message body is specific for each supported value of `op`.
     if (op == OP_UPDATE_GUARDIAN_SET) {
+        ;; @notice Updates the guardian set based on a Wormhole VAA
+        ;; @param data_slice - Slice containing the VAA with guardian set update information
         update_guardian_set(data_slice);
     } elseif (op == OP_UPDATE_PRICE_FEEDS) {
+        ;; @notice Updates price feeds with the latest price data
+        ;; @param msg_value - Amount of TON sent with the message (used for fee calculation)
+        ;; @param data_slice - Slice containing the price feed update data
         update_price_feeds(msg_value, data_slice);
     } elseif (op == OP_EXECUTE_GOVERNANCE_ACTION) {
+        ;; @notice Executes a governance action based on a Wormhole VAA
+        ;; @param data_slice - Slice containing the VAA with governance action information
         execute_governance_action(data_slice);
     } elseif (op == OP_UPGRADE_CONTRACT) {
+        ;; @notice Upgrades the contract code
+        ;; @param data - Cell containing the new contract code
         execute_upgrade_contract(data);
     } elseif (op == OP_PARSE_PRICE_FEED_UPDATES) {
+        ;; @notice Parses price feed updates and returns the results to the caller
+        ;; @param msg_value - Amount of TON sent with the message (used for fee calculation)
+        ;; @param data_slice - Slice containing the price feed update data
+        ;; @param price_ids_slice - Slice containing the price IDs to filter for
+        ;; @param min_publish_time - Minimum publish time for price updates to be considered
+        ;; @param max_publish_time - Maximum publish time for price updates to be considered
+        ;; @param sender_address - Address of the sender (for response)
+        ;; @param target_address - Address to send the response to
+        ;; @param custom_payload - Custom payload to include in the response
         cell price_ids_cell = in_msg_body~load_ref();
         slice price_ids_slice = price_ids_cell.begin_parse();
         int min_publish_time = in_msg_body~load_uint(64);
@@ -43,6 +79,15 @@
         slice custom_payload = custom_payload_cell.begin_parse();
         parse_price_feed_updates(msg_value, data_slice, price_ids_slice, min_publish_time, max_publish_time, sender_address, target_address, custom_payload);
     } elseif (op == OP_PARSE_UNIQUE_PRICE_FEED_UPDATES) {
+        ;; @notice Parses unique price feed updates (only the latest for each price ID) and returns the results to the caller
+        ;; @param msg_value - Amount of TON sent with the message (used for fee calculation)
+        ;; @param data_slice - Slice containing the price feed update data
+        ;; @param price_ids_slice - Slice containing the price IDs to filter for
+        ;; @param publish_time - Target publish time for price updates
+        ;; @param max_staleness - Maximum allowed staleness of price updates (in seconds)
+        ;; @param sender_address - Address of the sender (for response)
+        ;; @param target_address - Address to send the response to
+        ;; @param custom_payload - Custom payload to include in the response
         cell price_ids_cell = in_msg_body~load_ref();
         slice price_ids_slice = price_ids_cell.begin_parse();
         int publish_time = in_msg_body~load_uint(64);

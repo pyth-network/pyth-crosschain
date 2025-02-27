@@ -61,6 +61,11 @@ export default {
       type: "number",
       required: false,
     } as Options,
+    "gas-price": {
+      description: "Override the gas price that would be received from the RPC",
+      type: "number",
+      required: false,
+    } as Options,
     "update-fee-multiplier": {
       description:
         "Multiplier for the fee to update the price. It is useful in networks " +
@@ -94,6 +99,7 @@ export default {
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
       gasLimit,
+      gasPrice,
       updateFeeMultiplier,
       logLevel,
       controllerLogLevel,
@@ -167,7 +173,8 @@ export default {
       overrideGasPriceMultiplierCap,
       updateFeeMultiplier,
       gasLimit,
-      gasStation
+      gasStation,
+      gasPrice
     );
 
     const controller = new Controller(

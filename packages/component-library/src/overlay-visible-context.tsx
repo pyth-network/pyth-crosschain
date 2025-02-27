@@ -1,9 +1,7 @@
 import {
-  type ComponentProps,
   type Dispatch,
   type SetStateAction,
   createContext,
-  useState,
   useCallback,
   use,
 } from "react";
@@ -11,13 +9,6 @@ import {
 export const OverlayVisibleContext = createContext<
   [boolean, Dispatch<SetStateAction<boolean>>] | undefined
 >(undefined);
-
-export const OverlayVisibleContextProvider = (
-  props: Omit<ComponentProps<typeof OverlayVisibleContext>, "value">,
-) => {
-  const overlayVisibleState = useState(false);
-  return <OverlayVisibleContext value={overlayVisibleState} {...props} />;
-};
 
 const useOverlayVisible = () => {
   const overlayVisible = use(OverlayVisibleContext);
@@ -27,7 +18,6 @@ const useOverlayVisible = () => {
   return overlayVisible;
 };
 
-export const useIsOverlayVisible = () => useOverlayVisible()[0];
 export const useSetOverlayVisible = () => {
   const setOverlayVisible = useOverlayVisible()[1];
   return {

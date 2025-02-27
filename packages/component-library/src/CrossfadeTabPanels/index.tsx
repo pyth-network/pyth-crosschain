@@ -11,6 +11,7 @@ const AnimatedPanel = motion(UnstyledTabPanel);
 type Props = {
   items: {
     id: string;
+    className?: string;
     children: ReactNode;
   }[];
 };

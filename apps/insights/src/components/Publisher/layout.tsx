@@ -25,6 +25,7 @@ import {
 import { getPublisherCaps } from "../../services/hermes";
 import { Cluster, ClusterToName, parseCluster } from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
+import { Cards } from "../Cards";
 import { ChangePercent } from "../ChangePercent";
 import { ChangeValue } from "../ChangeValue";
 import { ChartCard } from "../ChartCard";
@@ -116,7 +117,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
               icon: <PublisherIcon knownPublisher={knownPublisher} />,
             })}
           />
-          <section className={styles.stats}>
+          <Cards className={styles.stats ?? ""}>
             <ChartCard
               variant="primary"
               header="Publisher Ranking"
@@ -317,6 +318,17 @@ export const PublishersLayout = async ({ children, params }: Props) => {
                   }
                 >
                   <SemicircleMeter
+                    width={260}
+                    height={310}
+                    value={Number(oisStats.poolUtilization)}
+                    maxValue={oisStats.maxPoolSize}
+                    className={styles.smallOisMeter ?? ""}
+                    aria-label="OIS Pool Utilization"
+                  >
+                    <TokenIcon className={styles.oisMeterIcon} />
+                    <div className={styles.oisMeterLabel}>OIS Pool</div>
+                  </SemicircleMeter>
+                  <SemicircleMeter
                     width={420}
                     height={420}
                     value={Number(oisStats.poolUtilization)}
@@ -353,6 +365,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
                   />
                   <OisApyHistory apyHistory={oisStats.apyHistory ?? []} />
                   <InfoBox
+                    className={styles.oisInfoBox}
                     icon={<ShieldChevron />}
                     header="Oracle Integrity Staking (OIS)"
                   >
@@ -367,7 +380,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
                 </Drawer>
               </DrawerTrigger>
             )}
-          </section>
+          </Cards>
         </section>
         <TabRoot>
           <Tabs
