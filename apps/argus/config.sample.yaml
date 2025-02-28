@@ -4,7 +4,6 @@ chains:
     contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
 
     # Keeper configuration for the chain
-    reveal_delay_blocks: 0
     gas_limit: 500000
 
     # Multiplier for the priority fee estimate, as a percentage (i.e., 100 = no change).
@@ -44,12 +43,6 @@ chains:
     # blocks after 5 blocks, then again after 10 blocks, and finally after 20 blocks.
     block_delays: [5, 10, 20]
 
-    # Historical commitments -- delete this block for local development purposes
-    commitments:
-      # prettier-ignore
-      - seed: [219,125,217,197,234,88,208,120,21,181,172,143,239,102,41,233,167,212,237,106,37,255,184,165,238,121,230,155,116,158,173,48]
-        chain_length: 10000
-        original_commitment_sequence_number: 104
 provider:
   uri: http://localhost:8080/
   chain_length: 100000
