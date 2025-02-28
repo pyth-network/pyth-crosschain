@@ -50,3 +50,4 @@ fortuna = { path = "../fortuna" }
 
 [dev-dependencies]
 axum-test = "13.1.1"
+mockito = "1.2.0"

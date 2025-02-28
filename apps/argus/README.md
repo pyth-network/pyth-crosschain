@@ -17,6 +17,21 @@ Simply run `cargo build` and `cargo test` to build and test the project.
 The Argus binary has a command-line interface to perform useful operations on the contract, such as
 registering a new price provider, or requesting price updates. To see the available commands, simply run `cargo run`.
 
+## Hermes Integration
+
+Argus integrates with the Hermes API to fetch price updates for fulfilling requests. When a price update request is received, Argus:
+
+1. Retrieves the request details from the blockchain
+2. Fetches the required price updates from Hermes using the `/v2/updates/price/{publish_time}` endpoint
+3. Executes the callback on the Pulse contract with the fetched price updates
+
+The Hermes client is implemented in the `keeper/hermes.rs` module and handles:
+
+- Converting price IDs to the format expected by Hermes
+- Fetching price updates from the Hermes API
+- Parsing the response and converting it to the format expected by the Pulse contract
+- Error handling and retries
+
 ## Local Development
 
 To start an instance of the webserver for local testing, you first need to perform a few setup steps:

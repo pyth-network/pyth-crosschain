@@ -26,8 +26,8 @@ use {
 pub(crate) mod request;
 pub(crate) mod fee;
 pub(crate) mod keeper_metrics;
-pub(crate) mod process_event;
 pub(crate) mod track;
+pub(crate) mod hermes;
 
 /// Track metrics in this interval
 const TRACK_INTERVAL: Duration = Duration::from_secs(10);

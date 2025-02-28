@@ -76,6 +76,8 @@ pub struct Config {
     pub chains: HashMap<ChainId, EthereumConfig>,
     pub provider: ProviderConfig,
     pub keeper: KeeperConfig,
+    #[serde(default)]
+    pub hermes: HermesConfig,
 }
 
 impl Config {
@@ -353,4 +355,24 @@ impl SecretString {
 
         Ok(None)
     }
+}
+
+/// Configuration for the Hermes API integration
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct HermesConfig {
+    /// Base URL for the Hermes API
+    #[serde(default = "default_hermes_base_url")]
+    pub base_url: String,
+}
+
+impl Default for HermesConfig {
+    fn default() -> Self {
+        Self {
+            base_url: default_hermes_base_url(),
+        }
+    }
+}
+
+fn default_hermes_base_url() -> String {
+    "https://hermes.pyth.network".to_string()
 }

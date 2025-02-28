@@ -83,3 +83,9 @@ keeper:
     value: 0xabcd
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
+
+# Hermes API configuration
+hermes:
+  # Base URL for the Hermes API
+  # This can be overridden by setting the HERMES_BASE_URL environment variable
+  base_url: https://hermes.pyth.network
