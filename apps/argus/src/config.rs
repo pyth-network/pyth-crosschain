@@ -8,7 +8,7 @@ use {
 };
 pub use {
     generate::GenerateOptions, get_request::GetRequestOptions, inspect::InspectOptions,
-    register_provider::RegisterProviderOptions, request_randomness::RequestRandomnessOptions,
+    register_provider::RegisterProviderOptions, request_price_update::RequestPriceUpdateOptions,
     run::RunOptions, setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
 };
 
@@ -16,7 +16,7 @@ mod generate;
 mod get_request;
 mod inspect;
 mod register_provider;
-mod request_randomness;
+mod request_price_update;
 mod run;
 mod setup_provider;
 mod withdraw_fees;
@@ -43,7 +43,7 @@ pub enum Options {
     SetupProvider(SetupProviderOptions),
 
     /// Request a price update from the contract.
-    RequestRandomness(RequestRandomnessOptions),
+    RequestPriceUpdate(RequestPriceUpdateOptions),
 
     /// Inspect recent requests and find unfulfilled price update requests.
     Inspect(InspectOptions),

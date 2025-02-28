@@ -3,7 +3,7 @@
 use {
     anyhow::Result,
     clap::Parser,
-    fortuna::{command, config},
+    argus::{command, config},
     std::io::IsTerminal,
 };
 
@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
         config::Options::Run(opts) => command::run(&opts).await,
         config::Options::RegisterProvider(opts) => command::register_provider(&opts).await,
         config::Options::SetupProvider(opts) => command::setup_provider(&opts).await,
-        config::Options::RequestRandomness(opts) => command::request_randomness(&opts).await,
+        config::Options::RequestPriceUpdate(opts) => command::request_price_update(&opts).await,
         config::Options::Inspect(opts) => command::inspect(&opts).await,
         config::Options::WithdrawFees(opts) => command::withdraw_fees(&opts).await,
     }
