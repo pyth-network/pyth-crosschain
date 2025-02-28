@@ -571,6 +571,8 @@ module pyth::pyth_test {
         data_sources: vector<DataSource>,
         update_fee: u64,
         to_mint: u64): (BurnCapability<AptosCoin>, MintCapability<AptosCoin>, Coin<AptosCoin>) {
+        let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
+
         // Initialize wormhole with a large message collection fee
         wormhole::wormhole_test::setup(100000);
 
@@ -583,7 +585,6 @@ module pyth::pyth_test {
         let (_pyth, signer_capability) = account::create_resource_account(&deployer, b"pyth");
         pyth::init_test(signer_capability, stale_price_threshold, governance_emitter_chain_id, governance_emitter_address, data_sources, update_fee);
 
-        let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
         let coins = coin::mint(to_mint, &mint_capability);
         (burn_capability, mint_capability, coins)
     }
@@ -773,6 +774,8 @@ module pyth::pyth_test {
         to_mint: u64
     ): (BurnCapability<AptosCoin>, MintCapability<AptosCoin>, Coin<AptosCoin>) {
         let aptos_framework_account = std::account::create_account_for_test(@aptos_framework);
+        let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
+
         std::timestamp::set_time_has_started_for_testing(&aptos_framework_account);
         wormhole::init_test(
             22,
@@ -797,7 +800,6 @@ module pyth::pyth_test {
             data_sources,
             50);
 
-        let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
         let coins = coin::mint(to_mint, &mint_capability);
         (burn_capability, mint_capability, coins)
     }
