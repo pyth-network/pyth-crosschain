@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      "dependsOn": ["test:format", "test:anchor"]
+      "dependsOn": ["test:format"]
     },
     "test:anchor": {}
   }

@@ -24,6 +24,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: "package.json"
+      # Libusb is a build requirement for the node-hid package and so pnpm
+      # install will fail if this isn't in the build environment and if a
+      # precompiled binary isn't found.
+      - name: Install libusb
+        run: sudo apt install -y libusb-1.0-0-dev libudev-dev
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: true
       - name: Install Solana Cli
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
@@ -34,3 +43,5 @@ jobs:
         run: solana-keygen new --no-bip39-passphrase
       - name: Install Anchor
         run: RUSTFLAGS= cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli
+      - name: Run anchor tests
+        run: pnpm run test:anchor
