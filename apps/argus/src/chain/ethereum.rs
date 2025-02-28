@@ -227,6 +227,32 @@ impl<T: JsonRpcClient + 'static> PulseReader for Pulse<Provider<T>> {
             .as_u64())
     }
 
+    async fn get_active_requests(&self, count: usize) -> Result<Vec<reader::Request>> {
+        let (requests, actual_count) = self
+            .get_first_active_requests(count.into())
+            .call()
+            .await?;
+
+        // Convert actual_count (U256) to usize safely
+        let actual_count_usize = actual_count.as_u64() as usize;
+        let mut result = Vec::with_capacity(actual_count_usize);
+
+        for i in 0..actual_count_usize {
+            let r = &requests[i];
+            if r.sequence_number != 0 {
+                result.push(reader::Request {
+                    requester: r.requester,
+                    sequence_number: r.sequence_number,
+                    callback_gas_limit: r.callback_gas_limit,
+                    price_ids: r.price_ids.to_vec(),
+                    publish_time: r.publish_time,
+                });
+            }
+        }
+
+        Ok(result)
+    }
+
     async fn get_price_update_requested_events(
         &self,
         from_block: BlockNumber,

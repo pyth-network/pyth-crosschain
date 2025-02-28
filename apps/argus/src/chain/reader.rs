@@ -60,6 +60,10 @@ pub trait PulseReader: Send + Sync {
         self.get_price_update_requested_events(from_block, to_block).await
     }
 
+    /// Get active requests directly from contract storage
+    /// This is more efficient than searching for events in the backlog
+    async fn get_active_requests(&self, count: usize) -> Result<Vec<Request>>;
+
     /// Estimate the gas required to execute a callback for price updates.
     async fn estimate_execute_callback_gas(
         &self,
@@ -153,13 +157,11 @@ pub mod mock {
     #[async_trait]
     impl PulseReader for MockPulseReader {
         async fn get_request(&self, sequence_number: u64) -> Result<Option<Request>> {
-            Ok(self
-                .requests
-                .read()
-                .unwrap()
+            let requests = self.requests.read().unwrap();
+            Ok(requests
                 .iter()
-                .find(|&r| r.sequence_number == sequence_number)
-                .map(|r| (*r).clone()))
+                .find(|r| r.sequence_number == sequence_number)
+                .cloned())
         }
 
         async fn get_block_number(
@@ -167,6 +169,11 @@ pub mod mock {
             _confirmed_block_status: BlockStatus,
         ) -> Result<BlockNumber> {
             Ok(*self.block_number.read().unwrap())
+        }
+
+        async fn get_active_requests(&self, count: usize) -> Result<Vec<Request>> {
+            let requests = self.requests.read().unwrap();
+            Ok(requests.iter().take(count).cloned().collect())
         }
 
         async fn get_price_update_requested_events(
