@@ -15,7 +15,17 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
-  const entries = [];
+  const entries: {
+    chain: string;
+    contract: string;
+    provider: string;
+    feeManager: string;
+    balance: string;
+    keeperBalance: string;
+    seq: string;
+    version: string;
+  }[] = [];
+
   const keeperAddress =
     ENTROPY_DEFAULT_KEEPER[argv.testnet ? "testnet" : "mainnet"];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {

@@ -42,10 +42,10 @@ async function main() {
   const wormholeChainName = toChainName(chainId);
 
   // Get the TON chain instance from DefaultStore based on network
-  const chain = DefaultStore.chains[isMainnet ? "ton_mainnet" : "ton_testnet"];
-  if (!chain || !(chain instanceof TonChain)) {
-    throw new Error(`Chain configuration not found for TON ${argv.network}`);
-  }
+  const chain = DefaultStore.getChainOrThrow(
+    isMainnet ? "ton_mainnet" : "ton_testnet",
+    TonChain
+  );
 
   const vault =
     DefaultStore.vaults[

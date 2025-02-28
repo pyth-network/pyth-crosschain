@@ -33,25 +33,16 @@ const parser = yargs(hideBin(process.argv))
 async function main() {
   const argv = await parser.argv;
 
-  const chain = DefaultStore.chains[argv.chain];
+  const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
+  const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
+  const address = await chain.deploy(
+    toPrivateKey(argv["private-key"]),
+    artifact["abi"],
+    artifact["bytecode"],
+    argv["deploy-args"] || []
+  );
 
-  if (!chain) {
-    throw new Error(`Chain ${argv.contract} not found`);
-  }
-
-  if (chain instanceof EvmChain) {
-    const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
-    const address = await chain.deploy(
-      toPrivateKey(argv["private-key"]),
-      artifact["abi"],
-      artifact["bytecode"],
-      argv["deploy-args"] || []
-    );
-
-    console.log(`Deployed contract at ${address}`);
-  } else {
-    throw new Error("Chain is not an EVM chain");
-  }
+  console.log(`Deployed contract at ${address}`);
 }
 
 main();

@@ -31,10 +31,7 @@ async function main() {
   const argv = await parser.argv;
 
   // Near wormhole contracts have the same id on testnet and mainnet.
-  const chain = DefaultStore.chains.near;
-  if (!(chain instanceof NearChain)) {
-    throw new Error("Near chain is missing");
-  }
+  const chain = DefaultStore.getChainOrThrow("near", NearChain);
 
   const vault =
     DefaultStore.vaults[

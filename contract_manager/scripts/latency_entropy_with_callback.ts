@@ -2,16 +2,12 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
   DefaultStore,
+  EvmChain,
   EvmEntropyContract,
   PrivateKey,
   toPrivateKey,
 } from "../src";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  findEntropyContract,
-  findEvmChain,
-} from "./common";
-import Web3 from "web3";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -111,7 +107,7 @@ async function main() {
       }
     }
   } else if (argv.chain) {
-    const chain = findEvmChain(argv.chain);
+    const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
     const contract = findEntropyContract(chain);
     await testLatency(contract, privateKey);
   }
