@@ -30,8 +30,8 @@
     .rightGroup {
       display: flex;
       flex-flow: row nowrap;
-      align-items: center;
-      gap: theme.spacing(2);
+      align-items: stretch;
+      gap: theme.spacing(4);
 
       & > * {
         flex: 1 1 0;

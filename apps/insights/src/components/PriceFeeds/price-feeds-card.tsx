@@ -143,12 +143,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
             priceFeedName: <PriceFeedTag compact symbol={symbol} />,
             assetClass: <AssetClassTag symbol={symbol} />,
             priceFeedId: (
-              <FeedKey
-                size="xs"
-                variant="ghost"
-                feedKey={key}
-                className={styles.feedKey ?? ""}
-              />
+              <FeedKey feedKey={key} className={styles.feedKey ?? ""} />
             ),
           },
         }),

@@ -105,7 +105,7 @@ export const PublishersLayout = async ({ children, params }: Props) => {
               items={[
                 { href: "/", label: "Home" },
                 { href: "/publishers", label: "Publishers" },
-                { label: <PublisherKey size="sm" publisherKey={key} /> },
+                { label: <PublisherKey publisherKey={key} /> },
               ]}
             />
           </div>

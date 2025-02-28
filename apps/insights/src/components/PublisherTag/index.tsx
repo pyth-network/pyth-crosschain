@@ -68,7 +68,7 @@ const Contents = (props: Props) => {
     return props.name ? (
       <div className={styles.name}>{props.name}</div>
     ) : (
-      <PublisherKey publisherKey={props.publisherKey} size="xs" />
+      <PublisherKey publisherKey={props.publisherKey} />
     );
   } else if (props.name) {
     return (
@@ -77,11 +77,10 @@ const Contents = (props: Props) => {
         <PublisherKey
           className={styles.key ?? ""}
           publisherKey={props.publisherKey}
-          size="xs"
         />
       </div>
     );
   } else {
-    return <PublisherKey publisherKey={props.publisherKey} size="sm" />;
+    return <PublisherKey publisherKey={props.publisherKey} />;
   }
 };
