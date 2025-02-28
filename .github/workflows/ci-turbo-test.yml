@@ -21,20 +21,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: "package.json"
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: 1.81.0
-      - uses: Swatinem/rust-cache@v2
-      - name: Install Solana Cli
-        run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
-      - name: Set Solana Cli version
-        run: agave-install init 1.18.26
-      - name: Create Solana key
-        run: solana-keygen new --no-bip39-passphrase
-      - name: Install Anchor
-        run: RUSTFLAGS= cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 anchor-cli
       # Libusb is a build requirement for the node-hid package and so pnpm
       # install will fail if this isn't in the build environment and if a
       # precompiled binary isn't found.
