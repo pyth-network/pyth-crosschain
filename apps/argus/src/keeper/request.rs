@@ -1,7 +1,7 @@
 use {
     crate::{
         api::{self, BlockchainState},
-        chain::{ethereum::InstrumentedSignablePythContract, reader::{BlockNumber, RequestedWithCallbackEvent}},
+        chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
         keeper::keeper_metrics::{AccountLabel, KeeperMetrics},
         keeper::hermes::fetch_price_updates_from_hermes,
     },
@@ -62,24 +62,16 @@ pub async fn process_active_requests(
                 tracing::info!(num_of_requests = &requests.len(), "Processing active requests");
 
                 for request in &requests {
-                    // Convert Request to RequestedWithCallbackEvent format for compatibility
-                    let request_event = RequestedWithCallbackEvent {
-                        sequence_number: request.sequence_number,
-                        requester: request.requester,
-                        price_ids: request.price_ids.clone(),
-                        callback_gas_limit: request.callback_gas_limit,
-                    };
-
                     // The write lock guarantees we spawn only one task per sequence number
                     let newly_inserted = fulfilled_requests_cache
                         .write()
                         .await
-                        .insert(request_event.sequence_number);
+                        .insert(request.sequence_number);
 
                     if newly_inserted {
                         spawn(
                             process_request_with_backoff(
-                                request_event,
+                                request.clone(),
                                 chain_state.clone(),
                                 contract.clone(),
                                 gas_limit,
@@ -111,7 +103,7 @@ pub async fn process_active_requests(
     sequence_number = request.sequence_number
 ))]
 pub async fn process_request_with_backoff(
-    request: RequestedWithCallbackEvent,
+    request: crate::chain::reader::Request,
     chain_state: BlockchainState,
     contract: Arc<InstrumentedSignablePythContract>,
     gas_limit: U256,
