@@ -14,6 +14,8 @@ pnpm-workspace.yaml @pyth-network/web-team
 turbo.json @pyth-network/web-team
 .npmrc @pyth-network/web-team
 .nvmrc @pyth-network/web-team
+/.github/ @pyth-network/core-team
+/.github/CODEOWNERS @pyth-network/core-team
 .github/workflows/publish-js.yml @pyth-network/web-team
 .github/workflows/ci-turbo-build.yml @pyth-network/web-team
 .github/workflows/ci-turbo-test.yml @pyth-network/web-team
