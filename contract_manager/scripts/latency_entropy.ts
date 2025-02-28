@@ -1,11 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { toPrivateKey } from "../src";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  findEntropyContract,
-  findEvmChain,
-} from "./common";
+import { DefaultStore, EvmChain, toPrivateKey } from "../src";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -24,7 +20,7 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
-  const chain = findEvmChain(argv.chain);
+  const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
   const contract = findEntropyContract(chain);
 
   const provider = await contract.getDefaultProvider();

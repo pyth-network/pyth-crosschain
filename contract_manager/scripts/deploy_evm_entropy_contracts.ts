@@ -172,13 +172,7 @@ async function topupAccountsIfNecessary(
 async function main() {
   const argv = await parser.argv;
 
-  const chainName = argv.chain;
-  const chain = DefaultStore.chains[chainName];
-  if (!chain) {
-    throw new Error(`Chain ${chainName} not found`);
-  } else if (!(chain instanceof EvmChain)) {
-    throw new Error(`Chain ${chainName} is not an EVM chain`);
-  }
+  const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
 
   const deploymentConfig: DeploymentConfig = {
     type: toDeploymentType(argv.deploymentType),

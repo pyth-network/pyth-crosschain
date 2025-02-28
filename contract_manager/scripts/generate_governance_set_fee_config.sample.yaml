@@ -1,24 +1,24 @@
-- name: aurora
+- chainName: aurora
   fee: 3
   exponent: 12
-- name: avalanche
+- chainName: avalanche
   fee: 25
   exponent: 13
-- name: conflux_espace
+- chainName: conflux_espace
   fee: 1
   exponent: 17
-- name: cronos
+- chainName: cronos
   fee: 6
   exponent: 16
-- name: meter
+- chainName: meter
   fee: 2
   exponent: 16
-- name: ronin
+- chainName: ronin
   fee: 1
   exponent: 15
-- name: sei_evm_mainnet
+- chainName: sei_evm_mainnet
   fee: 1
   exponent: 16
-- name: shimmer
+- chainName: shimmer
   fee: 1
   exponent: 18

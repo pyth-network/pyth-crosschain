@@ -78,6 +78,7 @@ export const COMMON_DEPLOY_OPTIONS = {
   },
   chain: {
     type: "array",
+    string: true,
     demandOption: true,
     desc: "Chains to upload the contract on. Must be one of the chains available in the store",
   },
@@ -205,22 +206,6 @@ export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
     }
   }
   throw new Error(`Entropy contract not found for chain ${chain.getId()}`);
-}
-
-/**
- * Finds an EVM chain by its name.
- * @param {string} chainName The name of the chain to find.
- * @returns The EVM chain instance.
- * @throws {Error} an error if the chain is not found or is not an EVM chain.
- */
-export function findEvmChain(chainName: string): EvmChain {
-  const chain = DefaultStore.chains[chainName];
-  if (!chain) {
-    throw new Error(`Chain ${chainName} not found`);
-  } else if (!(chain instanceof EvmChain)) {
-    throw new Error(`Chain ${chainName} is not an EVM chain`);
-  }
-  return chain;
 }
 
 /**

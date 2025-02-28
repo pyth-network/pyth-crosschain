@@ -7,7 +7,7 @@ import { parse } from "yaml";
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --config <path/to/config.yaml>")
   .options({
-    config: {
+    "config-path": {
       type: "string",
       demandOption: true,
       desc: "Path to the config file",
@@ -26,40 +26,36 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const {
-    config,
-    "ops-key-path": ops_key_path,
-    vault: vault_id,
+    "config-path": configPath,
+    "ops-key-path": opsKeyPath,
+    vault: vaultId,
   } = await parser.argv;
 
-  const config_obj = parse(readFileSync(config, "utf8"));
+  const config = parse(readFileSync(configPath, "utf8"));
 
-  let update_payloads: Buffer[] = [];
-  for (const chain of config_obj) {
-    const chain_obj = DefaultStore.chains[chain.name];
-    if (!chain_obj) {
-      throw new Error(`Chain with ID '${chain.name}' does not exist.`);
-    }
-
-    const payload = chain_obj.generateGovernanceSetFeePayload(
-      chain.fee,
-      chain.exponent
+  const updatePayloads: Buffer[] = [];
+  for (const setFeeEntry of config) {
+    const chain = DefaultStore.getChainOrThrow(setFeeEntry.chainName);
+    const payload = chain.generateGovernanceSetFeePayload(
+      setFeeEntry.fee,
+      setFeeEntry.exponent
     );
-    update_payloads.push(payload);
+    updatePayloads.push(payload);
     console.log(
-      `Generated payload for chain ${chain.name}:`,
+      `Generated payload for chain ${setFeeEntry.chainName}:`,
       payload.toString("hex")
     );
   }
 
-  const vault = DefaultStore.vaults[vault_id];
+  const vault = DefaultStore.vaults[vaultId];
 
   if (!vault) {
-    throw new Error(`Vault with ID '${vault_id}' does not exist.`);
+    throw new Error(`Vault with ID '${vaultId}' does not exist.`);
   }
 
-  const keypair = await loadHotWallet(ops_key_path);
+  const keypair = await loadHotWallet(opsKeyPath);
   vault.connect(keypair);
-  const proposal = await vault.proposeWormholeMessage(update_payloads);
+  const proposal = await vault.proposeWormholeMessage(updatePayloads);
   console.log("Proposal address:", proposal.address.toBase58());
 }
 
