@@ -97,6 +97,7 @@ pub async fn run_keeper(
     private_key: String,
     metrics_registry: Arc<RwLock<Registry>>,
     rpc_metrics: Arc<RpcMetrics>,
+    hermes_base_url: String,
 ) -> Result<()> {
     let mut handles = Vec::new();
     let keeper_metrics: Arc<KeeperMetrics> = Arc::new({
@@ -119,6 +120,7 @@ pub async fn run_keeper(
             chain_config.clone(),
             keeper_metrics.clone(),
             rpc_metrics.clone(),
+            hermes_base_url.clone(),
         )));
     }
 
@@ -130,6 +132,9 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let (tx_exit, rx_exit) = watch::channel(false);
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
     let rpc_metrics = Arc::new(RpcMetrics::new(metrics_registry.clone()).await);
+
+    // Store the hermes base URL from the command-line argument
+    let hermes_base_url = opts.hermes_base_url.clone();
 
     let mut tasks = Vec::new();
     for (chain_id, chain_config) in config.chains.clone() {
@@ -184,6 +189,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             keeper_private_key,
             metrics_registry.clone(),
             rpc_metrics.clone(),
+            hermes_base_url.clone(),
         ));
     } else {
         tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")

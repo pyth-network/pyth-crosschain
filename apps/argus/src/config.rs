@@ -26,6 +26,7 @@ mod withdraw_fees;
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
 const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";
+const DEFAULT_HERMES_BASE_URL: &str = "https://hermes.pyth.network";
 
 #[derive(Parser, Debug)]
 #[command(name = crate_name!())]
@@ -66,7 +67,7 @@ pub enum Options {
 pub struct ConfigOptions {
     /// Path to a configuration file containing the list of supported blockchains
     #[arg(long = "config")]
-    #[arg(env = "FORTUNA_CONFIG")]
+    #[arg(env = "ARGUS_CONFIG")]
     #[arg(default_value = "config.yaml")]
     pub config: String,
 }
@@ -76,8 +77,6 @@ pub struct Config {
     pub chains: HashMap<ChainId, EthereumConfig>,
     pub provider: ProviderConfig,
     pub keeper: KeeperConfig,
-    #[serde(default)]
-    pub hermes: HermesConfig,
 }
 
 impl Config {
@@ -355,24 +354,4 @@ impl SecretString {
 
         Ok(None)
     }
-}
-
-/// Configuration for the Hermes API integration
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct HermesConfig {
-    /// Base URL for the Hermes API
-    #[serde(default = "default_hermes_base_url")]
-    pub base_url: String,
-}
-
-impl Default for HermesConfig {
-    fn default() -> Self {
-        Self {
-            base_url: default_hermes_base_url(),
-        }
-    }
-}
-
-fn default_hermes_base_url() -> String {
-    "https://hermes.pyth.network".to_string()
 }

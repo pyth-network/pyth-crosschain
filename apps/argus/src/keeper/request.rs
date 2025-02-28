@@ -51,6 +51,7 @@ pub async fn process_active_requests(
     chain_state: api::BlockchainState,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    hermes_base_url: String,
 ) {
     tracing::info!("Processing active requests from contract storage");
 
@@ -77,6 +78,7 @@ pub async fn process_active_requests(
                                 gas_limit,
                                 escalation_policy.clone(),
                                 metrics.clone(),
+                                hermes_base_url.clone(),
                             )
                             .in_current_span(),
                         );
@@ -109,6 +111,7 @@ pub async fn process_request_with_backoff(
     gas_limit: U256,
     escalation_policy: EscalationPolicy,
     metrics: Arc<KeeperMetrics>,
+    hermes_base_url: String,
 ) -> Result<()> {
     // We process all price update requests for our provider
     let account_label = AccountLabel {
@@ -129,7 +132,11 @@ pub async fn process_request_with_backoff(
     };
 
     // Fetch price update data from Hermes for the requested price IDs
-    let update_data = fetch_price_updates_from_hermes(request_details.publish_time.as_u64(), &request.price_ids).await?;
+    let update_data = fetch_price_updates_from_hermes(
+        request_details.publish_time.as_u64(),
+        &request.price_ids,
+        hermes_base_url,
+    ).await?;
 
     let contract_call = contract.execute_callback(
         request.sequence_number,

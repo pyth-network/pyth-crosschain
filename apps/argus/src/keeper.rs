@@ -59,6 +59,7 @@ pub async fn run_keeper_threads(
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
     rpc_metrics: Arc<RpcMetrics>,
+    hermes_base_url: String,
 ) {
     tracing::info!("starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
@@ -89,6 +90,7 @@ pub async fn run_keeper_threads(
             chain_state.clone(),
             metrics.clone(),
             fulfilled_requests_cache.clone(),
+            hermes_base_url.clone(),
         )
         .in_current_span(),
     );
@@ -99,6 +101,7 @@ pub async fn run_keeper_threads(
     let request_check_metrics = metrics.clone();
     let request_check_escalation_policy = chain_eth_config.escalation_policy.to_policy();
     let request_check_fulfilled_requests_cache = fulfilled_requests_cache.clone();
+    let request_check_hermes_base_url = hermes_base_url.clone();
 
     // Spawn a thread to periodically check for active requests
     spawn(
@@ -114,6 +117,7 @@ pub async fn run_keeper_threads(
                     request_check_chain_state.clone(),
                     request_check_metrics.clone(),
                     request_check_fulfilled_requests_cache.clone(),
+                    request_check_hermes_base_url.clone(),
                 )
                 .in_current_span()
                 .await;

@@ -36,13 +36,12 @@ use {
     ethers::types::Bytes,
     reqwest::Client,
     serde::{Deserialize, Serialize},
-    std::{env, time::Duration},
+    std::time::Duration,
     tracing,
 };
 
-const HERMES_BASE_URL: &str = "https://hermes.pyth.network";
-const HERMES_ENV_VAR: &str = "HERMES_BASE_URL";
 const HERMES_TIMEOUT: Duration = Duration::from_secs(10);
+const DEFAULT_HERMES_BASE_URL: &str = "https://hermes.pyth.network";
 
 /// Binary data response from Hermes API
 #[derive(Debug, Serialize, Deserialize)]
@@ -72,20 +71,10 @@ pub struct HermesClient {
 }
 
 impl HermesClient {
-    /// Create a new Hermes client with the base URL from environment variable or default
+    /// Create a new Hermes client with default configuration
     pub fn new() -> Self {
-        // Create a default config with the default base URL
-        let default_config = crate::config::HermesConfig {
-            base_url: HERMES_BASE_URL.to_string(),
-        };
-        Self::from_config(&default_config)
-    }
-
-    /// Create a new Hermes client with the base URL from the config
-    pub fn from_config(config: &crate::config::HermesConfig) -> Self {
-        // Environment variable takes precedence over config
-        let base_url = env::var(HERMES_ENV_VAR).unwrap_or_else(|_| config.base_url.clone());
-        Self::with_base_url(base_url)
+        // Use the default base URL
+        Self::with_base_url(DEFAULT_HERMES_BASE_URL.to_string())
     }
 
     /// Create a new Hermes client with a custom base URL
@@ -173,12 +162,14 @@ impl Default for HermesClient {
 pub async fn fetch_price_updates_from_hermes(
     publish_time: u64,
     price_ids: &[[u8; 32]],
+    hermes_base_url: String,
 ) -> Result<Vec<Bytes>> {
     const MAX_RETRIES: usize = 3;
     const RETRY_DELAY: std::time::Duration = std::time::Duration::from_millis(500);
 
-    // Use HermesClient::new() which will read from environment variables if available
-    let hermes_client = HermesClient::new();
+    // Create a client with the provided base URL
+    let hermes_client = HermesClient::with_base_url(hermes_base_url);
+
     let mut last_error = None;
 
     for retry in 0..MAX_RETRIES {
