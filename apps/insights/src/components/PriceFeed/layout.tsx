@@ -68,8 +68,6 @@ export const PriceFeedLayout = async ({ children, params }: Props) => {
           <PriceFeedTag className={styles.priceFeedTag} symbol={feed.symbol} />
           <div className={styles.rightGroup}>
             <FeedKey
-              variant="ghost"
-              size="sm"
               className={styles.feedKey ?? ""}
               feedKey={feed.product.price_account}
             />

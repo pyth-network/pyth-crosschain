@@ -16,6 +16,7 @@
       outline-color 100ms linear,
       background-color 100ms linear;
     -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
 
     &[data-focus-visible] {
       outline: theme.spacing(0.5) solid theme.color("focus");

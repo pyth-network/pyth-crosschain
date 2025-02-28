@@ -43,7 +43,8 @@
     align-items: flex-start;
 
     .key {
-      margin-bottom: -#{theme.spacing(2)};
+      font-size: theme.font-size("xs");
+      margin-bottom: -0.5em;
     }
   }
 
