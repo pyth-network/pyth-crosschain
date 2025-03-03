@@ -634,12 +634,12 @@
   rpcUrl: https://node.mainnet.etherlink.com/
   networkId: 42793
   type: EvmChain
-- id: klaytn
+- id: kaia
   mainnet: true
   rpcUrl: https://rpc.ankr.com/klaytn
   networkId: 8217
   type: EvmChain
-- id: klaytn_testnet
+- id: kaia_testnet
   mainnet: false
   rpcUrl: https://rpc.ankr.com/klaytn_testnet
   networkId: 1001
