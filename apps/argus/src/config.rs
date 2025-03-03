@@ -1,5 +1,5 @@
 use {
-    crate::{api::ChainId, chain::reader::BlockStatus},
+    crate::api::ChainId,
     anyhow::{anyhow, Result},
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
     ethers::types::Address,
@@ -114,11 +114,6 @@ pub struct EthereumConfig {
 
     /// Address of a Pyth Pulse contract to interact with.
     pub contract_addr: Address,
-
-    /// The BlockStatus of the block that is considered confirmed.
-    /// For example, Finalized, Safe, Latest
-    #[serde(default)]
-    pub confirmed_block_status: BlockStatus,
 
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]

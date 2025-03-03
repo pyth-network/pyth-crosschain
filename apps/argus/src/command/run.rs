@@ -235,7 +235,6 @@ async fn setup_chain_state(
         id: chain_id.clone(),
         contract,
         provider_address: *provider,
-        confirmed_block_status: chain_config.confirmed_block_status,
     };
     Ok(state)
 }

@@ -1,5 +1,5 @@
 use {
-    crate::chain::reader::{BlockStatus, PulseReader},
+    crate::chain::reader::PulseReader,
     anyhow::Result,
     axum::{
         body::Body,
@@ -81,9 +81,6 @@ pub struct BlockchainState {
     pub contract: Arc<dyn PulseReader>,
     /// The address of the provider that this server is operating for.
     pub provider_address: Address,
-    /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
-    /// For eg., Finalized, Safe
-    pub confirmed_block_status: BlockStatus,
 }
 
 pub enum RestError {
@@ -159,7 +156,7 @@ mod test {
     use {
         crate::{
             api::{self, ApiState, BlockchainState},
-            chain::reader::{mock::MockPulseReader, BlockStatus},
+            chain::reader::mock::MockPulseReader,
         },
         axum::http::StatusCode,
         axum_test::{TestResponse, TestServer},
@@ -182,7 +179,6 @@ mod test {
             id: "ethereum".into(),
             contract: eth_read.clone(),
             provider_address: PROVIDER,
-            confirmed_block_status: BlockStatus::Latest,
         };
 
         let metrics_registry = Arc::new(RwLock::new(Registry::default()));
@@ -193,7 +189,6 @@ mod test {
             id: "avalanche".into(),
             contract: avax_read.clone(),
             provider_address: PROVIDER,
-            confirmed_block_status: BlockStatus::Latest,
         };
 
         let mut chains = HashMap::new();

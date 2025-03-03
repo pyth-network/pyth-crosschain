@@ -1,10 +1,10 @@
 use {
     crate::{
         api::ChainId,
-        chain::reader::{self, BlockNumber, BlockStatus, PulseReader, RequestedWithCallbackEvent},
+        chain::reader::{self, BlockNumber, PulseReader, RequestedWithCallbackEvent},
         config::EthereumConfig,
     },
-    anyhow::{anyhow, Error, Result},
+    anyhow::{anyhow, Context, Result},
     axum::async_trait,
     ethers::{
         abi::RawLog,
@@ -14,7 +14,7 @@ use {
         prelude::JsonRpcClient,
         providers::{Http, Middleware, Provider},
         signers::{LocalWallet, Signer},
-        types::{BlockNumber as EthersBlockNumber, U256},
+        types::U256,
     },
     fortuna::eth_utils::{
         eth_gas_oracle::EthProviderOracle,
@@ -213,25 +213,17 @@ impl<T: JsonRpcClient + 'static> PulseReader for Pulse<Provider<T>> {
         }
     }
 
-    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
-        let block_number: EthersBlockNumber = confirmed_block_status.into();
+    async fn get_block_number(&self) -> Result<BlockNumber> {
         let block = self
             .client()
-            .get_block(block_number)
-            .await?
-            .ok_or_else(|| Error::msg("pending block confirmation"))?;
-
-        Ok(block
-            .number
-            .ok_or_else(|| Error::msg("pending confirmation"))?
-            .as_u64())
+            .get_block_number()
+            .await
+            .context("Failed to get block number")?;
+        Ok(block.as_u64())
     }
 
     async fn get_active_requests(&self, count: usize) -> Result<Vec<reader::Request>> {
-        let (requests, actual_count) = self
-            .get_first_active_requests(count.into())
-            .call()
-            .await?;
+        let (requests, actual_count) = self.get_first_active_requests(count.into()).call().await?;
 
         // Convert actual_count (U256) to usize safely
         let actual_count_usize = actual_count.as_u64() as usize;
@@ -306,11 +298,10 @@ impl<T: JsonRpcClient + 'static> Pulse<Provider<T>> {
         // The currentSequenceNumber is stored in the State struct at slot 0, offset 32 bytes
         // (after admin, pythFeeInWei, accruedFeesInWei, and pyth)
         let storage_slot = ethers::types::H256::zero();
-        let storage_value = self.client().get_storage_at(
-            self.address(),
-            storage_slot,
-            None,
-        ).await?;
+        let storage_value = self
+            .client()
+            .get_storage_at(self.address(), storage_slot, None)
+            .await?;
 
         // H256 is always 32 bytes, so we don't need to check the length
 

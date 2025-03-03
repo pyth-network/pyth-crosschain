@@ -1,33 +1,10 @@
 use {
     anyhow::Result,
     axum::async_trait,
-    ethers::types::{Address, BlockNumber as EthersBlockNumber, U256},
+    ethers::types::{Address, U256},
 };
 
 pub type BlockNumber = u64;
-
-#[derive(
-    Copy, Clone, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
-)]
-pub enum BlockStatus {
-    /// Latest block
-    #[default]
-    Latest,
-    /// Finalized block accepted as canonical
-    Finalized,
-    /// Safe head block
-    Safe,
-}
-
-impl From<BlockStatus> for EthersBlockNumber {
-    fn from(val: BlockStatus) -> Self {
-        match val {
-            BlockStatus::Latest => EthersBlockNumber::Latest,
-            BlockStatus::Finalized => EthersBlockNumber::Finalized,
-            BlockStatus::Safe => EthersBlockNumber::Safe,
-        }
-    }
-}
 
 #[derive(Clone)]
 pub struct RequestedWithCallbackEvent {
@@ -43,7 +20,8 @@ pub trait PulseReader: Send + Sync {
     /// Get an in-flight request (if it exists)
     async fn get_request(&self, sequence_number: u64) -> Result<Option<Request>>;
 
-    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber>;
+    /// Get the latest block number
+    async fn get_block_number(&self) -> Result<BlockNumber>;
 
     async fn get_price_update_requested_events(
         &self,
@@ -57,7 +35,8 @@ pub trait PulseReader: Send + Sync {
         from_block: BlockNumber,
         to_block: BlockNumber,
     ) -> Result<Vec<RequestedWithCallbackEvent>> {
-        self.get_price_update_requested_events(from_block, to_block).await
+        self.get_price_update_requested_events(from_block, to_block)
+            .await
     }
 
     /// Get active requests directly from contract storage
@@ -89,9 +68,7 @@ pub struct Request {
 #[cfg(test)]
 pub mod mock {
     use {
-        crate::chain::reader::{
-            BlockNumber, BlockStatus, PulseReader, Request, RequestedWithCallbackEvent,
-        },
+        crate::chain::reader::{BlockNumber, PulseReader, Request, RequestedWithCallbackEvent},
         anyhow::Result,
         axum::async_trait,
         ethers::types::{Address, U256},
@@ -164,10 +141,7 @@ pub mod mock {
                 .cloned())
         }
 
-        async fn get_block_number(
-            &self,
-            _confirmed_block_status: BlockStatus,
-        ) -> Result<BlockNumber> {
+        async fn get_block_number(&self) -> Result<BlockNumber> {
             Ok(*self.block_number.read().unwrap())
         }
 

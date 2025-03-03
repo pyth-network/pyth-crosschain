@@ -5,7 +5,6 @@ use {
         extract::{Path, Query, State},
         Json,
     },
-    tokio::try_join,
     utoipa::{IntoParams, ToSchema},
 };
 
@@ -47,12 +46,7 @@ pub async fn price_update(
 
     let maybe_request_fut = state.contract.get_request(sequence);
 
-    let current_block_number_fut = state
-        .contract
-        .get_block_number(state.confirmed_block_status);
-
-    let (maybe_request, _current_block_number) =
-        try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
+    let maybe_request = maybe_request_fut.await.map_err(|e| {
             tracing::error!(chain_id = chain_id, "RPC request failed {}", e);
             RestError::TemporarilyUnavailable
         })?;

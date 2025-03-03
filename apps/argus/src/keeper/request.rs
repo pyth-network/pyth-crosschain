@@ -26,7 +26,7 @@ pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber
     loop {
         match chain_state
             .contract
-            .get_block_number(chain_state.confirmed_block_status)
+            .get_block_number()
             .await
         {
             Ok(latest_confirmed_block) => {
