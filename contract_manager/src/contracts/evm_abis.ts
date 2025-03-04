@@ -524,207 +524,1003 @@ export const EXECUTOR_ABI = [
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 
 export const PULSE_UPGRADEABLE_ABI = [
-  // Upgradeable specific functions
   {
-    inputs: [
-      { internalType: "address", name: "newImplementation", type: "address" },
+    type: "constructor",
+    inputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "MAX_PRICE_IDS",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint8",
+        internalType: "uint8",
+      },
     ],
-    name: "upgradeTo",
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "NUM_REQUESTS",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint8",
+        internalType: "uint8",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "NUM_REQUESTS_MASK",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bytes1",
+        internalType: "bytes1",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "acceptOwnership",
+    inputs: [],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
-    inputs: [],
-    name: "implementation",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
     type: "function",
-  },
-  // Core Pulse functions
-  {
-    inputs: [
-      { name: "publishTime", type: "uint256" },
-      { name: "priceIds", type: "bytes32[]" },
-      { name: "callbackGasLimit", type: "uint256" },
-    ],
-    name: "requestPriceUpdatesWithCallback",
-    outputs: [{ name: "sequenceNumber", type: "uint64" }],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { name: "sequenceNumber", type: "uint64" },
-      { name: "updateData", type: "bytes[]" },
-      { name: "priceIds", type: "bytes32[]" },
-    ],
     name: "executeCallback",
+    inputs: [
+      {
+        name: "sequenceNumber",
+        type: "uint64",
+        internalType: "uint64",
+      },
+      {
+        name: "updateData",
+        type: "bytes[]",
+        internalType: "bytes[]",
+      },
+      {
+        name: "priceIds",
+        type: "bytes32[]",
+        internalType: "bytes32[]",
+      },
+    ],
     outputs: [],
     stateMutability: "payable",
-    type: "function",
   },
   {
-    inputs: [],
-    name: "getPythFeeInWei",
-    outputs: [{ name: "pythFeeInWei", type: "uint128" }],
-    stateMutability: "view",
     type: "function",
-  },
-  {
-    inputs: [{ name: "callbackGasLimit", type: "uint256" }],
-    name: "getFee",
-    outputs: [{ name: "feeAmount", type: "uint128" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "getAccruedFees",
-    outputs: [{ name: "accruedFeesInWei", type: "uint128" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "sequenceNumber", type: "uint64" }],
-    name: "getRequest",
-    outputs: [
-      {
-        components: [
-          { name: "provider", type: "address" },
-          { name: "publishTime", type: "uint256" },
-          { name: "priceIds", type: "bytes32[]" },
-          { name: "callbackGasLimit", type: "uint256" },
-          { name: "requester", type: "address" },
-        ],
-        name: "req",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "manager", type: "address" }],
-    name: "setFeeManager",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "amount", type: "uint128" }],
-    name: "withdrawFees",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { name: "provider", type: "address" },
-      { name: "amount", type: "uint128" },
-    ],
-    name: "withdrawAsFeeManager",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "feeInWei", type: "uint128" }],
-    name: "registerProvider",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "newFeeInWei", type: "uint128" }],
-    name: "setProviderFee",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "provider", type: "address" }],
-    name: "getProviderInfo",
-    outputs: [
-      {
-        components: [
-          { name: "feeInWei", type: "uint128" },
-          { name: "accruedFeesInWei", type: "uint128" },
-        ],
-        name: "info",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
+    outputs: [
+      {
+        name: "accruedFeesInWei",
+        type: "uint128",
+        internalType: "uint128",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getDefaultProvider",
-    outputs: [{ name: "", type: "address" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "provider", type: "address" }],
-    name: "setDefaultProvider",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "periodSeconds", type: "uint256" }],
-    name: "setExclusivityPeriod",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
-    name: "getExclusivityPeriod",
-    outputs: [{ name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ name: "count", type: "uint256" }],
-    name: "getFirstActiveRequests",
     outputs: [
       {
-        components: [
-          { name: "provider", type: "address" },
-          { name: "publishTime", type: "uint256" },
-          { name: "priceIds", type: "bytes32[]" },
-          { name: "callbackGasLimit", type: "uint256" },
-          { name: "requester", type: "address" },
-        ],
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getExclusivityPeriod",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getFee",
+    inputs: [
+      {
+        name: "callbackGasLimit",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "feeAmount",
+        type: "uint128",
+        internalType: "uint128",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getFirstActiveRequests",
+    inputs: [
+      {
+        name: "count",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
         name: "requests",
         type: "tuple[]",
+        internalType: "struct PulseState.Request[]",
+        components: [
+          {
+            name: "sequenceNumber",
+            type: "uint64",
+            internalType: "uint64",
+          },
+          {
+            name: "publishTime",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "priceIds",
+            type: "bytes32[10]",
+            internalType: "bytes32[10]",
+          },
+          {
+            name: "numPriceIds",
+            type: "uint8",
+            internalType: "uint8",
+          },
+          {
+            name: "callbackGasLimit",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "requester",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "provider",
+            type: "address",
+            internalType: "address",
+          },
+        ],
       },
-      { name: "actualCount", type: "uint256" },
+      {
+        name: "actualCount",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
-    name: "owner",
-    outputs: [{ name: "", type: "address" }],
-    stateMutability: "view",
     type: "function",
-  },
-  // Initialize function for upgradeable contract
-  {
+    name: "getProviderInfo",
     inputs: [
-      { name: "owner", type: "address" },
-      { name: "admin", type: "address" },
-      { name: "wormholeChainId", type: "uint16" },
-      { name: "governanceEmitterChainId", type: "uint16" },
-      { name: "governanceEmitterAddress", type: "bytes32" },
+      {
+        name: "provider",
+        type: "address",
+        internalType: "address",
+      },
     ],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        internalType: "struct PulseState.ProviderInfo",
+        components: [
+          {
+            name: "feeInWei",
+            type: "uint128",
+            internalType: "uint128",
+          },
+          {
+            name: "accruedFeesInWei",
+            type: "uint128",
+            internalType: "uint128",
+          },
+          {
+            name: "feeManager",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "isRegistered",
+            type: "bool",
+            internalType: "bool",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getPythFeeInWei",
+    inputs: [],
+    outputs: [
+      {
+        name: "pythFeeInWei",
+        type: "uint128",
+        internalType: "uint128",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getRequest",
+    inputs: [
+      {
+        name: "sequenceNumber",
+        type: "uint64",
+        internalType: "uint64",
+      },
+    ],
+    outputs: [
+      {
+        name: "req",
+        type: "tuple",
+        internalType: "struct PulseState.Request",
+        components: [
+          {
+            name: "sequenceNumber",
+            type: "uint64",
+            internalType: "uint64",
+          },
+          {
+            name: "publishTime",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "priceIds",
+            type: "bytes32[10]",
+            internalType: "bytes32[10]",
+          },
+          {
+            name: "numPriceIds",
+            type: "uint8",
+            internalType: "uint8",
+          },
+          {
+            name: "callbackGasLimit",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "requester",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "provider",
+            type: "address",
+            internalType: "address",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "initialize",
+    inputs: [
+      {
+        name: "owner",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "admin",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "pythFeeInWei",
+        type: "uint128",
+        internalType: "uint128",
+      },
+      {
+        name: "pythAddress",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "defaultProvider",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "prefillRequestStorage",
+        type: "bool",
+        internalType: "bool",
+      },
+      {
+        name: "exclusivityPeriodSeconds",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
     outputs: [],
     stateMutability: "nonpayable",
+  },
+  {
     type: "function",
+    name: "owner",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "pendingOwner",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "proxiableUUID",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "registerProvider",
+    inputs: [
+      {
+        name: "feeInWei",
+        type: "uint128",
+        internalType: "uint128",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "renounceOwnership",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "requestPriceUpdatesWithCallback",
+    inputs: [
+      {
+        name: "publishTime",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "priceIds",
+        type: "bytes32[]",
+        internalType: "bytes32[]",
+      },
+      {
+        name: "callbackGasLimit",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "requestSequenceNumber",
+        type: "uint64",
+        internalType: "uint64",
+      },
+    ],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "setDefaultProvider",
+    inputs: [
+      {
+        name: "provider",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setExclusivityPeriod",
+    inputs: [
+      {
+        name: "periodSeconds",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setFeeManager",
+    inputs: [
+      {
+        name: "manager",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setProviderFee",
+    inputs: [
+      {
+        name: "newFeeInWei",
+        type: "uint128",
+        internalType: "uint128",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "transferOwnership",
+    inputs: [
+      {
+        name: "newOwner",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "upgradeTo",
+    inputs: [
+      {
+        name: "newImplementation",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "upgradeToAndCall",
+    inputs: [
+      {
+        name: "newImplementation",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "data",
+        type: "bytes",
+        internalType: "bytes",
+      },
+    ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "version",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "string",
+        internalType: "string",
+      },
+    ],
+    stateMutability: "pure",
+  },
+  {
+    type: "function",
+    name: "withdrawAsFeeManager",
+    inputs: [
+      {
+        name: "provider",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint128",
+        internalType: "uint128",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "withdrawFees",
+    inputs: [
+      {
+        name: "amount",
+        type: "uint128",
+        internalType: "uint128",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "event",
+    name: "AdminChanged",
+    inputs: [
+      {
+        name: "previousAdmin",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "newAdmin",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "BeaconUpgraded",
+    inputs: [
+      {
+        name: "beacon",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ContractUpgraded",
+    inputs: [
+      {
+        name: "oldImplementation",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "newImplementation",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "DefaultProviderUpdated",
+    inputs: [
+      {
+        name: "oldProvider",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "newProvider",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ExclusivityPeriodUpdated",
+    inputs: [
+      {
+        name: "oldPeriodSeconds",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "newPeriodSeconds",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "FeeManagerUpdated",
+    inputs: [
+      {
+        name: "admin",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "oldFeeManager",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "newFeeManager",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "FeesWithdrawn",
+    inputs: [
+      {
+        name: "recipient",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint128",
+        indexed: false,
+        internalType: "uint128",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Initialized",
+    inputs: [
+      {
+        name: "version",
+        type: "uint8",
+        indexed: false,
+        internalType: "uint8",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferStarted",
+    inputs: [
+      {
+        name: "previousOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "newOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferred",
+    inputs: [
+      {
+        name: "previousOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "newOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "PriceUpdateCallbackFailed",
+    inputs: [
+      {
+        name: "sequenceNumber",
+        type: "uint64",
+        indexed: true,
+        internalType: "uint64",
+      },
+      {
+        name: "provider",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "priceIds",
+        type: "bytes32[]",
+        indexed: false,
+        internalType: "bytes32[]",
+      },
+      {
+        name: "requester",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "reason",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "PriceUpdateExecuted",
+    inputs: [
+      {
+        name: "sequenceNumber",
+        type: "uint64",
+        indexed: true,
+        internalType: "uint64",
+      },
+      {
+        name: "provider",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "priceIds",
+        type: "bytes32[]",
+        indexed: false,
+        internalType: "bytes32[]",
+      },
+      {
+        name: "prices",
+        type: "int64[]",
+        indexed: false,
+        internalType: "int64[]",
+      },
+      {
+        name: "conf",
+        type: "uint64[]",
+        indexed: false,
+        internalType: "uint64[]",
+      },
+      {
+        name: "expos",
+        type: "int32[]",
+        indexed: false,
+        internalType: "int32[]",
+      },
+      {
+        name: "publishTimes",
+        type: "uint256[]",
+        indexed: false,
+        internalType: "uint256[]",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "PriceUpdateRequested",
+    inputs: [
+      {
+        name: "request",
+        type: "tuple",
+        indexed: false,
+        internalType: "struct PulseState.Request",
+        components: [
+          {
+            name: "sequenceNumber",
+            type: "uint64",
+            internalType: "uint64",
+          },
+          {
+            name: "publishTime",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "priceIds",
+            type: "bytes32[10]",
+            internalType: "bytes32[10]",
+          },
+          {
+            name: "numPriceIds",
+            type: "uint8",
+            internalType: "uint8",
+          },
+          {
+            name: "callbackGasLimit",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "requester",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "provider",
+            type: "address",
+            internalType: "address",
+          },
+        ],
+      },
+      {
+        name: "priceIds",
+        type: "bytes32[]",
+        indexed: false,
+        internalType: "bytes32[]",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ProviderFeeUpdated",
+    inputs: [
+      {
+        name: "provider",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "oldFee",
+        type: "uint128",
+        indexed: false,
+        internalType: "uint128",
+      },
+      {
+        name: "newFee",
+        type: "uint128",
+        indexed: false,
+        internalType: "uint128",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ProviderRegistered",
+    inputs: [
+      {
+        name: "provider",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "feeInWei",
+        type: "uint128",
+        indexed: false,
+        internalType: "uint128",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Upgraded",
+    inputs: [
+      {
+        name: "implementation",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "error",
+    name: "InsufficientFee",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidPriceIds",
+    inputs: [
+      {
+        name: "providedPriceIdsHash",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+      {
+        name: "storedPriceIdsHash",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "NoSuchRequest",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "TooManyPriceIds",
+    inputs: [
+      {
+        name: "provided",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "maximum",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
   },
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any

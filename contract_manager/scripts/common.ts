@@ -38,11 +38,26 @@ export async function deployIfNotCached(
       readFileSync(join(config.jsonOutputDir, `${artifactName}.json`), "utf8")
     );
 
+    // Handle bytecode which can be either a string or an object with an 'object' property
+    let bytecode = artifact["bytecode"];
+    if (
+      typeof bytecode === "object" &&
+      bytecode !== null &&
+      "object" in bytecode
+    ) {
+      bytecode = bytecode.object;
+    }
+
+    // Ensure bytecode starts with 0x
+    if (!bytecode.startsWith("0x")) {
+      bytecode = `0x${bytecode}`;
+    }
+
     console.log(`Deploying ${artifactName} on ${chain.getId()}...`);
     const addr = await chain.deploy(
       config.privateKey,
       artifact["abi"],
-      artifact["bytecode"],
+      bytecode,
       deployArgs,
       config.gasMultiplier,
       config.gasPriceMultiplier
