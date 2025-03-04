@@ -55,13 +55,6 @@ provider:
     value: 0xabcd
     # For production, you can store the private key in a file.
     # file: provider-key.txt
-  # A 32 byte random value in hexadecimal
-  # Generate with `openssl rand -hex 32`
-  secret:
-    # For local development, you can hardcode the value here
-    value: abcd
-    # For production, you can store the private key in a file.
-    # file: secret.txt
 
   # Set this to the address of your keeper wallet if you would like the keeper wallet to
   # be able to withdraw fees from the contract.

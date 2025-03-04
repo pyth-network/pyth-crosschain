@@ -271,10 +271,6 @@ pub struct ProviderConfig {
     /// the private key (e.g., running the server).
     pub private_key: SecretString,
 
-    /// The provider's secret which is a 64-char hex string.
-    /// The secret is used for authentication purposes.
-    pub secret: SecretString,
-
     /// The length of the hash chain to generate.
     pub chain_length: u64,
 
