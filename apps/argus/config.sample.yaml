@@ -1,7 +1,7 @@
 chains:
-  lightlink_pegasus:
-    geth_rpc_addr: https://replicator.pegasus.lightlink.io/rpc/v1
-    contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
+  linea_sepolia:
+    geth_rpc_addr: https://rpc.sepolia.linea.build
+    contract_addr: 0xEbe57e8045F2F230872523bbff7374986E45C486
 
     # Keeper configuration for the chain
     gas_limit: 500000
