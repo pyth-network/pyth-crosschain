@@ -115,10 +115,10 @@
 - chain: abstract_testnet
   address: "0x858687fD592112f7046E394A3Bf10D0C11fF9e63"
   type: EvmEntropyContract
-- chain: horse_dream
+- chain: unichain
   address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
   type: EvmEntropyContract
-- chain: mathematician_in_heart
+- chain: abstract
   address: "0x5a4a369F4db5df2054994AF031b7b23949b98c0e"
   type: EvmEntropyContract
 - chain: happy_bird_song_ends_with_tio

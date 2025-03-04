@@ -433,10 +433,10 @@
 - chain: hyperevm_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: horse_dream
+- chain: unichain
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: mathematician_in_heart
+- chain: abstract
   address: "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1"
   type: EvmPriceFeedContract
 - chain: happy_bird_song_ends_with_tio
@@ -457,13 +457,13 @@
 - chain: eventum_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: threat_level_midnight
+- chain: soneium
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: story_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: just_breathe
+- chain: kraken_ink_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: coredao_testnet_v2

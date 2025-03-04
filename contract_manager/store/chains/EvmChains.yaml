@@ -789,12 +789,12 @@
   rpcUrl: https://happy_bird_song_ends_with_tio.com
   networkId: 80000
   type: EvmChain
-- id: horse_dream
+- id: unichain
   mainnet: true
   rpcUrl: https://redacted.quiknode.pro/$ENV_UNICHAIN_API_KEY
   networkId: 130
   type: EvmChain
-- id: mathematician_in_heart
+- id: abstract
   mainnet: true
   rpcUrl: https://api-efe16d37.ml.eeffc03e557f4daf.com/
   networkId: 2741
@@ -819,9 +819,9 @@
   rpcUrl: https://test.finney.opentensor.ai:443
   networkId: 945
   type: EvmChain
-- id: threat_level_midnight
+- id: soneium
   mainnet: true
-  rpcUrl: $ENV_THREAT_LEVEL_MIDNIGHT_RPC_URL
+  rpcUrl: $SONEIUM_RPC_URL
   networkId: 1868
   type: EvmChain
 - id: story_testnet
@@ -834,9 +834,9 @@
   rpcUrl: https://mainnet-rpc.evedex.com
   networkId: 161803
   type: EvmChain
-- id: just_breathe
+- id: kraken_ink_mainnet
   mainnet: true
-  rpcUrl: $ENV_JUST_BREATHE_RPC_URL
+  rpcUrl: $KRAKEN_INK_RPC_URL
   networkId: 57073
   type: EvmChain
 - id: monad_devnet
