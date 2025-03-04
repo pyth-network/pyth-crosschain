@@ -22,22 +22,22 @@ const getLabels = (assetClass?: string | undefined) => {
 const LABELS = {
   Rates: {
     plural: {
-      upcase: "YIELDS",
-      title: "Yields",
+      upcase: "RATES",
+      title: "Rates",
     },
     singular: {
-      upcase: "YIELD",
-      title: "Yield",
+      upcase: "RATE",
+      title: "Rate",
     },
   },
   ambiguous: {
     plural: {
-      upcase: "PRICES / YIELDS",
-      title: "Prices / Yields",
+      upcase: "PRICES / RATES",
+      title: "Prices / Rates",
     },
     singular: {
-      upcase: "PRICE / YIELD",
-      title: "Price / Yield",
+      upcase: "PRICE / RATE",
+      title: "Price / Rate",
     },
   },
   default: {
