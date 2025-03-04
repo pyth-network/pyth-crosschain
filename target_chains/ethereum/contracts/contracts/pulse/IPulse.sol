@@ -75,6 +75,12 @@ interface IPulse is PulseEvents {
 
     function setFeeManager(address manager) external;
 
+    /**
+     * @notice Allows the admin to withdraw accumulated Pyth protocol fees
+     * @param amount The amount of fees to withdraw in wei
+     */
+    function withdrawFees(uint128 amount) external;
+
     function withdrawAsFeeManager(address provider, uint128 amount) external;
 
     function registerProvider(uint128 feeInWei) external;

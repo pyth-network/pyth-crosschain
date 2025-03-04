@@ -244,7 +244,7 @@ abstract contract Pulse is IPulse, PulseState {
         shortHash = uint8(hash[0] & NUM_REQUESTS_MASK);
     }
 
-    function withdrawFees(uint128 amount) external {
+    function withdrawFees(uint128 amount) external override {
         require(msg.sender == _state.admin, "Only admin can withdraw fees");
         require(_state.accruedFeesInWei >= amount, "Insufficient balance");
 

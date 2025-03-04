@@ -522,3 +522,209 @@ export const EXECUTOR_ABI = [
     type: "function",
   },
 ] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+
+export const PULSE_UPGRADEABLE_ABI = [
+  // Upgradeable specific functions
+  {
+    inputs: [
+      { internalType: "address", name: "newImplementation", type: "address" },
+    ],
+    name: "upgradeTo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "implementation",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  // Core Pulse functions
+  {
+    inputs: [
+      { name: "publishTime", type: "uint256" },
+      { name: "priceIds", type: "bytes32[]" },
+      { name: "callbackGasLimit", type: "uint256" },
+    ],
+    name: "requestPriceUpdatesWithCallback",
+    outputs: [{ name: "sequenceNumber", type: "uint64" }],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { name: "sequenceNumber", type: "uint64" },
+      { name: "updateData", type: "bytes[]" },
+      { name: "priceIds", type: "bytes32[]" },
+    ],
+    name: "executeCallback",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getPythFeeInWei",
+    outputs: [{ name: "pythFeeInWei", type: "uint128" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "callbackGasLimit", type: "uint256" }],
+    name: "getFee",
+    outputs: [{ name: "feeAmount", type: "uint128" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getAccruedFees",
+    outputs: [{ name: "accruedFeesInWei", type: "uint128" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "sequenceNumber", type: "uint64" }],
+    name: "getRequest",
+    outputs: [
+      {
+        components: [
+          { name: "provider", type: "address" },
+          { name: "publishTime", type: "uint256" },
+          { name: "priceIds", type: "bytes32[]" },
+          { name: "callbackGasLimit", type: "uint256" },
+          { name: "requester", type: "address" },
+        ],
+        name: "req",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "manager", type: "address" }],
+    name: "setFeeManager",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "amount", type: "uint128" }],
+    name: "withdrawFees",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { name: "provider", type: "address" },
+      { name: "amount", type: "uint128" },
+    ],
+    name: "withdrawAsFeeManager",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "feeInWei", type: "uint128" }],
+    name: "registerProvider",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "newFeeInWei", type: "uint128" }],
+    name: "setProviderFee",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "provider", type: "address" }],
+    name: "getProviderInfo",
+    outputs: [
+      {
+        components: [
+          { name: "feeInWei", type: "uint128" },
+          { name: "accruedFeesInWei", type: "uint128" },
+        ],
+        name: "info",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDefaultProvider",
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "provider", type: "address" }],
+    name: "setDefaultProvider",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "periodSeconds", type: "uint256" }],
+    name: "setExclusivityPeriod",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getExclusivityPeriod",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "count", type: "uint256" }],
+    name: "getFirstActiveRequests",
+    outputs: [
+      {
+        components: [
+          { name: "provider", type: "address" },
+          { name: "publishTime", type: "uint256" },
+          { name: "priceIds", type: "bytes32[]" },
+          { name: "callbackGasLimit", type: "uint256" },
+          { name: "requester", type: "address" },
+        ],
+        name: "requests",
+        type: "tuple[]",
+      },
+      { name: "actualCount", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  // Initialize function for upgradeable contract
+  {
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "admin", type: "address" },
+      { name: "wormholeChainId", type: "uint16" },
+      { name: "governanceEmitterChainId", type: "uint16" },
+      { name: "governanceEmitterAddress", type: "bytes32" },
+    ],
+    name: "initialize",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
