@@ -7,6 +7,8 @@ import {
   toDeploymentType,
   toPrivateKey,
   EvmPulseContract,
+  PULSE_DEFAULT_PROVIDER,
+  PULSE_DEFAULT_KEEPER,
 } from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
@@ -37,10 +39,6 @@ const parser = yargs(hideBin(process.argv))
       type: "string",
       demandOption: true,
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
-    },
-    "default-provider": {
-      type: "string",
-      desc: "Address of the default provider for the Pulse contract",
     },
   });
 
@@ -76,11 +74,7 @@ async function deployPulseContracts(
     pulseImplAddr
   );
 
-  // Get CLI arguments for initialization
-  const argv = await parser.argv;
-
   console.log("Preparing initialization data...");
-  console.log("Using default provider:", argv["default-provider"]);
 
   const pulseInitData = pulseImplContract.methods
     .initialize(
@@ -88,7 +82,9 @@ async function deployPulseContracts(
       executorAddr, // admin
       "1", // pythFeeInWei
       executorAddr, // pythAddress - using executor as a placeholder
-      argv["default-provider"], // defaultProvider
+      chain.isMainnet()
+        ? PULSE_DEFAULT_PROVIDER.mainnet
+        : PULSE_DEFAULT_PROVIDER.testnet,
       true, // prefillRequestStorage
       3600 // exclusivityPeriodSeconds - 1 hour
     )
@@ -140,6 +136,52 @@ async function deployPulseContracts(
   });
 }
 
+async function topupAccountsIfNecessary(
+  chain: EvmChain,
+  deploymentConfig: DeploymentConfig
+) {
+  for (const [accountName, defaultAddresses] of [
+    ["keeper", PULSE_DEFAULT_KEEPER],
+    ["provider", PULSE_DEFAULT_PROVIDER],
+  ] as const) {
+    const accountAddress = chain.isMainnet()
+      ? defaultAddresses.mainnet
+      : defaultAddresses.testnet;
+    const web3 = chain.getWeb3();
+    const balance = Number(
+      web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether")
+    );
+    const MIN_BALANCE = 0.01;
+    console.log(`${accountName} balance: ${balance} ETH`);
+    if (balance < MIN_BALANCE) {
+      console.log(
+        `Balance is less than ${MIN_BALANCE}. Topping up the ${accountName} address...`
+      );
+      const signer = web3.eth.accounts.privateKeyToAccount(
+        deploymentConfig.privateKey
+      );
+      web3.eth.accounts.wallet.add(signer);
+      const estimatedGas = await web3.eth.estimateGas({
+        from: signer.address,
+        to: accountAddress,
+        value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
+      });
+
+      const tx = await web3.eth.sendTransaction({
+        from: signer.address,
+        to: accountAddress,
+        gas: estimatedGas * deploymentConfig.gasMultiplier,
+        value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
+      });
+
+      console.log(
+        `Topped up the ${accountName} address. Tx: `,
+        tx.transactionHash
+      );
+    }
+  }
+}
+
 async function main() {
   const argv = await parser.argv;
 
@@ -165,6 +207,8 @@ async function main() {
     deploymentConfig,
     CACHE_FILE
   );
+
+  await topupAccountsIfNecessary(chain, deploymentConfig);
 
   console.log(
     `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`

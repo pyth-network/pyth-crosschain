@@ -18,7 +18,6 @@ import {
   getOrDeployWormholeContract,
   BaseDeployConfig,
 } from "./common";
-import Web3 from "web3";
 
 interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;

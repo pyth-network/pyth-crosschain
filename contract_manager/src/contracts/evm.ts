@@ -758,6 +758,15 @@ export class EvmPriceFeedContract extends PriceFeedContract {
   }
 }
 
+export const PULSE_DEFAULT_PROVIDER = {
+  mainnet: "0x78357316239040e19fC823372cC179ca75e64b81",
+  testnet: "0x78357316239040e19fC823372cC179ca75e64b81",
+};
+export const PULSE_DEFAULT_KEEPER = {
+  mainnet: "0x78357316239040e19fC823372cC179ca75e64b81",
+  testnet: "0x78357316239040e19fC823372cC179ca75e64b81",
+};
+
 export class EvmPulseContract extends Storable {
   static type = "EvmPulseContract";
 
