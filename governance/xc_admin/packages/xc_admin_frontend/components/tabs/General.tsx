@@ -155,8 +155,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
               }
             }),
           }
-          // these fields are immutable and should not be updated
-          delete symbolToData[product.metadata.symbol].metadata.symbol
+          // this field is immutable and should not be updated
           delete symbolToData[product.metadata.symbol].metadata.price_account
         })
       setExistingSymbols(new Set(Object.keys(symbolToData)))
@@ -211,8 +210,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
               changes[symbol] = { new: {} }
               changes[symbol].new = { ...fileDataParsed[symbol] }
               changes[symbol].new.metadata = {
-                ...changes[symbol].new.metadata,
                 symbol,
+                ...changes[symbol].new.metadata,
               }
               // these fields are generated deterministically and should not be updated
               delete changes[symbol].new.address
@@ -441,6 +440,25 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
               instructions.push(
                 await pythProgramClient.methods
                   .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+                  .accounts({
+                    priceAccount: priceAccountKey,
+                    fundingAccount,
+                  })
+                  .instruction()
+              )
+            }
+
+            // If maxLatency is set and is not 0, create update maxLatency instruction
+            if (
+              newChanges.priceAccounts[0].maxLatency !== undefined &&
+              newChanges.priceAccounts[0].maxLatency !== 0
+            ) {
+              instructions.push(
+                await pythProgramClient.methods
+                  .setMaxLatency(
+                    newChanges.priceAccounts[0].maxLatency,
+                    [0, 0, 0]
+                  )
                   .accounts({
                     priceAccount: priceAccountKey,
                     fundingAccount,
