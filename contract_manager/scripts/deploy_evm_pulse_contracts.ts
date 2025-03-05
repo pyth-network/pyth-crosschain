@@ -16,7 +16,6 @@ import {
   getWeb3Contract,
   getOrDeployWormholeContract,
   BaseDeployConfig,
-  makeCacheFunction,
 } from "./common";
 import fs from "fs";
 import path from "path";
@@ -92,48 +91,17 @@ async function deployPulseContracts(
 
   console.log("Deploying ERC1967Proxy for Pulse...");
 
-  // Custom deployment for ERC1967Proxy using the correct path
-  const proxyArtifactPath = path.join(
-    process.cwd(),
-    "../target_chains/ethereum/contracts/artifacts/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol/ERC1967Proxy.json"
+  return await deployIfNotCached(
+    CACHE_FILE,
+    chain,
+    config,
+    "ERC1967Proxy",
+    [pulseImplAddr, pulseInitData],
+    // NOTE: we are deploying a ERC1967Proxy when deploying executor
+    // we need to provide a different cache key. As the `artifactname`
+    // is same in both case which means the cache key will be same
+    `${chain.getId()}-ERC1967Proxy-PULSE1`
   );
-
-  console.log("Loading proxy artifact from:", proxyArtifactPath);
-  const proxyArtifact = JSON.parse(fs.readFileSync(proxyArtifactPath, "utf8"));
-
-  // Handle bytecode which can be either a string or an object with an 'object' property
-  let bytecode = proxyArtifact.bytecode;
-  if (
-    typeof bytecode === "object" &&
-    bytecode !== null &&
-    "object" in bytecode
-  ) {
-    bytecode = bytecode.object;
-  }
-
-  // Ensure bytecode starts with 0x
-  if (!bytecode.startsWith("0x")) {
-    bytecode = `0x${bytecode}`;
-  }
-
-  console.log("Proxy bytecode length:", bytecode.length);
-
-  const cacheKey = `${chain.getId()}-ERC1967Proxy-PULSE`;
-  const runIfNotCached = makeCacheFunction(CACHE_FILE);
-
-  return await runIfNotCached(cacheKey, async () => {
-    console.log(`Deploying ERC1967Proxy on ${chain.getId()}...`);
-    const addr = await chain.deploy(
-      config.privateKey,
-      proxyArtifact.abi,
-      bytecode,
-      [pulseImplAddr, pulseInitData],
-      config.gasMultiplier,
-      config.gasPriceMultiplier
-    );
-    console.log(`✅ Deployed ERC1967Proxy on ${chain.getId()} at ${addr}`);
-    return addr;
-  });
 }
 
 async function topupAccountsIfNecessary(
