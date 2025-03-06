@@ -27,8 +27,6 @@ pub struct PriceRequest {
     pub timestamp: TimestampUs,
     pub price_feed_ids: Vec<PriceFeedId>,
     pub properties: Vec<PriceFeedProperty>,
-    // "chains" was renamed to "formats". "chains" is still supported for compatibility.
-    #[serde(alias = "chains")]
     pub formats: Vec<Format>,
     #[serde(default)]
     pub json_binary_encoding: JsonBinaryEncoding,
