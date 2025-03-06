@@ -1,12 +1,12 @@
 export const priceFeeds = {
   updateFrequency: "400ms",
-  featuredRecentlyAdded: [
-    "Crypto.PYTH/USD",
-    "FX.EUR/USD",
-    "Equity.US.NFLX/USD",
-    "Commodities.WTI1M",
-    "Crypto.1INCH/USD",
-    "Equity.US.META/USD",
+  featuredFeeds: [
+    "Crypto.ARC/USD",
+    "Crypto.CDXUSD/USD",
+    "Equity.GB.CSPX/USD",
+    "Crypto.MSUSD/USD",
+    "Crypto.WSTHYPE/STHYPE.RR",
+    "Crypto.YNETHX/WETH.RR",
   ],
   featuredComingSoon: ["Rates.US1Y"],
 };

@@ -2,7 +2,7 @@ import { ArrowLineDown } from "@phosphor-icons/react/dist/ssr/ArrowLineDown";
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { ArrowsOutSimple } from "@phosphor-icons/react/dist/ssr/ArrowsOutSimple";
 import { ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
-import { StackPlus } from "@phosphor-icons/react/dist/ssr/StackPlus";
+import { Star } from "@phosphor-icons/react/dist/ssr/Star";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Button } from "@pythnetwork/component-library/Button";
 import {
@@ -50,7 +50,7 @@ export const PriceFeeds = async () => {
   ].slice(0, 6);
   const featuredRecentlyAdded = filterFeeds(
     priceFeeds.activeFeeds,
-    priceFeedsStaticConfig.featuredRecentlyAdded,
+    priceFeedsStaticConfig.featuredFeeds,
   );
 
   return (
@@ -149,8 +149,8 @@ const FeaturedFeeds = ({
       )}
     >
       <FeaturedFeedsCard
-        title="Recently Added"
-        icon={<StackPlus />}
+        title="Featured"
+        icon={<Star />}
         feeds={featuredRecentlyAdded}
         showPrices
         linkFeeds
