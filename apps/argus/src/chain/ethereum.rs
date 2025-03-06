@@ -207,6 +207,7 @@ impl<T: JsonRpcClient + 'static> PulseReader for Pulse<Provider<T>> {
                 callback_gas_limit: r.callback_gas_limit,
                 price_ids: r.price_ids.to_vec(),
                 publish_time: r.publish_time,
+                num_price_ids: r.num_price_ids,
             }))
         } else {
             Ok(None)
@@ -238,6 +239,7 @@ impl<T: JsonRpcClient + 'static> PulseReader for Pulse<Provider<T>> {
                     callback_gas_limit: r.callback_gas_limit,
                     price_ids: r.price_ids.to_vec(),
                     publish_time: r.publish_time,
+                    num_price_ids: r.num_price_ids,
                 });
             }
         }

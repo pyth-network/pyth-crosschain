@@ -122,7 +122,7 @@ pub async fn process_request_with_backoff(
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing request");
 
-    // Get the request details from the contract to get the publish_time
+    // Get the request details from the contract to get the publish_time and num_price_ids
     let request_details = match chain_state.contract.get_request(request.sequence_number).await? {
         Some(req) => req,
         None => {
@@ -136,6 +136,7 @@ pub async fn process_request_with_backoff(
         request_details.publish_time.as_u64(),
         &request.price_ids,
         hermes_base_url,
+        request_details.num_price_ids,
     ).await?;
 
     let contract_call = contract.execute_callback(

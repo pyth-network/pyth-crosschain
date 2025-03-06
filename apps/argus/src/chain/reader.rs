@@ -63,6 +63,7 @@ pub struct Request {
     pub callback_gas_limit: U256,
     pub price_ids: Vec<[u8; 32]>,
     pub publish_time: U256,
+    pub num_price_ids: u8,
 }
 
 #[cfg(test)]
@@ -100,6 +101,7 @@ pub mod mock {
                             callback_gas_limit: c,
                             price_ids: p.clone(),
                             publish_time: t,
+                            num_price_ids: 0,
                         })
                         .collect(),
                 ),
@@ -121,6 +123,7 @@ pub mod mock {
                 callback_gas_limit,
                 price_ids,
                 publish_time,
+                num_price_ids: 0,
             });
             self
         }
