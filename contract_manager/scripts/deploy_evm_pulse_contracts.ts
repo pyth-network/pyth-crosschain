@@ -16,6 +16,8 @@ import {
   getWeb3Contract,
   getOrDeployWormholeContract,
   BaseDeployConfig,
+  topupAccountsIfNecessary,
+  DefaultAddresses,
 } from "./common";
 import fs from "fs";
 import path from "path";
@@ -104,50 +106,16 @@ async function deployPulseContracts(
   );
 }
 
-async function topupAccountsIfNecessary(
+async function topupPulseAccountsIfNecessary(
   chain: EvmChain,
   deploymentConfig: DeploymentConfig
 ) {
-  for (const [accountName, defaultAddresses] of [
+  const accounts: Array<[string, DefaultAddresses]> = [
     ["keeper", PULSE_DEFAULT_KEEPER],
     ["provider", PULSE_DEFAULT_PROVIDER],
-  ] as const) {
-    const accountAddress = chain.isMainnet()
-      ? defaultAddresses.mainnet
-      : defaultAddresses.testnet;
-    const web3 = chain.getWeb3();
-    const balance = Number(
-      web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether")
-    );
-    const MIN_BALANCE = 0.01;
-    console.log(`${accountName} balance: ${balance} ETH`);
-    if (balance < MIN_BALANCE) {
-      console.log(
-        `Balance is less than ${MIN_BALANCE}. Topping up the ${accountName} address...`
-      );
-      const signer = web3.eth.accounts.privateKeyToAccount(
-        deploymentConfig.privateKey
-      );
-      web3.eth.accounts.wallet.add(signer);
-      const estimatedGas = await web3.eth.estimateGas({
-        from: signer.address,
-        to: accountAddress,
-        value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
-      });
+  ];
 
-      const tx = await web3.eth.sendTransaction({
-        from: signer.address,
-        to: accountAddress,
-        gas: estimatedGas * deploymentConfig.gasMultiplier,
-        value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
-      });
-
-      console.log(
-        `Topped up the ${accountName} address. Tx: `,
-        tx.transactionHash
-      );
-    }
-  }
+  await topupAccountsIfNecessary(chain, deploymentConfig, accounts);
 }
 
 async function main() {
@@ -176,7 +144,7 @@ async function main() {
     CACHE_FILE
   );
 
-  await topupAccountsIfNecessary(chain, deploymentConfig);
+  await topupPulseAccountsIfNecessary(chain, deploymentConfig);
 
   console.log(
     `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`

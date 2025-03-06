@@ -337,3 +337,52 @@ export async function getOrDeployWormholeContract(
     (await deployWormholeContract(chain, config, cacheFile))
   );
 }
+
+export interface DefaultAddresses {
+  mainnet: string;
+  testnet: string;
+}
+
+export async function topupAccountsIfNecessary(
+  chain: EvmChain,
+  deploymentConfig: BaseDeployConfig,
+  accounts: Array<[string, DefaultAddresses]>,
+  minBalance = 0.01
+) {
+  for (const [accountName, defaultAddresses] of accounts) {
+    const accountAddress = chain.isMainnet()
+      ? defaultAddresses.mainnet
+      : defaultAddresses.testnet;
+    const web3 = chain.getWeb3();
+    const balance = Number(
+      web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether")
+    );
+    console.log(`${accountName} balance: ${balance} ETH`);
+    if (balance < minBalance) {
+      console.log(
+        `Balance is less than ${minBalance}. Topping up the ${accountName} address...`
+      );
+      const signer = web3.eth.accounts.privateKeyToAccount(
+        deploymentConfig.privateKey
+      );
+      web3.eth.accounts.wallet.add(signer);
+      const estimatedGas = await web3.eth.estimateGas({
+        from: signer.address,
+        to: accountAddress,
+        value: web3.utils.toWei(`${minBalance}`, "ether"),
+      });
+
+      const tx = await web3.eth.sendTransaction({
+        from: signer.address,
+        to: accountAddress,
+        gas: estimatedGas * deploymentConfig.gasMultiplier,
+        value: web3.utils.toWei(`${minBalance}`, "ether"),
+      });
+
+      console.log(
+        `Topped up the ${accountName} address. Tx: `,
+        tx.transactionHash
+      );
+    }
+  }
+}
