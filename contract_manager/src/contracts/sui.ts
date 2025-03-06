@@ -527,7 +527,8 @@ export class SuiWormholeContract extends WormholeContract {
     return { id: result.digest, info: result };
   }
 
-  private async getStateFields(): Promise<any> { // eslint-disable-line @typescript-eslint/no-explicit-any
+  private async getStateFields(): Promise<any> {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     const provider = this.chain.getProvider();
     const result = await provider.getObject({
       id: this.stateId,

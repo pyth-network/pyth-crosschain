@@ -10,7 +10,7 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
 
   const { cluster, setCluster } = useContext(ClusterContext)
   const handleChange = useCallback(
-    (event: any) => {
+    (event: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (event.target.value) {
         router.query.cluster = event.target.value
         setCluster(event.target.value)

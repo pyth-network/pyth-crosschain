@@ -300,7 +300,7 @@ export const Proposal = ({
 
         if (refreshData) await refreshData().fetchData()
         toast.success(msg)
-      } catch (e: any) {
+      } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         toast.error(capitalizeFirstLetter(e.message))
       } finally {
         setIsTransactionLoading(false)

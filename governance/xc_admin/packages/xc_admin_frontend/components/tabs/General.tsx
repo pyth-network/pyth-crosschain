@@ -54,8 +54,8 @@ const checkSizeOfProductInstruction = (
 }
 
 const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
-  const [data, setData] = useState<any>({})
-  const [dataChanges, setDataChanges] = useState<Record<string, any>>()
+  const [data, setData] = useState<any>({}) // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [dataChanges, setDataChanges] = useState<Record<string, any>>() // eslint-disable-line @typescript-eslint/no-explicit-any
   const [existingSymbols, setExistingSymbols] = useState<Set<string>>(new Set())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
@@ -78,12 +78,12 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     setIsModalOpen(false)
   }
 
-  const sortData = (data: any) => {
-    const sortedData: any = {}
+  const sortData = (data: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const sortedData: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
     Object.keys(data)
       .sort()
       .forEach((key) => {
-        const sortedInnerData: any = {}
+        const sortedInnerData: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
         Object.keys(data[key])
           .sort()
           .forEach((innerKey) => {
@@ -92,13 +92,16 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             } else if (innerKey === 'priceAccounts') {
               // sort price accounts by address
               sortedInnerData[innerKey] = data[key][innerKey].sort(
-                (priceAccount1: any, priceAccount2: any) =>
-                  priceAccount1.address.localeCompare(priceAccount2.address)
+                (
+                  priceAccount1: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+                  priceAccount2: any // eslint-disable-line @typescript-eslint/no-explicit-any
+                ) => priceAccount1.address.localeCompare(priceAccount2.address)
               )
               // sort price accounts keys
               sortedInnerData[innerKey] = sortedInnerData[innerKey].map(
-                (priceAccount: any) => {
-                  const sortedPriceAccount: any = {}
+                (priceAccount: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+
+                  const sortedPriceAccount: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
                   Object.keys(priceAccount)
                     .sort()
                     .forEach((priceAccountKey) => {
@@ -128,7 +131,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig && rawConfig.mappingAccounts.length > 0) {
-      const symbolToData: any = {}
+      const symbolToData: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
       rawConfig.mappingAccounts
         .sort(
           (mapping1, mapping2) =>
@@ -164,8 +167,9 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     }
   }, [rawConfig, dataIsLoading, sortDataMemo, cluster])
 
-  const sortObjectByKeys = (obj: any) => {
-    const sortedObj: any = {}
+  const sortObjectByKeys = (obj: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-line @typescript-eslint/no-explicit-any
+    const sortedObj: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
     Object.keys(obj)
       .sort()
       .forEach((key) => {
@@ -200,7 +204,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           const fileData = e.target.result
           if (!isValidJson(fileData as string)) return
           const fileDataParsed = sortData(JSON.parse(fileData as string))
-          const changes: Record<string, any> = {}
+          const changes: Record<string, any> = {} // eslint-disable-line @typescript-eslint/no-explicit-any
           Object.keys(fileDataParsed).forEach((symbol) => {
             // remove duplicate publishers
             fileDataParsed[symbol].priceAccounts[0].publishers = [
@@ -249,7 +253,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const isValidJson = (json: string) => {
     try {
       JSON.parse(json)
-    } catch (e: any) {
+    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      // eslint-disable-line @typescript-eslint/no-explicit-any
       toast.error(capitalizeFirstLetter(e.message))
       return false
     }
@@ -636,7 +641,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     })
   }
 
-  const MetadataChangesRows = ({ changes }: { changes: any }) => {
+  const MetadataChangesRows = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     return (
       <>
@@ -668,62 +674,66 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
-  const PriceAccountsChangesRows = ({ changes }: { changes: any }) => {
+  const PriceAccountsChangesRows = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     return (
       <>
-        {changes.new.map((priceAccount: any, index: number) =>
-          Object.keys(priceAccount).map((priceAccountKey) =>
-            priceAccountKey === 'publishers' ? (
-              addPriceFeed ? (
-                <PublisherKeysChangesRows
-                  key={priceAccountKey}
-                  changes={{
-                    new: priceAccount[priceAccountKey],
-                  }}
-                />
-              ) : (
-                JSON.stringify(changes.prev[index][priceAccountKey]) !==
-                  JSON.stringify(priceAccount[priceAccountKey]) && (
+        {changes.new.map(
+          (
+            priceAccount: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            index: number
+          ) =>
+            Object.keys(priceAccount).map((priceAccountKey) =>
+              priceAccountKey === 'publishers' ? (
+                addPriceFeed ? (
                   <PublisherKeysChangesRows
                     key={priceAccountKey}
                     changes={{
-                      prev: changes.prev[index][priceAccountKey],
                       new: priceAccount[priceAccountKey],
                     }}
                   />
+                ) : (
+                  JSON.stringify(changes.prev[index][priceAccountKey]) !==
+                    JSON.stringify(priceAccount[priceAccountKey]) && (
+                    <PublisherKeysChangesRows
+                      key={priceAccountKey}
+                      changes={{
+                        prev: changes.prev[index][priceAccountKey],
+                        new: priceAccount[priceAccountKey],
+                      }}
+                    />
+                  )
+                )
+              ) : (
+                (addPriceFeed ||
+                  changes.prev[index][priceAccountKey] !==
+                    priceAccount[priceAccountKey]) && (
+                  <tr key={priceAccountKey}>
+                    <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+                      {priceAccountKey
+                        .split('_')
+                        .map((word) => capitalizeFirstLetter(word))
+                        .join(' ')}
+                    </td>
+                    <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+                      {!addPriceFeed ? (
+                        <>
+                          <s>{changes.prev[index][priceAccountKey]}</s>
+                          <br />
+                        </>
+                      ) : null}
+                      {priceAccount[priceAccountKey]}
+                    </td>
+                  </tr>
                 )
               )
-            ) : (
-              (addPriceFeed ||
-                changes.prev[index][priceAccountKey] !==
-                  priceAccount[priceAccountKey]) && (
-                <tr key={priceAccountKey}>
-                  <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
-                    {priceAccountKey
-                      .split('_')
-                      .map((word) => capitalizeFirstLetter(word))
-                      .join(' ')}
-                  </td>
-                  <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-                    {!addPriceFeed ? (
-                      <>
-                        <s>{changes.prev[index][priceAccountKey]}</s>
-                        <br />
-                      </>
-                    ) : null}
-                    {priceAccount[priceAccountKey]}
-                  </td>
-                </tr>
-              )
             )
-          )
         )}
       </>
     )
   }
 
-  const PublisherKeysChangesRows = ({ changes }: { changes: any }) => {
+  const PublisherKeysChangesRows = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     const publisherKeysToAdd = addPriceFeed
       ? changes.new
@@ -765,7 +775,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
-  const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
+  const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     return (
       <>
         <MetadataChangesRows
@@ -795,7 +805,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
-  const ModalContent = ({ changes }: { changes: any }) => {
+  const ModalContent = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     return (
       <>
         {Object.keys(changes).length > 0 ? (
