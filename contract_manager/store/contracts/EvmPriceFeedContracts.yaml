@@ -460,9 +460,6 @@
 - chain: soneium
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: story_testnet
-  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmPriceFeedContract
 - chain: kraken_ink_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
@@ -478,7 +475,7 @@
 - chain: berachain_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: story_mainnet
+- chain: story
   address: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134"
   type: EvmPriceFeedContract
 - chain: bittensor_testnet
@@ -489,4 +486,7 @@
   type: EvmPriceFeedContract
 - chain: bittensor_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: story_testnet
+  address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
   type: EvmPriceFeedContract

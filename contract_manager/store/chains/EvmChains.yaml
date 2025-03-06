@@ -826,8 +826,8 @@
   type: EvmChain
 - id: story_testnet
   mainnet: false
-  rpcUrl: https://rpc.odyssey.storyrpc.io/
-  networkId: 1516
+  rpcUrl: https://aeneid.storyrpc.io
+  networkId: 1315
   type: EvmChain
 - id: eventum_mainnet
   mainnet: true
@@ -859,7 +859,7 @@
   networkId: 80094
   rpcUrl: https://fluent-thrilling-scion.furtim-network.quiknode.pro/$ENV_RABECHAIN_API_KEY
   type: EvmChain
-- id: story_mainnet
+- id: story
   mainnet: true
   rpcUrl: https://homer.storyrpc.io
   networkId: 1514
