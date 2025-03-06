@@ -89,6 +89,7 @@ async function run() {
 
   eventSource.onmessage = (event: MessageEvent<string>) => {
     console.log("Received price update:", event.data);
+    // Variable intentionally unused, prefixed with underscore
     const _priceUpdate = JSON.parse(event.data) as PriceUpdate;
   };
 

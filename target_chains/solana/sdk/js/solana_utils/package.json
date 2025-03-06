@@ -20,7 +20,7 @@
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "test:unit": "jest",
-    "test:lint": "eslint src/",
+    "test:lint": "eslint src/ --max-warnings 0",
     "prepublishOnly": "pnpm run build && pnpm test:unit && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"

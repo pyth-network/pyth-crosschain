@@ -23,7 +23,7 @@
     "build": "tsc",
     "example-relay": "pnpm run build && node lib/examples/AptosRelay.js",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test:lint": "eslint src/",
+    "test:lint": "eslint src/ --max-warnings 0",
     "prepublishOnly": "pnpm run build && pnpm test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"

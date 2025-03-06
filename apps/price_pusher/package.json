@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test:lint": "eslint src/",
+    "test:lint": "eslint src/ --max-warnings 0",
     "start": "node lib/index.js",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
