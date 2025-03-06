@@ -484,3 +484,6 @@
 - chain: bittensor_mainnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
+- chain: injective_evm_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract

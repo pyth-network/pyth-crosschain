@@ -874,3 +874,8 @@
   rpcUrl: https://bittensor-finney.api.onfinality.io/public
   networkId: 964
   type: EvmChain
+- id: injective_evm_testnet
+  mainnet: false
+  rpcUrl: https://k8s.testnet.evmix.json-rpc.injective.network
+  networkId: 999
+  type: EvmChain
