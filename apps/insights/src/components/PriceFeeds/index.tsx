@@ -126,24 +126,29 @@ export const PriceFeeds = async () => {
       </UnstyledTabs>
       <Card
         className={styles.trademarkDisclaimerCard}
-        variant="tertiary"
         title="Trademark Disclaimer"
       >
         <div className={styles.trademarkDisclaimerContent}>
           <p>
-            The Pyth Network name, logo, and all related names, logos, product
-            and service names, designs, and slogans are trademarks of the Pyth
-            Data Association or its affiliates or licensors.
-          </p>
-          <p>
-            <Button
-              variant="outline"
-              size="sm"
-              href="https://www.pyth.network/trademark-disclaimer"
-              target="_blank"
-            >
-              View Full Disclaimer
-            </Button>
+            This website may display ticker symbols, product names, and other
+            identifiers that are trademarks, service marks or trade names of
+            third parties. Such display is for informational purposes only and
+            does not constitute any claim of ownership thereof by Pyth Data
+            Association or any of its subsidiaries and other affiliates
+            (collectively, "Association") or any sponsorship or endorsement by
+            Association of any associated products or services, and should not
+            be construed as indicating any affiliation, sponsorship or other
+            connection between Association and the third-party owners of such
+            identifiers. Any such third-party identifiers associated with
+            financial data are made solely to identify the relevant financial
+            products for which price data is made available via the website. All
+            trademarks, service marks, logos, product names, trade names and
+            company names mentioned on the website are the property of their
+            respective owners and are protected by trademark and other
+            intellectual property laws. Association makes no representations or
+            warranties with respect to any such identifiers or any data or other
+            information associated therewith and reserves the right to modify or
+            remove any such displays at its discretion.
           </p>
         </div>
       </Card>
