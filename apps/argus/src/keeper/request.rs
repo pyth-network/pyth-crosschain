@@ -168,7 +168,7 @@ pub async fn process_request_with_backoff(
     let contract_call = contract.execute_callback(
         request.sequence_number,
         update_data,
-        request.price_ids.clone(),
+        filtered_price_ids,
     );
 
     let success = submit_tx_with_backoff(
