@@ -78,12 +78,15 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     setIsModalOpen(false)
   }
 
-  const sortData = (data: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const sortedData: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sortData = (data: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sortedData: any = {}
     Object.keys(data)
       .sort()
       .forEach((key) => {
-        const sortedInnerData: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sortedInnerData: any = {}
         Object.keys(data[key])
           .sort()
           .forEach((innerKey) => {
@@ -99,9 +102,10 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
               )
               // sort price accounts keys
               sortedInnerData[innerKey] = sortedInnerData[innerKey].map(
-                (priceAccount: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-
-                  const sortedPriceAccount: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (priceAccount: any) => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const sortedPriceAccount: any = {}
                   Object.keys(priceAccount)
                     .sort()
                     .forEach((priceAccountKey) => {
@@ -167,9 +171,10 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     }
   }, [rawConfig, dataIsLoading, sortDataMemo, cluster])
 
-  const sortObjectByKeys = (obj: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    // eslint-disable-line @typescript-eslint/no-explicit-any
-    const sortedObj: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sortObjectByKeys = (obj: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sortedObj: any = {}
     Object.keys(obj)
       .sort()
       .forEach((key) => {
@@ -253,8 +258,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const isValidJson = (json: string) => {
     try {
       JSON.parse(json)
-    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      // eslint-disable-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       toast.error(capitalizeFirstLetter(e.message))
       return false
     }
@@ -641,8 +646,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     })
   }
 
-  const MetadataChangesRows = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const MetadataChangesRows = ({ changes }: { changes: any }) => {
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     return (
       <>
@@ -674,7 +679,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
-  const PriceAccountsChangesRows = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const PriceAccountsChangesRows = ({ changes }: { changes: any }) => {
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     return (
       <>
@@ -733,7 +739,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
-  const PublisherKeysChangesRows = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const PublisherKeysChangesRows = ({ changes }: { changes: any }) => {
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     const publisherKeysToAdd = addPriceFeed
       ? changes.new
@@ -775,7 +782,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
-  const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
     return (
       <>
         <MetadataChangesRows
@@ -805,7 +813,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
-  const ModalContent = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
         {Object.keys(changes).length > 0 ? (

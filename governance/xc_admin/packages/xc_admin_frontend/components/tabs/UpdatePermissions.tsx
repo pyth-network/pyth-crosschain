@@ -280,7 +280,8 @@ const UpdatePermissions = () => {
                 `Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`
               )
               setIsSendProposalButtonLoading(false)
-            } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } catch (e: any) {
               toast.error(capitalizeFirstLetter(e.message))
               setIsSendProposalButtonLoading(false)
             }
@@ -289,7 +290,8 @@ const UpdatePermissions = () => {
     }
   }
 
-  const ModalContent = ({ changes }: { changes: any }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
         {Object.keys(changes).length > 0 ? (
