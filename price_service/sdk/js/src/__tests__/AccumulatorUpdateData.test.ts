@@ -11,7 +11,8 @@ const TEST_ACCUMULATOR_UPDATE_DATA =
 
 describe("Test parse accumulator update", () => {
   test("Happy path", async () => {
-    const { vaa: _vaa, updates } = parseAccumulatorUpdateData(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { vaa, updates } = parseAccumulatorUpdateData(
       Buffer.from(TEST_ACCUMULATOR_UPDATE_DATA, "base64")
     );
 
@@ -73,7 +74,8 @@ describe("Test parse accumulator update", () => {
       ).updates.length
     ).toBe(3);
 
-    const { vaa: _vaa, updates } = parseAccumulatorUpdateData(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { vaa, updates } = parseAccumulatorUpdateData(
       sliceAccumulatorUpdateData(
         Buffer.from(TEST_ACCUMULATOR_UPDATE_DATA, "base64"),
         1,
