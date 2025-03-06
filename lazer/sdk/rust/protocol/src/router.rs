@@ -7,6 +7,7 @@ use {
     rust_decimal::{prelude::FromPrimitive, Decimal},
     serde::{de::Error, Deserialize, Serialize},
     std::{
+        fmt::Display,
         num::NonZeroI64,
         ops::{Add, Deref, DerefMut, Div, Sub},
         time::{SystemTime, UNIX_EPOCH},
@@ -242,6 +243,17 @@ mod channel_ids {
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
 }
 
+impl Display for Channel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Channel::FixedRate(fixed_rate) => match *fixed_rate {
+                FixedRate::MIN => write!(f, "real_time"),
+                rate => write!(f, "fixed_rate@{}ms", rate.value_ms()),
+            },
+        }
+    }
+}
+
 impl Channel {
     pub fn id(&self) -> ChannelId {
         match self {
@@ -250,15 +262,6 @@ impl Channel {
                 50 => channel_ids::FIXED_RATE_50,
                 200 => channel_ids::FIXED_RATE_200,
                 _ => panic!("unknown channel: {self:?}"),
-            },
-        }
-    }
-
-    pub fn to_string(&self) -> String {
-        match self {
-            Channel::FixedRate(fixed_rate) => match *fixed_rate {
-                FixedRate::MIN => "real_time".to_string(),
-                rate => format!("fixed_rate@{}ms", rate.value_ms()),
             },
         }
     }
