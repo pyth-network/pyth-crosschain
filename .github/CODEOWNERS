@@ -1,0 +1,25 @@
+apps/api-reference @pyth-network/web-team
+apps/entropy-debugger @pyth-network/web-team
+apps/insights @pyth-network/web-team
+apps/staking @pyth-network/web-team
+packages/app-logger @pyth-network/web-team
+packages/component-library @pyth-network/web-team
+packages/fonts @pyth-network/web-team
+packages/known-publishers @pyth-network/web-team
+packages/next-root @pyth-network/web-team
+Dockerfile.node @pyth-network/web-team
+lerna.json @pyth-network/web-team
+package.json @pyth-network/web-team
+pnpm-workspace.yaml @pyth-network/web-team
+turbo.json @pyth-network/web-team
+.npmrc @pyth-network/web-team
+.nvmrc @pyth-network/web-team
+/.github/ @pyth-network/core-team
+/.github/CODEOWNERS @pyth-network/core-team
+.github/workflows/publish-js.yml @pyth-network/web-team
+.github/workflows/ci-turbo-build.yml @pyth-network/web-team
+.github/workflows/ci-turbo-test.yml @pyth-network/web-team
+
+flake.lock @cprussin
+*.nix @cprussin
+.envrc @cprussin

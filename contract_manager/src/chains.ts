@@ -70,6 +70,7 @@ export type ChainConfig = Record<string, string> & {
 };
 export abstract class Chain extends Storable {
   public wormholeChainName: ChainName;
+  static type: string;
 
   /**
    * Creates a new Chain object

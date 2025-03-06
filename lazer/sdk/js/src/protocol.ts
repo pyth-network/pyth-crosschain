@@ -1,4 +1,4 @@
-export type Chain = "evm" | "solana";
+export type Format = "evm" | "solana" | "leEcdsa" | "leUnsigned";
 export type DeliveryFormat = "json" | "binary";
 export type JsonBinaryEncoding = "base64" | "hex";
 export type PriceFeedProperty =
@@ -16,7 +16,7 @@ export type Request =
       subscriptionId: number;
       priceFeedIds: number[];
       properties: PriceFeedProperty[];
-      chains: Chain[];
+      formats: Format[];
       deliveryFormat?: DeliveryFormat;
       jsonBinaryEncoding?: JsonBinaryEncoding;
       parsed?: boolean;
@@ -71,9 +71,16 @@ export type Response =
       parsed?: ParsedPayload | undefined;
       evm?: JsonBinaryData | undefined;
       solana?: JsonBinaryData | undefined;
+      leEcdsa?: JsonBinaryData | undefined;
+      leUnsigned?: JsonBinaryData | undefined;
     };
 
-export const BINARY_UPDATE_FORMAT_MAGIC = 1_937_213_467;
-export const PARSED_FORMAT_MAGIC = 2_584_795_844;
-export const EVM_FORMAT_MAGIC = 706_910_618;
-export const SOLANA_FORMAT_MAGIC_BE = 3_103_857_282;
+export const BINARY_UPDATE_FORMAT_MAGIC_LE = 461_928_307;
+
+export const FORMAT_MAGICS_LE = {
+  JSON: 3_302_625_434,
+  EVM: 2_593_727_018,
+  SOLANA: 2_182_742_457,
+  LE_ECDSA: 1_296_547_300,
+  LE_UNSIGNED: 1_499_680_012,
+};

@@ -61,9 +61,9 @@ export const ReferenceData = ({ feed }: Props) => {
         }),
         ...Object.entries({
           Exponent: "exponent",
-          "Number of Price Components": "numComponentPrices",
-          "Number of Price Quoters": "numQuoters",
-          "Minimum Number of Publishers": "minPublishers",
+          "Price Components": "numComponentPrices",
+          "Price Quoters": "numQuoters",
+          "Minimum Publishers": "minPublishers",
           "Last Slot": "lastSlot",
           "Valid Slot": "validSlot",
         } as const).map(

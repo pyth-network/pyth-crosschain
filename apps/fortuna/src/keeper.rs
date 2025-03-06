@@ -93,6 +93,7 @@ pub async fn run_keeper_threads(
             chain_state.clone(),
             metrics.clone(),
             fulfilled_requests_cache.clone(),
+            chain_eth_config.block_delays.clone(),
         )
         .in_current_span(),
     );

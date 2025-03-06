@@ -37,6 +37,11 @@ jobs:
         run: anchor build
       - name: Copy anchor target files
         run: cp ./target/idl/message_buffer.json idl/ && cp ./target/types/message_buffer.ts idl/
+      # Libusb is a build requirement for the node-hid package and so pnpm
+      # install will fail if this isn't in the build environment and if a
+      # precompiled binary isn't found.
+      - name: Install libusb
+        run: sudo apt install -y libusb-1.0-0-dev libudev-dev
       - uses: pnpm/action-setup@v4
         name: Install pnpm
       - name: Install prettier globally

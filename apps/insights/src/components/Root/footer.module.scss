@@ -1,41 +1,30 @@
 @use "@pythnetwork/component-library/theme";
 
 .footer {
-  // SM
   background: theme.color("background", "primary");
-
-  // XL
   padding: theme.spacing(8) 0;
-
-  // bg-beige-100 sm:border-t sm:border-stone-300
 
   .topContent {
     display: flex;
     gap: theme.spacing(6);
-
-    // SM
-    flex-flow: row nowrap;
-    align-items: center;
+    flex-flow: column nowrap;
+    align-items: stretch;
     justify-content: space-between;
+    margin-bottom: theme.spacing(6);
 
     @include theme.max-width;
 
-    // XL
-    margin-bottom: theme.spacing(12);
+    @include theme.breakpoint("sm") {
+      flex-flow: row nowrap;
+      align-items: center;
+      margin-bottom: theme.spacing(12);
+    }
 
-    // py-6
-
-    // flex-col
-
-    .left {
+    .main {
       display: flex;
       align-items: stretch;
       justify-content: space-between;
-
-      // SM
       gap: theme.spacing(6);
-
-      // gap-8
 
       .logoLink {
         height: theme.spacing(5);
@@ -54,46 +43,59 @@
       }
 
       .divider {
+        display: none;
         background-color: theme.color("border");
         width: 1px;
 
-        // hidden sm:block
+        @include theme.breakpoint("sm") {
+          display: unset;
+        }
       }
 
       .help {
         display: flex;
         flex-flow: row nowrap;
         align-items: center;
-        gap: theme.spacing(6);
+        gap: theme.spacing(3);
         font-size: theme.font-size("sm");
+
+        @include theme.breakpoint("sm") {
+          gap: theme.spacing(6);
+        }
       }
     }
 
-    .right {
-      margin: 0 -#{theme.button-padding("sm", false)};
+    .socialLinks {
       display: flex;
       flex-flow: row nowrap;
       align-items: center;
-
-      // SM
-      justify-content: flex-end;
+      justify-content: space-between;
       gap: theme.spacing(2);
+      max-width: theme.spacing(80);
+      width: 100%;
+      align-self: center;
 
-      // justify-between
+      @include theme.breakpoint("sm") {
+        margin: 0 -#{theme.button-padding("sm", false)};
+        width: unset;
+        max-width: unset;
+        align-self: unset;
+        justify-content: flex-end;
+      }
     }
   }
 
   .bottomContent {
     display: flex;
     gap: theme.spacing(6);
-
-    // SM
-    flex-flow: row nowrap;
+    flex-flow: column nowrap;
     justify-content: space-between;
 
-    // "flex-col
-
     @include theme.max-width;
+
+    @include theme.breakpoint("sm") {
+      flex-flow: row nowrap;
+    }
 
     .copyright {
       font-size: theme.font-size("xs");

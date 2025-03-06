@@ -14,7 +14,11 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
-  const entries = [];
+  const entries: {
+    chain: string;
+    contract: string;
+    version: string;
+  }[] = [];
   for (const contract of Object.values(DefaultStore.contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     if (contract instanceof EvmPriceFeedContract) {

@@ -1,5 +1,6 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { LoggerProvider } from "@pythnetwork/app-logger/provider";
+import { MainContent } from "@pythnetwork/component-library/MainContent";
 import dynamic from "next/dynamic";
 import { ThemeProvider } from "next-themes";
 import type { ComponentProps, ReactNode } from "react";
@@ -46,7 +47,9 @@ export const Root = ({
       {...props}
     >
       <body className={bodyClassName}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <MainContent>{children}</MainContent>
+        </ThemeProvider>
       </body>
       {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
       {amplitudeApiKey && <Amplitude apiKey={amplitudeApiKey} />}

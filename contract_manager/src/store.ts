@@ -29,6 +29,7 @@ import {
   TonWormholeContract,
   IotaWormholeContract,
   IotaPriceFeedContract,
+  EvmPulseContract,
 } from "./contracts";
 import { Token } from "./token";
 import { PriceFeedContract, Storable } from "./base";
@@ -45,6 +46,7 @@ export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
+  public pulse_contracts: Record<string, EvmPulseContract> = {};
   public wormhole_contracts: Record<string, WormholeContract> = {};
   public express_relay_contracts: Record<string, EvmExpressRelayContract> = {};
   public tokens: Record<string, Token> = {};
@@ -227,6 +229,30 @@ export class Store {
         this.vaults[vault.getId()] = vault;
       }
     });
+  }
+
+  /**
+   * Returns the chain with the given ID, or throws an error if it doesn't exist or is not of the specified type.
+   * @param chainId The unique identifier of the chain to retrieve
+   * @param ChainClass Optional class to validate the chain type.
+   * @returns The chain instance of type T
+   * @throws Error if chain doesn't exist or is not of the specified type
+   * @template T Type of chain to return, extends base Chain class
+   */
+  getChainOrThrow<T extends Chain>(
+    chainId: string,
+    ChainClass?: { new (...args: any[]): T; type: string }
+  ): T {
+    const chain = this.chains[chainId];
+    if (!chain) {
+      throw new Error(`Chain with ID '${chainId}' does not exist.`);
+    }
+    if (ChainClass && !(chain instanceof ChainClass)) {
+      throw new Error(
+        `Chain with ID '${chainId}' is not of type ${ChainClass.type}.`
+      );
+    }
+    return chain as T;
   }
 }
 

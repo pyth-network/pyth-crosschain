@@ -2,6 +2,7 @@
 
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { Meter } from "@pythnetwork/component-library/unstyled/Meter";
+import clsx from "clsx";
 import type { CSSProperties } from "react";
 
 import styles from "./index.module.scss";
@@ -11,6 +12,7 @@ const SCORE_WIDTH = 24;
 type Props = {
   width?: number | undefined;
   fill?: boolean | undefined;
+  className?: string | undefined;
 } & (
   | { isLoading: true }
   | {
@@ -19,10 +21,10 @@ type Props = {
     }
 );
 
-export const Score = ({ width, fill, ...props }: Props) =>
+export const Score = ({ width, fill, className, ...props }: Props) =>
   props.isLoading ? (
     <Skeleton
-      className={styles.score}
+      className={clsx(className, styles.score)}
       fill
       data-fill={fill ? "" : undefined}
       {...(!fill && {
@@ -31,7 +33,7 @@ export const Score = ({ width, fill, ...props }: Props) =>
     />
   ) : (
     <Meter
-      className={styles.meter ?? ""}
+      className={clsx(className, styles.meter)}
       value={props.score}
       maxValue={1}
       aria-label="Score"

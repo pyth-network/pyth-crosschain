@@ -1,0 +1,45 @@
+@use "@pythnetwork/component-library/theme";
+
+.generic {
+  border-radius: theme.border-radius("md");
+
+  &[data-asset-class="Commodities"] {
+    background: theme.pallette-color("zinc", 400);
+    fill: theme.pallette-color("zinc", 700);
+  }
+
+  &[data-asset-class="Crypto Index"] {
+    background: theme.pallette-color("fuchsia", 300);
+    fill: theme.pallette-color("fuchsia", 700);
+  }
+
+  &[data-asset-class="Crypto Redemption Rate"] {
+    background: theme.pallette-color("pink", 300);
+    fill: theme.pallette-color("pink", 700);
+  }
+
+  &[data-asset-class="Crypto"] {
+    background: theme.pallette-color("violet", 300);
+    fill: theme.pallette-color("violet", 700);
+  }
+
+  &[data-asset-class="Equity"] {
+    background: theme.pallette-color("rose", 300);
+    fill: theme.pallette-color("rose", 700);
+  }
+
+  &[data-asset-class="FX"] {
+    background: theme.pallette-color("indigo", 300);
+    fill: theme.pallette-color("indigo", 700);
+  }
+
+  &[data-asset-class="Metal"] {
+    background: theme.pallette-color("orange", 300);
+    fill: theme.pallette-color("orange", 700);
+  }
+
+  &[data-asset-class="Rates"] {
+    background: theme.pallette-color("emerald", 300);
+    fill: theme.pallette-color("stone", 700);
+  }
+}

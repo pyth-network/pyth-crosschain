@@ -334,6 +334,8 @@ pub async fn process_new_blocks(
 }
 
 /// Processes the backlog_range for a chain.
+/// It processes the backlog range for each configured block delay.
+#[allow(clippy::too_many_arguments)]
 #[tracing::instrument(skip_all)]
 pub async fn process_backlog(
     backlog_range: BlockRange,
@@ -343,18 +345,39 @@ pub async fn process_backlog(
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    block_delays: Vec<u64>,
 ) {
     tracing::info!("Processing backlog");
+    // Process blocks immediately first
     process_block_range(
-        backlog_range,
-        contract,
+        backlog_range.clone(),
+        Arc::clone(&contract),
         gas_limit,
-        escalation_policy,
-        chain_state,
-        metrics,
-        fulfilled_requests_cache,
+        escalation_policy.clone(),
+        chain_state.clone(),
+        metrics.clone(),
+        fulfilled_requests_cache.clone(),
     )
     .in_current_span()
     .await;
+
+    // Then process with each configured delay
+    for delay in &block_delays {
+        let adjusted_range = BlockRange {
+            from: backlog_range.from.saturating_sub(*delay),
+            to: backlog_range.to.saturating_sub(*delay),
+        };
+        process_block_range(
+            adjusted_range,
+            Arc::clone(&contract),
+            gas_limit,
+            escalation_policy.clone(),
+            chain_state.clone(),
+            metrics.clone(),
+            fulfilled_requests_cache.clone(),
+        )
+        .in_current_span()
+        .await;
+    }
     tracing::info!("Backlog processed");
 }

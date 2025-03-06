@@ -17,8 +17,9 @@ import {
   getWeb3Contract,
   getOrDeployWormholeContract,
   BaseDeployConfig,
+  topupAccountsIfNecessary,
+  DefaultAddresses,
 } from "./common";
-import Web3 from "web3";
 
 interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;
@@ -123,62 +124,22 @@ async function deployEntropyContracts(
   );
 }
 
-async function topupAccountsIfNecessary(
+async function topupEntropyAccountsIfNecessary(
   chain: EvmChain,
   deploymentConfig: DeploymentConfig
 ) {
-  for (const [accountName, defaultAddresses] of [
+  const accounts: Array<[string, DefaultAddresses]> = [
     ["keeper", ENTROPY_DEFAULT_KEEPER],
     ["provider", ENTROPY_DEFAULT_PROVIDER],
-  ] as const) {
-    const accountAddress = chain.isMainnet()
-      ? defaultAddresses.mainnet
-      : defaultAddresses.testnet;
-    const web3 = chain.getWeb3();
-    const balance = Number(
-      web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether")
-    );
-    const MIN_BALANCE = 0.01;
-    console.log(`${accountName} balance: ${balance} ETH`);
-    if (balance < MIN_BALANCE) {
-      console.log(
-        `Balance is less than ${MIN_BALANCE}. Topping up the ${accountName} address...`
-      );
-      const signer = web3.eth.accounts.privateKeyToAccount(
-        deploymentConfig.privateKey
-      );
-      web3.eth.accounts.wallet.add(signer);
-      const estimatedGas = await web3.eth.estimateGas({
-        from: signer.address,
-        to: accountAddress,
-        value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
-      });
+  ];
 
-      const tx = await web3.eth.sendTransaction({
-        from: signer.address,
-        to: accountAddress,
-        gas: estimatedGas * deploymentConfig.gasMultiplier,
-        value: web3.utils.toWei(`${MIN_BALANCE}`, "ether"),
-      });
-
-      console.log(
-        `Topped up the ${accountName} address. Tx: `,
-        tx.transactionHash
-      );
-    }
-  }
+  await topupAccountsIfNecessary(chain, deploymentConfig, accounts);
 }
 
 async function main() {
   const argv = await parser.argv;
 
-  const chainName = argv.chain;
-  const chain = DefaultStore.chains[chainName];
-  if (!chain) {
-    throw new Error(`Chain ${chainName} not found`);
-  } else if (!(chain instanceof EvmChain)) {
-    throw new Error(`Chain ${chainName} is not an EVM chain`);
-  }
+  const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
 
   const deploymentConfig: DeploymentConfig = {
     type: toDeploymentType(argv.deploymentType),
@@ -195,7 +156,7 @@ async function main() {
     CACHE_FILE
   );
 
-  await topupAccountsIfNecessary(chain, deploymentConfig);
+  await topupEntropyAccountsIfNecessary(chain, deploymentConfig);
 
   console.log(
     `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`

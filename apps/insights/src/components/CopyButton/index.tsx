@@ -3,22 +3,20 @@
 import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy";
 import { useLogger } from "@pythnetwork/app-logger";
-import {
-  type Props as ButtonProps,
-  Button,
-} from "@pythnetwork/component-library/Button";
-import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
+import { Button } from "@pythnetwork/component-library/unstyled/Button";
 import clsx from "clsx";
-import { useCallback, useEffect, useState } from "react";
+import { type ComponentProps, useCallback, useEffect, useState } from "react";
 
 import styles from "./index.module.scss";
+
+const COPY_INDICATOR_TIME = 1000;
 
 type OwnProps = {
   text: string;
 };
 
 type Props = Omit<
-  ButtonProps<typeof UnstyledButton>,
+  ComponentProps<typeof Button>,
   keyof OwnProps | "onPress" | "afterIcon"
 > &
   OwnProps;
@@ -46,7 +44,7 @@ export const CopyButton = ({ text, children, className, ...props }: Props) => {
     if (isCopied) {
       const timeout = setTimeout(() => {
         setIsCopied(false);
-      }, 2000);
+      }, COPY_INDICATOR_TIME);
       return () => {
         clearTimeout(timeout);
       };
@@ -59,16 +57,18 @@ export const CopyButton = ({ text, children, className, ...props }: Props) => {
     <Button
       onPress={copy}
       className={clsx(styles.copyButton, className)}
-      afterIcon={({ className, ...props }) => (
-        <div className={clsx(styles.iconContainer, className)} {...props}>
-          <Copy className={styles.copyIcon} />
-          <Check className={styles.checkIcon} />
-        </div>
-      )}
       {...(isCopied && { "data-is-copied": true })}
       {...props}
     >
-      {children}
+      {(...args) => (
+        <>
+          {typeof children === "function" ? children(...args) : children}
+          <div className={styles.iconContainer}>
+            <Copy className={styles.copyIcon} />
+            <Check className={styles.checkIcon} />
+          </div>
+        </>
+      )}
     </Button>
   );
 };

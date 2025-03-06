@@ -2,13 +2,11 @@ import WebSocket from "isomorphic-ws";
 import { dummyLogger, type Logger } from "ts-log";
 
 import {
-  BINARY_UPDATE_FORMAT_MAGIC,
-  EVM_FORMAT_MAGIC,
-  PARSED_FORMAT_MAGIC,
+  BINARY_UPDATE_FORMAT_MAGIC_LE,
+  FORMAT_MAGICS_LE,
   type ParsedPayload,
   type Request,
   type Response,
-  SOLANA_FORMAT_MAGIC_BE,
 } from "./protocol.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
 
@@ -17,6 +15,8 @@ export type BinaryResponse = {
   evm?: Buffer | undefined;
   solana?: Buffer | undefined;
   parsed?: ParsedPayload | undefined;
+  leEcdsa?: Buffer | undefined;
+  leUnsigned?: Buffer | undefined;
 };
 export type JsonOrBinaryResponse =
   | {
@@ -64,9 +64,9 @@ export class PythLazerClient {
         });
       } else if (Buffer.isBuffer(data)) {
         let pos = 0;
-        const magic = data.subarray(pos, pos + UINT32_NUM_BYTES).readUint32BE();
+        const magic = data.subarray(pos, pos + UINT32_NUM_BYTES).readUint32LE();
         pos += UINT32_NUM_BYTES;
-        if (magic != BINARY_UPDATE_FORMAT_MAGIC) {
+        if (magic != BINARY_UPDATE_FORMAT_MAGIC_LE) {
           throw new Error("binary update format magic mismatch");
         }
         // TODO: some uint64 values may not be representable as Number.
@@ -81,12 +81,16 @@ export class PythLazerClient {
           pos += UINT16_NUM_BYTES;
           const magic = data
             .subarray(pos, pos + UINT32_NUM_BYTES)
-            .readUint32BE();
-          if (magic == EVM_FORMAT_MAGIC) {
+            .readUint32LE();
+          if (magic == FORMAT_MAGICS_LE.EVM) {
             value.evm = data.subarray(pos, pos + len);
-          } else if (magic == SOLANA_FORMAT_MAGIC_BE) {
+          } else if (magic == FORMAT_MAGICS_LE.SOLANA) {
             value.solana = data.subarray(pos, pos + len);
-          } else if (magic == PARSED_FORMAT_MAGIC) {
+          } else if (magic == FORMAT_MAGICS_LE.LE_ECDSA) {
+            value.leEcdsa = data.subarray(pos, pos + len);
+          } else if (magic == FORMAT_MAGICS_LE.LE_UNSIGNED) {
+            value.leUnsigned = data.subarray(pos, pos + len);
+          } else if (magic == FORMAT_MAGICS_LE.JSON) {
             value.parsed = JSON.parse(
               data.subarray(pos + UINT32_NUM_BYTES, pos + len).toString()
             ) as ParsedPayload;

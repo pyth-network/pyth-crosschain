@@ -1,16 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  DefaultStore,
-  EvmEntropyContract,
-  PrivateKey,
-  toPrivateKey,
-} from "../src";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  findEntropyContract,
-  findEvmChain,
-} from "./common";
+import { DefaultStore, EvmChain, toPrivateKey } from "../src";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))
@@ -23,12 +14,12 @@ const parser = yargs(hideBin(process.argv))
     chain: {
       type: "string",
       demandOption: true,
-      desc: "test latency for the contract on this chain",
+      desc: "Chain to load test the entropy contract on",
     },
     "tester-address": {
       type: "string",
       demandOption: true,
-      desc: "Tester contract address",
+      desc: "Address of the EntropyTester contract",
     },
     "success-count": {
       type: "number",
@@ -72,7 +63,7 @@ const ABI = [
 async function main() {
   const argv = await parser.argv;
   const privateKey = toPrivateKey(argv.privateKey);
-  const chain = findEvmChain(argv.chain);
+  const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
   const contract = findEntropyContract(chain);
   const provider = await contract.getDefaultProvider();
   const fee = await contract.getFee(provider);

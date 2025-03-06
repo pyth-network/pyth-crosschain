@@ -1,22 +1,19 @@
 "use client";
 
 import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
-import { type ReactNode, useMemo } from "react";
+import { useMemo } from "react";
 
 import { useSelectPriceFeed } from "./price-feed-drawer-provider";
+import styles from "./top-feeds-table.module.scss";
+import { EntityList } from "../EntityList";
 
 type Props = {
   publisherScoreWidth: number;
-  rows: RowConfig<"score" | "asset" | "assetClass">[];
-  emptyState: ReactNode;
+  rows: (RowConfig<"score" | "asset" | "assetClass"> & { textValue: string })[];
   label: string;
 };
 
-export const TopFeedsTable = ({
-  publisherScoreWidth,
-  rows,
-  ...props
-}: Props) => {
+export const TopFeedsTable = ({ publisherScoreWidth, rows, label }: Props) => {
   const selectPriceFeed = useSelectPriceFeed();
 
   const rowsWithAction = useMemo(
@@ -33,32 +30,47 @@ export const TopFeedsTable = ({
   );
 
   return (
-    <Table
-      rounded
-      fill
-      columns={[
-        {
-          id: "score",
-          name: "SCORE",
-          alignment: "left",
-          width: publisherScoreWidth,
-        },
-        {
-          id: "asset",
-          name: "ASSET",
-          isRowHeader: true,
-          alignment: "left",
-        },
-        {
-          id: "assetClass",
-          name: "ASSET CLASS",
-          alignment: "right",
-          width: 40,
-        },
-      ]}
-      hideHeadersInEmptyState
-      rows={rowsWithAction}
-      {...props}
-    />
+    <>
+      <EntityList
+        label={label}
+        className={styles.list ?? ""}
+        fields={[
+          { id: "score", name: "Score" },
+          { id: "assetClass", name: "Asset Class" },
+        ]}
+        rows={rowsWithAction.map((row) => ({
+          ...row,
+          textValue: row.textValue,
+          header: row.data.asset,
+        }))}
+      />
+      <Table
+        label={label}
+        rounded
+        fill
+        className={styles.table ?? ""}
+        columns={[
+          {
+            id: "score",
+            name: "SCORE",
+            alignment: "left",
+            width: publisherScoreWidth,
+          },
+          {
+            id: "asset",
+            name: "ASSET",
+            isRowHeader: true,
+            alignment: "left",
+          },
+          {
+            id: "assetClass",
+            name: "ASSET CLASS",
+            alignment: "right",
+            width: 40,
+          },
+        ]}
+        rows={rowsWithAction}
+      />
+    </>
   );
 };

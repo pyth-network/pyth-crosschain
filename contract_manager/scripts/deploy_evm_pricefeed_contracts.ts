@@ -111,12 +111,7 @@ async function main() {
   const chainNames = argv.chain;
 
   for (const chainName of chainNames) {
-    const chain = DefaultStore.chains[chainName];
-    if (!chain) {
-      throw new Error(`Chain ${chainName} not found`);
-    } else if (!(chain instanceof EvmChain)) {
-      throw new Error(`Chain ${chainName} is not an EVM chain`);
-    }
+    const chain = DefaultStore.getChainOrThrow(chainName, EvmChain);
 
     console.log(`Deploying price feed contracts on ${chain.getId()}...`);
 

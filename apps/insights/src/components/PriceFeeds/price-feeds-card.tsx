@@ -16,10 +16,12 @@ import { useQueryState, parseAsString } from "nuqs";
 import { Suspense, useCallback, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
+import styles from "./price-feeds-card.module.scss";
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import { AssetClassTag } from "../AssetClassTag";
+import { EntityList } from "../EntityList";
 import { FeedKey } from "../FeedKey";
 import {
   SKELETON_WIDTH,
@@ -99,15 +101,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
     mkPageLink,
   } = useQueryParamFilterPagination(
     feedsFilteredByAssetClass,
-    (priceFeed, search) => {
-      const searchTokens = search
-        .split(" ")
-        .flatMap((item) => item.split(","))
-        .filter(Boolean);
-      return searchTokens.some((token) =>
-        filter.contains(priceFeed.displaySymbol, token),
-      );
-    },
+    (priceFeed, search) => filter.contains(priceFeed.displaySymbol, search),
     (a, b, { column, direction }) => {
       const field = column === "assetClass" ? "assetClass" : "displaySymbol";
       return (
@@ -120,35 +114,40 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
 
   const rows = useMemo(
     () =>
-      paginatedItems.map(({ symbol, exponent, numQuoters, key }) => ({
-        id: symbol,
-        href: `/price-feeds/${encodeURIComponent(symbol)}`,
-        data: {
-          exponent: (
-            <LiveValue
-              field="exponent"
-              feedKey={key}
-              defaultValue={exponent}
-              cluster={Cluster.Pythnet}
-            />
-          ),
-          numPublishers: (
-            <LiveValue
-              field="numQuoters"
-              feedKey={key}
-              defaultValue={numQuoters}
-              cluster={Cluster.Pythnet}
-            />
-          ),
-          price: <LivePrice feedKey={key} cluster={Cluster.Pythnet} />,
-          confidenceInterval: (
-            <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
-          ),
-          priceFeedName: <PriceFeedTag compact symbol={symbol} />,
-          assetClass: <AssetClassTag symbol={symbol} />,
-          priceFeedId: <FeedKey size="xs" variant="ghost" feedKey={key} />,
-        },
-      })),
+      paginatedItems.map(
+        ({ displaySymbol, symbol, exponent, numQuoters, key }) => ({
+          id: symbol,
+          href: `/price-feeds/${encodeURIComponent(symbol)}`,
+          textValue: displaySymbol,
+          data: {
+            exponent: (
+              <LiveValue
+                field="exponent"
+                feedKey={key}
+                defaultValue={exponent}
+                cluster={Cluster.Pythnet}
+              />
+            ),
+            numPublishers: (
+              <LiveValue
+                field="numQuoters"
+                feedKey={key}
+                defaultValue={numQuoters}
+                cluster={Cluster.Pythnet}
+              />
+            ),
+            price: <LivePrice feedKey={key} cluster={Cluster.Pythnet} />,
+            confidenceInterval: (
+              <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
+            ),
+            priceFeedName: <PriceFeedTag compact symbol={symbol} />,
+            assetClass: <AssetClassTag symbol={symbol} />,
+            priceFeedId: (
+              <FeedKey feedKey={key} className={styles.feedKey ?? ""} />
+            ),
+          },
+        }),
+      ),
     [paginatedItems],
   );
 
@@ -211,7 +210,7 @@ type PriceFeedsCardContents = Pick<Props, "id"> &
         onPageSizeChange: (newPageSize: number) => void;
         onPageChange: (newPage: number) => void;
         mkPageLink: (page: number) => string;
-        rows: RowConfig<
+        rows: (RowConfig<
           | "priceFeedName"
           | "assetClass"
           | "priceFeedId"
@@ -219,7 +218,7 @@ type PriceFeedsCardContents = Pick<Props, "id"> &
           | "confidenceInterval"
           | "exponent"
           | "numPublishers"
-        >[];
+        > & { textValue: string })[];
       }
   );
 
@@ -227,6 +226,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
   <Card
     id={id}
     icon={<ChartLine />}
+    className={styles.priceFeedsCard}
     title={
       <>
         <span>Price Feeds</span>
@@ -237,8 +237,21 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
         )}
       </>
     }
+    toolbarClassName={styles.toolbar}
     toolbar={
       <>
+        <SearchInput
+          size="sm"
+          width={50}
+          placeholder="Feed symbol"
+          className={styles.searchInput ?? ""}
+          {...(props.isLoading
+            ? { isPending: true, isDisabled: true }
+            : {
+                value: props.search,
+                onChange: props.onSearchChange,
+              })}
+        />
         <Select<string>
           label="Asset Class"
           size="sm"
@@ -260,17 +273,6 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
                 onSelectionChange: props.onAssetClassChange,
               })}
         />
-        <SearchInput
-          size="sm"
-          width={50}
-          placeholder="Feed symbol"
-          {...(props.isLoading
-            ? { isPending: true, isDisabled: true }
-            : {
-                value: props.search,
-                onChange: props.onSearchChange,
-              })}
-        />
       </>
     }
     {...(!props.isLoading && {
@@ -287,11 +289,38 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       ),
     })}
   >
+    <EntityList
+      label="Price Feeds"
+      className={styles.entityList ?? ""}
+      headerLoadingSkeleton={<PriceFeedTag compact isLoading />}
+      fields={[
+        { id: "assetClass", name: "Asset Class" },
+        { id: "priceFeedId", name: "Price Feed ID" },
+        { id: "confidenceInterval", name: "Confidence Interval" },
+        { id: "exponent", name: "Exponent" },
+        { id: "numPublishers", name: "# Publishers" },
+      ]}
+      isLoading={props.isLoading}
+      rows={
+        props.isLoading
+          ? []
+          : props.rows.map((row) => ({
+              ...row,
+              header: (
+                <>
+                  {row.data.priceFeedName}
+                  {row.data.price}
+                </>
+              ),
+            }))
+      }
+    />
     <Table
       rounded
       fill
       label="Price Feeds"
       stickyHeader={rootStyles.headerHeight}
+      className={styles.table ?? ""}
       columns={[
         {
           id: "priceFeedName",

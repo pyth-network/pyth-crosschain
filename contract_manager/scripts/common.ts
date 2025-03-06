@@ -38,11 +38,26 @@ export async function deployIfNotCached(
       readFileSync(join(config.jsonOutputDir, `${artifactName}.json`), "utf8")
     );
 
+    // Handle bytecode which can be either a string or an object with an 'object' property
+    let bytecode = artifact["bytecode"];
+    if (
+      typeof bytecode === "object" &&
+      bytecode !== null &&
+      "object" in bytecode
+    ) {
+      bytecode = bytecode.object;
+    }
+
+    // Ensure bytecode starts with 0x
+    if (!bytecode.startsWith("0x")) {
+      bytecode = `0x${bytecode}`;
+    }
+
     console.log(`Deploying ${artifactName} on ${chain.getId()}...`);
     const addr = await chain.deploy(
       config.privateKey,
       artifact["abi"],
-      artifact["bytecode"],
+      bytecode,
       deployArgs,
       config.gasMultiplier,
       config.gasPriceMultiplier
@@ -78,6 +93,7 @@ export const COMMON_DEPLOY_OPTIONS = {
   },
   chain: {
     type: "array",
+    string: true,
     demandOption: true,
     desc: "Chains to upload the contract on. Must be one of the chains available in the store",
   },
@@ -208,22 +224,6 @@ export function findEntropyContract(chain: EvmChain): EvmEntropyContract {
 }
 
 /**
- * Finds an EVM chain by its name.
- * @param {string} chainName The name of the chain to find.
- * @returns The EVM chain instance.
- * @throws {Error} an error if the chain is not found or is not an EVM chain.
- */
-export function findEvmChain(chainName: string): EvmChain {
-  const chain = DefaultStore.chains[chainName];
-  if (!chain) {
-    throw new Error(`Chain ${chainName} not found`);
-  } else if (!(chain instanceof EvmChain)) {
-    throw new Error(`Chain ${chainName} is not an EVM chain`);
-  }
-  return chain;
-}
-
-/**
  * Finds the wormhole contract for a given EVM chain.
  * @param {EvmChain} chain The EVM chain to find the wormhole contract for.
  * @returns If found, the wormhole contract for the given EVM chain. Else, undefined
@@ -336,4 +336,53 @@ export async function getOrDeployWormholeContract(
     findWormholeContract(chain) ??
     (await deployWormholeContract(chain, config, cacheFile))
   );
+}
+
+export interface DefaultAddresses {
+  mainnet: string;
+  testnet: string;
+}
+
+export async function topupAccountsIfNecessary(
+  chain: EvmChain,
+  deploymentConfig: BaseDeployConfig,
+  accounts: Array<[string, DefaultAddresses]>,
+  minBalance = 0.01
+) {
+  for (const [accountName, defaultAddresses] of accounts) {
+    const accountAddress = chain.isMainnet()
+      ? defaultAddresses.mainnet
+      : defaultAddresses.testnet;
+    const web3 = chain.getWeb3();
+    const balance = Number(
+      web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether")
+    );
+    console.log(`${accountName} balance: ${balance} ETH`);
+    if (balance < minBalance) {
+      console.log(
+        `Balance is less than ${minBalance}. Topping up the ${accountName} address...`
+      );
+      const signer = web3.eth.accounts.privateKeyToAccount(
+        deploymentConfig.privateKey
+      );
+      web3.eth.accounts.wallet.add(signer);
+      const estimatedGas = await web3.eth.estimateGas({
+        from: signer.address,
+        to: accountAddress,
+        value: web3.utils.toWei(`${minBalance}`, "ether"),
+      });
+
+      const tx = await web3.eth.sendTransaction({
+        from: signer.address,
+        to: accountAddress,
+        gas: estimatedGas * deploymentConfig.gasMultiplier,
+        value: web3.utils.toWei(`${minBalance}`, "ether"),
+      });
+
+      console.log(
+        `Topped up the ${accountName} address. Tx: `,
+        tx.transactionHash
+      );
+    }
+  }
 }

@@ -302,6 +302,7 @@ export const getPublisherAverageScoreHistory = async (
             FROM publisher_quality_ranking
             WHERE publisher = {key: String}
             AND cluster = {cluster: String}
+            AND interval_days = 1
             GROUP BY time
             ORDER BY time DESC
             LIMIT 30

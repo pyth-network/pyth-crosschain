@@ -1,9 +1,11 @@
+import alenoColor from "./icons/color/aleno.svg";
 import finazonColor from "./icons/color/finazon.svg";
 import orcaColor from "./icons/color/orca.svg";
 import sentioColor from "./icons/color/sentio.svg";
 import wooColor from "./icons/color/woo.svg";
 import ltpDark from "./icons/dark/ltp.svg";
 import ltpLight from "./icons/light/ltp.svg";
+import alenoMonochrome from "./icons/monochrome/aleno.svg";
 import blocksize from "./icons/monochrome/blocksize.svg";
 import elfomo from "./icons/monochrome/elfomo.svg";
 import finazonMonochrome from "./icons/monochrome/finazon.svg";
@@ -66,6 +68,13 @@ export const knownPublishers = {
     icon: {
       color: orcaColor,
       monochrome: orcaMonochrome,
+    },
+  },
+  EJT2CiSFR84yoVtqfB1LVC79MSS1wyZggaV6LHJB5nS2: {
+    name: "Aleno",
+    icon: {
+      color: alenoColor,
+      monochrome: alenoMonochrome,
     },
   },
 } as const;

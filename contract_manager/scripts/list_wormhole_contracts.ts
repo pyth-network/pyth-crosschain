@@ -14,7 +14,12 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
-  const entries = [];
+  const entries: {
+    chain: string;
+    contract: string;
+    guardianSetIndex: number;
+    chainId: number;
+  }[] = [];
   for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
     if (
       contract instanceof EvmWormholeContract &&

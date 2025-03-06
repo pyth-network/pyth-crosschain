@@ -14,10 +14,18 @@ import {
   type SortDescriptor,
   Table,
 } from "@pythnetwork/component-library/Table";
+import clsx from "clsx";
 import { useQueryState, parseAsStringEnum, parseAsBoolean } from "nuqs";
-import { type ReactNode, Suspense, useMemo, useCallback } from "react";
+import {
+  type ReactNode,
+  Fragment,
+  Suspense,
+  useMemo,
+  useCallback,
+} from "react";
 import { useFilter, useCollator } from "react-aria";
 
+import styles from "./index.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import {
@@ -26,6 +34,7 @@ import {
   Status as StatusType,
   statusNameToStatus,
 } from "../../status";
+import { EntityList } from "../EntityList";
 import { Explain } from "../Explain";
 import { EvaluationTime } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
@@ -181,6 +190,7 @@ export const ResolvedPriceComponentsCard = <
     () =>
       paginatedItems.map((component) => ({
         id: component.id,
+        nameAsString: component.nameAsString,
         data: {
           name: component.name,
           ...Object.fromEntries(
@@ -189,61 +199,56 @@ export const ResolvedPriceComponentsCard = <
               component[column.id],
             ]) ?? [],
           ),
-          ...(showQuality
-            ? {
-                score: component.score !== undefined && (
-                  <Score score={component.score} width={SCORE_WIDTH} />
-                ),
-                uptimeScore: component.uptimeScore !== undefined && (
-                  <FormattedNumber
-                    value={component.uptimeScore}
-                    maximumSignificantDigits={5}
-                  />
-                ),
-                deviationScore: component.deviationScore !== undefined && (
-                  <FormattedNumber
-                    value={component.deviationScore}
-                    maximumSignificantDigits={5}
-                  />
-                ),
-                stalledScore: component.stalledScore !== undefined && (
-                  <FormattedNumber
-                    value={component.stalledScore}
-                    maximumSignificantDigits={5}
-                  />
-                ),
-              }
-            : {
-                slot: (
-                  <LiveComponentValue
-                    feedKey={component.feedKey}
-                    publisherKey={component.publisherKey}
-                    field="publishSlot"
-                    cluster={component.cluster}
-                  />
-                ),
-                price: (
-                  <LivePrice
-                    feedKey={component.feedKey}
-                    publisherKey={component.publisherKey}
-                    cluster={component.cluster}
-                  />
-                ),
-                confidence: (
-                  <LiveConfidence
-                    feedKey={component.feedKey}
-                    publisherKey={component.publisherKey}
-                    cluster={component.cluster}
-                  />
-                ),
-              }),
+          score: component.score !== undefined && (
+            <Score score={component.score} width={SCORE_WIDTH} />
+          ),
+          uptimeScore: component.uptimeScore !== undefined && (
+            <FormattedNumber
+              value={component.uptimeScore}
+              maximumSignificantDigits={5}
+            />
+          ),
+          deviationScore: component.deviationScore !== undefined && (
+            <FormattedNumber
+              value={component.deviationScore}
+              maximumSignificantDigits={5}
+            />
+          ),
+          stalledScore: component.stalledScore !== undefined && (
+            <FormattedNumber
+              value={component.stalledScore}
+              maximumSignificantDigits={5}
+            />
+          ),
+          slot: (
+            <LiveComponentValue
+              feedKey={component.feedKey}
+              publisherKey={component.publisherKey}
+              field="publishSlot"
+              cluster={component.cluster}
+            />
+          ),
+          price: (
+            <LivePrice
+              feedKey={component.feedKey}
+              publisherKey={component.publisherKey}
+              cluster={component.cluster}
+            />
+          ),
+          confidence: (
+            <LiveConfidence
+              feedKey={component.feedKey}
+              publisherKey={component.publisherKey}
+              cluster={component.cluster}
+            />
+          ),
           status: <StatusComponent status={component.status} />,
         },
         onAction: () => {
           onPriceComponentAction(component);
         },
       })),
-    [paginatedItems, showQuality, onPriceComponentAction, props.extraColumns],
+    [paginatedItems, onPriceComponentAction, props.extraColumns],
   );
 
   const updateStatus = useCallback(
@@ -322,7 +327,7 @@ type PriceComponentsCardProps<
         onStatusChange: (newStatus: StatusName | "") => void;
         showQuality: boolean;
         setShowQuality: (newValue: boolean) => void;
-        rows: RowConfig<string>[];
+        rows: (RowConfig<string> & { nameAsString: string })[];
       }
   );
 
@@ -343,7 +348,7 @@ export const PriceComponentsCardContents = <
   const collator = useCollator();
   return (
     <Card
-      className={className}
+      className={clsx(className, styles.priceComponentsCard)}
       title={
         <>
           <span>{label}</span>
@@ -355,56 +360,66 @@ export const PriceComponentsCardContents = <
         </>
       }
       toolbar={
-        <>
-          {toolbarExtra}
-          <Select<StatusName | "">
-            label="Status"
-            size="sm"
-            variant="outline"
-            hideLabel
-            options={[
-              "",
-              ...Object.values(STATUS_NAMES).toSorted((a, b) =>
-                collator.compare(a, b),
-              ),
-            ]}
-            {...(props.isLoading
-              ? { isPending: true, buttonLabel: "Status" }
-              : {
-                  show: (value) => (value === "" ? "All" : value),
-                  placement: "bottom end",
-                  buttonLabel: props.status === "" ? "Status" : props.status,
-                  selectedKey: props.status,
-                  onSelectionChange: props.onStatusChange,
-                })}
-          />
-          <SearchInput
-            size="sm"
-            width={60}
-            placeholder={searchPlaceholder}
-            {...(props.isLoading
-              ? { isPending: true, isDisabled: true }
-              : {
-                  value: props.search,
-                  onChange: props.onSearchChange,
-                })}
-          />
-          <SingleToggleGroup
-            {...(!props.isLoading && {
-              selectedKey: props.showQuality ? "quality" : "prices",
-              onSelectionChange: (newValue) => {
-                props.setShowQuality(newValue === "quality");
-              },
-            })}
-            items={[
-              {
-                id: "prices",
-                children: <PriceName assetClass={props.assetClass} plural />,
-              },
-              { id: "quality", children: "Quality" },
-            ]}
-          />
-        </>
+        <div className={styles.toolbar}>
+          {toolbarExtra && (
+            <div data-section="extra" className={styles.toolbarSection}>
+              {toolbarExtra}
+            </div>
+          )}
+          <div data-section="search" className={styles.toolbarSection}>
+            <Select<StatusName | "">
+              label="Status"
+              size="sm"
+              variant="outline"
+              hideLabel
+              options={[
+                "",
+                ...Object.values(STATUS_NAMES).toSorted((a, b) =>
+                  collator.compare(a, b),
+                ),
+              ]}
+              {...(props.isLoading
+                ? { isPending: true, buttonLabel: "Status" }
+                : {
+                    show: (value) => (value === "" ? "All" : value),
+                    placement: "bottom end",
+                    buttonLabel: props.status === "" ? "Status" : props.status,
+                    selectedKey: props.status,
+                    onSelectionChange: props.onStatusChange,
+                  })}
+            />
+            <SearchInput
+              size="sm"
+              width={60}
+              placeholder={searchPlaceholder}
+              className={styles.searchInput ?? ""}
+              {...(props.isLoading
+                ? { isPending: true, isDisabled: true }
+                : {
+                    value: props.search,
+                    onChange: props.onSearchChange,
+                  })}
+            />
+          </div>
+          <div data-section="mode" className={styles.toolbarSection}>
+            <SingleToggleGroup
+              className={styles.modeSelect ?? ""}
+              {...(!props.isLoading && {
+                selectedKey: props.showQuality ? "quality" : "prices",
+                onSelectionChange: (newValue) => {
+                  props.setShowQuality(newValue === "quality");
+                },
+              })}
+              items={[
+                {
+                  id: "prices",
+                  children: <PriceName assetClass={props.assetClass} plural />,
+                },
+                { id: "quality", children: "Quality" },
+              ]}
+            />
+          </div>
+        </div>
       }
       {...(!props.isLoading && {
         footer: (
@@ -420,11 +435,44 @@ export const PriceComponentsCardContents = <
         ),
       })}
     >
+      <EntityList
+        label={label}
+        className={styles.entityList ?? ""}
+        headerLoadingSkeleton={nameLoadingSkeleton}
+        fields={[
+          { id: "slot", name: "Slot" },
+          { id: "price", name: "Price" },
+          { id: "confidence", name: "Confidence" },
+          { id: "uptimeScore", name: "Uptime Score" },
+          { id: "deviationScore", name: "Deviation Score" },
+          { id: "stalledScore", name: "Stalled Score" },
+          { id: "score", name: "Final Score" },
+          { id: "status", name: "Status" },
+        ]}
+        isLoading={props.isLoading}
+        rows={
+          props.isLoading
+            ? []
+            : props.rows.map((row) => ({
+                ...row,
+                textValue: row.nameAsString,
+                header: (
+                  <>
+                    {row.data.name}
+                    {extraColumns?.map((column) => (
+                      <Fragment key={column.id}>{row.data[column.id]}</Fragment>
+                    ))}
+                  </>
+                ),
+              }))
+        }
+      />
       <Table
         label={label}
         fill
         rounded
         stickyHeader={rootStyles.headerHeight}
+        className={styles.table ?? ""}
         columns={[
           {
             id: "name",

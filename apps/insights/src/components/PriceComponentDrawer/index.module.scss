@@ -1,17 +1,57 @@
 @use "@pythnetwork/component-library/theme";
 
 .priceComponentDrawer {
+  .priceComponentDrawerBody {
+    grid-template-rows: max-content max-content;
+    grid-template-columns: 100%;
+  }
+
+  .badges {
+    @include theme.breakpoint("lg") {
+      display: none;
+    }
+  }
+
+  .ghostOpenButton {
+    @include theme.breakpoint("md") {
+      display: none;
+    }
+  }
+
+  .bigScreenBadges {
+    display: none;
+
+    @include theme.breakpoint("lg") {
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(3);
+      align-items: center;
+    }
+  }
+
+  .outlineOpenButton {
+    display: none;
+
+    @include theme.breakpoint("md") {
+      display: inline flow-root;
+    }
+  }
+
   .testFeedMessage {
-    grid-column: span 2 / span 2;
     margin-bottom: theme.spacing(10);
   }
 
   .stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
     gap: theme.spacing(4);
     margin-bottom: theme.spacing(10);
+
+    @include theme.breakpoint("lg") {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+    }
   }
 
   .spinner {
@@ -127,6 +167,64 @@
       @include theme.text("sm", "normal");
 
       margin: theme.spacing(2) theme.spacing(4);
+    }
+
+    .smallLegend {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      background: theme.color("background", "primary");
+      border-radius: theme.border-radius("xl");
+
+      li {
+        padding: theme.spacing(3) theme.spacing(4);
+        border-bottom: 1px solid theme.color("background", "secondary");
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        dl {
+          display: flex;
+          flex-flow: row nowrap;
+          justify-content: space-between;
+          font-size: theme.font-size("sm");
+          margin: 0;
+          margin-top: theme.spacing(4);
+
+          .weight,
+          .scoreValue {
+            display: flex;
+            flex-flow: row nowrap;
+            gap: theme.spacing(2);
+
+            dt {
+              font-weight: theme.font-weight("medium");
+            }
+
+            dd {
+              padding: 0;
+              margin: 0;
+            }
+          }
+        }
+      }
+
+      .metricDescription {
+        display: none;
+      }
+
+      @include theme.breakpoint("lg") {
+        display: none;
+      }
+    }
+
+    .legendTable {
+      display: none;
+
+      @include theme.breakpoint("lg") {
+        display: unset;
+      }
     }
 
     .scoreCell {
