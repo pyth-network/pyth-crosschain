@@ -124,25 +124,29 @@ export const PriceFeeds = async () => {
           />
         </UnstyledTabPanel>
       </UnstyledTabs>
-      <Card className={styles.trademarkDisclaimerCard} variant="tertiary" title="Trademark Disclaimer">
-          <div className={styles.trademarkDisclaimerContent}>
-            <p>
-              The Pyth Network name, logo, and all related names, logos, product
-              and service names, designs, and slogans are trademarks of the Pyth
-              Data Association or its affiliates or licensors.
-            </p>
-            <p>
-              <Button
-                variant="outline"
-                size="sm"
-                href="https://www.pyth.network/trademark-disclaimer"
-                target="_blank"
-              >
-                View Full Disclaimer
-              </Button>
-            </p>
-          </div>
-        </Card>
+      <Card
+        className={styles.trademarkDisclaimerCard}
+        variant="tertiary"
+        title="Trademark Disclaimer"
+      >
+        <div className={styles.trademarkDisclaimerContent}>
+          <p>
+            The Pyth Network name, logo, and all related names, logos, product
+            and service names, designs, and slogans are trademarks of the Pyth
+            Data Association or its affiliates or licensors.
+          </p>
+          <p>
+            <Button
+              variant="outline"
+              size="sm"
+              href="https://www.pyth.network/trademark-disclaimer"
+              target="_blank"
+            >
+              View Full Disclaimer
+            </Button>
+          </p>
+        </div>
+      </Card>
     </div>
   );
 };
