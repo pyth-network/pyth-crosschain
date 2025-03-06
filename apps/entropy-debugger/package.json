@@ -9,11 +9,11 @@
   "scripts": {
     "build": "next build",
     "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix .",
+    "fix:lint": "eslint --fix . --max-warnings 0",
     "start:dev": "next dev --port 3005",
     "start:prod": "next start --port 3005",
     "test:format": "prettier --check .",
-    "test:lint": "eslint .",
+    "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc"
   },
   "dependencies": {

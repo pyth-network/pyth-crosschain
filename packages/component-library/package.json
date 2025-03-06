@@ -17,8 +17,8 @@
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
     "start:dev": "storybook dev --port 4000 --no-open",
     "test:format": "prettier --check .",
-    "test:lint:eslint": "eslint .",
-    "test:lint:stylelint": "stylelint 'src/**/*.scss'",
+    "test:lint:eslint": "eslint . --max-warnings 0",
+    "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc"
   },
   "peerDependencies": {

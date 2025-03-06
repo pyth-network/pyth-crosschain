@@ -25,7 +25,7 @@
     "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
     "example": "node lib/examples/HermesClient.js",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test:lint": "eslint src/",
+    "test:lint": "eslint src/ --max-warnings 0",
     "prepublishOnly": "pnpm run build:typescript && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"

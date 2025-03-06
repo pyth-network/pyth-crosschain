@@ -9,12 +9,12 @@
   "scripts": {
     "build": "next build",
     "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix .",
+    "fix:lint": "eslint --fix . --max-warnings 0",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_3TIYzlYYncZx7wRtfmzG2YUsNzKp vercel env pull",
     "start:dev": "next dev --port 3001",
     "start:prod": "next start --port 3001",
     "test:format": "prettier --check .",
-    "test:lint": "eslint .",
+    "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
     "test:unit": "jest --selectProjects unit"
   },

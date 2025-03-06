@@ -216,7 +216,7 @@ const UpdatePermissions = () => {
   }
 
   const handleEditPubkey = (
-    e: any,
+    e: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     account: PermissionAccount,
     prevPubkey: string
   ) => {
@@ -280,6 +280,7 @@ const UpdatePermissions = () => {
                 `Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`
               )
               setIsSendProposalButtonLoading(false)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (e: any) {
               toast.error(capitalizeFirstLetter(e.message))
               setIsSendProposalButtonLoading(false)
@@ -289,6 +290,7 @@ const UpdatePermissions = () => {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
