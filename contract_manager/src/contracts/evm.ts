@@ -2,7 +2,7 @@ import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
 import { PriceFeedContract, PrivateKey, Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
-import { DataSource, EvmExecute } from "@pythnetwork/xc-admin-common";
+import { DataSource } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
 import { TokenQty } from "../token";
 import {
@@ -11,6 +11,7 @@ import {
   EXTENDED_ENTROPY_ABI,
   EXTENDED_PYTH_ABI,
   WORMHOLE_ABI,
+  PULSE_UPGRADEABLE_ABI,
 } from "./evm_abis";
 
 /**
@@ -754,5 +755,207 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       address: this.address,
       type: EvmPriceFeedContract.type,
     };
+  }
+}
+
+export const PULSE_DEFAULT_PROVIDER = {
+  mainnet: "0x78357316239040e19fC823372cC179ca75e64b81",
+  testnet: "0x78357316239040e19fC823372cC179ca75e64b81",
+};
+export const PULSE_DEFAULT_KEEPER = {
+  mainnet: "0x78357316239040e19fC823372cC179ca75e64b81",
+  testnet: "0x78357316239040e19fC823372cC179ca75e64b81",
+};
+
+export class EvmPulseContract extends Storable {
+  static type = "EvmPulseContract";
+
+  constructor(public chain: EvmChain, public address: string) {
+    super();
+  }
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getChain(): EvmChain {
+    return this.chain;
+  }
+
+  getType(): string {
+    return EvmPulseContract.type;
+  }
+
+  getContract() {
+    const web3 = this.chain.getWeb3();
+    return new web3.eth.Contract(PULSE_UPGRADEABLE_ABI, this.address);
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string }
+  ): EvmPulseContract {
+    if (parsed.type !== EvmPulseContract.type) throw new Error("Invalid type");
+    if (!(chain instanceof EvmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new EvmPulseContract(chain, parsed.address);
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: EvmPulseContract.type,
+    };
+  }
+
+  async getOwner(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.owner().call();
+  }
+
+  async getExecutorContract(): Promise<EvmExecutorContract> {
+    const owner = await this.getOwner();
+    return new EvmExecutorContract(this.chain, owner);
+  }
+
+  async getPythFeeInWei(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.getPythFeeInWei().call();
+  }
+
+  async getFee(callbackGasLimit: number): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.getFee(callbackGasLimit).call();
+  }
+
+  async getAccruedFees(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.getAccruedFees().call();
+  }
+
+  async getRequest(sequenceNumber: number): Promise<{
+    provider: string;
+    publishTime: string;
+    priceIds: string[];
+    callbackGasLimit: string;
+    requester: string;
+  }> {
+    const contract = this.getContract();
+    return contract.methods.getRequest(sequenceNumber).call();
+  }
+
+  async getDefaultProvider(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.getDefaultProvider().call();
+  }
+
+  async getProviderInfo(provider: string): Promise<{
+    feeInWei: string;
+    accruedFeesInWei: string;
+  }> {
+    const contract = this.getContract();
+    return contract.methods.getProviderInfo(provider).call();
+  }
+
+  async getExclusivityPeriod(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.getExclusivityPeriod().call();
+  }
+
+  async getFirstActiveRequests(count: number): Promise<{
+    requests: Array<{
+      provider: string;
+      publishTime: string;
+      priceIds: string[];
+      callbackGasLimit: string;
+      requester: string;
+    }>;
+    actualCount: number;
+  }> {
+    const contract = this.getContract();
+    return contract.methods.getFirstActiveRequests(count).call();
+  }
+
+  async requestPriceUpdatesWithCallback(
+    senderPrivateKey: PrivateKey,
+    publishTime: number,
+    priceIds: string[],
+    callbackGasLimit: number
+  ) {
+    const web3 = this.chain.getWeb3();
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
+    const contract = new web3.eth.Contract(PULSE_UPGRADEABLE_ABI, this.address);
+
+    const fee = await this.getFee(callbackGasLimit);
+    const transactionObject = contract.methods.requestPriceUpdatesWithCallback(
+      publishTime,
+      priceIds,
+      callbackGasLimit
+    );
+
+    const result = await this.chain.estiamteAndSendTransaction(
+      transactionObject,
+      { from: address, value: fee }
+    );
+    return { id: result.transactionHash, info: result };
+  }
+
+  async executeCallback(
+    senderPrivateKey: PrivateKey,
+    sequenceNumber: number,
+    updateData: string[],
+    priceIds: string[]
+  ) {
+    const web3 = this.chain.getWeb3();
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
+    const contract = new web3.eth.Contract(PULSE_UPGRADEABLE_ABI, this.address);
+
+    const transactionObject = contract.methods.executeCallback(
+      sequenceNumber,
+      updateData,
+      priceIds
+    );
+
+    const result = await this.chain.estiamteAndSendTransaction(
+      transactionObject,
+      { from: address }
+    );
+    return { id: result.transactionHash, info: result };
+  }
+
+  // Admin functions
+  async generateSetFeeManagerPayload(manager: string): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods.setFeeManager(manager).encodeABI();
+    return this.chain.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data
+    );
+  }
+
+  async generateSetDefaultProviderPayload(provider: string): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods.setDefaultProvider(provider).encodeABI();
+    return this.chain.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data
+    );
+  }
+
+  async generateSetExclusivityPeriodPayload(
+    periodSeconds: number
+  ): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods
+      .setExclusivityPeriod(periodSeconds)
+      .encodeABI();
+    return this.chain.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data
+    );
   }
 }

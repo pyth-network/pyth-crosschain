@@ -26,6 +26,7 @@ import {
   EvmExpressRelayContract,
   TonPriceFeedContract,
   TonWormholeContract,
+  EvmPulseContract,
 } from "./contracts";
 import { Token } from "./token";
 import { PriceFeedContract, Storable } from "./base";
@@ -42,6 +43,7 @@ export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
+  public pulse_contracts: Record<string, EvmPulseContract> = {};
   public wormhole_contracts: Record<string, WormholeContract> = {};
   public express_relay_contracts: Record<string, EvmExpressRelayContract> = {};
   public tokens: Record<string, Token> = {};
