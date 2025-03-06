@@ -87,7 +87,7 @@ export const PriceFeeds = async () => {
         <FeaturedFeeds
           allComingSoon={priceFeeds.comingSoon}
           featuredComingSoon={featuredComingSoon.slice(0, 5)}
-          featuredFeeds={featuredFeeds.slice(0, 5)}
+          feeds={featuredFeeds.slice(0, 5)}
         />
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
@@ -120,7 +120,7 @@ export const PriceFeeds = async () => {
           <FeaturedFeeds
             allComingSoon={priceFeeds.comingSoon}
             featuredComingSoon={featuredComingSoon}
-            featuredFeeds={featuredFeeds}
+            feeds={featuredFeeds}
           />
         </UnstyledTabPanel>
       </UnstyledTabs>
@@ -129,29 +129,26 @@ export const PriceFeeds = async () => {
 };
 
 type FeaturedFeedsProps = {
-  featuredFeeds: FeaturedFeed[];
+  feeds: FeaturedFeed[];
   featuredComingSoon: FeaturedFeed[];
   allComingSoon: { symbol: string }[];
 };
 
 const FeaturedFeeds = ({
-  featuredFeeds,
+  feeds,
   featuredComingSoon,
   allComingSoon,
 }: FeaturedFeedsProps) => (
   <>
     <YesterdaysPricesProvider
       feeds={Object.fromEntries(
-        featuredFeeds.map(({ symbol, product }) => [
-          symbol,
-          product.price_account,
-        ]),
+        feeds.map(({ symbol, product }) => [symbol, product.price_account]),
       )}
     >
       <FeaturedFeedsCard
         title="Featured"
         icon={<Star />}
-        feeds={featuredFeeds}
+        feeds={feeds}
         showPrices
         linkFeeds
       />
