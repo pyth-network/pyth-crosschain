@@ -38,6 +38,7 @@ import { keyPairFromSeed } from "@ton/crypto";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
 import * as nearAPI from "near-api-js";
 import * as bs58 from "bs58";
+import * as chains from "viem/chains";
 
 /**
  * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
@@ -367,6 +368,13 @@ export class EvmChain extends Chain {
 
   static fromJson(parsed: ChainConfig & { networkId: number }): EvmChain {
     if (parsed.type !== EvmChain.type) throw new Error("Invalid type");
+    if (parsed.nativeToken === undefined) {
+      for (const chain of Object.values(chains)) {
+        if (chain.id === parsed.networkId) {
+          parsed.nativeToken = chain.nativeCurrency.symbol;
+        }
+      }
+    }
     return new EvmChain(
       parsed.id,
       parsed.mainnet,
@@ -381,6 +389,15 @@ export class EvmChain extends Chain {
    */
   getWeb3(): Web3 {
     return new Web3(parseRpcUrl(this.rpcUrl));
+  }
+
+  getViemDefaultWeb3(): Web3 {
+    for (const chain of Object.values(chains)) {
+      if (chain.id === this.networkId) {
+        return new Web3(chain.rpcUrls.default.http[0]);
+      }
+    }
+    throw new Error(`Chain with id ${this.networkId} not found in Viem`);
   }
 
   /**
