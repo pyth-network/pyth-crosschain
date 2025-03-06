@@ -87,7 +87,7 @@
     }
   }
 
-  .trademarkDisclaimerSection {
+  .trademarkDisclaimerCard {
     margin-top: theme.spacing(6);
     width: 100%;
 
@@ -98,7 +98,7 @@
       display: flex;
       flex-flow: column nowrap;
       gap: theme.spacing(4);
-      color: theme.color("text");
+      color: theme.color("foreground");
       font-size: theme.font-size("sm");
     }
   }

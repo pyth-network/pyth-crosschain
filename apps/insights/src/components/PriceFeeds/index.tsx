@@ -124,8 +124,7 @@ export const PriceFeeds = async () => {
           />
         </UnstyledTabPanel>
       </UnstyledTabs>
-      <div className={styles.trademarkDisclaimerSection}>
-        <Card variant="tertiary" title="Trademark Disclaimer">
+      <Card className={styles.trademarkDisclaimerCard} variant="tertiary" title="Trademark Disclaimer">
           <div className={styles.trademarkDisclaimerContent}>
             <p>
               The Pyth Network name, logo, and all related names, logos, product
@@ -144,7 +143,6 @@ export const PriceFeeds = async () => {
             </p>
           </div>
         </Card>
-      </div>
     </div>
   );
 };
