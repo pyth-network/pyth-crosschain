@@ -47,6 +47,12 @@ export const Footer = () => (
         <Link href="https://www.pyth.network/terms-of-use" target="_blank">
           Terms of Use
         </Link>
+        <Link
+          href="https://www.pyth.network/trademark-disclaimer"
+          target="_blank"
+        >
+          Trademark Disclaimer
+        </Link>
       </div>
     </div>
   </footer>
