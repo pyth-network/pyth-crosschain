@@ -41,10 +41,6 @@ const parser = yargs(hideBin(process.argv))
       demandOption: true,
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
     },
-    "default-provider": {
-      type: "string",
-      desc: "Address of the default provider for the Pulse contract",
-    },
   });
 
 async function deployPulseContracts(
