@@ -101,7 +101,7 @@ pub mod mock {
                             callback_gas_limit: c,
                             price_ids: p.clone(),
                             publish_time: t,
-                            num_price_ids: 0,
+                            num_price_ids: p.len().min(255) as u8,
                         })
                         .collect(),
                 ),
@@ -121,9 +121,9 @@ pub mod mock {
                 requester,
                 sequence_number: sequence,
                 callback_gas_limit,
-                price_ids,
+                price_ids: price_ids.clone(),
                 publish_time,
-                num_price_ids: 0,
+                num_price_ids: price_ids.len().min(255) as u8,
             });
             self
         }

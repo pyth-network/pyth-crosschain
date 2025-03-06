@@ -94,17 +94,13 @@ impl HermesClient {
         &self,
         publish_time: u64,
         price_ids: &[[u8; 32]],
-        num_price_ids: u8,
     ) -> Result<Vec<Bytes>> {
-        let valid_price_ids_count = num_price_ids as usize;
-
-        let price_ids_hex: Vec<String> = price_ids[0..valid_price_ids_count]
+        let price_ids_hex: Vec<String> = price_ids
             .iter()
             .map(|id| format!("0x{}", hex::encode(id)))
             .collect();
 
         let url = format!("{}/v2/updates/price/{}", self.base_url, publish_time);
-
         tracing::debug!(
             "Fetching price updates from Hermes for publish_time={} price_ids={:?}",
             publish_time,
@@ -116,13 +112,7 @@ impl HermesClient {
             query_params.push(("ids[]", id.as_str()));
         }
 
-        let response = self
-            .client
-            .get(&url)
-            .query(&query_params)
-            .send()
-            .await?;
-
+        let response = self.client.get(&url).query(&query_params).send().await?;
         println!("Full URL: {}", response.url());
 
         if !response.status().is_success() {
@@ -173,7 +163,6 @@ pub async fn fetch_price_updates_from_hermes(
     publish_time: u64,
     price_ids: &[[u8; 32]],
     hermes_base_url: String,
-    num_price_ids: u8,
 ) -> Result<Vec<Bytes>> {
     const MAX_RETRIES: usize = 3;
     const RETRY_DELAY: std::time::Duration = std::time::Duration::from_millis(500);
@@ -185,7 +174,7 @@ pub async fn fetch_price_updates_from_hermes(
 
     for retry in 0..MAX_RETRIES {
         match hermes_client
-            .get_price_updates(publish_time, price_ids, num_price_ids)
+            .get_price_updates(publish_time, price_ids)
             .await
         {
             Ok(update_data) => {
@@ -267,7 +256,7 @@ mod tests {
         let client = HermesClient::with_base_url(url);
 
         // Call the method
-        let result = client.get_price_updates(1234567890, &[price_id], 2).await;
+        let result = client.get_price_updates(1234567890, &[price_id]).await;
 
         // Verify the result
         assert!(result.is_ok());
@@ -315,7 +304,7 @@ mod tests {
         let client = HermesClient::with_base_url(url);
 
         // Call the method
-        let result = client.get_price_updates(1234567890, &[price_id], 2).await;
+        let result = client.get_price_updates(1234567890, &[price_id]).await;
 
         // Verify the result is an error
         assert!(result.is_err());
@@ -363,7 +352,7 @@ mod tests {
         let client = HermesClient::with_base_url(url);
 
         // Call the method
-        let result = client.get_price_updates(1234567890, &[price_id], 2).await;
+        let result = client.get_price_updates(1234567890, &[price_id]).await;
 
         // Verify the result
         assert!(result.is_ok());
@@ -411,7 +400,7 @@ mod tests {
         let client = HermesClient::with_base_url(url);
 
         // Call the method
-        let result = client.get_price_updates(1234567890, &[price_id], 2).await;
+        let result = client.get_price_updates(1234567890, &[price_id]).await;
 
         // Verify the result is an error about invalid hex
         assert!(result.is_err());
