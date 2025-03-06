@@ -36,6 +36,7 @@ pub struct KeeperMetrics {
     pub final_gas_multiplier: Family<AccountLabel, Histogram>,
     pub final_fee_multiplier: Family<AccountLabel, Histogram>,
     pub gas_price_estimate: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub accrued_pyth_fees: Family<AccountLabel, Gauge<f64, AtomicU64>>,
 }
 
 impl Default for KeeperMetrics {
@@ -76,6 +77,7 @@ impl Default for KeeperMetrics {
                 Histogram::new(vec![100.0, 110.0, 120.0, 140.0, 160.0, 180.0, 200.0].into_iter())
             }),
             gas_price_estimate: Family::default(),
+            accrued_pyth_fees: Family::default(),
         }
     }
 }
@@ -202,6 +204,12 @@ impl KeeperMetrics {
             keeper_metrics.gas_price_estimate.clone(),
         );
 
+        writable_registry.register(
+            "accrued_pyth_fees",
+            "Accrued Pyth fees on the contract",
+            keeper_metrics.accrued_pyth_fees.clone(),
+        );
+
         // *Important*: When adding a new metric:
         // 1. Register it above using `writable_registry.register(...)`
         // 2. Add a get_or_create call in the loop below to initialize it for each chain/provider pair
@@ -253,6 +261,9 @@ impl KeeperMetrics {
                 .get_or_create(&account_label);
             let _ = keeper_metrics
                 .gas_price_estimate
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .accrued_pyth_fees
                 .get_or_create(&account_label);
         }
 
