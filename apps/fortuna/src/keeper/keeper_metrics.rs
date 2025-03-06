@@ -16,6 +16,11 @@ pub struct AccountLabel {
     pub address: String,
 }
 
+#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
+pub struct ChainIdLabel {
+    pub chain_id: String,
+}
+
 pub struct KeeperMetrics {
     pub current_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number: Family<AccountLabel, Gauge>,
@@ -36,7 +41,7 @@ pub struct KeeperMetrics {
     pub final_gas_multiplier: Family<AccountLabel, Histogram>,
     pub final_fee_multiplier: Family<AccountLabel, Histogram>,
     pub gas_price_estimate: Family<AccountLabel, Gauge<f64, AtomicU64>>,
-    pub accrued_pyth_fees: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub accrued_pyth_fees: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
 }
 
 impl Default for KeeperMetrics {
@@ -213,6 +218,16 @@ impl KeeperMetrics {
         // *Important*: When adding a new metric:
         // 1. Register it above using `writable_registry.register(...)`
         // 2. Add a get_or_create call in the loop below to initialize it for each chain/provider pair
+
+        // Initialize accrued_pyth_fees for each chain_id
+        for (chain_id, _) in chain_labels.iter() {
+            let _ = keeper_metrics
+                .accrued_pyth_fees
+                .get_or_create(&ChainIdLabel {
+                    chain_id: chain_id.clone(),
+                });
+        }
+
         for (chain_id, provider_address) in chain_labels {
             let account_label = AccountLabel {
                 chain_id,
@@ -261,9 +276,6 @@ impl KeeperMetrics {
                 .get_or_create(&account_label);
             let _ = keeper_metrics
                 .gas_price_estimate
-                .get_or_create(&account_label);
-            let _ = keeper_metrics
-                .accrued_pyth_fees
                 .get_or_create(&account_label);
         }
 

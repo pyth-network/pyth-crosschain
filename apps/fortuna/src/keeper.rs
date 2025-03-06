@@ -11,6 +11,7 @@ use {
         keeper::commitment::update_commitments_loop,
         keeper::fee::adjust_fee_wrapper,
         keeper::fee::withdraw_fees_wrapper,
+        keeper::track::track_accrued_pyth_fees,
         keeper::track::track_balance,
         keeper::track::track_provider,
     },
@@ -204,6 +205,14 @@ pub async fn run_keeper_threads(
                         chain_id.clone(),
                         contract.client(),
                         keeper_address,
+                        keeper_metrics.clone(),
+                    )
+                    .in_current_span(),
+                );
+                spawn(
+                    track_accrued_pyth_fees(
+                        chain_id.clone(),
+                        contract.clone(),
                         keeper_metrics.clone(),
                     )
                     .in_current_span(),

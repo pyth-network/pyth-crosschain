@@ -1,5 +1,5 @@
 use {
-    super::keeper_metrics::{AccountLabel, KeeperMetrics},
+    super::keeper_metrics::{AccountLabel, ChainIdLabel, KeeperMetrics},
     crate::{
         api::ChainId, chain::ethereum::InstrumentedPythContract,
         eth_utils::traced_client::TracedClient,
@@ -123,9 +123,8 @@ pub async fn track_accrued_pyth_fees(
 
     metrics
         .accrued_pyth_fees
-        .get_or_create(&AccountLabel {
+        .get_or_create(&ChainIdLabel {
             chain_id: chain_id.clone(),
-            address: "global".to_string(),
         })
         .set(accrued_pyth_fees);
 }
