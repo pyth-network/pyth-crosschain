@@ -148,3 +148,6 @@
 - chain: hyperevm
   address: "0xfA25E653b44586dBbe27eE9d252192F0e4956683"
   type: EvmEntropyContract
+- chain: story_mainnet
+  address: "0xdF21D137Aadc95588205586636710ca2890538d5"
+  type: EvmEntropyContract
