@@ -106,7 +106,7 @@ export const RECEIVER_CHAINS = {
   berachain_mainnet: 60076,
   movement_mainnet: 60077,
   story_mainnet: 60078,
-  hyperEVM: 60079,
+  hyperevm: 60079,
   bittensor_mainnet: 60080,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
