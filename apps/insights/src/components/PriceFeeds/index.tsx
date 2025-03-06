@@ -135,7 +135,7 @@ export const PriceFeeds = async () => {
             third parties. Such display is for informational purposes only and
             does not constitute any claim of ownership thereof by Pyth Data
             Association or any of its subsidiaries and other affiliates
-            (collectively, "Association") or any sponsorship or endorsement by
+            (collectively, &quot;Association&quot;) or any sponsorship or endorsement by
             Association of any associated products or services, and should not
             be construed as indicating any affiliation, sponsorship or other
             connection between Association and the third-party owners of such
