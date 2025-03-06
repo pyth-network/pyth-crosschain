@@ -234,7 +234,7 @@ export class Store {
    */
   getChainOrThrow<T extends Chain>(
     chainId: string,
-    ChainClass?: { new (...args: any[]): T; type: string }
+    ChainClass?: { new (...args: any[]): T; type: string } // eslint-disable-line @typescript-eslint/no-explicit-any
   ): T {
     const chain = this.chains[chainId];
     if (!chain) {

@@ -174,10 +174,12 @@ export class GlobalChain extends Chain {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getAccountAddress(_privateKey: PrivateKey): Promise<string> {
     throw new Error("Can not get account for GlobalChain.");
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getAccountBalance(_privateKey: PrivateKey): Promise<number> {
     throw new Error("Can not get account balance for GlobalChain.");
   }
@@ -439,7 +441,7 @@ export class EvmChain extends Chain {
   }
 
   async estiamteAndSendTransaction(
-    transactionObject: any,
+    transactionObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     txParams: { from?: string; value?: string }
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;

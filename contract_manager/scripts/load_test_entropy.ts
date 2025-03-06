@@ -2,7 +2,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { DefaultStore, EvmChain, toPrivateKey } from "../src";
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
-import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -58,7 +57,7 @@ const ABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as any;
+] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 async function main() {
   const argv = await parser.argv;
