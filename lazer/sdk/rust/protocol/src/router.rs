@@ -66,6 +66,12 @@ impl Rate {
         let value: i64 = value.try_into().context("overflow")?;
         Ok(Self(value))
     }
+
+    pub fn from_integer(value: i64, exponent: u32) -> anyhow::Result<Self> {
+        let coef = 10i64.checked_pow(exponent).context("overflow")?;
+        let value = value.checked_mul(coef).context("overflow")?;
+        Ok(Self(value))
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -244,6 +250,15 @@ impl Channel {
                 50 => channel_ids::FIXED_RATE_50,
                 200 => channel_ids::FIXED_RATE_200,
                 _ => panic!("unknown channel: {self:?}"),
+            },
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            Channel::FixedRate(fixed_rate) => match *fixed_rate {
+                FixedRate::MIN => "real_time".to_string(),
+                rate => format!("fixed_rate@{}ms", rate.value_ms()),
             },
         }
     }
