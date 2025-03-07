@@ -105,7 +105,7 @@ export const RECEIVER_CHAINS = {
   kraken_ink_mainnet: 60075,
   berachain_mainnet: 60076,
   movement_mainnet: 60077,
-  story_mainnet: 60078,
+  story: 60078,
   hyperevm: 60079,
   bittensor_mainnet: 60080,
 
