@@ -124,34 +124,31 @@ export const PriceFeeds = async () => {
           />
         </UnstyledTabPanel>
       </UnstyledTabs>
-      <div className={styles.trademarkDisclaimerCard}>
-        <div className={styles.trademarkDisclaimerContent}>
-          <h3 className={styles.trademarkDisclaimerHeader}>
-            Trademark Disclaimer
-          </h3>
-          <p>
-            This website may display ticker symbols, product names, and other
-            identifiers that are trademarks, service marks or trade names of
-            third parties. Such display is for informational purposes only and
-            does not constitute any claim of ownership thereof by Pyth Data
-            Association or any of its subsidiaries and other affiliates
-            (collectively, &quot;Association&quot;) or any sponsorship or
-            endorsement by Association of any associated products or services,
-            and should not be construed as indicating any affiliation,
-            sponsorship or other connection between Association and the
-            third-party owners of such identifiers. Any such third-party
-            identifiers associated with financial data are made solely to
-            identify the relevant financial products for which price data is
-            made available via the website. All trademarks, service marks,
-            logos, product names, trade names and company names mentioned on the
-            website are the property of their respective owners and are
-            protected by trademark and other intellectual property laws.
-            Association makes no representations or warranties with respect to
-            any such identifiers or any data or other information associated
-            therewith and reserves the right to modify or remove any such
-            displays at its discretion.
-          </p>
-        </div>
+      <div className={styles.trademarkDisclaimer}>
+        <h3 className={styles.trademarkDisclaimerHeader}>
+          Trademark Disclaimer
+        </h3>
+        <p>
+          This website may display ticker symbols, product names, and other
+          identifiers that are trademarks, service marks or trade names of third
+          parties. Such display is for informational purposes only and does not
+          constitute any claim of ownership thereof by Pyth Data Association or
+          any of its subsidiaries and other affiliates (collectively,
+          &quot;Association&quot;) or any sponsorship or endorsement by
+          Association of any associated products or services, and should not be
+          construed as indicating any affiliation, sponsorship or other
+          connection between Association and the third-party owners of such
+          identifiers. Any such third-party identifiers associated with
+          financial data are made solely to identify the relevant financial
+          products for which price data is made available via the website. All
+          trademarks, service marks, logos, product names, trade names and
+          company names mentioned on the website are the property of their
+          respective owners and are protected by trademark and other
+          intellectual property laws. Association makes no representations or
+          warranties with respect to any such identifiers or any data or other
+          information associated therewith and reserves the right to modify or
+          remove any such displays at its discretion.
+        </p>
       </div>
     </div>
   );
