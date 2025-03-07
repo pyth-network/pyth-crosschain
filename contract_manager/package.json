@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc",
     "shell": "ts-node ./src/shell.ts",
-    "test:lint": "eslint src/ scripts/",
+    "test:lint": "eslint src/ scripts/ --max-warnings 0",
     "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\""
   },
   "author": "",
@@ -59,6 +59,7 @@
     "starknet": "^6.9.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.3",
+    "viem": "^2.23.5",
     "web3": "^1.8.2",
     "web3-eth-contract": "^1.8.2",
     "yaml": "^2.1.1"

@@ -23,8 +23,8 @@
   "scripts": {
     "build:cjs": "tsc --project tsconfig.build.json --verbatimModuleSyntax false --module commonjs --outDir ./dist/cjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "build:esm": "tsc --project tsconfig.build.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
-    "fix:lint": "eslint --fix .",
-    "test:lint": "eslint .",
+    "fix:lint": "eslint --fix . --max-warnings 0",
+    "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
     "example": "node --loader ts-node/esm examples/index.js",
     "doc": "typedoc --out docs/typedoc src",

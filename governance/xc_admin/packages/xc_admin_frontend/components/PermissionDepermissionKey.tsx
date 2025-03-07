@@ -57,6 +57,7 @@ const PermissionDepermissionKey = ({
 
   // get current input value
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (event: any) => {
     setSelectedAssetType(event.target.value)
     setIsModalOpen(true)
@@ -135,6 +136,7 @@ const PermissionDepermissionKey = ({
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSubmitButtonLoading(false)
         closeModal()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         if (error.response) {
           toast.error(capitalizeFirstLetter(error.response.data))
@@ -168,7 +170,14 @@ const PermissionDepermissionKey = ({
       })
       setPriceAccounts(res)
     }
-  }, [rawConfig, dataIsLoading, selectedAssetType, isPermission, publisherKey])
+  }, [
+    rawConfig,
+    dataIsLoading,
+    selectedAssetType,
+    isPermission,
+    publisherKey,
+    cluster,
+  ])
 
   return (
     <>

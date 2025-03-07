@@ -83,7 +83,7 @@ export const RECEIVER_CHAINS = {
   gravity: 60053,
   polynomial: 60054,
   etherlink: 60055,
-  klaytn: 60056,
+  kaia: 60056,
   kinto: 60057,
   b3_mainnet: 60058,
   cronos_zkevm_mainnet: 60059,
@@ -106,7 +106,7 @@ export const RECEIVER_CHAINS = {
   berachain_mainnet: 60076,
   movement_mainnet: 60077,
   story_mainnet: 60078,
-  hyperEVM: 60079,
+  hyperevm: 60079,
   bittensor_mainnet: 60080,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
@@ -201,7 +201,7 @@ export const RECEIVER_CHAINS = {
   etherlink_testnet: 50083,
   fuel_testnet: 50084,
   sei_evm_testnet: 50085,
-  klaytn_testnet: 50086,
+  kaia_testnet: 50086,
   morph_holesky_testnet: 50087,
   tabi_testnet: 50088,
   movement_suzuka_testnet: 50089,

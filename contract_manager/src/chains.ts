@@ -42,6 +42,7 @@ import * as nearAPI from "near-api-js";
 import * as bs58 from "bs58";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
+import * as chains from "viem/chains";
 
 /**
  * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
@@ -178,10 +179,12 @@ export class GlobalChain extends Chain {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getAccountAddress(_privateKey: PrivateKey): Promise<string> {
     throw new Error("Can not get account for GlobalChain.");
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getAccountBalance(_privateKey: PrivateKey): Promise<number> {
     throw new Error("Can not get account balance for GlobalChain.");
   }
@@ -435,6 +438,13 @@ export class EvmChain extends Chain {
 
   static fromJson(parsed: ChainConfig & { networkId: number }): EvmChain {
     if (parsed.type !== EvmChain.type) throw new Error("Invalid type");
+    if (parsed.nativeToken === undefined) {
+      for (const chain of Object.values(chains)) {
+        if (chain.id === parsed.networkId) {
+          parsed.nativeToken = chain.nativeCurrency.symbol;
+        }
+      }
+    }
     return new EvmChain(
       parsed.id,
       parsed.mainnet,
@@ -449,6 +459,15 @@ export class EvmChain extends Chain {
    */
   getWeb3(): Web3 {
     return new Web3(parseRpcUrl(this.rpcUrl));
+  }
+
+  getViemDefaultWeb3(): Web3 {
+    for (const chain of Object.values(chains)) {
+      if (chain.id === this.networkId) {
+        return new Web3(chain.rpcUrls.default.http[0]);
+      }
+    }
+    throw new Error(`Chain with id ${this.networkId} not found in Viem`);
   }
 
   /**
@@ -509,7 +528,7 @@ export class EvmChain extends Chain {
   }
 
   async estiamteAndSendTransaction(
-    transactionObject: any,
+    transactionObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     txParams: { from?: string; value?: string }
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;

@@ -621,8 +621,16 @@ export class EvmPriceFeedContract extends PriceFeedContract {
   }
 
   async getTotalFee(): Promise<TokenQty> {
-    const web3 = this.chain.getWeb3();
-    const amount = BigInt(await web3.eth.getBalance(this.address));
+    let web3: Web3;
+    let amount = BigInt(0);
+    try {
+      web3 = this.chain.getViemDefaultWeb3();
+      amount = BigInt(await web3.eth.getBalance(this.address));
+    } catch (error) {
+      // Fallback to regular web3 if viem default web3 fails
+      web3 = this.chain.getWeb3();
+      amount = BigInt(await web3.eth.getBalance(this.address));
+    }
     return {
       amount,
       denom: this.chain.getNativeToken(),

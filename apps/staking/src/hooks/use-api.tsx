@@ -288,6 +288,7 @@ const useApiContext = (
     lastStakeAccountMainnet,
     lastStakeAccountDevnet,
     mutate,
+    simulationPayer,
   ]);
 };
 

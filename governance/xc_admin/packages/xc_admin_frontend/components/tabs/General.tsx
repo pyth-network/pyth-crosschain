@@ -54,8 +54,8 @@ const checkSizeOfProductInstruction = (
 }
 
 const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
-  const [data, setData] = useState<any>({})
-  const [dataChanges, setDataChanges] = useState<Record<string, any>>()
+  const [data, setData] = useState<any>({}) // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [dataChanges, setDataChanges] = useState<Record<string, any>>() // eslint-disable-line @typescript-eslint/no-explicit-any
   const [existingSymbols, setExistingSymbols] = useState<Set<string>>(new Set())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
@@ -78,11 +78,14 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     setIsModalOpen(false)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sortData = (data: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sortedData: any = {}
     Object.keys(data)
       .sort()
       .forEach((key) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sortedInnerData: any = {}
         Object.keys(data[key])
           .sort()
@@ -92,12 +95,16 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             } else if (innerKey === 'priceAccounts') {
               // sort price accounts by address
               sortedInnerData[innerKey] = data[key][innerKey].sort(
-                (priceAccount1: any, priceAccount2: any) =>
-                  priceAccount1.address.localeCompare(priceAccount2.address)
+                (
+                  priceAccount1: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+                  priceAccount2: any // eslint-disable-line @typescript-eslint/no-explicit-any
+                ) => priceAccount1.address.localeCompare(priceAccount2.address)
               )
               // sort price accounts keys
               sortedInnerData[innerKey] = sortedInnerData[innerKey].map(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (priceAccount: any) => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const sortedPriceAccount: any = {}
                   Object.keys(priceAccount)
                     .sort()
@@ -128,7 +135,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig && rawConfig.mappingAccounts.length > 0) {
-      const symbolToData: any = {}
+      const symbolToData: any = {} // eslint-disable-line @typescript-eslint/no-explicit-any
       rawConfig.mappingAccounts
         .sort(
           (mapping1, mapping2) =>
@@ -163,7 +170,9 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     }
   }, [rawConfig, dataIsLoading, sortDataMemo, cluster])
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sortObjectByKeys = (obj: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sortedObj: any = {}
     Object.keys(obj)
       .sort()
@@ -199,7 +208,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           const fileData = e.target.result
           if (!isValidJson(fileData as string)) return
           const fileDataParsed = sortData(JSON.parse(fileData as string))
-          const changes: Record<string, any> = {}
+          const changes: Record<string, any> = {} // eslint-disable-line @typescript-eslint/no-explicit-any
           Object.keys(fileDataParsed).forEach((symbol) => {
             // remove duplicate publishers
             fileDataParsed[symbol].priceAccounts[0].publishers = [
@@ -248,6 +257,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const isValidJson = (json: string) => {
     try {
       JSON.parse(json)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(capitalizeFirstLetter(e.message))
       return false
@@ -654,6 +664,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     return (
@@ -686,61 +697,67 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const PriceAccountsChangesRows = ({ changes }: { changes: any }) => {
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     return (
       <>
-        {changes.new.map((priceAccount: any, index: number) =>
-          Object.keys(priceAccount).map((priceAccountKey) =>
-            priceAccountKey === 'publishers' ? (
-              addPriceFeed ? (
-                <PublisherKeysChangesRows
-                  key={priceAccountKey}
-                  changes={{
-                    new: priceAccount[priceAccountKey],
-                  }}
-                />
-              ) : (
-                JSON.stringify(changes.prev[index][priceAccountKey]) !==
-                  JSON.stringify(priceAccount[priceAccountKey]) && (
+        {changes.new.map(
+          (
+            priceAccount: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            index: number
+          ) =>
+            Object.keys(priceAccount).map((priceAccountKey) =>
+              priceAccountKey === 'publishers' ? (
+                addPriceFeed ? (
                   <PublisherKeysChangesRows
                     key={priceAccountKey}
                     changes={{
-                      prev: changes.prev[index][priceAccountKey],
                       new: priceAccount[priceAccountKey],
                     }}
                   />
+                ) : (
+                  JSON.stringify(changes.prev[index][priceAccountKey]) !==
+                    JSON.stringify(priceAccount[priceAccountKey]) && (
+                    <PublisherKeysChangesRows
+                      key={priceAccountKey}
+                      changes={{
+                        prev: changes.prev[index][priceAccountKey],
+                        new: priceAccount[priceAccountKey],
+                      }}
+                    />
+                  )
+                )
+              ) : (
+                (addPriceFeed ||
+                  changes.prev[index][priceAccountKey] !==
+                    priceAccount[priceAccountKey]) && (
+                  <tr key={priceAccountKey}>
+                    <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+                      {priceAccountKey
+                        .split('_')
+                        .map((word) => capitalizeFirstLetter(word))
+                        .join(' ')}
+                    </td>
+                    <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+                      {!addPriceFeed ? (
+                        <>
+                          <s>{changes.prev[index][priceAccountKey]}</s>
+                          <br />
+                        </>
+                      ) : null}
+                      {priceAccount[priceAccountKey]}
+                    </td>
+                  </tr>
                 )
               )
-            ) : (
-              (addPriceFeed ||
-                changes.prev[index][priceAccountKey] !==
-                  priceAccount[priceAccountKey]) && (
-                <tr key={priceAccountKey}>
-                  <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
-                    {priceAccountKey
-                      .split('_')
-                      .map((word) => capitalizeFirstLetter(word))
-                      .join(' ')}
-                  </td>
-                  <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-                    {!addPriceFeed ? (
-                      <>
-                        <s>{changes.prev[index][priceAccountKey]}</s>
-                        <br />
-                      </>
-                    ) : null}
-                    {priceAccount[priceAccountKey]}
-                  </td>
-                </tr>
-              )
             )
-          )
         )}
       </>
     )
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const PublisherKeysChangesRows = ({ changes }: { changes: any }) => {
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     const publisherKeysToAdd = addPriceFeed
@@ -783,6 +800,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
     return (
       <>
@@ -813,6 +831,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     )
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>

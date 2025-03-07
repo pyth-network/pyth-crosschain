@@ -1,5 +1,5 @@
 use {
-    super::keeper_metrics::{AccountLabel, KeeperMetrics},
+    super::keeper_metrics::{AccountLabel, ChainIdLabel, KeeperMetrics},
     crate::{
         api::ChainId, chain::ethereum::InstrumentedPythContract,
         eth_utils::traced_client::TracedClient,
@@ -99,4 +99,32 @@ pub async fn track_provider(
             address: provider_address.to_string(),
         })
         .set(end_sequence_number as i64);
+}
+
+/// tracks the accrued pyth fees on the given chain
+/// if there is an error the function will just return
+#[tracing::instrument(skip_all)]
+pub async fn track_accrued_pyth_fees(
+    chain_id: ChainId,
+    contract: InstrumentedPythContract,
+    metrics: Arc<KeeperMetrics>,
+) {
+    let accrued_pyth_fees = match contract.get_accrued_pyth_fees().call().await {
+        Ok(fees) => fees,
+        Err(e) => {
+            tracing::error!("Error while getting accrued pyth fees. error: {:?}", e);
+            return;
+        }
+    };
+
+    // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
+    // The fee is in wei, so we divide by 1e18 to convert it to eth.
+    let accrued_pyth_fees = accrued_pyth_fees as f64 / 1e18;
+
+    metrics
+        .accrued_pyth_fees
+        .get_or_create(&ChainIdLabel {
+            chain_id: chain_id.clone(),
+        })
+        .set(accrued_pyth_fees);
 }

@@ -5,6 +5,7 @@ import {
   CosmWasmPriceFeedContract,
   DefaultStore,
   EvmPriceFeedContract,
+  TonPriceFeedContract,
 } from "../src";
 
 const parser = yargs(hideBin(process.argv))
@@ -36,7 +37,8 @@ async function main() {
     if (
       contract instanceof AptosPriceFeedContract ||
       contract instanceof EvmPriceFeedContract ||
-      contract instanceof CosmWasmPriceFeedContract
+      contract instanceof CosmWasmPriceFeedContract ||
+      contract instanceof TonPriceFeedContract
     ) {
       try {
         const fee = await contract.getTotalFee();

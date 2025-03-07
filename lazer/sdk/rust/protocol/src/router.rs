@@ -7,6 +7,7 @@ use {
     rust_decimal::{prelude::FromPrimitive, Decimal},
     serde::{de::Error, Deserialize, Serialize},
     std::{
+        fmt::Display,
         num::NonZeroI64,
         ops::{Add, Deref, DerefMut, Div, Sub},
         time::{SystemTime, UNIX_EPOCH},
@@ -64,6 +65,12 @@ impl Rate {
         let coef = Decimal::from_i64(coef).context("overflow")?;
         let value = value.checked_mul(coef).context("overflow")?;
         let value: i64 = value.try_into().context("overflow")?;
+        Ok(Self(value))
+    }
+
+    pub fn from_integer(value: i64, exponent: u32) -> anyhow::Result<Self> {
+        let coef = 10i64.checked_pow(exponent).context("overflow")?;
+        let value = value.checked_mul(coef).context("overflow")?;
         Ok(Self(value))
     }
 }
@@ -234,6 +241,17 @@ mod channel_ids {
     pub const FIXED_RATE_1: ChannelId = ChannelId(1);
     pub const FIXED_RATE_50: ChannelId = ChannelId(2);
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
+}
+
+impl Display for Channel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Channel::FixedRate(fixed_rate) => match *fixed_rate {
+                FixedRate::MIN => write!(f, "real_time"),
+                rate => write!(f, "fixed_rate@{}ms", rate.value_ms()),
+            },
+        }
+    }
 }
 
 impl Channel {
