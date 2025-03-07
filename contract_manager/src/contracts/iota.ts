@@ -523,6 +523,7 @@ export class IotaWormholeContract extends WormholeContract {
     return { id: result.digest, info: result };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async getStateFields(): Promise<any> {
     const provider = this.chain.getProvider();
     const result = await provider.getObject({
