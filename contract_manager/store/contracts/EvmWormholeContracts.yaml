@@ -484,3 +484,6 @@
 - chain: bittensor_mainnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
+- chain: monad_testnet # this is on beta channel
+  address: "0xd74CdD8Eef0E97a5a7678F907991316f88E7965A"
+  type: EvmWormholeContract
