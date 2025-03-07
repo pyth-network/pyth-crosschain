@@ -6,11 +6,32 @@ import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "./PulseEvents.sol";
 import "./PulseState.sol";
 
-interface IPulseConsumer {
+abstract contract IPulseConsumer {
+    // This method is called by Pulse to provide the price updates to the consumer.
+    // It asserts that the msg.sender is the Pulse contract. It is not meant to be
+    // overridden by the consumer.
+    function _pulseCallback(
+        uint64 sequenceNumber,
+        PythStructs.PriceFeed[] memory priceFeeds
+    ) external {
+        address pulse = getPulse();
+        require(pulse != address(0), "Pulse address not set");
+        require(msg.sender == pulse, "Only Pulse can call this function");
+
+        pulseCallback(sequenceNumber, priceFeeds);
+    }
+
+    // getPulse returns the Pulse contract address. The method is being used to check that the
+    // callback is indeed from the Pulse contract. The consumer is expected to implement this method.
+    function getPulse() internal view virtual returns (address);
+
+    // This method is expected to be implemented by the consumer to handle the price updates.
+    // It will be called by _pulseCallback after _pulseCallback ensures that the call is
+    // indeed from Pulse contract.
     function pulseCallback(
         uint64 sequenceNumber,
         PythStructs.PriceFeed[] memory priceFeeds
-    ) external;
+    ) internal virtual;
 }
 
 interface IPulse is PulseEvents {

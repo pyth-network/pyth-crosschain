@@ -99,7 +99,7 @@ abstract contract Pulse is IPulse, PulseState {
         emit PriceUpdateRequested(req, priceIds);
     }
 
-    // TODO: I don't think this should be payable. Any cost paid to Pyth should come from the contract and be taken out of the provider's accrued fees.
+    // TODO: does this need to be payable? Any cost paid to Pyth could be taken out of the provider's accrued fees.
     function executeCallback(
         address providerToCredit,
         uint64 sequenceNumber,
@@ -145,12 +145,16 @@ abstract contract Pulse is IPulse, PulseState {
         clearRequest(sequenceNumber);
         // TODO: if this effect occurs here, we need to guarantee that executeCallback can never revert.
         // If executeCallback can revert, then funds can be permanently locked in the contract.
+        // TODO: there also needs to be some penalty mechanism in case the expected provider doesn't execute the callback.
+        // This should take funds from the expected provider and give to providerToCredit. The penalty should probably scale
+        // with time in order to ensure that the callback eventually gets executed.
+        // (There may be exploits with ^ though if the consumer contract is malicious ?)
         _state.providers[providerToCredit].accruedFeesInWei += req.fee;
         _state.providers[providerToCredit].accruedFeesInWei += SafeCast
             .toUint128(msg.value - pythFee);
 
         try
-            IPulseConsumer(req.requester).pulseCallback{
+            IPulseConsumer(req.requester)._pulseCallback{
                 gas: req.callbackGasLimit
             }(sequenceNumber, priceFeeds)
         {

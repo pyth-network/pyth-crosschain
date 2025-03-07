@@ -12,6 +12,7 @@ contract PulseState {
     struct Request {
         uint64 sequenceNumber;
         uint256 publishTime;
+        // TODO: this is going to absolutely explode gas costs. Need to do something smarter here.
         bytes32[MAX_PRICE_IDS] priceIds;
         uint8 numPriceIds; // Actual number of price IDs used
         uint256 callbackGasLimit;
