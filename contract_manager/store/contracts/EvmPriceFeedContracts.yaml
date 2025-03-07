@@ -490,3 +490,6 @@
 - chain: bittensor_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
+- chain: monad_testnet # This is on beta channel
+  address: "0xad2B52D2af1a9bD5c561894Cdd84f7505e1CD0B5"
+  type: EvmPriceFeedContract

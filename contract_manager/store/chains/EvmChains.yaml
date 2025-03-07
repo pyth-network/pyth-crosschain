@@ -851,7 +851,7 @@
   type: EvmChain
 - id: monad_testnet
   mainnet: false
-  rpcUrl: https://rpc.monad-testnet.category.xyz/rpc/nSyzM1wlIgaALWzbh3oIg5rW65AC6yjqrslOE8wb
+  rpcUrl: https://testnet-rpc.monad.xyz
   networkId: 10143
   type: EvmChain
 - id: berachain_mainnet

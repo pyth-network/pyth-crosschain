@@ -11,24 +11,16 @@
 # $ ./deploy.sh ethereum bnb avalanche
 set -euo pipefail
 
-echo "=========== Building dependencies ==========="
-pushd ../../../
-pnpm turbo build --filter @pythnetwork/pyth-evm-contract
-popd
-
-echo "=========== Compiling ==========="
-
 if [[ -e contracts/pyth/PythUpgradable_merged.sol ]]; then
     echo "Flattened contract PythUpgradable_merged.sol exists. Removing before compiling."
     rm contracts/pyth/PythUpgradable_merged.sol
 fi
 
-echo "Building the contracts..."
-# Ensure that we deploy a fresh build with up-to-date dependencies.
-rm -rf build && pnpm exec truffle compile --all
+echo "=========== Building dependencies & compiling contract ==========="
+pnpm turbo build --filter @pythnetwork/pyth-evm-contract
 
 echo "Deploying the contracts..."
 
 pushd ../../../contract_manager/
 
-pnpm exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir ../target_chains/ethereum/contracts/build/contracts --private-key $PK --chain "$@"
+pnpm exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir ../target_chains/ethereum/contracts/build/contracts --private-key $PK --deployment-type "stable" --chain "$@"
