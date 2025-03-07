@@ -18,6 +18,7 @@ interface IPulse is PulseEvents {
     /**
      * @notice Requests price updates with a callback
      * @dev The msg.value must be equal to getFee(callbackGasLimit)
+     * @param provider The provider to fulfill the request
      * @param callbackGasLimit The amount of gas allocated for the callback execution
      * @param publishTime The minimum publish time for price updates, it should be less than or equal to block.timestamp + 60
      * @param priceIds The price feed IDs to update. Maximum 10 price feeds per request.
@@ -30,6 +31,7 @@ interface IPulse is PulseEvents {
      *      the fee estimation unreliable.
      */
     function requestPriceUpdatesWithCallback(
+        address provider,
         uint256 publishTime,
         bytes32[] calldata priceIds,
         uint256 callbackGasLimit
@@ -39,11 +41,13 @@ interface IPulse is PulseEvents {
      * @notice Executes the callback for a price update request
      * @dev Requires 1.5x the callback gas limit to account for cross-contract call overhead
      * For example, if callbackGasLimit is 1M, the transaction needs at least 1.5M gas + some gas for some other operations in the function before the callback
+     * @param providerToCredit The provider to credit for fulfilling the request. This may not be the provider that submitted the request (if the exclusivity period has elapsed).
      * @param sequenceNumber The sequence number of the request
      * @param updateData The raw price update data from Pyth
      * @param priceIds The price feed IDs to update, must match the request
      */
     function executeCallback(
+        address providerToCredit,
         uint64 sequenceNumber,
         bytes[] calldata updateData,
         bytes32[] calldata priceIds
@@ -59,12 +63,17 @@ interface IPulse is PulseEvents {
 
     /**
      * @notice Calculates the total fee required for a price update request
+     * FIXME: is this comment right?
      * @dev Total fee = base Pyth protocol fee + gas costs for callback
+     * @param provider The provider to fulfill the request
      * @param callbackGasLimit The amount of gas allocated for callback execution
+     * @param priceIds The price feed IDs to update.
      * @return feeAmount The total fee in wei that must be provided as msg.value
      */
     function getFee(
-        uint256 callbackGasLimit
+        address provider,
+        uint256 callbackGasLimit,
+        bytes32[] calldata priceIds
     ) external view returns (uint128 feeAmount);
 
     function getAccruedFees() external view returns (uint128 accruedFeesInWei);
@@ -85,7 +94,7 @@ interface IPulse is PulseEvents {
 
     function registerProvider(uint128 feeInWei) external;
 
-    function setProviderFee(uint128 newFeeInWei) external;
+    function setProviderFee(address provider, uint128 newFeeInWei) external;
 
     function getProviderInfo(
         address provider

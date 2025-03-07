@@ -17,10 +17,11 @@ contract PulseState {
         uint256 callbackGasLimit;
         address requester;
         address provider;
+        uint128 fee;
     }
 
     struct ProviderInfo {
-        uint128 feeInWei;
+        uint128 feePerGasInWei;
         uint128 accruedFeesInWei;
         address feeManager;
         bool isRegistered;
