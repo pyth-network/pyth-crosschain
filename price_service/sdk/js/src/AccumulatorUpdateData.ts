@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import type { Buffer } from "buffer";
 
 const ACCUMULATOR_MAGIC = "504e4155";
 const MAJOR_VERSION = 1;
@@ -7,12 +8,12 @@ const KECCAK160_HASH_SIZE = 20;
 const PRICE_FEED_MESSAGE_VARIANT = 0;
 const TWAP_MESSAGE_VARIANT = 1;
 
-export type AccumulatorUpdateData = {
-  vaa: Buffer;
-  updates: { message: Buffer; proof: number[][] }[];
+export type AccumulatorUpdateData<T extends Uint8ArrayLike = Buffer> = {
+  vaa: T;
+  updates: { message: T; proof: number[][] }[];
 };
-export type PriceFeedMessage = {
-  feedId: Buffer;
+export type PriceFeedMessage<T extends Uint8ArrayLike = Buffer> = {
+  feedId: T;
   price: BN;
   confidence: BN;
   exponent: number;
@@ -22,8 +23,8 @@ export type PriceFeedMessage = {
   emaConf: BN;
 };
 
-export type TwapMessage = {
-  feedId: Buffer;
+export type TwapMessage<T extends Uint8ArrayLike = Buffer> = {
+  feedId: T;
   cumulativePrice: BN;
   cumulativeConf: BN;
   numDownSlots: BN;
@@ -33,17 +34,22 @@ export type TwapMessage = {
   publishSlot: BN;
 };
 
-export function isAccumulatorUpdateData(updateBytes: Buffer): boolean {
+export function isAccumulatorUpdateData<T extends Uint8ArrayLike>(
+  updateBytes: T
+): boolean {
   return (
-    updateBytes.toString("hex").slice(0, 8) === ACCUMULATOR_MAGIC &&
+    toHex(updateBytes).slice(0, 8) === ACCUMULATOR_MAGIC &&
     updateBytes[4] === MAJOR_VERSION &&
     updateBytes[5] === MINOR_VERSION
   );
 }
 
-export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
+export function parsePriceFeedMessage<T extends Uint8ArrayLike>(
+  message: T
+): PriceFeedMessage<T> {
   let cursor = 0;
-  const variant = message.readUInt8(cursor);
+  const dataView = getDataView(message);
+  const variant = dataView.getUint8(cursor);
   if (variant !== PRICE_FEED_MESSAGE_VARIANT) {
     throw new Error("Not a price feed message");
   }
@@ -54,7 +60,7 @@ export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
   cursor += 8;
   const confidence = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
-  const exponent = message.readInt32BE(cursor);
+  const exponent = dataView.getInt32(cursor);
   cursor += 4;
   const publishTime = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
@@ -76,9 +82,12 @@ export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
   };
 }
 
-export function parseTwapMessage(message: Buffer): TwapMessage {
+export function parseTwapMessage<T extends Uint8ArrayLike>(
+  message: T
+): TwapMessage<T> {
   let cursor = 0;
-  const variant = message.readUInt8(cursor);
+  const dataView = getDataView(message);
+  const variant = dataView.getUint8(cursor);
   if (variant !== TWAP_MESSAGE_VARIANT) {
     throw new Error("Not a twap message");
   }
@@ -91,7 +100,7 @@ export function parseTwapMessage(message: Buffer): TwapMessage {
   cursor += 16;
   const numDownSlots = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
-  const exponent = message.readInt32BE(cursor);
+  const exponent = dataView.getInt32(cursor);
   cursor += 4;
   const publishTime = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
@@ -114,38 +123,39 @@ export function parseTwapMessage(message: Buffer): TwapMessage {
 /**
  * An AccumulatorUpdateData contains a VAA and a list of updates. This function returns a new serialized AccumulatorUpdateData with only the updates in the range [start, end).
  */
-export function sliceAccumulatorUpdateData(
-  data: Buffer,
+export function sliceAccumulatorUpdateData<T extends Uint8ArrayLike>(
+  data: T,
   start?: number,
   end?: number
-): Buffer {
+): T {
   if (!isAccumulatorUpdateData(data)) {
     throw new Error("Invalid accumulator message");
   }
   let cursor = 6;
-  const trailingPayloadSize = data.readUint8(cursor);
+  const dataView = getDataView(data);
+  const trailingPayloadSize = dataView.getUint8(cursor);
   cursor += 1 + trailingPayloadSize;
 
   // const proofType = data.readUint8(cursor);
   cursor += 1;
 
-  const vaaSize = data.readUint16BE(cursor);
+  const vaaSize = dataView.getUint16(cursor);
   cursor += 2;
   cursor += vaaSize;
 
   const endOfVaa = cursor;
 
   const updates = [];
-  const numUpdates = data.readUInt8(cursor);
+  const numUpdates = dataView.getUint8(cursor);
   cursor += 1;
 
   for (let i = 0; i < numUpdates; i++) {
     const updateStart = cursor;
-    const messageSize = data.readUint16BE(cursor);
+    const messageSize = dataView.getUint16(cursor);
     cursor += 2;
     cursor += messageSize;
 
-    const numProofs = data.readUInt8(cursor);
+    const numProofs = dataView.getUint8(cursor);
     cursor += 1;
     cursor += KECCAK160_HASH_SIZE * numProofs;
 
@@ -157,44 +167,45 @@ export function sliceAccumulatorUpdateData(
   }
 
   const sliceUpdates = updates.slice(start, end);
-  return Buffer.concat([
+  return mergeUint8ArrayLikes([
     data.subarray(0, endOfVaa),
-    Buffer.from([sliceUpdates.length]),
+    fromAsTypeOf(data, [sliceUpdates.length]),
     ...updates.slice(start, end),
   ]);
 }
 
-export function parseAccumulatorUpdateData(
-  data: Buffer
-): AccumulatorUpdateData {
+export function parseAccumulatorUpdateData<T extends Uint8ArrayLike>(
+  data: T
+): AccumulatorUpdateData<T> {
   if (!isAccumulatorUpdateData(data)) {
     throw new Error("Invalid accumulator message");
   }
 
   let cursor = 6;
-  const trailingPayloadSize = data.readUint8(cursor);
+  const dataView = getDataView(data);
+  const trailingPayloadSize = dataView.getUint8(cursor);
   cursor += 1 + trailingPayloadSize;
 
-  // const proofType = data.readUint8(cursor);
+  // const proofType = data.getUint8(cursor);
   cursor += 1;
 
-  const vaaSize = data.readUint16BE(cursor);
+  const vaaSize = dataView.getUint16(cursor);
   cursor += 2;
 
   const vaa = data.subarray(cursor, cursor + vaaSize);
   cursor += vaaSize;
 
-  const numUpdates = data.readUInt8(cursor);
+  const numUpdates = dataView.getUint8(cursor);
   const updates = [];
   cursor += 1;
 
   for (let i = 0; i < numUpdates; i++) {
-    const messageSize = data.readUint16BE(cursor);
+    const messageSize = dataView.getUint16(cursor);
     cursor += 2;
     const message = data.subarray(cursor, cursor + messageSize);
     cursor += messageSize;
 
-    const numProofs = data.readUInt8(cursor);
+    const numProofs = dataView.getUint8(cursor);
     cursor += 1;
     const proof = [];
     for (let j = 0; j < numProofs; j++) {
@@ -212,4 +223,63 @@ export function parseAccumulatorUpdateData(
   }
 
   return { vaa, updates };
+}
+
+function mergeUint8ArrayLikes<T extends Uint8ArrayLike>(
+  inputs: [T, ...T[]]
+): T {
+  const out = createAsTypeOf(
+    inputs[0],
+    inputs.reduce((acc, arr) => acc + arr.length, 0)
+  );
+  let offset = 0;
+  for (const arr of inputs) {
+    out.set(arr, offset);
+    offset += arr.length;
+  }
+  return out;
+}
+
+function toHex(input: Uint8ArrayLike): string {
+  return Array.from(input)
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// With Uint8Arrays, we could just do `new DataView(buf.buffer)`.  But to
+// account for `Buffers`, we need to slice to the used space since `Buffers` may
+// be allocated to be larger than needed.
+function getDataView(buf: Uint8ArrayLike) {
+  return new DataView(
+    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+  );
+}
+
+// This is a little bit of a typescript hack -- we know that `Buffer.from` and
+// `Uint8Array.from` behave effectively the same and we just want a `from` which
+// will return either a `Uint8Array` or a `Buffer`, depending on the type of
+// some other variable.  But typescript sucks at typechecking prototypes so
+// there's really no other good way I'm aware of to do this besides a bit of
+// typecasting through `any`.
+function fromAsTypeOf<T extends Uint8ArrayLike>(
+  buf: T,
+  ...args: Parameters<typeof Uint8Array.from>
+) {
+  return Object.getPrototypeOf(buf.constructor).from(...args) as T;
+}
+
+// Similar to `fromAsTypeOf`, here we want to be able to create either a
+// `Buffer` or a `Uint8Array`, matching the type of a passed in value.  But this
+// is a bit more complex, because for `Uint8Array` we should do that with the
+// `Uint8Array` constructor, where for `Buffer` we should do that using
+// `Buffer.alloc`.  This is a bit of a weird hack but I don't know a better way
+// to make typescript handle such cases.
+function createAsTypeOf<T extends Uint8ArrayLike>(buf: T, size: number) {
+  const ctor = buf.constructor;
+  const create = ("alloc" in ctor ? ctor.alloc : ctor) as (size: number) => T;
+  return create(size);
+}
+
+interface Uint8ArrayLike extends Uint8Array {
+  subarray: (from: number, to: number) => this;
 }
