@@ -5,6 +5,7 @@ import {
   CosmWasmPriceFeedContract,
   DefaultStore,
   EvmPriceFeedContract,
+  IotaWormholeContract,
   SuiWormholeContract,
   toPrivateKey,
 } from "../src";
@@ -32,6 +33,7 @@ async function main() {
   for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
     if (
       contract instanceof SuiWormholeContract ||
+      contract instanceof IotaWormholeContract ||
       contract instanceof AptosWormholeContract
     ) {
       if (chains && !chains.includes(contract.getChain().getId())) {

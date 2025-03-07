@@ -1,0 +1,5 @@
+- id: iota_testnet
+  wormholeChainName: iota_sui_testnet
+  mainnet: false
+  rpcUrl: https://api.testnet.iota.cafe/
+  type: IotaChain

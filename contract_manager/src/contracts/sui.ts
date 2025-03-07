@@ -180,7 +180,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const tx = new Transaction();
     await this.client.updatePriceFeeds(tx, vaas, feedIds);
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, "hex")
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -192,7 +192,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     const tx = new Transaction();
     await this.client.createPriceFeed(tx, vaas);
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, "hex")
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
 
     const result = await this.executeTransaction(tx, keypair);
@@ -204,7 +204,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
     vaa: Buffer
   ): Promise<TxResult> {
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, "hex")
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
     const tx = new Transaction();
     const packageId = await this.getPythPackageId();
@@ -410,7 +410,7 @@ export class SuiWormholeContract extends WormholeContract {
   private client: SuiPythClient;
 
   getId(): string {
-    return `${this.chain.getId()}_${this.address}`;
+    return `${this.chain.getId()}_${this.stateId}`;
   }
 
   getType(): string {
@@ -420,7 +420,7 @@ export class SuiWormholeContract extends WormholeContract {
   toJson() {
     return {
       chain: this.chain.getId(),
-      address: this.address,
+      stateId: this.stateId,
       type: SuiWormholeContract.type,
     };
   }
@@ -429,7 +429,6 @@ export class SuiWormholeContract extends WormholeContract {
     chain: Chain,
     parsed: {
       type: string;
-      address: string;
       stateId: string;
     }
   ): SuiWormholeContract {
@@ -437,14 +436,10 @@ export class SuiWormholeContract extends WormholeContract {
       throw new Error("Invalid type");
     if (!(chain instanceof SuiChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new SuiWormholeContract(chain, parsed.address, parsed.stateId);
+    return new SuiWormholeContract(chain, parsed.stateId);
   }
 
-  constructor(
-    public chain: SuiChain,
-    public address: string,
-    public stateId: string
-  ) {
+  constructor(public chain: SuiChain, public stateId: string) {
     super();
     this.client = new SuiPythClient(
       this.chain.getProvider(),
@@ -493,7 +488,7 @@ export class SuiWormholeContract extends WormholeContract {
       target: `${corePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(coreObjectId),
-        tx.pure(uint8ArrayToBCS(vaa)),
+        tx.pure(uint8ArrayToBCS(new Uint8Array(vaa))),
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
     });
@@ -521,7 +516,7 @@ export class SuiWormholeContract extends WormholeContract {
     });
 
     const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(senderPrivateKey, "hex")
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };

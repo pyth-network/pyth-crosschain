@@ -20,8 +20,10 @@ import {
   InjectiveExecutor,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { Network } from "@injectivelabs/networks";
+import { IotaClient } from "@iota/iota-sdk/client";
 import { SuiClient } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
+import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { TokenId } from "./token";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
@@ -38,6 +40,8 @@ import { keyPairFromSeed } from "@ton/crypto";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
 import * as nearAPI from "near-api-js";
 import * as bs58 from "bs58";
+import { MIST_PER_SUI } from "@mysten/sui/utils";
+import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
 import * as chains from "viem/chains";
 
 /**
@@ -337,8 +341,8 @@ export class SuiChain extends Chain {
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const keypair = Ed25519Keypair.fromSecretKey(
-      Buffer.from(privateKey, "hex")
+    const keypair = SuiEd25519Keypair.fromSecretKey(
+      new Uint8Array(Buffer.from(privateKey, "hex"))
     );
     return keypair.toSuiAddress();
   }
@@ -348,7 +352,73 @@ export class SuiChain extends Chain {
     const balance = await provider.getBalance({
       owner: await this.getAccountAddress(privateKey),
     });
-    return Number(balance.totalBalance) / 10 ** 9;
+    return Number(balance.totalBalance) / Number(MIST_PER_SUI);
+  }
+}
+
+export class IotaChain extends Chain {
+  static type = "IotaChain";
+
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    nativeToken: TokenId | undefined,
+    public rpcUrl: string
+  ) {
+    super(id, mainnet, wormholeChainName, nativeToken);
+  }
+
+  static fromJson(parsed: ChainConfig): IotaChain {
+    if (parsed.type !== IotaChain.type) throw new Error("Invalid type");
+    return new IotaChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.nativeToken,
+      parsed.rpcUrl
+    );
+  }
+
+  toJson(): KeyValueConfig {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      rpcUrl: this.rpcUrl,
+      type: IotaChain.type,
+    };
+  }
+
+  getType(): string {
+    return IotaChain.type;
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(digest: string): Buffer {
+    return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
+  }
+
+  getProvider(): IotaClient {
+    return new IotaClient({ url: this.rpcUrl });
+  }
+
+  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const keypair = IotaEd25519Keypair.fromSecretKey(
+      new Uint8Array(Buffer.from(privateKey, "hex"))
+    );
+    return keypair.toIotaAddress();
+  }
+
+  async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const provider = this.getProvider();
+    const balance = await provider.getBalance({
+      owner: await this.getAccountAddress(privateKey),
+    });
+    return Number(balance.totalBalance) / Number(NANOS_PER_IOTA);
   }
 }
 
@@ -932,7 +1002,9 @@ export class NearChain extends Chain {
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     return Buffer.from(
-      Ed25519Keypair.fromSecretKey(Buffer.from(privateKey, "hex"))
+      SuiEd25519Keypair.fromSecretKey(
+        new Uint8Array(Buffer.from(privateKey, "hex"))
+      )
         .getPublicKey()
         .toRawBytes()
     ).toString("hex");
@@ -951,7 +1023,9 @@ export class NearChain extends Chain {
   ): Promise<nearAPI.Account> {
     const keyStore = new nearAPI.keyStores.InMemoryKeyStore();
     if (typeof senderPrivateKey !== "undefined") {
-      const key = bs58.encode(Buffer.from(senderPrivateKey, "hex"));
+      const key = bs58.encode(
+        new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+      );
       const keyPair = nearAPI.KeyPair.fromString(key);
       const address = await this.getAccountAddress(senderPrivateKey);
       await keyStore.setKey(this.networkId, address, keyPair);

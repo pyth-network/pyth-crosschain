@@ -1,0 +1,12 @@
+[package]
+name = "Wormhole"
+version = "0.2.0"
+published-at = "0xfca58c557f09cddb7930588c4e2a4edbe3cdded1ac1ed2270aa2dfa8d2b9ae0d"
+
+[dependencies.Iota]
+git = "https://github.com/iotaledger/iota.git"
+subdir = "crates/iota-framework/packages/iota-framework"
+rev = "751c23caf24efd071463b9ffd07eabcb15f44f31"
+
+[addresses]
+wormhole = "0xfca58c557f09cddb7930588c4e2a4edbe3cdded1ac1ed2270aa2dfa8d2b9ae0d"

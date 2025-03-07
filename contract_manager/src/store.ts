@@ -9,6 +9,7 @@ import {
   SuiChain,
   TonChain,
   NearChain,
+  IotaChain,
 } from "./chains";
 import {
   AptosPriceFeedContract,
@@ -26,6 +27,8 @@ import {
   EvmExpressRelayContract,
   TonPriceFeedContract,
   TonWormholeContract,
+  IotaWormholeContract,
+  IotaPriceFeedContract,
   EvmPulseContract,
 } from "./contracts";
 import { Token } from "./token";
@@ -90,6 +93,8 @@ export class Store {
       [StarknetChain.type]: StarknetChain,
       [TonChain.type]: TonChain,
       [NearChain.type]: NearChain,
+      [SuiChain.type]: SuiChain,
+      [IotaChain.type]: IotaChain,
     };
 
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
@@ -163,6 +168,8 @@ export class Store {
       [TonWormholeContract.type]: TonWormholeContract,
       [NearPriceFeedContract.type]: NearPriceFeedContract,
       [NearWormholeContract.type]: NearWormholeContract,
+      [IotaPriceFeedContract.type]: IotaPriceFeedContract,
+      [IotaWormholeContract.type]: IotaWormholeContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
