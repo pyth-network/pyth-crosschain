@@ -100,6 +100,13 @@
       gap: theme.spacing(4);
       color: theme.color("foreground");
       font-size: theme.font-size("sm");
+
+      .trademarkDisclaimerHeader {
+        @include theme.text("lg", "medium");
+
+        color: theme.color("heading");
+        margin-bottom: theme.spacing(2);
+      }
     }
   }
 }

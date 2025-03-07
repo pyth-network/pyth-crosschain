@@ -124,11 +124,11 @@ export const PriceFeeds = async () => {
           />
         </UnstyledTabPanel>
       </UnstyledTabs>
-      <Card
-        className={styles.trademarkDisclaimerCard}
-        title="Trademark Disclaimer"
-      >
+      <div className={styles.trademarkDisclaimerCard}>
         <div className={styles.trademarkDisclaimerContent}>
+          <h3 className={styles.trademarkDisclaimerHeader}>
+            Trademark Disclaimer
+          </h3>
           <p>
             This website may display ticker symbols, product names, and other
             identifiers that are trademarks, service marks or trade names of
@@ -152,7 +152,7 @@ export const PriceFeeds = async () => {
             displays at its discretion.
           </p>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
