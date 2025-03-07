@@ -33,10 +33,9 @@ export async function publishPackage(
   console.log("buildOutput: ", buildOutput);
 
   // Publish contracts
-  // const transactionBlock = new TransactionBlock();
   const txb = new Transaction();
 
-  txb.setGasBudget(NANOS_PER_IOTA / 2n); // 0.5 SUI
+  txb.setGasBudget(NANOS_PER_IOTA / 2n); // 0.5 IOTA
 
   const [upgradeCap] = txb.publish({
     modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
@@ -155,7 +154,7 @@ export async function initPyth(
     ],
   });
 
-  tx.setGasBudget(NANOS_PER_IOTA / 10n); // 0.1 sui
+  tx.setGasBudget(NANOS_PER_IOTA / 10n); // 0.1 IOTA
 
   let result = await provider.signAndExecuteTransaction({
     signer: keypair,

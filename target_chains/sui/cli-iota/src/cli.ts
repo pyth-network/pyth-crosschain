@@ -26,7 +26,7 @@ const OPTIONS = {
   contract: {
     type: "string",
     demandOption: true,
-    desc: "Contract to use for the command (e.g FIXME)",
+    desc: "Contract to use for the command (e.g iota_0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1)",
   },
   path: {
     type: "string",
@@ -36,7 +36,7 @@ const OPTIONS = {
   endpoint: {
     type: "string",
     default: "https://hermes.pyth.network",
-    desc: "Price service endpoint to use, defaults to https://hermes.pyth.network for mainnet and https://hermes-beta.pyth.network for testnet",
+    desc: "Price service endpoint to use, defaults to https://hermes.pyth.network",
   },
   "feed-id": {
     type: "array",

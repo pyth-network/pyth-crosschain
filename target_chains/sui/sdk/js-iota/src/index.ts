@@ -1,4 +1,4 @@
-export { IotaPriceServiceConnection } from "./SuiPriceServiceConnection";
+export { IotaPriceServiceConnection } from "./IotaPriceServiceConnection";
 export { IotaPythClient } from "./client";
 
 export {

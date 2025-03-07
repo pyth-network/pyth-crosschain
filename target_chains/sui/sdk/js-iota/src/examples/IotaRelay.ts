@@ -22,7 +22,7 @@ const argvPromise = yargs(hideBin(process.argv))
   })
   .option("full-node", {
     description:
-      "URL of the full Sui node RPC endpoint. e.g: https://fullnode.testnet.sui.io:443",
+      "URL of the full IOTA node RPC endpoint. e.g: https://api.testnet.iota.cafe/",
     type: "string",
     demandOption: true,
   })
@@ -41,8 +41,8 @@ export function getProvider(url: string) {
   return new IotaClient({ url });
 }
 async function run() {
-  if (process.env.SUI_KEY === undefined) {
-    throw new Error(`SUI_KEY environment variable should be set.`);
+  if (process.env.IOTA_KEY === undefined) {
+    throw new Error(`IOTA_KEY environment variable should be set.`);
   }
 
   const argv = await argvPromise;
@@ -80,7 +80,7 @@ async function run() {
   }
 
   const wallet = Ed25519Keypair.fromSecretKey(
-    Buffer.from(process.env.SUI_KEY, "hex")
+    Buffer.from(process.env.IOTA_KEY, "hex")
   );
 
   const result = await provider.signAndExecuteTransaction({

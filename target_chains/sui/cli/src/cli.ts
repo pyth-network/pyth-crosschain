@@ -36,7 +36,7 @@ const OPTIONS = {
   endpoint: {
     type: "string",
     default: "https://hermes.pyth.network",
-    desc: "Price service endpoint to use, defaults to https://hermes.pyth.network for mainnet and https://hermes-beta.pyth.network for testnet",
+    desc: "Price service endpoint to use, defaults to https://hermes.pyth.network",
   },
   "feed-id": {
     type: "array",

@@ -29,7 +29,6 @@ export async function publishPackage(
   console.log("buildOutput: ", buildOutput);
 
   // Publish contracts
-  // const transactionBlock = new TransactionBlock();
   const txb = new Transaction();
 
   txb.setGasBudget(MIST_PER_SUI / 2n); // 0.5 SUI

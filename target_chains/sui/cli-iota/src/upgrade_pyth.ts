@@ -17,7 +17,7 @@ export function buildForBytecodeAndDigest(packagePath: string) {
     digest: number[];
   } = JSON.parse(
     execSync(
-      `sui move build --dump-bytecode-as-base64 -p ${packagePath} 2> /dev/null`,
+      `iota move build --dump-bytecode-as-base64 -p ${packagePath} 2> /dev/null`,
       { encoding: "utf-8" }
     )
   );
@@ -68,7 +68,7 @@ export async function upgradePyth(
     arguments: [tx.object(contract.stateId), upgradeReceipt],
   });
 
-  tx.setGasBudget(NANOS_PER_IOTA / 4n); // 0.25 SUI
+  tx.setGasBudget(NANOS_PER_IOTA / 4n); // 0.25 IOTA
 
   return provider.signAndExecuteTransaction({
     signer: keypair,
@@ -102,7 +102,7 @@ export async function migratePyth(
     arguments: [tx.object(contract.stateId), verificationReceipt as any],
   });
 
-  tx.setGasBudget(NANOS_PER_IOTA / 10n); //0.1 SUI
+  tx.setGasBudget(NANOS_PER_IOTA / 10n); //0.1 IOTA
 
   return provider.signAndExecuteTransaction({
     signer: keypair,

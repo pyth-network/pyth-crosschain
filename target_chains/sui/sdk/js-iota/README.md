@@ -1,19 +1,20 @@
-# Pyth Sui JS SDK
+# Pyth IOTA JS SDK
 
-[Pyth](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency, equities, FX and commodities. This library allows you to use these real-time prices on the [Sui network](https://sui.io/).
+[Pyth](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency, equities, FX and commodities.
+This library allows you to use these real-time prices on the [IOTA network](https://www.iota.org/).
 
 ## Installation
 
 ### npm
 
 ```
-$ npm install --save @pythnetwork/pyth-sui-js
+$ npm install --save @pythnetwork/pyth-iota-js
 ```
 
 ### Yarn
 
 ```
-$ yarn add @pythnetwork/pyth-sui-js
+$ yarn add @pythnetwork/pyth-iota-js
 ```
 
 ## Quickstart
@@ -21,19 +22,19 @@ $ yarn add @pythnetwork/pyth-sui-js
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
 See [On-Demand Updates](https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand) for more information about this approach.
 Typically, to use Pyth prices on chain,
-they must be fetched from an off-chain Hermes instance. The `SuiPriceServiceConnection` class can be used to interact with these services,
+they must be fetched from an off-chain Hermes instance. The `IotaPriceServiceConnection` class can be used to interact with these services,
 providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
 Pyth prices and submit them to the network:
 
 ```typescript
-const connection = new SuiPriceServiceConnection(
-  "https://hermes-beta.pyth.network"
+const connection = new IotaPriceServiceConnection(
+  "https://hermes.pyth.network"
 ); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
-  // You can find the ids of prices at https://pyth.network/developers/price-feed-ids#sui-testnet
-  "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b", // BTC/USD price id in testnet
-  "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6", // ETH/USD price id in testnet
+  // You can find the ids of prices at https://pyth.network/developers/price-feed-ids
+  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", // BTC/USD price id
+  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id
 ];
 
 // In order to use Pyth prices in your protocol you need to submit the price update data to Pyth contract in your target
@@ -46,19 +47,19 @@ const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 
 ### **_Important Note for Integrators_**
 
-Your Sui Move module **should NOT** have a hard-coded call to `pyth::update_single_price_feed`. In other words, the Sui Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called directly from client code (e.g. Typescript or Rust).
+Your IOTA Move module **should NOT** have a hard-coded call to `pyth::update_single_price_feed`. In other words, the Iota Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called directly from client code (e.g. Typescript or Rust).
 
-This is because when a Sui contract is [upgraded](https://docs.sui.io/build/package-upgrades), the new address is different from the original. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to the way Pyth upgrades are implemented. (We only allows users to interact with the most recent package version for security reasons).
+This is because when a IOTA contract is [upgraded](https://docs.iota.org/developer/iota-101/move-overview/package-upgrades/upgrade), the new address is different from the original. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to the way Pyth upgrades are implemented. (We only allows users to interact with the most recent package version for security reasons).
 
-Therefore, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call a function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
-You can use `SuiPythClient` to build such transactions.
+Therefore, you should build a [Iota programmable transaction](https://docs.iota.org/ts-sdk/typescript/transaction-building/basics) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call a function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
+You can use `IotaPythClient` to build such transactions.
 
 ### Example
 
 ```ts
-import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
-import { Transaction } from "@mysten/sui/transactions";
-import { SuiClient } from "@mysten/sui/client";
+import { IotaPythClient } from "@pythnetwork/pyth-iota-js";
+import { Transaction } from "@iota/iota-sdk/transactions";
+import { IotaClient } from "@iota/iota-sdk/client";
 
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds); // see quickstart section
 
@@ -70,8 +71,8 @@ const wallet: SignerWithProvider = getWallet();
 const wormholeStateId = " 0xFILL_ME";
 const pythStateId = "0xFILL_ME";
 
-const provider = new SuiClient({ url: "https://fill-sui-endpoint" });
-const client = new SuiPythClient(wallet.provider, pythStateId, wormholeStateId);
+const provider = new IotaClient({ url: "https://fill-iota-endpoint" });
+const client = new IotaPythClient(wallet.provider, pythStateId, wormholeStateId);
 const tx = new Transaction();
 const priceInfoObjectIds = await client.updatePriceFeeds(tx, priceFeedUpdateData, priceIds);
 
@@ -98,26 +99,26 @@ Now in your contract you can consume the price by calling `pyth::get_price` or o
 
 ### CLI Example
 
-[This example](./src/examples/SuiRelay.ts) shows how to update prices on an Sui network. It does the following:
+[This example](./src/examples/IotaRelay.ts) shows how to update prices on an IOTA network. It does the following:
 
 1. Fetches update data from Hermes for the given price feeds.
-2. Calls the Pyth Sui contract with the update data.
+2. Calls the Pyth IOTA contract with the update data.
 
-You can run this example with `npm run example-relay`. A full command that updates prices on Sui testnet looks like:
+You can run this example with `npm run example-relay`. A full command that updates prices on IOTA testnet looks like:
 
 ```bash
-export SUI_KEY=YOUR_PRIV_KEY;
-npm run example-relay -- --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
---price-service "https://hermes-beta.pyth.network" \
---full-node "https://fullnode.testnet.sui.io:443" \
---pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" \
---wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
+export IOTA_KEY=YOUR_PRIV_KEY;
+npm run example-relay -- --feed-id "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace" \
+--price-service "https://hermes.pyth.network" \
+--full-node "https://api.testnet.iota.cafe" \
+--pyth-state-id "0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1" \
+--wormhole-state-id "0x8bc490f69520a97ca1b3de864c96aa2265a0cf5d90f5f3f016b2eddf0cf2af2b"
 ```
 
 ## Off-chain prices
 
 Many applications additionally need to display Pyth prices off-chain, for example, in their frontend application.
-The `SuiPriceServiceConnection` provides two different ways to fetch the current Pyth price.
+The `IotaPriceServiceConnection` provides two different ways to fetch the current Pyth price.
 The code blocks below assume that the `connection` and `priceIds` objects have been initialized as shown above.
 The first method is a single-shot query:
 
