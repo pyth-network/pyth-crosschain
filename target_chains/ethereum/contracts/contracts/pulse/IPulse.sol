@@ -40,10 +40,10 @@ interface IPulse is PulseEvents {
      * @notice Requests price updates with a callback
      * @dev The msg.value must be equal to getFee(callbackGasLimit)
      * @param provider The provider to fulfill the request
-     * @param callbackGasLimit The amount of gas allocated for the callback execution
      * @param publishTime The minimum publish time for price updates, it should be less than or equal to block.timestamp + 60
      * @param priceIds The price feed IDs to update. Maximum 10 price feeds per request.
      *        Requests requiring more feeds should be split into multiple calls.
+     * @param callbackGasLimit The amount of gas allocated for the callback execution
      * @return sequenceNumber The sequence number assigned to this request
      * @dev Security note: The 60-second future limit on publishTime prevents a DoS vector where
      *      attackers could submit many low-fee requests for far-future updates when gas prices
@@ -84,8 +84,7 @@ interface IPulse is PulseEvents {
 
     /**
      * @notice Calculates the total fee required for a price update request
-     * FIXME: is this comment right?
-     * @dev Total fee = base Pyth protocol fee + gas costs for callback
+     * @dev Total fee = base Pyth protocol fee + base provider fee + provider fee per feed + gas costs for callback
      * @param provider The provider to fulfill the request
      * @param callbackGasLimit The amount of gas allocated for callback execution
      * @param priceIds The price feed IDs to update.
@@ -97,7 +96,10 @@ interface IPulse is PulseEvents {
         bytes32[] calldata priceIds
     ) external view returns (uint128 feeAmount);
 
-    function getAccruedFees() external view returns (uint128 accruedFeesInWei);
+    function getAccruedPythFees()
+        external
+        view
+        returns (uint128 accruedFeesInWei);
 
     function getRequest(
         uint64 sequenceNumber

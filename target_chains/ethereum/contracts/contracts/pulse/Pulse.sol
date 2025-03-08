@@ -251,7 +251,7 @@ abstract contract Pulse is IPulse, PulseState {
         pythFeeInWei = _state.pythFeeInWei;
     }
 
-    function getAccruedFees()
+    function getAccruedPythFees()
         public
         view
         override

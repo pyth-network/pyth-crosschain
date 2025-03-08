@@ -643,7 +643,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         // Get admin's balance before withdrawal
         uint256 adminBalanceBefore = admin.balance;
-        uint128 accruedFees = pulse.getAccruedFees();
+        uint128 accruedFees = pulse.getAccruedPythFees();
 
         // Withdraw fees as admin
         vm.prank(admin);
@@ -656,7 +656,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             "Admin balance should increase by withdrawn amount"
         );
         assertEq(
-            pulse.getAccruedFees(),
+            pulse.getAccruedPythFees(),
             0,
             "Contract should have no fees after withdrawal"
         );
