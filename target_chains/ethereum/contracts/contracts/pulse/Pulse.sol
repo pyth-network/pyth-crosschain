@@ -56,7 +56,7 @@ abstract contract Pulse is IPulse, PulseState {
     // TODO: there can be a separate wrapper function that defaults the provider (or uses the cheapest or something).
     function requestPriceUpdatesWithCallback(
         address provider,
-        uint256 publishTime,
+        uint64 publishTime,
         bytes32[] calldata priceIds,
         uint256 callbackGasLimit
     ) external payable override returns (uint64 requestSequenceNumber) {
@@ -65,7 +65,7 @@ abstract contract Pulse is IPulse, PulseState {
             "Provider not registered"
         );
 
-        // FIXME: this comment is wrong.
+        // FIXME: this comment is wrong. (we're not using tx.gasprice)
         // NOTE: The 60-second future limit on publishTime prevents a DoS vector where
         //      attackers could submit many low-fee requests for far-future updates when gas prices
         //      are low, forcing executors to fulfill them later when gas prices might be much higher.
@@ -93,7 +93,6 @@ abstract contract Pulse is IPulse, PulseState {
         for (uint8 i = 0; i < priceIds.length; i++) {
             req.priceIds[i] = priceIds[i];
         }
-
         _state.accruedFeesInWei += _state.pythFeeInWei;
 
         emit PriceUpdateRequested(req, priceIds);
@@ -129,7 +128,6 @@ abstract contract Pulse is IPulse, PulseState {
             }
         }
 
-        // Parse price feeds first to measure gas usage
         // TODO: should this use parsePriceFeedUpdatesUnique? also, do we need to add 1 to maxPublishTime?
         IPyth pyth = IPyth(_state.pyth);
         uint256 pythFee = pyth.getUpdateFee(updateData);
@@ -142,7 +140,6 @@ abstract contract Pulse is IPulse, PulseState {
             SafeCast.toUint64(req.publishTime)
         );
 
-        clearRequest(sequenceNumber);
         // TODO: if this effect occurs here, we need to guarantee that executeCallback can never revert.
         // If executeCallback can revert, then funds can be permanently locked in the contract.
         // TODO: there also needs to be some penalty mechanism in case the expected provider doesn't execute the callback.
@@ -152,6 +149,18 @@ abstract contract Pulse is IPulse, PulseState {
         _state.providers[providerToCredit].accruedFeesInWei += req.fee;
         _state.providers[providerToCredit].accruedFeesInWei += SafeCast
             .toUint128(msg.value - pythFee);
+
+        clearRequest(sequenceNumber);
+
+        // TODO: I'm pretty sure this is going to use a lot of gas because it's doing a storage lookup for each sequence number.
+        // a better solution would be a doubly-linked list of active requests.
+        // After successful callback, update firstUnfulfilledSeq if needed
+        while (
+            _state.firstUnfulfilledSeq < _state.currentSequenceNumber &&
+            !isActive(findRequest(_state.firstUnfulfilledSeq))
+        ) {
+            _state.firstUnfulfilledSeq++;
+        }
 
         try
             IPulseConsumer(req.requester)._pulseCallback{
@@ -164,7 +173,7 @@ abstract contract Pulse is IPulse, PulseState {
             // Explicit revert/require
             emit PriceUpdateCallbackFailed(
                 sequenceNumber,
-                msg.sender,
+                providerToCredit,
                 priceIds,
                 req.requester,
                 reason
@@ -173,20 +182,11 @@ abstract contract Pulse is IPulse, PulseState {
             // Out of gas or other low-level errors
             emit PriceUpdateCallbackFailed(
                 sequenceNumber,
-                msg.sender,
+                providerToCredit,
                 priceIds,
                 req.requester,
                 "low-level error (possibly out of gas)"
             );
-        }
-
-        // TODO: I'm pretty sure this is going to use a lot of gas because it's doing a storage lookup for each sequence number.
-        // After successful callback, update firstUnfulfilledSeq if needed
-        while (
-            _state.firstUnfulfilledSeq < _state.currentSequenceNumber &&
-            !isActive(findRequest(_state.firstUnfulfilledSeq))
-        ) {
-            _state.firstUnfulfilledSeq++;
         }
     }
 
@@ -198,7 +198,7 @@ abstract contract Pulse is IPulse, PulseState {
         int64[] memory prices = new int64[](priceFeeds.length);
         uint64[] memory conf = new uint64[](priceFeeds.length);
         int32[] memory expos = new int32[](priceFeeds.length);
-        uint256[] memory publishTimes = new uint256[](priceFeeds.length);
+        uint64[] memory publishTimes = new uint256[](priceFeeds.length);
 
         for (uint i = 0; i < priceFeeds.length; i++) {
             prices[i] = priceFeeds[i].price.price;

@@ -13,7 +13,7 @@ interface PulseEvents {
         int64[] prices,
         uint64[] conf,
         int32[] expos,
-        uint256[] publishTimes
+        uint64[] publishTimes
     );
 
     event FeesWithdrawn(address indexed recipient, uint128 amount);

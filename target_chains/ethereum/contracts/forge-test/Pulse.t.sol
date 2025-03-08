@@ -12,13 +12,22 @@ import "../contracts/pulse/PulseEvents.sol";
 import "../contracts/pulse/PulseErrors.sol";
 
 contract MockPulseConsumer is IPulseConsumer {
+    address private _pulse;
     uint64 public lastSequenceNumber;
     PythStructs.PriceFeed[] private _lastPriceFeeds;
+
+    constructor(address pulse) {
+        _pulse = pulse;
+    }
+
+    function getPulse() internal view override returns (address) {
+        return _pulse;
+    }
 
     function pulseCallback(
         uint64 sequenceNumber,
         PythStructs.PriceFeed[] memory priceFeeds
-    ) external override {
+    ) internal override {
         lastSequenceNumber = sequenceNumber;
         for (uint i = 0; i < priceFeeds.length; i++) {
             _lastPriceFeeds.push(priceFeeds[i]);
@@ -35,10 +44,20 @@ contract MockPulseConsumer is IPulseConsumer {
 }
 
 contract FailingPulseConsumer is IPulseConsumer {
+    address private _pulse;
+
+    constructor(address pulse) {
+        _pulse = pulse;
+    }
+
+    function getPulse() internal view override returns (address) {
+        return _pulse;
+    }
+
     function pulseCallback(
         uint64,
         PythStructs.PriceFeed[] memory
-    ) external pure override {
+    ) internal pure override {
         revert("callback failed");
     }
 }
@@ -46,14 +65,25 @@ contract FailingPulseConsumer is IPulseConsumer {
 contract CustomErrorPulseConsumer is IPulseConsumer {
     error CustomError(string message);
 
+    address private _pulse;
+
+    constructor(address pulse) {
+        _pulse = pulse;
+    }
+
+    function getPulse() internal view override returns (address) {
+        return _pulse;
+    }
+
     function pulseCallback(
         uint64,
         PythStructs.PriceFeed[] memory
-    ) external pure override {
+    ) internal pure override {
         revert CustomError("callback failed");
     }
 }
 
+// FIXME: this shouldn't be IPulseConsumer.
 contract PulseTest is Test, PulseEvents, IPulseConsumer {
     ERC1967Proxy public proxy;
     PulseUpgradeable public pulse;
@@ -1187,11 +1217,15 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         );
     }
 
+    function getPulse() internal view override returns (address) {
+        return address(pulse);
+    }
+
     // Mock implementation of pulseCallback
     function pulseCallback(
         uint64 sequenceNumber,
         PythStructs.PriceFeed[] memory priceFeeds
-    ) external override {
+    ) internal override {
         // Just accept the callback, no need to do anything with the data
         // This prevents the revert we're seeing
     }
