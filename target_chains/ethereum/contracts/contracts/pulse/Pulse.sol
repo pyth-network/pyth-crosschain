@@ -198,13 +198,16 @@ abstract contract Pulse is IPulse, PulseState {
         int64[] memory prices = new int64[](priceFeeds.length);
         uint64[] memory conf = new uint64[](priceFeeds.length);
         int32[] memory expos = new int32[](priceFeeds.length);
-        uint64[] memory publishTimes = new uint256[](priceFeeds.length);
+        uint64[] memory publishTimes = new uint64[](priceFeeds.length);
 
         for (uint i = 0; i < priceFeeds.length; i++) {
             prices[i] = priceFeeds[i].price.price;
             conf[i] = priceFeeds[i].price.conf;
             expos[i] = priceFeeds[i].price.expo;
-            publishTimes[i] = priceFeeds[i].price.publishTime;
+            // Safe cast because this is a unix timestamp in seconds.
+            publishTimes[i] = SafeCast.toUint64(
+                priceFeeds[i].price.publishTime
+            );
         }
 
         emit PriceUpdateExecuted(

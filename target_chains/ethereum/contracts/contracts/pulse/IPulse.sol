@@ -53,7 +53,7 @@ interface IPulse is PulseEvents {
      */
     function requestPriceUpdatesWithCallback(
         address provider,
-        uint256 publishTime,
+        uint64 publishTime,
         bytes32[] calldata priceIds,
         uint256 callbackGasLimit
     ) external payable returns (uint64 sequenceNumber);
