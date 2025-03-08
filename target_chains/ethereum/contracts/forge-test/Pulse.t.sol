@@ -94,7 +94,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     address public defaultProvider;
     // Constants
     uint128 constant PYTH_FEE = 1 wei;
-    uint128 constant DEFAULT_PROVIDER_FEE = 1 wei;
+    uint128 constant DEFAULT_PROVIDER_FEE_PER_GAS = 1 wei;
+    uint128 constant DEFAULT_PROVIDER_BASE_FEE = 1 wei;
+    uint128 constant DEFAULT_PROVIDER_FEE_PER_FEED = 10 wei;
+    uint constant MOCK_PYTH_FEE_PER_FEED = 10 wei;
+
     uint128 constant CALLBACK_GAS_LIMIT = 1_000_000;
     bytes32 constant BTC_PRICE_FEED_ID =
         0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
@@ -107,7 +111,6 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     int64 constant MOCK_ETH_PRICE = 300_000_000_000; // $3,000
     uint64 constant MOCK_BTC_CONF = 10_000_000_000; // $100
     uint64 constant MOCK_ETH_CONF = 5_000_000_000; // $50
-    uint constant MOCK_PYTH_FEE_PER_FEED = 10;
 
     function setUp() public {
         owner = address(1);
@@ -128,7 +131,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             15
         );
         vm.prank(defaultProvider);
-        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+        pulse.registerProvider(
+            DEFAULT_PROVIDER_BASE_FEE,
+            DEFAULT_PROVIDER_FEE_PER_FEED,
+            DEFAULT_PROVIDER_FEE_PER_GAS
+        );
         consumer = new MockPulseConsumer(address(proxy));
     }
 
@@ -259,7 +266,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             callbackGasLimit: CALLBACK_GAS_LIMIT,
             requester: address(consumer),
             provider: defaultProvider,
-            fee: totalFee
+            fee: totalFee - PYTH_FEE
         });
 
         vm.expectEmit();
@@ -588,7 +595,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         for (uint256 i = 0; i < gasLimits.length; i++) {
             uint256 gasLimit = gasLimits[i];
             uint128 expectedFee = SafeCast.toUint128(
-                DEFAULT_PROVIDER_FEE * gasLimit
+                DEFAULT_PROVIDER_BASE_FEE +
+                    DEFAULT_PROVIDER_FEE_PER_FEED *
+                    priceIds.length +
+                    DEFAULT_PROVIDER_FEE_PER_GAS *
+                    gasLimit
             ) + PYTH_FEE;
             uint128 actualFee = pulse.getFee(
                 defaultProvider,
@@ -603,7 +614,12 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         }
 
         // Test with zero gas limit
-        uint128 expectedMinFee = PYTH_FEE;
+        uint128 expectedMinFee = SafeCast.toUint128(
+            PYTH_FEE +
+                DEFAULT_PROVIDER_BASE_FEE +
+                DEFAULT_PROVIDER_FEE_PER_FEED *
+                priceIds.length
+        );
         uint128 actualMinFee = pulse.getFee(defaultProvider, 0, priceIds);
         assertEq(
             actualMinFee,
@@ -793,7 +809,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         uint128 providerFee = 1000;
 
         vm.prank(provider);
-        pulse.registerProvider(providerFee);
+        pulse.registerProvider(providerFee, providerFee, providerFee);
 
         PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
         assertEq(info.feePerGasInWei, providerFee);
@@ -802,17 +818,27 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
     function testSetProviderFee() public {
         address provider = address(0x123);
-        uint128 initialFee = 1000;
-        uint128 newFee = 2000;
+        uint128 initialBaseFee = 1000;
+        uint128 initialFeePerFeed = 2000;
+        uint128 initialFeePerGas = 3000;
+        uint128 newFeePerFeed = 4000;
+        uint128 newBaseFee = 5000;
+        uint128 newFeePerGas = 6000;
 
         vm.prank(provider);
-        pulse.registerProvider(initialFee);
+        pulse.registerProvider(
+            initialBaseFee,
+            initialFeePerFeed,
+            initialFeePerGas
+        );
 
         vm.prank(provider);
-        pulse.setProviderFee(provider, newFee);
+        pulse.setProviderFee(provider, newBaseFee, newFeePerFeed, newFeePerGas);
 
         PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
-        assertEq(info.feePerGasInWei, newFee);
+        assertEq(info.baseFeeInWei, newBaseFee);
+        assertEq(info.feePerFeedInWei, newFeePerFeed);
+        assertEq(info.feePerGasInWei, newFeePerGas);
     }
 
     function testDefaultProvider() public {
@@ -820,7 +846,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         uint128 providerFee = 1000;
 
         vm.prank(provider);
-        pulse.registerProvider(providerFee);
+        pulse.registerProvider(providerFee, providerFee, providerFee);
 
         vm.prank(admin);
         pulse.setDefaultProvider(provider);
@@ -833,10 +859,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         uint128 providerFee = 1000;
 
         vm.prank(provider);
-        pulse.registerProvider(providerFee);
-
-        vm.prank(admin);
-        pulse.setDefaultProvider(provider);
+        pulse.registerProvider(providerFee, providerFee, providerFee);
 
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
@@ -848,7 +871,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
         }(
-            defaultProvider,
+            provider,
             SafeCast.toUint64(block.timestamp),
             priceIds,
             CALLBACK_GAS_LIMIT
@@ -889,7 +912,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         // Register a second provider
         address secondProvider = address(0x456);
         vm.prank(secondProvider);
-        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+        pulse.registerProvider(
+            DEFAULT_PROVIDER_BASE_FEE,
+            DEFAULT_PROVIDER_FEE_PER_FEED,
+            DEFAULT_PROVIDER_FEE_PER_GAS
+        );
 
         // Setup request
         (
@@ -906,17 +933,15 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Try to execute with second provider during exclusivity period
-        vm.prank(secondProvider);
         vm.expectRevert("Only assigned provider during exclusivity period");
         pulse.executeCallback(
-            defaultProvider,
+            secondProvider,
             sequenceNumber,
             updateData,
             priceIds
         );
 
         // Original provider should succeed
-        vm.prank(defaultProvider);
         pulse.executeCallback(
             defaultProvider,
             sequenceNumber,
@@ -929,7 +954,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         // Register a second provider
         address secondProvider = address(0x456);
         vm.prank(secondProvider);
-        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+        pulse.registerProvider(
+            DEFAULT_PROVIDER_BASE_FEE,
+            DEFAULT_PROVIDER_FEE_PER_FEED,
+            DEFAULT_PROVIDER_FEE_PER_GAS
+        );
 
         // Setup request
         (
@@ -962,7 +991,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         // Register a second provider
         address secondProvider = address(0x456);
         vm.prank(secondProvider);
-        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+        pulse.registerProvider(
+            DEFAULT_PROVIDER_BASE_FEE,
+            DEFAULT_PROVIDER_FEE_PER_FEED,
+            DEFAULT_PROVIDER_FEE_PER_GAS
+        );
 
         // Set custom exclusivity period
         vm.prank(admin);
@@ -984,10 +1017,9 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         // Try at 29 seconds (should fail for second provider)
         vm.warp(block.timestamp + 29);
-        vm.prank(secondProvider);
         vm.expectRevert("Only assigned provider during exclusivity period");
         pulse.executeCallback(
-            defaultProvider,
+            secondProvider,
             sequenceNumber,
             updateData,
             priceIds
@@ -995,9 +1027,8 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         // Try at 31 seconds (should succeed for second provider)
         vm.warp(block.timestamp + 2);
-        vm.prank(secondProvider);
         pulse.executeCallback(
-            defaultProvider,
+            secondProvider,
             sequenceNumber,
             updateData,
             priceIds

@@ -146,9 +146,8 @@ abstract contract Pulse is IPulse, PulseState {
         // This should take funds from the expected provider and give to providerToCredit. The penalty should probably scale
         // with time in order to ensure that the callback eventually gets executed.
         // (There may be exploits with ^ though if the consumer contract is malicious ?)
-        _state.providers[providerToCredit].accruedFeesInWei += req.fee;
         _state.providers[providerToCredit].accruedFeesInWei += SafeCast
-            .toUint128(msg.value - pythFee);
+            .toUint128((req.fee + msg.value) - pythFee);
 
         clearRequest(sequenceNumber);
 
@@ -227,13 +226,20 @@ abstract contract Pulse is IPulse, PulseState {
         bytes32[] calldata priceIds
     ) public view override returns (uint128 feeAmount) {
         uint128 baseFee = _state.pythFeeInWei; // Fixed fee to Pyth
-        // FIXME: this also needs to consider the Pyth fee charged for the update.
-        // Unfortunately, the getUpdateFee function takes the entire update data as an argument, not just the priceIds.
-        // uint128 pythFee = IPyth(_state.pyth).getUpdateFee(updateData);
-
+        // Note: The provider needs to set its fees to include the fee charged by the Pyth contract.
+        // Ideally, we would be able to automatically compute the pyth fees from the priceIds, but the
+        // fee computation on IPyth assumes it has the full updated data.
+        uint128 providerBaseFee = _state.providers[provider].baseFeeInWei;
+        uint128 providerFeedFee = SafeCast.toUint128(
+            priceIds.length * _state.providers[provider].feePerFeedInWei
+        );
         uint128 providerFeeInWei = _state.providers[provider].feePerGasInWei; // Provider's per-gas rate
         uint256 gasFee = callbackGasLimit * providerFeeInWei; // Total provider fee based on gas
-        feeAmount = baseFee + SafeCast.toUint128(gasFee); // Total fee user needs to pay
+        feeAmount =
+            baseFee +
+            providerBaseFee +
+            providerFeedFee +
+            SafeCast.toUint128(gasFee); // Total fee user needs to pay
     }
 
     function getPythFeeInWei()
@@ -360,9 +366,15 @@ abstract contract Pulse is IPulse, PulseState {
         emit FeesWithdrawn(msg.sender, amount);
     }
 
-    function registerProvider(uint128 feePerGasInWei) external override {
+    function registerProvider(
+        uint128 baseFeeInWei,
+        uint128 feePerFeedInWei,
+        uint128 feePerGasInWei
+    ) external override {
         ProviderInfo storage provider = _state.providers[msg.sender];
         require(!provider.isRegistered, "Provider already registered");
+        provider.baseFeeInWei = baseFeeInWei;
+        provider.feePerFeedInWei = feePerFeedInWei;
         provider.feePerGasInWei = feePerGasInWei;
         provider.isRegistered = true;
         emit ProviderRegistered(msg.sender, feePerGasInWei);
@@ -370,6 +382,8 @@ abstract contract Pulse is IPulse, PulseState {
 
     function setProviderFee(
         address provider,
+        uint128 newBaseFeeInWei,
+        uint128 newFeePerFeedInWei,
         uint128 newFeePerGasInWei
     ) external override {
         require(
@@ -382,9 +396,21 @@ abstract contract Pulse is IPulse, PulseState {
             "Only provider or fee manager can invoke this method"
         );
 
-        uint128 oldFee = _state.providers[provider].feePerGasInWei;
+        uint128 oldBaseFee = _state.providers[provider].baseFeeInWei;
+        uint128 oldFeePerFeed = _state.providers[provider].feePerFeedInWei;
+        uint128 oldFeePerGas = _state.providers[provider].feePerGasInWei;
+        _state.providers[provider].baseFeeInWei = newBaseFeeInWei;
+        _state.providers[provider].feePerFeedInWei = newFeePerFeedInWei;
         _state.providers[provider].feePerGasInWei = newFeePerGasInWei;
-        emit ProviderFeeUpdated(provider, oldFee, newFeePerGasInWei);
+        emit ProviderFeeUpdated(
+            provider,
+            oldBaseFee,
+            oldFeePerFeed,
+            oldFeePerGas,
+            newBaseFeeInWei,
+            newFeePerFeedInWei,
+            newFeePerGasInWei
+        );
     }
 
     function getProviderInfo(

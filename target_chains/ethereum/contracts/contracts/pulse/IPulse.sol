@@ -113,9 +113,18 @@ interface IPulse is PulseEvents {
 
     function withdrawAsFeeManager(address provider, uint128 amount) external;
 
-    function registerProvider(uint128 feeInWei) external;
+    function registerProvider(
+        uint128 baseFeeInWei,
+        uint128 feePerFeedInWei,
+        uint128 feePerGasInWei
+    ) external;
 
-    function setProviderFee(address provider, uint128 newFeeInWei) external;
+    function setProviderFee(
+        address provider,
+        uint128 newBaseFeeInWei,
+        uint128 newFeePerFeedInWei,
+        uint128 newFeePerGasInWei
+    ) external;
 
     function getProviderInfo(
         address provider

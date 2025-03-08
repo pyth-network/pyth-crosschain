@@ -24,6 +24,8 @@ contract PulseState {
     }
 
     struct ProviderInfo {
+        uint128 baseFeeInWei;
+        uint128 feePerFeedInWei;
         uint128 feePerGasInWei;
         uint128 accruedFeesInWei;
         address feeManager;

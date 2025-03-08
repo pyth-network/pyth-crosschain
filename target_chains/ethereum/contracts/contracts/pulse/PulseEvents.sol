@@ -35,8 +35,12 @@ interface PulseEvents {
     event ProviderRegistered(address indexed provider, uint128 feeInWei);
     event ProviderFeeUpdated(
         address indexed provider,
-        uint128 oldFee,
-        uint128 newFee
+        uint128 oldBaseFee,
+        uint128 oldFeePerFeed,
+        uint128 oldFeePerGas,
+        uint128 newBaseFee,
+        uint128 newFeePerFeed,
+        uint128 newFeePerGas
     );
     event DefaultProviderUpdated(address oldProvider, address newProvider);
 
