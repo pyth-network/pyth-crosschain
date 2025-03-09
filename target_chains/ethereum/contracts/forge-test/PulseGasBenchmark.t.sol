@@ -11,9 +11,6 @@ import "../contracts/pulse/PulseEvents.sol";
 import "../contracts/pulse/PulseErrors.sol";
 import "./utils/PulseTestUtils.t.sol";
 
-// TODO
-// - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
-//   verify the provider's value.
 contract PulseGasBenchmark is Test, PulseTestUtils {
     ERC1967Proxy public proxy;
     PulseUpgradeable public pulse;
