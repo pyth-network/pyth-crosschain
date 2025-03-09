@@ -148,19 +148,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer, PulseTestUtils {
         PulseState.Request memory expectedRequest = PulseState.Request({
             sequenceNumber: 1,
             publishTime: publishTime,
-            priceIds: [
-                priceIds[0],
-                priceIds[1],
-                bytes32(0), // Fill remaining slots with zero
-                bytes32(0),
-                bytes32(0),
-                bytes32(0),
-                bytes32(0),
-                bytes32(0),
-                bytes32(0),
-                bytes32(0)
-            ],
-            numPriceIds: 2,
+            priceIdsHash: keccak256(abi.encode(priceIds)),
             callbackGasLimit: CALLBACK_GAS_LIMIT,
             requester: address(consumer),
             provider: defaultProvider,
@@ -182,10 +170,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer, PulseTestUtils {
         PulseState.Request memory lastRequest = pulse.getRequest(1);
         assertEq(lastRequest.sequenceNumber, expectedRequest.sequenceNumber);
         assertEq(lastRequest.publishTime, expectedRequest.publishTime);
-        assertEq(lastRequest.numPriceIds, expectedRequest.numPriceIds);
-        for (uint8 i = 0; i < lastRequest.numPriceIds; i++) {
-            assertEq(lastRequest.priceIds[i], expectedRequest.priceIds[i]);
-        }
+        assertEq(lastRequest.priceIdsHash, expectedRequest.priceIdsHash);
         assertEq(
             lastRequest.callbackGasLimit,
             expectedRequest.callbackGasLimit
