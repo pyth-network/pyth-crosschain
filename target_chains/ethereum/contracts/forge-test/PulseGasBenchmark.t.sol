@@ -9,11 +9,12 @@ import "../contracts/pulse/IPulse.sol";
 import "../contracts/pulse/PulseState.sol";
 import "../contracts/pulse/PulseEvents.sol";
 import "../contracts/pulse/PulseErrors.sol";
+import "./utils/PulseTestUtils.t.sol";
 
 // TODO
 // - what's the impact of # of in-flight requests on gas usage? More requests => more hashes to
 //   verify the provider's value.
-contract PulseGasBenchmark is Test {
+contract PulseGasBenchmark is Test, PulseTestUtils {
     ERC1967Proxy public proxy;
     PulseUpgradeable public pulse;
     IPulseConsumer public consumer;
@@ -55,16 +56,40 @@ contract PulseGasBenchmark is Test {
         consumer = new VoidPulseConsumer(address(proxy));
     }
 
-    function testBasicFlow() public {
-        bytes32[] memory priceIds = createPriceIds();
-        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+    // Estimate how much gas is used by all of the data mocking functionality in the other gas benchmarks.
+    // Subtract this amount from the gas benchmarks to estimate the true usafe of the pulse flow.
+    function testDataMocking() public {
+        uint64 timestamp = SafeCast.toUint64(block.timestamp);
+        createPriceIds();
 
-        uint128 totalFee = calculateTotalFee();
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            timestamp
+        );
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
+        createMockUpdateData(priceFeeds);
+    }
+
+    function testBasicFlow() public {
+        uint64 timestamp = SafeCast.toUint64(block.timestamp);
+        bytes32[] memory priceIds = createPriceIds();
+
+        uint128 callbackGasLimit = 100000;
+        uint128 totalFee = pulse.getFee(
+            defaultProvider,
+            callbackGasLimit,
+            priceIds
+        );
         vm.deal(address(consumer), 1 ether);
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
-        }(defaultProvider, publishTime, priceIds, 100000);
+        }(defaultProvider, timestamp, priceIds, callbackGasLimit);
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            timestamp
+        );
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         pulse.executeCallback(
             defaultProvider,
