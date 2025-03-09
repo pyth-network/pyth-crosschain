@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "./utils/PulseTestUtils.t.sol";
 import "../contracts/pulse/PulseUpgradeable.sol";
 import "../contracts/pulse/IPulse.sol";
 import "../contracts/pulse/PulseState.sol";
@@ -84,7 +85,7 @@ contract CustomErrorPulseConsumer is IPulseConsumer {
 }
 
 // FIXME: this shouldn't be IPulseConsumer.
-contract PulseTest is Test, PulseEvents, IPulseConsumer {
+contract PulseTest is Test, PulseEvents, IPulseConsumer, PulseTestUtils {
     ERC1967Proxy public proxy;
     PulseUpgradeable public pulse;
     MockPulseConsumer public consumer;
@@ -97,20 +98,6 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     uint128 constant DEFAULT_PROVIDER_FEE_PER_GAS = 1 wei;
     uint128 constant DEFAULT_PROVIDER_BASE_FEE = 1 wei;
     uint128 constant DEFAULT_PROVIDER_FEE_PER_FEED = 10 wei;
-    uint constant MOCK_PYTH_FEE_PER_FEED = 10 wei;
-
-    uint128 constant CALLBACK_GAS_LIMIT = 1_000_000;
-    bytes32 constant BTC_PRICE_FEED_ID =
-        0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
-    bytes32 constant ETH_PRICE_FEED_ID =
-        0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace;
-
-    // Price feed constants
-    int8 constant MOCK_PRICE_FEED_EXPO = -8;
-    int64 constant MOCK_BTC_PRICE = 5_000_000_000_000; // $50,000
-    int64 constant MOCK_ETH_PRICE = 300_000_000_000; // $3,000
-    uint64 constant MOCK_BTC_CONF = 10_000_000_000; // $100
-    uint64 constant MOCK_ETH_CONF = 5_000_000_000; // $50
 
     function setUp() public {
         owner = address(1);
@@ -139,100 +126,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         consumer = new MockPulseConsumer(address(proxy));
     }
 
-    // Helper function to create price IDs array
-    function createPriceIds() internal pure returns (bytes32[] memory) {
-        bytes32[] memory priceIds = new bytes32[](2);
-        priceIds[0] = BTC_PRICE_FEED_ID;
-        priceIds[1] = ETH_PRICE_FEED_ID;
-        return priceIds;
-    }
-
-    // Helper function to create mock price feeds
-    function createMockPriceFeeds(
-        uint256 publishTime
-    ) internal pure returns (PythStructs.PriceFeed[] memory) {
-        PythStructs.PriceFeed[] memory priceFeeds = new PythStructs.PriceFeed[](
-            2
-        );
-
-        priceFeeds[0].id = BTC_PRICE_FEED_ID;
-        priceFeeds[0].price.price = MOCK_BTC_PRICE;
-        priceFeeds[0].price.conf = MOCK_BTC_CONF;
-        priceFeeds[0].price.expo = MOCK_PRICE_FEED_EXPO;
-        priceFeeds[0].price.publishTime = publishTime;
-
-        priceFeeds[1].id = ETH_PRICE_FEED_ID;
-        priceFeeds[1].price.price = MOCK_ETH_PRICE;
-        priceFeeds[1].price.conf = MOCK_ETH_CONF;
-        priceFeeds[1].price.expo = MOCK_PRICE_FEED_EXPO;
-        priceFeeds[1].price.publishTime = publishTime;
-
-        return priceFeeds;
-    }
-
-    // Helper function to mock Pyth response
-    function mockParsePriceFeedUpdates(
-        PythStructs.PriceFeed[] memory priceFeeds
-    ) internal {
-        uint expectedFee = MOCK_PYTH_FEE_PER_FEED * priceFeeds.length;
-
-        vm.mockCall(
-            address(pyth),
-            abi.encodeWithSelector(IPyth.getUpdateFee.selector),
-            abi.encode(expectedFee)
-        );
-
-        vm.mockCall(
-            address(pyth),
-            expectedFee,
-            abi.encodeWithSelector(IPyth.parsePriceFeedUpdates.selector),
-            abi.encode(priceFeeds)
-        );
-    }
-
-    // Helper function to create mock update data
-    function createMockUpdateData(
-        PythStructs.PriceFeed[] memory priceFeeds
-    ) internal pure returns (bytes[] memory) {
-        bytes[] memory updateData = new bytes[](2);
-        updateData[0] = abi.encode(priceFeeds[0]);
-        updateData[1] = abi.encode(priceFeeds[1]);
-        return updateData;
-    }
-
     // Helper function to calculate total fee
     // FIXME: I think this helper probably needs to take some arguments.
     function calculateTotalFee() internal view returns (uint128) {
         return
             pulse.getFee(defaultProvider, CALLBACK_GAS_LIMIT, createPriceIds());
-    }
-
-    // Helper function to setup consumer request
-    function setupConsumerRequest(
-        address consumerAddress
-    )
-        internal
-        returns (
-            uint64 sequenceNumber,
-            bytes32[] memory priceIds,
-            uint64 publishTime
-        )
-    {
-        priceIds = createPriceIds();
-        publishTime = SafeCast.toUint64(block.timestamp);
-        vm.deal(consumerAddress, 1 gwei);
-
-        uint128 totalFee = calculateTotalFee();
-
-        vm.prank(consumerAddress);
-        sequenceNumber = pulse.requestPriceUpdatesWithCallback{value: totalFee}(
-            defaultProvider,
-            publishTime,
-            priceIds,
-            CALLBACK_GAS_LIMIT
-        );
-
-        return (sequenceNumber, priceIds, publishTime);
     }
 
     function testRequestPriceUpdate() public {
@@ -334,7 +232,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             publishTime
         );
         // FIXME: this test doesn't ensure the Pyth fee is paid.
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
 
         // Create arrays for expected event data
         int64[] memory expectedPrices = new int64[](2);
@@ -405,12 +303,16 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(failingConsumer));
+        ) = setupConsumerRequest(
+                pulse,
+                defaultProvider,
+                address(failingConsumer)
+            );
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.expectEmit();
@@ -440,12 +342,16 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(failingConsumer));
+        ) = setupConsumerRequest(
+                pulse,
+                defaultProvider,
+                address(failingConsumer)
+            );
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.expectEmit();
@@ -472,13 +378,13 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer));
+        ) = setupConsumerRequest(pulse, defaultProvider, address(consumer));
 
         // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Try executing with only 100K gas when 1M is required
@@ -508,7 +414,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             futureTime // Mock price feeds with future timestamp
         );
-        mockParsePriceFeedUpdates(priceFeeds); // This will make parsePriceFeedUpdates return future-dated prices
+        mockParsePriceFeedUpdates(pyth, priceFeeds); // This will make parsePriceFeedUpdates return future-dated prices
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(defaultProvider);
@@ -555,12 +461,12 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer));
+        ) = setupConsumerRequest(pulse, defaultProvider, address(consumer));
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // First execution
@@ -747,7 +653,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         uint256 publishTime = block.timestamp;
 
         // Setup request
-        (uint64 sequenceNumber, , ) = setupConsumerRequest(address(consumer));
+        (uint64 sequenceNumber, , ) = setupConsumerRequest(
+            pulse,
+            defaultProvider,
+            address(consumer)
+        );
 
         // Create different priceIds
         bytes32[] memory wrongPriceIds = new bytes32[](2);
@@ -757,7 +667,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Should revert when trying to execute with wrong priceIds
@@ -923,13 +833,13 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer));
+        ) = setupConsumerRequest(pulse, defaultProvider, address(consumer));
 
         // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Try to execute with second provider during exclusivity period
@@ -965,13 +875,13 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer));
+        ) = setupConsumerRequest(pulse, defaultProvider, address(consumer));
 
         // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Wait for exclusivity period to end
@@ -1006,13 +916,13 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
             uint256 publishTime
-        ) = setupConsumerRequest(address(consumer));
+        ) = setupConsumerRequest(pulse, defaultProvider, address(consumer));
 
         // Setup mock data
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Try at 29 seconds (should fail for second provider)
@@ -1080,7 +990,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             SafeCast.toUint64(block.timestamp)
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         updateData = createMockUpdateData(priceFeeds);
 
         vm.deal(defaultProvider, 2 ether); // Increase ETH allocation to prevent OutOfFunds
@@ -1208,7 +1118,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        mockParsePriceFeedUpdates(priceFeeds);
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Create 20 requests with some gaps
