@@ -172,9 +172,6 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub fee: u128,
 
-    /// Historical commitments made by the provider.
-    pub commitments: Option<Vec<Commitment>>,
-
     /// Maximum number of hashes to record in a request.
     /// This should be set according to the maximum gas limit the provider supports for callbacks.
     pub max_num_hashes: Option<u32>,
@@ -270,17 +267,6 @@ impl EscalationPolicyConfig {
             fee_multiplier_cap_pct: self.fee_multiplier_cap_pct,
         }
     }
-}
-
-/// A commitment that the provider used to generate random numbers at some point in the past.
-/// These historical commitments need to be stored in the configuration to support transition points where
-/// the commitment changes. In theory, this information is stored on the blockchain, but unfortunately it
-/// is hard to retrieve from there.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Commitment {
-    pub seed: [u8; 32],
-    pub chain_length: u64,
-    pub original_commitment_sequence_number: u64,
 }
 
 /// Configuration values that are common to a single provider (and shared across chains).
