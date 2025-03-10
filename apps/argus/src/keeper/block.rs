@@ -37,10 +37,9 @@ pub struct BlockRange {
 }
 
 /// Get the latest safe block number for the chain. Retry internally if there is an error.
-pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
+pub async fn get_latest_safe_block(contract: Arc<InstrumentedSignablePythContract>, chain_state: &BlockchainState) -> BlockNumber {
     loop {
-        match chain_state
-            .contract
+        match contract
             .get_block_number(chain_state.confirmed_block_status)
             .await
         {
@@ -120,8 +119,7 @@ pub async fn process_single_block_batch(
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
 ) {
     loop {
-        let events_res = chain_state
-            .contract
+        let events_res = contract
             .get_request_with_callback_events(block_range.from, block_range.to)
             .await;
 
@@ -169,6 +167,7 @@ pub async fn process_single_block_batch(
     initial_safe_block = latest_safe_block
 ))]
 pub async fn watch_blocks_wrapper(
+    contract: Arc<InstrumentedSignablePythContract>,
     chain_state: BlockchainState,
     latest_safe_block: BlockNumber,
     tx: mpsc::Sender<BlockRange>,
@@ -177,6 +176,7 @@ pub async fn watch_blocks_wrapper(
     let mut last_safe_block_processed = latest_safe_block;
     loop {
         if let Err(e) = watch_blocks(
+            contract.clone(),
             chain_state.clone(),
             &mut last_safe_block_processed,
             tx.clone(),
@@ -196,6 +196,7 @@ pub async fn watch_blocks_wrapper(
 /// block ranges to the `tx` channel. If we have subscribed to events, we could have missed those and won't even
 /// know about it.
 pub async fn watch_blocks(
+    contract: Arc<InstrumentedSignablePythContract>,
     chain_state: BlockchainState,
     last_safe_block_processed: &mut BlockNumber,
     tx: mpsc::Sender<BlockRange>,
@@ -241,7 +242,7 @@ pub async fn watch_blocks(
             }
         }
 
-        let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
+        let latest_safe_block = get_latest_safe_block(contract.clone(), &chain_state).in_current_span().await;
         if latest_safe_block > *last_safe_block_processed {
             let mut from = latest_safe_block.saturating_sub(RETRY_PREVIOUS_BLOCKS);
 
