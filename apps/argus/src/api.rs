@@ -21,14 +21,12 @@ use {
     tokio::sync::RwLock,
     url::Url,
 };
-pub use {chain_ids::*, index::*, live::*, metrics::*, ready::*, revelation::*};
+pub use {index::*, live::*, metrics::*, ready::*};
 
-mod chain_ids;
 mod index;
 mod live;
 mod metrics;
 mod ready;
-mod revelation;
 
 pub type ChainId = String;
 
@@ -152,11 +150,6 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
         .route("/live", get(live))
         .route("/metrics", get(metrics))
         .route("/ready", get(ready))
-        .route("/v1/chains", get(chain_ids))
-        .route(
-            "/v1/chains/:chain_id/revelations/:sequence",
-            get(revelation),
-        )
         .with_state(state)
 }
 

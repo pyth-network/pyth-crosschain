@@ -32,8 +32,6 @@ use {
         time,
     },
     tower_http::cors::CorsLayer,
-    utoipa::OpenApi,
-    utoipa_swagger_ui::SwaggerUi,
 };
 
 /// Track metrics in this interval
@@ -45,32 +43,12 @@ pub async fn run_api(
     metrics_registry: Arc<RwLock<Registry>>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
-    #[derive(OpenApi)]
-    #[openapi(
-    paths(
-    crate::api::revelation,
-    crate::api::chain_ids,
-    ),
-    components(
-    schemas(
-    crate::api::GetRandomValueResponse,
-    crate::api::Blob,
-    crate::api::BinaryEncoding,
-    )
-    ),
-    tags(
-    (name = "fortuna", description = "Random number service for the Pyth Entropy protocol")
-    )
-    )]
-    struct ApiDoc;
-
     let api_state = api::ApiState::new(chains, metrics_registry).await;
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
     let app = Router::new();
     let app = app
-        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .merge(api::routes(api_state))
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());
