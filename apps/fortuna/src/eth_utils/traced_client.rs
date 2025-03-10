@@ -13,6 +13,7 @@ use {
     },
     std::{str::FromStr, sync::Arc},
     tokio::{sync::RwLock, time::Instant},
+    tracing,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, EncodeLabelSet)]
@@ -26,6 +27,7 @@ pub struct RpcMetrics {
     count: Family<RpcLabel, Counter>,
     latency: Family<RpcLabel, Histogram>,
     errors_count: Family<RpcLabel, Counter>,
+    unrecoverable_errors_count: Family<RpcLabel, Counter>,
 }
 
 impl RpcMetrics {
@@ -60,10 +62,18 @@ impl RpcMetrics {
             errors_count.clone(),
         );
 
+        let unrecoverable_errors_count = Family::default();
+        sub_registry.register(
+            "unrecoverable_errors_count",
+            "The number of RPC requests made to the chain that failed with unrecoverable errors.",
+            unrecoverable_errors_count.clone(),
+        );
+
         Self {
             count,
             latency,
             errors_count,
+            unrecoverable_errors_count,
         }
     }
 }
@@ -97,7 +107,21 @@ impl JsonRpcClient for TracedClient {
         let res = match self.inner.request(method, params).await {
             Ok(result) => Ok(result),
             Err(e) => {
+                // Always increment the total error count for metrics
                 self.metrics.errors_count.get_or_create(label).inc();
+
+                // Only log unrecoverable errors
+                if self.is_unrecoverable_error(&e) {
+                    self.metrics
+                        .unrecoverable_errors_count
+                        .get_or_create(label)
+                        .inc();
+                    tracing::error!("Unrecoverable RPC error: {:?}", e);
+                } else {
+                    // For recoverable errors, just log at debug level
+                    tracing::debug!("Recoverable RPC error (will retry): {:?}", e);
+                }
+
                 Err(e)
             }
         };
@@ -119,5 +143,28 @@ impl TracedClient {
             chain_id,
             metrics,
         }))
+    }
+
+    // Helper method to determine if an error is unrecoverable
+    fn is_unrecoverable_error(&self, error: &HttpClientError) -> bool {
+        // Errors that are considered unrecoverable:
+        // - Authentication errors
+        // - Invalid request errors
+        // - Method not found errors
+        // - Other errors that are not related to network or server issues
+        match error {
+            HttpClientError::ReqwestError(e) => {
+                // Network errors are typically recoverable
+                !e.is_timeout() && !e.is_connect() && !e.is_request()
+            }
+            HttpClientError::JsonRpcError(e) => {
+                // JSON-RPC errors with codes that indicate client errors are unrecoverable
+                // Codes -32700 to -32600 are parse errors and invalid requests
+                // Codes -32601 to -32603 are method not found, invalid params, and internal errors
+                let code = e.code;
+                (-32700..=-32600).contains(&code)
+            }
+            _ => true, // Consider other errors as unrecoverable by default
+        }
     }
 }
