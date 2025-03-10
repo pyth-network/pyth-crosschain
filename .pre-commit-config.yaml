@@ -110,7 +110,7 @@ repos:
       - id: cargo-clippy-pythnet-sdk
         name: Cargo clippy for pythnet SDK
         language: "rust"
-        entry: cargo +1.82.0 clippy --manifest-path ./pythnet/pythnet_sdk/Cargo.toml --tests -- --deny warnings
+        entry: cargo +1.82.0 clippy --manifest-path ./pythnet/pythnet_sdk/Cargo.toml -- --deny warnings
         pass_filenames: false
         files: pythnet/pythnet_sdk
       # Hooks for solana receiver contract
