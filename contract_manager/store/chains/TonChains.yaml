@@ -3,7 +3,7 @@
   mainnet: false
   # using # is a hack so we can later separate the key from the URL and pass
   # it as a header
-  rpcUrl: https://testnet.toncenter.com/api/v2/#$ENV_TON_TESTNET_API_KEY
+  rpcUrl: https://testnet.toncenter.com/api/v2/jsonRPC#$ENV_TON_TESTNET_API_KEY
   type: TonChain
 - id: ton_mainnet
   wormholeChainName: ton_mainnet
