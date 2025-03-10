@@ -12,8 +12,6 @@ use {
     tracing,
 };
 
-pub type ChainId = String;
-
 const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
 
 #[derive(Debug)]
@@ -157,8 +155,6 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     call: ContractCall<T, ()>,
     gas_limit: U256,
     escalation_policy: EscalationPolicy,
-    chain_id: ChainId,
-    sequence_number: u64,
 ) -> Result<SubmitTxResult> {
     let start_time = std::time::Instant::now();
 
@@ -183,8 +179,6 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
                 gas_limit,
                 gas_multiplier_pct,
                 fee_multiplier_pct,
-                chain_id.clone(),
-                sequence_number,
             )
             .await
         },
@@ -224,8 +218,6 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     // A value of 100 submits the tx with the same gas/fee as the estimate.
     gas_estimate_multiplier_pct: u64,
     fee_estimate_multiplier_pct: u64,
-    chain_id: ChainId,
-    sequence_number: u64,
 ) -> Result<TransactionReceipt, backoff::Error<anyhow::Error>> {
     let gas_estimate_res = call.estimate_gas().await;
 
@@ -270,12 +262,7 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
             / 100,
     );
 
-    tracing::info!(
-        "Chain ID: {}, Sequence Number: {}, Tx: {:?}",
-        chain_id,
-        sequence_number,
-        transaction
-    );
+    tracing::info!("Submitting transaction: {:?}", transaction);
 
     let pending_tx = client
         .send_transaction(transaction.clone(), None)
