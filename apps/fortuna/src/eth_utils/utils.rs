@@ -2,14 +2,17 @@ use {
     crate::eth_utils::nonce_manager::NonceManaged,
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
-    ethers::types::TransactionReceipt,
-    ethers::types::U256,
-    ethers::{contract::ContractCall, middleware::Middleware},
-    std::sync::atomic::AtomicU64,
-    std::sync::Arc,
+    ethers::{
+        contract::ContractCall,
+        middleware::Middleware,
+        types::{TransactionReceipt, U256},
+    },
+    std::sync::{atomic::AtomicU64, Arc},
     tokio::time::{timeout, Duration},
     tracing,
 };
+
+pub type ChainId = String;
 
 const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
 
@@ -154,6 +157,8 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     call: ContractCall<T, ()>,
     gas_limit: U256,
     escalation_policy: EscalationPolicy,
+    chain_id: ChainId,
+    sequence_number: u64,
 ) -> Result<SubmitTxResult> {
     let start_time = std::time::Instant::now();
 
@@ -178,6 +183,8 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
                 gas_limit,
                 gas_multiplier_pct,
                 fee_multiplier_pct,
+                chain_id.clone(),
+                sequence_number,
             )
             .await
         },
@@ -217,6 +224,8 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     // A value of 100 submits the tx with the same gas/fee as the estimate.
     gas_estimate_multiplier_pct: u64,
     fee_estimate_multiplier_pct: u64,
+    chain_id: ChainId,
+    sequence_number: u64,
 ) -> Result<TransactionReceipt, backoff::Error<anyhow::Error>> {
     let gas_estimate_res = call.estimate_gas().await;
 
@@ -259,6 +268,13 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
             .unwrap_or_default()
             .saturating_mul(fee_estimate_multiplier_pct.into())
             / 100,
+    );
+
+    tracing::info!(
+        "Chain ID: {}, Sequence Number: {}, Tx: {:?}",
+        chain_id,
+        sequence_number,
+        transaction
     );
 
     let pending_tx = client

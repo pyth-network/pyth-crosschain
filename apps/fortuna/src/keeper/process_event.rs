@@ -53,6 +53,8 @@ pub async fn process_event_with_backoff(
         contract_call,
         gas_limit,
         escalation_policy,
+        chain_state.id,
+        event.sequence_number,
     )
     .await;
 
