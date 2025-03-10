@@ -33,8 +33,6 @@ pub(crate) mod keeper_metrics;
 pub(crate) mod process_event;
 pub(crate) mod track;
 
-/// How many blocks to look back for events that might be missed when starting the keeper
-const BACKLOG_RANGE: u64 = 1000;
 /// Track metrics in this interval
 const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 /// Check whether we need to conduct a withdrawal at this interval.
@@ -80,12 +78,12 @@ pub async fn run_keeper_threads(
 
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashSet::<u64>::new()));
 
-    // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
+    // Spawn a thread to handle the events from last backlog_range blocks.
     let gas_limit: U256 = chain_eth_config.gas_limit.into();
     spawn(
         process_backlog(
             BlockRange {
-                from: latest_safe_block.saturating_sub(BACKLOG_RANGE),
+                from: latest_safe_block.saturating_sub(chain_eth_config.backlog_range),
                 to: latest_safe_block,
             },
             contract.clone(),

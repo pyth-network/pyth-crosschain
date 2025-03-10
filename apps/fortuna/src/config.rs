@@ -128,6 +128,10 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub confirmed_block_status: BlockStatus,
 
+    /// The number of blocks to look back for events that might be missed when starting the keeper
+    #[serde(default = "default_backlog_range")]
+    pub backlog_range: u64,
+
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]
     pub legacy_tx: bool,
@@ -192,6 +196,10 @@ fn default_block_delays() -> Vec<u64> {
 
 fn default_priority_fee_multiplier_pct() -> u64 {
     100
+}
+
+fn default_backlog_range() -> u64 {
+    1000
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
