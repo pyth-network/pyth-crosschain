@@ -62,8 +62,8 @@ pub async fn process_event_with_backoff(
         .inc();
 
     match success {
-        Ok(res) => {
-            tracing::info!("Processed event successfully in {:?}", res.duration);
+        Ok(result) => {
+            tracing::info!("Processed event successfully in {:?}", result.duration);
 
             metrics
                 .requests_processed_success
@@ -73,39 +73,37 @@ pub async fn process_event_with_backoff(
             metrics
                 .request_duration_ms
                 .get_or_create(&account_label)
-                .observe(res.duration.as_millis() as f64);
+                .observe(result.duration.as_millis() as f64);
 
             // Track retry count, gas multiplier, and fee multiplier for successful transactions
             metrics
                 .retry_count
                 .get_or_create(&account_label)
-                .observe(res.num_retries as f64);
+                .observe(result.num_retries as f64);
 
             metrics
                 .final_gas_multiplier
                 .get_or_create(&account_label)
-                .observe(res.gas_multiplier as f64);
+                .observe(result.gas_multiplier as f64);
 
             metrics
                 .final_fee_multiplier
                 .get_or_create(&account_label)
-                .observe(res.fee_multiplier as f64);
+                .observe(result.fee_multiplier as f64);
 
-            if let Ok(receipt) = res.receipt {
-                if let Some(gas_used) = receipt.gas_used {
-                    let gas_used_float = gas_used.as_u128() as f64 / 1e18;
+            if let Some(gas_used) = result.receipt.gas_used {
+                let gas_used_float = gas_used.as_u128() as f64 / 1e18;
+                metrics
+                    .total_gas_spent
+                    .get_or_create(&account_label)
+                    .inc_by(gas_used_float);
+
+                if let Some(gas_price) = result.receipt.effective_gas_price {
+                    let gas_fee = (gas_used * gas_price).as_u128() as f64 / 1e18;
                     metrics
-                        .total_gas_spent
+                        .total_gas_fee_spent
                         .get_or_create(&account_label)
-                        .inc_by(gas_used_float);
-
-                    if let Some(gas_price) = receipt.effective_gas_price {
-                        let gas_fee = (gas_used * gas_price).as_u128() as f64 / 1e18;
-                        metrics
-                            .total_gas_fee_spent
-                            .get_or_create(&account_label)
-                            .inc_by(gas_fee);
-                    }
+                        .inc_by(gas_fee);
                 }
             }
             metrics.reveals.get_or_create(&account_label).inc();
