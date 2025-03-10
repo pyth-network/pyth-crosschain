@@ -2,11 +2,12 @@ use {
     crate::eth_utils::nonce_manager::NonceManaged,
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
-    ethers::types::TransactionReceipt,
-    ethers::types::U256,
-    ethers::{contract::ContractCall, middleware::Middleware},
-    std::sync::atomic::AtomicU64,
-    std::sync::Arc,
+    ethers::{
+        contract::ContractCall,
+        middleware::Middleware,
+        types::{TransactionReceipt, U256},
+    },
+    std::sync::{atomic::AtomicU64, Arc},
     tokio::time::{timeout, Duration},
     tracing,
 };
@@ -260,6 +261,8 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
             .saturating_mul(fee_estimate_multiplier_pct.into())
             / 100,
     );
+
+    tracing::info!("Submitting transaction: {:?}", transaction);
 
     let pending_tx = client
         .send_transaction(transaction.clone(), None)
