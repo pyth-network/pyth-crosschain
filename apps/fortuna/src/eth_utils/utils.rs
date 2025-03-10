@@ -20,7 +20,7 @@ pub struct SubmitTxResult {
     pub gas_multiplier: u64,
     pub fee_multiplier: u64,
     pub duration: Duration,
-    pub receipt: Result<TransactionReceipt, anyhow::Error>,
+    pub receipt: TransactionReceipt,
 }
 
 #[derive(Clone, Debug)]
@@ -193,7 +193,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
             num_retries.store(retry_number + 1, std::sync::atomic::Ordering::Relaxed);
         },
     )
-    .await;
+    .await?;
 
     let duration = start_time.elapsed();
     let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
