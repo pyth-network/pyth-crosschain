@@ -1,11 +1,7 @@
 [package]
-name = "fortuna"
-version = "7.4.4"
+name = "argus"
+version = "0.1.0"
 edition = "2021"
-
-[lib]
-name = "fortuna"
-path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1.0.75"
@@ -17,6 +13,7 @@ byteorder = "1.5.0"
 clap = { version = "4.4.6", features = ["derive", "cargo", "env"] }
 ethabi = "18.0.0"
 ethers = { version = "2.0.14", features = ["ws"] }
+fortuna = { path = "../fortuna" }
 futures = { version = "0.3.28" }
 hex = "0.4.3"
 prometheus-client = { version = "0.21.2" }

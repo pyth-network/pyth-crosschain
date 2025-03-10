@@ -2,8 +2,8 @@ use {
     super::keeper_metrics::{AccountLabel, ChainIdLabel, KeeperMetrics},
     crate::{
         api::ChainId, chain::ethereum::InstrumentedPythContract,
-        eth_utils::traced_client::TracedClient,
     },
+    fortuna::eth_utils::traced_client::TracedClient,
     ethers::middleware::Middleware,
     ethers::{providers::Provider, types::Address},
     std::sync::Arc,

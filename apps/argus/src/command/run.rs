@@ -4,10 +4,10 @@ use {
         chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
         config::{Commitment, Config, EthereumConfig, RunOptions},
-        eth_utils::traced_client::{RpcMetrics, TracedClient},
         keeper::{self, keeper_metrics::KeeperMetrics},
         state::{HashChainState, PebbleHashChain},
     },
+    fortuna::eth_utils::traced_client::{RpcMetrics, TracedClient},
     anyhow::{anyhow, Error, Result},
     axum::Router,
     ethers::{

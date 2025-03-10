@@ -2,8 +2,8 @@ use {
     crate::{
         api::ChainId,
         chain::reader::{BlockNumber, BlockStatus},
-        eth_utils::utils::EscalationPolicy,
     },
+    fortuna::eth_utils::utils::EscalationPolicy,
     anyhow::{anyhow, Result},
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
     ethers::types::Address,

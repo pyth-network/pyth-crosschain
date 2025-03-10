@@ -3,8 +3,8 @@ use {
     crate::{
         api::BlockchainState,
         chain::{ethereum::InstrumentedSignablePythContract, reader::RequestedWithCallbackEvent},
-        eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
     },
+    fortuna::eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
     anyhow::{anyhow, Result},
     ethers::types::U256,
     std::sync::Arc,

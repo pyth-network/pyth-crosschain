@@ -128,6 +128,48 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
+name = "argus"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-macros",
+ "axum-test",
+ "backoff",
+ "base64 0.21.4",
+ "bincode",
+ "byteorder",
+ "chrono",
+ "clap",
+ "ethabi",
+ "ethers",
+ "fortuna",
+ "futures",
+ "futures-locks",
+ "hex",
+ "lazy_static",
+ "once_cell",
+ "prometheus-client",
+ "pythnet-sdk",
+ "rand",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_qs",
+ "serde_with",
+ "serde_yaml",
+ "sha3",
+ "thiserror",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "utoipa",
+ "utoipa-swagger-ui",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1559,7 +1601,6 @@ dependencies = [
  "anyhow",
  "axum",
  "axum-macros",
- "axum-test",
  "backoff",
  "base64 0.21.4",
  "bincode",

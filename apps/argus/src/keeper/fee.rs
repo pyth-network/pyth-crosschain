@@ -1,9 +1,9 @@
 use {
     crate::{
         api::BlockchainState, chain::ethereum::InstrumentedSignablePythContract,
-        eth_utils::utils::estimate_tx_cost, eth_utils::utils::send_and_confirm,
         keeper::AccountLabel, keeper::ChainId, keeper::KeeperMetrics,
     },
+    fortuna::eth_utils::utils::{estimate_tx_cost, send_and_confirm},
     anyhow::{anyhow, Result},
     ethers::{
         middleware::Middleware,

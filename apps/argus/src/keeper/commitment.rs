@@ -1,8 +1,9 @@
 use {
     crate::{
         api::BlockchainState, chain::ethereum::InstrumentedSignablePythContract,
-        eth_utils::utils::send_and_confirm, keeper::block::get_latest_safe_block,
+        keeper::block::get_latest_safe_block,
     },
+    fortuna::eth_utils::utils::send_and_confirm,
     anyhow::{anyhow, Result},
     std::sync::Arc,
     tokio::time::{self, Duration},

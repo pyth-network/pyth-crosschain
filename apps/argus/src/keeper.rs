@@ -3,7 +3,6 @@ use {
         api::{BlockchainState, ChainId},
         chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
         config::EthereumConfig,
-        eth_utils::traced_client::RpcMetrics,
         keeper::block::{
             get_latest_safe_block, process_backlog, process_new_blocks, watch_blocks_wrapper,
             BlockRange,
@@ -15,6 +14,7 @@ use {
         keeper::track::track_balance,
         keeper::track::track_provider,
     },
+    fortuna::eth_utils::traced_client::RpcMetrics,
     ethers::{signers::Signer, types::U256},
     keeper_metrics::{AccountLabel, KeeperMetrics},
     std::{collections::HashSet, sync::Arc},

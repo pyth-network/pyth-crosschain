@@ -2,10 +2,10 @@ use {
     crate::{
         api::{self, BlockchainState},
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
-        eth_utils::utils::EscalationPolicy,
         keeper::keeper_metrics::KeeperMetrics,
         keeper::process_event::process_event_with_backoff,
     },
+    fortuna::eth_utils::utils::EscalationPolicy,
     anyhow::{anyhow, Result},
     ethers::{
         providers::{Middleware, Provider, Ws},

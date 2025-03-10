@@ -5,12 +5,12 @@ use {
             self, BlockNumber, BlockStatus, EntropyReader, RequestedWithCallbackEvent,
         },
         config::EthereumConfig,
-        eth_utils::{
-            eth_gas_oracle::EthProviderOracle,
-            legacy_tx_middleware::LegacyTxMiddleware,
-            nonce_manager::NonceManagerMiddleware,
-            traced_client::{RpcMetrics, TracedClient},
-        },
+    },
+    fortuna::eth_utils::{
+        eth_gas_oracle::EthProviderOracle,
+        legacy_tx_middleware::LegacyTxMiddleware,
+        nonce_manager::NonceManagerMiddleware,
+        traced_client::{RpcMetrics, TracedClient},
     },
     anyhow::{anyhow, Error, Result},
     axum::async_trait,
