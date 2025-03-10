@@ -1,7 +1,6 @@
 use {
     crate::{
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},
-        state::HashChainState,
     },
     anyhow::Result,
     axum::{
@@ -78,8 +77,6 @@ impl ApiState {
 pub struct BlockchainState {
     /// The chain id for this blockchain, useful for logging
     pub id: ChainId,
-    /// The hash chain(s) required to serve random numbers for this blockchain
-    pub state: Arc<HashChainState>,
     /// The contract that the server is fulfilling requests for.
     pub contract: Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.

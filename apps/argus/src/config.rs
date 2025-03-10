@@ -298,25 +298,9 @@ pub struct ProviderConfig {
     /// the private key (e.g., running the server).
     pub private_key: SecretString,
 
-    /// The provider's secret which is a 64-char hex string.
-    /// The secret is used for generating new hash chains
-    pub secret: SecretString,
-
-    /// The length of the hash chain to generate.
-    pub chain_length: u64,
-
-    /// How frequently the hash chain is sampled -- increase this value to tradeoff more
-    /// compute per request for less RAM use.
-    #[serde(default = "default_chain_sample_interval")]
-    pub chain_sample_interval: u64,
-
     /// The address of the fee manager for the provider. Set this value to the keeper wallet address to
     /// enable keeper balance top-ups.
     pub fee_manager: Option<Address>,
-}
-
-fn default_chain_sample_interval() -> u64 {
-    1
 }
 
 /// Configuration values for the keeper service that are shared across chains.
