@@ -166,6 +166,8 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
 
     let num_retries = Arc::new(AtomicU64::new(0));
 
+    let padded_gas_limit = U256::from(escalation_policy.gas_limit_tolerance_pct) * gas_limit / 100;
+
     let success = backoff::future::retry_notify(
         backoff,
         || async {
@@ -176,7 +178,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
             submit_tx(
                 middleware.clone(),
                 &call,
-                gas_limit,
+                padded_gas_limit,
                 gas_multiplier_pct,
                 fee_multiplier_pct,
             )
