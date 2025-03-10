@@ -91,7 +91,8 @@ pub async fn process_event_with_backoff(
                 .get_or_create(&account_label)
                 .observe(res.fee_multiplier as f64);
 
-            if let Ok(receipt) = res.receipt {
+            let receipt = res.receipt;
+
                 if let Some(gas_used) = receipt.gas_used {
                     let gas_used_float = gas_used.as_u128() as f64 / 1e18;
                     metrics
@@ -107,7 +108,6 @@ pub async fn process_event_with_backoff(
                             .inc_by(gas_fee);
                     }
                 }
-            }
             metrics.reveals.get_or_create(&account_label).inc();
         }
         Err(e) => {
