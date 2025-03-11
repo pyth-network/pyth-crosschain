@@ -98,6 +98,8 @@ Now in your contract you can consume the price by calling `pyth::get_price` or o
 1. Fetches update data from Hermes for the given price feeds.
 2. Calls the Pyth Sui contract with the update data.
 
+In order to run the commands, a SUI private key is needed. The commands expects the key to be in the form of hex. You can use `sui keytool convert` to get the hex version of the key, to be used below, if your private key is in the form "suiprivkey...".
+
 You can run this example with `pnpm turbo --filter @pythnetwork/pyth-sui-js run example-relay` from the root of crosschain. Turbo will automatically build any detected dependencies including local ones, and filter is needed to tell it which sub-package to use (Such as this one). A full command that updates prices on Sui testnet looks like:
 
 ```bash
