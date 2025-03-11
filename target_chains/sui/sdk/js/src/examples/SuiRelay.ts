@@ -12,6 +12,7 @@ const argvPromise = yargs(hideBin(process.argv))
   .option("feed-id", {
     description:
       "Price feed ids to update without the leading 0x (e.g f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b). Can be provided multiple times for multiple feed updates",
+    string: true,
     type: "array",
     demandOption: true,
   })
@@ -49,7 +50,8 @@ async function run() {
 
   // Fetch the latest price feed update data from the Price Service
   const connection = new SuiPriceServiceConnection(argv["hermes"]);
-  const feeds = argv["feed-id"] as string[];
+  const feeds = argv["feed-id"];
+  if (!Array.isArray(feeds)) { throw new Error("Not a valid input!"); }
 
   const provider = getProvider(argv["full-node"]);
   const wormholeStateId = argv["wormhole-state-id"];
@@ -59,6 +61,9 @@ async function run() {
   const newFeeds = [];
   const existingFeeds = [];
   for (const feed of feeds) {
+    if (typeof feed !== "string") {
+      throw new Error(`Not a valid string input ${feed}`);
+    }
     if ((await client.getPriceFeedObjectId(feed)) == undefined) {
       newFeeds.push(feed);
     } else {

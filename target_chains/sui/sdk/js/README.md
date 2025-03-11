@@ -4,16 +4,11 @@
 
 ## Installation
 
-### npm
+### pnpm
 
 ```
-$ npm install --save @pythnetwork/pyth-sui-js
-```
-
-### Yarn
-
-```
-$ yarn add @pythnetwork/pyth-sui-js
+cd to crosschain root
+$ pnpm install
 ```
 
 ## Quickstart
@@ -103,11 +98,11 @@ Now in your contract you can consume the price by calling `pyth::get_price` or o
 1. Fetches update data from Hermes for the given price feeds.
 2. Calls the Pyth Sui contract with the update data.
 
-You can run this example with `npm run example-relay`. A full command that updates prices on Sui testnet looks like:
+You can run this example with `pnpm turbo --filter @pythnetwork/pyth-sui-js run example-relay` from the root of crosschain. Turbo will automatically build any detected dependencies including local ones, and filter is needed to tell it which sub-package to use (Such as this one). A full command that updates prices on Sui testnet looks like:
 
 ```bash
 export SUI_KEY=YOUR_PRIV_KEY;
-npm run example-relay -- --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
+pnpm turbo --filter @pythnetwork/pyth-sui-js run example-relay -- --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
 --price-service "https://hermes-beta.pyth.network" \
 --full-node "https://fullnode.testnet.sui.io:443" \
 --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" \
