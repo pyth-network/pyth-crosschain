@@ -8,3 +8,28 @@
     overflow: hidden;
   }
 }
+
+.disclaimer {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(1);
+  padding: theme.spacing(3);
+
+  .disclaimerIcon {
+    flex: none;
+    color: theme.color("states", "info", "icon");
+    font-size: theme.spacing(6);
+  }
+
+  .disclaimerBody {
+    @include theme.text("sm", "normal");
+
+    color: theme.color("paragraph");
+    padding: 0 theme.spacing(2);
+    line-height: 150%;
+
+    b {
+      font-weight: theme.font-weight("semibold");
+    }
+  }
+}
