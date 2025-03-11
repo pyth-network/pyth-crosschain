@@ -53,17 +53,19 @@ abstract contract Pulse is IPulse, PulseState {
         }
     }
 
+    // TODO: there can be a separate wrapper function that defaults the provider (or uses the cheapest or something).
     function requestPriceUpdatesWithCallback(
-        uint256 publishTime,
+        address provider,
+        uint64 publishTime,
         bytes32[] calldata priceIds,
         uint256 callbackGasLimit
     ) external payable override returns (uint64 requestSequenceNumber) {
-        address provider = _state.defaultProvider;
         require(
             _state.providers[provider].isRegistered,
             "Provider not registered"
         );
 
+        // FIXME: this comment is wrong. (we're not using tx.gasprice)
         // NOTE: The 60-second future limit on publishTime prevents a DoS vector where
         //      attackers could submit many low-fee requests for far-future updates when gas prices
         //      are low, forcing executors to fulfill them later when gas prices might be much higher.
@@ -75,7 +77,7 @@ abstract contract Pulse is IPulse, PulseState {
         }
         requestSequenceNumber = _state.currentSequenceNumber++;
 
-        uint128 requiredFee = getFee(callbackGasLimit);
+        uint128 requiredFee = getFee(provider, callbackGasLimit, priceIds);
         if (msg.value < requiredFee) revert InsufficientFee();
 
         Request storage req = allocRequest(requestSequenceNumber);
@@ -85,21 +87,20 @@ abstract contract Pulse is IPulse, PulseState {
         req.requester = msg.sender;
         req.numPriceIds = uint8(priceIds.length);
         req.provider = provider;
+        req.fee = SafeCast.toUint128(msg.value - _state.pythFeeInWei);
 
         // Copy price IDs to storage
         for (uint8 i = 0; i < priceIds.length; i++) {
             req.priceIds[i] = priceIds[i];
         }
-
-        _state.providers[provider].accruedFeesInWei += SafeCast.toUint128(
-            msg.value - _state.pythFeeInWei
-        );
         _state.accruedFeesInWei += _state.pythFeeInWei;
 
         emit PriceUpdateRequested(req, priceIds);
     }
 
+    // TODO: does this need to be payable? Any cost paid to Pyth could be taken out of the provider's accrued fees.
     function executeCallback(
+        address providerToCredit,
         uint64 sequenceNumber,
         bytes[] calldata updateData,
         bytes32[] calldata priceIds
@@ -111,7 +112,7 @@ abstract contract Pulse is IPulse, PulseState {
             block.timestamp < req.publishTime + _state.exclusivityPeriodSeconds
         ) {
             require(
-                msg.sender == req.provider,
+                providerToCredit == req.provider,
                 "Only assigned provider during exclusivity period"
             );
         }
@@ -127,19 +128,41 @@ abstract contract Pulse is IPulse, PulseState {
             }
         }
 
-        // Parse price feeds first to measure gas usage
-        PythStructs.PriceFeed[] memory priceFeeds = IPyth(_state.pyth)
-            .parsePriceFeedUpdates(
-                updateData,
-                priceIds,
-                SafeCast.toUint64(req.publishTime),
-                SafeCast.toUint64(req.publishTime)
-            );
+        // TODO: should this use parsePriceFeedUpdatesUnique? also, do we need to add 1 to maxPublishTime?
+        IPyth pyth = IPyth(_state.pyth);
+        uint256 pythFee = pyth.getUpdateFee(updateData);
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
+            value: pythFee
+        }(
+            updateData,
+            priceIds,
+            SafeCast.toUint64(req.publishTime),
+            SafeCast.toUint64(req.publishTime)
+        );
+
+        // TODO: if this effect occurs here, we need to guarantee that executeCallback can never revert.
+        // If executeCallback can revert, then funds can be permanently locked in the contract.
+        // TODO: there also needs to be some penalty mechanism in case the expected provider doesn't execute the callback.
+        // This should take funds from the expected provider and give to providerToCredit. The penalty should probably scale
+        // with time in order to ensure that the callback eventually gets executed.
+        // (There may be exploits with ^ though if the consumer contract is malicious ?)
+        _state.providers[providerToCredit].accruedFeesInWei += SafeCast
+            .toUint128((req.fee + msg.value) - pythFee);
 
         clearRequest(sequenceNumber);
 
+        // TODO: I'm pretty sure this is going to use a lot of gas because it's doing a storage lookup for each sequence number.
+        // a better solution would be a doubly-linked list of active requests.
+        // After successful callback, update firstUnfulfilledSeq if needed
+        while (
+            _state.firstUnfulfilledSeq < _state.currentSequenceNumber &&
+            !isActive(findRequest(_state.firstUnfulfilledSeq))
+        ) {
+            _state.firstUnfulfilledSeq++;
+        }
+
         try
-            IPulseConsumer(req.requester).pulseCallback{
+            IPulseConsumer(req.requester)._pulseCallback{
                 gas: req.callbackGasLimit
             }(sequenceNumber, priceFeeds)
         {
@@ -149,7 +172,7 @@ abstract contract Pulse is IPulse, PulseState {
             // Explicit revert/require
             emit PriceUpdateCallbackFailed(
                 sequenceNumber,
-                msg.sender,
+                providerToCredit,
                 priceIds,
                 req.requester,
                 reason
@@ -158,19 +181,11 @@ abstract contract Pulse is IPulse, PulseState {
             // Out of gas or other low-level errors
             emit PriceUpdateCallbackFailed(
                 sequenceNumber,
-                msg.sender,
+                providerToCredit,
                 priceIds,
                 req.requester,
                 "low-level error (possibly out of gas)"
             );
-        }
-
-        // After successful callback, update firstUnfulfilledSeq if needed
-        while (
-            _state.firstUnfulfilledSeq < _state.currentSequenceNumber &&
-            !isActive(findRequest(_state.firstUnfulfilledSeq))
-        ) {
-            _state.firstUnfulfilledSeq++;
         }
     }
 
@@ -182,13 +197,16 @@ abstract contract Pulse is IPulse, PulseState {
         int64[] memory prices = new int64[](priceFeeds.length);
         uint64[] memory conf = new uint64[](priceFeeds.length);
         int32[] memory expos = new int32[](priceFeeds.length);
-        uint256[] memory publishTimes = new uint256[](priceFeeds.length);
+        uint64[] memory publishTimes = new uint64[](priceFeeds.length);
 
         for (uint i = 0; i < priceFeeds.length; i++) {
             prices[i] = priceFeeds[i].price.price;
             conf[i] = priceFeeds[i].price.conf;
             expos[i] = priceFeeds[i].price.expo;
-            publishTimes[i] = priceFeeds[i].price.publishTime;
+            // Safe cast because this is a unix timestamp in seconds.
+            publishTimes[i] = SafeCast.toUint64(
+                priceFeeds[i].price.publishTime
+            );
         }
 
         emit PriceUpdateExecuted(
@@ -203,14 +221,25 @@ abstract contract Pulse is IPulse, PulseState {
     }
 
     function getFee(
-        uint256 callbackGasLimit
+        address provider,
+        uint256 callbackGasLimit,
+        bytes32[] calldata priceIds
     ) public view override returns (uint128 feeAmount) {
         uint128 baseFee = _state.pythFeeInWei; // Fixed fee to Pyth
-        uint128 providerFeeInWei = _state
-            .providers[_state.defaultProvider]
-            .feeInWei; // Provider's per-gas rate
+        // Note: The provider needs to set its fees to include the fee charged by the Pyth contract.
+        // Ideally, we would be able to automatically compute the pyth fees from the priceIds, but the
+        // fee computation on IPyth assumes it has the full updated data.
+        uint128 providerBaseFee = _state.providers[provider].baseFeeInWei;
+        uint128 providerFeedFee = SafeCast.toUint128(
+            priceIds.length * _state.providers[provider].feePerFeedInWei
+        );
+        uint128 providerFeeInWei = _state.providers[provider].feePerGasInWei; // Provider's per-gas rate
         uint256 gasFee = callbackGasLimit * providerFeeInWei; // Total provider fee based on gas
-        feeAmount = baseFee + SafeCast.toUint128(gasFee); // Total fee user needs to pay
+        feeAmount =
+            baseFee +
+            providerBaseFee +
+            providerFeedFee +
+            SafeCast.toUint128(gasFee); // Total fee user needs to pay
     }
 
     function getPythFeeInWei()
@@ -222,7 +251,7 @@ abstract contract Pulse is IPulse, PulseState {
         pythFeeInWei = _state.pythFeeInWei;
     }
 
-    function getAccruedFees()
+    function getAccruedPythFees()
         public
         view
         override
@@ -244,6 +273,7 @@ abstract contract Pulse is IPulse, PulseState {
         shortHash = uint8(hash[0] & NUM_REQUESTS_MASK);
     }
 
+    // TODO: move out governance functions into a separate PulseGovernance contract
     function withdrawFees(uint128 amount) external override {
         require(msg.sender == _state.admin, "Only admin can withdraw fees");
         require(_state.accruedFeesInWei >= amount, "Insufficient balance");
@@ -336,22 +366,51 @@ abstract contract Pulse is IPulse, PulseState {
         emit FeesWithdrawn(msg.sender, amount);
     }
 
-    function registerProvider(uint128 feeInWei) external override {
+    function registerProvider(
+        uint128 baseFeeInWei,
+        uint128 feePerFeedInWei,
+        uint128 feePerGasInWei
+    ) external override {
         ProviderInfo storage provider = _state.providers[msg.sender];
         require(!provider.isRegistered, "Provider already registered");
-        provider.feeInWei = feeInWei;
+        provider.baseFeeInWei = baseFeeInWei;
+        provider.feePerFeedInWei = feePerFeedInWei;
+        provider.feePerGasInWei = feePerGasInWei;
         provider.isRegistered = true;
-        emit ProviderRegistered(msg.sender, feeInWei);
+        emit ProviderRegistered(msg.sender, feePerGasInWei);
     }
 
-    function setProviderFee(uint128 newFeeInWei) external override {
+    function setProviderFee(
+        address provider,
+        uint128 newBaseFeeInWei,
+        uint128 newFeePerFeedInWei,
+        uint128 newFeePerGasInWei
+    ) external override {
         require(
-            _state.providers[msg.sender].isRegistered,
+            _state.providers[provider].isRegistered,
             "Provider not registered"
         );
-        uint128 oldFee = _state.providers[msg.sender].feeInWei;
-        _state.providers[msg.sender].feeInWei = newFeeInWei;
-        emit ProviderFeeUpdated(msg.sender, oldFee, newFeeInWei);
+        require(
+            msg.sender == provider ||
+                msg.sender == _state.providers[provider].feeManager,
+            "Only provider or fee manager can invoke this method"
+        );
+
+        uint128 oldBaseFee = _state.providers[provider].baseFeeInWei;
+        uint128 oldFeePerFeed = _state.providers[provider].feePerFeedInWei;
+        uint128 oldFeePerGas = _state.providers[provider].feePerGasInWei;
+        _state.providers[provider].baseFeeInWei = newBaseFeeInWei;
+        _state.providers[provider].feePerFeedInWei = newFeePerFeedInWei;
+        _state.providers[provider].feePerGasInWei = newFeePerGasInWei;
+        emit ProviderFeeUpdated(
+            provider,
+            oldBaseFee,
+            oldFeePerFeed,
+            oldFeePerGas,
+            newBaseFeeInWei,
+            newFeePerFeedInWei,
+            newFeePerGasInWei
+        );
     }
 
     function getProviderInfo(

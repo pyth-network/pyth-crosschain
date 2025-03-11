@@ -12,13 +12,22 @@ import "../contracts/pulse/PulseEvents.sol";
 import "../contracts/pulse/PulseErrors.sol";
 
 contract MockPulseConsumer is IPulseConsumer {
+    address private _pulse;
     uint64 public lastSequenceNumber;
     PythStructs.PriceFeed[] private _lastPriceFeeds;
+
+    constructor(address pulse) {
+        _pulse = pulse;
+    }
+
+    function getPulse() internal view override returns (address) {
+        return _pulse;
+    }
 
     function pulseCallback(
         uint64 sequenceNumber,
         PythStructs.PriceFeed[] memory priceFeeds
-    ) external override {
+    ) internal override {
         lastSequenceNumber = sequenceNumber;
         for (uint i = 0; i < priceFeeds.length; i++) {
             _lastPriceFeeds.push(priceFeeds[i]);
@@ -35,10 +44,20 @@ contract MockPulseConsumer is IPulseConsumer {
 }
 
 contract FailingPulseConsumer is IPulseConsumer {
+    address private _pulse;
+
+    constructor(address pulse) {
+        _pulse = pulse;
+    }
+
+    function getPulse() internal view override returns (address) {
+        return _pulse;
+    }
+
     function pulseCallback(
         uint64,
         PythStructs.PriceFeed[] memory
-    ) external pure override {
+    ) internal pure override {
         revert("callback failed");
     }
 }
@@ -46,14 +65,25 @@ contract FailingPulseConsumer is IPulseConsumer {
 contract CustomErrorPulseConsumer is IPulseConsumer {
     error CustomError(string message);
 
+    address private _pulse;
+
+    constructor(address pulse) {
+        _pulse = pulse;
+    }
+
+    function getPulse() internal view override returns (address) {
+        return _pulse;
+    }
+
     function pulseCallback(
         uint64,
         PythStructs.PriceFeed[] memory
-    ) external pure override {
+    ) internal pure override {
         revert CustomError("callback failed");
     }
 }
 
+// FIXME: this shouldn't be IPulseConsumer.
 contract PulseTest is Test, PulseEvents, IPulseConsumer {
     ERC1967Proxy public proxy;
     PulseUpgradeable public pulse;
@@ -64,7 +94,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     address public defaultProvider;
     // Constants
     uint128 constant PYTH_FEE = 1 wei;
-    uint128 constant DEFAULT_PROVIDER_FEE = 1 wei;
+    uint128 constant DEFAULT_PROVIDER_FEE_PER_GAS = 1 wei;
+    uint128 constant DEFAULT_PROVIDER_BASE_FEE = 1 wei;
+    uint128 constant DEFAULT_PROVIDER_FEE_PER_FEED = 10 wei;
+    uint constant MOCK_PYTH_FEE_PER_FEED = 10 wei;
+
     uint128 constant CALLBACK_GAS_LIMIT = 1_000_000;
     bytes32 constant BTC_PRICE_FEED_ID =
         0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
@@ -97,8 +131,12 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             15
         );
         vm.prank(defaultProvider);
-        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
-        consumer = new MockPulseConsumer();
+        pulse.registerProvider(
+            DEFAULT_PROVIDER_BASE_FEE,
+            DEFAULT_PROVIDER_FEE_PER_FEED,
+            DEFAULT_PROVIDER_FEE_PER_GAS
+        );
+        consumer = new MockPulseConsumer(address(proxy));
     }
 
     // Helper function to create price IDs array
@@ -136,8 +174,17 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     function mockParsePriceFeedUpdates(
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal {
+        uint expectedFee = MOCK_PYTH_FEE_PER_FEED * priceFeeds.length;
+
         vm.mockCall(
             address(pyth),
+            abi.encodeWithSelector(IPyth.getUpdateFee.selector),
+            abi.encode(expectedFee)
+        );
+
+        vm.mockCall(
+            address(pyth),
+            expectedFee,
             abi.encodeWithSelector(IPyth.parsePriceFeedUpdates.selector),
             abi.encode(priceFeeds)
         );
@@ -154,8 +201,10 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     }
 
     // Helper function to calculate total fee
+    // FIXME: I think this helper probably needs to take some arguments.
     function calculateTotalFee() internal view returns (uint128) {
-        return pulse.getFee(CALLBACK_GAS_LIMIT);
+        return
+            pulse.getFee(defaultProvider, CALLBACK_GAS_LIMIT, createPriceIds());
     }
 
     // Helper function to setup consumer request
@@ -166,17 +215,18 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         returns (
             uint64 sequenceNumber,
             bytes32[] memory priceIds,
-            uint256 publishTime
+            uint64 publishTime
         )
     {
         priceIds = createPriceIds();
-        publishTime = block.timestamp;
+        publishTime = SafeCast.toUint64(block.timestamp);
         vm.deal(consumerAddress, 1 gwei);
 
         uint128 totalFee = calculateTotalFee();
 
         vm.prank(consumerAddress);
         sequenceNumber = pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+            defaultProvider,
             publishTime,
             priceIds,
             CALLBACK_GAS_LIMIT
@@ -190,7 +240,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         vm.txGasPrice(30 gwei);
 
         bytes32[] memory priceIds = createPriceIds();
-        uint256 publishTime = block.timestamp;
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
 
         // Fund the consumer contract with enough ETH for higher gas price
         vm.deal(address(consumer), 1 ether);
@@ -215,7 +265,8 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             numPriceIds: 2,
             callbackGasLimit: CALLBACK_GAS_LIMIT,
             requester: address(consumer),
-            provider: defaultProvider
+            provider: defaultProvider,
+            fee: totalFee - PYTH_FEE
         });
 
         vm.expectEmit();
@@ -223,6 +274,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+            defaultProvider,
             publishTime,
             priceIds,
             CALLBACK_GAS_LIMIT
@@ -256,7 +308,8 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         vm.prank(address(consumer));
         vm.expectRevert(InsufficientFee.selector);
         pulse.requestPriceUpdatesWithCallback{value: PYTH_FEE}( // Intentionally low fee
-            block.timestamp,
+            defaultProvider,
+            SafeCast.toUint64(block.timestamp),
             priceIds,
             CALLBACK_GAS_LIMIT
         );
@@ -264,7 +317,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
     function testExecuteCallback() public {
         bytes32[] memory priceIds = createPriceIds();
-        uint256 publishTime = block.timestamp;
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
 
         // Fund the consumer contract
         vm.deal(address(consumer), 1 gwei);
@@ -274,12 +327,13 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
-        }(publishTime, priceIds, CALLBACK_GAS_LIMIT);
+        }(defaultProvider, publishTime, priceIds, CALLBACK_GAS_LIMIT);
 
         // Step 2: Create mock price feeds and setup Pyth response
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
+        // FIXME: this test doesn't ensure the Pyth fee is paid.
         mockParsePriceFeedUpdates(priceFeeds);
 
         // Create arrays for expected event data
@@ -295,7 +349,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         expectedExpos[0] = MOCK_PRICE_FEED_EXPO;
         expectedExpos[1] = MOCK_PRICE_FEED_EXPO;
 
-        uint256[] memory expectedPublishTimes = new uint256[](2);
+        uint64[] memory expectedPublishTimes = new uint64[](2);
         expectedPublishTimes[0] = publishTime;
         expectedPublishTimes[1] = publishTime;
 
@@ -315,7 +369,12 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(defaultProvider);
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
 
         // Verify callback was executed
         assertEq(consumer.lastSequenceNumber(), sequenceNumber);
@@ -338,7 +397,9 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     }
 
     function testExecuteCallbackFailure() public {
-        FailingPulseConsumer failingConsumer = new FailingPulseConsumer();
+        FailingPulseConsumer failingConsumer = new FailingPulseConsumer(
+            address(proxy)
+        );
 
         (
             uint64 sequenceNumber,
@@ -362,11 +423,18 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         );
 
         vm.prank(defaultProvider);
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
     }
 
     function testExecuteCallbackCustomErrorFailure() public {
-        CustomErrorPulseConsumer failingConsumer = new CustomErrorPulseConsumer();
+        CustomErrorPulseConsumer failingConsumer = new CustomErrorPulseConsumer(
+            address(proxy)
+        );
 
         (
             uint64 sequenceNumber,
@@ -390,7 +458,12 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         );
 
         vm.prank(defaultProvider);
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
     }
 
     function testExecuteCallbackWithInsufficientGas() public {
@@ -412,6 +485,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         vm.prank(defaultProvider);
         vm.expectRevert(); // Just expect any revert since it will be an out-of-gas error
         pulse.executeCallback{gas: 100000}(
+            defaultProvider,
             sequenceNumber,
             updateData,
             priceIds
@@ -421,14 +495,14 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     function testExecuteCallbackWithFutureTimestamp() public {
         // Setup request with future timestamp
         bytes32[] memory priceIds = createPriceIds();
-        uint256 futureTime = block.timestamp + 10; // 10 seconds in future
+        uint64 futureTime = SafeCast.toUint64(block.timestamp + 10); // 10 seconds in future
         vm.deal(address(consumer), 1 gwei);
 
         uint128 totalFee = calculateTotalFee();
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
-        }(futureTime, priceIds, CALLBACK_GAS_LIMIT);
+        }(defaultProvider, futureTime, priceIds, CALLBACK_GAS_LIMIT);
 
         // Try to execute callback before the requested timestamp
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
@@ -439,7 +513,12 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         vm.prank(defaultProvider);
         // Should succeed because we're simulating receiving future-dated price updates
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
 
         // Compare price feeds array length
         PythStructs.PriceFeed[] memory lastFeeds = consumer.lastPriceFeeds();
@@ -456,7 +535,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
     function testRevertOnTooFarFutureTimestamp() public {
         bytes32[] memory priceIds = createPriceIds();
-        uint256 farFutureTime = block.timestamp + 61; // Just over 1 minute
+        uint64 farFutureTime = SafeCast.toUint64(block.timestamp + 61); // Just over 1 minute
         vm.deal(address(consumer), 1 gwei);
 
         uint128 totalFee = calculateTotalFee();
@@ -464,6 +543,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         vm.expectRevert("Too far in future");
         pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+            defaultProvider,
             farFutureTime,
             priceIds,
             CALLBACK_GAS_LIMIT
@@ -485,12 +565,22 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         // First execution
         vm.prank(defaultProvider);
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
 
         // Second execution should fail
         vm.prank(defaultProvider);
         vm.expectRevert(NoSuchRequest.selector);
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
     }
 
     function testGetFee() public {
@@ -500,12 +590,22 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         gasLimits[1] = 500_000;
         gasLimits[2] = 1_000_000;
 
+        bytes32[] memory priceIds = createPriceIds();
+
         for (uint256 i = 0; i < gasLimits.length; i++) {
             uint256 gasLimit = gasLimits[i];
             uint128 expectedFee = SafeCast.toUint128(
-                DEFAULT_PROVIDER_FEE * gasLimit
+                DEFAULT_PROVIDER_BASE_FEE +
+                    DEFAULT_PROVIDER_FEE_PER_FEED *
+                    priceIds.length +
+                    DEFAULT_PROVIDER_FEE_PER_GAS *
+                    gasLimit
             ) + PYTH_FEE;
-            uint128 actualFee = pulse.getFee(gasLimit);
+            uint128 actualFee = pulse.getFee(
+                defaultProvider,
+                gasLimit,
+                priceIds
+            );
             assertEq(
                 actualFee,
                 expectedFee,
@@ -514,8 +614,13 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         }
 
         // Test with zero gas limit
-        uint128 expectedMinFee = PYTH_FEE;
-        uint128 actualMinFee = pulse.getFee(0);
+        uint128 expectedMinFee = SafeCast.toUint128(
+            PYTH_FEE +
+                DEFAULT_PROVIDER_BASE_FEE +
+                DEFAULT_PROVIDER_FEE_PER_FEED *
+                priceIds.length
+        );
+        uint128 actualMinFee = pulse.getFee(defaultProvider, 0, priceIds);
         assertEq(
             actualMinFee,
             expectedMinFee,
@@ -530,14 +635,15 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
-            block.timestamp,
+            defaultProvider,
+            SafeCast.toUint64(block.timestamp),
             priceIds,
             CALLBACK_GAS_LIMIT
         );
 
         // Get admin's balance before withdrawal
         uint256 adminBalanceBefore = admin.balance;
-        uint128 accruedFees = pulse.getAccruedFees();
+        uint128 accruedFees = pulse.getAccruedPythFees();
 
         // Withdraw fees as admin
         vm.prank(admin);
@@ -550,7 +656,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             "Admin balance should increase by withdrawn amount"
         );
         assertEq(
-            pulse.getAccruedFees(),
+            pulse.getAccruedPythFees(),
             0,
             "Contract should have no fees after withdrawal"
         );
@@ -580,7 +686,8 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         vm.prank(address(consumer));
         pulse.requestPriceUpdatesWithCallback{value: calculateTotalFee()}(
-            block.timestamp,
+            defaultProvider,
+            SafeCast.toUint64(block.timestamp),
             priceIds,
             CALLBACK_GAS_LIMIT
         );
@@ -662,7 +769,12 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
                 priceIds[0]
             )
         );
-        pulse.executeCallback(sequenceNumber, updateData, wrongPriceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            wrongPriceIds
+        );
     }
 
     function testRevertOnTooManyPriceIds() public {
@@ -685,7 +797,8 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
             )
         );
         pulse.requestPriceUpdatesWithCallback{value: totalFee}(
-            block.timestamp,
+            defaultProvider,
+            SafeCast.toUint64(block.timestamp),
             priceIds,
             CALLBACK_GAS_LIMIT
         );
@@ -696,26 +809,36 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         uint128 providerFee = 1000;
 
         vm.prank(provider);
-        pulse.registerProvider(providerFee);
+        pulse.registerProvider(providerFee, providerFee, providerFee);
 
         PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
-        assertEq(info.feeInWei, providerFee);
+        assertEq(info.feePerGasInWei, providerFee);
         assertTrue(info.isRegistered);
     }
 
     function testSetProviderFee() public {
         address provider = address(0x123);
-        uint128 initialFee = 1000;
-        uint128 newFee = 2000;
+        uint128 initialBaseFee = 1000;
+        uint128 initialFeePerFeed = 2000;
+        uint128 initialFeePerGas = 3000;
+        uint128 newFeePerFeed = 4000;
+        uint128 newBaseFee = 5000;
+        uint128 newFeePerGas = 6000;
 
         vm.prank(provider);
-        pulse.registerProvider(initialFee);
+        pulse.registerProvider(
+            initialBaseFee,
+            initialFeePerFeed,
+            initialFeePerGas
+        );
 
         vm.prank(provider);
-        pulse.setProviderFee(newFee);
+        pulse.setProviderFee(provider, newBaseFee, newFeePerFeed, newFeePerGas);
 
         PulseState.ProviderInfo memory info = pulse.getProviderInfo(provider);
-        assertEq(info.feeInWei, newFee);
+        assertEq(info.baseFeeInWei, newBaseFee);
+        assertEq(info.feePerFeedInWei, newFeePerFeed);
+        assertEq(info.feePerGasInWei, newFeePerGas);
     }
 
     function testDefaultProvider() public {
@@ -723,7 +846,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         uint128 providerFee = 1000;
 
         vm.prank(provider);
-        pulse.registerProvider(providerFee);
+        pulse.registerProvider(providerFee, providerFee, providerFee);
 
         vm.prank(admin);
         pulse.setDefaultProvider(provider);
@@ -736,21 +859,23 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         uint128 providerFee = 1000;
 
         vm.prank(provider);
-        pulse.registerProvider(providerFee);
-
-        vm.prank(admin);
-        pulse.setDefaultProvider(provider);
+        pulse.registerProvider(providerFee, providerFee, providerFee);
 
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
 
-        uint128 totalFee = pulse.getFee(CALLBACK_GAS_LIMIT);
+        uint128 totalFee = pulse.getFee(provider, CALLBACK_GAS_LIMIT, priceIds);
 
         vm.deal(address(consumer), totalFee);
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
-        }(block.timestamp, priceIds, CALLBACK_GAS_LIMIT);
+        }(
+            provider,
+            SafeCast.toUint64(block.timestamp),
+            priceIds,
+            CALLBACK_GAS_LIMIT
+        );
 
         PulseState.Request memory req = pulse.getRequest(sequenceNumber);
         assertEq(req.provider, provider);
@@ -787,7 +912,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         // Register a second provider
         address secondProvider = address(0x456);
         vm.prank(secondProvider);
-        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+        pulse.registerProvider(
+            DEFAULT_PROVIDER_BASE_FEE,
+            DEFAULT_PROVIDER_FEE_PER_FEED,
+            DEFAULT_PROVIDER_FEE_PER_GAS
+        );
 
         // Setup request
         (
@@ -804,20 +933,32 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Try to execute with second provider during exclusivity period
-        vm.prank(secondProvider);
         vm.expectRevert("Only assigned provider during exclusivity period");
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            secondProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
 
         // Original provider should succeed
-        vm.prank(defaultProvider);
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
     }
 
     function testExecuteCallbackAfterExclusivity() public {
         // Register a second provider
         address secondProvider = address(0x456);
         vm.prank(secondProvider);
-        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+        pulse.registerProvider(
+            DEFAULT_PROVIDER_BASE_FEE,
+            DEFAULT_PROVIDER_FEE_PER_FEED,
+            DEFAULT_PROVIDER_FEE_PER_GAS
+        );
 
         // Setup request
         (
@@ -838,14 +979,23 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         // Second provider should now succeed
         vm.prank(secondProvider);
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
     }
 
     function testExecuteCallbackWithCustomExclusivityPeriod() public {
         // Register a second provider
         address secondProvider = address(0x456);
         vm.prank(secondProvider);
-        pulse.registerProvider(DEFAULT_PROVIDER_FEE);
+        pulse.registerProvider(
+            DEFAULT_PROVIDER_BASE_FEE,
+            DEFAULT_PROVIDER_FEE_PER_FEED,
+            DEFAULT_PROVIDER_FEE_PER_GAS
+        );
 
         // Set custom exclusivity period
         vm.prank(admin);
@@ -867,14 +1017,22 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
 
         // Try at 29 seconds (should fail for second provider)
         vm.warp(block.timestamp + 29);
-        vm.prank(secondProvider);
         vm.expectRevert("Only assigned provider during exclusivity period");
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            secondProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
 
         // Try at 31 seconds (should succeed for second provider)
         vm.warp(block.timestamp + 2);
-        vm.prank(secondProvider);
-        pulse.executeCallback(sequenceNumber, updateData, priceIds);
+        pulse.executeCallback(
+            secondProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
     }
 
     function testGetFirstActiveRequests() public {
@@ -902,10 +1060,11 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     }
 
     function createTestRequests(bytes32[] memory priceIds) private {
-        uint256 publishTime = block.timestamp;
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
         for (uint i = 0; i < 5; i++) {
             vm.deal(address(this), 1 ether);
             pulse.requestPriceUpdatesWithCallback{value: 1 ether}(
+                defaultProvider,
                 publishTime,
                 priceIds,
                 1000000
@@ -919,15 +1078,25 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     ) private {
         // Create mock price feeds and setup Pyth response
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
-            block.timestamp
+            SafeCast.toUint64(block.timestamp)
         );
         mockParsePriceFeedUpdates(priceFeeds);
         updateData = createMockUpdateData(priceFeeds);
 
         vm.deal(defaultProvider, 2 ether); // Increase ETH allocation to prevent OutOfFunds
         vm.startPrank(defaultProvider);
-        pulse.executeCallback{value: 1 ether}(2, updateData, priceIds);
-        pulse.executeCallback{value: 1 ether}(4, updateData, priceIds);
+        pulse.executeCallback{value: 1 ether}(
+            defaultProvider,
+            2,
+            updateData,
+            priceIds
+        );
+        pulse.executeCallback{value: 1 ether}(
+            defaultProvider,
+            4,
+            updateData,
+            priceIds
+        );
         vm.stopPrank();
     }
 
@@ -1000,9 +1169,24 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
     ) private {
         vm.deal(defaultProvider, 3 ether); // Increase ETH allocation
         vm.startPrank(defaultProvider);
-        pulse.executeCallback{value: 1 ether}(1, updateData, priceIds);
-        pulse.executeCallback{value: 1 ether}(3, updateData, priceIds);
-        pulse.executeCallback{value: 1 ether}(5, updateData, priceIds);
+        pulse.executeCallback{value: 1 ether}(
+            defaultProvider,
+            1,
+            updateData,
+            priceIds
+        );
+        pulse.executeCallback{value: 1 ether}(
+            defaultProvider,
+            3,
+            updateData,
+            priceIds
+        );
+        pulse.executeCallback{value: 1 ether}(
+            defaultProvider,
+            5,
+            updateData,
+            priceIds
+        );
         vm.stopPrank();
     }
 
@@ -1017,7 +1201,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         // Setup test data
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
-        uint256 publishTime = block.timestamp;
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
         uint256 callbackGasLimit = 1000000;
 
         // Create mock price feeds and setup Pyth response
@@ -1031,6 +1215,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         for (uint i = 0; i < 20; i++) {
             vm.deal(address(this), 1 ether);
             pulse.requestPriceUpdatesWithCallback{value: 1 ether}(
+                defaultProvider,
                 publishTime,
                 priceIds,
                 callbackGasLimit
@@ -1041,6 +1226,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
                 vm.deal(defaultProvider, 1 ether);
                 vm.prank(defaultProvider);
                 pulse.executeCallback{value: 1 ether}(
+                    defaultProvider,
                     uint64(i + 1),
                     updateData,
                     priceIds
@@ -1071,11 +1257,15 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer {
         );
     }
 
+    function getPulse() internal view override returns (address) {
+        return address(pulse);
+    }
+
     // Mock implementation of pulseCallback
     function pulseCallback(
         uint64 sequenceNumber,
         PythStructs.PriceFeed[] memory priceFeeds
-    ) external override {
+    ) internal override {
         // Just accept the callback, no need to do anything with the data
         // This prevents the revert we're seeing
     }
