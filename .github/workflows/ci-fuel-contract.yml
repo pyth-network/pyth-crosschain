@@ -30,9 +30,19 @@ jobs:
         run: forc build --verbose
       - name: Run tests with Forc
         run: forc test --verbose
+        if: success() || failure()
       - name: Rust add wasm32-unknown-unknown target
         run: rustup target add wasm32-unknown-unknown
+        if: success() || failure()
+      - name: Format check
+        run: cargo fmt --manifest-path ./target_chains/fuel/contracts/Cargo.toml --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy --manifest-path ./target_chains/fuel/contracts/Cargo.toml --tests -- --deny warnings
+        if: success() || failure()
       - name: Build
         run: cargo build --verbose
+        if: success() || failure()
       - name: Run tests
         run: cargo test --verbose
+        if: success() || failure()

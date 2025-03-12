@@ -25,5 +25,12 @@ jobs:
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Format check
+        run: cargo +1.73.0 fmt --manifest-path ./governance/remote_executor/Cargo.toml --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo +1.73.0 clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests -- --deny warnings
+        if: success() || failure()
       - name: Run executor tests
         run: cargo test-sbf --manifest-path ./governance/remote_executor/Cargo.toml
+        if: success() || failure()
