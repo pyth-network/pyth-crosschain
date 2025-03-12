@@ -2,6 +2,7 @@ use {
     crate::{
         api::{BlockchainState, ChainId},
         chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
+        chain::reader::RequestedWithCallbackEvent,
         config::EthereumConfig,
         eth_utils::traced_client::RpcMetrics,
         keeper::block::{
@@ -11,6 +12,7 @@ use {
         keeper::commitment::update_commitments_loop,
         keeper::fee::adjust_fee_wrapper,
         keeper::fee::withdraw_fees_wrapper,
+        keeper::keeper_state::KeeperState,
         keeper::track::track_accrued_pyth_fees,
         keeper::track::track_balance,
         keeper::track::track_provider,
@@ -77,7 +79,16 @@ pub async fn run_keeper_threads(
     );
     let keeper_address = contract.wallet().address();
 
-    let fulfilled_requests_cache = Arc::new(RwLock::new(HashSet::<u64>::new()));
+    let keeper_state = Arc::new(KeeperState {
+        contract: contract.clone(),
+        gas_limit: chain_eth_config.gas_limit.into(),
+        chain_state: chain_state.clone(),
+        metrics: metrics.clone(),
+        escalation_policy: chain_eth_config.escalation_policy.to_policy(),
+    });
+
+    let fulfilled_requests_cache =
+        Arc::new(RwLock::new(HashSet::<RequestedWithCallbackEvent>::new()));
 
     // Spawn a thread to handle the events from last backlog_range blocks.
     let gas_limit: U256 = chain_eth_config.gas_limit.into();
@@ -87,11 +98,7 @@ pub async fn run_keeper_threads(
                 from: latest_safe_block.saturating_sub(chain_eth_config.backlog_range),
                 to: latest_safe_block,
             },
-            contract.clone(),
-            gas_limit,
-            chain_eth_config.escalation_policy.to_policy(),
-            chain_state.clone(),
-            metrics.clone(),
+            keeper_state.clone(),
             fulfilled_requests_cache.clone(),
             chain_eth_config.block_delays.clone(),
         )
@@ -113,12 +120,8 @@ pub async fn run_keeper_threads(
     // Spawn a thread for block processing with configured delays
     spawn(
         process_new_blocks(
-            chain_state.clone(),
             rx,
-            Arc::clone(&contract),
-            gas_limit,
-            chain_eth_config.escalation_policy.to_policy(),
-            metrics.clone(),
+            keeper_state.clone(),
             fulfilled_requests_cache.clone(),
             chain_eth_config.block_delays.clone(),
         )

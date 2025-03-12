@@ -67,8 +67,7 @@ pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber
 pub async fn process_block_range<H: EventHandler>(
     block_range: BlockRange,
     state: Arc<H>,
-    escalation_policy: EscalationPolicy,
-    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    fulfilled_requests_cache: Arc<RwLock<HashSet<H::Event>>>,
 ) {
     let BlockRange {
         from: first_block,
@@ -88,7 +87,6 @@ pub async fn process_block_range<H: EventHandler>(
                 to: to_block,
             },
             state.clone(),
-            escalation_policy.clone(),
             fulfilled_requests_cache.clone(),
         )
         .in_current_span()
@@ -108,23 +106,26 @@ pub async fn process_block_range<H: EventHandler>(
 pub async fn process_single_block_batch<H: EventHandler>(
     block_range: BlockRange,
     state: Arc<H>,
-    escalation_policy: EscalationPolicy,
-    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    fulfilled_requests_cache: Arc<RwLock<HashSet<H::Event>>>,
 ) {
     loop {
-        let events_res = state.get_events(block_range).await;
+        let events_res = state.get_events(&block_range).await;
 
         match events_res {
             Ok(events) => {
                 tracing::info!(num_of_events = &events.len(), "Processing",);
                 for event in &events {
+                    // TODO: should we be clearing these out?
                     // the write lock guarantees we spawn only one task per sequence number
-                    let newly_inserted = fulfilled_requests_cache
-                        .write()
-                        .await
-                        .insert(event.sequence_number);
+                    let newly_inserted =
+                        fulfilled_requests_cache.write().await.insert(event.clone());
+
                     if newly_inserted {
-                        spawn(state.process_event(event.clone()).in_current_span());
+                        let s = state.clone();
+                        let e = event.clone();
+                        spawn(async move {
+                            s.process_event(e).in_current_span().await;
+                        });
                     }
                 }
                 tracing::info!(num_of_events = &events.len(), "Processed",);
@@ -267,8 +268,7 @@ pub async fn watch_blocks(
 pub async fn process_new_blocks<H: EventHandler>(
     mut rx: mpsc::Receiver<BlockRange>,
     state: Arc<H>,
-    escalation_policy: EscalationPolicy,
-    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    fulfilled_requests_cache: Arc<RwLock<HashSet<H::Event>>>,
     block_delays: Vec<u64>,
 ) {
     tracing::info!("Waiting for new block ranges to process");
@@ -278,7 +278,6 @@ pub async fn process_new_blocks<H: EventHandler>(
             process_block_range(
                 block_range.clone(),
                 state.clone(),
-                escalation_policy.clone(),
                 fulfilled_requests_cache.clone(),
             )
             .in_current_span()
@@ -293,7 +292,6 @@ pub async fn process_new_blocks<H: EventHandler>(
                 process_block_range(
                     adjusted_range,
                     state.clone(),
-                    escalation_policy.clone(),
                     fulfilled_requests_cache.clone(),
                 )
                 .in_current_span()
@@ -310,8 +308,7 @@ pub async fn process_new_blocks<H: EventHandler>(
 pub async fn process_backlog<H: EventHandler>(
     backlog_range: BlockRange,
     state: Arc<H>,
-    escalation_policy: EscalationPolicy,
-    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    fulfilled_requests_cache: Arc<RwLock<HashSet<H::Event>>>,
     block_delays: Vec<u64>,
 ) {
     tracing::info!("Processing backlog");
@@ -319,7 +316,6 @@ pub async fn process_backlog<H: EventHandler>(
     process_block_range(
         backlog_range.clone(),
         state.clone(),
-        escalation_policy.clone(),
         fulfilled_requests_cache.clone(),
     )
     .in_current_span()
@@ -334,7 +330,6 @@ pub async fn process_backlog<H: EventHandler>(
         process_block_range(
             adjusted_range,
             state.clone(),
-            escalation_policy.clone(),
             fulfilled_requests_cache.clone(),
         )
         .in_current_span()

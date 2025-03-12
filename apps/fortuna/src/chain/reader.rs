@@ -29,7 +29,7 @@ impl From<BlockStatus> for EthersBlockNumber {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub struct RequestedWithCallbackEvent {
     pub sequence_number: u64,
     pub user_random_number: [u8; 32],

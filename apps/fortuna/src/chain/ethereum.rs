@@ -200,7 +200,7 @@ impl InstrumentedPythContract {
 }
 
 #[async_trait]
-impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
+impl<T: Middleware + 'static> EntropyReader for PythRandom<T> {
     async fn get_request(
         &self,
         provider_address: Address,
