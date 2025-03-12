@@ -1,6 +1,6 @@
 module pyth::batch_price_attestation {
     use std::vector::{Self};
-    use sui::clock::{Self, Clock};
+    use iota::clock::{Self, Clock};
 
     use pyth::price_feed::{Self};
     use pyth::price_info::{Self, PriceInfo};
@@ -164,7 +164,7 @@ module pyth::batch_price_attestation {
     #[test]
     #[expected_failure]
     fun test_deserialize_batch_price_attestation_invalid_magic() {
-        use sui::test_scenario::{Self, ctx};
+        use iota::test_scenario::{Self, ctx};
         let test = test_scenario::begin(@0x1234);
         let test_clock = clock::create_for_testing(ctx(&mut test));
         // A batch price attestation with a magic number of 0x50325749
@@ -176,7 +176,7 @@ module pyth::batch_price_attestation {
 
     #[test]
     fun test_deserialize_batch_price_attestation() {
-        use sui::test_scenario::{Self, ctx};
+        use iota::test_scenario::{Self, ctx};
         // Set the arrival time
         let test = test_scenario::begin(@0x1234);
         let test_clock = clock::create_for_testing(ctx(&mut test));

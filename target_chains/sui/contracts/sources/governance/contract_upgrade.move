@@ -8,9 +8,9 @@
 /// 3.  Upgrade.
 /// 4.  Commit upgrade.
 module pyth::contract_upgrade {
-    use sui::event::{Self};
-    use sui::object::{ID};
-    use sui::package::{UpgradeReceipt, UpgradeTicket};
+    use iota::event::{Self};
+    use iota::object::{ID};
+    use iota::package::{UpgradeReceipt, UpgradeTicket};
     use wormhole::bytes32::{Self, Bytes32};
     use wormhole::cursor::{Self};
 
@@ -38,9 +38,9 @@ module pyth::contract_upgrade {
     }
 
     /// Redeem governance VAA to issue an `UpgradeTicket` for the upgrade given
-    /// a contract upgrade VAA. This governance message is only relevant for Sui
+    /// a contract upgrade VAA. This governance message is only relevant for Iota
     /// because a contract upgrade is only relevant to one particular network
-    /// (in this case Sui), whose build digest is encoded in this message.
+    /// (in this case Iota), whose build digest is encoded in this message.
     public fun authorize_upgrade(
         pyth_state: &mut State,
         receipt: WormholeVAAVerificationReceipt,
@@ -86,7 +86,7 @@ module pyth::contract_upgrade {
 
     /// Finalize the upgrade that ran to produce the given `receipt`. This
     /// method invokes `state::commit_upgrade` which interacts with
-    /// `sui::package`.
+    /// `iota::package`.
     public fun commit_upgrade(
         self: &mut State,
         receipt: UpgradeReceipt,

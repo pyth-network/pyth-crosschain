@@ -1,5 +1,5 @@
 module pyth::set_update_fee {
-    use sui::math::{Self};
+    use std::u64;
 
     use wormhole::cursor;
 
@@ -34,14 +34,14 @@ module pyth::set_update_fee {
     }
 
     fun apply_exponent(mantissa: u64, exponent: u8): u64 {
-        mantissa * math::pow(10, exponent)
+        mantissa * u64::pow(10, exponent)
     }
 }
 
 #[test_only]
 module pyth::set_update_fee_tests {
-    use sui::test_scenario::{Self};
-    use sui::coin::Self;
+    use iota::test_scenario::{Self};
+    use iota::coin::Self;
 
     use pyth::pyth_tests::{Self, setup_test, take_wormhole_and_pyth_states};
     use pyth::state::Self;

@@ -49,8 +49,8 @@ module pyth::set_data_sources {
 
 #[test_only]
 module pyth::set_data_sources_tests {
-    use sui::test_scenario::{Self};
-    use sui::coin::Self;
+    use iota::test_scenario::{Self};
+    use iota::coin::Self;
 
     use wormhole::external_address::{Self};
     use wormhole::bytes32::{Self};
