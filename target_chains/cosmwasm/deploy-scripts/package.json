@@ -7,7 +7,9 @@
     "build": "tsc",
     "build-contract": "ts-node ./src/build-contract.ts",
     "instantiate-wormhole": "ts-node ./src/instantiate-wormhole.ts",
-    "instantiate-pyth": "ts-node ./src/instantiate-pyth.ts"
+    "instantiate-pyth": "ts-node ./src/instantiate-pyth.ts",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write ."
   },
   "author": "",
   "license": "Apache-2.0",
@@ -25,6 +27,7 @@
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.0",
-    "@types/yargs": "^17.0.18"
+    "@types/yargs": "^17.0.18",
+    "prettier": "^3.5.3"
   }
 }

@@ -6,10 +6,17 @@
     "lib": "lib",
     "test": "test"
   },
+  "scripts": {
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write ."
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@pythnetwork/pyth-sdk-solidity": "^4.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
   }
 }

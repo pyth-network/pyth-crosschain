@@ -10,6 +10,8 @@
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TCjesnm3pxM7Ay8oxlTH4xLkkmP9 vercel env pull",
     "start:dev": "next dev --port 3004",
     "start:prod": "next start --port 3004",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write .",
     "test:lint": "next lint --max-warnings 0"
   },
   "dependencies": {

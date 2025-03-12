@@ -5,7 +5,9 @@
   "scripts": {
     "start": "blueprint run",
     "build": "blueprint build Main",
-    "test:unit": "jest --verbose"
+    "test:unit": "jest --verbose",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write ."
   },
   "devDependencies": {
     "@pythnetwork/pyth-ton-js": "workspace:*",
