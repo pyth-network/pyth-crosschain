@@ -3,6 +3,7 @@ name: Check Pythnet SDK
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-pythnet-sdk.yml
       - pythnet/pythnet_sdk/**
   push:
     branches: [main]

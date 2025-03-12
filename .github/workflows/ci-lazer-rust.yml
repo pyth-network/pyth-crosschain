@@ -5,6 +5,7 @@ on:
       - main
   pull_request:
     paths:
+      - .github/workflows/ci-lazer-rust.yml
       - lazer/**
 
 jobs:

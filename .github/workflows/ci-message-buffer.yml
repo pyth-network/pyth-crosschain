@@ -2,6 +2,7 @@ name: Message Buffer Check
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-message-buffer.yml
       - pythnet/message_buffer/**
   push:
     branches:

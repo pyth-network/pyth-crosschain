@@ -3,6 +3,7 @@ name: Test CosmWasm Contract
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-cosmwasm-contract.yml
       - target_chains/cosmwasm/**
       - wormhole_attester/sdk/rust/**
   push:

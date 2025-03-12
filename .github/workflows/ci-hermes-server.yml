@@ -3,6 +3,7 @@ name: Check Hermes Server
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-hermes-server.yml
       - apps/hermes/server/**
   push:
     branches: [main]
