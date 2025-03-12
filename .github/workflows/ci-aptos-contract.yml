@@ -23,7 +23,7 @@ jobs:
         run: wget https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v6.1.1/aptos-cli-6.1.1-Ubuntu-22.04-x86_64.zip
 
       - name: Unzip CLI
-        run: unzip aptos-cli-3.1.0-Ubuntu-22.04-x86_64.zip
+        run: unzip aptos-cli-6.1.1-Ubuntu-22.04-x86_64.zip
 
       - name: Check Formatting
         run: ./aptos move fmt
