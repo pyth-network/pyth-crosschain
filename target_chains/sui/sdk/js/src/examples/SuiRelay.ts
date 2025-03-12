@@ -51,7 +51,9 @@ async function run() {
   // Fetch the latest price feed update data from the Price Service
   const connection = new SuiPriceServiceConnection(argv["hermes"]);
   const feeds = argv["feed-id"];
-  if (!Array.isArray(feeds)) { throw new Error("Not a valid input!"); }
+  if (!Array.isArray(feeds)) {
+    throw new Error("Not a valid input!");
+  }
 
   const provider = getProvider(argv["full-node"]);
   const wormholeStateId = argv["wormhole-state-id"];
