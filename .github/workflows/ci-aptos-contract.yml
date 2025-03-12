@@ -1,7 +1,6 @@
 on:
   pull_request:
     paths:
-      - .github/workflows/ci-aptos-contract.yml
       - target_chains/aptos/contracts/**
   push:
     branches:
@@ -30,12 +29,9 @@ jobs:
 
       - name: Check Formatting
         run: ./aptos move fmt
-        if: success() || failure()
 
       - name: Lint
         run: ./aptos move lint --check-test-code --dev
-        if: success() || failure()
 
       - name: Run tests
         run: ./aptos move test
-        if: success() || failure()
