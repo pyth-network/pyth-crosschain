@@ -5,6 +5,7 @@ on:
       - main
   pull_request:
     paths:
+      - .github/workflows/ci-lazer-rust.yml
       - lazer/**
 
 jobs:
@@ -36,7 +37,15 @@ jobs:
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
       - name: check Cargo.toml formatting
         run: find . -name Cargo.toml -exec taplo fmt --check --diff {} \;
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy --all-targets -- --deny warnings
+        if: success() || failure()
       - name: Build Solana programs
         run: cargo build-sbf
+        if: success() || failure()
       - name: test
         run: cargo test
+        if: success() || failure()

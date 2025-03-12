@@ -3,6 +3,7 @@ name: Test Solana Contract
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-solana-contract.yml
       - target_chains/solana/**
       - pythnet/pythnet_sdk/**
   push:
@@ -32,9 +33,18 @@ jobs:
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v1.16.20/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
       - name: Build
         run: cargo-build-sbf
+        if: success() || failure()
       - name: Run tests
         run: cargo-test-sbf
+        if: success() || failure()
       - name: Run sdk tests
         run: cargo test --package pyth-solana-receiver-sdk
+        if: success() || failure()

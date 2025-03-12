@@ -11,6 +11,7 @@ module pyth::governance_action {
         value: u8,
     }
 
+    #[lint::skip(unnecessary_numerical_extreme_comparison)]
     public fun from_u8(value: u8): GovernanceAction {
         assert!(CONTRACT_UPGRADE <= value && value <= SET_STALE_PRICE_THRESHOLD, error::invalid_governance_action());
         GovernanceAction { value }

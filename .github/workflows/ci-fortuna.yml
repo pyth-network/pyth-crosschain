@@ -3,12 +3,16 @@ name: Check Fortuna
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-fortuna.yml
       - apps/fortuna/**
   push:
     branches: [main]
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/fortuna
     steps:
       - uses: actions/checkout@v2
       - uses: Swatinem/rust-cache@v2
@@ -19,5 +23,12 @@ jobs:
           profile: minimal
           toolchain: 1.82.0
           override: true
-      - name: Run executor tests
-        run: cargo test --manifest-path ./apps/fortuna/Cargo.toml
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
+      - name: Run tests
+        run: cargo test
+        if: success() || failure()

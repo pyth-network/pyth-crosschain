@@ -3,6 +3,7 @@ name: Test CosmWasm Contract
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-cosmwasm-contract.yml
       - target_chains/cosmwasm/**
       - wormhole_attester/sdk/rust/**
   push:
@@ -26,7 +27,15 @@ jobs:
           toolchain: 1.82.0
           components: rustfmt, clippy
           override: true
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
       - name: Build
         run: cargo build --verbose
+        if: success() || failure()
       - name: Run tests
         run: cargo test --verbose
+        if: success() || failure()
