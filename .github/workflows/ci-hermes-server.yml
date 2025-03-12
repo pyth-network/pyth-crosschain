@@ -10,6 +10,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/hermes/server
     steps:
       - uses: actions/checkout@v2
       - uses: Swatinem/rust-cache@v2

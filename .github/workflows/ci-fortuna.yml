@@ -10,6 +10,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/fortuna
     steps:
       - uses: actions/checkout@v2
       - uses: Swatinem/rust-cache@v2
@@ -26,6 +29,6 @@ jobs:
       - name: Clippy check
         run: cargo clippy --tests -- --deny warnings
         if: success() || failure()
-      - name: Run executor tests
+      - name: Run tests
         run: cargo test
         if: success() || failure()
