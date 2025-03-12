@@ -30,6 +30,7 @@ pub(crate) mod block;
 pub(crate) mod commitment;
 pub(crate) mod fee;
 pub(crate) mod keeper_metrics;
+pub(crate) mod keeper_state;
 pub(crate) mod process_event;
 pub(crate) mod track;
 

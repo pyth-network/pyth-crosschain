@@ -4,6 +4,7 @@ use {
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
         eth_utils::utils::EscalationPolicy,
         keeper::keeper_metrics::KeeperMetrics,
+        keeper::keeper_state::EventHandler,
         keeper::process_event::process_event_with_backoff,
     },
     anyhow::{anyhow, Result},
@@ -63,13 +64,10 @@ pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber
 #[tracing::instrument(skip_all, fields(
     range_from_block = block_range.from, range_to_block = block_range.to
 ))]
-pub async fn process_block_range(
+pub async fn process_block_range<H: EventHandler>(
     block_range: BlockRange,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
+    state: Arc<H>,
     escalation_policy: EscalationPolicy,
-    chain_state: api::BlockchainState,
-    metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
 ) {
     let BlockRange {
@@ -89,11 +87,8 @@ pub async fn process_block_range(
                 from: current_block,
                 to: to_block,
             },
-            contract.clone(),
-            gas_limit,
+            state.clone(),
             escalation_policy.clone(),
-            chain_state.clone(),
-            metrics.clone(),
             fulfilled_requests_cache.clone(),
         )
         .in_current_span()
@@ -110,20 +105,14 @@ pub async fn process_block_range(
 #[tracing::instrument(name = "batch", skip_all, fields(
     batch_from_block = block_range.from, batch_to_block = block_range.to
 ))]
-pub async fn process_single_block_batch(
+pub async fn process_single_block_batch<H: EventHandler>(
     block_range: BlockRange,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
+    state: Arc<H>,
     escalation_policy: EscalationPolicy,
-    chain_state: api::BlockchainState,
-    metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
 ) {
     loop {
-        let events_res = chain_state
-            .contract
-            .get_request_with_callback_events(block_range.from, block_range.to)
-            .await;
+        let events_res = state.get_events(block_range).await;
 
         match events_res {
             Ok(events) => {
@@ -135,17 +124,7 @@ pub async fn process_single_block_batch(
                         .await
                         .insert(event.sequence_number);
                     if newly_inserted {
-                        spawn(
-                            process_event_with_backoff(
-                                event.clone(),
-                                chain_state.clone(),
-                                contract.clone(),
-                                gas_limit,
-                                escalation_policy.clone(),
-                                metrics.clone(),
-                            )
-                            .in_current_span(),
-                        );
+                        spawn(state.process_event(event.clone()).in_current_span());
                     }
                 }
                 tracing::info!(num_of_events = &events.len(), "Processed",);
@@ -285,13 +264,10 @@ pub async fn watch_blocks(
 /// for each configured block delay.
 #[tracing::instrument(skip_all)]
 #[allow(clippy::too_many_arguments)]
-pub async fn process_new_blocks(
-    chain_state: BlockchainState,
+pub async fn process_new_blocks<H: EventHandler>(
     mut rx: mpsc::Receiver<BlockRange>,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
+    state: Arc<H>,
     escalation_policy: EscalationPolicy,
-    metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
     block_delays: Vec<u64>,
 ) {
@@ -301,11 +277,8 @@ pub async fn process_new_blocks(
             // Process blocks immediately first
             process_block_range(
                 block_range.clone(),
-                Arc::clone(&contract),
-                gas_limit,
+                state.clone(),
                 escalation_policy.clone(),
-                chain_state.clone(),
-                metrics.clone(),
                 fulfilled_requests_cache.clone(),
             )
             .in_current_span()
@@ -319,11 +292,8 @@ pub async fn process_new_blocks(
                 };
                 process_block_range(
                     adjusted_range,
-                    Arc::clone(&contract),
-                    gas_limit,
+                    state.clone(),
                     escalation_policy.clone(),
-                    chain_state.clone(),
-                    metrics.clone(),
                     fulfilled_requests_cache.clone(),
                 )
                 .in_current_span()
@@ -337,13 +307,10 @@ pub async fn process_new_blocks(
 /// It processes the backlog range for each configured block delay.
 #[allow(clippy::too_many_arguments)]
 #[tracing::instrument(skip_all)]
-pub async fn process_backlog(
+pub async fn process_backlog<H: EventHandler>(
     backlog_range: BlockRange,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
+    state: Arc<H>,
     escalation_policy: EscalationPolicy,
-    chain_state: BlockchainState,
-    metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
     block_delays: Vec<u64>,
 ) {
@@ -351,11 +318,8 @@ pub async fn process_backlog(
     // Process blocks immediately first
     process_block_range(
         backlog_range.clone(),
-        Arc::clone(&contract),
-        gas_limit,
+        state.clone(),
         escalation_policy.clone(),
-        chain_state.clone(),
-        metrics.clone(),
         fulfilled_requests_cache.clone(),
     )
     .in_current_span()
@@ -369,11 +333,8 @@ pub async fn process_backlog(
         };
         process_block_range(
             adjusted_range,
-            Arc::clone(&contract),
-            gas_limit,
+            state.clone(),
             escalation_policy.clone(),
-            chain_state.clone(),
-            metrics.clone(),
             fulfilled_requests_cache.clone(),
         )
         .in_current_span()
