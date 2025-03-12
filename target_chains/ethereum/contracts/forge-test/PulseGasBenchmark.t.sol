@@ -54,10 +54,10 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
     }
 
     // Estimate how much gas is used by all of the data mocking functionality in the other gas benchmarks.
-    // Subtract this amount from the gas benchmarks to estimate the true usafe of the pulse flow.
+    // Subtract this amount from the gas benchmarks to estimate the true usage of the pulse flow.
     function testDataMocking() public {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
-        createPriceIds();
+        bytes32[] memory priceIds = createPriceIds();
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             timestamp
@@ -97,6 +97,8 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
     }
 }
 
+// A simple consumer that does nothing with the price updates.
+// Used to estimate the gas usage of the pulse flow.
 contract VoidPulseConsumer is IPulseConsumer {
     address private _pulse;
 
