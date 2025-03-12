@@ -351,27 +351,26 @@ where
         // Update the aggregate state
         let mut aggregate_state = self.into().data.write().await;
 
-        // Send update event to subscribers. We are purposefully ignoring the result
-        // because there might be no subscribers.
-        let _ = match aggregate_state.latest_completed_slot {
+        // Atomic check and update
+        let event = match aggregate_state.latest_completed_slot {
             None => {
-                aggregate_state.latest_completed_slot.replace(slot);
-                self.into()
-                    .api_update_tx
-                    .send(AggregationEvent::New { slot })
+                aggregate_state.latest_completed_slot = Some(slot);
+                AggregationEvent::New { slot }
             }
             Some(latest) if slot > latest => {
                 self.prune_removed_keys(message_state_keys).await;
-                aggregate_state.latest_completed_slot.replace(slot);
-                self.into()
-                    .api_update_tx
-                    .send(AggregationEvent::New { slot })
+                aggregate_state.latest_completed_slot = Some(slot);
+                AggregationEvent::New { slot }
             }
-            _ => self
-                .into()
-                .api_update_tx
-                .send(AggregationEvent::OutOfOrder { slot }),
+            Some(latest) if slot == latest => {
+                // Don't send duplicate events for the same slot
+                return Ok(());
+            }
+            _ => AggregationEvent::OutOfOrder { slot },
         };
+
+        // Only send the event after the state has been updated
+        let _ = self.into().api_update_tx.send(event);
 
         aggregate_state.latest_completed_slot = aggregate_state
             .latest_completed_slot
