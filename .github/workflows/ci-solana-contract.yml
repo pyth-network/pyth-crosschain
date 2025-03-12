@@ -33,10 +33,10 @@ jobs:
           sh -c "$(curl -sSfL https://release.solana.com/v1.16.20/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Format check
-        run: cargo fmt --manifest-path ./target_chains/solana/Cargo.toml --all -- --check
+        run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --manifest-path ./target_chains/solana/Cargo.toml --tests -- --deny warnings
+        run: cargo clippy --tests -- --deny warnings
         if: success() || failure()
       - name: Build
         run: cargo-build-sbf

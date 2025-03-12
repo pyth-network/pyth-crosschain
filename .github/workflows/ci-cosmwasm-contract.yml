@@ -27,10 +27,10 @@ jobs:
           components: rustfmt, clippy
           override: true
       - name: Format check
-        run: cargo fmt --manifest-path ./target_chains/cosmwasm/Cargo.toml --all -- --check
+        run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests -- --deny warnings
+        run: cargo clippy --tests -- --deny warnings
         if: success() || failure()
       - name: Build
         run: cargo build --verbose

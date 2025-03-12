@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: governance/remote_executor
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -26,11 +29,11 @@ jobs:
           sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Format check
-        run: cargo fmt --manifest-path ./governance/remote_executor/Cargo.toml --all -- --check
+        run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests -- --deny warnings
+        run: cargo clippy --tests -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
-        run: cargo test-sbf --manifest-path ./governance/remote_executor/Cargo.toml
+        run: cargo test-sbf
         if: success() || failure()

@@ -24,5 +24,14 @@ jobs:
       - name: Unzip CLI
         run: unzip aptos-cli-3.1.0-Ubuntu-22.04-x86_64.zip
 
+      - name: Check Formatting
+        run: ./aptos move fmt
+        if: success() || failure()
+
+      - name: Lint
+        run: ./aptos move lint --check-test-code --dev
+        if: success() || failure()
+
       - name: Run tests
         run: ./aptos move test
+        if: success() || failure()
