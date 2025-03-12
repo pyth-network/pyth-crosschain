@@ -109,7 +109,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let mut tasks = Vec::new();
     for (chain_id, chain_config) in config.chains.clone() {
-        let rpc_metrics = rpc_metrics.clone();
         tasks.push(spawn(async move {
             let state = setup_chain_state(
                 &config.provider.address,

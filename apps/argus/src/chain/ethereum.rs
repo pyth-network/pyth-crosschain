@@ -2,7 +2,7 @@ use {
     crate::{
         api::ChainId,
         chain::reader::{
-            BlockNumber, BlockStatus, RequestedWithCallbackEvent,
+            self, BlockNumber, BlockStatus, RequestedWithCallbackEvent,
         },
         config::EthereumConfig,
     },
@@ -199,6 +199,32 @@ impl InstrumentedPythContract {
 }
 
 impl<M: Middleware + 'static> PythRandom<M> {
+
+    pub async fn get_request_wrapper(
+        &self,
+        provider_address: Address,
+        sequence_number: u64,
+    ) -> Result<Option<reader::Request>> {
+        let r = self
+            .get_request(provider_address, sequence_number)
+            // TODO: This doesn't work for lighlink right now. Figure out how to do this in lightlink
+            // .block(ethers::core::types::BlockNumber::Finalized)
+            .call()
+            .await?;
+
+        // sequence_number == 0 means the request does not exist.
+        if r.sequence_number != 0 {
+            Ok(Some(reader::Request {
+                provider: r.provider,
+                sequence_number: r.sequence_number,
+                block_number: r.block_number,
+                use_blockhash: r.use_blockhash,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
         let block_number: EthersBlockNumber = confirmed_block_status.into();
         let block = self
