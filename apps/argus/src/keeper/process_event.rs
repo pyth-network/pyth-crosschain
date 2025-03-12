@@ -5,7 +5,7 @@ use {
         chain::{ethereum::InstrumentedSignablePythContract, reader::RequestedWithCallbackEvent},
     },
     fortuna::eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
-    anyhow::{anyhow, Result},
+    anyhow::Result,
     ethers::types::U256,
     std::sync::Arc,
     tracing,
@@ -36,10 +36,7 @@ pub async fn process_event_with_backoff(
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing event");
 
-    let provider_revelation = chain_state
-        .state
-        .reveal(event.sequence_number)
-        .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
+    let provider_revelation = [0; 32];
 
     let contract_call = contract.reveal_with_callback(
         event.provider_address,

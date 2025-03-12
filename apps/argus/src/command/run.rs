@@ -2,10 +2,8 @@ use {
     crate::{
         api::{self, BlockchainState, ChainId},
         chain::ethereum::InstrumentedPythContract,
-        command::register_provider::CommitmentMetadata,
-        config::{Commitment, Config, EthereumConfig, RunOptions},
+        config::{Config, EthereumConfig, RunOptions},
         keeper::{self, keeper_metrics::KeeperMetrics},
-        state::{HashChainState, PebbleHashChain},
     },
     fortuna::eth_utils::traced_client::{RpcMetrics, TracedClient},
     anyhow::{anyhow, Error, Result},
@@ -107,22 +105,16 @@ pub async fn run_keeper(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
-    let secret = config.provider.secret.load()?.ok_or(anyhow!(
-        "Please specify a provider secret in the config file."
-    ))?;
     let (tx_exit, rx_exit) = watch::channel(false);
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
     let rpc_metrics = Arc::new(RpcMetrics::new(metrics_registry.clone()).await);
 
     let mut tasks = Vec::new();
     for (chain_id, chain_config) in config.chains.clone() {
-        let secret_copy = secret.clone();
         let rpc_metrics = rpc_metrics.clone();
         tasks.push(spawn(async move {
             let state = setup_chain_state(
                 &config.provider.address,
-                &secret_copy,
-                config.provider.chain_sample_interval,
                 &chain_id,
                 &chain_config,
                 rpc_metrics,
@@ -189,8 +181,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
 async fn setup_chain_state(
     provider: &Address,
-    secret: &str,
-    chain_sample_interval: u64,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
     rpc_metrics: Arc<RpcMetrics>,
@@ -200,80 +190,9 @@ async fn setup_chain_state(
         chain_id.clone(),
         rpc_metrics,
     )?);
-    let mut provider_commitments = chain_config.commitments.clone().unwrap_or_default();
-    provider_commitments.sort_by(|c1, c2| {
-        c1.original_commitment_sequence_number
-            .cmp(&c2.original_commitment_sequence_number)
-    });
-
-    let provider_info = contract.get_provider_info(*provider).call().await?;
-    let latest_metadata = bincode::deserialize::<CommitmentMetadata>(
-        &provider_info.commitment_metadata,
-    )
-    .map_err(|e| {
-        anyhow!(
-            "Chain: {} - Failed to deserialize commitment metadata: {}",
-            &chain_id,
-            e
-        )
-    })?;
-
-    let last_prior_commitment = provider_commitments.last();
-    if last_prior_commitment.is_some()
-        && last_prior_commitment
-            .unwrap()
-            .original_commitment_sequence_number
-            >= provider_info.original_commitment_sequence_number
-    {
-        return Err(anyhow!("The current hash chain for chain id {} has configured commitments for sequence numbers greater than the current on-chain sequence number. Are the commitments configured correctly?", &chain_id));
-    }
-
-    provider_commitments.push(Commitment {
-        seed: latest_metadata.seed,
-        chain_length: latest_metadata.chain_length,
-        original_commitment_sequence_number: provider_info.original_commitment_sequence_number,
-    });
-
-    // TODO: we may want to load the hash chain in a lazy/fault-tolerant way. If there are many blockchains,
-    // then it's more likely that some RPC fails. We should tolerate these faults and generate the hash chain
-    // later when a user request comes in for that chain.
-
-    let mut offsets = Vec::<usize>::new();
-    let mut hash_chains = Vec::<PebbleHashChain>::new();
-
-    for commitment in &provider_commitments {
-        let offset = commitment.original_commitment_sequence_number.try_into()?;
-        offsets.push(offset);
-
-        let pebble_hash_chain = PebbleHashChain::from_config(
-            secret,
-            chain_id,
-            provider,
-            &chain_config.contract_addr,
-            &commitment.seed,
-            commitment.chain_length,
-            chain_sample_interval,
-        )
-        .map_err(|e| anyhow!("Failed to create hash chain: {}", e))?;
-        hash_chains.push(pebble_hash_chain);
-    }
-
-    let chain_state = HashChainState {
-        offsets,
-        hash_chains,
-    };
-
-    if chain_state.reveal(provider_info.original_commitment_sequence_number)?
-        != provider_info.original_commitment
-    {
-        return Err(anyhow!("The root of the generated hash chain for chain id {} does not match the commitment. Are the secret and chain length configured correctly?", &chain_id));
-    } else {
-        tracing::info!("Root of chain id {} matches commitment", &chain_id);
-    }
 
     let state = BlockchainState {
         id: chain_id.clone(),
-        state: Arc::new(chain_state),
         contract,
         provider_address: *provider,
         reveal_delay_blocks: chain_config.reveal_delay_blocks,
