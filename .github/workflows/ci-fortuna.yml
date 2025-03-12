@@ -3,6 +3,7 @@ name: Check Fortuna
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-fortuna.yml
       - apps/fortuna/**
   push:
     branches: [main]
@@ -24,7 +25,10 @@ jobs:
           override: true
       - name: Format check
         run: cargo fmt --all -- --check
+        if: success() || failure()
       - name: Clippy check
         run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
       - name: Run tests
         run: cargo test
+        if: success() || failure()

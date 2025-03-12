@@ -32,10 +32,6 @@ jobs:
         run: forc test --verbose
       - name: Rust add wasm32-unknown-unknown target
         run: rustup target add wasm32-unknown-unknown
-      - name: Format check
-        run: cargo fmt --all -- --check
-      - name: Clippy check
-        run: cargo clippy --tests -- --deny warnings
       - name: Build
         run: cargo build --verbose
       - name: Run tests

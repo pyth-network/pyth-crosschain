@@ -3,6 +3,7 @@ name: Check Hermes Server
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-hermes-server.yml
       - apps/hermes/server/**
   push:
     branches: [main]
@@ -29,7 +30,10 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Format check
         run: cargo fmt --all -- --check
+        if: success() || failure()
       - name: Clippy check
         run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
       - name: Run executor tests
         run: cargo test
+        if: success() || failure()
