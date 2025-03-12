@@ -20,10 +20,10 @@ jobs:
           toolchain: 1.82.0
           override: true
       - name: Format check
-        run: cargo +1.82.0 fmt --manifest-path ./apps/fortuna/Cargo.toml --all -- --check
+        run: cargo fmt --manifest-path ./apps/fortuna/Cargo.toml --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo +1.82.0 clippy --manifest-path ./apps/fortuna/Cargo.toml --tests -- --deny warnings
+        run: cargo clippy --manifest-path ./apps/fortuna/Cargo.toml --tests -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
         run: cargo test --manifest-path ./apps/fortuna/Cargo.toml

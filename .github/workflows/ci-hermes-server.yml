@@ -25,10 +25,10 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Format check
-        run: cargo +1.82.0 fmt --manifest-path ./apps/hermes/server/Cargo.toml --all -- --check
+        run: cargo fmt --manifest-path ./apps/hermes/server/Cargo.toml --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo +1.82.0 clippy --manifest-path ./apps/hermes/server/Cargo.toml --tests -- --deny warnings
+        run: cargo clippy --manifest-path ./apps/hermes/server/Cargo.toml --tests -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
         run: cargo test --manifest-path ./apps/hermes/server/Cargo.toml
