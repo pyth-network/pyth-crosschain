@@ -5,10 +5,15 @@ Install move cli according to this [doc](../contracts/README.md)
 # Deploying from scratch
 
 Configure the `Move.toml` file accordingly. The wormhole address should be specified based on the target chain in the `Move.toml` and the pyth address should be `0x0`.
+
+In order to run the commands, a SUI private key is needed. Often, the private key takes the form of "suiprivkey...". The example expects the key in the form of hex. You can use `sui keytool convert` to get the hex version fo the key, to be used below.
+
+Run the following commands from the root of crosschain to ensure dependencies are correctly installed and built. You can install dependencies in root using `pnpm install`.
+
 We can deploy the pyth oracle and initialize it with the following command:
 
 ```bash
-npm run cli -- deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet]
+pnpm turbo --filter @pythnetwork/pyth-sui-cli run cli -- deploy --private-key <private-key> --chain [sui_mainnet|sui_testnet]
 ```
 
 You can then add your sui contract configs to the contract manager store.
@@ -16,7 +21,7 @@ You can then add your sui contract configs to the contract manager store.
 You can also manually create all the price feeds available at the moment to make it easier for devs to test the oracle.
 
 ```bash
-npm run cli -- create-all --private-key <private-key> --contract <contract-id>
+pnpm turbo --filter @pythnetwork/pyth-sui-cli run cli -- create-all --private-key <private-key> --contract <contract-id>
 ```
 
 # Updating price feeds:
@@ -24,11 +29,11 @@ npm run cli -- create-all --private-key <private-key> --contract <contract-id>
 You can use the `create` and `update-feeds` commands to create and update price feeds respectively.
 
 ```bash
-npm run cli -- create --feed-id <feed-id> --private-key <private-key> --contract <contract-id>
+pnpm turbo --filter @pythnetwork/pyth-sui-cli run cli -- create --feed-id <feed-id> --private-key <private-key> --contract <contract-id>
 ```
 
 ```bash
-npm run cli -- update-feeds --feed-id <feed-id> --private-key <private-key> --contract <contract-id>
+pnpm turbo --filter @pythnetwork/pyth-sui-cli run cli -- update-feeds --feed-id <feed-id> --private-key <private-key> --contract <contract-id>
 ```
 
 # Upgrade process:
@@ -49,7 +54,7 @@ The following steps are needed to upgrade our sui contracts:
 Run the following command to generate the new hash, make sure the contract addresses are identical to the deployed ones:
 
 ```bash
-npm run cli -- generate-digest
+pnpm turbo --filter @pythnetwork/pyth-sui-cli run cli -- generate-digest
 ```
 
 ## Upgrading the contract
@@ -57,7 +62,7 @@ npm run cli -- generate-digest
 To upgrade the contract after the governance vaa was executed run:
 
 ```bash
-npm run cli -- upgrade --private-key <private-key> --contract <contract-id> --vaa <upgrade-vaa>
+pnpm turbo --filter @pythnetwork/pyth-sui-cli run cli -- upgrade --private-key <private-key> --contract <contract-id> --vaa <upgrade-vaa>
 ```
 
 The upgrade procedure consists of 2 transactions. The first one is to upgrade the contract (sui level) and the second one is to run the `migrate` function and upgrade the version (package level).

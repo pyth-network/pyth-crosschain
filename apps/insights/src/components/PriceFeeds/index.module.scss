@@ -86,24 +86,4 @@
       @include theme.max-width;
     }
   }
-
-  .trademarkDisclaimer {
-    margin-top: theme.spacing(6);
-    width: 100%;
-    padding: theme.spacing(4);
-    display: flex;
-    flex-flow: column nowrap;
-    gap: theme.spacing(4);
-    color: theme.color("foreground");
-    font-size: theme.font-size("sm");
-
-    @include theme.max-width;
-
-    .trademarkDisclaimerHeader {
-      @include theme.text("lg", "medium");
-
-      color: theme.color("heading");
-      margin-bottom: theme.spacing(2);
-    }
-  }
 }

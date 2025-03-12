@@ -454,9 +454,6 @@
 - chain: soneium
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
-- chain: story_testnet
-  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
-  type: EvmWormholeContract
 - chain: kraken_ink_mainnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
@@ -472,7 +469,7 @@
 - chain: berachain_mainnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
-- chain: story_mainnet
+- chain: story
   address: "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c"
   type: EvmWormholeContract
 - chain: bittensor_testnet
@@ -482,5 +479,8 @@
   address: "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7"
   type: EvmWormholeContract
 - chain: bittensor_mainnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: story_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
