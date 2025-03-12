@@ -4,10 +4,6 @@
   "description": "Wormhole Sui Integration Test",
   "main": "index.js",
   "license": "MIT",
-  "scripts": {
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
-  },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.12",
     "@mysten/sui.js": "^0.32.2",
