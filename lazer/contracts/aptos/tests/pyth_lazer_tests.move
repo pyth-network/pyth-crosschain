@@ -35,6 +35,8 @@ module pyth_lazer::pyth_lazer_tests {
                 8,
                 false
             );
+        coin::create_coin_conversion_map(framework);
+        coin::create_pairing<AptosCoin>(framework);
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_freeze_cap(freeze_cap);
         mint_cap
