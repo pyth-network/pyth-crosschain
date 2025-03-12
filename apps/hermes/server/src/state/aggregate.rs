@@ -105,6 +105,10 @@ pub struct AggregateStateData {
 
     /// Aggregate Specific Metrics
     pub metrics: metrics::Metrics,
+
+    /// Set of slots for which events have already been sent.
+    /// This prevents sending multiple events for the same slot.
+    pub slots_with_sent_events: HashSet<Slot>,
 }
 
 impl AggregateStateData {
@@ -120,6 +124,7 @@ impl AggregateStateData {
             metrics: metrics::Metrics::new(metrics_registry),
             readiness_staleness_threshold,
             readiness_max_allowed_slot_lag,
+            slots_with_sent_events: HashSet::new(),
         }
     }
 }
@@ -348,24 +353,14 @@ where
         tracing::info!(len = message_states.len(), "Storing Message States.");
         self.store_message_states(message_states).await?;
 
-        // First, get the data we need without holding the lock
-        let message_state_keys_clone = message_state_keys.clone();
-        let should_prune = {
-            let aggregate_state = self.into().data.read().await;
-            match aggregate_state.latest_completed_slot {
-                None => false,
-                Some(latest) if slot > latest => true,
-                _ => false,
-            }
-        };
-
-        // Do the pruning outside the critical section if needed
-        if should_prune {
-            self.prune_removed_keys(message_state_keys_clone).await;
-        }
-
-        // Now acquire the write lock for the state update and event sending
+        // Update the aggregate state
         let mut aggregate_state = self.into().data.write().await;
+
+        // Check if we've already sent an event for this slot
+        if aggregate_state.slots_with_sent_events.contains(&slot) {
+            // We've already sent an event for this slot, don't send another one
+            return Ok(());
+        }
 
         // Atomic check and update
         let event = match aggregate_state.latest_completed_slot {
@@ -374,15 +369,15 @@ where
                 AggregationEvent::New { slot }
             }
             Some(latest) if slot > latest => {
+                self.prune_removed_keys(message_state_keys).await;
                 aggregate_state.latest_completed_slot = Some(slot);
                 AggregationEvent::New { slot }
             }
-            Some(latest) if slot == latest => {
-                // Don't send duplicate events for the same slot
-                return Ok(());
-            }
             _ => AggregationEvent::OutOfOrder { slot },
         };
+
+        // Mark this slot as having sent an event
+        aggregate_state.slots_with_sent_events.insert(slot);
 
         // Only send the event after the state has been updated
         let _ = self.into().api_update_tx.send(event);
@@ -1388,6 +1383,115 @@ mod test {
 
         assert_eq!(result.unwrap_err().to_string(), "Message not found");
     }
+
+    /// Test that verifies only one event is sent per slot, even when updates arrive out of order
+    /// or when a slot is processed multiple times.
+    #[tokio::test]
+    pub async fn test_out_of_order_updates_send_single_event_per_slot() {
+        let (state, mut update_rx) = setup_state(10).await;
+
+        // Create price feed messages
+        let price_feed_100 = create_dummy_price_feed_message(100, 10, 9);
+        let price_feed_101 = create_dummy_price_feed_message(100, 11, 10);
+
+        // First, process slot 100
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(vec![Message::PriceFeedMessage(price_feed_100)], 100, 20),
+        )
+        .await;
+
+        // Check that we received the New event for slot 100
+        assert_eq!(
+            update_rx.recv().await,
+            Ok(AggregationEvent::New { slot: 100 })
+        );
+
+        // Next, process slot 101
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(vec![Message::PriceFeedMessage(price_feed_101)], 101, 21),
+        )
+        .await;
+
+        // Check that we received the New event for slot 101
+        assert_eq!(
+            update_rx.recv().await,
+            Ok(AggregationEvent::New { slot: 101 })
+        );
+
+        // Now, process slot 100 again
+        store_multiple_concurrent_valid_updates(
+            state.clone(),
+            generate_update(vec![Message::PriceFeedMessage(price_feed_100)], 100, 22),
+        )
+        .await;
+
+        // Try to receive another event with a timeout to ensure no more events were sent
+        // We should not receive an OutOfOrder event for slot 100 since we've already sent an event for it
+        let timeout_result =
+            tokio::time::timeout(std::time::Duration::from_millis(100), update_rx.recv()).await;
+
+        // The timeout should occur, indicating no more events were received
+        assert!(
+            timeout_result.is_err(),
+            "Received unexpected additional event"
+        );
+
+        // Verify that both price feeds were stored correctly
+        let price_feed_ids = (*state).get_price_feed_ids().await;
+        assert_eq!(price_feed_ids.len(), 1);
+        assert!(price_feed_ids.contains(&PriceIdentifier::new([100; 32])));
+    }
+
+    /// Test that verifies only one event is sent when multiple concurrent updates
+    /// for the same slot are processed.
+    #[tokio::test]
+    pub async fn test_concurrent_updates_same_slot_sends_single_event() {
+        let (state, mut update_rx) = setup_state(10).await;
+
+        // Create a single price feed message
+        let price_feed = create_dummy_price_feed_message(100, 10, 9);
+
+        // Generate 100 identical updates for the same slot but with different sequence numbers
+        let mut all_updates = Vec::new();
+        for seq in 0..100 {
+            let updates = generate_update(vec![Message::PriceFeedMessage(price_feed)], 10, seq);
+            all_updates.extend(updates);
+        }
+
+        // Process updates concurrently - we don't care if some fail due to the race condition
+        // The important thing is that only one event is sent
+        let state_arc = Arc::clone(&state);
+        let futures = all_updates.into_iter().map(move |u| {
+            let state_clone = Arc::clone(&state_arc);
+            async move {
+                let _ = state_clone.store_update(u).await;
+            }
+        });
+        futures::future::join_all(futures).await;
+
+        // Check that only one AggregationEvent::New is received
+        assert_eq!(
+            update_rx.recv().await,
+            Ok(AggregationEvent::New { slot: 10 })
+        );
+
+        // Try to receive another event with a timeout to ensure no more events were sent
+        let timeout_result =
+            tokio::time::timeout(std::time::Duration::from_millis(100), update_rx.recv()).await;
+
+        // The timeout should occur, indicating no more events were received
+        assert!(
+            timeout_result.is_err(),
+            "Received unexpected additional event"
+        );
+
+        // Verify that the price feed was stored correctly
+        let price_feed_ids = (*state).get_price_feed_ids().await;
+        assert_eq!(price_feed_ids.len(), 1);
+        assert!(price_feed_ids.contains(&PriceIdentifier::new([100; 32])));
+    }
 }
 #[cfg(test)]
 /// Unit tests for the core TWAP calculation logic in `calculate_twap`
@@ -1434,7 +1538,7 @@ mod calculate_twap_unit_tests {
 
     #[test]
     fn test_invalid_timestamps() {
-        let start = create_basic_twap_message(100, 100, 110, 1000);
+        let start = create_basic_twap_message(100, 100, 90, 1000);
         let end = create_basic_twap_message(300, 200, 180, 1100);
 
         let err = calculate_twap(&start, &end).unwrap_err();
