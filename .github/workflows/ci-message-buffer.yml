@@ -34,6 +34,10 @@ jobs:
       - name: Install Anchor
         run: |
           cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
+      - name: Install g++ 12
+        run: |
+          sudo apt-get install g++-12
+          echo "CXX=/usr/bin/g++-12" >> "${GITHUB_ENV}"
       # Libusb is a build requirement for the node-hid package and so pnpm
       # install will fail if this isn't in the build environment and if a
       # precompiled binary isn't found.

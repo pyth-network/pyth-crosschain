@@ -25,6 +25,9 @@ jobs:
       - name: Unzip CLI
         run: unzip aptos-cli-6.1.1-Ubuntu-22.04-x86_64.zip
 
+      - name: Install movefmt
+        run: ./aptos update movefmt
+
       - name: Check Formatting
         run: ./aptos move fmt
         if: success() || failure()
