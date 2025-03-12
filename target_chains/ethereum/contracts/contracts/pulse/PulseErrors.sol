@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 error NoSuchProvider();
 error NoSuchRequest();
+// TODO: add expected / provided values
 error InsufficientFee();
 error Unauthorized();
 error InvalidCallbackGas();

@@ -1,0 +1,85 @@
+chains:
+  lightlink_pegasus:
+    geth_rpc_addr: https://replicator.pegasus.lightlink.io/rpc/v1
+    contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
+
+    # Keeper configuration for the chain
+    reveal_delay_blocks: 0
+    gas_limit: 500000
+
+    # Multiplier for the priority fee estimate, as a percentage (i.e., 100 = no change).
+    # Defaults to 100 if the field is omitted.
+    priority_fee_multiplier_pct: 100
+
+    escalation_policy:
+      # Pad the first callback transaction's gas estimate by 25%,
+      # then multiply each successive callback transaction's gas estimate by 10% until the cap is reached.
+      # All numbers are expressed as percentages where 100 = no change.
+      initial_gas_multiplier_pct: 125
+      gas_multiplier_pct: 110
+      gas_multiplier_cap_pct: 600
+
+      # Multiply successive callback transaction's fees by 10% until the cap is reached.
+      # All numbers are expressed as percentages where 100 = no change.
+      # (See also priority_fee_multiplier_pct above to generically adjust the priority fee estimates for the chain --
+      # adjusting that parameter will influence the fee of the first transaction, in addition to other things)
+      fee_multiplier_pct: 110
+      fee_multiplier_cap_pct: 200
+
+    min_keeper_balance: 100000000000000000
+
+    # Provider configuration
+    # How much to charge in fees
+    fee: 1500000000000000
+
+    # Configuration for dynamic fees under high gas prices. The keeper will set
+    # on-chain fees to make between [min_profit_pct, max_profit_pct] of the max callback
+    # cost in profit per transaction.
+    min_profit_pct: 0
+    target_profit_pct: 20
+    max_profit_pct: 100
+
+    # A list of block delays for processing blocks multiple times. Each number represents
+    # how many blocks to wait before processing. For example, [5, 10, 20] means process
+    # blocks after 5 blocks, then again after 10 blocks, and finally after 20 blocks.
+    block_delays: [5, 10, 20]
+
+    # Historical commitments -- delete this block for local development purposes
+    commitments:
+      # prettier-ignore
+      - seed: [219,125,217,197,234,88,208,120,21,181,172,143,239,102,41,233,167,212,237,106,37,255,184,165,238,121,230,155,116,158,173,48]
+        chain_length: 10000
+        original_commitment_sequence_number: 104
+provider:
+  uri: http://localhost:8080/
+  chain_length: 100000
+  chain_sample_interval: 10
+
+  # An ethereum wallet address and private key. Generate with `cast wallet new`
+  address: 0xADDRESS
+  private_key:
+    # For local development, you can hardcode the private key here
+    value: 0xabcd
+    # For production, you can store the private key in a file.
+    # file: provider-key.txt
+  # A 32 byte random value in hexadecimal
+  # Generate with `openssl rand -hex 32`
+  secret:
+    # For local development, you can hardcode the value here
+    value: abcd
+    # For production, you can store the private key in a file.
+    # file: secret.txt
+
+  # Set this to the address of your keeper wallet if you would like the keeper wallet to
+  # be able to withdraw fees from the contract.
+  fee_manager: 0xADDRESS
+keeper:
+  # An ethereum wallet address and private key for running the keeper service.
+  # This does not have to be the same key as the provider's key above.
+  # Generate with `cast wallet new`.
+  # The keeper private key can be omitted to run the webservice without the keeper.
+  private_key:
+    # For local development, you can hardcode the private key here
+    value: 0xabcd
+    # For production, you can store the private key in a file.
+    # file: keeper-key.txt

@@ -11,16 +11,22 @@ contract PulseState {
 
     struct Request {
         uint64 sequenceNumber;
-        uint256 publishTime;
+        uint64 publishTime;
+        // TODO: this is going to absolutely explode gas costs. Need to do something smarter here.
+        // possible solution is to hash the price ids and store the hash instead.
+        // The ids themselves can be retrieved from the event.
         bytes32[MAX_PRICE_IDS] priceIds;
         uint8 numPriceIds; // Actual number of price IDs used
         uint256 callbackGasLimit;
         address requester;
         address provider;
+        uint128 fee;
     }
 
     struct ProviderInfo {
-        uint128 feeInWei;
+        uint128 baseFeeInWei;
+        uint128 feePerFeedInWei;
+        uint128 feePerGasInWei;
         uint128 accruedFeesInWei;
         address feeManager;
         bool isRegistered;

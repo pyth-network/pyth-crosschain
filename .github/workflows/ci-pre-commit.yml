@@ -11,7 +11,7 @@ env:
   POETRY_VERSION: "1.4.2"
 jobs:
   pre-commit:
-    runs-on: ubuntu-latest-x64-m
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1

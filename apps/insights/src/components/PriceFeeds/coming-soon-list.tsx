@@ -72,6 +72,7 @@ export const ComingSoonList = ({ comingSoonSymbols }: Props) => {
     () =>
       filteredFeeds.map(({ symbol }) => ({
         id: symbol,
+        href: `/price-feeds/${encodeURIComponent(symbol)}`,
         data: {
           priceFeedName: <PriceFeedTag compact symbol={symbol} />,
           assetClass: <AssetClassTag symbol={symbol} />,
