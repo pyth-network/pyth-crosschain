@@ -8,13 +8,11 @@
   },
   "scripts": {
     "build:ci": "turbo build --filter=!./apps/api-reference --filter=!./apps/insights --filter=!./apps/staking",
-    "example:hermes-client": "pnpm i && turbo example --filter @pythnetwork/hermes-client --ui stream",
-    "fix": "pnpm i && turbo fix",
+    "fix:format": "prettier --write .",
+    "install:modules": "[ $CI ] && true || pnpm install",
     "publish": "lerna publish from-package --no-private --no-git-tag-version --yes",
-    "start:dev": "pnpm i && turbo start:dev",
-    "start:prod": "pnpm i && turbo start:prod",
-    "test": "pnpm i && turbo test",
-    "test:ci": "turbo test"
+    "test:format": "prettier --check .",
+    "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
   },
   "devDependencies": {
     "@cprussin/prettier-config": "^2.2.1",

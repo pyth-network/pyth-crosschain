@@ -3,22 +3,23 @@
   "extends": ["//"],
   "tasks": {
     "build:schemas": {
-      "dependsOn": ["pull:schema"],
+      "dependsOn": ["//#install:modules", "pull:schema"],
       "inputs": ["schema.json"],
       "outputs": ["src/zodSchemas.ts"]
     },
     "build:typescript": {
-      "dependsOn": ["build:schemas", "^build"],
+      "dependsOn": ["//#install:modules", "build:schemas", "^build"],
       "outputs": ["lib/**"]
     },
     "build": {
       "dependsOn": ["build:typescript", "build:schemas"]
     },
     "example": {
-      "dependsOn": ["build"],
+      "dependsOn": ["//#install:modules", "build"],
       "cache": false
     },
     "pull:schema": {
+      "dependsOn": ["//#install:modules"],
       "outputs": ["schema.json"],
       "cache": false
     }

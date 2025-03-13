@@ -1,10 +1,64 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["NODE_ENV"],
+  "globalPassThroughEnv": ["COREPACK_HOME"],
   "ui": "tui",
   "tasks": {
+    "//#fix": {
+      "dependsOn": ["//#fix:lint", "//#fix:format"],
+      "cache": false
+    },
+    "//#fix:format": {
+      "dependsOn": ["//#install:modules", "//#fix:lint"],
+      "cache": false
+    },
+    "//#fix:lint": {
+      "dependsOn": ["//#install:modules", "^build"],
+      "cache": false
+    },
+    "//#install:modules": {
+      "inputs": [
+        "**/package.json",
+        ".npmrc",
+        ".npmignore",
+        "pnpm-workspace.yaml",
+        "!**/.next/**",
+        "!**/dist/**"
+      ],
+      "outputs": ["pnpm-lock.yaml"]
+    },
+    "//#test": {
+      "dependsOn": [
+        "//#test:types",
+        "//#test:unit",
+        "//#test:integration",
+        "//#test:format",
+        "//#test:lint"
+      ]
+    },
+    "//#test:format": {
+      "dependsOn": ["//#install:modules"]
+    },
+    "//#test:lint": {
+      "dependsOn": ["//#install:modules", "^build"]
+    },
+    "//#test:types": {
+      "dependsOn": ["//#install:modules", "^build"]
+    },
+    "//#test:unit": {
+      "dependsOn": ["//#install:modules", "^build"]
+    },
+    "//#test:integration": {
+      "dependsOn": ["//#install:modules", "^build"]
+    },
     "build": {
-      "dependsOn": ["^build", "build:cjs", "build:esm"],
+      "dependsOn": [
+        "//#install:modules",
+        "pull:env",
+        "^build",
+        "build:cjs",
+        "build:esm"
+      ],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
@@ -14,12 +68,32 @@
         "!prettier.config.js",
         "!vercel.json"
       ],
-      "outputs": ["dist/**", "lib/**"]
+      "outputs": ["lib/**", "dist/**", ".next/**", "!.next/cache/**"]
     },
     "build:cjs": {
+      "dependsOn": ["//#install:modules"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!**/*.test.*",
+        "!jest.config.js",
+        "!eslint.config.js",
+        "!prettier.config.js",
+        "!vercel.json"
+      ],
       "outputs": ["dist/cjs/**"]
     },
     "build:esm": {
+      "dependsOn": ["//#install:modules"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!**/*.test.*",
+        "!jest.config.js",
+        "!eslint.config.js",
+        "!prettier.config.js",
+        "!vercel.json"
+      ],
       "outputs": ["dist/esm/**"]
     },
     "fix": {
@@ -27,11 +101,26 @@
       "cache": false
     },
     "fix:format": {
-      "dependsOn": ["fix:lint"],
+      "dependsOn": ["//#install:modules", "fix:lint"],
       "cache": false
     },
     "fix:lint": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["//#install:modules", "^build"],
+      "cache": false
+    },
+    "pull:env": {
+      "dependsOn": ["//#install:modules"],
+      "outputs": [".env.local"],
+      "cache": false
+    },
+    "start:dev": {
+      "dependsOn": ["//#install:modules", "pull:env"],
+      "persistent": true,
+      "cache": false
+    },
+    "start:prod": {
+      "dependsOn": ["//#install:modules", "build"],
+      "persistent": true,
       "cache": false
     },
     "test": {
@@ -43,18 +132,20 @@
         "test:lint"
       ]
     },
-    "test:format": {},
+    "test:format": {
+      "dependsOn": ["//#install:modules"]
+    },
     "test:lint": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["//#install:modules", "^build"]
     },
     "test:types": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["//#install:modules", "^build"]
     },
     "test:unit": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["//#install:modules", "^build"]
     },
     "test:integration": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["//#install:modules", "^build"]
     }
   }
 }

@@ -76,11 +76,12 @@ The [HermesClient](./src/examples/HermesClient.ts) example demonstrates both the
 examples above. To run the example:
 
 1. Clone [the Pyth monorepo](https://github.com/pyth-network/pyth-crosschain)
-2. In the root of the monorepo, run `pnpm example:hermes-client -- <args>`. For
-   example, to print BTC and ETH price feeds in the testnet network, run:
+2. In the root of the monorepo, run `pnpm turbo --filter
+   @pythnetwork/hermes-client example -- <args>`. For example, to print BTC and
+   ETH price feeds in the testnet network, run:
 
 ```bash
-pnpm example:hermes-client -- \
+pnpm turbo --filter @pythnetwork/hermes-client example -- \
   --endpoint https://hermes.pyth.network \
   --price-ids \
     0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43 \
