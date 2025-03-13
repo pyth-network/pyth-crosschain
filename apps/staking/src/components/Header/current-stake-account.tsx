@@ -20,7 +20,7 @@ export const CurrentStakeAccount = ({
   return api.type === ApiStateType.Loaded && !isBlocked ? (
     <div
       className={clsx(
-        "hidden flex-col items-end justify-center text-xs xs:flex xl:flex-row xl:items-center xl:text-sm",
+        "hidden flex-col items-end justify-center text-xs xs:flex 2xl:flex-row 2xl:items-center 2xl:text-sm",
         className,
       )}
       {...props}
@@ -28,7 +28,7 @@ export const CurrentStakeAccount = ({
       <div className="font-semibold">Stake account:</div>
       <CopyButton
         text={api.account.toBase58()}
-        className="text-pythpurple-400 xl:ml-2 xl:mr-0"
+        className="text-pythpurple-400 2xl:ml-2 2xl:mr-0"
       >
         <TruncatedKey>{api.account}</TruncatedKey>
       </CopyButton>

@@ -74,7 +74,7 @@ export const AccountSummary = ({
     <Image
       src={background}
       alt=""
-      className="absolute -right-40 hidden h-full object-cover object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)] md:block"
+      className="absolute -right-40 hidden h-full object-cover object-right [mask-image:linear-gradient(to_right,_transparent,_black_50%)] sm:block"
     />
     <div className="relative flex flex-col items-start justify-between gap-8 sm:p-4 md:flex-row md:items-center md:gap-16 xl:px-8 xl:py-2">
       <div>

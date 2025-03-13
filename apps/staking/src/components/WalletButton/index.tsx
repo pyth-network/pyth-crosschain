@@ -295,7 +295,7 @@ const ButtonComponent = ({
   ...props
 }: ButtonComponentProps) => (
   <Button
-    className={clsx("w-36 text-sm lg:w-52 lg:text-base", className)}
+    className={clsx("w-36 text-sm lg:text-base xl:w-52", className)}
     size="nopad"
     {...props}
   >
