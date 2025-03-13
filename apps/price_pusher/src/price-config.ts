@@ -128,7 +128,11 @@ export function shouldUpdate(
   );
 
   logger.info(
-    { sourcePrice: sourceLatestPrice, targetPrice: targetLatestPrice },
+    {
+      sourcePrice: sourceLatestPrice,
+      targetPrice: targetLatestPrice,
+      symbol: priceConfig.alias,
+    },
     `Analyzing price ${priceConfig.alias} (${priceId}). ` +
       `Time difference: ${timeDifference} (< ${priceConfig.timeDifference}? / early: < ${priceConfig.earlyUpdateTimeDifference}) OR ` +
       `Price deviation: ${priceDeviationPct.toFixed(5)}% (< ${
