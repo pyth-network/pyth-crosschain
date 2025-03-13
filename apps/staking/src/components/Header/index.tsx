@@ -21,7 +21,7 @@ export const Header = ({
     >
       <div className="border-b border-neutral-600/50 bg-pythpurple-800 lg:border-x">
         <MaxWidth className="flex h-header items-center justify-between gap-2 lg:-mx-4">
-          <div className="flex flex-row items-center gap-8 lg:gap-12">
+          <div className="flex flex-row items-center gap-6 lg:gap-12">
             <Link
               href="/"
               className="-mx-2 h-[calc(var(--header-height)_-_0.5rem)] rounded-sm p-2 text-pythpurple-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
@@ -30,9 +30,9 @@ export const Header = ({
               <Logomark className="h-full lg:hidden" />
               <span className="sr-only">Pyth Staking</span>
             </Link>
-            <Stats className="hidden gap-4 sm:flex lg:gap-6" />
+            <Stats className="hidden gap-4 md:flex lg:gap-6" />
           </div>
-          <div className="flex flex-none flex-row items-stretch gap-4 md:gap-8">
+          <div className="flex flex-none flex-row items-stretch gap-4 lg:gap-8">
             <CurrentStakeAccount />
             <WalletButton className="flex-none" />
             <HelpMenu />
@@ -40,6 +40,6 @@ export const Header = ({
         </MaxWidth>
       </div>
     </header>
-    <Stats className="border-b border-neutral-600/50 py-4 text-center sm:hidden" />
+    <Stats className="border-b border-neutral-600/50 py-4 text-center md:hidden" />
   </>
 );

@@ -47,9 +47,9 @@ export const HelpMenu = () => {
   return (
     <>
       <MenuTrigger>
-        <Button className="group -mx-2 flex flex-row items-center gap-2 rounded-sm p-2 transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 pressed:bg-white/10 md:-mx-4 md:px-4">
+        <Button className="group -mx-2 flex flex-row items-center gap-2 rounded-sm p-2 transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 pressed:bg-white/10 xl:-mx-4 xl:px-4">
           <QuestionMarkCircleIcon className="size-6 flex-none" />
-          <span className="sr-only md:not-sr-only">Help</span>
+          <span className="sr-only xl:not-sr-only">Help</span>
           <ChevronDownIcon className="size-4 flex-none opacity-60 transition duration-300 group-data-[pressed]:-rotate-180" />
         </Button>
         <Menu placement="bottom end">
