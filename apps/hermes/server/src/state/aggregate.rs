@@ -105,10 +105,6 @@ pub struct AggregateStateData {
 
     /// Aggregate Specific Metrics
     pub metrics: metrics::Metrics,
-
-    /// Set of slots for which events have already been sent.
-    /// This prevents sending multiple events for the same slot.
-    pub slots_with_sent_events: HashSet<Slot>,
 }
 
 impl AggregateStateData {
@@ -124,7 +120,6 @@ impl AggregateStateData {
             metrics: metrics::Metrics::new(metrics_registry),
             readiness_staleness_threshold,
             readiness_max_allowed_slot_lag,
-            slots_with_sent_events: HashSet::new(),
         }
     }
 }
@@ -287,12 +282,22 @@ where
                     WormholePayload::Merkle(proof) => {
                         tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
 
-                        store_wormhole_merkle_verified_message(
+                        // Store the wormhole merkle verified message and check if it was already stored
+                        let is_new = store_wormhole_merkle_verified_message(
                             self,
                             proof.clone(),
                             update_vaa.to_owned(),
                         )
                         .await?;
+
+                        // If the message was already stored, return early
+                        if !is_new {
+                            tracing::info!(
+                                slot = proof.slot,
+                                "VAA Merkle Proof already stored, skipping."
+                            );
+                            return Ok(());
+                        }
 
                         self.into()
                             .data
@@ -308,6 +313,15 @@ where
             Update::AccumulatorMessages(accumulator_messages) => {
                 let slot = accumulator_messages.slot;
                 tracing::info!(slot = slot, "Storing Accumulator Messages.");
+
+                // Check if we already have accumulator messages for this slot
+                if (self.fetch_accumulator_messages(slot).await?).is_some() {
+                    tracing::info!(
+                        slot = slot,
+                        "Accumulator Messages already stored, skipping."
+                    );
+                    return Ok(());
+                }
 
                 self.store_accumulator_messages(accumulator_messages)
                     .await?;
@@ -356,12 +370,6 @@ where
         // Update the aggregate state
         let mut aggregate_state = self.into().data.write().await;
 
-        // Check if we've already sent an event for this slot
-        if aggregate_state.slots_with_sent_events.contains(&slot) {
-            // We've already sent an event for this slot, don't send another one
-            return Ok(());
-        }
-
         // Atomic check and update
         let event = match aggregate_state.latest_completed_slot {
             None => {
@@ -375,9 +383,6 @@ where
             }
             _ => AggregationEvent::OutOfOrder { slot },
         };
-
-        // Mark this slot as having sent an event
-        aggregate_state.slots_with_sent_events.insert(slot);
 
         // Only send the event after the state has been updated
         let _ = self.into().api_update_tx.send(event);
@@ -1538,7 +1543,7 @@ mod calculate_twap_unit_tests {
 
     #[test]
     fn test_invalid_timestamps() {
-        let start = create_basic_twap_message(100, 100, 110, 1000);
+        let start = create_basic_twap_message(100, 100, 90, 1000);
         let end = create_basic_twap_message(300, 200, 180, 1100);
 
         let err = calculate_twap(&start, &end).unwrap_err();
