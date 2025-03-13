@@ -1543,7 +1543,7 @@ mod calculate_twap_unit_tests {
 
     #[test]
     fn test_invalid_timestamps() {
-        let start = create_basic_twap_message(100, 100, 90, 1000);
+        let start = create_basic_twap_message(100, 100, 110, 1000);
         let end = create_basic_twap_message(300, 200, 180, 1100);
 
         let err = calculate_twap(&start, &end).unwrap_err();
