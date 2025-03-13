@@ -17,8 +17,10 @@
     "test:ci": "turbo test"
   },
   "devDependencies": {
+    "@cprussin/prettier-config": "^2.2.1",
     "lerna": "^8.1.8",
-    "prettier": "2.7.1",
+    "prettier": "catalog:",
+    "prettier-plugin-solidity": "catalog:",
     "turbo": "^2.2.3"
   },
   "pnpm": {

@@ -17,7 +17,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node lib/index.js",
-    "format": "prettier --write \"src/**/*.ts\""
+    "fix:format": "prettier --write \"src/**/*.ts\"",
+    "test:format": "prettier --check \"src/**/*.ts\""
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",

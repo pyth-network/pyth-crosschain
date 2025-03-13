@@ -26,6 +26,8 @@
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write .",
     "example": "node --loader ts-node/esm examples/index.js",
     "doc": "typedoc --out docs/typedoc src",
     "publish": "pnpm run script -- publish"
@@ -38,7 +40,7 @@
     "@types/node": "^18.19.54",
     "@types/ws": "^8.5.12",
     "eslint": "^9.12.0",
-    "prettier": "^3.3.3",
+    "prettier": "catalog:",
     "ts-node": "^10.9.2",
     "typedoc": "^0.26.8",
     "typescript": ">=5.5.0 < 5.6.0",
@@ -60,11 +62,11 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
+    "@isaacs/ttlcache": "^1.4.1",
     "@solana/buffer-layout": "^4.0.1",
     "@solana/web3.js": "^1.98.0",
     "isomorphic-ws": "^5.0.0",
-    "ws": "^8.18.0",
-    "@isaacs/ttlcache": "^1.4.1",
-    "ts-log": "^2.2.7"
+    "ts-log": "^2.2.7",
+    "ws": "^8.18.0"
   }
 }

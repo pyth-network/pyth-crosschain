@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": "true",
   "scripts": {
-    "init-buffer": "pnpm exec ts-node scripts/setup_message_buffer.ts"
+    "init-buffer": "pnpm exec ts-node scripts/setup_message_buffer.ts",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write ."
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.27.0",
@@ -17,7 +19,7 @@
     "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
     "mocha": "^9.0.3",
-    "prettier": "^2.6.2",
+    "prettier": "catalog:",
     "ts-mocha": "^10.0.0",
     "typescript": "^4.3.5"
   }

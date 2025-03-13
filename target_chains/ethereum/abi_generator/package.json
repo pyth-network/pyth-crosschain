@@ -18,11 +18,12 @@
     "generate-abis": "src/generate.js"
   },
   "scripts": {
-    "format": "prettier --write .",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write .",
     "generate": "node src/generate.js"
   },
   "devDependencies": {
-    "prettier": "^2.7.1",
+    "prettier": "catalog:",
     "solc": "^0.8.15"
   }
 }

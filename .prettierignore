@@ -1,25 +1,39 @@
 pnpm-lock.yaml
 patches/
 .turbo/
+target_chains/sui/vendor/
 
-# These apps have their own prettier config that uses a later version of
-# prettier
-#
-# TODO(cprussin): eventually I'll figure out how to upgrade prettier everywhere
-# and hook it in to pre-commit.  For now, I don't want to downgrade prettier in
-# the packages that are using the later version, and pre-commit doesn't support
-# later versions of prettier directly.
-#
-# Ideally, we should probably hook up a pre-commit script to run auto-fixes in a
-# generic way that packages can hook into by defining lifecycle scripts, or by
-# using the nx task graph.  Then, packages can use their own formatters /
-# formatter versions and can also hook up other auto-fixes like eslint, etc.
-#
-# I'll explore doing this when I get around to spending some time on our nx
-# build graph config.
-apps/api-reference
-apps/staking
-apps/insights
-apps/entropy-debugger
-governance/pyth_staking_sdk
+# This should stay in sync with the list of workspaces from
+# `pnpm-workspace.yaml`
+apps/*
 packages/*
+apps/hermes/client/js
+governance/xc_admin/packages/*
+governance/pyth_staking_sdk
+price_service/sdk/js
+price_service/client/js
+pythnet/message_buffer
+target_chains/aptos/cli
+target_chains/aptos/sdk/js
+target_chains/cosmwasm/tools
+target_chains/cosmwasm/deploy-scripts
+target_chains/ethereum/contracts
+target_chains/ethereum/abi_generator
+target_chains/ethereum/entropy_sdk/solidity
+target_chains/ethereum/sdk/js
+target_chains/ethereum/sdk/solidity
+target_chains/ethereum/sdk/stylus/pyth-mock-solidity
+target_chains/ethereum/examples/coin_flip/app
+target_chains/fuel/sdk/js
+target_chains/starknet/sdk/js
+target_chains/sui/sdk/js
+target_chains/sui/sdk/js-iota
+target_chains/sui/cli
+target_chains/sui/cli-iota
+target_chains/solana/sdk/js/solana_utils
+target_chains/solana/sdk/js/pyth_solana_receiver
+target_chains/ton/contracts
+target_chains/ton/sdk/js
+contract_manager
+lazer/contracts/solana
+lazer/sdk/js

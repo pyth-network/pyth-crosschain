@@ -11,8 +11,10 @@
   "scripts": {
     "build": "tsc",
     "shell": "ts-node ./src/shell.ts",
+    "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
+    "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "test:lint": "eslint src/ scripts/ --max-warnings 0",
-    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\""
+    "test:format": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\""
   },
   "author": "",
   "license": "Apache-2.0",
@@ -34,10 +36,10 @@
     "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/price-service-client": "workspace:*",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
+    "@pythnetwork/pyth-iota-js": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:^",
     "@pythnetwork/pyth-starknet-js": "^0.2.1",
     "@pythnetwork/pyth-sui-js": "workspace:*",
-    "@pythnetwork/pyth-iota-js": "workspace:*",
     "@pythnetwork/pyth-ton": "workspace:*",
     "@pythnetwork/pyth-ton-js": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:^",
@@ -67,7 +69,7 @@
   "devDependencies": {
     "@types/web3": "^1.2.2",
     "eslint": "^8.0.0",
-    "prettier": "^2.6.2",
+    "prettier": "catalog:",
     "typedoc": "^0.25.7"
   }
 }
