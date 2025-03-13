@@ -22,7 +22,7 @@ export const Stats = ({ className, ...props }: HTMLProps<HTMLDivElement>) => {
 
   return (
     <div className={clsx("flex flex-row items-stretch", className)} {...props}>
-      <div className="flex-1 sm:flex-none">
+      <div className="flex-1 md:flex-none">
         {state.type === StateType.Loaded ? (
           <Tokens className="mb-1 text-xl font-semibold leading-none">
             {state.data.totalStaked}
@@ -35,7 +35,7 @@ export const Stats = ({ className, ...props }: HTMLProps<HTMLDivElement>) => {
         </div>
       </div>
       <div className="border-l border-neutral-600/50" />
-      <div className="flex-1 sm:flex-none">
+      <div className="flex-1 md:flex-none">
         {state.type === StateType.Loaded ? (
           <Tokens className="mb-1 text-xl font-semibold leading-none">
             {state.data.rewardsDistributed}
@@ -48,7 +48,7 @@ export const Stats = ({ className, ...props }: HTMLProps<HTMLDivElement>) => {
         </div>
       </div>
       <div className="border-l border-neutral-600/50" />
-      <div className="flex-1 sm:flex-none">
+      <div className="flex-1 md:flex-none">
         {state.type === StateType.Loaded ? (
           <Tokens className="mb-1 text-xl font-semibold leading-none">
             {state.data.totalGovernance}
@@ -57,7 +57,7 @@ export const Stats = ({ className, ...props }: HTMLProps<HTMLDivElement>) => {
           <Loading />
         )}
         <div className="text-xs leading-none text-pythpurple-400">
-          Pyth Governance Total Staked
+          Governance Total Staked
         </div>
       </div>
     </div>
