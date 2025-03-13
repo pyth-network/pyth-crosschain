@@ -9,7 +9,7 @@ import { COMMON_DEPLOY_OPTIONS } from "./common";
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_cosmwasm.ts")
   .usage(
-    "Usage: $0 --code <path/to/artifact.wasm> --private-key <private-key> --chain <chain>"
+    "Usage: $0 --code <path/to/artifact.wasm> --private-key <private-key> --chain <chain>",
   )
   .options({
     code: {
@@ -38,8 +38,8 @@ async function main() {
       DefaultStore.chains[argv.chain] as CosmWasmChain,
       wormholeContract,
       argv["private-key"],
-      code
-    )
+      code,
+    ),
   );
 }
 

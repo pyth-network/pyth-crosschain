@@ -24,7 +24,7 @@ export class WormholeMultisigInstruction implements MultisigInstruction {
     name: string,
     args: { [key: string]: any },
     accounts: AnchorAccounts,
-    governanceAction: PythGovernanceAction | undefined
+    governanceAction: PythGovernanceAction | undefined,
   ) {
     this.name = name;
     this.args = args;
@@ -33,11 +33,11 @@ export class WormholeMultisigInstruction implements MultisigInstruction {
   }
 
   static fromTransactionInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): WormholeMultisigInstruction {
     const wormholeProgram = createReadOnlyWormholeProgramInterface(
       instruction.programId,
-      new Connection(getPythClusterApiUrl("devnet")) // Hack to get a decoder, this connection won't actually be used
+      new Connection(getPythClusterApiUrl("devnet")), // Hack to get a decoder, this connection won't actually be used
     );
 
     const deserializedData = (
@@ -55,9 +55,9 @@ export class WormholeMultisigInstruction implements MultisigInstruction {
           resolveAccountNames(
             wormholeProgram.idl,
             deserializedData.name,
-            instruction
+            instruction,
           ),
-          decodedGovernanceAction
+          decodedGovernanceAction,
         );
       } else {
         return new WormholeMultisigInstruction(
@@ -66,9 +66,9 @@ export class WormholeMultisigInstruction implements MultisigInstruction {
           resolveAccountNames(
             wormholeProgram.idl,
             deserializedData.name,
-            instruction
+            instruction,
           ),
-          undefined
+          undefined,
         );
       }
     } else {
@@ -76,7 +76,7 @@ export class WormholeMultisigInstruction implements MultisigInstruction {
         UNRECOGNIZED_INSTRUCTION,
         { data: instruction.data },
         { named: {}, remaining: instruction.keys },
-        undefined
+        undefined,
       );
     }
   }

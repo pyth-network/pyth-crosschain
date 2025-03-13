@@ -24,15 +24,14 @@ export async function deployWormholeContract(
   wormholeGovernanceChainId: string,
   wormholeGovernanceContract: string,
   wormholeInitialSigners: string[],
-  wormholeReceiverChainId: number
+  wormholeReceiverChainId: number,
 ): Promise<string> {
   const receiverSetupArtifact = await deployer.loadArtifact("ReceiverSetup");
   const receiverImplArtifact = await deployer.loadArtifact(
-    "ReceiverImplementation"
+    "ReceiverImplementation",
   );
-  const wormholeReceiverArtifact = await deployer.loadArtifact(
-    "WormholeReceiver"
-  );
+  const wormholeReceiverArtifact =
+    await deployer.loadArtifact("WormholeReceiver");
   console.log("Deploying WormholeReceiver contract...");
 
   const receiverSetupContract = await deployer.deploy(receiverSetupArtifact);
@@ -43,7 +42,7 @@ export async function deployWormholeContract(
   const receiverImplContract = await deployer.deploy(receiverImplArtifact);
   console.log(
     "Deployed ReceiverImplementation on",
-    receiverImplContract.address
+    receiverImplContract.address,
   );
 
   // encode initialisation data
@@ -55,17 +54,17 @@ export async function deployWormholeContract(
       wormholeReceiverChainId,
       wormholeGovernanceChainId,
       wormholeGovernanceContract,
-    ]
+    ],
   );
 
   // deploy proxy
   const wormholeReceiverContract = await deployer.deploy(
     wormholeReceiverArtifact,
-    [receiverSetupContract.address, whInitData]
+    [receiverSetupContract.address, whInitData],
   );
 
   console.log(
-    `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`
+    `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`,
   );
 
   return wormholeReceiverContract.address;

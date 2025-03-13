@@ -70,7 +70,7 @@ let vault =
 await vault.connect(wallet);
 let payload =
   DefaultStore.chains.aptos_testnet.generateGovernanceUpgradePayload(
-    "CONTRACT_HASH_TO_USE"
+    "CONTRACT_HASH_TO_USE",
   );
 await vault.proposeWormholeMessage([payload]);
 ```
@@ -83,7 +83,7 @@ After the approval process, you can fetch the VAA for the transaction and execut
 import { SubmittedWormholeMessage } from "./src/governance";
 let msg = await SubmittedWormholeMessage.fromTransactionSignature(
   "tx_signature",
-  "devnet or mainnet-beta"
+  "devnet or mainnet-beta",
 );
 let vaa = await msg.fetchVaa();
 let contract =
@@ -91,7 +91,7 @@ let contract =
     .aptos_testnet_0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387;
 await contract.executeGovernanceInstruction(
   "private-key-of-account-inaptos",
-  vaa
+  vaa,
 );
 ```
 

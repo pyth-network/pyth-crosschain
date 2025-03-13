@@ -287,16 +287,19 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             PriceFeedMessage[] memory messages
         ) = generateRandomPriceMessages(numMessages);
 
-        (bytes[] memory updateData, uint updateFee) = createBatchedUpdateDataFromMessagesWithConfig(
-            messages,
-            MerkleUpdateConfig(
-                MERKLE_TREE_DEPTH,
-                NUM_GUARDIAN_SIGNERS,
-                SOURCE_EMITTER_CHAIN_ID,
-                0x00000000000000000000000000000000000000000000000000000000000000aa, // Random wrong source address
-                false
-            )
-        );
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromMessagesWithConfig(
+                messages,
+                MerkleUpdateConfig(
+                    MERKLE_TREE_DEPTH,
+                    NUM_GUARDIAN_SIGNERS,
+                    SOURCE_EMITTER_CHAIN_ID,
+                    0x00000000000000000000000000000000000000000000000000000000000000aa, // Random wrong source address
+                    false
+                )
+            );
 
         vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
         pyth.parsePriceFeedUpdates{value: updateFee}(

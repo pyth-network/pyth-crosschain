@@ -4,7 +4,7 @@ import { WormholeEmitter, loadHotWallet } from "../src/governance";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
-    "Usage: $0 --cluster <cluster> --wallet-path <path_to_wallet_file> --message <message>"
+    "Usage: $0 --cluster <cluster> --wallet-path <path_to_wallet_file> --message <message>",
   )
   .options({
     cluster: {
@@ -38,14 +38,14 @@ async function main() {
   console.log(
     `Message sent. Emitter: ${submittedMessage.emitter.toBase58()}, Sequence Number: ${
       submittedMessage.sequenceNumber
-    }`
+    }`,
   );
   console.log(`Sleeping for 5 seconds to allow the message to be processed...`);
   await new Promise((resolve) => setTimeout(resolve, 5000));
   console.log(
     `Fetching VAA for message ${submittedMessage.emitter.toBase58()}, Sequence Number: ${
       submittedMessage.sequenceNumber
-    }...`
+    }...`,
   );
   const vaa = await submittedMessage.fetchVaa();
   console.log(`VAA: ${vaa.toString("hex")}`);

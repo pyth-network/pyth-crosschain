@@ -67,7 +67,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
       wormholeGovernanceChainId,
       wormholeGovernanceContract,
       wormholeInitialSigners,
-      wormholeReceiverChainId
+      wormholeReceiverChainId,
     );
   }
 
@@ -95,7 +95,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
       governanceInitialSequence,
       validTimePeriodSeconds,
       singleUpdateFeeInWei,
-    ]
+    ],
   );
 
   const pythProxyContract = await deployer.deploy(pythProxyArtifact, [

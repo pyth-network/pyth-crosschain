@@ -15,7 +15,7 @@ export type DeploymentType = "stable" | "beta";
 // this method will return an object with key = zipFileName and value = compiledCode
 export async function getContractBytesDict(
   artifactZipFileNames: string[],
-  version: string
+  version: string,
 ) {
   const githubArtifactsLink = `https://github.com/pyth-network/pyth-crosschain/releases/download/pyth-cosmwasm-contract-v${version}/`;
   const tmpCodeStorageDir = "./tmp";
@@ -34,7 +34,7 @@ export async function getContractBytesDict(
       return new Promise<void>((resolve, reject) => {
         const dl = new DownloaderHelper(
           githubArtifactsLink + artifactZipName + ".zip",
-          tmpCodeStorageDir
+          tmpCodeStorageDir,
         );
 
         dl.on("end", () => {
@@ -50,13 +50,13 @@ export async function getContractBytesDict(
           reject(err);
         });
       });
-    })
+    }),
   );
 
   // extract zip files
   uniqueArtifactsZipName.map(async (artifactZipName) => {
     const zip = new AdmZip(
-      path.resolve(tmpCodeStorageDir + "/" + artifactZipName + ".zip")
+      path.resolve(tmpCodeStorageDir + "/" + artifactZipName + ".zip"),
     );
     zip.extractAllTo(path.resolve(tmpCodeStorageDir));
   });
@@ -64,7 +64,7 @@ export async function getContractBytesDict(
   let contractBytesDict: { [fileName: string]: Buffer } = {};
   for (let uniqueArtifactZipName of uniqueArtifactsZipName) {
     const contractBytes = readFileSync(
-      tmpCodeStorageDir + "/" + uniqueArtifactZipName + "/pyth_cosmwasm.wasm"
+      tmpCodeStorageDir + "/" + uniqueArtifactZipName + "/pyth_cosmwasm.wasm",
     );
     contractBytesDict[uniqueArtifactZipName] = contractBytes;
   }

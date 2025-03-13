@@ -52,7 +52,7 @@ export function u256be(property?: string | undefined): UIntBE {
 /** An array of numBytes bytes, returned as a hexadecimal string. */
 export function hexBytes(
   numBytes: number,
-  property?: string | undefined
+  property?: string | undefined,
 ): HexBytes {
   return new HexBytes(numBytes, property);
 }

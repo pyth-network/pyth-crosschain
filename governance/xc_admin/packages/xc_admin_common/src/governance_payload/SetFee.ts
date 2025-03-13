@@ -18,7 +18,7 @@ export class SetFee extends PythGovernanceActionImpl {
   constructor(
     targetChainId: ChainName,
     readonly newFeeValue: bigint,
-    readonly newFeeExpo: bigint
+    readonly newFeeExpo: bigint,
   ) {
     super(targetChainId, "SetFee");
   }
@@ -27,14 +27,14 @@ export class SetFee extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "SetFee",
-      SetFee.layout
+      SetFee.layout,
     );
     if (!decoded) return undefined;
 
     return new SetFee(
       decoded[0].targetChainId,
       decoded[1].newFeeValue,
-      decoded[1].newFeeExpo
+      decoded[1].newFeeExpo,
     );
   }
 
@@ -67,7 +67,7 @@ export class SetFeeInToken extends PythGovernanceActionImpl {
     targetChainId: ChainName,
     readonly newFeeValue: bigint,
     readonly newFeeExpo: bigint,
-    readonly token: Buffer
+    readonly token: Buffer,
   ) {
     super(targetChainId, "SetFeeInToken");
   }
@@ -85,14 +85,14 @@ export class SetFeeInToken extends PythGovernanceActionImpl {
       header.targetChainId,
       fields.newFeeValue,
       fields.newFeeExpo,
-      data.subarray(index)
+      data.subarray(index),
     );
   }
 
   encode(): Buffer {
     const headerBuffer = new PythGovernanceHeader(
       this.targetChainId,
-      "SetFeeInToken"
+      "SetFeeInToken",
     ).encode();
 
     const fieldsBuf = Buffer.alloc(SetFeeInToken.layout.span);
@@ -102,7 +102,7 @@ export class SetFeeInToken extends PythGovernanceActionImpl {
         newFeeExpo: this.newFeeExpo,
         tokenLen: this.token.length,
       },
-      fieldsBuf
+      fieldsBuf,
     );
 
     return Buffer.concat([headerBuffer, fieldsBuf, this.token]);

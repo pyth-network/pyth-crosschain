@@ -68,7 +68,6 @@ contract ExampleContract {
     return pyth.getPriceNoOlderThan(priceID, 10);
   }
 }
-
 ```
 
 ## How Pyth Works on EVM Chains

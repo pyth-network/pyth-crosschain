@@ -61,11 +61,11 @@ async function run() {
   // get the wasm code from github
   let contractBytesDict = await getContractBytesDict(
     [pythArtifactZipName],
-    argv.contractVersion
+    argv.contractVersion,
   );
 
   const checksum = Buffer.from(
-    sha256(contractBytesDict[pythArtifactZipName])
+    sha256(contractBytesDict[pythArtifactZipName]),
   ).toString("hex");
 
   console.log(`Downloaded wasm checksum ${checksum}`);
@@ -75,7 +75,7 @@ async function run() {
   });
 
   console.log(
-    `Code stored on chain ${chain.getId()} at ${storeCodeRes.codeId}`
+    `Code stored on chain ${chain.getId()} at ${storeCodeRes.codeId}`,
   );
 
   const instantiateContractRes = await chainExecutor.instantiateContract({

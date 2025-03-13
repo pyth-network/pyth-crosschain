@@ -12,7 +12,7 @@ const parser = yargs(hideBin(process.argv))
       "Usage: $0 --network <mainnet|testnet> --contract-address <address> --ops-key-path <ops_key_path>\n" +
       "Required environment variables:\n" +
       "  - ENV_TON_MAINNET_API_KEY: API key for TON mainnet\n" +
-      "  - ENV_TON_TESTNET_API_KEY: API key for TON testnet"
+      "  - ENV_TON_TESTNET_API_KEY: API key for TON testnet",
   )
   .options({
     network: {
@@ -44,7 +44,7 @@ async function main() {
   // Get the TON chain instance from DefaultStore based on network
   const chain = DefaultStore.getChainOrThrow(
     isMainnet ? "ton_mainnet" : "ton_testnet",
-    TonChain
+    TonChain,
   );
 
   const vault =
@@ -53,14 +53,14 @@ async function main() {
     ];
 
   console.log(
-    `Upgrading contract on TON ${argv.network} (Chain ID: ${chainId}, Wormhole Chain Name: ${wormholeChainName})`
+    `Upgrading contract on TON ${argv.network} (Chain ID: ${chainId}, Wormhole Chain Name: ${wormholeChainName})`,
   );
 
   // Read the compiled contract from the build directory
   // NOTE: Remember to rebuild contract_manager before running this script because it will also build the ton contract
   const compiledPath = path.resolve(
     __dirname,
-    "../../target_chains/ton/contracts/build/Main.compiled.json"
+    "../../target_chains/ton/contracts/build/Main.compiled.json",
   );
   const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
   const newCodeHash = compiled.hash;

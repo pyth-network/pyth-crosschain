@@ -39,7 +39,7 @@ async function run() {
   // Fetch the latest price feed update data from the Price Service
   const connection = new AptosPriceServiceConnection(argv.priceService);
   const priceFeedUpdateData = await connection.getPriceFeedsUpdateData(
-    argv.priceIds as string[]
+    argv.priceIds as string[],
   );
 
   // Update the Pyth Contract using this update data
@@ -56,9 +56,9 @@ async function run() {
         argv.pythContract + "::pyth",
         "update_price_feeds_with_funder",
         [],
-        [AptosPriceServiceConnection.serializeUpdateData(priceFeedUpdateData)]
-      )
-    )
+        [AptosPriceServiceConnection.serializeUpdateData(priceFeedUpdateData)],
+      ),
+    ),
   );
 
   console.dir(result, { depth: null });

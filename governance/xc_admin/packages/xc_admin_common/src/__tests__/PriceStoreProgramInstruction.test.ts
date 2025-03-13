@@ -12,7 +12,7 @@ test("Price store instruction parse: roundtrip", (done) => {
       data: {
         payerKey: new PublicKey("Fe9vtgwRhbMSUsAjwUzupzRoJKofyyk1Rz8ZUrPmGHMr"),
         authorityKey: new PublicKey(
-          "D9rnZSLjdYboFGDGHk5Qre2yBS8HYbc6374Zm6AeC1PB"
+          "D9rnZSLjdYboFGDGHk5Qre2yBS8HYbc6374Zm6AeC1PB",
         ),
       },
     },
@@ -20,13 +20,13 @@ test("Price store instruction parse: roundtrip", (done) => {
       type: "InitializePublisher",
       data: {
         authorityKey: new PublicKey(
-          "D9rnZSLjdYboFGDGHk5Qre2yBS8HYbc6374Zm6AeC1PB"
+          "D9rnZSLjdYboFGDGHk5Qre2yBS8HYbc6374Zm6AeC1PB",
         ),
         publisherKey: new PublicKey(
-          "EXAyN9UVu1x163PQkVzyNm4YunNkMGu5Ry7ntoyyQGTe"
+          "EXAyN9UVu1x163PQkVzyNm4YunNkMGu5Ry7ntoyyQGTe",
         ),
         bufferKey: new PublicKey(
-          "7q6SS575jGDjE8bWsx4PiLVqS7cHJhjJBhysvRoP53WJ"
+          "7q6SS575jGDjE8bWsx4PiLVqS7cHJhjJBhysvRoP53WJ",
         ),
       },
     },

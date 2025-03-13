@@ -101,7 +101,7 @@ export abstract class PriceFeedContract extends Storable {
    */
   abstract executeUpdatePriceFeed(
     senderPrivateKey: PrivateKey,
-    vaas: Buffer[]
+    vaas: Buffer[],
   ): Promise<TxResult>;
 
   /**
@@ -111,7 +111,7 @@ export abstract class PriceFeedContract extends Storable {
    */
   abstract executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult>;
 
   /**

@@ -34,7 +34,7 @@ const ED25519_INSTRUCTION_LAYOUT = BufferLayout.struct<
 export const createEd25519Instruction = (
   message: Buffer,
   instructionIndex: number,
-  startingOffset: number
+  startingOffset: number,
 ) => {
   const signatureOffset = startingOffset + MAGIC_LEN;
   const publicKeyOffset = signatureOffset + SIGNATURE_LEN;
@@ -42,7 +42,7 @@ export const createEd25519Instruction = (
   const messageDataOffset = messageDataSizeOffset + MESSAGE_SIZE_LEN;
 
   const messageDataSize = message.readUInt16LE(
-    messageDataSizeOffset - startingOffset
+    messageDataSizeOffset - startingOffset,
   );
 
   const instructionData = Buffer.alloc(ED25519_INSTRUCTION_LEN);
@@ -59,7 +59,7 @@ export const createEd25519Instruction = (
       messageDataSize: messageDataSize,
       messageInstructionIndex: instructionIndex,
     },
-    instructionData
+    instructionData,
   );
 
   return new TransactionInstruction({

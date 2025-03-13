@@ -49,20 +49,20 @@ export class InjectivePriceListener extends ChainPriceListener {
     private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
-    }
+    },
   ) {
     super(config.pollingFrequency, priceItems);
   }
 
   async getOnChainPriceInfo(
-    priceId: HexString
+    priceId: HexString,
   ): Promise<PriceInfo | undefined> {
     let priceQueryResponse: PriceQueryResponse;
     try {
       const api = new ChainGrpcWasmApi(this.grpcEndpoint);
       const { data } = await api.fetchSmartContractState(
         this.pythContractAddress,
-        Buffer.from(`{"price_feed":{"id":"${priceId}"}}`).toString("base64")
+        Buffer.from(`{"price_feed":{"id":"${priceId}"}}`).toString("base64"),
       );
 
       const json = Buffer.from(data).toString();
@@ -74,8 +74,8 @@ export class InjectivePriceListener extends ChainPriceListener {
 
     this.logger.debug(
       `Polled an Injective on chain price for feed ${this.priceIdToAlias.get(
-        priceId
-      )} (${priceId}).`
+        priceId,
+      )} (${priceId}).`,
     );
 
     return {
@@ -102,7 +102,7 @@ export class InjectivePricePusher implements IPricePusher {
     private grpcEndpoint: string,
     private logger: Logger,
     mnemonic: string,
-    chainConfig?: Partial<InjectiveConfig>
+    chainConfig?: Partial<InjectiveConfig>,
   ) {
     this.wallet = PrivateKey.fromMnemonic(mnemonic);
 
@@ -121,7 +121,7 @@ export class InjectivePricePusher implements IPricePusher {
     const chainGrpcAuthApi = new ChainGrpcAuthApi(this.grpcEndpoint);
     // Fetch the latest account details only if it's not stored.
     this.account ??= await chainGrpcAuthApi.fetchAccount(
-      this.injectiveAddress()
+      this.injectiveAddress(),
     );
 
     const { txRaw: simulateTxRaw } = createTransactionFromMsg({
@@ -198,7 +198,7 @@ export class InjectivePricePusher implements IPricePusher {
 
   async updatePriceFeed(
     priceIds: string[],
-    pubTimesToPush: number[]
+    pubTimesToPush: number[],
   ): Promise<void> {
     if (priceIds.length === 0) {
       return;
@@ -226,8 +226,8 @@ export class InjectivePricePusher implements IPricePusher {
             get_update_fee: {
               vaas: priceFeedUpdateObject.update_price_feeds.data,
             },
-          })
-        ).toString("base64")
+          }),
+        ).toString("base64"),
       );
 
       const json = Buffer.from(data).toString();

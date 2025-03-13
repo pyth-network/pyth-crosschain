@@ -23,7 +23,7 @@ const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
 
 const [mockCpiCallerAuth] = anchor.web3.PublicKey.findProgramAddressSync(
   [Buffer.from("upd_price_write"), messageBufferProgram.programId.toBuffer()],
-  mockCpiProg.programId
+  mockCpiProg.programId,
 );
 
 const pythPriceAccountId = new anchor.BN(1);
@@ -40,13 +40,13 @@ const [pythPriceAccountPk] = anchor.web3.PublicKey.findProgramAddressSync(
     Buffer.from("price"),
     pythPriceAccountId.toArrayLike(Buffer, "le", 8),
   ],
-  mockCpiProg.programId
+  mockCpiProg.programId,
 );
 const MESSAGE = Buffer.from("message");
 const [messageBufferPda, messageBufferBump] =
   anchor.web3.PublicKey.findProgramAddressSync(
     [mockCpiCallerAuth.toBuffer(), MESSAGE, pythPriceAccountPk.toBuffer()],
-    messageBufferProgram.programId
+    messageBufferProgram.programId,
   );
 
 const pythPriceAccountId2 = new anchor.BN(2);
@@ -56,13 +56,13 @@ const [pythPriceAccountPk2] = anchor.web3.PublicKey.findProgramAddressSync(
     Buffer.from("price"),
     pythPriceAccountId2.toArrayLike(Buffer, "le", 8),
   ],
-  mockCpiProg.programId
+  mockCpiProg.programId,
 );
 
 const [messageBufferPda2, messageBufferBump2] =
   anchor.web3.PublicKey.findProgramAddressSync(
     [mockCpiCallerAuth.toBuffer(), MESSAGE, pythPriceAccountPk2.toBuffer()],
-    messageBufferProgram.programId
+    messageBufferProgram.programId,
   );
 
 const messageBufferPdaMeta2 = {
@@ -83,7 +83,7 @@ let whitelistAdmin = anchor.web3.Keypair.generate();
 const [whitelistPubkey, whitelistBump] =
   anchor.web3.PublicKey.findProgramAddressSync(
     [MESSAGE, Buffer.from("whitelist")],
-    messageBufferProgram.programId
+    messageBufferProgram.programId,
   );
 
 describe("message_buffer", () => {
@@ -99,9 +99,8 @@ describe("message_buffer", () => {
       .rpc();
     console.log("Your transaction signature", tx);
 
-    const whitelist = await messageBufferProgram.account.whitelist.fetch(
-      whitelistPubkey
-    );
+    const whitelist =
+      await messageBufferProgram.account.whitelist.fetch(whitelistPubkey);
     assert.strictEqual(whitelist.bump, whitelistBump);
     assert.isTrue(whitelist.admin.equals(whitelistAdmin.publicKey));
     console.info(`whitelist: ${JSON.stringify(whitelist)}`);
@@ -116,16 +115,15 @@ describe("message_buffer", () => {
       })
       .signers([whitelistAdmin])
       .rpc();
-    const whitelist = await messageBufferProgram.account.whitelist.fetch(
-      whitelistPubkey
-    );
+    const whitelist =
+      await messageBufferProgram.account.whitelist.fetch(whitelistPubkey);
     console.info(`whitelist after add: ${JSON.stringify(whitelist)}`);
     const whitelistAllowedPrograms = whitelist.allowedPrograms.map((pk) =>
-      pk.toString()
+      pk.toString(),
     );
     assert.deepEqual(
       whitelistAllowedPrograms,
-      allowedProgramAuthorities.map((p) => p.toString())
+      allowedProgramAuthorities.map((p) => p.toString()),
     );
   });
 
@@ -152,11 +150,11 @@ describe("message_buffer", () => {
 
     const messageBufferAccountData = await getMessageBuffer(
       provider.connection,
-      messageBufferPda
+      messageBufferPda,
     );
     const messageBufferHeader = deserializeMessageBufferHeader(
       messageBufferProgram,
-      messageBufferAccountData
+      messageBufferAccountData,
     );
     assert.equal(messageBufferHeader.version, 1);
     assert.equal(messageBufferHeader.bump, messageBufferBump);
@@ -173,15 +171,14 @@ describe("message_buffer", () => {
             fromPubkey: provider.wallet.publicKey,
             toPubkey: messageBufferPda2,
             lamports: minimumEmptyRent,
-          })
+          }),
         );
         return tx;
-      })()
+      })(),
     );
 
-    const accumulatorPdaBalance = await provider.connection.getBalance(
-      messageBufferPda2
-    );
+    const accumulatorPdaBalance =
+      await provider.connection.getBalance(messageBufferPda2);
     console.log(`accumulatorPdaBalance: ${accumulatorPdaBalance}`);
     assert.isTrue(accumulatorPdaBalance === minimumEmptyRent);
 
@@ -199,20 +196,19 @@ describe("message_buffer", () => {
 
     const messageBufferAccountData = await getMessageBuffer(
       provider.connection,
-      messageBufferPda2
+      messageBufferPda2,
     );
 
     const minimumMessageBufferRent =
       await provider.connection.getMinimumBalanceForRentExemption(
-        messageBufferAccountData.length
+        messageBufferAccountData.length,
       );
-    const accumulatorPdaBalanceAfter = await provider.connection.getBalance(
-      messageBufferPda2
-    );
+    const accumulatorPdaBalanceAfter =
+      await provider.connection.getBalance(messageBufferPda2);
     assert.isTrue(accumulatorPdaBalanceAfter === minimumMessageBufferRent);
     const messageBufferHeader = deserializeMessageBufferHeader(
       messageBufferProgram,
-      messageBufferAccountData
+      messageBufferAccountData,
     );
 
     console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
@@ -232,9 +228,8 @@ describe("message_buffer", () => {
       .signers([whitelistAdmin])
       .rpc();
 
-    let whitelist = await messageBufferProgram.account.whitelist.fetch(
-      whitelistPubkey
-    );
+    let whitelist =
+      await messageBufferProgram.account.whitelist.fetch(whitelistPubkey);
     assert.isTrue(whitelist.admin.equals(newWhitelistAdmin.publicKey));
 
     // swap back to original authority
@@ -246,9 +241,8 @@ describe("message_buffer", () => {
       .signers([newWhitelistAdmin])
       .rpc();
 
-    whitelist = await messageBufferProgram.account.whitelist.fetch(
-      whitelistPubkey
-    );
+    whitelist =
+      await messageBufferProgram.account.whitelist.fetch(whitelistPubkey);
     assert.isTrue(whitelist.admin.equals(whitelistAdmin.publicKey));
   });
 
@@ -289,12 +283,12 @@ describe("message_buffer", () => {
             return v;
           }
         },
-        2
-      )}`
+        2,
+      )}`,
     );
     for (const prop in mockCpiCallerAddPriceTxPrep.pubkeys) {
       console.log(
-        `${prop}: ${mockCpiCallerAddPriceTxPrep.pubkeys[prop].toString()}`
+        `${prop}: ${mockCpiCallerAddPriceTxPrep.pubkeys[prop].toString()}`,
       );
     }
 
@@ -313,24 +307,23 @@ describe("message_buffer", () => {
 
     console.log(`addPriceTx: ${addPriceTx}`);
     const pythPriceAccount = await provider.connection.getAccountInfo(
-      mockCpiCallerAddPriceTxPubkeys.pythPriceAccount
+      mockCpiCallerAddPriceTxPubkeys.pythPriceAccount,
     );
 
-    const messageBufferAccount = await provider.connection.getAccountInfo(
-      messageBufferPda
-    );
+    const messageBufferAccount =
+      await provider.connection.getAccountInfo(messageBufferPda);
 
     const accumulatorPriceMessages = parseMessageBuffer(
       messageBufferProgram,
-      messageBufferAccount.data
+      messageBufferAccount.data,
     );
 
     console.log(
       `accumulatorPriceMessages: ${JSON.stringify(
         accumulatorPriceMessages,
         null,
-        2
-      )}`
+        2,
+      )}`,
     );
     accumulatorPriceMessages.forEach((pm) => {
       assert.isTrue(pm.id.eq(addPriceParams.id));
@@ -341,13 +334,13 @@ describe("message_buffer", () => {
 
   it("Fetches MessageBuffer using getProgramAccounts with discriminator", async () => {
     const messageBufferAccounts = await getProgramAccountsForMessageBuffers(
-      provider.connection
+      provider.connection,
     );
     const msgBufferAcctKeys = messageBufferAccounts.map((ai) =>
-      ai.pubkey.toString()
+      ai.pubkey.toString(),
     );
     console.log(
-      `messageBufferAccounts: ${JSON.stringify(msgBufferAcctKeys, null, 2)}`
+      `messageBufferAccounts: ${JSON.stringify(msgBufferAcctKeys, null, 2)}`,
     );
 
     assert.isTrue(messageBufferAccounts.length === 2);
@@ -364,7 +357,7 @@ describe("message_buffer", () => {
 
     let accumulatorPdaMeta = getAccumulatorPdaMeta(
       mockCpiCallerAuth,
-      pythPriceAccountPk
+      pythPriceAccountPk,
     );
     await mockCpiProg.methods
       .updatePrice(updatePriceParams)
@@ -382,9 +375,8 @@ describe("message_buffer", () => {
         skipPreflight: true,
       });
 
-    const pythPriceAccount = await mockCpiProg.account.priceAccount.fetch(
-      pythPriceAccountPk
-    );
+    const pythPriceAccount =
+      await mockCpiProg.account.priceAccount.fetch(pythPriceAccountPk);
     assert.isTrue(pythPriceAccount.price.eq(updatePriceParams.price));
     assert.isTrue(pythPriceAccount.priceExpo.eq(updatePriceParams.priceExpo));
     assert.isTrue(pythPriceAccount.ema.eq(updatePriceParams.ema));
@@ -392,20 +384,20 @@ describe("message_buffer", () => {
 
     const messageBufferAccountData = await getMessageBuffer(
       provider.connection,
-      messageBufferPda
+      messageBufferPda,
     );
 
     const updatedAccumulatorPriceMessages = parseMessageBuffer(
       messageBufferProgram,
-      messageBufferAccountData
+      messageBufferAccountData,
     );
 
     console.log(
       `updatedAccumulatorPriceMessages: ${JSON.stringify(
         updatedAccumulatorPriceMessages,
         null,
-        2
-      )}`
+        2,
+      )}`,
     );
     updatedAccumulatorPriceMessages.forEach((pm) => {
       assert.isTrue(pm.id.eq(addPriceParams.id));
@@ -431,7 +423,7 @@ describe("message_buffer", () => {
 
       let accumulatorPdaMeta = getAccumulatorPdaMeta(
         mockCpiCallerAuth,
-        pythPriceAccountPk
+        pythPriceAccountPk,
       );
       await mockCpiProg.methods
         .cpiMaxTest(updatePriceParams, testCase)
@@ -449,9 +441,8 @@ describe("message_buffer", () => {
           skipPreflight: true,
         });
 
-      const pythPriceAccount = await mockCpiProg.account.priceAccount.fetch(
-        pythPriceAccountPk
-      );
+      const pythPriceAccount =
+        await mockCpiProg.account.priceAccount.fetch(pythPriceAccountPk);
       assert.isTrue(pythPriceAccount.price.eq(updatePriceParams.price));
       assert.isTrue(pythPriceAccount.priceExpo.eq(updatePriceParams.priceExpo));
       assert.isTrue(pythPriceAccount.ema.eq(updatePriceParams.ema));
@@ -459,12 +450,12 @@ describe("message_buffer", () => {
 
       const messageBufferAccountData = await getMessageBuffer(
         provider.connection,
-        messageBufferPda
+        messageBufferPda,
       );
 
       const messageBufferHeader = deserializeMessageBufferHeader(
         messageBufferProgram,
-        messageBufferAccountData
+        messageBufferAccountData,
       );
 
       console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
@@ -479,7 +470,7 @@ describe("message_buffer", () => {
           currentExpectedOffset: ${currentExpectedOffset}
         `);
         assert.isTrue(
-          messageBufferHeader.endOffsets[j] === currentExpectedOffset
+          messageBufferHeader.endOffsets[j] === currentExpectedOffset,
         );
       }
     }
@@ -501,7 +492,7 @@ describe("message_buffer", () => {
 
       let accumulatorPdaMeta = getAccumulatorPdaMeta(
         mockCpiCallerAuth,
-        pythPriceAccountPk
+        pythPriceAccountPk,
       );
       let errorThrown = false;
       try {
@@ -530,7 +521,7 @@ describe("message_buffer", () => {
   it("Resizes a buffer to a valid larger size", async () => {
     const messageBufferAccountDataBefore = await getMessageBuffer(
       provider.connection,
-      messageBufferPda2
+      messageBufferPda2,
     );
     const messageBufferAccountDataLenBefore =
       messageBufferAccountDataBefore.length;
@@ -538,11 +529,11 @@ describe("message_buffer", () => {
     // check that header is still the same as before
     const messageBufferHeaderBefore = deserializeMessageBufferHeader(
       messageBufferProgram,
-      messageBufferAccountDataBefore
+      messageBufferAccountDataBefore,
     );
 
     const payerBalanceBefore = await provider.connection.getBalance(
-      payer.publicKey
+      payer.publicKey,
     );
     console.log(`payerBalanceBefore: ${payerBalanceBefore}`);
     const targetSize = 10 * 1024;
@@ -558,28 +549,28 @@ describe("message_buffer", () => {
       .rpc({ skipPreflight: true });
 
     const payerBalanceAftger = await provider.connection.getBalance(
-      payer.publicKey
+      payer.publicKey,
     );
     assert.isTrue(payerBalanceAftger < payerBalanceBefore);
 
     const messageBufferAccountData = await getMessageBuffer(
       provider.connection,
-      messageBufferPda2
+      messageBufferPda2,
     );
     assert.equal(messageBufferAccountData.length, targetSize);
 
     // check that header is still the same as before
     const messageBufferHeader = deserializeMessageBufferHeader(
       messageBufferProgram,
-      messageBufferAccountData
+      messageBufferAccountData,
     );
     assert.deepEqual(
       messageBufferHeader.endOffsets,
-      messageBufferHeaderBefore.endOffsets
+      messageBufferHeaderBefore.endOffsets,
     );
     assert.deepEqual(
       messageBufferAccountData.subarray(0, messageBufferAccountDataLenBefore),
-      messageBufferAccountDataBefore
+      messageBufferAccountDataBefore,
     );
   });
 
@@ -599,7 +590,7 @@ describe("message_buffer", () => {
 
     const messageBufferAccountData = await getMessageBuffer(
       provider.connection,
-      messageBufferPda2
+      messageBufferPda2,
     );
     assert.equal(messageBufferAccountData.length, targetSize);
   });
@@ -643,7 +634,7 @@ describe("message_buffer", () => {
 
     const messageBufferAccountData = await getMessageBuffer(
       provider.connection,
-      messageBufferPda2
+      messageBufferPda2,
     );
 
     if (messageBufferAccountData != null) {
@@ -651,14 +642,14 @@ describe("message_buffer", () => {
     }
 
     const messageBufferAccounts = await getProgramAccountsForMessageBuffers(
-      provider.connection
+      provider.connection,
     );
     assert.equal(messageBufferAccounts.length, 1);
 
     assert.isFalse(
       messageBufferAccounts
         .map((a) => a.pubkey.toString())
-        .includes(messageBufferPda2.toString())
+        .includes(messageBufferPda2.toString()),
     );
   });
 
@@ -677,20 +668,19 @@ describe("message_buffer", () => {
 
     const messageBufferAccountData = await getMessageBuffer(
       provider.connection,
-      messageBufferPda2
+      messageBufferPda2,
     );
 
     const minimumMessageBufferRent =
       await provider.connection.getMinimumBalanceForRentExemption(
-        messageBufferAccountData.length
+        messageBufferAccountData.length,
       );
-    const accumulatorPdaBalanceAfter = await provider.connection.getBalance(
-      messageBufferPda2
-    );
+    const accumulatorPdaBalanceAfter =
+      await provider.connection.getBalance(messageBufferPda2);
     assert.isTrue(accumulatorPdaBalanceAfter === minimumMessageBufferRent);
     const messageBufferHeader = deserializeMessageBufferHeader(
       messageBufferProgram,
-      messageBufferAccountData
+      messageBufferAccountData,
     );
 
     console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
@@ -703,11 +693,11 @@ describe("message_buffer", () => {
 
 export const getAccumulatorPdaMeta = (
   cpiCallerAuth: anchor.web3.PublicKey,
-  pythAccount: anchor.web3.PublicKey
+  pythAccount: anchor.web3.PublicKey,
 ): AccountMeta => {
   const accumulatorPdaKey = anchor.web3.PublicKey.findProgramAddressSync(
     [cpiCallerAuth.toBuffer(), MESSAGE, pythAccount.toBuffer()],
-    messageBufferProgram.programId
+    messageBufferProgram.programId,
   )[0];
   return {
     pubkey: accumulatorPdaKey,
@@ -718,7 +708,7 @@ export const getAccumulatorPdaMeta = (
 
 async function getMessageBuffer(
   connection: anchor.web3.Connection,
-  accountKey: anchor.web3.PublicKey
+  accountKey: anchor.web3.PublicKey,
 ): Promise<Buffer | null> {
   let accountInfo = await connection.getAccountInfo(accountKey);
   return accountInfo ? accountInfo.data : null;
@@ -728,11 +718,11 @@ async function getMessageBuffer(
 // accountType and accountSchema.
 function parseMessageBuffer(
   messageBufferProgram: Program<MessageBuffer>,
-  accountData: Buffer
+  accountData: Buffer,
 ): AccumulatorPriceMessage[] {
   const msgBufferHeader = deserializeMessageBufferHeader(
     messageBufferProgram,
-    accountData
+    accountData,
   );
 
   const accumulatorMessages = [];
@@ -740,7 +730,7 @@ function parseMessageBuffer(
 
   let dataBuffer = accountData.subarray(
     msgBufferHeader.headerLen,
-    accountData.length
+    accountData.length,
   );
   let start = 0;
   for (let i = 0; i < msgBufferHeader.endOffsets.length; i++) {
@@ -781,11 +771,11 @@ type MessageBufferType = {
 
 function deserializeMessageBufferHeader(
   messageBufferProgram: Program<MessageBuffer>,
-  accountData: Buffer
+  accountData: Buffer,
 ): IdlAccounts<MessageBuffer>["messageBuffer"] {
   return messageBufferProgram.coder.accounts.decode(
     "MessageBuffer",
-    accountData
+    accountData,
   );
 }
 
@@ -848,7 +838,7 @@ function parseCompactPriceMessage(data: Uint8Array): CompactPriceMessage {
 
 // fetch MessageBuffer accounts using `getProgramAccounts` and memcmp filter
 async function getProgramAccountsForMessageBuffers(
-  connection: anchor.web3.Connection
+  connection: anchor.web3.Connection,
 ) {
   return await connection.getProgramAccounts(messageBufferProgram.programId, {
     filters: [

@@ -17,7 +17,7 @@ export class IotaPythClient {
   constructor(
     public provider: IotaClient,
     public pythStateId: ObjectId,
-    public wormholeStateId: ObjectId
+    public wormholeStateId: ObjectId,
   ) {
     this.pythPackageId = undefined;
     this.wormholePackageId = undefined;
@@ -94,7 +94,7 @@ export class IotaPythClient {
               .serialize(Array.from(vaa), {
                 maxSize: MAX_ARGUMENT_SIZE,
               })
-              .toBytes()
+              .toBytes(),
           ),
           tx.object(IOTA_CLOCK_OBJECT_ID),
         ],
@@ -113,14 +113,14 @@ export class IotaPythClient {
   async updatePriceFeeds(
     tx: Transaction,
     updates: Buffer[],
-    feedIds: HexString[]
+    feedIds: HexString[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
 
     let priceUpdatesHotPotato;
     if (updates.length > 1) {
       throw new Error(
-        "SDK does not support sending multiple accumulator messages in a single transaction"
+        "SDK does not support sending multiple accumulator messages in a single transaction",
       );
     }
     const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
@@ -135,7 +135,7 @@ export class IotaPythClient {
             .serialize(Array.from(updates[0]), {
               maxSize: MAX_ARGUMENT_SIZE,
             })
-            .toBytes()
+            .toBytes(),
         ),
         verifiedVaas[0],
         tx.object(IOTA_CLOCK_OBJECT_ID),
@@ -146,14 +146,14 @@ export class IotaPythClient {
     const baseUpdateFee = await this.getBaseUpdateFee();
     const coins = tx.splitCoins(
       tx.gas,
-      feedIds.map(() => tx.pure.u64(baseUpdateFee))
+      feedIds.map(() => tx.pure.u64(baseUpdateFee)),
     );
     let coinId = 0;
     for (const feedId of feedIds) {
       const priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
       if (!priceInfoObjectId) {
         throw new Error(
-          `Price feed ${feedId} not found, please create it first`
+          `Price feed ${feedId} not found, please create it first`,
         );
       }
       priceInfoObjects.push(priceInfoObjectId);
@@ -180,7 +180,7 @@ export class IotaPythClient {
     const packageId = await this.getPythPackageId();
     if (updates.length > 1) {
       throw new Error(
-        "SDK does not support sending multiple accumulator messages in a single transaction"
+        "SDK does not support sending multiple accumulator messages in a single transaction",
       );
     }
     const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
@@ -195,7 +195,7 @@ export class IotaPythClient {
             .serialize(Array.from(updates[0]), {
               maxSize: MAX_ARGUMENT_SIZE,
             })
-            .toBytes()
+            .toBytes(),
         ),
         verifiedVaas[0],
         tx.object(IOTA_CLOCK_OBJECT_ID),
@@ -250,7 +250,7 @@ export class IotaPythClient {
         normalizedFeedId,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        result.data.content.fields.value
+        result.data.content.fields.value,
       );
     }
     return this.priceFeedObjectIdCache.get(normalizedFeedId);
@@ -271,13 +271,13 @@ export class IotaPythClient {
       });
       if (!result.data || !result.data.type) {
         throw new Error(
-          "Price Table not found, contract may not be initialized"
+          "Price Table not found, contract may not be initialized",
         );
       }
       let type = result.data.type.replace("0x2::table::Table<", "");
       type = type.replace(
         "::price_identifier::PriceIdentifier, 0x2::object::ID>",
-        ""
+        "",
       );
       this.priceTableInfo = { id: result.data.objectId, fieldType: type };
     }

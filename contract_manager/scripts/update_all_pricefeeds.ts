@@ -39,7 +39,7 @@ async function main() {
   const argv = await parser.argv;
   let priceFeedsMetadata: PriceFeedMetadata[] = [];
   const client = new HermesClient(
-    argv.endpoint || "https://hermes.pyth.network"
+    argv.endpoint || "https://hermes.pyth.network",
   );
   const contract = DefaultStore.contracts[argv.contract];
   const privateKey = toPrivateKey(argv["private-key"]);
@@ -56,8 +56,8 @@ async function main() {
   for (let i = 0; i < priceFeedIds.length; i += chunkSize) {
     console.log(
       `Processing chunk ${i / chunkSize + 1} of ${Math.ceil(
-        priceFeedIds.length / chunkSize
-      )}`
+        priceFeedIds.length / chunkSize,
+      )}`,
     );
     const chunk = priceFeedIds.slice(i, i + chunkSize);
     console.log(`length: ${chunk.length}`);
@@ -70,9 +70,9 @@ async function main() {
         updates.binary.data.map((update) =>
           encoding === "hex"
             ? Buffer.from(update, "hex")
-            : Buffer.from(update, "base64")
-        )
-      )
+            : Buffer.from(update, "base64"),
+        ),
+      ),
     );
   }
 }

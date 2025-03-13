@@ -99,7 +99,7 @@ describe("Test http endpoints", () => {
     const publishTime10SecAgo = Math.floor(new Date().getTime() / 1000) - 10;
     const [vaa, vaaPublishTime] = await connection.getVaa(
       ids[0],
-      publishTime10SecAgo
+      publishTime10SecAgo,
     );
 
     expect(vaa.length).toBeGreaterThan(0);
@@ -141,7 +141,7 @@ describe("Test websocket endpoints", () => {
         // Make sure it receives more than 1 update
         expect(counter.get(id)).toBeGreaterThan(1);
       }
-    }
+    },
   );
 
   test.concurrent("websocket subscription works with verbose", async () => {
@@ -227,6 +227,6 @@ describe("Test websocket endpoints", () => {
       }
 
       // expect(seenOutOfOrder).toBe(true);
-    }
+    },
   );
 });

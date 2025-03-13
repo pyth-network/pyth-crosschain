@@ -5,18 +5,18 @@ import { PublicKey } from "@solana/web3.js";
  * The program is deployed at this address on all SVM networks.
  */
 export const DEFAULT_RECEIVER_PROGRAM_ID = new PublicKey(
-  "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ"
+  "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",
 );
 /**
  * The default Wormhole program ID.
  * The program is deployed at this address on all SVM networks.
  */
 export const DEFAULT_WORMHOLE_PROGRAM_ID = new PublicKey(
-  "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ"
+  "HDwcJBJXjL9FpJ7UBsYBtaDjsBUhuLCUYoz3zr8SWWaQ",
 );
 
 export const DEFAULT_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
-  "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT"
+  "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
 );
 
 /**
@@ -24,13 +24,13 @@ export const DEFAULT_PUSH_ORACLE_PROGRAM_ID = new PublicKey(
  */
 export const getGuardianSetPda = (
   guardianSetIndex: number,
-  wormholeProgramId: PublicKey
+  wormholeProgramId: PublicKey,
 ) => {
   const guardianSetIndexBuf = Buffer.alloc(4);
   guardianSetIndexBuf.writeUInt32BE(guardianSetIndex, 0);
   return PublicKey.findProgramAddressSync(
     [Buffer.from("GuardianSet"), guardianSetIndexBuf],
-    wormholeProgramId
+    wormholeProgramId,
   )[0];
 };
 
@@ -47,11 +47,11 @@ export function getRandomTreasuryId() {
  */
 export const getTreasuryPda = (
   treasuryId: number,
-  receiverProgramId: PublicKey
+  receiverProgramId: PublicKey,
 ) => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("treasury"), Buffer.from([treasuryId])],
-    receiverProgramId
+    receiverProgramId,
   )[0];
 };
 
@@ -61,6 +61,6 @@ export const getTreasuryPda = (
 export const getConfigPda = (receiverProgramId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("config")],
-    receiverProgramId
+    receiverProgramId,
   )[0];
 };

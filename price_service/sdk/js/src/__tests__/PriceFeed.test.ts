@@ -81,7 +81,7 @@ test("getMetadata returns PriceFeedMetadata as expected", () => {
       emitter_chain: 8,
       price_service_receive_time: 9,
       sequence_number: 10,
-    })
+    }),
   );
 });
 
@@ -106,6 +106,6 @@ test("getVAA returns string as expected", () => {
   const priceFeed = PriceFeed.fromJson(data);
 
   expect(priceFeed.getVAA()).toStrictEqual(
-    "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef"
+    "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef",
   );
 });

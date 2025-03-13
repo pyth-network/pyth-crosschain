@@ -36,7 +36,7 @@ it("Unit test for getSizeOfTransaction", async () => {
       space: 100,
       lamports: 1000000000,
       programId: SystemProgram.programId,
-    })
+    }),
   );
 
   ixsToSend.push(
@@ -48,7 +48,7 @@ it("Unit test for getSizeOfTransaction", async () => {
       space: 100,
       lamports: 1000000000,
       programId: SystemProgram.programId,
-    })
+    }),
   );
 
   ixsToSend.push(
@@ -56,13 +56,13 @@ it("Unit test for getSizeOfTransaction", async () => {
       keys: [{ pubkey: PublicKey.unique(), isSigner: true, isWritable: true }],
       programId: PublicKey.unique(),
       data: Buffer.from([1, 2, 3]),
-    })
+    }),
   );
 
   ixsToSend.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 69 }));
 
   ixsToSend.push(
-    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000000 })
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000000 }),
   );
 
   const transaction = new Transaction();
@@ -73,7 +73,7 @@ it("Unit test for getSizeOfTransaction", async () => {
   transaction.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
   transaction.feePayer = payer.publicKey;
   expect(transaction.serialize({ requireAllSignatures: false }).length).toBe(
-    getSizeOfTransaction(ixsToSend, false)
+    getSizeOfTransaction(ixsToSend, false),
   );
 
   const versionedTransaction = new VersionedTransaction(
@@ -81,10 +81,10 @@ it("Unit test for getSizeOfTransaction", async () => {
       recentBlockhash: transaction.recentBlockhash,
       payerKey: payer.publicKey,
       instructions: ixsToSend,
-    }).compileToV0Message()
+    }).compileToV0Message(),
   );
   expect(versionedTransaction.serialize().length).toBe(
-    getSizeOfTransaction(ixsToSend)
+    getSizeOfTransaction(ixsToSend),
   );
 
   const addressLookupTable: AddressLookupTableAccount =
@@ -109,10 +109,10 @@ it("Unit test for getSizeOfTransaction", async () => {
       recentBlockhash: transaction.recentBlockhash,
       payerKey: payer.publicKey,
       instructions: ixsToSend,
-    }).compileToV0Message([addressLookupTable])
+    }).compileToV0Message([addressLookupTable]),
   );
 
   expect(versionedTransactionWithAlt.serialize().length).toBe(
-    getSizeOfTransaction(ixsToSend, true, addressLookupTable)
+    getSizeOfTransaction(ixsToSend, true, addressLookupTable),
   );
 });

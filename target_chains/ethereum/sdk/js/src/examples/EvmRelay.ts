@@ -62,9 +62,8 @@ async function run() {
   const priceFeeds = await connection.getLatestPriceFeeds(priceIds);
   console.log(priceFeeds);
 
-  const priceFeedUpdateData = await connection.getPriceFeedsUpdateData(
-    priceIds
-  );
+  const priceFeedUpdateData =
+    await connection.getPriceFeedsUpdateData(priceIds);
   console.log(priceFeedUpdateData);
 
   const pythContract = new web3.eth.Contract(
@@ -72,7 +71,7 @@ async function run() {
     pythContractAddr,
     {
       from: provider.getAddress(0),
-    }
+    },
   );
 
   const updateFee = await pythContract.methods
@@ -110,7 +109,7 @@ async function run() {
         .getPriceNoOlderThan(priceId, 60) // 60 seconds staleness tolerance
         .call();
       console.log(
-        `Updated ${priceId} to (${price} +- ${conf}) * 10^${expo} at unix timestamp ${publishTime}`
+        `Updated ${priceId} to (${price} +- ${conf}) * 10^${expo} at unix timestamp ${publishTime}`,
       );
     }
   }

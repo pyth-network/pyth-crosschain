@@ -42,7 +42,7 @@ export class TerraDeployer implements Deployer {
       console.error(`Transaction failed: ${res.raw_log}`);
     } else {
       console.log(
-        `Broadcasted transaction hash: ${JSON.stringify(res.txhash)}`
+        `Broadcasted transaction hash: ${JSON.stringify(res.txhash)}`,
       );
     }
 
@@ -55,7 +55,7 @@ export class TerraDeployer implements Deployer {
 
     const store_code = new MsgStoreCode(
       this.wallet.key.accAddress,
-      contract_bytes.toString("base64")
+      contract_bytes.toString("base64"),
     );
 
     const rs = await this.signAndBroadcastMsg(store_code);
@@ -67,7 +67,7 @@ export class TerraDeployer implements Deployer {
       codeId = parseInt(ci);
     } catch (e) {
       console.error(
-        "Encountered an error in parsing deploy code result. Printing raw log"
+        "Encountered an error in parsing deploy code result. Printing raw log",
       );
       console.error(rs.raw_log);
       throw e;
@@ -79,7 +79,7 @@ export class TerraDeployer implements Deployer {
   async instantiate(
     codeId: number,
     inst_msg: string | object,
-    label: string
+    label: string,
   ): Promise<string> {
     const instMsg = new MsgInstantiateContract(
       this.wallet.key.accAddress,
@@ -87,7 +87,7 @@ export class TerraDeployer implements Deployer {
       codeId,
       inst_msg,
       undefined,
-      label
+      label,
     );
     const rs = await this.signAndBroadcastMsg(instMsg);
 
@@ -98,7 +98,7 @@ export class TerraDeployer implements Deployer {
       address = extractFromRawLog(rs.raw_log, "_contract_address");
     } catch (e) {
       console.error(
-        "Encountered an error in parsing instantiation result. Printing raw log"
+        "Encountered an error in parsing instantiation result. Printing raw log",
       );
       console.error(rs.raw_log);
       throw e;
@@ -106,8 +106,8 @@ export class TerraDeployer implements Deployer {
 
     console.log(
       `Instantiated ${label} at ${address} (${convert_terra_address_to_hex(
-        address
-      )})`
+        address,
+      )})`,
     );
     return address;
   }
@@ -119,7 +119,7 @@ export class TerraDeployer implements Deployer {
       codeId,
       {
         action: "",
-      }
+      },
     );
 
     const rs = await this.signAndBroadcastMsg(migrateMsg);
@@ -129,7 +129,7 @@ export class TerraDeployer implements Deployer {
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(
-        "Encountered an error in parsing migration result. Printing raw log"
+        "Encountered an error in parsing migration result. Printing raw log",
       );
       console.error(rs.raw_log);
       throw e;
@@ -145,7 +145,7 @@ export class TerraDeployer implements Deployer {
     const updateAdminMsg = new MsgUpdateContractAdmin(
       currAdmin,
       newAdmin,
-      contract
+      contract,
     );
 
     await this.signAndBroadcastMsg(updateAdminMsg);
@@ -169,7 +169,7 @@ export class TerraDeployer implements Deployer {
     const wallet = lcd.wallet(
       new MnemonicKey({
         mnemonic,
-      })
+      }),
     );
 
     return new TerraDeployer(wallet);

@@ -37,7 +37,7 @@ export class TonWormholeContract extends WormholeContract {
     parsed: {
       type: string;
       address: string;
-    }
+    },
   ): TonWormholeContract {
     if (parsed.type !== TonWormholeContract.type)
       throw new Error("Invalid type");
@@ -46,14 +46,17 @@ export class TonWormholeContract extends WormholeContract {
     return new TonWormholeContract(chain, parsed.address);
   }
 
-  constructor(public chain: TonChain, public address: string) {
+  constructor(
+    public chain: TonChain,
+    public address: string,
+  ) {
     super();
   }
 
   async getContract(): Promise<OpenedContract<PythContract>> {
     const provider = await this.chain.getContractProvider(this.address);
     const contract = provider.open(
-      PythContract.createFromAddress(Address.parse(this.address))
+      PythContract.createFromAddress(Address.parse(this.address)),
     );
 
     return contract;
@@ -80,7 +83,7 @@ export class TonWormholeContract extends WormholeContract {
 
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const contract = await this.getContract();
     const provider = await this.chain.getContractProvider(this.address);
@@ -93,7 +96,7 @@ export class TonWormholeContract extends WormholeContract {
       wallet.address,
       BigInt(0),
       Buffer.alloc(0),
-      1
+      1,
     );
 
     return {
@@ -106,13 +109,16 @@ export class TonWormholeContract extends WormholeContract {
 export class TonPriceFeedContract extends PriceFeedContract {
   static type = "TonPriceFeedContract";
 
-  constructor(public chain: TonChain, public address: string) {
+  constructor(
+    public chain: TonChain,
+    public address: string,
+  ) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): TonPriceFeedContract {
     if (parsed.type !== TonPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -136,7 +142,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
   async getContract(): Promise<OpenedContract<PythContract>> {
     const provider = await this.chain.getContractProvider(this.address);
     const contract = provider.open(
-      PythContract.createFromAddress(Address.parse(this.address))
+      PythContract.createFromAddress(Address.parse(this.address)),
     );
 
     return contract;
@@ -225,7 +231,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
 
   async executeUpdatePriceFeed(
     senderPrivateKey: PrivateKey,
-    vaas: Buffer[]
+    vaas: Buffer[],
   ): Promise<TxResult> {
     const client = await this.chain.getClient();
     const contract = await this.getContract();
@@ -237,7 +243,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
       await contract.sendUpdatePriceFeeds(
         sender,
         vaa,
-        calculateUpdatePriceFeedsFee(BigInt(fee)) + BigInt(fee)
+        calculateUpdatePriceFeedsFee(BigInt(fee)) + BigInt(fee),
       );
     }
 
@@ -246,7 +252,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
     });
     const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
     const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value
+      typeof value === "bigint" ? value.toString() : value,
     );
 
     return {
@@ -257,7 +263,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const client = await this.chain.getClient();
     const contract = await this.getContract();
@@ -270,7 +276,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
     });
     const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
     const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value
+      typeof value === "bigint" ? value.toString() : value,
     );
 
     return {
@@ -281,7 +287,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
 
   async upgradeContract(
     senderPrivateKey: PrivateKey,
-    newCode: Cell
+    newCode: Cell,
   ): Promise<TxResult> {
     const client = await this.chain.getClient();
     const contract = await this.getContract();
@@ -294,7 +300,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
     });
     const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
     const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value
+      typeof value === "bigint" ? value.toString() : value,
     );
 
     return {

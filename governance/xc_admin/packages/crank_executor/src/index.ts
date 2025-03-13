@@ -15,7 +15,7 @@ import {
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const VAULT: PublicKey = new PublicKey(envOrErr("VAULT"));
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
+  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii"))),
 );
 const SOLANA_RPC = process.env.SOLANA_RPC;
 const COMMITMENT: Commitment =
@@ -29,7 +29,7 @@ async function run() {
   const squad = new SquadsMesh({
     connection: new Connection(
       SOLANA_RPC ?? getPythClusterApiUrl(CLUSTER),
-      COMMITMENT
+      COMMITMENT,
     ),
     wallet: new NodeWallet(KEYPAIR),
     multisigProgramId: DEFAULT_MULTISIG_PROGRAM_ID,

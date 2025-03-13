@@ -7,7 +7,7 @@ const parser = yargs(hideBin(process.argv))
   .usage(
     "Requests and reveals a random number from an entropy contract while measuing the\n" +
       "latency between request submission and availablity of the provider revelation from fortuna.\n" +
-      "Usage: $0 --chain <chain-id> --private-key <private-key>"
+      "Usage: $0 --chain <chain-id> --private-key <private-key>",
   )
   .options({
     chain: {
@@ -30,7 +30,7 @@ async function main() {
   const requestResponse = await contract.requestRandomness(
     userRandomNumber,
     provider,
-    privateKey
+    privateKey,
   );
   console.log("Request tx hash: ", requestResponse.transactionHash);
   const startTime = Date.now();
@@ -50,7 +50,7 @@ async function main() {
         providerRevelation,
         provider,
         sequenceNumber,
-        privateKey
+        privateKey,
       );
       console.log("Reveal tx hash: ", revealResponse.transactionHash);
       break;

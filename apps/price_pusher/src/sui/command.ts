@@ -99,12 +99,12 @@ export default {
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const keypair = Ed25519Keypair.deriveKeypair(
       mnemonic,
-      `m/44'/784'/${accountIndex}'/0'/0'`
+      `m/44'/784'/${accountIndex}'/0'/0'`,
     );
     logger.info(
       `Pushing updates from wallet address: ${keypair
         .getPublicKey()
-        .toSuiAddress()}`
+        .toSuiAddress()}`,
     );
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
@@ -117,7 +117,7 @@ export default {
       logger.error(
         `Invalid price id submitted for: ${invalidPriceItems
           .map(({ alias }) => alias)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -126,7 +126,7 @@ export default {
     const pythListener = new PythPriceListener(
       hermesClient,
       priceItems,
-      logger.child({ module: "PythPriceListener" })
+      logger.child({ module: "PythPriceListener" }),
     );
 
     const suiListener = new SuiPriceListener(
@@ -135,7 +135,7 @@ export default {
       endpoint,
       priceItems,
       logger.child({ module: "SuiPriceListener" }),
-      { pollingFrequency }
+      { pollingFrequency },
     );
     const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
       hermesClient,
@@ -146,7 +146,7 @@ export default {
       keypair,
       gasBudget,
       numGasObjects,
-      ignoreGasObjects
+      ignoreGasObjects,
     );
 
     const controller = new Controller(
@@ -155,7 +155,7 @@ export default {
       suiListener,
       suiPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency }
+      { pushingFrequency },
     );
 
     controller.start();

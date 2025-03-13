@@ -17,7 +17,7 @@ export class AptosPriceListener extends ChainPriceListener {
     private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
-    }
+    },
   ) {
     super(config.pollingFrequency, priceItems);
   }
@@ -27,7 +27,7 @@ export class AptosPriceListener extends ChainPriceListener {
 
     const res = await client.getAccountResource(
       this.pythModule,
-      `${this.pythModule}::state::LatestPriceInfo`
+      `${this.pythModule}::state::LatestPriceInfo`,
     );
 
     try {
@@ -50,8 +50,8 @@ export class AptosPriceListener extends ChainPriceListener {
 
       this.logger.debug(
         `Polled an Aptos on-chain price for feed ${this.priceIdToAlias.get(
-          priceId
-        )} (${priceId}).`
+          priceId,
+        )} (${priceId}).`,
       );
 
       return {
@@ -62,7 +62,7 @@ export class AptosPriceListener extends ChainPriceListener {
     } catch (err) {
       this.logger.error(
         err,
-        `Polling Aptos on-chain price for ${priceId} failed.`
+        `Polling Aptos on-chain price for ${priceId} failed.`,
       );
       return undefined;
     }
@@ -94,7 +94,7 @@ export class AptosPricePusher implements IPricePusher {
     private pythContractAddress: string,
     private endpoint: string,
     private mnemonic: string,
-    private overrideGasPriceMultiplier: number
+    private overrideGasPriceMultiplier: number,
   ) {
     this.sequenceNumberLocked = false;
   }
@@ -111,13 +111,13 @@ export class AptosPricePusher implements IPricePusher {
       encoding: "base64",
     });
     return response.binary.data.map((data) =>
-      Array.from(Buffer.from(data, "base64"))
+      Array.from(Buffer.from(data, "base64")),
     );
   }
 
   async updatePriceFeed(
     priceIds: string[],
-    pubTimesToPush: number[]
+    pubTimesToPush: number[],
   ): Promise<void> {
     if (priceIds.length === 0) {
       return;
@@ -137,7 +137,7 @@ export class AptosPricePusher implements IPricePusher {
 
     const account = AptosAccount.fromDerivePath(
       APTOS_ACCOUNT_HD_PATH,
-      this.mnemonic
+      this.mnemonic,
     );
     const client = new AptosClient(this.endpoint);
 
@@ -151,7 +151,7 @@ export class AptosPricePusher implements IPricePusher {
       },
       {
         sequence_number: sequenceNumber.toFixed(),
-      }
+      },
     );
 
     try {
@@ -160,7 +160,7 @@ export class AptosPricePusher implements IPricePusher {
 
       this.logger.debug(
         { hash: pendingTx.hash },
-        "Successfully broadcasted tx."
+        "Successfully broadcasted tx.",
       );
 
       // Sometimes broadcasted txs don't make it on-chain and they cause our sequence number
@@ -183,7 +183,7 @@ export class AptosPricePusher implements IPricePusher {
   // Wait for the transaction to be confirmed. If it fails, reset the sequence number.
   private async waitForTransactionConfirmation(
     client: AptosClient,
-    txHash: string
+    txHash: string,
   ): Promise<void> {
     try {
       await client.waitForTransaction(txHash, {
@@ -195,7 +195,7 @@ export class AptosPricePusher implements IPricePusher {
     } catch (err) {
       this.logger.error(
         { err, hash: txHash },
-        `Transaction failed to confirm.`
+        `Transaction failed to confirm.`,
       );
 
       this.lastSequenceNumber = undefined;
@@ -207,7 +207,7 @@ export class AptosPricePusher implements IPricePusher {
   // the blockchain itself (and caches it for later).
   private async tryGetNextSequenceNumber(
     client: AptosClient,
-    account: AptosAccount
+    account: AptosAccount,
   ): Promise<number> {
     if (this.lastSequenceNumber !== undefined) {
       this.lastSequenceNumber += 1;
@@ -220,10 +220,10 @@ export class AptosPricePusher implements IPricePusher {
         try {
           this.sequenceNumberLocked = true;
           this.lastSequenceNumber = Number(
-            (await client.getAccount(account.address())).sequence_number
+            (await client.getAccount(account.address())).sequence_number,
           );
           this.logger.debug(
-            `Fetched account sequence number: ${this.lastSequenceNumber}`
+            `Fetched account sequence number: ${this.lastSequenceNumber}`,
           );
           return this.lastSequenceNumber;
         } catch (e: any) {

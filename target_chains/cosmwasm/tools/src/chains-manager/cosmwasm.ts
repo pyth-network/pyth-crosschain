@@ -36,7 +36,7 @@ export class CosmwasmExecutor implements ChainExecutor {
     private readonly endpoint: string,
     private readonly signer: OfflineSigner,
     // example - 0.025uosmo
-    private readonly gasPrice: string
+    private readonly gasPrice: string,
   ) {}
 
   /**
@@ -47,7 +47,7 @@ export class CosmwasmExecutor implements ChainExecutor {
   static async getSignerFromMnemonic(mnemonic: string, prefix: string) {
     const directSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(
       mnemonic,
-      { prefix }
+      { prefix },
     );
     return directSecp256k1HdWallet;
   }
@@ -60,7 +60,7 @@ export class CosmwasmExecutor implements ChainExecutor {
   static async getSignerFromPrivateKey(privateKey: string, prefix: string) {
     return await DirectSecp256k1Wallet.fromKey(
       Buffer.from(privateKey, "hex"),
-      prefix
+      prefix,
     );
   }
 
@@ -82,7 +82,7 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   private async signAndBroadcastMsg(
-    encodedMsgObject: EncodeObject
+    encodedMsgObject: EncodeObject,
   ): Promise<DeliverTxResponse> {
     const address = (await this.signer.getAccounts())[0].address;
 
@@ -91,14 +91,14 @@ export class CosmwasmExecutor implements ChainExecutor {
       this.signer,
       {
         gasPrice: GasPrice.fromString(this.gasPrice),
-      }
+      },
     );
 
     try {
       const txResponse = await cosmwasmClient.signAndBroadcast(
         address,
         [encodedMsgObject],
-        2
+        2,
       );
 
       if (txResponse.code !== 0) {
@@ -106,8 +106,8 @@ export class CosmwasmExecutor implements ChainExecutor {
       } else {
         console.log(
           `Broadcasted transaction hash: ${JSON.stringify(
-            txResponse.transactionHash
-          )}`
+            txResponse.transactionHash,
+          )}`,
         );
       }
 
@@ -142,7 +142,7 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async instantiateContract(
-    req: InstantiateContractRequest
+    req: InstantiateContractRequest,
   ): Promise<InstantiateContractResponse> {
     const { codeId, instMsg, label } = req;
 
@@ -162,7 +162,7 @@ export class CosmwasmExecutor implements ChainExecutor {
       };
 
     const txResponse = await this.signAndBroadcastMsg(
-      msgInstantiateContractEncodeObject
+      msgInstantiateContractEncodeObject,
     );
 
     if (txResponse.rawLog === undefined)
@@ -170,7 +170,7 @@ export class CosmwasmExecutor implements ChainExecutor {
 
     const contractAddr: string = extractFromRawLog(
       txResponse.rawLog,
-      "_contract_address"
+      "_contract_address",
     );
 
     return {
@@ -180,7 +180,7 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async executeContract(
-    req: ExecuteContractRequest
+    req: ExecuteContractRequest,
   ): Promise<ExecuteContractResponse> {
     const { contractAddr, funds, msg } = req;
     const msgExecuteContact = {
@@ -196,7 +196,7 @@ export class CosmwasmExecutor implements ChainExecutor {
     };
 
     const txResponse = await this.signAndBroadcastMsg(
-      msgExecuteContractEncodeObject
+      msgExecuteContractEncodeObject,
     );
 
     return {
@@ -205,7 +205,7 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async migrateContract(
-    req: MigrateContractRequest
+    req: MigrateContractRequest,
   ): Promise<MigrateContractResponse> {
     const { newCodeId, contractAddr, migrateMsg } = req;
     const msgMigrateContractEncodeObject: MsgMigrateContractEncodeObject = {
@@ -219,14 +219,14 @@ export class CosmwasmExecutor implements ChainExecutor {
     };
 
     const txResponse = await this.signAndBroadcastMsg(
-      msgMigrateContractEncodeObject
+      msgMigrateContractEncodeObject,
     );
 
     if (txResponse.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
 
     let resultCodeId = parseInt(
-      extractFromRawLog(txResponse.rawLog, "code_id")
+      extractFromRawLog(txResponse.rawLog, "code_id"),
     );
 
     assert.strictEqual(newCodeId, resultCodeId);
@@ -237,7 +237,7 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async updateContractAdmin(
-    req: UpdateContractAdminRequest
+    req: UpdateContractAdminRequest,
   ): Promise<UpdateContractAdminResponse> {
     const { newAdminAddr, contractAddr } = req;
     const currAdminAddr = await this.getAddress();
@@ -252,7 +252,7 @@ export class CosmwasmExecutor implements ChainExecutor {
     };
 
     const txResponse = await this.signAndBroadcastMsg(
-      msgUpdateAdminEncodeObject
+      msgUpdateAdminEncodeObject,
     );
 
     return {
@@ -268,7 +268,7 @@ function extractFromRawLog(rawLog: string, key: string): string {
     return rx.exec(rawLog)![1];
   } catch (e) {
     console.error(
-      "Encountered an error in parsing instantiation result. Printing raw log"
+      "Encountered an error in parsing instantiation result. Printing raw log",
     );
     console.error(rawLog);
     throw e;

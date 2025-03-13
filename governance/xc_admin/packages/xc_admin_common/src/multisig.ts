@@ -32,11 +32,11 @@ export const PRICE_FEED_MULTISIG: Record<Cluster | "localnet", PublicKey> = {
  * Address of the ops key (same on all networks)
  */
 export const PRICE_FEED_OPS_KEY = new PublicKey(
-  "ACzP6RC98vcBk9oTeAwcH1o5HJvtBzU59b5nqdwc7Cxy"
+  "ACzP6RC98vcBk9oTeAwcH1o5HJvtBzU59b5nqdwc7Cxy",
 );
 
 export const UPGRADE_OPS_KEY = new PublicKey(
-  "opsLibxVY7Vz5eYMmSfX8cLFCFVYTtH6fr6MiifMpA7"
+  "opsLibxVY7Vz5eYMmSfX8cLFCFVYTtH6fr6MiifMpA7",
 );
 
 export function getOpsKey(vault: PublicKey): PublicKey {
@@ -67,7 +67,7 @@ export async function getProposals(
   squad: Squads,
   vault: PublicKey,
   offset: number = 1,
-  state: "active" | "executeReady" | "executed" | "all" = "all"
+  state: "active" | "executeReady" | "executed" | "all" = "all",
 ): Promise<TransactionAccount[]> {
   const msAccount = await squad.getMultisig(vault);
   let txKeys = lodash
@@ -76,10 +76,10 @@ export async function getProposals(
   let msTransactions = await squad.getTransactions(txKeys);
   return msTransactions
     .filter(
-      (x: TransactionAccount | null): x is TransactionAccount => x != null
+      (x: TransactionAccount | null): x is TransactionAccount => x != null,
     )
     .filter((x) =>
-      state === "all" ? true : lodash.isEqual(x.status, { [state]: {} })
+      state === "all" ? true : lodash.isEqual(x.status, { [state]: {} }),
     );
 }
 
@@ -91,7 +91,7 @@ export async function getProposals(
  */
 export async function getManyProposalsInstructions(
   squad: Squads,
-  txAccounts: TransactionAccount[]
+  txAccounts: TransactionAccount[],
 ): Promise<InstructionAccount[][]> {
   let allIxsKeys = [];
   let ownerTransaction = [];
@@ -103,8 +103,8 @@ export async function getManyProposalsInstructions(
           getIxPDA(
             txAccount.publicKey,
             new BN(i),
-            DEFAULT_MULTISIG_PROGRAM_ID
-          )[0]
+            DEFAULT_MULTISIG_PROGRAM_ID,
+          )[0],
       );
     for (let ixKey of ixKeys) {
       allIxsKeys.push(ixKey);
@@ -115,7 +115,7 @@ export async function getManyProposalsInstructions(
   let allTxIxsAccounts = await squad.getInstructions(allIxsKeys);
   let ixAccountsByTx: InstructionAccount[][] = Array.from(
     Array(txAccounts.length),
-    () => []
+    () => [],
   );
 
   for (let i = 0; i < allTxIxsAccounts.length; i++) {
@@ -135,16 +135,20 @@ export async function getManyProposalsInstructions(
  */
 export async function getProposalInstructions(
   squad: Squads,
-  txAccount: TransactionAccount
+  txAccount: TransactionAccount,
 ): Promise<InstructionAccount[]> {
   let ixKeys = lodash
     .range(1, txAccount.instructionIndex + 1)
     .map(
       (i) =>
-        getIxPDA(txAccount.publicKey, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]
+        getIxPDA(
+          txAccount.publicKey,
+          new BN(i),
+          DEFAULT_MULTISIG_PROGRAM_ID,
+        )[0],
     );
   let txIxs = await squad.getInstructions(ixKeys);
   return txIxs.filter(
-    (x: InstructionAccount | null): x is InstructionAccount => x != null
+    (x: InstructionAccount | null): x is InstructionAccount => x != null,
   );
 }

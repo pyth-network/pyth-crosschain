@@ -15,7 +15,7 @@ export class SystemProgramMultisigInstruction implements MultisigInstruction {
   constructor(
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
   ) {
     this.name = name;
     this.args = args;
@@ -23,7 +23,7 @@ export class SystemProgramMultisigInstruction implements MultisigInstruction {
   }
 
   static fromTransactionInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): SystemProgramMultisigInstruction {
     try {
       const instructionType =
@@ -77,7 +77,7 @@ export class SystemProgramMultisigInstruction implements MultisigInstruction {
       return new SystemProgramMultisigInstruction(
         UNRECOGNIZED_INSTRUCTION,
         { data: instruction.data },
-        { named: {}, remaining: instruction.keys }
+        { named: {}, remaining: instruction.keys },
       );
     }
   }

@@ -7,7 +7,7 @@ import { toPrivateKey } from "../src";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
-    "Usage: $0 --code <path/to/artifact.wasm> --private-key <private-key> --chain <chain>"
+    "Usage: $0 --code <path/to/artifact.wasm> --private-key <private-key> --chain <chain>",
   )
   .options({
     code: {
@@ -33,7 +33,7 @@ async function main() {
   const { codeId } = await CosmWasmPriceFeedContract.storeCode(
     DefaultStore.chains[argv.chain] as CosmWasmChain,
     toPrivateKey(argv["private-key"]),
-    code
+    code,
   );
   console.log(`Successfully uploaded code with id ${codeId}`);
 }

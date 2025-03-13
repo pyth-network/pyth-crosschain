@@ -17,7 +17,7 @@ const parser = yargs(hideBin(process.argv))
   .usage(
     "Deploys a new Upgradeable contract for Executor or Entropy to a set of chains where Entropy is deployed and creates a governance proposal for it.\n" +
       `Uses a cache file to avoid deploying contracts twice\n` +
-      "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> --ops-key-path <ops_key_path> --std-output <std_output>"
+      "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> --ops-key-path <ops_key_path> --std-output <std_output>",
   )
   .options({
     ...COMMON_UPGRADE_OPTIONS,
@@ -75,12 +75,12 @@ async function main() {
               artifact["abi"],
               artifact["bytecode"],
               [],
-              2
+              2,
             );
-          }
+          },
         );
         console.log(
-          `Deployed contract at ${address} on ${contract.chain.getId()}`
+          `Deployed contract at ${address} on ${contract.chain.getId()}`,
         );
         const payload =
           argv["contract-type"] === "executor"
@@ -99,8 +99,8 @@ async function main() {
   if (failures.length > 0) {
     throw new Error(
       `Some chains could not be deployed: ${failures.join(
-        ", "
-      )}. Scroll up to see the errors from each chain.`
+        ", ",
+      )}. Scroll up to see the errors from each chain.`,
     );
   }
 

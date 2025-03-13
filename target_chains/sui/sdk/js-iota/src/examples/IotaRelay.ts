@@ -80,7 +80,7 @@ async function run() {
   }
 
   const wallet = Ed25519Keypair.fromSecretKey(
-    Buffer.from(process.env.IOTA_KEY, "hex")
+    Buffer.from(process.env.IOTA_KEY, "hex"),
   );
 
   const result = await provider.signAndExecuteTransaction({

@@ -9,7 +9,10 @@ export class CosmosUpgradeContract extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ codeId: bigint }>> =
     BufferLayout.struct([BufferLayoutExt.u64be("codeId")]);
 
-  constructor(targetChainId: ChainName, readonly codeId: bigint) {
+  constructor(
+    targetChainId: ChainName,
+    readonly codeId: bigint,
+  ) {
     super(targetChainId, "UpgradeContract");
   }
 
@@ -17,13 +20,13 @@ export class CosmosUpgradeContract extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "UpgradeContract",
-      CosmosUpgradeContract.layout
+      CosmosUpgradeContract.layout,
     );
     if (!decoded) return undefined;
 
     return new CosmosUpgradeContract(
       decoded[0].targetChainId,
-      decoded[1].codeId
+      decoded[1].codeId,
     );
   }
 
@@ -39,7 +42,10 @@ export class UpgradeContract256Bit extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
     BufferLayout.struct([BufferLayoutExt.hexBytes(32, "hash")]);
 
-  constructor(targetChainId: ChainName, readonly hash: string) {
+  constructor(
+    targetChainId: ChainName,
+    readonly hash: string,
+  ) {
     super(targetChainId, "UpgradeContract");
   }
 
@@ -47,7 +53,7 @@ export class UpgradeContract256Bit extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "UpgradeContract",
-      this.layout
+      this.layout,
     );
     if (!decoded) return undefined;
 
@@ -65,7 +71,10 @@ export class EvmUpgradeContract extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ address: string }>> =
     BufferLayout.struct([BufferLayoutExt.hexBytes(20, "address")]);
 
-  constructor(targetChainId: ChainName, readonly address: string) {
+  constructor(
+    targetChainId: ChainName,
+    readonly address: string,
+  ) {
     super(targetChainId, "UpgradeContract");
   }
 
@@ -73,7 +82,7 @@ export class EvmUpgradeContract extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "UpgradeContract",
-      this.layout
+      this.layout,
     );
     if (!decoded) return undefined;
 

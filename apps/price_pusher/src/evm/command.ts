@@ -125,7 +125,7 @@ export default {
       logger.error(
         `Invalid price id submitted for: ${invalidPriceItems
           .map(({ alias }) => alias)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -134,14 +134,14 @@ export default {
     const pythListener = new PythPriceListener(
       hermesClient,
       priceItems,
-      logger.child({ module: "PythPriceListener" })
+      logger.child({ module: "PythPriceListener" }),
     );
 
     const client = await createClient(endpoint, mnemonic);
     const pythContract = createPythContract(client, pythContractAddress);
 
     logger.info(
-      `Pushing updates from wallet address: ${client.account.address}`
+      `Pushing updates from wallet address: ${client.account.address}`,
     );
 
     // It is possible to watch the events in the non-ws endpoints, either by getFilter
@@ -156,13 +156,13 @@ export default {
       logger.child({ module: "EvmPriceListener" }),
       {
         pollingFrequency,
-      }
+      },
     );
 
     const gasStation = getCustomGasStation(
       logger.child({ module: "CustomGasStation" }),
       customGasStation,
-      txSpeed
+      txSpeed,
     );
     const evmPusher = new EvmPricePusher(
       hermesClient,
@@ -174,7 +174,7 @@ export default {
       updateFeeMultiplier,
       gasLimit,
       gasStation,
-      gasPrice
+      gasPrice,
     );
 
     const controller = new Controller(
@@ -183,7 +183,7 @@ export default {
       evmListener,
       evmPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency }
+      { pushingFrequency },
     );
 
     controller.start();

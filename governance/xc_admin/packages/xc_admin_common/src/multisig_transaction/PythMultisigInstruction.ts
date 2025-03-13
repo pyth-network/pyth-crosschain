@@ -17,7 +17,7 @@ export class PythMultisigInstruction implements MultisigInstruction {
   constructor(
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
   ) {
     this.name = name;
     this.args = args;
@@ -25,7 +25,7 @@ export class PythMultisigInstruction implements MultisigInstruction {
   }
 
   static fromTransactionInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): PythMultisigInstruction {
     const pythInstructionCoder = pythOracleCoder().instruction;
 
@@ -35,13 +35,13 @@ export class PythMultisigInstruction implements MultisigInstruction {
       return new PythMultisigInstruction(
         deserializedData.name,
         deserializedData.data,
-        resolveAccountNames(pythIdl as Idl, deserializedData.name, instruction)
+        resolveAccountNames(pythIdl as Idl, deserializedData.name, instruction),
       );
     } else {
       return new PythMultisigInstruction(
         UNRECOGNIZED_INSTRUCTION,
         { data: instruction.data },
-        { named: {}, remaining: instruction.keys }
+        { named: {}, remaining: instruction.keys },
       );
     }
   }

@@ -2226,7 +2226,7 @@ export class PythContract extends Contract {
         max_publish_time: BigNumberish,
         min_publish_time: BigNumberish,
         target_price_feed_ids: Vec<string>,
-        update_data: Vec<Bytes>
+        update_data: Vec<Bytes>,
       ],
       Vec<PriceFeedOutput>
     >;
@@ -2242,7 +2242,7 @@ export class PythContract extends Contract {
       [
         price_feed_ids: Vec<string>,
         publish_times: Vec<BigNumberish>,
-        update_data: Vec<Bytes>
+        update_data: Vec<Bytes>,
       ],
       void
     >;
@@ -2256,7 +2256,7 @@ export class PythContract extends Contract {
         valid_time_period_seconds: BigNumberish,
         wormhole_guardian_set_addresses: Vec<string>,
         wormhole_guardian_set_index: BigNumberish,
-        chain_id: BigNumberish
+        chain_id: BigNumberish,
       ],
       void
     >;
@@ -2285,7 +2285,7 @@ export class PythContract extends Contract {
 
   constructor(
     id: string | AbstractAddress,
-    accountOrProvider: Account | Provider
+    accountOrProvider: Account | Provider,
   ) {
     super(id, abi, accountOrProvider);
   }

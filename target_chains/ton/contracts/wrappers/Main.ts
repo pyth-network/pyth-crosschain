@@ -33,14 +33,14 @@ export class Main extends BaseWrapper {
   async getCurrentGuardianSetIndex(provider: ContractProvider) {
     return await super.getCurrentGuardianSetIndex(
       provider,
-      "get_current_guardian_set_index"
+      "get_current_guardian_set_index",
     );
   }
 
   async sendUpdateGuardianSet(
     provider: ContractProvider,
     via: Sender,
-    vm: Buffer
+    vm: Buffer,
   ) {
     await super.sendUpdateGuardianSet(provider, via, vm);
   }
@@ -49,7 +49,7 @@ export class Main extends BaseWrapper {
     provider: ContractProvider,
     via: Sender,
     updateData: Buffer,
-    updateFee: bigint
+    updateFee: bigint,
   ) {
     await super.sendUpdatePriceFeeds(provider, via, updateData, updateFee);
   }
@@ -58,20 +58,20 @@ export class Main extends BaseWrapper {
     return await super.getPriceUnsafe(
       provider,
       priceFeedId,
-      "get_price_unsafe"
+      "get_price_unsafe",
     );
   }
 
   async getPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
-    priceFeedId: HexString
+    priceFeedId: HexString,
   ) {
     return await super.getPriceNoOlderThan(
       provider,
       timePeriod,
       priceFeedId,
-      "get_price_no_older_than"
+      "get_price_no_older_than",
     );
   }
 
@@ -79,20 +79,20 @@ export class Main extends BaseWrapper {
     return await super.getEmaPriceUnsafe(
       provider,
       priceFeedId,
-      "get_ema_price_unsafe"
+      "get_ema_price_unsafe",
     );
   }
 
   async getEmaPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
-    priceFeedId: HexString
+    priceFeedId: HexString,
   ) {
     return await super.getEmaPriceNoOlderThan(
       provider,
       timePeriod,
       priceFeedId,
-      "get_ema_price_no_older_than"
+      "get_ema_price_no_older_than",
     );
   }
 

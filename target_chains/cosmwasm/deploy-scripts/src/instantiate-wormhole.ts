@@ -50,10 +50,10 @@ async function run() {
   const storeCodeRes = await CosmWasmPriceFeedContract.storeCode(
     chain,
     privateKey,
-    wasmFilePath
+    wasmFilePath,
   );
   console.log(
-    `Code stored on chain ${chain.getId()} at ${storeCodeRes.codeId}`
+    `Code stored on chain ${chain.getId()} at ${storeCodeRes.codeId}`,
   );
   const chainExecutor = await chain.getExecutor(privateKey);
   const instantiateContractRes = await chainExecutor.instantiateContract({
@@ -66,7 +66,7 @@ async function run() {
     label: "wormhole",
   });
   console.log(
-    `Contract instantiated at ${instantiateContractRes.contractAddr}`
+    `Contract instantiated at ${instantiateContractRes.contractAddr}`,
   );
 
   await chainExecutor.updateContractAdmin({
@@ -77,7 +77,7 @@ async function run() {
 
   const contract = new CosmWasmWormholeContract(
     chain,
-    instantiateContractRes.contractAddr
+    instantiateContractRes.contractAddr,
   );
   if (argv.deploy === "stable") {
     console.log("Syncing guardian sets for mainnet contract");
@@ -85,7 +85,7 @@ async function run() {
     console.log("Sync complete");
   }
   console.log(
-    `Contract deployed on chain ${chain.getId()} at ${contract.address}`
+    `Contract deployed on chain ${chain.getId()} at ${contract.address}`,
   );
 }
 

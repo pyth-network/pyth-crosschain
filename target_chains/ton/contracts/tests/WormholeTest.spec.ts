@@ -36,7 +36,7 @@ describe("WormholeTest", () => {
     guardianSet: string[] = GUARDIAN_SET_0,
     chainId: number = CHAIN_ID,
     governanceChainId: number = GOVERNANCE_CHAIN_ID,
-    governanceContract: string = GOVERNANCE_CONTRACT
+    governanceContract: string = GOVERNANCE_CONTRACT,
   ) {
     const config: WormholeTestConfig = {
       guardianSetIndex,
@@ -47,12 +47,12 @@ describe("WormholeTest", () => {
     };
 
     wormholeTest = blockchain.openContract(
-      WormholeTest.createFromConfig(config, code)
+      WormholeTest.createFromConfig(config, code),
     );
 
     const deployResult = await wormholeTest.sendDeploy(
       deployer.getSender(),
-      toNano("0.05")
+      toNano("0.05"),
     );
 
     expect(deployResult.transactions).toHaveTransaction({
@@ -75,12 +75,12 @@ describe("WormholeTest", () => {
     const encodedUpgrade = createGuardianSetUpgradeBytes(
       chainId,
       newGuardianSetIndex,
-      GUARDIAN_SET_4
+      GUARDIAN_SET_4,
     );
 
     const result = await wormholeTest.getParseEncodedUpgrade(
       currentGuardianSetIndex,
-      encodedUpgrade
+      encodedUpgrade,
     );
 
     expect(result.action).toBe(2);
@@ -100,7 +100,7 @@ describe("WormholeTest", () => {
     const encodedUpgrade = createGuardianSetUpgradeBytes(
       chainId,
       newGuardianSetIndex,
-      GUARDIAN_SET_4
+      GUARDIAN_SET_4,
     );
 
     // Replace the first 32 bytes with zeros
@@ -110,8 +110,8 @@ describe("WormholeTest", () => {
     await expect(
       wormholeTest.getParseEncodedUpgrade(
         currentGuardianSetIndex,
-        encodedUpgrade
-      )
+        encodedUpgrade,
+      ),
     ).rejects.toThrow("Unable to execute get method. Got exit_code: 1011"); // ERROR_INVALID_MODULE = 1011
   });
 
@@ -121,7 +121,7 @@ describe("WormholeTest", () => {
     const mainnet_upgrade_vaa_1 = MAINNET_UPGRADE_VAAS[0];
 
     const result = await wormholeTest.getParseAndVerifyWormholeVm(
-      Buffer.from(mainnet_upgrade_vaa_1, "hex")
+      Buffer.from(mainnet_upgrade_vaa_1, "hex"),
     );
     expect(result.version).toBe(1);
     expect(result.vm_guardian_set_index).toBe(0);
@@ -129,13 +129,13 @@ describe("WormholeTest", () => {
     expect(result.nonce).toBe(3);
     expect(result.emitter_chain_id).toBe(1);
     expect(result.emitter_address.toString()).toBe(
-      "0000000000000000000000000000000000000000000000000000000000000004"
+      "0000000000000000000000000000000000000000000000000000000000000004",
     );
     expect(result.sequence).toBe(1337);
     expect(result.consistency_level).toBe(0);
     expect(result.payload).toBe(mainnet_upgrade_vaa_1.slice(246));
     expect(result.hash).toBe(
-      "ed3a5600d44b9dcc889daf0178dd69ab1e9356308194ba3628a7b720ae48a8d5"
+      "ed3a5600d44b9dcc889daf0178dd69ab1e9356308194ba3628a7b720ae48a8d5",
     );
   });
 
@@ -146,7 +146,7 @@ describe("WormholeTest", () => {
 
     const getUpdateGuardianSetResult = await wormholeTest.sendUpdateGuardianSet(
       deployer.getSender(),
-      Buffer.from(mainnet_upgrade_vaa_1, "hex")
+      Buffer.from(mainnet_upgrade_vaa_1, "hex"),
     );
     expect(getUpdateGuardianSetResult.transactions).toHaveTransaction({
       from: deployer.address,
@@ -164,7 +164,7 @@ describe("WormholeTest", () => {
     const invalid_mainnet_upgrade_vaa = "00" + MAINNET_UPGRADE_VAAS[0].slice(2);
     const result = await wormholeTest.sendUpdateGuardianSet(
       deployer.getSender(),
-      Buffer.from(invalid_mainnet_upgrade_vaa, "hex")
+      Buffer.from(invalid_mainnet_upgrade_vaa, "hex"),
     );
     expect(result.transactions).toHaveTransaction({
       from: deployer.address,
@@ -214,16 +214,16 @@ describe("WormholeTest", () => {
 
     const getParseAndVerifyWormholeVmResult =
       await wormholeTest.getParseAndVerifyWormholeVm(
-        Buffer.from(mainnet_upgrade_vaa_1, "hex")
+        Buffer.from(mainnet_upgrade_vaa_1, "hex"),
       );
     expect(getParseAndVerifyWormholeVmResult.hash).toBe(
-      "ed3a5600d44b9dcc889daf0178dd69ab1e9356308194ba3628a7b720ae48a8d5"
+      "ed3a5600d44b9dcc889daf0178dd69ab1e9356308194ba3628a7b720ae48a8d5",
     );
 
     const sendUpdateGuardianSetResult =
       await wormholeTest.sendUpdateGuardianSet(
         deployer.getSender(),
-        Buffer.from(mainnet_upgrade_vaa_1, "hex")
+        Buffer.from(mainnet_upgrade_vaa_1, "hex"),
       );
     expect(sendUpdateGuardianSetResult.transactions).toHaveTransaction({
       from: deployer.address,
@@ -233,7 +233,7 @@ describe("WormholeTest", () => {
 
     getGovernanceActionIsConsumedResult =
       await wormholeTest.getGovernanceActionIsConsumed(
-        BigInt("0x" + getParseAndVerifyWormholeVmResult.hash)
+        BigInt("0x" + getParseAndVerifyWormholeVmResult.hash),
       );
     expect(getGovernanceActionIsConsumedResult).toEqual(true);
   });

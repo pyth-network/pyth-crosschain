@@ -25,19 +25,19 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   constructor(
     public chain: IotaChain,
     public stateId: string,
-    public wormholeStateId: string
+    public wormholeStateId: string,
   ) {
     super();
     this.client = new IotaPythClient(
       this.getProvider(),
       this.stateId,
-      this.wormholeStateId
+      this.wormholeStateId,
     );
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; stateId: string; wormholeStateId: string }
+    parsed: { type: string; stateId: string; wormholeStateId: string },
   ): IotaPriceFeedContract {
     if (parsed.type !== IotaPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -46,7 +46,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     return new IotaPriceFeedContract(
       chain,
       parsed.stateId,
-      parsed.wormholeStateId
+      parsed.wormholeStateId,
     );
   }
 
@@ -118,12 +118,12 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     });
     if (!priceInfo.data || !priceInfo.data.content) {
       throw new Error(
-        `Price feed ID ${priceInfoObjectId} in price table but object not found!!`
+        `Price feed ID ${priceInfoObjectId} in price table but object not found!!`,
       );
     }
     if (priceInfo.data.content.dataType !== "moveObject") {
       throw new Error(
-        `Expected ${priceInfoObjectId} to be a moveObject (PriceInfoObject)`
+        `Expected ${priceInfoObjectId} to be a moveObject (PriceInfoObject)`,
       );
     }
     return {
@@ -131,12 +131,12 @@ export class IotaPriceFeedContract extends PriceFeedContract {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         priceInfo.data.content.fields.price_info.fields.price_feed.fields
-          .ema_price
+          .ema_price,
       ),
       price: await this.parsePrice(
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        priceInfo.data.content.fields.price_info.fields.price_feed.fields.price
+        priceInfo.data.content.fields.price_info.fields.price_feed.fields.price,
       ),
     };
   }
@@ -153,7 +153,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
       packageId,
-      vaa
+      vaa,
     );
 
     tx.moveCall({
@@ -175,24 +175,24 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   async executeUpdatePriceFeedWithFeeds(
     senderPrivateKey: string,
     vaas: Buffer[],
-    feedIds: string[]
+    feedIds: string[],
   ): Promise<TxResult> {
     const tx = new Transaction();
     await this.client.updatePriceFeeds(tx, vaas, feedIds);
     const keypair = Ed25519Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
     );
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
   }
   async executeCreatePriceFeed(
     senderPrivateKey: string,
-    vaas: Buffer[]
+    vaas: Buffer[],
   ): Promise<TxResult> {
     const tx = new Transaction();
     await this.client.createPriceFeed(tx, vaas);
     const keypair = Ed25519Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
     );
 
     const result = await this.executeTransaction(tx, keypair);
@@ -201,17 +201,17 @@ export class IotaPriceFeedContract extends PriceFeedContract {
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const keypair = Ed25519Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
     );
     const tx = new Transaction();
     const packageId = await this.getPythPackageId();
     const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
       packageId,
-      vaa
+      vaa,
     );
 
     tx.moveCall({
@@ -227,14 +227,14 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     vaa: Buffer,
     keypair: Ed25519Keypair,
     modules: number[][],
-    dependencies: string[]
+    dependencies: string[],
   ) {
     const tx = new Transaction();
     const packageId = await this.getPythPackageId();
     const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
       packageId,
-      vaa
+      vaa,
     );
 
     const [upgradeTicket] = tx.moveCall({
@@ -268,7 +268,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   async getVaaVerificationReceipt(
     tx: Transaction,
     packageId: string,
-    vaa: Buffer
+    vaa: Buffer,
   ) {
     const wormholePackageId = await this.getWormholePackageId();
 
@@ -330,7 +330,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     });
     if (!result.data || !result.data.content) {
       throw new Error(
-        "Data Sources not found, contract may not be initialized"
+        "Data Sources not found, contract may not be initialized",
       );
     }
     if (result.data.content.dataType !== "moveObject") {
@@ -350,10 +350,10 @@ export class IotaPriceFeedContract extends PriceFeedContract {
         return {
           emitterChain: Number(fields.emitter_chain),
           emitterAddress: Buffer.from(
-            fields.emitter_address.fields.value.fields.data
+            fields.emitter_address.fields.value.fields.data,
           ).toString("hex"),
         };
-      }
+      },
     );
   }
 
@@ -431,7 +431,7 @@ export class IotaWormholeContract extends WormholeContract {
       type: string;
       address: string;
       stateId: string;
-    }
+    },
   ): IotaWormholeContract {
     if (parsed.type !== IotaWormholeContract.type)
       throw new Error("Invalid type");
@@ -440,7 +440,10 @@ export class IotaWormholeContract extends WormholeContract {
     return new IotaWormholeContract(chain, parsed.stateId);
   }
 
-  constructor(public chain: IotaChain, public stateId: string) {
+  constructor(
+    public chain: IotaChain,
+    public stateId: string,
+  ) {
     super();
     this.client = new IotaPythClient(
       this.chain.getProvider(),
@@ -449,7 +452,7 @@ export class IotaWormholeContract extends WormholeContract {
       // so there is no Pyth contract here, passing empty string to type-
       // check.
       "",
-      this.stateId
+      this.stateId,
     );
   }
 
@@ -480,7 +483,7 @@ export class IotaWormholeContract extends WormholeContract {
 
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const tx = new Transaction();
     const coreObjectId = this.stateId;
@@ -517,7 +520,7 @@ export class IotaWormholeContract extends WormholeContract {
     });
 
     const keypair = Ed25519Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
     );
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };

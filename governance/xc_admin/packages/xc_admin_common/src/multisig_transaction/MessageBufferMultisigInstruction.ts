@@ -21,10 +21,10 @@ import {
 } from "@pythnetwork/pyth-solana-receiver";
 
 export const MESH_PROGRAM_ID = new PublicKey(
-  "SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho"
+  "SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho",
 );
 export const STAKING_PROGRAM_ID = new PublicKey(
-  "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ"
+  "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ",
 );
 
 export class AnchorMultisigInstruction implements MultisigInstruction {
@@ -37,7 +37,7 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
     program: MultisigInstructionProgram,
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
   ) {
     this.program = program;
     this.name = name;
@@ -46,7 +46,7 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
   }
 
   static fromTransactionInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): MultisigInstruction {
     let idl: Idl;
     let program: MultisigInstructionProgram;
@@ -84,7 +84,7 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
             idlAuthority: instruction.keys[2],
           },
           remaining: instruction.keys.slice(3),
-        }
+        },
       );
     }
     const instructionCoder = new BorshCoder(idl).instruction;
@@ -96,14 +96,14 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
         program,
         deserializedData.name,
         deserializedData.data,
-        resolveAccountNames(idl, deserializedData.name, instruction)
+        resolveAccountNames(idl, deserializedData.name, instruction),
       );
     } else {
       return new AnchorMultisigInstruction(
         program,
         UNRECOGNIZED_INSTRUCTION,
         { data: instruction.data },
-        { named: {}, remaining: instruction.keys }
+        { named: {}, remaining: instruction.keys },
       );
     }
   }

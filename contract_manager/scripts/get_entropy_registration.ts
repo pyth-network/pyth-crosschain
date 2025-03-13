@@ -39,12 +39,12 @@ async function main() {
 
     const commitmentMetadata = providerInfo.commitmentMetadata.replace(
       "0x",
-      ""
+      "",
     );
 
     // const binaryData = hexToBytes(commitmentMetadata);
     const metadata = deserializeCommitmentMetadata(
-      Buffer.from(commitmentMetadata, "hex")
+      Buffer.from(commitmentMetadata, "hex"),
     );
     console.log("=".repeat(100));
     console.log(`Fetched info for ${contract.getId()}`);
@@ -56,7 +56,7 @@ async function main() {
     console.log(`chainLength       : ${metadata.chainLength}`);
     console.log(`seed              : [${metadata.seed}]`);
     console.log(
-      `original seq no   : ${providerInfo.originalCommitmentSequenceNumber}`
+      `original seq no   : ${providerInfo.originalCommitmentSequenceNumber}`,
     );
   }
 }

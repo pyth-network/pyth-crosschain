@@ -55,7 +55,7 @@ const getChainById = (chainId: number): Chain =>
 
 export const createClient = async (
   endpoint: string,
-  mnemonic: string
+  mnemonic: string,
 ): Promise<SuperWalletClient> => {
   const transport = getTransport(endpoint);
 

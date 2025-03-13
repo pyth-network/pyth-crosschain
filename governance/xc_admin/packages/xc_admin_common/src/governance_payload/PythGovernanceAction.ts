@@ -24,7 +24,7 @@ export const EvmExecutorAction = {
 
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
-  deserialized: Readonly<{ moduleId: number; actionId: number }>
+  deserialized: Readonly<{ moduleId: number; actionId: number }>,
 ): ActionName | undefined {
   if (deserialized.moduleId == MODULE_EXECUTOR && deserialized.actionId == 0) {
     return "ExecutePostedVaa";
@@ -79,7 +79,7 @@ export class PythGovernanceHeader {
       BufferLayout.u8("action"),
       BufferLayout.u16be("chain"),
     ],
-    "header"
+    "header",
   );
   /** Span of the serialized governance header */
   static span = 8;
@@ -106,7 +106,7 @@ export class PythGovernanceHeader {
     if (actionName) {
       return new PythGovernanceHeader(
         toChainName(deserialized.chain),
-        actionName
+        actionName,
       );
     } else {
       return undefined;
@@ -138,7 +138,7 @@ export class PythGovernanceHeader {
         action,
         chain: toChainId(this.targetChainId),
       },
-      buffer
+      buffer,
     );
     return buffer.subarray(0, span);
   }
@@ -175,7 +175,7 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
   /** Encode this action as a buffer with the given payload (encoded using the given layout). */
   protected encodeWithPayload<T>(
     payloadLayout: BufferLayout.Layout<T>,
-    payload: T
+    payload: T,
   ): Buffer {
     const headerBuffer = this.header().encode();
 
@@ -189,14 +189,14 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
   protected static decodeWithPayload<T>(
     buffer: Buffer,
     requiredAction: ActionName,
-    payloadLayout: BufferLayout.Layout<T>
+    payloadLayout: BufferLayout.Layout<T>,
   ): [PythGovernanceHeader, T] | undefined {
     const header = PythGovernanceHeader.decode(buffer);
     if (!header || header.action !== requiredAction) return undefined;
 
     const payload = safeLayoutDecode(
       payloadLayout,
-      buffer.subarray(PythGovernanceHeader.span, buffer.length)
+      buffer.subarray(PythGovernanceHeader.span, buffer.length),
     );
     if (!payload) return undefined;
 
@@ -206,7 +206,7 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
 
 export function safeLayoutDecode<T>(
   layout: BufferLayout.Layout<T>,
-  data: Buffer
+  data: Buffer,
 ): T | undefined {
   try {
     return layout.decode(data);

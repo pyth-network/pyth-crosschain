@@ -18,7 +18,7 @@ advanceBlock = () => {
         const newBlockHash = web3.eth.getBlock("latest").hash;
 
         return resolve(newBlockHash);
-      }
+      },
     );
   });
 };

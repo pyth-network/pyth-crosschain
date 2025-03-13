@@ -3,7 +3,7 @@ function camelToSnakeCase(str: string): string {
 }
 
 export function camelToSnakeCaseObject(
-  obj: Record<string, string | boolean>
+  obj: Record<string, string | boolean>,
 ): Record<string, string | boolean> {
   const result: Record<string, string | boolean> = {};
   Object.keys(obj).forEach((key) => {

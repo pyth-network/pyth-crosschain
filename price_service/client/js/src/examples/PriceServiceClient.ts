@@ -46,8 +46,8 @@ async function run() {
   await connection.subscribePriceFeedUpdates(priceIds, (priceFeed) => {
     console.log(
       `Current price for ${priceFeed.id}: ${JSON.stringify(
-        priceFeed.getPriceNoOlderThan(60)
-      )}.`
+        priceFeed.getPriceNoOlderThan(60),
+      )}.`,
     );
     console.log(priceFeed.getVAA());
   });

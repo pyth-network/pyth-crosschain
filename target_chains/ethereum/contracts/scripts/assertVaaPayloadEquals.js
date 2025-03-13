@@ -8,7 +8,7 @@ const { assert } = require("chai");
  */
 module.exports = async function assertVaaPayloadEquals(
   vaaHex,
-  expectedPayload
+  expectedPayload,
 ) {
   if (vaaHex.startsWith("0x")) {
     vaaHex = vaaHex.substring(2);
@@ -18,6 +18,6 @@ module.exports = async function assertVaaPayloadEquals(
 
   assert(
     expectedPayload.equals(vaaPayload),
-    "The VAA payload is not equal to the expected payload"
+    "The VAA payload is not equal to the expected payload",
   );
 };

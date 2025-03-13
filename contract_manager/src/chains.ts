@@ -55,7 +55,7 @@ export function parseRpcUrl(rpcUrl: string): string {
       const envValue = process.env[envName];
       if (!envValue) {
         throw new Error(
-          `Missing env variable ${envName} required for this RPC: ${rpcUrl}`
+          `Missing env variable ${envName} required for this RPC: ${rpcUrl}`,
         );
       }
       rpcUrl = rpcUrl.replace(envMatch, envValue);
@@ -86,7 +86,7 @@ export abstract class Chain extends Storable {
     protected id: string,
     protected mainnet: boolean,
     wormholeChainName: string,
-    protected nativeToken: TokenId | undefined
+    protected nativeToken: TokenId | undefined,
   ) {
     super();
     this.wormholeChainName = wormholeChainName as ChainName;
@@ -119,7 +119,7 @@ export abstract class Chain extends Storable {
     return new SetFee(
       this.wormholeChainName,
       BigInt(fee),
-      BigInt(exponent)
+      BigInt(exponent),
     ).encode();
   }
 
@@ -136,11 +136,11 @@ export abstract class Chain extends Storable {
    * @param newValidStalePriceThreshold the new stale price threshold in seconds
    */
   generateGovernanceSetStalePriceThreshold(
-    newValidStalePriceThreshold: bigint
+    newValidStalePriceThreshold: bigint,
   ): Buffer {
     return new SetValidPeriod(
       this.wormholeChainName,
-      newValidStalePriceThreshold
+      newValidStalePriceThreshold,
     ).encode();
   }
 
@@ -175,7 +175,7 @@ export class GlobalChain extends Chain {
 
   generateGovernanceUpgradePayload(): Buffer {
     throw new Error(
-      "Can not create a governance message for upgrading contracts on all chains!"
+      "Can not create a governance message for upgrading contracts on all chains!",
     );
   }
 
@@ -214,7 +214,7 @@ export class CosmWasmChain extends Chain {
     public endpoint: string,
     public gasPrice: string,
     public prefix: string,
-    public feeDenom: string
+    public feeDenom: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -229,7 +229,7 @@ export class CosmWasmChain extends Chain {
       parsed.endpoint,
       parsed.gasPrice,
       parsed.prefix,
-      parsed.feeDenom
+      parsed.feeDenom,
     );
   }
 
@@ -260,18 +260,18 @@ export class CosmWasmChain extends Chain {
   }
 
   async getExecutor(
-    privateKey: PrivateKey
+    privateKey: PrivateKey,
   ): Promise<CosmwasmExecutor | InjectiveExecutor> {
     if (this.getId().indexOf("injective") > -1) {
       return InjectiveExecutor.fromPrivateKey(
         this.isMainnet() ? Network.Mainnet : Network.Testnet,
-        privateKey
+        privateKey,
       );
     }
     return new CosmwasmExecutor(
       this.endpoint,
       await CosmwasmExecutor.getSignerFromPrivateKey(privateKey, this.prefix),
-      this.gasPrice + this.feeDenom
+      this.gasPrice + this.feeDenom,
     );
   }
 
@@ -298,7 +298,7 @@ export class SuiChain extends Chain {
     mainnet: boolean,
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
-    public rpcUrl: string
+    public rpcUrl: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -310,7 +310,7 @@ export class SuiChain extends Chain {
       parsed.mainnet,
       parsed.wormholeChainName,
       parsed.nativeToken,
-      parsed.rpcUrl
+      parsed.rpcUrl,
     );
   }
 
@@ -342,7 +342,7 @@ export class SuiChain extends Chain {
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const keypair = SuiEd25519Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(privateKey, "hex"))
+      new Uint8Array(Buffer.from(privateKey, "hex")),
     );
     return keypair.toSuiAddress();
   }
@@ -364,7 +364,7 @@ export class IotaChain extends Chain {
     mainnet: boolean,
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
-    public rpcUrl: string
+    public rpcUrl: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -376,7 +376,7 @@ export class IotaChain extends Chain {
       parsed.mainnet,
       parsed.wormholeChainName,
       parsed.nativeToken,
-      parsed.rpcUrl
+      parsed.rpcUrl,
     );
   }
 
@@ -408,7 +408,7 @@ export class IotaChain extends Chain {
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const keypair = IotaEd25519Keypair.fromSecretKey(
-      new Uint8Array(Buffer.from(privateKey, "hex"))
+      new Uint8Array(Buffer.from(privateKey, "hex")),
     );
     return keypair.toIotaAddress();
   }
@@ -430,7 +430,7 @@ export class EvmChain extends Chain {
     mainnet: boolean,
     nativeToken: TokenId | undefined,
     private rpcUrl: string,
-    private networkId: number
+    private networkId: number,
   ) {
     // On EVM networks we use the chain id as the wormhole chain name
     super(id, mainnet, id, nativeToken);
@@ -450,7 +450,7 @@ export class EvmChain extends Chain {
       parsed.mainnet,
       parsed.nativeToken,
       parsed.rpcUrl,
-      parsed.networkId
+      parsed.networkId,
     );
   }
 
@@ -488,14 +488,14 @@ export class EvmChain extends Chain {
   generateExecutorPayload(
     executor: string,
     callAddress: string,
-    calldata: string
+    calldata: string,
   ): Buffer {
     return new EvmExecute(
       this.wormholeChainName,
       executor.replace("0x", ""),
       callAddress.replace("0x", ""),
       0n,
-      Buffer.from(calldata.replace("0x", ""), "hex")
+      Buffer.from(calldata.replace("0x", ""), "hex"),
     ).encode();
   }
 
@@ -529,7 +529,7 @@ export class EvmChain extends Chain {
 
   async estiamteAndSendTransaction(
     transactionObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    txParams: { from?: string; value?: string }
+    txParams: { from?: string; value?: string },
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;
     const gasEstimate = await transactionObject.estimateGas(txParams);
@@ -556,7 +556,7 @@ export class EvmChain extends Chain {
     bytecode: string,
     deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
     gasMultiplier = 1,
-    gasPriceMultiplier = 1
+    gasPriceMultiplier = 1,
   ): Promise<string> {
     const web3 = this.getWeb3();
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
@@ -573,7 +573,7 @@ export class EvmChain extends Chain {
           BigInt(gas) * BigInt(gasPrice)
         } wei, but only have ${deployerBalance} wei. We need ${
           Number(gasDiff) / 10 ** 18
-        } ETH more.`
+        } ETH more.`,
       );
     }
 
@@ -601,7 +601,7 @@ export class EvmChain extends Chain {
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const web3 = this.getWeb3();
     const balance = await web3.eth.getBalance(
-      await this.getAccountAddress(privateKey)
+      await this.getAccountAddress(privateKey),
     );
     return Number(balance) / 10 ** 18;
   }
@@ -615,7 +615,7 @@ export class AptosChain extends Chain {
     mainnet: boolean,
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
-    public rpcUrl: string
+    public rpcUrl: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -653,13 +653,13 @@ export class AptosChain extends Chain {
       parsed.mainnet,
       parsed.wormholeChainName,
       parsed.nativeToken,
-      parsed.rpcUrl
+      parsed.rpcUrl,
     );
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const account = new AptosAccount(
-      new Uint8Array(Buffer.from(privateKey, "hex"))
+      new Uint8Array(Buffer.from(privateKey, "hex")),
     );
     return account.address().toString();
   }
@@ -667,7 +667,7 @@ export class AptosChain extends Chain {
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const client = this.getClient();
     const account = new AptosAccount(
-      new Uint8Array(Buffer.from(privateKey, "hex"))
+      new Uint8Array(Buffer.from(privateKey, "hex")),
     );
     const coinClient = new CoinClient(client);
     return Number(await coinClient.checkBalance(account)) / 10 ** 8;
@@ -675,18 +675,18 @@ export class AptosChain extends Chain {
 
   async sendTransaction(
     senderPrivateKey: PrivateKey,
-    txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
+    txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction,
   ): Promise<TxResult> {
     const client = this.getClient();
     const sender = new AptosAccount(
-      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
     );
     const result = await client.generateSignSubmitWaitForTransaction(
       sender,
       txPayload,
       {
         maxGasAmount: BigInt(30000),
-      }
+      },
     );
     return { id: result.hash, info: result };
   }
@@ -700,7 +700,7 @@ export class FuelChain extends Chain {
     mainnet: boolean,
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
-    public gqlUrl: string
+    public gqlUrl: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -744,7 +744,7 @@ export class FuelChain extends Chain {
       parsed.mainnet,
       parsed.wormholeChainName,
       parsed.nativeToken,
-      parsed.gqlUrl
+      parsed.gqlUrl,
     );
   }
 
@@ -767,7 +767,7 @@ export class StarknetChain extends Chain {
     id: string,
     mainnet: boolean,
     wormholeChainName: string,
-    public rpcUrl: string
+    public rpcUrl: string,
   ) {
     super(id, mainnet, wormholeChainName, undefined);
   }
@@ -792,7 +792,7 @@ export class StarknetChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
-      parsed.rpcUrl
+      parsed.rpcUrl,
     );
   }
 
@@ -856,7 +856,7 @@ export class TonChain extends Chain {
     mainnet: boolean,
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
-    private rpcUrl: string
+    private rpcUrl: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -876,7 +876,7 @@ export class TonChain extends Chain {
   async getContract(address: string): Promise<OpenedContract<PythContract>> {
     const client = await this.getClient();
     const contract = client.open(
-      PythContract.createFromAddress(Address.parse(address))
+      PythContract.createFromAddress(Address.parse(address)),
     );
     return contract;
   }
@@ -934,7 +934,7 @@ export class TonChain extends Chain {
       parsed.mainnet,
       parsed.wormholeChainName,
       parsed.nativeToken,
-      parsed.rpcUrl
+      parsed.rpcUrl,
     );
   }
 
@@ -960,7 +960,7 @@ export class NearChain extends Chain {
     wormholeChainName: string,
     nativeToken: TokenId | undefined,
     private rpcUrl: string,
-    private networkId: string
+    private networkId: string,
   ) {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
@@ -973,7 +973,7 @@ export class NearChain extends Chain {
       parsed.wormholeChainName,
       parsed.nativeToken,
       parsed.rpcUrl,
-      parsed.networkId
+      parsed.networkId,
     );
   }
 
@@ -1003,10 +1003,10 @@ export class NearChain extends Chain {
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     return Buffer.from(
       SuiEd25519Keypair.fromSecretKey(
-        new Uint8Array(Buffer.from(privateKey, "hex"))
+        new Uint8Array(Buffer.from(privateKey, "hex")),
       )
         .getPublicKey()
-        .toRawBytes()
+        .toRawBytes(),
     ).toString("hex");
   }
 
@@ -1019,12 +1019,12 @@ export class NearChain extends Chain {
 
   async getNearAccount(
     accountId: string,
-    senderPrivateKey?: PrivateKey
+    senderPrivateKey?: PrivateKey,
   ): Promise<nearAPI.Account> {
     const keyStore = new nearAPI.keyStores.InMemoryKeyStore();
     if (typeof senderPrivateKey !== "undefined") {
       const key = bs58.encode(
-        new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+        new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
       );
       const keyPair = nearAPI.KeyPair.fromString(key);
       const address = await this.getAccountAddress(senderPrivateKey);

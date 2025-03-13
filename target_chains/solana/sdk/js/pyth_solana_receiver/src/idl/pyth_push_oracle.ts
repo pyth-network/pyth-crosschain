@@ -39,7 +39,7 @@ export type PythPushOracle = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -57,9 +57,9 @@ export type PythPushOracle = {
           type: {
             array: ["u8", 32];
           };
-        }
+        },
       ];
-    }
+    },
   ];
   types: [
     {
@@ -76,7 +76,7 @@ export type PythPushOracle = {
           {
             name: "treasuryId";
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -96,10 +96,10 @@ export type PythPushOracle = {
                 array: ["u8", 20];
               };
             };
-          }
+          },
         ];
       };
-    }
+    },
   ];
   errors: [
     {
@@ -111,7 +111,7 @@ export type PythPushOracle = {
       code: 6001;
       name: "PriceFeedMessageMismatch";
       msg: "Trying to update price feed with the wrong feed id";
-    }
+    },
   ];
 };
 

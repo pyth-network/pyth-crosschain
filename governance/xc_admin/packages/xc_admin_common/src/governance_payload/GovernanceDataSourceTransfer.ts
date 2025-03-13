@@ -17,13 +17,16 @@ export class AuthorizeGovernanceDataSourceTransfer
   readonly actionName: ActionName;
   readonly claimVaa: Buffer;
 
-  constructor(readonly targetChainId: ChainName, vaa: Buffer) {
+  constructor(
+    readonly targetChainId: ChainName,
+    vaa: Buffer,
+  ) {
     this.actionName = "AuthorizeGovernanceDataSourceTransfer";
     this.claimVaa = new Buffer(vaa);
   }
 
   static decode(
-    data: Buffer
+    data: Buffer,
   ): AuthorizeGovernanceDataSourceTransfer | undefined {
     const header = PythGovernanceHeader.decode(data);
     if (!header || header.action !== "AuthorizeGovernanceDataSourceTransfer") {
@@ -34,14 +37,14 @@ export class AuthorizeGovernanceDataSourceTransfer
 
     return new AuthorizeGovernanceDataSourceTransfer(
       header.targetChainId,
-      payload
+      payload,
     );
   }
 
   encode(): Buffer {
     const headerBuffer = new PythGovernanceHeader(
       this.targetChainId,
-      this.actionName
+      this.actionName,
     ).encode();
     return Buffer.concat([headerBuffer, this.claimVaa]);
   }
@@ -57,7 +60,7 @@ export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImp
 
   constructor(
     targetChainId: ChainName,
-    readonly governanceDataSourceIndex: number
+    readonly governanceDataSourceIndex: number,
   ) {
     super(targetChainId, "RequestGovernanceDataSourceTransfer");
   }
@@ -66,13 +69,13 @@ export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImp
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "RequestGovernanceDataSourceTransfer",
-      RequestGovernanceDataSourceTransfer.layout
+      RequestGovernanceDataSourceTransfer.layout,
     );
     if (!decoded) return undefined;
 
     return new RequestGovernanceDataSourceTransfer(
       decoded[0].targetChainId,
-      decoded[1].governanceDataSourceIndex
+      decoded[1].governanceDataSourceIndex,
     );
   }
 

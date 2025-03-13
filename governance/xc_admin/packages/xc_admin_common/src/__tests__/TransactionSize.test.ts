@@ -36,8 +36,8 @@ it("Unit test for getSizeOfTransaction", async () => {
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
       new Wallet(new Keypair()),
-      AnchorProvider.defaultOptions()
-    )
+      AnchorProvider.defaultOptions(),
+    ),
   );
 
   const payer = new Keypair();
@@ -60,7 +60,7 @@ it("Unit test for getSizeOfTransaction", async () => {
         productAccount,
         tailMappingAccount: PublicKey.unique(),
       })
-      .instruction()
+      .instruction(),
   );
 
   ixsToSend.push(
@@ -71,7 +71,7 @@ it("Unit test for getSizeOfTransaction", async () => {
         productAccount,
         priceAccount: PublicKey.unique(),
       })
-      .instruction()
+      .instruction(),
   );
 
   const transaction = new Transaction();
@@ -82,7 +82,7 @@ it("Unit test for getSizeOfTransaction", async () => {
   transaction.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
   transaction.feePayer = payer.publicKey;
   expect(transaction.serialize({ requireAllSignatures: false }).length).toBe(
-    getSizeOfTransaction(ixsToSend, false)
+    getSizeOfTransaction(ixsToSend, false),
   );
 });
 
@@ -95,8 +95,8 @@ it("Unit test for getSizeOfTransaction", async () => {
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
       new Wallet(new Keypair()),
-      AnchorProvider.defaultOptions()
-    )
+      AnchorProvider.defaultOptions(),
+    ),
   );
   const ixsToSend: TransactionInstruction[] = [];
   const payer = new Keypair();
@@ -109,7 +109,7 @@ it("Unit test for getSizeOfTransaction", async () => {
           fundingAccount: payer.publicKey,
           priceAccount: PublicKey.unique(),
         })
-        .instruction()
+        .instruction(),
     );
   }
 
@@ -118,31 +118,31 @@ it("Unit test for getSizeOfTransaction", async () => {
       computeUnitPriceMicroLamports: 50000,
     });
   expect(
-    txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b)
+    txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b),
   ).toBe(ixsToSend.length + txToSend.length);
   expect(
     txToSend.every(
-      (tx) => getSizeOfTransaction(tx.instructions, false) <= PACKET_DATA_SIZE
-    )
+      (tx) => getSizeOfTransaction(tx.instructions, false) <= PACKET_DATA_SIZE,
+    ),
   ).toBeTruthy();
 
   for (let tx of txToSend) {
     tx.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
     tx.feePayer = payer.publicKey;
     expect(tx.serialize({ requireAllSignatures: false }).length).toBe(
-      getSizeOfTransaction(tx.instructions, false)
+      getSizeOfTransaction(tx.instructions, false),
     );
   }
 
   const batches: TransactionInstruction[][] =
     batchIntoExecutorPayload(ixsToSend);
   expect(batches.map((batch) => batch.length).reduce((a, b) => a + b)).toBe(
-    ixsToSend.length
+    ixsToSend.length,
   );
   expect(
     batches.every(
       (batch) =>
-        getSizeOfExecutorInstructions(batch) <= MAX_EXECUTOR_PAYLOAD_SIZE
-    )
+        getSizeOfExecutorInstructions(batch) <= MAX_EXECUTOR_PAYLOAD_SIZE,
+    ),
   ).toBeTruthy();
 });

@@ -19,7 +19,7 @@ const { getDefaultConfig } = require("./contractManagerConfig");
 
 const parser = yargs(hideBin(process.argv))
   .usage(
-    "Usage: $0 --contracts <path-to-contract-json-folder> --network <contract_id> --private-key <private-key> --ops-wallet <ops-wallet>"
+    "Usage: $0 --contracts <path-to-contract-json-folder> --network <contract_id> --private-key <private-key> --ops-wallet <ops-wallet>",
   )
   .options({
     contract: {
@@ -60,8 +60,9 @@ async function main() {
   const privateKey = argv["private-key"];
   const network = argv["network"];
   const setupInfo = require(argv["contract"] + "/ReceiverSetup.json");
-  const implementationInfo = require(argv["contract"] +
-    "/ReceiverImplementation.json");
+  const implementationInfo = require(
+    argv["contract"] + "/ReceiverImplementation.json",
+  );
   const receiverInfo = require(argv["contract"] + "/WormholeReceiver.json");
 
   const payloads: Buffer[] = [];
@@ -82,14 +83,14 @@ async function main() {
           privateKey,
           setupInfo.abi,
           setupInfo.bytecode,
-          []
+          [],
         );
         console.log("setupAddress", setupAddress);
         const implementationAddress = await chain.deploy(
           privateKey,
           implementationInfo.abi,
           implementationInfo.bytecode,
-          []
+          [],
         );
         console.log("implementationAddress", implementationAddress);
         const web3 = new Web3();
@@ -100,7 +101,7 @@ async function main() {
             wormholeInitialSigners,
             CHAINS[chain.wormholeChainName],
             wormholeGovernanceChainId,
-            wormholeGovernanceContract
+            wormholeGovernanceContract,
           )
           .encodeABI();
 
@@ -109,7 +110,7 @@ async function main() {
           privateKey,
           receiverInfo.abi,
           receiverInfo.bytecode,
-          [setupAddress, initData]
+          [setupAddress, initData],
         );
         const contract = new EvmWormholeContract(chain, receiverAddress);
         console.log("receiverAddress", receiverAddress);
@@ -118,7 +119,7 @@ async function main() {
         return contract.address;
       });
       const payload = chain.generateGovernanceSetWormholeAddressPayload(
-        address.replace("0x", "")
+        address.replace("0x", ""),
       );
       payloads.push(payload);
     }

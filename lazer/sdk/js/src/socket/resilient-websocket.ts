@@ -34,7 +34,7 @@ export class ResilientWebSocket {
   constructor(
     endpoint: string,
     wsOptions?: ClientOptions | ClientRequestArgs,
-    logger?: Logger
+    logger?: Logger,
   ) {
     this.endpoint = endpoint;
     this.wsOptions = wsOptions;
@@ -60,7 +60,7 @@ export class ResilientWebSocket {
 
     if (this.wsClient === undefined) {
       this.logger?.error(
-        "Couldn't connect to the websocket server. Error callback is called."
+        "Couldn't connect to the websocket server. Error callback is called.",
       );
     } else {
       this.wsClient.send(data);
@@ -88,7 +88,7 @@ export class ResilientWebSocket {
     const timeoutId = setTimeout(() => {
       if (this.rejectConnection) {
         this.rejectConnection(
-          new Error(`Connection timeout after ${String(CONNECTION_TIMEOUT)}ms`)
+          new Error(`Connection timeout after ${String(CONNECTION_TIMEOUT)}ms`),
         );
       }
     }, CONNECTION_TIMEOUT);
@@ -182,7 +182,7 @@ export class ResilientWebSocket {
       this.logger?.error(
         "Connection closed unexpectedly or because of timeout. Reconnecting after " +
           String(waitTime) +
-          "ms."
+          "ms.",
       );
 
       await sleep(waitTime);
@@ -200,7 +200,7 @@ export class ResilientWebSocket {
 
     if (this.wsClient === undefined) {
       this.logger?.error(
-        "Couldn't reconnect to websocket. Error callback is called."
+        "Couldn't reconnect to websocket. Error callback is called.",
       );
       return;
     }

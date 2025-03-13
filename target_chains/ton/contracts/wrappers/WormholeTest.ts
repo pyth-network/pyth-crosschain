@@ -17,7 +17,7 @@ export class WormholeTest extends BaseWrapper {
   static createFromConfig(
     config: WormholeTestConfig,
     code: Cell,
-    workchain = 0
+    workchain = 0,
   ) {
     const data = WormholeTest.getWormholeInitData(config);
     const init = { code, data };
@@ -41,7 +41,7 @@ export class WormholeTest extends BaseWrapper {
   async getParseEncodedUpgrade(
     provider: ContractProvider,
     currentGuardianSetIndex: number,
-    encodedUpgrade: Buffer
+    encodedUpgrade: Buffer,
   ) {
     const result = await provider.get("test_parse_encoded_upgrade", [
       { type: "int", value: BigInt(currentGuardianSetIndex) },
@@ -106,7 +106,7 @@ export class WormholeTest extends BaseWrapper {
   async getCurrentGuardianSetIndex(provider: ContractProvider) {
     return await super.getCurrentGuardianSetIndex(
       provider,
-      "test_get_current_guardian_set_index"
+      "test_get_current_guardian_set_index",
     );
   }
 
@@ -143,7 +143,7 @@ export class WormholeTest extends BaseWrapper {
 
   async getGovernanceActionIsConsumed(
     provider: ContractProvider,
-    hash: bigint
+    hash: bigint,
   ) {
     const result = await provider.get("test_governance_action_is_consumed", [
       { type: "int", value: hash },
@@ -154,7 +154,7 @@ export class WormholeTest extends BaseWrapper {
   async sendUpdateGuardianSet(
     provider: ContractProvider,
     via: Sender,
-    vm: Buffer
+    vm: Buffer,
   ) {
     await super.sendUpdateGuardianSet(provider, via, vm);
   }

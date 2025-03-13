@@ -42,7 +42,7 @@ export class InjectiveExecutor implements ChainExecutor {
 
   constructor(
     private readonly network: Network,
-    private readonly wallet: PrivateKey
+    private readonly wallet: PrivateKey,
   ) {}
 
   static fromMnemonic(network: Network, mnemonic: string) {
@@ -127,7 +127,7 @@ export class InjectiveExecutor implements ChainExecutor {
       throw new Error(`Transaction failed: ${txResponse.rawLog}`);
     } else {
       console.log(
-        `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`
+        `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`,
       );
     }
 
@@ -144,7 +144,7 @@ export class InjectiveExecutor implements ChainExecutor {
     const txResponse = await this.signAndBroadcastMsg(store_code);
 
     const codeId: number = parseInt(
-      extractFromRawLog(txResponse.rawLog, "code_id")
+      extractFromRawLog(txResponse.rawLog, "code_id"),
     );
 
     return {
@@ -154,7 +154,7 @@ export class InjectiveExecutor implements ChainExecutor {
   }
 
   async instantiateContract(
-    req: InstantiateContractRequest
+    req: InstantiateContractRequest,
   ): Promise<InstantiateContractResponse> {
     const { codeId, instMsg, label } = req;
     const instantiateMsg = MsgInstantiateContract.fromJSON({
@@ -170,7 +170,7 @@ export class InjectiveExecutor implements ChainExecutor {
 
     const contractAddr: string = extractFromRawLog(
       txResponse.rawLog,
-      "contract_address"
+      "contract_address",
     );
 
     return {
@@ -180,7 +180,7 @@ export class InjectiveExecutor implements ChainExecutor {
   }
 
   async executeContract(
-    req: ExecuteContractRequest
+    req: ExecuteContractRequest,
   ): Promise<ExecuteContractResponse> {
     const { contractAddr, msg, funds } = req;
 
@@ -199,7 +199,7 @@ export class InjectiveExecutor implements ChainExecutor {
   }
 
   async migrateContract(
-    req: MigrateContractRequest
+    req: MigrateContractRequest,
   ): Promise<MigrateContractResponse> {
     const { newCodeId, contractAddr, migrateMsg } = req;
     const migrate_msg = MsgMigrateContract.fromJSON({
@@ -214,7 +214,7 @@ export class InjectiveExecutor implements ChainExecutor {
     const txResponse = await this.signAndBroadcastMsg(migrate_msg);
 
     let resultCodeId: number = parseInt(
-      extractFromRawLog(txResponse.rawLog, "code_id")
+      extractFromRawLog(txResponse.rawLog, "code_id"),
     );
     try {
       assert.strictEqual(newCodeId, resultCodeId);
@@ -230,7 +230,7 @@ export class InjectiveExecutor implements ChainExecutor {
   }
 
   async updateContractAdmin(
-    req: UpdateContractAdminRequest
+    req: UpdateContractAdminRequest,
   ): Promise<UpdateContractAdminResponse> {
     const { newAdminAddr, contractAddr } = req;
     const currAdminAddr = this.getAddress();
@@ -256,7 +256,7 @@ function extractFromRawLog(rawLog: string, key: string): string {
     return rx.exec(rawLog)![1];
   } catch (e) {
     console.error(
-      "Encountered an error in parsing instantiation result. Printing raw log"
+      "Encountered an error in parsing instantiation result. Printing raw log",
     );
     console.error(rawLog);
     throw e;

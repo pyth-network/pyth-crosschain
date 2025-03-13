@@ -39,7 +39,7 @@ describe("Main", () => {
 
     const deployResult = await main.sendDeploy(
       deployer.getSender(),
-      toNano("0.05")
+      toNano("0.05"),
     );
 
     expect(deployResult.transactions).toHaveTransaction({

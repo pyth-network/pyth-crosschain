@@ -7,7 +7,7 @@ const parser = yargs(hideBin(process.argv))
   .usage(
     "Tries to reveal an entropy request with callback using the provided private key.\n" +
       "This can be used to manually debug why a callback was not triggered.\n" +
-      "Usage: $0 --chain <chain-id> --private-key <private-key> --sequence-number <sequence-number>"
+      "Usage: $0 --chain <chain-id> --private-key <private-key> --sequence-number <sequence-number>",
   )
   .options({
     chain: {
@@ -41,7 +41,7 @@ async function main() {
   const userRandomNumber = await contract.getUserRandomNumber(
     provider,
     sequenceNumber,
-    parseInt(request.blockNumber)
+    parseInt(request.blockNumber),
   );
   console.log("User random number: ", userRandomNumber);
   const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
@@ -57,7 +57,7 @@ async function main() {
     providerRevelation,
     provider,
     sequenceNumber,
-    privateKey
+    privateKey,
   );
 }
 

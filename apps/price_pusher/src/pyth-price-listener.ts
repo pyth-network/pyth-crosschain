@@ -20,12 +20,12 @@ export class PythPriceListener implements IPriceListener {
   constructor(
     hermesClient: HermesClient,
     priceItems: PriceItem[],
-    logger: Logger
+    logger: Logger,
   ) {
     this.hermesClient = hermesClient;
     this.priceIds = priceItems.map((priceItem) => priceItem.id);
     this.priceIdToAlias = new Map(
-      priceItems.map((priceItem) => [priceItem.id, priceItem.alias])
+      priceItems.map((priceItem) => [priceItem.id, priceItem.alias]),
     );
     this.latestPriceInfo = new Map();
     this.logger = logger;
@@ -39,15 +39,15 @@ export class PythPriceListener implements IPriceListener {
       {
         parsed: true,
         ignoreInvalidPriceIds: true,
-      }
+      },
     );
     eventSource.onmessage = (event: MessageEvent<string>) => {
       const priceUpdates = JSON.parse(event.data) as PriceUpdate;
       priceUpdates.parsed?.forEach((priceUpdate) => {
         this.logger.debug(
           `Received new price feed update from Pyth price service: ${this.priceIdToAlias.get(
-            priceUpdate.id
-          )} ${priceUpdate.id}`
+            priceUpdate.id,
+          )} ${priceUpdate.id}`,
         );
 
         // Consider price to be currently available if it is not older than 60s

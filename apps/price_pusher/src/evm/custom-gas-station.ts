@@ -36,7 +36,7 @@ export class CustomGasStation {
     } catch (err) {
       this.logger.error(
         err,
-        "Failed to fetch gas price from Matic mainnet. Returning undefined"
+        "Failed to fetch gas price from Matic mainnet. Returning undefined",
       );
       return undefined;
     }
@@ -46,7 +46,7 @@ export class CustomGasStation {
 export function getCustomGasStation(
   logger: Logger,
   customGasStation?: number,
-  txSpeed?: string
+  txSpeed?: string,
 ) {
   if (customGasStation && txSpeed) {
     return new CustomGasStation(logger, customGasStation, txSpeed);

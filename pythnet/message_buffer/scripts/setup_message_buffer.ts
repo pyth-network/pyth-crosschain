@@ -36,11 +36,11 @@ function getPythClusterEndpoint(cluster: PythClusterOrIntegration): string {
 }
 
 function getPythPidForCluster(
-  cluster: PythClusterOrIntegration
+  cluster: PythClusterOrIntegration,
 ): anchor.web3.PublicKey {
   if (cluster === "integration") {
     return new anchor.web3.PublicKey(
-      "7th6GdMuo4u1zNLzFAyMY6psunHNsGjPjo8hXvcTgKei"
+      "7th6GdMuo4u1zNLzFAyMY6psunHNsGjPjo8hXvcTgKei",
     );
   } else {
     return getPythProgramKeyForCluster(cluster);
@@ -50,43 +50,43 @@ function getPythPidForCluster(
 const getKeypairFromFile = (keypairPath: string): anchor.web3.Keypair => {
   const keypairBuffer = fs.readFileSync(keypairPath);
   return anchor.web3.Keypair.fromSecretKey(
-    Uint8Array.from(JSON.parse(keypairBuffer.toString()))
+    Uint8Array.from(JSON.parse(keypairBuffer.toString())),
   );
 };
 
 function getPythOracleCpiAuth(
   messageBufferProgramId: anchor.web3.PublicKey,
-  pythOracleProgramId: anchor.web3.PublicKey
+  pythOracleProgramId: anchor.web3.PublicKey,
 ): anchor.web3.PublicKey {
   return anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("upd_price_write"), messageBufferProgramId.toBuffer()],
-    pythOracleProgramId
+    pythOracleProgramId,
   )[0];
 }
 
 function getMessageBufferPubkey(
   pythOracleCpiAuth: anchor.web3.PublicKey,
   pythPriceAccountPk: anchor.web3.PublicKey,
-  messageBufferProgramId: anchor.web3.PublicKey
+  messageBufferProgramId: anchor.web3.PublicKey,
 ): anchor.web3.PublicKey {
   return anchor.web3.PublicKey.findProgramAddressSync(
     [pythOracleCpiAuth.toBuffer(), MESSAGE, pythPriceAccountPk.toBuffer()],
-    messageBufferProgramId
+    messageBufferProgramId,
   )[0];
 }
 
 export async function getPriceAccountPubkeys(
   connection: anchor.web3.Connection,
-  pythPublicKey: anchor.web3.PublicKey
+  pythPublicKey: anchor.web3.PublicKey,
 ): Promise<PublicKey[]> {
   const accountList = await connection.getProgramAccounts(
     pythPublicKey,
-    connection.commitment
+    connection.commitment,
   );
   console.info(
     `fetched ${
       accountList.length
-    } programAccounts for pythProgram: ${pythPublicKey.toString()}`
+    } programAccounts for pythProgram: ${pythPublicKey.toString()}`,
   );
   const priceAccountIds: PublicKey[] = [];
   accountList.forEach((singleAccount) => {
@@ -130,11 +130,11 @@ async function main() {
   const cluster = process.env.CLUSTER as PythClusterOrIntegration;
 
   const messageBufferPid = new anchor.web3.PublicKey(
-    process.env.MESSAGE_BUFFER_PROGRAM_ID
+    process.env.MESSAGE_BUFFER_PROGRAM_ID,
   );
   const pythOraclePid = getPythPidForCluster(cluster);
   const payer = getKeypairFromFile(
-    path.resolve(process.env.PAYER_KEYPAIR_PATH)
+    path.resolve(process.env.PAYER_KEYPAIR_PATH),
   );
   const endpoint = getPythClusterEndpoint(cluster);
   const initialSize = parseInt(process.env.INITIAL_SIZE || "", 10);
@@ -160,7 +160,7 @@ async function main() {
       commitment,
       preflightCommitment: commitment,
       skipPreflight: true,
-    }
+    },
   );
 
   anchor.setProvider(provider);
@@ -168,18 +168,18 @@ async function main() {
   const messageBufferProgram = new Program(
     messageBuffer as Idl,
     messageBufferPid,
-    provider
+    provider,
   ) as unknown as Program<MessageBuffer>;
 
   const [whitelistPubkey, whitelistBump] =
     anchor.web3.PublicKey.findProgramAddressSync(
       [MESSAGE, Buffer.from("whitelist")],
-      messageBufferProgram.programId
+      messageBufferProgram.programId,
     );
 
   const pythOracleCpiAuth = getPythOracleCpiAuth(
     messageBufferProgram.programId,
-    pythOraclePid
+    pythOraclePid,
   );
 
   if (canAirdrop) {
@@ -187,7 +187,7 @@ async function main() {
 
     let airdropSig = await provider.connection.requestAirdrop(
       payer.publicKey,
-      1 * anchor.web3.LAMPORTS_PER_SOL
+      1 * anchor.web3.LAMPORTS_PER_SOL,
     );
     await provider.connection.confirmTransaction({
       signature: airdropSig,
@@ -204,13 +204,12 @@ async function main() {
 
   console.log("Initializing message buffer whitelist admin...");
 
-  let whitelist = await messageBufferProgram.account.whitelist.fetchNullable(
-    whitelistPubkey
-  );
+  let whitelist =
+    await messageBufferProgram.account.whitelist.fetchNullable(whitelistPubkey);
 
   if (whitelist === null) {
     console.group(
-      "No whitelist detected. Initializing message buffer whitelist & admin"
+      "No whitelist detected. Initializing message buffer whitelist & admin",
     );
     const initializeTxnSig = await messageBufferProgram.methods
       .initialize()
@@ -224,9 +223,8 @@ async function main() {
     console.log(`initializeTxnSig: ${initializeTxnSig}`);
 
     console.log("fetching & checking whitelist");
-    whitelist = await messageBufferProgram.account.whitelist.fetch(
-      whitelistPubkey
-    );
+    whitelist =
+      await messageBufferProgram.account.whitelist.fetch(whitelistPubkey);
 
     assert.strictEqual(whitelist.bump, whitelistBump);
     assert.isTrue(whitelist.admin.equals(whitelistAdmin.publicKey));
@@ -247,16 +245,15 @@ async function main() {
       .rpc();
     console.log(`setAllowedProgramSig: ${setAllowedProgramSig}`);
     console.log("fetching & checking whitelist after add");
-    whitelist = await messageBufferProgram.account.whitelist.fetch(
-      whitelistPubkey
-    );
+    whitelist =
+      await messageBufferProgram.account.whitelist.fetch(whitelistPubkey);
     console.info(`whitelist after add: ${JSON.stringify(whitelist)}`);
     const whitelistAllowedPrograms = whitelist.allowedPrograms.map((pk) =>
-      pk.toString()
+      pk.toString(),
     );
     assert.deepEqual(
       whitelistAllowedPrograms,
-      allowedProgramAuthorities.map((p) => p.toString())
+      allowedProgramAuthorities.map((p) => p.toString()),
     );
     console.groupEnd();
   } else {
@@ -274,14 +271,14 @@ async function main() {
       messageBuffer: getMessageBufferPubkey(
         pythOracleCpiAuth,
         priceId,
-        messageBufferPid
+        messageBufferPid,
       ),
       priceAccount: priceId,
     };
   });
 
   let accounts = await messageBufferProgram.account.messageBuffer.fetchMultiple(
-    messageBufferKeys.map((k) => k.messageBuffer)
+    messageBufferKeys.map((k) => k.messageBuffer),
   );
 
   const msgBufferKeysAndData = messageBufferKeys.map((k, i) => {
@@ -346,7 +343,7 @@ async function main() {
         } catch (e) {
           console.error(
             "Error creating message buffer for price account: ",
-            priceId.toString()
+            priceId.toString(),
           );
           console.error(e);
           errorAccounts.push({
@@ -354,12 +351,12 @@ async function main() {
             messageBuffer: messageBufferPda.toString(),
           });
         }
-      }
-    )
+      },
+    ),
   );
   if (errorAccounts.length !== 0) {
     console.error(
-      `Ran into errors when initializing ${errorAccounts.length} accounts`
+      `Ran into errors when initializing ${errorAccounts.length} accounts`,
     );
     console.info(`Accounts with errors: ${JSON.stringify(errorAccounts)}`);
   }
@@ -369,15 +366,16 @@ async function main() {
   // Update whitelist admin at the end otherwise all the message buffer PDAs
   // will have to be initialized by the whitelist admin (which could be the multisig)
   if (process.env.WHITELIST_ADMIN) {
-    whitelist = await messageBufferProgram.account.whitelist.fetchNullable(
-      whitelistPubkey
-    );
+    whitelist =
+      await messageBufferProgram.account.whitelist.fetchNullable(
+        whitelistPubkey,
+      );
     let newWhitelistAdmin = new anchor.web3.PublicKey(
-      process.env.WHITELIST_ADMIN
+      process.env.WHITELIST_ADMIN,
     );
     if (!whitelist.admin.equals(newWhitelistAdmin)) {
       console.info(
-        `updating whitelist admin from ${whitelist.admin.toString()} to ${newWhitelistAdmin.toString()}`
+        `updating whitelist admin from ${whitelist.admin.toString()} to ${newWhitelistAdmin.toString()}`,
       );
       try {
         await messageBufferProgram.methods
@@ -392,7 +390,7 @@ async function main() {
       }
     } else {
       console.info(
-        `whitelist admin is already ${newWhitelistAdmin.toString()}`
+        `whitelist admin is already ${newWhitelistAdmin.toString()}`,
       );
     }
   }

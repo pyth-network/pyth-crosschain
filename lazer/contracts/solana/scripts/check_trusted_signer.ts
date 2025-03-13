@@ -25,13 +25,13 @@ async function main() {
   const provider = new anchor.AnchorProvider(
     connection,
     new NodeWallet(anchor.web3.Keypair.generate()), // Dummy wallet since we're only reading
-    { commitment: "confirmed" }
+    { commitment: "confirmed" },
   );
   anchor.setProvider(provider);
 
   const program: anchor.Program<PythLazerSolanaContract> = new anchor.Program(
     pythLazerSolanaContractIdl as PythLazerSolanaContract,
-    provider
+    provider,
   );
 
   // Fetch and decode storage account
@@ -51,13 +51,13 @@ async function main() {
     console.log(`\nPublic Key: ${signer.pubkey.toBase58()}`);
     console.log(
       `Expires At: ${new Date(
-        signer.expiresAt.toNumber() * 1000
-      ).toISOString()}`
+        signer.expiresAt.toNumber() * 1000,
+      ).toISOString()}`,
     );
     console.log(
       `Active: ${
         signer.expiresAt.toNumber() > Date.now() / 1000 ? "Yes" : "No"
-      }`
+      }`,
     );
   }
 }

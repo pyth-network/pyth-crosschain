@@ -60,12 +60,12 @@ function build() {
       argv.osmosis === true
         ? "osmosis"
         : argv.injective === true
-        ? "injective"
-        : undefined;
+          ? "injective"
+          : undefined;
 
     if (feature === undefined) {
       console.log(
-        "Please provide one of the options: ['cosmwasm', 'injective', 'osmosis']"
+        "Please provide one of the options: ['cosmwasm', 'injective', 'osmosis']",
       );
       return;
     }

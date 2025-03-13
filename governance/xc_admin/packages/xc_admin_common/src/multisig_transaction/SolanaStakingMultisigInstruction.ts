@@ -22,7 +22,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
   constructor(
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
   ) {
     this.name = name;
     this.args = args;
@@ -30,7 +30,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
   }
 
   static fromTransactionInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): SolanaStakingMultisigInstruction {
     try {
       const type = StakeInstruction.decodeInstructionType(instruction);
@@ -55,7 +55,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
                 },
               },
               remaining: [],
-            }
+            },
           );
         case "Delegate":
           const decodedDelegate = StakeInstruction.decodeDelegate(instruction);
@@ -81,7 +81,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
                 },
               },
               remaining: [],
-            }
+            },
           );
         case "Initialize":
           const decodedInitialize =
@@ -101,7 +101,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
                 },
               },
               remaining: [],
-            }
+            },
           );
         case "Authorize":
         case "AuthorizeWithSeed":
@@ -116,7 +116,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
       return new SolanaStakingMultisigInstruction(
         UNRECOGNIZED_INSTRUCTION,
         { data: instruction.data },
-        { named: {}, remaining: instruction.keys }
+        { named: {}, remaining: instruction.keys },
       );
     }
   }
@@ -124,7 +124,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
 
 export async function fetchStakeAccounts(
   connection: Connection,
-  voterAccount: PublicKey
+  voterAccount: PublicKey,
 ) {
   const stakeAccounts = await connection.getProgramAccounts(
     StakeProgram.programId,
@@ -144,7 +144,7 @@ export async function fetchStakeAccounts(
           },
         },
       ],
-    }
+    },
   );
 
   return stakeAccounts.map((account) => account.pubkey);

@@ -7,7 +7,10 @@ export class EvmSetWormholeAddress extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ address: string }>> =
     BufferLayout.struct([BufferLayoutExt.hexBytes(20, "address")]);
 
-  constructor(targetChainId: ChainName, readonly address: string) {
+  constructor(
+    targetChainId: ChainName,
+    readonly address: string,
+  ) {
     super(targetChainId, "SetWormholeAddress");
   }
 
@@ -15,13 +18,13 @@ export class EvmSetWormholeAddress extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "SetWormholeAddress",
-      this.layout
+      this.layout,
     );
     if (!decoded) return undefined;
 
     return new EvmSetWormholeAddress(
       decoded[0].targetChainId,
-      decoded[1].address
+      decoded[1].address,
     );
   }
 
@@ -36,7 +39,10 @@ export class StarknetSetWormholeAddress extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ address: string }>> =
     BufferLayout.struct([BufferLayoutExt.hexBytes(32, "address")]);
 
-  constructor(targetChainId: ChainName, readonly address: string) {
+  constructor(
+    targetChainId: ChainName,
+    readonly address: string,
+  ) {
     super(targetChainId, "SetWormholeAddress");
   }
 
@@ -44,13 +50,13 @@ export class StarknetSetWormholeAddress extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "SetWormholeAddress",
-      this.layout
+      this.layout,
     );
     if (!decoded) return undefined;
 
     return new StarknetSetWormholeAddress(
       decoded[0].targetChainId,
-      decoded[1].address
+      decoded[1].address,
     );
   }
 

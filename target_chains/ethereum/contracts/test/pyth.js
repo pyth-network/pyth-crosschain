@@ -59,7 +59,7 @@ contract("Pyth", function () {
   it("should be initialized with the correct signers and values", async function () {
     await this.pythProxy.isValidDataSource(
       testPyth2WormholeChainId,
-      testPyth2WormholeEmitter
+      testPyth2WormholeEmitter,
     );
   });
 
@@ -73,7 +73,7 @@ contract("Pyth", function () {
     // upgrade proxy should fail
     await expectRevert(
       upgradeProxy(this.pythProxy.address, MockPythUpgrade),
-      "Ownable: caller is not the owner."
+      "Ownable: caller is not the owner.",
     );
   });
 
@@ -82,7 +82,7 @@ contract("Pyth", function () {
     batches,
     valueInWei,
     chainId,
-    emitter
+    emitter,
   ) {
     let updateData = [];
     for (let data of batches) {
@@ -95,7 +95,7 @@ contract("Pyth", function () {
         data,
         [testSigner1PK],
         0,
-        0
+        0,
       );
       updateData.push("0x" + vm);
     }
@@ -112,15 +112,15 @@ contract("Pyth", function () {
   async function createAndThenSubmitGovernanceInstructionVaa(
     contract,
     governanceInstruction,
-    sequence
+    sequence,
   ) {
     await contract.executeGovernanceInstruction(
       await createVAAFromUint8Array(
         governanceInstruction.encode(),
         testGovernanceChainId,
         testGovernanceEmitter,
-        sequence
-      )
+        sequence,
+      ),
     );
   }
 
@@ -139,16 +139,16 @@ contract("Pyth", function () {
     await createAndThenSubmitGovernanceInstructionVaa(
       contract,
       new governance.SetFee("ethereum", BigInt(newFee), BigInt(0)),
-      governanceSequence ?? 1
+      governanceSequence ?? 1,
     );
   }
 
   it("should fail transaction if a price is not found", async function () {
     await expectRevertCustomError(
       this.pythProxy.queryPriceFeed(
-        "0xdeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeed"
+        "0xdeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeed",
       ),
-      "PriceFeedNotFound"
+      "PriceFeedNotFound",
     );
   });
 
@@ -162,12 +162,12 @@ contract("Pyth", function () {
   async function setValidPeriodTo(
     contract,
     newValidPeriod,
-    governanceSequence
+    governanceSequence,
   ) {
     await createAndThenSubmitGovernanceInstructionVaa(
       contract,
       new governance.SetValidPeriod("ethereum", BigInt(newValidPeriod)),
-      governanceSequence ?? 1
+      governanceSequence ?? 1,
     );
   }
 
@@ -185,12 +185,12 @@ contract("Pyth", function () {
       wrongMagic,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaWrongMagic),
-      "InvalidGovernanceMessage"
+      "InvalidGovernanceMessage",
     );
 
     const wrongModule = Buffer.from(data);
@@ -200,12 +200,12 @@ contract("Pyth", function () {
       wrongModule,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaWrongModule),
-      "InvalidGovernanceTarget"
+      "InvalidGovernanceTarget",
     );
 
     const outOfBoundModule = Buffer.from(data);
@@ -215,12 +215,12 @@ contract("Pyth", function () {
       outOfBoundModule,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await expectRevert(
       this.pythProxy.executeGovernanceInstruction(vaaOutOfBoundModule),
-      "Panic: Enum value out of bounds."
+      "Panic: Enum value out of bounds.",
     );
   });
 
@@ -231,69 +231,69 @@ contract("Pyth", function () {
       data,
       testGovernanceChainId,
       "0x0000000000000000000000000000000000000000000000000000000000001111",
-      1
+      1,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaWrongEmitter),
-      "InvalidGovernanceDataSource"
+      "InvalidGovernanceDataSource",
     );
 
     const vaaWrongChain = await createVAAFromUint8Array(
       data,
       governance.CHAINS.karura,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaWrongChain),
-      "InvalidGovernanceDataSource"
+      "InvalidGovernanceDataSource",
     );
   });
 
   it("Make sure governance with only target chain id and 0 work", async function () {
     const wrongChainData = new governance.SetValidPeriod(
       "solana",
-      BigInt(10)
+      BigInt(10),
     ).encode();
 
     const wrongChainVaa = await createVAAFromUint8Array(
       wrongChainData,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(wrongChainVaa),
-      "InvalidGovernanceTarget"
+      "InvalidGovernanceTarget",
     );
 
     const dataForAllChains = new governance.SetValidPeriod(
       "unset",
-      BigInt(10)
+      BigInt(10),
     ).encode();
 
     const vaaForAllChains = await createVAAFromUint8Array(
       dataForAllChains,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await this.pythProxy.executeGovernanceInstruction(vaaForAllChains);
 
     const dataForEth = new governance.SetValidPeriod(
       "ethereum",
-      BigInt(10)
+      BigInt(10),
     ).encode();
 
     const vaaForEth = await createVAAFromUint8Array(
       dataForEth,
       testGovernanceChainId,
       testGovernanceEmitter,
-      2
+      2,
     );
 
     await this.pythProxy.executeGovernanceInstruction(vaaForEth);
@@ -306,32 +306,32 @@ contract("Pyth", function () {
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await this.pythProxy.executeGovernanceInstruction(vaaSeq1),
       // Replaying shouldn't work
       await expectRevertCustomError(
         this.pythProxy.executeGovernanceInstruction(vaaSeq1),
-        "OldGovernanceMessage"
+        "OldGovernanceMessage",
       );
 
     const vaaSeq2 = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      2
+      2,
     );
 
     await this.pythProxy.executeGovernanceInstruction(vaaSeq2),
       // Replaying shouldn't work
       await expectRevertCustomError(
         this.pythProxy.executeGovernanceInstruction(vaaSeq1),
-        "OldGovernanceMessage"
+        "OldGovernanceMessage",
       );
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaSeq2),
-      "OldGovernanceMessage"
+      "OldGovernanceMessage",
     );
   });
 
@@ -341,19 +341,19 @@ contract("Pyth", function () {
 
     const data = new governance.EvmUpgradeContract(
       "unset", // 0
-      newImplementation.address.replace("0x", "")
+      newImplementation.address.replace("0x", ""),
     ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaa),
-      "InvalidGovernanceTarget"
+      "InvalidGovernanceTarget",
     );
   });
 
@@ -362,14 +362,14 @@ contract("Pyth", function () {
 
     const data = new governance.EvmUpgradeContract(
       "ethereum",
-      newImplementation.address.replace("0x", "")
+      newImplementation.address.replace("0x", ""),
     ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
@@ -388,20 +388,20 @@ contract("Pyth", function () {
 
     const data = new governance.EvmUpgradeContract(
       "ethereum",
-      newImplementation.address.replace("0x", "")
+      newImplementation.address.replace("0x", ""),
     ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     // Calling a non-existing method will cause a revert with no explanation.
     await expectRevert(
       this.pythProxy.executeGovernanceInstruction(vaa),
-      "revert"
+      "revert",
     );
   });
 
@@ -417,26 +417,26 @@ contract("Pyth", function () {
       claimInstructionData,
       newEmitterChain,
       newEmitterAddress,
-      1
+      1,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(claimVaaHexString),
-      "InvalidGovernanceDataSource"
+      "InvalidGovernanceDataSource",
     );
 
     const claimVaa = Buffer.from(claimVaaHexString.substring(2), "hex");
 
     const data = new governance.AuthorizeGovernanceDataSourceTransfer(
       "unset",
-      claimVaa
+      claimVaa,
     ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     const oldGovernanceDataSource = await this.pythProxy.governanceDataSource();
@@ -456,26 +456,26 @@ contract("Pyth", function () {
     // Verifies the data source has changed.
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaa),
-      "InvalidGovernanceDataSource"
+      "InvalidGovernanceDataSource",
     );
 
     // Make sure a claim vaa does not get executed
 
     const claimLonely = new governance.RequestGovernanceDataSourceTransfer(
       "unset",
-      2
+      2,
     ).encode();
 
     const claimLonelyVaa = await createVAAFromUint8Array(
       claimLonely,
       newEmitterChain,
       newEmitterAddress,
-      2
+      2,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(claimLonelyVaa),
-      "InvalidGovernanceMessage"
+      "InvalidGovernanceMessage",
     );
 
     // Transfer back the ownership to the old governance data source without increasing
@@ -485,37 +485,37 @@ contract("Pyth", function () {
     const transferBackClaimInstructionDataWrong =
       new governance.RequestGovernanceDataSourceTransfer(
         "unset",
-        1 // The same governance data source index => Should fail
+        1, // The same governance data source index => Should fail
       ).encode();
 
     const transferBackClaimVaaHexStringWrong = await createVAAFromUint8Array(
       transferBackClaimInstructionDataWrong,
       testGovernanceChainId,
       testGovernanceEmitter,
-      2
+      2,
     );
 
     const transferBackClaimVaaWrong = Buffer.from(
       transferBackClaimVaaHexStringWrong.substring(2),
-      "hex"
+      "hex",
     );
 
     const transferBackDataWrong =
       new governance.AuthorizeGovernanceDataSourceTransfer(
         "unset",
-        transferBackClaimVaaWrong
+        transferBackClaimVaaWrong,
       ).encode();
 
     const transferBackVaaWrong = await createVAAFromUint8Array(
       transferBackDataWrong,
       newEmitterChain,
       newEmitterAddress,
-      2
+      2,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(transferBackVaaWrong),
-      "OldGovernanceMessage"
+      "OldGovernanceMessage",
     );
   });
 
@@ -532,7 +532,7 @@ contract("Pyth", function () {
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     const oldDataSources = await this.pythProxy.validDataSources();
@@ -546,14 +546,14 @@ contract("Pyth", function () {
     assert.isTrue(
       await this.pythProxy.isValidDataSource(
         governance.CHAINS.acala,
-        "0x0000000000000000000000000000000000000000000000000000000000001111"
-      )
+        "0x0000000000000000000000000000000000000000000000000000000000001111",
+      ),
     );
     assert.isFalse(
       await this.pythProxy.isValidDataSource(
         testPyth2WormholeChainId,
-        testPyth2WormholeEmitter
-      )
+        testPyth2WormholeEmitter,
+      ),
     );
 
     // TODO: try to publish prices
@@ -563,14 +563,14 @@ contract("Pyth", function () {
     const data = new governance.SetFee(
       "ethereum",
       BigInt(5),
-      BigInt(3) // 5*10**3 = 5000
+      BigInt(3), // 5*10**3 = 5000
     ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     const oldFee = await this.pythProxy.singleUpdateFeeInWei();
@@ -593,7 +593,7 @@ contract("Pyth", function () {
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     const oldValidPeriod = await this.pythProxy.validTimePeriodSeconds();
@@ -622,7 +622,7 @@ contract("Pyth", function () {
         [testSigner1.address],
         governance.CHAINS.polygon, // changing the chain id to polygon
         wormholeGovernanceChainId,
-        wormholeGovernanceContract
+        wormholeGovernanceContract,
       )
       .encodeABI();
 
@@ -631,14 +631,14 @@ contract("Pyth", function () {
     // Creating the vaa to set the new wormhole address
     const data = new governance.EvmSetWormholeAddress(
       "ethereum",
-      newWormhole.address.replace("0x", "")
+      newWormhole.address.replace("0x", ""),
     ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     assert.equal(await this.pythProxy.chainId(), governance.CHAINS.ethereum);
@@ -667,26 +667,26 @@ contract("Pyth", function () {
         [testSigner1.address],
         governance.CHAINS.polygon, // changing the chain id to polygon
         wormholeGovernanceChainId,
-        wormholeGovernanceContract
+        wormholeGovernanceContract,
       )
       .encodeABI();
 
     const newWormholeReceiver = await WormholeReceiver.new(
       newReceiverSetup.address,
-      initData
+      initData,
     );
 
     // Creating the vaa to set the new wormhole address
     const data = new governance.EvmSetWormholeAddress(
       "ethereum",
-      newWormholeReceiver.address.replace("0x", "")
+      newWormholeReceiver.address.replace("0x", ""),
     ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     assert.equal(await this.pythProxy.chainId(), governance.CHAINS.ethereum);
@@ -715,7 +715,7 @@ contract("Pyth", function () {
         [testSigner2.address], // A wrong signer
         governance.CHAINS.ethereum,
         wormholeGovernanceChainId,
-        wormholeGovernanceContract
+        wormholeGovernanceContract,
       )
       .encodeABI();
 
@@ -724,19 +724,19 @@ contract("Pyth", function () {
     // Creating the vaa to set the new wormhole address
     const data = new governance.EvmSetWormholeAddress(
       "ethereum",
-      newWormhole.address.replace("0x", "")
+      newWormhole.address.replace("0x", ""),
     ).encode();
 
     const wrongVaa = await createVAAFromUint8Array(
       data,
       testGovernanceChainId,
       testGovernanceEmitter,
-      1
+      1,
     );
 
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(wrongVaa),
-      "InvalidGovernanceMessage"
+      "InvalidGovernanceMessage",
     );
   });
 
@@ -759,7 +759,7 @@ const signAndEncodeVM = async function (
   data,
   signers,
   guardianSetIndex,
-  consistencyLevel
+  consistencyLevel,
 ) {
   const body = [
     web3.eth.abi.encodeParameter("uint32", timestamp).substring(2 + (64 - 8)),
@@ -776,7 +776,7 @@ const signAndEncodeVM = async function (
   ];
 
   const hash = web3.utils.soliditySha3(
-    web3.utils.soliditySha3("0x" + body.join(""))
+    web3.utils.soliditySha3("0x" + body.join("")),
   );
 
   let signatures = "";
@@ -825,7 +825,7 @@ async function createVAAFromUint8Array(
   dataBuffer,
   emitterChainId,
   emitterAddress,
-  sequence
+  sequence,
 ) {
   const dataHex = "0x" + dataBuffer.toString("hex");
   return (
@@ -839,7 +839,7 @@ async function createVAAFromUint8Array(
       dataHex,
       [testSigner1PK],
       0,
-      0
+      0,
     ))
   );
 }
@@ -870,7 +870,7 @@ function expectEventNotEmittedWithArgs(receipt, eventName, args) {
   const matches = getNumMatchingEvents(receipt, eventName, args);
   assert(
     matches === 0,
-    `Expected no matching emitted event. But found ${matches}.`
+    `Expected no matching emitted event. But found ${matches}.`,
   );
 }
 
@@ -888,7 +888,7 @@ async function expectRevertCustomError(promise, reason) {
       const reasonId = web3.utils.keccak256(reason + "()").substr(0, 10);
       expect(
         JSON.stringify(revert),
-        `Expected custom error ${reason} (${reasonId})`
+        `Expected custom error ${reason} (${reasonId})`,
       ).to.include(reasonId);
     }
   }

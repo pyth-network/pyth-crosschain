@@ -28,7 +28,7 @@ export interface DataSource {
 export class PythContract implements Contract {
   constructor(
     readonly address: Address,
-    readonly init?: { code: Cell; data: Cell }
+    readonly init?: { code: Cell; data: Cell },
   ) {}
 
   static createFromAddress(address: Address) {
@@ -44,7 +44,7 @@ export class PythContract implements Contract {
   async sendUpdateGuardianSet(
     provider: ContractProvider,
     via: Sender,
-    vm: Buffer
+    vm: Buffer,
   ) {
     const messageBody = beginCell()
       .storeUint(1, 32) // OP_UPDATE_GUARDIAN_SET
@@ -62,7 +62,7 @@ export class PythContract implements Contract {
     provider: ContractProvider,
     via: Sender,
     updateData: Buffer,
-    updateFee: bigint
+    updateFee: bigint,
   ) {
     const messageBody = beginCell()
       .storeUint(2, 32) // OP_UPDATE_PRICE_FEEDS
@@ -79,7 +79,7 @@ export class PythContract implements Contract {
   async sendExecuteGovernanceAction(
     provider: ContractProvider,
     via: Sender,
-    governanceAction: Buffer
+    governanceAction: Buffer,
   ) {
     const messageBody = beginCell()
       .storeUint(3, 32) // OP_EXECUTE_GOVERNANCE_ACTION
@@ -96,7 +96,7 @@ export class PythContract implements Contract {
   async sendUpgradeContract(
     provider: ContractProvider,
     via: Sender,
-    newCode: Cell
+    newCode: Cell,
   ) {
     const messageBody = beginCell()
       .storeUint(4, 32) // OP_UPGRADE_CONTRACT
@@ -131,7 +131,7 @@ export class PythContract implements Contract {
   async getPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
-    priceFeedId: string
+    priceFeedId: string,
   ) {
     const result = await provider.get("get_price_no_older_than", [
       { type: "int", value: BigInt(timePeriod) },
@@ -172,7 +172,7 @@ export class PythContract implements Contract {
   async getEmaPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
-    priceFeedId: string
+    priceFeedId: string,
   ) {
     const result = await provider.get("get_ema_price_no_older_than", [
       { type: "int", value: BigInt(timePeriod) },
@@ -209,7 +209,7 @@ export class PythContract implements Contract {
   async getLastExecutedGovernanceSequence(provider: ContractProvider) {
     const result = await provider.get(
       "get_last_executed_governance_sequence",
-      []
+      [],
     );
 
     return result.stack.readNumber();
@@ -277,7 +277,7 @@ function bufferToChunks(buff: Buffer, chunkSizeBytes = 127): Uint8Array[] {
   const uint8Array = new Uint8Array(
     buff.buffer,
     buff.byteOffset,
-    buff.byteLength
+    buff.byteLength,
   );
 
   for (let offset = 0; offset < uint8Array.length; offset += chunkSizeBytes) {
@@ -294,7 +294,7 @@ export function parseDataSources(cell: Cell): DataSource[] {
   const slice = cell.beginParse();
   const dict = slice.loadDictDirect(
     Dictionary.Keys.Uint(8),
-    Dictionary.Values.Cell()
+    Dictionary.Values.Cell(),
   );
   for (const [, value] of dict) {
     const dataSource = parseDataSource(value);

@@ -37,9 +37,9 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   const pythImplContract = await deployer.deploy(pythImplArtifact);
 
   console.log(
-    `Deployed Pyth implementation contract on ${pythImplContract.address}`
+    `Deployed Pyth implementation contract on ${pythImplContract.address}`,
   );
   console.log(
-    "Please use this address as the candidate new implementation in the deployment script."
+    "Please use this address as the candidate new implementation in the deployment script.",
   );
 }

@@ -44,7 +44,7 @@ export interface ChainExecutor {
    * @throws an error if it fails
    */
   instantiateContract(
-    req: InstantiateContractRequest
+    req: InstantiateContractRequest,
   ): Promise<InstantiateContractResponse>;
 
   /**
@@ -59,7 +59,7 @@ export interface ChainExecutor {
    * @throws an error if it fails
    */
   executeContract(
-    req: ExecuteContractRequest
+    req: ExecuteContractRequest,
   ): Promise<ExecuteContractResponse>;
 
   /**
@@ -77,7 +77,7 @@ export interface ChainExecutor {
    * @throws an error if it fails.
    */
   migrateContract(
-    req: MigrateContractRequest
+    req: MigrateContractRequest,
   ): Promise<MigrateContractResponse>;
 
   /**
@@ -94,7 +94,7 @@ export interface ChainExecutor {
    * @throws an error if it fails
    */
   updateContractAdmin(
-    req: UpdateContractAdminRequest
+    req: UpdateContractAdminRequest,
   ): Promise<UpdateContractAdminResponse>;
 }
 

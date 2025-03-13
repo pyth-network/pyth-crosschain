@@ -50,20 +50,20 @@ export class PythTest extends BaseWrapper {
     return await super.getPriceUnsafe(
       provider,
       priceFeedId,
-      "test_get_price_unsafe"
+      "test_get_price_unsafe",
     );
   }
 
   async getPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
-    priceFeedId: HexString
+    priceFeedId: HexString,
   ) {
     return await super.getPriceNoOlderThan(
       provider,
       timePeriod,
       priceFeedId,
-      "test_get_price_no_older_than"
+      "test_get_price_no_older_than",
     );
   }
 
@@ -71,20 +71,20 @@ export class PythTest extends BaseWrapper {
     return await super.getEmaPriceUnsafe(
       provider,
       priceFeedId,
-      "test_get_ema_price_unsafe"
+      "test_get_ema_price_unsafe",
     );
   }
 
   async getEmaPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
-    priceFeedId: HexString
+    priceFeedId: HexString,
   ) {
     return await super.getEmaPriceNoOlderThan(
       provider,
       timePeriod,
       priceFeedId,
-      "test_get_ema_price_no_older_than"
+      "test_get_ema_price_no_older_than",
     );
   }
 
@@ -95,7 +95,7 @@ export class PythTest extends BaseWrapper {
   async getSingleUpdateFee(provider: ContractProvider) {
     return await super.getSingleUpdateFee(
       provider,
-      "test_get_single_update_fee"
+      "test_get_single_update_fee",
     );
   }
 
@@ -103,7 +103,7 @@ export class PythTest extends BaseWrapper {
     provider: ContractProvider,
     via: Sender,
     updateData: Buffer,
-    updateFee: bigint
+    updateFee: bigint,
   ) {
     await super.sendUpdatePriceFeeds(provider, via, updateData, updateFee);
   }
@@ -111,7 +111,7 @@ export class PythTest extends BaseWrapper {
   async sendUpdateGuardianSet(
     provider: ContractProvider,
     via: Sender,
-    vm: Buffer
+    vm: Buffer,
   ) {
     await super.sendUpdateGuardianSet(provider, via, vm);
   }
@@ -124,7 +124,7 @@ export class PythTest extends BaseWrapper {
   async getLastExecutedGovernanceSequence(provider: ContractProvider) {
     const result = await provider.get(
       "test_get_last_executed_governance_sequence",
-      []
+      [],
     );
     return result.stack.readNumber();
   }
@@ -132,7 +132,7 @@ export class PythTest extends BaseWrapper {
   async getGovernanceDataSourceIndex(provider: ContractProvider) {
     const result = await provider.get(
       "test_get_governance_data_source_index",
-      []
+      [],
     );
     return result.stack.readNumber();
   }
@@ -145,7 +145,7 @@ export class PythTest extends BaseWrapper {
   async sendExecuteGovernanceAction(
     provider: ContractProvider,
     via: Sender,
-    governanceAction: Buffer
+    governanceAction: Buffer,
   ) {
     const messageBody = beginCell()
       .storeUint(3, 32) // OP_EXECUTE_GOVERNANCE_ACTION
@@ -162,7 +162,7 @@ export class PythTest extends BaseWrapper {
   async sendUpgradeContract(
     provider: ContractProvider,
     via: Sender,
-    newCode: Cell
+    newCode: Cell,
   ) {
     const messageBody = beginCell()
       .storeUint(4, 32) // OP_UPGRADE_CONTRACT
@@ -178,7 +178,7 @@ export class PythTest extends BaseWrapper {
 
   async getIsValidDataSource(
     provider: ContractProvider,
-    dataSource: DataSource
+    dataSource: DataSource,
   ) {
     const result = await provider.get("test_get_is_valid_data_source", [
       {
@@ -204,7 +204,7 @@ export class PythTest extends BaseWrapper {
     time1: number,
     time2: number,
     targetAddress: Address,
-    customPayload: Buffer
+    customPayload: Buffer,
   ): Cell {
     // Create a buffer for price IDs: 1 byte length + (32 bytes per ID)
     const priceIdsBuffer = Buffer.alloc(1 + priceIds.length * 32);
@@ -237,7 +237,7 @@ export class PythTest extends BaseWrapper {
     minPublishTime: number,
     maxPublishTime: number,
     targetAddress: Address,
-    customPayload: Buffer
+    customPayload: Buffer,
   ) {
     const messageCell = this.createPriceFeedMessage(
       5, // OP_PARSE_PRICE_FEED_UPDATES
@@ -246,7 +246,7 @@ export class PythTest extends BaseWrapper {
       minPublishTime,
       maxPublishTime,
       targetAddress,
-      customPayload
+      customPayload,
     );
 
     await provider.internal(via, {
@@ -265,7 +265,7 @@ export class PythTest extends BaseWrapper {
     publishTime: number,
     maxStaleness: number,
     targetAddress: Address,
-    customPayload: Buffer
+    customPayload: Buffer,
   ) {
     const messageCell = this.createPriceFeedMessage(
       6, // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
@@ -274,7 +274,7 @@ export class PythTest extends BaseWrapper {
       publishTime,
       maxStaleness,
       targetAddress,
-      customPayload
+      customPayload,
     );
 
     await provider.internal(via, {

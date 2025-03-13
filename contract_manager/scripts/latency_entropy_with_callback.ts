@@ -13,7 +13,7 @@ const parser = yargs(hideBin(process.argv))
   .usage(
     "Requests a random number from an entropy contract and measures the\n" +
       "latency between request submission and fulfillment by the Fortuna keeper service.\n" +
-      "Usage: $0 --private-key <private-key> --chain <chain-id> | --all-chains <testnet|mainnet>"
+      "Usage: $0 --private-key <private-key> --chain <chain-id> | --all-chains <testnet|mainnet>",
   )
   .options({
     chain: {
@@ -32,7 +32,7 @@ const parser = yargs(hideBin(process.argv))
 
 async function testLatency(
   contract: EvmEntropyContract,
-  privateKey: PrivateKey
+  privateKey: PrivateKey,
 ) {
   const provider = await contract.getDefaultProvider();
   const userRandomNumber = contract.generateUserRandomNumber();
@@ -40,7 +40,7 @@ async function testLatency(
     userRandomNumber,
     provider,
     privateKey,
-    true // with callback
+    true, // with callback
   );
   console.log(`Request tx hash  : ${requestResponse.transactionHash}`);
   // Read the sequence number for the request from the transaction events.
@@ -69,7 +69,7 @@ async function testLatency(
     });
 
     const event = events.find(
-      (event) => event.returnValues.request[1] == sequenceNumber
+      (event) => event.returnValues.request[1] == sequenceNumber,
     );
 
     if (event !== undefined) {
@@ -79,7 +79,7 @@ async function testLatency(
       console.log(
         `Revealed after   : ${
           currentBlock - requestResponse.blockNumber
-        } blocks`
+        } blocks`,
       );
       break;
     }

@@ -59,7 +59,7 @@ export class CosmWasmWormholeContract extends WormholeContract {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): CosmWasmWormholeContract {
     if (parsed.type !== CosmWasmWormholeContract.type)
       throw new Error("Invalid type");
@@ -68,7 +68,10 @@ export class CosmWasmWormholeContract extends WormholeContract {
     return new CosmWasmWormholeContract(chain, parsed.address);
   }
 
-  constructor(public chain: CosmWasmChain, public address: string) {
+  constructor(
+    public chain: CosmWasmChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -100,13 +103,13 @@ export class CosmWasmWormholeContract extends WormholeContract {
 
     const guardianSet = JSON.parse(config[key])["addresses"];
     return guardianSet.map((entry: { bytes: string }) =>
-      Buffer.from(entry.bytes, "base64").toString("hex")
+      Buffer.from(entry.bytes, "base64").toString("hex"),
     );
   }
 
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const executor = await this.chain.getExecutor(senderPrivateKey);
     const result = await executor.executeContract({
@@ -129,7 +132,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
           emitterChain: Number(chain_id),
           emitterAddress: Buffer.from(emitter, "base64").toString("hex"),
         };
-      }
+      },
     );
   }
 
@@ -143,13 +146,16 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     };
   }
 
-  constructor(public chain: CosmWasmChain, public address: string) {
+  constructor(
+    public chain: CosmWasmChain,
+    public address: string,
+  ) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): CosmWasmPriceFeedContract {
     if (parsed.type !== CosmWasmPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -172,7 +178,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
   static async storeCode(
     chain: CosmWasmChain,
     privateKey: PrivateKey,
-    wasmPath: string
+    wasmPath: string,
   ) {
     const contractBytes = readFileSync(wasmPath);
     const executor = await chain.getExecutor(privateKey);
@@ -190,7 +196,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     chain: CosmWasmChain,
     codeId: number,
     config: DeploymentConfig,
-    privateKey: PrivateKey
+    privateKey: PrivateKey,
   ): Promise<CosmWasmPriceFeedContract> {
     const executor = await chain.getExecutor(privateKey);
     const result = await executor.instantiateContract({
@@ -276,7 +282,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
 
   equalDataSources(
     dataSources1: WormholeSource[],
-    dataSources2: WormholeSource[]
+    dataSources2: WormholeSource[],
   ): boolean {
     if (dataSources1.length !== dataSources2.length) return false;
     for (let i = 0; i < dataSources1.length; i++) {
@@ -368,7 +374,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     const client = await CosmWasmClient.connect(this.chain.endpoint);
     const coin = await client.getBalance(
       this.address,
-      this.getChain().feeDenom
+      this.getChain().feeDenom,
     );
     return {
       amount: BigInt(coin.amount),
@@ -380,7 +386,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     const client = await CosmWasmClient.connect(this.chain.endpoint);
     const result = await client.queryContractSmart(
       this.address,
-      "get_valid_time_period"
+      "get_valid_time_period",
     );
     return Number(result.secs + result.nanos * 1e-9);
   }

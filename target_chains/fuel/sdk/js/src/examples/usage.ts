@@ -9,7 +9,7 @@ import { Provider, Wallet, Contract, hexlify, arrayify } from "fuels";
 async function main() {
   // Create a provider for interacting with Fuel RPC
   const provider = await Provider.create(
-    "https://testnet.fuel.network/v1/graphql"
+    "https://testnet.fuel.network/v1/graphql",
   );
   const privateKey = process.env.ACCOUNT_PRIVATE_KEY;
   if (privateKey === undefined) {
@@ -21,7 +21,7 @@ async function main() {
   const contract = new Contract(
     PYTH_CONTRACT_ADDRESS_SEPOLIA,
     PYTH_CONTRACT_ABI,
-    wallet
+    wallet,
   );
 
   const priceFeedSymbol = "Crypto.ETH/USD";
@@ -33,7 +33,7 @@ async function main() {
   console.log(
     `Previous price: ${
       previousPrice.price.toNumber() * 10 ** -previousPrice.exponent
-    }`
+    }`,
   );
 
   // Create a client for pulling price updates from Hermes.
@@ -48,11 +48,11 @@ async function main() {
     `Current price from Hermes: ${
       Number(priceUpdates.parsed?.[0].price.price) *
       10 ** Number(priceUpdates.parsed?.[0].price.expo)
-    }`
+    }`,
   );
 
   const priceFeedUpdateData = arrayify(
-    Buffer.from(priceUpdates.binary.data[0], "hex")
+    Buffer.from(priceUpdates.binary.data[0], "hex"),
   );
 
   // Query the amount of update fee required
@@ -74,7 +74,7 @@ async function main() {
     await contract.functions.price_no_older_than(60, priceFeedId).get()
   ).value;
   console.log(
-    `New price: ${newPrice.price.toNumber() * 10 ** -newPrice.exponent}`
+    `New price: ${newPrice.price.toNumber() * 10 ** -newPrice.exponent}`,
   );
 }
 

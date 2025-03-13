@@ -99,20 +99,19 @@ export class CosmwasmQuerier implements ChainQuerier {
 
   private constructor(readonly tendermintClient: Tendermint34Client) {
     this.wasmQueryClient = setupWasmExtension(
-      new QueryClient(tendermintClient)
+      new QueryClient(tendermintClient),
     );
   }
 
   async getContractInfo(
-    req: ContractInfoRequest
+    req: ContractInfoRequest,
   ): Promise<ContractInfoResponse> {
     const { contractAddr } = req;
 
     const { wasm: wasmQueryClient } = this.wasmQueryClient;
 
-    const { contractInfo } = await wasmQueryClient.getContractInfo(
-      contractAddr
-    );
+    const { contractInfo } =
+      await wasmQueryClient.getContractInfo(contractAddr);
 
     if (contractInfo === undefined)
       throw new Error("error fetching contract info");
