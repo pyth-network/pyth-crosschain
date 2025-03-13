@@ -68,4 +68,16 @@ jobs:
           sudo mv aptos /usr/local/bin/
           chmod +x /usr/local/bin/aptos
           aptos update movefmt
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "package.json"
+      # Libusb is a build requirement for the node-hid package and so pnpm
+      # install will fail if this isn't in the build environment and if a
+      # precompiled binary isn't found.
+      - name: Install libusb
+        run: sudo apt install -y libusb-1.0-0-dev libudev-dev
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: true
       - uses: pre-commit/action@v3.0.0
