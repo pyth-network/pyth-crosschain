@@ -253,12 +253,7 @@ export const TermsOfService = () => (
           and are responsible for complying with local laws.
         </Paragraph>
         <Paragraph>
-          EXCEPT EXPLICTLY PROVIDED IN THESE TERMS, CERTAIN TOOLS AND/OR
-          SERVICES ARE NOT DEVELOPED FOR, AND ARE NOT AVAILABLE TO PERSONS OR
-          ENTITIES WHO RESIDE IN, ARE LOCATED IN, ARE INCORPORATED IN, OR HAVE A
-          REGISTERED OFFICE OR PRINCIPAL PLACE OF BUSINESS IN THE UNITED KINGDOM
-          (COLLECTIVELY, “ <strong>BLOCKED PERSONS</strong>”). MOREOVER, THE
-          SERVICES ARE NOT OFFERED TO PERSONS OR ENTITIES WHO RESIDE IN, ARE
+          THE SERVICES ARE NOT OFFERED TO PERSONS OR ENTITIES WHO RESIDE IN, ARE
           CITIZENS OF, ARE LOCATED IN, ARE INCORPORATED IN, OR HAVE A REGISTERED
           OFFICE OR PRINCIPAL PLACE OF BUSINESS IN ANY RESTRICTED JURISDICTION
           OR COUNTRY SUBJECT TO ANY SANCTIONS OR RESTRICTIONS PURSUANT TO ANY
@@ -277,11 +272,10 @@ export const TermsOfService = () => (
           BEING ACTIVELY MARKETED TO, PERSONS OR ENTITIES WHO RESIDE IN, ARE
           LOCATED IN, ARE INCORPORATED IN, OR HAVE A REGISTERED OFFICE OR
           PRINCIPAL PLACE OF BUSINESS IN THE EUROPEAN UNION. THERE ARE NO
-          EXCEPTIONS. IF YOU ARE A BLOCKED PERSON OR A RESTRICTED PERSON, THEN
-          DO NOT USE OR ATTEMPT TO ACCESS AND/OR USE THE SERVICES. USE OF ANY
-          TECHNOLOGY OR MECHANISM, SUCH AS A VIRTUAL PRIVATE NETWORK (“
-          <strong>VPN</strong>”) TO CIRCUMVENT THE RESTRICTIONS SET FORTH HEREIN
-          IS PROHIBITED.
+          EXCEPTIONS. IF YOU ARE A RESTRICTED PERSON, THEN DO NOT USE OR ATTEMPT
+          TO ACCESS AND/OR USE THE SERVICES. USE OF ANY TECHNOLOGY OR MECHANISM,
+          SUCH AS A VIRTUAL PRIVATE NETWORK (“ <strong>VPN</strong>”) TO
+          CIRCUMVENT THE RESTRICTIONS SET FORTH HEREIN IS PROHIBITED.
         </Paragraph>
       </Section>
       <Section title="Services">
@@ -546,8 +540,8 @@ export const TermsOfService = () => (
             </li>
             <li>use the Services in or from any Restricted Jurisdictions;</li>
             <li>
-              use the Services if you if you are a Blocked or Restricted Person
-              (or on their behalf);
+              use the Services if you if you are a Restricted Person (or on
+              their behalf);
             </li>
             <li>
               use the Services in any way that violates any applicable federal,
