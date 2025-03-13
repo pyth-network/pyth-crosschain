@@ -874,3 +874,8 @@
   rpcUrl: https://bittensor-finney.api.onfinality.io/public
   networkId: 964
   type: EvmChain
+- id: berachain_bepolia
+  mainnet: false
+  rpcUrl: https://bepolia.rpc.berachain.com/
+  networkId: 80069
+  type: EvmChain
