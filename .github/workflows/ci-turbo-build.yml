@@ -15,8 +15,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Install libusb
-        run: sudo apt install -y libusb-1.0-0-dev
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-node@v4
