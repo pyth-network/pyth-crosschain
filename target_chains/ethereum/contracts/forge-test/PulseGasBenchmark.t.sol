@@ -57,7 +57,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
     // Subtract this amount from the gas benchmarks to estimate the true usage of the pulse flow.
     function testDataMocking() public {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
-        bytes32[] memory priceIds = createPriceIds();
+        createPriceIds();
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             timestamp
