@@ -233,6 +233,7 @@ export const RECEIVER_CHAINS = {
   monad_devnet: 50116,
   monad_testnet: 50117,
   iota_sui_testnet: 50118,
+  berachain_bepolia: 50119,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
