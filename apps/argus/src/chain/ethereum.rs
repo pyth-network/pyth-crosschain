@@ -2,7 +2,7 @@ use {
     crate::{
         api::ChainId,
         chain::reader::{
-            self, BlockNumber, BlockStatus, EntropyReader, RequestedWithCallbackEvent,
+            self, BlockNumber, BlockStatus, RequestedWithCallbackEvent,
         },
         config::EthereumConfig,
     },
@@ -13,7 +13,6 @@ use {
         traced_client::{RpcMetrics, TracedClient},
     },
     anyhow::{anyhow, Error, Result},
-    axum::async_trait,
     ethers::{
         abi::RawLog,
         contract::{abigen, EthLogDecode},
@@ -199,9 +198,9 @@ impl InstrumentedPythContract {
     }
 }
 
-#[async_trait]
-impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
-    async fn get_request(
+impl<M: Middleware + 'static> PythRandom<M> {
+
+    pub async fn get_request_wrapper(
         &self,
         provider_address: Address,
         sequence_number: u64,
@@ -226,7 +225,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
         }
     }
 
-    async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
+    pub async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
         let block_number: EthersBlockNumber = confirmed_block_status.into();
         let block = self
             .client()
@@ -240,7 +239,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             .as_u64())
     }
 
-    async fn get_request_with_callback_events(
+    pub async fn get_request_with_callback_events(
         &self,
         from_block: BlockNumber,
         to_block: BlockNumber,
@@ -260,7 +259,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             .collect())
     }
 
-    async fn estimate_reveal_with_callback_gas(
+    pub async fn estimate_reveal_with_callback_gas(
         &self,
         sender: Address,
         provider: Address,

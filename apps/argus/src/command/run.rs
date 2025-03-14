@@ -1,7 +1,6 @@
 use {
     crate::{
         api::{self, BlockchainState, ChainId},
-        chain::ethereum::InstrumentedPythContract,
         config::{Config, EthereumConfig, RunOptions},
         keeper::{self, keeper_metrics::KeeperMetrics},
     },
@@ -37,11 +36,10 @@ const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 
 pub async fn run_api(
     socket_addr: SocketAddr,
-    chains: HashMap<String, api::BlockchainState>,
     metrics_registry: Arc<RwLock<Registry>>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
-    let api_state = api::ApiState::new(chains, metrics_registry).await;
+    let api_state = api::ApiState::new(metrics_registry).await;
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -111,13 +109,11 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let mut tasks = Vec::new();
     for (chain_id, chain_config) in config.chains.clone() {
-        let rpc_metrics = rpc_metrics.clone();
         tasks.push(spawn(async move {
             let state = setup_chain_state(
                 &config.provider.address,
                 &chain_id,
                 &chain_config,
-                rpc_metrics,
             )
             .await;
 
@@ -174,7 +170,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         rpc_metrics.clone(),
     ));
 
-    run_api(opts.addr, chains, metrics_registry, rx_exit).await?;
+    run_api(opts.addr, metrics_registry, rx_exit).await?;
 
     Ok(())
 }
@@ -183,17 +179,9 @@ async fn setup_chain_state(
     provider: &Address,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
-    rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<BlockchainState> {
-    let contract = Arc::new(InstrumentedPythContract::from_config(
-        chain_config,
-        chain_id.clone(),
-        rpc_metrics,
-    )?);
-
     let state = BlockchainState {
         id: chain_id.clone(),
-        contract,
         provider_address: *provider,
         reveal_delay_blocks: chain_config.reveal_delay_blocks,
         confirmed_block_status: chain_config.confirmed_block_status,

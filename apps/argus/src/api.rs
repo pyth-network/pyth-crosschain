@@ -1,6 +1,6 @@
 use {
     crate::{
-        chain::reader::{BlockNumber, BlockStatus, EntropyReader},
+        chain::reader::{BlockNumber, BlockStatus},
     },
     anyhow::Result,
     axum::{
@@ -16,7 +16,7 @@ use {
         metrics::{counter::Counter, family::Family},
         registry::Registry,
     },
-    std::{collections::HashMap, sync::Arc},
+    std::sync::Arc,
     tokio::sync::RwLock,
     url::Url,
 };
@@ -40,8 +40,6 @@ pub struct ApiMetrics {
 
 #[derive(Clone)]
 pub struct ApiState {
-    pub chains: Arc<HashMap<ChainId, BlockchainState>>,
-
     pub metrics_registry: Arc<RwLock<Registry>>,
 
     /// Prometheus metrics
@@ -50,7 +48,6 @@ pub struct ApiState {
 
 impl ApiState {
     pub async fn new(
-        chains: HashMap<ChainId, BlockchainState>,
         metrics_registry: Arc<RwLock<Registry>>,
     ) -> ApiState {
         let metrics = ApiMetrics {
@@ -65,7 +62,6 @@ impl ApiState {
         );
 
         ApiState {
-            chains: Arc::new(chains),
             metrics: Arc::new(metrics),
             metrics_registry,
         }
@@ -77,8 +73,6 @@ impl ApiState {
 pub struct BlockchainState {
     /// The chain id for this blockchain, useful for logging
     pub id: ChainId,
-    /// The contract that the server is fulfilling requests for.
-    pub contract: Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.
     pub provider_address: Address,
     /// The server will wait for this many block confirmations of a request before revealing

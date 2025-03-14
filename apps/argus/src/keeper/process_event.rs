@@ -111,9 +111,8 @@ pub async fn process_event_with_backoff(
             // In case the callback did not succeed, we double-check that the request is still on-chain.
             // If the request is no longer on-chain, one of the transactions we sent likely succeeded, but
             // the RPC gave us an error anyway.
-            let req = chain_state
-                .contract
-                .get_request(event.provider_address, event.sequence_number)
+            let req = contract
+                .get_request_wrapper(event.provider_address, event.sequence_number)
                 .await;
 
             tracing::error!("Failed to process event: {:?}. Request: {:?}", e, req);

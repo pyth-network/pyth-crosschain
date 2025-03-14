@@ -61,8 +61,6 @@ pub async fn run_keeper_threads(
     rpc_metrics: Arc<RpcMetrics>,
 ) {
     tracing::info!("starting keeper");
-    let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
-    tracing::info!("latest safe block: {}", &latest_safe_block);
 
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(
@@ -77,6 +75,9 @@ pub async fn run_keeper_threads(
     let keeper_address = contract.wallet().address();
 
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashSet::<u64>::new()));
+
+    let latest_safe_block = get_latest_safe_block(contract.clone(), &chain_state).in_current_span().await;
+    tracing::info!("latest safe block: {}", &latest_safe_block);
 
     // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
     let gas_limit: U256 = chain_eth_config.gas_limit.into();
@@ -101,6 +102,7 @@ pub async fn run_keeper_threads(
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
     spawn(
         watch_blocks_wrapper(
+            contract.clone(),
             chain_state.clone(),
             latest_safe_block,
             tx,
