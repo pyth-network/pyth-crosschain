@@ -57,7 +57,7 @@ contract ExampleContract {
     bytes[] calldata priceUpdateData
   ) public payable returns (PythStructs.Price memory) {
     // Update the prices to the latest available values and pay the required fee for it. The `priceUpdateData` data
-    // should be retrieved from our off-chain Price Service API using the `pyth-evm-js` package.
+    // should be retrieved from our off-chain Price Service API using the `hermes-client` package.
     // See section "How Pyth Works on EVM Chains" below for more information.
     uint fee = pyth.getUpdateFee(priceUpdateData);
     pyth.updatePriceFeeds{ value: fee }(priceUpdateData);

@@ -25,7 +25,7 @@ contract PythAggregatorV3 {
     // Wrapper function to update the underlying Pyth price feeds. Not part of the AggregatorV3 interface but useful.
     function updateFeeds(bytes[] calldata priceUpdateData) public payable {
         // Update the prices to the latest available values and pay the required fee for it. The `priceUpdateData` data
-        // should be retrieved from our off-chain Price Service API using the `pyth-evm-js` package.
+        // should be retrieved from our off-chain Price Service API using the `hermes-client` package.
         // See section "How Pyth Works on EVM Chains" below for more information.
         uint fee = pyth.getUpdateFee(priceUpdateData);
         pyth.updatePriceFeeds{value: fee}(priceUpdateData);
