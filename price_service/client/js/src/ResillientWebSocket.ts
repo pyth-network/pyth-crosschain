@@ -45,7 +45,7 @@ export class ResilientWebSocket {
 
     if (this.wsClient === undefined) {
       this.logger?.error(
-        "Couldn't connect to the websocket server. Error callback is called."
+        "Couldn't connect to the websocket server. Error callback is called.",
       );
     } else {
       this.wsClient?.send(data);
@@ -89,7 +89,7 @@ export class ResilientWebSocket {
         const waitTime = expoBackoff(this.wsFailedAttempts);
 
         this.logger?.error(
-          `Connection closed unexpectedly or because of timeout. Reconnecting after ${waitTime}ms.`
+          `Connection closed unexpectedly or because of timeout. Reconnecting after ${waitTime}ms.`,
         );
 
         await sleep(waitTime);
@@ -153,7 +153,7 @@ export class ResilientWebSocket {
 
     if (this.wsClient === undefined) {
       this.logger?.error(
-        "Couldn't reconnect to websocket. Error callback is called."
+        "Couldn't reconnect to websocket. Error callback is called.",
       );
       return;
     }

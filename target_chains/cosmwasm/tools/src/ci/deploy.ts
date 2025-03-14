@@ -21,32 +21,32 @@ async function deploy() {
   /* Check that the artifact folder contains all the wasm files we expect and nothing else */
 
   const actual_artifacts = readdirSync("../artifacts/").filter((a) =>
-    a.endsWith(".wasm")
+    a.endsWith(".wasm"),
   );
 
   const missing_artifacts = artifacts.filter(
-    (a) => !actual_artifacts.includes(a)
+    (a) => !actual_artifacts.includes(a),
   );
   if (missing_artifacts.length) {
     console.log(
-      "Error during terra deployment. The following files are expected to be in the artifacts folder:"
+      "Error during terra deployment. The following files are expected to be in the artifacts folder:",
     );
     missing_artifacts.forEach((file) => console.log(`  - ${file}`));
     console.log(
-      "Hint: the deploy script needs to run after the contracts have been built."
+      "Hint: the deploy script needs to run after the contracts have been built.",
     );
     console.log(
-      "External binary blobs need to be manually added in tools/Dockerfile."
+      "External binary blobs need to be manually added in tools/Dockerfile.",
     );
     process.exit(1);
   }
 
   const unexpected_artifacts = actual_artifacts.filter(
-    (a) => !artifacts.includes(a)
+    (a) => !artifacts.includes(a),
   );
   if (unexpected_artifacts.length) {
     console.log(
-      "Error during terra deployment. The following files are not expected to be in the artifacts folder:"
+      "Error during terra deployment. The following files are not expected to be in the artifacts folder:",
     );
     unexpected_artifacts.forEach((file) => console.log(`  - ${file}`));
     console.log("Hint: you might need to modify tools/deploy.js");
@@ -56,7 +56,7 @@ async function deploy() {
   /* Set up terra deployer */
   const deployer = DeployerFactory.create(
     NetworkConfig[NETWORKS.TERRA_LOCAL],
-    "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius"
+    "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius",
   );
 
   /* Deploy artifacts */
@@ -95,7 +95,7 @@ async function deploy() {
         {
           bytes: Buffer.from(
             "beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe",
-            "hex"
+            "hex",
           ).toString("base64"),
         },
       ],
@@ -108,7 +108,7 @@ async function deploy() {
   addresses[contract] = await deployer.instantiate(
     codeIds[contract],
     inst_msg,
-    "wormhole"
+    "wormhole",
   );
 
   contract = "pyth_cosmwasm.wasm";
@@ -129,7 +129,7 @@ async function deploy() {
     ],
     governance_source: {
       emitter: Buffer.from(pythGovernanceEmitterAddress, "hex").toString(
-        "base64"
+        "base64",
       ),
       chain_id: pythChain,
     },
@@ -147,7 +147,7 @@ async function deploy() {
   addresses[contract] = await deployer.instantiate(
     codeIds[contract],
     inst_msg,
-    "pyth"
+    "pyth",
   );
 }
 

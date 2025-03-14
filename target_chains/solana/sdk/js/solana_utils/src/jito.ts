@@ -28,7 +28,7 @@ export function getRandomTipAccount(): PublicKey {
 
 export function buildJitoTipInstruction(
   payer: PublicKey,
-  lamports: number
+  lamports: number,
 ): TransactionInstruction {
   return SystemProgram.transfer({
     fromPubkey: payer,
@@ -43,7 +43,7 @@ export async function sendTransactionsJito(
     signers?: Signer[] | undefined;
   }[],
   searcherClient: SearcherClient,
-  wallet: Wallet
+  wallet: Wallet,
 ): Promise<string> {
   const signedTransactions = [];
 
@@ -60,7 +60,7 @@ export async function sendTransactionsJito(
   }
 
   const firstTransactionSignature = bs58.encode(
-    signedTransactions[0].signatures[0]
+    signedTransactions[0].signatures[0],
   );
 
   const bundle = new Bundle(signedTransactions, 2);

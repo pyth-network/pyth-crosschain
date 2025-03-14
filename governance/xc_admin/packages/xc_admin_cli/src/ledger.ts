@@ -14,7 +14,7 @@ export class LedgerNodeWallet implements Wallet {
   constructor(
     derivationPath: Buffer,
     transport: Transport,
-    publicKey: PublicKey
+    publicKey: PublicKey,
   ) {
     this._derivationPath = derivationPath;
     this._transport = transport;
@@ -23,12 +23,12 @@ export class LedgerNodeWallet implements Wallet {
 
   static async createWallet(
     derivationAccount?: number,
-    derivationChange?: number
+    derivationChange?: number,
   ): Promise<LedgerNodeWallet> {
     const transport = await TransportNodeHid.create();
     const derivationPath = getDerivationPath(
       derivationAccount,
-      derivationChange
+      derivationChange,
     );
     const publicKey = await getPublicKey(transport, derivationPath);
     console.log(`Loaded ledger: ${publicKey.toBase58()}}`);
@@ -36,7 +36,7 @@ export class LedgerNodeWallet implements Wallet {
   }
 
   async signTransaction<T extends Transaction | VersionedTransaction>(
-    tx: T
+    tx: T,
   ): Promise<T> {
     console.log("Please approve the transaction on your ledger device...");
     const transport = this._transport;
@@ -46,7 +46,7 @@ export class LedgerNodeWallet implements Wallet {
       const signature = await signTransaction(
         transport,
         tx,
-        this._derivationPath
+        this._derivationPath,
       );
       tx.addSignature(publicKey, signature);
     } else {
@@ -57,7 +57,7 @@ export class LedgerNodeWallet implements Wallet {
   }
 
   async signAllTransactions<T extends Transaction | VersionedTransaction>(
-    txs: T[]
+    txs: T[],
   ): Promise<T[]> {
     return await Promise.all(txs.map((tx) => this.signTransaction(tx)));
   }
@@ -105,13 +105,13 @@ const LEDGER_CLA = 0xe0;
 /** @internal */
 export async function getPublicKey(
   transport: Transport,
-  derivationPath: Buffer
+  derivationPath: Buffer,
 ): Promise<PublicKey> {
   const bytes = await send(
     transport,
     INS_GET_PUBKEY,
     P1_NON_CONFIRM,
-    derivationPath
+    derivationPath,
   );
   return new PublicKey(bytes);
 }
@@ -120,7 +120,7 @@ export async function getPublicKey(
 export async function signTransaction(
   transport: Transport,
   transaction: Transaction,
-  derivationPath: Buffer
+  derivationPath: Buffer,
 ): Promise<Buffer> {
   const paths = Buffer.alloc(1);
   paths.writeUInt8(1, 0);
@@ -136,7 +136,7 @@ async function send(
   transport: Transport,
   instruction: number,
   p1: number,
-  data: Buffer
+  data: Buffer,
 ): Promise<Buffer> {
   let p2 = 0;
   let offset = 0;
@@ -149,7 +149,7 @@ async function send(
         instruction,
         p1,
         p2 | P2_MORE,
-        buffer
+        buffer,
       );
       if (response.length !== 2)
         throw new TransportStatusError(StatusCodes.INCORRECT_DATA);
@@ -165,7 +165,7 @@ async function send(
     instruction,
     p1,
     p2,
-    buffer
+    buffer,
   );
 
   return response.subarray(0, response.length - 2);

@@ -65,7 +65,7 @@ export default {
       logger.error(
         `Invalid price id submitted for: ${invalidPriceItems
           .map(({ alias }) => alias)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -74,7 +74,7 @@ export default {
     const pythListener = new PythPriceListener(
       hermesClient,
       priceItems,
-      logger.child({ module: "PythPriceListener" })
+      logger.child({ module: "PythPriceListener" }),
     );
 
     const client = new TonClient({ endpoint });
@@ -87,7 +87,7 @@ export default {
       contractAddress,
       priceItems,
       logger.child({ module: "TonPriceListener" }),
-      { pollingFrequency }
+      { pollingFrequency },
     );
 
     const tonPricePusher = new TonPricePusher(
@@ -95,7 +95,7 @@ export default {
       privateKey,
       contractAddress,
       hermesClient,
-      logger.child({ module: "TonPricePusher" })
+      logger.child({ module: "TonPricePusher" }),
     );
 
     const controller = new Controller(
@@ -104,7 +104,7 @@ export default {
       tonPriceListener,
       tonPricePusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency }
+      { pushingFrequency },
     );
 
     await controller.start();

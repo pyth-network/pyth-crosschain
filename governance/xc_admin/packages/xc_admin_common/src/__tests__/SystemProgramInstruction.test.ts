@@ -27,14 +27,14 @@ test("System multisig instruction parse", (done) => {
   const parsedInstruction = parser.parseInstruction(transferInstruction);
   if (parsedInstruction instanceof SystemProgramMultisigInstruction) {
     expect(parsedInstruction.program).toBe(
-      MultisigInstructionProgram.SystemProgram
+      MultisigInstructionProgram.SystemProgram,
     );
     expect(parsedInstruction.name).toBe("Transfer");
     expect(
-      parsedInstruction.args.fromPubkey.equals(new PublicKey(1))
+      parsedInstruction.args.fromPubkey.equals(new PublicKey(1)),
     ).toBeTruthy();
     expect(
-      parsedInstruction.args.toPubkey.equals(new PublicKey(2))
+      parsedInstruction.args.toPubkey.equals(new PublicKey(2)),
     ).toBeTruthy();
     expect(parsedInstruction.args.lamports.toString()).toBe("100");
   } else {
@@ -49,11 +49,11 @@ test("System multisig instruction parse", (done) => {
   const parsedBadInstruction = parser.parseInstruction(badInstruction);
   if (parsedBadInstruction instanceof SystemProgramMultisigInstruction) {
     expect(parsedBadInstruction.program).toBe(
-      MultisigInstructionProgram.SystemProgram
+      MultisigInstructionProgram.SystemProgram,
     );
     expect(parsedBadInstruction.name).toBe(UNRECOGNIZED_INSTRUCTION);
     expect(
-      parsedBadInstruction.args.data.equals(Buffer.from([1, 2, 3, 4]))
+      parsedBadInstruction.args.data.equals(Buffer.from([1, 2, 3, 4])),
     ).toBeTruthy();
     done();
   } else {

@@ -17,7 +17,7 @@ import { DataSource } from "@pythnetwork/xc-admin-common";
 export class BaseWrapper implements Contract {
   constructor(
     readonly address: Address,
-    readonly init?: { code: Cell; data: Cell }
+    readonly init?: { code: Cell; data: Cell },
   ) {}
 
   static createFromAddress(address: Address) {
@@ -39,18 +39,18 @@ export class BaseWrapper implements Contract {
   }): Cell {
     const priceDict = Dictionary.empty(
       Dictionary.Keys.BigUint(256),
-      Dictionary.Values.Cell()
+      Dictionary.Values.Cell(),
     );
 
     if (config.priceFeedId && config.price && config.emaPrice) {
       const priceCell = beginCell()
         .storeInt(
           config.price.getPriceAsNumberUnchecked() * 10 ** -config.price.expo,
-          64
+          64,
         )
         .storeUint(
           config.price.getConfAsNumberUnchecked() * 10 ** -config.price.expo,
-          64
+          64,
         )
         .storeInt(config.price.expo, 32)
         .storeUint(config.price.publishTime, 64)
@@ -60,12 +60,12 @@ export class BaseWrapper implements Contract {
         .storeInt(
           config.emaPrice.getPriceAsNumberUnchecked() *
             10 ** -config.emaPrice.expo,
-          64
+          64,
         )
         .storeUint(
           config.emaPrice.getConfAsNumberUnchecked() *
             10 ** -config.emaPrice.expo,
-          64
+          64,
         )
         .storeInt(config.emaPrice.expo, 32)
         .storeUint(config.emaPrice.publishTime, 64)
@@ -82,7 +82,7 @@ export class BaseWrapper implements Contract {
     // Create a dictionary for valid data sources
     const isValidDataSourceDict = Dictionary.empty(
       Dictionary.Keys.BigUint(256),
-      Dictionary.Values.Bool()
+      Dictionary.Values.Bool(),
     );
 
     if (config.dataSources) {
@@ -111,7 +111,7 @@ export class BaseWrapper implements Contract {
     const guardianSetCell = beginCell()
       .storeUint(config.guardianSetIndex, 32)
       .storeDict(
-        createGuardianSetsDict(config.guardianSet, config.guardianSetIndex)
+        createGuardianSetsDict(config.guardianSet, config.guardianSetIndex),
       )
       .endCell();
 
@@ -126,10 +126,10 @@ export class BaseWrapper implements Contract {
           ? beginCell()
               .storeUint(config.governanceDataSource.emitterChain, 16)
               .storeBuffer(
-                Buffer.from(config.governanceDataSource.emitterAddress, "hex")
+                Buffer.from(config.governanceDataSource.emitterAddress, "hex"),
               )
               .endCell()
-          : beginCell().endCell()
+          : beginCell().endCell(),
       ) // governance_data_source
       .storeUint(0, 64) // last_executed_governance_sequence, set to 0 for initial state
       .storeUint(0, 32) // governance_data_source_index, set to 0 for initial state
@@ -155,7 +155,7 @@ export class BaseWrapper implements Contract {
 
   async getCurrentGuardianSetIndex(
     provider: ContractProvider,
-    methodName: string
+    methodName: string,
   ) {
     const result = await provider.get(methodName, []);
     return result.stack.readNumber();
@@ -164,7 +164,7 @@ export class BaseWrapper implements Contract {
   async sendUpdateGuardianSet(
     provider: ContractProvider,
     via: Sender,
-    vm: Buffer
+    vm: Buffer,
   ) {
     const messageBody = beginCell()
       .storeUint(1, 32) // OP_UPDATE_GUARDIAN_SET
@@ -182,7 +182,7 @@ export class BaseWrapper implements Contract {
     provider: ContractProvider,
     via: Sender,
     updateData: Buffer,
-    updateFee: bigint
+    updateFee: bigint,
   ) {
     const messageBody = beginCell()
       .storeUint(2, 32) // OP_UPDATE_PRICE_FEEDS
@@ -204,7 +204,7 @@ export class BaseWrapper implements Contract {
   async getPriceUnsafe(
     provider: ContractProvider,
     priceFeedId: HexString,
-    methodName: string
+    methodName: string,
   ) {
     const result = await provider.get(methodName, [
       { type: "int", value: BigInt(priceFeedId) },
@@ -227,7 +227,7 @@ export class BaseWrapper implements Contract {
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString,
-    methodName: string
+    methodName: string,
   ) {
     const result = await provider.get(methodName, [
       { type: "int", value: BigInt(timePeriod) },
@@ -250,7 +250,7 @@ export class BaseWrapper implements Contract {
   async getEmaPriceUnsafe(
     provider: ContractProvider,
     priceFeedId: HexString,
-    methodName: string
+    methodName: string,
   ) {
     const result = await provider.get(methodName, [
       { type: "int", value: BigInt(priceFeedId) },
@@ -273,7 +273,7 @@ export class BaseWrapper implements Contract {
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString,
-    methodName: string
+    methodName: string,
   ) {
     const result = await provider.get(methodName, [
       { type: "int", value: BigInt(timePeriod) },
@@ -296,7 +296,7 @@ export class BaseWrapper implements Contract {
   async getUpdateFee(
     provider: ContractProvider,
     vm: Buffer,
-    methodName: string
+    methodName: string,
   ) {
     const result = await provider.get(methodName, [
       { type: "slice", cell: createCellChain(vm) },

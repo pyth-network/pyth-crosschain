@@ -32,8 +32,8 @@ test("Wormhole multisig instruction parse: send message without governance paylo
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
       new Wallet(new Keypair()),
-      AnchorProvider.defaultOptions()
-    )
+      AnchorProvider.defaultOptions(),
+    ),
   );
   const parser = MultisigParser.fromCluster(cluster);
 
@@ -52,107 +52,107 @@ test("Wormhole multisig instruction parse: send message without governance paylo
       const parsedInstruction = parser.parseInstruction(instruction);
       if (parsedInstruction instanceof WormholeMultisigInstruction) {
         expect(parsedInstruction.program).toBe(
-          MultisigInstructionProgram.WormholeBridge
+          MultisigInstructionProgram.WormholeBridge,
         );
         expect(parsedInstruction.name).toBe("postMessage");
         expect(
           parsedInstruction.accounts.named["bridge"].pubkey.equals(
-            instruction.keys[0].pubkey
-          )
+            instruction.keys[0].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["bridge"].isSigner).toBe(
-          instruction.keys[0].isSigner
+          instruction.keys[0].isSigner,
         );
         expect(parsedInstruction.accounts.named["bridge"].isWritable).toBe(
-          instruction.keys[0].isWritable
+          instruction.keys[0].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["message"].pubkey.equals(
-            instruction.keys[1].pubkey
-          )
+            instruction.keys[1].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["message"].isSigner).toBe(
-          instruction.keys[1].isSigner
+          instruction.keys[1].isSigner,
         );
         expect(parsedInstruction.accounts.named["message"].isWritable).toBe(
-          instruction.keys[1].isWritable
+          instruction.keys[1].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["emitter"].pubkey.equals(
-            instruction.keys[2].pubkey
-          )
+            instruction.keys[2].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["emitter"].isSigner).toBe(
-          instruction.keys[2].isSigner
+          instruction.keys[2].isSigner,
         );
         expect(parsedInstruction.accounts.named["emitter"].isWritable).toBe(
-          instruction.keys[2].isWritable
+          instruction.keys[2].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["sequence"].pubkey.equals(
-            instruction.keys[3].pubkey
-          )
+            instruction.keys[3].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["sequence"].isSigner).toBe(
-          instruction.keys[3].isSigner
+          instruction.keys[3].isSigner,
         );
         expect(parsedInstruction.accounts.named["sequence"].isWritable).toBe(
-          instruction.keys[3].isWritable
+          instruction.keys[3].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["payer"].pubkey.equals(
-            instruction.keys[4].pubkey
-          )
+            instruction.keys[4].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["payer"].isSigner).toBe(
-          instruction.keys[4].isSigner
+          instruction.keys[4].isSigner,
         );
         expect(parsedInstruction.accounts.named["payer"].isWritable).toBe(
-          instruction.keys[4].isWritable
+          instruction.keys[4].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["feeCollector"].pubkey.equals(
-            instruction.keys[5].pubkey
-          )
+            instruction.keys[5].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["feeCollector"].isSigner).toBe(
-          instruction.keys[5].isSigner
+          instruction.keys[5].isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["feeCollector"].isWritable
+          parsedInstruction.accounts.named["feeCollector"].isWritable,
         ).toBe(instruction.keys[5].isWritable);
         expect(
           parsedInstruction.accounts.named["clock"].pubkey.equals(
-            instruction.keys[6].pubkey
-          )
+            instruction.keys[6].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["clock"].isSigner).toBe(
-          instruction.keys[6].isSigner
+          instruction.keys[6].isSigner,
         );
         expect(parsedInstruction.accounts.named["clock"].isWritable).toBe(
-          instruction.keys[6].isWritable
+          instruction.keys[6].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["rent"].pubkey.equals(
-            instruction.keys[7].pubkey
-          )
+            instruction.keys[7].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["rent"].isSigner).toBe(
-          instruction.keys[7].isSigner
+          instruction.keys[7].isSigner,
         );
         expect(parsedInstruction.accounts.named["rent"].isWritable).toBe(
-          instruction.keys[7].isWritable
+          instruction.keys[7].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["systemProgram"].pubkey.equals(
-            instruction.keys[8].pubkey
-          )
+            instruction.keys[8].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["systemProgram"].isSigner).toBe(
-          instruction.keys[8].isSigner
+          instruction.keys[8].isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["systemProgram"].isWritable
+          parsedInstruction.accounts.named["systemProgram"].isWritable,
         ).toBe(instruction.keys[8].isWritable);
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
 
@@ -176,8 +176,8 @@ test("Wormhole multisig instruction parse: send message with governance payload"
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
       new Wallet(new Keypair()),
-      AnchorProvider.defaultOptions()
-    )
+      AnchorProvider.defaultOptions(),
+    ),
   );
   const parser = MultisigParser.fromCluster(cluster);
 
@@ -204,119 +204,119 @@ test("Wormhole multisig instruction parse: send message with governance payload"
       const parsedInstruction = parser.parseInstruction(instruction);
       if (parsedInstruction instanceof WormholeMultisigInstruction) {
         expect(parsedInstruction.program).toBe(
-          MultisigInstructionProgram.WormholeBridge
+          MultisigInstructionProgram.WormholeBridge,
         );
         expect(parsedInstruction.name).toBe("postMessage");
         expect(
           parsedInstruction.accounts.named["bridge"].pubkey.equals(
-            instruction.keys[0].pubkey
-          )
+            instruction.keys[0].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["bridge"].isSigner).toBe(
-          instruction.keys[0].isSigner
+          instruction.keys[0].isSigner,
         );
         expect(parsedInstruction.accounts.named["bridge"].isWritable).toBe(
-          instruction.keys[0].isWritable
+          instruction.keys[0].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["message"].pubkey.equals(
-            instruction.keys[1].pubkey
-          )
+            instruction.keys[1].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["message"].isSigner).toBe(
-          instruction.keys[1].isSigner
+          instruction.keys[1].isSigner,
         );
         expect(parsedInstruction.accounts.named["message"].isWritable).toBe(
-          instruction.keys[1].isWritable
+          instruction.keys[1].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["emitter"].pubkey.equals(
-            instruction.keys[2].pubkey
-          )
+            instruction.keys[2].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["emitter"].isSigner).toBe(
-          instruction.keys[2].isSigner
+          instruction.keys[2].isSigner,
         );
         expect(parsedInstruction.accounts.named["emitter"].isWritable).toBe(
-          instruction.keys[2].isWritable
+          instruction.keys[2].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["sequence"].pubkey.equals(
-            instruction.keys[3].pubkey
-          )
+            instruction.keys[3].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["sequence"].isSigner).toBe(
-          instruction.keys[3].isSigner
+          instruction.keys[3].isSigner,
         );
         expect(parsedInstruction.accounts.named["sequence"].isWritable).toBe(
-          instruction.keys[3].isWritable
+          instruction.keys[3].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["payer"].pubkey.equals(
-            instruction.keys[4].pubkey
-          )
+            instruction.keys[4].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["payer"].isSigner).toBe(
-          instruction.keys[4].isSigner
+          instruction.keys[4].isSigner,
         );
         expect(parsedInstruction.accounts.named["payer"].isWritable).toBe(
-          instruction.keys[4].isWritable
+          instruction.keys[4].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["feeCollector"].pubkey.equals(
-            instruction.keys[5].pubkey
-          )
+            instruction.keys[5].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["feeCollector"].isSigner).toBe(
-          instruction.keys[5].isSigner
+          instruction.keys[5].isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["feeCollector"].isWritable
+          parsedInstruction.accounts.named["feeCollector"].isWritable,
         ).toBe(instruction.keys[5].isWritable);
         expect(
           parsedInstruction.accounts.named["clock"].pubkey.equals(
-            instruction.keys[6].pubkey
-          )
+            instruction.keys[6].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["clock"].isSigner).toBe(
-          instruction.keys[6].isSigner
+          instruction.keys[6].isSigner,
         );
         expect(parsedInstruction.accounts.named["clock"].isWritable).toBe(
-          instruction.keys[6].isWritable
+          instruction.keys[6].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["rent"].pubkey.equals(
-            instruction.keys[7].pubkey
-          )
+            instruction.keys[7].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["rent"].isSigner).toBe(
-          instruction.keys[7].isSigner
+          instruction.keys[7].isSigner,
         );
         expect(parsedInstruction.accounts.named["rent"].isWritable).toBe(
-          instruction.keys[7].isWritable
+          instruction.keys[7].isWritable,
         );
         expect(
           parsedInstruction.accounts.named["systemProgram"].pubkey.equals(
-            instruction.keys[8].pubkey
-          )
+            instruction.keys[8].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["systemProgram"].isSigner).toBe(
-          instruction.keys[8].isSigner
+          instruction.keys[8].isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["systemProgram"].isWritable
+          parsedInstruction.accounts.named["systemProgram"].isWritable,
         ).toBe(instruction.keys[8].isWritable);
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
 
         expect(parsedInstruction.args.nonce).toBe(0);
         expect(
-          parsedInstruction.args.payload.equals(executePostedVaa.encode())
+          parsedInstruction.args.payload.equals(executePostedVaa.encode()),
         );
         expect(parsedInstruction.args.consistencyLevel).toBe(0);
 
         if (parsedInstruction.governanceAction instanceof ExecutePostedVaa) {
           expect(parsedInstruction.governanceAction.targetChainId).toBe(
-            "pythnet"
+            "pythnet",
           );
 
           (
@@ -325,23 +325,23 @@ test("Wormhole multisig instruction parse: send message with governance payload"
           ).forEach((instruction, i) => {
             expect(
               instruction.programId.equals(
-                executePostedVaa.instructions[i].programId
-              )
+                executePostedVaa.instructions[i].programId,
+              ),
             );
             expect(
-              instruction.data.equals(executePostedVaa.instructions[i].data)
+              instruction.data.equals(executePostedVaa.instructions[i].data),
             );
             instruction.keys.forEach((account, j) => {
               expect(
                 account.pubkey.equals(
-                  executePostedVaa.instructions[i].keys[j].pubkey
-                )
+                  executePostedVaa.instructions[i].keys[j].pubkey,
+                ),
               ).toBeTruthy();
               expect(account.isSigner).toBe(
-                executePostedVaa.instructions[i].keys[j].isSigner
+                executePostedVaa.instructions[i].keys[j].isSigner,
               );
               expect(account.isWritable).toBe(
-                executePostedVaa.instructions[i].keys[j].isWritable
+                executePostedVaa.instructions[i].keys[j].isWritable,
               );
             });
           });

@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "cli": "ts-node src/cli.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write ."
   },
   "author": "",
   "license": "ISC",
@@ -16,7 +18,7 @@
   "devDependencies": {
     "@types/node": "^18.7.21",
     "@types/yargs": "^17.0.13",
-    "prettier": "2.8.0",
+    "prettier": "catalog:",
     "typescript": "^5.3.3"
   },
   "dependencies": {

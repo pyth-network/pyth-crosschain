@@ -28,7 +28,7 @@ export type WormholeCoreBridgeSolana = {
         defined: "usize";
       };
       value: "30 * 1_024";
-    }
+    },
   ];
   instructions: [
     {
@@ -49,7 +49,7 @@ export type WormholeCoreBridgeSolana = {
         "",
         "NOTE: If you wish to publish a small message (one where the data does not overflow the",
         "Solana transaction size), it is recommended that you use an [sdk](crate::sdk::cpi) method to",
-        "either prepare your message or post a message as a program ID emitter."
+        "either prepare your message or post a message as a program ID emitter.",
       ];
       accounts: [
         {
@@ -57,7 +57,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: false;
           isSigner: true;
           docs: [
-            "This authority is the only one who can write to the draft message account."
+            "This authority is the only one who can write to the draft message account.",
           ];
         },
         {
@@ -65,7 +65,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: true;
           isSigner: false;
           docs: ["Bridge."];
-        }
+        },
       ];
       args: [
         {
@@ -73,7 +73,7 @@ export type WormholeCoreBridgeSolana = {
           type: {
             defined: "InitMessageV1Args";
           };
-        }
+        },
       ];
     },
     {
@@ -81,7 +81,7 @@ export type WormholeCoreBridgeSolana = {
       docs: [
         "Processor used to write to a draft [PostedMessageV1](crate::state::PostedMessageV1) account.",
         "This instruction requires an authority (the emitter authority) to interact with the message",
-        "account."
+        "account.",
       ];
       accounts: [
         {
@@ -94,7 +94,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: true;
           isSigner: false;
           docs: ["only be published when the message is finalized."];
-        }
+        },
       ];
       args: [
         {
@@ -102,7 +102,7 @@ export type WormholeCoreBridgeSolana = {
           type: {
             defined: "WriteMessageV1Args";
           };
-        }
+        },
       ];
     },
     {
@@ -112,7 +112,7 @@ export type WormholeCoreBridgeSolana = {
         "Once finalized, this message account cannot be written to again. A finalized message is the",
         "only state the legacy post message instruction can accept before publishing. This",
         "instruction requires an authority (the emitter authority) to interact with the message",
-        "account."
+        "account.",
       ];
       accounts: [
         {
@@ -125,7 +125,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: true;
           isSigner: false;
           docs: ["only be published when the message is finalized."];
-        }
+        },
       ];
       args: [];
     },
@@ -134,7 +134,7 @@ export type WormholeCoreBridgeSolana = {
       docs: [
         "Processor used to process a draft [PostedMessageV1](crate::state::PostedMessageV1) account.",
         "This instruction requires an authority (the emitter authority) to interact with the message",
-        "account."
+        "account.",
       ];
       accounts: [
         {
@@ -152,7 +152,7 @@ export type WormholeCoreBridgeSolana = {
           name: "closeAccountDestination";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -160,7 +160,7 @@ export type WormholeCoreBridgeSolana = {
       name: "initEncodedVaa";
       docs: [
         "Processor used to intialize a created account as [EncodedVaa](crate::state::EncodedVaa). An",
-        "authority (the write authority) is established with this instruction."
+        "authority (the write authority) is established with this instruction.",
       ];
       accounts: [
         {
@@ -168,7 +168,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: false;
           isSigner: true;
           docs: [
-            "The authority who can write to the VAA account when it is being processed."
+            "The authority who can write to the VAA account when it is being processed.",
           ];
         },
         {
@@ -176,7 +176,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: true;
           isSigner: false;
           docs: ["Bridge."];
-        }
+        },
       ];
       args: [];
     },
@@ -184,7 +184,7 @@ export type WormholeCoreBridgeSolana = {
       name: "closeEncodedVaa";
       docs: [
         "Processor used to close an [EncodedVaa](crate::state::EncodedVaa). This instruction requires",
-        "an authority (the write authority) to interact witht he encoded VAA account."
+        "an authority (the write authority) to interact witht he encoded VAA account.",
       ];
       accounts: [
         {
@@ -194,7 +194,7 @@ export type WormholeCoreBridgeSolana = {
           docs: [
             "This account is only required to be mutable for the `CloseVaaAccount` directive. This",
             "authority is the same signer that originally created the VAA accounts, so he is the one that",
-            "will receive the lamports back for the closed accounts."
+            "will receive the lamports back for the closed accounts.",
           ];
         },
         {
@@ -202,7 +202,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: true;
           isSigner: false;
           docs: ["written to and then verified."];
-        }
+        },
       ];
       args: [];
     },
@@ -211,7 +211,7 @@ export type WormholeCoreBridgeSolana = {
       docs: [
         "Processor used to write to an [EncodedVaa](crate::state::EncodedVaa) account. This",
         "instruction requires an authority (the write authority) to interact with the encoded VAA",
-        "account."
+        "account.",
       ];
       accounts: [
         {
@@ -219,7 +219,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: false;
           isSigner: true;
           docs: [
-            "The only authority that can write to the encoded VAA account."
+            "The only authority that can write to the encoded VAA account.",
           ];
         },
         {
@@ -227,7 +227,7 @@ export type WormholeCoreBridgeSolana = {
           isMut: true;
           isSigner: false;
           docs: ["written to and then verified."];
-        }
+        },
       ];
       args: [
         {
@@ -235,7 +235,7 @@ export type WormholeCoreBridgeSolana = {
           type: {
             defined: "WriteEncodedVaaArgs";
           };
-        }
+        },
       ];
     },
     {
@@ -243,7 +243,7 @@ export type WormholeCoreBridgeSolana = {
       docs: [
         "Processor used to verify an [EncodedVaa](crate::state::EncodedVaa) account as a version 1",
         "VAA (guardian signatures attesting to this observation). This instruction requires an",
-        "authority (the write authority) to interact with the encoded VAA account."
+        "authority (the write authority) to interact with the encoded VAA account.",
       ];
       accounts: [
         {
@@ -263,9 +263,9 @@ export type WormholeCoreBridgeSolana = {
           isSigner: false;
           docs: [
             "Guardian set account, which should be the same one that was used to attest for the VAA. The",
-            "signatures in the encoded VAA are verified against this guardian set."
+            "signatures in the encoded VAA are verified against this guardian set.",
           ];
-        }
+        },
       ];
       args: [];
     },
@@ -277,7 +277,7 @@ export type WormholeCoreBridgeSolana = {
         "",
         "NOTE: Because the legacy verify signatures instruction was not required for the Posted VAA",
         "account to exist, the encoded [SignatureSet](crate::state::SignatureSet) is the default",
-        "[Pubkey]."
+        "[Pubkey].",
       ];
       accounts: [
         {
@@ -286,7 +286,7 @@ export type WormholeCoreBridgeSolana = {
           isSigner: true;
           docs: [
             "Payer to create the posted VAA account. This instruction allows anyone with an encoded VAA",
-            "to create a posted VAA account."
+            "to create a posted VAA account.",
           ];
         },
         {
@@ -301,7 +301,7 @@ export type WormholeCoreBridgeSolana = {
             "allow a pathway to convert the encoded VAA into a posted VAA. However, the payload is",
             "restricted to 9.5KB, which is much larger than what was possible with the old implementation",
             "using the legacy post vaa instruction. The Core Bridge program will not support posting VAAs",
-            "larger than this payload size."
+            "larger than this payload size.",
           ];
         },
         {
@@ -313,7 +313,7 @@ export type WormholeCoreBridgeSolana = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -321,7 +321,7 @@ export type WormholeCoreBridgeSolana = {
       name: "closeSignatureSet";
       docs: [
         "Processor used to close a [SignatureSet](crate::state::SignatureSet), which was used to",
-        "verify the VAA using the legacy parse and verify procedure."
+        "verify the VAA using the legacy parse and verify procedure.",
       ];
       accounts: [
         {
@@ -342,12 +342,12 @@ export type WormholeCoreBridgeSolana = {
           docs: [
             "Signature set that may have been used to create the posted VAA account. If the `post_vaa_v1`",
             "instruction were used to create the posted VAA account, then the encoded signature set",
-            "pubkey would be all zeroes."
+            "pubkey would be all zeroes.",
           ];
-        }
+        },
       ];
       args: [];
-    }
+    },
   ];
   accounts: [
     {
@@ -361,7 +361,7 @@ export type WormholeCoreBridgeSolana = {
         "NOTE: The account schema is the same as legacy guardian sets, but this account now has a",
         "discriminator generated by Anchor's [account] macro. When the Core Bridge program performs a",
         "guardian set update with this implementation, guardian sets will now have this Anchor-generated",
-        "discriminator."
+        "discriminator.",
       ];
       type: {
         kind: "struct";
@@ -369,7 +369,7 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "index";
             docs: [
-              "Index representing an incrementing version number for this guardian set."
+              "Index representing an incrementing version number for this guardian set.",
             ];
             type: "u32";
           },
@@ -385,7 +385,7 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "creationTime";
             docs: [
-              "Timestamp representing the time this guardian became active."
+              "Timestamp representing the time this guardian became active.",
             ];
             type: {
               defined: "Timestamp";
@@ -394,12 +394,12 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "expirationTime";
             docs: [
-              "Expiration time when VAAs issued by this set are no longer valid."
+              "Expiration time when VAAs issued by this set are no longer valid.",
             ];
             type: {
               defined: "Timestamp";
             };
-          }
+          },
         ];
       };
     },
@@ -414,7 +414,7 @@ export type WormholeCoreBridgeSolana = {
         "NOTE: The account schema is the same as legacy signature sets, but this account now has a",
         "discriminator generated by Anchor's [account] macro. When the Core Bridge program upgrades to",
         "this implementation from the old one, integrators in the middle of verifying signatures will",
-        "have to use a new keypair for this account and try again."
+        "have to use a new keypair for this account and try again.",
       ];
       type: {
         kind: "struct";
@@ -437,7 +437,7 @@ export type WormholeCoreBridgeSolana = {
             name: "guardianSetIndex";
             docs: ["Index of the guardian set"];
             type: "u32";
-          }
+          },
         ];
       };
     },
@@ -447,7 +447,7 @@ export type WormholeCoreBridgeSolana = {
         "Account used to warehouse VAA buffer.",
         "",
         "NOTE: This account should not be used by an external application unless the header's status is",
-        "`Verified`. It is encouraged to use the `EncodedVaa` zero-copy account struct instead."
+        "`Verified`. It is encouraged to use the `EncodedVaa` zero-copy account struct instead.",
       ];
       type: {
         kind: "struct";
@@ -463,10 +463,10 @@ export type WormholeCoreBridgeSolana = {
             name: "buf";
             docs: ["VAA buffer."];
             type: "bytes";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   types: [
     {
@@ -490,7 +490,7 @@ export type WormholeCoreBridgeSolana = {
                 array: ["u8", 20];
               };
             };
-          }
+          },
         ];
       };
     },
@@ -499,7 +499,7 @@ export type WormholeCoreBridgeSolana = {
       docs: [
         "Arguments used to post a new Wormhole (Core Bridge) message either using",
         "[post_message](crate::legacy::instruction::post_message) or",
-        "[post_message_unreliable](crate::legacy::instruction::post_message_unreliable)."
+        "[post_message_unreliable](crate::legacy::instruction::post_message_unreliable).",
       ];
       type: {
         kind: "struct";
@@ -520,7 +520,7 @@ export type WormholeCoreBridgeSolana = {
             type: {
               defined: "Commitment";
             };
-          }
+          },
         ];
       };
     },
@@ -531,7 +531,7 @@ export type WormholeCoreBridgeSolana = {
         "",
         "NOTE: It is preferred to use the new process of verifying a VAA using the new Core Bridge Anchor",
         "instructions. See [init_encoded_vaa](crate::wormhole_core_bridge_solana::init_encoded_vaa) and",
-        "[write_encoded_vaa](crate::wormhole_core_bridge_solana::write_encoded_vaa) for more info."
+        "[write_encoded_vaa](crate::wormhole_core_bridge_solana::write_encoded_vaa) for more info.",
       ];
       type: {
         kind: "struct";
@@ -556,7 +556,7 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "emitterChain";
             docs: [
-              "The Wormhole chain ID denoting the origin of this message."
+              "The Wormhole chain ID denoting the origin of this message.",
             ];
             type: "u16";
           },
@@ -581,7 +581,7 @@ export type WormholeCoreBridgeSolana = {
             name: "payload";
             docs: ["Message payload."];
             type: "bytes";
-          }
+          },
         ];
       };
     },
@@ -592,7 +592,7 @@ export type WormholeCoreBridgeSolana = {
         "",
         "NOTE: It is preferred to use the new process of verifying a VAA using the new Core Bridge Anchor",
         "instructions. See [init_encoded_vaa](crate::wormhole_core_bridge_solana::init_encoded_vaa) and",
-        "[write_encoded_vaa](crate::wormhole_core_bridge_solana::write_encoded_vaa) for more info."
+        "[write_encoded_vaa](crate::wormhole_core_bridge_solana::write_encoded_vaa) for more info.",
       ];
       type: {
         kind: "struct";
@@ -606,12 +606,12 @@ export type WormholeCoreBridgeSolana = {
               "",
               "NOTE: In the legacy implementation, this argument being a fixed-sized array of 19 only",
               "allows the first 19 guardians of any size guardian set to be verified. Because of this, it",
-              "is absolutely important to use the new process of verifying a VAA."
+              "is absolutely important to use the new process of verifying a VAA.",
             ];
             type: {
               array: ["i8", 19];
             };
-          }
+          },
         ];
       };
     },
@@ -628,7 +628,7 @@ export type WormholeCoreBridgeSolana = {
       docs: [
         "Account used to store the current configuration of the bridge, including tracking Wormhole fee",
         "payments. For governance decrees, the guardian set index is used to determine whether a decree",
-        "was attested for using the latest guardian set."
+        "was attested for using the latest guardian set.",
       ];
       type: {
         kind: "struct";
@@ -636,7 +636,7 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "guardianSetIndex";
             docs: [
-              "The current guardian set index, used to decide which signature sets to accept."
+              "The current guardian set index, used to decide which signature sets to accept.",
             ];
             type: "u32";
           },
@@ -644,7 +644,7 @@ export type WormholeCoreBridgeSolana = {
             name: "gap0";
             docs: [
               "Gap. In the old implementation, this was an amount that kept track of message fees that",
-              "were paid to the program's fee collector."
+              "were paid to the program's fee collector.",
             ];
             type: {
               array: ["u8", 8];
@@ -655,7 +655,7 @@ export type WormholeCoreBridgeSolana = {
             docs: [
               "Period for how long a guardian set is valid after it has been replaced by a new one.  This",
               "guarantees that VAAs issued by that set can still be submitted for a certain period.  In",
-              "this period we still trust the old guardian set."
+              "this period we still trust the old guardian set.",
             ];
             type: {
               defined: "Duration";
@@ -664,17 +664,17 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "feeLamports";
             docs: [
-              "Amount of lamports that needs to be paid to the protocol to post a message"
+              "Amount of lamports that needs to be paid to the protocol to post a message",
             ];
             type: "u64";
-          }
+          },
         ];
       };
     },
     {
       name: "LegacyEmitterSequence";
       docs: [
-        "Account used to store the current sequence number for a given emitter."
+        "Account used to store the current sequence number for a given emitter.",
       ];
       type: {
         kind: "struct";
@@ -682,10 +682,10 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "value";
             docs: [
-              "Current sequence number, which will be used the next time this emitter publishes a message."
+              "Current sequence number, which will be used the next time this emitter publishes a message.",
             ];
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -709,7 +709,7 @@ export type WormholeCoreBridgeSolana = {
             type: {
               defined: "EmitterType";
             };
-          }
+          },
         ];
       };
     },
@@ -724,14 +724,14 @@ export type WormholeCoreBridgeSolana = {
             type: {
               defined: "PostedMessageV1Data";
             };
-          }
+          },
         ];
       };
     },
     {
       name: "PostedMessageV1Info";
       docs: [
-        "Message metadata defining information about a published Wormhole message."
+        "Message metadata defining information about a published Wormhole message.",
       ];
       type: {
         kind: "struct";
@@ -745,7 +745,7 @@ export type WormholeCoreBridgeSolana = {
             name: "emitterAuthority";
             docs: [
               "Authority used to write the message. This field is set to default when the message is",
-              "posted."
+              "posted.",
             ];
             type: "publicKey";
           },
@@ -755,7 +755,7 @@ export type WormholeCoreBridgeSolana = {
               "If a message is being written to, this status is used to determine which state this",
               "account is in (e.g. [MessageStatus::Writing] indicates that the emitter authority is still",
               "writing its message to this account). When this message is posted, this value will be",
-              "set to [MessageStatus::Published]."
+              "set to [MessageStatus::Published].",
             ];
             type: {
               defined: "MessageStatus";
@@ -791,7 +791,7 @@ export type WormholeCoreBridgeSolana = {
               "Always `1`.",
               "",
               "NOTE: Saving this value is silly, but we are keeping it to be consistent with how the posted",
-              "message account is written."
+              "message account is written.",
             ];
             type: {
               defined: "ChainIdSolanaOnly";
@@ -800,10 +800,10 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "emitter";
             docs: [
-              "Emitter of the message. This may either be the emitter authority or a program ID."
+              "Emitter of the message. This may either be the emitter authority or a program ID.",
             ];
             type: "publicKey";
-          }
+          },
         ];
       };
     },
@@ -811,7 +811,7 @@ export type WormholeCoreBridgeSolana = {
       name: "PostedMessageV1Data";
       docs: [
         "Underlying data for either [PostedMessageV1](crate::legacy::state::PostedMessageV1) or",
-        "[PostedMessageV1Unreliable](crate::legacy::state::PostedMessageV1Unreliable)."
+        "[PostedMessageV1Unreliable](crate::legacy::state::PostedMessageV1Unreliable).",
       ];
       type: {
         kind: "struct";
@@ -827,7 +827,7 @@ export type WormholeCoreBridgeSolana = {
             name: "payload";
             docs: ["Encoded message."];
             type: "bytes";
-          }
+          },
         ];
       };
     },
@@ -837,7 +837,7 @@ export type WormholeCoreBridgeSolana = {
         "Account used to store a published Wormhole message.",
         "",
         "NOTE: If your integration requires reusable message accounts, please see",
-        "[PostedMessageV1Unreliable](crate::legacy::state::PostedMessageV1Unreliable)."
+        "[PostedMessageV1Unreliable](crate::legacy::state::PostedMessageV1Unreliable).",
       ];
       type: {
         kind: "struct";
@@ -848,7 +848,7 @@ export type WormholeCoreBridgeSolana = {
             type: {
               defined: "PostedMessageV1Data";
             };
-          }
+          },
         ];
       };
     },
@@ -856,7 +856,7 @@ export type WormholeCoreBridgeSolana = {
       name: "PostedVaaV1Info";
       docs: [
         "VAA metadata defining information about a Wormhole message attested for by an active guardian",
-        "set."
+        "set.",
       ];
       type: {
         kind: "struct";
@@ -877,7 +877,7 @@ export type WormholeCoreBridgeSolana = {
             name: "signatureSet";
             docs: [
               "Pubkey of [SignatureSet](crate::state::SignatureSet) account that represents this VAA's",
-              "signature verification."
+              "signature verification.",
             ];
             type: "publicKey";
           },
@@ -890,7 +890,7 @@ export type WormholeCoreBridgeSolana = {
               "which is zero for VAA data (posted messages and VAAs resemble the same account schema). By",
               "changing this to the guardian set index, we patch a bug with verifying governance VAAs for",
               "the Core Bridge (other Core Bridge implementations require that the guardian set that",
-              "attested for the governance VAA is the current one)."
+              "attested for the governance VAA is the current one).",
             ];
             type: "u32";
           },
@@ -907,7 +907,7 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "emitterChain";
             docs: [
-              "The Wormhole chain ID denoting the origin of this message."
+              "The Wormhole chain ID denoting the origin of this message.",
             ];
             type: "u16";
           },
@@ -917,7 +917,7 @@ export type WormholeCoreBridgeSolana = {
             type: {
               array: ["u8", 32];
             };
-          }
+          },
         ];
       };
     },
@@ -938,7 +938,7 @@ export type WormholeCoreBridgeSolana = {
             name: "payload";
             docs: ["Message payload."];
             type: "bytes";
-          }
+          },
         ];
       };
     },
@@ -946,7 +946,7 @@ export type WormholeCoreBridgeSolana = {
       name: "WriteEncodedVaaArgs";
       docs: [
         "Arguments for the [write_encoded_vaa](crate::wormhole_core_bridge_solana::write_encoded_vaa)",
-        "instruction."
+        "instruction.",
       ];
       type: {
         kind: "struct";
@@ -959,10 +959,10 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "data";
             docs: [
-              "Data representing subset of VAA buffer starting at specified index."
+              "Data representing subset of VAA buffer starting at specified index.",
             ];
             type: "bytes";
-          }
+          },
         ];
       };
     },
@@ -970,7 +970,7 @@ export type WormholeCoreBridgeSolana = {
       name: "InitMessageV1Args";
       docs: [
         "Arguments for the [init_message_v1](crate::wormhole_core_bridge_solana::init_message_v1)",
-        "instruction."
+        "instruction.",
       ];
       type: {
         kind: "struct";
@@ -992,12 +992,12 @@ export type WormholeCoreBridgeSolana = {
             docs: [
               "Optional program ID if the emitter address will be your program ID.",
               "",
-              'NOTE: If `Some(program_id)`, your emitter authority seeds to be \\[b"emitter\\].'
+              'NOTE: If `Some(program_id)`, your emitter authority seeds to be \\[b"emitter\\].',
             ];
             type: {
               option: "publicKey";
             };
-          }
+          },
         ];
       };
     },
@@ -1005,7 +1005,7 @@ export type WormholeCoreBridgeSolana = {
       name: "WriteMessageV1Args";
       docs: [
         "Arguments for the [write_message_v1](crate::wormhole_core_bridge_solana::write_message_v1)",
-        "instruction."
+        "instruction.",
       ];
       type: {
         kind: "struct";
@@ -1018,10 +1018,10 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "data";
             docs: [
-              "Data representing subset of message buffer starting at specified index."
+              "Data representing subset of message buffer starting at specified index.",
             ];
             type: "bytes";
-          }
+          },
         ];
       };
     },
@@ -1035,7 +1035,7 @@ export type WormholeCoreBridgeSolana = {
             name: "status";
             docs: [
               "Processing status. **This encoded VAA is only considered usable when this status is set",
-              "to [Verified](ProcessingStatus::Verified).**"
+              "to [Verified](ProcessingStatus::Verified).**",
             ];
             type: {
               defined: "ProcessingStatus";
@@ -1049,10 +1049,10 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "version";
             docs: [
-              "VAA version. Only when the VAA is verified is this version set to a value."
+              "VAA version. Only when the VAA is verified is this version set to a value.",
             ];
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -1061,7 +1061,7 @@ export type WormholeCoreBridgeSolana = {
       docs: [
         "This struct defines unix timestamp as u32 (as opposed to more modern systems that have adopted",
         "i64). Methods for this struct are meant to convert Solana's clock type to this type assuming we",
-        "are far from year 2038."
+        "are far from year 2038.",
       ];
       type: {
         kind: "struct";
@@ -1069,14 +1069,14 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "value";
             type: "u32";
-          }
+          },
         ];
       };
     },
     {
       name: "Duration";
       docs: [
-        "To be used with the [Timestamp] type, this struct defines a duration in seconds."
+        "To be used with the [Timestamp] type, this struct defines a duration in seconds.",
       ];
       type: {
         kind: "struct";
@@ -1084,7 +1084,7 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "seconds";
             type: "u32";
-          }
+          },
         ];
       };
     },
@@ -1099,7 +1099,7 @@ export type WormholeCoreBridgeSolana = {
             type: {
               array: ["u8", 32];
             };
-          }
+          },
         ];
       };
     },
@@ -1108,7 +1108,7 @@ export type WormholeCoreBridgeSolana = {
       docs: [
         "This type is kind of silly. But because [PostedMessageV1](crate::state::PostedMessageV1) has the",
         "emitter chain ID as a field, which is unnecessary since it is always Solana's chain ID, we use",
-        "this type to guarantee that the encoded chain ID is always `1`."
+        "this type to guarantee that the encoded chain ID is always `1`.",
       ];
       type: {
         kind: "struct";
@@ -1116,7 +1116,7 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "chainId";
             type: "u16";
-          }
+          },
         ];
       };
     },
@@ -1138,7 +1138,7 @@ export type WormholeCoreBridgeSolana = {
           {
             name: "sequence";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -1149,7 +1149,7 @@ export type WormholeCoreBridgeSolana = {
         "",
         "NOTE: No more instructions should be added to this enum. Instead, add them as Anchor instruction",
         "handlers, which will inevitably live in",
-        "[wormhole_core_bridge_solana](crate::wormhole_core_bridge_solana)."
+        "[wormhole_core_bridge_solana](crate::wormhole_core_bridge_solana).",
       ];
       type: {
         kind: "enum";
@@ -1180,7 +1180,7 @@ export type WormholeCoreBridgeSolana = {
           },
           {
             name: "PostMessageUnreliable";
-          }
+          },
         ];
       };
     },
@@ -1197,7 +1197,7 @@ export type WormholeCoreBridgeSolana = {
           },
           {
             name: "Executable";
-          }
+          },
         ];
       };
     },
@@ -1205,7 +1205,7 @@ export type WormholeCoreBridgeSolana = {
       name: "MessageStatus";
       docs: [
         "Status of a message. When a message is posted, its status is",
-        "[Published](MessageStatus::Published)."
+        "[Published](MessageStatus::Published).",
       ];
       type: {
         kind: "enum";
@@ -1218,7 +1218,7 @@ export type WormholeCoreBridgeSolana = {
           },
           {
             name: "ReadyForPublishing";
-          }
+          },
         ];
       };
     },
@@ -1244,7 +1244,7 @@ export type WormholeCoreBridgeSolana = {
                 type: {
                   defined: "Commitment";
                 };
-              }
+              },
             ];
           },
           {
@@ -1267,12 +1267,12 @@ export type WormholeCoreBridgeSolana = {
                 type: {
                   defined: "Commitment";
                 };
-              }
+              },
             ];
           },
           {
             name: "PreparedMessage";
-          }
+          },
         ];
       };
     },
@@ -1290,7 +1290,7 @@ export type WormholeCoreBridgeSolana = {
           },
           {
             name: "Verified";
-          }
+          },
         ];
       };
     },
@@ -1300,7 +1300,7 @@ export type WormholeCoreBridgeSolana = {
         "Representation of Solana's commitment levels. This enum is not exhaustive because Wormhole only",
         "considers these two commitment levels in its Guardian observation.",
         "",
-        "See <https://docs.solana.com/cluster/commitments> for more info."
+        "See <https://docs.solana.com/cluster/commitments> for more info.",
       ];
       type: {
         kind: "enum";
@@ -1310,10 +1310,10 @@ export type WormholeCoreBridgeSolana = {
           },
           {
             name: "Finalized";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   errors: [
     {
@@ -1600,7 +1600,7 @@ export type WormholeCoreBridgeSolana = {
       code: 10286;
       name: "ExecutableDisallowed";
       msg: "ExecutableDisallowed";
-    }
+    },
   ];
 };
 

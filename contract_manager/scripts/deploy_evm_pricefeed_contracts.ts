@@ -29,7 +29,7 @@ const CACHE_FILE = ".cache-deploy-evm";
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_pricefeed_contracts.ts")
   .usage(
-    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain0> --chain <chain1>"
+    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain0> --chain <chain1>",
   )
   .options({
     ...COMMON_DEPLOY_OPTIONS,
@@ -50,25 +50,25 @@ const parser = yargs(hideBin(process.argv))
 async function deployPriceFeedContracts(
   chain: EvmChain,
   config: DeploymentConfig,
-  wormholeAddr: string
+  wormholeAddr: string,
 ): Promise<string> {
   const pythImplAddr = await deployIfNotCached(
     CACHE_FILE,
     chain,
     config,
     "PythUpgradable",
-    []
+    [],
   );
 
   // Craft the init data for the proxy contract
   const { dataSources, governanceDataSource } = getDefaultDeploymentConfig(
-    config.type
+    config.type,
   );
 
   const pythImplContract = getWeb3Contract(
     config.jsonOutputDir,
     "PythUpgradable",
-    pythImplAddr
+    pythImplAddr,
   );
 
   const pythInitData = pythImplContract.methods
@@ -80,7 +80,7 @@ async function deployPriceFeedContracts(
       "0x" + governanceDataSource.emitterAddress,
       0, // governanceInitialSequence
       config.validTimePeriodSeconds,
-      config.singleUpdateFeeInWei
+      config.singleUpdateFeeInWei,
     )
     .encodeABI();
 
@@ -105,7 +105,7 @@ async function main() {
   };
 
   console.log(
-    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`
+    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`,
   );
 
   const chainNames = argv.chain;
@@ -118,13 +118,13 @@ async function main() {
     const wormholeContract = await getOrDeployWormholeContract(
       chain,
       deploymentConfig,
-      CACHE_FILE
+      CACHE_FILE,
     );
 
     const priceFeedAddr = await deployPriceFeedContracts(
       chain,
       deploymentConfig,
-      wormholeContract.address
+      wormholeContract.address,
     );
 
     if (deploymentConfig.saveContract) {
@@ -135,7 +135,7 @@ async function main() {
     }
 
     console.log(
-      `✅ Deployed price feed contracts on ${chain.getId()} at ${priceFeedAddr}\n\n`
+      `✅ Deployed price feed contracts on ${chain.getId()} at ${priceFeedAddr}\n\n`,
     );
   }
 }

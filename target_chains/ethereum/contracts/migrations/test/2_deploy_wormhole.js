@@ -25,7 +25,7 @@ module.exports = async function (deployer) {
       initialSigners,
       chainId,
       governanceChainId,
-      governanceContract
+      governanceContract,
     )
     .encodeABI();
 

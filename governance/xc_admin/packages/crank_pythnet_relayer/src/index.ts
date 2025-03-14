@@ -37,7 +37,7 @@ import {
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const EMITTER: PublicKey = new PublicKey(envOrErr("EMITTER"));
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
+  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii"))),
 );
 const OFFSET: number = Number(process.env.OFFSET ?? "-1");
 const SKIP_FAILED_REMOTE_INSTRUCTIONS: boolean =
@@ -55,7 +55,7 @@ async function run() {
     {
       commitment: COMMITMENT,
       preflightCommitment: COMMITMENT,
-    }
+    },
   );
   const multisigParser = MultisigParser.fromCluster(CLUSTER);
 
@@ -63,12 +63,11 @@ async function run() {
 
   const claimRecordAddress: PublicKey = PublicKey.findProgramAddressSync(
     [Buffer.from(CLAIM_RECORD_SEED), EMITTER.toBuffer()],
-    remoteExecutor.programId
+    remoteExecutor.programId,
   )[0];
   const executorKey: PublicKey = mapKey(EMITTER);
-  const claimRecord = await remoteExecutor.account.claimRecord.fetchNullable(
-    claimRecordAddress
-  );
+  const claimRecord =
+    await remoteExecutor.account.claimRecord.fetchNullable(claimRecordAddress);
   let lastSequenceNumber: number = claimRecord
     ? (claimRecord.sequence as BN).toNumber()
     : -1;
@@ -82,8 +81,8 @@ async function run() {
     const response = await (
       await fetch(
         `${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
-          "hex"
-        )}/${lastSequenceNumber}`
+          "hex",
+        )}/${lastSequenceNumber}`,
       )
     ).json();
 
@@ -105,7 +104,7 @@ async function run() {
           WORMHOLE_ADDRESS[CLUSTER]!,
           provider.wallet.publicKey,
           Buffer.from(response.vaaBytes, "base64"),
-          { commitment: COMMITMENT }
+          { commitment: COMMITMENT },
         );
 
         console.log(`VAA ${lastSequenceNumber} relayed. executing ...`);
@@ -123,7 +122,7 @@ async function run() {
           extraAccountMetas.push(
             ...ix.keys.filter((acc) => {
               return !acc.pubkey.equals(executorKey);
-            })
+            }),
           );
 
           const parsedInstruction = multisigParser.parseInstruction(ix);
@@ -141,8 +140,8 @@ async function run() {
                 CLUSTER,
                 provider.wallet.publicKey,
                 parsedInstruction.args.symbol,
-                AccountType.Product
-              )
+                AccountType.Product,
+              ),
             );
             productAccountToSymbol[
               parsedInstruction.accounts.named.productAccount.pubkey.toBase58()
@@ -152,7 +151,7 @@ async function run() {
             parsedInstruction.name == "addPrice"
           ) {
             const productAccount = await provider.connection.getAccountInfo(
-              parsedInstruction.accounts.named.productAccount.pubkey
+              parsedInstruction.accounts.named.productAccount.pubkey,
             );
             const productSymbol = productAccount
               ? parseProductData(productAccount.data).product.symbol
@@ -166,8 +165,8 @@ async function run() {
                   CLUSTER,
                   provider.wallet.publicKey,
                   productSymbol,
-                  AccountType.Price
-                )
+                  AccountType.Price,
+                ),
               );
             } else {
               throw Error("Product account not found");
@@ -180,8 +179,8 @@ async function run() {
               await createDeterministicPublisherBufferAccountInstruction(
                 provider.connection,
                 provider.wallet.publicKey,
-                parsedInstruction.args.publisherKey
-              )
+                parsedInstruction.args.publisherKey,
+              ),
             );
           }
         }
@@ -193,7 +192,7 @@ async function run() {
               claimRecord: claimRecordAddress,
               postedVaa: derivePostedVaaKey(
                 WORMHOLE_ADDRESS[CLUSTER]!,
-                vaa.hash
+                vaa.hash,
               ),
             })
             .remainingAccounts(extraAccountMetas)
@@ -214,8 +213,8 @@ async function run() {
       console.log(`All VAAs have been relayed`);
       console.log(
         `${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
-          "hex"
-        )}/${lastSequenceNumber}`
+          "hex",
+        )}/${lastSequenceNumber}`,
       );
       break;
     } else {

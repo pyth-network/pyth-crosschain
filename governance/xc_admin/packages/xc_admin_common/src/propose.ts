@@ -66,7 +66,7 @@ export class MultisigVault {
     wallet: Wallet,
     cluster: PythCluster,
     squad: SquadsMesh,
-    vault: PublicKey
+    vault: PublicKey,
   ) {
     this.wallet = wallet;
     this.cluster = cluster;
@@ -87,7 +87,7 @@ export class MultisigVault {
     const msAccount = await this.getMultisigAccount();
     const localAuthorityPDA = await this.squad.getAuthorityPDA(
       msAccount.publicKey,
-      msAccount.authorityIndex
+      msAccount.authorityIndex,
     );
 
     if (cluster === undefined || cluster === this.cluster) {
@@ -117,69 +117,69 @@ export class MultisigVault {
     return new AnchorProvider(
       this.squad.connection,
       this.squad.wallet as Wallet,
-      opts
+      opts,
     );
   }
 
   // Convenience wrappers around squads methods
 
   public async createProposalIx(
-    proposalIndex: number
+    proposalIndex: number,
   ): Promise<[TransactionInstruction, PublicKey]> {
     const msAccount = await this.squad.getMultisig(this.vault);
 
     const ix = await this.squad.buildCreateTransaction(
       msAccount.publicKey,
       msAccount.authorityIndex,
-      proposalIndex
+      proposalIndex,
     );
 
     const newProposalAddress = getTxPDA(
       this.vault,
       new BN(proposalIndex),
-      this.squad.multisigProgramId
+      this.squad.multisigProgramId,
     )[0];
 
     return [ix, newProposalAddress];
   }
 
   public async activateProposalIx(
-    proposalAddress: PublicKey
+    proposalAddress: PublicKey,
   ): Promise<TransactionInstruction> {
     return await this.squad.buildActivateTransaction(
       this.vault,
-      proposalAddress
+      proposalAddress,
     );
   }
 
   public async approveProposalIx(
-    proposalAddress: PublicKey
+    proposalAddress: PublicKey,
   ): Promise<TransactionInstruction> {
     return await this.squad.buildApproveTransaction(
       this.vault,
-      proposalAddress
+      proposalAddress,
     );
   }
 
   public async addMemberIx(
     member: PublicKey,
-    targetVault: PublicKey
+    targetVault: PublicKey,
   ): Promise<TransactionInstruction> {
     return await this.squad.buildAddMember(
       targetVault,
       await this.getAuthorityPDA(),
-      member
+      member,
     );
   }
 
   public async removeMemberIx(
     member: PublicKey,
-    targetVault: PublicKey
+    targetVault: PublicKey,
   ): Promise<TransactionInstruction> {
     return await this.squad.buildRemoveMember(
       targetVault,
       await this.getAuthorityPDA(),
-      member
+      member,
     );
   }
 
@@ -204,11 +204,11 @@ export class MultisigVault {
    */
   public async proposeWormholeMessageWithPayer(
     payload: Buffer,
-    messagePayer: PublicKey
+    messagePayer: PublicKey,
   ): Promise<PublicKey> {
     return this.proposeWormholeMultipleMessagesWithPayer(
       [payload],
-      messagePayer
+      messagePayer,
     );
   }
 
@@ -224,7 +224,7 @@ export class MultisigVault {
     payloads: Buffer[],
     messagePayer: PublicKey,
     proposalAddress?: PublicKey,
-    priorityFeeConfig: PriorityFeeConfig = {}
+    priorityFeeConfig: PriorityFeeConfig = {},
   ): Promise<PublicKey> {
     const msAccount = await this.getMultisigAccount();
 
@@ -232,7 +232,7 @@ export class MultisigVault {
     let startingIndex = 0;
     if (proposalAddress === undefined) {
       const [proposalIx, newProposalAddress] = await this.createProposalIx(
-        msAccount.transactionIndex + 1
+        msAccount.transactionIndex + 1,
       );
       ixToSend.push(proposalIx);
       proposalAddress = newProposalAddress;
@@ -242,7 +242,7 @@ export class MultisigVault {
     }
     if (payloads.length > MAX_INSTRUCTIONS_PER_PROPOSAL)
       throw new Error(
-        "Too many messages in proposal, multiple proposal not supported yet"
+        "Too many messages in proposal, multiple proposal not supported yet",
       );
 
     for (let i = startingIndex; i < payloads.length; i++) {
@@ -253,7 +253,7 @@ export class MultisigVault {
         1 + i,
         this.wormholeAddress()!,
         payloads[i],
-        messagePayer
+        messagePayer,
       );
       ixToSend.push(
         await this.squad.buildAddInstruction(
@@ -263,8 +263,8 @@ export class MultisigVault {
           1 + i,
           instructionToPropose.authorityIndex,
           instructionToPropose.authorityBump,
-          instructionToPropose.authorityType
-        )
+          instructionToPropose.authorityType,
+        ),
       );
     }
     ixToSend.push(await this.activateProposalIx(proposalAddress));
@@ -272,7 +272,7 @@ export class MultisigVault {
 
     const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
       ixToSend,
-      priorityFeeConfig
+      priorityFeeConfig,
     );
     await this.sendAllTransactions(txToSend);
     return proposalAddress;
@@ -288,7 +288,7 @@ export class MultisigVault {
   public async proposeInstructions(
     instructions: TransactionInstruction[],
     targetCluster: PythCluster,
-    priorityFeeConfig: PriorityFeeConfig = {}
+    priorityFeeConfig: PriorityFeeConfig = {},
   ): Promise<PublicKey[]> {
     const msAccount = await this.getMultisigAccount();
     const newProposals = [];
@@ -305,9 +305,8 @@ export class MultisigVault {
       for (let j = 0; j < batches.length; j += MAX_INSTRUCTIONS_PER_PROPOSAL) {
         const proposalIndex =
           msAccount.transactionIndex + 1 + j / MAX_INSTRUCTIONS_PER_PROPOSAL;
-        const [proposalIx, newProposalAddress] = await this.createProposalIx(
-          proposalIndex
-        );
+        const [proposalIx, newProposalAddress] =
+          await this.createProposalIx(proposalIndex);
         ixToSend.push(proposalIx);
         newProposals.push(newProposalAddress);
 
@@ -320,7 +319,7 @@ export class MultisigVault {
             newProposalAddress,
             batch,
             i + 1,
-            this.wormholeAddress()!
+            this.wormholeAddress()!,
           );
           ixToSend.push(
             await this.squad.buildAddInstruction(
@@ -330,8 +329,8 @@ export class MultisigVault {
               i + 1,
               squadIx.authorityIndex,
               squadIx.authorityBump,
-              squadIx.authorityType
-            )
+              squadIx.authorityType,
+            ),
           );
         }
         ixToSend.push(await this.activateProposalIx(newProposalAddress));
@@ -345,9 +344,8 @@ export class MultisigVault {
       ) {
         const proposalIndex =
           msAccount.transactionIndex + 1 + j / MAX_INSTRUCTIONS_PER_PROPOSAL;
-        const [proposalIx, newProposalAddress] = await this.createProposalIx(
-          proposalIndex
-        );
+        const [proposalIx, newProposalAddress] =
+          await this.createProposalIx(proposalIndex);
         ixToSend.push(proposalIx);
         newProposals.push(newProposalAddress);
 
@@ -359,28 +357,28 @@ export class MultisigVault {
               this.vault,
               newProposalAddress,
               instruction,
-              i + 1
-            )
+              i + 1,
+            ),
           );
         }
         ixToSend.push(
           await this.squad.buildActivateTransaction(
             this.vault,
-            newProposalAddress
-          )
+            newProposalAddress,
+          ),
         );
         ixToSend.push(
           await this.squad.buildApproveTransaction(
             this.vault,
-            newProposalAddress
-          )
+            newProposalAddress,
+          ),
         );
       }
     }
 
     const txToSend = TransactionBuilder.batchIntoLegacyTransactions(
       ixToSend,
-      priorityFeeConfig
+      priorityFeeConfig,
     );
 
     await this.sendAllTransactions(txToSend);
@@ -403,7 +401,7 @@ export class MultisigVault {
             [{ tx, signers: [] }],
             provider.connection,
             this.squad.wallet as NodeWallet,
-            MAX_RETRY_SEND
+            MAX_RETRY_SEND,
           );
           break;
         } catch (e) {
@@ -422,7 +420,7 @@ export class MultisigVault {
  * Batch instructions into batches for inclusion in a remote executor payload
  */
 export function batchIntoExecutorPayload(
-  instructions: TransactionInstruction[]
+  instructions: TransactionInstruction[],
 ): TransactionInstruction[][] {
   let i = 0;
   const batches: TransactionInstruction[][] = [];
@@ -447,7 +445,7 @@ export function batchIntoExecutorPayload(
 
 /** Get the size of instructions when serialized as in a remote executor payload */
 export function getSizeOfExecutorInstructions(
-  instructions: TransactionInstruction[]
+  instructions: TransactionInstruction[],
 ) {
   return instructions
     .map((ix) => {
@@ -472,7 +470,7 @@ export async function wrapAsRemoteInstruction(
   proposalAddress: PublicKey,
   instructions: TransactionInstruction[],
   instructionIndex: number,
-  wormholeAddress: PublicKey
+  wormholeAddress: PublicKey,
 ): Promise<SquadInstruction> {
   const buffer: Buffer = new ExecutePostedVaa("pythnet", instructions).encode();
   return await getPostMessageInstruction(
@@ -482,7 +480,7 @@ export async function wrapAsRemoteInstruction(
     instructionIndex,
     wormholeAddress,
     buffer,
-    getOpsKey(vault)
+    getOpsKey(vault),
   );
 }
 
@@ -503,30 +501,30 @@ async function getPostMessageInstruction(
   instructionIndex: number,
   wormholeAddress: PublicKey,
   payload: Buffer,
-  messagePayer: PublicKey
+  messagePayer: PublicKey,
 ): Promise<SquadInstruction> {
   const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     proposalAddress,
     new BN(instructionIndex),
-    squad.multisigProgramId
+    squad.multisigProgramId,
   );
 
   const emitter = squad.getAuthorityPDA(vault, 1);
   const provider = new AnchorProvider(
     squad.connection,
     squad.wallet as Wallet,
-    AnchorProvider.defaultOptions()
+    AnchorProvider.defaultOptions(),
   );
   const wormholeProgram = createWormholeProgramInterface(
     wormholeAddress,
-    provider
+    provider,
   );
 
   const accounts = getPostMessageAccounts(
     wormholeAddress,
     emitter,
     messagePayer,
-    messagePDA
+    messagePDA,
   );
 
   return {
@@ -544,7 +542,7 @@ function getPostMessageAccounts(
   wormholeAddress: PublicKey,
   emitter: PublicKey,
   payer: PublicKey,
-  message: PublicKey
+  message: PublicKey,
 ) {
   return {
     bridge: deriveWormholeBridgeDataKey(wormholeAddress),

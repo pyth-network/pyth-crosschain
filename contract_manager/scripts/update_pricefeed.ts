@@ -5,7 +5,7 @@ import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
-    "Usage: $0 --contract <contract_id> --feed-id <feed-id> --private-key <private-key>"
+    "Usage: $0 --contract <contract_id> --feed-id <feed-id> --private-key <private-key>",
   )
   .options({
     contract: {
@@ -35,20 +35,20 @@ async function main() {
   if (!contract) {
     throw new Error(
       `Contract ${argv.contract} not found. Contracts found: ${Object.keys(
-        DefaultStore.contracts
-      )}`
+        DefaultStore.contracts,
+      )}`,
     );
   }
   const priceService = new PriceServiceConnection(
-    argv.endpoint || "https://hermes.pyth.network"
+    argv.endpoint || "https://hermes.pyth.network",
   );
   const vaas = await priceService.getLatestVaas(argv["feed-id"] as string[]);
   const privateKey = toPrivateKey(argv["private-key"]);
   console.log(
     await contract.executeUpdatePriceFeed(
       privateKey,
-      vaas.map((vaa) => Buffer.from(vaa, "base64"))
-    )
+      vaas.map((vaa) => Buffer.from(vaa, "base64")),
+    ),
   );
 }
 

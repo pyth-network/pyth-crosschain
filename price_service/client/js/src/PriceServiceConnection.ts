@@ -121,7 +121,7 @@ export class PriceServiceConnection {
         process.exit(1);
       } else {
         this.logger.error(
-          "Cannot halt process. Please handle the websocket error."
+          "Cannot halt process. Please handle the websocket error.",
         );
       }
     };
@@ -137,7 +137,7 @@ export class PriceServiceConnection {
    * @returns Array of PriceFeeds
    */
   async getLatestPriceFeeds(
-    priceIds: HexString[]
+    priceIds: HexString[],
   ): Promise<PriceFeed[] | undefined> {
     if (priceIds.length === 0) {
       return [];
@@ -152,7 +152,7 @@ export class PriceServiceConnection {
     });
     const priceFeedsJson = response.data as any[];
     return priceFeedsJson.map((priceFeedJson) =>
-      PriceFeed.fromJson(priceFeedJson)
+      PriceFeed.fromJson(priceFeedJson),
     );
   }
 
@@ -188,7 +188,7 @@ export class PriceServiceConnection {
    */
   async getVaa(
     priceId: HexString,
-    publishTime: EpochTimeStamp
+    publishTime: EpochTimeStamp,
   ): Promise<[string, EpochTimeStamp]> {
     const response = await this.httpClient.get("/api/get_vaa", {
       params: {
@@ -211,7 +211,7 @@ export class PriceServiceConnection {
    */
   async getPriceFeed(
     priceId: HexString,
-    publishTime: EpochTimeStamp
+    publishTime: EpochTimeStamp,
   ): Promise<PriceFeed> {
     const response = await this.httpClient.get("/api/get_price_feed", {
       params: {
@@ -249,7 +249,7 @@ export class PriceServiceConnection {
    */
   async subscribePriceFeedUpdates(
     priceIds: HexString[],
-    cb: PriceFeedUpdateCallback
+    cb: PriceFeedUpdateCallback,
   ) {
     if (this.wsClient === undefined) {
       await this.startWebSocket();
@@ -292,7 +292,7 @@ export class PriceServiceConnection {
    */
   async unsubscribePriceFeedUpdates(
     priceIds: HexString[],
-    cb?: PriceFeedUpdateCallback
+    cb?: PriceFeedUpdateCallback,
   ) {
     if (this.wsClient === undefined) {
       await this.startWebSocket();
@@ -382,7 +382,7 @@ export class PriceServiceConnection {
       if (message.type === "response") {
         if (message.status === "error") {
           this.logger.error(
-            `Error response from the websocket server ${message.error}.`
+            `Error response from the websocket server ${message.error}.`,
           );
           this.onWsError(new Error(message.error));
         }
@@ -392,7 +392,7 @@ export class PriceServiceConnection {
           priceFeed = PriceFeed.fromJson(message.price_feed);
         } catch (e: any) {
           this.logger.error(
-            `Error parsing price feeds from message ${data.toString()}.`
+            `Error parsing price feeds from message ${data.toString()}.`,
           );
           this.logger.error(e);
           this.onWsError(e);
@@ -406,7 +406,7 @@ export class PriceServiceConnection {
         }
       } else {
         this.logger.warn(
-          `Ignoring unsupported server response ${data.toString()}.`
+          `Ignoring unsupported server response ${data.toString()}.`,
         );
       }
     };

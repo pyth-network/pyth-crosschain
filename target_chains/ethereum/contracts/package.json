@@ -10,6 +10,8 @@
     "@types/chai": "^4.3.4",
     "chai": "^4.2.0",
     "mocha": "^8.2.1",
+    "prettier": "catalog:",
+    "prettier-plugin-solidity": "catalog:",
     "truffle": "^5.7.4",
     "truffle-deploy-registry": "^0.5.1",
     "truffle-plugin-stdjsonin": "github:mhrsalehi/truffle-plugin-stdjsonin",
@@ -22,7 +24,9 @@
     "receiver-submit-guardian-sets": "truffle exec scripts/receiverSubmitGuardianSetUpgrades.js",
     "verify": "truffle run verify $npm_config_module@$npm_config_contract_address --network $npm_config_network",
     "install-forge-deps": "forge install foundry-rs/forge-std@v1.7.6 --no-git --no-commit",
-    "coverage": "./coverage.sh"
+    "coverage": "./coverage.sh",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write ."
   },
   "author": "",
   "license": "Apache-2.0",

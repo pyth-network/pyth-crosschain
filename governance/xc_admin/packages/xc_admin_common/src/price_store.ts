@@ -15,7 +15,7 @@ import { AnchorAccounts } from "./multisig_transaction/anchor";
 import { PRICE_FEED_OPS_KEY } from "./multisig";
 
 export const PRICE_STORE_PROGRAM_ID: PublicKey = new PublicKey(
-  "3m6sv6HGqEbuyLV84mD7rJn4MAC9LhUa1y1AUNVqcPfr"
+  "3m6sv6HGqEbuyLV84mD7rJn4MAC9LhUa1y1AUNVqcPfr",
 );
 
 export type PriceStoreInitializeInstruction = {
@@ -52,21 +52,21 @@ export const PRICE_STORE_BUFFER_SPACE = 100048;
 export function findPriceStoreConfigAddress(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("CONFIG")],
-    PRICE_STORE_PROGRAM_ID
+    PRICE_STORE_PROGRAM_ID,
   );
 }
 
 export function findPriceStorePublisherConfigAddress(
-  publisherKey: PublicKey
+  publisherKey: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("PUBLISHER_CONFIG"), publisherKey.toBuffer()],
-    PRICE_STORE_PROGRAM_ID
+    PRICE_STORE_PROGRAM_ID,
   );
 }
 
 export function createPriceStoreInstruction(
-  data: PriceStoreInstruction
+  data: PriceStoreInstruction,
 ): TransactionInstruction {
   switch (data.type) {
     case "Initialize": {
@@ -150,7 +150,7 @@ export function createPriceStoreInstruction(
 }
 
 export function parsePriceStoreInstruction(
-  instruction: TransactionInstruction
+  instruction: TransactionInstruction,
 ): PriceStoreInstruction {
   if (!instruction.programId.equals(PRICE_STORE_PROGRAM_ID)) {
     throw new Error("program ID mismatch");
@@ -210,7 +210,7 @@ export function parsePriceStoreInstruction(
     const expectedJson = JSON.stringify(expected.data);
     const actualJson = JSON.stringify(instruction.data);
     throw new Error(
-      `invalid instruction data: expected ${expectedJson}, got ${actualJson}`
+      `invalid instruction data: expected ${expectedJson}, got ${actualJson}`,
     );
   }
 
@@ -220,13 +220,13 @@ export function parsePriceStoreInstruction(
     a.pubkey.equals(b.pubkey);
 
   const accountMismatch = expected.keys.some(
-    (ex, index) => !accountEquals(ex, instruction.keys[index])
+    (ex, index) => !accountEquals(ex, instruction.keys[index]),
   );
   if (accountMismatch) {
     const expectedJson = JSON.stringify(expected.keys);
     const actualJson = JSON.stringify(instruction.keys);
     throw new Error(
-      `invalid accounts: expected ${expectedJson}, got ${actualJson}`
+      `invalid accounts: expected ${expectedJson}, got ${actualJson}`,
     );
   }
   return data;
@@ -241,7 +241,7 @@ export class PriceStoreMultisigInstruction implements MultisigInstruction {
   constructor(
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
   ) {
     this.name = name;
     this.args = args;
@@ -249,7 +249,7 @@ export class PriceStoreMultisigInstruction implements MultisigInstruction {
   }
 
   static fromTransactionInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): PriceStoreMultisigInstruction {
     let result;
     try {
@@ -258,7 +258,7 @@ export class PriceStoreMultisigInstruction implements MultisigInstruction {
       return new PriceStoreMultisigInstruction(
         UNRECOGNIZED_INSTRUCTION,
         { data: instruction.data, error: (e as Error).toString() },
-        { named: {}, remaining: instruction.keys }
+        { named: {}, remaining: instruction.keys },
       );
     }
 
@@ -270,7 +270,7 @@ export class PriceStoreMultisigInstruction implements MultisigInstruction {
 }
 
 export async function findDetermisticPublisherBufferAddress(
-  publisher: PublicKey
+  publisher: PublicKey,
 ): Promise<[PublicKey, string]> {
   const seedPrefix = "Buffer";
   const seed =
@@ -279,7 +279,7 @@ export async function findDetermisticPublisherBufferAddress(
   const address: PublicKey = await PublicKey.createWithSeed(
     PRICE_FEED_OPS_KEY,
     seed,
-    PRICE_STORE_PROGRAM_ID
+    PRICE_STORE_PROGRAM_ID,
   );
   return [address, seed];
 }
@@ -287,11 +287,10 @@ export async function findDetermisticPublisherBufferAddress(
 export async function createDeterministicPublisherBufferAccountInstruction(
   connection: Connection,
   base: PublicKey,
-  publisher: PublicKey
+  publisher: PublicKey,
 ): Promise<TransactionInstruction> {
-  const [bufferKey, seed] = await findDetermisticPublisherBufferAddress(
-    publisher
-  );
+  const [bufferKey, seed] =
+    await findDetermisticPublisherBufferAddress(publisher);
   return SystemProgram.createAccountWithSeed({
     fromPubkey: base,
     basePubkey: base,
@@ -299,7 +298,7 @@ export async function createDeterministicPublisherBufferAccountInstruction(
     seed,
     space: PRICE_STORE_BUFFER_SPACE,
     lamports: await connection.getMinimumBalanceForRentExemption(
-      PRICE_STORE_BUFFER_SPACE
+      PRICE_STORE_BUFFER_SPACE,
     ),
     programId: PRICE_STORE_PROGRAM_ID,
   });
@@ -307,7 +306,7 @@ export async function createDeterministicPublisherBufferAccountInstruction(
 
 export async function createDetermisticPriceStoreInitializePublisherInstruction(
   authorityKey: PublicKey,
-  publisherKey: PublicKey
+  publisherKey: PublicKey,
 ): Promise<TransactionInstruction> {
   const bufferKey = (
     await findDetermisticPublisherBufferAddress(publisherKey)
@@ -324,7 +323,7 @@ export async function createDetermisticPriceStoreInitializePublisherInstruction(
 
 export async function isPriceStorePublisherInitialized(
   connection: Connection,
-  publisherKey: PublicKey
+  publisherKey: PublicKey,
 ): Promise<boolean> {
   const publisherConfigKey =
     findPriceStorePublisherConfigAddress(publisherKey)[0];
@@ -333,7 +332,7 @@ export async function isPriceStorePublisherInitialized(
 }
 
 export async function isPriceStoreInitialized(
-  connection: Connection
+  connection: Connection,
 ): Promise<boolean> {
   const configKey = findPriceStoreConfigAddress()[0];
   const response = await connection.getAccountInfo(configKey);

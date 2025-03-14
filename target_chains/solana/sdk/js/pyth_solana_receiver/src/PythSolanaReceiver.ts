@@ -112,12 +112,12 @@ export class PythTransactionBuilder extends TransactionBuilder {
   constructor(
     pythSolanaReceiver: PythSolanaReceiver,
     config: PythTransactionBuilderConfig,
-    addressLookupTable?: AddressLookupTableAccount
+    addressLookupTable?: AddressLookupTableAccount,
   ) {
     super(
       pythSolanaReceiver.wallet.publicKey,
       pythSolanaReceiver.connection,
-      addressLookupTable
+      addressLookupTable,
     );
     this.pythSolanaReceiver = pythSolanaReceiver;
     this.closeInstructions = [];
@@ -151,13 +151,14 @@ export class PythTransactionBuilder extends TransactionBuilder {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
       closeInstructions,
-    } = await this.pythSolanaReceiver.buildPostPriceUpdateInstructions(
-      priceUpdateDataArray
-    );
+    } =
+      await this.pythSolanaReceiver.buildPostPriceUpdateInstructions(
+        priceUpdateDataArray,
+      );
     this.closeInstructions.push(...closeInstructions);
     Object.assign(
       this.priceFeedIdToPriceUpdateAccount,
-      priceFeedIdToPriceUpdateAccount
+      priceFeedIdToPriceUpdateAccount,
     );
     this.addInstructions(postInstructions);
   }
@@ -191,13 +192,14 @@ export class PythTransactionBuilder extends TransactionBuilder {
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
       closeInstructions,
-    } = await this.pythSolanaReceiver.buildPostPriceUpdateAtomicInstructions(
-      priceUpdateDataArray
-    );
+    } =
+      await this.pythSolanaReceiver.buildPostPriceUpdateAtomicInstructions(
+        priceUpdateDataArray,
+      );
     this.closeInstructions.push(...closeInstructions);
     Object.assign(
       this.priceFeedIdToPriceUpdateAccount,
-      priceFeedIdToPriceUpdateAccount
+      priceFeedIdToPriceUpdateAccount,
     );
     this.addInstructions(postInstructions);
   }
@@ -227,13 +229,14 @@ export class PythTransactionBuilder extends TransactionBuilder {
       postInstructions,
       priceFeedIdToTwapUpdateAccount,
       closeInstructions,
-    } = await this.pythSolanaReceiver.buildPostTwapUpdateInstructions(
-      twapUpdateDataArray
-    );
+    } =
+      await this.pythSolanaReceiver.buildPostTwapUpdateInstructions(
+        twapUpdateDataArray,
+      );
     this.closeInstructions.push(...closeInstructions);
     Object.assign(
       this.priceFeedIdToTwapUpdateAccount,
-      priceFeedIdToTwapUpdateAccount
+      priceFeedIdToTwapUpdateAccount,
     );
     this.addInstructions(postInstructions);
   }
@@ -266,12 +269,12 @@ export class PythTransactionBuilder extends TransactionBuilder {
       closeInstructions,
     } = await this.pythSolanaReceiver.buildUpdatePriceFeedInstructions(
       priceUpdateDataArray,
-      shardId
+      shardId,
     );
     this.closeInstructions.push(...closeInstructions);
     Object.assign(
       this.priceFeedIdToPriceUpdateAccount,
-      priceFeedIdToPriceUpdateAccount
+      priceFeedIdToPriceUpdateAccount,
     );
     this.addInstructions(postInstructions);
   }
@@ -308,11 +311,11 @@ export class PythTransactionBuilder extends TransactionBuilder {
    */
   async addPriceConsumerInstructions(
     getInstructions: (
-      getPriceUpdateAccount: (priceFeedId: string) => PublicKey
-    ) => Promise<InstructionWithEphemeralSigners[]>
+      getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
+    ) => Promise<InstructionWithEphemeralSigners[]>,
   ) {
     this.addInstructions(
-      await getInstructions(this.getPriceUpdateAccount.bind(this))
+      await getInstructions(this.getPriceUpdateAccount.bind(this)),
     );
   }
 
@@ -348,11 +351,11 @@ export class PythTransactionBuilder extends TransactionBuilder {
    */
   async addTwapConsumerInstructions(
     getInstructions: (
-      getTwapUpdateAccount: (priceFeedId: string) => PublicKey
-    ) => Promise<InstructionWithEphemeralSigners[]>
+      getTwapUpdateAccount: (priceFeedId: string) => PublicKey,
+    ) => Promise<InstructionWithEphemeralSigners[]>,
   ) {
     this.addInstructions(
-      await getInstructions(this.getTwapUpdateAccount.bind(this))
+      await getInstructions(this.getTwapUpdateAccount.bind(this)),
     );
   }
 
@@ -363,8 +366,8 @@ export class PythTransactionBuilder extends TransactionBuilder {
   async addClosePreviousEncodedVaasInstructions(maxInstructions = 40) {
     this.addInstructions(
       await this.pythSolanaReceiver.buildClosePreviousEncodedVaasInstructions(
-        maxInstructions
-      )
+        maxInstructions,
+      ),
     );
   }
 
@@ -372,7 +375,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
    */
   async buildVersionedTransactions(
-    args: PriorityFeeConfig
+    args: PriorityFeeConfig,
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     if (this.closeUpdateAccounts) {
       this.addInstructions(this.closeInstructions);
@@ -384,7 +387,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
   buildLegacyTransactions(
-    args: PriorityFeeConfig
+    args: PriorityFeeConfig,
   ): { tx: Transaction; signers: Signer[] }[] {
     if (this.closeUpdateAccounts) {
       this.addInstructions(this.closeInstructions);
@@ -401,7 +404,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
       this.priceFeedIdToPriceUpdateAccount[priceFeedId];
     if (!priceUpdateAccount) {
       throw new Error(
-        `No price update account found for the price feed ID ${priceFeedId}. Make sure to call addPostPriceUpdates or addPostPartiallyVerifiedPriceUpdates before calling this function.`
+        `No price update account found for the price feed ID ${priceFeedId}. Make sure to call addPostPriceUpdates or addPostPartiallyVerifiedPriceUpdates before calling this function.`,
       );
     }
     return priceUpdateAccount;
@@ -415,7 +418,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
     const twapUpdateAccount = this.priceFeedIdToTwapUpdateAccount[priceFeedId];
     if (!twapUpdateAccount) {
       throw new Error(
-        `No TWAP update account found for the price feed ID ${priceFeedId}. Make sure to call addPostTwapUpdates before calling this function.`
+        `No TWAP update account found for the price feed ID ${priceFeedId}. Make sure to call addPostTwapUpdates before calling this function.`,
       );
     }
     return twapUpdateAccount;
@@ -467,17 +470,17 @@ export class PythSolanaReceiver {
     this.receiver = new Program<PythSolanaReceiverProgram>(
       Idl as PythSolanaReceiverProgram,
       receiverProgramId,
-      this.provider
+      this.provider,
     );
     this.wormhole = new Program<WormholeCoreBridgeSolana>(
       WormholeCoreBridgeSolanaIdl as WormholeCoreBridgeSolana,
       wormholeProgramId,
-      this.provider
+      this.provider,
     );
     this.pushOracle = new Program<PythPushOracle>(
       PythPushOracleIdl as PythPushOracle,
       pushOracleProgramId,
-      this.provider
+      this.provider,
     );
     this.treasuryId = treasuryId;
   }
@@ -487,7 +490,7 @@ export class PythSolanaReceiver {
    */
   newTransactionBuilder(
     config: PythTransactionBuilderConfig,
-    addressLookupAccount?: AddressLookupTableAccount
+    addressLookupAccount?: AddressLookupTableAccount,
   ): PythTransactionBuilder {
     return new PythTransactionBuilder(this, config, addressLookupAccount);
   }
@@ -504,7 +507,7 @@ export class PythSolanaReceiver {
    * @returns `closeInstructions`: the instructions to close the price update accounts, these should be called after consuming the price updates
    */
   async buildPostPriceUpdateAtomicInstructions(
-    priceUpdateDataArray: string[]
+    priceUpdateDataArray: string[],
   ): Promise<{
     postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
@@ -518,7 +521,7 @@ export class PythSolanaReceiver {
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
-        Buffer.from(priceUpdateData, "base64")
+        Buffer.from(priceUpdateData, "base64"),
       );
       const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
       const trimmedVaa = trimSignatures(accumulatorUpdateData.vaa);
@@ -538,7 +541,7 @@ export class PythSolanaReceiver {
               config: getConfigPda(this.receiver.programId),
               guardianSet: getGuardianSetPda(
                 guardianSetIndex,
-                this.wormhole.programId
+                this.wormhole.programId,
               ),
             })
             .instruction(),
@@ -551,8 +554,8 @@ export class PythSolanaReceiver {
 
         closeInstructions.push(
           await this.buildClosePriceUpdateInstruction(
-            priceUpdateKeypair.publicKey
-          )
+            priceUpdateKeypair.publicKey,
+          ),
         );
       }
     }
@@ -572,7 +575,7 @@ export class PythSolanaReceiver {
    * @returns `closeInstructions`: the instructions to close the price update accounts, these should be called after consuming the price updates
    */
   async buildPostPriceUpdateInstructions(
-    priceUpdateDataArray: string[]
+    priceUpdateDataArray: string[],
   ): Promise<{
     postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
@@ -586,7 +589,7 @@ export class PythSolanaReceiver {
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
-        Buffer.from(priceUpdateData, "base64")
+        Buffer.from(priceUpdateData, "base64"),
       );
 
       const {
@@ -621,8 +624,8 @@ export class PythSolanaReceiver {
         ] = priceUpdateKeypair.publicKey;
         closeInstructions.push(
           await this.buildClosePriceUpdateInstruction(
-            priceUpdateKeypair.publicKey
-          )
+            priceUpdateKeypair.publicKey,
+          ),
         );
       }
     }
@@ -643,7 +646,7 @@ export class PythSolanaReceiver {
    * @returns `closeInstructions`: the instructions to close the TWAP update accounts, these should be called after consuming the TWAP updates
    */
   async buildPostTwapUpdateInstructions(
-    twapUpdateDataArray: string[]
+    twapUpdateDataArray: string[],
   ): Promise<{
     postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToTwapUpdateAccount: Record<string, PublicKey>;
@@ -657,18 +660,18 @@ export class PythSolanaReceiver {
 
     if (twapUpdateDataArray.length !== 2) {
       throw new Error(
-        "twapUpdateDataArray must contain exactly two updates (start and end)"
+        "twapUpdateDataArray must contain exactly two updates (start and end)",
       );
     }
 
     const [startUpdateData, endUpdateData] = twapUpdateDataArray.map((data) =>
-      parseAccumulatorUpdateData(Buffer.from(data, "base64"))
+      parseAccumulatorUpdateData(Buffer.from(data, "base64")),
     );
 
     // Validate that the start and end updates contain the same number of price feeds
     if (startUpdateData.updates.length !== endUpdateData.updates.length) {
       throw new Error(
-        "Start and end updates must contain the same number of price feeds"
+        "Start and end updates must contain the same number of price feeds",
       );
     }
 
@@ -681,7 +684,7 @@ export class PythSolanaReceiver {
     } = await buildPostEncodedVaasForTwapInstructions(
       this.wormhole,
       startUpdateData,
-      endUpdateData
+      endUpdateData,
     );
     postInstructions.push(...buildVaasInstructions);
     closeInstructions.push(...closeVaasInstructions);
@@ -715,7 +718,7 @@ export class PythSolanaReceiver {
         "0x" + parseTwapMessage(startUpdate.message).feedId.toString("hex")
       ] = twapUpdateKeypair.publicKey;
       closeInstructions.push(
-        await this.buildCloseTwapUpdateInstruction(twapUpdateKeypair.publicKey)
+        await this.buildCloseTwapUpdateInstruction(twapUpdateKeypair.publicKey),
       );
     }
 
@@ -737,7 +740,7 @@ export class PythSolanaReceiver {
    */
   async buildUpdatePriceFeedInstructions(
     priceUpdateDataArray: string[],
-    shardId: number
+    shardId: number,
   ): Promise<{
     postInstructions: InstructionWithEphemeralSigners[];
     priceFeedIdToPriceUpdateAccount: Record<string, PublicKey>;
@@ -751,7 +754,7 @@ export class PythSolanaReceiver {
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
-        Buffer.from(priceUpdateData, "base64")
+        Buffer.from(priceUpdateData, "base64"),
       );
 
       const {
@@ -772,14 +775,14 @@ export class PythSolanaReceiver {
                 treasuryId,
               },
               shardId,
-              Array.from(feedId)
+              Array.from(feedId),
             )
             .accounts({
               pythSolanaReceiver: this.receiver.programId,
               encodedVaa,
               priceFeedAccount: this.getPriceFeedAccountAddress(
                 shardId,
-                feedId
+                feedId,
               ),
               treasury: getTreasuryPda(treasuryId, this.receiver.programId),
               config: getConfigPda(this.receiver.programId),
@@ -821,7 +824,7 @@ export class PythSolanaReceiver {
    * Build an instruction to close an encoded VAA account, recovering the rent.
    */
   async buildCloseEncodedVaaInstruction(
-    encodedVaa: PublicKey
+    encodedVaa: PublicKey,
   ): Promise<InstructionWithEphemeralSigners> {
     return buildCloseEncodedVaaInstruction(this.wormhole, encodedVaa);
   }
@@ -830,7 +833,7 @@ export class PythSolanaReceiver {
    * Build aset of instructions to close all the existing encoded VAA accounts owned by this PythSolanaReceiver's wallet
    */
   async buildClosePreviousEncodedVaasInstructions(
-    maxInstructions: number
+    maxInstructions: number,
   ): Promise<InstructionWithEphemeralSigners[]> {
     const encodedVaas = await this.findOwnedEncodedVaaAccounts();
     const instructions = [];
@@ -844,7 +847,7 @@ export class PythSolanaReceiver {
    * Build an instruction to close a price update account, recovering the rent.
    */
   async buildClosePriceUpdateInstruction(
-    priceUpdateAccount: PublicKey
+    priceUpdateAccount: PublicKey,
   ): Promise<InstructionWithEphemeralSigners> {
     const instruction = await this.receiver.methods
       .reclaimRent()
@@ -857,7 +860,7 @@ export class PythSolanaReceiver {
    * Build an instruction to close a TWAP update account, recovering the rent.
    */
   async buildCloseTwapUpdateInstruction(
-    twapUpdateAccount: PublicKey
+    twapUpdateAccount: PublicKey,
   ): Promise<InstructionWithEphemeralSigners> {
     const instruction = await this.receiver.methods
       .reclaimTwapRent()
@@ -872,14 +875,14 @@ export class PythSolanaReceiver {
   async batchIntoVersionedTransactions(
     instructions: InstructionWithEphemeralSigners[],
     priorityFeeConfig: PriorityFeeConfig,
-    addressLookupTable?: AddressLookupTableAccount
+    addressLookupTable?: AddressLookupTableAccount,
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     return TransactionBuilder.batchIntoVersionedTransactions(
       this.wallet.publicKey,
       this.connection,
       instructions,
       priorityFeeConfig,
-      addressLookupTable
+      addressLookupTable,
     );
   }
 
@@ -889,10 +892,10 @@ export class PythSolanaReceiver {
    * @returns The contents of the deserialized price update account or `null` if the account doesn't exist
    */
   async fetchPriceUpdateAccount(
-    priceUpdateAccount: PublicKey
+    priceUpdateAccount: PublicKey,
   ): Promise<PriceUpdateAccount | null> {
     return this.receiver.account.priceUpdateV2.fetchNullable(
-      priceUpdateAccount
+      priceUpdateAccount,
     );
   }
 
@@ -904,10 +907,10 @@ export class PythSolanaReceiver {
    */
   async fetchPriceFeedAccount(
     shardId: number,
-    priceFeedId: Buffer | string
+    priceFeedId: Buffer | string,
   ): Promise<PriceUpdateAccount | null> {
     return this.receiver.account.priceUpdateV2.fetchNullable(
-      this.getPriceFeedAccountAddress(shardId, priceFeedId)
+      this.getPriceFeedAccountAddress(shardId, priceFeedId),
     );
   }
 
@@ -919,12 +922,12 @@ export class PythSolanaReceiver {
    */
   getPriceFeedAccountAddress(
     shardId: number,
-    priceFeedId: Buffer | string
+    priceFeedId: Buffer | string,
   ): PublicKey {
     return getPriceFeedAccountForProgram(
       shardId,
       priceFeedId,
-      this.pushOracle.programId
+      this.pushOracle.programId,
     );
   }
 
@@ -936,7 +939,7 @@ export class PythSolanaReceiver {
     return await findEncodedVaaAccountsByWriteAuthority(
       this.receiver.provider.connection,
       this.wallet.publicKey,
-      this.wormhole.programId
+      this.wormhole.programId,
     );
   }
 }
@@ -951,7 +954,7 @@ export class PythSolanaReceiver {
 export function getPriceFeedAccountForProgram(
   shardId: number,
   priceFeedId: Buffer | string,
-  pushOracleProgramId?: PublicKey
+  pushOracleProgramId?: PublicKey,
 ): PublicKey {
   if (typeof priceFeedId == "string") {
     if (priceFeedId.startsWith("0x")) {
@@ -969,6 +972,6 @@ export function getPriceFeedAccountForProgram(
 
   return PublicKey.findProgramAddressSync(
     [shardBuffer, priceFeedId],
-    pushOracleProgramId ?? DEFAULT_PUSH_ORACLE_PROGRAM_ID
+    pushOracleProgramId ?? DEFAULT_PUSH_ORACLE_PROGRAM_ID,
   )[0];
 }

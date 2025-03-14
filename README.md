@@ -98,7 +98,6 @@ If you don't use nix at all, then install the required system packages:
   `package.json`; you can experiment with
   [corepack](https://nodejs.org/api/corepack.html) to manage your pnpm version
   for you.
-- [turbo](https://turbo.build/repo/docs/getting-started/installation)
 
 #### Common tasks
 
@@ -109,13 +108,13 @@ and will only re-run as necessary. For any of the following tasks, you can pass
 [any valid `turbo run` option](https://turbo.build/repo/docs/reference/run)
 after `--`, for instance you could run `pnpm test -- --concurrency 2`.
 
-- `pnpm test`: Run all unit tests, integration tests, linting, and format
+- `pnpm turbo test`: Run all unit tests, integration tests, linting, and format
   checks, as well as whatever other code checks any packages support.
-- `pnpm fix`: Run auto fixes, including reformatting code and auto-fixing lint
-  rules where possible.
-- `pnpm start:dev`: Start all development servers in parallel.
-- `pnpm start:prod`: Run production builds and start production mode servers in
-  parallel.
+- `pnpm turbo fix`: Run auto fixes, including reformatting code and auto-fixing
+  lint rules where possible.
+- `pnpm turbo start:dev`: Start all development servers in parallel.
+- `pnpm turbo start:prod`: Run production builds and start production mode
+  servers in parallel.
 
 #### Building a new package
 

@@ -13,7 +13,7 @@ function getPythSources(deploymentType: DeploymentType) {
     governance_source: {
       emitter: Buffer.from(
         config.governanceDataSource.emitterAddress,
-        "hex"
+        "hex",
       ).toString("base64"),
       chain_id: config.governanceDataSource.emitterChain,
     },
@@ -62,7 +62,7 @@ export function getWormholeConfig({
     fee_denom: feeDenom,
     gov_chain: config.governanceChainId,
     gov_address: Buffer.from(config.governanceContract, "hex").toString(
-      "base64"
+      "base64",
     ),
     guardian_set_expirity: 86400,
     initial_guardian_set: {

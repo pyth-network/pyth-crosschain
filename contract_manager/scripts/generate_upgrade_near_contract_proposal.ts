@@ -6,7 +6,7 @@ import { NearChain } from "../src/chains";
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Creates a governance proposal to upgrade the price feeds contract on Near.\n" +
-      "Usage: $0 --network <mainnet|testnet> --code-hash <hash> --ops-key-path <ops_key_path>\n"
+      "Usage: $0 --network <mainnet|testnet> --code-hash <hash> --ops-key-path <ops_key_path>\n",
   )
   .options({
     network: {
@@ -45,7 +45,7 @@ async function main() {
     throw new Error("invalid code hash format");
   }
   console.log(
-    `Upgrading contract on Near ${argv.network} to code hash: ${codeHash}`
+    `Upgrading contract on Near ${argv.network} to code hash: ${codeHash}`,
   );
 
   // Generate governance payload for the upgrade

@@ -14,5 +14,5 @@ repl.evalCode(
     "import { StarknetPriceFeedContract } from './src/contracts/starknet';" +
     "import { DefaultStore } from './src/store';" +
     "import { toPrivateKey } from './src/base';" +
-    "DefaultStore"
+    "DefaultStore",
 );

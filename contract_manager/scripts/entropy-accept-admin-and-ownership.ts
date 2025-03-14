@@ -5,7 +5,7 @@ import { DefaultStore, EvmChain, loadHotWallet } from "../src";
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Creates governance proposal to accept pending admin or ownership transfer for Pyth entropy contracts.\n" +
-      "Usage: $0 --chain <chain_1> --chain <chain_2> --ops-key-path <ops_key_path>"
+      "Usage: $0 --chain <chain_1> --chain <chain_2> --ops-key-path <ops_key_path>",
   )
   .options({
     testnet: {
@@ -50,7 +50,7 @@ async function main() {
     throw new Error(
       `Some chains were not found ${selectedChains
         .map((chain) => chain.getId())
-        .toString()}`
+        .toString()}`,
     );
   for (const chain of selectedChains) {
     if (chain.isMainnet() != selectedChains[0].isMainnet())

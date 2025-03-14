@@ -42,14 +42,14 @@ import { Wallet } from "@coral-xyz/anchor";
  */
 export async function getPostMessageFeeInstruction(
   wormholeBridgeAddress: PublicKey,
-  squad: SquadsMesh
+  squad: SquadsMesh,
 ) {
   const wormholeFee = wormholeBridgeAddress
     ? (
         await getWormholeBridgeData(
           squad.connection,
           wormholeBridgeAddress,
-          "confirmed"
+          "confirmed",
         )
       ).config.fee
     : 0;
@@ -75,7 +75,7 @@ export async function executeProposal(
   squad: SquadsMesh,
   cluster: PythCluster,
   commitment: Commitment = "confirmed",
-  priorityFeeConfig: PriorityFeeConfig
+  priorityFeeConfig: PriorityFeeConfig,
 ) {
   const multisigParser = MultisigParser.fromCluster(cluster);
   const signatures: string[] = [];
@@ -87,7 +87,7 @@ export async function executeProposal(
     const instructionPda = getIxPDA(
       proposal.publicKey,
       new BN(i),
-      squad.multisigProgramId
+      squad.multisigProgramId,
     )[0];
     const instruction = await squad.getInstruction(instructionPda);
     const parsedInstruction = multisigParser.parseInstruction({
@@ -104,8 +104,8 @@ export async function executeProposal(
       transaction.add(
         await getPostMessageFeeInstruction(
           multisigParser.wormholeBridgeAddress!,
-          squad
-        )
+          squad,
+        ),
       );
     } else if (
       parsedInstruction instanceof PythMultisigInstruction &&
@@ -118,8 +118,8 @@ export async function executeProposal(
           cluster,
           squad.wallet.publicKey,
           parsedInstruction.args.symbol,
-          AccountType.Product
-        )
+          AccountType.Product,
+        ),
       );
     } else if (
       parsedInstruction instanceof PythMultisigInstruction &&
@@ -127,7 +127,7 @@ export async function executeProposal(
     ) {
       /// Add price, fetch the symbol from the product account
       const productAccount = await squad.connection.getAccountInfo(
-        parsedInstruction.accounts.named.productAccount.pubkey
+        parsedInstruction.accounts.named.productAccount.pubkey,
       );
       if (productAccount) {
         transaction.add(
@@ -136,8 +136,8 @@ export async function executeProposal(
             cluster,
             squad.wallet.publicKey,
             parseProductData(productAccount.data).product.symbol,
-            AccountType.Price
-          )
+            AccountType.Price,
+          ),
         );
       } else {
         throw Error("Product account not found");
@@ -149,16 +149,16 @@ export async function executeProposal(
     transaction.add(
       await squad.buildExecuteInstruction(
         proposal.publicKey,
-        getIxPDA(proposal.publicKey, new BN(i), squad.multisigProgramId)[0]
-      )
+        getIxPDA(proposal.publicKey, new BN(i), squad.multisigProgramId)[0],
+      ),
     );
 
     signatures.push(
       ...(await sendTransactions(
         [{ tx: transaction, signers: [] }],
         squad.connection,
-        squad.wallet as Wallet
-      ))
+        squad.wallet as Wallet,
+      )),
     );
   }
   return signatures;

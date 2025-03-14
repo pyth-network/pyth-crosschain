@@ -49,7 +49,7 @@ export class SubmittedWormholeMessage {
   constructor(
     public emitter: PublicKey,
     public sequenceNumber: number,
-    public cluster: PythCluster
+    public cluster: PythCluster,
   ) {}
 
   /**
@@ -63,20 +63,20 @@ export class SubmittedWormholeMessage {
   static async fromTransactionSignature(
     signature: string,
     cluster: PythCluster,
-    registry: SolanaRpcRegistry = getPythClusterApiUrl
+    registry: SolanaRpcRegistry = getPythClusterApiUrl,
   ): Promise<SubmittedWormholeMessage> {
     const connection = new Connection(registry(cluster), "confirmed");
 
     const txDetails = await connection.getParsedTransaction(signature);
     const sequenceLogPrefix = "Sequence: ";
     const txLog = txDetails?.meta?.logMessages?.find((s) =>
-      s.includes(sequenceLogPrefix)
+      s.includes(sequenceLogPrefix),
     );
 
     const sequenceNumber = Number(
       txLog?.substring(
-        txLog.indexOf(sequenceLogPrefix) + sequenceLogPrefix.length
-      )
+        txLog.indexOf(sequenceLogPrefix) + sequenceLogPrefix.length,
+      ),
     );
 
     const wormholeAddress = WORMHOLE_ADDRESS[cluster];
@@ -97,7 +97,7 @@ export class SubmittedWormholeMessage {
     });
     if (!emitter)
       throw new InvalidTransactionError(
-        "Could not find wormhole postMessage instruction"
+        "Could not find wormhole postMessage instruction",
       );
     return new SubmittedWormholeMessage(emitter, sequenceNumber, cluster);
   }
@@ -115,7 +115,7 @@ export class SubmittedWormholeMessage {
       const response = await fetch(
         `${rpcUrl}/v1/signed_vaa/1/${this.emitter.toBuffer().toString("hex")}/${
           this.sequenceNumber
-        }`
+        }`,
       );
       if (response.status === 404) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -160,7 +160,7 @@ export class WormholeEmitter {
    */
   async sendMessage(
     payload: Buffer,
-    registry: SolanaRpcRegistry = getPythClusterApiUrl
+    registry: SolanaRpcRegistry = getPythClusterApiUrl,
   ) {
     const provider = new AnchorProvider(
       new Connection(registry(this.cluster), "confirmed"),
@@ -168,7 +168,7 @@ export class WormholeEmitter {
       {
         commitment: "confirmed",
         preflightCommitment: "confirmed",
-      }
+      },
     );
     const wormholeAddress = WORMHOLE_ADDRESS[this.cluster];
     if (!wormholeAddress) throw new Error(`Invalid cluster ${this.cluster}`);
@@ -188,7 +188,7 @@ export class WormholeEmitter {
     };
     const wormholeProgram = createWormholeProgramInterface(
       wormholeAddress,
-      provider
+      provider,
     );
     const transaction = new Transaction();
     transaction.add(
@@ -196,18 +196,18 @@ export class WormholeEmitter {
         fromPubkey: emitter,
         toPubkey: feeCollector,
         lamports: 1000,
-      })
+      }),
     );
     transaction.add(
       await wormholeProgram.methods
         .postMessage(0, payload, 0)
         .accounts(accounts)
-        .instruction()
+        .instruction(),
     );
     const signature = await provider.sendAndConfirm(transaction, [kp]);
     return SubmittedWormholeMessage.fromTransactionSignature(
       signature,
-      this.cluster
+      this.cluster,
     );
   }
 }
@@ -216,7 +216,7 @@ export class WormholeMultisigProposal {
   constructor(
     public address: PublicKey,
     public squad: SquadsMesh,
-    public cluster: PythCluster
+    public cluster: PythCluster,
   ) {}
 
   /**
@@ -240,7 +240,7 @@ export class WormholeMultisigProposal {
       this.squad,
       this.cluster,
       this.squad.connection.commitment,
-      {}
+      {},
     );
     const msgs: SubmittedWormholeMessage[] = [];
     for (const signature of signatures) {
@@ -248,8 +248,8 @@ export class WormholeMultisigProposal {
         msgs.push(
           await SubmittedWormholeMessage.fromTransactionSignature(
             signature,
-            this.cluster
-          )
+            this.cluster,
+          ),
         );
       } catch (e) {
         if (!(e instanceof InvalidTransactionError)) throw e;
@@ -309,7 +309,7 @@ export class Vault extends Storable {
    */
   public connect(
     wallet: Wallet,
-    registry: SolanaRpcRegistry = getPythClusterApiUrl
+    registry: SolanaRpcRegistry = getPythClusterApiUrl,
   ): void {
     this.squad = SquadsMesh.endpoint(registry(this.cluster), wallet);
   }
@@ -326,7 +326,7 @@ export class Vault extends Storable {
   public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
     const squad = SquadsMesh.endpoint(
       registry(this.cluster),
-      new NodeWallet(Keypair.generate()) // dummy wallet
+      new NodeWallet(Keypair.generate()), // dummy wallet
     );
     return squad.getAuthorityPDA(this.key, 1);
   }
@@ -341,7 +341,7 @@ export class Vault extends Storable {
     const rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
     const emitter = await this.getEmitter();
     const response = await fetch(
-      `${rpcUrl}/api/v1/vaas/1/${emitter.toBase58()}`
+      `${rpcUrl}/api/v1/vaas/1/${emitter.toBase58()}`,
     );
     const { data } = await response.json();
     return data[0].sequence;
@@ -357,21 +357,21 @@ export class Vault extends Storable {
   public async proposeWormholeMessage(
     payloads: Buffer[],
     proposalAddress?: PublicKey,
-    priorityFeeConfig: PriorityFeeConfig = {}
+    priorityFeeConfig: PriorityFeeConfig = {},
   ): Promise<WormholeMultisigProposal> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
       squad.wallet as Wallet,
       this.cluster,
       squad,
-      this.key
+      this.key,
     );
     const txAccount =
       await multisigVault.proposeWormholeMultipleMessagesWithPayer(
         payloads,
         squad.wallet.publicKey,
         proposalAddress,
-        priorityFeeConfig
+        priorityFeeConfig,
       );
     return new WormholeMultisigProposal(txAccount, squad, this.cluster);
   }
@@ -385,7 +385,7 @@ export class Vault extends Storable {
 export async function loadHotWallet(walletPath: string): Promise<Wallet> {
   return new NodeWallet(
     Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(readFileSync(walletPath, "ascii")))
-    )
+      Uint8Array.from(JSON.parse(readFileSync(walletPath, "ascii"))),
+    ),
   );
 }

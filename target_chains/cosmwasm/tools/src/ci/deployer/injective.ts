@@ -43,7 +43,7 @@ export class InjectiveDeployer implements Deployer {
         denom: string;
       }[];
       gas: string;
-    } = DEFAULT_STD_FEE
+    } = DEFAULT_STD_FEE,
   ): Promise<TxResponse> {
     const networkInfo = getNetworkInfo(this.network);
 
@@ -68,7 +68,7 @@ export class InjectiveDeployer implements Deployer {
       console.error(`Transaction failed: ${txResponse.rawLog}`);
     } else {
       console.log(
-        `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`
+        `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`,
       );
     }
 
@@ -107,7 +107,7 @@ export class InjectiveDeployer implements Deployer {
       codeId = parseInt(ci);
     } catch (e) {
       console.error(
-        "Encountered an error in parsing deploy code result. Printing raw log"
+        "Encountered an error in parsing deploy code result. Printing raw log",
       );
       console.error(txResponse.rawLog);
       throw e;
@@ -119,7 +119,7 @@ export class InjectiveDeployer implements Deployer {
   async instantiate(
     codeId: number,
     inst_msg: object,
-    label: string
+    label: string,
   ): Promise<string> {
     const instantiate_msg = MsgInstantiateContract.fromJSON({
       sender: this.injectiveAddress(),
@@ -136,7 +136,7 @@ export class InjectiveDeployer implements Deployer {
       address = extractFromRawLog(txResponse.rawLog, "contract_address");
     } catch (e) {
       console.error(
-        "Encountered an error in parsing instantiation result. Printing raw log"
+        "Encountered an error in parsing instantiation result. Printing raw log",
       );
       console.error(txResponse.rawLog);
       throw e;
@@ -144,8 +144,8 @@ export class InjectiveDeployer implements Deployer {
 
     console.log(
       `Instantiated Pyth at ${address} (${convert_injective_address_to_hex(
-        address
-      )})`
+        address,
+      )})`,
     );
 
     return address;
@@ -169,7 +169,7 @@ export class InjectiveDeployer implements Deployer {
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(
-        "Encountered an error in parsing migration result. Printing raw log"
+        "Encountered an error in parsing migration result. Printing raw log",
       );
       console.error(txResponse.rawLog);
       throw e;

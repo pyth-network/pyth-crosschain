@@ -31,13 +31,13 @@ export class FuelPriceListener extends ChainPriceListener {
     private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
-    }
+    },
   ) {
     super(config.pollingFrequency, priceItems);
     this.contract = new Contract(
       this.pythContractId,
       PYTH_CONTRACT_ABI,
-      this.provider
+      this.provider,
     );
   }
 
@@ -56,8 +56,8 @@ export class FuelPriceListener extends ChainPriceListener {
 
       this.logger.debug(
         `Polled a Fuel on chain price for feed ${this.priceIdToAlias.get(
-          priceId
-        )} (${priceId}).`
+          priceId,
+        )} (${priceId}).`,
       );
 
       return {
@@ -79,19 +79,19 @@ export class FuelPricePusher implements IPricePusher {
     private wallet: Wallet,
     private pythContractId: string,
     private hermesClient: HermesClient,
-    private logger: Logger
+    private logger: Logger,
   ) {
     this.contract = new Contract(
       this.pythContractId,
       PYTH_CONTRACT_ABI,
-      this.wallet as Provider
+      this.wallet as Provider,
     );
   }
 
   async updatePriceFeed(
     priceIds: string[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    pubTimesToPush: number[]
+    pubTimesToPush: number[],
   ): Promise<void> {
     if (priceIds.length === 0) {
       return;
@@ -124,7 +124,7 @@ export class FuelPricePusher implements IPricePusher {
 
       this.logger.info(
         { transactionId: result.transactionId },
-        "updatePriceFeed successful"
+        "updatePriceFeed successful",
       );
     } catch (err: any) {
       this.logger.error(err, "updatePriceFeed failed");

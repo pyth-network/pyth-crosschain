@@ -25,7 +25,7 @@ const signAndEncodeVM = function (
   data,
   signers,
   guardianSetIndex,
-  consistencyLevel
+  consistencyLevel,
 ) {
   const body = [
     abi.encodeParameter("uint32", timestamp).substring(2 + (64 - 8)),
@@ -74,7 +74,7 @@ function createVAAFromUint8Array(
   dataBuffer,
   emitterChainId,
   emitterAddress,
-  sequence
+  sequence,
 ) {
   const dataHex = "0x" + dataBuffer.toString("hex");
   return (
@@ -88,7 +88,7 @@ function createVAAFromUint8Array(
       dataHex,
       [testSigner1PK],
       0,
-      0
+      0,
     )
   );
 }
@@ -98,6 +98,6 @@ module.exports = function createLocalnetGovernanceVAA(dataBuffer, sequence) {
     dataBuffer,
     testGovernanceChain,
     testGovernanceEmitter,
-    sequence
+    sequence,
   );
 };

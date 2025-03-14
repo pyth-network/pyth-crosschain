@@ -24,8 +24,10 @@
     "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
     "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
     "example": "node lib/examples/HermesClient.js",
-    "format": "prettier --write \"src/**/*.ts\"",
+    "fix:lint": "eslint src/ --fix --max-warnings 0",
+    "fix:format": "prettier --write \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
+    "test:format": "prettier --check \"src/**/*.ts\"",
     "prepublishOnly": "pnpm run build:typescript && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"
@@ -44,7 +46,7 @@
     "eslint": "^8.14.0",
     "jest": "^29.4.0",
     "openapi-zod-client": "^1.18.1",
-    "prettier": "^2.6.2",
+    "prettier": "catalog:",
     "ts-jest": "^29.0.5",
     "typescript": "catalog:",
     "yargs": "^17.4.1"

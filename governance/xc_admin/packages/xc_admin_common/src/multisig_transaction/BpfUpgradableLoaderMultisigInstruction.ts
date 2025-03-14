@@ -17,7 +17,7 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
   constructor(
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
   ) {
     this.name = name;
     this.args = args;
@@ -25,7 +25,7 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
   }
 
   static fromTransactionInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): BpfUpgradableLoaderInstruction {
     try {
       const instructionTypeLayout = BufferLayout.u32("instruction");
@@ -46,7 +46,7 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
                 upgradeAuthority: instruction.keys[6],
               },
               remaining: instruction.keys.slice(7),
-            }
+            },
           );
         case 4:
           return new BpfUpgradableLoaderInstruction(
@@ -59,7 +59,7 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
                 newAuthority: instruction.keys[2],
               },
               remaining: instruction.keys.slice(3),
-            }
+            },
           );
         case 5:
           let args;
@@ -95,7 +95,7 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
       return new BpfUpgradableLoaderInstruction(
         UNRECOGNIZED_INSTRUCTION,
         { data: instruction.data },
-        { named: {}, remaining: instruction.keys }
+        { named: {}, remaining: instruction.keys },
       );
     }
   }

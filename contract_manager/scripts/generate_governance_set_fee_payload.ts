@@ -38,12 +38,12 @@ async function main() {
     const chain = DefaultStore.getChainOrThrow(setFeeEntry.chainName);
     const payload = chain.generateGovernanceSetFeePayload(
       setFeeEntry.fee,
-      setFeeEntry.exponent
+      setFeeEntry.exponent,
     );
     updatePayloads.push(payload);
     console.log(
       `Generated payload for chain ${setFeeEntry.chainName}:`,
-      payload.toString("hex")
+      payload.toString("hex"),
     );
   }
 

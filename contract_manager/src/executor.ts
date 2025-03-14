@@ -17,14 +17,14 @@ interface GovernanceContract {
   getLastExecutedGovernanceSequence(): Promise<number>;
   executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult>;
 }
 
 async function executeForGovernanceContract(
   contract: GovernanceContract,
   vaa: Buffer,
-  senderPrivateKey: PrivateKey
+  senderPrivateKey: PrivateKey,
 ) {
   const parsedVaa = parseVaa(vaa);
   const governanceSource = await contract.getGovernanceDataSource();
@@ -37,13 +37,13 @@ async function executeForGovernanceContract(
       await contract.getLastExecutedGovernanceSequence();
     if (lastExecutedSequence >= parsedVaa.sequence) {
       console.log(
-        `Skipping on contract ${contract.getId()} as it was already executed`
+        `Skipping on contract ${contract.getId()} as it was already executed`,
       );
       return;
     }
     const { id } = await contract.executeGovernanceInstruction(
       senderPrivateKey,
-      vaa
+      vaa,
     );
     console.log(`Executed on contract ${contract.getId()} with txHash: ${id}`);
   }
@@ -67,13 +67,13 @@ export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
       ) {
         const executorContract = new EvmExecutorContract(
           chain,
-          action.executorAddress
+          action.executorAddress,
         );
 
         await executeForGovernanceContract(
           executorContract,
           vaa,
-          senderPrivateKey
+          senderPrivateKey,
         );
       }
     }

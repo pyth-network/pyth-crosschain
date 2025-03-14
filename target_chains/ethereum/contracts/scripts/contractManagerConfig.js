@@ -20,10 +20,10 @@ function getDefaultConfig(chainName) {
     getDefaultDeploymentConfig("stable");
 
   const emitterChainIds = dataSources.map((dataSource) =>
-    convertChainId(dataSource.emitterChain)
+    convertChainId(dataSource.emitterChain),
   );
   const emitterAddresses = dataSources.map((dataSource) =>
-    convertAddress(dataSource.emitterAddress)
+    convertAddress(dataSource.emitterAddress),
   );
   const governanceChainId = convertChainId(governanceDataSource.emitterChain);
   const governanceEmitter = convertAddress(governanceDataSource.emitterAddress);
@@ -31,10 +31,10 @@ function getDefaultConfig(chainName) {
   const wormholeInitialSigners =
     wormholeConfig.initialGuardianSet.map(convertAddress);
   const wormholeGovernanceChainId = convertChainId(
-    wormholeConfig.governanceChainId
+    wormholeConfig.governanceChainId,
   );
   const wormholeGovernanceContract = convertAddress(
-    wormholeConfig.governanceContract
+    wormholeConfig.governanceContract,
   );
 
   return {

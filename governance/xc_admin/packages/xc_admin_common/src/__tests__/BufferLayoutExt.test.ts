@@ -13,7 +13,7 @@ test("Buffer layout extension fc tests", (done) => {
 
       const decodedBI = u64.decode(buffer);
       return buffer.equals(encodedUint8Array) && bi === decodedBI;
-    })
+    }),
   );
 
   done();

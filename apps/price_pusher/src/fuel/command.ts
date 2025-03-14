@@ -64,7 +64,7 @@ export default {
       logger.error(
         `Invalid price id submitted for: ${invalidPriceItems
           .map(({ alias }) => alias)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -73,7 +73,7 @@ export default {
     const pythListener = new PythPriceListener(
       hermesClient,
       priceItems,
-      logger.child({ module: "PythPriceListener" })
+      logger.child({ module: "PythPriceListener" }),
     );
 
     const provider = await Provider.create(endpoint);
@@ -85,14 +85,14 @@ export default {
       pythContractAddress,
       priceItems,
       logger.child({ module: "FuelPriceListener" }),
-      { pollingFrequency }
+      { pollingFrequency },
     );
 
     const fuelPricePusher = new FuelPricePusher(
       wallet,
       pythContractAddress,
       hermesClient,
-      logger.child({ module: "FuelPricePusher" })
+      logger.child({ module: "FuelPricePusher" }),
     );
 
     const controller = new Controller(
@@ -101,7 +101,7 @@ export default {
       fuelPriceListener,
       fuelPricePusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency }
+      { pushingFrequency },
     );
 
     await controller.start();

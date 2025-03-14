@@ -64,7 +64,7 @@ export default {
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const account = AptosAccount.fromDerivePath(
       APTOS_ACCOUNT_HD_PATH,
-      mnemonic
+      mnemonic,
     );
     logger.info(`Pushing from account address: ${account.address()}`);
 
@@ -78,7 +78,7 @@ export default {
       logger.error(
         `Invalid price id submitted for: ${invalidPriceItems
           .map(({ alias }) => alias)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -87,7 +87,7 @@ export default {
     const pythListener = new PythPriceListener(
       hermesClient,
       priceItems,
-      logger.child({ module: "PythPriceListener" })
+      logger.child({ module: "PythPriceListener" }),
     );
 
     const aptosListener = new AptosPriceListener(
@@ -95,7 +95,7 @@ export default {
       endpoint,
       priceItems,
       logger.child({ module: "AptosPriceListener" }),
-      { pollingFrequency }
+      { pollingFrequency },
     );
 
     const aptosPusher = new AptosPricePusher(
@@ -104,7 +104,7 @@ export default {
       pythContractAddress,
       endpoint,
       mnemonic,
-      overrideGasPriceMultiplier
+      overrideGasPriceMultiplier,
     );
 
     const controller = new Controller(
@@ -113,7 +113,7 @@ export default {
       aptosListener,
       aptosPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency }
+      { pushingFrequency },
     );
 
     controller.start();

@@ -80,7 +80,7 @@ export default {
       logger.error(
         `Invalid price id submitted for: ${invalidPriceItems
           .map(({ alias }) => alias)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -89,7 +89,7 @@ export default {
     const pythListener = new PythPriceListener(
       hermesClient,
       priceItems,
-      logger.child({ module: "PythPriceListener" })
+      logger.child({ module: "PythPriceListener" }),
     );
 
     const injectiveListener = new InjectivePriceListener(
@@ -99,7 +99,7 @@ export default {
       logger.child({ module: "InjectivePriceListener" }),
       {
         pollingFrequency,
-      }
+      },
     );
     const injectivePusher = new InjectivePricePusher(
       hermesClient,
@@ -111,7 +111,7 @@ export default {
         chainId: getNetworkInfo(network).chainId,
         gasPrice,
         gasMultiplier,
-      }
+      },
     );
 
     const controller = new Controller(
@@ -120,7 +120,7 @@ export default {
       injectiveListener,
       injectivePusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency }
+      { pushingFrequency },
     );
 
     controller.start();

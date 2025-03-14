@@ -10,7 +10,7 @@ import { COMMON_DEPLOY_OPTIONS } from "./common";
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_contract.ts")
   .usage(
-    "Usage: $0 --std-output <path/to/std-output.json> --private-key <private-key> --chain <chain> [--deploy-args <arg> [... <args>]]"
+    "Usage: $0 --std-output <path/to/std-output.json> --private-key <private-key> --chain <chain> [--deploy-args <arg> [... <args>]]",
   )
   .options({
     "std-output": {
@@ -39,7 +39,7 @@ async function main() {
     toPrivateKey(argv["private-key"]),
     artifact["abi"],
     artifact["bytecode"],
-    argv["deploy-args"] || []
+    argv["deploy-args"] || [],
   );
 
   console.log(`Deployed contract at ${address}`);

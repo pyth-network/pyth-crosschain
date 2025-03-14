@@ -6,7 +6,9 @@
   "private": "true",
   "scripts": {
     "build": "tsc",
-    "deploy": "ts-node ./src/ci/deploy.ts"
+    "deploy": "ts-node ./src/ci/deploy.ts",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write ."
   },
   "author": "",
   "license": "Apache-2.0",

@@ -135,14 +135,14 @@ export const WormholeInstructionView = ({
                                   'string'
                                     ? parsedInstruction.args[key]
                                     : parsedInstruction.args[key] instanceof
-                                      Uint8Array
-                                    ? parsedInstruction.args[key].toString()
-                                    : typeof parsedInstruction.args[key] ===
-                                      'bigint'
-                                    ? parsedInstruction.args[key].toString()
-                                    : JSON.stringify(
-                                        parsedInstruction.args[key]
-                                      )}
+                                        Uint8Array
+                                      ? parsedInstruction.args[key].toString()
+                                      : typeof parsedInstruction.args[key] ===
+                                          'bigint'
+                                        ? parsedInstruction.args[key].toString()
+                                        : JSON.stringify(
+                                            parsedInstruction.args[key]
+                                          )}
                                 </div>
                               )}
                             </>

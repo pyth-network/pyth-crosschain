@@ -63,7 +63,7 @@ export class PythWrapperQuerier {
    */
   async getPriceFeed(
     contractAddr: string,
-    id: string
+    id: string,
   ): Promise<PriceFeedResponse> {
     try {
       const priceFeedResponse = await this.chainQuerier.getSmartContractState({
@@ -116,7 +116,7 @@ export class PythWrapperExecutor {
    * @throws an error if it fails
    */
   async executeUpdatePriceFeeds(
-    req: ExecuteUpdatePriceFeedsRequest
+    req: ExecuteUpdatePriceFeedsRequest,
   ): Promise<ExecuteContractResponse> {
     const { contractAddr, vaas, fund } = req;
 
@@ -143,7 +143,7 @@ export class PythWrapperExecutor {
    * @throws an error if it fails
    */
   async executeGovernanceInstruction(
-    req: ExecuteGovernanceInstructionRequest
+    req: ExecuteGovernanceInstructionRequest,
   ): Promise<ExecuteContractResponse> {
     const { contractAddr, vaa } = req;
 

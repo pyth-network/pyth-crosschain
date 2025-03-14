@@ -91,7 +91,7 @@ export class UnrecognizedProgram implements MultisigInstruction {
   constructor(
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
   ) {
     this.name = name;
     this.args = args;
@@ -99,12 +99,12 @@ export class UnrecognizedProgram implements MultisigInstruction {
   }
 
   static fromTransactionInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): UnrecognizedProgram {
     return new UnrecognizedProgram(
       UNRECOGNIZED_INSTRUCTION,
       { data: instruction.data },
-      { named: {}, remaining: instruction.keys }
+      { named: {}, remaining: instruction.keys },
     );
   }
 }
@@ -116,7 +116,7 @@ export class MultisigParser {
   constructor(
     pythOracleAddress: PublicKey,
     wormholeBridgeAddress: PublicKey | undefined,
-    pythPriceStoreAddress: PublicKey | undefined
+    pythPriceStoreAddress: PublicKey | undefined,
   ) {
     this.pythOracleAddress = pythOracleAddress;
     this.wormholeBridgeAddress = wormholeBridgeAddress;
@@ -126,7 +126,7 @@ export class MultisigParser {
     return new MultisigParser(
       getPythProgramKeyForCluster(cluster),
       WORMHOLE_ADDRESS[cluster],
-      PRICE_STORE_PROGRAM_ID
+      PRICE_STORE_PROGRAM_ID,
     );
   }
 
@@ -136,7 +136,7 @@ export class MultisigParser {
       instruction.programId.equals(this.wormholeBridgeAddress)
     ) {
       return WormholeMultisigInstruction.fromTransactionInstruction(
-        instruction
+        instruction,
       );
     } else if (instruction.programId.equals(this.pythOracleAddress)) {
       return PythMultisigInstruction.fromTransactionInstruction(instruction);
@@ -145,7 +145,7 @@ export class MultisigParser {
       instruction.programId.equals(this.pythPriceStoreAddress)
     ) {
       return PriceStoreMultisigInstruction.fromTransactionInstruction(
-        instruction
+        instruction,
       );
     } else if (
       instruction.programId.equals(MESSAGE_BUFFER_PROGRAM_ID) ||
@@ -156,15 +156,15 @@ export class MultisigParser {
       return AnchorMultisigInstruction.fromTransactionInstruction(instruction);
     } else if (instruction.programId.equals(SystemProgram.programId)) {
       return SystemProgramMultisigInstruction.fromTransactionInstruction(
-        instruction
+        instruction,
       );
     } else if (instruction.programId.equals(BPF_UPGRADABLE_LOADER)) {
       return BpfUpgradableLoaderInstruction.fromTransactionInstruction(
-        instruction
+        instruction,
       );
     } else if (instruction.programId.equals(StakeProgram.programId)) {
       return SolanaStakingMultisigInstruction.fromTransactionInstruction(
-        instruction
+        instruction,
       );
     } else if (instruction.programId.equals(SOLANA_LAZER_PROGRAM_ID)) {
       return LazerMultisigInstruction.fromInstruction(instruction);

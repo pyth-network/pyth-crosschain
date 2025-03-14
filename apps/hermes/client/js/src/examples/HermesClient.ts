@@ -43,7 +43,7 @@ function extractBasicAuthorizationHeadersFromUrl(urlString: string): {
 
   if (url.username && url.password) {
     headers["Authorization"] = `Basic ${btoa(
-      `${url.username}:${url.password}`
+      `${url.username}:${url.password}`,
     )}`;
     url.username = "";
     url.password = "";
@@ -54,7 +54,7 @@ function extractBasicAuthorizationHeadersFromUrl(urlString: string): {
 
 async function run() {
   const { endpoint, headers } = extractBasicAuthorizationHeadersFromUrl(
-    argv.endpoint
+    argv.endpoint,
   );
   const connection = new HermesClient(endpoint, { headers });
 

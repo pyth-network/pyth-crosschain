@@ -11,7 +11,7 @@ import {
 
 describe("LazerMultisigInstruction", () => {
   const mockProgramId = new PublicKey(
-    "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt"
+    "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt",
   );
   const systemProgram = SystemProgram.programId;
 

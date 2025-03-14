@@ -63,7 +63,7 @@ export class HermesClient {
     schema: z.ZodSchema<ResponseData>,
     options?: RequestInit,
     retries = this.httpRetries,
-    backoff = 100 + Math.floor(Math.random() * 100) // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
+    backoff = 100 + Math.floor(Math.random() * 100), // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
   ): Promise<ResponseData> {
     try {
       const response = await fetch(url, {
@@ -79,7 +79,7 @@ export class HermesClient {
         throw new Error(
           `HTTP error! status: ${response.status}${
             errorBody ? `, body: ${errorBody}` : ""
-          }`
+          }`,
         );
       }
       const data = await response.json();
@@ -124,7 +124,7 @@ export class HermesClient {
     return await this.httpRequest(
       url.toString(),
       schemas.PriceFeedMetadata.array(),
-      fetchOptions
+      fetchOptions,
     );
   }
 
@@ -154,7 +154,7 @@ export class HermesClient {
     return await this.httpRequest(
       url.toString(),
       schemas.LatestPublisherStakeCapsUpdateDataResponse,
-      fetchOptions
+      fetchOptions,
     );
   }
 
@@ -178,7 +178,7 @@ export class HermesClient {
       parsed?: boolean;
       ignoreInvalidPriceIds?: boolean;
     },
-    fetchOptions?: RequestInit
+    fetchOptions?: RequestInit,
   ): Promise<PriceUpdate> {
     const url = this.buildURL("updates/price/latest");
     for (const id of ids) {
@@ -215,7 +215,7 @@ export class HermesClient {
       parsed?: boolean;
       ignoreInvalidPriceIds?: boolean;
     },
-    fetchOptions?: RequestInit
+    fetchOptions?: RequestInit,
   ): Promise<PriceUpdate> {
     const url = this.buildURL(`updates/price/${publishTime}`);
     for (const id of ids) {
@@ -255,7 +255,7 @@ export class HermesClient {
       allowUnordered?: boolean;
       benchmarksOnly?: boolean;
       ignoreInvalidPriceIds?: boolean;
-    }
+    },
   ): Promise<EventSource> {
     const url = this.buildURL("updates/price/stream");
     ids.forEach((id) => {
@@ -302,7 +302,7 @@ export class HermesClient {
       parsed?: boolean;
       ignoreInvalidPriceIds?: boolean;
     },
-    fetchOptions?: RequestInit
+    fetchOptions?: RequestInit,
   ): Promise<TwapsResponse> {
     const url = this.buildURL(`updates/twap/${window_seconds}/latest`);
     for (const id of ids) {
@@ -317,13 +317,13 @@ export class HermesClient {
     return this.httpRequest(
       url.toString(),
       schemas.TwapsResponse,
-      fetchOptions
+      fetchOptions,
     );
   }
 
   private appendUrlSearchParams(
     url: URL,
-    params: Record<string, string | boolean>
+    params: Record<string, string | boolean>,
   ) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -337,7 +337,7 @@ export class HermesClient {
       `./v2/${endpoint}`,
       // We ensure the `baseURL` ends with a `/` so that URL doesn't resolve the
       // path relative to the parent.
-      `${this.baseURL}${this.baseURL.endsWith("/") ? "" : "/"}`
+      `${this.baseURL}${this.baseURL.endsWith("/") ? "" : "/"}`,
     );
   }
 }

@@ -6,7 +6,7 @@ export type MessageBuffer = {
       name: "initialize";
       docs: [
         "Initializes the whitelist and sets it's admin. Once initialized,",
-        "the admin must sign all further changes to the whitelist."
+        "the admin must sign all further changes to the whitelist.",
       ];
       accounts: [
         {
@@ -14,7 +14,7 @@ export type MessageBuffer = {
           isMut: false;
           isSigner: true;
           docs: [
-            "Admin that can update the whitelist and create/resize/delete buffers"
+            "Admin that can update the whitelist and create/resize/delete buffers",
           ];
         },
         {
@@ -37,7 +37,7 @@ export type MessageBuffer = {
                 kind: "const";
                 type: "string";
                 value: "whitelist";
-              }
+              },
             ];
           };
         },
@@ -45,7 +45,7 @@ export type MessageBuffer = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -55,7 +55,7 @@ export type MessageBuffer = {
         "Sets the programs that are allowed to invoke this program through CPI",
         "",
         "* `allowed_programs` - Entire list of programs that are allowed to",
-        "invoke this program through CPI"
+        "invoke this program through CPI",
       ];
       accounts: [
         {
@@ -78,11 +78,11 @@ export type MessageBuffer = {
                 kind: "const";
                 type: "string";
                 value: "whitelist";
-              }
+              },
             ];
           };
           relations: ["admin"];
-        }
+        },
       ];
       args: [
         {
@@ -90,7 +90,7 @@ export type MessageBuffer = {
           type: {
             vec: "publicKey";
           };
-        }
+        },
       ];
     },
     {
@@ -117,17 +117,17 @@ export type MessageBuffer = {
                 kind: "const";
                 type: "string";
                 value: "whitelist";
-              }
+              },
             ];
           };
           relations: ["admin"];
-        }
+        },
       ];
       args: [
         {
           name: "newAdmin";
           type: "publicKey";
-        }
+        },
       ];
     },
     {
@@ -155,7 +155,7 @@ export type MessageBuffer = {
         "",
         "TODO:",
         '- handle updates ("paging/batches of messages")',
-        ""
+        "",
       ];
       accounts: [
         {
@@ -176,7 +176,7 @@ export type MessageBuffer = {
                     kind: "const";
                     type: "string";
                     value: "whitelist";
-                  }
+                  },
                 ];
               };
             },
@@ -185,7 +185,7 @@ export type MessageBuffer = {
               isMut: false;
               isSigner: true;
               docs: ["PDA representing authorized cpi caller"];
-            }
+            },
           ];
         },
         {
@@ -211,10 +211,10 @@ export type MessageBuffer = {
                 kind: "arg";
                 type: "publicKey";
                 path: "base_account_key";
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
@@ -226,7 +226,7 @@ export type MessageBuffer = {
           type: {
             vec: "bytes";
           };
-        }
+        },
       ];
     },
     {
@@ -242,7 +242,7 @@ export type MessageBuffer = {
         "(e.g. pyth price account)",
         "*`target_size`          - Initial size to allocate for the",
         "`MessageBuffer` PDA. `target_size`",
-        "must be >= HEADER_LEN && <= 10240"
+        "must be >= HEADER_LEN && <= 10240",
       ];
       accounts: [
         {
@@ -260,7 +260,7 @@ export type MessageBuffer = {
                 kind: "const";
                 type: "string";
                 value: "whitelist";
-              }
+              },
             ];
           };
           relations: ["admin"];
@@ -280,7 +280,7 @@ export type MessageBuffer = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -294,7 +294,7 @@ export type MessageBuffer = {
         {
           name: "targetSize";
           type: "u32";
-        }
+        },
       ];
     },
     {
@@ -310,7 +310,7 @@ export type MessageBuffer = {
         "(e.g. pyth price account)",
         "*`target_size`          -  Size to re-allocate for the",
         "`MessageBuffer` PDA. If increasing the size,",
-        "max delta of current_size & target_size is 10240"
+        "max delta of current_size & target_size is 10240",
       ];
       accounts: [
         {
@@ -328,7 +328,7 @@ export type MessageBuffer = {
                 kind: "const";
                 type: "string";
                 value: "whitelist";
-              }
+              },
             ];
           };
           relations: ["admin"];
@@ -343,7 +343,7 @@ export type MessageBuffer = {
           isMut: true;
           isSigner: true;
           docs: [
-            "Pays for any additional rent needed to increase the buffer size"
+            "Pays for any additional rent needed to increase the buffer size",
           ];
         },
         {
@@ -360,7 +360,7 @@ export type MessageBuffer = {
             "if target_size is < MessageBuffer::INIT_SPACE + 8",
             "and if so,then load() will fail.",
             "If increasing, Anchor also automatically checks if target_size delta",
-            "exceeds MAX_PERMITTED_DATA_INCREASE"
+            "exceeds MAX_PERMITTED_DATA_INCREASE",
           ];
           pda: {
             seeds: [
@@ -378,10 +378,10 @@ export type MessageBuffer = {
                 kind: "arg";
                 type: "publicKey";
                 path: "base_account_key";
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
@@ -395,7 +395,7 @@ export type MessageBuffer = {
         {
           name: "targetSize";
           type: "u32";
-        }
+        },
       ];
     },
     {
@@ -409,7 +409,7 @@ export type MessageBuffer = {
         "for deriving the `MessageBuffer` PDA.",
         "* `base_account_key`    - Pubkey of the original account the",
         "`MessageBuffer` is derived from",
-        "(e.g. pyth price account)"
+        "(e.g. pyth price account)",
       ];
       accounts: [
         {
@@ -427,7 +427,7 @@ export type MessageBuffer = {
                 kind: "const";
                 type: "string";
                 value: "whitelist";
-              }
+              },
             ];
           };
           relations: ["admin"];
@@ -463,10 +463,10 @@ export type MessageBuffer = {
                 kind: "arg";
                 type: "publicKey";
                 path: "base_account_key";
-              }
+              },
             ];
           };
-        }
+        },
       ];
       args: [
         {
@@ -476,9 +476,9 @@ export type MessageBuffer = {
         {
           name: "baseAccountKey";
           type: "publicKey";
-        }
+        },
       ];
-    }
+    },
   ];
   accounts: [
     {
@@ -506,7 +506,7 @@ export type MessageBuffer = {
         "NOTE: The defined fields are read as *Little Endian*. The actual messages",
         "are read as *Big Endian*. The MessageBuffer fields are only ever read",
         "by the Pythnet validator & Hermes so don't need to be in Big Endian",
-        "for cross-platform compatibility."
+        "for cross-platform compatibility.",
       ];
       type: {
         kind: "struct";
@@ -529,12 +529,12 @@ export type MessageBuffer = {
               "endpoints of every message.",
               "ex: [10, 14]",
               "=> msg1 = account_info.data[(header_len + 0)..(header_len + 10)]",
-              "=> msg2 = account_info.data[(header_len + 10)..(header_len + 14)]"
+              "=> msg2 = account_info.data[(header_len + 10)..(header_len + 14)]",
             ];
             type: {
               array: ["u16", 255];
             };
-          }
+          },
         ];
       };
     },
@@ -556,10 +556,10 @@ export type MessageBuffer = {
             type: {
               vec: "publicKey";
             };
-          }
+          },
         ];
       };
-    }
+    },
   ];
   errors: [
     {
@@ -596,7 +596,7 @@ export type MessageBuffer = {
       code: 6006;
       name: "TargetSizeExceedsMaxLen";
       msg: "Target size exceeds MessageBuffer::MAX_LEN";
-    }
+    },
   ];
 };
 

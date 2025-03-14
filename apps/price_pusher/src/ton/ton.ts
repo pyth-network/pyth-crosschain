@@ -31,11 +31,11 @@ export class TonPriceListener extends ChainPriceListener {
     private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
-    }
+    },
   ) {
     super(config.pollingFrequency, priceItems);
     this.contract = this.provider.open(
-      PythContract.createFromAddress(this.contractAddress)
+      PythContract.createFromAddress(this.contractAddress),
     );
   }
 
@@ -46,8 +46,8 @@ export class TonPriceListener extends ChainPriceListener {
 
       this.logger.debug(
         `Polled a TON on chain price for feed ${this.priceIdToAlias.get(
-          priceId
-        )} (${priceId}).`
+          priceId,
+        )} (${priceId}).`,
       );
 
       return {
@@ -71,7 +71,7 @@ export class TonPricePusher implements IPricePusher {
     private privateKey: string,
     private contractAddress: Address,
     private hermesClient: HermesClient,
-    private logger: Logger
+    private logger: Logger,
   ) {
     this.contract = this.client
       .provider(this.contractAddress)
@@ -88,7 +88,7 @@ export class TonPricePusher implements IPricePusher {
   async updatePriceFeed(
     priceIds: string[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    pubTimesToPush: number[]
+    pubTimesToPush: number[],
   ): Promise<void> {
     if (priceIds.length === 0) {
       return;
@@ -116,7 +116,7 @@ export class TonPricePusher implements IPricePusher {
         await this.contract.sendUpdatePriceFeeds(
           this.sender,
           updateDataBuffer,
-          totalFee
+          totalFee,
         );
       }
 

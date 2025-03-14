@@ -20,7 +20,7 @@ export const PROPOSAL_STATUSES = [
   'draft',
   'unkwown',
 ] as const
-export type ProposalStatus = typeof PROPOSAL_STATUSES[number]
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number]
 
 export const getProposalStatus = (
   proposal: TransactionAccount | undefined,

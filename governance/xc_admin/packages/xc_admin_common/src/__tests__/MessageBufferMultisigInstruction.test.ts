@@ -28,8 +28,8 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
       new Wallet(new Keypair()),
-      AnchorProvider.defaultOptions()
-    )
+      AnchorProvider.defaultOptions(),
+    ),
   ) as unknown as Program<MessageBuffer>;
 
   const parser = MultisigParser.fromCluster(cluster);
@@ -56,77 +56,77 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
 
       if (parsedInstruction instanceof AnchorMultisigInstruction) {
         expect(parsedInstruction.program).toBe(
-          MultisigInstructionProgram.MessageBuffer
+          MultisigInstructionProgram.MessageBuffer,
         );
         expect(parsedInstruction.name).toBe("createBuffer");
 
         expect(
           parsedInstruction.accounts.named["whitelist"].pubkey.equals(
-            instruction.keys[0].pubkey
-          )
+            instruction.keys[0].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["whitelist"].isSigner).toBe(
-          instruction.keys[0].isSigner
+          instruction.keys[0].isSigner,
         );
         expect(parsedInstruction.accounts.named["whitelist"].isWritable).toBe(
-          instruction.keys[0].isWritable
+          instruction.keys[0].isWritable,
         );
 
         expect(
           parsedInstruction.accounts.named["admin"].pubkey.equals(
-            instruction.keys[1].pubkey
-          )
+            instruction.keys[1].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["admin"].isSigner).toBe(
-          instruction.keys[1].isSigner
+          instruction.keys[1].isSigner,
         );
         expect(parsedInstruction.accounts.named["admin"].isWritable).toBe(
-          instruction.keys[1].isWritable
+          instruction.keys[1].isWritable,
         );
 
         expect(
           parsedInstruction.accounts.named["payer"].pubkey.equals(
-            instruction.keys[2].pubkey
-          )
+            instruction.keys[2].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["payer"].isSigner).toBe(
-          instruction.keys[2].isSigner
+          instruction.keys[2].isSigner,
         );
         expect(parsedInstruction.accounts.named["payer"].isWritable).toBe(
-          instruction.keys[2].isWritable
+          instruction.keys[2].isWritable,
         );
 
         expect(
           parsedInstruction.accounts.named["systemProgram"].pubkey.equals(
-            instruction.keys[3].pubkey
-          )
+            instruction.keys[3].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["systemProgram"].isSigner).toBe(
-          instruction.keys[3].isSigner
+          instruction.keys[3].isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["systemProgram"].isWritable
+          parsedInstruction.accounts.named["systemProgram"].isWritable,
         ).toBe(instruction.keys[3].isWritable);
 
         expect(parsedInstruction.accounts.remaining.length).toBe(1);
 
         expect(
           parsedInstruction.accounts.remaining[0].pubkey.equals(
-            instruction.keys[4].pubkey
-          )
+            instruction.keys[4].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.remaining[0].isSigner).toBe(
-          instruction.keys[4].isSigner
+          instruction.keys[4].isSigner,
         );
         expect(parsedInstruction.accounts.remaining[0].isWritable).toBe(
-          instruction.keys[4].isWritable
+          instruction.keys[4].isWritable,
         );
 
         expect(
-          parsedInstruction.args.allowedProgramAuth.equals(allowedProgramAuth)
+          parsedInstruction.args.allowedProgramAuth.equals(allowedProgramAuth),
         ).toBeTruthy();
         expect(
-          parsedInstruction.args.baseAccountKey.equals(baseAccountKey)
+          parsedInstruction.args.baseAccountKey.equals(baseAccountKey),
         ).toBeTruthy();
         expect(parsedInstruction.args.targetSize).toBe(100);
 
@@ -148,8 +148,8 @@ test("Message buffer multisig instruction parse: delete buffer", (done) => {
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
       new Wallet(new Keypair()),
-      AnchorProvider.defaultOptions()
-    )
+      AnchorProvider.defaultOptions(),
+    ),
   ) as unknown as Program<MessageBuffer>;
 
   const parser = MultisigParser.fromCluster(cluster);
@@ -170,65 +170,65 @@ test("Message buffer multisig instruction parse: delete buffer", (done) => {
 
       if (parsedInstruction instanceof AnchorMultisigInstruction) {
         expect(parsedInstruction.program).toBe(
-          MultisigInstructionProgram.MessageBuffer
+          MultisigInstructionProgram.MessageBuffer,
         );
         expect(parsedInstruction.name).toBe("deleteBuffer");
 
         expect(
           parsedInstruction.accounts.named["whitelist"].pubkey.equals(
-            instruction.keys[0].pubkey
-          )
+            instruction.keys[0].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["whitelist"].isSigner).toBe(
-          instruction.keys[0].isSigner
+          instruction.keys[0].isSigner,
         );
         expect(parsedInstruction.accounts.named["whitelist"].isWritable).toBe(
-          instruction.keys[0].isWritable
+          instruction.keys[0].isWritable,
         );
 
         expect(
           parsedInstruction.accounts.named["admin"].pubkey.equals(
-            instruction.keys[1].pubkey
-          )
+            instruction.keys[1].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["admin"].isSigner).toBe(
-          instruction.keys[1].isSigner
+          instruction.keys[1].isSigner,
         );
         expect(parsedInstruction.accounts.named["admin"].isWritable).toBe(
-          instruction.keys[1].isWritable
+          instruction.keys[1].isWritable,
         );
 
         expect(
           parsedInstruction.accounts.named["payer"].pubkey.equals(
-            instruction.keys[2].pubkey
-          )
+            instruction.keys[2].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["payer"].isSigner).toBe(
-          instruction.keys[2].isSigner
+          instruction.keys[2].isSigner,
         );
         expect(parsedInstruction.accounts.named["payer"].isWritable).toBe(
-          instruction.keys[2].isWritable
+          instruction.keys[2].isWritable,
         );
 
         expect(
           parsedInstruction.accounts.named["messageBuffer"].pubkey.equals(
-            instruction.keys[3].pubkey
-          )
+            instruction.keys[3].pubkey,
+          ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named["messageBuffer"].isSigner).toBe(
-          instruction.keys[3].isSigner
+          instruction.keys[3].isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["messageBuffer"].isWritable
+          parsedInstruction.accounts.named["messageBuffer"].isWritable,
         ).toBe(instruction.keys[3].isWritable);
 
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
 
         expect(
-          parsedInstruction.args.allowedProgramAuth.equals(allowedProgramAuth)
+          parsedInstruction.args.allowedProgramAuth.equals(allowedProgramAuth),
         ).toBeTruthy();
         expect(
-          parsedInstruction.args.baseAccountKey.equals(baseAccountKey)
+          parsedInstruction.args.baseAccountKey.equals(baseAccountKey),
         ).toBeTruthy();
 
         done();

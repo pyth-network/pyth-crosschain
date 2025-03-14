@@ -862,8 +862,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                       {addPriceFeed
                         ? 'Add New Price Feed'
                         : deletePriceFeed
-                        ? 'Delete Old Price Feed'
-                        : key}
+                          ? 'Delete Old Price Feed'
+                          : key}
                     </td>
                   </tr>
                   {addPriceFeed ? (

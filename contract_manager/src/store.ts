@@ -102,7 +102,7 @@ export class Store {
       for (const parsed of parsedArray) {
         if (allChainClasses[parsed.type] === undefined) {
           throw new Error(
-            `No chain class found for chain type: ${parsed.type}`
+            `No chain class found for chain type: ${parsed.type}`,
           );
         }
         const chain = allChainClasses[parsed.type].fromJson(parsed);
@@ -127,7 +127,7 @@ export class Store {
     for (const [type, contracts] of Object.entries(contractsByType)) {
       writeFileSync(
         `${this.path}/contracts/${type}s.yaml`,
-        stringify(contracts.map((c) => c.toJson()))
+        stringify(contracts.map((c) => c.toJson())),
       );
     }
   }
@@ -143,7 +143,7 @@ export class Store {
     for (const [type, chains] of Object.entries(chainsByType)) {
       writeFileSync(
         `${this.path}/chains/${type}s.yaml`,
-        stringify(chains.map((c) => c.toJson()))
+        stringify(chains.map((c) => c.toJson())),
       );
     }
   }
@@ -180,7 +180,7 @@ export class Store {
         const chain = this.chains[parsed.chain];
         const chainContract = allContractClasses[parsed.type].fromJson(
           chain,
-          parsed
+          parsed,
         );
         if (
           this.contracts[chainContract.getId()] ||
@@ -188,7 +188,7 @@ export class Store {
           this.wormhole_contracts[chainContract.getId()]
         )
           throw new Error(
-            `Multiple contracts with id ${chainContract.getId()} found`
+            `Multiple contracts with id ${chainContract.getId()} found`,
           );
         if (chainContract instanceof EvmEntropyContract) {
           this.entropy_contracts[chainContract.getId()] = chainContract;
@@ -241,7 +241,7 @@ export class Store {
    */
   getChainOrThrow<T extends Chain>(
     chainId: string,
-    ChainClass?: { new (...args: any[]): T; type: string } // eslint-disable-line @typescript-eslint/no-explicit-any
+    ChainClass?: { new (...args: any[]): T; type: string }, // eslint-disable-line @typescript-eslint/no-explicit-any
   ): T {
     const chain = this.chains[chainId];
     if (!chain) {
@@ -249,7 +249,7 @@ export class Store {
     }
     if (ChainClass && !(chain instanceof ChainClass)) {
       throw new Error(
-        `Chain with ID '${chainId}' is not of type ${ChainClass.type}.`
+        `Chain with ID '${chainId}' is not of type ${ChainClass.type}.`,
       );
     }
     return chain as T;

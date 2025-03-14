@@ -117,7 +117,7 @@ export function parseTwapMessage(message: Buffer): TwapMessage {
 export function sliceAccumulatorUpdateData(
   data: Buffer,
   start?: number,
-  end?: number
+  end?: number,
 ): Buffer {
   if (!isAccumulatorUpdateData(data)) {
     throw new Error("Invalid accumulator message");
@@ -165,7 +165,7 @@ export function sliceAccumulatorUpdateData(
 }
 
 export function parseAccumulatorUpdateData(
-  data: Buffer
+  data: Buffer,
 ): AccumulatorUpdateData {
   if (!isAccumulatorUpdateData(data)) {
     throw new Error("Invalid accumulator message");
@@ -199,7 +199,7 @@ export function parseAccumulatorUpdateData(
     const proof = [];
     for (let j = 0; j < numProofs; j++) {
       proof.push(
-        Array.from(data.subarray(cursor, cursor + KECCAK160_HASH_SIZE))
+        Array.from(data.subarray(cursor, cursor + KECCAK160_HASH_SIZE)),
       );
       cursor += KECCAK160_HASH_SIZE;
     }

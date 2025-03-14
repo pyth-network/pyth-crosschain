@@ -24,7 +24,7 @@ export class EvmExecute extends PythGovernanceActionImpl {
     readonly executorAddress: string,
     readonly callAddress: string,
     readonly value: bigint,
-    readonly calldata: Buffer
+    readonly calldata: Buffer,
   ) {
     super(targetChainId, "Execute");
   }
@@ -33,7 +33,7 @@ export class EvmExecute extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "Execute",
-      this.layout
+      this.layout,
     );
     if (!decoded) return undefined;
 
@@ -42,7 +42,7 @@ export class EvmExecute extends PythGovernanceActionImpl {
       decoded[1].executorAddress,
       decoded[1].callAddress,
       decoded[1].value,
-      Buffer.from(decoded[1].calldata)
+      Buffer.from(decoded[1].calldata),
     );
   }
 

@@ -10,7 +10,7 @@ const client = await PythLazerClient.create(
   ["wss://pyth-lazer.dourolabs.app/v1/stream"],
   "access_token",
   3, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. The connections will round-robin across the provided URLs. Default is 3.
-  console // Optionally log socket operations (to the console in this case.)
+  console, // Optionally log socket operations (to the console in this case.)
 );
 
 // Read and process messages from the Lazer stream
@@ -23,7 +23,7 @@ client.addMessageListener((message) => {
           "stream updated for subscription",
           message.value.subscriptionId,
           ":",
-          message.value.parsed?.priceFeeds
+          message.value.parsed?.priceFeeds,
         );
       }
       break;

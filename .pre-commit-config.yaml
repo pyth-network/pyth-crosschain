@@ -23,18 +23,13 @@ repos:
             target_chains/sui/vendor/|
             patches/
           )
-  # Hook to format many type of files in the repo
-  # including solidity contracts.
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v2.7.1"
-    hooks:
-      - id: prettier
-        additional_dependencies:
-          - "prettier@2.7.1"
-          - "prettier-plugin-solidity@1.0.0-rc.1"
-        exclude: target_chains/sui/vendor/
   - repo: local
     hooks:
+      - id: turbo-fix
+        name: Run turbo fix on packages changed since the last commit
+        language: system
+        entry: sh -c 'TURBO_SCM_BASE="HEAD^1" pnpm turbo fix --affected'
+        pass_filenames: false
       # Hooks for the remote executor
       - id: cargo-fmt-remote-executor
         name: Cargo format for remote executor

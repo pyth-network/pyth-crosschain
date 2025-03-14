@@ -23,7 +23,7 @@ export class Token extends Storable {
     // The hexadecimal pyth id of the tokens X/USD price feed
     // (get this from hermes or the Pyth docs page)
     public pythId: string | undefined,
-    public decimals: number
+    public decimals: number,
   ) {
     super();
   }

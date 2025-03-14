@@ -12,7 +12,7 @@ const governanceChainId = process.env.GOVERNANCE_CHAIN_ID;
 const governanceEmitter = process.env.GOVERNANCE_EMITTER;
 // Default value for this field is 0
 const governanceInitialSequence = Number(
-  process.env.GOVERNANCE_INITIAL_SEQUENCE ?? "0"
+  process.env.GOVERNANCE_INITIAL_SEQUENCE ?? "0",
 );
 
 const validTimePeriodSeconds = Number(process.env.VALID_TIME_PERIOD_SECONDS);
@@ -42,6 +42,6 @@ module.exports = async function (deployer) {
       validTimePeriodSeconds,
       singleUpdateFeeInWei,
     ],
-    { deployer }
+    { deployer },
   );
 };

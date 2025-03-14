@@ -58,12 +58,12 @@ export const VAA_SPLIT_INDEX = 721;
  */
 export function trimSignatures(
   vaa: Buffer,
-  n = DEFAULT_REDUCED_GUARDIAN_SET_SIZE
+  n = DEFAULT_REDUCED_GUARDIAN_SET_SIZE,
 ): Buffer {
   const currentNumSignatures = vaa[5];
   if (n > currentNumSignatures) {
     throw new Error(
-      "Resulting VAA can't have more signatures than the original VAA"
+      "Resulting VAA can't have more signatures than the original VAA",
     );
   }
 
@@ -95,7 +95,7 @@ interface VaaInstructionGroups {
 // Core function to generate VAA instruction groups
 async function generateVaaInstructionGroups(
   wormhole: Program<WormholeCoreBridgeSolana>,
-  vaa: Buffer
+  vaa: Buffer,
 ): Promise<VaaInstructionGroups> {
   const encodedVaaKeypair = new Keypair();
 
@@ -153,7 +153,7 @@ async function generateVaaInstructionGroups(
           .accounts({
             guardianSet: getGuardianSetPda(
               getGuardianSetIndex(vaa),
-              wormhole.programId
+              wormhole.programId,
             ),
             draftVaa: encodedVaaKeypair.publicKey,
           })
@@ -199,7 +199,7 @@ async function generateVaaInstructionGroups(
  */
 export async function buildPostEncodedVaaInstructions(
   wormhole: Program<WormholeCoreBridgeSolana>,
-  vaa: Buffer
+  vaa: Buffer,
 ): Promise<{
   encodedVaaAddress: PublicKey;
   postInstructions: InstructionWithEphemeralSigners[];
@@ -242,7 +242,7 @@ export async function buildPostEncodedVaaInstructions(
 export async function buildPostEncodedVaasForTwapInstructions(
   wormhole: Program<WormholeCoreBridgeSolana>,
   startUpdateData: AccumulatorUpdateData,
-  endUpdateData: AccumulatorUpdateData
+  endUpdateData: AccumulatorUpdateData,
 ): Promise<{
   startEncodedVaaAddress: PublicKey;
   endEncodedVaaAddress: PublicKey;
@@ -251,11 +251,11 @@ export async function buildPostEncodedVaasForTwapInstructions(
 }> {
   const startGroups = await generateVaaInstructionGroups(
     wormhole,
-    startUpdateData.vaa
+    startUpdateData.vaa,
   );
   const endGroups = await generateVaaInstructionGroups(
     wormhole,
-    endUpdateData.vaa
+    endUpdateData.vaa,
   );
 
   // Pack instructions for optimal 3-transaction pattern:
@@ -290,7 +290,7 @@ export async function buildPostEncodedVaasForTwapInstructions(
  */
 export async function buildCloseEncodedVaaInstruction(
   wormhole: Program<WormholeCoreBridgeSolana>,
-  encodedVaa: PublicKey
+  encodedVaa: PublicKey,
 ): Promise<InstructionWithEphemeralSigners> {
   const instruction = await wormhole.methods
     .closeEncodedVaa()
@@ -311,13 +311,13 @@ export async function buildCloseEncodedVaaInstruction(
 export async function buildEncodedVaaCreateInstruction(
   wormhole: Program<WormholeCoreBridgeSolana>,
   vaa: Buffer,
-  encodedVaaKeypair: Keypair
+  encodedVaaKeypair: Keypair,
 ): Promise<InstructionWithEphemeralSigners> {
   const encodedVaaSize = vaa.length + VAA_START;
   return {
     instruction: await wormhole.account.encodedVaa.createInstruction(
       encodedVaaKeypair,
-      encodedVaaSize
+      encodedVaaSize,
     ),
     signers: [encodedVaaKeypair],
   };
@@ -330,7 +330,7 @@ export async function buildEncodedVaaCreateInstruction(
 export async function findEncodedVaaAccountsByWriteAuthority(
   connection: Connection,
   writeAuthority: PublicKey,
-  wormholeProgramId: PublicKey
+  wormholeProgramId: PublicKey,
 ): Promise<PublicKey[]> {
   const result = await connection.getProgramAccounts(wormholeProgramId, {
     filters: [
@@ -338,7 +338,7 @@ export async function findEncodedVaaAccountsByWriteAuthority(
         memcmp: {
           offset: 0,
           bytes: bs58.encode(
-            Buffer.from(sha256("account:EncodedVaa").slice(0, 8))
+            Buffer.from(sha256("account:EncodedVaa").slice(0, 8)),
           ),
         },
       },

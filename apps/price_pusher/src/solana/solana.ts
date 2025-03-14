@@ -26,7 +26,7 @@ export class SolanaPriceListener extends ChainPriceListener {
     private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
-    }
+    },
   ) {
     super(config.pollingFrequency, priceItems);
   }
@@ -36,9 +36,8 @@ export class SolanaPriceListener extends ChainPriceListener {
   private async checkHealth() {
     const slot = await this.pythSolanaReceiver.connection.getSlot("finalized");
     try {
-      const blockTime = await this.pythSolanaReceiver.connection.getBlockTime(
-        slot
-      );
+      const blockTime =
+        await this.pythSolanaReceiver.connection.getBlockTime(slot);
       if (
         blockTime === null ||
         blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS
@@ -47,7 +46,7 @@ export class SolanaPriceListener extends ChainPriceListener {
           this.logger.info(
             `Solana connection is behind by ${
               Date.now() / 1000 - blockTime
-            } seconds`
+            } seconds`,
           );
         }
       }
@@ -68,12 +67,12 @@ export class SolanaPriceListener extends ChainPriceListener {
       const priceFeedAccount =
         await this.pythSolanaReceiver.fetchPriceFeedAccount(
           this.shardId,
-          Buffer.from(priceId, "hex")
+          Buffer.from(priceId, "hex"),
         );
       this.logger.debug(
         `Polled a Solana on chain price for feed ${this.priceIdToAlias.get(
-          priceId
-        )} (${priceId}).`
+          priceId,
+        )} (${priceId}).`,
       );
       if (priceFeedAccount) {
         return {
@@ -98,7 +97,7 @@ export class SolanaPricePusher implements IPricePusher {
     private logger: Logger,
     private shardId: number,
     private computeUnitPriceMicroLamports: number,
-    private addressLookupTableAccount?: AddressLookupTableAccount
+    private addressLookupTableAccount?: AddressLookupTableAccount,
   ) {}
 
   async updatePriceFeed(priceIds: string[]): Promise<void> {
@@ -119,7 +118,7 @@ export class SolanaPricePusher implements IPricePusher {
         shuffledPriceIds,
         {
           encoding: "base64",
-        }
+        },
       );
       priceFeedUpdateData = response.binary.data;
     } catch (err: any) {
@@ -131,11 +130,11 @@ export class SolanaPricePusher implements IPricePusher {
       {
         closeUpdateAccounts: true,
       },
-      this.addressLookupTableAccount
+      this.addressLookupTableAccount,
     );
     await transactionBuilder.addUpdatePriceFeed(
       priceFeedUpdateData,
-      this.shardId
+      this.shardId,
     );
 
     const transactions = await transactionBuilder.buildVersionedTransactions({
@@ -147,7 +146,7 @@ export class SolanaPricePusher implements IPricePusher {
       const signatures = await sendTransactions(
         transactions,
         this.pythSolanaReceiver.connection,
-        this.pythSolanaReceiver.wallet
+        this.pythSolanaReceiver.wallet,
       );
       this.logger.info({ signatures }, "updatePriceFeed successful");
     } catch (err: any) {
@@ -169,24 +168,24 @@ export class SolanaPricePusherJito implements IPricePusher {
     private searcherClient: SearcherClient,
     private jitoBundleSize: number,
     private updatesPerJitoBundle: number,
-    private addressLookupTableAccount?: AddressLookupTableAccount
+    private addressLookupTableAccount?: AddressLookupTableAccount,
   ) {}
 
   async getRecentJitoTipLamports(): Promise<number | undefined> {
     try {
       const response = await fetch(
-        "http://bundles-api-rest.jito.wtf/api/v1/bundles/tip_floor"
+        "http://bundles-api-rest.jito.wtf/api/v1/bundles/tip_floor",
       );
       if (!response.ok) {
         this.logger.error(
           { status: response.status, statusText: response.statusText },
-          "getRecentJitoTips http request failed"
+          "getRecentJitoTips http request failed",
         );
         return undefined;
       }
       const data = await response.json();
       return Math.floor(
-        Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL
+        Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL,
       );
     } catch (err: any) {
       this.logger.error({ err }, "getRecentJitoTips failed");
@@ -224,17 +223,17 @@ export class SolanaPricePusherJito implements IPricePusher {
         {
           closeUpdateAccounts: true,
         },
-        this.addressLookupTableAccount
+        this.addressLookupTableAccount,
       );
       await transactionBuilder.addUpdatePriceFeed(
         priceFeedUpdateData.map((x) => {
           return sliceAccumulatorUpdateData(
             Buffer.from(x, "base64"),
             i,
-            i + this.updatesPerJitoBundle
+            i + this.updatesPerJitoBundle,
           ).toString("base64");
         }),
-        this.shardId
+        this.shardId,
       );
 
       const transactions = await transactionBuilder.buildVersionedTransactions({
@@ -249,7 +248,7 @@ export class SolanaPricePusherJito implements IPricePusher {
           await sendTransactionsJito(
             transactions,
             this.searcherClient,
-            this.pythSolanaReceiver.wallet
+            this.pythSolanaReceiver.wallet,
           );
           break;
         } catch (err: any) {

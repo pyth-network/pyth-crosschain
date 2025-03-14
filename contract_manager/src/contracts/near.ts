@@ -14,7 +14,10 @@ import { WormholeContract } from "./wormhole";
 export class NearWormholeContract extends WormholeContract {
   static type = "NearWormholeContract";
 
-  constructor(public chain: NearChain, public address: string) {
+  constructor(
+    public chain: NearChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -32,7 +35,7 @@ export class NearWormholeContract extends WormholeContract {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): NearWormholeContract {
     if (parsed.type !== NearWormholeContract.type)
       throw new Error("Invalid type");
@@ -51,12 +54,12 @@ export class NearWormholeContract extends WormholeContract {
 
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
     const account = await this.chain.getNearAccount(
       senderAddress,
-      senderPrivateKey
+      senderPrivateKey,
     );
     const outcome = await account.functionCall({
       contractId: this.address,
@@ -70,17 +73,17 @@ export class NearWormholeContract extends WormholeContract {
 
   getCurrentGuardianSetIndex(): Promise<number> {
     throw new Error(
-      "near wormhole contract doesn't implement getCurrentGuardianSetIndex method"
+      "near wormhole contract doesn't implement getCurrentGuardianSetIndex method",
     );
   }
   getChainId(): Promise<number> {
     throw new Error(
-      "near wormhole contract doesn't implement getChainId method"
+      "near wormhole contract doesn't implement getChainId method",
     );
   }
   getGuardianSet(): Promise<string[]> {
     throw new Error(
-      "near wormhole contract doesn't implement getGuardianSet method"
+      "near wormhole contract doesn't implement getGuardianSet method",
     );
   }
 }
@@ -92,7 +95,7 @@ export class NearPriceFeedContract extends PriceFeedContract {
     public chain: NearChain,
     public address: string,
     public governanceDataSource: DataSource,
-    public lastExecutedGovernanceSequence: number
+    public lastExecutedGovernanceSequence: number,
   ) {
     super();
   }
@@ -128,7 +131,7 @@ export class NearPriceFeedContract extends PriceFeedContract {
       governanceDataSourceAddress: string;
       governanceDataSourceChain: number;
       lastExecutedGovernanceSequence: number;
-    }
+    },
   ): NearPriceFeedContract {
     if (parsed.type !== NearPriceFeedContract.type) {
       throw new Error("Invalid type");
@@ -143,12 +146,12 @@ export class NearPriceFeedContract extends PriceFeedContract {
         emitterAddress: parsed.governanceDataSourceAddress,
         emitterChain: parsed.governanceDataSourceChain,
       },
-      parsed.lastExecutedGovernanceSequence
+      parsed.lastExecutedGovernanceSequence,
     );
   }
 
   async getContractNearAccount(
-    senderPrivateKey?: PrivateKey
+    senderPrivateKey?: PrivateKey,
   ): Promise<nearAPI.Account> {
     return await this.chain.getNearAccount(this.address, senderPrivateKey);
   }
@@ -220,7 +223,7 @@ export class NearPriceFeedContract extends PriceFeedContract {
 
   async executeUpdatePriceFeed(
     senderPrivateKey: PrivateKey,
-    vaas: Buffer[]
+    vaas: Buffer[],
   ): Promise<TxResult> {
     if (vaas.length === 0) {
       throw new Error("no vaas specified");
@@ -228,7 +231,7 @@ export class NearPriceFeedContract extends PriceFeedContract {
     const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
     const account = await this.chain.getNearAccount(
       senderAddress,
-      senderPrivateKey
+      senderPrivateKey,
     );
     const results = [];
     for (const vaa of vaas) {
@@ -253,12 +256,12 @@ export class NearPriceFeedContract extends PriceFeedContract {
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
     const account = await this.chain.getNearAccount(
       senderAddress,
-      senderPrivateKey
+      senderPrivateKey,
     );
     const outcome = await account.functionCall({
       contractId: this.address,

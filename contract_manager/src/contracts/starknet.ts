@@ -36,7 +36,7 @@ export class StarknetWormholeContract extends WormholeContract {
     parsed: {
       type: string;
       address: string;
-    }
+    },
   ): StarknetWormholeContract {
     if (parsed.type !== StarknetWormholeContract.type)
       throw new Error("Invalid type");
@@ -45,7 +45,10 @@ export class StarknetWormholeContract extends WormholeContract {
     return new StarknetWormholeContract(chain, parsed.address);
   }
 
-  constructor(public chain: StarknetChain, public address: string) {
+  constructor(
+    public chain: StarknetChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -74,7 +77,7 @@ export class StarknetWormholeContract extends WormholeContract {
 
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
     const provider = this.chain.getProvider();
@@ -82,7 +85,7 @@ export class StarknetWormholeContract extends WormholeContract {
     const account = new Account(
       provider,
       "0x" + senderAddress,
-      "0x" + senderPrivateKey
+      "0x" + senderPrivateKey,
     );
     contract.connect(account);
 
@@ -96,7 +99,10 @@ export class StarknetWormholeContract extends WormholeContract {
 export class StarknetPriceFeedContract extends PriceFeedContract {
   static type = "StarknetPriceFeedContract";
 
-  constructor(public chain: StarknetChain, public address: string) {
+  constructor(
+    public chain: StarknetChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -105,7 +111,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     parsed: {
       type: string;
       address: string;
-    }
+    },
   ): StarknetPriceFeedContract {
     if (parsed.type !== StarknetPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -172,7 +178,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
    * @param token hex encoded token address without 0x prefix
    */
   async getBaseUpdateFeeInToken(
-    token: string
+    token: string,
   ): Promise<{ amount: string; denom?: string | undefined }> {
     token = "0x" + token;
     const provider = this.chain.getProvider();
@@ -205,7 +211,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
 
   async executeUpdatePriceFeed(
     senderPrivateKey: PrivateKey,
-    vaas: Buffer[]
+    vaas: Buffer[],
   ): Promise<TxResult> {
     const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
     const provider = this.chain.getProvider();
@@ -213,7 +219,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     const account = new Account(
       provider,
       "0x" + senderAddress,
-      "0x" + senderPrivateKey
+      "0x" + senderPrivateKey,
     );
     contract.connect(account);
 
@@ -240,7 +246,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const senderAddress = await this.chain.getAccountAddress(senderPrivateKey);
     const provider = this.chain.getProvider();
@@ -248,7 +254,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     const account = new Account(
       provider,
       "0x" + senderAddress,
-      "0x" + senderPrivateKey
+      "0x" + senderPrivateKey,
     );
     contract.connect(account);
 

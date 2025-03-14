@@ -3,8 +3,6 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["pull:env", "^build"],
-      "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
@@ -17,36 +15,28 @@
       ]
     },
     "fix:lint": {
-      "dependsOn": ["fix:lint:eslint", "fix:lint:stylelint"],
-      "cache": false
+      "dependsOn": [
+        "//#install:modules",
+        "fix:lint:eslint",
+        "fix:lint:stylelint"
+      ]
     },
     "fix:lint:eslint": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["//#install:modules", "^build"],
       "cache": false
     },
     "fix:lint:stylelint": {
-      "cache": false
-    },
-    "pull:env": {
-      "outputs": [".env.local"],
-      "cache": false
-    },
-    "start:dev": {
-      "dependsOn": ["pull:env"],
-      "persistent": true,
-      "cache": false
-    },
-    "start:prod": {
-      "dependsOn": ["build"],
-      "persistent": true,
+      "dependsOn": ["//#install:modules"],
       "cache": false
     },
     "test:lint": {
       "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
     },
     "test:lint:eslint": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["//#install:modules", "^build"]
     },
-    "test:lint:stylelint": {}
+    "test:lint:stylelint": {
+      "dependsOn": ["//#install:modules"]
+    }
   }
 }

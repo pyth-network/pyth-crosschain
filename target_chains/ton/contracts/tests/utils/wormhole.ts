@@ -94,7 +94,7 @@ export const GUARDIAN_SET_4 = [
 export function createGuardianSetUpgradeBytes(
   chainId: number,
   newGuardianSetIndex: number,
-  guardians: string[]
+  guardians: string[],
 ): Buffer {
   const payload = Buffer.alloc(1024);
   let offset = 0;
@@ -140,11 +140,11 @@ export function createGuardianSetUpgradeBytes(
 
 export function createGuardianSetsDict(
   guardianSet: string[],
-  guardianSetIndex: number
+  guardianSetIndex: number,
 ): Dictionary<number, Cell> {
   const guardianSetDict = Dictionary.empty(
     Dictionary.Keys.Uint(8),
-    Dictionary.Values.Buffer(20)
+    Dictionary.Values.Buffer(20),
   );
   guardianSet.forEach((key, index) => {
     guardianSetDict.set(index, Buffer.from(key.slice(2), "hex"));
@@ -152,7 +152,7 @@ export function createGuardianSetsDict(
 
   const guardianSets = Dictionary.empty(
     Dictionary.Keys.Uint(32),
-    Dictionary.Values.Cell()
+    Dictionary.Values.Cell(),
   );
   const guardianSetCell = beginCell()
     .storeUint(0, 64) // expiration_time, set to 0 for testing

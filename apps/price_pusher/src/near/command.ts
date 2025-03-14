@@ -72,7 +72,7 @@ export default {
       logger.error(
         `Invalid price id submitted for: ${invalidPriceItems
           .map(({ alias }) => alias)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -81,7 +81,7 @@ export default {
     const pythListener = new PythPriceListener(
       hermesClient,
       priceItems,
-      logger
+      logger,
     );
 
     const nearAccount = new NearAccount(
@@ -89,7 +89,7 @@ export default {
       accountId,
       nodeUrl,
       privateKeyPath,
-      pythContractAddress
+      pythContractAddress,
     );
 
     const nearListener = new NearPriceListener(
@@ -98,13 +98,13 @@ export default {
       logger.child({ module: "NearPriceListener" }),
       {
         pollingFrequency,
-      }
+      },
     );
 
     const nearPusher = new NearPricePusher(
       nearAccount,
       hermesClient,
-      logger.child({ module: "NearPricePusher" })
+      logger.child({ module: "NearPricePusher" }),
     );
 
     const controller = new Controller(
@@ -113,7 +113,7 @@ export default {
       nearListener,
       nearPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency }
+      { pushingFrequency },
     );
 
     controller.start();

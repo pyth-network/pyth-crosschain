@@ -59,13 +59,13 @@ export default async function (hre: HardhatRuntimeEnvironment) {
       wormholeGovernanceChainId,
       wormholeGovernanceContract,
       wormholeInitialSigners,
-      wormholeReceiverChainId
+      wormholeReceiverChainId,
     );
   }
 
   console.log(
     "WormholeReceiver contract address:",
-    wormholeReceiverContractAddress
+    wormholeReceiverContractAddress,
   );
 
   // // TODO: Top up accounts if necessary
@@ -75,7 +75,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     wormholeReceiverContractAddress,
     wormholeReceiverChainId,
     governanceChainId,
-    governanceEmitter
+    governanceEmitter,
   );
 
   console.log("Executor contract address:", executorContractAddress);
@@ -84,7 +84,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     deployer,
     executorContractAddress,
     wormholeReceiverChainId,
-    isMainnet
+    isMainnet,
   );
 
   console.log("Entropy contract address:", entropyContractAddress);
@@ -101,15 +101,14 @@ async function deployExecutorContract(
   wormholeReceiverContractAddress: string,
   wormholeReceiverChainId: number,
   governanceChainId: string,
-  governanceEmitter: string
+  governanceEmitter: string,
 ) {
-  const executorImplArtifact = await deployer.loadArtifact(
-    "ExecutorUpgradable"
-  );
+  const executorImplArtifact =
+    await deployer.loadArtifact("ExecutorUpgradable");
   const executorImplContract = await deployer.deploy(executorImplArtifact);
   console.log(
     "Deployed ExecutorImpl contract on",
-    executorImplContract.address
+    executorImplContract.address,
   );
 
   const executorInitData = executorImplContract.interface.encodeFunctionData(
@@ -120,7 +119,7 @@ async function deployExecutorContract(
       wormholeReceiverChainId,
       governanceChainId,
       governanceEmitter,
-    ]
+    ],
   );
 
   const executorProxyArtifact = await deployer.loadArtifact("ERC1967Proxy");
@@ -139,7 +138,7 @@ async function deployEntropyContract(
   deployer: Deployer,
   executorContractAddress: string,
   chainId: number,
-  isMainnet: boolean
+  isMainnet: boolean,
 ) {
   const entropyImplArtifact = await deployer.loadArtifact("EntropyUpgradable");
   const entropyImplContract = await deployer.deploy(entropyImplArtifact);
@@ -154,7 +153,7 @@ async function deployEntropyContract(
         ? ENTROPY_DEFAULT_PROVIDER.mainnet
         : ENTROPY_DEFAULT_PROVIDER.testnet,
       true,
-    ]
+    ],
   );
 
   const entropyProxyArtifact = await deployer.loadArtifact("ERC1967Proxy");

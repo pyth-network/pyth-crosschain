@@ -41,7 +41,7 @@ export class WebSocketPool {
     urls: string[],
     token: string,
     numConnections: number = DEFAULT_NUM_CONNECTIONS,
-    logger: Logger = dummyLogger
+    logger: Logger = dummyLogger,
   ): Promise<WebSocketPool> {
     if (urls.length === 0) {
       throw new Error("No URLs provided");
@@ -76,7 +76,7 @@ export class WebSocketPool {
           } catch (error) {
             pool.logger.error(
               "Failed to resend subscription on reconnect:",
-              error
+              error,
             );
           }
         }
@@ -100,7 +100,7 @@ export class WebSocketPool {
     }
 
     pool.logger.info(
-      `Successfully established ${numConnections.toString()} redundant WebSocket connections`
+      `Successfully established ${numConnections.toString()} redundant WebSocket connections`,
     );
 
     return pool;
@@ -114,8 +114,8 @@ export class WebSocketPool {
     if (message.type === "subscriptionError") {
       throw new Error(
         `Error occurred for subscription ID ${String(
-          message.subscriptionId
-        )}: ${message.error}`
+          message.subscriptionId,
+        )}: ${message.error}`,
       );
     } else if (message.type === "error") {
       throw new Error(`Error: ${message.error}`);

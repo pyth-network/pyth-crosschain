@@ -378,8 +378,8 @@ export const Proposal = ({
           {uniqueTargetCluster
             ? `Target network: ${targetClusters[0]}`
             : targetClusters.length == 0
-            ? ''
-            : `Multiple target networks detected ${targetClusters.join(' ')}`}
+              ? ''
+              : `Multiple target networks detected ${targetClusters.join(' ')}`}
         </h4>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
@@ -550,10 +550,10 @@ export const Proposal = ({
                               {typeof instruction.args[key] === 'string'
                                 ? instruction.args[key]
                                 : instruction.args[key] instanceof Uint8Array
-                                ? instruction.args[key].toString()
-                                : typeof instruction.args[key] === 'bigint'
-                                ? instruction.args[key].toString()
-                                : JSON.stringify(instruction.args[key])}
+                                  ? instruction.args[key].toString()
+                                  : typeof instruction.args[key] === 'bigint'
+                                    ? instruction.args[key].toString()
+                                    : JSON.stringify(instruction.args[key])}
                             </div>
                           )}
                         </div>

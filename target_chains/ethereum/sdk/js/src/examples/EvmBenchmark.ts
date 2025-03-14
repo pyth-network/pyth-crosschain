@@ -69,7 +69,7 @@ async function run() {
 
   const [priceFeedUpdateVaa, updateTimestamp] = await connection.getVaa(
     priceId,
-    unixTimestamp
+    unixTimestamp,
   );
   console.log(`Next pyth update was at: ${updateTimestamp}`);
   console.log(priceFeedUpdateVaa);
@@ -82,7 +82,7 @@ async function run() {
     pythContractAddr,
     {
       from: provider.getAddress(0),
-    }
+    },
   );
 
   const updateFee = await pythContract.methods
@@ -100,7 +100,7 @@ async function run() {
       // parsePriceFeedUpdates will reject any price update outside of the time window provided in the following
       // two arguments. Integrators can use this to specify the timestamp of the update they are expecting.
       unixTimestamp,
-      unixTimestamp + 5
+      unixTimestamp + 5,
     )
     .send({ value: updateFee })
     .on("transactionHash", (hash: string) => {

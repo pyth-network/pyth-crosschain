@@ -17,7 +17,7 @@ export class LazerMultisigInstruction implements MultisigInstruction {
   constructor(
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
   ) {
     this.name = name;
     this.args = args;
@@ -25,7 +25,7 @@ export class LazerMultisigInstruction implements MultisigInstruction {
   }
 
   static fromInstruction(
-    instruction: TransactionInstruction
+    instruction: TransactionInstruction,
   ): LazerMultisigInstruction {
     // TODO: This is a hack to transform the IDL to be compatible with the anchor version we are using, we can't upgrade anchor to 0.30.1 because then the existing idls will break
     const idl = lazerIdl as Idl;
@@ -38,13 +38,13 @@ export class LazerMultisigInstruction implements MultisigInstruction {
       return new LazerMultisigInstruction(
         deserializedData.name,
         deserializedData.data,
-        resolveAccountNames(idl, deserializedData.name, instruction)
+        resolveAccountNames(idl, deserializedData.name, instruction),
       );
     } else {
       return new LazerMultisigInstruction(
         UNRECOGNIZED_INSTRUCTION,
         { data: instruction.data },
-        { named: {}, remaining: instruction.keys }
+        { named: {}, remaining: instruction.keys },
       );
     }
   }

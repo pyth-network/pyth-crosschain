@@ -16,7 +16,7 @@ export interface Deployer {
   instantiate(
     codeId: number,
     inst_msg: string | object,
-    label: string
+    label: string,
   ): Promise<string>;
   migrate(contract: string, codeId: number): Promise<void>;
   updateAdmin(newAdmin: string, contract: string): Promise<void>;

@@ -47,11 +47,11 @@ async function main() {
           feeUsd = Number(fee.amount) * prices[fee.denom];
           totalFeeUsd += feeUsd;
           console.log(
-            `${contract.getId()} ${fee.amount} ${fee.denom} ($${feeUsd})`
+            `${contract.getId()} ${fee.amount} ${fee.denom} ($${feeUsd})`,
           );
         } else {
           console.log(
-            `${contract.getId()} ${fee.amount} ${fee.denom} ($ value unknown)`
+            `${contract.getId()} ${fee.amount} ${fee.denom} ($ value unknown)`,
           );
         }
       } catch (e) {

@@ -21,7 +21,7 @@ const PriceConfigFileSchema: Joi.Schema = Joi.array()
         price_deviation: Joi.number().optional(),
         confidence_ratio: Joi.number().optional(),
       }).optional(),
-    })
+    }),
   )
   .unique("id")
   .unique("alias")
@@ -92,7 +92,7 @@ export function shouldUpdate(
   priceConfig: PriceConfig,
   sourceLatestPrice: PriceInfo | undefined,
   targetLatestPrice: PriceInfo | undefined,
-  logger: Logger
+  logger: Logger,
 ): UpdateCondition {
   const priceId = priceConfig.id;
 
@@ -104,7 +104,7 @@ export function shouldUpdate(
   // It means that price never existed there. So we should push the latest price feed.
   if (targetLatestPrice === undefined) {
     logger.info(
-      `${priceConfig.alias} (${priceId}) is not available on the target network. Pushing the price.`
+      `${priceConfig.alias} (${priceId}) is not available on the target network. Pushing the price.`,
     );
     return UpdateCondition.YES;
   }
@@ -119,12 +119,12 @@ export function shouldUpdate(
 
   const priceDeviationPct =
     (Math.abs(
-      Number(sourceLatestPrice.price) - Number(targetLatestPrice.price)
+      Number(sourceLatestPrice.price) - Number(targetLatestPrice.price),
     ) /
       Number(targetLatestPrice.price)) *
     100;
   const confidenceRatioPct = Math.abs(
-    (Number(sourceLatestPrice.conf) / Number(sourceLatestPrice.price)) * 100
+    (Number(sourceLatestPrice.conf) / Number(sourceLatestPrice.price)) * 100,
   );
 
   logger.info(
@@ -140,7 +140,7 @@ export function shouldUpdate(
       }%? / early: < ${priceConfig.earlyUpdatePriceDeviation}%?) OR ` +
       `Confidence ratio: ${confidenceRatioPct.toFixed(5)}% (< ${
         priceConfig.confidenceRatio
-      }%? / early: < ${priceConfig.earlyUpdatePriceDeviation}%?)`
+      }%? / early: < ${priceConfig.earlyUpdatePriceDeviation}%?)`,
   );
 
   if (

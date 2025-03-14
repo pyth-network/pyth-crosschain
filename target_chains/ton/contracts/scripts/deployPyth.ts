@@ -25,7 +25,7 @@ export async function run(provider: NetworkProvider) {
   // Require CHAIN_ID environment variable
   if (!process.env.CHAIN_ID) {
     throw new Error(
-      "CHAIN_ID environment variable is required. Example usage: CHAIN_ID=2 npx blueprint run ..."
+      "CHAIN_ID environment variable is required. Example usage: CHAIN_ID=2 npx blueprint run ...",
     );
   }
 
@@ -51,7 +51,7 @@ export async function run(provider: NetworkProvider) {
   };
 
   const main = provider.open(
-    Main.createFromConfig(config, await compile("Main"))
+    Main.createFromConfig(config, await compile("Main")),
   );
 
   await main.sendDeploy(provider.sender(), toNano("0.005"));
@@ -71,8 +71,8 @@ export async function run(provider: NetworkProvider) {
     console.log(
       `Successfully updated guardian set ${i + 1} with VAA: ${vaa.slice(
         0,
-        20
-      )}...`
+        20,
+      )}...`,
     );
 
     // Wait for 30 seconds before checking the guardian set index
@@ -85,7 +85,7 @@ export async function run(provider: NetworkProvider) {
       console.error(
         `Failed to update guardian set. Expected index ${
           i + 1
-        }, got ${newIndex}`
+        }, got ${newIndex}`,
       );
       break;
     }
@@ -101,7 +101,7 @@ export async function run(provider: NetworkProvider) {
   const priceIds = [BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID];
   const latestPriceUpdates = await hermesClient.getLatestPriceUpdates(
     priceIds,
-    { encoding: "hex" }
+    { encoding: "hex" },
   );
   console.log("Hermes BTC price:", latestPriceUpdates.parsed?.[0].price);
   console.log("Hermes ETH price:", latestPriceUpdates.parsed?.[1].price);
@@ -121,7 +121,7 @@ export async function run(provider: NetworkProvider) {
   const result = await main.sendUpdatePriceFeeds(
     provider.sender(),
     updateData,
-    totalFee
+    totalFee,
   );
   console.log("Price feeds updated successfully.");
 
@@ -131,11 +131,11 @@ export async function run(provider: NetworkProvider) {
   // Query updated price feeds
   const btcPrice = await main.getPriceUnsafe(BTC_PRICE_FEED_ID);
   console.log(
-    `Updated BTC price: ${btcPrice.price}, publish time: ${btcPrice.publishTime}`
+    `Updated BTC price: ${btcPrice.price}, publish time: ${btcPrice.publishTime}`,
   );
 
   const ethPrice = await main.getPriceUnsafe(ETH_PRICE_FEED_ID);
   console.log(
-    `Updated ETH price: ${ethPrice.price}, publish time: ${ethPrice.publishTime}`
+    `Updated ETH price: ${ethPrice.price}, publish time: ${ethPrice.publishTime}`,
   );
 }

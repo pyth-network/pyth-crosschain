@@ -36,7 +36,7 @@ function getSeed(accountType: AccountType, symbol: string): string {
  */
 function getAccountTypeSize(
   accountType: AccountType,
-  cluster: PythCluster
+  cluster: PythCluster,
 ): number {
   switch (accountType) {
     case AccountType.Price:
@@ -62,13 +62,13 @@ function getAccountTypeSize(
 export async function findDetermisticAccountAddress(
   type: AccountType,
   symbol: string,
-  cluster: PythCluster
+  cluster: PythCluster,
 ): Promise<[PublicKey, string]> {
   const seed: string = getSeed(type, symbol).slice(0, 32);
   const address: PublicKey = await PublicKey.createWithSeed(
     PRICE_FEED_OPS_KEY,
     seed,
-    getPythProgramKeyForCluster(cluster)
+    getPythProgramKeyForCluster(cluster),
   );
   return [address, seed];
 }
@@ -87,7 +87,7 @@ export async function getCreateAccountWithSeedInstruction(
   cluster: PythCluster,
   base: PublicKey,
   symbol: string,
-  accountType: AccountType
+  accountType: AccountType,
 ): Promise<TransactionInstruction> {
   const [address, seed]: [PublicKey, string] =
     await findDetermisticAccountAddress(accountType, symbol, cluster);
@@ -98,7 +98,7 @@ export async function getCreateAccountWithSeedInstruction(
     seed: seed,
     space: getAccountTypeSize(accountType, cluster),
     lamports: await connection.getMinimumBalanceForRentExemption(
-      getAccountTypeSize(accountType, cluster)
+      getAccountTypeSize(accountType, cluster),
     ),
     programId: getPythProgramKeyForCluster(cluster),
   });

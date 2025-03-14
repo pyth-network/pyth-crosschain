@@ -18,7 +18,7 @@
           cli = prev.lib.mkCli "cli" {
             _noAll = true;
 
-            start = "${prev.lib.getExe prev.pnpm} start:dev";
+            start = "${prev.lib.getExe prev.pnpm} turbo start:dev";
 
             test = {
               nix = {
@@ -26,7 +26,7 @@
                 dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules .";
                 format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules --check .";
               };
-              turbo = "${prev.lib.getExe prev.pnpm} test -- --ui stream";
+              turbo = "${prev.lib.getExe prev.pnpm} turbo test -- --ui stream";
             };
 
             fix = {
@@ -35,7 +35,7 @@
                 dead-code = "${prev.deadnix}/bin/deadnix --exclude ./node_modules -e .";
                 format = "${prev.alejandra}/bin/alejandra --exclude ./node_modules .";
               };
-              turbo = "${prev.lib.getExe prev.pnpm} fix -- --ui stream";
+              turbo = "${prev.lib.getExe prev.pnpm} turbo fix -- --ui stream";
             };
           };
         };

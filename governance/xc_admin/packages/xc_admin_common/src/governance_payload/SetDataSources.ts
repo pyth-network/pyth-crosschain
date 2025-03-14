@@ -25,7 +25,7 @@ export class SetDataSources implements PythGovernanceAction {
 
   constructor(
     readonly targetChainId: ChainName,
-    readonly dataSources: DataSource[]
+    readonly dataSources: DataSource[],
   ) {
     this.actionName = "SetDataSources";
   }
@@ -51,7 +51,7 @@ export class SetDataSources implements PythGovernanceAction {
   encode(): Buffer {
     const headerBuffer = new PythGovernanceHeader(
       this.targetChainId,
-      "SetDataSources"
+      "SetDataSources",
     ).encode();
 
     const numSourcesBuf = Buffer.alloc(1);

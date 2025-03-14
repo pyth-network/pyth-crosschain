@@ -79,7 +79,7 @@ async function main() {
         // }
 
         console.log(
-          `Current Guardianset for ${contract.getId()}: ${await wormhole.getCurrentGuardianSetIndex()}`
+          `Current Guardianset for ${contract.getId()}: ${await wormhole.getCurrentGuardianSetIndex()}`,
         );
 
         await wormhole.syncMainnetGuardianSets(privateKey);

@@ -11,7 +11,10 @@ export class SetValidPeriod extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ newValidPeriod: bigint }>> =
     BufferLayout.struct([BufferLayoutExt.u64be("newValidPeriod")]);
 
-  constructor(targetChainId: ChainName, readonly newValidPeriod: bigint) {
+  constructor(
+    targetChainId: ChainName,
+    readonly newValidPeriod: bigint,
+  ) {
     super(targetChainId, "SetValidPeriod");
   }
 
@@ -19,13 +22,13 @@ export class SetValidPeriod extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "SetValidPeriod",
-      SetValidPeriod.layout
+      SetValidPeriod.layout,
     );
     if (!decoded) return undefined;
 
     return new SetValidPeriod(
       decoded[0].targetChainId,
-      decoded[1].newValidPeriod
+      decoded[1].newValidPeriod,
     );
   }
 

@@ -69,19 +69,19 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       },
       async (argv) => {
         const artefact = serializePackage(
-          buildPackage(argv["package-dir"]!, argv["named-addresses"])
+          buildPackage(argv["package-dir"]!, argv["named-addresses"]),
         );
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             "0x1::code",
             "publish_package_txn",
             [],
-            [artefact.meta, artefact.bytecodes]
-          )
+            [artefact.meta, artefact.bytecodes],
+          ),
         );
 
         await executeTransaction(argv.network, txPayload);
-      }
+      },
     )
     .command(
       "deploy-wormhole <package-dir> <seed>",
@@ -97,7 +97,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const sender = getSender();
         const derivedAddress = generateDerivedAddress(
           sender.address().toString(),
-          argv.seed!
+          argv.seed!,
         );
 
         const namedAddresses = `deployer=${argv.deployer},wormhole=0x${derivedAddress}`;
@@ -108,11 +108,11 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           argv["package-dir"],
           argv.deployer,
           argv.seed,
-          namedAddresses
+          namedAddresses,
         );
 
         await executeTransaction(argv.network, txPayload);
-      }
+      },
     )
     .command(
       "deploy-pyth <package-dir> <seed>",
@@ -129,7 +129,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const sender = getSender();
         const derivedAddress = generateDerivedAddress(
           sender.address().toString(),
-          argv.seed!
+          argv.seed!,
         );
 
         const namedAddresses = `wormhole=${argv.wormhole},deployer=${argv.deployer},pyth=0x${derivedAddress}`;
@@ -141,11 +141,11 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           argv["package-dir"],
           argv.deployer,
           argv.seed,
-          namedAddresses
+          namedAddresses,
         );
 
         await executeTransaction(argv.network, txPayload);
-      }
+      },
     )
     .command(
       "derived-address <seed>",
@@ -159,10 +159,10 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         console.log(
           generateDerivedAddress(
             argv.signer || getSender().address().toString(),
-            argv.seed
-          )
+            argv.seed,
+          ),
         );
-      }
+      },
     )
     .command(
       "init-wormhole",
@@ -183,7 +183,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const guardian_addresses_serializer = new BCS.Serializer();
         guardian_addresses_serializer.serializeU32AsUleb128(1);
         guardian_addresses_serializer.serializeBytes(
-          Buffer.from(guardian_address, "hex")
+          Buffer.from(guardian_address, "hex"),
         );
 
         const args = [
@@ -195,19 +195,19 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const sender = getSender();
         const wormholeAddress = generateDerivedAddress(
           sender.address().hex(),
-          "wormhole"
+          "wormhole",
         );
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             `${wormholeAddress}::wormhole`,
             "init",
             [],
-            args
-          )
+            args,
+          ),
         );
 
         await executeTransaction(argv.network, txPayload);
-      }
+      },
     )
     .command(
       "init-pyth <seed>",
@@ -240,16 +240,16 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
 
         const dataSourceChainIdsSerializer = new BCS.Serializer();
         dataSourceChainIdsSerializer.serializeU32AsUleb128(
-          config.dataSources.length
+          config.dataSources.length,
         );
         const dataSourceEmitterAddressesSerializer = new BCS.Serializer();
         dataSourceEmitterAddressesSerializer.serializeU32AsUleb128(
-          config.dataSources.length
+          config.dataSources.length,
         );
         config.dataSources.forEach((ds) => {
           dataSourceChainIdsSerializer.serializeU64(ds.emitterChain);
           dataSourceEmitterAddressesSerializer.serializeBytes(
-            Buffer.from(ds.emitterAddress, "hex")
+            Buffer.from(ds.emitterAddress, "hex"),
           );
         });
 
@@ -264,19 +264,19 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const sender = getSender();
         const pythAddress = generateDerivedAddress(
           sender.address().hex(),
-          argv.seed
+          argv.seed,
         );
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             `${pythAddress}::pyth`,
             "init",
             [],
-            args
-          )
+            args,
+          ),
         );
 
         await executeTransaction(argv.network, txPayload);
-      }
+      },
     )
     .command(
       "hash-contracts <package-dir>",
@@ -296,7 +296,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const p = buildPackage(argv["package-dir"]!, namedAddresses);
         const b = serializePackage(p);
         console.log(Buffer.from(b.codeHash).toString("hex"));
-      }
+      },
     )
     .command(
       "upgrade <package-dir>",
@@ -315,7 +315,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
       async (argv) => {
         const namedAddresses = `wormhole=${argv.wormhole},deployer=${argv.deployer},pyth=${argv.pyth}`;
         const artefact = serializePackage(
-          buildPackage(argv["package-dir"]!, namedAddresses)
+          buildPackage(argv["package-dir"]!, namedAddresses),
         );
 
         let pythAddress = argv.pyth;
@@ -324,12 +324,12 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
             `${pythAddress}::contract_upgrade`,
             "do_contract_upgrade",
             [],
-            [artefact.meta, artefact.bytecodes]
-          )
+            [artefact.meta, artefact.bytecodes],
+          ),
         );
 
         await executeTransaction(argv.network, txPayload);
-      }
+      },
     )
     .command(
       "diff-abi <addr-1> <addr-2>",
@@ -362,11 +362,11 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           // Replace the addresses with 0x0 so that we can compare the ABIs skipping the irrelevant address differences
           const module1Stripped = module1Response.replace(
             new RegExp(addr1, "g"),
-            "0x0"
+            "0x0",
           );
           const module2Stripped = module2Response.replace(
             new RegExp(addr2, "g"),
-            "0x0"
+            "0x0",
           );
           if (
             JSON.stringify(JSON.parse(module1Stripped).abi) !==
@@ -377,7 +377,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
             console.log(`Module ${moduleName} ABI not changed`);
           }
         }
-      }
+      },
     )
     .demandCommand();
 
@@ -385,7 +385,7 @@ function getSender() {
   const key = process.env["APTOS_PRIVATE_KEY"];
   if (key === undefined) {
     throw new Error(
-      `Please set the APTOS_PRIVATE_KEY environment variable to the private key of the sender in hex format`
+      `Please set the APTOS_PRIVATE_KEY environment variable to the private key of the sender in hex format`,
     );
   }
   return new AptosAccount(new Uint8Array(Buffer.from(key, "hex")));
@@ -393,7 +393,7 @@ function getSender() {
 
 async function executeTransaction(
   network: string,
-  txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
+  txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction,
 ) {
   const endpoint = (DefaultStore.chains[network] as AptosChain).rpcUrl;
   const client = new AptosClient(endpoint);
@@ -401,7 +401,7 @@ async function executeTransaction(
   console.log(
     await client.generateSignSubmitWaitForTransaction(sender, txPayload, {
       maxGasAmount: BigInt(30000),
-    })
+    }),
   );
 }
 
@@ -428,7 +428,7 @@ function generateDerivedAddress(signer_address: string, seed: string): string {
       hexStringToByteArray(signer_address),
       Buffer.from(seed, "ascii"),
       derive_resource_account_scheme,
-    ])
+    ]),
   );
 }
 
@@ -457,7 +457,7 @@ function buildPackage(dir: string, addrs?: string): Package {
     .map((dirent) => dirent.name);
   if (buildDirs.length !== 1) {
     console.error(
-      `Unexpected directory structure in ${dir}/build: expected a single directory`
+      `Unexpected directory structure in ${dir}/build: expected a single directory`,
     );
     process.exit(1);
   }
@@ -465,7 +465,7 @@ function buildPackage(dir: string, addrs?: string): Package {
   return {
     meta_file: `${buildDir}/package-metadata.bcs`,
     mv_files: result["Result"].map(
-      (mod: string) => `${buildDir}/bytecode_modules/${mod.split("::")[1]}.mv`
+      (mod: string) => `${buildDir}/bytecode_modules/${mod.split("::")[1]}.mv`,
     ),
   };
 }
@@ -498,7 +498,7 @@ function createDeployDerivedTransaction(
   packageDir: string,
   deployer: string,
   seed: string,
-  namedAddresses: string
+  namedAddresses: string,
 ) {
   const artifact = serializePackage(buildPackage(packageDir, namedAddresses));
 
@@ -511,8 +511,8 @@ function createDeployDerivedTransaction(
         artifact.meta,
         artifact.bytecodes,
         BCS.bcsSerializeBytes(Buffer.from(seed, "ascii")),
-      ]
-    )
+      ],
+    ),
   );
 }
 

@@ -9,7 +9,7 @@ export type PythContract = GetContractReturnType<
 
 export const createPythContract = (
   client: SuperWalletClient,
-  address: Address
+  address: Address,
 ): PythContract =>
   getContract({
     client,

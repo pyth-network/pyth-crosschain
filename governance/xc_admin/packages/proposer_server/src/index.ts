@@ -20,7 +20,7 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 const PORT: number = Number(process.env.PORT ?? "4000");
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
+  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii"))),
 );
 const MAINNET_RPC: string =
   process.env.MAINNET_RPC ?? getPythClusterApiUrl("mainnet-beta");
@@ -63,7 +63,7 @@ app.post("/api/propose", async (req: Request, res: Response) => {
               pubkey: new PublicKey(key.pubkey),
             };
           }),
-        })
+        }),
     );
 
     const cluster: PythCluster = req.body.cluster;
@@ -78,7 +78,7 @@ app.post("/api/propose", async (req: Request, res: Response) => {
       wallet,
       getMultisigCluster(cluster),
       proposeSquads,
-      PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+      PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
     );
 
     // preserve the existing API by returning only the first pubkey

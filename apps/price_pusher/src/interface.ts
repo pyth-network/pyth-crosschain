@@ -24,11 +24,11 @@ export abstract class ChainPriceListener implements IPriceListener {
 
   constructor(
     private pollingFrequency: DurationInSeconds,
-    protected priceItems: PriceItem[]
+    protected priceItems: PriceItem[],
   ) {
     this.latestPriceInfo = new Map();
     this.priceIdToAlias = new Map(
-      priceItems.map(({ id, alias }) => [id, alias])
+      priceItems.map(({ id, alias }) => [id, alias]),
     );
   }
 
@@ -49,7 +49,7 @@ export abstract class ChainPriceListener implements IPriceListener {
 
   protected updateLatestPriceInfo(
     priceId: HexString,
-    observedPrice: PriceInfo
+    observedPrice: PriceInfo,
   ) {
     const cachedLatestPriceInfo = this.getLatestPriceInfo(priceId);
 
@@ -72,13 +72,13 @@ export abstract class ChainPriceListener implements IPriceListener {
   }
 
   abstract getOnChainPriceInfo(
-    priceId: HexString
+    priceId: HexString,
   ): Promise<PriceInfo | undefined>;
 }
 
 export interface IPricePusher {
   updatePriceFeed(
     priceIds: string[],
-    pubTimesToPush: UnixTimestamp[]
+    pubTimesToPush: UnixTimestamp[],
   ): Promise<void>;
 }

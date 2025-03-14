@@ -78,6 +78,7 @@ catalog:
   pino: 9.5.0
   postcss-loader: 8.1.1
   postcss: 8.4.47
+  prettier-plugin-solidity: ^1.4.2
   prettier: 3.3.3
   react-aria-components: 1.5.0
   react-aria: 3.36.0

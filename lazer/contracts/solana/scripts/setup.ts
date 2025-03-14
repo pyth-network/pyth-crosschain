@@ -24,7 +24,7 @@ async function main() {
     .parse();
 
   const keypair = anchor.web3.Keypair.fromSecretKey(
-    new Uint8Array(JSON.parse(readFileSync(argv.keypairPath, "ascii")))
+    new Uint8Array(JSON.parse(readFileSync(argv.keypairPath, "ascii"))),
   );
 
   const topAuthority = new anchor.web3.PublicKey(argv.topAuthority);
@@ -38,7 +38,7 @@ async function main() {
 
   const program: Program<PythLazerSolanaContract> = new Program(
     pythLazerSolanaContractIdl as PythLazerSolanaContract,
-    provider
+    provider,
   );
 
   const storage = await program.account.storage.all();
@@ -61,7 +61,7 @@ async function main() {
     await program.methods
       .update(
         new anchor.web3.PublicKey(argv.trustedSigner),
-        new anchor.BN(argv.expiryTimeSeconds)
+        new anchor.BN(argv.expiryTimeSeconds),
       )
       .accounts({})
       .rpc();

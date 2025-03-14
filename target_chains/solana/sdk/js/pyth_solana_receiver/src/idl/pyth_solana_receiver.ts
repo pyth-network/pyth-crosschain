@@ -19,7 +19,7 @@ export type PythSolanaReceiver = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -27,7 +27,7 @@ export type PythSolanaReceiver = {
           type: {
             defined: "Config";
           };
-        }
+        },
       ];
     },
     {
@@ -42,13 +42,13 @@ export type PythSolanaReceiver = {
           name: "config";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
           name: "targetGovernanceAuthority";
           type: "publicKey";
-        }
+        },
       ];
     },
     {
@@ -63,7 +63,7 @@ export type PythSolanaReceiver = {
           name: "config";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -79,7 +79,7 @@ export type PythSolanaReceiver = {
           name: "config";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
@@ -89,7 +89,7 @@ export type PythSolanaReceiver = {
               defined: "DataSource";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -104,13 +104,13 @@ export type PythSolanaReceiver = {
           name: "config";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
           name: "singleUpdateFeeInLamports";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -125,13 +125,13 @@ export type PythSolanaReceiver = {
           name: "config";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
           name: "wormhole";
           type: "publicKey";
-        }
+        },
       ];
     },
     {
@@ -146,13 +146,13 @@ export type PythSolanaReceiver = {
           name: "config";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [
         {
           name: "minimumSignatures";
           type: "u8";
-        }
+        },
       ];
     },
     {
@@ -161,7 +161,7 @@ export type PythSolanaReceiver = {
         "Post a price update using a VAA and a MerklePriceUpdate.",
         "This function allows you to post a price update in a single transaction.",
         "Compared to post_update, it is less secure since you won't be able to verify all guardian signatures if you use this function because of transaction size limitations.",
-        "Typically, you can fit 5 guardian signatures in a transaction that uses this."
+        "Typically, you can fit 5 guardian signatures in a transaction that uses this.",
       ];
       accounts: [
         {
@@ -174,7 +174,7 @@ export type PythSolanaReceiver = {
           isMut: false;
           isSigner: false;
           docs: [
-            "Instead we do the same steps in deserialize_guardian_set_checked."
+            "Instead we do the same steps in deserialize_guardian_set_checked.",
           ];
         },
         {
@@ -193,7 +193,7 @@ export type PythSolanaReceiver = {
           isSigner: true;
           docs: [
             "The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.",
-            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized"
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized",
           ];
         },
         {
@@ -205,7 +205,7 @@ export type PythSolanaReceiver = {
           name: "writeAuthority";
           isMut: false;
           isSigner: true;
-        }
+        },
       ];
       args: [
         {
@@ -213,7 +213,7 @@ export type PythSolanaReceiver = {
           type: {
             defined: "PostUpdateAtomicParams";
           };
-        }
+        },
       ];
     },
     {
@@ -221,7 +221,7 @@ export type PythSolanaReceiver = {
       docs: [
         "Post a price update using an encoded_vaa account and a MerklePriceUpdate calldata.",
         "This should be called after the client has already verified the Vaa via the Wormhole contract.",
-        "Check out target_chains/solana/cli/src/main.rs for an example of how to do this."
+        "Check out target_chains/solana/cli/src/main.rs for an example of how to do this.",
       ];
       accounts: [
         {
@@ -250,7 +250,7 @@ export type PythSolanaReceiver = {
           isSigner: true;
           docs: [
             "The contraint is such that either the price_update_account is uninitialized or the payer is the write_authority.",
-            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized"
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that price_update_account.write_authority == Pubkey::default() once the account is initialized",
           ];
         },
         {
@@ -262,7 +262,7 @@ export type PythSolanaReceiver = {
           name: "writeAuthority";
           isMut: false;
           isSigner: true;
-        }
+        },
       ];
       args: [
         {
@@ -270,7 +270,7 @@ export type PythSolanaReceiver = {
           type: {
             defined: "PostUpdateParams";
           };
-        }
+        },
       ];
     },
     {
@@ -278,7 +278,7 @@ export type PythSolanaReceiver = {
       docs: [
         "Post a TWAP (time weighted average price) update for a given time window.",
         "This should be called after the client has already verified the VAAs via the Wormhole contract.",
-        "Check out target_chains/solana/cli/src/main.rs for an example of how to do this."
+        "Check out target_chains/solana/cli/src/main.rs for an example of how to do this.",
       ];
       accounts: [
         {
@@ -312,7 +312,7 @@ export type PythSolanaReceiver = {
           isSigner: true;
           docs: [
             "The contraint is such that either the twap_update_account is uninitialized or the write_authority is the write_authority.",
-            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that twap_update_account.write_authority == Pubkey::default() once the account is initialized"
+            "Pubkey::default() is the SystemProgram on Solana and it can't sign so it's impossible that twap_update_account.write_authority == Pubkey::default() once the account is initialized",
           ];
         },
         {
@@ -324,7 +324,7 @@ export type PythSolanaReceiver = {
           name: "writeAuthority";
           isMut: false;
           isSigner: true;
-        }
+        },
       ];
       args: [
         {
@@ -332,7 +332,7 @@ export type PythSolanaReceiver = {
           type: {
             defined: "PostTwapUpdateParams";
           };
-        }
+        },
       ];
     },
     {
@@ -347,7 +347,7 @@ export type PythSolanaReceiver = {
           name: "priceUpdateAccount";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [];
     },
@@ -363,10 +363,10 @@ export type PythSolanaReceiver = {
           name: "twapUpdateAccount";
           isMut: true;
           isSigner: false;
-        }
+        },
       ];
       args: [];
-    }
+    },
   ];
   accounts: [
     {
@@ -403,7 +403,7 @@ export type PythSolanaReceiver = {
           {
             name: "minimumSignatures";
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -431,7 +431,7 @@ export type PythSolanaReceiver = {
           {
             name: "postedSlot";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -449,10 +449,10 @@ export type PythSolanaReceiver = {
             type: {
               defined: "TwapPrice";
             };
-          }
+          },
         ];
       };
-    }
+    },
   ];
   types: [
     {
@@ -493,7 +493,7 @@ export type PythSolanaReceiver = {
           {
             name: "emaConf";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -501,7 +501,7 @@ export type PythSolanaReceiver = {
       name: "TwapPrice";
       docs: [
         "The time weighted average price & conf for a feed over the window [start_time, end_time].",
-        "This type is used to persist the calculated TWAP in TwapUpdate accounts on Solana."
+        "This type is used to persist the calculated TWAP in TwapUpdate accounts on Solana.",
       ];
       type: {
         kind: "struct";
@@ -536,10 +536,10 @@ export type PythSolanaReceiver = {
             name: "downSlotsRatio";
             docs: [
               "Ratio out of 1_000_000, where a value of 1_000_000 represents",
-              "all slots were missed and 0 represents no slots were missed."
+              "all slots were missed and 0 represents no slots were missed.",
             ];
             type: "u32";
-          }
+          },
         ];
       };
     },
@@ -559,7 +559,7 @@ export type PythSolanaReceiver = {
                 array: ["u8", 20];
               };
             };
-          }
+          },
         ];
       };
     },
@@ -575,7 +575,7 @@ export type PythSolanaReceiver = {
           {
             name: "emitter";
             type: "publicKey";
-          }
+          },
         ];
       };
     },
@@ -597,7 +597,7 @@ export type PythSolanaReceiver = {
           {
             name: "treasuryId";
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -615,7 +615,7 @@ export type PythSolanaReceiver = {
           {
             name: "treasuryId";
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -639,14 +639,14 @@ export type PythSolanaReceiver = {
           {
             name: "treasuryId";
             type: "u8";
-          }
+          },
         ];
       };
     },
     {
       name: "VerificationLevel";
       docs: [
-        "* This enum represents how many guardian signatures were checked for a Pythnet price update\n * If full, guardian quorum has been attained\n * If partial, at least config.minimum signatures have been verified, but in the case config.minimum_signatures changes in the future we also include the number of signatures that were checked"
+        "* This enum represents how many guardian signatures were checked for a Pythnet price update\n * If full, guardian quorum has been attained\n * If partial, at least config.minimum signatures have been verified, but in the case config.minimum_signatures changes in the future we also include the number of signatures that were checked",
       ];
       type: {
         kind: "enum";
@@ -657,15 +657,15 @@ export type PythSolanaReceiver = {
               {
                 name: "numSignatures";
                 type: "u8";
-              }
+              },
             ];
           },
           {
             name: "Full";
-          }
+          },
         ];
       };
-    }
+    },
   ];
   errors: [
     {
@@ -777,7 +777,7 @@ export type PythSolanaReceiver = {
       code: 6021;
       name: "NonexistentGovernanceAuthorityTransferRequest";
       msg: "The governance authority needs to request a transfer first";
-    }
+    },
   ];
 };
 

@@ -43,7 +43,7 @@ export class PythLazerClient {
     urls: string[],
     token: string,
     numConnections = 3,
-    logger: Logger = dummyLogger
+    logger: Logger = dummyLogger,
   ): Promise<PythLazerClient> {
     const wsp = await WebSocketPool.create(urls, token, numConnections, logger);
     return new PythLazerClient(wsp);
@@ -71,7 +71,7 @@ export class PythLazerClient {
         }
         // TODO: some uint64 values may not be representable as Number.
         const subscriptionId = Number(
-          data.subarray(pos, pos + UINT64_NUM_BYTES).readBigInt64BE()
+          data.subarray(pos, pos + UINT64_NUM_BYTES).readBigInt64BE(),
         );
         pos += UINT64_NUM_BYTES;
 
@@ -92,7 +92,7 @@ export class PythLazerClient {
             value.leUnsigned = data.subarray(pos, pos + len);
           } else if (magic == FORMAT_MAGICS_LE.JSON) {
             value.parsed = JSON.parse(
-              data.subarray(pos + UINT32_NUM_BYTES, pos + len).toString()
+              data.subarray(pos + UINT32_NUM_BYTES, pos + len).toString(),
             ) as ParsedPayload;
           } else {
             throw new Error("unknown magic: " + magic.toString());

@@ -3,9 +3,11 @@
   "extends": ["//"],
   "tasks": {
     "build:abis": {
+      "dependsOn": ["//#install:modules"],
       "outputs": ["abis/**"]
     },
     "build:bin": {
+      "dependsOn": ["//#install:modules"],
       "outputs": ["build/**"]
     },
     "build": {

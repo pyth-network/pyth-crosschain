@@ -23,7 +23,7 @@ import { EvmExecute } from "./ExecuteAction";
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(
-  data: Buffer
+  data: Buffer,
 ): PythGovernanceAction | undefined {
   const header = PythGovernanceHeader.decode(data);
   if (!header) return undefined;

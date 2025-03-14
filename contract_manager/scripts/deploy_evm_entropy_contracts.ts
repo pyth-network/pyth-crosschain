@@ -31,7 +31,7 @@ const CACHE_FILE = ".cache-deploy-evm-entropy-contracts";
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_entropy_contracts.ts")
   .usage(
-    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain> --wormhole-addr <wormhole-addr>"
+    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain> --wormhole-addr <wormhole-addr>",
   )
   .options({
     ...COMMON_DEPLOY_OPTIONS,
@@ -45,14 +45,14 @@ const parser = yargs(hideBin(process.argv))
 async function deployExecutorContracts(
   chain: EvmChain,
   config: DeploymentConfig,
-  wormholeAddr: string
+  wormholeAddr: string,
 ): Promise<string> {
   const executorImplAddr = await deployIfNotCached(
     CACHE_FILE,
     chain,
     config,
     "ExecutorUpgradable",
-    []
+    [],
   );
 
   // Craft the init data for the proxy contract
@@ -61,7 +61,7 @@ async function deployExecutorContracts(
   const executorImplContract = getWeb3Contract(
     config.jsonOutputDir,
     "ExecutorUpgradable",
-    executorImplAddr
+    executorImplAddr,
   );
 
   const executorInitData = executorImplContract.methods
@@ -70,7 +70,7 @@ async function deployExecutorContracts(
       0, // lastExecutedSequence,
       chain.getWormholeChainId(),
       governanceDataSource.emitterChain,
-      `0x${governanceDataSource.emitterAddress}`
+      `0x${governanceDataSource.emitterAddress}`,
     )
     .encodeABI();
 
@@ -83,20 +83,20 @@ async function deployExecutorContracts(
 async function deployEntropyContracts(
   chain: EvmChain,
   config: DeploymentConfig,
-  executorAddr: string
+  executorAddr: string,
 ): Promise<string> {
   const entropyImplAddr = await deployIfNotCached(
     CACHE_FILE,
     chain,
     config,
     "EntropyUpgradable",
-    []
+    [],
   );
 
   const entropyImplContract = getWeb3Contract(
     config.jsonOutputDir,
     "EntropyUpgradable",
-    entropyImplAddr
+    entropyImplAddr,
   );
 
   const entropyInitData = entropyImplContract.methods
@@ -107,7 +107,7 @@ async function deployEntropyContracts(
       chain.isMainnet()
         ? ENTROPY_DEFAULT_PROVIDER.mainnet
         : ENTROPY_DEFAULT_PROVIDER.testnet,
-      true // prefillRequestStorage
+      true, // prefillRequestStorage
     )
     .encodeABI();
 
@@ -120,13 +120,13 @@ async function deployEntropyContracts(
     // NOTE: we are deploying a ERC1967Proxy when deploying executor
     // we need to provide a different cache key. As the `artifactname`
     // is same in both case which means the cache key will be same
-    `${chain.getId()}-ERC1967Proxy-ENTROPY`
+    `${chain.getId()}-ERC1967Proxy-ENTROPY`,
   );
 }
 
 async function topupEntropyAccountsIfNecessary(
   chain: EvmChain,
-  deploymentConfig: DeploymentConfig
+  deploymentConfig: DeploymentConfig,
 ) {
   const accounts: Array<[string, DefaultAddresses]> = [
     ["keeper", ENTROPY_DEFAULT_KEEPER],
@@ -153,13 +153,13 @@ async function main() {
   const wormholeContract = await getOrDeployWormholeContract(
     chain,
     deploymentConfig,
-    CACHE_FILE
+    CACHE_FILE,
   );
 
   await topupEntropyAccountsIfNecessary(chain, deploymentConfig);
 
   console.log(
-    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`
+    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`,
   );
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
@@ -167,12 +167,12 @@ async function main() {
   const executorAddr = await deployExecutorContracts(
     chain,
     deploymentConfig,
-    wormholeContract.address
+    wormholeContract.address,
   );
   const entropyAddr = await deployEntropyContracts(
     chain,
     deploymentConfig,
-    executorAddr
+    executorAddr,
   );
 
   if (deploymentConfig.saveContract) {
@@ -183,7 +183,7 @@ async function main() {
   }
 
   console.log(
-    `✅ Deployed entropy contracts on ${chain.getId()} at ${entropyAddr}\n\n`
+    `✅ Deployed entropy contracts on ${chain.getId()} at ${entropyAddr}\n\n`,
   );
 }
 

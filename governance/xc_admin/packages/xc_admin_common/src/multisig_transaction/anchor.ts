@@ -15,7 +15,7 @@ export type AnchorAccounts = {
 export function resolveAccountNames(
   idl: Idl,
   name: string,
-  instruction: TransactionInstruction
+  instruction: TransactionInstruction,
 ): { named: NamedAccounts; remaining: RemainingAccounts } {
   const ix = idl.instructions.find((ix) => ix.name == name);
   if (!ix) {
@@ -35,7 +35,7 @@ export function resolveAccountNames(
 
 export const IDL_SET_BUFFER_DISCRIMINATOR = Buffer.from(
   "40f4bc78a7e9690a03",
-  "hex"
+  "hex",
 );
 
 async function getIdlAddress(programId: PublicKey): Promise<PublicKey> {
@@ -46,7 +46,7 @@ async function getIdlAddress(programId: PublicKey): Promise<PublicKey> {
 export async function idlSetBuffer(
   programId: PublicKey,
   buffer: PublicKey,
-  idlAuthority: PublicKey
+  idlAuthority: PublicKey,
 ): Promise<TransactionInstruction> {
   let idlAddress = await getIdlAddress(programId);
   return {

@@ -67,12 +67,12 @@ export class ExecutePostedVaa implements PythGovernanceAction {
   readonly instructions: TransactionInstruction[];
   static layout: Vector<InstructionData> = new Vector<InstructionData>(
     instructionDataLayout,
-    "instructions"
+    "instructions",
   );
 
   constructor(
     targetChainId: ChainName,
-    instructions: TransactionInstruction[]
+    instructions: TransactionInstruction[],
   ) {
     this.targetChainId = targetChainId;
     this.instructions = instructions;
@@ -85,7 +85,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
 
     const deserialized = safeLayoutDecode(
       this.layout,
-      data.subarray(PythGovernanceHeader.span)
+      data.subarray(PythGovernanceHeader.span),
     );
     if (!deserialized) return undefined;
 
@@ -108,7 +108,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
   encode(): Buffer {
     const headerBuffer = new PythGovernanceHeader(
       this.targetChainId,
-      "ExecutePostedVaa"
+      "ExecutePostedVaa",
     ).encode();
 
     // The code will crash if the payload is actually bigger than PACKET_DATA_SIZE. But PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload should never be bigger than this anyway

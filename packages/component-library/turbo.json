@@ -6,26 +6,28 @@
       "outputs": ["storybook-static/**"]
     },
     "fix:lint": {
-      "dependsOn": ["fix:lint:eslint", "fix:lint:stylelint"],
-      "cache": false
+      "dependsOn": [
+        "//#install:modules",
+        "fix:lint:eslint",
+        "fix:lint:stylelint"
+      ]
     },
     "fix:lint:eslint": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["//#install:modules", "^build"],
       "cache": false
     },
     "fix:lint:stylelint": {
-      "cache": false
-    },
-    "start:dev": {
-      "persistent": true,
+      "dependsOn": ["//#install:modules"],
       "cache": false
     },
     "test:lint": {
       "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
     },
     "test:lint:eslint": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["//#install:modules", "^build"]
     },
-    "test:lint:stylelint": {}
+    "test:lint:stylelint": {
+      "dependsOn": ["//#install:modules"]
+    }
   }
 }

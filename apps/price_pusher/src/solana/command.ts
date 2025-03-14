@@ -140,7 +140,7 @@ export default {
       logger.error(
         `Invalid price id submitted for: ${invalidPriceItems
           .map(({ alias }) => alias)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -149,13 +149,13 @@ export default {
     const pythListener = new PythPriceListener(
       hermesClient,
       priceItems,
-      logger.child({ module: "PythPriceListener" })
+      logger.child({ module: "PythPriceListener" }),
     );
 
     const wallet = new NodeWallet(
       Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(keypairFile, "ascii")))
-      )
+        Uint8Array.from(JSON.parse(fs.readFileSync(keypairFile, "ascii"))),
+      ),
     );
 
     const connection = new Connection(endpoint, "processed");
@@ -176,7 +176,7 @@ export default {
     let solanaPricePusher;
     if (jitoTipLamports) {
       const jitoKeypair = Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(jitoKeypairFile, "ascii")))
+        Uint8Array.from(JSON.parse(fs.readFileSync(jitoKeypairFile, "ascii"))),
       );
 
       const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
@@ -191,7 +191,7 @@ export default {
         jitoClient,
         jitoBundleSize,
         updatesPerJitoBundle,
-        lookupTableAccount
+        lookupTableAccount,
       );
 
       onBundleResult(jitoClient, logger.child({ module: "JitoClient" }));
@@ -202,7 +202,7 @@ export default {
         logger.child({ module: "SolanaPricePusher" }),
         shardId,
         computeUnitPriceMicroLamports,
-        lookupTableAccount
+        lookupTableAccount,
       );
     }
 
@@ -211,7 +211,7 @@ export default {
       shardId,
       priceItems,
       logger.child({ module: "SolanaPriceListener" }),
-      { pollingFrequency }
+      { pollingFrequency },
     );
 
     const controller = new Controller(
@@ -220,7 +220,7 @@ export default {
       solanaPriceListener,
       solanaPricePusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency }
+      { pushingFrequency },
     );
 
     controller.start();
@@ -232,6 +232,6 @@ export const onBundleResult = (c: SearcherClient, logger: Logger) => {
     () => undefined,
     (err) => {
       logger.error(err, "Error in bundle result");
-    }
+    },
   );
 };

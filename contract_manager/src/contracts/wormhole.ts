@@ -21,7 +21,7 @@ export abstract class WormholeContract extends Storable {
    */
   abstract upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult>;
 
   /**
@@ -40,7 +40,7 @@ export abstract class WormholeContract extends Storable {
       const vaa = MAINNET_UPGRADE_VAAS[i];
       const result = await this.upgradeGuardianSets(
         senderPrivateKey,
-        Buffer.from(vaa, "hex")
+        Buffer.from(vaa, "hex"),
       );
       console.log(`Submitted upgrade VAA ${i} with tx id ${result.id}`);
       // make sure the upgrade is complete before continuing

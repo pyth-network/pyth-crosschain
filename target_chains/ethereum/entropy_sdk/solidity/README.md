@@ -76,7 +76,7 @@ For the provider `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` you can query the 
 
 ```typescript
 await axios.get(
-  `https://fortuna-staging.dourolabs.app/v1/chains/${chainName}/revelations/${sequenceNumber}`
+  `https://fortuna-staging.dourolabs.app/v1/chains/${chainName}/revelations/${sequenceNumber}`,
 );
 ```
 
@@ -133,7 +133,6 @@ contract MyContract is PRNG {
     PRNG(_seed);
   }
 }
-
 ```
 
 2. Use the contract functions to generate random numbers:

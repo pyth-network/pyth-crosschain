@@ -13,7 +13,7 @@ const parser = yargs(hideBin(process.argv))
   .usage(
     "Tries to execute all vaas on a vault.\n" +
       "Useful for batch upgrades.\n" +
-      "Usage: $0 --vault <mainnet|devnet> --private-key <private-key> --offset <offset> [--dryrun]"
+      "Usage: $0 --vault <mainnet|devnet> --private-key <private-key> --offset <offset> [--dryrun]",
   )
   .options({
     vault: {
@@ -52,12 +52,12 @@ async function main() {
   console.log("Executing VAAs for vault", vault.getId());
   console.log(
     "Executing VAAs for emitter",
-    (await vault.getEmitter()).toBase58()
+    (await vault.getEmitter()).toBase58(),
   );
   const lastSequenceNumber = await vault.getLastSequenceNumber();
   const startSequenceNumber = lastSequenceNumber - argv.offset;
   console.log(
-    `Going from sequence number ${startSequenceNumber} to ${lastSequenceNumber}`
+    `Going from sequence number ${startSequenceNumber} to ${lastSequenceNumber}`,
   );
   for (
     let seqNumber = startSequenceNumber;
@@ -67,7 +67,7 @@ async function main() {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
       await vault.getEmitter(),
       seqNumber,
-      vault.cluster
+      vault.cluster,
     );
     const vaa = await submittedWormholeMessage.fetchVaa();
     const decodedAction = decodeGovernancePayload(parseVaa(vaa).payload);

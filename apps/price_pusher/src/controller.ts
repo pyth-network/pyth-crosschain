@@ -14,7 +14,7 @@ export class Controller {
     private logger: Logger,
     config: {
       pushingFrequency: DurationInSeconds;
-    }
+    },
   ) {
     this.pushingFrequency = config.pushingFrequency;
   }
@@ -48,7 +48,7 @@ export class Controller {
           priceConfig,
           sourceLatestPrice,
           targetLatestPrice,
-          this.logger
+          this.logger,
         );
         if (priceShouldUpdate == UpdateCondition.YES) {
           pushThresholdMet = true;
@@ -70,7 +70,7 @@ export class Controller {
               alias: priceConfig.alias,
             })),
           },
-          "Some of the checks triggered pushing update. Will push the updates for some feeds."
+          "Some of the checks triggered pushing update. Will push the updates for some feeds.",
         );
 
         // note that the priceIds are without leading "0x"

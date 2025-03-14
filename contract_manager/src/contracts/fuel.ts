@@ -44,7 +44,7 @@ export class FuelWormholeContract extends WormholeContract {
     parsed: {
       type: string;
       address: string;
-    }
+    },
   ): FuelWormholeContract {
     if (parsed.type !== FuelWormholeContract.type)
       throw new Error("Invalid type");
@@ -53,7 +53,10 @@ export class FuelWormholeContract extends WormholeContract {
     return new FuelWormholeContract(chain, parsed.address);
   }
 
-  constructor(public chain: FuelChain, public address: string) {
+  constructor(
+    public chain: FuelChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -63,7 +66,7 @@ export class FuelWormholeContract extends WormholeContract {
     return new Contract(
       this.address,
       FuelContractAbi,
-      wallet ? (wallet as Account) : provider
+      wallet ? (wallet as Account) : provider,
     );
   }
 
@@ -92,7 +95,7 @@ export class FuelWormholeContract extends WormholeContract {
 
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const wallet = await this.chain.getWallet(senderPrivateKey);
     const contract = await this.getContract(wallet);
@@ -112,13 +115,16 @@ export class FuelWormholeContract extends WormholeContract {
 export class FuelPriceFeedContract extends PriceFeedContract {
   static type = "FuelPriceFeedContract";
 
-  constructor(public chain: FuelChain, public address: string) {
+  constructor(
+    public chain: FuelChain,
+    public address: string,
+  ) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): FuelPriceFeedContract {
     if (parsed.type !== FuelPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -143,7 +149,7 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     return new Contract(
       this.address,
       FuelContractAbi,
-      wallet ? (wallet as Account) : provider
+      wallet ? (wallet as Account) : provider,
     );
   }
 
@@ -160,7 +166,7 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     const pythContract = await this.getContract();
     return Number(
       (await pythContract.functions.last_executed_governance_sequence().get())
-        .value
+        .value,
     );
   }
 
@@ -234,7 +240,7 @@ export class FuelPriceFeedContract extends PriceFeedContract {
           emitterChain: chain_id,
           emitterAddress: emitter_address.replace("0x", ""),
         };
-      }
+      },
     );
   }
 
@@ -270,7 +276,7 @@ export class FuelPriceFeedContract extends PriceFeedContract {
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ) {
     const wallet = await this.chain.getWallet(senderPrivateKey);
     const contract = await this.getContract(wallet);

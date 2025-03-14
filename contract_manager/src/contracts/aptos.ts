@@ -41,7 +41,7 @@ export class AptosWormholeContract extends WormholeContract {
     parsed: {
       type: string;
       address: string;
-    }
+    },
   ): AptosWormholeContract {
     if (parsed.type !== AptosWormholeContract.type)
       throw new Error("Invalid type");
@@ -50,7 +50,10 @@ export class AptosWormholeContract extends WormholeContract {
     return new AptosWormholeContract(chain, parsed.address);
   }
 
-  constructor(public chain: AptosChain, public address: string) {
+  constructor(
+    public chain: AptosChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -93,15 +96,15 @@ export class AptosWormholeContract extends WormholeContract {
 
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
       TxnBuilderTypes.EntryFunction.natural(
         `${this.address}::guardian_set_upgrade`,
         "submit_vaa_entry",
         [],
-        [BCS.bcsSerializeBytes(vaa)]
-      )
+        [BCS.bcsSerializeBytes(vaa)],
+      ),
     );
     return this.chain.sendTransaction(senderPrivateKey, txPayload);
   }
@@ -121,7 +124,7 @@ export class AptosPriceFeedContract extends PriceFeedContract {
   constructor(
     public chain: AptosChain,
     public stateId: string,
-    public wormholeStateId: string
+    public wormholeStateId: string,
   ) {
     super();
   }
@@ -132,7 +135,7 @@ export class AptosPriceFeedContract extends PriceFeedContract {
       type: string;
       stateId: string;
       wormholeStateId: string;
-    }
+    },
   ): AptosPriceFeedContract {
     if (parsed.type !== AptosPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -141,21 +144,21 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     return new AptosPriceFeedContract(
       chain,
       parsed.stateId,
-      parsed.wormholeStateId
+      parsed.wormholeStateId,
     );
   }
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ): Promise<TxResult> {
     const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
       TxnBuilderTypes.EntryFunction.natural(
         `${this.stateId}::governance`,
         "execute_governance_instruction",
         [],
-        [BCS.bcsSerializeBytes(vaa)]
-      )
+        [BCS.bcsSerializeBytes(vaa)],
+      ),
     );
     return this.chain.sendTransaction(senderPrivateKey, txPayload);
   }
@@ -166,15 +169,15 @@ export class AptosPriceFeedContract extends PriceFeedContract {
 
   async executeUpdatePriceFeed(
     senderPrivateKey: PrivateKey,
-    vaas: Buffer[]
+    vaas: Buffer[],
   ): Promise<TxResult> {
     const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
       TxnBuilderTypes.EntryFunction.natural(
         `${this.stateId}::pyth`,
         "update_price_feeds_with_funder",
         [],
-        [BCS.serializeVectorWithFunc(vaas, "serializeBytes")]
-      )
+        [BCS.serializeVectorWithFunc(vaas, "serializeBytes")],
+      ),
     );
     return this.chain.sendTransaction(senderPrivateKey, txPayload);
   }
@@ -264,7 +267,7 @@ export class AptosPriceFeedContract extends PriceFeedContract {
         emitterChain: Number(source.emitter_chain),
         emitterAddress: source.emitter_address.external_address.replace(
           "0x",
-          ""
+          "",
         ),
       };
     });
@@ -281,14 +284,14 @@ export class AptosPriceFeedContract extends PriceFeedContract {
       emitterChain: Number(data.source.emitter_chain),
       emitterAddress: data.source.emitter_address.external_address.replace(
         "0x",
-        ""
+        "",
       ),
     };
   }
 
   async getLastExecutedGovernanceSequence() {
     const data = (await this.findResource(
-      "LastExecutedGovernanceSequence"
+      "LastExecutedGovernanceSequence",
     )) as { sequence: string };
     return Number(data.sequence);
   }

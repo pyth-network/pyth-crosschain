@@ -7,7 +7,7 @@ const parser = yargs(hideBin(process.argv))
   .usage(
     "Load tests the entropy contract using the EntropyTester contract with many requests in a single transaction\n" +
       "it does not monitor whether the callbacks are actually submitted or not.\n" +
-      "Usage: $0 --private-key <private-key> --chain <chain-id> --tester-address <tester-address>"
+      "Usage: $0 --private-key <private-key> --chain <chain-id> --tester-address <tester-address>",
   )
   .options({
     chain: {
@@ -72,7 +72,7 @@ async function main() {
   const transactionObject = testerContract.methods.batchRequests(
     provider,
     argv.successCount,
-    argv.revertCount
+    argv.revertCount,
   );
   const totalCount = argv.successCount + argv.revertCount;
   const result = await contract.chain.estiamteAndSendTransaction(
@@ -80,7 +80,7 @@ async function main() {
     {
       from: address,
       value: (fee * totalCount).toString(),
-    }
+    },
   );
   console.log("Submitted transaction ", result.transactionHash);
 }

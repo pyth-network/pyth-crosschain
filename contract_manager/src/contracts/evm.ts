@@ -25,12 +25,12 @@ import {
  */
 export async function getCodeDigestWithoutAddress(
   web3: Web3,
-  address: string
+  address: string,
 ): Promise<string> {
   const code = await web3.eth.getCode(address);
   const strippedCode = code.replaceAll(
     address.toLowerCase().replace("0x", ""),
-    "0000000000000000000000000000000000000000"
+    "0000000000000000000000000000000000000000",
   );
   return Web3.utils.keccak256(strippedCode);
 }
@@ -57,7 +57,7 @@ export class EvmWormholeContract extends WormholeContract {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): EvmWormholeContract {
     if (parsed.type !== EvmWormholeContract.type)
       throw new Error("Invalid type");
@@ -66,7 +66,10 @@ export class EvmWormholeContract extends WormholeContract {
     return new EvmWormholeContract(chain, parsed.address);
   }
 
-  constructor(public chain: EvmChain, public address: string) {
+  constructor(
+    public chain: EvmChain,
+    public address: string,
+  ) {
     super();
   }
   getContract(): Contract {
@@ -77,7 +80,7 @@ export class EvmWormholeContract extends WormholeContract {
   async getCurrentGuardianSetIndex(): Promise<number> {
     const wormholeContract = this.getContract();
     return Number(
-      await wormholeContract.methods.getCurrentGuardianSetIndex().call()
+      await wormholeContract.methods.getCurrentGuardianSetIndex().call(),
     );
   }
 
@@ -103,11 +106,11 @@ export class EvmWormholeContract extends WormholeContract {
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const wormholeContract = new web3.eth.Contract(WORMHOLE_ABI, this.address);
     const transactionObject = wormholeContract.methods.submitNewGuardianSet(
-      "0x" + vaa.toString("hex")
+      "0x" + vaa.toString("hex"),
     );
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
-      { from: address }
+      { from: address },
     );
     return { id: result.transactionHash, info: result };
   }
@@ -158,7 +161,10 @@ export const ENTROPY_DEFAULT_KEEPER = {
 export class EvmEntropyContract extends Storable {
   static type = "EvmEntropyContract";
 
-  constructor(public chain: EvmChain, public address: string) {
+  constructor(
+    public chain: EvmChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -181,7 +187,7 @@ export class EvmEntropyContract extends Storable {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): EvmEntropyContract {
     if (parsed.type !== EvmEntropyContract.type)
       throw new Error("Invalid type");
@@ -205,20 +211,20 @@ export class EvmEntropyContract extends Storable {
   }
 
   async generateUpgradeEntropyContractPayload(
-    newImplementation: string
+    newImplementation: string,
   ): Promise<Buffer> {
     const contract = this.getContract();
     const data = contract.methods.upgradeTo(newImplementation).encodeABI();
     return this.chain.generateExecutorPayload(
       await this.getOwner(),
       this.address,
-      data
+      data,
     );
   }
 
   // Generates a payload to upgrade the executor contract, the owner of entropy contracts
   async generateUpgradeExecutorContractsPayload(
-    newImplementation: string
+    newImplementation: string,
   ): Promise<Buffer> {
     // Executor contract is the owner of entropy contract
     const executorAddr = await this.getOwner();
@@ -280,7 +286,7 @@ export class EvmEntropyContract extends Storable {
    */
   async getRequest(
     provider: string,
-    sequenceNumber: number
+    sequenceNumber: number,
   ): Promise<EntropyRequest> {
     const contract = this.getContract();
     return contract.methods.getRequest(provider, sequenceNumber).call();
@@ -298,7 +304,7 @@ export class EvmEntropyContract extends Storable {
   async getUserRandomNumber(
     provider: string,
     sequenceNumber: number,
-    block: number
+    block: number,
   ): Promise<string> {
     const contract = this.getContract();
     const result = await contract.getPastEvents("RequestedWithCallback", {
@@ -325,7 +331,7 @@ export class EvmEntropyContract extends Storable {
     providerRevelation: string,
     provider: string,
     sequenceNumber: number,
-    senderPrivateKey: PrivateKey
+    senderPrivateKey: PrivateKey,
   ) {
     const web3 = this.chain.getWeb3();
     // can not use `this.getContract()` because it uses another web3 instance without the wallet
@@ -335,7 +341,7 @@ export class EvmEntropyContract extends Storable {
       provider,
       sequenceNumber,
       userRandomNumber,
-      providerRevelation
+      providerRevelation,
     );
     return this.chain.estiamteAndSendTransaction(transactionObject, {
       from: address,
@@ -356,7 +362,7 @@ export class EvmEntropyContract extends Storable {
     userRandomNumber: string,
     provider: string,
     senderPrivateKey: PrivateKey,
-    withCallback?: boolean
+    withCallback?: boolean,
   ) {
     const web3 = this.chain.getWeb3();
     const userCommitment = web3.utils.keccak256(userRandomNumber);
@@ -368,14 +374,14 @@ export class EvmEntropyContract extends Storable {
     if (withCallback) {
       transactionObject = contract.methods.requestWithCallback(
         provider,
-        userCommitment
+        userCommitment,
       );
     } else {
       const useBlockHash = false;
       transactionObject = contract.methods.request(
         provider,
         userCommitment,
-        useBlockHash
+        useBlockHash,
       );
     }
 
@@ -390,7 +396,7 @@ export class EvmEntropyContract extends Storable {
     providerRevelation: string,
     provider: string,
     sequenceNumber: string,
-    senderPrivateKey: PrivateKey
+    senderPrivateKey: PrivateKey,
   ) {
     const web3 = this.chain.getWeb3();
     const contract = new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
@@ -399,7 +405,7 @@ export class EvmEntropyContract extends Storable {
       provider,
       sequenceNumber,
       userRevelation,
-      providerRevelation
+      providerRevelation,
     );
     return this.chain.estiamteAndSendTransaction(transactionObject, {
       from: address,
@@ -410,7 +416,10 @@ export class EvmEntropyContract extends Storable {
 export class EvmExpressRelayContract extends Storable {
   static type = "EvmExpressRelayContract";
 
-  constructor(public chain: EvmChain, public address: string) {
+  constructor(
+    public chain: EvmChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -433,7 +442,7 @@ export class EvmExpressRelayContract extends Storable {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): EvmExpressRelayContract {
     if (parsed.type !== EvmExpressRelayContract.type)
       throw new Error("Invalid type");
@@ -448,7 +457,7 @@ export class EvmExpressRelayContract extends Storable {
     return this.chain.generateExecutorPayload(
       await this.getOwner(),
       this.address,
-      data
+      data,
     );
   }
 
@@ -492,7 +501,10 @@ export class EvmExpressRelayContract extends Storable {
 }
 
 export class EvmExecutorContract {
-  constructor(public chain: EvmChain, public address: string) {}
+  constructor(
+    public chain: EvmChain,
+    public address: string,
+  ) {}
 
   getId(): string {
     return `${this.chain.getId()}_${this.address}`;
@@ -540,17 +552,17 @@ export class EvmExecutorContract {
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ) {
     const web3 = this.chain.getWeb3();
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const executorContract = new web3.eth.Contract(EXECUTOR_ABI, this.address);
     const transactionObject = executorContract.methods.execute(
-      "0x" + vaa.toString("hex")
+      "0x" + vaa.toString("hex"),
     );
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
-      { from: address }
+      { from: address },
     );
     return { id: result.transactionHash, info: result };
   }
@@ -559,13 +571,16 @@ export class EvmExecutorContract {
 export class EvmPriceFeedContract extends PriceFeedContract {
   static type = "EvmPriceFeedContract";
 
-  constructor(public chain: EvmChain, public address: string) {
+  constructor(
+    public chain: EvmChain,
+    public address: string,
+  ) {
     super();
   }
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): EvmPriceFeedContract {
     if (parsed.type !== EvmPriceFeedContract.type)
       throw new Error("Invalid type");
@@ -640,7 +655,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
   async getLastExecutedGovernanceSequence() {
     const pythContract = await this.getContract();
     return Number(
-      await pythContract.methods.lastExecutedGovernanceSequence().call()
+      await pythContract.methods.lastExecutedGovernanceSequence().call(),
     );
   }
 
@@ -704,7 +719,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
           emitterChain: Number(chainId),
           emitterAddress: emitterAddress.replace("0x", ""),
         };
-      }
+      },
     );
   }
 
@@ -731,24 +746,24 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       pythContract.methods.updatePriceFeeds(priceFeedUpdateData);
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
-      { from: address, value: updateFee }
+      { from: address, value: updateFee },
     );
     return { id: result.transactionHash, info: result };
   }
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
-    vaa: Buffer
+    vaa: Buffer,
   ) {
     const web3 = this.chain.getWeb3();
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
     const transactionObject = pythContract.methods.executeGovernanceInstruction(
-      "0x" + vaa.toString("hex")
+      "0x" + vaa.toString("hex"),
     );
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
-      { from: address }
+      { from: address },
     );
     return { id: result.transactionHash, info: result };
   }
@@ -778,7 +793,10 @@ export const PULSE_DEFAULT_KEEPER = {
 export class EvmPulseContract extends Storable {
   static type = "EvmPulseContract";
 
-  constructor(public chain: EvmChain, public address: string) {
+  constructor(
+    public chain: EvmChain,
+    public address: string,
+  ) {
     super();
   }
 
@@ -801,7 +819,7 @@ export class EvmPulseContract extends Storable {
 
   static fromJson(
     chain: Chain,
-    parsed: { type: string; address: string }
+    parsed: { type: string; address: string },
   ): EvmPulseContract {
     if (parsed.type !== EvmPulseContract.type) throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
@@ -889,7 +907,7 @@ export class EvmPulseContract extends Storable {
     senderPrivateKey: PrivateKey,
     publishTime: number,
     priceIds: string[],
-    callbackGasLimit: number
+    callbackGasLimit: number,
   ) {
     const web3 = this.chain.getWeb3();
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
@@ -899,12 +917,12 @@ export class EvmPulseContract extends Storable {
     const transactionObject = contract.methods.requestPriceUpdatesWithCallback(
       publishTime,
       priceIds,
-      callbackGasLimit
+      callbackGasLimit,
     );
 
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
-      { from: address, value: fee }
+      { from: address, value: fee },
     );
     return { id: result.transactionHash, info: result };
   }
@@ -913,7 +931,7 @@ export class EvmPulseContract extends Storable {
     senderPrivateKey: PrivateKey,
     sequenceNumber: number,
     updateData: string[],
-    priceIds: string[]
+    priceIds: string[],
   ) {
     const web3 = this.chain.getWeb3();
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
@@ -922,12 +940,12 @@ export class EvmPulseContract extends Storable {
     const transactionObject = contract.methods.executeCallback(
       sequenceNumber,
       updateData,
-      priceIds
+      priceIds,
     );
 
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
-      { from: address }
+      { from: address },
     );
     return { id: result.transactionHash, info: result };
   }
@@ -939,7 +957,7 @@ export class EvmPulseContract extends Storable {
     return this.chain.generateExecutorPayload(
       await this.getOwner(),
       this.address,
-      data
+      data,
     );
   }
 
@@ -949,12 +967,12 @@ export class EvmPulseContract extends Storable {
     return this.chain.generateExecutorPayload(
       await this.getOwner(),
       this.address,
-      data
+      data,
     );
   }
 
   async generateSetExclusivityPeriodPayload(
-    periodSeconds: number
+    periodSeconds: number,
   ): Promise<Buffer> {
     const contract = this.getContract();
     const data = contract.methods
@@ -963,7 +981,7 @@ export class EvmPulseContract extends Storable {
     return this.chain.generateExecutorPayload(
       await this.getOwner(),
       this.address,
-      data
+      data,
     );
   }
 }

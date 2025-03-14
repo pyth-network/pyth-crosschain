@@ -9,7 +9,7 @@ test("Upgrade contract ser/de", (done) => {
 
   const expectedUpgradeContract = new CosmosUpgradeContract(
     "injective",
-    BigInt("18446744073709551614")
+    BigInt("18446744073709551614"),
   );
   const buffer = expectedUpgradeContract.encode();
 
@@ -18,8 +18,8 @@ test("Upgrade contract ser/de", (done) => {
     buffer.equals(
       Buffer.from([
         80, 84, 71, 77, 1, 0, 0, 19, 255, 255, 255, 255, 255, 255, 255, 254,
-      ])
-    )
+      ]),
+    ),
   ).toBeTruthy();
 
   const actualHeader = PythGovernanceHeader.decode(buffer);

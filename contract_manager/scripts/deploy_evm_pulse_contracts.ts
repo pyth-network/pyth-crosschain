@@ -32,7 +32,7 @@ const CACHE_FILE = ".cache-deploy-evm-pulse-contracts";
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_pulse_contracts.ts")
   .usage(
-    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain> --default-provider <default-provider> --wormhole-addr <wormhole-addr>"
+    "Usage: $0 --std-output-dir <path/to/std-output-dir/> --private-key <private-key> --chain <chain> --default-provider <default-provider> --wormhole-addr <wormhole-addr>",
   )
   .options({
     ...COMMON_DEPLOY_OPTIONS,
@@ -46,7 +46,7 @@ const parser = yargs(hideBin(process.argv))
 async function deployPulseContracts(
   chain: EvmChain,
   config: DeploymentConfig,
-  executorAddr: string
+  executorAddr: string,
 ): Promise<string> {
   console.log("Deploying PulseUpgradeable on", chain.getId(), "...");
 
@@ -54,8 +54,8 @@ async function deployPulseContracts(
   const pulseArtifact = JSON.parse(
     fs.readFileSync(
       path.join(config.jsonOutputDir, "PulseUpgradeable.json"),
-      "utf8"
-    )
+      "utf8",
+    ),
   );
   console.log("PulseArtifact bytecode type:", typeof pulseArtifact.bytecode);
 
@@ -64,7 +64,7 @@ async function deployPulseContracts(
     chain,
     config,
     "PulseUpgradeable",
-    []
+    [],
   );
 
   console.log("PulseUpgradeable implementation deployed at:", pulseImplAddr);
@@ -72,7 +72,7 @@ async function deployPulseContracts(
   const pulseImplContract = getWeb3Contract(
     config.jsonOutputDir,
     "PulseUpgradeable",
-    pulseImplAddr
+    pulseImplAddr,
   );
 
   console.log("Preparing initialization data...");
@@ -87,7 +87,7 @@ async function deployPulseContracts(
         ? PULSE_DEFAULT_PROVIDER.mainnet
         : PULSE_DEFAULT_PROVIDER.testnet,
       true, // prefillRequestStorage
-      3600 // exclusivityPeriodSeconds - 1 hour
+      3600, // exclusivityPeriodSeconds - 1 hour
     )
     .encodeABI();
 
@@ -102,13 +102,13 @@ async function deployPulseContracts(
     // NOTE: we are deploying a ERC1967Proxy when deploying executor
     // we need to provide a different cache key. As the `artifactname`
     // is same in both case which means the cache key will be same
-    `${chain.getId()}-ERC1967Proxy-PULSE1`
+    `${chain.getId()}-ERC1967Proxy-PULSE1`,
   );
 }
 
 async function topupPulseAccountsIfNecessary(
   chain: EvmChain,
-  deploymentConfig: DeploymentConfig
+  deploymentConfig: DeploymentConfig,
 ) {
   const accounts: Array<[string, DefaultAddresses]> = [
     ["keeper", PULSE_DEFAULT_KEEPER],
@@ -141,13 +141,13 @@ async function main() {
   const wormholeContract = await getOrDeployWormholeContract(
     chain,
     deploymentConfig,
-    CACHE_FILE
+    CACHE_FILE,
   );
 
   await topupPulseAccountsIfNecessary(chain, deploymentConfig);
 
   console.log(
-    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`
+    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`,
   );
 
   console.log(`Deploying pulse contracts on ${chain.getId()}...`);
@@ -156,7 +156,7 @@ async function main() {
   const pulseAddr = await deployPulseContracts(
     chain,
     deploymentConfig,
-    executorAddr
+    executorAddr,
   );
 
   if (deploymentConfig.saveContract) {
@@ -167,7 +167,7 @@ async function main() {
   }
 
   console.log(
-    `✅ Deployed pulse contracts on ${chain.getId()} at ${pulseAddr}\n\n`
+    `✅ Deployed pulse contracts on ${chain.getId()} at ${pulseAddr}\n\n`,
   );
 }
 

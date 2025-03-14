@@ -13,7 +13,7 @@ import { Cell } from "@ton/ton";
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Upgrades the Pyth contract on TON and creates a governance proposal for it.\n" +
-      "Usage: $0 --contract <contract_name> --private-key <private_key>"
+      "Usage: $0 --contract <contract_name> --private-key <private_key>",
   )
   .options({
     contract: {
@@ -39,7 +39,7 @@ async function main() {
   // NOTE: Remember to rebuild contract_manager before running this script because it will also build the ton contract
   const compiledPath = path.resolve(
     __dirname,
-    "../../target_chains/ton/contracts/build/Main.compiled.json"
+    "../../target_chains/ton/contracts/build/Main.compiled.json",
   );
   const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
   const newCode = Cell.fromHex(compiled.hex);
@@ -47,7 +47,7 @@ async function main() {
 
   const tx = await contract.upgradeContract(
     toPrivateKey(argv["private-key"]),
-    newCode
+    newCode,
   );
   console.log("Upgrade transaction:", tx);
 }

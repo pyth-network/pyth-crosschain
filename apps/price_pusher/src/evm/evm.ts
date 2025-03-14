@@ -41,7 +41,7 @@ export class EvmPriceListener extends ChainPriceListener {
     private logger: Logger,
     config: {
       pollingFrequency: DurationInSeconds;
-    }
+    },
   ) {
     super(config.pollingFrequency, priceItems);
 
@@ -58,7 +58,7 @@ export class EvmPriceListener extends ChainPriceListener {
     } else {
       this.logger.info(
         "The target network RPC endpoint is not Websocket. " +
-          "Listening for updates only via polling...."
+          "Listening for updates only via polling....",
       );
     }
 
@@ -69,12 +69,12 @@ export class EvmPriceListener extends ChainPriceListener {
   private async startWatching() {
     this.pythContract.watchEvent.PriceFeedUpdate(
       { id: this.priceItems.map((item) => addLeading0x(item.id)) },
-      { strict: true, onLogs: this.onPriceFeedUpdate.bind(this) }
+      { strict: true, onLogs: this.onPriceFeedUpdate.bind(this) },
     );
   }
 
   private onPriceFeedUpdate(
-    logs: WatchContractEventOnLogsParameter<typeof PythAbi, "PriceFeedUpdate">
+    logs: WatchContractEventOnLogsParameter<typeof PythAbi, "PriceFeedUpdate">,
   ) {
     for (const log of logs) {
       const priceId = removeLeading0x(assertDefined(log.args.id));
@@ -88,8 +88,8 @@ export class EvmPriceListener extends ChainPriceListener {
       this.logger.debug(
         { priceInfo },
         `Received a new Evm PriceFeedUpdate event for price feed ${this.priceIdToAlias.get(
-          priceId
-        )} (${priceId}).`
+          priceId,
+        )} (${priceId}).`,
       );
 
       this.updateLatestPriceInfo(priceId, priceInfo);
@@ -97,7 +97,7 @@ export class EvmPriceListener extends ChainPriceListener {
   }
 
   async getOnChainPriceInfo(
-    priceId: HexString
+    priceId: HexString,
   ): Promise<PriceInfo | undefined> {
     let priceRaw: any;
     try {
@@ -111,8 +111,8 @@ export class EvmPriceListener extends ChainPriceListener {
 
     this.logger.debug(
       `Polled an EVM on chain price for feed ${this.priceIdToAlias.get(
-        priceId
-      )} (${priceId}).`
+        priceId,
+      )} (${priceId}).`,
     );
 
     return {
@@ -137,7 +137,7 @@ export class EvmPricePusher implements IPricePusher {
     private updateFeeMultiplier: number,
     private gasLimit?: number,
     private customGasStation?: CustomGasStation,
-    private gasPrice?: number
+    private gasPrice?: number,
   ) {}
 
   // The pubTimes are passed here to use the values that triggered the push.
@@ -148,7 +148,7 @@ export class EvmPricePusher implements IPricePusher {
   // is not landed yet.
   async updatePriceFeed(
     priceIds: string[],
-    pubTimesToPush: UnixTimestamp[]
+    pubTimesToPush: UnixTimestamp[],
   ): Promise<void> {
     if (priceIds.length === 0) {
       return;
@@ -158,11 +158,11 @@ export class EvmPricePusher implements IPricePusher {
       throw new Error("Invalid arguments");
 
     const priceFeedUpdateData = (await this.getPriceFeedsUpdateData(
-      priceIds
+      priceIds,
     )) as `0x${string}`[];
 
     const priceFeedUpdateDataWith0x = priceFeedUpdateData.map((data) =>
-      addLeading0x(data)
+      addLeading0x(data),
     );
 
     let updateFee;
@@ -172,13 +172,13 @@ export class EvmPricePusher implements IPricePusher {
         priceFeedUpdateDataWith0x,
       ]);
       updateFee = BigInt(
-        Math.round(Number(updateFee) * (this.updateFeeMultiplier || 1))
+        Math.round(Number(updateFee) * (this.updateFeeMultiplier || 1)),
       );
       this.logger.debug(`Update fee: ${updateFee}`);
     } catch (e: any) {
       this.logger.error(
         e,
-        "An unidentified error has occured when getting the update fee."
+        "An unidentified error has occured when getting the update fee.",
       );
       throw e;
     }
@@ -191,7 +191,7 @@ export class EvmPricePusher implements IPricePusher {
       this.gasPrice ??
       Number(
         await (this.customGasStation?.getCustomGasPrice() ??
-          this.client.getGasPrice())
+          this.client.getGasPrice()),
       );
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
@@ -221,7 +221,7 @@ export class EvmPricePusher implements IPricePusher {
     ) {
       gasPrice = Math.min(
         gasPriceToOverride,
-        gasPrice * this.overrideGasPriceMultiplierCap
+        gasPrice * this.overrideGasPriceMultiplierCap,
       );
     }
 
@@ -230,7 +230,7 @@ export class EvmPricePusher implements IPricePusher {
     this.logger.debug(`Using gas price: ${gasPrice} and nonce: ${txNonce}`);
 
     const pubTimesToPushParam = pubTimesToPush.map((pubTime) =>
-      BigInt(pubTime)
+      BigInt(pubTime),
     );
 
     const priceIdsWith0x = priceIds.map((priceId) => addLeading0x(priceId));
@@ -247,7 +247,7 @@ export class EvmPricePusher implements IPricePusher {
               this.gasLimit !== undefined
                 ? BigInt(Math.ceil(this.gasLimit))
                 : undefined,
-          }
+          },
         );
 
       this.logger.debug({ request }, "Simulated request successfully");
@@ -265,11 +265,11 @@ export class EvmPricePusher implements IPricePusher {
           err.walk(
             (e) =>
               e instanceof ContractFunctionRevertedError &&
-              e.data?.errorName === "NoFreshUpdate"
+              e.data?.errorName === "NoFreshUpdate",
           )
         ) {
           this.logger.info(
-            "Simulation reverted because none of the updates are fresh. This is an expected behaviour to save gas. Skipping this push."
+            "Simulation reverted because none of the updates are fresh. This is an expected behaviour to save gas. Skipping this push.",
           );
           return;
         }
@@ -278,7 +278,7 @@ export class EvmPricePusher implements IPricePusher {
           this.logger.error(
             { err },
             "Wallet doesn't have enough balance. In rare cases, there might be issues with gas price " +
-              "calculation in the RPC."
+              "calculation in the RPC.",
           );
           throw err;
         }
@@ -288,14 +288,14 @@ export class EvmPricePusher implements IPricePusher {
           err.walk(
             (e) =>
               e instanceof InternalRpcError &&
-              e.details.includes("replacement transaction underpriced")
+              e.details.includes("replacement transaction underpriced"),
           )
         ) {
           this.logger.warn(
             "The gas price of the transaction is too low or there is an existing transaction with higher gas with the same nonce. " +
               "The price will be increased in the next push. Skipping this push. " +
               "If this keeps happening or transactions are not landing you need to increase the override gas price " +
-              "multiplier and the cap to increase the likelihood of the transaction landing on-chain."
+              "multiplier and the cap to increase the likelihood of the transaction landing on-chain.",
           );
           return;
         }
@@ -305,11 +305,11 @@ export class EvmPricePusher implements IPricePusher {
             (e) =>
               e instanceof TransactionExecutionError &&
               (e.details.includes("nonce too low") ||
-                e.message.includes("Nonce provided for the transaction"))
+                e.message.includes("Nonce provided for the transaction")),
           )
         ) {
           this.logger.info(
-            "The nonce is incorrect. This is an expected behaviour in high frequency or multi-instance setup. Skipping this push."
+            "The nonce is incorrect. This is an expected behaviour in high frequency or multi-instance setup. Skipping this push.",
           );
           return;
         }
@@ -319,7 +319,7 @@ export class EvmPricePusher implements IPricePusher {
           this.logger.warn(
             { err },
             "The contract function execution failed in simulation. This is an expected behaviour in high frequency or multi-instance setup. " +
-              "Please review this error and file an issue if it is a bug. Skipping this push."
+              "Please review this error and file an issue if it is a bug. Skipping this push.",
           );
           return;
         }
@@ -330,7 +330,7 @@ export class EvmPricePusher implements IPricePusher {
           this.logger.error(
             { err },
             "Transaction execution failed. This is an expected behaviour in high frequency or multi-instance setup. " +
-              "Please review this error and file an issue if it is a bug. Skipping this push."
+              "Please review this error and file an issue if it is a bug. Skipping this push.",
           );
           return;
         }
@@ -343,7 +343,7 @@ export class EvmPricePusher implements IPricePusher {
           err.message.includes("invalid nonce")
         ) {
           this.logger.info(
-            "The nonce is incorrect (are multiple users using this account?). Skipping this push."
+            "The nonce is incorrect (are multiple users using this account?). Skipping this push.",
           );
           return;
         }
@@ -355,7 +355,7 @@ export class EvmPricePusher implements IPricePusher {
           // and increase the gas price accordingly.
           this.logger.warn(
             "The transaction failed with error: max fee per gas less than block base fee. " +
-              "The fee will be increased in the next push. Skipping this push."
+              "The fee will be increased in the next push. Skipping this push.",
           );
           return;
         }
@@ -369,7 +369,7 @@ export class EvmPricePusher implements IPricePusher {
 
         if (err.message.includes("could not replace existing tx")) {
           this.logger.error(
-            "A transaction with the same nonce has been mined and this one is no longer needed. Skipping this push."
+            "A transaction with the same nonce has been mined and this one is no longer needed. Skipping this push.",
           );
           return;
         }
@@ -379,7 +379,7 @@ export class EvmPricePusher implements IPricePusher {
       this.logger.error(
         { err },
         "The transaction failed with an unhandled error. crashing the process. " +
-          "Please review this error and file an issue if it is a bug."
+          "Please review this error and file an issue if it is a bug.",
       );
       throw err;
     }
@@ -406,7 +406,7 @@ export class EvmPricePusher implements IPricePusher {
           this.logger.info(
             { hash, receipt },
             "Price update did not succeed or its transaction did not land. " +
-              "This is an expected behaviour in high frequency or multi-instance setup."
+              "This is an expected behaviour in high frequency or multi-instance setup.",
           );
       }
     } catch (err: any) {
@@ -415,7 +415,7 @@ export class EvmPricePusher implements IPricePusher {
   }
 
   private async getPriceFeedsUpdateData(
-    priceIds: HexString[]
+    priceIds: HexString[],
   ): Promise<string[]> {
     const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
       encoding: "hex",

@@ -17,7 +17,10 @@ export type OsmosisHost = {
 
 export class OsmosisDeployer implements Deployer {
   private chain: Chain;
-  constructor(private endpoint: string, private mnemonic: string) {
+  constructor(
+    private endpoint: string,
+    private mnemonic: string,
+  ) {
     const c = chains.find(({ chain_name }) => chain_name === "osmosis");
     if (c === undefined)
       throw new Error("Could not find Osmosis in chain registry");
@@ -31,7 +34,7 @@ export class OsmosisDeployer implements Deployer {
   }
 
   private async signAndBroadcast(
-    msg: EncodeObject
+    msg: EncodeObject,
   ): Promise<DeliverTxResponse> {
     const signer = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic);
 
@@ -46,7 +49,7 @@ export class OsmosisDeployer implements Deployer {
       client,
       address,
       [msg],
-      "estimate fee"
+      "estimate fee",
     );
 
     // libraries output more gas than simulated by multiplying with a constant
@@ -55,7 +58,7 @@ export class OsmosisDeployer implements Deployer {
     // hence again multiplying by 1.3
     const fee = calculateFee(
       parseInt((parseInt(gas) * 1.3).toFixed()),
-      "0.025uosmo"
+      "0.025uosmo",
     );
 
     const rs = await client.signAndBroadcast(address, [msg], fee);
@@ -64,7 +67,7 @@ export class OsmosisDeployer implements Deployer {
       console.error(`Transaction failed: ${rs.events}`);
     } else {
       console.log(
-        `Broadcasted transaction hash: ${JSON.stringify(rs.transactionHash)}`
+        `Broadcasted transaction hash: ${JSON.stringify(rs.transactionHash)}`,
       );
     }
 
@@ -93,7 +96,7 @@ export class OsmosisDeployer implements Deployer {
       codeId = parseInt(ci);
     } catch (e) {
       console.error(
-        "Encountered an error in parsing deploy code result. Printing raw log"
+        "Encountered an error in parsing deploy code result. Printing raw log",
       );
       console.error(rs.rawLog);
       throw e;
@@ -105,7 +108,7 @@ export class OsmosisDeployer implements Deployer {
   async instantiate(
     codeId: number,
     inst_msg: string | object,
-    label: string
+    label: string,
   ): Promise<string> {
     const accAddress = await this.getAccountAddress();
     const instMsg =
@@ -131,7 +134,7 @@ export class OsmosisDeployer implements Deployer {
       address = extractFromRawLog(rs.rawLog, "_contract_address");
     } catch (e) {
       console.error(
-        "Encountered an error in parsing instantiation result. Printing raw log"
+        "Encountered an error in parsing instantiation result. Printing raw log",
       );
       console.error(rs.rawLog);
       throw e;
@@ -139,8 +142,8 @@ export class OsmosisDeployer implements Deployer {
 
     console.log(
       `Instantiated ${label} at ${address} (${convert_terra_address_to_hex(
-        address
-      )})`
+        address,
+      )})`,
     );
     return address;
   }
@@ -155,7 +158,7 @@ export class OsmosisDeployer implements Deployer {
         msg: Buffer.from(
           JSON.stringify({
             action: "",
-          })
+          }),
         ),
       });
 
@@ -169,7 +172,7 @@ export class OsmosisDeployer implements Deployer {
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(
-        "Encountered an error in parsing migration result. Printing raw log"
+        "Encountered an error in parsing migration result. Printing raw log",
       );
       console.error(rs.rawLog);
       throw e;

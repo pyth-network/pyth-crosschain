@@ -39,11 +39,11 @@ test("GovernancePayload ser/de", (done) => {
   // Valid header 1
   let expectedGovernanceHeader = new PythGovernanceHeader(
     "pythnet",
-    "ExecutePostedVaa"
+    "ExecutePostedVaa",
   );
   let buffer = expectedGovernanceHeader.encode();
   expect(
-    buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26]))
+    buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26])),
   ).toBeTruthy();
   let governanceHeader = PythGovernanceHeader.decode(buffer);
   expect(governanceHeader?.targetChainId).toBe("pythnet");
@@ -52,7 +52,7 @@ test("GovernancePayload ser/de", (done) => {
   // Valid header 2
   expectedGovernanceHeader = new PythGovernanceHeader(
     "unset",
-    "ExecutePostedVaa"
+    "ExecutePostedVaa",
   );
   buffer = expectedGovernanceHeader.encode();
   expect(buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 0]))).toBeTruthy();
@@ -79,29 +79,29 @@ test("GovernancePayload ser/de", (done) => {
   // Wrong magic number
   expect(
     PythGovernanceHeader.decode(
-      Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0])
-    )
+      Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0]),
+    ),
   ).toBeUndefined();
 
   // Wrong chain
   expect(
     PythGovernanceHeader.decode(
-      Buffer.from([80, 84, 71, 77, 0, 0, 255, 255, 0, 0, 0, 0])
-    )
+      Buffer.from([80, 84, 71, 77, 0, 0, 255, 255, 0, 0, 0, 0]),
+    ),
   ).toBeUndefined();
 
   // Wrong module/action combination
   expect(
     PythGovernanceHeader.decode(
-      Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0])
-    )
+      Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0]),
+    ),
   ).toBeUndefined();
 
   // Decode executePostVaa with empty instructions
   let expectedExecutePostedVaa = new ExecutePostedVaa("pythnet", []);
   buffer = expectedExecutePostedVaa.encode();
   expect(
-    buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26, 0, 0, 0, 0]))
+    buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26, 0, 0, 0, 0])),
   ).toBeTruthy();
   let executePostedVaaArgs = ExecutePostedVaa.decode(buffer);
   expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
@@ -128,35 +128,35 @@ test("GovernancePayload ser/de", (done) => {
         109, 165, 127, 11, 165, 252, 140, 6, 121, 57, 204, 91, 119, 165, 106,
         241, 234, 131, 75, 180, 0, 1, 12, 0, 0, 0, 2, 0, 0, 0, 0, 152, 13, 0, 0,
         0, 0, 0,
-      ])
-    )
+      ]),
+    ),
   ).toBeTruthy();
   executePostedVaaArgs = ExecutePostedVaa.decode(buffer);
   expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(1);
   expect(
     executePostedVaaArgs?.instructions[0].programId.equals(
-      SystemProgram.programId
-    )
+      SystemProgram.programId,
+    ),
   ).toBeTruthy();
   expect(
     executePostedVaaArgs?.instructions[0].keys[0].pubkey.equals(
-      new PublicKey("AWQ18oKzd187aM2oMB4YirBcdgX1FgWfukmqEX91BRES")
-    )
+      new PublicKey("AWQ18oKzd187aM2oMB4YirBcdgX1FgWfukmqEX91BRES"),
+    ),
   ).toBeTruthy();
   expect(executePostedVaaArgs?.instructions[0].keys[0].isSigner).toBeTruthy();
   expect(executePostedVaaArgs?.instructions[0].keys[0].isWritable).toBeTruthy();
   expect(
     executePostedVaaArgs?.instructions[0].keys[1].pubkey.equals(
-      new PublicKey("J25GT2knN8V2Wvg9jNrYBuj9SZdsLnU6bK7WCGrL7daj")
-    )
+      new PublicKey("J25GT2knN8V2Wvg9jNrYBuj9SZdsLnU6bK7WCGrL7daj"),
+    ),
   ).toBeTruthy();
   expect(!executePostedVaaArgs?.instructions[0].keys[1].isSigner).toBeTruthy();
   expect(executePostedVaaArgs?.instructions[0].keys[1].isWritable).toBeTruthy();
   expect(
     executePostedVaaArgs?.instructions[0].data.equals(
-      Buffer.from([2, 0, 0, 0, 0, 152, 13, 0, 0, 0, 0, 0])
-    )
+      Buffer.from([2, 0, 0, 0, 0, 152, 13, 0, 0, 0, 0, 0]),
+    ),
   );
 
   const requestGovernanceDataSourceTransfer =
@@ -166,22 +166,22 @@ test("GovernancePayload ser/de", (done) => {
   console.log(requestGovernanceDataSourceTransferBuffer.toJSON());
   expect(
     requestGovernanceDataSourceTransferBuffer.equals(
-      Buffer.from([80, 84, 71, 77, 1, 5, 234, 147, 0, 0, 0, 1])
-    )
+      Buffer.from([80, 84, 71, 77, 1, 5, 234, 147, 0, 0, 0, 1]),
+    ),
   ).toBeTruthy();
 
   const authorizeGovernanceDataSourceTransfer =
     new AuthorizeGovernanceDataSourceTransfer(
       "starknet",
-      Buffer.from([1, 2, 3])
+      Buffer.from([1, 2, 3]),
     );
   const authorizeGovernanceDataSourceTransferBuffer =
     authorizeGovernanceDataSourceTransfer.encode();
   console.log(authorizeGovernanceDataSourceTransferBuffer.toJSON());
   expect(
     authorizeGovernanceDataSourceTransferBuffer.equals(
-      Buffer.from([80, 84, 71, 77, 1, 1, 234, 147, 1, 2, 3])
-    )
+      Buffer.from([80, 84, 71, 77, 1, 1, 234, 147, 1, 2, 3]),
+    ),
   ).toBeTruthy();
 
   const setFee = new SetFee("starknet", 42n, 8n);
@@ -192,8 +192,8 @@ test("GovernancePayload ser/de", (done) => {
       Buffer.from([
         80, 84, 71, 77, 1, 3, 234, 147, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0,
         0, 0, 8,
-      ])
-    )
+      ]),
+    ),
   ).toBeTruthy();
 
   const setFeeInToken = new SetFeeInToken(
@@ -202,8 +202,8 @@ test("GovernancePayload ser/de", (done) => {
     8n,
     Buffer.from(
       "049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-      "hex"
-    )
+      "hex",
+    ),
   );
   const setFeeInTokenBuffer = setFeeInToken.encode();
   console.log(setFeeInTokenBuffer.toJSON());
@@ -214,8 +214,8 @@ test("GovernancePayload ser/de", (done) => {
         0, 0, 8, 32, 4, 157, 54, 87, 13, 78, 70, 244, 142, 153, 103, 75, 211,
         252, 200, 70, 68, 221, 214, 185, 111, 124, 116, 27, 21, 98, 184, 47,
         158, 0, 77, 199,
-      ])
-    )
+      ]),
+    ),
   ).toBeTruthy();
 
   const setDataSources = new SetDataSources("starknet", [
@@ -240,13 +240,13 @@ test("GovernancePayload ser/de", (done) => {
         190, 146, 235, 109, 244, 50, 163, 240, 10, 37, 0, 3, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         1, 45,
-      ])
-    )
+      ]),
+    ),
   ).toBeTruthy();
 
   const setWormholeAddress = new StarknetSetWormholeAddress(
     "starknet",
-    "05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2"
+    "05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2",
   );
   const setWormholeAddressBuffer = setWormholeAddress.encode();
   console.log(setWormholeAddressBuffer.toJSON());
@@ -256,13 +256,13 @@ test("GovernancePayload ser/de", (done) => {
         80, 84, 71, 77, 1, 6, 234, 147, 5, 3, 63, 6, 213, 196, 123, 204, 231,
         150, 14, 167, 3, 176, 74, 11, 246, 75, 243, 63, 111, 46, 181, 97, 52,
         150, 218, 116, 117, 34, 217, 194,
-      ])
-    )
+      ]),
+    ),
   ).toBeTruthy();
 
   const upgradeContract = new UpgradeContract256Bit(
     "starknet",
-    "043d0ed8155263af0862372df3af9403c502358661f317f62fbdc026d03beaee"
+    "043d0ed8155263af0862372df3af9403c502358661f317f62fbdc026d03beaee",
   );
   const upgradeContractBuffer = upgradeContract.encode();
   console.log(upgradeContractBuffer.toJSON());
@@ -272,8 +272,8 @@ test("GovernancePayload ser/de", (done) => {
         80, 84, 71, 77, 1, 0, 234, 147, 4, 61, 14, 216, 21, 82, 99, 175, 8, 98,
         55, 45, 243, 175, 148, 3, 197, 2, 53, 134, 97, 243, 23, 246, 47, 189,
         192, 38, 208, 59, 234, 238,
-      ])
-    )
+      ]),
+    ),
   ).toBeTruthy();
 
   done();
@@ -288,7 +288,7 @@ function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
   ] as ActionName[];
   const actionArb = fc.constantFrom(...actions);
   const targetChainIdArb = fc.constantFrom(
-    ...(Object.keys(CHAINS) as ChainName[])
+    ...(Object.keys(CHAINS) as ChainName[]),
   );
 
   return actionArb.chain((action) => {
@@ -338,13 +338,13 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       const arb256bit = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
         (buffer) => {
           return new UpgradeContract256Bit(header.targetChainId, buffer);
-        }
+        },
       );
 
       const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
         (address) => {
           return new EvmUpgradeContract(header.targetChainId, address);
-        }
+        },
       );
 
       return fc.oneof(cosmosArb, arb256bit, evmArb);
@@ -352,7 +352,7 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       return bufferArb().map((claimVaa) => {
         return new AuthorizeGovernanceDataSourceTransfer(
           header.targetChainId,
-          claimVaa
+          claimVaa,
         );
       });
     } else if (header.action === "SetDataSources") {
@@ -373,19 +373,19 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       return fc.bigUintN(32).map((index) => {
         return new RequestGovernanceDataSourceTransfer(
           header.targetChainId,
-          parseInt(index.toString())
+          parseInt(index.toString()),
         );
       });
     } else if (header.action === "SetWormholeAddress") {
       const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
         (address) => {
           return new EvmSetWormholeAddress(header.targetChainId, address);
-        }
+        },
       );
       const starknetArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
         (address) => {
           return new StarknetSetWormholeAddress(header.targetChainId, address);
-        }
+        },
       );
       return fc.oneof(evmArb, starknetArb);
     } else if (header.action === "Execute") {
@@ -403,8 +403,8 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
               executerAddress,
               callAddress,
               value,
-              callData
-            )
+              callData,
+            ),
         );
     } else if (header.action === "SetFeeInToken") {
       return fc
@@ -421,7 +421,7 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             header.targetChainId,
             value,
             expo,
-            Buffer.from(token)
+            Buffer.from(token),
           );
         });
     } else {
@@ -442,7 +442,7 @@ test("Header serialization round-trip test", (done) => {
         decoded.action === original.action &&
         decoded.targetChainId === original.targetChainId
       );
-    })
+    }),
   );
 
   done();
@@ -459,7 +459,7 @@ test("Governance action serialization round-trip test", (done) => {
 
       // TODO: not sure if i love this test.
       return decoded.encode().equals(original.encode());
-    })
+    }),
   );
 
   done();

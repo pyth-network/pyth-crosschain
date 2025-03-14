@@ -123,12 +123,12 @@ function invalidValue(typ: any, val: any, key: any = ""): never {
   if (key) {
     throw Error(
       `Invalid value for key "${key}". Expected type ${JSON.stringify(
-        typ
-      )} but got ${JSON.stringify(val)}`
+        typ,
+      )} but got ${JSON.stringify(val)}`,
     );
   }
   throw Error(
-    `Invalid value ${JSON.stringify(val)} for type ${JSON.stringify(typ)}`
+    `Invalid value ${JSON.stringify(val)} for type ${JSON.stringify(typ)}`,
   );
 }
 
@@ -193,7 +193,7 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
   function transformObject(
     props: { [k: string]: any },
     additional: any,
-    val: any
+    val: any,
   ): any {
     if (val === null || typeof val !== "object" || Array.isArray(val)) {
       return invalidValue("object", val);
@@ -228,10 +228,10 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
     return typ.hasOwnProperty("unionMembers")
       ? transformUnion(typ.unionMembers, val)
       : typ.hasOwnProperty("arrayItems")
-      ? transformArray(typ.arrayItems, val)
-      : typ.hasOwnProperty("props")
-      ? transformObject(getProps(typ), typ.additional, val)
-      : invalidValue(typ, val);
+        ? transformArray(typ.arrayItems, val)
+        : typ.hasOwnProperty("props")
+          ? transformObject(getProps(typ), typ.additional, val)
+          : invalidValue(typ, val);
   }
   // Numbers can be parsed by Date but shouldn't be.
   if (typ === Date && typeof val !== "number") return transformDate(val);
@@ -279,7 +279,7 @@ const typeMap: any = {
       { json: "price", js: "price", typ: r("Price") },
       { json: "vaa", js: "vaa", typ: u(undefined, "") },
     ],
-    "any"
+    "any",
   ),
   Price: o(
     [
@@ -288,7 +288,7 @@ const typeMap: any = {
       { json: "price", js: "price", typ: "" },
       { json: "publish_time", js: "publish_time", typ: 0 },
     ],
-    "any"
+    "any",
   ),
   PriceFeedMetadata: o(
     [
@@ -311,6 +311,6 @@ const typeMap: any = {
       { json: "sequence_number", js: "sequence_number", typ: u(undefined, 0) },
       { json: "slot", js: "slot", typ: u(undefined, 0) },
     ],
-    "any"
+    "any",
   ),
 };
