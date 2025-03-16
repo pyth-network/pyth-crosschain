@@ -16,13 +16,11 @@ export const useQueryParamFilterPagination = <T>(
   items: T[],
   predicate: (item: T, term: string) => boolean,
   doSort: (a: T, b: T, descriptor: SortDescriptor) => number,
-  options?:
-    | {
-        defaultPageSize?: number | undefined;
-        defaultSort?: string | undefined;
-        defaultDescending?: boolean;
-      }
-    | undefined,
+  options?: {
+    defaultPageSize?: number | undefined;
+    defaultSort?: string | undefined;
+    defaultDescending?: boolean;
+  },
 ) => {
   const logger = useLogger();
 

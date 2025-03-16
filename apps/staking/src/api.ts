@@ -102,7 +102,7 @@ export const loadData = async (
   client: PythStakingClient,
   pythnetClient: PythnetClient,
   hermesClient: HermesClient,
-  stakeAccount?: PublicKey | undefined,
+  stakeAccount?: PublicKey,
   simulationPayer?: PublicKey,
 ): Promise<Data> =>
   stakeAccount === undefined

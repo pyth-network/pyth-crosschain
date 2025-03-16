@@ -9,7 +9,7 @@ export const PriceName = ({ assetClass, uppercase, plural }: Props) =>
     uppercase ? "upcase" : "title"
   ];
 
-const getLabels = (assetClass?: string | undefined) => {
+const getLabels = (assetClass?: string) => {
   if (assetClass === undefined) {
     return LABELS.ambiguous;
   } else {

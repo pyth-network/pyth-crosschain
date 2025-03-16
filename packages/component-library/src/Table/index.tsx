@@ -226,7 +226,7 @@ const cellProps = <T extends string>(
     ColumnConfig<T>,
     "alignment" | "width" | "fill" | "sticky" | "className"
   >,
-  extraClassName?: string | undefined,
+  extraClassName?: string,
   extraStyle?: CSSProperties,
 ) => ({
   className: clsx(styles.cell, extraClassName, className),
