@@ -1,5 +1,5 @@
 {
-  "extends": "@cprussin/tsconfig/react.json",
+  "extends": "@cprussin/tsconfig/nextjs.json",
   "include": [
     "*.d.ts",
     "**/*.ts",
