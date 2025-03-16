@@ -9,7 +9,7 @@ import {
   Popover,
   Menu as BaseMenu,
   MenuItem as BaseMenuItem,
-  Section as BaseSection,
+  MenuSection as BaseSection,
   Separator as BaseSeparator,
 } from "react-aria-components";
 

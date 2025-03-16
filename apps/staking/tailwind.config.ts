@@ -11,9 +11,9 @@ const tailwindConfig = {
     forms,
     animate,
     reactAria,
-    tailwindPlugin(({ addVariant }) => {
-      addVariant("search-cancel", "&::-webkit-search-cancel-button");
-      addVariant("search-decoration", "&::-webkit-search-decoration");
+    tailwindPlugin((plugin) => {
+      plugin.addVariant("search-cancel", "&::-webkit-search-cancel-button");
+      plugin.addVariant("search-decoration", "&::-webkit-search-decoration");
     }),
   ],
   theme: {
