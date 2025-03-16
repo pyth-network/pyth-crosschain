@@ -204,19 +204,19 @@ const ProgramTab = ({
 }: ProgramTabProps) => (
   <Tab
     className={clsx(
-      "group flex flex-1 cursor-pointer flex-col items-center focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 selected:cursor-default",
+      "group flex flex-1 cursor-pointer flex-col items-center data-[selected]:cursor-default focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
       className,
     )}
     {...props}
   >
-    <div className="group-selected:opacity-100 relative hidden w-4/5 opacity-30 transition group-hover:opacity-60 md:block">
+    <div className="relative hidden w-4/5 opacity-30 transition group-hover:opacity-60 group-data-[selected]:opacity-100 md:block">
       <div className="absolute inset-0 bg-[#E6DAFE] mix-blend-color" />
       <Image src={image} alt="" className="size-full" />
       <div className="absolute inset-0 top-16 text-center text-2xl text-pythpurple-800 lg:text-3xl">
         {description}
       </div>
     </div>
-    <div className="group-selected:border-pythpurple-400 group-selected:bg-pythpurple-600 md:group-selected:border-pythpurple-400 size-full border border-transparent text-center font-semibold leading-none transition md:border-neutral-600/50 md:bg-pythpurple-800 md:text-lg">
+    <div className="size-full border border-transparent text-center font-semibold leading-none transition group-data-[selected]:border-pythpurple-400 group-data-[selected]:bg-pythpurple-600 md:border-neutral-600/50 md:bg-pythpurple-800 md:text-lg md:group-data-[selected]:border-pythpurple-400">
       <div className="grid size-full place-content-center p-2 group-hover:bg-pythpurple-600/60 md:p-4">
         {children}
       </div>

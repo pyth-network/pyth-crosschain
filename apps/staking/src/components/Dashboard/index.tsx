@@ -268,12 +268,12 @@ const Journey = ({
 }: JourneyProps) => (
   <Tab
     className={clsx(
-      "group/tab flex flex-1 cursor-pointer flex-col items-center bg-pythpurple-800 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 selected:cursor-default group-data-[empty]:sm:bg-transparent",
+      "group/tab flex flex-1 cursor-pointer flex-col items-center bg-pythpurple-800 data-[selected]:cursor-default focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 group-data-[empty]:sm:bg-transparent",
       className,
     )}
     {...props}
   >
-    <div className="group-selected/tab:border-pythpurple-400/60 group-selected/tab:bg-pythpurple-600/60 group-hover/tab:group-selected/tab:bg-pythpurple-600/60 grid size-full flex-none basis-0 place-content-center border border-neutral-600/50 bg-pythpurple-800 p-2 text-center font-semibold transition group-hover/tab:bg-pythpurple-600/30 group-data-[empty]:py-8 sm:py-4 sm:text-lg group-data-[empty]:sm:py-2">
+    <div className="grid size-full flex-none basis-0 place-content-center border border-neutral-600/50 bg-pythpurple-800 p-2 text-center font-semibold transition group-hover/tab:bg-pythpurple-600/30 group-data-[selected]/tab:border-pythpurple-400/60 group-data-[selected]/tab:bg-pythpurple-600/60 group-data-[empty]:py-8 group-hover/tab:group-data-[selected]/tab:bg-pythpurple-600/60 sm:py-4 sm:text-lg group-data-[empty]:sm:py-2">
       <span className="hidden group-data-[empty]:inline sm:inline">
         {longText}
       </span>

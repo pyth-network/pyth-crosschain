@@ -61,14 +61,14 @@ export const Guide = ({ title, description, steps, ...props }: Props) => {
           {({ title, icon: Icon, index }) => (
             <Tab
               id={index.toString()}
-              className="group flex cursor-pointer flex-row items-center gap-4 border border-neutral-600/50 px-6 py-4 transition focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 selected:cursor-default selected:border-pythpurple-600 selected:bg-pythpurple-600/20 md:flex-1 md:px-4 md:py-2 lg:border-b lg:border-x-transparent lg:border-t-transparent lg:bg-black/40 lg:px-4 lg:py-6 lg:selected:border-neutral-600/50 lg:selected:border-b-transparent lg:selected:bg-black/40 xl:px-10 2xl:px-20"
+              className="group flex cursor-pointer flex-row items-center gap-4 border border-neutral-600/50 px-6 py-4 transition data-[selected]:cursor-default data-[selected]:border-pythpurple-600 data-[selected]:bg-pythpurple-600/20 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 md:flex-1 md:px-4 md:py-2 lg:border-b lg:border-x-transparent lg:border-t-transparent lg:bg-black/40 lg:px-4 lg:py-6 lg:data-[selected]:border-neutral-600/50 lg:data-[selected]:border-b-transparent lg:data-[selected]:bg-black/40 xl:px-10 2xl:px-20"
             >
-              <Icon className="group-selected:opacity-100 size-10 flex-none opacity-50 transition" />
+              <Icon className="size-10 flex-none opacity-50 transition group-data-[selected]:opacity-100" />
               <div className="flex flex-col justify-between">
                 <div className="text-sm tracking-[0.5rem] opacity-50 md:tracking-wide">
                   STEP {index + 1}
                 </div>
-                <div className="group-selected:opacity-100 opacity-50 transition xl:text-xl">
+                <div className="opacity-50 transition group-data-[selected]:opacity-100 xl:text-xl">
                   {title}
                 </div>
               </div>
@@ -95,7 +95,7 @@ export const Guide = ({ title, description, steps, ...props }: Props) => {
                   {({ title, index: subtabIndex }) => (
                     <Tab
                       id={subtabIndex.toString()}
-                      className="grid cursor-pointer place-content-center border border-neutral-600/50 p-2 text-center opacity-60 transition focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 selected:cursor-default selected:border-pythpurple-600/50 selected:bg-pythpurple-600/10 selected:opacity-100 sm:h-20 sm:flex-1 sm:px-2 sm:py-4 md:px-4"
+                      className="grid cursor-pointer place-content-center border border-neutral-600/50 p-2 text-center opacity-60 transition data-[selected]:cursor-default data-[selected]:border-pythpurple-600/50 data-[selected]:bg-pythpurple-600/10 data-[selected]:opacity-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 sm:h-20 sm:flex-1 sm:px-2 sm:py-4 md:px-4"
                     >
                       {title}
                     </Tab>
