@@ -178,11 +178,18 @@ export const LiveValue = <T extends keyof PriceData>({
 }: LiveValueProps<T>) => {
   const { current } = useLivePriceData(cluster, feedKey);
 
-  return current !== undefined || defaultValue !== undefined ? (
-    (current?.[field]?.toString() ?? defaultValue)
-  ) : (
-    <Skeleton width={SKELETON_WIDTH} />
-  );
+  if (current !== undefined || defaultValue !== undefined) {
+    const value = current?.[field];
+    if (typeof value === "string") {
+      return value;
+    } else if (typeof value === "number" || typeof value === "bigint") {
+      return value.toString();
+    } else {
+      return value ? JSON.stringify(value) : defaultValue;
+    }
+  } else {
+    return <Skeleton width={SKELETON_WIDTH} />;
+  }
 };
 
 type LiveComponentValueProps<T extends keyof PriceComponent["latest"]> = {
