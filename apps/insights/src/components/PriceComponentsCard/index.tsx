@@ -8,28 +8,23 @@ import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
-import {
-  type RowConfig,
-  type ColumnConfig,
-  type SortDescriptor,
-  Table,
+import type {
+  RowConfig,
+  ColumnConfig,
+  SortDescriptor,
 } from "@pythnetwork/component-library/Table";
+import { Table } from "@pythnetwork/component-library/Table";
 import clsx from "clsx";
 import { useQueryState, parseAsStringEnum, parseAsBoolean } from "nuqs";
-import {
-  type ReactNode,
-  Fragment,
-  Suspense,
-  useMemo,
-  useCallback,
-} from "react";
+import type { ReactNode } from "react";
+import { Fragment, Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import styles from "./index.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
+import type { StatusName } from "../../status";
 import {
-  type StatusName,
   STATUS_NAMES,
   Status as StatusType,
   statusNameToStatus,

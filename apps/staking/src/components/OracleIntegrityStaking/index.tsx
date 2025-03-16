@@ -11,18 +11,14 @@ import type { lookup } from "@pythnetwork/known-publishers";
 import { calculateApy } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
-import {
-  useMemo,
-  useCallback,
-  useState,
-  useRef,
-  createElement,
-  type ComponentProps,
-  type Dispatch,
-  type SetStateAction,
-  type HTMLAttributes,
-  type FormEvent,
+import type {
+  ComponentProps,
+  Dispatch,
+  SetStateAction,
+  HTMLAttributes,
+  FormEvent,
 } from "react";
+import { useMemo, useCallback, useState, useRef, createElement } from "react";
 import { useFilter, useCollator } from "react-aria";
 import {
   SearchField,
@@ -35,7 +31,8 @@ import {
   MenuTrigger,
 } from "react-aria-components";
 
-import { type States, StateType as ApiStateType } from "../../hooks/use-api";
+import type { States } from "../../hooks/use-api";
+import { StateType as ApiStateType } from "../../hooks/use-api";
 import {
   StateType as UseAsyncStateType,
   useAsync,

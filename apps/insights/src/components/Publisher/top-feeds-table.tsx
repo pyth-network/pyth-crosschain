@@ -1,6 +1,7 @@
 "use client";
 
-import { type RowConfig, Table } from "@pythnetwork/component-library/Table";
+import type { RowConfig } from "@pythnetwork/component-library/Table";
+import { Table } from "@pythnetwork/component-library/Table";
 import { useMemo } from "react";
 
 import { useSelectPriceFeed } from "./price-feed-drawer-provider";

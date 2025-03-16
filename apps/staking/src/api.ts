@@ -1,5 +1,6 @@
 import type { HermesClient, PublisherCaps } from "@pythnetwork/hermes-client";
 import { lookup } from "@pythnetwork/known-publishers";
+import type { StakeAccountPositions } from "@pythnetwork/staking-sdk";
 import {
   epochToDate,
   extractPublisherData,
@@ -8,7 +9,6 @@ import {
   PositionState,
   PythnetClient,
   PythStakingClient,
-  type StakeAccountPositions,
 } from "@pythnetwork/staking-sdk";
 import { PublicKey } from "@solana/web3.js";
 import { z } from "zod";
@@ -102,7 +102,7 @@ export const loadData = async (
   client: PythStakingClient,
   pythnetClient: PythnetClient,
   hermesClient: HermesClient,
-  stakeAccount?: PublicKey | undefined,
+  stakeAccount?: PublicKey,
   simulationPayer?: PublicKey,
 ): Promise<Data> =>
   stakeAccount === undefined

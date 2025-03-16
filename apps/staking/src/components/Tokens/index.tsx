@@ -2,7 +2,8 @@
 
 import clsx from "clsx";
 import * as dnum from "dnum";
-import { type ComponentProps, useMemo } from "react";
+import type { ComponentProps } from "react";
+import { useMemo } from "react";
 import { Button, TooltipTrigger, useLocale } from "react-aria-components";
 
 import Pyth from "./pyth.svg";

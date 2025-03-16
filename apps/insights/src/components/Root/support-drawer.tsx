@@ -5,10 +5,8 @@ import { Coins } from "@phosphor-icons/react/dist/ssr/Coins";
 import { Gavel } from "@phosphor-icons/react/dist/ssr/Gavel";
 import { Plug } from "@phosphor-icons/react/dist/ssr/Plug";
 import { ShieldChevron } from "@phosphor-icons/react/dist/ssr/ShieldChevron";
-import {
-  type Props as CardProps,
-  Card,
-} from "@pythnetwork/component-library/Card";
+import type { Props as CardProps } from "@pythnetwork/component-library/Card";
+import { Card } from "@pythnetwork/component-library/Card";
 import { Drawer } from "@pythnetwork/component-library/Drawer";
 import type { Link as UnstyledLink } from "@pythnetwork/component-library/unstyled/Link";
 import type { ComponentProps, ReactNode } from "react";

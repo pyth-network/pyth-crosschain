@@ -6,14 +6,13 @@ import {
   PROGRAM_VERSION_V2,
   withCreateTokenOwnerRecord,
 } from "@solana/spl-governance";
+import type { Account, Mint } from "@solana/spl-token";
 import {
-  type Account,
   createAssociatedTokenAccountInstruction,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddressSync,
   getMint,
-  type Mint,
 } from "@solana/spl-token";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
@@ -39,16 +38,16 @@ import {
   getStakeAccountMetadataAddress,
   getTargetAccountAddress,
 } from "./pdas";
-import {
-  PositionState,
-  type GlobalConfig,
-  type PoolConfig,
-  type PoolDataAccount,
-  type StakeAccountPositions,
-  type TargetAccount,
-  type VoterWeightAction,
-  type VestingSchedule,
+import type {
+  GlobalConfig,
+  PoolConfig,
+  PoolDataAccount,
+  StakeAccountPositions,
+  TargetAccount,
+  VoterWeightAction,
+  VestingSchedule,
 } from "./types";
+import { PositionState } from "./types";
 import { bigintMax, bigintMin } from "./utils/bigint";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -810,6 +809,7 @@ export class PythStakingClient {
     for (const instruction of instructions.advanceDelegationRecordInstructions) {
       const tx = new Transaction().add(instruction);
       tx.feePayer = simulationPayer ?? this.wallet.publicKey;
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const res = await this.connection.simulateTransaction(tx);
       const val = res.value.returnData?.data[0];
       if (val === undefined) {

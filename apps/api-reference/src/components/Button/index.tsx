@@ -1,14 +1,13 @@
 "use client";
 
 import clsx from "clsx";
-import {
-  type ComponentProps,
-  type ElementType,
-  type MouseEvent,
-  type CSSProperties,
-  useState,
-  useCallback,
+import type {
+  ComponentProps,
+  ElementType,
+  MouseEvent,
+  CSSProperties,
 } from "react";
+import { useState, useCallback } from "react";
 
 const DEFAULT_GRADIENT_SIZE = "30rem";
 

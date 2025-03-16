@@ -1,4 +1,5 @@
-import pino, { type Logger } from "pino";
+import type { Logger } from "pino";
+import pino from "pino";
 
 import { IS_PRODUCTION_BUILD } from "./isomorphic-config";
 

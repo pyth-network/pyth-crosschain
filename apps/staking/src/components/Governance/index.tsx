@@ -1,6 +1,7 @@
 import clsx from "clsx";
 
-import { type States, StateType as ApiStateType } from "../../hooks/use-api";
+import type { States } from "../../hooks/use-api";
+import { StateType as ApiStateType } from "../../hooks/use-api";
 import { GovernanceGuide } from "../GovernanceGuide";
 import { ProgramSection } from "../ProgramSection";
 

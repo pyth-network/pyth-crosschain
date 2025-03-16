@@ -13,9 +13,9 @@ export enum ParameterType {
   IntArray,
 }
 
-export const TRANSFORMS: {
-  [paramType in ParameterType]?: (value: string) => unknown;
-} = {
+export const TRANSFORMS: Partial<
+  Record<ParameterType, (value: string) => unknown>
+> = {
   [ParameterType.PriceFeedIdArray]: (value) => [value],
   [ParameterType.HexArray]: (value) => [value],
   [ParameterType.IntArray]: (value) => [value],

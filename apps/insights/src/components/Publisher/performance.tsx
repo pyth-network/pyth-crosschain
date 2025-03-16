@@ -22,7 +22,8 @@ import {
   ExplainInactive,
   ExplainAverage,
 } from "../Explanations";
-import { type Variant as NoResultsVariant, NoResults } from "../NoResults";
+import type { Variant as NoResultsVariant } from "../NoResults";
+import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";

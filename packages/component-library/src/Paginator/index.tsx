@@ -1,11 +1,13 @@
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import clsx from "clsx";
-import { type ComponentProps, useMemo, useCallback } from "react";
+import type { ComponentProps } from "react";
+import { useMemo, useCallback } from "react";
 import type { Link } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { type Props as ButtonProps, Button } from "../Button/index.js";
+import type { Props as ButtonProps } from "../Button/index.js";
+import { Button } from "../Button/index.js";
 import buttonStyles from "../Button/index.module.scss";
 import { Select } from "../Select/index.js";
 import { Toolbar } from "../unstyled/Toolbar/index.js";
@@ -105,10 +107,6 @@ const PaginatorToolbar = ({
     <Toolbar aria-label="Page" className={styles.paginatorToolbar ?? ""}>
       <PageSelector
         hideText
-        // I'm not quite sure why this is triggering, I'll need to figure this
-        // out later.  Something in Phosphor's types is incorrect and is making
-        // eslint think this icon is an error object somehow...
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         beforeIcon={CaretLeft}
         isDisabled={currentPage === 1}
         page={1}
@@ -134,10 +132,6 @@ const PaginatorToolbar = ({
       })}
       <PageSelector
         hideText
-        // I'm not quite sure why this is triggering, I'll need to figure this
-        // out later.  Something in Phosphor's types is incorrect and is making
-        // eslint think this icon is an error object somehow...
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         beforeIcon={CaretRight}
         isDisabled={currentPage === numPages}
         page={numPages}

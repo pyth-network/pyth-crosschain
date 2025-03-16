@@ -2,7 +2,8 @@
 
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import clsx from "clsx";
-import { type ComponentProps, type ReactNode, Fragment } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { Fragment } from "react";
 
 import styles from "./index.module.scss";
 import { usePriceFeeds } from "../../hooks/use-price-feeds";

@@ -3,7 +3,8 @@
 import { useLogger } from "@pythnetwork/app-logger";
 import { Switch } from "@pythnetwork/component-library/Switch";
 import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
-import { type ComponentProps, Suspense, useCallback, useMemo } from "react";
+import type { ComponentProps } from "react";
+import { Suspense, useCallback, useMemo } from "react";
 
 import { Cluster, ClusterToName } from "../../services/pyth";
 import { PriceComponentDrawer } from "../PriceComponentDrawer";

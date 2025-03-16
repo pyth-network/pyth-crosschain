@@ -7,13 +7,13 @@ import {
   POSITION_BUFFER_SIZE,
   POSITIONS_ACCOUNT_HEADER_SIZE,
 } from "../constants";
-import {
-  type Position,
-  type PositionAnchor,
-  PositionState,
-  type StakeAccountPositions,
-  type TargetWithParameters,
+import type {
+  Position,
+  PositionAnchor,
+  StakeAccountPositions,
+  TargetWithParameters,
 } from "../types";
+import { PositionState } from "../types";
 
 export const getPositionState = (
   position: Position,
@@ -71,7 +71,7 @@ export const deserializeStakeAccountPositions = (
 ) => {
   const coder = new BorshCoder(idl);
   let i = 8; // Skip discriminator
-  const owner = new PublicKey(data.slice(i, i + 32));
+  const owner = new PublicKey(data.subarray(i, i + 32));
   const numberOfPositions = Math.floor(
     (data.length - POSITIONS_ACCOUNT_HEADER_SIZE) / POSITION_BUFFER_SIZE,
   );

@@ -2,14 +2,8 @@
 
 import { useLogger } from "@pythnetwork/app-logger";
 import { parseAsString, useQueryState } from "nuqs";
-import {
-  type ComponentProps,
-  Suspense,
-  createContext,
-  useMemo,
-  useCallback,
-  use,
-} from "react";
+import type { ComponentProps } from "react";
+import { Suspense, createContext, useMemo, useCallback, use } from "react";
 
 import { usePriceFeeds } from "../../hooks/use-price-feeds";
 import type { Cluster } from "../../services/pyth";

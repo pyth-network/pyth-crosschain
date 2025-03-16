@@ -18,13 +18,13 @@ export function buildForBytecodeAndDigest(packagePath: string) {
   } = JSON.parse(
     execSync(
       `iota move build --dump-bytecode-as-base64 -p ${packagePath} 2> /dev/null`,
-      { encoding: "utf-8" }
-    )
+      { encoding: "utf-8" },
+    ),
   );
   return {
     modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
-      normalizeIotaObjectId(d)
+      normalizeIotaObjectId(d),
     ),
     digest: Buffer.from(buildOutput.digest),
   };
@@ -36,7 +36,7 @@ export async function upgradePyth(
   modules: number[][],
   dependencies: string[],
   signedVaa: Buffer,
-  contract: IotaPriceFeedContract
+  contract: IotaPriceFeedContract,
 ) {
   const pythPackage = await contract.getPackageId(contract.stateId);
 
@@ -45,7 +45,7 @@ export async function upgradePyth(
   const verificationReceipt = await contract.getVaaVerificationReceipt(
     tx as any,
     pythPackage,
-    signedVaa
+    signedVaa,
   );
 
   // Authorize upgrade.
@@ -85,7 +85,7 @@ export async function migratePyth(
   provider: IotaClient,
   signedUpgradeVaa: Buffer,
   contract: IotaPriceFeedContract,
-  pythPackageOld: string
+  pythPackageOld: string,
 ) {
   const pythPackage = await contract.getPackageId(contract.stateId);
   const tx = new Transaction();
@@ -95,7 +95,7 @@ export async function migratePyth(
   const verificationReceipt = await contract.getVaaVerificationReceipt(
     tx,
     pythPackageOld,
-    signedUpgradeVaa
+    signedUpgradeVaa,
   );
   tx.moveCall({
     target: `${pythPackage}::migrate::migrate`,

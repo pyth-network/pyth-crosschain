@@ -16,7 +16,8 @@ import { SearchField } from "@pythnetwork/component-library/unstyled/SearchField
 import { Select } from "@pythnetwork/component-library/unstyled/Select";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
 import clsx from "clsx";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
 
 import styles from "./price-feed-select.module.scss";

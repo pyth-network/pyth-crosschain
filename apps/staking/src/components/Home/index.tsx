@@ -2,11 +2,8 @@
 
 import { useIsSSR } from "react-aria";
 
-import {
-  type States,
-  StateType as ApiStateType,
-  useApi,
-} from "../../hooks/use-api";
+import type { States } from "../../hooks/use-api";
+import { StateType as ApiStateType, useApi } from "../../hooks/use-api";
 import {
   StateType as DashboardDataStateType,
   useData,

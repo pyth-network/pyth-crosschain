@@ -26,7 +26,8 @@ import { useMergedRef } from "next/dist/client/use-merged-ref.js";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime.js";
 import { formatUrl } from "next/dist/shared/lib/router/utils/format-url.js";
 import { isLocalURL } from "next/dist/shared/lib/router/utils/is-local-url.js";
-import { type Ref, useCallback, useMemo, useRef, useEffect, use } from "react";
+import type { Ref } from "react";
+import { useCallback, useMemo, useRef, useEffect, use } from "react";
 import type { HoverEvent, PressEvent } from "react-aria";
 
 type Options<T> = {

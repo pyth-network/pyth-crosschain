@@ -1,6 +1,7 @@
 import { Disclosure, DisclosurePanel } from "@headlessui/react";
 import { LazyMotion, AnimatePresence, m, domAnimation } from "framer-motion";
-import { type ComponentProps, type Ref, forwardRef } from "react";
+import type { ComponentProps, Ref } from "react";
+import { forwardRef } from "react";
 
 export { DisclosureButton as AccordionButton } from "@headlessui/react";
 

@@ -4,20 +4,13 @@ import type { IconProps } from "@phosphor-icons/react";
 import { Desktop } from "@phosphor-icons/react/dist/ssr/Desktop";
 import { Moon } from "@phosphor-icons/react/dist/ssr/Moon";
 import { Sun } from "@phosphor-icons/react/dist/ssr/Sun";
-import {
-  type Props as ButtonProps,
-  Button,
-} from "@pythnetwork/component-library/Button";
+import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
+import { Button } from "@pythnetwork/component-library/Button";
 import clsx from "clsx";
 import { motion } from "motion/react";
 import { useTheme } from "next-themes";
-import {
-  type ReactNode,
-  type ElementType,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
+import type { ReactNode, ElementType } from "react";
+import { useCallback, useRef, useMemo } from "react";
 import { useIsSSR } from "react-aria";
 
 import styles from "./theme-switch.module.scss";

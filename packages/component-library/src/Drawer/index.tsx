@@ -4,13 +4,8 @@ import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import { useMediaQuery } from "@react-hookz/web";
 import clsx from "clsx";
 import { animate, useMotionValue, useMotionValueEvent } from "motion/react";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useState,
-  useRef,
-  useEffect,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Heading } from "react-aria-components";
 
 import styles from "./index.module.scss";
@@ -129,7 +124,6 @@ export const Drawer = ({
           if (e.type !== "pointercancel" && velocity.y > 10) {
             state.close();
           } else {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             animate(y, "0", {
               type: "inertia",
               bounceStiffness: 300,

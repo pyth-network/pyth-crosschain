@@ -405,169 +405,229 @@ $color: (
   "transparent": transparent,
   "background": (
     "primary": light-dark(pallette-color("white"), pallette-color("steel", 950)),
-    "nav-blur":
-      light-dark(
+    "nav-blur": light-dark(
         rgb(from pallette-color("white") r g b / 70%),
         rgb(from pallette-color("steel", 950) r g b / 70%)
       ),
     "modal": light-dark(pallette-color("white"), pallette-color("steel", 950)),
-    "secondary":
-      light-dark(pallette-color("beige", 100), pallette-color("steel", 900)),
-    "card-highlight":
-      light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
-    "card-secondary":
-      light-dark(pallette-color("white"), pallette-color("steel", 950)),
+    "secondary": light-dark(
+        pallette-color("beige", 100),
+        pallette-color("steel", 900)
+      ),
+    "card-highlight": light-dark(
+        pallette-color("violet", 100),
+        pallette-color("violet", 950)
+      ),
+    "card-secondary": light-dark(
+        pallette-color("white"),
+        pallette-color("steel", 950)
+      ),
   ),
-  "foreground":
-    light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
-  "heading":
-    light-dark(pallette-color("steel", 800), pallette-color("steel", 200)),
-  "paragraph":
-    light-dark(pallette-color("steel", 700), pallette-color("steel", 300)),
+  "foreground": light-dark(
+      pallette-color("steel", 900),
+      pallette-color("steel", 50)
+    ),
+  "heading": light-dark(
+      pallette-color("steel", 800),
+      pallette-color("steel", 200)
+    ),
+  "paragraph": light-dark(
+      pallette-color("steel", 700),
+      pallette-color("steel", 300)
+    ),
   "link": (
-    "primary":
-      light-dark(pallette-color("violet", 700), pallette-color("purple", 300)),
-    "normal":
-      light-dark(pallette-color("steel", 800), pallette-color("steel", 50)),
+    "primary": light-dark(
+        pallette-color("violet", 700),
+        pallette-color("purple", 300)
+      ),
+    "normal": light-dark(
+        pallette-color("steel", 800),
+        pallette-color("steel", 50)
+      ),
   ),
-  "highlight":
-    light-dark(pallette-color("violet", 600), pallette-color("violet", 500)),
-  "muted":
-    light-dark(pallette-color("stone", 700), pallette-color("steel", 300)),
-  "border":
-    light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
+  "highlight": light-dark(
+      pallette-color("violet", 600),
+      pallette-color("violet", 500)
+    ),
+  "muted": light-dark(
+      pallette-color("stone", 700),
+      pallette-color("steel", 300)
+    ),
+  "border": light-dark(
+      pallette-color("stone", 300),
+      pallette-color("steel", 600)
+    ),
   "selection": (
-    "background":
-      light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
-    "foreground":
-      light-dark(pallette-color("steel", 50), pallette-color("steel", 950)),
+    "background": light-dark(
+        pallette-color("violet", 600),
+        pallette-color("violet", 400)
+      ),
+    "foreground": light-dark(
+        pallette-color("steel", 50),
+        pallette-color("steel", 950)
+      ),
   ),
   "states": (
     "success": (
-      "base":
-        light-dark(
+      "base": light-dark(
           pallette-color("emerald", 600),
           pallette-color("emerald", 500)
         ),
-      "background":
-        light-dark(
+      "background": light-dark(
           pallette-color("emerald", 100),
           pallette-color("emerald", 950)
         ),
-      "normal":
-        light-dark(
+      "normal": light-dark(
           pallette-color("emerald", 600),
           pallette-color("emerald", 500)
         ),
       "hover": pallette-color("emerald", 700),
       "active": pallette-color("emerald", 800),
-      "border":
-        light-dark(
+      "border": light-dark(
           pallette-color("emerald", 400),
           pallette-color("emerald", 800)
         ),
     ),
     "error": (
       "base": light-dark(pallette-color("red", 600), pallette-color("red", 400)),
-      "color":
-        light-dark(pallette-color("red", 500), pallette-color("red", 400)),
-      "background":
-        light-dark(pallette-color("red", 100), pallette-color("red", 950)),
+      "color": light-dark(
+          pallette-color("red", 500),
+          pallette-color("red", 400)
+        ),
+      "background": light-dark(
+          pallette-color("red", 100),
+          pallette-color("red", 950)
+        ),
       "normal": pallette-color("red", 500),
       "hover": pallette-color("red", 600),
       "active": pallette-color("red", 700),
-      "border":
-        light-dark(pallette-color("red", 400), pallette-color("red", 900)),
+      "border": light-dark(
+          pallette-color("red", 400),
+          pallette-color("red", 900)
+        ),
     ),
     "neutral": (
-      "normal":
-        light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
-      "border":
-        light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
-      "background":
-        light-dark(pallette-color("white"), pallette-color("steel", 900)),
+      "normal": light-dark(
+          pallette-color("steel", 900),
+          pallette-color("steel", 50)
+        ),
+      "border": light-dark(
+          pallette-color("stone", 300),
+          pallette-color("steel", 600)
+        ),
+      "background": light-dark(
+          pallette-color("white"),
+          pallette-color("steel", 900)
+        ),
     ),
     "info": (
-      "background":
-        light-dark(pallette-color("indigo", 100), pallette-color("indigo", 950)),
-      "background-opaque":
-        light-dark(
+      "background": light-dark(
+          pallette-color("indigo", 100),
+          pallette-color("indigo", 950)
+        ),
+      "background-opaque": light-dark(
           rgb(from pallette-color("indigo", 200) r g b / 80%),
           rgb(from pallette-color("indigo", 950) r g b / 80%)
         ),
-      "icon":
-        light-dark(pallette-color("indigo", 600), pallette-color("indigo", 500)),
-      "normal":
-        light-dark(pallette-color("indigo", 600), pallette-color("indigo", 400)),
-      "border":
-        light-dark(pallette-color("indigo", 400), pallette-color("indigo", 800)),
+      "icon": light-dark(
+          pallette-color("indigo", 600),
+          pallette-color("indigo", 500)
+        ),
+      "normal": light-dark(
+          pallette-color("indigo", 600),
+          pallette-color("indigo", 400)
+        ),
+      "border": light-dark(
+          pallette-color("indigo", 400),
+          pallette-color("indigo", 800)
+        ),
     ),
     "warning": (
-      "normal":
-        light-dark(pallette-color("orange", 600), pallette-color("orange", 400)),
-      "background":
-        light-dark(pallette-color("orange", 100), pallette-color("orange", 950)),
-      "border":
-        light-dark(pallette-color("orange", 400), pallette-color("orange", 700)),
+      "normal": light-dark(
+          pallette-color("orange", 600),
+          pallette-color("orange", 400)
+        ),
+      "background": light-dark(
+          pallette-color("orange", 100),
+          pallette-color("orange", 950)
+        ),
+      "border": light-dark(
+          pallette-color("orange", 400),
+          pallette-color("orange", 700)
+        ),
     ),
     "yellow": (
       "normal": pallette-color("yellow", 500),
-      "background":
-        light-dark(pallette-color("yellow", 100), pallette-color("yellow", 900)),
+      "background": light-dark(
+          pallette-color("yellow", 100),
+          pallette-color("yellow", 900)
+        ),
     ),
     "lime": (
       "normal": pallette-color("lime", 500),
-      "background":
-        light-dark(pallette-color("lime", 100), pallette-color("lime", 900)),
+      "background": light-dark(
+          pallette-color("lime", 100),
+          pallette-color("lime", 900)
+        ),
     ),
     "data": (
-      "normal":
-        light-dark(pallette-color("violet", 600), pallette-color("violet", 400)),
-      "background":
-        light-dark(pallette-color("violet", 100), pallette-color("violet", 950)),
-      "border":
-        light-dark(pallette-color("violet", 200), pallette-color("violet", 800)),
+      "normal": light-dark(
+          pallette-color("violet", 600),
+          pallette-color("violet", 400)
+        ),
+      "background": light-dark(
+          pallette-color("violet", 100),
+          pallette-color("violet", 950)
+        ),
+      "border": light-dark(
+          pallette-color("violet", 200),
+          pallette-color("violet", 800)
+        ),
     ),
   ),
-  "focus":
-    light-dark(pallette-color("violet", 700), pallette-color("violet", 500)),
-  "focus-dim":
-    light-dark(
+  "focus": light-dark(
+      pallette-color("violet", 700),
+      pallette-color("violet", 500)
+    ),
+  "focus-dim": light-dark(
       rgb(from pallette-color("violet", 700) r g b / 30%),
       rgb(from pallette-color("violet", 500) r g b / 30%)
     ),
   "forms": (
     "input": (
       "hover": (
-        "border":
-          light-dark(pallette-color("stone", 400), pallette-color("steel", 500)),
+        "border": light-dark(
+            pallette-color("stone", 400),
+            pallette-color("steel", 500)
+          ),
       ),
     ),
   ),
   "chart": (
     "series": (
-      "primary":
-        light-dark(pallette-color("violet", 500), pallette-color("violet", 400)),
-      "neutral":
-        light-dark(pallette-color("stone", 500), pallette-color("steel", 300)),
+      "primary": light-dark(
+          pallette-color("violet", 500),
+          pallette-color("violet", 400)
+        ),
+      "neutral": light-dark(
+          pallette-color("stone", 500),
+          pallette-color("steel", 300)
+        ),
     ),
   ),
   "button": (
     "primary": (
       "foreground": pallette-color("white"),
       "background": (
-        "normal":
-          light-dark(
+        "normal": light-dark(
             pallette-color("violet", 700),
             pallette-color("violet", 600)
           ),
-        "hover":
-          light-dark(
+        "hover": light-dark(
             pallette-color("violet", 800),
             pallette-color("violet", 700)
           ),
-        "active":
-          light-dark(
+        "active": light-dark(
             pallette-color("violet", 900),
             pallette-color("violet", 800)
           ),
@@ -582,40 +642,54 @@ $color: (
       ),
     ),
     "solid": (
-      "foreground":
-        light-dark(pallette-color("steel", 50), pallette-color("steel", 900)),
+      "foreground": light-dark(
+          pallette-color("steel", 50),
+          pallette-color("steel", 900)
+        ),
       "background": (
-        "normal":
-          light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
-        "hover":
-          light-dark(pallette-color("steel", 600), pallette-color("steel", 200)),
-        "active":
-          light-dark(pallette-color("steel", 900), pallette-color("steel", 50)),
+        "normal": light-dark(
+            pallette-color("steel", 900),
+            pallette-color("steel", 50)
+          ),
+        "hover": light-dark(
+            pallette-color("steel", 600),
+            pallette-color("steel", 200)
+          ),
+        "active": light-dark(
+            pallette-color("steel", 900),
+            pallette-color("steel", 50)
+          ),
       ),
     ),
     "outline": (
-      "border":
-        light-dark(pallette-color("stone", 300), pallette-color("steel", 600)),
-      "foreground":
-        light-dark(pallette-color("stone", 900), pallette-color("steel", 50)),
+      "border": light-dark(
+          pallette-color("stone", 300),
+          pallette-color("steel", 600)
+        ),
+      "foreground": light-dark(
+          pallette-color("stone", 900),
+          pallette-color("steel", 50)
+        ),
       "background": (
-        "hover":
-          light-dark(
+        "hover": light-dark(
             rgb(from pallette-color("beige", 950) r g b / 5%),
             rgb(from pallette-color("steel", 50) r g b / 5%)
           ),
-        "active":
-          light-dark(
+        "active": light-dark(
             rgb(from pallette-color("beige", 950) r g b / 10%),
             rgb(from pallette-color("steel", 50) r g b / 10%)
           ),
       ),
     ),
     "disabled": (
-      "foreground":
-        light-dark(pallette-color("stone", 400), pallette-color("steel", 400)),
-      "background":
-        light-dark(pallette-color("stone", 200), pallette-color("steel", 600)),
+      "foreground": light-dark(
+          pallette-color("stone", 400),
+          pallette-color("steel", 400)
+        ),
+      "background": light-dark(
+          pallette-color("stone", 200),
+          pallette-color("steel", 600)
+        ),
     ),
   ),
 );

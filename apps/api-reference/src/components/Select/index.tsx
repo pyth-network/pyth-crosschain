@@ -11,13 +11,8 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import {
-  type ReactNode,
-  type ChangeEvent,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import type { ReactNode, ChangeEvent } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 import { Accordion, AccordionButton, AccordionPanel } from "../Accordion";
 

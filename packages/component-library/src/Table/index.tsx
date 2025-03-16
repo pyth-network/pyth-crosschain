@@ -108,25 +108,25 @@ export const Table = <T extends string>({
         {...props}
       >
         <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
-          {(column: ColumnConfig<T>) => (
+          {(columnConfig: ColumnConfig<T>) => (
             <Column
               data-sticky-header={stickyHeader === undefined ? undefined : ""}
-              {...column}
-              {...cellProps(column, headerCellClassName, {
+              {...columnConfig}
+              {...cellProps(columnConfig, headerCellClassName, {
                 "--sticky-header-top":
                   typeof stickyHeader === "string" ? stickyHeader : 0,
               } as CSSProperties)}
             >
-              {({ allowsSorting, sort, sortDirection }) => (
+              {({ allowsSorting, sortDirection, ...column }) => (
                 <>
-                  <div className={styles.name}>{column.name}</div>
+                  <div className={styles.name}>{columnConfig.name}</div>
                   {allowsSorting && (
                     <Button
                       className={styles.sortButton ?? ""}
                       size="xs"
                       variant="ghost"
                       onPress={() => {
-                        sort(
+                        column.sort(
                           sortDirection === "ascending"
                             ? "descending"
                             : "ascending",
@@ -226,7 +226,7 @@ const cellProps = <T extends string>(
     ColumnConfig<T>,
     "alignment" | "width" | "fill" | "sticky" | "className"
   >,
-  extraClassName?: string | undefined,
+  extraClassName?: string,
   extraStyle?: CSSProperties,
 ) => ({
   className: clsx(styles.cell, extraClassName, className),

@@ -2,7 +2,8 @@
 
 import clsx from "clsx";
 import { motion } from "motion/react";
-import { type ComponentProps, useId } from "react";
+import type { ComponentProps } from "react";
+import { useId } from "react";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";

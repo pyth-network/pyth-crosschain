@@ -1,20 +1,11 @@
 "use client";
 
-import {
-  type TargetAndTransition,
-  type Target,
-  AnimatePresence,
-  motion,
-} from "motion/react";
+import type { TargetAndTransition, Target } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { LayoutRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useSelectedLayoutSegment } from "next/navigation";
-import {
-  type ReactNode,
-  type ComponentProps,
-  useContext,
-  useEffect,
-  useRef,
-} from "react";
+import type { ReactNode, ComponentProps } from "react";
+import { useContext, useEffect, useRef } from "react";
 
 type OwnProps = {
   children: ReactNode;

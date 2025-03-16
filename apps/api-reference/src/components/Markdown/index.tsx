@@ -1,4 +1,4 @@
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import MarkdownComponent from "react-markdown";
 
 import { MARKDOWN_COMPONENTS } from "../../markdown-components";

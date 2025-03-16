@@ -1,7 +1,8 @@
 "use client";
 
 import { parse } from "bcp-47";
-import { useMemo, type ComponentProps } from "react";
+import type { ComponentProps } from "react";
+import { useMemo } from "react";
 import { I18nProvider as I18nProviderBase, useIsSSR } from "react-aria";
 
 const SUPPORTED_LANGUAGES = new Set(["en"]);
@@ -15,7 +16,7 @@ export const I18nProvider = (
     () =>
       isSSR
         ? DEFAULT_LOCALE
-        : (window.navigator.languages.find((locale) => {
+        : (globalThis.navigator.languages.find((locale) => {
             const language = parse(locale).language;
             return (
               language !== undefined &&

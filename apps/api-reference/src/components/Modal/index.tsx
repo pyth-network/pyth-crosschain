@@ -8,7 +8,8 @@ import {
   CloseButton,
 } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { type ReactNode, Fragment } from "react";
+import type { ReactNode } from "react";
+import { Fragment } from "react";
 
 import { Button } from "../Button";
 

@@ -1,7 +1,9 @@
 "use client";
 
-import pino, { type Logger } from "pino";
-import { type ComponentProps, createContext, useContext, useMemo } from "react";
+import type { Logger } from "pino";
+import pino from "pino";
+import type { ComponentProps } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 const LoggerContext = createContext<undefined | Logger<string>>(undefined);
 

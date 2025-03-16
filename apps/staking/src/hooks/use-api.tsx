@@ -5,7 +5,8 @@ import { PythnetClient, PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useLocalStorageValue } from "@react-hookz/web";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { type ComponentProps, createContext, useContext, useMemo } from "react";
+import type { ComponentProps } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
 
 import { StateType as DataStateType, useData } from "./use-data";

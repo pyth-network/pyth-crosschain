@@ -1,12 +1,8 @@
 "use client";
 
 import clsx from "clsx";
-import {
-  type ComponentProps,
-  type ElementType,
-  type ReactNode,
-  use,
-} from "react";
+import type { ComponentProps, ElementType, ReactNode } from "react";
+import { use } from "react";
 import { OverlayTriggerStateContext } from "react-aria-components";
 
 import styles from "./index.module.scss";

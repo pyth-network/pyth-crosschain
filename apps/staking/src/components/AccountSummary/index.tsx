@@ -2,20 +2,16 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { epochToDate } from "@pythnetwork/staking-sdk";
 import clsx from "clsx";
 import Image from "next/image";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useCallback,
-  useState,
-  useMemo,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useCallback, useState, useMemo } from "react";
 import {
   DialogTrigger,
   Button as ReactAriaButton,
 } from "react-aria-components";
 
 import background from "./background.png";
-import { type States, StateType as ApiStateType } from "../../hooks/use-api";
+import type { States } from "../../hooks/use-api";
+import { StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useAsync } from "../../hooks/use-async";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";

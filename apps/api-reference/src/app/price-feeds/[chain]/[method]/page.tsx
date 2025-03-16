@@ -1,7 +1,8 @@
 "use client";
 
 import { notFound } from "next/navigation";
-import { type ComponentProps, use } from "react";
+import type { ComponentProps } from "react";
+import { use } from "react";
 
 import * as apis from "../../../../apis";
 import { EvmApi } from "../../../../components/EvmApi";

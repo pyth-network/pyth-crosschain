@@ -2,15 +2,11 @@
 
 import { useLogger } from "@pythnetwork/app-logger";
 import { useResizeObserver } from "@react-hookz/web";
-import {
-  type IChartApi,
-  type ISeriesApi,
-  type UTCTimestamp,
-  LineStyle,
-  createChart,
-} from "lightweight-charts";
+import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
+import { LineSeries, LineStyle, createChart } from "lightweight-charts";
 import { useTheme } from "next-themes";
-import { type RefObject, useEffect, useRef, useCallback } from "react";
+import type { RefObject } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 
 import theme from "./theme.module.scss";
@@ -48,7 +44,7 @@ const useChartElem = (symbol: string, feedId: string) => {
   const backfillData = useCallback(() => {
     if (!isBackfilling.current && earliestDateRef.current) {
       isBackfilling.current = true;
-      const url = new URL("/historical-prices", window.location.origin);
+      const url = new URL("/historical-prices", globalThis.location.origin);
       url.searchParams.set("symbol", symbol);
       url.searchParams.set("until", earliestDateRef.current.toString());
       fetch(url)
@@ -115,7 +111,7 @@ const useChartElem = (symbol: string, feedId: string) => {
         },
       });
 
-      const price = chart.addLineSeries({ priceFormat });
+      const price = chart.addSeries(LineSeries, { priceFormat });
 
       chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
         if (
@@ -133,8 +129,8 @@ const useChartElem = (symbol: string, feedId: string) => {
       chartRef.current = {
         resolution: Resolution.Tick,
         chart,
-        confidenceHigh: chart.addLineSeries(confidenceConfig),
-        confidenceLow: chart.addLineSeries(confidenceConfig),
+        confidenceHigh: chart.addSeries(LineSeries, confidenceConfig),
+        confidenceLow: chart.addSeries(LineSeries, confidenceConfig),
         price,
       };
       return () => {

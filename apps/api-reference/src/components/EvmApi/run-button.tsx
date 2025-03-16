@@ -9,7 +9,8 @@ import { ContractFunctionExecutionError } from "viem";
 import { useAccount, useConfig } from "wagmi";
 import { readContract, simulateContract, writeContract } from "wagmi/actions";
 
-import { type Parameter, TRANSFORMS } from "./parameter";
+import type { Parameter } from "./parameter";
+import { TRANSFORMS } from "./parameter";
 import { getContractAddress } from "../../evm-networks";
 import { useIsMounted } from "../../use-is-mounted";
 import { Button } from "../Button";

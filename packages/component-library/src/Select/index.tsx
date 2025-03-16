@@ -1,9 +1,8 @@
 import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
+import type { PopoverProps, Button as BaseButton } from "react-aria-components";
 import {
-  type PopoverProps,
-  type Button as BaseButton,
   Label,
   Select as BaseSelect,
   Popover,
@@ -13,7 +12,8 @@ import {
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { type Props as ButtonProps, Button } from "../Button/index.js";
+import type { Props as ButtonProps } from "../Button/index.js";
+import { Button } from "../Button/index.js";
 import { DropdownCaretDown } from "../DropdownCaretDown/index.js";
 import {
   ListBox,

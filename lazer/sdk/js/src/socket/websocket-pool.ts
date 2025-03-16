@@ -1,9 +1,10 @@
 import TTLCache from "@isaacs/ttlcache";
 import WebSocket from "isomorphic-ws";
-import { dummyLogger, type Logger } from "ts-log";
+import type { Logger } from "ts-log";
+import { dummyLogger } from "ts-log";
 
-import { ResilientWebSocket } from "./resilient-websocket.js";
 import type { Request, Response } from "../protocol.js";
+import { ResilientWebSocket } from "./resilient-websocket.js";
 
 const DEFAULT_NUM_CONNECTIONS = 3;
 

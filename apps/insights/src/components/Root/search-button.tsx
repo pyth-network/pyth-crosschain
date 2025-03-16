@@ -3,7 +3,8 @@
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import { type ComponentProps, useMemo } from "react";
+import type { ComponentProps } from "react";
+import { useMemo } from "react";
 import { useIsSSR } from "react-aria";
 
 import { useToggleSearchDialog } from "./search-dialog";

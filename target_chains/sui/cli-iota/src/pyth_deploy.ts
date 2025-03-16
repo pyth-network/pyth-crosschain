@@ -15,7 +15,7 @@ import { bcs } from "@iota/iota-sdk/bcs";
 export async function publishPackage(
   keypair: Ed25519Keypair,
   provider: IotaClient,
-  packagePath: string
+  packagePath: string,
 ): Promise<{ packageId: string; upgradeCapId: string; deployerCapId: string }> {
   // Build contracts
   const buildOutput: {
@@ -26,8 +26,8 @@ export async function publishPackage(
       `iota move build --dump-bytecode-as-base64 --path ${__dirname}/${packagePath} 2> /dev/null`,
       {
         encoding: "utf-8",
-      }
-    )
+      },
+    ),
   );
 
   console.log("buildOutput: ", buildOutput);
@@ -40,7 +40,7 @@ export async function publishPackage(
   const [upgradeCap] = txb.publish({
     modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
-      normalizeIotaObjectId(d)
+      normalizeIotaObjectId(d),
     ),
   });
 
@@ -58,7 +58,7 @@ export async function publishPackage(
   });
 
   const publishedChanges = result.objectChanges?.filter(
-    (change) => change.type === "published"
+    (change) => change.type === "published",
   );
 
   if (
@@ -67,7 +67,7 @@ export async function publishPackage(
   ) {
     throw new Error(
       "No publish event found in transaction:" +
-        JSON.stringify(result.objectChanges, null, 2)
+        JSON.stringify(result.objectChanges, null, 2),
     );
   }
 
@@ -108,7 +108,7 @@ export async function initPyth(
   config: {
     dataSources: DataSource[];
     governanceDataSource: DataSource;
-  }
+  },
 ) {
   const tx = new Transaction();
 
@@ -119,25 +119,25 @@ export async function initPyth(
       .serialize(
         config.dataSources.map((dataSource) => [
           ...Buffer.from(dataSource.emitterAddress, "hex"),
-        ])
-      )
+        ]),
+      ),
   );
   const dataSourceEmitterChainIds = tx.pure(
     bcs
       .vector(bcs.u64())
       .serialize(
-        config.dataSources.map((dataSource) => dataSource.emitterChain)
-      )
+        config.dataSources.map((dataSource) => dataSource.emitterChain),
+      ),
   );
   const governanceEmitterAddress = tx.pure(
     bcs
       .vector(bcs.u8())
       .serialize([
         ...Buffer.from(config.governanceDataSource.emitterAddress, "hex"),
-      ])
+      ]),
   );
   const governanceEmitterChainId = tx.pure(
-    bcs.u64().serialize(config.governanceDataSource.emitterChain)
+    bcs.u64().serialize(config.governanceDataSource.emitterChain),
   );
   const stalePriceThreshold = tx.pure.u64(60);
   tx.moveCall({

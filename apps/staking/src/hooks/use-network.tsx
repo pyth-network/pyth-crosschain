@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  type ComponentProps,
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-} from "react";
+import type { ComponentProps } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 const NetworkContext = createContext<undefined | NetworkContext>(undefined);
 

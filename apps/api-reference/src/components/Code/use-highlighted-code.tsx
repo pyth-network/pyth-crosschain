@@ -1,8 +1,7 @@
 "use client";
 
+import type { ReactNode, RefObject } from "react";
 import {
-  type ReactNode,
-  type RefObject,
   createContext,
   useContext,
   useState,
@@ -48,7 +47,7 @@ const useHighlighter = () => {
 export const useHighlightedCode = (
   language: SupportedLanguage | undefined,
   code: string,
-  dimRange?: readonly [OffsetOrPosition, OffsetOrPosition] | undefined,
+  dimRange?: readonly [OffsetOrPosition, OffsetOrPosition],
 ) => {
   const highlighter = useHighlighter();
   const decorations = useMemo(

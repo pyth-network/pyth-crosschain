@@ -2,13 +2,8 @@
 
 import { PythHttpClient } from "@pythnetwork/client";
 import { Connection, PublicKey } from "@solana/web3.js";
-import {
-  type ComponentProps,
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-} from "react";
+import type { ComponentProps } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { z } from "zod";
 
 const PYTHNET_RPC_URL = "https://api2.pythnet.pyth.network";

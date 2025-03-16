@@ -1,11 +1,7 @@
 import clsx from "clsx";
 import { LazyMotion, m, domAnimation } from "framer-motion";
-import {
-  type HTMLProps,
-  type ReactNode,
-  type ComponentProps,
-  useState,
-} from "react";
+import type { HTMLProps, ReactNode, ComponentProps } from "react";
+import { useState } from "react";
 import { Button } from "react-aria-components";
 
 type Props = Omit<HTMLProps<HTMLDivElement>, "title"> & {
@@ -60,9 +56,6 @@ export const Faq = ({ title, questions, className, ...props }: Props) => {
                 </Button>
               </dt>
               <m.dt
-                // @ts-expect-error the framer-motion types don't currently
-                // expose props like `className` correctly for some reason, even
-                // though this works correctly...
                 className="-mt-1 flex max-w-prose flex-col gap-4 overflow-hidden font-light"
                 initial={{ height: openItem === i ? "auto" : 0 }}
                 animate={{ height: openItem === i ? "auto" : 0 }}

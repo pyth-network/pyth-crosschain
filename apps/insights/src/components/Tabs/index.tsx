@@ -6,7 +6,8 @@ import {
   Tabs as UnstyledTabs,
 } from "@pythnetwork/component-library/unstyled/Tabs";
 import { useSelectedLayoutSegment, usePathname } from "next/navigation";
-import { useMemo, type ComponentProps } from "react";
+import type { ComponentProps } from "react";
+import { useMemo } from "react";
 
 import { LayoutTransition } from "../LayoutTransition";
 

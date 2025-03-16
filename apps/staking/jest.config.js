@@ -1,1 +1,1 @@
-export { nextjs as default } from "@cprussin/jest-config";
+export { nextjs as default } from "@cprussin/jest-config/next";

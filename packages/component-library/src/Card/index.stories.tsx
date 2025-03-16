@@ -41,7 +41,10 @@ const meta = {
       control: "select",
       options: Object.keys(Icon),
       mapping: Object.fromEntries(
-        Object.entries(Icon).map(([key, Icon]) => [key, <Icon key={key} />]),
+        Object.entries(Icon).map(([key, Icon]) => [
+          key,
+          <Icon weights={new Map()} key={key} />,
+        ]),
       ),
       table: {
         category: "Contents",

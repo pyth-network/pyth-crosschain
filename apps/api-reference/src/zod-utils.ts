@@ -1,4 +1,5 @@
-import { type ZodSchema, type ZodTypeDef, z } from "zod";
+import type { ZodSchema, ZodTypeDef } from "zod";
+import { z } from "zod";
 
 export const singletonArray = <Output, Def extends ZodTypeDef, Input>(
   schema: ZodSchema<Output, Def, Input>,

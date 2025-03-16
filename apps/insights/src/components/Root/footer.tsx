@@ -1,7 +1,5 @@
-import {
-  type Props as ButtonProps,
-  Button,
-} from "@pythnetwork/component-library/Button";
+import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
+import { Button } from "@pythnetwork/component-library/Button";
 import { DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { Link } from "@pythnetwork/component-library/Link";
 import type { ComponentProps, ElementType } from "react";

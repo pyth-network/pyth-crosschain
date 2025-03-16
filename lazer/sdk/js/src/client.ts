@@ -1,13 +1,9 @@
 import WebSocket from "isomorphic-ws";
-import { dummyLogger, type Logger } from "ts-log";
+import type { Logger } from "ts-log";
+import { dummyLogger } from "ts-log";
 
-import {
-  BINARY_UPDATE_FORMAT_MAGIC_LE,
-  FORMAT_MAGICS_LE,
-  type ParsedPayload,
-  type Request,
-  type Response,
-} from "./protocol.js";
+import type { ParsedPayload, Request, Response } from "./protocol.js";
+import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
 
 export type BinaryResponse = {

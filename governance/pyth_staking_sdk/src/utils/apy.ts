@@ -17,6 +17,9 @@ export const calculateApy = (
   } & ({ isSelf: true } | { isSelf: false; poolUtilization: bigint }),
 ) => {
   const { selfStake, poolCapacity, yieldRate, isSelf } = options;
+  // This eslint rule incorrectly tries to use Math.min() here instead, which
+  // casts down to number
+  // eslint-disable-next-line unicorn/prefer-math-min-max
   const eligibleSelfStake = selfStake > poolCapacity ? poolCapacity : selfStake;
 
   if (poolCapacity === 0n) {
@@ -40,6 +43,9 @@ export const calculateApy = (
   const delegatorPoolUtilization = poolUtilization - selfStake;
   const delegatorPoolCapacity = poolCapacity - eligibleSelfStake;
   const eligibleStake =
+    // This eslint rule incorrectly tries to use Math.min() here instead, which
+    // casts down to number
+    // eslint-disable-next-line unicorn/prefer-math-min-max
     delegatorPoolUtilization > delegatorPoolCapacity
       ? delegatorPoolCapacity
       : delegatorPoolUtilization;
