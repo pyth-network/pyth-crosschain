@@ -19,7 +19,7 @@
     "lerna": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
-    "turbo": "catalog:"
+    "turbo": "^2.4.4"
   },
   "pnpm": {
     "overrides": {
