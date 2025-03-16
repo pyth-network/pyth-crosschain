@@ -809,6 +809,7 @@ export class PythStakingClient {
     for (const instruction of instructions.advanceDelegationRecordInstructions) {
       const tx = new Transaction().add(instruction);
       tx.feePayer = simulationPayer ?? this.wallet.publicKey;
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const res = await this.connection.simulateTransaction(tx);
       const val = res.value.returnData?.data[0];
       if (val === undefined) {

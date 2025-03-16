@@ -246,7 +246,7 @@ const useIntegrityStakingSum = (
     [publishers, field],
   );
 
-// eslint-disable-next-line unicorn/no-array-reduce
+// eslint-disable-next-line unicorn/no-array-reduce, unicorn/prefer-math-min-max
 const bigIntMin = (...args: bigint[]) => args.reduce((m, e) => (e < m ? e : m));
 
 type TabId = Exclude<ComponentProps<typeof Tabs>["selectedKey"], undefined>;
