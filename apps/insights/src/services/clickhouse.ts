@@ -1,7 +1,8 @@
 import "server-only";
 
 import { createClient } from "@clickhouse/client";
-import { z, type ZodSchema, type ZodTypeDef } from "zod";
+import type { ZodSchema, ZodTypeDef } from "zod";
+import { z } from "zod";
 
 import { Cluster, ClusterToName } from "./pyth";
 import { CLICKHOUSE } from "../config/server";

@@ -1,6 +1,8 @@
-import { type Geo, geolocation, ipAddress } from "@vercel/functions";
+import type { Geo } from "@vercel/functions";
+import { geolocation, ipAddress } from "@vercel/functions";
 import ipRangeCheck from "ip-range-check";
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import ProxyCheck from "proxycheck-ts";
 
 import {

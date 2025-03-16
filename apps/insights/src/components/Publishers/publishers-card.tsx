@@ -9,14 +9,15 @@ import { Link } from "@pythnetwork/component-library/Link";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
-import {
-  type RowConfig,
-  type SortDescriptor,
-  Table,
+import type {
+  RowConfig,
+  SortDescriptor,
 } from "@pythnetwork/component-library/Table";
+import { Table } from "@pythnetwork/component-library/Table";
 import clsx from "clsx";
 import { useQueryState, parseAsStringEnum } from "nuqs";
-import { type ReactNode, Suspense, useMemo, useCallback } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import styles from "./publishers-card.module.scss";

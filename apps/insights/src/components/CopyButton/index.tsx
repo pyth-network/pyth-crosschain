@@ -5,7 +5,8 @@ import { Copy } from "@phosphor-icons/react/dist/ssr/Copy";
 import { useLogger } from "@pythnetwork/app-logger";
 import { Button } from "@pythnetwork/component-library/unstyled/Button";
 import clsx from "clsx";
-import { type ComponentProps, useCallback, useEffect, useState } from "react";
+import type { ComponentProps } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import styles from "./index.module.scss";
 

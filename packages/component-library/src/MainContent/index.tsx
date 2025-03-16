@@ -1,15 +1,13 @@
 "use client";
 
 import clsx from "clsx";
-import {
-  type ComponentProps,
-  type CSSProperties,
-  type Dispatch,
-  type SetStateAction,
-  createContext,
-  useState,
-  use,
+import type {
+  ComponentProps,
+  CSSProperties,
+  Dispatch,
+  SetStateAction,
 } from "react";
+import { createContext, useState, use } from "react";
 
 import styles from "./index.module.scss";
 import { OverlayVisibleContext } from "../overlay-visible-context.js";

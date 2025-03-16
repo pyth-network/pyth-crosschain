@@ -1,6 +1,7 @@
 import { useLogger } from "@pythnetwork/app-logger";
 import { useCallback } from "react";
-import useSWR, { type KeyedMutator } from "swr";
+import type { KeyedMutator } from "swr";
+import useSWR from "swr";
 
 export const useData = <T>(
   key: Parameters<typeof useSWR<T>>[0],

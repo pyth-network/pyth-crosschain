@@ -1,8 +1,7 @@
 "use client";
 
+import type { ReactNode, RefObject } from "react";
 import {
-  type ReactNode,
-  type RefObject,
   createContext,
   useContext,
   useState,

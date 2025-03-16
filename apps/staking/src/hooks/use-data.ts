@@ -1,5 +1,6 @@
 import { useCallback } from "react";
-import useSWR, { type KeyedMutator } from "swr";
+import type { KeyedMutator } from "swr";
+import useSWR from "swr";
 
 import { useLogger } from "./use-logger";
 

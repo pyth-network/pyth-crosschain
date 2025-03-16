@@ -1,6 +1,7 @@
 import type { ClientRequestArgs } from "node:http";
 
-import WebSocket, { type ClientOptions, type ErrorEvent } from "isomorphic-ws";
+import type { ClientOptions, ErrorEvent } from "isomorphic-ws";
+import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 
 const HEARTBEAT_TIMEOUT_DURATION = 10_000;

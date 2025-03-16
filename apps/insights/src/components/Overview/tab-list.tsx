@@ -6,7 +6,8 @@ import {
 } from "@pythnetwork/component-library/unstyled/Tabs";
 import clsx from "clsx";
 import { motion } from "motion/react";
-import { type ComponentProps, useId } from "react";
+import type { ComponentProps } from "react";
+import { useId } from "react";
 
 import styles from "./tab-list.module.scss";
 

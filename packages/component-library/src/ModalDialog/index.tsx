@@ -1,18 +1,11 @@
 "use client";
 
-import { motion, type PanInfo } from "motion/react";
+import type { PanInfo } from "motion/react";
+import { motion } from "motion/react";
+import type { ComponentProps, Dispatch, SetStateAction } from "react";
+import { createContext, use, useCallback, useState, useEffect } from "react";
+import type { ModalRenderProps } from "react-aria-components";
 import {
-  type ComponentProps,
-  type Dispatch,
-  type SetStateAction,
-  createContext,
-  use,
-  useCallback,
-  useState,
-  useEffect,
-} from "react";
-import {
-  type ModalRenderProps,
   Modal,
   ModalOverlay,
   Dialog,

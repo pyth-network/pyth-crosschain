@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { type VariantArg, LayoutTransition } from "../LayoutTransition";
+import type { VariantArg } from "../LayoutTransition";
+import { LayoutTransition } from "../LayoutTransition";
 
 type Props = {
   children: ReactNode;

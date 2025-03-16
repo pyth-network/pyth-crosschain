@@ -7,13 +7,13 @@ import {
   POSITION_BUFFER_SIZE,
   POSITIONS_ACCOUNT_HEADER_SIZE,
 } from "../constants";
-import {
-  type Position,
-  type PositionAnchor,
-  PositionState,
-  type StakeAccountPositions,
-  type TargetWithParameters,
+import type {
+  Position,
+  PositionAnchor,
+  StakeAccountPositions,
+  TargetWithParameters,
 } from "../types";
+import { PositionState } from "../types";
 
 export const getPositionState = (
   position: Position,

@@ -2,10 +2,8 @@ import { createPublicClient, http, parseEventLogs, publicActions } from "viem";
 import { z } from "zod";
 
 import { EntropyAbi } from "./entropy-abi";
-import {
-  type EntropyDeployment,
-  EntropyDeployments,
-} from "../store/entropy-deployments";
+import type { EntropyDeployment } from "../store/entropy-deployments";
+import { EntropyDeployments } from "../store/entropy-deployments";
 
 export async function requestCallback(
   txHash: string,

@@ -1,6 +1,7 @@
 "use client";
 
-import { type ComponentProps, createContext, use } from "react";
+import type { ComponentProps } from "react";
+import { createContext, use } from "react";
 import { z } from "zod";
 
 import { StateType, useData } from "../../hooks/use-data";

@@ -1,6 +1,7 @@
 "use client";
 
-import { type ComponentProps, useCallback } from "react";
+import type { ComponentProps } from "react";
+import { useCallback } from "react";
 
 import { useSelectPriceFeed } from "./price-feed-drawer-provider";
 import { usePriceFeeds } from "../../hooks/use-price-feeds";

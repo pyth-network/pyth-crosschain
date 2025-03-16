@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { useSelectedLayoutSegment } from "next/navigation";
-import { type HTMLProps } from "react";
+import type { HTMLProps } from "react";
 
 import { VPN_BLOCKED_SEGMENT } from "../../config/isomorphic";
 import { StateType as ApiStateType, useApi } from "../../hooks/use-api";

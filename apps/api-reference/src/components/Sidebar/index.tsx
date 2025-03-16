@@ -4,12 +4,8 @@ import { Field, Label } from "@headlessui/react";
 import clsx from "clsx";
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
-import {
-  type HTMLAttributes,
-  useState,
-  type ComponentProps,
-  type ElementType,
-} from "react";
+import type { HTMLAttributes, ComponentProps, ElementType } from "react";
+import { useState } from "react";
 
 import * as apis from "../../apis";
 import { Select } from "../Select";

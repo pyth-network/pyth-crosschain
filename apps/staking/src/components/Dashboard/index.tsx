@@ -1,15 +1,9 @@
 import { useLocalStorageValue } from "@react-hookz/web";
 import clsx from "clsx";
-import Image, { type StaticImageData } from "next/image";
-import {
-  type ComponentProps,
-  type ReactNode,
-  type FormEvent,
-  useState,
-  useMemo,
-  useEffect,
-  useCallback,
-} from "react";
+import type { StaticImageData } from "next/image";
+import Image from "next/image";
+import type { ComponentProps, ReactNode, FormEvent } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Tabs, TabList, TabPanel, Tab, Form } from "react-aria-components";
 
 import type { States, StateType as ApiStateType } from "../../hooks/use-api";

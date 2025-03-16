@@ -2,12 +2,10 @@
 
 import clsx from "clsx";
 import { motion } from "motion/react";
-import { type ComponentProps, useId, useMemo } from "react";
-import {
-  type Key,
-  ToggleButtonGroup,
-  ToggleButton,
-} from "react-aria-components";
+import type { ComponentProps } from "react";
+import { useId, useMemo } from "react";
+import type { Key } from "react-aria-components";
+import { ToggleButtonGroup, ToggleButton } from "react-aria-components";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";

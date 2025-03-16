@@ -1,17 +1,15 @@
 import { Wallet } from "@coral-xyz/anchor";
+import type { Connection } from "@solana/web3.js";
 import {
   Keypair,
   PublicKey,
   sendAndConfirmTransaction,
   SystemProgram,
   Transaction,
-  type Connection,
 } from "@solana/web3.js";
 
-import {
-  type CustomAbortController,
-  startValidatorRaw,
-} from "./start-validator";
+import type { CustomAbortController } from "./start-validator";
+import { startValidatorRaw } from "./start-validator";
 import { getCurrentEpoch } from "../src";
 import { getConfigAddress } from "../src/pdas";
 import { PythStakingClient } from "../src/pyth-staking-client";

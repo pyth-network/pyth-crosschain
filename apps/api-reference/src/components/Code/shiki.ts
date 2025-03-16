@@ -1,8 +1,5 @@
-import {
-  type HighlighterCore,
-  type DecorationItem,
-  getHighlighterCore as shikiGetHighlighterCore,
-} from "shiki/core";
+import type { HighlighterCore, DecorationItem } from "shiki/core";
+import { createHighlighterCore } from "shiki/core";
 import javascript from "shiki/langs/javascript.mjs";
 import json from "shiki/langs/json.mjs";
 import solidity from "shiki/langs/solidity.mjs";

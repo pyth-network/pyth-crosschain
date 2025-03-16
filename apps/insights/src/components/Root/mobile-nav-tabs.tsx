@@ -4,7 +4,8 @@ import { Link } from "@pythnetwork/component-library/unstyled/Link";
 import clsx from "clsx";
 import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useId, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useId, useMemo } from "react";
 
 import styles from "./mobile-nav-tabs.module.scss";
 

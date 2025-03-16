@@ -3,7 +3,8 @@
 import { PlusMinus } from "@phosphor-icons/react/dist/ssr/PlusMinus";
 import type { PriceData, PriceComponent } from "@pythnetwork/client";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { useNumberFormatter, useDateFormatter } from "react-aria";
 
 import styles from "./index.module.scss";

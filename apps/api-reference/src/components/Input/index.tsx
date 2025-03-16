@@ -1,12 +1,13 @@
+import type { InputProps } from "@headlessui/react";
 import {
   Field,
   Label,
   Description,
   Input as HeadlessUiInput,
-  type InputProps,
 } from "@headlessui/react";
 import clsx from "clsx";
-import { type Ref, type ReactNode, forwardRef } from "react";
+import type { Ref, ReactNode } from "react";
+import { forwardRef } from "react";
 
 import { ErrorTooltip } from "../ErrorTooltip";
 

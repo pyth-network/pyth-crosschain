@@ -10,14 +10,8 @@ import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { Table } from "@pythnetwork/component-library/Table";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import {
-  type ReactNode,
-  Suspense,
-  useState,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState, useRef, useCallback, useMemo } from "react";
 import {
   RouterProvider,
   useDateFormatter,

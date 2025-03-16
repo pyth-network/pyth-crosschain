@@ -1,5 +1,6 @@
 import type { PublicKey } from "@solana/web3.js";
-import { useMemo, type HTMLAttributes } from "react";
+import type { HTMLAttributes } from "react";
+import { useMemo } from "react";
 
 type Props = Omit<HTMLAttributes<HTMLElement>, "children"> & {
   children: PublicKey | `0x${string}`;

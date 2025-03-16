@@ -14,13 +14,8 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import type { PublicKey } from "@solana/web3.js";
 import clsx from "clsx";
 import { useSelectedLayoutSegment } from "next/navigation";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useCallback,
-  useMemo,
-  type ReactElement,
-} from "react";
+import type { ComponentProps, ReactNode, ReactElement } from "react";
+import { useCallback, useMemo } from "react";
 import {
   MenuTrigger,
   SubmenuTrigger,
@@ -30,11 +25,8 @@ import {
 } from "react-aria-components";
 
 import { VPN_BLOCKED_SEGMENT } from "../../config/isomorphic";
-import {
-  StateType as ApiStateType,
-  type States,
-  useApi,
-} from "../../hooks/use-api";
+import type { States } from "../../hooks/use-api";
+import { StateType as ApiStateType, useApi } from "../../hooks/use-api";
 import { StateType as DataStateType, useData } from "../../hooks/use-data";
 import { useLogger } from "../../hooks/use-logger";
 import { useNetwork } from "../../hooks/use-network";

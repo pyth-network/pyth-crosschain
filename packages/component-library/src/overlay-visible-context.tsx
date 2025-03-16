@@ -1,10 +1,5 @@
-import {
-  type Dispatch,
-  type SetStateAction,
-  createContext,
-  useCallback,
-  use,
-} from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { createContext, useCallback, use } from "react";
 
 export const OverlayVisibleContext = createContext<
   [boolean, Dispatch<SetStateAction<boolean>>] | undefined

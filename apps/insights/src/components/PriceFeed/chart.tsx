@@ -2,15 +2,11 @@
 
 import { useLogger } from "@pythnetwork/app-logger";
 import { useResizeObserver } from "@react-hookz/web";
-import {
-  type IChartApi,
-  type ISeriesApi,
-  type UTCTimestamp,
-  LineStyle,
-  createChart,
-} from "lightweight-charts";
+import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
+import { LineSeries, LineStyle, createChart } from "lightweight-charts";
 import { useTheme } from "next-themes";
-import { type RefObject, useEffect, useRef, useCallback } from "react";
+import type { RefObject } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 
 import theme from "./theme.module.scss";

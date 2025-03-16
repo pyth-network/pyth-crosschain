@@ -1,7 +1,8 @@
 "use client";
 
 import { parse } from "bcp-47";
-import { useMemo, type ComponentProps } from "react";
+import type { ComponentProps } from "react";
+import { useMemo } from "react";
 import { I18nProvider as I18nProviderBase, useIsSSR } from "react-aria";
 
 const SUPPORTED_LANGUAGES = new Set(["en"]);

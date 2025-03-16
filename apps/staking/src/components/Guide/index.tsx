@@ -1,12 +1,12 @@
-import Image, { type StaticImageData } from "next/image";
-import {
-  type ComponentProps,
-  type ComponentType,
-  type ReactNode,
-  type SVGAttributes,
-  useMemo,
-  useRef,
+import type { StaticImageData } from "next/image";
+import Image from "next/image";
+import type {
+  ComponentProps,
+  ComponentType,
+  ReactNode,
+  SVGAttributes,
 } from "react";
+import { useMemo, useRef } from "react";
 import {
   Tabs,
   TabList,

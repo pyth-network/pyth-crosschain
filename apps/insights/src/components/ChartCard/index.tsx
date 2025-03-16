@@ -3,15 +3,8 @@
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
-import {
-  type ElementType,
-  type ComponentProps,
-  type ReactNode,
-  Suspense,
-  useState,
-  useMemo,
-  useCallback,
-} from "react";
+import type { ElementType, ComponentProps, ReactNode } from "react";
+import { Suspense, useState, useMemo, useCallback } from "react";
 import { ResponsiveContainer, Tooltip, Line, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 

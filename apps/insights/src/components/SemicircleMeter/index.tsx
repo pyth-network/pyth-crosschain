@@ -3,7 +3,8 @@
 import { Meter } from "@pythnetwork/component-library/unstyled/Meter";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
-import { type ComponentProps, type CSSProperties, Suspense } from "react";
+import type { ComponentProps, CSSProperties } from "react";
+import { Suspense } from "react";
 import { PolarAngleAxis, RadialBar } from "recharts";
 
 import styles from "./index.module.scss";

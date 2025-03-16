@@ -3,7 +3,8 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useSelectedLayoutSegment } from "next/navigation";
-import { type ComponentProps, useMemo } from "react";
+import type { ComponentProps } from "react";
+import { useMemo } from "react";
 
 const baseClasses = "font-semibold text-sm py-2 px-3";
 

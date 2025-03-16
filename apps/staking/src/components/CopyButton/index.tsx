@@ -1,6 +1,7 @@
 import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import { type ComponentProps, useCallback, useEffect, useState } from "react";
+import type { ComponentProps } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "react-aria-components";
 
 import { useLogger } from "../../hooks/use-logger";

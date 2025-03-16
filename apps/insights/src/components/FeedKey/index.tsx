@@ -1,4 +1,5 @@
-import { useMemo, type ComponentProps } from "react";
+import type { ComponentProps } from "react";
+import { useMemo } from "react";
 
 import { toHex, truncateHex } from "../../hex";
 import { CopyButton } from "../CopyButton";

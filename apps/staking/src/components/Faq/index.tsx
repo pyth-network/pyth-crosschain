@@ -1,11 +1,7 @@
 import clsx from "clsx";
 import { LazyMotion, m, domAnimation } from "framer-motion";
-import {
-  type HTMLProps,
-  type ReactNode,
-  type ComponentProps,
-  useState,
-} from "react";
+import type { HTMLProps, ReactNode, ComponentProps } from "react";
+import { useState } from "react";
 import { Button } from "react-aria-components";
 
 type Props = Omit<HTMLProps<HTMLDivElement>, "title"> & {

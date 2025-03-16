@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode, type ComponentProps, createContext, use } from "react";
+import type { ReactNode, ComponentProps } from "react";
+import { createContext, use } from "react";
 
 import type { Cluster } from "../services/pyth";
 

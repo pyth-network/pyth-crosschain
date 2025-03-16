@@ -17,9 +17,8 @@ import {
 } from "@pythnetwork/component-library/unstyled/ListBox";
 import { useMediaQuery } from "@react-hookz/web";
 import { useRouter } from "next/navigation";
+import type { ReactNode, ComponentProps } from "react";
 import {
-  type ReactNode,
-  type ComponentProps,
   useState,
   useCallback,
   useEffect,

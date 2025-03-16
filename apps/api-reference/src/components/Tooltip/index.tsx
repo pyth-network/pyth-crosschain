@@ -1,7 +1,7 @@
 "use client";
 
+import type { Placement } from "@floating-ui/react";
 import {
-  type Placement,
   FloatingArrow,
   FloatingPortal,
   useFloating,
@@ -20,10 +20,8 @@ import {
   flip,
   shift,
 } from "@floating-ui/react";
+import type { ComponentProps, ElementType, Ref } from "react";
 import {
-  type ComponentProps,
-  type ElementType,
-  type Ref,
   useState,
   useMemo,
   createContext,

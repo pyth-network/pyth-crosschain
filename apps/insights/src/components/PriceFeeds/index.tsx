@@ -5,10 +5,8 @@ import { ClockCountdown } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
 import { Star } from "@phosphor-icons/react/dist/ssr/Star";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Button } from "@pythnetwork/component-library/Button";
-import {
-  type Props as CardProps,
-  Card,
-} from "@pythnetwork/component-library/Card";
+import type { Props as CardProps } from "@pythnetwork/component-library/Card";
+import { Card } from "@pythnetwork/component-library/Card";
 import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { TabList } from "@pythnetwork/component-library/TabList";

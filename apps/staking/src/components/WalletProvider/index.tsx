@@ -18,7 +18,8 @@ import {
   WalletConnectWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 import { useNetwork } from "../../hooks/use-network";
 import { metadata } from "../../metadata";

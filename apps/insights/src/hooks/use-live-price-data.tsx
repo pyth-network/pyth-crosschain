@@ -4,8 +4,8 @@ import { useLogger } from "@pythnetwork/app-logger";
 import type { PriceData } from "@pythnetwork/client";
 import { useMap } from "@react-hookz/web";
 import { PublicKey } from "@solana/web3.js";
+import type { ComponentProps } from "react";
 import {
-  type ComponentProps,
   use,
   createContext,
   useEffect,

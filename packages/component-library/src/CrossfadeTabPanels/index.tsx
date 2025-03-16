@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { use } from "react";
 import { TabListStateContext } from "react-aria-components";
 
 import { TabPanel as UnstyledTabPanel } from "../unstyled/Tabs/index.js";

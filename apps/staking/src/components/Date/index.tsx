@@ -1,5 +1,7 @@
-import { useMemo, type HTMLProps } from "react";
-import { useDateFormatter, type DateFormatterOptions } from "react-aria";
+import type { HTMLProps } from "react";
+import { useMemo } from "react";
+import type { DateFormatterOptions } from "react-aria";
+import { useDateFormatter } from "react-aria";
 
 type Props = Omit<HTMLProps<HTMLSpanElement>, "children"> & {
   children: Date;

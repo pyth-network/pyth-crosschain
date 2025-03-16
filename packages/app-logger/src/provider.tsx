@@ -1,7 +1,8 @@
 "use client";
 
 import { pino } from "pino";
-import { type ComponentProps, useMemo } from "react";
+import type { ComponentProps } from "react";
+import { useMemo } from "react";
 
 import { LoggerContext } from "./context.js";
 

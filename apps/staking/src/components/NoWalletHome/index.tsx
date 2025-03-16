@@ -1,17 +1,10 @@
 import { WalletIcon } from "@heroicons/react/24/outline";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import clsx from "clsx";
-import Image, { type StaticImageData } from "next/image";
-import {
-  type ReactNode,
-  type ComponentType,
-  type SVGProps,
-  type ComponentProps,
-  useCallback,
-  useState,
-  useRef,
-  useEffect,
-} from "react";
+import type { StaticImageData } from "next/image";
+import Image from "next/image";
+import type { ReactNode, ComponentType, SVGProps, ComponentProps } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
 
 import governance from "./governance.png";

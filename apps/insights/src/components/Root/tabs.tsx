@@ -6,9 +6,10 @@ import {
   Tabs,
 } from "@pythnetwork/component-library/unstyled/Tabs";
 import { useSelectedLayoutSegment, usePathname } from "next/navigation";
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 
-import { type VariantArg, LayoutTransition } from "../LayoutTransition";
+import type { VariantArg } from "../LayoutTransition";
+import { LayoutTransition } from "../LayoutTransition";
 
 export const TabRoot = (
   props: Omit<ComponentProps<typeof Tabs>, "selectedKey">,
