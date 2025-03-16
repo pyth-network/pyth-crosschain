@@ -17,19 +17,19 @@
     "test:types": "tsc"
   },
   "dependencies": {
-    "@radix-ui/react-select": "^2.1.2",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@radix-ui/react-switch": "^1.1.1",
-    "class-variance-authority": "^0.7.1",
+    "@radix-ui/react-select": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-switch": "catalog:",
+    "class-variance-authority": "catalog:",
     "clsx": "catalog:",
-    "highlight.js": "^11.10.0",
-    "lucide-react": "^0.465.0",
+    "highlight.js": "catalog:",
+    "lucide-react": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7",
-    "viem": "^2.21.53",
+    "tailwind-merge": "catalog:",
+    "tailwindcss-animate": "catalog:",
+    "viem": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

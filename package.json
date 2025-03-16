@@ -15,18 +15,16 @@
     "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
   },
   "devDependencies": {
-    "@cprussin/prettier-config": "^2.2.1",
-    "lerna": "^8.1.8",
+    "@cprussin/prettier-config": "catalog:",
+    "lerna": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
-    "turbo": "^2.2.3"
+    "turbo": "catalog:"
   },
   "pnpm": {
     "overrides": {
       "@injectivelabs/sdk-ts@1.10.72>@injectivelabs/token-metadata": "1.10.42",
-      "eslint-config-next>@typescript-eslint/parser": "^7.0.0",
-      "@solana/web3.js@^1.93.0": "1.92.3",
-      "eslint-config-turbo": "^2.2.3"
+      "@solana/web3.js@^1.93.0": "1.92.3"
     },
     "patchedDependencies": {
       "eccrypto@1.1.6": "patches/eccrypto@1.1.6.patch"

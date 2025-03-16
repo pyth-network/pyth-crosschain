@@ -54,7 +54,7 @@
     "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
-    "@pythnetwork/staking-sdk": "workspace:",
+    "@pythnetwork/staking-sdk": "workspace:*",
     "@svgr/webpack": "catalog:",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
