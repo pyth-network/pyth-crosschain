@@ -41,11 +41,6 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
                 <Button
                   size="xs"
                   variant="outline"
-                  // I'm not quite sure why this is triggering, I'll need to
-                  // figure this out later.  Something in Phosphor's types is
-                  // incorrect and is making eslint think this icon is an error
-                  // object somehow...
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                   beforeIcon={House}
                   hideText
                   href="/"

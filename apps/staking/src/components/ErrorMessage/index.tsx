@@ -49,9 +49,6 @@ const UnknownError = ({ error }: { error: unknown }) => {
         </div>
       </Button>
       <m.div
-        // @ts-expect-error the framer-motion types don't currently expose props
-        // like `className` correctly for some reason, even though this works
-        // correctly...
         className="overflow-hidden pt-1 opacity-60"
         initial={{ height: 0 }}
         animate={{ height: detailsOpen ? "auto" : 0 }}

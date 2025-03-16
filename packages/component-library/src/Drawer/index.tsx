@@ -124,7 +124,6 @@ export const Drawer = ({
           if (e.type !== "pointercancel" && velocity.y > 10) {
             state.close();
           } else {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             animate(y, "0", {
               type: "inertia",
               bounceStiffness: 300,

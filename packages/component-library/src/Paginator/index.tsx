@@ -107,10 +107,6 @@ const PaginatorToolbar = ({
     <Toolbar aria-label="Page" className={styles.paginatorToolbar ?? ""}>
       <PageSelector
         hideText
-        // I'm not quite sure why this is triggering, I'll need to figure this
-        // out later.  Something in Phosphor's types is incorrect and is making
-        // eslint think this icon is an error object somehow...
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         beforeIcon={CaretLeft}
         isDisabled={currentPage === 1}
         page={1}
@@ -136,10 +132,6 @@ const PaginatorToolbar = ({
       })}
       <PageSelector
         hideText
-        // I'm not quite sure why this is triggering, I'll need to figure this
-        // out later.  Something in Phosphor's types is incorrect and is making
-        // eslint think this icon is an error object somehow...
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         beforeIcon={CaretRight}
         isDisabled={currentPage === numPages}
         page={numPages}
