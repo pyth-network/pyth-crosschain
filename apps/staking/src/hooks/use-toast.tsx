@@ -1,16 +1,8 @@
 "use client";
 
-import {
-  type ToastState as BaseToastState,
-  useToastState,
-} from "@react-stately/toast";
-import {
-  type ComponentProps,
-  type ReactNode,
-  createContext,
-  useContext,
-  useCallback,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, useContext, useCallback, useMemo } from "react";
+import { UNSTABLE_ToastQueue as ToastQueue } from "react-aria-components";
 
 export enum ToastType {
   Success,
@@ -25,7 +17,8 @@ const Toast = {
 };
 export type Toast = ReturnType<(typeof Toast)[keyof typeof Toast]>;
 
-type ToastState = BaseToastState<Toast> & {
+type ToastState = {
+  queue: ToastQueue<Toast>;
   success: (message: ReactNode) => void;
   error: (error: unknown) => void;
 };
@@ -38,23 +31,24 @@ type ToastContextProps = Omit<
 >;
 
 export const ToastProvider = (props: ToastContextProps) => {
-  const toast = useToastState<Toast>({
-    maxVisibleToasts: 3,
-    hasExitAnimation: true,
-  });
+  const queue = useMemo(
+    () =>
+      new ToastQueue<Toast>({
+        maxVisibleToasts: 3,
+      }),
+    [],
+  );
 
   const success = useCallback(
-    (message: ReactNode) => toast.add(Toast.Success(message)),
-    [toast],
+    (message: ReactNode) => queue.add(Toast.Success(message)),
+    [queue],
   );
   const error = useCallback(
-    (error: unknown) => toast.add(Toast.ErrorToast(error)),
-    [toast],
+    (error: unknown) => queue.add(Toast.ErrorToast(error)),
+    [queue],
   );
 
-  return (
-    <ToastContext.Provider value={{ ...toast, success, error }} {...props} />
-  );
+  return <ToastContext.Provider value={{ queue, success, error }} {...props} />;
 };
 
 export const useToast = () => {
