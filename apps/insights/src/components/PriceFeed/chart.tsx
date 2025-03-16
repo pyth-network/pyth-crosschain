@@ -111,7 +111,7 @@ const useChartElem = (symbol: string, feedId: string) => {
         },
       });
 
-      const price = chart.addLineSeries({ priceFormat });
+      const price = chart.addSeries(LineSeries, { priceFormat });
 
       chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
         if (
@@ -129,8 +129,8 @@ const useChartElem = (symbol: string, feedId: string) => {
       chartRef.current = {
         resolution: Resolution.Tick,
         chart,
-        confidenceHigh: chart.addLineSeries(confidenceConfig),
-        confidenceLow: chart.addLineSeries(confidenceConfig),
+        confidenceHigh: chart.addSeries(LineSeries, confidenceConfig),
+        confidenceLow: chart.addSeries(LineSeries, confidenceConfig),
         price,
       };
       return () => {
