@@ -63,12 +63,12 @@ export const Guide = ({ title, description, steps, ...props }: Props) => {
               id={index.toString()}
               className="group flex cursor-pointer flex-row items-center gap-4 border border-neutral-600/50 px-6 py-4 transition focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 selected:cursor-default selected:border-pythpurple-600 selected:bg-pythpurple-600/20 md:flex-1 md:px-4 md:py-2 lg:border-b lg:border-x-transparent lg:border-t-transparent lg:bg-black/40 lg:px-4 lg:py-6 lg:selected:border-neutral-600/50 lg:selected:border-b-transparent lg:selected:bg-black/40 xl:px-10 2xl:px-20"
             >
-              <Icon className="size-10 flex-none opacity-50 transition group-selected:opacity-100" />
+              <Icon className="group-selected:opacity-100 size-10 flex-none opacity-50 transition" />
               <div className="flex flex-col justify-between">
                 <div className="text-sm tracking-[0.5rem] opacity-50 md:tracking-wide">
                   STEP {index + 1}
                 </div>
-                <div className="opacity-50 transition group-selected:opacity-100 xl:text-xl">
+                <div className="group-selected:opacity-100 opacity-50 transition xl:text-xl">
                   {title}
                 </div>
               </div>
