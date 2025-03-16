@@ -337,7 +337,7 @@ const getScoreHistory = async ([
   symbol,
   selectedPeriod,
 ]: [Cluster, string, string, EvaluationPeriod]) => {
-  const url = new URL("/component-score-history", window.location.origin);
+  const url = new URL("/component-score-history", globalThis.location.origin);
   url.searchParams.set("cluster", ClusterToName[cluster]);
   url.searchParams.set("publisherKey", publisherKey);
   url.searchParams.set("symbol", symbol);

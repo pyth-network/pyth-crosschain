@@ -44,7 +44,7 @@ const useChartElem = (symbol: string, feedId: string) => {
   const backfillData = useCallback(() => {
     if (!isBackfilling.current && earliestDateRef.current) {
       isBackfilling.current = true;
-      const url = new URL("/historical-prices", window.location.origin);
+      const url = new URL("/historical-prices", globalThis.location.origin);
       url.searchParams.set("symbol", symbol);
       url.searchParams.set("until", earliestDateRef.current.toString());
       fetch(url)

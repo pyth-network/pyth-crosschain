@@ -43,7 +43,7 @@ export const YesterdaysPricesProvider = ({
 const getYesterdaysPrices = async (
   feeds: YesterdaysPricesProviderProps["feeds"],
 ): Promise<Map<string, number>> => {
-  const url = new URL("/yesterdays-prices", window.location.origin);
+  const url = new URL("/yesterdays-prices", globalThis.location.origin);
   for (const symbol of Object.keys(feeds)) {
     url.searchParams.append("symbols", symbol);
   }

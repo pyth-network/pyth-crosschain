@@ -16,7 +16,7 @@ export const I18nProvider = (
     () =>
       isSSR
         ? DEFAULT_LOCALE
-        : (window.navigator.languages.find((locale) => {
+        : (globalThis.navigator.languages.find((locale) => {
             const language = parse(locale).language;
             return (
               language !== undefined &&
