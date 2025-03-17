@@ -429,39 +429,4 @@ abstract contract Pulse is IPulse, PulseState {
     function getExclusivityPeriod() external view override returns (uint256) {
         return _state.exclusivityPeriodSeconds;
     }
-
-    function getFirstActiveRequests(
-        uint256 count
-    )
-        external
-        view
-        override
-        returns (Request[] memory requests, uint256 actualCount)
-    {
-        requests = new Request[](count);
-        actualCount = 0;
-
-        // Start from the first unfulfilled sequence and work forwards
-        // uint64 currentSeq = _state.firstUnfulfilledSeq;
-        uint64 currentSeq = 0;
-
-        // Continue until we find enough active requests or reach current sequence
-        while (
-            actualCount < count && currentSeq < _state.currentSequenceNumber
-        ) {
-            Request memory req = findRequest(currentSeq);
-            if (isActive(req)) {
-                requests[actualCount] = req;
-                actualCount++;
-            }
-            currentSeq++;
-        }
-
-        // If we found fewer requests than asked for, resize the array
-        if (actualCount < count) {
-            assembly {
-                mstore(requests, actualCount)
-            }
-        }
-    }
 }

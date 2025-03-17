@@ -139,23 +139,4 @@ interface IPulse is PulseEvents {
     function setExclusivityPeriod(uint256 periodSeconds) external;
 
     function getExclusivityPeriod() external view returns (uint256);
-
-    /**
-     * @notice Gets the first N active requests
-     * @param count Maximum number of active requests to return
-     * @return requests Array of active requests, ordered from oldest to newest
-     * @return actualCount Number of active requests found (may be less than count)
-     * @dev Gas Usage: This function's gas cost scales linearly with the number of requests
-     *      between firstUnfulfilledSeq and currentSequenceNumber. Each iteration costs approximately:
-     *      - 2100 gas for cold storage reads, 100 gas for warm storage reads (SLOAD)
-     *      - Additional gas for array operations
-     *      The function starts from firstUnfulfilledSeq (all requests before this are fulfilled)
-     *      and scans forward until it finds enough active requests or reaches currentSequenceNumber.
-     */
-    function getFirstActiveRequests(
-        uint256 count
-    )
-        external
-        view
-        returns (PulseState.Request[] memory requests, uint256 actualCount);
 }

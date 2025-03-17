@@ -7,11 +7,17 @@ contract PulseState {
     bytes1 public constant NUM_REQUESTS_MASK = 0x1f;
 
     struct Request {
+        // Storage word 1
         address requester;
         uint64 sequenceNumber;
+        // 4 bytes unused
+        // Storage word 2
         address provider;
         uint64 publishTime;
+        // 4 bytes unused
+        // Storage word 3
         bytes32 priceIdsHash;
+        // Storage word 4
         uint128 callbackGasLimit;
         uint128 fee;
     }
@@ -26,13 +32,21 @@ contract PulseState {
     }
 
     struct State {
+        // Storage word 1
         uint128 pythFeeInWei;
         uint128 accruedFeesInWei;
+        // Storage word 2
         address pyth;
         uint64 currentSequenceNumber;
+        // 4 bytes unused
+        // Storage word 3
         address defaultProvider;
+        // 12 bytes unused
+        // Storage word 4
         uint256 exclusivityPeriodSeconds;
+        // Storage word 5
         address admin;
+        // 12 bytes unused
         Request[NUM_REQUESTS] requests;
         mapping(bytes32 => Request) requestsOverflow;
         mapping(address => ProviderInfo) providers;
