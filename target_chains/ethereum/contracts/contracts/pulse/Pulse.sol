@@ -70,9 +70,6 @@ abstract contract Pulse is IPulse, PulseState {
         //      Since tx.gasprice is used to calculate fees, allowing far-future requests would make
         //      the fee estimation unreliable.
         require(publishTime <= block.timestamp + 60, "Too far in future");
-        if (priceIds.length > MAX_PRICE_IDS) {
-            revert TooManyPriceIds(priceIds.length, MAX_PRICE_IDS);
-        }
         requestSequenceNumber = _state.currentSequenceNumber++;
 
         uint128 requiredFee = getFee(provider, callbackGasLimit, priceIds);
@@ -85,7 +82,7 @@ abstract contract Pulse is IPulse, PulseState {
         req.requester = msg.sender;
         req.provider = provider;
         req.fee = SafeCast.toUint128(msg.value - _state.pythFeeInWei);
-        req.priceIdsHash = keccak256(abi.encodePacked(priceIds));
+        req.priceIdsHash = keccak256(abi.encode(priceIds));
 
         _state.accruedFeesInWei += _state.pythFeeInWei;
 
@@ -112,10 +109,12 @@ abstract contract Pulse is IPulse, PulseState {
         }
 
         // Verify priceIds match
-        require(
-            req.priceIdsHash == keccak256(abi.encodePacked(priceIds)),
-            "Price IDs mismatch"
-        );
+        if (req.priceIdsHash != keccak256(abi.encode(priceIds))) {
+            revert InvalidPriceIds(
+                keccak256(abi.encode(priceIds)),
+                req.priceIdsHash
+            );
+        }
 
         // TODO: should this use parsePriceFeedUpdatesUnique? also, do we need to add 1 to maxPublishTime?
         IPyth pyth = IPyth(_state.pyth);
