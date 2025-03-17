@@ -1,6 +1,5 @@
-import { getSigningOsmosisClient, cosmwasm, estimateOsmoFee } from "osmojs";
-import { chains } from "chain-registry";
-import { Chain } from "@chain-registry/types";
+import { getSigningOsmosisClient, cosmwasm } from "osmojs";
+import { estimateOsmoFee } from "@osmonauts/utils";
 import { readFileSync } from "fs";
 import { DeliverTxResponse, calculateFee } from "@cosmjs/stargate";
 import { wasmTypes } from "@cosmjs/cosmwasm-stargate/build/modules/wasm/messages";
@@ -16,16 +15,10 @@ export type OsmosisHost = {
 };
 
 export class OsmosisDeployer implements Deployer {
-  private chain: Chain;
   constructor(
     private endpoint: string,
     private mnemonic: string,
-  ) {
-    const c = chains.find(({ chain_name }) => chain_name === "osmosis");
-    if (c === undefined)
-      throw new Error("Could not find Osmosis in chain registry");
-    this.chain = c;
-  }
+  ) {}
 
   private async getAccountAddress(): Promise<string> {
     const signer = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic);

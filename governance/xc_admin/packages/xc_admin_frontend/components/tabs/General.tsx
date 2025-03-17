@@ -201,6 +201,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
     uploadAnchor.setAttribute('type', 'file')
     uploadAnchor.setAttribute('accept', '.json')
     uploadAnchor.addEventListener('change', (e) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const file = (e.target as HTMLInputElement).files![0]
       const reader = new FileReader()
       reader.onload = (e) => {
