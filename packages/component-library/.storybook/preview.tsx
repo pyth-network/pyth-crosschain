@@ -15,15 +15,15 @@ const preview = {
         cellSize: 4,
         cellAmount: 4,
       },
-      options: [
-        { name: "Primary", value: "var(--primary-background)" },
-        { name: "Secondary", value: "var(--secondary-background)" },
-      ],
+      options: {
+        primary: { name: "Primary", value: "var(--primary-background)" },
+        secondary: { name: "Secondary", value: "var(--secondary-background)" },
+      },
     },
     actions: { argTypesRegex: "^on[A-Z].*" },
   },
   initialGlobals: {
-    backgrounds: { value: "Primary" },
+    backgrounds: { value: "primary" },
   },
 } satisfies Preview;
 
