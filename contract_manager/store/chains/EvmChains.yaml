@@ -804,7 +804,7 @@
   rpcUrl: https://testnet-rpc.eh-dev.app
   networkId: 16182
   type: EvmChain
-- id: fantom_sonic_devnet
+- id: sonic_blaze_testnet
   mainnet: false
   rpcUrl: https://rpc.blaze.soniclabs.com
   networkId: 57054

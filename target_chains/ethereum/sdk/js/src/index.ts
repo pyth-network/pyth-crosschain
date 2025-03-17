@@ -106,7 +106,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   eos_testnet: "0x0708325268dF9F66270F1401206434524814508b",
   eventum_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   evmos_testnet: "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
-  fantom_sonic_devnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  sonic_blaze_testnet: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   fantom_sonic_testnet: "0x96124d1F6E44FfDf1fb5D6d74BB2DE1B7Fbe7376",
   fantom_testnet: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
   filecoin_calibration: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",

@@ -124,7 +124,7 @@
 - chain: happy_bird_song_ends_with_tio
   address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
   type: EvmEntropyContract
-- chain: fantom_sonic_devnet
+- chain: sonic_blaze_testnet
   address: "0xEbe57e8045F2F230872523bbff7374986E45C486"
   type: EvmEntropyContract
 - chain: unichain_sepolia
