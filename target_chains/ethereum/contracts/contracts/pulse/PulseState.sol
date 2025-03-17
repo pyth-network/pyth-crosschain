@@ -7,17 +7,19 @@ contract PulseState {
     bytes1 public constant NUM_REQUESTS_MASK = 0x1f;
 
     struct Request {
-        // Storage word 1
+        // Storage slot 1 //
         address requester;
         uint64 sequenceNumber;
         // 4 bytes unused
-        // Storage word 2
+        // Storage slot 2 //
         address provider;
         uint64 publishTime;
         // 4 bytes unused
-        // Storage word 3
+        // Storage slot 3 //
+        // Hash of the array of price ids that should be provided to fulfill this request.
+        // The hash is order-sensitive.
         bytes32 priceIdsHash;
-        // Storage word 4
+        // Storage slot 4 //
         uint128 callbackGasLimit;
         uint128 fee;
     }
@@ -32,19 +34,19 @@ contract PulseState {
     }
 
     struct State {
-        // Storage word 1
+        // Storage slot 1 //
         uint128 pythFeeInWei;
         uint128 accruedFeesInWei;
-        // Storage word 2
+        // Storage slot 2 //
         address pyth;
         uint64 currentSequenceNumber;
         // 4 bytes unused
-        // Storage word 3
+        // Storage slot 3 //
         address defaultProvider;
         // 12 bytes unused
-        // Storage word 4
+        // Storage slot 4 //
         uint256 exclusivityPeriodSeconds;
-        // Storage word 5
+        // Storage slot 5 //
         address admin;
         // 12 bytes unused
         Request[NUM_REQUESTS] requests;
