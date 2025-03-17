@@ -140,18 +140,6 @@ abstract contract Pulse is IPulse, PulseState {
 
         clearRequest(sequenceNumber);
 
-        // TODO: I'm pretty sure this is going to use a lot of gas because it's doing a storage lookup for each sequence number.
-        // a better solution would be a doubly-linked list of active requests.
-        // After successful callback, update firstUnfulfilledSeq if needed
-        /*
-        while (
-            _state.firstUnfulfilledSeq < _state.currentSequenceNumber &&
-            !isActive(findRequest(_state.firstUnfulfilledSeq))
-        ) {
-            _state.firstUnfulfilledSeq++;
-        }
-        */
-
         try
             IPulseConsumer(req.requester)._pulseCallback{
                 gas: req.callbackGasLimit
