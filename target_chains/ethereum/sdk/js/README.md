@@ -1,6 +1,7 @@
 # Pyth EVM JS (DEPRECATED)
 
-> [!WARNING] > **DEPRECATION NOTICE:** This package is deprecated and no longer maintained. Please use [hermes-client](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js) instead.
+> [!WARNING] 
+> **DEPRECATION NOTICE:** This package is deprecated and no longer maintained. Please use [hermes-client](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js) instead.
 
 [Pyth](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency,
 equities, FX and commodities. This library allows you to use these real-time prices on EVM-based networks.
