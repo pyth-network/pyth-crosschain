@@ -33,7 +33,7 @@
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
     "commander": "^9.5.0",
-    "typescript": "^4.9.4"
+    "typescript": "catalog:"
   },
   "dev-dependencies": {
     "ts-node": "^10.9.2"

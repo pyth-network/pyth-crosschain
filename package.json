@@ -23,11 +23,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@injectivelabs/sdk-ts@1.10.72>@injectivelabs/token-metadata": "1.10.42",
-      "@solana/web3.js@^1.93.0": "1.92.3"
-    },
-    "patchedDependencies": {
-      "eccrypto@1.1.6": "patches/eccrypto@1.1.6.patch"
+      "@solana/web3.js@1.77.4>rpc-websockets": "7.11.0"
     }
   }
 }

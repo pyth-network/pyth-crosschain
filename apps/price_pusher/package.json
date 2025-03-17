@@ -71,6 +71,7 @@
     "@pythnetwork/pyth-ton-js": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
     "@solana/web3.js": "^1.93.0",
+    "@ton/core": "^0.59.0",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.1.0",
     "@types/pino": "^7.0.5",
