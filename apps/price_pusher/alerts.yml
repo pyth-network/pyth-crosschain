@@ -1,0 +1,47 @@
+groups:
+  - name: price_pusher_alerts
+    rules:
+      - alert: PriceFeedNotUpdated
+        expr: time() - pyth_price_last_published_time > 3600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Price feed not updated"
+          description: "Price feed {{ $labels.alias }} has not been updated for more than 1 hour"
+
+      - alert: HighErrorRate
+        expr: sum(increase(pyth_price_update_errors_total[15m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in price updates"
+          description: "There have been more than 5 errors in the last 15 minutes"
+
+      - alert: NoRecentPriceUpdates
+        expr: sum(increase(pyth_price_updates_total[30m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No recent price updates"
+          description: "No price updates have been pushed in the last 30 minutes"
+
+      - alert: PricePusherDown
+        expr: up{job=~"price_pusher.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Price pusher service is down"
+          description: "The price pusher service {{ $labels.instance }} is down"
+
+      - alert: HighUpdateDuration
+        expr: rate(pyth_price_update_duration_seconds_sum[5m]) / rate(pyth_price_update_duration_seconds_count[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High update duration"
+          description: "Price updates are taking longer than 5 seconds on average"

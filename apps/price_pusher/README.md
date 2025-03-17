@@ -259,3 +259,91 @@ pushed twice and you won't pay additional costs most of the time.** However, the
 conditions in the RPCs because they are often behind a load balancer which can sometimes cause rejected
 transactions to land on-chain. You can reduce the chances of additional cost overhead by reducing the
 pushing frequency.
+
+## Prometheus Metrics
+
+The price_pusher now supports Prometheus metrics to monitor the health and performance of the price update service. Metrics are exposed via an HTTP endpoint that can be scraped by Prometheus.
+
+### Available Metrics
+
+The following metrics are available:
+
+- **pyth_price_last_published_time**: The last published time of a price feed in unix timestamp
+- **pyth_price_updates_total**: Total number of price updates pushed to the chain
+- **pyth_price_update_duration_seconds**: Duration of price update operations in seconds
+- **pyth_active_price_feeds**: Number of active price feeds being monitored
+- **pyth_price_update_errors_total**: Total number of errors encountered during price updates
+- **pyth_price_update_attempts_total**: Total number of price update attempts
+
+### Configuration
+
+Metrics are enabled by default and can be configured using the following command-line options:
+
+- `--enable-metrics`: Enable or disable the Prometheus metrics server (default: true)
+- `--metrics-port`: Port for the Prometheus metrics server (default: 9090)
+
+Example:
+
+```bash
+node lib/index.js evm --config config.evm.mainnet.json --metrics-port 9091
+```
+
+### Running Locally with Docker
+
+You can run a local Prometheus instance to test the metrics:
+
+1. Create a `prometheus.yml` file:
+
+```yaml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "price_pusher"
+    static_configs:
+      - targets: ["localhost:9090"]
+```
+
+2. Run Prometheus with Docker:
+
+```bash
+docker run -d --name prometheus -p 9090:9090 \
+  -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus
+```
+
+3. Run Grafana with Docker:
+
+```bash
+docker run -d --name grafana -p 3000:3000 grafana/grafana
+```
+
+4. Access Grafana at http://localhost:3000 (default credentials: admin/admin) and add Prometheus as a data source (URL: http://host.docker.internal:9090).
+
+### Example Grafana Queries
+
+Here are some example Grafana queries to monitor your price feeds:
+
+1. Last published time for each price feed:
+
+```
+pyth_price_last_published_time
+```
+
+2. Number of price updates in the last hour:
+
+```
+sum(increase(pyth_price_updates_total[1h]))
+```
+
+3. Price feeds not updated in the last hour:
+
+```
+time() - pyth_price_last_published_time > 3600
+```
+
+4. Average update duration:
+
+```
+rate(pyth_price_update_duration_seconds_sum[5m]) / rate(pyth_price_update_duration_seconds_count[5m])
+```

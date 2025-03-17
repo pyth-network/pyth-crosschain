@@ -11,6 +11,7 @@ import pino from "pino";
 import { createClient } from "./super-wallet";
 import { createPythContract } from "./pyth-contract";
 import { isWsEndpoint, filterInvalidPriceItems } from "../utils";
+import { PricePusherMetrics } from "../metrics";
 
 export default {
   command: "evm",
@@ -83,6 +84,8 @@ export default {
     ...options.pushingFrequency,
     ...options.logLevel,
     ...options.controllerLogLevel,
+    ...options.enableMetrics,
+    ...options.metricsPort,
   },
   handler: async function (argv: any) {
     // FIXME: type checks for this
@@ -103,6 +106,8 @@ export default {
       updateFeeMultiplier,
       logLevel,
       controllerLogLevel,
+      enableMetrics,
+      metricsPort,
     } = argv;
     console.log("***** priceServiceEndpoint *****", priceServiceEndpoint);
 
@@ -130,6 +135,14 @@ export default {
     }
 
     priceItems = existingPriceItems;
+
+    // Initialize metrics if enabled
+    let metrics: PricePusherMetrics | undefined;
+    if (enableMetrics) {
+      metrics = new PricePusherMetrics(logger.child({ module: "Metrics" }));
+      metrics.start(metricsPort);
+      logger.info(`Metrics server started on port ${metricsPort}`);
+    }
 
     const pythListener = new PythPriceListener(
       hermesClient,
@@ -183,7 +196,10 @@ export default {
       evmListener,
       evmPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency },
+      {
+        pushingFrequency,
+        metrics,
+      }
     );
 
     controller.start();

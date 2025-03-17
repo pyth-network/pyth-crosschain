@@ -9,6 +9,7 @@ import near from "./near/command";
 import solana from "./solana/command";
 import fuel from "./fuel/command";
 import ton from "./ton/command";
+import { enableMetrics, metricsPort } from "./options";
 
 yargs(hideBin(process.argv))
   .parserConfiguration({
@@ -16,6 +17,8 @@ yargs(hideBin(process.argv))
   })
   .config("config")
   .global("config")
+  .option("enable-metrics", enableMetrics["enable-metrics"])
+  .option("metrics-port", metricsPort["metrics-port"])
   .command(evm)
   .command(fuel)
   .command(injective)

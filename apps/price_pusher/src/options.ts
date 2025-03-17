@@ -76,3 +76,21 @@ export const controllerLogLevel = {
     choices: ["trace", "debug", "info", "warn", "error"],
   } as Options,
 };
+
+export const enableMetrics = {
+  "enable-metrics": {
+    description: "Enable Prometheus metrics server",
+    type: "boolean",
+    required: false,
+    default: true,
+  } as Options,
+};
+
+export const metricsPort = {
+  "metrics-port": {
+    description: "Port for the Prometheus metrics server",
+    type: "number",
+    required: false,
+    default: 9090,
+  } as Options,
+};
