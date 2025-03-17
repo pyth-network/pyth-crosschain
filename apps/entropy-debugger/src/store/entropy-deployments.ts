@@ -9,7 +9,7 @@ export type EntropyDeployment = {
 };
 
 export const EntropyDeployments = {
-  "berachain-mainnet": {
+  berachain: {
     address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     network: "mainnet",
     explorer: "https://berascan.com/address/$ADDRESS",
@@ -369,7 +369,7 @@ export const EntropyDeployments = {
     rpc: "https://api.testnet.abs.xyz",
     nativeCurrency: "ETH",
   },
-  "sonic-fantom-testnet": {
+  "sonic-blaze-testnet": {
     address: "0xebe57e8045f2f230872523bbff7374986e45c486",
     explorer: "https://blaze.soniclabs.com/address/$ADDRESS",
     delay: "",
@@ -396,23 +396,23 @@ export const EntropyDeployments = {
     rpc: "https://rpc.soniclabs.com",
     nativeCurrency: "S",
   },
-  "monad-devnet": {
-    address: "0x36825bf3fbdf5a29e2d5148bfe7dcf7b5639e320",
-    explorer: "https://brightstar-884.devnet1.monad.xyz/address/$ADDRESS",
+  "story-testnet": {
+    address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    explorer: "https://aeneid.storyscan.xyz/address/$ADDRESS",
     delay: "",
     gasLimit: "500K",
     network: "testnet",
-    nativeCurrency: "MON",
-    rpc: "https://rpc.devnet1.monad.xyz",
+    rpc: "https://aeneid.storyrpc.io",
+    nativeCurrency: "IP",
   },
   "monad-testnet": {
-    address: "0x36825bf3fbdf5a29e2d5148bfe7dcf7b5639e320",
+    address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     explorer: "https://testnet.monadexplorer.com/address/$ADDRESS",
     delay: "",
     gasLimit: "500K",
     network: "testnet",
-    nativeCurrency: "MON",
     rpc: "https://testnet-rpc.monad.xyz",
+    nativeCurrency: "MON",
   },
   abstract: {
     address: "0x5a4a369F4db5df2054994AF031b7b23949b98c0e",
@@ -422,6 +422,24 @@ export const EntropyDeployments = {
     network: "mainnet",
     rpc: "https://api.mainnet.abs.xyz",
     nativeCurrency: "ETH",
+  },
+  story: {
+    address: "0xdF21D137Aadc95588205586636710ca2890538d5",
+    explorer: "https://storyscan.xyz/address/$ADDRESS",
+    delay: "",
+    gasLimit: "500K",
+    network: "mainnet",
+    rpc: "https://mainnet.storyrpc.io",
+    nativeCurrency: "IP",
+  },
+  "berachain-bepolia": {
+    address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    explorer: "https://bepolia.beratrail.io/address/$ADDRESS",
+    delay: "",
+    gasLimit: "500K",
+    network: "testnet",
+    rpc: "https://bepolia.rpc.berachain.com",
+    nativeCurrency: "BERA",
   },
 } as const satisfies Record<string, EntropyDeployment>;
 
