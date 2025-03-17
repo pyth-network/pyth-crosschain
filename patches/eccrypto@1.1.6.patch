@@ -1,0 +1,12 @@
+diff --git a/index.js b/index.js
+index a63218b73bb5cb1d566962fac9360689341fcae0..5f05762ce04ab0934973b02f04777a3bfa75d88f 100644
+--- a/index.js
++++ b/index.js
+@@ -21,6 +21,6 @@ try {
+     throw e;
+   } else {
+     console.info('secp256k1 unavailable, reverting to browser version');
+-    return (module.exports = require("./browser"));
++    module.exports = require("./browser");
+   }
+ }
