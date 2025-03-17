@@ -24,6 +24,9 @@
   "pnpm": {
     "overrides": {
       "@solana/web3.js@1.77.4>rpc-websockets": "7.11.0"
+    },
+    "patchedDependencies": {
+      "eccrypto@1.1.6": "patches/eccrypto@1.1.6.patch"
     }
   }
 }
