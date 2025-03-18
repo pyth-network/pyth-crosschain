@@ -225,7 +225,7 @@ export const RECEIVER_CHAINS = {
   happy_bird_song_ends_with_tio: 50108,
   hyperevm_testnet: 50109,
   eventum_testnet: 50110,
-  fantom_sonic_devnet: 50111,
+  sonic_blaze_testnet: 50111,
   movement_bardock_testnet: 50112,
   story_testnet: 50113,
   coredao_testnet_v2: 50114,
