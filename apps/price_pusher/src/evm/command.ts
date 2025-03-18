@@ -199,13 +199,15 @@ export default {
       {
         pushingFrequency,
         metrics,
-        walletBalanceInfo: metrics ? {
-          client,
-          address: client.account.address,
-          network: await client.getChainId().then(id => id.toString()),
-          updateInterval: pushingFrequency
-        } : undefined
-      }
+        walletBalanceInfo: metrics
+          ? {
+              client,
+              address: client.account.address,
+              network: await client.getChainId().then((id) => id.toString()),
+              updateInterval: pushingFrequency,
+            }
+          : undefined,
+      },
     );
 
     await controller.start();

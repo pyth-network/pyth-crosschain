@@ -96,11 +96,11 @@ export class PricePusherMetrics {
   public updateLastPublishedTime(
     priceId: string,
     alias: string,
-    priceInfo: PriceInfo
+    priceInfo: PriceInfo,
   ): void {
     this.lastPublishedTime.set(
       { price_id: priceId, alias },
-      priceInfo.publishTime
+      priceInfo.publishTime,
     );
   }
 
@@ -118,7 +118,7 @@ export class PricePusherMetrics {
   public recordPriceUpdateError(
     priceId: string,
     alias: string,
-    errorType: string
+    errorType: string,
   ): void {
     this.priceUpdateErrors.inc({
       price_id: priceId,
@@ -145,16 +145,17 @@ export class PricePusherMetrics {
   public updateWalletBalance(
     walletAddress: string,
     network: string,
-    balance: bigint | number
+    balance: bigint | number,
   ): void {
     // Convert to number for compatibility with prometheus
-    const balanceNum = typeof balance === 'bigint' ? Number(balance) / 1e18 : balance;
+    const balanceNum =
+      typeof balance === "bigint" ? Number(balance) / 1e18 : balance;
     this.walletBalance.set(
       { wallet_address: walletAddress, network },
-      balanceNum
+      balanceNum,
     );
     this.logger.debug(
-      `Updated wallet balance metric: ${walletAddress} = ${balanceNum}`
+      `Updated wallet balance metric: ${walletAddress} = ${balanceNum}`,
     );
   }
 }

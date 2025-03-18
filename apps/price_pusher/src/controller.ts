@@ -29,7 +29,7 @@ export class Controller {
       pushingFrequency: DurationInSeconds;
       metrics?: PricePusherMetrics;
       walletBalanceInfo?: WalletBalanceInfo;
-    }
+    },
   ) {
     this.pushingFrequency = config.pushingFrequency;
     this.metrics = config.metrics;
@@ -47,17 +47,16 @@ export class Controller {
 
     try {
       const { client, address, network } = this.walletBalanceInfo;
-      const balance = await client.getBalance({ address: address as `0x${string}` });
+      const balance = await client.getBalance({
+        address: address as `0x${string}`,
+      });
 
       this.metrics.updateWalletBalance(address, network, balance);
       this.logger.debug(
-        `Updated wallet balance: ${address} = ${balance.toString()}`
+        `Updated wallet balance: ${address} = ${balance.toString()}`,
       );
     } catch (error) {
-      this.logger.error(
-        { error },
-        "Error fetching wallet balance for metrics"
-      );
+      this.logger.error({ error }, "Error fetching wallet balance for metrics");
     }
   }
 
@@ -102,7 +101,7 @@ export class Controller {
           this.metrics.updateLastPublishedTime(
             priceId,
             alias,
-            targetLatestPrice
+            targetLatestPrice,
           );
         }
 
@@ -151,14 +150,14 @@ export class Controller {
                 config,
                 timer: this.metrics!.startPriceUpdateTimer(
                   config.id,
-                  config.alias
+                  config.alias,
                 ),
               }))
             : [];
 
           await this.targetChainPricePusher.updatePriceFeed(
             priceIds,
-            pubTimesToPush
+            pubTimesToPush,
           );
 
           // Record successful updates and end timers
@@ -171,7 +170,7 @@ export class Controller {
         } catch (error) {
           this.logger.error(
             { error, priceIds },
-            "Error pushing price updates to chain"
+            "Error pushing price updates to chain",
           );
 
           // Record errors in metrics
@@ -180,7 +179,7 @@ export class Controller {
               this.metrics.recordPriceUpdateError(
                 config.id,
                 config.alias,
-                error instanceof Error ? error.name : "unknown"
+                error instanceof Error ? error.name : "unknown",
               );
             }
           }
