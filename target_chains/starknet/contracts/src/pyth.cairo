@@ -46,6 +46,8 @@ mod pyth {
     use pyth::util::{ResultMapErrInto, write_i64};
     use core::nullable::{NullableTrait, match_nullable, FromNullableResult};
     use core::fmt::{Debug, Formatter};
+    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess, Map, StoragePathEntry};
+    use core::dict::Felt252Dict;
 
     #[event]
     #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
@@ -124,11 +126,11 @@ mod pyth {
         fee_token_address2: ContractAddress,
         single_update_fee1: u256,
         single_update_fee2: u256,
-        data_sources: LegacyMap<usize, DataSource>,
+        data_sources: Map<usize, DataSource>,
         num_data_sources: usize,
         // For fast validation.
-        is_valid_data_source: LegacyMap<DataSource, bool>,
-        latest_price_info: LegacyMap<u256, PriceInfo>,
+        is_valid_data_source: Map<DataSource, bool>,
+        latest_price_info: Map<u256, PriceInfo>,
         governance_data_source: DataSource,
         last_executed_governance_sequence: u64,
         // Governance data source index is used to prevent replay attacks,
@@ -197,7 +199,7 @@ mod pyth {
         fn get_price_unsafe(
             self: @ContractState, price_id: u256
         ) -> Result<Price, GetPriceUnsafeError> {
-            let info = self.latest_price_info.read(price_id);
+            let info = self.latest_price_info.entry(price_id).read();
             if info.publish_time == 0 {
                 return Result::Err(GetPriceUnsafeError::PriceFeedNotFound);
             }
@@ -223,7 +225,7 @@ mod pyth {
         fn get_ema_price_unsafe(
             self: @ContractState, price_id: u256
         ) -> Result<Price, GetPriceUnsafeError> {
-            let info = self.latest_price_info.read(price_id);
+            let info = self.latest_price_info.entry(price_id).read();
             if info.publish_time == 0 {
                 return Result::Err(GetPriceUnsafeError::PriceFeedNotFound);
             }
@@ -249,7 +251,7 @@ mod pyth {
         fn query_price_feed_unsafe(
             self: @ContractState, price_id: u256
         ) -> Result<PriceFeed, GetPriceUnsafeError> {
-            let info = self.latest_price_info.read(price_id);
+            let info = self.latest_price_info.entry(price_id).read();
             if info.publish_time == 0 {
                 return Result::Err(GetPriceUnsafeError::PriceFeedNotFound);
             }
@@ -272,12 +274,12 @@ mod pyth {
         }
 
         fn price_feed_exists(self: @ContractState, price_id: u256) -> bool {
-            let info = self.latest_price_info.read(price_id);
+            let info = self.latest_price_info.entry(price_id).read();
             info.publish_time != 0
         }
 
         fn latest_price_info_publish_time(self: @ContractState, price_id: u256) -> u64 {
-            let info = self.latest_price_info.read(price_id);
+            let info = self.latest_price_info.entry(price_id).read();
             info.publish_time
         }
 
@@ -311,7 +313,7 @@ mod pyth {
             let mut found = false;
             while i < required_publish_times.len() {
                 let item = required_publish_times.at(i);
-                let latest_time = self.latest_price_info.read(*item.price_id).publish_time;
+                let latest_time = self.latest_price_info.entry(*item.price_id).read().publish_time;
                 if latest_time < *item.publish_time {
                     self.update_price_feeds(update);
                     found = true;
@@ -373,14 +375,14 @@ mod pyth {
             let mut i = 0;
             let mut output = array![];
             while i < count {
-                output.append(self.data_sources.read(i));
+                output.append(self.data_sources.entry(i).read());
                 i += 1;
             };
             output
         }
 
         fn is_valid_data_source(self: @ContractState, source: DataSource) -> bool {
-            self.is_valid_data_source.read(source)
+            self.is_valid_data_source.entry(source).read()
         }
 
         fn governance_data_source(self: @ContractState) -> DataSource {
@@ -472,10 +474,10 @@ mod pyth {
             let mut i = 0;
             let mut old_data_sources = array![];
             while i < num_old {
-                let old_source = self.data_sources.read(i);
+                let old_source = self.data_sources.entry(i).read();
                 old_data_sources.append(old_source);
-                self.is_valid_data_source.write(old_source, false);
-                self.data_sources.write(i, Default::default());
+                self.is_valid_data_source.entry(old_source).write(false);
+                self.data_sources.entry(i).write(Default::default());
                 i += 1;
             };
 
@@ -483,15 +485,15 @@ mod pyth {
             i = 0;
             while i < data_sources.len() {
                 let source = data_sources.at(i);
-                self.is_valid_data_source.write(*source, true);
-                self.data_sources.write(i, *source);
+                self.is_valid_data_source.entry(*source).write(true);
+                self.data_sources.entry(i).write(*source);
                 i += 1;
             };
             old_data_sources
         }
 
         fn update_latest_price_if_necessary(ref self: ContractState, message: @PriceFeedMessage) {
-            let latest_publish_time = self.latest_price_info.read(*message.price_id).publish_time;
+            let latest_publish_time = self.latest_price_info.entry(*message.price_id).read().publish_time;
             if *message.publish_time > latest_publish_time {
                 let info = PriceInfo {
                     price: *message.price,
@@ -501,7 +503,7 @@ mod pyth {
                     ema_price: *message.ema_price,
                     ema_conf: *message.ema_conf,
                 };
-                self.latest_price_info.write(*message.price_id, info);
+                self.latest_price_info.entry(*message.price_id).write(info);
 
                 let event = PriceFeedUpdated {
                     price_id: *message.price_id,
@@ -639,7 +641,7 @@ mod pyth {
             let wormhole = IWormholeDispatcher { contract_address: self.wormhole_address.read() };
             let vm = wormhole.parse_and_verify_vm(wormhole_proof);
 
-            if !self.is_valid_data_source.read(vm.data_source()) {
+            if !self.is_valid_data_source.entry(vm.data_source()).read() {
                 panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateDataSource.into());
             }
 

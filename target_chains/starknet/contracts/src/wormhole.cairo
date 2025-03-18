@@ -30,6 +30,7 @@ mod wormhole {
     use core::starknet::eth_signature::is_eth_signature_valid;
     use core::panic_with_felt252;
     use pyth::util::{UNEXPECTED_OVERFLOW};
+    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess, Map, StoragePathEntry};
 
     /// Events emitted by the contract.
     #[event]
@@ -68,12 +69,12 @@ mod wormhole {
         current_guardian_set_index: u32,
         /// For every executed governance actions, contains an entry with
         /// key = hash of the message and value = true.
-        consumed_governance_actions: LegacyMap<u256, bool>,
+        consumed_governance_actions: Map<u256, bool>,
         /// All known guardian sets.
-        guardian_sets: LegacyMap<u32, GuardianSet>,
+        guardian_sets: Map<u32, GuardianSet>,
         /// Public keys of guardians in all known guardian sets.
         /// Key = (guardian_set_index, guardian_index).
-        guardian_keys: LegacyMap<(u32, u8), EthAddress>,
+        guardian_keys: Map<(u32, u8), EthAddress>,
     }
 
     /// Initializes the contract.
@@ -100,7 +101,7 @@ mod wormhole {
     impl WormholeImpl of IWormhole<ContractState> {
         fn parse_and_verify_vm(self: @ContractState, encoded_vm: ByteBuffer) -> VerifiedVM {
             let vm = parse_vm(encoded_vm);
-            let guardian_set = self.guardian_sets.read(vm.guardian_set_index);
+            let guardian_set = self.guardian_sets.entry(vm.guardian_set_index).read();
             if guardian_set.num_guardians == 0 {
                 panic_with_felt252(ParseAndVerifyVmError::InvalidGuardianSetIndex.into());
             }
@@ -136,7 +137,8 @@ mod wormhole {
 
                 let guardian_key = self
                     .guardian_keys
-                    .read((vm.guardian_set_index, signature.guardian_index))
+                    .entry((vm.guardian_set_index, signature.guardian_index))
+                    .read()
                     .try_into()
                     .expect(UNEXPECTED_OVERFLOW);
 
@@ -148,13 +150,13 @@ mod wormhole {
 
         fn get_guardian_set(self: @ContractState, index: u32) -> super::GuardianSet {
             let mut keys = array![];
-            let set = self.guardian_sets.read(index);
+            let set = self.guardian_sets.entry(index).read();
             if set.num_guardians == 0 {
                 panic_with_felt252(GetGuardianSetError::InvalidIndex.into());
             }
             let mut i: u8 = 0;
             while i.into() < set.num_guardians {
-                keys.append(self.guardian_keys.read((index, i)));
+                keys.append(self.guardian_keys.entry((index, i)).read());
                 i += 1;
             };
             super::GuardianSet {
@@ -170,7 +172,7 @@ mod wormhole {
             self.current_guardian_set_index.read()
         }
         fn governance_action_is_consumed(self: @ContractState, hash: u256) -> bool {
-            self.consumed_governance_actions.read(hash)
+            self.consumed_governance_actions.entry(hash).read()
         }
         fn chain_id(self: @ContractState) -> u16 {
             self.chain_id.read()
@@ -201,7 +203,7 @@ mod wormhole {
             self.store_guardian_set(new_set.set_index, @new_set.keys);
             self.expire_guardian_set(current_set_index, get_block_timestamp());
 
-            self.consumed_governance_actions.write(vm.hash, true);
+            self.consumed_governance_actions.entry(vm.hash).write(true);
 
             let event = GuardianSetAdded { index: new_set.set_index };
             self.emit(event);
@@ -231,14 +233,15 @@ mod wormhole {
             };
 
             let set = GuardianSet { num_guardians: guardians.len(), expiration_time: 0 };
-            self.guardian_sets.write(set_index, set);
+            self.guardian_sets.entry(set_index).write(set);
             i = 0;
             while i < guardians.len() {
                 let key = *guardians.at(i);
                 // i < 256
                 self
                     .guardian_keys
-                    .write((set_index, i.try_into().expect(UNEXPECTED_OVERFLOW)), key.into());
+                    .entry((set_index, i.try_into().expect(UNEXPECTED_OVERFLOW)))
+                    .write(key.into());
                 i += 1;
             };
             self.current_guardian_set_index.write(set_index);
@@ -246,9 +249,9 @@ mod wormhole {
 
         /// Marks the specified guardian set to expire in 24 hours.
         fn expire_guardian_set(ref self: ContractState, set_index: u32, now: u64) {
-            let mut set = self.guardian_sets.read(set_index);
+            let mut set = self.guardian_sets.entry(set_index).read();
             set.expiration_time = now + 86400;
-            self.guardian_sets.write(set_index, set);
+            self.guardian_sets.entry(set_index).write(set);
         }
 
         /// Checks required properties of the governance instruction.
@@ -263,7 +266,7 @@ mod wormhole {
             if self.governance_contract.read() != *vm.emitter_address {
                 panic_with_felt252(GovernanceError::WrongContract.into());
             }
-            if self.consumed_governance_actions.read(*vm.hash) {
+            if self.consumed_governance_actions.entry(*vm.hash).read() {
                 panic_with_felt252(GovernanceError::ActionAlreadyConsumed.into());
             }
         }
