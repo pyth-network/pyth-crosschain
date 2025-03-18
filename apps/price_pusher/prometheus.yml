@@ -11,29 +11,6 @@ scrape_configs:
         target_label: instance
         replacement: "price_pusher"
 
-  # Add more price_pusher instances for different chains
-  # - job_name: 'price_pusher_ethereum'
-  #   static_configs:
-  #     - targets: ['localhost:9091']
-  #   relabel_configs:
-  #     - source_labels: [__address__]
-  #       target_label: instance
-  #       replacement: 'ethereum'
-  #     - source_labels: [__address__]
-  #       target_label: chain
-  #       replacement: 'ethereum'
-
-  # - job_name: 'price_pusher_solana'
-  #   static_configs:
-  #     - targets: ['localhost:9092']
-  #   relabel_configs:
-  #     - source_labels: [__address__]
-  #       target_label: instance
-  #       replacement: 'solana'
-  #     - source_labels: [__address__]
-  #       target_label: chain
-  #       replacement: 'solana'
-
 alerting:
   alertmanagers:
     - static_configs:
@@ -43,24 +20,3 @@ alerting:
 # Alert rules
 rule_files:
   - "alerts.yml"
-# Sample alerts.yml content:
-# groups:
-# - name: price_pusher_alerts
-#   rules:
-#   - alert: PriceFeedNotUpdated
-#     expr: time() - pyth_price_last_published_time > 3600
-#     for: 5m
-#     labels:
-#       severity: warning
-#     annotations:
-#       summary: "Price feed not updated"
-#       description: "Price feed {{ $labels.alias }} has not been updated for more than 1 hour"
-#
-#   - alert: HighErrorRate
-#     expr: sum(increase(pyth_price_update_errors_total[15m])) > 5
-#     for: 5m
-#     labels:
-#       severity: warning
-#     annotations:
-#       summary: "High error rate in price updates"
-#       description: "There have been more than 5 errors in the last 15 minutes"
