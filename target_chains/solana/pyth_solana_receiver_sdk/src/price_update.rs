@@ -2,7 +2,7 @@ pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage};
 use {
     crate::{check, error::GetPriceError},
     anchor_lang::prelude::{borsh::BorshSchema, *},
-    solana_program::pubkey::Pubkey,
+    anchor_lang::solana_program::pubkey::Pubkey,
 };
 
 /// Pyth price updates are bridged to all blockchains via Wormhole.
@@ -323,9 +323,9 @@ pub mod tests {
             error::GetPriceError,
             price_update::{Price, PriceUpdateV2, TwapPrice, TwapUpdate, VerificationLevel},
         },
+        anchor_lang::solana_program::{borsh0_10, clock::Clock, pubkey::Pubkey},
         anchor_lang::Discriminator,
         pythnet_sdk::messages::PriceFeedMessage,
-        solana_program::{borsh0_10, clock::Clock, pubkey::Pubkey},
     };
 
     #[test]
