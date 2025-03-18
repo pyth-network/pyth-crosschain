@@ -6,6 +6,7 @@ import wooColor from "./icons/color/woo.svg";
 import ltpDark from "./icons/dark/ltp.svg";
 import ltpLight from "./icons/light/ltp.svg";
 import alenoMonochrome from "./icons/monochrome/aleno.svg";
+import alphanonce from "./icons/monochrome/alphanonce.svg";
 import blocksize from "./icons/monochrome/blocksize.svg";
 import elfomo from "./icons/monochrome/elfomo.svg";
 import finazonMonochrome from "./icons/monochrome/finazon.svg";
@@ -75,6 +76,12 @@ export const knownPublishers = {
     icon: {
       color: alenoColor,
       monochrome: alenoMonochrome,
+    },
+  },
+  "2mTD1b3ZG3YL86DgnPm4hwEQQZPej8D6Vb4pRso1RFJi": {
+    name: "Alphanonce",
+    icon: {
+      monochrome: alphanonce,
     },
   },
 } as const;
