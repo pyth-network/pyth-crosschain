@@ -13,9 +13,11 @@ export class PricePusherMetrics {
   public lastPublishedTime: Gauge<string>;
   public priceUpdatesTotal: Counter<string>;
   public priceUpdateDuration: Histogram<string>;
-  public activePriceFeeds: Gauge<string>;
+  public priceFeedsTotal: Gauge<string>;
   public priceUpdateErrors: Counter<string>;
   public priceUpdateAttempts: Counter<string>;
+  // Wallet metrics
+  public walletBalance: Gauge<string>;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -48,9 +50,9 @@ export class PricePusherMetrics {
       registers: [this.registry],
     });
 
-    this.activePriceFeeds = new Gauge({
-      name: "pyth_active_price_feeds",
-      help: "Number of active price feeds being monitored",
+    this.priceFeedsTotal = new Gauge({
+      name: "pyth_price_feeds_total",
+      help: "Total number of price feeds being monitored",
       registers: [this.registry],
     });
 
@@ -65,6 +67,14 @@ export class PricePusherMetrics {
       name: "pyth_price_update_attempts_total",
       help: "Total number of price update attempts",
       labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
+    // Wallet balance metric
+    this.walletBalance = new Gauge({
+      name: "pyth_wallet_balance",
+      help: "Current wallet balance of the price pusher in native token units",
+      labelNames: ["wallet_address", "network"],
       registers: [this.registry],
     });
 
@@ -117,9 +127,9 @@ export class PricePusherMetrics {
     });
   }
 
-  // Set the number of active price feeds
-  public setActivePriceFeeds(count: number): void {
-    this.activePriceFeeds.set(count);
+  // Set the number of price feeds
+  public setPriceFeedsTotal(count: number): void {
+    this.priceFeedsTotal.set(count);
   }
 
   // Create a timer for measuring price update duration
@@ -129,5 +139,22 @@ export class PricePusherMetrics {
       alias,
     });
     return end;
+  }
+
+  // Update wallet balance
+  public updateWalletBalance(
+    walletAddress: string,
+    network: string,
+    balance: bigint | number
+  ): void {
+    // Convert to number for compatibility with prometheus
+    const balanceNum = typeof balance === 'bigint' ? Number(balance) / 1e18 : balance;
+    this.walletBalance.set(
+      { wallet_address: walletAddress, network },
+      balanceNum
+    );
+    this.logger.debug(
+      `Updated wallet balance metric: ${walletAddress} = ${balanceNum}`
+    );
   }
 }

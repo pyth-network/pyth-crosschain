@@ -45,3 +45,21 @@ groups:
         annotations:
           summary: "High update duration"
           description: "Price updates are taking longer than 5 seconds on average"
+
+      - alert: WalletBalanceLow
+        expr: pyth_wallet_balance < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Wallet balance is getting low"
+          description: "Wallet {{ $labels.wallet_address }} on network {{ $labels.network }} has balance below 0.1 native tokens"
+
+      - alert: WalletBalanceCritical
+        expr: pyth_wallet_balance < 0.01
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Wallet balance critically low"
+          description: "Wallet {{ $labels.wallet_address }} on network {{ $labels.network }} has balance below 0.01 native tokens. Transactions may fail soon!"
