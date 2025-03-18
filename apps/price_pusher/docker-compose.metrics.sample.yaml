@@ -33,42 +33,6 @@ services:
     networks:
       - monitoring
 
-  # Example price_pusher service for Ethereum
-  # price_pusher_ethereum:
-  #   image: your-price-pusher-image:latest
-  #   container_name: price_pusher_ethereum
-  #   volumes:
-  #     - ./config.evm.mainnet.json:/app/config.json
-  #     - ./mnemonic:/app/mnemonic
-  #   command: >
-  #     node lib/index.js evm
-  #     --config /app/config.json
-  #     --mnemonic-file /app/mnemonic
-  #     --metrics-port 9091
-  #   ports:
-  #     - "9091:9091"
-  #   networks:
-  #     - monitoring
-  #   restart: unless-stopped
-
-  # Example price_pusher service for Solana
-  # price_pusher_solana:
-  #   image: your-price-pusher-image:latest
-  #   container_name: price_pusher_solana
-  #   volumes:
-  #     - ./config.solana.mainnet.json:/app/config.json
-  #     - ./mnemonic:/app/mnemonic
-  #   command: >
-  #     node lib/index.js solana
-  #     --config /app/config.json
-  #     --mnemonic-file /app/mnemonic
-  #     --metrics-port 9092
-  #   ports:
-  #     - "9092:9092"
-  #   networks:
-  #     - monitoring
-  #   restart: unless-stopped
-
 networks:
   monitoring:
     driver: bridge
