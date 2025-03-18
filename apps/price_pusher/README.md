@@ -271,9 +271,10 @@ The following metrics are available:
 - **pyth_price_last_published_time**: The last published time of a price feed in unix timestamp
 - **pyth_price_updates_total**: Total number of price updates pushed to the chain
 - **pyth_price_update_duration_seconds**: Duration of price update operations in seconds
-- **pyth_active_price_feeds**: Number of active price feeds being monitored
+- **pyth_price_feeds_total**: Total number of price feeds being monitored
 - **pyth_price_update_errors_total**: Total number of errors encountered during price updates
 - **pyth_price_update_attempts_total**: Total number of price update attempts
+- **pyth_wallet_balance**: Current wallet balance of the price pusher in native token units
 
 ### Configuration
 
@@ -290,7 +291,21 @@ node lib/index.js evm --config config.evm.mainnet.json --metrics-port 9091
 
 ### Running Locally with Docker
 
-You can run a local Prometheus instance to test the metrics:
+You can run the monitoring stack (Prometheus and Grafana) using the provided docker-compose configuration:
+
+1. Use the sample docker-compose file for metrics:
+
+```bash
+docker-compose -f docker-compose.metrics.sample.yaml up
+```
+
+This will start:
+- Prometheus server on port 9090 with the alerts configured in alerts.yml
+- Grafana server on port 3000 with default credentials (admin/admin)
+
+The docker-compose.metrics.sample.yaml file also includes commented examples of price_pusher services for different blockchains that you can uncomment and customize for your specific needs.
+
+Alternatively, if you prefer to set up the monitoring stack manually:
 
 1. Create a `prometheus.yml` file:
 
@@ -309,6 +324,7 @@ scrape_configs:
 ```bash
 docker run -d --name prometheus -p 9090:9090 \
   -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+  -v $(pwd)/alerts.yml:/etc/prometheus/alerts.yml \
   prom/prometheus
 ```
 
@@ -347,3 +363,30 @@ time() - pyth_price_last_published_time > 3600
 ```
 rate(pyth_price_update_duration_seconds_sum[5m]) / rate(pyth_price_update_duration_seconds_count[5m])
 ```
+
+5. Monitor wallet balances:
+
+```
+pyth_wallet_balance
+```
+
+6. Detect low wallet balances (below 0.1 tokens):
+
+```
+pyth_wallet_balance < 0.1
+```
+
+### Alerting
+
+The price pusher includes pre-configured Prometheus alerting rules in the `alerts.yml` file. These rules monitor various aspects of the price pusher's operation, including:
+
+- Price feeds not being updated for an extended period (>1 hour)
+- High error rates in price updates
+- No recent price updates across all feeds
+- Service availability
+- High update durations
+- Low wallet balances with two severity levels:
+  - Warning: Balance below 0.1 native tokens
+  - Critical: Balance below 0.01 native tokens (transactions may fail soon)
+
+When using the docker-compose setup, these alerts are automatically loaded into Prometheus and can be viewed in the Alerting section of Grafana after setting up the Prometheus data source.
