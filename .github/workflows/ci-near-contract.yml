@@ -38,7 +38,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "target_chains/near/receiver -> target"
-      - run: sudo apt-get install -y libudev-dev
+      - run: sudo apt-get update && sudo apt-get install -y libudev-dev
       - run: cargo +stable install --locked cargo-near@0.13.3
       - run: cargo near build reproducible-wasm
       - name: Upload artifact
