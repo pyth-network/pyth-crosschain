@@ -1,10 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "turbo --filter @pythnetwork/component-library build:storybook",
-  "ignoreCommand": "pnpm dlx turbo-ignore --fallback=HEAD^",
+  "ignoreCommand": "../../vercel-ignore.sh",
   "framework": null,
-  "outputDirectory": "storybook-static",
-  "env": {
-    "ENABLE_EXPERIMENTAL_COREPACK": "1"
-  }
+  "outputDirectory": "storybook-static"
 }
