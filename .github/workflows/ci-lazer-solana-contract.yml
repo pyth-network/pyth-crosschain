@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - lazer/**
+      - .github/workflows/ci-lazer-solana-contract.yml
 
 jobs:
   lazer-solana-contract-test:
@@ -28,7 +29,7 @@ jobs:
       # install will fail if this isn't in the build environment and if a
       # precompiled binary isn't found.
       - name: Install libusb
-        run: sudo apt install -y libusb-1.0-0-dev libudev-dev
+        run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev libudev-dev
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
