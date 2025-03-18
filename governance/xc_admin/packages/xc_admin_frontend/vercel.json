@@ -1,7 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "pnpm dlx turbo-ignore --fallback=HEAD^",
-  "env": {
-    "ENABLE_EXPERIMENTAL_COREPACK": "1"
-  }
+  "ignoreCommand": "../../../../vercel-ignore.sh"
 }
