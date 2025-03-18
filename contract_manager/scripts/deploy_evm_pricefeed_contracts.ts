@@ -16,6 +16,7 @@ import {
   getOrDeployWormholeContract,
   BaseDeployConfig,
 } from "./common";
+import { HermesClient } from "@pythnetwork/hermes-client";
 
 interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;
@@ -44,6 +45,21 @@ const parser = yargs(hideBin(process.argv))
       demandOption: false,
       default: 1,
       desc: "Single update fee in wei for the price feed",
+    },
+    "single-update-fee-in-usd": {
+      type: "number",
+      demandOption: false,
+      desc: "Single update fee in USD for the price feed. (This overrides the single-update-fee-in-wei option) ",
+    },
+    "native-token-price-feed-id": {
+      type: "string",
+      demandOption: false,
+      desc: "Pyth Price Feed ID to fetch the current price of the native token (This will be used to calculate the single-update-fee-in-usd)",
+    },
+    "native-token-decimals": {
+      type: "number",
+      demandOption: false,
+      desc: "Number of decimals of the native token",
     },
   });
 
@@ -92,11 +108,46 @@ async function deployPriceFeedContracts(
 
 async function main() {
   const argv = await parser.argv;
+  let singleUpdateFeeInWei = argv.singleUpdateFeeInWei;
+
+  const singleUpdateFeeInUsd = argv["single-update-fee-in-usd"];
+  const nativeTokenPriceFeedId = argv["native-token-price-feed-id"];
+  const nativeTokenDecimals = argv["native-token-decimals"];
+  if (
+    singleUpdateFeeInUsd &&
+    (nativeTokenPriceFeedId == null || nativeTokenDecimals == null)
+  ) {
+    throw new Error(
+      "native-token-price-feed-id and native-token-decimals are required when single-update-fee-in-usd is provided",
+    );
+  }
+
+  if (nativeTokenPriceFeedId && singleUpdateFeeInUsd && nativeTokenDecimals) {
+    const hermesClient = new HermesClient("https://hermes.pyth.network");
+    const priceObject = await hermesClient.getLatestPriceUpdates(
+      [nativeTokenPriceFeedId],
+      {
+        parsed: true,
+      },
+    );
+
+    const price = priceObject.parsed?.[0].price;
+    if (price == null) {
+      throw new Error("Failed to get price of the native token");
+    }
+    const priceInUsd = Number(price.price);
+    const exponent = price.expo;
+    singleUpdateFeeInWei = Math.round(
+      Math.pow(10, nativeTokenDecimals) *
+        (singleUpdateFeeInUsd / (priceInUsd * Math.pow(10, exponent))),
+    );
+    console.log(`Single update fee in wei: ${singleUpdateFeeInWei}`);
+  }
 
   const deploymentConfig: DeploymentConfig = {
     type: toDeploymentType(argv.deploymentType),
     validTimePeriodSeconds: argv.validTimePeriodSeconds,
-    singleUpdateFeeInWei: argv.singleUpdateFeeInWei,
+    singleUpdateFeeInWei: singleUpdateFeeInWei,
     gasMultiplier: argv.gasMultiplier,
     gasPriceMultiplier: argv.gasPriceMultiplier,
     privateKey: toPrivateKey(argv.privateKey),
