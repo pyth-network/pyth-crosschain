@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[100] internal trustedSigners;
     uint256 public verification_fee;
+    mapping(address => uint256) trustedSignerToExpiresAtMapping;
 
     constructor() {
         _disableInitializers();
@@ -36,6 +37,7 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
                 if (trustedSigners[i].pubkey == trustedSigner) {
                     trustedSigners[i].pubkey = address(0);
                     trustedSigners[i].expiresAt = 0;
+                    delete trustedSignerToExpiresAtMapping[trustedSigner];
                     return;
                 }
             }
@@ -44,6 +46,7 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
             for (uint8 i = 0; i < trustedSigners.length; i++) {
                 if (trustedSigners[i].pubkey == trustedSigner) {
                     trustedSigners[i].expiresAt = expiresAt;
+                    trustedSignerToExpiresAtMapping[trustedSigner] = expiresAt;
                     return;
                 }
             }
@@ -52,6 +55,7 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
                 if (trustedSigners[i].pubkey == address(0)) {
                     trustedSigners[i].pubkey = trustedSigner;
                     trustedSigners[i].expiresAt = expiresAt;
+                    trustedSignerToExpiresAtMapping[trustedSigner] = expiresAt;
                     return;
                 }
             }
@@ -60,12 +64,7 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function isValidSigner(address signer) public view returns (bool) {
-        for (uint8 i = 0; i < trustedSigners.length; i++) {
-            if (trustedSigners[i].pubkey == signer) {
-                return block.timestamp < trustedSigners[i].expiresAt;
-            }
-        }
-        return false;
+        return block.timestamp < trustedSignerToExpiresAtMapping[signer];
     }
 
     function verifyUpdate(
