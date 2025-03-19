@@ -268,13 +268,13 @@ The price_pusher now supports Prometheus metrics to monitor the health and perfo
 
 The following metrics are available:
 
-- **pyth_price_last_published_time**: The last published time of a price feed in unix timestamp
-- **pyth_price_updates_total**: Total number of price updates pushed to the chain
-- **pyth_price_update_duration_seconds**: Duration of price update operations in seconds
-- **pyth_price_feeds_total**: Total number of price feeds being monitored
-- **pyth_price_update_errors_total**: Total number of errors encountered during price updates
-- **pyth_price_update_attempts_total**: Total number of price update attempts
-- **pyth_wallet_balance**: Current wallet balance of the price pusher in native token units
+- **pyth_price_last_published_time** (Gauge): The last published time of a price feed in unix timestamp
+- **pyth_price_updates_total** (Counter): Total number of price updates pushed to the chain
+- **pyth_price_update_duration_seconds** (Histogram): Duration of price update operations in seconds
+- **pyth_price_feeds_total** (Gauge): Total number of price feeds being monitored
+- **pyth_price_update_errors_total** (Counter): Total number of errors encountered during price updates
+- **pyth_price_update_attempts_total** (Counter): Total number of price update attempts
+- **pyth_wallet_balance** (Gauge): Current wallet balance of the price pusher in native token units
 
 ### Configuration
 
@@ -286,7 +286,7 @@ Metrics are enabled by default and can be configured using the following command
 Example:
 
 ```bash
-node lib/index.js evm --config config.evm.mainnet.json --metrics-port 9091
+pnpm run dev evm --config config.evm.mainnet.json --metrics-port 9091
 ```
 
 ### Running Locally with Docker
