@@ -2,4 +2,3 @@ docker-compose.yaml
 price-config.yaml
 lib
 mnemonic
-grafana-dashboard.json

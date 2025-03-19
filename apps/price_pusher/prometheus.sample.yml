@@ -19,4 +19,4 @@ alerting:
 
 # Alert rules
 rule_files:
-  - "alerts.yml"
+  - "alerts.sample.yml"

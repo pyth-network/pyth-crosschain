@@ -7,8 +7,8 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./alerts.yml:/etc/prometheus/alerts.yml
+      - ./prometheus.sample.yml:/etc/prometheus/prometheus.yml
+      - ./alerts.sample.yml:/etc/prometheus/alerts.yml
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -24,6 +24,9 @@ services:
       - "3000:3000"
     volumes:
       - grafana-storage:/var/lib/grafana
+      - ./grafana-dashboard.sample.json:/var/lib/grafana/dashboards/pyth-price-pusher-dashboard.json
+      - ./dashboard.sample.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
+      - ./datasource.sample.yml:/etc/grafana/provisioning/datasources/datasource.yml
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin

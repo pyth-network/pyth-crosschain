@@ -300,14 +300,14 @@ docker-compose -f docker-compose.metrics.sample.yaml up
 ```
 
 This will start:
-- Prometheus server on port 9090 with the alerts configured in alerts.yml
+- Prometheus server on port 9090 with the alerts configured in alerts.sample.yml
 - Grafana server on port 3000 with default credentials (admin/admin)
 
-The docker-compose.metrics.sample.yaml file also includes commented examples of price_pusher services for different blockchains that you can uncomment and customize for your specific needs.
+The docker-compose.metrics.sample.yaml file includes a pre-configured Grafana dashboard that displays all the metrics mentioned above. You can check this dashboard to see charts for wallet balance, price update statistics, errors, and other key metrics. The dashboard is automatically provisioned when you start the stack with docker-compose.
 
 Alternatively, if you prefer to set up the monitoring stack manually:
 
-1. Create a `prometheus.yml` file:
+1. Create a `prometheus.sample.yml` file:
 
 ```yaml
 global:
@@ -323,8 +323,8 @@ scrape_configs:
 
 ```bash
 docker run -d --name prometheus -p 9090:9090 \
-  -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
-  -v $(pwd)/alerts.yml:/etc/prometheus/alerts.yml \
+  -v $(pwd)/prometheus.sample.yml:/etc/prometheus/prometheus.yml \
+  -v $(pwd)/alerts.sample.yml:/etc/prometheus/alerts.yml \
   prom/prometheus
 ```
 
@@ -378,7 +378,7 @@ pyth_wallet_balance < 0.1
 
 ### Alerting
 
-The price pusher includes pre-configured Prometheus alerting rules in the `alerts.yml` file. These rules monitor various aspects of the price pusher's operation, including:
+The price pusher includes pre-configured Prometheus alerting rules in the `alerts.sample.yml` file. These rules monitor various aspects of the price pusher's operation, including:
 
 - Price feeds not being updated for an extended period (>1 hour)
 - High error rates in price updates
