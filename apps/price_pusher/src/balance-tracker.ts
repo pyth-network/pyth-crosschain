@@ -1,17 +1,9 @@
-// Export the interfaces
-export * from "./interface";
-
-// Export chain-specific implementations
-export * from "./evm";
-// export * from "./aptos";
-
-// Factory function to create the appropriate balance tracker based on the chain
-import { PricePusherMetrics } from "../metrics";
+import { PricePusherMetrics } from "./metrics";
 import { Logger } from "pino";
-import { DurationInSeconds } from "../utils";
+import { DurationInSeconds } from "./utils";
 import { IBalanceTracker } from "./interface";
-import { EvmBalanceTracker } from "./evm";
-import { SuperWalletClient } from "../evm/super-wallet";
+import { EvmBalanceTracker } from "./evm/balance-tracker";
+import { SuperWalletClient } from "./evm/super-wallet";
 
 /**
  * Parameters for creating an EVM balance tracker

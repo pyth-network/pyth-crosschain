@@ -1,5 +1,5 @@
-import { SuperWalletClient } from "../evm/super-wallet";
-import { BaseBalanceTracker, BaseBalanceTrackerConfig } from "./interface";
+import { SuperWalletClient } from "./super-wallet";
+import { BaseBalanceTracker, BaseBalanceTrackerConfig } from "../interface";
 
 /**
  * EVM-specific configuration for balance tracker
