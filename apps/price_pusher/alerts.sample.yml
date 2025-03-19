@@ -1,0 +1,56 @@
+groups:
+  - name: price_pusher_alerts
+    rules:
+      - alert: PriceFeedNotUpdated
+        expr: time() - pyth_price_last_published_time > 3600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Price feed not updated"
+          description: "Price feed {{ $labels.alias }} has not been updated for more than 1 hour"
+
+      - alert: HighErrorRate
+        expr: sum(increase(pyth_price_update_attempts_total{status="error"}[15m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate in price updates"
+          description: "There have been more than 5 errors in the last 15 minutes"
+
+      - alert: NoRecentPriceUpdates
+        expr: sum(increase(pyth_price_update_attempts_total{status="success"}[30m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No recent price updates"
+          description: "No price updates have been pushed in the last 30 minutes"
+
+      - alert: PricePusherDown
+        expr: up{job=~"price_pusher.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Price pusher service is down"
+          description: "The price pusher service {{ $labels.instance }} is down"
+
+      - alert: WalletBalanceLow
+        expr: pyth_wallet_balance < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Wallet balance is getting low"
+          description: "Wallet {{ $labels.wallet_address }} on network {{ $labels.network }} has balance below 0.1 native tokens"
+
+      - alert: WalletBalanceCritical
+        expr: pyth_wallet_balance < 0.01
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Wallet balance critically low"
+          description: "Wallet {{ $labels.wallet_address }} on network {{ $labels.network }} has balance below 0.01 native tokens. Transactions may fail soon!"

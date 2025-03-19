@@ -3,9 +3,12 @@ import { DurationInSeconds, sleep } from "./utils";
 import { IPriceListener, IPricePusher } from "./interface";
 import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
 import { Logger } from "pino";
+import { PricePusherMetrics } from "./metrics";
 
 export class Controller {
   private pushingFrequency: DurationInSeconds;
+  private metrics?: PricePusherMetrics;
+
   constructor(
     private priceConfigs: PriceConfig[],
     private sourcePriceListener: IPriceListener,
@@ -14,9 +17,14 @@ export class Controller {
     private logger: Logger,
     config: {
       pushingFrequency: DurationInSeconds;
+      metrics?: PricePusherMetrics;
     },
   ) {
     this.pushingFrequency = config.pushingFrequency;
+    this.metrics = config.metrics;
+
+    // Set the number of price feeds if metrics are enabled
+    this.metrics?.setPriceFeedsTotal(this.priceConfigs.length);
   }
 
   async start() {
@@ -38,11 +46,21 @@ export class Controller {
 
       for (const priceConfig of this.priceConfigs) {
         const priceId = priceConfig.id;
+        const alias = priceConfig.alias;
 
         const targetLatestPrice =
           this.targetPriceListener.getLatestPriceInfo(priceId);
         const sourceLatestPrice =
           this.sourcePriceListener.getLatestPriceInfo(priceId);
+
+        // Update metrics for the last published time if available
+        if (this.metrics && targetLatestPrice) {
+          this.metrics.updateLastPublishedTime(
+            priceId,
+            alias,
+            targetLatestPrice,
+          );
+        }
 
         const priceShouldUpdate = shouldUpdate(
           priceConfig,
@@ -50,6 +68,12 @@ export class Controller {
           targetLatestPrice,
           this.logger,
         );
+
+        // Record update condition in metrics
+        if (this.metrics) {
+          this.metrics.recordUpdateCondition(priceId, alias, priceShouldUpdate);
+        }
+
         if (priceShouldUpdate == UpdateCondition.YES) {
           pushThresholdMet = true;
         }
@@ -75,7 +99,60 @@ export class Controller {
 
         // note that the priceIds are without leading "0x"
         const priceIds = pricesToPush.map((priceConfig) => priceConfig.id);
-        this.targetChainPricePusher.updatePriceFeed(priceIds, pubTimesToPush);
+
+        try {
+          await this.targetChainPricePusher.updatePriceFeed(
+            priceIds,
+            pubTimesToPush,
+          );
+
+          // Record successful updates
+          if (this.metrics) {
+            for (const config of pricesToPush) {
+              const triggerValue =
+                shouldUpdate(
+                  config,
+                  this.sourcePriceListener.getLatestPriceInfo(config.id),
+                  this.targetPriceListener.getLatestPriceInfo(config.id),
+                  this.logger,
+                ) === UpdateCondition.YES
+                  ? "yes"
+                  : "early";
+
+              this.metrics.recordPriceUpdate(
+                config.id,
+                config.alias,
+                triggerValue,
+              );
+            }
+          }
+        } catch (error) {
+          this.logger.error(
+            { error, priceIds },
+            "Error pushing price updates to chain",
+          );
+
+          // Record errors in metrics
+          if (this.metrics) {
+            for (const config of pricesToPush) {
+              const triggerValue =
+                shouldUpdate(
+                  config,
+                  this.sourcePriceListener.getLatestPriceInfo(config.id),
+                  this.targetPriceListener.getLatestPriceInfo(config.id),
+                  this.logger,
+                ) === UpdateCondition.YES
+                  ? "yes"
+                  : "early";
+
+              this.metrics.recordPriceUpdateError(
+                config.id,
+                config.alias,
+                triggerValue,
+              );
+            }
+          }
+        }
       } else {
         this.logger.info("None of the checks were triggered. No push needed.");
       }

@@ -11,6 +11,8 @@ import pino from "pino";
 import { createClient } from "./super-wallet";
 import { createPythContract } from "./pyth-contract";
 import { isWsEndpoint, filterInvalidPriceItems } from "../utils";
+import { PricePusherMetrics } from "../metrics";
+import { createEvmBalanceTracker } from "../balance-tracker";
 
 export default {
   command: "evm",
@@ -83,6 +85,8 @@ export default {
     ...options.pushingFrequency,
     ...options.logLevel,
     ...options.controllerLogLevel,
+    ...options.enableMetrics,
+    ...options.metricsPort,
   },
   handler: async function (argv: any) {
     // FIXME: type checks for this
@@ -103,6 +107,8 @@ export default {
       updateFeeMultiplier,
       logLevel,
       controllerLogLevel,
+      enableMetrics,
+      metricsPort,
     } = argv;
     console.log("***** priceServiceEndpoint *****", priceServiceEndpoint);
 
@@ -130,6 +136,14 @@ export default {
     }
 
     priceItems = existingPriceItems;
+
+    // Initialize metrics if enabled
+    let metrics: PricePusherMetrics | undefined;
+    if (enableMetrics) {
+      metrics = new PricePusherMetrics(logger.child({ module: "Metrics" }));
+      metrics.start(metricsPort);
+      logger.info(`Metrics server started on port ${metricsPort}`);
+    }
 
     const pythListener = new PythPriceListener(
       hermesClient,
@@ -183,9 +197,27 @@ export default {
       evmListener,
       evmPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency },
+      {
+        pushingFrequency,
+        metrics,
+      },
     );
 
-    controller.start();
+    // Create and start the balance tracker if metrics are enabled
+    if (metrics) {
+      const balanceTracker = createEvmBalanceTracker({
+        client,
+        address: client.account.address,
+        network: await client.getChainId().then((id) => id.toString()),
+        updateInterval: pushingFrequency,
+        metrics,
+        logger,
+      });
+
+      // Start the balance tracker
+      await balanceTracker.start();
+    }
+
+    await controller.start();
   },
 };

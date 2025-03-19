@@ -259,3 +259,117 @@ pushed twice and you won't pay additional costs most of the time.** However, the
 conditions in the RPCs because they are often behind a load balancer which can sometimes cause rejected
 transactions to land on-chain. You can reduce the chances of additional cost overhead by reducing the
 pushing frequency.
+
+## Prometheus Metrics
+
+The price_pusher now supports Prometheus metrics to monitor the health and performance of the price update service. Metrics are exposed via an HTTP endpoint that can be scraped by Prometheus.
+
+### Available Metrics
+
+The following metrics are available:
+
+- **pyth_price_last_published_time** (Gauge): The last published time of a price feed in unix timestamp, labeled by price_id and alias
+- **pyth_price_update_attempts_total** (Counter): Total number of price update attempts with their trigger condition and status, labeled by price_id, alias, trigger, and status
+- **pyth_price_feeds_total** (Gauge): Total number of price feeds being monitored
+- **pyth_wallet_balance** (Gauge): Current wallet balance of the price pusher in native token units, labeled by wallet_address and network
+
+### Configuration
+
+Metrics are enabled by default and can be configured using the following command-line options:
+
+- `--enable-metrics`: Enable or disable the Prometheus metrics server (default: true)
+- `--metrics-port`: Port for the Prometheus metrics server (default: 9090)
+
+Example:
+
+```bash
+pnpm run dev evm --config config.evm.mainnet.json --metrics-port 9091
+```
+
+### Running Locally with Docker
+
+You can run the monitoring stack (Prometheus and Grafana) using the provided docker-compose configuration:
+
+1. Use the sample docker-compose file for metrics:
+
+```bash
+docker-compose -f docker-compose.metrics.sample.yaml up
+```
+
+This will start:
+- Prometheus server on port 9090 with the alerts configured in alerts.sample.yml
+- Grafana server on port 3000 with default credentials (admin/admin)
+
+The docker-compose.metrics.sample.yaml file includes a pre-configured Grafana dashboard (see the [Dashboard](#dashboard) section below) that displays all the metrics mentioned above. This dashboard provides monitoring of your price pusher operations with panels for configured feeds, active feeds, wallet balance, update statistics, and error tracking. The dashboard is automatically provisioned when you start the stack with docker-compose.
+
+### Example Grafana Queries
+
+Here are some example Grafana queries to monitor your price feeds:
+
+1. Last published time for each price feed:
+
+```
+pyth_price_last_published_time
+```
+
+2. Number of price updates in the last hour:
+
+```
+sum(increase(pyth_price_update_attempts_total{status="success"}[1h]))
+```
+
+3. Price feeds not updated in the last hour:
+
+```
+time() - pyth_price_last_published_time > 3600
+```
+
+4. Distribution of update conditions:
+
+```
+sum by (condition) (increase(pyth_update_conditions_total[$__range]))
+```
+
+5. Monitor wallet balances:
+
+```
+pyth_wallet_balance
+```
+
+6. Detect low wallet balances (below 0.1 tokens):
+
+```
+pyth_wallet_balance < 0.1
+```
+
+### Dashboard
+
+The docker-compose setup includes a pre-configured Grafana dashboard (`grafana-dashboard.sample.json`) that provides monitoring of your price pusher operations. The dashboard includes the following panels:
+
+- **Configured Price Feeds**: Shows the number of price feeds configured in your price-config file.
+- **Active Price Feeds**: Displays the number of price feeds currently being actively monitored.
+- **Time Since Last Update**: Shows how long it's been since the last successful price update was published on-chain.
+- **Price Feeds List**: A table listing all configured price feeds with their details.
+- **Successful Updates (Current Range)**: Graph showing the number of successful price updates over the current range with timeline.
+- **Update Conditions Distribution**: Pie chart showing the distribution of update conditions (YES/NO/EARLY) over the selected time range.
+- **Wallet Balance**: Current balance of your wallet in native token units.
+- **Wallet Balance Over Time**: Graph tracking your wallet balance over time to monitor consumption.
+- **Failed Updates (Current Range)**: Graph showing the number of failed price updates over the current range with timeline.
+
+When you first start the monitoring stack, the dashboard may show "No data" in the panels until the price pusher has been running for some time and has collected sufficient metrics.
+
+This dashboard is automatically provisioned when you start the docker-compose stack and provides visibility into the health and performance of your price pusher deployment.
+
+### Alerting
+
+The price pusher includes pre-configured Prometheus alerting rules in the `alerts.sample.yml` file. These rules monitor various aspects of the price pusher's operation, including:
+
+- Price feeds not being updated for an extended period (>1 hour)
+- High error rates in price update attempts
+- No successful price updates across all feeds in the last 30 minutes
+- Service availability monitoring
+- Low wallet balances with two severity levels:
+  - Warning: Balance below 0.1 native tokens
+  - Critical: Balance below 0.01 native tokens (transactions may fail soon)
+
+When using the docker-compose setup, these alerts are automatically loaded into Prometheus and can be viewed in the Alerting section of Grafana after setting up the Prometheus data source.
