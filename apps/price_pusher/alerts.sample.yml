@@ -11,7 +11,7 @@ groups:
           description: "Price feed {{ $labels.alias }} has not been updated for more than 1 hour"
 
       - alert: HighErrorRate
-        expr: sum(increase(pyth_price_update_errors_total[15m])) > 5
+        expr: sum(increase(pyth_price_update_attempts_total{status="error"}[15m])) > 5
         for: 5m
         labels:
           severity: warning
@@ -20,7 +20,7 @@ groups:
           description: "There have been more than 5 errors in the last 15 minutes"
 
       - alert: NoRecentPriceUpdates
-        expr: sum(increase(pyth_price_updates_total[30m])) == 0
+        expr: sum(increase(pyth_price_update_attempts_total{status="success"}[30m])) == 0
         for: 5m
         labels:
           severity: critical
@@ -36,15 +36,6 @@ groups:
         annotations:
           summary: "Price pusher service is down"
           description: "The price pusher service {{ $labels.instance }} is down"
-
-      - alert: HighUpdateDuration
-        expr: rate(pyth_price_update_duration_seconds_sum[5m]) / rate(pyth_price_update_duration_seconds_count[5m]) > 5
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High update duration"
-          description: "Price updates are taking longer than 5 seconds on average"
 
       - alert: WalletBalanceLow
         expr: pyth_wallet_balance < 0.1

@@ -268,12 +268,10 @@ The price_pusher now supports Prometheus metrics to monitor the health and perfo
 
 The following metrics are available:
 
-- **pyth_price_last_published_time** (Gauge): The last published time of a price feed in unix timestamp
-- **pyth_price_updates_total** (Counter): Total number of price updates pushed to the chain
+- **pyth_price_last_published_time** (Gauge): The last published time of a price feed in unix timestamp, labeled by price_id and alias
+- **pyth_price_update_attempts_total** (Counter): Total number of price update attempts with their trigger condition and status, labeled by price_id, alias, trigger, and status
 - **pyth_price_feeds_total** (Gauge): Total number of price feeds being monitored
-- **pyth_price_update_errors_total** (Counter): Total number of errors encountered during price updates
-- **pyth_update_conditions_total** (Counter): Count of update condition checks by status (YES/NO/EARLY)
-- **pyth_wallet_balance** (Gauge): Current wallet balance of the price pusher in native token units
+- **pyth_wallet_balance** (Gauge): Current wallet balance of the price pusher in native token units, labeled by wallet_address and network
 
 ### Configuration
 
@@ -304,37 +302,6 @@ This will start:
 
 The docker-compose.metrics.sample.yaml file includes a pre-configured Grafana dashboard (see the [Dashboard](#dashboard) section below) that displays all the metrics mentioned above. This dashboard provides monitoring of your price pusher operations with panels for configured feeds, active feeds, wallet balance, update statistics, and error tracking. The dashboard is automatically provisioned when you start the stack with docker-compose.
 
-Alternatively, if you prefer to set up the monitoring stack manually:
-
-1. Create a `prometheus.sample.yml` file:
-
-```yaml
-global:
-  scrape_interval: 15s
-
-scrape_configs:
-  - job_name: "price_pusher"
-    static_configs:
-      - targets: ["localhost:9090"]
-```
-
-2. Run Prometheus with Docker:
-
-```bash
-docker run -d --name prometheus -p 9090:9090 \
-  -v $(pwd)/prometheus.sample.yml:/etc/prometheus/prometheus.yml \
-  -v $(pwd)/alerts.sample.yml:/etc/prometheus/alerts.yml \
-  prom/prometheus
-```
-
-3. Run Grafana with Docker:
-
-```bash
-docker run -d --name grafana -p 3000:3000 grafana/grafana
-```
-
-4. Access Grafana at http://localhost:3000 (default credentials: admin/admin) and add Prometheus as a data source (URL: http://host.docker.internal:9090).
-
 ### Example Grafana Queries
 
 Here are some example Grafana queries to monitor your price feeds:
@@ -348,7 +315,7 @@ pyth_price_last_published_time
 2. Number of price updates in the last hour:
 
 ```
-sum(increase(pyth_price_updates_total[1h]))
+sum(increase(pyth_price_update_attempts_total{status="success"}[1h]))
 ```
 
 3. Price feeds not updated in the last hour:
@@ -398,10 +365,9 @@ This dashboard is automatically provisioned when you start the docker-compose st
 The price pusher includes pre-configured Prometheus alerting rules in the `alerts.sample.yml` file. These rules monitor various aspects of the price pusher's operation, including:
 
 - Price feeds not being updated for an extended period (>1 hour)
-- High error rates in price updates
-- No recent price updates across all feeds
-- Service availability
-- High update durations
+- High error rates in price update attempts
+- No successful price updates across all feeds in the last 30 minutes
+- Service availability monitoring
 - Low wallet balances with two severity levels:
   - Warning: Balance below 0.1 native tokens
   - Critical: Balance below 0.01 native tokens (transactions may fail soon)
