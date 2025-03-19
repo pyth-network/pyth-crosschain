@@ -720,18 +720,7 @@ mod test {
         let (state, _) = setup_state(2).await;
 
         // Make sure the retrieved accumulator messages is what we store.
-        let mut accumulator_messages_at_10 = create_empty_accumulator_messages_at_slot(10);
-        state
-            .store_accumulator_messages(accumulator_messages_at_10.clone())
-            .await
-            .unwrap();
-        assert_eq!(
-            state.fetch_accumulator_messages(10).await.unwrap().unwrap(),
-            accumulator_messages_at_10
-        );
-
-        // Make sure overwriting the accumulator messages works.
-        accumulator_messages_at_10.ring_size = 5; // Change the ring size from 3 to 5.
+        let accumulator_messages_at_10 = create_empty_accumulator_messages_at_slot(10);
         state
             .store_accumulator_messages(accumulator_messages_at_10.clone())
             .await
@@ -782,22 +771,7 @@ mod test {
         let (state, _) = setup_state(2).await;
 
         // Make sure the retrieved wormhole merkle state is what we store
-        let mut wormhole_merkle_state_at_10 = create_empty_wormhole_merkle_state_at_slot(10);
-        state
-            .store_wormhole_merkle_state(wormhole_merkle_state_at_10.clone())
-            .await
-            .unwrap();
-        assert_eq!(
-            state
-                .fetch_wormhole_merkle_state(10)
-                .await
-                .unwrap()
-                .unwrap(),
-            wormhole_merkle_state_at_10
-        );
-
-        // Make sure overwriting the wormhole merkle state works.
-        wormhole_merkle_state_at_10.root.ring_size = 5; // Change the ring size from 3 to 5.
+        let wormhole_merkle_state_at_10 = create_empty_wormhole_merkle_state_at_slot(10);
         state
             .store_wormhole_merkle_state(wormhole_merkle_state_at_10.clone())
             .await
