@@ -1,8 +1,4 @@
 
-
-
-
-
 pub struct Block {
     pub hash: [u8; 32],
     pub parent: Option<[u8; 32]>,
@@ -56,9 +52,13 @@ impl BlockchainState {
     }
 }
 
-// full set of currently pending on-chain requests
-pub struct PulseRequests {
 
+pub struct PulseRequest {
+    // Whatever parameters you need to invoke the callback
+}
+
+pub struct PulseRequests {
+    // Holds the full set of currently pending on-chain requests
 }
 
 impl PulseRequests {
@@ -67,8 +67,14 @@ impl PulseRequests {
     }
 }
 
-pub struct PulseRequest {
-    // whatever parameters you need for the callback
+
+
+
+pub struct CallbackStatus {
+    // task needs the ability to update these values.
+    num_retries: u64,
+    last_retry_time: Instant,
+    task: Option<JoinHandle<Result<()>>>,
 }
 
 
@@ -111,12 +117,4 @@ pub async fn fulfill_request(request: &PulseRequest, hermes: &str,  gas_estimate
     fee_estimate_multiplier_pct: u64,) -> Result<()> {
     // get price update by calling hermes
     // create contract call and submit it
-}
-
-
-pub struct CallbackStatus {
-    // task needs the ability to update these values.
-    num_retries: u64,
-    last_retry_time: Instant,
-    task: Option<JoinHandle<Result<()>>>,
 }

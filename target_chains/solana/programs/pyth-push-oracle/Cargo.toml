@@ -20,10 +20,12 @@ anchor-lang = { workspace = true }
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 solana-program = { workspace = true }
 byteorder = "1.4.3"
-pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk"}
+pyth-solana-receiver-sdk = "0.5.0"
 
 [dev-dependencies]
-pyth-solana-receiver = { path = "../pyth-solana-receiver", features = ["no-entrypoint"]}
+pyth-solana-receiver = { path = "../pyth-solana-receiver", features = [
+    "no-entrypoint",
+] }
 solana-sdk = { workspace = true }
 tokio = "1.14.1"
 program-simulator = { path = "../../program_simulator" }
