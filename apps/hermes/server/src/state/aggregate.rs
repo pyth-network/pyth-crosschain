@@ -314,17 +314,21 @@ where
                 let slot = accumulator_messages.slot;
                 tracing::info!(slot = slot, "Storing Accumulator Messages.");
 
-                // Check if we already have accumulator messages for this slot
-                if (self.fetch_accumulator_messages(slot).await?).is_some() {
+                // Store the accumulator messages and check if they were already stored in a single operation
+                // This avoids the race condition where multiple threads could check and find nothing
+                // but then both store the same messages
+                let is_new = self
+                    .store_accumulator_messages(accumulator_messages)
+                    .await?;
+
+                // If the messages were already stored, return early
+                if !is_new {
                     tracing::info!(
                         slot = slot,
                         "Accumulator Messages already stored, skipping."
                     );
                     return Ok(());
                 }
-
-                self.store_accumulator_messages(accumulator_messages)
-                    .await?;
 
                 self.into()
                     .data

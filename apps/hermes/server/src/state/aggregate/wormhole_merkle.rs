@@ -59,17 +59,12 @@ pub async fn store_wormhole_merkle_verified_message<S>(
 where
     S: Cache,
 {
-    // Check if we already have a state for this slot
-    if (state.fetch_wormhole_merkle_state(root.slot).await?).is_some() {
-        // State already exists, return early
-        return Ok(false);
-    }
-
-    // State doesn't exist, store it
+    // Store the state and check if it was already stored in a single operation
+    // This avoids the race condition where multiple threads could check and find nothing
+    // but then both store the same state
     state
         .store_wormhole_merkle_state(WormholeMerkleState { root, vaa })
-        .await?;
-    Ok(true)
+        .await
 }
 
 pub fn construct_message_states_proofs(
