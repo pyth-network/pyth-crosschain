@@ -396,9 +396,15 @@
               "job#C": true,
               "price_id": false,
               "price_id#B": true,
-              "price_id#C": true
+              "price_id#C": true,
+              "Value #C": false
             },
-            "includeByName": {},
+            "includeByName": {
+              "alias 1": true,
+              "price_id": true,
+              "Value #B": true,
+              "Value #C": true
+            },
             "indexByName": {
               "Time 1": 4,
               "Time 2": 10,

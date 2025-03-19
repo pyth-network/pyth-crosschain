@@ -4,20 +4,10 @@ import { IPriceListener, IPricePusher } from "./interface";
 import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
 import { Logger } from "pino";
 import { PricePusherMetrics } from "./metrics";
-import { SuperWalletClient } from "./evm/super-wallet";
-
-// Define the wallet balance info interface
-interface WalletBalanceInfo {
-  client: SuperWalletClient;
-  address: `0x${string}`;
-  network: string;
-  updateInterval: DurationInSeconds;
-}
 
 export class Controller {
   private pushingFrequency: DurationInSeconds;
   private metrics?: PricePusherMetrics;
-  private walletBalanceInfo?: WalletBalanceInfo;
 
   constructor(
     private priceConfigs: PriceConfig[],
@@ -28,45 +18,19 @@ export class Controller {
     config: {
       pushingFrequency: DurationInSeconds;
       metrics?: PricePusherMetrics;
-      walletBalanceInfo?: WalletBalanceInfo;
     },
   ) {
     this.pushingFrequency = config.pushingFrequency;
     this.metrics = config.metrics;
-    this.walletBalanceInfo = config.walletBalanceInfo;
 
     // Set the number of price feeds if metrics are enabled
     this.metrics?.setPriceFeedsTotal(this.priceConfigs.length);
-  }
-
-  // Get wallet balance and update metrics
-  private async updateWalletBalance(): Promise<void> {
-    if (!this.metrics || !this.walletBalanceInfo) return;
-
-    try {
-      const { client, address, network } = this.walletBalanceInfo;
-      const balance = await client.getBalance({
-        address: address,
-      });
-
-      this.metrics.updateWalletBalance(address, network, balance);
-      this.logger.debug(
-        `Updated wallet balance: ${address} = ${balance.toString()}`,
-      );
-    } catch (error) {
-      this.logger.error({ error }, "Error fetching wallet balance for metrics");
-    }
   }
 
   async start() {
     // start the listeners
     await this.sourcePriceListener.start();
     await this.targetPriceListener.start();
-
-    // Update wallet balance initially if metrics are enabled
-    if (this.metrics && this.walletBalanceInfo) {
-      await this.updateWalletBalance();
-    }
 
     // wait for the listeners to get updated. There could be a restart
     // before this run and we need to respect the cooldown duration as
@@ -79,11 +43,6 @@ export class Controller {
       let pushThresholdMet = false;
       const pricesToPush: PriceConfig[] = [];
       const pubTimesToPush: UnixTimestamp[] = [];
-
-      // Update wallet balance if metrics are enabled
-      if (this.metrics && this.walletBalanceInfo) {
-        await this.updateWalletBalance();
-      }
 
       for (const priceConfig of this.priceConfigs) {
         const priceId = priceConfig.id;

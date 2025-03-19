@@ -12,6 +12,7 @@ import { createClient } from "./super-wallet";
 import { createPythContract } from "./pyth-contract";
 import { isWsEndpoint, filterInvalidPriceItems } from "../utils";
 import { PricePusherMetrics } from "../metrics";
+import { createEvmBalanceTracker } from "../balance-tracker";
 
 export default {
   command: "evm",
@@ -199,16 +200,23 @@ export default {
       {
         pushingFrequency,
         metrics,
-        walletBalanceInfo: metrics
-          ? {
-              client,
-              address: client.account.address,
-              network: await client.getChainId().then((id) => id.toString()),
-              updateInterval: pushingFrequency,
-            }
-          : undefined,
       },
     );
+
+    // Create and start the balance tracker if metrics are enabled
+    if (metrics) {
+      const balanceTracker = createEvmBalanceTracker({
+        client,
+        address: client.account.address,
+        network: await client.getChainId().then((id) => id.toString()),
+        updateInterval: pushingFrequency,
+        metrics,
+        logger,
+      });
+
+      // Start the balance tracker
+      await balanceTracker.start();
+    }
 
     await controller.start();
   },
