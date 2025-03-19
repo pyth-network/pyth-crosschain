@@ -93,34 +93,36 @@ where
     // Convert the broadcast receiver into a Stream
     let stream = BroadcastStream::new(update_rx);
 
-    let sse_stream = stream.then(move |message| {
-        let state_clone = state.clone(); // Clone again to use inside the async block
-        let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
-        async move {
-            match message {
-                Ok(event) => {
-                    match handle_aggregation_event(
-                        event,
-                        state_clone,
-                        price_ids_clone,
-                        params.encoding,
-                        params.parsed,
-                        params.benchmarks_only,
-                        params.allow_unordered,
-                    )
-                    .await
-                    {
-                        Ok(Some(update)) => Ok(Event::default()
-                            .json_data(update)
-                            .unwrap_or_else(error_event)),
-                        Ok(None) => Ok(Event::default().comment("No update available")),
-                        Err(e) => Ok(error_event(e)),
+    let sse_stream = stream
+        .then(move |message| {
+            let state_clone = state.clone(); // Clone again to use inside the async block
+            let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
+            async move {
+                match message {
+                    Ok(event) => {
+                        match handle_aggregation_event(
+                            event,
+                            state_clone,
+                            price_ids_clone,
+                            params.encoding,
+                            params.parsed,
+                            params.benchmarks_only,
+                            params.allow_unordered,
+                        )
+                        .await
+                        {
+                            Ok(Some(update)) => Some(Ok(Event::default()
+                                .json_data(update)
+                                .unwrap_or_else(error_event))),
+                            Ok(None) => None,
+                            Err(e) => Some(Ok(error_event(e))),
+                        }
                     }
+                    Err(e) => Some(Ok(error_event(e))),
                 }
-                Err(e) => Ok(error_event(e)),
             }
-        }
-    });
+        })
+        .filter_map(|x| x);
 
     Ok(Sse::new(sse_stream).keep_alive(KeepAlive::default()))
 }

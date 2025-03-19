@@ -122,12 +122,12 @@ pub trait Cache {
     async fn store_accumulator_messages(
         &self,
         accumulator_messages: AccumulatorMessages,
-    ) -> Result<()>;
+    ) -> Result<bool>;
     async fn fetch_accumulator_messages(&self, slot: Slot) -> Result<Option<AccumulatorMessages>>;
     async fn store_wormhole_merkle_state(
         &self,
         wormhole_merkle_state: WormholeMerkleState,
-    ) -> Result<()>;
+    ) -> Result<bool>;
     async fn fetch_wormhole_merkle_state(&self, slot: Slot) -> Result<Option<WormholeMerkleState>>;
     async fn message_state_keys(&self) -> Vec<MessageStateKey>;
     async fn fetch_message_states(
@@ -226,13 +226,22 @@ where
     async fn store_accumulator_messages(
         &self,
         accumulator_messages: AccumulatorMessages,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         let mut cache = self.into().accumulator_messages_cache.write().await;
-        cache.insert(accumulator_messages.slot, accumulator_messages);
+        let slot = accumulator_messages.slot;
+
+        // Check if we already have messages for this slot while holding the lock
+        if cache.contains_key(&slot) {
+            // Messages already exist, return false to indicate no insertion happened
+            return Ok(false);
+        }
+
+        // Messages don't exist, store them
+        cache.insert(slot, accumulator_messages);
         while cache.len() > self.into().cache_size as usize {
             cache.pop_first();
         }
-        Ok(())
+        Ok(true)
     }
 
     async fn fetch_accumulator_messages(&self, slot: Slot) -> Result<Option<AccumulatorMessages>> {
@@ -243,13 +252,22 @@ where
     async fn store_wormhole_merkle_state(
         &self,
         wormhole_merkle_state: WormholeMerkleState,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         let mut cache = self.into().wormhole_merkle_state_cache.write().await;
-        cache.insert(wormhole_merkle_state.root.slot, wormhole_merkle_state);
+        let slot = wormhole_merkle_state.root.slot;
+
+        // Check if we already have a state for this slot while holding the lock
+        if cache.contains_key(&slot) {
+            // State already exists, return false to indicate no insertion happened
+            return Ok(false);
+        }
+
+        // State doesn't exist, store it
+        cache.insert(slot, wormhole_merkle_state);
         while cache.len() > self.into().cache_size as usize {
             cache.pop_first();
         }
-        Ok(())
+        Ok(true)
     }
 
     async fn fetch_wormhole_merkle_state(&self, slot: Slot) -> Result<Option<WormholeMerkleState>> {
@@ -702,18 +720,7 @@ mod test {
         let (state, _) = setup_state(2).await;
 
         // Make sure the retrieved accumulator messages is what we store.
-        let mut accumulator_messages_at_10 = create_empty_accumulator_messages_at_slot(10);
-        state
-            .store_accumulator_messages(accumulator_messages_at_10.clone())
-            .await
-            .unwrap();
-        assert_eq!(
-            state.fetch_accumulator_messages(10).await.unwrap().unwrap(),
-            accumulator_messages_at_10
-        );
-
-        // Make sure overwriting the accumulator messages works.
-        accumulator_messages_at_10.ring_size = 5; // Change the ring size from 3 to 5.
+        let accumulator_messages_at_10 = create_empty_accumulator_messages_at_slot(10);
         state
             .store_accumulator_messages(accumulator_messages_at_10.clone())
             .await
@@ -764,22 +771,7 @@ mod test {
         let (state, _) = setup_state(2).await;
 
         // Make sure the retrieved wormhole merkle state is what we store
-        let mut wormhole_merkle_state_at_10 = create_empty_wormhole_merkle_state_at_slot(10);
-        state
-            .store_wormhole_merkle_state(wormhole_merkle_state_at_10.clone())
-            .await
-            .unwrap();
-        assert_eq!(
-            state
-                .fetch_wormhole_merkle_state(10)
-                .await
-                .unwrap()
-                .unwrap(),
-            wormhole_merkle_state_at_10
-        );
-
-        // Make sure overwriting the wormhole merkle state works.
-        wormhole_merkle_state_at_10.root.ring_size = 5; // Change the ring size from 3 to 5.
+        let wormhole_merkle_state_at_10 = create_empty_wormhole_merkle_state_at_slot(10);
         state
             .store_wormhole_merkle_state(wormhole_merkle_state_at_10.clone())
             .await
