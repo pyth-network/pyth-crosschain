@@ -270,10 +270,9 @@ The following metrics are available:
 
 - **pyth_price_last_published_time** (Gauge): The last published time of a price feed in unix timestamp
 - **pyth_price_updates_total** (Counter): Total number of price updates pushed to the chain
-- **pyth_price_update_duration_seconds** (Histogram): Duration of price update operations in seconds
 - **pyth_price_feeds_total** (Gauge): Total number of price feeds being monitored
 - **pyth_price_update_errors_total** (Counter): Total number of errors encountered during price updates
-- **pyth_price_update_attempts_total** (Counter): Total number of price update attempts
+- **pyth_update_conditions_total** (Counter): Count of update condition checks by status (YES/NO/EARLY)
 - **pyth_wallet_balance** (Gauge): Current wallet balance of the price pusher in native token units
 
 ### Configuration
@@ -358,10 +357,10 @@ sum(increase(pyth_price_updates_total[1h]))
 time() - pyth_price_last_published_time > 3600
 ```
 
-4. Average update duration:
+4. Distribution of update conditions:
 
 ```
-rate(pyth_price_update_duration_seconds_sum[5m]) / rate(pyth_price_update_duration_seconds_count[5m])
+sum by (condition) (increase(pyth_update_conditions_total[$__range]))
 ```
 
 5. Monitor wallet balances:
@@ -378,13 +377,14 @@ pyth_wallet_balance < 0.1
 
 ### Dashboard
 
-The docker-compose setup includes a pre-configured Grafana dashboard (`grafana-dashboard.sample.json`) that provides monitoring of your price pusher operations. Based on the screenshot, the dashboard includes the following panels:
+The docker-compose setup includes a pre-configured Grafana dashboard (`grafana-dashboard.sample.json`) that provides monitoring of your price pusher operations. The dashboard includes the following panels:
 
 - **Configured Price Feeds**: Shows the number of price feeds configured in your price-config file.
 - **Active Price Feeds**: Displays the number of price feeds currently being actively monitored.
 - **Time Since Last Update**: Shows how long it's been since the last successful price update was published on-chain.
 - **Price Feeds List**: A table listing all configured price feeds with their details.
 - **Price Updates (Last Hour)**: Graph showing the number of price updates over the last hour with timeline.
+- **Update Conditions Distribution**: Pie chart showing the distribution of update conditions (YES/NO/EARLY) over the selected time range.
 - **Wallet Balance**: Current balance of your wallet in native token units.
 - **Wallet Balance Over Time**: Graph tracking your wallet balance over time to monitor consumption.
 - **Update Errors**: Tracks errors encountered during price update operations.

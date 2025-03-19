@@ -9,7 +9,7 @@ import { SuperWalletClient } from "./evm/super-wallet";
 // Define the wallet balance info interface
 interface WalletBalanceInfo {
   client: SuperWalletClient;
-  address: string;
+  address: `0x${string}`;
   network: string;
   updateInterval: DurationInSeconds;
 }
@@ -36,9 +36,7 @@ export class Controller {
     this.walletBalanceInfo = config.walletBalanceInfo;
 
     // Set the number of price feeds if metrics are enabled
-    if (this.metrics) {
-      this.metrics.setPriceFeedsTotal(this.priceConfigs.length);
-    }
+    this.metrics?.setPriceFeedsTotal(this.priceConfigs.length);
   }
 
   // Get wallet balance and update metrics
@@ -48,7 +46,7 @@ export class Controller {
     try {
       const { client, address, network } = this.walletBalanceInfo;
       const balance = await client.getBalance({
-        address: address as `0x${string}`,
+        address: address,
       });
 
       this.metrics.updateWalletBalance(address, network, balance);
@@ -112,9 +110,9 @@ export class Controller {
           this.logger,
         );
 
-        // Record price update attempt in metrics
+        // Record update condition in metrics
         if (this.metrics) {
-          this.metrics.recordPriceUpdateAttempt(priceId, alias);
+          this.metrics.recordUpdateCondition(priceId, alias, priceShouldUpdate);
         }
 
         if (priceShouldUpdate == UpdateCondition.YES) {

@@ -2,6 +2,7 @@ import { Registry, Counter, Gauge } from "prom-client";
 import express from "express";
 import { PriceInfo } from "./interface";
 import { Logger } from "pino";
+import { UpdateCondition } from "./price-config";
 
 // Define the metrics we want to track
 export class PricePusherMetrics {
@@ -14,7 +15,7 @@ export class PricePusherMetrics {
   public priceUpdatesTotal: Counter<string>;
   public priceFeedsTotal: Gauge<string>;
   public priceUpdateErrors: Counter<string>;
-  public priceUpdateAttempts: Counter<string>;
+  public updateConditionsTotal: Counter<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
 
@@ -54,10 +55,10 @@ export class PricePusherMetrics {
       registers: [this.registry],
     });
 
-    this.priceUpdateAttempts = new Counter({
-      name: "pyth_price_update_attempts_total",
-      help: "Total number of price update attempts",
-      labelNames: ["price_id", "alias"],
+    this.updateConditionsTotal = new Counter({
+      name: "pyth_update_conditions_total",
+      help: "Total number of price update condition checks by status (YES/NO/EARLY)",
+      labelNames: ["price_id", "alias", "condition"],
       registers: [this.registry],
     });
 
@@ -100,9 +101,18 @@ export class PricePusherMetrics {
     this.priceUpdatesTotal.inc({ price_id: priceId, alias });
   }
 
-  // Record a price update attempt
-  public recordPriceUpdateAttempt(priceId: string, alias: string): void {
-    this.priceUpdateAttempts.inc({ price_id: priceId, alias });
+  // Record update condition status (YES/NO/EARLY)
+  public recordUpdateCondition(
+    priceId: string,
+    alias: string,
+    condition: UpdateCondition,
+  ): void {
+    const conditionLabel = UpdateCondition[condition];
+    this.updateConditionsTotal.inc({
+      price_id: priceId,
+      alias,
+      condition: conditionLabel,
+    });
   }
 
   // Record a price update error
