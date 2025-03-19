@@ -303,7 +303,7 @@ This will start:
 - Prometheus server on port 9090 with the alerts configured in alerts.sample.yml
 - Grafana server on port 3000 with default credentials (admin/admin)
 
-The docker-compose.metrics.sample.yaml file includes a pre-configured Grafana dashboard that displays all the metrics mentioned above. You can check this dashboard to see charts for wallet balance, price update statistics, errors, and other key metrics. The dashboard is automatically provisioned when you start the stack with docker-compose.
+The docker-compose.metrics.sample.yaml file includes a pre-configured Grafana dashboard (see the [Dashboard](#dashboard) section below) that displays all the metrics mentioned above. This dashboard provides monitoring of your price pusher operations with panels for configured feeds, active feeds, wallet balance, update statistics, and error tracking. The dashboard is automatically provisioned when you start the stack with docker-compose.
 
 Alternatively, if you prefer to set up the monitoring stack manually:
 
@@ -375,6 +375,23 @@ pyth_wallet_balance
 ```
 pyth_wallet_balance < 0.1
 ```
+
+### Dashboard
+
+The docker-compose setup includes a pre-configured Grafana dashboard (`grafana-dashboard.sample.json`) that provides monitoring of your price pusher operations. Based on the screenshot, the dashboard includes the following panels:
+
+- **Configured Price Feeds**: Shows the number of price feeds configured in your price-config file.
+- **Active Price Feeds**: Displays the number of price feeds currently being actively monitored.
+- **Time Since Last Update**: Shows how long it's been since the last successful price update was published on-chain.
+- **Price Feeds List**: A table listing all configured price feeds with their details.
+- **Price Updates (Last Hour)**: Graph showing the number of price updates over the last hour with timeline.
+- **Wallet Balance**: Current balance of your wallet in native token units.
+- **Wallet Balance Over Time**: Graph tracking your wallet balance over time to monitor consumption.
+- **Update Errors**: Tracks errors encountered during price update operations.
+
+When you first start the monitoring stack, the dashboard may show "No data" in the panels until the price pusher has been running for some time and has collected sufficient metrics.
+
+This dashboard is automatically provisioned when you start the docker-compose stack and provides visibility into the health and performance of your price pusher deployment.
 
 ### Alerting
 

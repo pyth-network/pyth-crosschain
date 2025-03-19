@@ -144,27 +144,15 @@ export class Controller {
         const priceIds = pricesToPush.map((priceConfig) => priceConfig.id);
 
         try {
-          // Start timers for each price update if metrics are enabled
-          const timers = this.metrics
-            ? pricesToPush.map((config) => ({
-                config,
-                timer: this.metrics!.startPriceUpdateTimer(
-                  config.id,
-                  config.alias,
-                ),
-              }))
-            : [];
-
           await this.targetChainPricePusher.updatePriceFeed(
             priceIds,
             pubTimesToPush,
           );
 
-          // Record successful updates and end timers
+          // Record successful updates
           if (this.metrics) {
-            for (const { config, timer } of timers) {
+            for (const config of pricesToPush) {
               this.metrics.recordPriceUpdate(config.id, config.alias);
-              timer(); // End the timer
             }
           }
         } catch (error) {

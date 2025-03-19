@@ -1,4 +1,4 @@
-import { Registry, Counter, Gauge, Histogram } from "prom-client";
+import { Registry, Counter, Gauge } from "prom-client";
 import express from "express";
 import { PriceInfo } from "./interface";
 import { Logger } from "pino";
@@ -12,7 +12,6 @@ export class PricePusherMetrics {
   // Metrics for price feed updates
   public lastPublishedTime: Gauge<string>;
   public priceUpdatesTotal: Counter<string>;
-  public priceUpdateDuration: Histogram<string>;
   public priceFeedsTotal: Gauge<string>;
   public priceUpdateErrors: Counter<string>;
   public priceUpdateAttempts: Counter<string>;
@@ -39,14 +38,6 @@ export class PricePusherMetrics {
       name: "pyth_price_updates_total",
       help: "Total number of price updates pushed to the chain",
       labelNames: ["price_id", "alias"],
-      registers: [this.registry],
-    });
-
-    this.priceUpdateDuration = new Histogram({
-      name: "pyth_price_update_duration_seconds",
-      help: "Duration of price update operations in seconds",
-      labelNames: ["price_id", "alias"],
-      buckets: [0.1, 0.5, 1, 2, 5, 10],
       registers: [this.registry],
     });
 
@@ -130,15 +121,6 @@ export class PricePusherMetrics {
   // Set the number of price feeds
   public setPriceFeedsTotal(count: number): void {
     this.priceFeedsTotal.set(count);
-  }
-
-  // Create a timer for measuring price update duration
-  public startPriceUpdateTimer(priceId: string, alias: string): () => void {
-    const end = this.priceUpdateDuration.startTimer({
-      price_id: priceId,
-      alias,
-    });
-    return end;
   }
 
   // Update wallet balance
