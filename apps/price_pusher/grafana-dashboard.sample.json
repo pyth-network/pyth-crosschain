@@ -355,7 +355,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "pyth_price_updates_total",
+          "expr": "pyth_price_update_attempts_total{status=\"success\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -496,7 +496,23 @@
           },
           "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Updates"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -526,13 +542,13 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(pyth_price_updates_total[$__range]))",
+          "expr": "sum(increase(pyth_price_update_attempts_total{status=\"success\"}[$__range]))",
           "legendFormat": "Updates",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Price Updates (Current Range)",
+      "title": "Successful Updates (Current Range)",
       "type": "timeseries"
     },
     {
@@ -645,9 +661,9 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum by (condition) (increase(pyth_update_conditions_total[$__range]))",
+          "expr": "sum by (trigger) (increase(pyth_price_update_attempts_total[$__range]))",
           "instant": false,
-          "legendFormat": "{{condition}}",
+          "legendFormat": "{{trigger}}",
           "range": true,
           "refId": "A"
         }
@@ -909,13 +925,13 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(pyth_price_update_errors_total[$__range]))",
+          "expr": "sum(increase(pyth_price_update_attempts_total{status=\"error\"}[$__range]))",
           "legendFormat": "Errors",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Update Errors",
+      "title": "Failed Updates (Current Range)",
       "type": "timeseries"
     }
   ],

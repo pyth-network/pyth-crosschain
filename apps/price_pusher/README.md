@@ -383,11 +383,11 @@ The docker-compose setup includes a pre-configured Grafana dashboard (`grafana-d
 - **Active Price Feeds**: Displays the number of price feeds currently being actively monitored.
 - **Time Since Last Update**: Shows how long it's been since the last successful price update was published on-chain.
 - **Price Feeds List**: A table listing all configured price feeds with their details.
-- **Price Updates (Last Hour)**: Graph showing the number of price updates over the last hour with timeline.
+- **Successful Updates (Current Range)**: Graph showing the number of successful price updates over the current range with timeline.
 - **Update Conditions Distribution**: Pie chart showing the distribution of update conditions (YES/NO/EARLY) over the selected time range.
 - **Wallet Balance**: Current balance of your wallet in native token units.
 - **Wallet Balance Over Time**: Graph tracking your wallet balance over time to monitor consumption.
-- **Update Errors**: Tracks errors encountered during price update operations.
+- **Failed Updates (Current Range)**: Graph showing the number of failed price updates over the current range with timeline.
 
 When you first start the monitoring stack, the dashboard may show "No data" in the panels until the price pusher has been running for some time and has collected sufficient metrics.
 

@@ -12,10 +12,8 @@ export class PricePusherMetrics {
 
   // Metrics for price feed updates
   public lastPublishedTime: Gauge<string>;
-  public priceUpdatesTotal: Counter<string>;
+  public priceUpdateAttempts: Counter<string>;
   public priceFeedsTotal: Gauge<string>;
-  public priceUpdateErrors: Counter<string>;
-  public updateConditionsTotal: Counter<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
 
@@ -35,30 +33,16 @@ export class PricePusherMetrics {
       registers: [this.registry],
     });
 
-    this.priceUpdatesTotal = new Counter({
-      name: "pyth_price_updates_total",
-      help: "Total number of price updates pushed to the chain",
-      labelNames: ["price_id", "alias"],
+    this.priceUpdateAttempts = new Counter({
+      name: "pyth_price_update_attempts_total",
+      help: "Total number of price update attempts with their trigger condition and status",
+      labelNames: ["price_id", "alias", "trigger", "status"],
       registers: [this.registry],
     });
 
     this.priceFeedsTotal = new Gauge({
       name: "pyth_price_feeds_total",
       help: "Total number of price feeds being monitored",
-      registers: [this.registry],
-    });
-
-    this.priceUpdateErrors = new Counter({
-      name: "pyth_price_update_errors_total",
-      help: "Total number of errors encountered during price updates",
-      labelNames: ["price_id", "alias"],
-      registers: [this.registry],
-    });
-
-    this.updateConditionsTotal = new Counter({
-      name: "pyth_update_conditions_total",
-      help: "Total number of price update condition checks by status (YES/NO/EARLY)",
-      labelNames: ["price_id", "alias", "condition"],
       registers: [this.registry],
     });
 
@@ -97,8 +81,17 @@ export class PricePusherMetrics {
   }
 
   // Record a successful price update
-  public recordPriceUpdate(priceId: string, alias: string): void {
-    this.priceUpdatesTotal.inc({ price_id: priceId, alias });
+  public recordPriceUpdate(
+    priceId: string,
+    alias: string,
+    trigger: string = "yes",
+  ): void {
+    this.priceUpdateAttempts.inc({
+      price_id: priceId,
+      alias,
+      trigger: trigger.toLowerCase(),
+      status: "success",
+    });
   }
 
   // Record update condition status (YES/NO/EARLY)
@@ -107,19 +100,31 @@ export class PricePusherMetrics {
     alias: string,
     condition: UpdateCondition,
   ): void {
-    const conditionLabel = UpdateCondition[condition];
-    this.updateConditionsTotal.inc({
-      price_id: priceId,
-      alias,
-      condition: conditionLabel,
-    });
+    const triggerLabel = UpdateCondition[condition].toLowerCase();
+    // Only record as 'skipped' when the condition is NO
+    if (condition === UpdateCondition.NO) {
+      this.priceUpdateAttempts.inc({
+        price_id: priceId,
+        alias,
+        trigger: triggerLabel,
+        status: "skipped",
+      });
+    }
+    // YES and EARLY don't increment the counter here - they'll be counted
+    // when recordPriceUpdate or recordPriceUpdateError is called
   }
 
   // Record a price update error
-  public recordPriceUpdateError(priceId: string, alias: string): void {
-    this.priceUpdateErrors.inc({
+  public recordPriceUpdateError(
+    priceId: string,
+    alias: string,
+    trigger: string = "yes",
+  ): void {
+    this.priceUpdateAttempts.inc({
       price_id: priceId,
       alias,
+      trigger: trigger.toLowerCase(),
+      status: "error",
     });
   }
 

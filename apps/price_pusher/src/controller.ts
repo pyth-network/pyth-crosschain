@@ -109,7 +109,21 @@ export class Controller {
           // Record successful updates
           if (this.metrics) {
             for (const config of pricesToPush) {
-              this.metrics.recordPriceUpdate(config.id, config.alias);
+              const triggerValue =
+                shouldUpdate(
+                  config,
+                  this.sourcePriceListener.getLatestPriceInfo(config.id),
+                  this.targetPriceListener.getLatestPriceInfo(config.id),
+                  this.logger,
+                ) === UpdateCondition.YES
+                  ? "yes"
+                  : "early";
+
+              this.metrics.recordPriceUpdate(
+                config.id,
+                config.alias,
+                triggerValue,
+              );
             }
           }
         } catch (error) {
@@ -121,7 +135,21 @@ export class Controller {
           // Record errors in metrics
           if (this.metrics) {
             for (const config of pricesToPush) {
-              this.metrics.recordPriceUpdateError(config.id, config.alias);
+              const triggerValue =
+                shouldUpdate(
+                  config,
+                  this.sourcePriceListener.getLatestPriceInfo(config.id),
+                  this.targetPriceListener.getLatestPriceInfo(config.id),
+                  this.logger,
+                ) === UpdateCondition.YES
+                  ? "yes"
+                  : "early";
+
+              this.metrics.recordPriceUpdateError(
+                config.id,
+                config.alias,
+                triggerValue,
+              );
             }
           }
         }
