@@ -51,7 +51,7 @@ export class PricePusherMetrics {
     this.priceUpdateErrors = new Counter({
       name: "pyth_price_update_errors_total",
       help: "Total number of errors encountered during price updates",
-      labelNames: ["price_id", "alias", "error_type"],
+      labelNames: ["price_id", "alias"],
       registers: [this.registry],
     });
 
@@ -116,15 +116,10 @@ export class PricePusherMetrics {
   }
 
   // Record a price update error
-  public recordPriceUpdateError(
-    priceId: string,
-    alias: string,
-    errorType: string,
-  ): void {
+  public recordPriceUpdateError(priceId: string, alias: string): void {
     this.priceUpdateErrors.inc({
       price_id: priceId,
       alias,
-      error_type: errorType,
     });
   }
 

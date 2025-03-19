@@ -121,11 +121,7 @@ export class Controller {
           // Record errors in metrics
           if (this.metrics) {
             for (const config of pricesToPush) {
-              this.metrics.recordPriceUpdateError(
-                config.id,
-                config.alias,
-                error instanceof Error ? error.name : "unknown",
-              );
+              this.metrics.recordPriceUpdateError(config.id, config.alias);
             }
           }
         }

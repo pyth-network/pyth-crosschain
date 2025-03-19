@@ -526,13 +526,13 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(pyth_price_updates_total[1h]))",
+          "expr": "sum(increase(pyth_price_updates_total[$__range]))",
           "legendFormat": "Updates",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Price Updates (Last Hour)",
+      "title": "Price Updates (Current Range)",
       "type": "timeseries"
     },
     {
@@ -909,7 +909,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(pyth_price_update_errors_total[5m]))",
+          "expr": "sum(increase(pyth_price_update_errors_total[$__range]))",
           "legendFormat": "Errors",
           "range": true,
           "refId": "A"
