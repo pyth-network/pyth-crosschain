@@ -10,7 +10,7 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import pino from "pino";
 import { filterInvalidPriceItems } from "../utils";
 import { PricePusherMetrics } from "../metrics";
-import { createSuiBalanceTracker } from "../balance-tracker";
+import { createSuiBalanceTracker } from "./balance-tracker";
 import { SuiClient } from "@mysten/sui/client";
 
 export default {

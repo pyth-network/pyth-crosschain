@@ -1,5 +1,12 @@
 import { SuiClient } from "@mysten/sui/client";
-import { BaseBalanceTracker, BaseBalanceTrackerConfig } from "../interface";
+import {
+  BaseBalanceTracker,
+  BaseBalanceTrackerConfig,
+  IBalanceTracker,
+} from "../interface";
+import { DurationInSeconds } from "../utils";
+import { PricePusherMetrics } from "../metrics";
+import { Logger } from "pino";
 
 /**
  * Sui-specific configuration for balance tracker
@@ -58,4 +65,32 @@ export class SuiBalanceTracker extends BaseBalanceTracker {
       );
     }
   }
+}
+
+/**
+ * Parameters for creating a Sui balance tracker
+ */
+export interface CreateSuiBalanceTrackerParams {
+  client: SuiClient;
+  address: string;
+  network: string;
+  updateInterval: DurationInSeconds;
+  metrics: PricePusherMetrics;
+  logger: Logger;
+}
+
+/**
+ * Factory function to create a balance tracker for Sui chain
+ */
+export function createSuiBalanceTracker(
+  params: CreateSuiBalanceTrackerParams,
+): IBalanceTracker {
+  return new SuiBalanceTracker({
+    client: params.client,
+    address: params.address,
+    network: params.network,
+    updateInterval: params.updateInterval,
+    metrics: params.metrics,
+    logger: params.logger,
+  });
 }

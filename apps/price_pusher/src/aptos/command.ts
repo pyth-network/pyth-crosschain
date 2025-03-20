@@ -14,7 +14,7 @@ import { AptosAccount } from "aptos";
 import pino from "pino";
 import { filterInvalidPriceItems } from "../utils";
 import { PricePusherMetrics } from "../metrics";
-import { createAptosBalanceTracker } from "../balance-tracker";
+import { createAptosBalanceTracker } from "./balance-tracker";
 
 export default {
   command: "aptos",

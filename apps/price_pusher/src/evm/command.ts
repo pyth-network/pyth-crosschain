@@ -12,7 +12,7 @@ import { createClient } from "./super-wallet";
 import { createPythContract } from "./pyth-contract";
 import { isWsEndpoint, filterInvalidPriceItems } from "../utils";
 import { PricePusherMetrics } from "../metrics";
-import { createEvmBalanceTracker } from "../balance-tracker";
+import { createEvmBalanceTracker } from "./balance-tracker";
 
 export default {
   command: "evm",

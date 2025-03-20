@@ -1,5 +1,12 @@
 import { SuperWalletClient } from "./super-wallet";
-import { BaseBalanceTracker, BaseBalanceTrackerConfig } from "../interface";
+import {
+  BaseBalanceTracker,
+  BaseBalanceTrackerConfig,
+  IBalanceTracker,
+} from "../interface";
+import { DurationInSeconds } from "../utils";
+import { PricePusherMetrics } from "../metrics";
+import { Logger } from "pino";
 
 /**
  * EVM-specific configuration for balance tracker
@@ -48,4 +55,32 @@ export class EvmBalanceTracker extends BaseBalanceTracker {
       );
     }
   }
+}
+
+/**
+ * Parameters for creating an EVM balance tracker
+ */
+export interface CreateEvmBalanceTrackerParams {
+  client: SuperWalletClient;
+  address: `0x${string}`;
+  network: string;
+  updateInterval: DurationInSeconds;
+  metrics: PricePusherMetrics;
+  logger: Logger;
+}
+
+/**
+ * Factory function to create a balance tracker for EVM chains
+ */
+export function createEvmBalanceTracker(
+  params: CreateEvmBalanceTrackerParams,
+): IBalanceTracker {
+  return new EvmBalanceTracker({
+    client: params.client,
+    address: params.address,
+    network: params.network,
+    updateInterval: params.updateInterval,
+    metrics: params.metrics,
+    logger: params.logger,
+  });
 }

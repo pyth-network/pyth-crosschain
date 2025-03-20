@@ -1,5 +1,12 @@
 import { AptosClient } from "aptos";
-import { BaseBalanceTracker, BaseBalanceTrackerConfig } from "../interface";
+import {
+  BaseBalanceTracker,
+  BaseBalanceTrackerConfig,
+  IBalanceTracker,
+} from "../interface";
+import { DurationInSeconds } from "../utils";
+import { PricePusherMetrics } from "../metrics";
+import { Logger } from "pino";
 
 /**
  * Aptos-specific configuration for balance tracker
@@ -71,4 +78,34 @@ export class AptosBalanceTracker extends BaseBalanceTracker {
       );
     }
   }
+}
+
+/**
+ * Parameters for creating an Aptos balance tracker
+ */
+export interface CreateAptosBalanceTrackerParams {
+  endpoint: string;
+  address: string;
+  network: string;
+  updateInterval: DurationInSeconds;
+  metrics: PricePusherMetrics;
+  logger: Logger;
+  decimals?: number;
+}
+
+/**
+ * Factory function to create a balance tracker for Aptos chain
+ */
+export function createAptosBalanceTracker(
+  params: CreateAptosBalanceTrackerParams,
+): IBalanceTracker {
+  return new AptosBalanceTracker({
+    endpoint: params.endpoint,
+    address: params.address,
+    network: params.network,
+    updateInterval: params.updateInterval,
+    metrics: params.metrics,
+    logger: params.logger,
+    decimals: params.decimals,
+  });
 }
