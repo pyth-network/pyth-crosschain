@@ -21,6 +21,10 @@ import pino from "pino";
 import { Logger } from "pino";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { filterInvalidPriceItems } from "../utils";
+import { PricePusherMetrics } from "../metrics";
+import { createSolanaBalanceTracker } from "./balance-tracker";
+import { IBalanceTracker } from "../interface";
+
 export default {
   command: "solana",
   describe: "run price pusher for solana",
@@ -99,6 +103,8 @@ export default {
     ...options.pushingFrequency,
     ...options.logLevel,
     ...options.controllerLogLevel,
+    ...options.enableMetrics,
+    ...options.metricsPort,
   },
   handler: async function (argv: any) {
     const {
@@ -122,6 +128,8 @@ export default {
       treasuryId,
       logLevel,
       controllerLogLevel,
+      enableMetrics,
+      metricsPort,
     } = argv;
 
     const logger = pino({ level: logLevel });
@@ -129,6 +137,14 @@ export default {
     const priceConfigs = readPriceConfigFile(priceConfigFile);
 
     const hermesClient = new HermesClient(priceServiceEndpoint);
+
+    // Initialize metrics if enabled
+    let metrics: PricePusherMetrics | undefined;
+    if (enableMetrics) {
+      metrics = new PricePusherMetrics(logger.child({ module: "Metrics" }));
+      metrics.start(metricsPort);
+      logger.info(`Metrics server started on port ${metricsPort}`);
+    }
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
@@ -152,11 +168,10 @@ export default {
       logger.child({ module: "PythPriceListener" }),
     );
 
-    const wallet = new NodeWallet(
-      Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(keypairFile, "ascii"))),
-      ),
+    const keypair = Keypair.fromSecretKey(
+      Uint8Array.from(JSON.parse(fs.readFileSync(keypairFile, "ascii"))),
     );
+    const wallet = new NodeWallet(keypair);
 
     const connection = new Connection(endpoint, "processed");
     const pythSolanaReceiver = new PythSolanaReceiver({
@@ -165,6 +180,21 @@ export default {
       pushOracleProgramId: new PublicKey(pythContractAddress),
       treasuryId: treasuryId,
     });
+
+    // Create and start the balance tracker if metrics are enabled
+    if (metrics) {
+      const balanceTracker: IBalanceTracker = createSolanaBalanceTracker({
+        connection,
+        publicKey: keypair.publicKey,
+        network: "solana",
+        updateInterval: 60,
+        metrics,
+        logger,
+      });
+
+      // Start the balance tracker
+      await balanceTracker.start();
+    }
 
     // Fetch the account lookup table if provided
     const lookupTableAccount = addressLookupTableAccount
@@ -220,7 +250,10 @@ export default {
       solanaPriceListener,
       solanaPricePusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency },
+      {
+        pushingFrequency,
+        metrics,
+      },
     );
 
     controller.start();
