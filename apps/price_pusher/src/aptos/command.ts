@@ -13,6 +13,9 @@ import {
 import { AptosAccount } from "aptos";
 import pino from "pino";
 import { filterInvalidPriceItems } from "../utils";
+import { PricePusherMetrics } from "../metrics";
+import { createAptosBalanceTracker } from "./balance-tracker";
+
 export default {
   command: "aptos",
   describe: "run price pusher for aptos",
@@ -40,6 +43,8 @@ export default {
     ...options.pushingFrequency,
     ...options.logLevel,
     ...options.controllerLogLevel,
+    ...options.enableMetrics,
+    ...options.metricsPort,
   },
   handler: async function (argv: any) {
     // FIXME: type checks for this
@@ -54,12 +59,22 @@ export default {
       overrideGasPriceMultiplier,
       logLevel,
       controllerLogLevel,
+      enableMetrics,
+      metricsPort,
     } = argv;
 
     const logger = pino({ level: logLevel });
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint);
+
+    // Initialize metrics if enabled
+    let metrics: PricePusherMetrics | undefined;
+    if (enableMetrics) {
+      metrics = new PricePusherMetrics(logger.child({ module: "Metrics" }));
+      metrics.start(metricsPort);
+      logger.info(`Metrics server started on port ${metricsPort}`);
+    }
 
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
     const account = AptosAccount.fromDerivePath(
@@ -113,8 +128,26 @@ export default {
       aptosListener,
       aptosPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
-      { pushingFrequency },
+      {
+        pushingFrequency,
+        metrics,
+      },
     );
+
+    // Create and start the balance tracker if metrics are enabled
+    if (metrics) {
+      const balanceTracker = createAptosBalanceTracker({
+        address: account.address().toString(),
+        endpoint,
+        network: "aptos",
+        updateInterval: pushingFrequency,
+        metrics,
+        logger: logger.child({ module: "AptosBalanceTracker" }),
+      });
+
+      // Start the balance tracker
+      await balanceTracker.start();
+    }
 
     controller.start();
   },
