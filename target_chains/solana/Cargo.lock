@@ -3120,9 +3120,10 @@ dependencies = [
 
 [[package]]
 name = "pyth-solana-receiver-sdk"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anchor-lang",
+ "bytemuck_derive",
  "hex",
  "pythnet-sdk",
  "solana-program",
