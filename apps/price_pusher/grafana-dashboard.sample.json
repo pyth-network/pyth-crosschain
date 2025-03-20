@@ -22,9 +22,22 @@
   "links": [],
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 15,
+      "panels": [],
+      "title": "Configured Price Feeds",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -46,10 +59,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 6,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 9,
       "options": {
@@ -70,26 +83,42 @@
         "wideLayout": true
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "pyth_price_feeds_total",
+          "expr": "pyth_price_feeds_total{namespace=\"$chain\"}",
           "instant": true,
+          "legendFormat": "{{namespace}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Configured Price Feeds",
+      "title": "Configured Price Feeds: ${chain}",
       "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 16,
+      "panels": [],
+      "title": "Active Price Feeds",
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -111,10 +140,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 6,
-        "x": 6,
-        "y": 0
+        "x": 0,
+        "y": 8
       },
       "id": 12,
       "options": {
@@ -135,26 +164,42 @@
         "wideLayout": true
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "count(pyth_price_last_published_time)",
+          "expr": "count(pyth_price_last_published_time{namespace=\"$chain\"})",
           "instant": true,
+          "legendFormat": "{{namespace}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Active Price Feeds",
+      "title": "Active Price Feeds: ${chain}",
       "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 17,
+      "panels": [],
+      "title": "Time Since Last Update",
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -180,10 +225,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 15
       },
       "id": 2,
       "options": {
@@ -204,27 +249,42 @@
         "wideLayout": true
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "time() - pyth_price_last_published_time",
+          "expr": "time() - pyth_price_last_published_time{namespace=\"$chain\"}",
           "instant": true,
           "legendFormat": "{{alias}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Time Since Last Update (Stat)",
+      "title": "Time Since Last Update: ${chain}",
       "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 18,
+      "panels": [],
+      "title": "Price Feeds Lists",
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -298,9 +358,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
-        "y": 8
+        "y": 22
       },
       "id": 7,
       "options": {
@@ -322,14 +382,16 @@
         ]
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "v",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "pyth_price_last_published_time",
+          "expr": "pyth_price_last_published_time{namespace=\"$chain\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -339,10 +401,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "time() - pyth_price_last_published_time",
+          "expr": "time() - pyth_price_last_published_time{namespace=\"$chain\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -352,10 +414,10 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "pyth_price_update_attempts_total{status=\"success\"}",
+          "expr": "pyth_price_update_attempts_total{status=\"success\", namespace=\"$chain\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -363,7 +425,7 @@
           "refId": "C"
         }
       ],
-      "title": "Price Feeds List",
+      "title": "Price Feeds List: ${chain}",
       "transformations": [
         {
           "id": "joinByField",
@@ -410,11 +472,8 @@
               "Time 2": 10,
               "Time 3": 15,
               "Value #A": 9,
-              "Value #B": 2,
-              "Value #C": 3,
               "__name__ 1": 5,
               "__name__ 2": 16,
-              "alias 1": 1,
               "alias 2": 11,
               "alias 3": 17,
               "app 1": 6,
@@ -431,7 +490,6 @@
             "renameByName": {
               "Value #B": "Time Since Update",
               "Value #C": "Total Updates",
-              "alias": "Symbol",
               "alias 1": "Symbol",
               "price_id": "Price ID"
             }
@@ -441,9 +499,22 @@
       "type": "table"
     },
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 19,
+      "panels": [],
+      "title": "Updates Statistics",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -517,8 +588,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 8
+        "x": 0,
+        "y": 31
       },
       "id": 3,
       "options": {
@@ -535,26 +606,41 @@
         }
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "sum(increase(pyth_price_update_attempts_total{status=\"success\"}[$__range]))",
-          "legendFormat": "Updates",
+          "expr": "increase(pyth_price_update_attempts_total{status=\"success\", namespace=\"$chain\"}[$__range])",
+          "legendFormat": "{{alias}} - Updates",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Successful Updates (Current Range)",
+      "title": "Successful Updates: ${chain}",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 14,
+      "panels": [],
+      "title": "Update Conditions By Chain",
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -620,9 +706,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 6,
+        "w": 8,
         "x": 0,
-        "y": 16
+        "y": 40
       },
       "id": 13,
       "options": {
@@ -642,7 +728,7 @@
         "pieType": "pie",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -654,27 +740,42 @@
         }
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "sum by (trigger) (increase(pyth_price_update_attempts_total[$__range]))",
+          "expr": "sum by (trigger) (increase(pyth_price_update_attempts_total{namespace=\"$chain\"}[$__range]))",
           "instant": false,
           "legendFormat": "{{trigger}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Update Conditions Distribution (Current Range)",
+      "title": "Update Conditions: ${chain}",
       "type": "piechart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Wallet Information",
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -704,15 +805,15 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 6,
-        "y": 16
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 49
       },
       "id": 10,
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
@@ -724,31 +825,33 @@
           "values": false
         },
         "showPercentChange": false,
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "wideLayout": true
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "pyth_wallet_balance",
+          "expr": "pyth_wallet_balance{namespace=\"$chain\"}",
           "instant": true,
           "legendFormat": "{{wallet_address}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Wallet Balance",
+      "title": "Wallet Balance: ${chain}",
       "type": "stat"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -805,8 +908,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 16
+        "x": 0,
+        "y": 55
       },
       "id": 11,
       "options": {
@@ -823,26 +926,41 @@
         }
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "pyth_wallet_balance",
+          "expr": "pyth_wallet_balance{namespace=\"$chain\"}",
           "legendFormat": "{{wallet_address}} ({{network}})",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Wallet Balance Over Time",
+      "title": "Wallet Balance Over Time: ${chain}",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 63
+      },
+      "id": 21,
+      "panels": [],
+      "title": "Failed Updates",
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "edryyydtht14wa"
       },
       "fieldConfig": {
         "defaults": {
@@ -901,7 +1019,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 64
       },
       "id": 6,
       "options": {
@@ -918,20 +1036,22 @@
         }
       },
       "pluginVersion": "11.5.2",
+      "repeat": "chain",
+      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "edryyydtht14wa"
           },
           "editorMode": "code",
-          "expr": "sum(increase(pyth_price_update_attempts_total{status=\"error\"}[$__range]))",
-          "legendFormat": "Errors",
+          "expr": "increase(pyth_price_update_attempts_total{status=\"error\", namespace=\"$chain\"}[$__range])",
+          "legendFormat": "{{alias}} - Errors",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Failed Updates (Current Range)",
+      "title": "Failed Updates: ${chain}",
       "type": "timeseries"
     }
   ],
@@ -940,7 +1060,41 @@
   "schemaVersion": 40,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "ads9ouz3jh4hsa"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Chain",
+        "multi": true,
+        "name": "chain",
+        "options": [],
+        "query": {
+          "label": "namespace",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "regex": ".*price-pusher.*",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
