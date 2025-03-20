@@ -139,7 +139,7 @@ export default {
       const balanceTracker = createAptosBalanceTracker({
         address: account.address().toString(),
         endpoint,
-        network: "aptos", // You might want to extract network name from config
+        network: "aptos",
         updateInterval: pushingFrequency,
         metrics,
         logger: logger.child({ module: "AptosBalanceTracker" }),

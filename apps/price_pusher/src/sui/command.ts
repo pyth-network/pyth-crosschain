@@ -178,12 +178,10 @@ export default {
 
     // Create and start the balance tracker if metrics are enabled
     if (metrics) {
-      // For Sui, we'll use a simple network identification approach
-      // In the future, this could be improved by querying the network directly
       const balanceTracker = createSuiBalanceTracker({
         client: suiClient,
         address: suiAddress,
-        network: "sui", // Simply use "sui" as the network name for now
+        network: "sui",
         updateInterval: pushingFrequency,
         metrics,
         logger,
