@@ -8,7 +8,7 @@
   "dynamic-jito-tips": true,
   "jito-bundle-size": "5",
   "updates-per-jito-bundle": "6",
-  "price-config-file": "./price-config.yaml",
+  "price-config-file": "./price-config.stable.sample.yaml",
   "price-service-endpoint": "https://hermes.pyth.network/",
   "pyth-contract-address": "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
   "pushing-frequency": "30"
