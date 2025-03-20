@@ -4,7 +4,7 @@
 2. If the wormhole contract is not deployed on the target chain run the following command:
 
    ```
-   pnpm instantiate-wormhole -- --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge> --chain <chain>
+   pnpm instantiate-wormhole --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge> --chain <chain>
    ```
 
    You can re-build the wormhole contract using the scripts given in `wormhole-stub`.

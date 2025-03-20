@@ -268,7 +268,7 @@ function extractFromRawLog(rawLog: string, key: string): string {
     return rx.exec(rawLog)![1];
   } catch (e) {
     console.error(
-      "Encountered an error in parsing instantiation result. Printing raw log",
+      "Encountered an error in parsing tx result. Printing raw log",
     );
     console.error(rawLog);
     throw e;

@@ -87,6 +87,11 @@ async function run() {
   console.log(
     `Contract deployed on chain ${chain.getId()} at ${contract.address}`,
   );
+
+  DefaultStore.wormhole_contracts[contract.getId()] = contract;
+  DefaultStore.saveAllContracts();
+  console.log("Added the following to your CosmWasm contracts configs");
+  console.log(Store.serialize(contract));
 }
 
 run();
