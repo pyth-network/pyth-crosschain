@@ -4,6 +4,7 @@ import { DurationInSeconds } from "./utils";
 import { IBalanceTracker } from "./interface";
 import { EvmBalanceTracker } from "./evm/balance-tracker";
 import { SuperWalletClient } from "./evm/super-wallet";
+import { AptosBalanceTracker } from "./aptos/balance-tracker";
 
 /**
  * Parameters for creating an EVM balance tracker
@@ -30,6 +31,36 @@ export function createEvmBalanceTracker(
     updateInterval: params.updateInterval,
     metrics: params.metrics,
     logger: params.logger,
+  });
+}
+
+/**
+ * Parameters for creating an Aptos balance tracker
+ */
+export interface CreateAptosBalanceTrackerParams {
+  endpoint: string;
+  address: string;
+  network: string;
+  updateInterval: DurationInSeconds;
+  metrics: PricePusherMetrics;
+  logger: Logger;
+  decimals?: number;
+}
+
+/**
+ * Factory function to create a balance tracker for Aptos chain
+ */
+export function createAptosBalanceTracker(
+  params: CreateAptosBalanceTrackerParams,
+): IBalanceTracker {
+  return new AptosBalanceTracker({
+    endpoint: params.endpoint,
+    address: params.address,
+    network: params.network,
+    updateInterval: params.updateInterval,
+    metrics: params.metrics,
+    logger: params.logger,
+    decimals: params.decimals,
   });
 }
 
