@@ -5,6 +5,8 @@ import { IBalanceTracker } from "./interface";
 import { EvmBalanceTracker } from "./evm/balance-tracker";
 import { SuperWalletClient } from "./evm/super-wallet";
 import { AptosBalanceTracker } from "./aptos/balance-tracker";
+import { SuiBalanceTracker } from "./sui/balance-tracker";
+import { SuiClient } from "@mysten/sui/client";
 
 /**
  * Parameters for creating an EVM balance tracker
@@ -64,6 +66,33 @@ export function createAptosBalanceTracker(
   });
 }
 
+/**
+ * Parameters for creating a Sui balance tracker
+ */
+export interface CreateSuiBalanceTrackerParams {
+  client: SuiClient;
+  address: string;
+  network: string;
+  updateInterval: DurationInSeconds;
+  metrics: PricePusherMetrics;
+  logger: Logger;
+}
+
+/**
+ * Factory function to create a balance tracker for Sui chain
+ */
+export function createSuiBalanceTracker(
+  params: CreateSuiBalanceTrackerParams,
+): IBalanceTracker {
+  return new SuiBalanceTracker({
+    client: params.client,
+    address: params.address,
+    network: params.network,
+    updateInterval: params.updateInterval,
+    metrics: params.metrics,
+    logger: params.logger,
+  });
+}
+
 // Additional factory functions for other chains would follow the same pattern:
-// export function createSuiBalanceTracker(params: CreateSuiBalanceTrackerParams): IBalanceTracker { ... }
 // export function createSolanaBalanceTracker(params: CreateSolanaBalanceTrackerParams): IBalanceTracker { ... }
