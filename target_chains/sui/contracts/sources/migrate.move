@@ -11,7 +11,7 @@
 /// any of Pyth's methods by enforcing the current build version as
 /// their required minimum version.
 module pyth::migrate {
-    use iota::object::{ID};
+    use sui::object::{ID};
 
     use pyth::state::{Self, State};
     use pyth::contract_upgrade::{Self};
@@ -67,7 +67,7 @@ module pyth::migrate {
 
         // Finally emit an event reflecting a successful migrate.
         let package = state::current_package(&latest_only, pyth_state);
-        iota::event::emit(MigrateComplete { package });
+        sui::event::emit(MigrateComplete { package });
     }
 
     #[test_only]

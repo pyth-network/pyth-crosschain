@@ -1,6 +1,6 @@
 module pyth::accumulator {
     use std::vector::{Self};
-    use iota::clock::{Clock, Self};
+    use sui::clock::{Clock, Self};
     use wormhole::bytes20::{Self, Bytes20};
     use wormhole::cursor::{Self, Cursor};
     use pyth::deserialize::{Self};

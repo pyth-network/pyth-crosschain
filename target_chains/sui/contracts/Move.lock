@@ -2,35 +2,35 @@
 
 [move]
 version = 0
-manifest_digest = "915D6459031D76A0618631BDF08328171A3494876C5E17735BCBFF462BEDF464"
+manifest_digest = "320300697C11C4D84BF6ED32C1DB48A4EE830B6B44F4DFDA4E89345875C5EA11"
 deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 
 dependencies = [
-  { name = "Iota" },
+  { name = "Sui" },
   { name = "Wormhole" },
 ]
 
 [[move.package]]
-name = "Iota"
-source = { git = "https://github.com/iotaledger/iota.git", rev = "751c23caf24efd071463b9ffd07eabcb15f44f31", subdir = "crates/iota-framework/packages/iota-framework" }
+name = "MoveStdlib"
+source = { git = "https://github.com/MystenLabs/sui.git", rev = "041c5f2bae2fe52079e44b70514333532d69f4e6", subdir = "crates/sui-framework/packages/move-stdlib" }
+
+[[move.package]]
+name = "Sui"
+source = { git = "https://github.com/MystenLabs/sui.git", rev = "041c5f2bae2fe52079e44b70514333532d69f4e6", subdir = "crates/sui-framework/packages/sui-framework" }
 
 dependencies = [
   { name = "MoveStdlib" },
 ]
 
 [[move.package]]
-name = "MoveStdlib"
-source = { git = "https://github.com/iotaledger/iota.git", rev = "751c23caf24efd071463b9ffd07eabcb15f44f31", subdir = "crates/iota-framework/packages/move-stdlib" }
-
-[[move.package]]
 name = "Wormhole"
-source = { local = "../vendor/wormhole_iota_testnet/wormhole" }
+source = { git = "https://github.com/wormhole-foundation/wormhole.git", rev = "82d82bffd5a8566e4b5d94be4e4678ad55ab1f4f", subdir = "sui/wormhole" }
 
 dependencies = [
-  { name = "Iota" },
+  { name = "Sui" },
 ]
 
 [move.toolchain-version]
-compiler-version = "0.9.2-rc"
-edition = "2024.beta"
-flavor = "iota"
+compiler-version = "1.27.2"
+edition = "legacy"
+flavor = "sui"

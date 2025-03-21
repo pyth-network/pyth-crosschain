@@ -1,7 +1,7 @@
 module pyth::data_source {
-    use iota::dynamic_field::{Self};
-    use iota::object::{UID};
-    use iota::tx_context::{TxContext};
+    use sui::dynamic_field::{Self};
+    use sui::object::{UID};
+    use sui::tx_context::{TxContext};
 
     use pyth::set::{Self};
 
