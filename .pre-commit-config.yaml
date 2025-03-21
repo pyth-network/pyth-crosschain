@@ -26,9 +26,9 @@ repos:
   - repo: local
     hooks:
       - id: turbo-fix-format
-        name: Run turbo fix:format on packages changed since the last commit
+        name: Run turbo fix:format on packages
         language: system
-        entry: sh -c 'TURBO_SCM_BASE="HEAD^1" pnpm turbo fix:format --affected'
+        entry: sh -c 'pnpm turbo fix:format'
         pass_filenames: false
       # Hooks for the remote executor
       - id: cargo-fmt-remote-executor
