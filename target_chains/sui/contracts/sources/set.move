@@ -1,7 +1,7 @@
 /// A set data structure.
 module pyth::set {
-    use iota::table::{Self, Table};
-    use iota::tx_context::{TxContext};
+    use sui::table::{Self, Table};
+    use sui::tx_context::{TxContext};
     use std::vector;
 
     /// Empty struct. Used as the value type in mappings to encode a set

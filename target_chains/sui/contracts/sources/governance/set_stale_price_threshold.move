@@ -27,8 +27,8 @@ module pyth::set_stale_price_threshold {
 
 #[test_only]
 module pyth::set_stale_price_threshold_test {
-    use iota::test_scenario::{Self};
-    use iota::coin::Self;
+    use sui::test_scenario::{Self};
+    use sui::coin::Self;
 
     use pyth::pyth_tests::{Self, setup_test, take_wormhole_and_pyth_states};
     use pyth::state::Self;

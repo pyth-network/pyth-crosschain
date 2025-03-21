@@ -1,10 +1,10 @@
 module pyth::price_info {
-    use iota::object::{Self, UID, ID};
-    use iota::tx_context::{TxContext};
-    use iota::dynamic_object_field::{Self};
-    use iota::table::{Self};
-    use iota::coin::{Self, Coin};
-    use iota::iota::IOTA;
+    use sui::object::{Self, UID, ID};
+    use sui::tx_context::{TxContext};
+    use sui::dynamic_object_field::{Self};
+    use sui::table::{Self};
+    use sui::coin::{Self, Coin};
+    use sui::sui::SUI;
 
     use pyth::price_feed::{Self, PriceFeed};
     use pyth::price_identifier::{PriceIdentifier};
@@ -18,7 +18,7 @@ module pyth::price_info {
     friend pyth::pyth;
     friend pyth::state;
 
-    /// Iota object version of PriceInfo.
+    /// Sui object version of PriceInfo.
     /// Has a key ability, is unique for each price identifier, and lives in global store.
     struct PriceInfoObject has key, store {
         id: UID,
@@ -33,7 +33,7 @@ module pyth::price_info {
     }
 
     /// Creates a table which maps a PriceIdentifier to the
-    /// UID (in bytes) of the corresponding Iota PriceInfoObject.
+    /// UID (in bytes) of the corresponding Sui PriceInfoObject.
     public(friend) fun new_price_info_registry(parent_id: &mut UID, ctx: &mut TxContext) {
         assert!(
             !dynamic_object_field::exists_(parent_id, KEY),
@@ -95,19 +95,19 @@ module pyth::price_info {
     }
 
     public fun get_balance(price_info_object: &PriceInfoObject): u64 {
-        if (!dynamic_object_field::exists_with_type<vector<u8>, Coin<IOTA>>(&price_info_object.id, FEE_STORAGE_KEY)) {
+        if (!dynamic_object_field::exists_with_type<vector<u8>, Coin<SUI>>(&price_info_object.id, FEE_STORAGE_KEY)) {
             return 0
         };
-        let fee = dynamic_object_field::borrow<vector<u8>, Coin<IOTA>>(&price_info_object.id, FEE_STORAGE_KEY);
+        let fee = dynamic_object_field::borrow<vector<u8>, Coin<SUI>>(&price_info_object.id, FEE_STORAGE_KEY);
         coin::value(fee)
     }
 
-    public fun deposit_fee_coins(price_info_object: &mut PriceInfoObject, fee_coins: Coin<IOTA>) {
-        if (!dynamic_object_field::exists_with_type<vector<u8>, Coin<IOTA>>(&price_info_object.id, FEE_STORAGE_KEY)) {
+    public fun deposit_fee_coins(price_info_object: &mut PriceInfoObject, fee_coins: Coin<SUI>) {
+        if (!dynamic_object_field::exists_with_type<vector<u8>, Coin<SUI>>(&price_info_object.id, FEE_STORAGE_KEY)) {
             dynamic_object_field::add(&mut price_info_object.id, FEE_STORAGE_KEY, fee_coins);
         }
         else {
-            let current_fee = dynamic_object_field::borrow_mut<vector<u8>, Coin<IOTA>>(
+            let current_fee = dynamic_object_field::borrow_mut<vector<u8>, Coin<SUI>>(
                 &mut price_info_object.id,
                 FEE_STORAGE_KEY
             );
@@ -139,8 +139,8 @@ module pyth::price_info {
 
     #[test]
     public fun test_get_price_info_object_id_from_price_identifier(){
-        use iota::object::{Self};
-        use iota::test_scenario::{Self, ctx};
+        use sui::object::{Self};
+        use sui::test_scenario::{Self, ctx};
         use pyth::price_identifier::{Self};
         let scenario = test_scenario::begin(@pyth);
         let uid = object::new(ctx(&mut scenario));

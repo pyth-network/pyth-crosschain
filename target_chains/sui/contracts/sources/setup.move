@@ -1,8 +1,8 @@
 module pyth::setup {
-    use iota::object::{Self, UID};
-    use iota::package::{Self, UpgradeCap};
-    use iota::transfer::{Self};
-    use iota::tx_context::{Self, TxContext};
+    use sui::object::{Self, UID};
+    use sui::package::{Self, UpgradeCap};
+    use sui::transfer::{Self};
+    use sui::tx_context::{Self, TxContext};
 
     use pyth::state::{Self};
     use pyth::data_source::{DataSource};
@@ -34,7 +34,7 @@ module pyth::setup {
         // This will be created and sent to the transaction sender
         // automatically when the contract is published.
         transfer::public_transfer(
-            iota::package::test_publish(object::id_from_address(@pyth), ctx),
+            sui::package::test_publish(object::id_from_address(@pyth), ctx),
             tx_context::sender(ctx)
         );
     }

@@ -1,5 +1,5 @@
 module pyth::event {
-    use iota::event::{Self};
+    use sui::event::{Self};
     use pyth::price_feed::{PriceFeed};
 
     friend pyth::pyth;
