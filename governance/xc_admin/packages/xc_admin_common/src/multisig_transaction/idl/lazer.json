@@ -84,6 +84,36 @@
       ]
     },
     {
+      "name": "updateEcdsaSigner",
+      "accounts": [
+        {
+          "name": "topAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "storage",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "trustedSigner",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          }
+        },
+        {
+          "name": "expiresAt",
+          "type": "i64"
+        }
+      ]
+    },
+    {
       "name": "verifyMessage",
       "docs": [
         "Verifies a ed25519 signature on Solana by checking that the transaction contains",
