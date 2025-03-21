@@ -8,8 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
+    "fix:format": "prettier --write \"src/**/*.sol\"",
+    "test:format": "prettier --check \"src/**/*.sol\""
   },
   "keywords": [],
   "author": "",
