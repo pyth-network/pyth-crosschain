@@ -9,7 +9,7 @@
       "cache": false
     },
     "//#fix:format": {
-      "dependsOn": ["//#install:modules", "//#fix:lint"],
+      "dependsOn": ["//#install:modules"],
       "cache": false
     },
     "//#fix:lint": {
@@ -101,7 +101,7 @@
       "cache": false
     },
     "fix:format": {
-      "dependsOn": ["//#install:modules", "fix:lint"],
+      "dependsOn": ["//#install:modules"],
       "cache": false
     },
     "fix:lint": {
