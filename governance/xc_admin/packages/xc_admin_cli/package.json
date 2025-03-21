@@ -36,6 +36,6 @@
     "typescript": "catalog:"
   },
   "dev-dependencies": {
-    "ts-node": "^10.9.2"
+    "ts-node": "catalog:"
   }
 }
