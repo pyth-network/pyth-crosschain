@@ -119,6 +119,7 @@ catalog:
   tailwindcss: ^3.0.0
   tailwindcss-animate: ^1.0.7
   tailwindcss-react-aria-components: ^2.0.0
+  ts-node: ^10.9.2
   typescript: ^5.8.2
   vercel: ^41.4.1
   viem: ^2.23.11

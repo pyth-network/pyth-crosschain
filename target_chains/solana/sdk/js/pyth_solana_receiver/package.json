@@ -41,8 +41,8 @@
     "prettier": "catalog:",
     "quicktype": "^23.0.76",
     "ts-jest": "^29.0.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^4.6.3"
+    "ts-node": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",

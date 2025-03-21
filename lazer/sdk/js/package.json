@@ -39,7 +39,7 @@
     "@types/ws": "^8.5.12",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "ts-node": "^10.9.2",
+    "ts-node": "catalog:",
     "typedoc": "^0.26.8",
     "typescript": "catalog:"
   },

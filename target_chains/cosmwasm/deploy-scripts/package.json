@@ -22,13 +22,13 @@
     "adm-zip": "^0.5.10",
     "node-downloader-helper": "^2.1.7",
     "rimraf": "^5.0.0",
-    "typescript": "^5.3.3",
+    "typescript": "catalog:",
     "yargs": "^17.0.1"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.0",
     "@types/yargs": "^17.0.18",
     "prettier": "catalog:",
-    "ts-node": "^10.9.2"
+    "ts-node": "catalog:"
   }
 }
