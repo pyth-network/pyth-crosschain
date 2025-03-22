@@ -879,3 +879,8 @@
   rpcUrl: https://bepolia.rpc.berachain.com/
   networkId: 80069
   type: EvmChain
+- id: megaeth_testnet
+  mainnet: false
+  rpcUrl: https://carrot.megaeth.com/rpc
+  networkId: 6342
+  type: EvmChain
