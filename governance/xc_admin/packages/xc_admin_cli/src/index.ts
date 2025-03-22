@@ -972,4 +972,74 @@ multisigCommand(
     );
   });
 
+multisigCommand(
+  "upgrade-program-and-set-trusted-ecdsa-signer",
+  "Upgrade the Lazer program and set a trusted ECDSA signer",
+)
+  .requiredOption("-b, --buffer <pubkey>", "buffer account for the upgrade")
+  .requiredOption(
+    "-s, --signer <address>",
+    "public address (hex) of the trusted ECDSA signer to add/update",
+  )
+  .requiredOption(
+    "-e, --expiry-time <seconds>",
+    "expiry time in seconds since Unix epoch. Set to 0 to remove the signer.",
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+
+    const buffer: PublicKey = new PublicKey(options.buffer);
+    const trustedSigner = Buffer.from(options.signer, "hex");
+    const expiryTime = new BN(options.expiryTime);
+
+    const programId = SOLANA_LAZER_PROGRAM_ID;
+    const programDataAccount = PublicKey.findProgramAddressSync(
+      [programId.toBuffer()],
+      BPF_UPGRADABLE_LOADER,
+    )[0];
+
+    // This is intruction is not in @solana/web3.js, source : https://docs.rs/solana-program/latest/src/solana_program/bpf_loader_upgradeable.rs.html#200
+    const upgradeInstruction: TransactionInstruction = {
+      programId: BPF_UPGRADABLE_LOADER,
+      // 4-bytes instruction discriminator, got it from https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html#104
+      data: Buffer.from([3, 0, 0, 0]),
+      keys: [
+        { pubkey: programDataAccount, isSigner: false, isWritable: true },
+        { pubkey: programId, isSigner: false, isWritable: true },
+        { pubkey: buffer, isSigner: false, isWritable: true },
+        { pubkey: vault.wallet.publicKey, isSigner: false, isWritable: true },
+        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+        { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
+        {
+          pubkey: await vault.getVaultAuthorityPDA(targetCluster),
+          isSigner: true,
+          isWritable: false,
+        },
+      ],
+    };
+
+    // Create Anchor program instance
+    const lazerProgram = new Program(
+      lazerIdl as Idl,
+      SOLANA_LAZER_PROGRAM_ID,
+      vault.getAnchorProvider(),
+    );
+
+    // Use Anchor to create the instruction
+    const updateSignerInstruction = await lazerProgram.methods
+      .updateEcdsaSigner(trustedSigner, expiryTime)
+      .accounts({
+        topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
+        storage: SOLANA_STORAGE_ID,
+      })
+      .instruction();
+
+    await vault.proposeInstructions(
+      [upgradeInstruction, updateSignerInstruction],
+      targetCluster,
+      DEFAULT_PRIORITY_FEE_CONFIG,
+    );
+  });
+
 program.parse();
