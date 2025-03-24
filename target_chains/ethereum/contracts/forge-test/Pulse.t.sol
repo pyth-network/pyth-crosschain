@@ -145,23 +145,25 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer, PulseTestUtils {
         uint128 totalFee = calculateTotalFee();
 
         // Create the event data we expect to see
+        bytes8[] memory expectedPriceIdPrefixes = new bytes8[](2);
+        {
+            bytes32 priceId0 = priceIds[0];
+            bytes32 priceId1 = priceIds[1];
+            bytes8 prefix0;
+            bytes8 prefix1;
+            assembly {
+                prefix0 := priceId0
+                prefix1 := priceId1
+            }
+            expectedPriceIdPrefixes[0] = prefix0;
+            expectedPriceIdPrefixes[1] = prefix1;
+        }
+
         PulseState.Request memory expectedRequest = PulseState.Request({
             sequenceNumber: 1,
             publishTime: publishTime,
-            priceIds: [
-                priceIds[0],
-                priceIds[1],
-                bytes32(0), // Fill remaining slots with zero
-                bytes32(0),
-                bytes32(0),
-                bytes32(0),
-                bytes32(0),
-                bytes32(0),
-                bytes32(0),
-                bytes32(0)
-            ],
-            numPriceIds: 2,
-            callbackGasLimit: CALLBACK_GAS_LIMIT,
+            priceIdPrefixes: expectedPriceIdPrefixes,
+            callbackGasLimit: uint32(CALLBACK_GAS_LIMIT),
             requester: address(consumer),
             provider: defaultProvider,
             fee: totalFee - PYTH_FEE
@@ -182,9 +184,15 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer, PulseTestUtils {
         PulseState.Request memory lastRequest = pulse.getRequest(1);
         assertEq(lastRequest.sequenceNumber, expectedRequest.sequenceNumber);
         assertEq(lastRequest.publishTime, expectedRequest.publishTime);
-        assertEq(lastRequest.numPriceIds, expectedRequest.numPriceIds);
-        for (uint8 i = 0; i < lastRequest.numPriceIds; i++) {
-            assertEq(lastRequest.priceIds[i], expectedRequest.priceIds[i]);
+        assertEq(
+            lastRequest.priceIdPrefixes.length,
+            expectedRequest.priceIdPrefixes.length
+        );
+        for (uint8 i = 0; i < lastRequest.priceIdPrefixes.length; i++) {
+            assertEq(
+                lastRequest.priceIdPrefixes[i],
+                expectedRequest.priceIdPrefixes[i]
+            );
         }
         assertEq(
             lastRequest.callbackGasLimit,
@@ -672,11 +680,21 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer, PulseTestUtils {
 
         // Should revert when trying to execute with wrong priceIds
         vm.prank(defaultProvider);
+        // Extract first 8 bytes of the price ID for the error expectation
+        bytes32 storedPriceIdPrefix;
+        {
+            bytes8 prefix;
+            assembly {
+                prefix := mload(add(priceIds, 32))
+            }
+            storedPriceIdPrefix = bytes32(uint256(uint64(prefix)));
+        }
+
         vm.expectRevert(
             abi.encodeWithSelector(
                 InvalidPriceIds.selector,
                 wrongPriceIds[0],
-                priceIds[0]
+                storedPriceIdPrefix
             )
         );
         pulse.executeCallback(

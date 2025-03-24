@@ -15,7 +15,7 @@ abstract contract Pulse is IPulse, PulseState {
         address pythAddress,
         address defaultProvider,
         bool prefillRequestStorage,
-        uint256 exclusivityPeriodSeconds
+        uint32 exclusivityPeriodSeconds
     ) internal {
         require(admin != address(0), "admin is zero address");
         require(pythAddress != address(0), "pyth is zero address");
@@ -44,11 +44,7 @@ abstract contract Pulse is IPulse, PulseState {
                 req.publishTime = 1;
                 req.callbackGasLimit = 1;
                 req.requester = address(1);
-                req.numPriceIds = 0;
-                // Pre-warm the priceIds array storage
-                for (uint8 j = 0; j < MAX_PRICE_IDS; j++) {
-                    req.priceIds[j] = bytes32(0);
-                }
+                delete req.priceIdPrefixes;
             }
         }
     }
@@ -83,15 +79,25 @@ abstract contract Pulse is IPulse, PulseState {
         Request storage req = allocRequest(requestSequenceNumber);
         req.sequenceNumber = requestSequenceNumber;
         req.publishTime = publishTime;
-        req.callbackGasLimit = callbackGasLimit;
+
+        // FIXME: quick hack to test gas usage. update the parameter to be uint32 if we keep this.
+        req.callbackGasLimit = uint32(callbackGasLimit);
         req.requester = msg.sender;
-        req.numPriceIds = uint8(priceIds.length);
         req.provider = provider;
         req.fee = SafeCast.toUint128(msg.value - _state.pythFeeInWei);
 
-        // Copy price IDs to storage
+        // Create array with the right size
+        req.priceIdPrefixes = new bytes8[](priceIds.length);
+
+        // Copy only the first 8 bytes of each price ID to storage
         for (uint8 i = 0; i < priceIds.length; i++) {
-            req.priceIds[i] = priceIds[i];
+            // Extract first 8 bytes of the price ID
+            bytes32 priceId = priceIds[i];
+            bytes8 prefix;
+            assembly {
+                prefix := priceId
+            }
+            req.priceIdPrefixes[i] = prefix;
         }
         _state.accruedFeesInWei += _state.pythFeeInWei;
 
@@ -119,12 +125,20 @@ abstract contract Pulse is IPulse, PulseState {
 
         // Verify priceIds match
         require(
-            priceIds.length == req.numPriceIds,
+            priceIds.length == req.priceIdPrefixes.length,
             "Price IDs length mismatch"
         );
-        for (uint8 i = 0; i < req.numPriceIds; i++) {
-            if (priceIds[i] != req.priceIds[i]) {
-                revert InvalidPriceIds(priceIds[i], req.priceIds[i]);
+        for (uint8 i = 0; i < req.priceIdPrefixes.length; i++) {
+            // Extract first 8 bytes of the provided price ID
+            bytes32 priceId = priceIds[i];
+            bytes8 prefix;
+            assembly {
+                prefix := priceId
+            }
+
+            // Compare with stored prefix
+            if (prefix != req.priceIdPrefixes[i]) {
+                revert InvalidPriceIds(priceIds[i], req.priceIdPrefixes[i]);
             }
         }
 
@@ -437,17 +451,17 @@ abstract contract Pulse is IPulse, PulseState {
         emit DefaultProviderUpdated(oldProvider, provider);
     }
 
-    function setExclusivityPeriod(uint256 periodSeconds) external override {
+    function setExclusivityPeriod(uint32 periodSeconds) external override {
         require(
             msg.sender == _state.admin,
             "Only admin can set exclusivity period"
         );
-        uint256 oldPeriod = _state.exclusivityPeriodSeconds;
+        uint32 oldPeriod = _state.exclusivityPeriodSeconds;
         _state.exclusivityPeriodSeconds = periodSeconds;
         emit ExclusivityPeriodUpdated(oldPeriod, periodSeconds);
     }
 
-    function getExclusivityPeriod() external view override returns (uint256) {
+    function getExclusivityPeriod() external view override returns (uint32) {
         return _state.exclusivityPeriodSeconds;
     }
 

@@ -136,9 +136,9 @@ interface IPulse is PulseEvents {
 
     function setDefaultProvider(address provider) external;
 
-    function setExclusivityPeriod(uint256 periodSeconds) external;
+    function setExclusivityPeriod(uint32 periodSeconds) external;
 
-    function getExclusivityPeriod() external view returns (uint256);
+    function getExclusivityPeriod() external view returns (uint32);
 
     /**
      * @notice Gets the first N active requests

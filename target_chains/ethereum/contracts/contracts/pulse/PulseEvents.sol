@@ -45,7 +45,7 @@ interface PulseEvents {
     event DefaultProviderUpdated(address oldProvider, address newProvider);
 
     event ExclusivityPeriodUpdated(
-        uint256 oldPeriodSeconds,
-        uint256 newPeriodSeconds
+        uint32 oldPeriodSeconds,
+        uint32 newPeriodSeconds
     );
 }
