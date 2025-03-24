@@ -12,9 +12,6 @@ import "../contracts/pulse/PulseState.sol";
 import "../contracts/pulse/PulseEvents.sol";
 import "../contracts/pulse/PulseErrors.sol";
 
-// Concrete implementation for testing
-contract ConcretePulseUpgradeable is PulseUpgradeable {}
-
 contract MockPulseConsumer is IPulseConsumer {
     address private _pulse;
     uint64 public lastSequenceNumber;
@@ -107,7 +104,7 @@ contract PulseTest is Test, PulseEvents, IPulseConsumer, PulseTestUtils {
         admin = address(2);
         pyth = address(3);
         defaultProvider = address(4);
-        PulseUpgradeable _pulse = new ConcretePulseUpgradeable();
+        PulseUpgradeable _pulse = new PulseUpgradeable();
         proxy = new ERC1967Proxy(address(_pulse), "");
         pulse = PulseUpgradeable(address(proxy));
 

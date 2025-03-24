@@ -10,7 +10,6 @@ import "../contracts/pulse/PulseState.sol";
 import "../contracts/pulse/PulseEvents.sol";
 import "../contracts/pulse/PulseErrors.sol";
 import "./utils/PulseTestUtils.t.sol";
-import "./Pulse.t.sol";
 
 contract PulseGasBenchmark is Test, PulseTestUtils {
     ERC1967Proxy public proxy;
@@ -32,7 +31,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         admin = address(2);
         pyth = address(3);
         defaultProvider = address(4);
-        PulseUpgradeable _pulse = new ConcretePulseUpgradeable();
+        PulseUpgradeable _pulse = new PulseUpgradeable();
         proxy = new ERC1967Proxy(address(_pulse), "");
         pulse = PulseUpgradeable(address(proxy));
 
