@@ -10,6 +10,7 @@ import "../contracts/pulse/PulseState.sol";
 import "../contracts/pulse/PulseEvents.sol";
 import "../contracts/pulse/PulseErrors.sol";
 import "./utils/PulseTestUtils.t.sol";
+import "./Pulse.t.sol";
 
 contract PulseGasBenchmark is Test, PulseTestUtils {
     ERC1967Proxy public proxy;
@@ -21,17 +22,17 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
     address public pyth;
     address public defaultProvider;
 
-    uint128 constant PYTH_FEE = 1 wei;
-    uint128 constant DEFAULT_PROVIDER_FEE_PER_GAS = 1 wei;
-    uint128 constant DEFAULT_PROVIDER_BASE_FEE = 1 wei;
-    uint128 constant DEFAULT_PROVIDER_FEE_PER_FEED = 10 wei;
+    uint96 constant PYTH_FEE = 1 wei;
+    uint96 constant DEFAULT_PROVIDER_FEE_PER_GAS = 1 wei;
+    uint96 constant DEFAULT_PROVIDER_BASE_FEE = 1 wei;
+    uint96 constant DEFAULT_PROVIDER_FEE_PER_FEED = 10 wei;
 
     function setUp() public {
         owner = address(1);
         admin = address(2);
         pyth = address(3);
         defaultProvider = address(4);
-        PulseUpgradeable _pulse = new PulseUpgradeable();
+        PulseUpgradeable _pulse = new ConcretePulseUpgradeable();
         proxy = new ERC1967Proxy(address(_pulse), "");
         pulse = PulseUpgradeable(address(proxy));
 
@@ -70,8 +71,8 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
         bytes32[] memory priceIds = createPriceIds();
 
-        uint128 callbackGasLimit = 100000;
-        uint128 totalFee = pulse.getFee(
+        uint32 callbackGasLimit = 100000;
+        uint96 totalFee = pulse.getFee(
             defaultProvider,
             callbackGasLimit,
             priceIds

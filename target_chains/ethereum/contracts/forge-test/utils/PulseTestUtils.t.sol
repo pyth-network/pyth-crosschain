@@ -23,7 +23,7 @@ abstract contract PulseTestUtils is Test {
     // Fee charged by the Pyth oracle per price feed
     uint constant MOCK_PYTH_FEE_PER_FEED = 10 wei;
 
-    uint128 constant CALLBACK_GAS_LIMIT = 1_000_000;
+    uint32 constant CALLBACK_GAS_LIMIT = 1_000_000;
 
     // Helper function to create price IDs array
     function createPriceIds() internal pure returns (bytes32[] memory) {
@@ -104,7 +104,7 @@ abstract contract PulseTestUtils is Test {
         publishTime = SafeCast.toUint64(block.timestamp);
         vm.deal(consumerAddress, 1 gwei);
 
-        uint128 totalFee = pulse.getFee(provider, CALLBACK_GAS_LIMIT, priceIds);
+        uint96 totalFee = pulse.getFee(provider, CALLBACK_GAS_LIMIT, priceIds);
 
         vm.prank(consumerAddress);
         sequenceNumber = pulse.requestPriceUpdatesWithCallback{value: totalFee}(
