@@ -10,7 +10,7 @@ import "../contracts/pulse/PulseState.sol";
 import "../contracts/pulse/PulseEvents.sol";
 import "../contracts/pulse/PulseErrors.sol";
 import "./utils/PulseTestUtils.t.sol";
-
+import {console} from "forge-std/console.sol";
 contract PulseGasBenchmark is Test, PulseTestUtils {
     ERC1967Proxy public proxy;
     PulseUpgradeable public pulse;
@@ -94,6 +94,79 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
             updateData,
             priceIds
         );
+    }
+
+    // Runs benchmark with feeds and returns the gas usage breakdown
+    function _runBenchmarkWithFeedsAndGasTracking(
+        uint256 numFeeds
+    ) internal returns (uint256 requestGas, uint256 executeGas) {
+        uint64 timestamp = SafeCast.toUint64(block.timestamp);
+        bytes32[] memory priceIds = createPriceIds(numFeeds);
+
+        uint32 callbackGasLimit = 100000;
+        uint96 totalFee = pulse.getFee(
+            defaultProvider,
+            callbackGasLimit,
+            priceIds
+        );
+        vm.deal(address(consumer), 1 ether);
+
+        // Measure gas for request
+        uint256 gasBefore = gasleft();
+        vm.prank(address(consumer));
+        uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
+            value: totalFee
+        }(defaultProvider, timestamp, priceIds, callbackGasLimit);
+        requestGas = gasBefore - gasleft();
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            timestamp,
+            numFeeds
+        );
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Measure gas for execute
+        gasBefore = gasleft();
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
+        executeGas = gasBefore - gasleft();
+    }
+
+    function testGasBreakdownByFeeds() public {
+        uint256[] memory feedCounts = new uint256[](5);
+        feedCounts[0] = 1;
+        feedCounts[1] = 2;
+        feedCounts[2] = 4;
+        feedCounts[3] = 8;
+        feedCounts[4] = 10;
+
+        console.log("=== Gas Usage Breakdown ===");
+        for (uint256 i = 0; i < feedCounts.length; i++) {
+            console.log("--> Feeds: %s", vm.toString(feedCounts[i]));
+            (
+                uint256 requestGas,
+                uint256 executeCallbackGas
+            ) = _runBenchmarkWithFeedsAndGasTracking(feedCounts[i]);
+
+            string memory requestGasStr = vm.toString(requestGas);
+            string memory executeCallbackGasStr = vm.toString(
+                executeCallbackGas
+            );
+            string memory totalGasStr = vm.toString(
+                requestGas + executeCallbackGas
+            );
+            console.log(
+                "Request gas: %s | Callback gas: %s | Total gas: %s",
+                requestGasStr,
+                executeCallbackGasStr,
+                totalGasStr
+            );
+        }
     }
 }
 
