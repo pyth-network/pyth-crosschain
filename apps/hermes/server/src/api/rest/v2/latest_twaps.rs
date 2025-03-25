@@ -109,7 +109,7 @@ where
     let twaps_with_update_data = Aggregates::get_twaps_with_update_data(
         &*state.state,
         &price_ids,
-        path_params.window_seconds as i64,
+        path_params.window_seconds,
         RequestTime::LatestTimeEarliestSlot,
     )
     .await

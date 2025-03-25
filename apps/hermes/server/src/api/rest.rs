@@ -201,7 +201,7 @@ mod tests {
         async fn get_twaps_with_update_data(
             &self,
             _price_ids: &[PriceIdentifier],
-            _window_seconds: i64,
+            _window_seconds: u64,
             _end_time: RequestTime,
         ) -> Result<TwapsWithUpdateData> {
             unimplemented!("Not needed for this test")

@@ -244,7 +244,7 @@ where
     async fn get_twaps_with_update_data(
         &self,
         price_ids: &[PriceIdentifier],
-        window_seconds: i64,
+        window_seconds: u64,
         end_time: RequestTime,
     ) -> Result<TwapsWithUpdateData>;
 }
@@ -412,7 +412,7 @@ where
     async fn get_twaps_with_update_data(
         &self,
         price_ids: &[PriceIdentifier],
-        window_seconds: i64,
+        window_seconds: u64,
         end_time: RequestTime,
     ) -> Result<TwapsWithUpdateData> {
         match get_verified_twaps_with_update_data(self, price_ids, window_seconds, end_time.clone())
@@ -634,7 +634,7 @@ where
 async fn get_verified_twaps_with_update_data<S>(
     state: &S,
     price_ids: &[PriceIdentifier],
-    window_seconds: i64,
+    window_seconds: u64,
     end_time: RequestTime,
 ) -> Result<TwapsWithUpdateData>
 where
@@ -663,7 +663,7 @@ where
         ));
     } else {
         // Use the publish time from the first end message
-        end_messages[0].message.publish_time() - window_seconds
+        end_messages[0].message.publish_time() - window_seconds as i64
     };
     let start_time = RequestTime::FirstAfter(start_timestamp);
 

@@ -292,7 +292,7 @@ async fn retrieve_message_state(
                     let mut latest_entry_with_earliest_slot = last_entry;
 
                     // Walk backwards through the sorted entries rather than use `range` since we will only
-                    // have 1-2 entries that have the same publish_time.
+                    // have a couple entries that have the same publish_time.
                     // We have acquired the RwLock via read() above, so we should be safe to reenter the cache here.
                     for (k, v) in key_cache.iter().rev() {
                         if k.publish_time < latest_publish_time {
