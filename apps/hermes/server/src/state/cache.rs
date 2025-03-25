@@ -285,6 +285,28 @@ async fn retrieve_message_state(
         Some(key_cache) => {
             match request_time {
                 RequestTime::Latest => key_cache.last_key_value().map(|(_, v)| v).cloned(),
+                RequestTime::LatestTimeEarliestSlot => {
+                    // Get the latest publish time from the last entry
+                    let last_entry = key_cache.last_key_value()?;
+                    let latest_publish_time = last_entry.0.publish_time;
+                    let mut latest_entry_with_earliest_slot = last_entry;
+
+                    // Walk backwards through the sorted entries rather than use `range` since we will only
+                    // have 1-2 entries that have the same publish_time.
+                    // We have acquired the RwLock via read() above, so we should be safe to reenter the cache here.
+                    for (k, v) in key_cache.iter().rev() {
+                        if k.publish_time < latest_publish_time {
+                            // We've found an entry with an earlier publish time
+                            break;
+                        }
+
+                        // Update our tracked entry (the reverse iteration will find entries
+                        // with higher slots first, so we'll end up with the lowest slot)
+                        latest_entry_with_earliest_slot = (k, v);
+                    }
+
+                    Some(latest_entry_with_earliest_slot.1.clone())
+                }
                 RequestTime::FirstAfter(time) => {
                     // If the requested time is before the first element in the vector, we are
                     // not sure that the first element is the closest one.
@@ -587,6 +609,73 @@ mod test {
                 .await
                 .unwrap(),
             vec![slightly_older_message_state]
+        );
+    }
+
+    #[tokio::test]
+    pub async fn test_latest_time_earliest_slot_request_works() {
+        // Initialize state with a cache size of 3 per key.
+        let (state, _) = setup_state(3).await;
+
+        // Create and store a message state with feed id [1....] and publish time 10 at slot 7.
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 7).await;
+
+        // Create and store a message state with feed id [1....] and publish time 10 at slot 10.
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 10).await;
+
+        // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
+        let earliest_slot_message_state =
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
+
+        // Create and store a message state with feed id [1....] and publish time 8 at slot 3.
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 8, 3).await;
+
+        // The LatestTimeEarliestSlot should return the message with publish time 10 at slot 5
+        assert_eq!(
+            state
+                .fetch_message_states(
+                    vec![[1; 32]],
+                    RequestTime::LatestTimeEarliestSlot,
+                    MessageStateFilter::Only(MessageType::PriceFeedMessage),
+                )
+                .await
+                .unwrap(),
+            vec![earliest_slot_message_state]
+        );
+
+        // Create and store a message state with feed id [1....] and publish time 15 at slot 20.
+        let newer_time_message_state =
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 15, 20).await;
+
+        // The LatestTimeEarliestSlot should now return the message with publish time 15
+        assert_eq!(
+            state
+                .fetch_message_states(
+                    vec![[1; 32]],
+                    RequestTime::LatestTimeEarliestSlot,
+                    MessageStateFilter::Only(MessageType::PriceFeedMessage),
+                )
+                .await
+                .unwrap(),
+            vec![newer_time_message_state]
+        );
+
+        // Store two messages with even later publish time but different slots
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 20, 35).await;
+        let latest_time_earliest_slot_message =
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 20, 30).await;
+
+        // The LatestTimeEarliestSlot should return the message with publish time 20 at slot 30
+        assert_eq!(
+            state
+                .fetch_message_states(
+                    vec![[1; 32]],
+                    RequestTime::LatestTimeEarliestSlot,
+                    MessageStateFilter::Only(MessageType::PriceFeedMessage),
+                )
+                .await
+                .unwrap(),
+            vec![latest_time_earliest_slot_message]
         );
     }
 
