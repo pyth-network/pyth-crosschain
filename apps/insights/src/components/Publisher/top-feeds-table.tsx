@@ -10,24 +10,37 @@ import { EntityList } from "../EntityList";
 
 type Props = {
   publisherScoreWidth: number;
-  rows: (RowConfig<"score" | "asset" | "assetClass"> & { textValue: string })[];
   label: string;
-};
+} & (
+  | { isLoading: true; rows?: undefined }
+  | {
+      isLoading?: false | undefined;
+      rows: (RowConfig<"score" | "asset" | "assetClass"> & {
+        textValue: string;
+      })[];
+    }
+);
 
-export const TopFeedsTable = ({ publisherScoreWidth, rows, label }: Props) => {
+export const TopFeedsTable = ({
+  publisherScoreWidth,
+  label,
+  ...props
+}: Props) => {
   const selectPriceFeed = useSelectPriceFeed();
 
   const rowsWithAction = useMemo(
     () =>
-      rows.map((row) => ({
-        ...row,
-        ...(selectPriceFeed && {
-          onAction: () => {
-            selectPriceFeed(row.id.toString());
-          },
-        }),
-      })),
-    [selectPriceFeed, rows],
+      props.isLoading
+        ? undefined
+        : props.rows.map((row) => ({
+            ...row,
+            ...(selectPriceFeed && {
+              onAction: () => {
+                selectPriceFeed(row.id.toString());
+              },
+            }),
+          })),
+    [selectPriceFeed, props.isLoading, props.rows],
   );
 
   return (
@@ -39,11 +52,15 @@ export const TopFeedsTable = ({ publisherScoreWidth, rows, label }: Props) => {
           { id: "score", name: "Score" },
           { id: "assetClass", name: "Asset Class" },
         ]}
-        rows={rowsWithAction.map((row) => ({
-          ...row,
-          textValue: row.textValue,
-          header: row.data.asset,
-        }))}
+        {...(rowsWithAction === undefined
+          ? { isLoading: true }
+          : {
+              rows: rowsWithAction.map((row) => ({
+                ...row,
+                textValue: row.textValue,
+                header: row.data.asset,
+              })),
+            })}
       />
       <Table
         label={label}
@@ -70,7 +87,11 @@ export const TopFeedsTable = ({ publisherScoreWidth, rows, label }: Props) => {
             width: 40,
           },
         ]}
-        rows={rowsWithAction}
+        {...(rowsWithAction === undefined
+          ? { isLoading: true }
+          : {
+              rows: rowsWithAction,
+            })}
       />
     </>
   );
