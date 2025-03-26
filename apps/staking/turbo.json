@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
-    "build": {
+    "build:vercel": {
       "env": [
         "IP_ALLOWLIST",
         "GOVERNANCE_ONLY_REGIONS",

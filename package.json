@@ -7,7 +7,6 @@
     "pnpm": "^9.15.3"
   },
   "scripts": {
-    "build:ci": "turbo build --filter=!./apps/api-reference --filter=!./apps/insights --filter=!./apps/staking",
     "fix:format": "prettier --write .",
     "install:modules": "[ $CI ] && true || pnpm install",
     "publish": "lerna publish from-package --no-private --no-git-tag-version --yes",
