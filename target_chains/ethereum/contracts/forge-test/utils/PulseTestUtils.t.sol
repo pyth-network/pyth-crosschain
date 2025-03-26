@@ -27,9 +27,26 @@ abstract contract PulseTestUtils is Test {
 
     // Helper function to create price IDs array
     function createPriceIds() internal pure returns (bytes32[] memory) {
-        bytes32[] memory priceIds = new bytes32[](2);
-        priceIds[0] = BTC_PRICE_FEED_ID;
-        priceIds[1] = ETH_PRICE_FEED_ID;
+        return createPriceIds(2);
+    }
+
+    // Helper function to create price IDs array with specified count
+    function createPriceIds(uint8 count) internal pure returns (bytes32[] memory) {
+        bytes32[] memory priceIds = new bytes32[](count);
+        
+        // Always use real price feed IDs for the first two if available
+        if (count >= 1) {
+            priceIds[0] = BTC_PRICE_FEED_ID;
+        }
+        if (count >= 2) {
+            priceIds[1] = ETH_PRICE_FEED_ID;
+        }
+        
+        // For additional IDs, generate synthetic ones based on the index
+        for (uint8 i = 2; i < count; i++) {
+            priceIds[i] = bytes32(uint256(keccak256(abi.encodePacked(i))));
+        }
+        
         return priceIds;
     }
 
@@ -37,21 +54,36 @@ abstract contract PulseTestUtils is Test {
     function createMockPriceFeeds(
         uint256 publishTime
     ) internal pure returns (PythStructs.PriceFeed[] memory) {
+        bytes32[] memory priceIds = createPriceIds();
+        return createMockPriceFeeds(publishTime, priceIds);
+    }
+
+    // Helper function to create mock price feeds for specific priceIds
+    function createMockPriceFeeds(
+        uint256 publishTime,
+        bytes32[] memory priceIds
+    ) internal pure returns (PythStructs.PriceFeed[] memory) {
         PythStructs.PriceFeed[] memory priceFeeds = new PythStructs.PriceFeed[](
-            2
+            priceIds.length
         );
 
-        priceFeeds[0].id = BTC_PRICE_FEED_ID;
-        priceFeeds[0].price.price = MOCK_BTC_PRICE;
-        priceFeeds[0].price.conf = MOCK_BTC_CONF;
-        priceFeeds[0].price.expo = MOCK_PRICE_FEED_EXPO;
-        priceFeeds[0].price.publishTime = publishTime;
-
-        priceFeeds[1].id = ETH_PRICE_FEED_ID;
-        priceFeeds[1].price.price = MOCK_ETH_PRICE;
-        priceFeeds[1].price.conf = MOCK_ETH_CONF;
-        priceFeeds[1].price.expo = MOCK_PRICE_FEED_EXPO;
-        priceFeeds[1].price.publishTime = publishTime;
+        for (uint i = 0; i < priceIds.length; i++) {
+            priceFeeds[i].id = priceIds[i];
+            // Use BTC price for index 0, ETH price for index 1, and a synthetic price for others
+            if (i == 0) {
+                priceFeeds[i].price.price = MOCK_BTC_PRICE;
+                priceFeeds[i].price.conf = MOCK_BTC_CONF;
+            } else if (i == 1) {
+                priceFeeds[i].price.price = MOCK_ETH_PRICE;
+                priceFeeds[i].price.conf = MOCK_ETH_CONF;
+            } else {
+                // For additional feeds, use a price derived from the index
+                priceFeeds[i].price.price = int64(uint64(1_000_000_000_000 + (i * 100_000_000_000)));
+                priceFeeds[i].price.conf = uint64(1_000_000_000 + (i * 100_000_000));
+            }
+            priceFeeds[i].price.expo = MOCK_PRICE_FEED_EXPO;
+            priceFeeds[i].price.publishTime = publishTime;
+        }
 
         return priceFeeds;
     }
@@ -81,9 +113,10 @@ abstract contract PulseTestUtils is Test {
     function createMockUpdateData(
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal pure returns (bytes[] memory) {
-        bytes[] memory updateData = new bytes[](2);
-        updateData[0] = abi.encode(priceFeeds[0]);
-        updateData[1] = abi.encode(priceFeeds[1]);
+        bytes[] memory updateData = new bytes[](priceFeeds.length);
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            updateData[i] = abi.encode(priceFeeds[i]);
+        }
         return updateData;
     }
 

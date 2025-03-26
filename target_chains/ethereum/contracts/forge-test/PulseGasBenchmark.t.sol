@@ -66,6 +66,38 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         createMockUpdateData(priceFeeds);
     }
 
+    // Helper function to run the benchmark with a specified number of price feeds
+    function runBenchmarkWithFeedCount(uint8 feedCount) internal {
+        uint64 timestamp = SafeCast.toUint64(block.timestamp);
+        bytes32[] memory priceIds = createPriceIds(feedCount);
+
+        uint128 callbackGasLimit = 100000;
+        uint128 totalFee = pulse.getFee(
+            defaultProvider,
+            callbackGasLimit,
+            priceIds
+        );
+        vm.deal(address(consumer), 1 ether);
+        vm.prank(address(consumer));
+        uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
+            value: totalFee
+        }(defaultProvider, timestamp, priceIds, callbackGasLimit);
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            timestamp,
+            priceIds
+        );
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumber,
+            updateData,
+            priceIds
+        );
+    }
+
     function testBasicFlow() public {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
         bytes32[] memory priceIds = createPriceIds();
@@ -94,6 +126,31 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
             updateData,
             priceIds
         );
+    }
+
+    // Benchmark with 1 price feed
+    function testBenchmarkWithOneFeed() public {
+        runBenchmarkWithFeedCount(1);
+    }
+
+    // Benchmark with 2 price feeds
+    function testBenchmarkWithTwoFeeds() public {
+        runBenchmarkWithFeedCount(2);
+    }
+
+    // Benchmark with 4 price feeds
+    function testBenchmarkWithFourFeeds() public {
+        runBenchmarkWithFeedCount(4);
+    }
+
+    // Benchmark with 8 price feeds
+    function testBenchmarkWithEightFeeds() public {
+        runBenchmarkWithFeedCount(8);
+    }
+
+    // Benchmark with 10 price feeds (maximum)
+    function testBenchmarkWithTenFeeds() public {
+        runBenchmarkWithFeedCount(10);
     }
 }
 
