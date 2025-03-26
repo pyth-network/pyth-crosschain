@@ -13,7 +13,7 @@ use {
         Json,
     },
     base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
-    pyth_sdk::{DurationInSeconds, PriceIdentifier, UnixTimestamp},
+    pyth_sdk::{DurationInSeconds, PriceIdentifier},
     serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
@@ -105,20 +105,12 @@ where
     let price_ids: Vec<PriceIdentifier> =
         validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
 
-    // Collect start and end bounds for the TWAP window
-    let window_seconds = path_params.window_seconds as i64;
-    let current_time = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as UnixTimestamp;
-    let start_time = current_time - window_seconds;
-
     // Calculate the average
     let twaps_with_update_data = Aggregates::get_twaps_with_update_data(
         &*state.state,
         &price_ids,
-        RequestTime::FirstAfter(start_time),
-        RequestTime::Latest,
+        path_params.window_seconds,
+        RequestTime::LatestTimeEarliestSlot,
     )
     .await
     .map_err(|e| {
