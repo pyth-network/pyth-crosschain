@@ -44,8 +44,6 @@ abstract contract Pulse is IPulse, PulseState {
                 req.publishTime = 1;
                 req.callbackGasLimit = 1;
                 req.requester = address(1);
-                // Initialize with empty array, no need to pre-warm with a fixed size anymore
-                delete req.priceIdPrefixes;
             }
         }
     }

@@ -41,7 +41,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
             PYTH_FEE,
             pyth,
             defaultProvider,
-            false,
+            true,
             15
         );
         vm.prank(defaultProvider);
@@ -66,40 +66,8 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         createMockUpdateData(priceFeeds);
     }
 
-    function testBasicFlow() public {
-        uint64 timestamp = SafeCast.toUint64(block.timestamp);
-        bytes32[] memory priceIds = createPriceIds();
-
-        uint32 callbackGasLimit = 100000;
-        uint96 totalFee = pulse.getFee(
-            defaultProvider,
-            callbackGasLimit,
-            priceIds
-        );
-        vm.deal(address(consumer), 1 ether);
-        vm.prank(address(consumer));
-        uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
-            value: totalFee
-        }(defaultProvider, timestamp, priceIds, callbackGasLimit);
-
-        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
-            timestamp
-        );
-        mockParsePriceFeedUpdates(pyth, priceFeeds);
-        bytes[] memory updateData = createMockUpdateData(priceFeeds);
-
-        pulse.executeCallback(
-            defaultProvider,
-            sequenceNumber,
-            updateData,
-            priceIds
-        );
-    }
-
-    // Runs benchmark with feeds and returns the gas usage breakdown
-    function _runBenchmarkWithFeedsAndGasTracking(
-        uint256 numFeeds
-    ) internal returns (uint256 requestGas, uint256 executeGas) {
+    // Helper function to run the basic request + fulfill flow with a specified number of feeds
+    function _runBenchmarkWithFeeds(uint256 numFeeds) internal {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
         bytes32[] memory priceIds = createPriceIds(numFeeds);
 
@@ -110,14 +78,10 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
             priceIds
         );
         vm.deal(address(consumer), 1 ether);
-
-        // Measure gas for request
-        uint256 gasBefore = gasleft();
         vm.prank(address(consumer));
         uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
             value: totalFee
         }(defaultProvider, timestamp, priceIds, callbackGasLimit);
-        requestGas = gasBefore - gasleft();
 
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             timestamp,
@@ -126,47 +90,100 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        // Measure gas for execute
-        gasBefore = gasleft();
         pulse.executeCallback(
             defaultProvider,
             sequenceNumber,
             updateData,
             priceIds
         );
-        executeGas = gasBefore - gasleft();
     }
 
-    function testGasBreakdownByFeeds() public {
-        uint256[] memory feedCounts = new uint256[](5);
-        feedCounts[0] = 1;
-        feedCounts[1] = 2;
-        feedCounts[2] = 4;
-        feedCounts[3] = 8;
-        feedCounts[4] = 10;
+    function testFlow_01_Feed() public {
+        _runBenchmarkWithFeeds(1);
+    }
 
-        console.log("=== Gas Usage Breakdown ===");
-        for (uint256 i = 0; i < feedCounts.length; i++) {
-            console.log("--> Feeds: %s", vm.toString(feedCounts[i]));
-            (
-                uint256 requestGas,
-                uint256 executeCallbackGas
-            ) = _runBenchmarkWithFeedsAndGasTracking(feedCounts[i]);
+    function testFlow_02_Feeds() public {
+        _runBenchmarkWithFeeds(2);
+    }
 
-            string memory requestGasStr = vm.toString(requestGas);
-            string memory executeCallbackGasStr = vm.toString(
-                executeCallbackGas
-            );
-            string memory totalGasStr = vm.toString(
-                requestGas + executeCallbackGas
-            );
-            console.log(
-                "Request gas: %s | Callback gas: %s | Total gas: %s",
-                requestGasStr,
-                executeCallbackGasStr,
-                totalGasStr
+    function testFlow_04_Feeds() public {
+        _runBenchmarkWithFeeds(4);
+    }
+
+    function testFlow_08_Feeds() public {
+        _runBenchmarkWithFeeds(8);
+    }
+
+    function testFlow_10_Feeds() public {
+        _runBenchmarkWithFeeds(10);
+    }
+
+    // This test checks the gas usage for worst-case out-of-order fulfillment.
+    // It creates 10 requests, and then fulfills them in reverse order.
+    //
+    // The last fulfillment will be the most expensive since it needs
+    // to linearly scan through all the fulfilled requests in storage
+    // in order to update _state.lastUnfulfilledReq
+    // NOTE: Run test with -vv to see extra gas logs.
+    function testMultipleRequestsOutOfOrderFulfillment() public {
+        uint64 timestamp = SafeCast.toUint64(block.timestamp);
+        bytes32[] memory priceIds = createPriceIds(2);
+        uint32 callbackGasLimit = 100000;
+        uint128 totalFee = pulse.getFee(
+            defaultProvider,
+            callbackGasLimit,
+            priceIds
+        );
+
+        // Create 10 requests
+        uint64[] memory sequenceNumbers = new uint64[](10);
+        vm.deal(address(consumer), 10 ether);
+
+        for (uint i = 0; i < 10; i++) {
+            vm.prank(address(consumer));
+            sequenceNumbers[i] = pulse.requestPriceUpdatesWithCallback{
+                value: totalFee
+            }(
+                defaultProvider,
+                timestamp + uint64(i),
+                priceIds,
+                callbackGasLimit
             );
         }
+
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            timestamp
+        );
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Execute callbacks in reverse
+        uint startGas = gasleft();
+        for (uint i = 9; i > 0; i--) {
+            pulse.executeCallback(
+                defaultProvider,
+                sequenceNumbers[i],
+                updateData,
+                priceIds
+            );
+        }
+        uint midGas = gasleft();
+
+        // Execute the first request last - this would be the most expensive
+        // in the original implementation as it would need to loop through
+        // all sequence numbers
+        pulse.executeCallback(
+            defaultProvider,
+            sequenceNumbers[0],
+            updateData,
+            priceIds
+        );
+        uint endGas = gasleft();
+
+        // Log gas usage for the last callback which would be the most expensive
+        // in the original implementation
+        console.log("Gas used for last callback (seq 1):", midGas - endGas);
+        console.log("Gas used for all other callbacks:", startGas - midGas);
     }
 }
 
