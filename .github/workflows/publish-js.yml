@@ -26,5 +26,5 @@ jobs:
         run: pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: pnpm build:ci
+      - run: pnpm run turbo build
       - run: pnpm run publish

@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
-    "build": {
+    "build:vercel": {
       "env": [
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
