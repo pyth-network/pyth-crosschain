@@ -7,7 +7,7 @@
     "node": "22"
   },
   "scripts": {
-    "build": "next build",
+    "build:vercelonly": "next build",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",

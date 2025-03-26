@@ -7,7 +7,7 @@
     "node": "22"
   },
   "scripts": {
-    "build": "next build",
+    "build:vercelonly": "next build",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_gbljYVzp0m5EpCuOF6nZpM4WMFM6 vercel env pull",

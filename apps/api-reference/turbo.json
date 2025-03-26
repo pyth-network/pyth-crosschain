@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
-    "build": {
+    "build:vercelonly": {
       "env": [
         "WALLETCONNECT_PROJECT_ID",
         "AMPLITUDE_API_KEY",

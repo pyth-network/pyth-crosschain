@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
-    "build": {
+    "build:vercelonly": {
       "env": [
         "BUILD_STANDALONE",
         "NEXT_PUBLIC_MAINNET_RPC",
