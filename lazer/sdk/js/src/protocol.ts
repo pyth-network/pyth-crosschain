@@ -48,7 +48,7 @@ export type JsonBinaryData = {
   data: string;
 };
 
-export type FailedFeedsDetails = {
+export type InvalidFeedSubscriptionDetails = {
   unknownIds: number[];
   unsupportedChannels: number[];
   comingSoon: number[];
@@ -63,7 +63,7 @@ export type Response =
       type: "subscribed";
       subscriptionId: number;
       successfulFeeds?: number[];
-      failedFeeds?: FailedFeedsDetails;
+      failedFeeds?: InvalidFeedSubscriptionDetails;
     }
   | {
       type: "unsubscribed";
