@@ -20,6 +20,7 @@ export type Request =
       deliveryFormat?: DeliveryFormat;
       jsonBinaryEncoding?: JsonBinaryEncoding;
       parsed?: boolean;
+      ignoreInvalidFeeds?: boolean;
       channel: Channel;
     }
   | {
@@ -47,6 +48,12 @@ export type JsonBinaryData = {
   data: string;
 };
 
+export type FailedFeedsDetails = {
+  unknownIds: number[];
+  unsupportedChannels: number[];
+  comingSoon: number[];
+};
+
 export type Response =
   | {
       type: "error";
@@ -55,6 +62,8 @@ export type Response =
   | {
       type: "subscribed";
       subscriptionId: number;
+      successfulFeeds?: number[];
+      failedFeeds?: FailedFeedsDetails;
     }
   | {
       type: "unsubscribed";
