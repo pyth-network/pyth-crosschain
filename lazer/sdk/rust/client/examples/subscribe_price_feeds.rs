@@ -49,6 +49,7 @@ async fn main() -> anyhow::Result<()> {
                 ),
             })
             .expect("invalid subscription params"),
+            ignore_invalid_feeds: Some(false),
         },
         // Example subscription: binary feed targeting Solana and EVM
         SubscribeRequest {
@@ -70,6 +71,7 @@ async fn main() -> anyhow::Result<()> {
                 ),
             })
             .expect("invalid subscription params"),
+            ignore_invalid_feeds: Some(false),
         },
     ];
 
