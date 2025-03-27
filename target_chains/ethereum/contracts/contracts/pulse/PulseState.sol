@@ -5,21 +5,22 @@ pragma solidity ^0.8.0;
 contract PulseState {
     uint8 public constant NUM_REQUESTS = 32;
     bytes1 public constant NUM_REQUESTS_MASK = 0x1f;
-    // Maximum number of price feeds per request. This limit keeps gas costs predictable and reasonable. 10 is a reasonable number for most use cases.
-    // Requests with more than 10 price feeds should be split into multiple requests
-    uint8 public constant MAX_PRICE_IDS = 10;
 
     struct Request {
-        uint64 sequenceNumber;
-        uint64 publishTime;
-        // TODO: this is going to absolutely explode gas costs. Need to do something smarter here.
-        // possible solution is to hash the price ids and store the hash instead.
-        // The ids themselves can be retrieved from the event.
-        bytes32[MAX_PRICE_IDS] priceIds;
-        uint8 numPriceIds; // Actual number of price IDs used
-        uint256 callbackGasLimit;
+        // Storage slot 1 //
         address requester;
+        uint64 sequenceNumber;
+        // 4 bytes unused
+        // Storage slot 2 //
         address provider;
+        uint64 publishTime;
+        // 4 bytes unused
+        // Storage slot 3 //
+        // Hash of the array of price ids that should be provided to fulfill this request.
+        // The hash is order-sensitive.
+        bytes32 priceIdsHash;
+        // Storage slot 4 //
+        uint128 callbackGasLimit;
         uint128 fee;
     }
 
@@ -33,17 +34,24 @@ contract PulseState {
     }
 
     struct State {
-        address admin;
+        // Storage slot 1 //
         uint128 pythFeeInWei;
         uint128 accruedFeesInWei;
+        // Storage slot 2 //
         address pyth;
         uint64 currentSequenceNumber;
+        // 4 bytes unused
+        // Storage slot 3 //
         address defaultProvider;
+        // 12 bytes unused
+        // Storage slot 4 //
         uint256 exclusivityPeriodSeconds;
+        // Storage slot 5 //
+        address admin;
+        // 12 bytes unused
         Request[NUM_REQUESTS] requests;
         mapping(bytes32 => Request) requestsOverflow;
         mapping(address => ProviderInfo) providers;
-        uint64 firstUnfulfilledSeq; // All sequences before this are fulfilled
     }
 
     State internal _state;

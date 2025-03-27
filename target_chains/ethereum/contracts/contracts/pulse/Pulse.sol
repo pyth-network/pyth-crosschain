@@ -44,11 +44,9 @@ abstract contract Pulse is IPulse, PulseState {
                 req.publishTime = 1;
                 req.callbackGasLimit = 1;
                 req.requester = address(1);
-                req.numPriceIds = 0;
-                // Pre-warm the priceIds array storage
-                for (uint8 j = 0; j < MAX_PRICE_IDS; j++) {
-                    req.priceIds[j] = bytes32(0);
-                }
+                req.priceIdsHash = bytes32(uint256(1));
+                req.fee = 1;
+                req.provider = address(1);
             }
         }
     }
@@ -72,9 +70,6 @@ abstract contract Pulse is IPulse, PulseState {
         //      Since tx.gasprice is used to calculate fees, allowing far-future requests would make
         //      the fee estimation unreliable.
         require(publishTime <= block.timestamp + 60, "Too far in future");
-        if (priceIds.length > MAX_PRICE_IDS) {
-            revert TooManyPriceIds(priceIds.length, MAX_PRICE_IDS);
-        }
         requestSequenceNumber = _state.currentSequenceNumber++;
 
         uint128 requiredFee = getFee(provider, callbackGasLimit, priceIds);
@@ -83,16 +78,12 @@ abstract contract Pulse is IPulse, PulseState {
         Request storage req = allocRequest(requestSequenceNumber);
         req.sequenceNumber = requestSequenceNumber;
         req.publishTime = publishTime;
-        req.callbackGasLimit = callbackGasLimit;
+        req.callbackGasLimit = SafeCast.toUint128(callbackGasLimit);
         req.requester = msg.sender;
-        req.numPriceIds = uint8(priceIds.length);
         req.provider = provider;
         req.fee = SafeCast.toUint128(msg.value - _state.pythFeeInWei);
+        req.priceIdsHash = keccak256(abi.encode(priceIds));
 
-        // Copy price IDs to storage
-        for (uint8 i = 0; i < priceIds.length; i++) {
-            req.priceIds[i] = priceIds[i];
-        }
         _state.accruedFeesInWei += _state.pythFeeInWei;
 
         emit PriceUpdateRequested(req, priceIds);
@@ -118,14 +109,11 @@ abstract contract Pulse is IPulse, PulseState {
         }
 
         // Verify priceIds match
-        require(
-            priceIds.length == req.numPriceIds,
-            "Price IDs length mismatch"
-        );
-        for (uint8 i = 0; i < req.numPriceIds; i++) {
-            if (priceIds[i] != req.priceIds[i]) {
-                revert InvalidPriceIds(priceIds[i], req.priceIds[i]);
-            }
+        if (req.priceIdsHash != keccak256(abi.encode(priceIds))) {
+            revert InvalidPriceIds(
+                keccak256(abi.encode(priceIds)),
+                req.priceIdsHash
+            );
         }
 
         // TODO: should this use parsePriceFeedUpdatesUnique? also, do we need to add 1 to maxPublishTime?
@@ -150,16 +138,6 @@ abstract contract Pulse is IPulse, PulseState {
             .toUint128((req.fee + msg.value) - pythFee);
 
         clearRequest(sequenceNumber);
-
-        // TODO: I'm pretty sure this is going to use a lot of gas because it's doing a storage lookup for each sequence number.
-        // a better solution would be a doubly-linked list of active requests.
-        // After successful callback, update firstUnfulfilledSeq if needed
-        while (
-            _state.firstUnfulfilledSeq < _state.currentSequenceNumber &&
-            !isActive(findRequest(_state.firstUnfulfilledSeq))
-        ) {
-            _state.firstUnfulfilledSeq++;
-        }
 
         try
             IPulseConsumer(req.requester)._pulseCallback{
@@ -449,39 +427,5 @@ abstract contract Pulse is IPulse, PulseState {
 
     function getExclusivityPeriod() external view override returns (uint256) {
         return _state.exclusivityPeriodSeconds;
-    }
-
-    function getFirstActiveRequests(
-        uint256 count
-    )
-        external
-        view
-        override
-        returns (Request[] memory requests, uint256 actualCount)
-    {
-        requests = new Request[](count);
-        actualCount = 0;
-
-        // Start from the first unfulfilled sequence and work forwards
-        uint64 currentSeq = _state.firstUnfulfilledSeq;
-
-        // Continue until we find enough active requests or reach current sequence
-        while (
-            actualCount < count && currentSeq < _state.currentSequenceNumber
-        ) {
-            Request memory req = findRequest(currentSeq);
-            if (isActive(req)) {
-                requests[actualCount] = req;
-                actualCount++;
-            }
-            currentSeq++;
-        }
-
-        // If we found fewer requests than asked for, resize the array
-        if (actualCount < count) {
-            assembly {
-                mstore(requests, actualCount)
-            }
-        }
     }
 }
