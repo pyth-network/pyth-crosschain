@@ -88,8 +88,20 @@ abstract contract PulseTestUtils is Test {
 
         for (uint256 i = 0; i < numFeeds; i++) {
             priceFeeds[i].id = priceIds[i];
-            priceFeeds[i].price.price = MOCK_BTC_PRICE; // Using BTC price for all feeds for simplicity
-            priceFeeds[i].price.conf = MOCK_BTC_CONF; // Using BTC conf for all feeds for simplicity
+
+            // Use appropriate price and conf based on the price ID
+            if (priceIds[i] == BTC_PRICE_FEED_ID) {
+                priceFeeds[i].price.price = MOCK_BTC_PRICE;
+                priceFeeds[i].price.conf = MOCK_BTC_CONF;
+            } else if (priceIds[i] == ETH_PRICE_FEED_ID) {
+                priceFeeds[i].price.price = MOCK_ETH_PRICE;
+                priceFeeds[i].price.conf = MOCK_ETH_CONF;
+            } else {
+                // Default to BTC price for other feeds
+                priceFeeds[i].price.price = MOCK_BTC_PRICE;
+                priceFeeds[i].price.conf = MOCK_BTC_CONF;
+            }
+
             priceFeeds[i].price.expo = MOCK_PRICE_FEED_EXPO;
             priceFeeds[i].price.publishTime = publishTime;
         }
