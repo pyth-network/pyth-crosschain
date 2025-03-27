@@ -20,6 +20,7 @@ import {
   StarknetSetWormholeAddress,
 } from "./SetWormholeAddress";
 import { EvmExecute } from "./ExecuteAction";
+import { SetTransactionFee } from "./SetTransactionFee";
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(
@@ -73,6 +74,8 @@ export function decodeGovernancePayload(
     }
     case "Execute":
       return EvmExecute.decode(data);
+    case "SetTransactionFee":
+      return SetTransactionFee.decode(data);
     default:
       return undefined;
   }
@@ -86,5 +89,6 @@ export * from "./GovernanceDataSourceTransfer";
 export * from "./SetDataSources";
 export * from "./SetValidPeriod";
 export * from "./SetFee";
+export * from "./SetTransactionFee";
 export * from "./SetWormholeAddress";
 export * from "./ExecuteAction";

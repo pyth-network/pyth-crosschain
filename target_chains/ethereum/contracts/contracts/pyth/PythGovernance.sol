@@ -38,6 +38,7 @@ abstract contract PythGovernance is
         address oldWormholeAddress,
         address newWormholeAddress
     );
+    event TransactionFeeSet(uint oldFee, uint newFee);
 
     function verifyGovernanceVM(
         bytes memory encodedVM
@@ -97,6 +98,8 @@ abstract contract PythGovernance is
                 parseSetWormholeAddressPayload(gi.payload),
                 encodedVM
             );
+        } else if (gi.action == GovernanceAction.SetTransactionFee) {
+            setTransactionFee(parseSetTransactionFeePayload(gi.payload));
         } else {
             revert PythErrors.InvalidGovernanceMessage();
         }
@@ -242,5 +245,14 @@ abstract contract PythGovernance is
             revert PythErrors.InvalidWormholeAddressToSet();
 
         emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
+    }
+
+    function setTransactionFee(
+        SetTransactionFeePayload memory payload
+    ) internal {
+        uint oldFee = transactionFeeInWei();
+        setTransactionFeeInWei(payload.newFee);
+
+        emit TransactionFeeSet(oldFee, transactionFeeInWei());
     }
 }
