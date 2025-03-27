@@ -98,23 +98,23 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         );
     }
 
-    function testFlow_01_Feed() public {
+    function testBasicFlowWith01Feeds() public {
         _runBenchmarkWithFeeds(1);
     }
 
-    function testFlow_02_Feeds() public {
+    function testBasicFlowWith02Feeds() public {
         _runBenchmarkWithFeeds(2);
     }
 
-    function testFlow_04_Feeds() public {
+    function testBasicFlowWith04Feeds() public {
         _runBenchmarkWithFeeds(4);
     }
 
-    function testFlow_08_Feeds() public {
+    function testBasicFlowWith08Feeds() public {
         _runBenchmarkWithFeeds(8);
     }
 
-    function testFlow_10_Feeds() public {
+    function testBasicFlowWith10Feeds() public {
         _runBenchmarkWithFeeds(10);
     }
 
@@ -124,7 +124,9 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
     // The last fulfillment will be the most expensive since it needs
     // to linearly scan through all the fulfilled requests in storage
     // in order to update _state.lastUnfulfilledReq
-    // NOTE: Run test with -vv to see extra gas logs.
+    //
+    // NOTE: Run test with `forge test --gas-report --match-test testMultipleRequestsOutOfOrderFulfillment`
+    // and observe the `max` value for `executeCallback` to see the cost of the most expensive request.
     function testMultipleRequestsOutOfOrderFulfillment() public {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
         bytes32[] memory priceIds = createPriceIds(2);
@@ -181,9 +183,76 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         uint endGas = gasleft();
 
         // Log gas usage for the last callback which would be the most expensive
-        // in the original implementation
-        console.log("Gas used for last callback (seq 1):", midGas - endGas);
-        console.log("Gas used for all other callbacks:", startGas - midGas);
+        // in the original implementation (need to run test with -vv)
+        console.log(
+            "Gas used for last callback (seq 1): %s",
+            vm.toString(midGas - endGas)
+        );
+        console.log(
+            "Gas used for all other callbacks: %s",
+            vm.toString(startGas - midGas)
+        );
+    }
+
+    // Helper function to run the overflow mapping benchmark with a specified number of feeds
+    function _runOverflowBenchmarkWithFeeds(uint256 numFeeds) internal {
+        uint64 timestamp = SafeCast.toUint64(block.timestamp);
+        bytes32[] memory priceIds = createPriceIds(numFeeds);
+        uint32 callbackGasLimit = 100000;
+        uint128 totalFee = pulse.getFee(
+            defaultProvider,
+            callbackGasLimit,
+            priceIds
+        );
+
+        // Create NUM_REQUESTS requests to fill up the main array
+        // The constant is defined in PulseState.sol as 32
+        uint64[] memory sequenceNumbers = new uint64[](32);
+        vm.deal(address(consumer), 50 ether);
+
+        // Use the same timestamp for all requests to avoid "Too far in future" error
+        for (uint i = 0; i < 32; i++) {
+            vm.prank(address(consumer));
+            sequenceNumbers[i] = pulse.requestPriceUpdatesWithCallback{
+                value: totalFee
+            }(defaultProvider, timestamp, priceIds, callbackGasLimit);
+        }
+
+        // Create one more request that will go to the overflow mapping
+        // (This could potentially happen earlier if a shortKey collides,
+        // but this guarantees it.)
+        vm.prank(address(consumer));
+        pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+            defaultProvider,
+            timestamp,
+            priceIds,
+            callbackGasLimit
+        );
+    }
+
+    // These tests benchmark the gas usage when a new request overflows the fixed-size
+    // request array and gets stored in the overflow mapping.
+    //
+    // NOTE: Run test with `forge test --gas-report --match-test testOverflowMappingGasUsageWithXXFeeds`
+    // and observe the `max` value for `executeCallback` to see the cost of the overflowing request.
+    function testOverflowMappingGasUsageWith01Feeds() public {
+        _runOverflowBenchmarkWithFeeds(1);
+    }
+
+    function testOverflowMappingGasUsageWith02Feeds() public {
+        _runOverflowBenchmarkWithFeeds(2);
+    }
+
+    function testOverflowMappingGasUsageWith04Feeds() public {
+        _runOverflowBenchmarkWithFeeds(4);
+    }
+
+    function testOverflowMappingGasUsageWith08Feeds() public {
+        _runOverflowBenchmarkWithFeeds(8);
+    }
+
+    function testOverflowMappingGasUsageWith10Feeds() public {
+        _runOverflowBenchmarkWithFeeds(10);
     }
 }
 
