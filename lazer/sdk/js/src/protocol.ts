@@ -20,7 +20,7 @@ export type Request =
       deliveryFormat?: DeliveryFormat;
       jsonBinaryEncoding?: JsonBinaryEncoding;
       parsed?: boolean;
-      ignoreInvalidFeeds?: boolean;
+      ignoreInvalidFeedIds?: boolean;
       channel: Channel;
     }
   | {

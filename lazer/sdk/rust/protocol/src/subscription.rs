@@ -26,7 +26,7 @@ pub struct SubscribeRequest {
     #[serde(flatten)]
     pub params: SubscriptionParams,
     #[serde(default)]
-    pub ignore_invalid_feeds: Option<bool>,
+    pub ignore_invalid_feed_ids: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
