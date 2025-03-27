@@ -63,7 +63,12 @@ pub async fn process_event_with_backoff(
 
     match success {
         Ok(result) => {
-            tracing::info!("Processed event successfully in {:?}", result.duration);
+            tracing::info!(
+                "Processed event successfully in {:?} after {} retries. Receipt: {:?}",
+                result.duration,
+                result.num_retries,
+                result.receipt
+            );
 
             metrics
                 .requests_processed_success

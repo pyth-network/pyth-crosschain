@@ -25,10 +25,10 @@ repos:
           )
   - repo: local
     hooks:
-      - id: turbo-fix
-        name: Run turbo fix on packages changed since the last commit
+      - id: turbo-fix-format
+        name: Run turbo fix on packages
         language: system
-        entry: sh -c 'TURBO_SCM_BASE="HEAD^1" pnpm turbo fix --affected'
+        entry: sh -c 'pnpm turbo fix'
         pass_filenames: false
       # Hooks for the remote executor
       - id: cargo-fmt-remote-executor

@@ -1,3 +1,4 @@
+use ethabi::ethereum_types::U64;
 use {
     crate::eth_utils::nonce_manager::NonceManaged,
     anyhow::{anyhow, Result},
@@ -314,6 +315,13 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
                 transaction
             ))
         })?;
+
+    if receipt.status == Some(U64::from(0)) {
+        return Err(backoff::Error::transient(anyhow!(
+            "Reveal transaction reverted on-chain. Tx:{:?}",
+            transaction
+        )));
+    }
 
     Ok(receipt)
 }

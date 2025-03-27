@@ -60,7 +60,7 @@ export const EntropyDeployments = {
     explorer: "https://optimistic.etherscan.io/address/$ADDRESS",
     delay: "2 blocks",
     gasLimit: "500K",
-    rpc: "https://rpc.ankr.com/optimism",
+    rpc: "https://optimism.llamarpc.com",
     nativeCurrency: "ETH",
   },
   mode: {
@@ -216,7 +216,7 @@ export const EntropyDeployments = {
     rpc: "https://subnets.avax.network/orangetest/testnet/rpc",
     nativeCurrency: "JUICE",
   },
-  "sei-evm-mainnet": {
+  "sei-evm": {
     address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     explorer: "https://seitrace.com/address/$ADDRESS?chain=pacific-1",
     delay: "1 block",
@@ -306,7 +306,7 @@ export const EntropyDeployments = {
     rpc: "https://sepolia.b3.fun/http/",
     nativeCurrency: "ETH",
   },
-  "b3-mainnet": {
+  b3: {
     address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     explorer: "https://explorer.b3.fun/address/$ADDRESS",
     delay: "1 block",
@@ -351,7 +351,7 @@ export const EntropyDeployments = {
     rpc: "https://sanko-arb-sepolia.rpc.caldera.xyz/http",
     nativeCurrency: "DMT",
   },
-  "apechain-mainnet": {
+  apechain: {
     address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     explorer: "https://apechain.calderaexplorer.xyz/address/$ADDRESS",
     delay: "1 block",
@@ -440,6 +440,15 @@ export const EntropyDeployments = {
     network: "testnet",
     rpc: "https://bepolia.rpc.berachain.com",
     nativeCurrency: "BERA",
+  },
+  hyperevm: {
+    address: "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    explorer: "https://hyperliquid.cloud.blockscout.com/address/$ADDRESS",
+    delay: "",
+    gasLimit: "500K",
+    network: "mainnet",
+    rpc: "https://rpc.hyperliquid.xyz/evm",
+    nativeCurrency: "HYPE",
   },
 } as const satisfies Record<string, EntropyDeployment>;
 
