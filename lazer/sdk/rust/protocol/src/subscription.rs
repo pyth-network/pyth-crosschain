@@ -25,6 +25,8 @@ pub struct SubscribeRequest {
     pub subscription_id: SubscriptionId,
     #[serde(flatten)]
     pub params: SubscriptionParams,
+    #[serde(default)]
+    pub ignore_invalid_feeds: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,6 +52,10 @@ pub enum Response {
 #[serde(rename_all = "camelCase")]
 pub struct SubscribedResponse {
     pub subscription_id: SubscriptionId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub successful_feeds: Option<Vec<u64>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub failed_feeds: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
