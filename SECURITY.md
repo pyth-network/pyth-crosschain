@@ -54,6 +54,8 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
   - **Scope**: _pyth-crosschain-starknet contracts_
 - **[Jan 17, 2025 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2025_01_17/pyth_lazer_solana_audit_final.pdf)**
   - **Scope**: _pyth-lazer solana contract_
+- **[Feb 12, 2025 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2025_02_12/pyth_lazer_evm_audit_final.pdf)**
+  - **Scope**: _pyth-lazer evm contract_
 
 ## Social Media Monitoring
 
