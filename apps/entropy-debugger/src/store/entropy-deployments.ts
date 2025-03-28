@@ -113,7 +113,7 @@ export const EntropyDeployments = {
     network: "testnet",
     delay: "",
     address: "0xdF21D137Aadc95588205586636710ca2890538d5",
-    explorer: "https://evmtestnet.confluxscan.io/address/$ADDRESS",
+    explorer: "https://evmtestnet.confluxscan.org/address/$ADDRESS",
     gasLimit: "500K",
     nativeCurrency: "CFX",
   },
