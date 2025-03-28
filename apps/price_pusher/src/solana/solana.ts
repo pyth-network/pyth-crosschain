@@ -174,7 +174,7 @@ export class SolanaPricePusherJito implements IPricePusher {
   async getRecentJitoTipLamports(): Promise<number | undefined> {
     try {
       const response = await fetch(
-        "http://bundles-api-rest.jito.wtf/api/v1/bundles/tip_floor",
+        "https://bundles.jito.wtf/api/v1/bundles/tip_floor",
       );
       if (!response.ok) {
         this.logger.error(
