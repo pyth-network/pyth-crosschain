@@ -107,7 +107,7 @@ pub async fn adjust_fee_wrapper(
         .in_current_span()
         .await
         {
-            tracing::error!("Withdrawing fees. error: {:?}", e);
+            tracing::error!("Fee adjustment failed: {:?}", e);
         }
         time::sleep(poll_interval).await;
     }
@@ -212,6 +212,9 @@ pub async fn adjust_fee_if_necessary(
     if is_chain_active
         && ((provider_fee > target_fee_max && can_reduce_fees) || provider_fee < target_fee_min)
     {
+        if min_fee_wei * 100 < target_fee {
+            return Err(anyhow!("Cowardly refusing to set target fee more than 100x min_fee_wei. Target: {:?} Min: {:?}", target_fee, min_fee_wei));
+        }
         tracing::info!(
             "Adjusting fees. Current: {:?} Target: {:?}",
             provider_fee,
