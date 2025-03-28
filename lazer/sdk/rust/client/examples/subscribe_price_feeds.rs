@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
                 channel: Channel::FixedRate(
                     FixedRate::from_ms(200).expect("unsupported update rate"),
                 ),
-                ignore_invalid_feed_ids: Some(false),
+                ignore_invalid_feed_ids: false,
             })
             .expect("invalid subscription params"),
         },
@@ -69,7 +69,7 @@ async fn main() -> anyhow::Result<()> {
                 channel: Channel::FixedRate(
                     FixedRate::from_ms(50).expect("unsupported update rate"),
                 ),
-                ignore_invalid_feed_ids: Some(false),
+                ignore_invalid_feed_ids: false,
             })
             .expect("invalid subscription params"),
         },
