@@ -177,7 +177,7 @@ export class SolanaPricePusherJito implements IPricePusher {
         "https://bundles.jito.wtf/api/v1/bundles/tip_floor",
       );
       if (!response.ok) {
-        this.logger.warn(
+        this.logger.error(
           { status: response.status, statusText: response.statusText },
           "getRecentJitoTips http request failed",
         );
@@ -188,7 +188,7 @@ export class SolanaPricePusherJito implements IPricePusher {
         Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL,
       );
     } catch (err: any) {
-      this.logger.warn({ err }, "getRecentJitoTips failed");
+      this.logger.error({ err }, "getRecentJitoTips failed");
       return undefined;
     }
   }
