@@ -57,10 +57,18 @@ pub struct SubscribedResponse {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct InvalidFeedSubscriptionDetails {
+    pub unknown_ids: Vec<u32>,
+    pub unsupported_channels: Vec<u32>,
+    pub unstable: Vec<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SubscribedWithInvalidFeedIdsIgnoredResponse {
     pub subscription_id: SubscriptionId,
-    pub successful_feeds: Vec<u32>,
-    pub failed_feeds: serde_json::Value,
+    pub subscribed_feed_ids: Vec<u32>,
+    pub ignored_invalid_feed_ids: InvalidFeedSubscriptionDetails,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
