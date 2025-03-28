@@ -55,7 +55,7 @@ interface IPulse is PulseEvents {
         address provider,
         uint64 publishTime,
         bytes32[] calldata priceIds,
-        uint256 callbackGasLimit
+        uint32 callbackGasLimit
     ) external payable returns (uint64 sequenceNumber);
 
     /**
@@ -80,7 +80,7 @@ interface IPulse is PulseEvents {
      * @dev This is a fixed fee per request that goes to the Pyth protocol, separate from gas costs
      * @return pythFeeInWei The base fee in wei that every request must pay
      */
-    function getPythFeeInWei() external view returns (uint128 pythFeeInWei);
+    function getPythFeeInWei() external view returns (uint96 pythFeeInWei);
 
     /**
      * @notice Calculates the total fee required for a price update request
@@ -92,9 +92,9 @@ interface IPulse is PulseEvents {
      */
     function getFee(
         address provider,
-        uint256 callbackGasLimit,
+        uint32 callbackGasLimit,
         bytes32[] calldata priceIds
-    ) external view returns (uint128 feeAmount);
+    ) external view returns (uint96 feeAmount);
 
     function getAccruedPythFees()
         external
@@ -116,16 +116,16 @@ interface IPulse is PulseEvents {
     function withdrawAsFeeManager(address provider, uint128 amount) external;
 
     function registerProvider(
-        uint128 baseFeeInWei,
-        uint128 feePerFeedInWei,
-        uint128 feePerGasInWei
+        uint96 baseFeeInWei,
+        uint96 feePerFeedInWei,
+        uint96 feePerGasInWei
     ) external;
 
     function setProviderFee(
         address provider,
-        uint128 newBaseFeeInWei,
-        uint128 newFeePerFeedInWei,
-        uint128 newFeePerGasInWei
+        uint96 newBaseFeeInWei,
+        uint96 newFeePerFeedInWei,
+        uint96 newFeePerGasInWei
     ) external;
 
     function getProviderInfo(
@@ -136,9 +136,9 @@ interface IPulse is PulseEvents {
 
     function setDefaultProvider(address provider) external;
 
-    function setExclusivityPeriod(uint256 periodSeconds) external;
+    function setExclusivityPeriod(uint32 periodSeconds) external;
 
-    function getExclusivityPeriod() external view returns (uint256);
+    function getExclusivityPeriod() external view returns (uint32);
 
     /**
      * @notice Gets the first N active requests

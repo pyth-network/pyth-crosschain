@@ -19,11 +19,12 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     // It is possible to have more signers but the median seems to be 13.
     uint8 constant NUM_GUARDIAN_SIGNERS = 13;
 
-    // We use 5 prices to form a batch of 5 prices, close to our mainnet transactions.
-    uint8 constant NUM_PRICES = 5;
+    // Our mainnet transactions use 5 prices to form a batch of 5 prices,
+    // but Pulse allows parsing up to 10 requests in a single requests, so we set up 10 prices.
+    uint8 constant NUM_PRICES = 10;
 
-    // We will have less than 512 price for a foreseeable future.
-    uint8 constant MERKLE_TREE_DEPTH = 9;
+    // We will have less than 2^11=2048 price for a foreseeable future.
+    uint8 constant MERKLE_TREE_DEPTH = 11;
 
     IWormhole public wormhole;
     IPyth public pyth;
@@ -265,10 +266,8 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
             100
         );
     }
-
-    function testBenchmarkParsePriceFeedUpdates1() public {
-        uint numIds = 1;
-
+    // Helper function to run price feed update benchmark with a specified number of feeds
+    function _runParsePriceFeedUpdatesBenchmark(uint256 numIds) internal {
         bytes32[] memory ids = new bytes32[](numIds);
         for (uint i = 0; i < numIds; i++) {
             ids[i] = priceIds[i];
@@ -279,66 +278,46 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
             0,
             50
         );
+    }
+
+    function testBenchmarkParsePriceFeedUpdates1() public {
+        _runParsePriceFeedUpdatesBenchmark(1);
     }
 
     function testBenchmarkParsePriceFeedUpdates2() public {
-        uint numIds = 2;
-
-        bytes32[] memory ids = new bytes32[](numIds);
-        for (uint i = 0; i < numIds; i++) {
-            ids[i] = priceIds[i];
-        }
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee[numIds - 1]}(
-            freshPricesUpdateData[numIds - 1],
-            ids,
-            0,
-            50
-        );
+        _runParsePriceFeedUpdatesBenchmark(2);
     }
 
     function testBenchmarkParsePriceFeedUpdates3() public {
-        uint numIds = 3;
-
-        bytes32[] memory ids = new bytes32[](numIds);
-        for (uint i = 0; i < numIds; i++) {
-            ids[i] = priceIds[i];
-        }
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee[numIds - 1]}(
-            freshPricesUpdateData[numIds - 1],
-            ids,
-            0,
-            50
-        );
+        _runParsePriceFeedUpdatesBenchmark(3);
     }
 
     function testBenchmarkParsePriceFeedUpdates4() public {
-        uint numIds = 4;
-
-        bytes32[] memory ids = new bytes32[](numIds);
-        for (uint i = 0; i < numIds; i++) {
-            ids[i] = priceIds[i];
-        }
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee[numIds - 1]}(
-            freshPricesUpdateData[numIds - 1],
-            ids,
-            0,
-            50
-        );
+        _runParsePriceFeedUpdatesBenchmark(4);
     }
 
     function testBenchmarkParsePriceFeedUpdates5() public {
-        uint numIds = 5;
+        _runParsePriceFeedUpdatesBenchmark(5);
+    }
 
-        bytes32[] memory ids = new bytes32[](numIds);
-        for (uint i = 0; i < numIds; i++) {
-            ids[i] = priceIds[i];
-        }
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee[numIds - 1]}(
-            freshPricesUpdateData[numIds - 1],
-            ids,
-            0,
-            50
-        );
+    function testBenchmarkParsePriceFeedUpdates6() public {
+        _runParsePriceFeedUpdatesBenchmark(6);
+    }
+
+    function testBenchmarkParsePriceFeedUpdates7() public {
+        _runParsePriceFeedUpdatesBenchmark(7);
+    }
+
+    function testBenchmarkParsePriceFeedUpdates8() public {
+        _runParsePriceFeedUpdatesBenchmark(8);
+    }
+
+    function testBenchmarkParsePriceFeedUpdates9() public {
+        _runParsePriceFeedUpdatesBenchmark(9);
+    }
+
+    function testBenchmarkParsePriceFeedUpdates10() public {
+        _runParsePriceFeedUpdatesBenchmark(10);
     }
 
     function testBenchmarkParsePriceFeedUpdatesForAllPriceFeedsShuffledSubsetPriceIds()
