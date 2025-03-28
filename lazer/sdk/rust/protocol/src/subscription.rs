@@ -53,7 +53,7 @@ pub enum Response {
 pub struct SubscribedResponse {
     pub subscription_id: SubscriptionId,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub successful_feeds: Option<Vec<u64>>,
+    pub successful_feeds: Option<Vec<u32>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub failed_feeds: Option<serde_json::Value>,
 }
