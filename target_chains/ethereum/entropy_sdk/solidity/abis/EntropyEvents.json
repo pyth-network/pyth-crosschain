@@ -3,6 +3,62 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "requestor",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "errorCode",
+        "type": "bytes32"
+      }
+    ],
+    "name": "CallbackFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "oldDefaultGasLimit",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "newDefaultGasLimit",
+        "type": "uint64"
+      }
+    ],
+    "name": "ProviderDefaultGasLimitUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "address",
         "name": "provider",
@@ -163,6 +219,11 @@
             "internalType": "uint32",
             "name": "maxNumHashes",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "defaultGasLimit",
+            "type": "uint64"
           }
         ],
         "indexed": false,
@@ -217,6 +278,16 @@
           {
             "internalType": "bool",
             "name": "isRequestWithCallback",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "callbackAttempted",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "reentryGuard",
             "type": "bool"
           }
         ],
@@ -297,6 +368,16 @@
             "internalType": "bool",
             "name": "isRequestWithCallback",
             "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "callbackAttempted",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "reentryGuard",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -351,6 +432,16 @@
           {
             "internalType": "bool",
             "name": "isRequestWithCallback",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "callbackAttempted",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "reentryGuard",
             "type": "bool"
           }
         ],
@@ -430,6 +521,16 @@
           {
             "internalType": "bool",
             "name": "isRequestWithCallback",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "callbackAttempted",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "reentryGuard",
             "type": "bool"
           }
         ],

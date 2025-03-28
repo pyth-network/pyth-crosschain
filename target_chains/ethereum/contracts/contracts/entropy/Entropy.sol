@@ -470,6 +470,15 @@ abstract contract Entropy is IEntropy, EntropyState {
         if (!req.isRequestWithCallback) {
             revert EntropyErrors.InvalidRevealCall();
         }
+        // Invariant check: all callback requests should have useBlockhash set to false.
+        if (req.useBlockhash) {
+            revert EntropyErrors.InvalidRevealCall();
+        }
+
+        if (req.reentryGuard) {
+            revert EntropyErrors.InvalidRevealCall();
+        }
+
         bytes32 blockHash;
         bytes32 randomNumber;
         (randomNumber, blockHash) = revealHelper(
@@ -480,27 +489,60 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         address callAddress = req.requester;
 
-        emit RevealedWithCallback(
-            req,
-            userRandomNumber,
-            providerRevelation,
-            randomNumber
-        );
-
-        clearRequest(provider, sequenceNumber);
-
         // Check if the callAddress is a contract account.
+        // TODO: this can probably be deleted.
         uint len;
         assembly {
             len := extcodesize(callAddress)
         }
+
+        bool success;
+        bytes memory ret;
         if (len != 0) {
-            IEntropyConsumer(callAddress)._entropyCallback(
-                sequenceNumber,
-                provider,
+            uint64 gas;
+            if (req.blockNumber != 0) {
+                gas = req.blockNumber;
+            } else {
+                gas = gasLeft();
+            }
+
+            req.reentryGuard = true;
+            (success, ret) == callAddress.excessivelySafeCall(
+                gas,
+                32,
+                abi.encodeWithSelector(
+                    IEntropyConsumer._entropyCallback.selector,
+                    sequenceNumber,
+                    provider,
+                    randomNumber
+                )
+            );
+            req.reentryGuard = false;
+        }    
+
+        if (success) {
+            emit RevealedWithCallback(
+                req,
+                userRandomNumber,
+                providerRevelation,
                 randomNumber
             );
+            clearRequest(provider, sequenceNumber);
+        } else {
+            bytes32 errorReason;
+            assembly {
+                errorReason := mload(add(ret, 32));
+            }
+
+            emit CallbackFailed(
+                provider,
+                req.requester,
+                sequenceNumber,
+                errorReason
+            )
+            req.callbackAttempted = true;
         }
+
     }
 
     function getProviderInfo(
@@ -622,6 +664,24 @@ abstract contract Entropy is IEntropy, EntropyState {
             msg.sender,
             oldMaxNumHashes,
             maxNumHashes
+        );
+    }
+
+    // Set the default gas limit for a request.
+    function setDefaultGasLimit(uint64 gasLimit) external override {
+        EntropyStructs.ProviderInfo storage provider = _state.providers[
+            msg.sender
+        ];
+        if (provider.sequenceNumber == 0) {
+            revert EntropyErrors.NoSuchProvider();
+        }
+
+        uint64 oldGasLimit = provider.defaultGasLimit;
+        provider.defaultGasLimit = gasLimit;
+        emit ProviderDefaultGasLimitUpdated(
+            msg.sender,
+            oldGasLimit,
+            gasLimit
         );
     }
 

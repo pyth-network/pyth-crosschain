@@ -28,6 +28,13 @@ interface EntropyEvents {
         bytes32 providerRevelation,
         bytes32 randomNumber
     );
+    // TODO: indexing, other fields??
+    event CallbackFailed(
+        address indexed provider,
+        address indexed requestor,
+        uint64 indexed sequenceNumber,
+        bytes32 errorCode
+    );
 
     event ProviderFeeUpdated(address provider, uint128 oldFee, uint128 newFee);
 
@@ -42,6 +49,12 @@ interface EntropyEvents {
         address provider,
         uint32 oldMaxNumHashes,
         uint32 newMaxNumHashes
+    );
+
+    event ProviderDefaultGasLimitUpdated(
+        address provider,
+        uint64 oldDefaultGasLimit,
+        uint64 newDefaultGasLimit
     );
 
     event Withdrawal(

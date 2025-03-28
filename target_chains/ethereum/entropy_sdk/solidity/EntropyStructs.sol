@@ -37,6 +37,8 @@ contract EntropyStructs {
         // Maximum number of hashes to record in a request. This should be set according to the maximum gas limit
         // the provider supports for callbacks.
         uint32 maxNumHashes;
+        // Default gas limit to use for callbacks.
+        uint64 defaultGasLimit;
     }
 
     struct Request {
@@ -54,6 +56,9 @@ contract EntropyStructs {
         // Note that we're using a uint64 such that we have an additional space for an address and other fields in
         // this storage slot. Although block.number returns a uint256, 64 bits should be plenty to index all of the
         // blocks ever generated.
+        //
+        // Note: We are overloading this storage slot to also store a gas limit for callbacks, as we do not support
+        // blockhashes in the callback case.
         uint64 blockNumber;
         // The address that requested this random number.
         address requester;
@@ -61,6 +66,9 @@ contract EntropyStructs {
         bool useBlockhash;
         // If true, the requester will be called back with the generated random value.
         bool isRequestWithCallback;
-        // There are 2 remaining bytes of free space in this slot.
+        // If true, the callback has been attempted by the provider (and failed for some reason).
+        bool callbackAttempted;
+        // If true, a fulfillment request for this is already in-flight
+        bool reentryGuard;
     }
 }
