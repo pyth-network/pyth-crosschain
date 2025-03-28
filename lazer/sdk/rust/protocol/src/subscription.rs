@@ -40,6 +40,7 @@ pub struct UnsubscribeRequest {
 pub enum Response {
     Error(ErrorResponse),
     Subscribed(SubscribedResponse),
+    SubscribedWithInvalidFeedIdsIgnored(SubscribedWithInvalidFeedIdsIgnoredResponse),
     Unsubscribed(UnsubscribedResponse),
     SubscriptionError(SubscriptionErrorResponse),
     StreamUpdated(StreamUpdatedResponse),
@@ -50,6 +51,22 @@ pub enum Response {
 #[serde(rename_all = "camelCase")]
 pub struct SubscribedResponse {
     pub subscription_id: SubscriptionId,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InvalidFeedSubscriptionDetails {
+    pub unknown_ids: Vec<u32>,
+    pub unsupported_channels: Vec<u32>,
+    pub unstable: Vec<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SubscribedWithInvalidFeedIdsIgnoredResponse {
+    pub subscription_id: SubscriptionId,
+    pub subscribed_feed_ids: Vec<u32>,
+    pub ignored_invalid_feed_ids: InvalidFeedSubscriptionDetails,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

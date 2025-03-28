@@ -20,6 +20,7 @@ export type Request =
       deliveryFormat?: DeliveryFormat;
       jsonBinaryEncoding?: JsonBinaryEncoding;
       parsed?: boolean;
+      ignoreInvalidFeedIds?: boolean;
       channel: Channel;
     }
   | {
@@ -47,6 +48,12 @@ export type JsonBinaryData = {
   data: string;
 };
 
+export type InvalidFeedSubscriptionDetails = {
+  unknownIds: number[];
+  unsupportedChannels: number[];
+  unstable: number[];
+};
+
 export type Response =
   | {
       type: "error";
@@ -55,6 +62,12 @@ export type Response =
   | {
       type: "subscribed";
       subscriptionId: number;
+    }
+  | {
+      type: "subscribedWithInvalidFeedIdsIgnored";
+      subscriptionId: number;
+      subscribedFeedIds: number[];
+      ignoredInvalidFeedIds: InvalidFeedSubscriptionDetails;
     }
   | {
       type: "unsubscribed";
