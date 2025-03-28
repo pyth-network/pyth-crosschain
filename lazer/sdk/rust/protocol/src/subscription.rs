@@ -42,7 +42,7 @@ pub struct UnsubscribeRequest {
 pub enum Response {
     Error(ErrorResponse),
     Subscribed(SubscribedResponse),
-    SubscribedWithIgnoredInvalidFeedIds(SubscribedWithInvalidFeedIdsIgnoredResponse),
+    SubscribedWithInvalidFeedIdsIgnored(SubscribedWithInvalidFeedIdsIgnoredResponse),
     Unsubscribed(UnsubscribedResponse),
     SubscriptionError(SubscriptionErrorResponse),
     StreamUpdated(StreamUpdatedResponse),
