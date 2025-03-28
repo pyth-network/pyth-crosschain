@@ -42,6 +42,7 @@ pub struct UnsubscribeRequest {
 pub enum Response {
     Error(ErrorResponse),
     Subscribed(SubscribedResponse),
+    SubscribedWithIgnoredInvalidFeedIds(SubscribedWithInvalidFeedIdsIgnoredResponse),
     Unsubscribed(UnsubscribedResponse),
     SubscriptionError(SubscriptionErrorResponse),
     StreamUpdated(StreamUpdatedResponse),
@@ -52,10 +53,14 @@ pub enum Response {
 #[serde(rename_all = "camelCase")]
 pub struct SubscribedResponse {
     pub subscription_id: SubscriptionId,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub successful_feeds: Option<Vec<u32>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub failed_feeds: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SubscribedWithInvalidFeedIdsIgnoredResponse {
+    pub subscription_id: SubscriptionId,
+    pub successful_feeds: Vec<u32>,
+    pub failed_feeds: serde_json::Value,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

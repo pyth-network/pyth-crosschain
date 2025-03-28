@@ -64,7 +64,7 @@ export type Response =
       subscriptionId: number;
     }
   | {
-      type: "subscribedWithIgnoredInvalidFeedIds";
+      type: "subscribedWithInvalidFeedIdsIgnored";
       subscriptionId: number;
       successfulFeeds: number[];
       failedFeeds: InvalidFeedSubscriptionDetails;
