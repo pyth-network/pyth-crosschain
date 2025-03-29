@@ -27,12 +27,18 @@ export default {
       required: true,
     } as Options,
     "gas-price": {
-      description: "Gas price to be used for each transasction",
+      description: "Gas price to be used for each transaction",
       type: "number",
     } as Options,
     "gas-multiplier": {
-      description: "Gas multiplier to be used for each transasction",
+      description: "Gas multiplier to be used for each transaction",
       type: "number",
+    } as Options,
+    "price-ids-process-chunk-size": {
+      description:
+        "Set in case we wanna split price feeds updates into chunks to have smaller transactions. Set to -1 to disable chunking.",
+      type: "number",
+      required: false,
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -46,18 +52,19 @@ export default {
   handler: async function (argv: any) {
     // FIXME: type checks for this
     const {
-      gasPrice,
-      gasMultiplier,
-      grpcEndpoint,
-      priceConfigFile,
-      priceServiceEndpoint,
-      mnemonicFile,
-      pythContractAddress,
-      pushingFrequency,
-      pollingFrequency,
       network,
       logLevel,
+      gasPrice,
+      grpcEndpoint,
+      mnemonicFile,
+      gasMultiplier,
+      priceConfigFile,
+      pollingFrequency,
+      pushingFrequency,
       controllerLogLevel,
+      pythContractAddress,
+      priceServiceEndpoint,
+      priceIdsProcessChunkSize,
     } = argv;
 
     const logger = pino({ level: logLevel });
@@ -111,6 +118,7 @@ export default {
         chainId: getNetworkInfo(network).chainId,
         gasPrice,
         gasMultiplier,
+        priceIdsProcessChunkSize,
       },
     );
 
