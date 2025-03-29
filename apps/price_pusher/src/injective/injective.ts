@@ -214,10 +214,13 @@ export class InjectivePricePusher implements IPricePusher {
     if (priceIds.length !== pubTimesToPush.length)
       throw new Error("Invalid arguments");
 
-    const priceIdChunks = splitArrayToChunks({
-      array: priceIds,
-      chunkSize: this.chainConfig.priceIdsProcessChunkSize,
-    });
+    const priceIdChunks =
+      this.chainConfig.priceIdsProcessChunkSize === -1
+        ? [priceIds]
+        : splitArrayToChunks({
+            array: priceIds,
+            chunkSize: this.chainConfig.priceIdsProcessChunkSize,
+          });
 
     for (const [chunkIndex, priceIdChunk] of priceIdChunks.entries()) {
       await this.updatePriceFeedChunk(priceIdChunk, chunkIndex);
