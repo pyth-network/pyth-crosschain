@@ -32,6 +32,7 @@ import {
   DataSource,
   SetDataSources,
 } from "../governance_payload/SetDataSources";
+import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);
@@ -423,6 +424,12 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             expo,
             Buffer.from(token),
           );
+        });
+    } else if (header.action === "SetTransactionFee") {
+      return fc
+        .record({ v: fc.bigUintN(64), e: fc.bigUintN(64) })
+        .map(({ v, e }) => {
+          return new SetTransactionFee(header.targetChainId, v, e);
         });
     } else {
       throw new Error("Unsupported action type");

@@ -16,6 +16,7 @@ export const TargetAction = {
   RequestGovernanceDataSourceTransfer: 5,
   SetWormholeAddress: 6,
   SetFeeInToken: 7,
+  SetTransactionFee: 8,
 } as const;
 
 export const EvmExecutorAction = {
@@ -46,6 +47,8 @@ export function toActionName(
         return "SetWormholeAddress";
       case 7:
         return "SetFeeInToken";
+      case 8:
+        return "SetTransactionFee";
     }
   } else if (
     deserialized.moduleId == MODULE_EVM_EXECUTOR &&
