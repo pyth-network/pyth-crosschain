@@ -35,9 +35,10 @@ export default {
       type: "number",
     } as Options,
     "price-ids-process-chunk-size": {
-      description: "Set in case we wanna split price feeds updates into chunks to have smaller transactions. Set to -1 to disable chunking.",
+      description:
+        "Set in case we wanna split price feeds updates into chunks to have smaller transactions. Set to -1 to disable chunking.",
       type: "number",
-      required: false
+      required: false,
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -117,7 +118,7 @@ export default {
         chainId: getNetworkInfo(network).chainId,
         gasPrice,
         gasMultiplier,
-        priceIdsProcessChunkSize
+        priceIdsProcessChunkSize,
       },
     );
 
