@@ -397,6 +397,6 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.3";
+        return "1.4.4-alpha.1";
     }
 }
