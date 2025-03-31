@@ -3,8 +3,8 @@
 
 use {
     crate::router::{Channel, JsonUpdate, PriceFeedId, SubscriptionParams},
+    crate::symbol_state::SymbolState,
     derive_more::From,
-    pyth_lazer_internal_protocol::SymbolState,
     serde::{Deserialize, Serialize},
 };
 
