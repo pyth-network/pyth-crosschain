@@ -2,8 +2,7 @@
 //! used across publishers, agents and routers.
 
 use {
-    crate::router::{Channel, JsonUpdate, PriceFeedId, SubscriptionParams},
-    crate::symbol_state::SymbolState,
+    crate::router::{JsonUpdate, PriceFeedId, SubscriptionParams},
     derive_more::From,
     serde::{Deserialize, Serialize},
 };
@@ -58,8 +57,8 @@ pub struct SubscribedResponse {
 #[serde(rename_all = "camelCase")]
 pub struct InvalidFeedSubscriptionDetails {
     pub unknown_ids: Vec<PriceFeedId>,
-    pub unsupported_channels: Vec<(PriceFeedId, Channel)>,
-    pub unstable: Vec<(PriceFeedId, SymbolState)>,
+    pub unsupported_channels: Vec<PriceFeedId>,
+    pub unstable: Vec<PriceFeedId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
