@@ -86,7 +86,11 @@ abstract contract Pyth is
         // In the accumulator update data a single update can contain
         // up to 255 messages and we charge a singleUpdateFee per each
         // message
-        return 255 * singleUpdateFeeInWei() * updateDataSize;
+        return
+            255 *
+            singleUpdateFeeInWei() *
+            updateDataSize +
+            transactionFeeInWei();
     }
 
     function getUpdateFee(
