@@ -1,7 +1,5 @@
 use {
-    crate::{
-        chain::reader::{BlockNumber, BlockStatus},
-    },
+    crate::chain::reader::BlockStatus,
     anyhow::Result,
     axum::{
         body::Body,
@@ -47,9 +45,7 @@ pub struct ApiState {
 }
 
 impl ApiState {
-    pub async fn new(
-        metrics_registry: Arc<RwLock<Registry>>,
-    ) -> ApiState {
+    pub async fn new(metrics_registry: Arc<RwLock<Registry>>) -> ApiState {
         let metrics = ApiMetrics {
             http_requests: Family::default(),
         };
@@ -68,16 +64,13 @@ impl ApiState {
     }
 }
 
-/// The state of the randomness service for a single blockchain.
+/// The state of the service for a single blockchain.
 #[derive(Clone)]
 pub struct BlockchainState {
     /// The chain id for this blockchain, useful for logging
     pub id: ChainId,
     /// The address of the provider that this server is operating for.
     pub provider_address: Address,
-    /// The server will wait for this many block confirmations of a request before revealing
-    /// the random number.
-    pub reveal_delay_blocks: BlockNumber,
     /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
     /// For eg., Finalized, Safe
     pub confirmed_block_status: BlockStatus,

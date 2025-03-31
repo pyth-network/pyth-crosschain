@@ -4,13 +4,13 @@ use {
         config::{Config, EthereumConfig, RunOptions},
         keeper::{self, keeper_metrics::KeeperMetrics},
     },
-    fortuna::eth_utils::traced_client::{RpcMetrics, TracedClient},
     anyhow::{anyhow, Error, Result},
     axum::Router,
     ethers::{
         middleware::Middleware,
         types::{Address, BlockNumber},
     },
+    fortuna::eth_utils::traced_client::{RpcMetrics, TracedClient},
     futures::future::join_all,
     prometheus_client::{
         encoding::EncodeLabelSet,
@@ -110,12 +110,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let mut tasks = Vec::new();
     for (chain_id, chain_config) in config.chains.clone() {
         tasks.push(spawn(async move {
-            let state = setup_chain_state(
-                &config.provider.address,
-                &chain_id,
-                &chain_config,
-            )
-            .await;
+            let state = setup_chain_state(&config.provider.address, &chain_id, &chain_config).await;
 
             (chain_id, state)
         }));
@@ -183,7 +178,6 @@ async fn setup_chain_state(
     let state = BlockchainState {
         id: chain_id.clone(),
         provider_address: *provider,
-        reveal_delay_blocks: chain_config.reveal_delay_blocks,
         confirmed_block_status: chain_config.confirmed_block_status,
     };
     Ok(state)

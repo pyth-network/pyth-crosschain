@@ -1,14 +1,10 @@
 use {
     crate::{
-        api::{get_register_uri, ChainId},
+        api::ChainId,
         chain::ethereum::SignablePythContract,
         config::{Config, EthereumConfig, ProviderConfig, RegisterProviderOptions},
     },
     anyhow::{anyhow, Result},
-    ethers::{
-        abi::Bytes,
-        types::U256,
-    },
     std::sync::Arc,
 };
 
@@ -31,7 +27,7 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<()> {
 
 pub async fn register_provider_from_config(
     provider_config: &ProviderConfig,
-    chain_id: &ChainId,
+    _chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<()> {
     let private_key_string = provider_config.private_key.load()?.ok_or(anyhow!(
@@ -39,40 +35,10 @@ pub async fn register_provider_from_config(
     ))?;
 
     // Initialize a Provider to interface with the EVM contract.
-    let contract =
+    let _contract =
         Arc::new(SignablePythContract::from_config(chain_config, &private_key_string).await?);
-    // Create a new random hash chain.
-    let random = rand::random::<[u8; 32]>();
 
-    // FIXME: delete this
-    let commitment_length = 1000;
-
-    // Arguments to the contract to register our new provider.
-    let fee_in_wei = chain_config.fee;
-    let commitment = [0; 32];
-    // Store the random seed and chain length in the metadata field so that we can regenerate the hash
-    // chain at-will. (This is secure because you can't generate the chain unless you also have the secret)
-    let commitment_metadata = CommitmentMetadata {
-        seed: random,
-        chain_length: commitment_length,
-    };
-    let uri = get_register_uri(&provider_config.uri, chain_id)?;
-    let call = contract.register(
-        fee_in_wei,
-        commitment,
-        bincode::serialize(&commitment_metadata)?.into(),
-        commitment_length,
-        // Use Bytes to serialize the uri. Most users will be using JS/TS to deserialize this uri.
-        // Bincode is a different encoding mechanisms, and I didn't find any JS/TS library to parse bincode.
-        Bytes::from(uri.as_str()).into(),
-    );
-    let mut gas_estimate = call.estimate_gas().await?;
-    let gas_multiplier = U256::from(2); //TODO: smarter gas estimation
-    gas_estimate *= gas_multiplier;
-    let call_with_gas = call.gas(gas_estimate);
-    if let Some(r) = call_with_gas.send().await?.await? {
-        tracing::info!("Registered provider: {:?}", r);
-    }
+    // TODO: implement registration for Pulse
 
     Ok(())
 }

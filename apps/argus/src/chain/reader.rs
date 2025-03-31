@@ -1,6 +1,4 @@
-use {
-    ethers::types::{Address, BlockNumber as EthersBlockNumber},
-};
+use ethers::types::{Address, BlockNumber as EthersBlockNumber};
 
 pub type BlockNumber = u64;
 

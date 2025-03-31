@@ -3,52 +3,33 @@ use {
         api::{BlockchainState, ChainId},
         chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
         config::EthereumConfig,
-        keeper::block::{
-            get_latest_safe_block, process_backlog, process_new_blocks, watch_blocks_wrapper,
-            BlockRange,
-        },
         keeper::fee::adjust_fee_wrapper,
         keeper::fee::withdraw_fees_wrapper,
         keeper::track::track_accrued_pyth_fees,
         keeper::track::track_balance,
         keeper::track::track_provider,
     },
-    fortuna::eth_utils::traced_client::RpcMetrics,
     ethers::{signers::Signer, types::U256},
+    fortuna::eth_utils::traced_client::RpcMetrics,
     keeper_metrics::{AccountLabel, KeeperMetrics},
-    std::{collections::HashSet, sync::Arc},
+    std::sync::Arc,
     tokio::{
         spawn,
-        sync::{mpsc, RwLock},
         time::{self, Duration},
     },
     tracing::{self, Instrument},
 };
 
-pub(crate) mod block;
 pub(crate) mod fee;
 pub(crate) mod keeper_metrics;
-pub(crate) mod process_event;
 pub(crate) mod track;
 
-/// How many blocks to look back for events that might be missed when starting the keeper
-const BACKLOG_RANGE: u64 = 1000;
 /// Track metrics in this interval
 const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 /// Check whether we need to conduct a withdrawal at this interval.
 const WITHDRAW_INTERVAL: Duration = Duration::from_secs(300);
 /// Check whether we need to adjust the fee at this interval.
 const ADJUST_FEE_INTERVAL: Duration = Duration::from_secs(30);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RequestState {
-    /// Fulfilled means that the request was either revealed or we are sure we
-    /// will not be able to reveal it.
-    Fulfilled,
-    /// We have already processed the request but couldn't fulfill it and we are
-    /// unsure if we can fulfill it or not.
-    Processed,
-}
 
 /// Run threads to handle events for the last `BACKLOG_RANGE` blocks, watch for new blocks and
 /// handle any events for the new blocks.
@@ -73,58 +54,6 @@ pub async fn run_keeper_threads(
         .expect("Chain config should be valid"),
     );
     let keeper_address = contract.wallet().address();
-
-    let fulfilled_requests_cache = Arc::new(RwLock::new(HashSet::<u64>::new()));
-
-    let latest_safe_block = get_latest_safe_block(contract.clone(), &chain_state).in_current_span().await;
-    tracing::info!("latest safe block: {}", &latest_safe_block);
-
-    // Spawn a thread to handle the events from last BACKLOG_RANGE blocks.
-    let gas_limit: U256 = chain_eth_config.gas_limit.into();
-    spawn(
-        process_backlog(
-            BlockRange {
-                from: latest_safe_block.saturating_sub(BACKLOG_RANGE),
-                to: latest_safe_block,
-            },
-            contract.clone(),
-            gas_limit,
-            chain_eth_config.escalation_policy.to_policy(),
-            chain_state.clone(),
-            metrics.clone(),
-            fulfilled_requests_cache.clone(),
-            chain_eth_config.block_delays.clone(),
-        )
-        .in_current_span(),
-    );
-
-    let (tx, rx) = mpsc::channel::<BlockRange>(1000);
-    // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
-    spawn(
-        watch_blocks_wrapper(
-            contract.clone(),
-            chain_state.clone(),
-            latest_safe_block,
-            tx,
-            chain_eth_config.geth_rpc_wss.clone(),
-        )
-        .in_current_span(),
-    );
-
-    // Spawn a thread for block processing with configured delays
-    spawn(
-        process_new_blocks(
-            chain_state.clone(),
-            rx,
-            Arc::clone(&contract),
-            gas_limit,
-            chain_eth_config.escalation_policy.to_policy(),
-            metrics.clone(),
-            fulfilled_requests_cache.clone(),
-            chain_eth_config.block_delays.clone(),
-        )
-        .in_current_span(),
-    );
 
     // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
     spawn(
@@ -152,6 +81,8 @@ pub async fn run_keeper_threads(
             // near the maximum gas limit.
             // In the unlikely event that the keeper fees aren't sufficient, the solution to this is to configure the target
             // fee percentage to be higher on that specific chain.
+
+            // TODO: remove this, the gas limit is set by the consumer now.
             chain_eth_config.gas_limit,
             // NOTE: unwrap() here so we panic early if someone configures these values below -100.
             u64::try_from(100 + chain_eth_config.min_profit_pct)

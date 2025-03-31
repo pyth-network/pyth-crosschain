@@ -1,12 +1,9 @@
 use {
-    crate::{
-        api::ChainId,
-        chain::reader::{BlockNumber, BlockStatus},
-    },
-    fortuna::eth_utils::utils::EscalationPolicy,
+    crate::{api::ChainId, chain::reader::BlockStatus},
     anyhow::{anyhow, Result},
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
     ethers::types::Address,
+    fortuna::eth_utils::utils::EscalationPolicy,
     std::{collections::HashMap, fs},
 };
 pub use {
@@ -66,7 +63,7 @@ pub enum Options {
 pub struct ConfigOptions {
     /// Path to a configuration file containing the list of supported blockchains
     #[arg(long = "config")]
-    #[arg(env = "FORTUNA_CONFIG")]
+    #[arg(env = "ARGUS_CONFIG")]
     #[arg(default_value = "config.yaml")]
     pub config: String,
 }
@@ -117,12 +114,6 @@ pub struct EthereumConfig {
     /// Address of a Pyth Randomness contract to interact with.
     pub contract_addr: Address,
 
-    /// reveal_delay_blocks - The difference between the block number with the
-    /// confirmed_block_status(see below) and the block number of a request to
-    /// Entropy should be greater than `reveal_delay_blocks` for Fortuna to reveal
-    /// its commitment.
-    pub reveal_delay_blocks: BlockNumber,
-
     /// The BlockStatus of the block that is considered confirmed.
     /// For example, Finalized, Safe, Latest
     #[serde(default)]
@@ -136,7 +127,6 @@ pub struct EthereumConfig {
     pub gas_limit: u64,
 
     /// The percentage multiplier to apply to priority fee estimates (100 = no change, e.g. 150 = 150% of base fee)
-    #[serde(default = "default_priority_fee_multiplier_pct")]
     pub priority_fee_multiplier_pct: u64,
 
     /// The escalation policy governs how the gas limit and fee are increased during backoff retries.
@@ -171,24 +161,6 @@ pub struct EthereumConfig {
     /// How much the provider charges for a request on this chain.
     #[serde(default)]
     pub fee: u128,
-
-    /// Maximum number of hashes to record in a request.
-    /// This should be set according to the maximum gas limit the provider supports for callbacks.
-    pub max_num_hashes: Option<u32>,
-
-    /// A list of delays (in blocks) that indicates how many blocks should be delayed
-    /// before we process a block. For retry logic, we can process blocks multiple times
-    /// at each specified delay. For example: [5, 10, 20].
-    #[serde(default = "default_block_delays")]
-    pub block_delays: Vec<u64>,
-}
-
-fn default_block_delays() -> Vec<u64> {
-    vec![5]
-}
-
-fn default_priority_fee_multiplier_pct() -> u64 {
-    100
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -272,10 +244,6 @@ impl EscalationPolicyConfig {
 /// Configuration values that are common to a single provider (and shared across chains).
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ProviderConfig {
-    /// The URI where clients can retrieve random values from this provider,
-    /// i.e., wherever fortuna for this provider will be hosted.
-    pub uri: String,
-
     /// The public key of the provider whose requests the server will respond to.
     pub address: Address,
 

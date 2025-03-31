@@ -3,9 +3,6 @@ chains:
     geth_rpc_addr: https://replicator.pegasus.lightlink.io/rpc/v1
     contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
 
-    # Keeper configuration for the chain
-    reveal_delay_blocks: 0
-    gas_limit: 500000
 
     # Multiplier for the priority fee estimate, as a percentage (i.e., 100 = no change).
     # Defaults to 100 if the field is omitted.
@@ -38,23 +35,7 @@ chains:
     min_profit_pct: 0
     target_profit_pct: 20
     max_profit_pct: 100
-
-    # A list of block delays for processing blocks multiple times. Each number represents
-    # how many blocks to wait before processing. For example, [5, 10, 20] means process
-    # blocks after 5 blocks, then again after 10 blocks, and finally after 20 blocks.
-    block_delays: [5, 10, 20]
-
-    # Historical commitments -- delete this block for local development purposes
-    commitments:
-      # prettier-ignore
-      - seed: [219,125,217,197,234,88,208,120,21,181,172,143,239,102,41,233,167,212,237,106,37,255,184,165,238,121,230,155,116,158,173,48]
-        chain_length: 10000
-        original_commitment_sequence_number: 104
 provider:
-  uri: http://localhost:8080/
-  chain_length: 100000
-  chain_sample_interval: 10
-
   # An ethereum wallet address and private key. Generate with `cast wallet new`
   address: 0xADDRESS
   private_key:
@@ -63,12 +44,6 @@ provider:
     # For production, you can store the private key in a file.
     # file: provider-key.txt
   # A 32 byte random value in hexadecimal
-  # Generate with `openssl rand -hex 32`
-  secret:
-    # For local development, you can hardcode the value here
-    value: abcd
-    # For production, you can store the private key in a file.
-    # file: secret.txt
 
   # Set this to the address of your keeper wallet if you would like the keeper wallet to
   # be able to withdraw fees from the contract.
