@@ -50,8 +50,8 @@ export type JsonBinaryData = {
 
 export type InvalidFeedSubscriptionDetails = {
   unknownIds: number[];
-  unsupportedChannels: Array<{id: number, channel: string}>;
-  unstable: Array<{id: number, state: string}>;
+  unsupportedChannels: Array<{ id: number; channel: string }>;
+  unstable: Array<{ id: number; state: string }>;
 };
 
 export type Response =
