@@ -2,8 +2,9 @@
 //! used across publishers, agents and routers.
 
 use {
-    crate::router::{JsonUpdate, SubscriptionParams},
+    crate::router::{Channel, JsonUpdate, PriceFeedId, SubscriptionParams},
     derive_more::From,
+    pyth_lazer_internal_protocol::SymbolState,
     serde::{Deserialize, Serialize},
 };
 
@@ -56,16 +57,16 @@ pub struct SubscribedResponse {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InvalidFeedSubscriptionDetails {
-    pub unknown_ids: Vec<u32>,
-    pub unsupported_channels: Vec<u32>,
-    pub unstable: Vec<u32>,
+    pub unknown_ids: Vec<PriceFeedId>,
+    pub unsupported_channels: Vec<(PriceFeedId, Channel)>,
+    pub unstable: Vec<(PriceFeedId, SymbolState)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscribedWithInvalidFeedIdsIgnoredResponse {
     pub subscription_id: SubscriptionId,
-    pub subscribed_feed_ids: Vec<u32>,
+    pub subscribed_feed_ids: Vec<PriceFeedId>,
     pub ignored_invalid_feed_ids: InvalidFeedSubscriptionDetails,
 }
 
