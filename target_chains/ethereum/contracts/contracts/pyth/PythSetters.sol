@@ -48,4 +48,8 @@ contract PythSetters is PythState, IPythEvents {
     function setGovernanceDataSourceIndex(uint32 newIndex) internal {
         _state.governanceDataSourceIndex = newIndex;
     }
+
+    function setTransactionFeeInWei(uint fee) internal {
+        _state.transactionFeeInWei = fee;
+    }
 }

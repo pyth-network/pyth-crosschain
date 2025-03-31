@@ -86,7 +86,11 @@ abstract contract Pyth is
         // In the accumulator update data a single update can contain
         // up to 255 messages and we charge a singleUpdateFee per each
         // message
-        return 255 * singleUpdateFeeInWei() * updateDataSize;
+        return
+            255 *
+            singleUpdateFeeInWei() *
+            updateDataSize +
+            transactionFeeInWei();
     }
 
     function getUpdateFee(
@@ -330,7 +334,8 @@ abstract contract Pyth is
     function getTotalFee(
         uint totalNumUpdates
     ) private view returns (uint requiredFee) {
-        return totalNumUpdates * singleUpdateFeeInWei();
+        return
+            (totalNumUpdates * singleUpdateFeeInWei()) + transactionFeeInWei();
     }
 
     function findIndexOfPriceId(
@@ -392,6 +397,6 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.3";
+        return "1.4.4-alpha.1";
     }
 }
