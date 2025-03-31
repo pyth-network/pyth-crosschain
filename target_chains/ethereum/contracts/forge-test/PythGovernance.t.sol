@@ -167,7 +167,7 @@ contract PythGovernanceTest is
             MAGIC,
             uint8(GovernanceModule.Target),
             uint8(GovernanceAction.SetValidPeriod),
-            bytes32("ethereum"),
+            TARGET_CHAIN_ID,
             uint64(0)
         );
 
