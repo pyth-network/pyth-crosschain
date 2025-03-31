@@ -9,6 +9,7 @@ pub mod router;
 mod serde_price_as_i64;
 mod serde_str;
 pub mod subscription;
+pub mod symbol_state;
 
 #[test]
 fn magics_in_big_endian() {

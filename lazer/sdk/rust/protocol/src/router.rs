@@ -358,6 +358,8 @@ pub struct SubscriptionParamsRepr {
     #[serde(default = "default_parsed")]
     pub parsed: bool,
     pub channel: Channel,
+    #[serde(default)]
+    pub ignore_invalid_feed_ids: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
