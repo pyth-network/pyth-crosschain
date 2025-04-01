@@ -24,7 +24,11 @@ import styles from "./publishers-card.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { CLUSTER_NAMES } from "../../services/pyth";
 import { EntityList } from "../EntityList";
-import { ExplainActive, ExplainInactive } from "../Explanations";
+import {
+  ExplainPermissioned,
+  ExplainActive,
+  ExplainInactive,
+} from "../Explanations";
 import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
@@ -43,6 +47,7 @@ type Props = {
 type Publisher = {
   id: string;
   ranking: number;
+  permissionedFeeds: number;
   activeFeeds: number;
   inactiveFeeds: number;
   averageScore: number;
@@ -99,6 +104,7 @@ const ResolvedPublishersCard = ({
     (a, b, { column, direction }) => {
       switch (column) {
         case "ranking":
+        case "permissionedFeeds":
         case "activeFeeds":
         case "inactiveFeeds":
         case "averageScore": {
@@ -131,6 +137,7 @@ const ResolvedPublishersCard = ({
           id,
           ranking,
           averageScore,
+          permissionedFeeds,
           activeFeeds,
           inactiveFeeds,
           ...publisher
@@ -149,6 +156,7 @@ const ResolvedPublishersCard = ({
                 })}
               />
             ),
+            permissionedFeeds,
             activeFeeds: (
               <Link
                 href={`/publishers/${cluster}/${id}/price-feeds?status=Active`}
@@ -224,7 +232,12 @@ type PublishersCardContentsProps = Pick<Props, "className" | "explainAverage"> &
         cluster: (typeof CLUSTER_NAMES)[number];
         onChangeCluster: (value: (typeof CLUSTER_NAMES)[number]) => void;
         rows: (RowConfig<
-          "ranking" | "name" | "activeFeeds" | "inactiveFeeds" | "averageScore"
+          | "ranking"
+          | "name"
+          | "permissionedFeeds"
+          | "activeFeeds"
+          | "inactiveFeeds"
+          | "averageScore"
         > & { textValue: string })[];
       }
   );
@@ -299,6 +312,7 @@ const PublishersCardContents = ({
       headerLoadingSkeleton={<PublisherTag isLoading />}
       fields={[
         { id: "averageScore", name: "Average Score" },
+        { id: "permissionedFeeds", name: "Permissioned Feeds" },
         { id: "activeFeeds", name: "Active Feeds" },
         { id: "inactiveFeeds", name: "Inactive Feeds" },
       ]}
@@ -340,10 +354,22 @@ const PublishersCardContents = ({
           allowsSorting: true,
         },
         {
+          id: "permissionedFeeds",
+          name: (
+            <>
+              FEEDS
+              <ExplainPermissioned />
+            </>
+          ),
+          alignment: "center",
+          width: 30,
+          allowsSorting: true,
+        },
+        {
           id: "activeFeeds",
           name: (
             <>
-              ACTIVE FEEDS
+              ACTIVE
               <ExplainActive />
             </>
           ),
@@ -355,7 +381,7 @@ const PublishersCardContents = ({
           id: "inactiveFeeds",
           name: (
             <>
-              INACTIVE FEEDS
+              INACTIVE
               <ExplainInactive />
             </>
           ),

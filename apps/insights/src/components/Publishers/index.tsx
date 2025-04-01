@@ -147,6 +147,7 @@ export const Publishers = async () => {
 const toTableRow = ({
   key,
   rank,
+  permissionedFeeds,
   inactiveFeeds,
   activeFeeds,
   averageScore,
@@ -155,8 +156,9 @@ const toTableRow = ({
   return {
     id: key,
     ranking: rank,
-    activeFeeds: activeFeeds,
-    inactiveFeeds: inactiveFeeds,
+    permissionedFeeds,
+    activeFeeds,
+    inactiveFeeds,
     averageScore,
     ...(knownPublisher && {
       name: knownPublisher.name,
