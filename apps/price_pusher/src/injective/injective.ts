@@ -219,7 +219,7 @@ export class InjectivePricePusher implements IPricePusher {
         ? [priceIds]
         : splitArrayToChunks({
             array: priceIds,
-            chunkSize: this.chainConfig.priceIdsProcessChunkSize,
+            chunkSize: Number(this.chainConfig.priceIdsProcessChunkSize),
           });
 
     for (const [chunkIndex, priceIdChunk] of priceIdChunks.entries()) {

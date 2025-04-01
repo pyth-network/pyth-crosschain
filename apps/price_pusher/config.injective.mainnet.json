@@ -1,0 +1,15 @@
+{
+  "time_difference": "0",
+  "pushing_frequency": "5",
+  "polling_frequency": "4",
+  "gas-multiplier": "1.02",
+  "log-level": "info",
+  "controller-log-level": "info",
+  "priceIds-process-chunk-size": "10",
+  "network": "mainnet",
+  "mnemonic-file": "./.env.mnemonic.injective.mainnet",
+  "price-config-file": "./price-config.injective.mainnet.yaml",
+  "grpc-endpoint": "https://k8s.bm.mainnet.chain.grpc-web.injective.network:443",
+  "pyth-contract-address": "inj12j43nf2f0qumnt2zrrmpvnsqgzndxefujlvr08",
+  "price-service-endpoint": "https://hermes.pyth.network"
+}
