@@ -22,9 +22,9 @@
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
+        "internalType": "bytes",
         "name": "errorCode",
-        "type": "bytes32"
+        "type": "bytes"
       }
     ],
     "name": "CallbackFailed",
