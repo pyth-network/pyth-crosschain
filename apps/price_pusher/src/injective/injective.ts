@@ -1,9 +1,9 @@
 import { HexString, HermesClient } from "@pythnetwork/hermes-client";
 import {
-  IPricePusher,
-  PriceInfo,
-  ChainPriceListener,
   PriceItem,
+  PriceInfo,
+  IPricePusher,
+  ChainPriceListener,
 } from "../interface";
 import { DurationInSeconds } from "../utils";
 import {
@@ -37,9 +37,11 @@ type PriceQueryResponse = {
   };
 };
 
-type UpdateFeeResponse = {
-  denom: string;
-  amount: string;
+type InjectiveConfig = {
+  chainId: string;
+  gasMultiplier: number;
+  gasPrice: number;
+  priceIdsProcessChunkSize: number;
 };
 
 // this use price without leading 0x
@@ -88,16 +90,11 @@ export class InjectivePriceListener extends ChainPriceListener {
   }
 }
 
-type InjectiveConfig = {
-  chainId: string;
-  gasMultiplier: number;
-  gasPrice: number;
-  priceIdsProcessChunkSize: number;
-};
 export class InjectivePricePusher implements IPricePusher {
-  private wallet: PrivateKey;
+  private mnemonic: string;
   private chainConfig: InjectiveConfig;
-  private account: Account | null = null;
+  private accounts: Record<string, Account | undefined> =
+    {}; /** { address: Account } */
 
   constructor(
     private hermesClient: HermesClient,
@@ -107,8 +104,7 @@ export class InjectivePricePusher implements IPricePusher {
     mnemonic: string,
     chainConfig?: Partial<InjectiveConfig>,
   ) {
-    this.wallet = PrivateKey.fromMnemonic(mnemonic);
-
+    this.mnemonic = mnemonic;
     this.chainConfig = {
       chainId: chainConfig?.chainId ?? INJECTIVE_TESTNET_CHAIN_ID,
       gasMultiplier: chainConfig?.gasMultiplier ?? DEFAULT_GAS_MULTIPLIER,
@@ -119,88 +115,62 @@ export class InjectivePricePusher implements IPricePusher {
     };
   }
 
-  private injectiveAddress(): string {
-    return this.wallet.toBech32();
+  private getWallet(index: number) {
+    if (
+      this.chainConfig.priceIdsProcessChunkSize === -1 ||
+      this.chainConfig.priceIdsProcessChunkSize === undefined
+    ) {
+      return PrivateKey.fromMnemonic(this.mnemonic);
+    }
+
+    return PrivateKey.fromMnemonic(this.mnemonic, `m/44'/60'/0'/0/${index}`);
   }
 
-  private async signAndBroadcastMsg(msg: Msgs): Promise<TxResponse> {
+  private async signAndBroadcastMsg(
+    msg: Msgs,
+    index: number,
+  ): Promise<TxResponse> {
     const chainGrpcAuthApi = new ChainGrpcAuthApi(this.grpcEndpoint);
+    const wallet = this.getWallet(index);
+    const injectiveAddress = wallet.toAddress().toBech32();
 
     // Fetch the latest account details only if it's not stored.
-    this.account ??= await chainGrpcAuthApi.fetchAccount(
-      this.injectiveAddress(),
-    );
+    this.accounts[injectiveAddress] ??=
+      await chainGrpcAuthApi.fetchAccount(injectiveAddress);
 
-    const { txRaw: simulateTxRaw } = createTransactionFromMsg({
-      sequence: this.account.baseAccount.sequence,
-      accountNumber: this.account.baseAccount.accountNumber,
-      message: msg,
-      chainId: this.chainConfig.chainId,
-      pubKey: this.wallet.toPublicKey().toBase64(),
-    });
+    const account = this.accounts[injectiveAddress];
 
-    const txService = new TxGrpcApi(this.grpcEndpoint);
-    // simulation
     try {
-      const {
-        gasInfo: { gasUsed },
-      } = await txService.simulate(simulateTxRaw);
-
-      // simulation returns us the approximate gas used
-      // gas passed with the transaction should be more than that
-      // in order for it to be successfully executed
-      // this multiplier takes care of that
-      const gas = (gasUsed * this.chainConfig.gasMultiplier).toFixed();
-      const fee = {
-        amount: [
-          {
-            denom: "inj",
-            amount: (Number(gas) * this.chainConfig.gasPrice).toFixed(),
-          },
-        ],
-        gas,
-      };
-
       const { signBytes, txRaw } = createTransactionFromMsg({
-        sequence: this.account.baseAccount.sequence,
-        accountNumber: this.account.baseAccount.accountNumber,
+        sequence: account.baseAccount.sequence,
+        accountNumber: account.baseAccount.accountNumber,
         message: msg,
         chainId: this.chainConfig.chainId,
-        fee,
-        pubKey: this.wallet.toPublicKey().toBase64(),
+        fee: await this.getStdFee(msg, index),
+        pubKey: wallet.toPublicKey().toBase64(),
       });
 
-      const sig = await this.wallet.sign(Buffer.from(signBytes));
-
-      this.account.baseAccount.sequence++;
+      const sig = await wallet.sign(Buffer.from(signBytes));
 
       /** Append Signatures */
       txRaw.signatures = [sig];
+
       // this takes approx 5 seconds
-      const txResponse = await txService.broadcast(txRaw);
+      const txResponse = await new TxGrpcApi(this.grpcEndpoint).broadcast(
+        txRaw,
+      );
+
+      account.baseAccount.sequence++;
 
       return txResponse;
     } catch (e: any) {
-      // The sequence number was invalid and hence we will have to fetch it again.
+      // The sequence number was invalid and hence we will have to fetch it again
       if (JSON.stringify(e).match(/account sequence mismatch/) !== null) {
-        // We need to fetch the account details again.
-        this.account = null;
+        this.accounts[injectiveAddress] = undefined;
       }
+
       throw e;
     }
-  }
-
-  async getPriceFeedUpdateObject(priceIds: string[]): Promise<any> {
-    const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
-      encoding: "base64",
-    });
-    const vaas = response.binary.data;
-
-    return {
-      update_price_feeds: {
-        data: vaas,
-      },
-    };
   }
 
   async updatePriceFeed(
@@ -222,62 +192,34 @@ export class InjectivePricePusher implements IPricePusher {
             chunkSize: Number(this.chainConfig.priceIdsProcessChunkSize),
           });
 
-    for (const [chunkIndex, priceIdChunk] of priceIdChunks.entries()) {
-      await this.updatePriceFeedChunk(priceIdChunk, chunkIndex);
-    }
+    await Promise.all(
+      priceIdChunks.map((priceIdChunk, chunkIndex) =>
+        this.updatePriceFeedChunk(priceIdChunk, chunkIndex),
+      ),
+    );
   }
 
   private async updatePriceFeedChunk(
     priceIds: string[],
     chunkIndex: number,
   ): Promise<void> {
-    let priceFeedUpdateObject;
-
     try {
-      // get the latest VAAs for updatePriceFeed and then push them
-      priceFeedUpdateObject = await this.getPriceFeedUpdateObject(priceIds);
-    } catch (err) {
-      this.logger.error(
-        err,
-        `Error fetching the latest vaas to push for chunk ${chunkIndex}`,
+      const priceFeedUpdateObject =
+        await this.getPriceFeedUpdateObject(priceIds);
+      const updateFeeQueryResponse = await this.getUpdateFee(
+        priceFeedUpdateObject.update_price_feeds.data,
       );
-      return;
-    }
+      const wallet = this.getWallet(chunkIndex);
 
-    let updateFeeQueryResponse: UpdateFeeResponse;
-    try {
-      const api = new ChainGrpcWasmApi(this.grpcEndpoint);
-      const { data } = await api.fetchSmartContractState(
-        this.pythContractAddress,
-        Buffer.from(
-          JSON.stringify({
-            get_update_fee: {
-              vaas: priceFeedUpdateObject.update_price_feeds.data,
-            },
-          }),
-        ).toString("base64"),
-      );
-
-      const json = Buffer.from(data).toString();
-      updateFeeQueryResponse = JSON.parse(json);
-    } catch (err) {
-      this.logger.error(
-        err,
-        `Error fetching update fee for chunk ${chunkIndex}`,
-      );
-      // Throwing an error because it is likely an RPC issue
-      throw err;
-    }
-
-    try {
-      const executeMsg = MsgExecuteContract.fromJSON({
-        sender: this.injectiveAddress(),
+      const msg = MsgExecuteContract.fromJSON({
+        sender: wallet.toAddress().toBech32(),
         contractAddress: this.pythContractAddress,
         msg: priceFeedUpdateObject,
         funds: [updateFeeQueryResponse],
       });
 
-      const rs = await this.signAndBroadcastMsg(executeMsg);
+      const rs = await this.signAndBroadcastMsg(msg, chunkIndex);
+
       this.logger.info(
         { hash: rs.txHash },
         `Successfully broadcasted txHash for chunk ${chunkIndex}`,
@@ -285,6 +227,7 @@ export class InjectivePricePusher implements IPricePusher {
     } catch (err: any) {
       if (err.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
         this.logger.error(err, `Account not found for chunk ${chunkIndex}`);
+
         throw new Error("Please check the mnemonic");
       }
 
@@ -295,10 +238,112 @@ export class InjectivePricePusher implements IPricePusher {
         this.logger.error(err, `Insufficient funds for chunk ${chunkIndex}`);
         throw new Error("Insufficient funds");
       }
+
       this.logger.error(
         err,
         `Error executing messages for chunk ${chunkIndex}`,
       );
+    }
+  }
+
+  /**
+   * Get the fee for the transaction (using simulation).
+   *
+   * We also apply a multiplier to the gas used to apply a small
+   * buffer to the gas that'll be used.
+   */
+  private async getStdFee(msg: Msgs, index: number) {
+    const wallet = this.getWallet(index);
+    const injectiveAddress = wallet.toAddress().toBech32();
+    const account = this.accounts[injectiveAddress];
+
+    if (!account) {
+      throw new Error("Account not found");
+    }
+
+    const { txRaw: simulateTxRaw } = createTransactionFromMsg({
+      sequence: account.baseAccount.sequence,
+      accountNumber: account.baseAccount.accountNumber,
+      message: msg,
+      chainId: this.chainConfig.chainId,
+      pubKey: wallet.toPublicKey().toBase64(),
+    });
+
+    try {
+      const result = await new TxGrpcApi(this.grpcEndpoint).simulate(
+        simulateTxRaw,
+      );
+
+      const gas = (
+        result.gasInfo.gasUsed * this.chainConfig.gasMultiplier
+      ).toFixed();
+      const fee = {
+        amount: [
+          {
+            denom: "inj",
+            amount: (Number(gas) * this.chainConfig.gasPrice).toFixed(),
+          },
+        ],
+        gas,
+      };
+
+      return fee;
+    } catch (err) {
+      this.logger.error(err, `Error getting std fee`);
+      throw err;
+    }
+  }
+
+  /**
+   * Get the latest VAAs for updatePriceFeed and then push them
+   */
+  private async getPriceFeedUpdateObject(priceIds: string[]) {
+    try {
+      const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
+        encoding: "base64",
+      });
+      const vaas = response.binary.data;
+
+      return {
+        update_price_feeds: {
+          data: vaas,
+        },
+      } as {
+        update_price_feeds: {
+          data: string[];
+        };
+      };
+    } catch (err) {
+      this.logger.error(err, `Error fetching the latest vaas to push`);
+      throw err;
+    }
+  }
+
+  /**
+   * Get the update fee for the given VAAs (i.e the fee that is paid to the pyth contract)
+   */
+  private async getUpdateFee(vaas: string[]) {
+    try {
+      const api = new ChainGrpcWasmApi(this.grpcEndpoint);
+      const { data } = await api.fetchSmartContractState(
+        this.pythContractAddress,
+        Buffer.from(
+          JSON.stringify({
+            get_update_fee: {
+              vaas,
+            },
+          }),
+        ).toString("base64"),
+      );
+
+      const json = Buffer.from(data).toString();
+
+      return JSON.parse(json);
+    } catch (err) {
+      this.logger.error(err, `Error fetching update fee.`);
+
+      // Throwing an error because it is likely an RPC issue
+      throw err;
     }
   }
 }
