@@ -114,6 +114,7 @@ pnpm run start injective --grpc-endpoint https://grpc-endpoint.com \
     --network testnet \
     [--gas-price 160000000] \
     [--gas-multiplier 1.1] \
+    [--priceIds-process-chunk-size 100] \
     [--pushing-frequency 10] \
     [--polling-frequency 5]
 

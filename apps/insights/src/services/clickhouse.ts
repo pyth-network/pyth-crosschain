@@ -15,6 +15,9 @@ export const getPublishers = async (cluster: Cluster) =>
       z.strictObject({
         key: z.string(),
         rank: z.number(),
+        permissionedFeeds: z
+          .string()
+          .transform((value) => Number.parseInt(value, 10)),
         activeFeeds: z
           .string()
           .transform((value) => Number.parseInt(value, 10)),
@@ -50,6 +53,7 @@ export const getPublishers = async (cluster: Cluster) =>
             timestamp,
             publisher AS key,
             rank,
+            LENGTH(symbols) AS permissionedFeeds,
             activeFeeds,
             inactiveFeeds,
             score_data.averageScore,
