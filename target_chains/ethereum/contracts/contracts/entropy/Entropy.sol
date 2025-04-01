@@ -103,7 +103,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             for (uint8 i = 0; i < NUM_REQUESTS; i++) {
                 EntropyStructs.Request storage req = _state.requests[i];
                 req.provider = address(1);
-                req.blockNumber = 1234;
+                req.blockNumberOrGasLimit = 1234;
                 req.commitment = hex"0123";
             }
         }
@@ -222,14 +222,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
-        uint128 requiredFee = getFee(provider);
+        uint128 requiredFee = getFeeForGas(provider, callbackGasLimit);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
-        providerInfo.accruedFeesInWei += getProviderFee(
-            provider,
-            callbackGasLimit
-        );
+        uint128 providerFee = getProviderFee(provider, callbackGasLimit);
+        providerInfo.accruedFeesInWei += providerFee;
         _state.accruedPythFeesInWei += (SafeCast.toUint128(msg.value) -
-            providerInfo.feeInWei);
+            providerFee);
 
         // Store the user's commitment so that we can fulfill the request later.
         // Warning: this code needs to overwrite *every* field in the request, because the returned request can be
@@ -257,16 +255,19 @@ abstract contract Entropy is IEntropy, EntropyState {
         } else if (isRequestWithCallback) {
             req.isRequestWithCallback = isRequestWithCallback;
             if (callbackGasLimit == 0) {
-                req.blockNumber = providerInfo.defaultGasLimit;
+                req.blockNumberOrGasLimit = providerInfo.defaultGasLimit;
             } else {
-                req.blockNumber = callbackGasLimit;
+                req.blockNumberOrGasLimit = callbackGasLimit;
             }
             req.useBlockhash = false;
         } else {
             req.isRequestWithCallback = false;
-            req.blockNumber = SafeCast.toUint64(block.number);
+            req.blockNumberOrGasLimit = SafeCast.toUint64(block.number);
             req.useBlockhash = useBlockhash;
         }
+
+        req.callbackFailed = false;
+        req.reentryGuard = false;
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -376,9 +377,9 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         blockHash = bytes32(uint256(0));
         if (req.useBlockhash) {
-            bytes32 _blockHash = blockhash(req.blockNumber);
+            bytes32 _blockHash = blockhash(req.blockNumberOrGasLimit);
 
-            // The `blockhash` function will return zero if the req.blockNumber is equal to the current
+            // The `blockhash` function will return zero if the req.blockNumberOrGasLimit is equal to the current
             // block number, or if it is not within the 256 most recent blocks. This allows the user to
             // select between two random numbers by executing the reveal function in the same block as the
             // request, or after 256 blocks. This gives each user two chances to get a favorable result on
@@ -451,7 +452,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     }
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
-    // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
+    // against the corresponding commitments in the in-flight request. If both values are validated, this method returns
     // the corresponding random number.
     //
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
@@ -520,7 +521,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         }
         // Invariant check: all callback requests should have useBlockhash set to false.
         if (req.useBlockhash) {
-            revert EntropyErrors.InvalidRevealCall();
+            revert EntropyErrors.AssertionFailure();
         }
 
         if (req.reentryGuard) {
@@ -537,11 +538,16 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         address callAddress = req.requester;
 
-        if (req.blockNumber != 0 && !req.callbackAttempted) {
+        // blockNumberOrGasLimit holds the gas limit in the callback case.
+        // If the gas limit is 0, then the provider hasn't configured their default limit,
+        // so we default to the prior entropy flow (where there is no failure state).
+        // Similarly, if the request has already failed, we fall back to the prior flow so that
+        // recovery attempts can provide more gas / directly see the revert reason.
+        if (req.blockNumberOrGasLimit != 0 && !req.callbackFailed) {
             // TODO: need to validate that we have enough gas left to forward (?)
             // Or at least that we forwarded enough gas before marking the callback as failed
             /*
-            if (gasleft() < req.blockNumber) {
+            if (gasleft() < req.blockNumberOrGasLimit) {
 
             }
             */
@@ -550,7 +556,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             bool success;
             bytes memory ret;
             (success, ret) = callAddress.excessivelySafeCall(
-                req.blockNumber,
+                req.blockNumberOrGasLimit,
                 0,
                 32,
                 abi.encodeWithSelector(
@@ -582,7 +588,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     sequenceNumber,
                     errorReason
                 );
-                req.callbackAttempted = true;
+                req.callbackFailed = true;
             }
         } else {
             emit RevealedWithCallback(
@@ -600,11 +606,13 @@ abstract contract Entropy is IEntropy, EntropyState {
             }
 
             if (len != 0) {
+                req.reentryGuard = true;
                 IEntropyConsumer(callAddress)._entropyCallback(
                     sequenceNumber,
                     provider,
                     randomNumber
                 );
+                req.reentryGuard = false;
             }
         }
     }
@@ -652,6 +660,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             providerAddr
         ];
         if (gasLimit > provider.defaultGasLimit) {
+            // This calculation rounds down the fee, which means that users can get some gas in the callback for free.
+            // However, the value of the free gas is < 1 wei, which is insignificant.
             uint128 additionalFee = ((gasLimit - provider.defaultGasLimit) *
                 provider.feeInWei) / provider.defaultGasLimit;
             return provider.feeInWei + additionalFee;

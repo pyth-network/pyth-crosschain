@@ -262,7 +262,7 @@
           },
           {
             "internalType": "uint64",
-            "name": "blockNumber",
+            "name": "blockNumberOrGasLimit",
             "type": "uint64"
           },
           {
@@ -282,7 +282,7 @@
           },
           {
             "internalType": "bool",
-            "name": "callbackAttempted",
+            "name": "callbackFailed",
             "type": "bool"
           },
           {
@@ -351,7 +351,7 @@
           },
           {
             "internalType": "uint64",
-            "name": "blockNumber",
+            "name": "blockNumberOrGasLimit",
             "type": "uint64"
           },
           {
@@ -371,7 +371,7 @@
           },
           {
             "internalType": "bool",
-            "name": "callbackAttempted",
+            "name": "callbackFailed",
             "type": "bool"
           },
           {
@@ -416,7 +416,7 @@
           },
           {
             "internalType": "uint64",
-            "name": "blockNumber",
+            "name": "blockNumberOrGasLimit",
             "type": "uint64"
           },
           {
@@ -436,7 +436,7 @@
           },
           {
             "internalType": "bool",
-            "name": "callbackAttempted",
+            "name": "callbackFailed",
             "type": "bool"
           },
           {
@@ -505,7 +505,7 @@
           },
           {
             "internalType": "uint64",
-            "name": "blockNumber",
+            "name": "blockNumberOrGasLimit",
             "type": "uint64"
           },
           {
@@ -525,7 +525,7 @@
           },
           {
             "internalType": "bool",
-            "name": "callbackAttempted",
+            "name": "callbackFailed",
             "type": "bool"
           },
           {
