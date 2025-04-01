@@ -21,7 +21,9 @@ use {
 };
 
 pub(crate) mod fee;
+pub(crate) mod fulfillment_task;
 pub(crate) mod keeper_metrics;
+pub(crate) mod state;
 pub(crate) mod track;
 
 /// Track metrics in this interval
