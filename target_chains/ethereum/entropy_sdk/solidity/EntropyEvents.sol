@@ -33,7 +33,7 @@ interface EntropyEvents {
         address indexed provider,
         address indexed requestor,
         uint64 indexed sequenceNumber,
-        bytes32 errorCode
+        bytes errorCode
     );
 
     event ProviderFeeUpdated(address provider, uint128 oldFee, uint128 newFee);

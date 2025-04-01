@@ -954,7 +954,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumer consumer = new EntropyConsumer(address(random));
-        vm.deal(address(consumer), fee);
+        vm.deal(user1, fee);
         vm.prank(user1);
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
@@ -1012,7 +1012,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumerFails consumer = new EntropyConsumerFails(address(random));
-        vm.deal(address(consumer), fee);
+        vm.deal(user1, fee);
         vm.prank(user1);
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
@@ -1031,7 +1031,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             address(consumer),
             assignedSequenceNumber,
-            bytes32(bytes("Callback failed"))
+            abi.encodeWithSelector(0x08c379a0, "Callback failed")
         );
         vm.prank(user1);
         random.revealWithCallback(
@@ -1458,6 +1458,15 @@ contract EntropyConsumerFails is IEntropyConsumer {
 
     constructor(address _entropy) {
         entropy = _entropy;
+    }
+
+    function requestEntropy(
+        bytes32 randomNumber
+    ) public payable returns (uint64 sequenceNumber) {
+        address _provider = IEntropy(entropy).getDefaultProvider();
+        sequenceNumber = IEntropy(entropy).requestWithCallback{
+            value: msg.value
+        }(_provider, randomNumber);
     }
 
     function getEntropy() internal view override returns (address) {

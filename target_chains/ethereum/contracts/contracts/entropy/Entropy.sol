@@ -558,7 +558,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             (success, ret) = callAddress.excessivelySafeCall(
                 req.blockNumberOrGasLimit,
                 0,
-                32,
+                256,
                 abi.encodeWithSelector(
                     IEntropyConsumer._entropyCallback.selector,
                     sequenceNumber,
@@ -577,16 +577,11 @@ abstract contract Entropy is IEntropy, EntropyState {
                 );
                 clearRequest(provider, sequenceNumber);
             } else {
-                bytes32 errorReason;
-                assembly {
-                    errorReason := mload(add(ret, 32))
-                }
-
                 emit CallbackFailed(
                     provider,
                     req.requester,
                     sequenceNumber,
-                    errorReason
+                    ret
                 );
                 req.callbackFailed = true;
             }
