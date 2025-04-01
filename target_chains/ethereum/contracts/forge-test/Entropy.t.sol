@@ -801,10 +801,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                         providerInfo.currentCommitment
                     )
                 ),
-                blockNumber: 1234,
+                blockNumber: 0,
                 requester: user1,
                 useBlockhash: false,
-                isRequestWithCallback: true
+                isRequestWithCallback: true,
+                callbackAttempted: false,
+                reentryGuard: false
             })
         );
         vm.roll(1234);

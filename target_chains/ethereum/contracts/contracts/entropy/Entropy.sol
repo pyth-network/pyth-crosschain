@@ -8,6 +8,7 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import "./EntropyState.sol";
 
 // Entropy implements a secure 2-party random number generation procedure. The protocol
@@ -76,6 +77,8 @@ import "./EntropyState.sol";
 // the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
 // cases where the user chooses not to reveal.
 abstract contract Entropy is IEntropy, EntropyState {
+    using ExcessivelySafeCall for address;
+
     function _initialize(
         address admin,
         uint128 pythFeeInWei,
@@ -203,7 +206,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userCommitment,
         bool useBlockhash,
-        bool isRequestWithCallback
+        bool isRequestWithCallback,
+        uint64 callbackGasLimit
     ) internal returns (EntropyStructs.Request storage req) {
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
@@ -220,7 +224,10 @@ abstract contract Entropy is IEntropy, EntropyState {
         // Check that fees were paid and increment the pyth / provider balances.
         uint128 requiredFee = getFee(provider);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
-        providerInfo.accruedFeesInWei += providerInfo.feeInWei;
+        providerInfo.accruedFeesInWei += getProviderFee(
+            provider,
+            callbackGasLimit
+        );
         _state.accruedPythFeesInWei += (SafeCast.toUint128(msg.value) -
             providerInfo.feeInWei);
 
@@ -245,9 +252,21 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
         req.requester = msg.sender;
 
-        req.blockNumber = SafeCast.toUint64(block.number);
-        req.useBlockhash = useBlockhash;
-        req.isRequestWithCallback = isRequestWithCallback;
+        if (useBlockhash && isRequestWithCallback) {
+            revert EntropyErrors.AssertionFailure();
+        } else if (isRequestWithCallback) {
+            req.isRequestWithCallback = isRequestWithCallback;
+            if (callbackGasLimit == 0) {
+                req.blockNumber = providerInfo.defaultGasLimit;
+            } else {
+                req.blockNumber = callbackGasLimit;
+            }
+            req.useBlockhash = false;
+        } else {
+            req.isRequestWithCallback = false;
+            req.blockNumber = SafeCast.toUint64(block.number);
+            req.useBlockhash = useBlockhash;
+        }
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -269,7 +288,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             provider,
             userCommitment,
             useBlockHash,
-            false
+            false,
+            0
         );
         assignedSequenceNumber = req.sequenceNumber;
         emit Requested(req);
@@ -294,7 +314,35 @@ abstract contract Entropy is IEntropy, EntropyState {
             // If we remove the blockHash from this, the provider would have no choice but to provide its committed
             // random number. Hence, useBlockHash is set to false.
             false,
-            true
+            true,
+            0
+        );
+
+        emit RequestedWithCallback(
+            provider,
+            req.requester,
+            req.sequenceNumber,
+            userRandomNumber,
+            req
+        );
+
+        return req.sequenceNumber;
+    }
+
+    function requestWithCallbackAndGas(
+        address provider,
+        bytes32 userRandomNumber,
+        uint64 gasLimit
+    ) public payable override returns (uint64) {
+        EntropyStructs.Request storage req = requestHelper(
+            provider,
+            constructUserCommitment(userRandomNumber),
+            // If useBlockHash is set to true, it allows a scenario in which the provider and miner can collude.
+            // If we remove the blockHash from this, the provider would have no choice but to provide its committed
+            // random number. Hence, useBlockHash is set to false.
+            false,
+            true,
+            gasLimit
         );
 
         emit RequestedWithCallback(
@@ -489,26 +537,21 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         address callAddress = req.requester;
 
-        // Check if the callAddress is a contract account.
-        // TODO: this can probably be deleted.
-        uint len;
-        assembly {
-            len := extcodesize(callAddress)
-        }
+        if (req.blockNumber != 0 && !req.callbackAttempted) {
+            // TODO: need to validate that we have enough gas left to forward (?)
+            // Or at least that we forwarded enough gas before marking the callback as failed
+            /*
+            if (gasleft() < req.blockNumber) {
 
-        bool success;
-        bytes memory ret;
-        if (len != 0) {
-            uint64 gas;
-            if (req.blockNumber != 0) {
-                gas = req.blockNumber;
-            } else {
-                gas = gasLeft();
             }
+            */
 
             req.reentryGuard = true;
-            (success, ret) == callAddress.excessivelySafeCall(
-                gas,
+            bool success;
+            bytes memory ret;
+            (success, ret) = callAddress.excessivelySafeCall(
+                req.blockNumber,
+                0,
                 32,
                 abi.encodeWithSelector(
                     IEntropyConsumer._entropyCallback.selector,
@@ -518,9 +561,30 @@ abstract contract Entropy is IEntropy, EntropyState {
                 )
             );
             req.reentryGuard = false;
-        }    
 
-        if (success) {
+            if (success) {
+                emit RevealedWithCallback(
+                    req,
+                    userRandomNumber,
+                    providerRevelation,
+                    randomNumber
+                );
+                clearRequest(provider, sequenceNumber);
+            } else {
+                bytes32 errorReason;
+                assembly {
+                    errorReason := mload(add(ret, 32))
+                }
+
+                emit CallbackFailed(
+                    provider,
+                    req.requester,
+                    sequenceNumber,
+                    errorReason
+                );
+                req.callbackAttempted = true;
+            }
+        } else {
             emit RevealedWithCallback(
                 req,
                 userRandomNumber,
@@ -528,21 +592,21 @@ abstract contract Entropy is IEntropy, EntropyState {
                 randomNumber
             );
             clearRequest(provider, sequenceNumber);
-        } else {
-            bytes32 errorReason;
+
+            // Check if the callAddress is a contract account.
+            uint len;
             assembly {
-                errorReason := mload(add(ret, 32));
+                len := extcodesize(callAddress)
             }
 
-            emit CallbackFailed(
-                provider,
-                req.requester,
-                sequenceNumber,
-                errorReason
-            )
-            req.callbackAttempted = true;
+            if (len != 0) {
+                IEntropyConsumer(callAddress)._entropyCallback(
+                    sequenceNumber,
+                    provider,
+                    randomNumber
+                );
+            }
         }
-
     }
 
     function getProviderInfo(
@@ -570,7 +634,30 @@ abstract contract Entropy is IEntropy, EntropyState {
     function getFee(
         address provider
     ) public view override returns (uint128 feeAmount) {
-        return _state.providers[provider].feeInWei + _state.pythFeeInWei;
+        return getFeeForGas(provider, 0);
+    }
+
+    function getFeeForGas(
+        address provider,
+        uint64 gasLimit
+    ) public view override returns (uint128 feeAmount) {
+        return getProviderFee(provider, gasLimit) + _state.pythFeeInWei;
+    }
+
+    function getProviderFee(
+        address providerAddr,
+        uint64 gasLimit
+    ) internal view returns (uint128 feeAmount) {
+        EntropyStructs.ProviderInfo memory provider = _state.providers[
+            providerAddr
+        ];
+        if (gasLimit > provider.defaultGasLimit) {
+            uint128 additionalFee = ((gasLimit - provider.defaultGasLimit) *
+                provider.feeInWei) / provider.defaultGasLimit;
+            return provider.feeInWei + additionalFee;
+        } else {
+            return provider.feeInWei;
+        }
     }
 
     function getPythFee() public view returns (uint128 feeAmount) {
@@ -678,11 +765,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         uint64 oldGasLimit = provider.defaultGasLimit;
         provider.defaultGasLimit = gasLimit;
-        emit ProviderDefaultGasLimitUpdated(
-            msg.sender,
-            oldGasLimit,
-            gasLimit
-        );
+        emit ProviderDefaultGasLimitUpdated(msg.sender, oldGasLimit, gasLimit);
     }
 
     function constructUserCommitment(

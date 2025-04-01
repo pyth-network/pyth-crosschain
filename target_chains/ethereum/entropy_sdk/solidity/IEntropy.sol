@@ -56,6 +56,12 @@ interface IEntropy is EntropyEvents {
         bytes32 userRandomNumber
     ) external payable returns (uint64 assignedSequenceNumber);
 
+    function requestWithCallbackAndGas(
+        address provider,
+        bytes32 userRandomNumber,
+        uint64 gasLimit
+    ) external payable returns (uint64 assignedSequenceNumber);
+
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
@@ -100,6 +106,11 @@ interface IEntropy is EntropyEvents {
 
     function getFee(address provider) external view returns (uint128 feeAmount);
 
+    function getFeeForGas(
+        address provider,
+        uint64 gasLimit
+    ) external view returns (uint128 feeAmount);
+
     function getAccruedPythFees()
         external
         view
@@ -123,6 +134,9 @@ interface IEntropy is EntropyEvents {
     // Set the maximum number of hashes to record in a request. This should be set according to the maximum gas limit
     // the provider supports for callbacks.
     function setMaxNumHashes(uint32 maxNumHashes) external;
+
+    // Set the default gas limit for a request. If 0, no
+    function setDefaultGasLimit(uint64 gasLimit) external;
 
     // Advance the provider commitment and increase the sequence number.
     // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
