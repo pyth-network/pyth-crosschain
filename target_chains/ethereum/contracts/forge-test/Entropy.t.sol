@@ -946,6 +946,139 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
     }
 
+    function testRequestWithCallbackAndRevealWithCallbackWithGasLimit() public {
+        uint64 defaultGasLimit = 100000;
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        EntropyConsumer consumer = new EntropyConsumer(address(random));
+        vm.deal(address(consumer), fee);
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
+            userRandomNumber
+        );
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+
+        // Verify the gas limit was set correctly
+        assertEq(req.blockNumberOrGasLimit, defaultGasLimit);
+
+        vm.expectEmit(false, false, false, true, address(random));
+        emit RevealedWithCallback(
+            req,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+        vm.prank(user1);
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        assertEq(consumer.sequence(), assignedSequenceNumber);
+        assertEq(consumer.provider(), provider1);
+        assertEq(
+            consumer.randomness(),
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+    }
+
+    function testRequestWithCallbackAndRevealWithCallbackWithGasLimitAndFailure() public {
+        uint64 defaultGasLimit = 100000;
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        EntropyConsumerFails consumer = new EntropyConsumerFails(address(random));
+        vm.deal(address(consumer), fee);
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
+            userRandomNumber
+        );
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+
+        // Verify the gas limit was set correctly
+        assertEq(req.blockNumberOrGasLimit, defaultGasLimit);
+
+        // First attempt should fail and emit CallbackFailed event
+        vm.expectEmit(false, false, false, true, address(random));
+        emit CallbackFailed(
+            provider1,
+            address(consumer),
+            assignedSequenceNumber,
+            bytes32(bytes("Callback failed"))
+        );
+        vm.prank(user1);
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // Verify request is still active after failure
+        EntropyStructs.Request memory reqAfterFailure = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
+        assertTrue(reqAfterFailure.callbackFailed);
+
+/*
+        // Second attempt should succeed and emit RevealedWithCallback event
+        vm.expectEmit(false, false, false, true, address(random));
+        emit RevealedWithCallback(
+            req,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+        vm.prank(user1);
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // Verify request is cleared after successful reveal
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+        */
+    }
+
     function testRequestWithCallbackAndRevealWithCallbackFailing() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
