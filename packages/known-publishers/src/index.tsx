@@ -1,5 +1,6 @@
 import alenoColor from "./icons/color/aleno.svg";
 import finazonColor from "./icons/color/finazon.svg";
+import lotechColor from "./icons/color/lotech.svg";
 import orcaColor from "./icons/color/orca.svg";
 import sentioColor from "./icons/color/sentio.svg";
 import wooColor from "./icons/color/woo.svg";
@@ -11,6 +12,7 @@ import blocksize from "./icons/monochrome/blocksize.svg";
 import elfomo from "./icons/monochrome/elfomo.svg";
 import finazonMonochrome from "./icons/monochrome/finazon.svg";
 import gluex from "./icons/monochrome/gluex.svg";
+import lotechMonochrome from "./icons/monochrome/lotech.svg";
 import ltpMonochrome from "./icons/monochrome/ltp.svg";
 import orcaMonochrome from "./icons/monochrome/orca.svg";
 import sentioMonochrome from "./icons/monochrome/sentio.svg";
@@ -82,6 +84,13 @@ export const knownPublishers = {
     name: "Alphanonce",
     icon: {
       monochrome: alphanonce,
+    },
+  },
+  "7YQg8Tz9KHKsg7yHiAFRBsDkLoKvZbMXt7VbW44F7QM": {
+    name: "LO:TECH",
+    icon: {
+      monochrome: lotechMonochrome,
+      color: lotechColor,
     },
   },
 } as const;
