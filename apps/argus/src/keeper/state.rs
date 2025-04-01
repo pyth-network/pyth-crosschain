@@ -15,8 +15,6 @@ use std::{
     sync::Arc,
 };
 
-use crate::eth_utils::utils::EscalationPolicy;
-
 use super::{
     fulfillment_task::{RequestFulfiller, RequestFulfillmentTask},
     keeper_metrics::KeeperMetrics,
@@ -42,6 +40,16 @@ pub struct PulseRequest {
 
     // Provider's address
     pub provider: Address,
+}
+// FIXME: Stub EscalationPolicy until we need it. At that point we should
+// refactor it out of Fortuna into a common SDK.
+#[derive(Debug, Clone)]
+pub struct EscalationPolicy;
+
+impl Default for EscalationPolicy {
+    fn default() -> Self {
+        Self {}
+    }
 }
 
 #[allow(dead_code)]
@@ -336,14 +344,7 @@ mod tests {
             prefix_to_price_ids: Arc::new(HashMap::new()),
             exclusivity_period_seconds: 300,
             failure_timeout_seconds: 3600,
-            escalation_policy: EscalationPolicy {
-                gas_limit_tolerance_pct: 110,
-                initial_gas_multiplier_pct: 125,
-                gas_multiplier_pct: 110,
-                gas_multiplier_cap_pct: 600,
-                fee_multiplier_pct: 110,
-                fee_multiplier_cap_pct: 200,
-            },
+            escalation_policy: EscalationPolicy::default(),
             hermes_url: Url::parse(MOCK_HERMES_URL).unwrap(),
             provider_address,
             metrics: Arc::new(metrics),

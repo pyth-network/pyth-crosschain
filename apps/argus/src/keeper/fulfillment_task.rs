@@ -1,8 +1,7 @@
 use anyhow::Result;
 use tokio::task::JoinHandle;
 
-use super::state::PulseRequest;
-use crate::eth_utils::utils::EscalationPolicy;
+use super::state::{EscalationPolicy, PulseRequest};
 use async_trait::async_trait;
 
 #[allow(dead_code)]
