@@ -1226,6 +1226,120 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(reqAfterReveal.sequenceNumber, 0);
     }
 
+    function testRequestWithCallbackUsingTooMuchGas2() public {
+        uint32 defaultGasLimit = 64000000;
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        EntropyConsumer consumer = new EntropyConsumer(address(random), false);
+        consumer.setTargetGasUsage(defaultGasLimit);
+
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
+            userRandomNumber
+        );
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+
+        // Verify the gas limit was set correctly
+        // assertEq(req.gasLimit10k, 10);
+
+        // The transaction reverts if the provider does not provide enough gas to forward
+        // the gasLimit to the callback transaction.
+        vm.expectRevert();
+        random.revealWithCallback{gas: defaultGasLimit - 10000}(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        /*
+        // If called with enough gas, the transaction should succeed, but the callback should fail because
+        // it uses too much gas.
+        vm.expectEmit(false, false, false, true, address(random));
+        emit CallbackFailed(
+            provider1,
+            address(consumer),
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            ),
+            // out-of-gas reverts have an empty bytes array as the return value.
+            ""
+        );
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // Verify request is still active after failure
+        EntropyStructs.Request memory reqAfterFailure = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
+        assertEq(
+            reqAfterFailure.status,
+            EntropyConstants.STATUS_CALLBACK_FAILED
+        );
+
+        // A subsequent attempt passing insufficient gas should also revert
+        vm.expectRevert();
+        random.revealWithCallback{gas: defaultGasLimit - 10000}(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // Again, request stays active after failure
+        reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
+        assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
+        assertEq(
+            reqAfterFailure.status,
+            EntropyConstants.STATUS_CALLBACK_FAILED
+        );
+
+        // Calling without a gas limit should succeed
+        vm.expectEmit(false, false, false, true, address(random));
+        emit RevealedWithCallback(
+            reqAfterFailure,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // Verify request is cleared after successful reveal
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+        */
+    }
+
     function testLastRevealedTooOld() public {
         for (uint256 i = 0; i < provider1MaxNumHashes; i++) {
             request(user1, provider1, 42, false);
