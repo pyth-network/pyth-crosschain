@@ -1,0 +1,72 @@
+# This workflow runs our end-to-end tests suite.
+#
+# It roughly follows these steps:
+# - Install rust
+# - Install `cargo-stylus`
+# - Install `solc`
+# - Spin up `nitro-testnode`
+#
+# Contract deployments and account funding happen on a per-test basis.
+name: stylus-e2e-tests
+permissions:
+  contents: read
+on:
+  pull_request:
+    paths:
+      - target_chains/ethereum/sdk/stylus/**
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/ethereum/sdk/stylus/**
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  required:
+    name: tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/ethereum/sdk/stylus
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache-key: "e2e-tests"
+          rustflags: ""
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Install cargo-stylus
+        run: cargo install cargo-stylus@0.5.8
+      - name: Install solc
+        run: |
+          curl -LO https://github.com/ethereum/solidity/releases/download/v0.8.24/solc-static-linux
+          sudo mv solc-static-linux /usr/bin/solc
+          sudo chmod a+x /usr/bin/solc
+      - name: Setup nitro node
+        run: ./scripts/nitro-testnode.sh -d -i
+      - name: run e2e tests
+        run: |
+          touch .env
+          echo "RPC_URL=http://localhost:8547" >> .env
+          echo "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" >> .env
+          echo "WALLET_ADDRESS=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" >> .env
+          cat .env
+          cd pyth-mock-solidity
+          echo "$PRIVATE_KEY"
+          echo "$WALLET_ADDRESS"
+          deployed_to=$(forge script ./script/MockPyth.s.sol:MockPythScript \
+            --rpc-url "$RPC_URL" \
+            --private-key "$PRIVATE_KEY" \
+            --broadcast \
+            | grep -oP '(?<=Pyth contract address: )0x[a-fA-F0-9]{40}' | tail -n 1)
+          echo "MOCK_PYTH_ADDRESS=$deployed_to" >> .env
+          cd ..
+          # Run Integration Tests
+          ./scripts/e2e-tests.sh 
