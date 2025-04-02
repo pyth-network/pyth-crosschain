@@ -247,7 +247,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
-        req.isRequestWithCallback = isRequestWithCallback;
+        req.status = (uint8) isRequestWithCallback;
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -470,6 +470,11 @@ abstract contract Entropy is IEntropy, EntropyState {
         if (!req.isRequestWithCallback) {
             revert EntropyErrors.InvalidRevealCall();
         }
+
+        if (req.reentryGuard) {
+            revert EntropyErrors.AssertionFailure();
+        }
+
         bytes32 blockHash;
         bytes32 randomNumber;
         (randomNumber, blockHash) = revealHelper(
@@ -480,26 +485,76 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         address callAddress = req.requester;
 
-        emit RevealedWithCallback(
-            req,
-            userRandomNumber,
-            providerRevelation,
-            randomNumber
-        );
+        // blockNumberOrGasLimit holds the gas limit in the callback case.
+        // If the gas limit is 0, then the provider hasn't configured their default limit,
+        // so we default to the prior entropy flow (where there is no failure state).
+        // Similarly, if the request has already failed, we fall back to the prior flow so that
+        // recovery attempts can provide more gas / directly see the revert reason.
+        if (!req.callbackFailed) {
+            req.reentryGuard = true;
+            bool success;
+            bytes memory ret;
+            (success, ret) = callAddress.excessivelySafeCall(
+                req.blockNumberOrGasLimit,
+                0,
+                256,
+                abi.encodeWithSelector(
+                    IEntropyConsumer._entropyCallback.selector,
+                    sequenceNumber,
+                    provider,
+                    randomNumber
+                )
+            );
+            req.reentryGuard = false;
 
-        clearRequest(provider, sequenceNumber);
-
-        // Check if the callAddress is a contract account.
-        uint len;
-        assembly {
-            len := extcodesize(callAddress)
-        }
-        if (len != 0) {
-            IEntropyConsumer(callAddress)._entropyCallback(
-                sequenceNumber,
-                provider,
+            if (success) {
+                emit RevealedWithCallback(
+                    req,
+                    userRandomNumber,
+                    providerRevelation,
+                    randomNumber
+                );
+                clearRequest(provider, sequenceNumber);
+            } else if (ret.length > 0) {
+                emit CallbackFailed(
+                    provider,
+                    req.requester,
+                    sequenceNumber,
+                    ret
+                );
+                req.callbackFailed = true;
+            } else {
+                // The callback ran out of gas
+                // TODO: this case will go away once we add provider gas limits
+                revert;
+            }
+        } else {
+            emit RevealedWithCallback(
+                req,
+                userRandomNumber,
+                providerRevelation,
                 randomNumber
             );
+
+            clearRequest(provider, sequenceNumber);
+
+            // Check if the callAddress is a contract account.
+            uint len;
+            assembly {
+                len := extcodesize(callAddress)
+            }
+            if (len != 0) {
+                // Setting the reentry guard here isn't strictly necessary because we've cleared the request above
+                // (using the check-effects-interactions pattern). However, it seems like a good measure for consistency
+                // across the two cases.
+                req.reentryGuard = true;
+                IEntropyConsumer(callAddress)._entropyCallback(
+                    sequenceNumber,
+                    provider,
+                    randomNumber
+                );
+                req.reentryGuard = false;
+            }
         }
     }
 

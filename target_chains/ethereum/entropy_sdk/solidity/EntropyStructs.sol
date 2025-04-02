@@ -59,8 +59,12 @@ contract EntropyStructs {
         address requester;
         // If true, incorporate the blockhash of blockNumber into the generated random value.
         bool useBlockhash;
-        // If true, the requester will be called back with the generated random value.
-        bool isRequestWithCallback;
-        // There are 2 remaining bytes of free space in this slot.
+        // Status flag for requests with callbacks.
+        // 0 -- not a request with callback
+        // 1 -- request with callback where the callback hasn't been invoked yet.
+        // 2 -- request with callback where the callback is currently in flight (this state is a reentry guard)
+        // 3 -- request with callback where the callback has been invoked and failed
+        uint8 status;
+        // 2 bytes of space left in this struct.
     }
 }
