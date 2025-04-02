@@ -744,11 +744,11 @@ importers:
         specifier: 1.14.47
         version: 1.14.47
       '@injectivelabs/sdk-ts':
-        specifier: 1.14.49
-        version: 1.14.49(@types/react@19.0.11)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)
+        specifier: 1.14.50
+        version: 1.14.50(@types/react@19.0.11)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)
       '@injectivelabs/utils':
-        specifier: ^1.14.47
-        version: 1.14.47
+        specifier: ^1.14.48
+        version: 1.14.48
       '@mysten/sui':
         specifier: ^1.3.0
         version: 1.24.0(typescript@5.8.2)
@@ -5422,8 +5422,8 @@ packages:
   '@injectivelabs/sdk-ts@1.10.72':
     resolution: {integrity: sha512-A5mHNNBgO4fI1c/7CZ0bGfVXliy8laP+VaYZ++aWh1YyudoZw4CTCEmLetZRy7AUU3XcfbHa8sAImRi7db+v6Q==}
 
-  '@injectivelabs/sdk-ts@1.14.49':
-    resolution: {integrity: sha512-MmoSQmtJNnW900yleSpWgBhLpIBZr+uUw2MoDPemd6XGQcWvogGvIDIZn2W0hKjyA9YpWO4JH6AOOa4KBlI0HQ==}
+  '@injectivelabs/sdk-ts@1.14.50':
+    resolution: {integrity: sha512-hU4zO+J6XTUULs4+DaUiaogL+Af8t11CdYgGUVIWh4NXtGAuZd8DCv5dT5k9IQKstS0foo9aeHS0wNcoBv273g==}
 
   '@injectivelabs/sdk-ts@1.14.7':
     resolution: {integrity: sha512-Qm8y8jKCMyNfYZGZVI+p0SIGJPtP5M9/DPFyPK+JSR2OOU0J4MX2yS/tQB5ViC/3Bt7yQhw/l3Rop93e7pTZEg==}
@@ -5446,8 +5446,8 @@ packages:
   '@injectivelabs/utils@1.10.12':
     resolution: {integrity: sha512-c8al79nxIJgV1cBAdW2TPDGldj/8gm5k0h5TIN/AJs8/AeIjpTwwVGfLY3QvPOpRsxuQ9CjBkTXrAcSL1wwkcw==}
 
-  '@injectivelabs/utils@1.14.47':
-    resolution: {integrity: sha512-0hByJJaWaADy40XFnaP8TnTzkftBgIbAp7D2K/Ybsj2XPnytXNET3ejLx63VPjNnvMNWCK9/BGVSsB4TS8WWBQ==}
+  '@injectivelabs/utils@1.14.48':
+    resolution: {integrity: sha512-ypqSVpEWrBKp2GB7UBbymhwShPT5x94NsvA7XZl7EW/5uQ9qyFevrd7vsOo81yiHsYscup3F7aTDQ7/C0+W0aQ==}
 
   '@internationalized/date@3.7.0':
     resolution: {integrity: sha512-VJ5WS3fcVx0bejE/YHfbDKR/yawZgKqn/if+oEeLqNwBtPzVB06olkfcnojTmEMX+gTpH+FlQ69SHNitJ8/erQ==}
@@ -23390,9 +23390,9 @@ snapshots:
       js-base64: 3.7.7
       near-api-js: 1.1.0(encoding@0.1.13)
     optionalDependencies:
-      '@injectivelabs/networks': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/networks': 1.10.12
       '@injectivelabs/sdk-ts': 1.10.72(@types/react@19.0.11)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)
-      '@injectivelabs/utils': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/utils': 1.10.12
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
@@ -23428,9 +23428,9 @@ snapshots:
       js-base64: 3.7.7
       near-api-js: 1.1.0(encoding@0.1.13)
     optionalDependencies:
-      '@injectivelabs/networks': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/networks': 1.10.12
       '@injectivelabs/sdk-ts': 1.10.72(@types/react@19.0.11)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)
-      '@injectivelabs/utils': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/utils': 1.10.12
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
@@ -23466,9 +23466,9 @@ snapshots:
       js-base64: 3.7.7
       near-api-js: 1.1.0(encoding@0.1.13)
     optionalDependencies:
-      '@injectivelabs/networks': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/networks': 1.10.12
       '@injectivelabs/sdk-ts': 1.10.72(bufferutil@4.0.7)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@6.0.3)
-      '@injectivelabs/utils': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/utils': 1.10.12
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
@@ -23504,9 +23504,9 @@ snapshots:
       js-base64: 3.7.7
       near-api-js: 1.1.0(encoding@0.1.13)
     optionalDependencies:
-      '@injectivelabs/networks': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/networks': 1.10.12
       '@injectivelabs/sdk-ts': 1.10.72(@types/react@19.0.11)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)
-      '@injectivelabs/utils': 1.10.12(google-protobuf@3.21.4)
+      '@injectivelabs/utils': 1.10.12
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
@@ -25997,7 +25997,7 @@ snapshots:
   '@injectivelabs/exceptions@1.14.41(google-protobuf@3.21.4)':
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.41
+      '@injectivelabs/ts-types': 1.14.47
       http-status-codes: 2.3.0
       shx: 0.3.4
     transitivePeerDependencies:
@@ -26064,23 +26064,22 @@ snapshots:
       protobufjs: 7.4.0
       rxjs: 7.8.2
 
-  '@injectivelabs/networks@1.10.12(google-protobuf@3.21.4)':
+  '@injectivelabs/networks@1.10.12':
     dependencies:
-      '@injectivelabs/exceptions': 1.14.41(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.41
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/exceptions': 1.14.47
+      '@injectivelabs/ts-types': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       link-module-alias: 1.2.0
       shx: 0.3.4
     transitivePeerDependencies:
       - debug
-      - google-protobuf
     optional: true
 
   '@injectivelabs/networks@1.14.41(google-protobuf@3.21.4)':
     dependencies:
       '@injectivelabs/exceptions': 1.14.41(google-protobuf@3.21.4)
       '@injectivelabs/ts-types': 1.14.41
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       shx: 0.3.4
     transitivePeerDependencies:
       - debug
@@ -26105,17 +26104,17 @@ snapshots:
       '@cosmjs/stargate': 0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@ethersproject/bytes': 5.8.0
       '@injectivelabs/core-proto-ts': 0.0.14
-      '@injectivelabs/exceptions': 1.14.41(google-protobuf@3.21.4)
+      '@injectivelabs/exceptions': 1.14.47
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
       '@injectivelabs/grpc-web-node-http-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
       '@injectivelabs/grpc-web-react-native-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
       '@injectivelabs/indexer-proto-ts': 1.10.8-rc.4
       '@injectivelabs/mito-proto-ts': 1.0.9
       '@injectivelabs/networks': 1.14.47
-      '@injectivelabs/test-utils': 1.14.41(google-protobuf@3.21.4)
+      '@injectivelabs/test-utils': 1.14.41
       '@injectivelabs/token-metadata': 1.10.42(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.41
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/ts-types': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       '@metamask/eth-sig-util': 4.0.1
       axios: 0.27.2
       bech32: 2.0.0
@@ -26154,17 +26153,17 @@ snapshots:
       '@cosmjs/stargate': 0.30.1(bufferutil@4.0.7)(utf-8-validate@6.0.3)
       '@ethersproject/bytes': 5.8.0
       '@injectivelabs/core-proto-ts': 0.0.14
-      '@injectivelabs/exceptions': 1.14.41(google-protobuf@3.21.4)
+      '@injectivelabs/exceptions': 1.14.47
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
       '@injectivelabs/grpc-web-node-http-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
       '@injectivelabs/grpc-web-react-native-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
       '@injectivelabs/indexer-proto-ts': 1.10.8-rc.4
       '@injectivelabs/mito-proto-ts': 1.0.9
       '@injectivelabs/networks': 1.14.47
-      '@injectivelabs/test-utils': 1.14.41(google-protobuf@3.21.4)
+      '@injectivelabs/test-utils': 1.14.41
       '@injectivelabs/token-metadata': 1.10.42(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.41
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/ts-types': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       '@metamask/eth-sig-util': 4.0.1
       axios: 0.27.2
       bech32: 2.0.0
@@ -26195,7 +26194,7 @@ snapshots:
       - utf-8-validate
     optional: true
 
-  '@injectivelabs/sdk-ts@1.14.49(@types/react@19.0.11)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)':
+  '@injectivelabs/sdk-ts@1.14.50(@types/react@19.0.11)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)':
     dependencies:
       '@apollo/client': 3.13.4(@types/react@19.0.11)(graphql@16.10.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@cosmjs/amino': 0.33.1
@@ -26213,7 +26212,7 @@ snapshots:
       '@injectivelabs/networks': 1.14.47
       '@injectivelabs/olp-proto-ts': 1.13.4
       '@injectivelabs/ts-types': 1.14.47
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       '@metamask/eth-sig-util': 4.0.1
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
@@ -26259,10 +26258,10 @@ snapshots:
       '@injectivelabs/indexer-proto-ts': 1.11.36
       '@injectivelabs/mito-proto-ts': 1.0.62
       '@injectivelabs/networks': 1.14.47
-      '@injectivelabs/test-utils': 1.14.41(google-protobuf@3.21.4)
-      '@injectivelabs/token-metadata': 1.14.11(google-protobuf@3.21.4)
+      '@injectivelabs/test-utils': 1.14.41
+      '@injectivelabs/token-metadata': 1.14.11
       '@injectivelabs/ts-types': 1.14.41
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       '@metamask/eth-sig-util': 4.0.1
       axios: 0.27.2
       bech32: 2.0.0
@@ -26290,12 +26289,12 @@ snapshots:
       - subscriptions-transport-ws
       - utf-8-validate
 
-  '@injectivelabs/test-utils@1.14.41(google-protobuf@3.21.4)':
+  '@injectivelabs/test-utils@1.14.41':
     dependencies:
-      '@injectivelabs/exceptions': 1.14.41(google-protobuf@3.21.4)
+      '@injectivelabs/exceptions': 1.14.47
       '@injectivelabs/networks': 1.14.47
-      '@injectivelabs/ts-types': 1.14.41
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/ts-types': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       axios: 1.8.3(debug@4.4.0)
       bignumber.js: 9.1.2
       shx: 0.3.4
@@ -26303,14 +26302,13 @@ snapshots:
       store2: 2.14.4
     transitivePeerDependencies:
       - debug
-      - google-protobuf
 
   '@injectivelabs/token-metadata@1.10.42(google-protobuf@3.21.4)':
     dependencies:
       '@injectivelabs/exceptions': 1.14.41(google-protobuf@3.21.4)
       '@injectivelabs/networks': 1.14.47
       '@injectivelabs/ts-types': 1.14.41
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       '@types/lodash.values': 4.3.9
       copyfiles: 2.4.1
       jsonschema: 1.5.0
@@ -26322,12 +26320,12 @@ snapshots:
       - debug
       - google-protobuf
 
-  '@injectivelabs/token-metadata@1.14.11(google-protobuf@3.21.4)':
+  '@injectivelabs/token-metadata@1.14.11':
     dependencies:
-      '@injectivelabs/exceptions': 1.14.41(google-protobuf@3.21.4)
+      '@injectivelabs/exceptions': 1.14.47
       '@injectivelabs/networks': 1.14.47
-      '@injectivelabs/ts-types': 1.14.41
-      '@injectivelabs/utils': 1.14.47
+      '@injectivelabs/ts-types': 1.14.47
+      '@injectivelabs/utils': 1.14.48
       '@types/lodash.values': 4.3.9
       copyfiles: 2.4.1
       jsonschema: 1.5.0
@@ -26337,7 +26335,6 @@ snapshots:
       shx: 0.3.4
     transitivePeerDependencies:
       - debug
-      - google-protobuf
 
   '@injectivelabs/ts-types@1.14.41':
     dependencies:
@@ -26345,10 +26342,10 @@ snapshots:
 
   '@injectivelabs/ts-types@1.14.47': {}
 
-  '@injectivelabs/utils@1.10.12(google-protobuf@3.21.4)':
+  '@injectivelabs/utils@1.10.12':
     dependencies:
-      '@injectivelabs/exceptions': 1.14.41(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.41
+      '@injectivelabs/exceptions': 1.14.47
+      '@injectivelabs/ts-types': 1.14.47
       axios: 0.21.4(debug@4.4.0)
       bignumber.js: 9.1.2
       http-status-codes: 2.3.0
@@ -26358,10 +26355,9 @@ snapshots:
       store2: 2.14.4
     transitivePeerDependencies:
       - debug
-      - google-protobuf
     optional: true
 
-  '@injectivelabs/utils@1.14.47':
+  '@injectivelabs/utils@1.14.48':
     dependencies:
       '@bangjelkoski/store2': 2.14.3
       '@injectivelabs/exceptions': 1.14.47
