@@ -281,9 +281,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             PythInternalStructs.TwapPriceInfo memory twapPriceInfo,
             bytes32 priceId
         )
-        // TODO: Add the logic to extract the twap price info from the merkle proof
+    // TODO: Add the logic to extract the twap price info from the merkle proof
     {
-                unchecked {
+        unchecked {
             bytes calldata encodedMessage;
             uint16 messageSize = UnsafeCalldataBytesLib.toUint16(
                 encoded,
@@ -322,7 +322,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             return (endOffset, twapPriceInfo, priceId);
         }
     }
-        
 
     function parsePriceFeedMessage(
         bytes calldata encodedPriceFeed,
@@ -451,7 +450,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 revert PythErrors.InvalidUpdateData();
         }
     }
-
 
     function updatePriceInfosFromAccumulatorUpdate(
         bytes calldata accumulatorUpdate
