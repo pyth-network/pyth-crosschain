@@ -11,6 +11,19 @@ contract MockPyth is AbstractPyth {
     uint singleUpdateFeeInWei;
     uint validTimePeriod;
 
+    // Mock structure for TWAP price information
+    struct MockTwapPriceInfo {
+        int32 expo;
+        int64 price;
+        uint64 conf;
+        uint64 publishTime;
+        uint64 prevPublishTime;
+        uint64 publishSlot;
+        int128 cumulativePrice;
+        uint128 cumulativeConf;
+        uint64 numDownSlots;
+    }
+
     constructor(uint _validTimePeriod, uint _singleUpdateFeeInWei) {
         singleUpdateFeeInWei = _singleUpdateFeeInWei;
         validTimePeriod = _validTimePeriod;
@@ -158,6 +171,186 @@ contract MockPyth is AbstractPyth {
                 maxPublishTime,
                 true
             );
+    }
+
+    function parseTwapPriceFeedUpdates(
+        bytes[][] calldata updateData,
+        bytes32[] calldata priceIds
+    )
+        external
+        payable
+        returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds)
+    {
+        // Validate inputs and fee
+        if (updateData.length != 2) revert PythErrors.InvalidUpdateData();
+
+        uint requiredFee = getUpdateFee(updateData[0]);
+        if (requiredFee != getUpdateFee(updateData[1]))
+            revert PythErrors.InvalidUpdateData();
+        if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
+
+        twapPriceFeeds = new PythStructs.TwapPriceFeed[](priceIds.length);
+
+        // Process each price ID
+        for (uint i = 0; i < priceIds.length; i++) {
+            processTwapPriceFeed(updateData, priceIds[i], i, twapPriceFeeds);
+        }
+    }
+
+    function processTwapPriceFeed(
+        bytes[][] calldata updateData,
+        bytes32 priceId,
+        uint index,
+        PythStructs.TwapPriceFeed[] memory twapPriceFeeds
+    ) private {
+        // Find start price feed
+        PythStructs.PriceFeed memory startFeed;
+        uint64 startPrevPublishTime;
+        bool foundStart = false;
+
+        for (uint j = 0; j < updateData[0].length; j++) {
+            (startFeed, startPrevPublishTime) = abi.decode(
+                updateData[0][j],
+                (PythStructs.PriceFeed, uint64)
+            );
+
+            if (startFeed.id == priceId) {
+                foundStart = true;
+                break;
+            }
+        }
+
+        if (!foundStart) revert PythErrors.PriceFeedNotFoundWithinRange();
+
+        // Find end price feed
+        PythStructs.PriceFeed memory endFeed;
+        uint64 endPrevPublishTime;
+        bool foundEnd = false;
+
+        for (uint j = 0; j < updateData[1].length; j++) {
+            (endFeed, endPrevPublishTime) = abi.decode(
+                updateData[1][j],
+                (PythStructs.PriceFeed, uint64)
+            );
+
+            if (endFeed.id == priceId) {
+                foundEnd = true;
+                break;
+            }
+        }
+
+        if (!foundEnd) revert PythErrors.PriceFeedNotFoundWithinRange();
+
+        // Validate time ordering
+        if (startFeed.price.publishTime >= endFeed.price.publishTime) {
+            revert PythErrors.InvalidTwapUpdateDataSet();
+        }
+
+        // Convert to MockTwapPriceInfo
+        MockTwapPriceInfo memory startInfo = createMockTwapInfo(
+            startFeed,
+            startPrevPublishTime
+        );
+        MockTwapPriceInfo memory endInfo = createMockTwapInfo(
+            endFeed,
+            endPrevPublishTime
+        );
+
+        if (startInfo.publishSlot >= endInfo.publishSlot) {
+            revert PythErrors.InvalidTwapUpdateDataSet();
+        }
+
+        // Calculate and store TWAP
+        twapPriceFeeds[index] = calculateTwap(priceId, startInfo, endInfo);
+
+        // Emit event in a separate function to reduce stack depth
+        emitTwapUpdate(
+            priceId,
+            startInfo.publishTime,
+            endInfo.publishTime,
+            twapPriceFeeds[index]
+        );
+    }
+
+    function emitTwapUpdate(
+        bytes32 priceId,
+        uint64 startTime,
+        uint64 endTime,
+        PythStructs.TwapPriceFeed memory twapFeed
+    ) private {
+        emit TwapPriceFeedUpdate(
+            priceId,
+            startTime,
+            endTime,
+            twapFeed.twap.price,
+            twapFeed.twap.conf,
+            twapFeed.downSlotRatio
+        );
+    }
+
+    function createMockTwapInfo(
+        PythStructs.PriceFeed memory feed,
+        uint64 prevPublishTime
+    ) internal pure returns (MockTwapPriceInfo memory mockInfo) {
+        mockInfo.expo = feed.price.expo;
+        mockInfo.price = feed.price.price;
+        mockInfo.conf = feed.price.conf;
+        mockInfo.publishTime = uint64(feed.price.publishTime);
+        mockInfo.prevPublishTime = prevPublishTime;
+
+        // Use publishTime as publishSlot in mock implementation
+        mockInfo.publishSlot = uint64(feed.price.publishTime);
+
+        // Create mock cumulative values for demonstration
+        // In a real implementation, these would accumulate over time
+        mockInfo.cumulativePrice =
+            int128(feed.price.price) *
+            int128(uint128(mockInfo.publishSlot));
+        mockInfo.cumulativeConf =
+            uint128(feed.price.conf) *
+            uint128(mockInfo.publishSlot);
+
+        // Default to 0 down slots for mock
+        mockInfo.numDownSlots = 0;
+
+        return mockInfo;
+    }
+
+    function calculateTwap(
+        bytes32 priceId,
+        MockTwapPriceInfo memory twapPriceInfoStart,
+        MockTwapPriceInfo memory twapPriceInfoEnd
+    ) internal pure returns (PythStructs.TwapPriceFeed memory twapPriceFeed) {
+        twapPriceFeed.id = priceId;
+        twapPriceFeed.startTime = twapPriceInfoStart.publishTime;
+        twapPriceFeed.endTime = twapPriceInfoEnd.publishTime;
+
+        // Calculate differences between start and end points for slots and cumulative values
+        uint64 slotDiff = twapPriceInfoEnd.publishSlot -
+            twapPriceInfoStart.publishSlot;
+        int128 priceDiff = twapPriceInfoEnd.cumulativePrice -
+            twapPriceInfoStart.cumulativePrice;
+        uint128 confDiff = twapPriceInfoEnd.cumulativeConf -
+            twapPriceInfoStart.cumulativeConf;
+
+        // Calculate time-weighted average price (TWAP) and confidence
+        int128 twapPrice = priceDiff / int128(uint128(slotDiff));
+        uint128 twapConf = confDiff / uint128(slotDiff);
+
+        twapPriceFeed.twap.price = int64(twapPrice);
+        twapPriceFeed.twap.conf = uint64(twapConf);
+        twapPriceFeed.twap.expo = twapPriceInfoStart.expo;
+        twapPriceFeed.twap.publishTime = twapPriceInfoEnd.publishTime;
+
+        // Calculate downSlotRatio as a value between 0 and 1,000,000
+        uint64 totalDownSlots = twapPriceInfoEnd.numDownSlots -
+            twapPriceInfoStart.numDownSlots;
+        uint64 downSlotsRatio = (totalDownSlots * 1_000_000) / slotDiff;
+
+        // Safely downcast to uint32 (sufficient for value range 0-1,000,000)
+        twapPriceFeed.downSlotRatio = uint32(downSlotsRatio);
+
+        return twapPriceFeed;
     }
 
     function createPriceFeedUpdateData(

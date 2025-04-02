@@ -478,13 +478,13 @@ abstract contract Pyth is
         PythInternalStructs.TwapPriceInfo memory twapPriceInfoStart,
         PythInternalStructs.TwapPriceInfo memory twapPriceInfoEnd
     ) private pure {
-        // First validate each individual data point's internal consistency
+        // First validate each individual price's uniqueness
         if (
-            twapPriceInfoStart.prevPublishTime > twapPriceInfoStart.publishTime
+            twapPriceInfoStart.prevPublishTime >= twapPriceInfoStart.publishTime
         ) {
             revert PythErrors.InvalidTwapUpdateData();
         }
-        if (twapPriceInfoEnd.prevPublishTime > twapPriceInfoEnd.publishTime) {
+        if (twapPriceInfoEnd.prevPublishTime >= twapPriceInfoEnd.publishTime) {
             revert PythErrors.InvalidTwapUpdateData();
         }
 
