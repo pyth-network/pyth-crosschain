@@ -821,7 +821,7 @@
   type: EvmChain
 - id: soneium
   mainnet: true
-  rpcUrl: $SONEIUM_RPC_URL
+  rpcUrl: https://soneium.drpc.org
   networkId: 1868
   type: EvmChain
 - id: story_testnet
