@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache 2
+
 library EntropyConstants {
     // Status values for Request.status //
     // not a request with callback

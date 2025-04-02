@@ -972,10 +972,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
         );
-        EntropyStructs.Request memory req = random.getRequest(
-            provider1,
-            assignedSequenceNumber
-        );
 
         // On the first attempt, the transaction should succeed and emit CallbackFailed event.
         bytes memory revertReason = abi.encodeWithSelector(
@@ -1350,9 +1346,7 @@ contract EntropyConsumer is IEntropyConsumer {
         // Keep consuming gas until we reach our target
         while (currentGasUsed < targetGasUsage) {
             // Consume gas with a hash operation
-            bytes32 hash = keccak256(
-                abi.encodePacked(currentGasUsed, _randomness)
-            );
+            keccak256(abi.encodePacked(currentGasUsed, _randomness));
             currentGasUsed = startGas - gasleft();
         }
 

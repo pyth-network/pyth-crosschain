@@ -9,7 +9,7 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "ExcessivelySafeCall/ExcessivelySafeCall.sol";
+import "@nomad-xyz/excessively-safe-call/src/ExcessivelySafeCall.sol";
 import "./EntropyState.sol";
 
 // Entropy implements a secure 2-party random number generation procedure. The protocol
@@ -500,7 +500,6 @@ abstract contract Entropy is IEntropy, EntropyState {
             bytes memory ret;
             (success, ret) = callAddress.excessivelySafeCall(
                 gasleft(), // TODO: providers need to be able to configure this in the future.
-                0,
                 256, // copy at most 256 bytes of the return value into ret.
                 abi.encodeWithSelector(
                     IEntropyConsumer._entropyCallback.selector,
