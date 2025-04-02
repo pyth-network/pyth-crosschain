@@ -10,9 +10,9 @@ pub struct Options {
     /// Higher values increase memory usage but allow access to more historical data
     /// without falling back to Benchmarks.
     ///
-    /// Default is 2000 slots, which gives ~13 minutes of cached updates.
+    /// Default is 1600 slots, which gives 640 seconds of cached updates.
     #[arg(long = "cache-size-slots")]
     #[arg(env = "CACHE_SIZE_SLOTS")]
-    #[arg(default_value = "2000")]
+    #[arg(default_value = "1600")]
     pub size_slots: u64,
 }
