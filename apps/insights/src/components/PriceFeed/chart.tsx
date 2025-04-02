@@ -141,9 +141,7 @@ const useChartElem = (symbol: string, feedId: string) => {
 
   useEffect(() => {
     if (current && chartRef.current) {
-      if (!earliestDateRef.current) {
-        earliestDateRef.current = current.timestamp;
-      }
+      earliestDateRef.current ??= current.timestamp;
       const { price, confidence } = current.aggregate;
       const time = getLocalTimestamp(
         new Date(Number(current.timestamp * 1000n)),
