@@ -251,7 +251,9 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
-        req.status = isRequestWithCallback ? 1 : 0;
+        req.status = isRequestWithCallback
+            ? EntropyConstants.STATUS_CALLBACK_NOT_STARTED
+            : EntropyConstants.STATUS_NO_CALLBACK;
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -471,7 +473,10 @@ abstract contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
 
-        if (!(req.status == EntropyConstants.STATUS_CALLBACK_NOT_STARTED || req.status == EntropyConstants.STATUS_CALLBACK_FAILED)) {
+        if (
+            !(req.status == EntropyConstants.STATUS_CALLBACK_NOT_STARTED ||
+                req.status == EntropyConstants.STATUS_CALLBACK_FAILED)
+        ) {
             revert EntropyErrors.InvalidRevealCall();
         }
 
@@ -485,11 +490,10 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         address callAddress = req.requester;
 
-        // blockNumberOrGasLimit holds the gas limit in the callback case.
-        // If the gas limit is 0, then the provider hasn't configured their default limit,
-        // so we default to the prior entropy flow (where there is no failure state).
-        // Similarly, if the request has already failed, we fall back to the prior flow so that
-        // recovery attempts can provide more gas / directly see the revert reason.
+        // Requests that haven't been invoked yet will be invoked safely (catching reverts), and
+        // any reverts will be reported as an event. Any failing requests move to a failure state
+        // at which point they can be recovered. The recovery flow invokes the callback directly
+        // (no catching errors) which allows callers to easily see the revert reason.
         if (req.status == EntropyConstants.STATUS_CALLBACK_NOT_STARTED) {
             req.status = EntropyConstants.STATUS_CALLBACK_IN_PROGRESS;
             bool success;
@@ -497,7 +501,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             (success, ret) = callAddress.excessivelySafeCall(
                 gasleft(), // TODO: providers need to be able to configure this in the future.
                 0,
-                256,
+                256, // copy at most 256 bytes of the return value into ret.
                 abi.encodeWithSelector(
                     IEntropyConsumer._entropyCallback.selector,
                     sequenceNumber,
@@ -517,10 +521,14 @@ abstract contract Entropy is IEntropy, EntropyState {
                 );
                 clearRequest(provider, sequenceNumber);
             } else if (ret.length > 0) {
+                // Callback reverted for some reason that is *not* out-of-gas.
                 emit CallbackFailed(
                     provider,
                     req.requester,
                     sequenceNumber,
+                    userRandomNumber,
+                    providerRevelation,
+                    randomNumber,
                     ret
                 );
                 req.status = EntropyConstants.STATUS_CALLBACK_FAILED;
@@ -530,6 +538,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                 require(false, "provider needs to send more gas");
             }
         } else {
+            // This case uses the checks-effects-interactions pattern to avoid reentry attacks
             emit RevealedWithCallback(
                 req,
                 userRandomNumber,
@@ -545,16 +554,11 @@ abstract contract Entropy is IEntropy, EntropyState {
                 len := extcodesize(callAddress)
             }
             if (len != 0) {
-                // Setting the reentry guard here isn't strictly necessary because we've cleared the request above
-                // (using the check-effects-interactions pattern). However, it seems like a good measure for consistency
-                // across the two cases.
-                req.status = EntropyConstants.STATUS_CALLBACK_IN_PROGRESS;
                 IEntropyConsumer(callAddress)._entropyCallback(
                     sequenceNumber,
                     provider,
                     randomNumber
                 );
-                req.status = EntropyConstants.STATUS_CALLBACK_NOT_STARTED;
             }
         }
     }

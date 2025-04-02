@@ -1,4 +1,3 @@
-
 library EntropyConstants {
     // Status values for Request.status //
     // not a request with callback

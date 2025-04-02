@@ -33,6 +33,9 @@ interface EntropyEvents {
         address indexed provider,
         address indexed requestor,
         uint64 indexed sequenceNumber,
+        bytes32 userRandomNumber,
+        bytes32 providerRevelation,
+        bytes32 randomNumber,
         bytes errorCode
     );
 
