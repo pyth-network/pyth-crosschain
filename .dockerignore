@@ -16,3 +16,4 @@
 .git
 
 !apps/hermes/server/src/state/cache.rs
+!apps/hermes/server/src/config/cache.rs
