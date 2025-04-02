@@ -3,11 +3,13 @@
 pragma solidity ^0.8.0;
 
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyConstants.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "ExcessivelySafeCall/ExcessivelySafeCall.sol";
 import "./EntropyState.sol";
 
 // Entropy implements a secure 2-party random number generation procedure. The protocol
@@ -76,6 +78,8 @@ import "./EntropyState.sol";
 // the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
 // cases where the user chooses not to reveal.
 abstract contract Entropy is IEntropy, EntropyState {
+    using ExcessivelySafeCall for address;
+
     function _initialize(
         address admin,
         uint128 pythFeeInWei,
@@ -247,7 +251,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
-        req.status = (uint8) isRequestWithCallback;
+        req.status = isRequestWithCallback ? 1 : 0;
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -423,7 +427,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
 
-        if (req.isRequestWithCallback) {
+        if (req.status != EntropyConstants.STATUS_NO_CALLBACK) {
             revert EntropyErrors.InvalidRevealCall();
         }
 
@@ -467,12 +471,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
 
-        if (!req.isRequestWithCallback) {
+        if (!(req.status == EntropyConstants.STATUS_CALLBACK_NOT_STARTED || req.status == EntropyConstants.STATUS_CALLBACK_FAILED)) {
             revert EntropyErrors.InvalidRevealCall();
-        }
-
-        if (req.reentryGuard) {
-            revert EntropyErrors.AssertionFailure();
         }
 
         bytes32 blockHash;
@@ -490,12 +490,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         // so we default to the prior entropy flow (where there is no failure state).
         // Similarly, if the request has already failed, we fall back to the prior flow so that
         // recovery attempts can provide more gas / directly see the revert reason.
-        if (!req.callbackFailed) {
-            req.reentryGuard = true;
+        if (req.status == EntropyConstants.STATUS_CALLBACK_NOT_STARTED) {
+            req.status = EntropyConstants.STATUS_CALLBACK_IN_PROGRESS;
             bool success;
             bytes memory ret;
             (success, ret) = callAddress.excessivelySafeCall(
-                req.blockNumberOrGasLimit,
+                gasleft(), // TODO: providers need to be able to configure this in the future.
                 0,
                 256,
                 abi.encodeWithSelector(
@@ -505,7 +505,8 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 )
             );
-            req.reentryGuard = false;
+            // Reset status to not started here in case the transaction reverts.
+            req.status = EntropyConstants.STATUS_CALLBACK_NOT_STARTED;
 
             if (success) {
                 emit RevealedWithCallback(
@@ -522,11 +523,11 @@ abstract contract Entropy is IEntropy, EntropyState {
                     sequenceNumber,
                     ret
                 );
-                req.callbackFailed = true;
+                req.status = EntropyConstants.STATUS_CALLBACK_FAILED;
             } else {
                 // The callback ran out of gas
-                // TODO: this case will go away once we add provider gas limits
-                revert;
+                // TODO: this case will go away once we add provider gas limits, so we're not putting in a custom error type.
+                require(false, "provider needs to send more gas");
             }
         } else {
             emit RevealedWithCallback(
@@ -547,13 +548,13 @@ abstract contract Entropy is IEntropy, EntropyState {
                 // Setting the reentry guard here isn't strictly necessary because we've cleared the request above
                 // (using the check-effects-interactions pattern). However, it seems like a good measure for consistency
                 // across the two cases.
-                req.reentryGuard = true;
+                req.status = EntropyConstants.STATUS_CALLBACK_IN_PROGRESS;
                 IEntropyConsumer(callAddress)._entropyCallback(
                     sequenceNumber,
                     provider,
                     randomNumber
                 );
-                req.reentryGuard = false;
+                req.status = EntropyConstants.STATUS_CALLBACK_NOT_STARTED;
             }
         }
     }
