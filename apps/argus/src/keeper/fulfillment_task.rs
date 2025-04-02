@@ -7,8 +7,7 @@ use async_trait::async_trait;
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct RequestFulfillmentTask {
-    // Tracks fulfillment task and contains everything needed to execute the callback
-    // If None, the task hasn't been attempted yet. If Some(fut), task is in flight or completed.
+    /// If None, the task hasn't been spawned. If Some(fut), task is in flight or completed.
     pub task: Option<JoinHandle<Result<()>>>,
     pub retries: u32,
     pub success: bool,
@@ -16,7 +15,7 @@ pub struct RequestFulfillmentTask {
     // The error received during fulfillment if `success` is false.
     // We don't consider the consumer callback reverting as a failure since we catch those
     // in the Pulse contract. Thus, this should only happen if there's a transient RPC error
-    // (tx failed to land,)
+    // (tx failed to land, out of gas, etc)
     pub error: Option<String>,
 }
 

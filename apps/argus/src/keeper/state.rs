@@ -1,14 +1,8 @@
-// Need to be able to unit test whatever we come up with
-// We need a layer that's responsible for producing a set of events,
-// and a state layer that's keeping track of the events.
-
-// The event producer will be swappable in case instead of of polling for request state
-// from the chain, we decide to get request state from blocks.
-
-// test all the keeper stuff thoroughly w/ mock providers etc
-// wire everything up to the actual blockchain (ethers providers, multiple RPCs, connect to the ABI)
-
-// full set of currently pending on-chain requests
+//! Keeper state management module.
+//!
+//! This module provides the state layer for the keeper, responsible for tracking
+//! and managing on-chain price update requests. It maintains the current state of
+//! pending requests and their fulfillment status.
 
 use std::{
     collections::{HashMap, HashSet},
@@ -24,12 +18,12 @@ use tokio::sync::RwLock;
 use tracing::{error, info};
 use url::Url;
 
-// The price request from the Pulse contract (only fields useful in Argus are present here.)
+/// The price request from the Pulse contract (only fields useful in Argus are present here.)
 // TODO: Get this from somewhere else, SDK perhaps?
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct PulseRequest {
     pub sequence_number: u64,
-    pub feed_id_prefixes: Vec<String>,
+    pub feed_id_prefixes: Vec<[u8; 8]>,
 
     // The timestamp at which the callback should be fulfilled
     pub publish_time: u64,
@@ -54,41 +48,41 @@ impl Default for EscalationPolicy {
 
 #[allow(dead_code)]
 pub struct KeeperState {
-    // All currently fulfillable requests from the Pulse contract
+    /// All currently fulfillable requests from the Pulse contract
     pub pending_requests: Arc<RwLock<HashMap<PulseRequest, RequestFulfillmentTask>>>,
 
-    // Map from a prefix feed ID prefix (the values stored in the on-chain requests)
-    // to the actual price feed ID, which is queryable in Hermes.
-    //
-    // NOTE: Maybe support querying by prefix in Hermes? that way we don't have to keep
-    // an up-to-date map in Argus since that's a little clunky, and we can avoid
-    // failing to recognize freshly listed IDs if our map is stale.
-    // OR, we fetch all price ids from Hermes every time and find the prefix.
+    /// Map from a prefix feed ID prefix (the values stored in the on-chain requests)
+    /// to the actual price feed ID, which is queryable in Hermes.
+    ///
+    /// NOTE: Maybe support querying by prefix in Hermes? that way we don't have to keep
+    /// an up-to-date map in Argus since that's a little clunky, and we can avoid
+    /// failing to recognize freshly listed IDs if our map is stale.
+    /// OR, we fetch all price ids from Hermes every time and find the prefix.
     pub prefix_to_price_ids: Arc<HashMap<String, String>>,
 
-    // The time period after a request's publish_time during which only the requested provider
-    // can fulfill the request.
-    // After this period lapses, any provider can fulfill it (TODO: for an extra reward?)
+    /// The time period after a request's publish_time during which only the requested provider
+    /// can fulfill the request.
+    /// After this period lapses, any provider can fulfill it (TODO: for an extra reward?)
     pub exclusivity_period_seconds: u32,
 
-    // The amount of time a request can retry until it's considered unfulfillable and is ignored.
+    /// The amount of time a request can retry until it's considered unfulfillable and is ignored.
     pub failure_timeout_seconds: u64,
 
-    // Policy that defines the internal retries for landing the callback execution tx.
-    // Increases gas and fees until the tx lands.
+    /// Policy that defines the internal retries for landing the callback execution tx.
+    /// Increases gas and fees until the tx lands.
     pub escalation_policy: EscalationPolicy,
 
-    // The Hermes endpoint to fetch price data from
+    /// The Hermes endpoint to fetch price data from
     pub hermes_url: Url,
 
-    // The public key of the provider whose requests this keeper will respond to.
+    /// The public key of the provider whose requests this keeper will respond to.
     pub provider_address: Address,
 
-    // RequestFulfiller implementor that can execute the callback request
+    /// RequestFulfiller implementor that can execute the callback request
     pub request_fulfiller: Arc<dyn RequestFulfiller>,
 
-    // Metrics for tracking keeper performance
-    // TODO: emit metrics
+    /// Metrics for tracking keeper performance
+    /// TODO: emit metrics
     pub metrics: Arc<KeeperMetrics>,
 }
 
@@ -176,12 +170,10 @@ impl KeeperState {
                         "Spawned new fulfillment task for request {}", request.sequence_number
                     );
                 }
-                // Task exists - check if it's completed
+                // Task exists and is completed
                 Some(handle) if handle.is_finished() => {
-                    // Take ownership of the handle
+                    // Take ownership of the handle and consume the result
                     let handle = fulfillment_task.task.take().unwrap();
-
-                    // Await the result directly now that we own the handle
                     match handle.await {
                         Ok(Ok(())) => {
                             // Task completed successfully
@@ -235,13 +227,12 @@ impl KeeperState {
             // Check if request has been around too long without success
             let request_age_seconds = current_time - request.publish_time;
             if !fulfillment_task.success && request_age_seconds > self.failure_timeout_seconds {
-                // Log that this request has been around too long without successful fulfillment
                 error!(
                     "Request #{} has exceeded timeout of {} minutes without successful fulfillment",
                     request.sequence_number, self.failure_timeout_seconds
                 );
 
-                // Emit metrics here for monitoring/alerting
+                // TODO: Emit metrics here for monitoring/alerting
             }
         }
     }
@@ -360,7 +351,7 @@ mod tests {
     ) -> PulseRequest {
         PulseRequest {
             sequence_number,
-            feed_id_prefixes: vec!["ff61491a".to_string()],
+            feed_id_prefixes: vec![[0xff, 0x61, 0x49, 0x1a, 0x00, 0x00, 0x00, 0x00]],
             publish_time,
             callback_gas_limit: 100000,
             provider: Address::from_str(provider).unwrap_or_default(),
