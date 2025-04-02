@@ -1003,7 +1003,9 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(reqAfterReveal.sequenceNumber, 0);
     }
 
-    function testRequestWithCallbackAndRevealWithCallbackWithGasLimitAndFailure() public {
+    function testRequestWithCallbackAndRevealWithCallbackWithGasLimitAndFailure()
+        public
+    {
         uint64 defaultGasLimit = 100000;
         vm.prank(provider1);
         random.setDefaultGasLimit(defaultGasLimit);
@@ -1025,7 +1027,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(req.blockNumberOrGasLimit, defaultGasLimit);
 
         // On the first attempt, the transaction should succeed and emit CallbackFailed event.
-        bytes memory revertReason = abi.encodeWithSelector(0x08c379a0, "Callback failed");
+        bytes memory revertReason = abi.encodeWithSelector(
+            0x08c379a0,
+            "Callback failed"
+        );
         vm.expectEmit(false, false, false, true, address(random));
         emit CallbackFailed(
             provider1,
@@ -1058,15 +1063,11 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Again, request stays active after failure
-        reqAfterFailure = random.getRequest(
-            provider1,
-            assignedSequenceNumber
-        );
+        reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertTrue(reqAfterFailure.callbackFailed);
 
-        // If the callback starts succeeding, we can invoke it and
-        // it emits RevealedWithCallback event.
+        // If the callback starts succeeding, we can invoke it and it emits the usual RevealedWithCallback event.
         consumer.setReverts(false);
         vm.expectEmit(false, false, false, true, address(random));
         emit RevealedWithCallback(
@@ -1097,10 +1098,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testRequestWithCallbackAndRevealWithCallbackFailing() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumer consumer = new EntropyConsumer(
-            address(random),
-            true
-        );
+        EntropyConsumer consumer = new EntropyConsumer(address(random), true);
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
@@ -1431,6 +1429,108 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         // Fee should be the same as base fee since we're using less gas than default
         assertEq(fee, random.getFee(provider1));
     }
+
+    function testRequestWithCallbackAndRevealWithCallbackWithGasLimitAndFailureWithGasUsage()
+        public
+    {
+        uint64 defaultGasLimit = 100000;
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        EntropyConsumer consumer = new EntropyConsumer(address(random), false);
+        // Consumer callback uses ~10% more gas than the provider's default
+        consumer.setTargetGasUsage((defaultGasLimit * 110) / 100);
+
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
+            userRandomNumber
+        );
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+
+        // Verify the gas limit was set correctly
+        assertEq(req.blockNumberOrGasLimit, defaultGasLimit);
+
+        // The transaction reverts if the provider does not provide enough gas to forward
+        // the gasLimit to the callback transaction.
+        vm.expectRevert();
+        random.revealWithCallback{gas: defaultGasLimit - 10000}(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // If called with enough gas, the transaction should succeed, but the callback should fail because
+        // it uses too much gas.
+        vm.expectEmit(false, false, false, true, address(random));
+        emit CallbackFailed(
+            provider1,
+            address(consumer),
+            assignedSequenceNumber,
+            // out-of-gas reverts have an empty bytes array as the return value.
+            ""
+        );
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // Verify request is still active after failure
+        EntropyStructs.Request memory reqAfterFailure = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
+        assertTrue(reqAfterFailure.callbackFailed);
+
+        // A subsequent attempt passing insufficient gas should also revert
+        vm.expectRevert();
+        random.revealWithCallback{gas: defaultGasLimit - 10000}(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // Again, request stays active after failure
+        reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
+        assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
+        assertTrue(reqAfterFailure.callbackFailed);
+
+        // Calling without a gas limit should succeed
+        vm.expectEmit(false, false, false, true, address(random));
+        emit RevealedWithCallback(
+            reqAfterFailure,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        // Verify request is cleared after successful reveal
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+    }
 }
 
 contract EntropyConsumer is IEntropyConsumer {
@@ -1439,10 +1539,13 @@ contract EntropyConsumer is IEntropyConsumer {
     address public entropy;
     address public provider;
     bool public reverts;
+    uint256 public gasUsed;
+    uint256 public targetGasUsage;
 
     constructor(address _entropy, bool _reverts) {
         entropy = _entropy;
         reverts = _reverts;
+        targetGasUsage = 0; // Default target
     }
 
     function requestEntropy(
@@ -1462,11 +1565,29 @@ contract EntropyConsumer is IEntropyConsumer {
         reverts = _reverts;
     }
 
+    function setTargetGasUsage(uint256 _targetGasUsage) public {
+        targetGasUsage = _targetGasUsage;
+    }
+
     function entropyCallback(
         uint64 _sequence,
         address _provider,
         bytes32 _randomness
     ) internal override {
+        uint256 startGas = gasleft();
+        uint256 currentGasUsed = 0;
+
+        // Keep consuming gas until we reach our target
+        while (currentGasUsed < targetGasUsage) {
+            // Consume gas with a hash operation
+            bytes32 hash = keccak256(
+                abi.encodePacked(currentGasUsed, _randomness)
+            );
+            currentGasUsed = startGas - gasleft();
+        }
+
+        gasUsed = currentGasUsed;
+
         if (!reverts) {
             sequence = _sequence;
             provider = _provider;
