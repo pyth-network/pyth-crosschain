@@ -253,17 +253,12 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
-<<<<<<< HEAD
+
         req.callbackStatus = isRequestWithCallback
             ? EntropyStatusConstants.CALLBACK_NOT_STARTED
             : EntropyStatusConstants.CALLBACK_NOT_NECESSARY;
-=======
-        req.status = isRequestWithCallback
-            ? EntropyConstants.STATUS_CALLBACK_NOT_STARTED
-            : EntropyConstants.STATUS_NO_CALLBACK;
-        // TODO: rounding!            
+        // TODO: rounding!
         req.gasLimit10k = SafeCast.toUint16(callbackGasLimit / 10000);
->>>>>>> 185f7de53 (moving stuff around)
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -304,7 +299,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userRandomNumber
     ) public payable override returns (uint64) {
-        return requestWithCallbackAndGasLimit(provider, userRandomNumber, _state.providers[provider].defaultGasLimit);
+        return
+            requestWithCallbackAndGasLimit(
+                provider,
+                userRandomNumber,
+                _state.providers[provider].defaultGasLimit
+            );
     }
 
     function requestWithCallbackAndGasLimit(
