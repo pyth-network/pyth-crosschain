@@ -806,6 +806,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 requester: user1,
                 useBlockhash: false,
                 callbackStatus: EntropyStatusConstants.CALLBACK_NOT_STARTED
+                gasLimit10k: 0
             })
         );
         vm.roll(1234);
@@ -939,9 +940,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
     }
 
-    // TODO: restore this test once providers have custom gas limits, which allow us to toggle between
-    // the old and new failure behavior.
-    /*
     function testRequestWithCallbackAndRevealWithCallbackFailing() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
@@ -961,9 +959,69 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Proofs[assignedSequenceNumber]
         );
     }
-    */
+
+    function testRequestWithCallbackGasLimit() public {
+        uint64 defaultGasLimit = 100000;
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+        EntropyConsumer consumer = new EntropyConsumer(address(random), false);
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
+            userRandomNumber
+        );
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+
+        // Verify the gas limit was set correctly
+        assertEq(req.blockNumberOrGasLimit, defaultGasLimit);
+
+        vm.expectEmit(false, false, false, true, address(random));
+        emit RevealedWithCallback(
+            req,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+        random.revealWithCallback(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
+        assertEq(consumer.sequence(), assignedSequenceNumber);
+        assertEq(consumer.provider(), provider1);
+        assertEq(
+            consumer.randomness(),
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            )
+        );
+
+        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+            provider1,
+            assignedSequenceNumber
+        );
+        assertEq(reqAfterReveal.sequenceNumber, 0);
+    }
 
     function testRequestWithRevertingCallback() public {
+        uint64 defaultGasLimit = 100000;
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyConsumer consumer = new EntropyConsumer(address(random), true);
@@ -1056,7 +1114,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testRequestWithCallbackUsingTooMuchGas() public {
-        uint64 defaultGasLimit = 100000;
+        uint32 defaultGasLimit = 100000;
 
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
@@ -1299,6 +1357,132 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         vm.expectRevert();
         random.setProviderFeeAsFeeManager(provider1, 1000);
     }
+
+    function testSetDefaultGasLimit() public {
+        uint32 newGasLimit = 100000;
+
+        vm.prank(provider1);
+        random.setDefaultGasLimit(newGasLimit);
+
+        EntropyStructs.ProviderInfo memory info = random.getProviderInfo(
+            provider1
+        );
+        assertEq(info.defaultGasLimit, newGasLimit);
+    }
+
+    function testSetDefaultGasLimitRevertIfNotFromProvider() public {
+        vm.expectRevert(EntropyErrors.NoSuchProvider.selector);
+        random.setDefaultGasLimit(100000);
+    }
+
+    function testRequestWithCallbackUsesDefaultGasLimit() public {
+        uint32 defaultGasLimit = 100000;
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFee(provider1);
+
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 sequenceNumber = random.requestWithCallback{value: fee}(
+            provider1,
+            userRandomNumber
+        );
+
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            sequenceNumber
+        );
+        assertEq(req.gasLimit10k, defaultGasLimit);
+    }
+
+    function testRequestWithCallbackAndCustomGasLimit() public {
+        uint32 defaultGasLimit = 100000;
+        uint32 customGasLimit = 200000;
+
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFeeForGas(provider1, customGasLimit);
+
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{value: fee}(
+            provider1,
+            userRandomNumber,
+            customGasLimit
+        );
+
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            sequenceNumber
+        );
+        assertEq(req.gasLimit10k, customGasLimit);
+    }
+
+    function testRequestWithCallbackAndGasLimitFeeScaling() public {
+        uint32 defaultGasLimit = 100000;
+        uint32 doubleGasLimit = 200000;
+
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        uint baseFee = random.getFee(provider1);
+        assertEq(baseFee, provider1FeeInWei + pythFeeInWei);
+
+        // Fee scales proportionally with gas limit
+        uint scaledFee = random.getFeeForGas(provider1, doubleGasLimit);
+        assertEq(scaledFee, 2 * provider1FeeInWei + pythFeeInWei);
+    }
+
+    function testRequestWithCallbackAndGasLimitInsufficientFee() public {
+        uint32 defaultGasLimit = 100000;
+        uint32 doubleGasLimit = 200000;
+
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint baseFee = random.getFee(provider1); // This is insufficient for double gas
+
+        vm.deal(user1, baseFee);
+        vm.prank(user1);
+        vm.expectRevert(EntropyErrors.InsufficientFee.selector);
+        random.requestWithCallbackAndGasLimit{value: baseFee}(
+            provider1,
+            userRandomNumber,
+            doubleGasLimit
+        );
+    }
+
+    function testRequestWithCallbackAndGasLimitLowerThanDefault() public {
+        uint32 defaultGasLimit = 100000;
+        uint32 lowerGasLimit = 50000;
+
+        vm.prank(provider1);
+        random.setDefaultGasLimit(defaultGasLimit);
+
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFeeForGas(provider1, lowerGasLimit);
+
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{value: fee}(
+            provider1,
+            userRandomNumber,
+            lowerGasLimit
+        );
+
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            sequenceNumber
+        );
+        assertEq(req.gasLimit10k, lowerGasLimit);
+        // Fee should be the same as base fee since we're using less gas than default
+        assertEq(fee, random.getFee(provider1));
+    }    
 }
 
 contract EntropyConsumer is IEntropyConsumer {

@@ -207,7 +207,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userCommitment,
         bool useBlockhash,
-        bool isRequestWithCallback
+        bool isRequestWithCallback,
+        uint32 callbackGasLimit
     ) internal returns (EntropyStructs.Request storage req) {
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
@@ -222,11 +223,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
-        uint128 requiredFee = getFee(provider);
+        uint128 requiredFee = getFeeForGas(provider, callbackGasLimit);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
-        providerInfo.accruedFeesInWei += providerInfo.feeInWei;
+        uint128 providerFee = getProviderFee(provider, callbackGasLimit);
+        providerInfo.accruedFeesInWei += providerFee;
         _state.accruedPythFeesInWei += (SafeCast.toUint128(msg.value) -
-            providerInfo.feeInWei);
+            providerFee);
 
         // Store the user's commitment so that we can fulfill the request later.
         // Warning: this code needs to overwrite *every* field in the request, because the returned request can be
@@ -251,9 +253,17 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
+<<<<<<< HEAD
         req.callbackStatus = isRequestWithCallback
             ? EntropyStatusConstants.CALLBACK_NOT_STARTED
             : EntropyStatusConstants.CALLBACK_NOT_NECESSARY;
+=======
+        req.status = isRequestWithCallback
+            ? EntropyConstants.STATUS_CALLBACK_NOT_STARTED
+            : EntropyConstants.STATUS_NO_CALLBACK;
+        // TODO: rounding!            
+        req.gasLimit10k = SafeCast.toUint16(callbackGasLimit / 10000);
+>>>>>>> 185f7de53 (moving stuff around)
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -275,7 +285,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             provider,
             userCommitment,
             useBlockHash,
-            false
+            false,
+            0
         );
         assignedSequenceNumber = req.sequenceNumber;
         emit Requested(req);
@@ -293,6 +304,14 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userRandomNumber
     ) public payable override returns (uint64) {
+        return requestWithCallbackAndGasLimit(provider, userRandomNumber, _state.providers[provider].defaultGasLimit);
+    }
+
+    function requestWithCallbackAndGasLimit(
+        address provider,
+        bytes32 userRandomNumber,
+        uint32 gasLimit
+    ) public payable override returns (uint64) {
         EntropyStructs.Request storage req = requestHelper(
             provider,
             constructUserCommitment(userRandomNumber),
@@ -300,7 +319,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             // If we remove the blockHash from this, the provider would have no choice but to provide its committed
             // random number. Hence, useBlockHash is set to false.
             false,
-            true
+            true,
+            gasLimit
         );
 
         emit RequestedWithCallback(
@@ -310,7 +330,6 @@ abstract contract Entropy is IEntropy, EntropyState {
             userRandomNumber,
             req
         );
-
         return req.sequenceNumber;
     }
 
@@ -497,12 +516,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         // any reverts will be reported as an event. Any failing requests move to a failure state
         // at which point they can be recovered. The recovery flow invokes the callback directly
         // (no catching errors) which allows callers to easily see the revert reason.
-        if (req.callbackStatus == EntropyStatusConstants.CALLBACK_NOT_STARTED) {
+        if (req.gasLimit10k != 0 && req.callbackStatus == EntropyStatusConstants.CALLBACK_NOT_STARTED) {
             req.callbackStatus = EntropyStatusConstants.CALLBACK_IN_PROGRESS;
             bool success;
             bytes memory ret;
             (success, ret) = callAddress.excessivelySafeCall(
-                gasleft(), // TODO: providers need to be able to configure this in the future.
+                req.gasLimit10k * 10000,
                 256, // copy at most 256 bytes of the return value into ret.
                 abi.encodeWithSelector(
                     IEntropyConsumer._entropyCallback.selector,
@@ -590,7 +609,32 @@ abstract contract Entropy is IEntropy, EntropyState {
     function getFee(
         address provider
     ) public view override returns (uint128 feeAmount) {
-        return _state.providers[provider].feeInWei + _state.pythFeeInWei;
+        return getFeeForGas(provider, 0);
+    }
+
+    function getFeeForGas(
+        address provider,
+        uint32 gasLimit
+    ) public view override returns (uint128 feeAmount) {
+        return getProviderFee(provider, gasLimit) + _state.pythFeeInWei;
+    }
+
+    function getProviderFee(
+        address providerAddr,
+        uint32 gasLimit
+    ) internal view returns (uint128 feeAmount) {
+        EntropyStructs.ProviderInfo memory provider = _state.providers[
+            providerAddr
+        ];
+        if (gasLimit > provider.defaultGasLimit) {
+            // This calculation rounds down the fee, which means that users can get some gas in the callback for free.
+            // However, the value of the free gas is < 1 wei, which is insignificant.
+            uint128 additionalFee = ((gasLimit - provider.defaultGasLimit) *
+                provider.feeInWei) / provider.defaultGasLimit;
+            return provider.feeInWei + additionalFee;
+        } else {
+            return provider.feeInWei;
+        }
     }
 
     function getPythFee() public view returns (uint128 feeAmount) {
@@ -685,6 +729,20 @@ abstract contract Entropy is IEntropy, EntropyState {
             oldMaxNumHashes,
             maxNumHashes
         );
+    }
+
+    // Set the default gas limit for a request.
+    function setDefaultGasLimit(uint32 gasLimit) external override {
+        EntropyStructs.ProviderInfo storage provider = _state.providers[
+            msg.sender
+        ];
+        if (provider.sequenceNumber == 0) {
+            revert EntropyErrors.NoSuchProvider();
+        }
+
+        uint32 oldGasLimit = provider.defaultGasLimit;
+        provider.defaultGasLimit = gasLimit;
+        emit ProviderDefaultGasLimitUpdated(msg.sender, oldGasLimit, gasLimit);
     }
 
     function constructUserCommitment(
