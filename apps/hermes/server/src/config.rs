@@ -2,6 +2,7 @@ use clap::{crate_authors, crate_description, crate_name, crate_version, Args, Pa
 
 mod aggregate;
 mod benchmarks;
+mod cache;
 mod metrics;
 mod pythnet;
 mod rpc;
@@ -24,6 +25,10 @@ pub enum Options {
 
 #[derive(Args, Clone, Debug)]
 pub struct RunOptions {
+    /// Cache Options
+    #[command(flatten)]
+    pub cache: cache::Options,
+
     /// Aggregate Options
     #[command(flatten)]
     pub aggregate: aggregate::Options,
