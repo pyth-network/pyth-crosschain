@@ -257,8 +257,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         req.callbackStatus = isRequestWithCallback
             ? EntropyStatusConstants.CALLBACK_NOT_STARTED
             : EntropyStatusConstants.CALLBACK_NOT_NECESSARY;
-        // TODO: rounding!
-        req.gasLimit10k = SafeCast.toUint16(callbackGasLimit / 10000);
+        req.gasLimit10k = roundGas(callbackGasLimit);
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -520,8 +519,9 @@ abstract contract Entropy is IEntropy, EntropyState {
             req.callbackStatus = EntropyStatusConstants.CALLBACK_IN_PROGRESS;
             bool success;
             bytes memory ret;
+            uint256 startingGas = gasleft();
             (success, ret) = callAddress.excessivelySafeCall(
-                req.gasLimit10k * 10000,
+                uint256(req.gasLimit10k) * 10000,
                 256, // copy at most 256 bytes of the return value into ret.
                 abi.encodeWithSelector(
                     IEntropyConsumer._entropyCallback.selector,
@@ -530,6 +530,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 )
             );
+            uint256 endingGas = gasleft();
             // Reset status to not started here in case the transaction reverts.
             req.callbackStatus = EntropyStatusConstants.CALLBACK_NOT_STARTED;
 
@@ -541,8 +542,8 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 );
                 clearRequest(provider, sequenceNumber);
-            } else if (ret.length > 0) {
-                // Callback reverted for some reason that is *not* out-of-gas.
+            } else if (ret.length > 0 || startingGas - endingGas >= uint256(req.gasLimit10k) * 10000) {
+                // Callback reverted for some reason. Note ret.length == 0 implies out of gas.
                 emit CallbackFailed(
                     provider,
                     req.requester,
@@ -554,8 +555,6 @@ abstract contract Entropy is IEntropy, EntropyState {
                 );
                 req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
             } else {
-                // The callback ran out of gas
-                // TODO: this case will go away once we add provider gas limits, so we're not putting in a custom error type.
                 require(false, "provider needs to send more gas");
             }
         } else {
@@ -626,10 +625,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         EntropyStructs.ProviderInfo memory provider = _state.providers[
             providerAddr
         ];
-        if (gasLimit > provider.defaultGasLimit) {
+
+        uint32 roundedGasLimit = uint32(roundGas(gasLimit)) * 10000;
+        if (roundedGasLimit > provider.defaultGasLimit) {
             // This calculation rounds down the fee, which means that users can get some gas in the callback for free.
             // However, the value of the free gas is < 1 wei, which is insignificant.
-            uint128 additionalFee = ((gasLimit - provider.defaultGasLimit) *
+            uint128 additionalFee = ((roundedGasLimit - provider.defaultGasLimit) *
                 provider.feeInWei) / provider.defaultGasLimit;
             return provider.feeInWei + additionalFee;
         } else {
@@ -759,6 +760,18 @@ abstract contract Entropy is IEntropy, EntropyState {
         combinedRandomness = keccak256(
             abi.encodePacked(userRandomness, providerRandomness, blockHash)
         );
+    }
+
+    // Rounds the provided quantity of gas into units of 10k gas.
+    // If gas is not evenly divisible by 10k, rounds up.
+    function roundGas(
+        uint32 gas
+    ) public pure returns (uint16) {
+        uint32 gas10k = gas / 10000;
+        if (gas10k * 10000 < gas) {
+            gas10k += 1;
+        }
+        return SafeCast.toUint16(gas10k);
     }
 
     // Create a unique key for an in-flight randomness request. Returns both a long key for use in the requestsOverflow

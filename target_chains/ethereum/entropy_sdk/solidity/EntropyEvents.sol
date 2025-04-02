@@ -39,8 +39,19 @@ interface EntropyEvents {
         bytes errorCode
     );
 
+    event CallbackOutOfGas(
+        address indexed provider,
+        address indexed requestor,
+        uint64 indexed sequenceNumber,
+        bytes32 userRandomNumber,
+        bytes32 providerRevelation,
+        bytes32 randomNumber,
+        bytes errorCode
+    );
+
     event ProviderFeeUpdated(address provider, uint128 oldFee, uint128 newFee);
 
+    // TODO: uint32
     event ProviderDefaultGasLimitUpdated(
         address indexed provider,
         uint64 oldDefaultGasLimit,

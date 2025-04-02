@@ -979,7 +979,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify the gas limit was set correctly
-        assertEq(req.gasLimit10k, defaultGasLimit);
+        assertEq(req.gasLimit10k, 10);
 
         vm.expectEmit(false, false, false, true, address(random));
         emit RevealedWithCallback(
@@ -1135,7 +1135,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify the gas limit was set correctly
-        assertEq(req.gasLimit10k, defaultGasLimit);
+        assertEq(req.gasLimit10k, 10);
 
         // The transaction reverts if the provider does not provide enough gas to forward
         // the gasLimit to the callback transaction.
@@ -1451,7 +1451,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             sequenceNumber
         );
-        assertEq(req.gasLimit10k, defaultGasLimit);
+        assertEq(req.gasLimit10k, 10);
     }
 
     function testRequestWithCallbackAndCustomGasLimit() public {
@@ -1474,7 +1474,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             sequenceNumber
         );
-        assertEq(req.gasLimit10k, customGasLimit);
+        assertEq(req.gasLimit10k, 20);
     }
 
     function testRequestWithCallbackAndGasLimitFeeScaling() public {
@@ -1532,9 +1532,37 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             sequenceNumber
         );
-        assertEq(req.gasLimit10k, lowerGasLimit);
+        assertEq(req.gasLimit10k, 5);
         // Fee should be the same as base fee since we're using less gas than default
         assertEq(fee, random.getFee(provider1));
+    }
+
+    function testRoundGas() public {
+        // TODO: test this with the full request/reveal flow and update the max value
+
+        // Test exact multiples of 10,000
+        assertEq(random.roundGas(0), 0);
+        assertEq(random.roundGas(10000), 1);
+        assertEq(random.roundGas(20000), 2);
+        assertEq(random.roundGas(100000), 10);
+
+        // Test values just below multiples of 10,000
+        assertEq(random.roundGas(9999), 1);
+        assertEq(random.roundGas(19999), 2);
+        assertEq(random.roundGas(99999), 10);
+
+        // Test values just above multiples of 10,000
+        assertEq(random.roundGas(10001), 2);
+        assertEq(random.roundGas(20001), 3);
+        assertEq(random.roundGas(100001), 11);
+
+        // Test middle values
+        assertEq(random.roundGas(5000), 1);
+        assertEq(random.roundGas(15000), 2);
+        assertEq(random.roundGas(25000), 3);
+
+        // Test maximum uint32 value
+        assertEq(random.roundGas(type(uint32).max), 429497); // (2^32 - 1) / 10000 rounded up
     }
 }
 
