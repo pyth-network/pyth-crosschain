@@ -4,6 +4,22 @@ import { useMemo } from "react";
 import { Explain } from "../Explain";
 import { FormattedDate } from "../FormattedDate";
 
+export const ExplainRanking = ({
+  scoreTime,
+}: {
+  scoreTime?: Date | undefined;
+}) => {
+  return (
+    <Explain size="xs" title="Permissioned Feeds">
+      <p>
+        The publisher{"'"}s <b>ranking</b> is determined by the number of{" "}
+        <b>Price Feeds</b> that publisher has permissions to publish to.
+      </p>
+      {scoreTime && <EvaluationTime scoreTime={scoreTime} />}
+    </Explain>
+  );
+};
+
 export const ExplainPermissioned = ({
   scoreTime,
 }: {
