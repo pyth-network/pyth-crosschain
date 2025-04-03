@@ -134,7 +134,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     ))?;
     let (tx_exit, rx_exit) = watch::channel(false);
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
-    let rpc_metrics = Arc::new(RpcMetrics::new(metrics_registry.clone()).await);
+    let rpc_metrics: Arc<RpcMetrics> = Arc::new(RpcMetrics::new(metrics_registry.clone()).await);
 
     let mut tasks = Vec::new();
     for (chain_id, chain_config) in config.chains.clone() {
