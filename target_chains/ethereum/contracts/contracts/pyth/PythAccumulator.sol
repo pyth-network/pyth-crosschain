@@ -229,44 +229,22 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             uint64 prevPublishTime
         )
     {
-        unchecked {
-            bytes calldata encodedMessage;
-            uint16 messageSize = UnsafeCalldataBytesLib.toUint16(
-                encoded,
-                offset
-            );
-            offset += 2;
+        bytes calldata encodedMessage;
+        MessageType messageType;
+        (
+            encodedMessage,
+            messageType,
+            endOffset
+        ) = extractAndValidateEncodedMessage(encoded, offset, digest);
 
-            encodedMessage = UnsafeCalldataBytesLib.slice(
-                encoded,
-                offset,
-                messageSize
+        if (messageType == MessageType.PriceFeed) {
+            (priceInfo, priceId, prevPublishTime) = parsePriceFeedMessage(
+                encodedMessage,
+                1
             );
-            offset += messageSize;
+        } else revert PythErrors.InvalidUpdateData();
 
-            bool valid;
-            (valid, endOffset) = MerkleTree.isProofValid(
-                encoded,
-                offset,
-                digest,
-                encodedMessage
-            );
-            if (!valid) {
-                revert PythErrors.InvalidUpdateData();
-            }
-
-            MessageType messageType = MessageType(
-                UnsafeCalldataBytesLib.toUint8(encodedMessage, 0)
-            );
-            if (messageType == MessageType.PriceFeed) {
-                (priceInfo, priceId, prevPublishTime) = parsePriceFeedMessage(
-                    encodedMessage,
-                    1
-                );
-            } else revert PythErrors.InvalidUpdateData();
-
-            return (endOffset, priceInfo, priceId, prevPublishTime);
-        }
+        return (endOffset, priceInfo, priceId, prevPublishTime);
     }
 
     function extractTwapPriceInfoFromMerkleProof(
@@ -281,46 +259,69 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             PythInternalStructs.TwapPriceInfo memory twapPriceInfo,
             bytes32 priceId
         )
-    // TODO: Add the logic to extract the twap price info from the merkle proof
     {
-        unchecked {
-            bytes calldata encodedMessage;
-            uint16 messageSize = UnsafeCalldataBytesLib.toUint16(
-                encoded,
-                offset
-            );
-            offset += 2;
+        bytes calldata encodedMessage;
+        MessageType messageType;
+        (
+            encodedMessage,
+            messageType,
+            endOffset
+        ) = extractAndValidateEncodedMessage(encoded, offset, digest);
 
-            encodedMessage = UnsafeCalldataBytesLib.slice(
-                encoded,
-                offset,
-                messageSize
+        if (messageType == MessageType.TwapPriceFeed) {
+            (twapPriceInfo, priceId) = parseTwapPriceFeedMessage(
+                encodedMessage,
+                1
             );
-            offset += messageSize;
+        } else revert PythErrors.InvalidUpdateData();
 
-            bool valid;
-            (valid, endOffset) = MerkleTree.isProofValid(
-                encoded,
-                offset,
-                digest,
-                encodedMessage
-            );
-            if (!valid) {
-                revert PythErrors.InvalidUpdateData();
-            }
+        return (endOffset, twapPriceInfo, priceId);
+    }
 
-            MessageType messageType = MessageType(
-                UnsafeCalldataBytesLib.toUint8(encodedMessage, 0)
-            );
-            if (messageType == MessageType.TwapPriceFeed) {
-                (twapPriceInfo, priceId) = parseTwapPriceFeedMessage(
-                    encodedMessage,
-                    1
-                );
-            } else revert PythErrors.InvalidUpdateData();
+    function extractAndValidateEncodedMessage(
+        bytes calldata encoded,
+        uint offset,
+        bytes20 digest
+    )
+        private
+        pure
+        returns (
+            bytes calldata encodedMessage,
+            MessageType messageType,
+            uint endOffset
+        )
+    {
+        uint16 messageSize = UnsafeCalldataBytesLib.toUint16(encoded, offset);
+        offset += 2;
 
-            return (endOffset, twapPriceInfo, priceId);
+        encodedMessage = UnsafeCalldataBytesLib.slice(
+            encoded,
+            offset,
+            messageSize
+        );
+        offset += messageSize;
+
+        bool valid;
+        (valid, endOffset) = MerkleTree.isProofValid(
+            encoded,
+            offset,
+            digest,
+            encodedMessage
+        );
+        if (!valid) {
+            revert PythErrors.InvalidUpdateData();
         }
+
+        messageType = MessageType(
+            UnsafeCalldataBytesLib.toUint8(encodedMessage, 0)
+        );
+        if (
+            messageType != MessageType.PriceFeed &&
+            messageType != MessageType.TwapPriceFeed
+        ) {
+            revert PythErrors.InvalidUpdateData();
+        }
+        return (encodedMessage, messageType, endOffset);
     }
 
     function parsePriceFeedMessage(
