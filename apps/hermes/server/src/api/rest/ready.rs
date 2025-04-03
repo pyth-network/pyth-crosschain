@@ -9,7 +9,7 @@ use {
 };
 
 /// Endpoint that returns OK (200) only when the cache is fully hydrated.
-/// 
+///
 /// The cache is considered fully hydrated when all of the following conditions are met:
 /// - `has_completed_recently`: The latest completed update is recent (within the staleness threshold)
 /// - `is_not_behind`: The latest completed slot isn't too far behind the latest observed slot
