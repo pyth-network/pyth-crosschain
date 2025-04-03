@@ -27,6 +27,10 @@ const proxyCheckClient = PROXYCHECK_API_KEY
   : undefined;
 
 export const middleware = async (request: NextRequest) => {
+  // eslint-disable-next-line no-console
+  console.log("IP Allowlist:", IP_ALLOWLIST);
+  // eslint-disable-next-line no-console
+  console.log("Are they allowed?", isIpAllowlisted("163.116.252.75"));
   const ip = ipAddress(request);
   if (isIpAllowlisted(ip)) {
     return isBlockedSegment(request)
