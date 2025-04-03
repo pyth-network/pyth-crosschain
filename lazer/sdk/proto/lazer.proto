@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "publisher_update.proto";
+
+enum TransactionSignatureType {
+  ed25519 = 0;
+}
+
+message SignedLazerTransaction {
+  TransactionSignatureType signature_type = 1;
+  bytes signature = 2;
+  bytes transaction = 3;
+}
+
+message LazerTransaction {
+  oneof transaction {
+    PublisherUpdatePayload publisher_updates = 1;
+  }
+}
