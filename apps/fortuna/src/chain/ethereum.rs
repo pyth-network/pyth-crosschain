@@ -162,7 +162,7 @@ impl SignablePythContract {
             let provider = create_failover_provider(&chain_config.geth_rpc_addrs)?;
             Self::from_config_and_provider(chain_config, private_key, provider).await
         } else {
-            let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addrs.get(0).unwrap_or(&chain_config.geth_rpc_addr))?;
+            let provider = Provider::<Http>::try_from(chain_config.geth_rpc_addr.as_str())?;
             Self::from_config_and_provider(chain_config, private_key, provider).await
         }
     }
@@ -190,7 +190,7 @@ impl PythContract {
         let provider = if !chain_config.geth_rpc_addrs.is_empty() {
             create_failover_provider(&chain_config.geth_rpc_addrs)?
         } else {
-            Provider::<Http>::try_from(&chain_config.geth_rpc_addrs.get(0).unwrap_or(&chain_config.geth_rpc_addr))?
+            Provider::<Http>::try_from(chain_config.geth_rpc_addr.as_str())?
         };
 
         Ok(PythRandom::new(
@@ -201,7 +201,7 @@ impl PythContract {
 }
 
 impl InstrumentedPythContract {
-    pub fn from_config_with_metrics(
+    pub fn from_config_with_chain_metrics(
         chain_config: &EthereumConfig,
         chain_id: ChainId,
         metrics: Arc<RpcMetrics>,

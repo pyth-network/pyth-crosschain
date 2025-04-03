@@ -36,7 +36,7 @@ async fn inspect_chain(
     let rpc_provider = if !chain_config.geth_rpc_addrs.is_empty() {
         crate::eth_utils::utils::create_failover_provider(&chain_config.geth_rpc_addrs)?
     } else {
-        Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?
+        Provider::<Http>::try_from(chain_config.geth_rpc_addr.as_str())?
     };
     let multicall_exists = rpc_provider
         .get_code(ethers::contract::MULTICALL_ADDRESS, None)

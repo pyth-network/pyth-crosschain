@@ -78,7 +78,7 @@ pub async fn withdraw_fees_for_chain(
 
         match &tx_result {
             Some(receipt) => {
-                tracing::info!("Withdrawal transaction hash {:?}", receipt.transaction_hash);
+                tracing::info!("Withdrawal transaction hash {:?}", receipt.transaction_hash());
             }
             None => {
                 tracing::warn!("No transaction receipt. Unclear what happened to the transaction");

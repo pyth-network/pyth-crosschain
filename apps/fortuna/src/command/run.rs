@@ -217,7 +217,7 @@ async fn setup_chain_state(
     chain_config: &EthereumConfig,
     rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<BlockchainState> {
-    let contract = Arc::new(InstrumentedPythContract::from_config_with_metrics(
+    let contract = Arc::new(InstrumentedPythContract::from_config_with_chain_metrics(
         chain_config,
         chain_id.clone(),
         rpc_metrics,

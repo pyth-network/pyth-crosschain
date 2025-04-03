@@ -11,7 +11,7 @@ use {
 
 /// Run the entire random number generation protocol to produce a random number.
 pub async fn generate(opts: &GenerateOptions) -> Result<()> {
-    let contract = Arc::new(
+    let contract: Arc<SignablePythContract> = Arc::new(
         SignablePythContract::from_config_with_key(
             &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
             &opts.private_key,
