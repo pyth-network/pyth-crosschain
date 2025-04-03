@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
-import "@pythnetwork/entropy-sdk-solidity/EntropyConstants.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
@@ -11,6 +10,7 @@ import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@nomad-xyz/excessively-safe-call/src/ExcessivelySafeCall.sol";
 import "./EntropyState.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyStatusConstants.sol";
 
 // Entropy implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
@@ -252,8 +252,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
         req.status = isRequestWithCallback
-            ? EntropyConstants.STATUS_CALLBACK_NOT_STARTED
-            : EntropyConstants.STATUS_NO_CALLBACK;
+            ? EntropyStatusConstants.CALLBACK_NOT_STARTED
+            : EntropyStatusConstants.CALLBACK_NOT_NECESSARY;
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -409,7 +409,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     }
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
-    // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
+    // against the corresponding commitments in the in-flight request. If both values are validated, this method returns
     // the corresponding random number.
     //
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
@@ -429,7 +429,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
 
-        if (req.status != EntropyConstants.STATUS_NO_CALLBACK) {
+        if (req.status != EntropyStatusConstants.CALLBACK_NOT_NECESSARY) {
             revert EntropyErrors.InvalidRevealCall();
         }
 
@@ -474,8 +474,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
 
         if (
-            !(req.status == EntropyConstants.STATUS_CALLBACK_NOT_STARTED ||
-                req.status == EntropyConstants.STATUS_CALLBACK_FAILED)
+            !(req.status == EntropyStatusConstants.CALLBACK_NOT_STARTED ||
+                req.status == EntropyStatusConstants.CALLBACK_FAILED)
         ) {
             revert EntropyErrors.InvalidRevealCall();
         }
@@ -494,8 +494,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         // any reverts will be reported as an event. Any failing requests move to a failure state
         // at which point they can be recovered. The recovery flow invokes the callback directly
         // (no catching errors) which allows callers to easily see the revert reason.
-        if (req.status == EntropyConstants.STATUS_CALLBACK_NOT_STARTED) {
-            req.status = EntropyConstants.STATUS_CALLBACK_IN_PROGRESS;
+        if (req.status == EntropyStatusConstants.CALLBACK_NOT_STARTED) {
+            req.status = EntropyStatusConstants.CALLBACK_IN_PROGRESS;
             bool success;
             bytes memory ret;
             (success, ret) = callAddress.excessivelySafeCall(
@@ -509,7 +509,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                 )
             );
             // Reset status to not started here in case the transaction reverts.
-            req.status = EntropyConstants.STATUS_CALLBACK_NOT_STARTED;
+            req.status = EntropyStatusConstants.CALLBACK_NOT_STARTED;
 
             if (success) {
                 emit RevealedWithCallback(
@@ -530,7 +530,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber,
                     ret
                 );
-                req.status = EntropyConstants.STATUS_CALLBACK_FAILED;
+                req.status = EntropyStatusConstants.CALLBACK_FAILED;
             } else {
                 // The callback ran out of gas
                 // TODO: this case will go away once we add provider gas limits, so we're not putting in a custom error type.

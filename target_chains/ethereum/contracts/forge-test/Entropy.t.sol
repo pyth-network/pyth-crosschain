@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "@pythnetwork/entropy-sdk-solidity/EntropyConstants.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
@@ -11,6 +10,7 @@ import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyStatusConstants.sol";
 
 // TODO
 // - fuzz test?
@@ -805,7 +805,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 blockNumber: 1234,
                 requester: user1,
                 useBlockhash: false,
-                status: EntropyConstants.STATUS_CALLBACK_NOT_STARTED
+                status: EntropyStatusConstants.CALLBACK_NOT_STARTED
             })
         );
         vm.roll(1234);
@@ -1006,7 +1006,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertTrue(
-            reqAfterFailure.status == EntropyConstants.STATUS_CALLBACK_FAILED
+            reqAfterFailure.status == EntropyStatusConstants.CALLBACK_FAILED
         );
 
         // On the second attempt, the transaction should directly revert
@@ -1022,7 +1022,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertTrue(
-            reqAfterFailure.status == EntropyConstants.STATUS_CALLBACK_FAILED
+            reqAfterFailure.status == EntropyStatusConstants.CALLBACK_FAILED
         );
 
         // If the callback starts succeeding, we can invoke it and it emits the usual RevealedWithCallback event.
