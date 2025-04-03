@@ -135,7 +135,7 @@ pub trait Cache {
         ids: Vec<FeedId>,
         request_time: RequestTime,
         filter: MessageStateFilter,
-    ) -> Result<Vec<MessageState>>;    
+    ) -> Result<Vec<MessageState>>;
     async fn is_cache_ready(&self) -> bool;
 }
 
@@ -276,18 +276,18 @@ where
         Ok(cache.get(&slot).cloned())
     }
 
-    /// Checks if the cache contains sufficient data to serve requests. 
-    /// Specifically, TWAP requests -- to serve a TWAP of X seconds, there 
+    /// Checks if the cache contains sufficient data to serve requests.
+    /// Specifically, TWAP requests -- to serve a TWAP of X seconds, there
     /// needs to be X seconds of data in the cache. We need to serve TWAPs
-    /// from the cache since TwapMessages only exist in Hermes at the moment, 
+    /// from the cache since TwapMessages only exist in Hermes at the moment,
     /// not Benchmarks.
-    /// 
-    /// The cache is considered ready when it is at or near its maximum capacity.
+    ///
+    /// The cache is considered ready when it is at or near its maximum slot capacity.
     async fn is_cache_ready(&self) -> bool {
-        let message_cache = self.into().message_cache.read().await;
-        let cache_size = self.into().cache_size as usize;
-        
-        message_cache.len() >= (cache_size * 9 / 10)
+        let message_cache = self.into().accumulator_messages_cache.read().await;
+        let max_cache_size = self.into().cache_size as usize;
+
+        message_cache.len() >= (max_cache_size * 9 / 10)
     }
 }
 
