@@ -11,11 +11,11 @@ import "./PulseErrors.sol";
 abstract contract Pulse is IPulse, PulseState {
     function _initialize(
         address admin,
-        uint128 pythFeeInWei,
+        uint96 pythFeeInWei,
         address pythAddress,
         address defaultProvider,
         bool prefillRequestStorage,
-        uint256 exclusivityPeriodSeconds
+        uint32 exclusivityPeriodSeconds
     ) internal {
         require(admin != address(0), "admin is zero address");
         require(pythAddress != address(0), "pyth is zero address");
@@ -44,11 +44,6 @@ abstract contract Pulse is IPulse, PulseState {
                 req.publishTime = 1;
                 req.callbackGasLimit = 1;
                 req.requester = address(1);
-                req.numPriceIds = 0;
-                // Pre-warm the priceIds array storage
-                for (uint8 j = 0; j < MAX_PRICE_IDS; j++) {
-                    req.priceIds[j] = bytes32(0);
-                }
             }
         }
     }
@@ -58,7 +53,7 @@ abstract contract Pulse is IPulse, PulseState {
         address provider,
         uint64 publishTime,
         bytes32[] calldata priceIds,
-        uint256 callbackGasLimit
+        uint32 callbackGasLimit
     ) external payable override returns (uint64 requestSequenceNumber) {
         require(
             _state.providers[provider].isRegistered,
@@ -77,7 +72,7 @@ abstract contract Pulse is IPulse, PulseState {
         }
         requestSequenceNumber = _state.currentSequenceNumber++;
 
-        uint128 requiredFee = getFee(provider, callbackGasLimit, priceIds);
+        uint96 requiredFee = getFee(provider, callbackGasLimit, priceIds);
         if (msg.value < requiredFee) revert InsufficientFee();
 
         Request storage req = allocRequest(requestSequenceNumber);
@@ -85,13 +80,21 @@ abstract contract Pulse is IPulse, PulseState {
         req.publishTime = publishTime;
         req.callbackGasLimit = callbackGasLimit;
         req.requester = msg.sender;
-        req.numPriceIds = uint8(priceIds.length);
         req.provider = provider;
-        req.fee = SafeCast.toUint128(msg.value - _state.pythFeeInWei);
+        req.fee = SafeCast.toUint96(msg.value - _state.pythFeeInWei);
 
-        // Copy price IDs to storage
+        // Create array with the right size
+        req.priceIdPrefixes = new bytes8[](priceIds.length);
+
+        // Copy only the first 8 bytes of each price ID to storage
         for (uint8 i = 0; i < priceIds.length; i++) {
-            req.priceIds[i] = priceIds[i];
+            // Extract first 8 bytes of the price ID
+            bytes32 priceId = priceIds[i];
+            bytes8 prefix;
+            assembly {
+                prefix := priceId
+            }
+            req.priceIdPrefixes[i] = prefix;
         }
         _state.accruedFeesInWei += _state.pythFeeInWei;
 
@@ -119,12 +122,21 @@ abstract contract Pulse is IPulse, PulseState {
 
         // Verify priceIds match
         require(
-            priceIds.length == req.numPriceIds,
+            priceIds.length == req.priceIdPrefixes.length,
             "Price IDs length mismatch"
         );
-        for (uint8 i = 0; i < req.numPriceIds; i++) {
-            if (priceIds[i] != req.priceIds[i]) {
-                revert InvalidPriceIds(priceIds[i], req.priceIds[i]);
+        for (uint8 i = 0; i < req.priceIdPrefixes.length; i++) {
+            // Extract first 8 bytes of the provided price ID
+            bytes32 priceId = priceIds[i];
+            bytes8 prefix;
+            assembly {
+                prefix := priceId
+            }
+
+            // Compare with stored prefix
+            if (prefix != req.priceIdPrefixes[i]) {
+                // Now we can directly use the bytes8 prefix in the error
+                revert InvalidPriceIds(priceIds[i], req.priceIdPrefixes[i]);
             }
         }
 
@@ -222,31 +234,31 @@ abstract contract Pulse is IPulse, PulseState {
 
     function getFee(
         address provider,
-        uint256 callbackGasLimit,
+        uint32 callbackGasLimit,
         bytes32[] calldata priceIds
-    ) public view override returns (uint128 feeAmount) {
-        uint128 baseFee = _state.pythFeeInWei; // Fixed fee to Pyth
+    ) public view override returns (uint96 feeAmount) {
+        uint96 baseFee = _state.pythFeeInWei; // Fixed fee to Pyth
         // Note: The provider needs to set its fees to include the fee charged by the Pyth contract.
         // Ideally, we would be able to automatically compute the pyth fees from the priceIds, but the
         // fee computation on IPyth assumes it has the full updated data.
-        uint128 providerBaseFee = _state.providers[provider].baseFeeInWei;
-        uint128 providerFeedFee = SafeCast.toUint128(
+        uint96 providerBaseFee = _state.providers[provider].baseFeeInWei;
+        uint96 providerFeedFee = SafeCast.toUint96(
             priceIds.length * _state.providers[provider].feePerFeedInWei
         );
-        uint128 providerFeeInWei = _state.providers[provider].feePerGasInWei; // Provider's per-gas rate
+        uint96 providerFeeInWei = _state.providers[provider].feePerGasInWei; // Provider's per-gas rate
         uint256 gasFee = callbackGasLimit * providerFeeInWei; // Total provider fee based on gas
         feeAmount =
             baseFee +
             providerBaseFee +
             providerFeedFee +
-            SafeCast.toUint128(gasFee); // Total fee user needs to pay
+            SafeCast.toUint96(gasFee); // Total fee user needs to pay
     }
 
     function getPythFeeInWei()
         public
         view
         override
-        returns (uint128 pythFeeInWei)
+        returns (uint96 pythFeeInWei)
     {
         pythFeeInWei = _state.pythFeeInWei;
     }
@@ -367,9 +379,9 @@ abstract contract Pulse is IPulse, PulseState {
     }
 
     function registerProvider(
-        uint128 baseFeeInWei,
-        uint128 feePerFeedInWei,
-        uint128 feePerGasInWei
+        uint96 baseFeeInWei,
+        uint96 feePerFeedInWei,
+        uint96 feePerGasInWei
     ) external override {
         ProviderInfo storage provider = _state.providers[msg.sender];
         require(!provider.isRegistered, "Provider already registered");
@@ -382,9 +394,9 @@ abstract contract Pulse is IPulse, PulseState {
 
     function setProviderFee(
         address provider,
-        uint128 newBaseFeeInWei,
-        uint128 newFeePerFeedInWei,
-        uint128 newFeePerGasInWei
+        uint96 newBaseFeeInWei,
+        uint96 newFeePerFeedInWei,
+        uint96 newFeePerGasInWei
     ) external override {
         require(
             _state.providers[provider].isRegistered,
@@ -396,9 +408,9 @@ abstract contract Pulse is IPulse, PulseState {
             "Only provider or fee manager can invoke this method"
         );
 
-        uint128 oldBaseFee = _state.providers[provider].baseFeeInWei;
-        uint128 oldFeePerFeed = _state.providers[provider].feePerFeedInWei;
-        uint128 oldFeePerGas = _state.providers[provider].feePerGasInWei;
+        uint96 oldBaseFee = _state.providers[provider].baseFeeInWei;
+        uint96 oldFeePerFeed = _state.providers[provider].feePerFeedInWei;
+        uint96 oldFeePerGas = _state.providers[provider].feePerGasInWei;
         _state.providers[provider].baseFeeInWei = newBaseFeeInWei;
         _state.providers[provider].feePerFeedInWei = newFeePerFeedInWei;
         _state.providers[provider].feePerGasInWei = newFeePerGasInWei;
@@ -437,7 +449,7 @@ abstract contract Pulse is IPulse, PulseState {
         emit DefaultProviderUpdated(oldProvider, provider);
     }
 
-    function setExclusivityPeriod(uint256 periodSeconds) external override {
+    function setExclusivityPeriod(uint32 periodSeconds) external override {
         require(
             msg.sender == _state.admin,
             "Only admin can set exclusivity period"
@@ -447,7 +459,7 @@ abstract contract Pulse is IPulse, PulseState {
         emit ExclusivityPeriodUpdated(oldPeriod, periodSeconds);
     }
 
-    function getExclusivityPeriod() external view override returns (uint256) {
+    function getExclusivityPeriod() external view override returns (uint32) {
         return _state.exclusivityPeriodSeconds;
     }
 

@@ -10,41 +10,62 @@ contract PulseState {
     uint8 public constant MAX_PRICE_IDS = 10;
 
     struct Request {
+        // Slot 1: 8 + 8 + 4 + 12 = 32 bytes
         uint64 sequenceNumber;
         uint64 publishTime;
-        // TODO: this is going to absolutely explode gas costs. Need to do something smarter here.
-        // possible solution is to hash the price ids and store the hash instead.
-        // The ids themselves can be retrieved from the event.
-        bytes32[MAX_PRICE_IDS] priceIds;
-        uint8 numPriceIds; // Actual number of price IDs used
-        uint256 callbackGasLimit;
+        uint32 callbackGasLimit;
+        uint96 fee;
+        // Slot 2: 20 + 12 = 32 bytes
         address requester;
+        // 12 bytes padding
+
+        // Slot 3: 20 + 12 = 32 bytes
         address provider;
-        uint128 fee;
+        // 12 bytes padding
+
+        // Dynamic array starts at its own slot
+        // Store only first 8 bytes of each price ID to save gas
+        bytes8[] priceIdPrefixes;
     }
 
     struct ProviderInfo {
-        uint128 baseFeeInWei;
-        uint128 feePerFeedInWei;
-        uint128 feePerGasInWei;
+        // Slot 1: 12 + 12 + 8 = 32 bytes
+        uint96 baseFeeInWei;
+        uint96 feePerFeedInWei;
+        // 8 bytes padding
+
+        // Slot 2: 12 + 16 + 4 = 32 bytes
+        uint96 feePerGasInWei;
         uint128 accruedFeesInWei;
+        // 4 bytes padding
+
+        // Slot 3: 20 + 1 + 11 = 32 bytes
         address feeManager;
         bool isRegistered;
+        // 11 bytes padding
     }
 
     struct State {
+        // Slot 1: 20 + 4 + 8 = 32 bytes
         address admin;
-        uint128 pythFeeInWei;
-        uint128 accruedFeesInWei;
-        address pyth;
+        uint32 exclusivityPeriodSeconds;
         uint64 currentSequenceNumber;
+        // Slot 2: 20 + 8 + 4 = 32 bytes
+        address pyth;
+        uint64 firstUnfulfilledSeq;
+        // 4 bytes padding
+
+        // Slot 3: 20 + 12 = 32 bytes
         address defaultProvider;
-        uint256 exclusivityPeriodSeconds;
+        uint96 pythFeeInWei;
+        // Slot 4: 16 + 16 = 32 bytes
+        uint128 accruedFeesInWei;
+        // 16 bytes padding
+
+        // These take their own slots regardless of ordering
         Request[NUM_REQUESTS] requests;
         mapping(bytes32 => Request) requestsOverflow;
         mapping(address => ProviderInfo) providers;
-        uint64 firstUnfulfilledSeq; // All sequences before this are fulfilled
     }
-
     State internal _state;
 }

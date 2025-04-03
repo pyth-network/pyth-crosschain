@@ -21,11 +21,11 @@ contract PulseUpgradeable is
     function initialize(
         address owner,
         address admin,
-        uint128 pythFeeInWei,
+        uint96 pythFeeInWei,
         address pythAddress,
         address defaultProvider,
         bool prefillRequestStorage,
-        uint256 exclusivityPeriodSeconds
+        uint32 exclusivityPeriodSeconds
     ) external initializer {
         require(owner != address(0), "owner is zero address");
         require(admin != address(0), "admin is zero address");
