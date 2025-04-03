@@ -276,9 +276,12 @@ where
         Ok(cache.get(&slot).cloned())
     }
 
+    /// 
     async fn is_cache_ready(&self) -> bool {
         let message_cache = self.into().message_cache.read().await;
-        !message_cache.is_empty()
+        let cache_size = self.into().cache_size as usize;
+        
+        message_cache.len() >= (cache_size * 9 / 10)
     }
 }
 
