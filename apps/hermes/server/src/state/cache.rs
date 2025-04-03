@@ -136,6 +136,10 @@ pub trait Cache {
         request_time: RequestTime,
         filter: MessageStateFilter,
     ) -> Result<Vec<MessageState>>;
+    /// Checks if the cache contains sufficient data to serve requests.
+    /// 
+    /// The cache is considered ready when it is at or near its maximum capacity.
+    
     async fn is_cache_ready(&self) -> bool;
 }
 
