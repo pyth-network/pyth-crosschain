@@ -44,4 +44,15 @@ contract PythInternalStructs {
         uint16 chainId;
         bytes32 emitterAddress;
     }
+
+    struct TwapUpdateData {
+        uint offsetStart;
+        uint offsetEnd;
+        bytes20 digestStart;
+        bytes20 digestEnd;
+        uint8 numUpdatesStart;
+        uint8 numUpdatesEnd;
+        bytes encodedStart;
+        bytes encodedEnd;
+    }
 }
