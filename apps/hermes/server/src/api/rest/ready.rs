@@ -24,7 +24,7 @@ where
 {
     let state = &*state.state;
     let (aggregates_ready, metadata) = Aggregates::is_ready(state).await;
-    let cache_ready = Cache::is_ready(state).await;
+    let cache_ready = Cache::is_cache_ready(state).await;
     
     if aggregates_ready && cache_ready {
         (StatusCode::OK, "OK").into_response()

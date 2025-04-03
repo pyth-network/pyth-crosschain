@@ -137,7 +137,7 @@ pub trait Cache {
         filter: MessageStateFilter,
     ) -> Result<Vec<MessageState>>;
     /// 
-    async fn is_ready(&self) -> bool;
+    async fn is_cache_ready(&self) -> bool;
 }
 
 #[async_trait::async_trait]
@@ -278,7 +278,7 @@ where
     }
 
     /// 
-    async fn is_ready(&self) -> bool {
+    async fn is_cache_ready(&self) -> bool {
         let message_cache = self.into().message_cache.read().await;
         !message_cache.is_empty()
     }
