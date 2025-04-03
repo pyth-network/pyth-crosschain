@@ -12,14 +12,19 @@ import { useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { PublicKey, Connection } from "@solana/web3.js";
 import type { ComponentProps } from "react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 
 import WalletTesterIDL from "./wallet-tester-idl.json";
 import { StateType as ApiStateType, useApi } from "../../hooks/use-api";
-import { useData, StateType } from "../../hooks/use-data";
-import { useLogger } from "../../hooks/use-logger";
+import {
+  useAsync,
+  StateType as UseAsyncStateType,
+} from "../../hooks/use-async";
+import { useData, StateType as UseDataStateType } from "../../hooks/use-data";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
+
+const MAX_TEST_RETRIES = 10;
 
 export const WalletTester = () => (
   <div className="grid size-full place-content-center">
@@ -101,11 +106,11 @@ const WalletConnected = ({ wallet }: { wallet: AnchorWallet }) => {
   );
 
   switch (testedStatus.type) {
-    case StateType.NotLoaded:
-    case StateType.Loading: {
+    case UseDataStateType.NotLoaded:
+    case UseDataStateType.Loading: {
       return <Description>Loading...</Description>;
     }
-    case StateType.Error: {
+    case UseDataStateType.Error: {
       return (
         <Description>
           Uh oh, we ran into an issue while checking if your wallet has been
@@ -113,7 +118,7 @@ const WalletConnected = ({ wallet }: { wallet: AnchorWallet }) => {
         </Description>
       );
     }
-    case StateType.Loaded: {
+    case UseDataStateType.Loaded: {
       return testedStatus.data.hasTested ? (
         <p className="text-green-600">
           Your wallet has already been tested succesfully!
@@ -126,37 +131,57 @@ const WalletConnected = ({ wallet }: { wallet: AnchorWallet }) => {
 };
 
 const Tester = ({ wallet }: { wallet: AnchorWallet }) => {
-  const logger = useLogger();
   const toast = useToast();
-  const [tested, setTested] = useState(false);
   const { connection } = useConnection();
-  const test = useCallback(() => {
-    testWallet(connection, wallet)
+  const { state, execute } = useAsync(() => testWallet(connection, wallet));
+  const doTest = useCallback(() => {
+    execute()
       .then(() => {
-        setTested(true);
         toast.success("Successfully tested wallet, thank you!");
       })
       .catch((error: unknown) => {
-        logger.error(error);
         toast.error(error);
       });
-  }, [setTested, logger, toast, wallet, connection]);
+  }, [execute, toast]);
 
-  return tested ? (
-    <p className="text-green-600">Your wallet has been tested succesfully!</p>
-  ) : (
-    <>
-      <Description>
-        Please click the button below and accept the transaction in your wallet
-        to test the browser wallet compatibility. You will need 0.001 SOL.
-      </Description>
-      <div className="flex justify-center">
-        <Button className="px-10 py-4" size="nopad" onPress={test}>
-          Click to test
-        </Button>
-      </div>
-    </>
-  );
+  switch (state.type) {
+    case UseAsyncStateType.Base:
+    case UseAsyncStateType.Error:
+    case UseAsyncStateType.Running: {
+      return (
+        <>
+          <Description>
+            Please click the button below and accept the transaction in your
+            wallet to test the browser wallet compatibility. You will need 0.001
+            SOL.
+          </Description>
+          <div className="flex justify-center">
+            <Button
+              className="px-10 py-4"
+              size="nopad"
+              {...(state.type === UseAsyncStateType.Running
+                ? { isLoading: true }
+                : { onPress: doTest })}
+            >
+              Click to test
+            </Button>
+          </div>
+          {state.type === UseAsyncStateType.Error && (
+            <p className="mt-4 text-red-600">
+              Uh oh, an error occurred! Please try again
+            </p>
+          )}
+        </>
+      );
+    }
+    case UseAsyncStateType.Complete: {
+      return (
+        <p className="text-green-600">
+          Your wallet has been tested succesfully!
+        </p>
+      );
+    }
+  }
 };
 
 const getHasAlreadyTested = async (
@@ -178,7 +203,7 @@ const testWallet = async (connection: Connection, wallet: AnchorWallet) => {
   );
   const testMethod = walletTester.methods.test;
   if (testMethod) {
-    return sendTransactions(
+    await sendTransactions(
       await TransactionBuilder.batchIntoVersionedTransactions(
         wallet.publicKey,
         connection,
@@ -192,6 +217,7 @@ const testWallet = async (connection: Connection, wallet: AnchorWallet) => {
       ),
       connection,
       wallet,
+      MAX_TEST_RETRIES,
     );
   } else {
     throw new Error("No test method found in program");
