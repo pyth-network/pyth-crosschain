@@ -1,10 +1,11 @@
 [package]
 name = "pyth-lazer-protocol"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2021"
 description = "Pyth Lazer SDK - protocol types."
 license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
+build = "build.rs"
 
 [dependencies]
 byteorder = "1.5.0"
@@ -15,6 +16,7 @@ derive_more = { version = "1.0.0", features = ["from"] }
 itertools = "0.13.0"
 rust_decimal = "1.36.0"
 base64 = "0.22.1"
+prost = "0.13.5"
 
 [dev-dependencies]
 bincode = "1.3.3"
@@ -23,3 +25,6 @@ hex = "0.4.3"
 libsecp256k1 = "0.7.1"
 bs58 = "0.5.1"
 alloy-primitives = "0.8.19"
+
+[build-dependencies]
+prost-build = "0.13.5"
