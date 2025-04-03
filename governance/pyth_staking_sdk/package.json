@@ -34,7 +34,7 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1",
+    "@coral-xyz/anchor": "catalog:",
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/solana-utils": "workspace:*",
     "@solana/spl-governance": "^0.3.28",

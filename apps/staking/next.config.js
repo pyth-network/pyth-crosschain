@@ -60,12 +60,4 @@ export default {
         "https://web-api.pyth.network/publishers_ranking?cluster=pythnet",
     },
   ],
-
-  redirects: () => [
-    {
-      source: "/test",
-      destination: "https://staking-legacy.pyth.network/test",
-      permanent: false,
-    },
-  ],
 };
