@@ -1,0 +1,39 @@
+{
+  "address": "tstPARXbQ5yxVkRU2UcZRbYphzbUEW6t5ihzpLaafgz",
+  "metadata": {
+    "name": "wallet_tester",
+    "version": "1.0.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "test",
+      "discriminator": [163, 36, 134, 53, 232, 223, 146, 222],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "test_receipt",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "payer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    }
+  ]
+}

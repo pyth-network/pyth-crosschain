@@ -50,6 +50,7 @@ catalog:
   "@axe-core/react": ^4.10.1
   "@bonfida/spl-name-service": ^3.0.10
   "@clickhouse/client": ^1.11.0
+  "@coral-xyz/anchor": ^0.30.1
   "@cprussin/eslint-config": ^4.0.2
   "@cprussin/jest-config": ^2.0.2
   "@cprussin/prettier-config": ^2.2.2
