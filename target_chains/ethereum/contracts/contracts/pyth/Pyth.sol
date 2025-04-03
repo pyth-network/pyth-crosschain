@@ -314,6 +314,7 @@ abstract contract Pyth is
     )
         external
         payable
+        override
         returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds)
     {
         {
