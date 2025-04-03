@@ -45,6 +45,7 @@ contract PythInternalStructs {
         bytes32 emitterAddress;
     }
 
+    // Define a struct that encapsulates these related variables. This will reduce the number of individual variables on the stack.
     struct TwapUpdateData {
         uint offsetStart;
         uint offsetEnd;
