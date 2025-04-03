@@ -22,6 +22,7 @@ pub struct ChainIdLabel {
 }
 
 pub struct KeeperMetrics {
+    // TODO: reevaluate what metrics are useful for argus
     pub current_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number: Family<AccountLabel, Gauge>,
     pub balance: Family<AccountLabel, Gauge<f64, AtomicU64>>,
