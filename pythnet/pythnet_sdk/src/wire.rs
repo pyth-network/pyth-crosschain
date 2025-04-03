@@ -139,10 +139,13 @@ pub mod v1 {
 
 #[cfg(test)]
 mod tests {
-    use crate::wire::{
-        array,
-        v1::{AccumulatorUpdateData, Proof},
-        Deserializer, PrefixedVec, Serializer,
+    use crate::{
+        messages::Message,
+        wire::{
+            array, from_slice,
+            v1::{AccumulatorUpdateData, Proof},
+            Deserializer, PrefixedVec, Serializer,
+        },
     };
 
     // Test the arbitrary fixed sized array serialization implementation.
@@ -519,5 +522,21 @@ mod tests {
         // Test if bumping major version makes it incompatible
         buffer[4] = 0x03;
         AccumulatorUpdateData::try_from_slice(&buffer).unwrap_err();
+    }
+
+    // Test a real message for the accumulator update. Apart from testing it's quite useful for debugging.
+    #[test]
+    fn test_accumulator_fixture() {
+        let update = "504e41550100000003b801000000040d0039e043cb20b7fa5bc764e470b91e7f5f21658cdb76d27d83a592bcee4e756c9c43522b152b2a40c7f05d165d67e4916ad62386ba902d7e88753ca1168873d2600102dd5fcf0c759235eb74f188b5631e6e090e66620d764db504c8ca7cfd3740a668345f71052f48f5604badb6dfd0a5a3ece87e70fad9cb29919683d32e811d0deb010392ec1f1d4e0dcdc8acc8bef450e14b93daf133018bf3789bb1baedd008e1e6bc53f9cb0d83544da4ddff2ed1bd8c7b3dfb6e96ea40f9fb6d9c6c881caf40ed7901040801d6dcbc18f7706370cc511328777f7b61688368c299fdd4abe38860572281461b54cc6b124b8bdaeed12637b4832e46eede678b3dc835eae1149a9ff04ef000067db45bbd2584875d8989563debaf5146382764fee5b872f02e2facd637e68e274403499bfd5891fdc55e0277577bda68693e3c714e2c735f4fb2023dd5c5f19900087a494a169ede6ab8b67a639a2eefeabdbaa43f36319961ae5f683244a4913dfc03959824f8213ea8a9fb47b59d47524c8ba9e853fb3198f0c3302bf60075dde3010aa1c9e7fb618fc05077f9efc29d35e19c01ea4d18816440c8a2d3c1aad1b70bec3a10d35cc23931920e4b7adcfd698ab7a892cc9de1cd9ac11d7af120b92fbd78010b32548b109e22f5b9c8efdd896c5d31094d526b0f083b76022587f55211557e0323f02959b0f03370a6a76aca522aceef623b5767dbfa38a4135c5815687043d0010ca0aaf29729f468deda49cb972d1205f4c87c2b0ea46ca2b3c93f70698ff4d70469a188c3c6a0bc884c1b60d3d3d0e849e0adbfa849442e44a20042851bb52c75000dcf7faa0c86813ebe002e41956d8f5b809f61e2a4bc6a6633f482b51ee0d32ae62bc2330155ef00abcfeea44527be8312da5d50a8b7235f4edf15f796d5518ec3010fcf77947c5119fac256ae85c209672f158563d312a6bb74b613aaa94bab9846c9528f8f13f8621024e3d12b93538856c06d16512095a47ae26e63954446ac68330110bbb705d5357a1d78b26446a5de6501da28e7c19fb43ef9f56d43f341c72c362e577c61cdbe8d83fc38fd31874e86ebc9d6f1dee1fbba87ac49aa8c55bf4d95660011785631988bc90b35d3c45229030b46c1ac5181637102e5c2a46cdb25be0f5fa5267ccb390ee44235c91aaf1a0e5f442167a0f710c4d9830c48ae8c9558ae96550167edb5da00000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71000000000759b33f014155575600000000000c66fad50000271030c91600a5e258569a690c96d59f013978c7897601005500879551021853eec7a7dc827578e8e69da7e4fa8148339aa0d3d5296405be4b1a00000000393d2ba80000000000a82f9afffffff80000000067edb5da0000000067edb5da000000003cf06b08000000000024b7510cf5d9c5eb9e3032d750d0b65dedd7527449e4187c6ea25cb08d65341198760d09b01db92364e60efa1758472f0130bc041ad1f711e373a6ffa23d69abff34d6b927acd5e1617cac4fba36bfc75da71daf9cd01698dfb623063e58bb20ff0c9d1752460efb4c6f961e46a35bf9540e01e6e46cd2090072d4702124d804626184e94101a115dbec3aeaf2dfa3156eb709e8787574ef406356389da2f3b5874d0bd02092f94a8ede60d38cb26904cf10bd74511a706062466dc91ad4608249999aafde5222b68cc38ebc1f80eb83916a29a95284a5680579734f02f962129aa35778e71b1fe834141cafa3a2dca40f25fed9";
+        let update = hex::decode(update).unwrap();
+        let update = AccumulatorUpdateData::try_from_slice(&update).unwrap();
+        let Proof::WormholeMerkle { vaa: _, updates } = update.proof;
+        println!("Updates: {:?}", updates.len());
+        for update in updates {
+            let message: Message =
+                from_slice::<byteorder::BigEndian, _>(update.message.as_ref()).unwrap();
+            let feed_id_hex = hex::encode(message.feed_id());
+            println!("id: {}, Message: {:?}", feed_id_hex, message);
+        }
     }
 }
