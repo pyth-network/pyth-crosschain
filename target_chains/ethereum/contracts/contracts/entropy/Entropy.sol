@@ -521,6 +521,11 @@ abstract contract Entropy is IEntropy, EntropyState {
             bytes memory ret;
             uint256 startingGas = gasleft();
             (success, ret) = callAddress.excessivelySafeCall(
+                // Warning: the provided gas limit below is only an *upper bound* on the gas provided to the call.
+                // If the current context has less gas the desired value, 63/64ths of the current context's gas will
+                // be provided instead. (See CALL opcode docs here https://www.evm.codes/?fork=cancun#f1)
+                // Consequently, out-of-gas reverts need to be handled carefully to ensure that the callback
+                // was truly provided with a sufficient amount of gas.                
                 uint256(req.gasLimit10k) * 10000,
                 256, // copy at most 256 bytes of the return value into ret.
                 abi.encodeWithSelector(
@@ -543,7 +548,9 @@ abstract contract Entropy is IEntropy, EntropyState {
                 );
                 clearRequest(provider, sequenceNumber);
             } else if (ret.length > 0 || startingGas - endingGas >= uint256(req.gasLimit10k) * 10000) {
-                // Callback reverted for some reason. Note ret.length == 0 implies out of gas.
+                // The callback reverted for some reason.
+                // If ret.length == 0, then the callback ran out of gas. In this case, ensure that the
+                // callback was provided with sufficient gas.
                 emit CallbackFailed(
                     provider,
                     req.requester,
@@ -555,7 +562,13 @@ abstract contract Entropy is IEntropy, EntropyState {
                 );
                 req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
             } else {
-                require(false, "provider needs to send more gas");
+                // Callback reverted by running out of gas, but the calling context did not have enough gas
+                // to run the callback. This is a corner case that can happen due to the nuances of gas passing
+                // in calls (see the comment on the call above).
+                // 
+                // (Note that reverting here plays nicely with the estimateGas RPC method, which binary searches for 
+                // the smallest gas value that causes the transaction to *succeed*. See https://github.com/ethereum/go-ethereum/pull/3587 )
+                revert EntropyErrors.InsufficientGas();
             }
         } else {
             // This case uses the checks-effects-interactions pattern to avoid reentry attacks

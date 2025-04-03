@@ -1226,7 +1226,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(reqAfterReveal.sequenceNumber, 0);
     }
 
+    // Test the corner case caused by the CALL opcode passing at most 63/64ths of the current gas
+    // to the sub-call.
     function testRequestWithCallbackUsingTooMuchGas2() public {
+        // With a 64M gas limit, we will pass ~63M gas to the callback (which is insufficient), but still 
+        // have ~1M gas to execute code within the revealWithCallback method, which should be enough to
+        // run all of the logic subsequent to the excessivelySafeCall.
         uint32 defaultGasLimit = 64000000;
         vm.prank(provider1);
         random.setDefaultGasLimit(defaultGasLimit);
@@ -1246,98 +1251,15 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             assignedSequenceNumber
         );
 
-        // Verify the gas limit was set correctly
-        // assertEq(req.gasLimit10k, 10);
-
         // The transaction reverts if the provider does not provide enough gas to forward
         // the gasLimit to the callback transaction.
-        vm.expectRevert();
+        vm.expectRevert(EntropyErrors.InsufficientGas.selector);
         random.revealWithCallback{gas: defaultGasLimit - 10000}(
             provider1,
             assignedSequenceNumber,
             userRandomNumber,
             provider1Proofs[assignedSequenceNumber]
         );
-
-        /*
-        // If called with enough gas, the transaction should succeed, but the callback should fail because
-        // it uses too much gas.
-        vm.expectEmit(false, false, false, true, address(random));
-        emit CallbackFailed(
-            provider1,
-            address(consumer),
-            assignedSequenceNumber,
-            userRandomNumber,
-            provider1Proofs[assignedSequenceNumber],
-            random.combineRandomValues(
-                userRandomNumber,
-                provider1Proofs[assignedSequenceNumber],
-                0
-            ),
-            // out-of-gas reverts have an empty bytes array as the return value.
-            ""
-        );
-        random.revealWithCallback(
-            provider1,
-            assignedSequenceNumber,
-            userRandomNumber,
-            provider1Proofs[assignedSequenceNumber]
-        );
-
-        // Verify request is still active after failure
-        EntropyStructs.Request memory reqAfterFailure = random.getRequest(
-            provider1,
-            assignedSequenceNumber
-        );
-        assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
-        assertEq(
-            reqAfterFailure.status,
-            EntropyConstants.STATUS_CALLBACK_FAILED
-        );
-
-        // A subsequent attempt passing insufficient gas should also revert
-        vm.expectRevert();
-        random.revealWithCallback{gas: defaultGasLimit - 10000}(
-            provider1,
-            assignedSequenceNumber,
-            userRandomNumber,
-            provider1Proofs[assignedSequenceNumber]
-        );
-
-        // Again, request stays active after failure
-        reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
-        assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
-        assertEq(
-            reqAfterFailure.status,
-            EntropyConstants.STATUS_CALLBACK_FAILED
-        );
-
-        // Calling without a gas limit should succeed
-        vm.expectEmit(false, false, false, true, address(random));
-        emit RevealedWithCallback(
-            reqAfterFailure,
-            userRandomNumber,
-            provider1Proofs[assignedSequenceNumber],
-            random.combineRandomValues(
-                userRandomNumber,
-                provider1Proofs[assignedSequenceNumber],
-                0
-            )
-        );
-        random.revealWithCallback(
-            provider1,
-            assignedSequenceNumber,
-            userRandomNumber,
-            provider1Proofs[assignedSequenceNumber]
-        );
-
-        // Verify request is cleared after successful reveal
-        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
-            provider1,
-            assignedSequenceNumber
-        );
-        assertEq(reqAfterReveal.sequenceNumber, 0);
-        */
     }
 
     function testLastRevealedTooOld() public {

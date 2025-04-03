@@ -43,4 +43,6 @@ library EntropyErrors {
     error LastRevealedTooOld();
     // A more recent commitment is already revealed on-chain
     error UpdateTooOld();
+    // Not enough gas was provided to the function to execute the callback with the desired amount of gas.
+    error InsufficientGas();
 }
