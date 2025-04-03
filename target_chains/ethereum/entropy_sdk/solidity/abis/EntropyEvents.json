@@ -265,7 +265,7 @@
           },
           {
             "internalType": "uint8",
-            "name": "status",
+            "name": "callbackStatus",
             "type": "uint8"
           }
         ],
@@ -344,7 +344,7 @@
           },
           {
             "internalType": "uint8",
-            "name": "status",
+            "name": "callbackStatus",
             "type": "uint8"
           }
         ],
@@ -399,7 +399,7 @@
           },
           {
             "internalType": "uint8",
-            "name": "status",
+            "name": "callbackStatus",
             "type": "uint8"
           }
         ],
@@ -478,7 +478,7 @@
           },
           {
             "internalType": "uint8",
-            "name": "status",
+            "name": "callbackStatus",
             "type": "uint8"
           }
         ],

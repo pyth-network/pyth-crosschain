@@ -805,7 +805,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 blockNumber: 1234,
                 requester: user1,
                 useBlockhash: false,
-                status: EntropyStatusConstants.CALLBACK_NOT_STARTED
+                callbackStatus: EntropyStatusConstants.CALLBACK_NOT_STARTED
             })
         );
         vm.roll(1234);
@@ -1006,7 +1006,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertTrue(
-            reqAfterFailure.status == EntropyStatusConstants.CALLBACK_FAILED
+            reqAfterFailure.callbackStatus ==
+                EntropyStatusConstants.CALLBACK_FAILED
         );
 
         // On the second attempt, the transaction should directly revert
@@ -1022,7 +1023,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertTrue(
-            reqAfterFailure.status == EntropyStatusConstants.CALLBACK_FAILED
+            reqAfterFailure.callbackStatus ==
+                EntropyStatusConstants.CALLBACK_FAILED
         );
 
         // If the callback starts succeeding, we can invoke it and it emits the usual RevealedWithCallback event.

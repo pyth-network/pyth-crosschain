@@ -60,7 +60,7 @@ contract EntropyStructs {
         // If true, incorporate the blockhash of blockNumber into the generated random value.
         bool useBlockhash;
         // Status flag for requests with callbacks. See EntropyConstants for the possible values of this flag.
-        uint8 status;
+        uint8 callbackStatus;
         // 2 bytes of space left in this struct.
     }
 }

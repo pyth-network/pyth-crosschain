@@ -251,7 +251,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
-        req.status = isRequestWithCallback
+        req.callbackStatus = isRequestWithCallback
             ? EntropyStatusConstants.CALLBACK_NOT_STARTED
             : EntropyStatusConstants.CALLBACK_NOT_NECESSARY;
     }
@@ -429,7 +429,9 @@ abstract contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
 
-        if (req.status != EntropyStatusConstants.CALLBACK_NOT_NECESSARY) {
+        if (
+            req.callbackStatus != EntropyStatusConstants.CALLBACK_NOT_NECESSARY
+        ) {
             revert EntropyErrors.InvalidRevealCall();
         }
 
@@ -474,8 +476,9 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
 
         if (
-            !(req.status == EntropyStatusConstants.CALLBACK_NOT_STARTED ||
-                req.status == EntropyStatusConstants.CALLBACK_FAILED)
+            !(req.callbackStatus ==
+                EntropyStatusConstants.CALLBACK_NOT_STARTED ||
+                req.callbackStatus == EntropyStatusConstants.CALLBACK_FAILED)
         ) {
             revert EntropyErrors.InvalidRevealCall();
         }
@@ -494,8 +497,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         // any reverts will be reported as an event. Any failing requests move to a failure state
         // at which point they can be recovered. The recovery flow invokes the callback directly
         // (no catching errors) which allows callers to easily see the revert reason.
-        if (req.status == EntropyStatusConstants.CALLBACK_NOT_STARTED) {
-            req.status = EntropyStatusConstants.CALLBACK_IN_PROGRESS;
+        if (req.callbackStatus == EntropyStatusConstants.CALLBACK_NOT_STARTED) {
+            req.callbackStatus = EntropyStatusConstants.CALLBACK_IN_PROGRESS;
             bool success;
             bytes memory ret;
             (success, ret) = callAddress.excessivelySafeCall(
@@ -509,7 +512,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                 )
             );
             // Reset status to not started here in case the transaction reverts.
-            req.status = EntropyStatusConstants.CALLBACK_NOT_STARTED;
+            req.callbackStatus = EntropyStatusConstants.CALLBACK_NOT_STARTED;
 
             if (success) {
                 emit RevealedWithCallback(
@@ -530,7 +533,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber,
                     ret
                 );
-                req.status = EntropyStatusConstants.CALLBACK_FAILED;
+                req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
             } else {
                 // The callback ran out of gas
                 // TODO: this case will go away once we add provider gas limits, so we're not putting in a custom error type.
