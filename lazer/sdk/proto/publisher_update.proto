@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package pyth_lazer;
+
 message PublisherUpdatePayload {
   repeated PublisherUpdate updates = 1;
   uint64 batch_timestamp_us = 2;
