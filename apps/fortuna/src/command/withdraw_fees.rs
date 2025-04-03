@@ -22,7 +22,7 @@ pub async fn withdraw_fees(opts: &WithdrawFeesOptions) -> Result<()> {
         Some(chain_id) => {
             let chain_config = &config.get_chain_config(&chain_id)?;
             let contract =
-                SignablePythContract::from_config(chain_config, &private_key_string).await?;
+                SignablePythContract::from_config_with_key(chain_config, &private_key_string).await?;
 
             withdraw_fees_for_chain(
                 contract,
@@ -36,7 +36,7 @@ pub async fn withdraw_fees(opts: &WithdrawFeesOptions) -> Result<()> {
             for (chain_id, chain_config) in config.chains.iter() {
                 tracing::info!("Withdrawing fees for chain: {}", chain_id);
                 let contract =
-                    SignablePythContract::from_config(chain_config, &private_key_string).await?;
+                    SignablePythContract::from_config_with_key(chain_config, &private_key_string).await?;
 
                 withdraw_fees_for_chain(
                     contract,
@@ -78,7 +78,7 @@ pub async fn withdraw_fees_for_chain(
 
         match &tx_result {
             Some(receipt) => {
-                tracing::info!("Withdrawal transaction hash {:?}", receipt.transaction_hash);
+                tracing::info!("Withdrawal transaction hash {:?}", receipt.transaction_hash());
             }
             None => {
                 tracing::warn!("No transaction receipt. Unclear what happened to the transaction");

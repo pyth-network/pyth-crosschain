@@ -33,7 +33,11 @@ async fn inspect_chain(
     num_requests: u64,
     multicall_batch_size: u64,
 ) -> Result<()> {
-    let rpc_provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+    let rpc_provider = if !chain_config.geth_rpc_addrs.is_empty() {
+        crate::eth_utils::utils::create_failover_provider(&chain_config.geth_rpc_addrs)?
+    } else {
+        Provider::<Http>::try_from(chain_config.geth_rpc_addr.as_str())?
+    };
     let multicall_exists = rpc_provider
         .get_code(ethers::contract::MULTICALL_ADDRESS, None)
         .await
@@ -41,7 +45,7 @@ async fn inspect_chain(
         .len()
         > 0;
 
-    let contract = PythContract::from_config(chain_config)?;
+    let contract = PythContract::from_config_basic(chain_config)?;
     let entropy_provider = contract.get_default_provider().call().await?;
     let provider_info = contract.get_provider_info(entropy_provider).call().await?;
     let mut current_request_number = provider_info.sequence_number;

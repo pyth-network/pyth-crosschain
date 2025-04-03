@@ -107,8 +107,11 @@ impl Config {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EthereumConfig {
-    /// URL of a Geth RPC endpoint to use for interacting with the blockchain.
-    /// TODO: Change type from String to Url
+    #[serde(default = "default_geth_rpc_addrs")]
+    pub geth_rpc_addrs: Vec<String>,
+
+    #[serde(skip_serializing)]
+    #[deprecated(note = "Use geth_rpc_addrs instead")]
     pub geth_rpc_addr: String,
 
     /// URL of a Geth RPC wss endpoint to use for subscribing to blockchain events.
@@ -200,6 +203,10 @@ fn default_priority_fee_multiplier_pct() -> u64 {
 
 fn default_backlog_range() -> u64 {
     1000
+}
+
+fn default_geth_rpc_addrs() -> Vec<String> {
+    Vec::new()
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
