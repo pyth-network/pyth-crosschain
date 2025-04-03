@@ -136,6 +136,8 @@ pub trait Cache {
         request_time: RequestTime,
         filter: MessageStateFilter,
     ) -> Result<Vec<MessageState>>;
+    /// 
+    async fn is_ready(&self) -> bool;
 }
 
 #[async_trait::async_trait]
@@ -273,6 +275,12 @@ where
     async fn fetch_wormhole_merkle_state(&self, slot: Slot) -> Result<Option<WormholeMerkleState>> {
         let cache = self.into().wormhole_merkle_state_cache.read().await;
         Ok(cache.get(&slot).cloned())
+    }
+
+    /// 
+    async fn is_ready(&self) -> bool {
+        let message_cache = self.into().message_cache.read().await;
+        !message_cache.is_empty()
     }
 }
 
