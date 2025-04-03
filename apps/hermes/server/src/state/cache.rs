@@ -136,7 +136,6 @@ pub trait Cache {
         request_time: RequestTime,
         filter: MessageStateFilter,
     ) -> Result<Vec<MessageState>>;
-    ///
     async fn is_cache_ready(&self) -> bool;
 }
 
@@ -277,7 +276,6 @@ where
         Ok(cache.get(&slot).cloned())
     }
 
-    ///
     async fn is_cache_ready(&self) -> bool {
         let message_cache = self.into().message_cache.read().await;
         !message_cache.is_empty()
