@@ -1,4 +1,4 @@
-import { createPublicClient, http, parseEventLogs, publicActions } from "viem";
+import { createPublicClient, http, parseEventLogs, publicActions, keccak256 } from "viem";
 import { z } from "zod";
 
 import { EntropyAbi } from "./entropy-abi";
@@ -73,3 +73,143 @@ const revelationSchema = z.object({
     data: z.string(),
   }),
 });
+
+export async function getAllRequests(chain: keyof typeof EntropyDeployments) {
+  const deployment = EntropyDeployments[chain];
+  if (!deployment) {
+    throw new Error(`Invalid chain: ${chain}`);
+  }
+
+  try {
+    const client = createPublicClient({
+      transport: http(deployment.rpc),
+    }).extend(publicActions);
+
+    // Get the latest block number
+    const latestBlock = await client.getBlockNumber();
+
+    // Look back 100 blocks for requests
+    const fromBlock = latestBlock - BigInt(100);
+
+    console.log(`Fetching logs for chain ${chain} from block ${fromBlock} to ${latestBlock}`);
+    console.log(`Contract address: ${deployment.address}`);
+
+    // Get logs using the event from the ABI
+    const logs = await client.getLogs({
+      address: deployment.address as `0x${string}`,
+      fromBlock,
+      toBlock: latestBlock,
+      event: EntropyAbi.find(event => event.name === "RequestedWithCallback" && event.type === "event")!,
+    });
+
+    console.log(`Found ${logs.length} logs for chain ${chain}`);
+
+    return logs.map(log => ({
+      chain,
+      network: deployment.network,
+      provider: log.args.provider!,
+      sequenceNumber: log.args.sequenceNumber!,
+      userRandomNumber: log.args.userRandomNumber!,
+      transactionHash: log.transactionHash,
+      blockNumber: log.blockNumber,
+    }));
+  } catch (error) {
+    console.error(`Error fetching logs for chain ${chain}:`, error);
+    return [];
+  }
+}
+
+export async function getRequestBySequenceNumber(
+  chain: keyof typeof EntropyDeployments,
+  sequenceNumber: string
+) {
+  const deployment = EntropyDeployments[chain];
+  if (!deployment) {
+    throw new Error(`Invalid chain: ${chain}`);
+  }
+
+  try {
+    const client = createPublicClient({
+      transport: http(deployment.rpc),
+    }).extend(publicActions);
+
+    // Get the latest block number
+    const latestBlock = await client.getBlockNumber();
+
+    // Look back 10000 blocks for requests
+    const fromBlock = latestBlock - BigInt(10_000);
+
+    // Get logs for the specific sequence number
+    const logs = await client.getLogs({
+      address: deployment.address as `0x${string}`,
+      fromBlock: fromBlock,
+      toBlock: latestBlock,
+      event: EntropyAbi.find(event => event.name === "RequestedWithCallback" && event.type === "event")!,
+      args: {
+        sequenceNumber: BigInt(sequenceNumber)
+      }
+    });
+
+    if (logs.length > 0) {
+      const log = logs[0] as {
+        args: {
+          provider: `0x${string}`;
+          sequenceNumber: bigint;
+          userRandomNumber: `0x${string}`;
+        };
+        transactionHash: `0x${string}`;
+        blockNumber: bigint;
+      };
+
+      return {
+        chain,
+        network: deployment.network,
+        provider: log.args.provider,
+        sequenceNumber: log.args.sequenceNumber,
+        userRandomNumber: log.args.userRandomNumber,
+        transactionHash: log.transactionHash,
+        blockNumber: log.blockNumber,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Error searching for sequence number ${sequenceNumber} on chain ${chain}:`, error);
+    return null;
+  }
+}
+
+export async function getRequestByTransactionHash(
+  chain: keyof typeof EntropyDeployments,
+  txHash: string
+) {
+  const deployment = EntropyDeployments[chain];
+  if (!deployment) {
+    throw new Error(`Invalid chain: ${chain}`);
+  }
+
+  try {
+    const { provider, sequenceNumber, userRandomNumber } = await fetchInfoFromTx(txHash, deployment);
+
+    const client = createPublicClient({
+      transport: http(deployment.rpc),
+    }).extend(publicActions);
+
+    const receipt = await client.getTransactionReceipt({
+      hash: txHash as `0x${string}`,
+    });
+
+    return {
+      chain,
+      network: deployment.network,
+      provider,
+      sequenceNumber,
+      userRandomNumber,
+      transactionHash: txHash as `0x${string}`,
+      blockNumber: receipt.blockNumber,
+    };
+  } catch (error) {
+    console.error(`Error fetching request for transaction ${txHash} on chain ${chain}:`, error);
+    return null;
+  }
+}
