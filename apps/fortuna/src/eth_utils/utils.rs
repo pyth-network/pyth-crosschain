@@ -6,9 +6,13 @@ use {
     ethers::{
         contract::ContractCall,
         middleware::Middleware,
+        providers::{Http, Provider},
         types::{TransactionReceipt, U256},
     },
-    std::sync::{atomic::AtomicU64, Arc},
+    std::{
+        str::FromStr,
+        sync::{atomic::AtomicU64, Arc},
+    },
     tokio::time::{timeout, Duration},
     tracing,
 };
@@ -324,4 +328,25 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     }
 
     Ok(receipt)
+}
+
+pub fn create_failover_provider(rpc_addrs: &[String]) -> Result<Provider<Http>> {
+    if rpc_addrs.is_empty() {
+        return Err(anyhow!("No RPC addresses provided"));
+    }
+
+    if rpc_addrs.len() == 1 {
+        return Provider::<Http>::try_from(&rpc_addrs[0])
+            .map_err(|e| anyhow!("Failed to create provider from {}: {:?}", rpc_addrs[0], e));
+    }
+
+    let providers = rpc_addrs
+        .iter()
+        .map(|addr| {
+            Http::from_str(addr)
+                .map_err(|e| anyhow!("Failed to create HTTP provider from {}: {:?}", addr, e))
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(Provider::new(providers[0].clone()))
 }

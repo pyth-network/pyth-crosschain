@@ -7,9 +7,11 @@ use {
         config::EthereumConfig,
         eth_utils::{
             eth_gas_oracle::EthProviderOracle,
+            failover_middleware::FailoverMiddleware,
             legacy_tx_middleware::LegacyTxMiddleware,
             nonce_manager::NonceManagerMiddleware,
             traced_client::{RpcMetrics, TracedClient},
+            utils::create_failover_provider,
         },
     },
     anyhow::{anyhow, Error, Result},
@@ -156,8 +158,13 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
 
 impl SignablePythContract {
     pub async fn from_config(chain_config: &EthereumConfig, private_key: &str) -> Result<Self> {
-        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
-        Self::from_config_and_provider(chain_config, private_key, provider).await
+        if !chain_config.geth_rpc_addrs.is_empty() {
+            let provider = create_failover_provider(&chain_config.geth_rpc_addrs)?;
+            Self::from_config_and_provider(chain_config, private_key, provider).await
+        } else {
+            let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+            Self::from_config_and_provider(chain_config, private_key, provider).await
+        }
     }
 }
 
@@ -168,14 +175,23 @@ impl InstrumentedSignablePythContract {
         chain_id: ChainId,
         metrics: Arc<RpcMetrics>,
     ) -> Result<Self> {
-        let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
+        let rpc_addr = if !chain_config.geth_rpc_addrs.is_empty() {
+            &chain_config.geth_rpc_addrs[0]
+        } else {
+            &chain_config.geth_rpc_addr
+        };
+        let provider = TracedClient::new(chain_id, rpc_addr, metrics)?;
         Self::from_config_and_provider(chain_config, private_key, provider).await
     }
 }
 
 impl PythContract {
     pub fn from_config(chain_config: &EthereumConfig) -> Result<Self> {
-        let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+        let provider = if !chain_config.geth_rpc_addrs.is_empty() {
+            create_failover_provider(&chain_config.geth_rpc_addrs)?
+        } else {
+            Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?
+        };
 
         Ok(PythRandom::new(
             chain_config.contract_addr,
@@ -190,7 +206,12 @@ impl InstrumentedPythContract {
         chain_id: ChainId,
         metrics: Arc<RpcMetrics>,
     ) -> Result<Self> {
-        let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
+        let rpc_addr = if !chain_config.geth_rpc_addrs.is_empty() {
+            &chain_config.geth_rpc_addrs[0]
+        } else {
+            &chain_config.geth_rpc_addr
+        };
+        let provider = TracedClient::new(chain_id, rpc_addr, metrics)?;
 
         Ok(PythRandom::new(
             chain_config.contract_addr,

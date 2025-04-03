@@ -316,14 +316,18 @@ pub async fn check_block_timestamp_lag(
     metrics: Family<ChainLabel, Gauge>,
     rpc_metrics: Arc<RpcMetrics>,
 ) {
-    let provider =
-        match TracedClient::new(chain_id.clone(), &chain_config.geth_rpc_addr, rpc_metrics) {
-            Ok(r) => r,
-            Err(e) => {
-                tracing::error!("Failed to create provider for chain id - {:?}", e);
-                return;
-            }
-        };
+    let rpc_addr = if !chain_config.geth_rpc_addrs.is_empty() {
+        &chain_config.geth_rpc_addrs[0]
+    } else {
+        &chain_config.geth_rpc_addr
+    };
+    let provider = match TracedClient::new(chain_id.clone(), rpc_addr, rpc_metrics) {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::error!("Failed to create provider for chain id - {:?}", e);
+            return;
+        }
+    };
 
     const INF_LAG: i64 = 1000000; // value that definitely triggers an alert
     let lag = match provider.get_block(BlockNumber::Latest).await {
