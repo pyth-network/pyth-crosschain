@@ -1,9 +1,9 @@
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
+import type { TransactionSignature } from "@solana/web3.js";
 import {
   Connection,
   PublicKey,
   Transaction,
-  TransactionSignature,
   VersionedTransaction,
 } from "@solana/web3.js";
 
