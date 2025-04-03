@@ -65,7 +65,7 @@ pub async fn run_keeper_threads(
     tracing::info!("latest safe block: {}", &latest_safe_block);
 
     let contract = Arc::new(
-        InstrumentedSignablePythContract::from_config(
+        InstrumentedSignablePythContract::from_config_with_metrics(
             &chain_eth_config,
             &private_key,
             chain_state.id.clone(),
@@ -173,7 +173,7 @@ pub async fn run_keeper_threads(
             let chain_config = chain_eth_config.clone();
             let provider_address = chain_state.provider_address;
             let keeper_metrics = metrics.clone();
-            let contract = match InstrumentedPythContract::from_config(
+            let contract = match InstrumentedPythContract::from_config_with_metrics(
                 &chain_config,
                 chain_id.clone(),
                 rpc_metrics,

@@ -45,7 +45,7 @@ async fn inspect_chain(
         .len()
         > 0;
 
-    let contract = PythContract::from_config(chain_config)?;
+    let contract = PythContract::from_config_basic(chain_config)?;
     let entropy_provider = contract.get_default_provider().call().await?;
     let provider_info = contract.get_provider_info(entropy_provider).call().await?;
     let mut current_request_number = provider_info.sequence_number;

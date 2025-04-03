@@ -10,7 +10,7 @@ use {
 /// Get the on-chain request metadata for a provider and sequence number.
 pub async fn get_request(opts: &GetRequestOptions) -> Result<()> {
     // Initialize a Provider to interface with the EVM contract.
-    let contract = Arc::new(PythContract::from_config(
+    let contract = Arc::new(PythContract::from_config_basic(
         &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
     )?);
 

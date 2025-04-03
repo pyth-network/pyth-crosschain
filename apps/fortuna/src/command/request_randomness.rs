@@ -9,7 +9,7 @@ use {
 
 pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<()> {
     let contract = Arc::new(
-        SignablePythContract::from_config(
+        SignablePythContract::from_config_with_key(
             &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
             &opts.private_key,
         )

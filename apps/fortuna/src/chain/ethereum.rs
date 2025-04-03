@@ -157,19 +157,19 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
 }
 
 impl SignablePythContract {
-    pub async fn from_config(chain_config: &EthereumConfig, private_key: &str) -> Result<Self> {
+    pub async fn from_config_with_key(chain_config: &EthereumConfig, private_key: &str) -> Result<Self> {
         if !chain_config.geth_rpc_addrs.is_empty() {
             let provider = create_failover_provider(&chain_config.geth_rpc_addrs)?;
             Self::from_config_and_provider(chain_config, private_key, provider).await
         } else {
-            let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
+            let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addrs.get(0).unwrap_or(&chain_config.geth_rpc_addr))?;
             Self::from_config_and_provider(chain_config, private_key, provider).await
         }
     }
 }
 
 impl InstrumentedSignablePythContract {
-    pub async fn from_config(
+    pub async fn from_config_with_metrics(
         chain_config: &EthereumConfig,
         private_key: &str,
         chain_id: ChainId,
@@ -186,11 +186,11 @@ impl InstrumentedSignablePythContract {
 }
 
 impl PythContract {
-    pub fn from_config(chain_config: &EthereumConfig) -> Result<Self> {
+    pub fn from_config_basic(chain_config: &EthereumConfig) -> Result<Self> {
         let provider = if !chain_config.geth_rpc_addrs.is_empty() {
             create_failover_provider(&chain_config.geth_rpc_addrs)?
         } else {
-            Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?
+            Provider::<Http>::try_from(&chain_config.geth_rpc_addrs.get(0).unwrap_or(&chain_config.geth_rpc_addr))?
         };
 
         Ok(PythRandom::new(
@@ -201,7 +201,7 @@ impl PythContract {
 }
 
 impl InstrumentedPythContract {
-    pub fn from_config(
+    pub fn from_config_with_metrics(
         chain_config: &EthereumConfig,
         chain_id: ChainId,
         metrics: Arc<RpcMetrics>,

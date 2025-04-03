@@ -42,7 +42,7 @@ pub async fn register_provider_from_config(
 
     // Initialize a Provider to interface with the EVM contract.
     let contract =
-        Arc::new(SignablePythContract::from_config(chain_config, &private_key_string).await?);
+        Arc::new(SignablePythContract::from_config_with_key(chain_config, &private_key_string).await?);
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();
     let secret = provider_config

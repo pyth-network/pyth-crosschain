@@ -73,7 +73,7 @@ async fn setup_chain_provider(
     ))?;
     let provider_address = private_key.clone().parse::<LocalWallet>()?.address();
     // Initialize a Provider to interface with the EVM contract.
-    let contract = Arc::new(SignablePythContract::from_config(chain_config, &private_key).await?);
+    let contract = Arc::new(SignablePythContract::from_config_with_key(chain_config, &private_key).await?);
 
     tracing::info!("Fetching provider info");
     let provider_info = contract.get_provider_info(provider_address).call().await?;
