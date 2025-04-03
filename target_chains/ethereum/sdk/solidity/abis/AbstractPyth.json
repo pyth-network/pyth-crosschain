@@ -81,7 +81,7 @@
       {
         "indexed": false,
         "internalType": "uint32",
-        "name": "downSlotRatio",
+        "name": "downSlotsRatio",
         "type": "uint32"
       }
     ],
@@ -627,7 +627,7 @@
           },
           {
             "internalType": "uint32",
-            "name": "downSlotRatio",
+            "name": "downSlotsRatio",
             "type": "uint32"
           }
         ],

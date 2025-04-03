@@ -284,7 +284,7 @@ contract MockPyth is AbstractPyth {
             endTime,
             twapFeed.twap.price,
             twapFeed.twap.conf,
-            twapFeed.downSlotRatio
+            twapFeed.downSlotsRatio
         );
     }
 
@@ -342,13 +342,13 @@ contract MockPyth is AbstractPyth {
         twapPriceFeed.twap.expo = twapPriceInfoStart.expo;
         twapPriceFeed.twap.publishTime = twapPriceInfoEnd.publishTime;
 
-        // Calculate downSlotRatio as a value between 0 and 1,000,000
+        // Calculate downSlotsRatio as a value between 0 and 1,000,000
         uint64 totalDownSlots = twapPriceInfoEnd.numDownSlots -
             twapPriceInfoStart.numDownSlots;
         uint64 downSlotsRatio = (totalDownSlots * 1_000_000) / slotDiff;
 
         // Safely downcast to uint32 (sufficient for value range 0-1,000,000)
-        twapPriceFeed.downSlotRatio = uint32(downSlotsRatio);
+        twapPriceFeed.downSlotsRatio = uint32(downSlotsRatio);
 
         return twapPriceFeed;
     }

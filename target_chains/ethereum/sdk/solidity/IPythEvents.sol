@@ -22,13 +22,13 @@ interface IPythEvents {
     /// @param endTime End time of the TWAP.
     /// @param twapPrice Price of the TWAP.
     /// @param twapConf Confidence interval of the TWAP.
-    /// @param downSlotRatio Down slot ratio of the TWAP.
+    /// @param downSlotsRatio Down slot ratio of the TWAP.
     event TwapPriceFeedUpdate(
         bytes32 indexed id,
         uint64 startTime,
         uint64 endTime,
         int64 twapPrice,
         uint64 twapConf,
-        uint32 downSlotRatio
+        uint32 downSlotsRatio
     );
 }

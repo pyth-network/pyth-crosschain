@@ -41,6 +41,6 @@ contract PythStructs {
         // TWAP price
         Price twap;
         // Down slot ratio
-        uint32 downSlotRatio;
+        uint32 downSlotsRatio;
     }
 }
