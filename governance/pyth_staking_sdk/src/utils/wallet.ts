@@ -1,8 +1,17 @@
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey, Transaction, TransactionSignature, VersionedTransaction } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionSignature,
+  VersionedTransaction,
+} from "@solana/web3.js";
 
 export type PythStakingWallet = AnchorWallet & {
-  sendTransaction: (tx: Transaction | VersionedTransaction, connection: Connection) => Promise<TransactionSignature>;
+  sendTransaction: (
+    tx: Transaction | VersionedTransaction,
+    connection: Connection,
+  ) => Promise<TransactionSignature>;
 };
 
 export const DummyWallet: PythStakingWallet = {
