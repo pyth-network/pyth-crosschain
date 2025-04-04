@@ -257,7 +257,13 @@ abstract contract Entropy is IEntropy, EntropyState {
         req.callbackStatus = isRequestWithCallback
             ? EntropyStatusConstants.CALLBACK_NOT_STARTED
             : EntropyStatusConstants.CALLBACK_NOT_NECESSARY;
-        req.gasLimit10k = roundGas(callbackGasLimit);
+        if (providerInfo.defaultGasLimit == 0) {
+            // Provider doesn't support the new callback failure state flow (toggled by setting the gas limit field).
+            // Set gasLimit10k to 0 to disable.
+            req.gasLimit10k = 0;
+        } else {
+            req.gasLimit10k = roundGas(callbackGasLimit);
+        }        
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
