@@ -8,22 +8,25 @@ message PublisherUpdatePayload {
 }
 
 message PublisherUpdate {
-  uint32 price_feed_id = 1;
-  uint64 source_timestamp_us = 2;
-  uint64 publisher_timestamp_us = 3;
   oneof update {
-    PriceUpdateV1 price_update_v1 = 4;
-    FundingRateUpdateV1 funding_rate_update_v1 = 5;
+    PriceUpdateV1 price_update_v1 = 3;
+    FundingRateUpdateV1 funding_rate_update_v1 = 4;
   }
 }
 
 message PriceUpdateV1 {
-  optional int64 price = 1;
-  optional int64 best_bid_price = 2;
-  optional int64 best_ask_price = 3;
+  uint32 price_feed_id = 1;
+  uint64 source_timestamp_us = 2;
+  uint64 publisher_timestamp_us = 3;
+  optional int64 price = 4;
+  optional int64 best_bid_price = 5;
+  optional int64 best_ask_price = 6;
 }
 
 message FundingRateUpdateV1 {
-  optional int64 price = 1;
-  optional int64 rate = 2;
+  uint32 price_feed_id = 1;
+  uint64 source_timestamp_us = 2;
+  uint64 publisher_timestamp_us = 3;
+  optional int64 price = 4;
+  optional int64 rate = 5;
 }

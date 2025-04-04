@@ -41,6 +41,8 @@
     "@types/ws": "^8.5.12",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "protobufjs": "^7.4.0",
+    "protobufjs-cli": "^1.1.3",
     "ts-node": "catalog:",
     "typedoc": "^0.26.8",
     "typescript": "catalog:"
