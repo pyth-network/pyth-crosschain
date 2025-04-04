@@ -661,6 +661,11 @@ abstract contract Entropy is IEntropy, EntropyState {
             providerAddr
         ];
 
+        // Providers charge a minimum of their configured feeInWei for every request. 
+        // Requests using more than the defaultGasLimit get a proportionally scaled fee.
+        // This approach may be somewhat simplistic, but it allows us to continue using the
+        // existing feeInWei parameter for the callback failure flow instead of defining new 
+        // configuration values.
         uint32 roundedGasLimit = uint32(roundGas(gasLimit)) * 10000;
         if (
             provider.defaultGasLimit > 0 &&
