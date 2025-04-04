@@ -21,6 +21,11 @@
   },
   {
     "inputs": [],
+    "name": "InsufficientGas",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidRevealCall",
     "type": "error"
   },

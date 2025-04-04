@@ -805,7 +805,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 blockNumber: 1234,
                 requester: user1,
                 useBlockhash: false,
-                callbackStatus: EntropyStatusConstants.CALLBACK_NOT_STARTED
+                callbackStatus: EntropyStatusConstants.CALLBACK_NOT_STARTED,
                 gasLimit10k: 0
             })
         );
@@ -1178,8 +1178,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertEq(
-            reqAfterFailure.status,
-            EntropyConstants.STATUS_CALLBACK_FAILED
+            reqAfterFailure.callbackStatus,
+            EntropyStatusConstants.CALLBACK_FAILED
         );
 
         // A subsequent attempt passing insufficient gas should also revert
@@ -1195,8 +1195,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertEq(
-            reqAfterFailure.status,
-            EntropyConstants.STATUS_CALLBACK_FAILED
+            reqAfterFailure.callbackStatus,
+            EntropyStatusConstants.CALLBACK_FAILED
         );
 
         // Calling without a gas limit should succeed
