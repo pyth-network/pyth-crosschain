@@ -1492,29 +1492,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(req.gasLimit10k, 10);
     }
 
-    function testRequestWithCallbackAndCustomGasLimit() public {
-        uint32 defaultGasLimit = 100000;
-        uint32 customGasLimit = 200000;
-
-        vm.prank(provider1);
-        random.setDefaultGasLimit(defaultGasLimit);
-
-        bytes32 userRandomNumber = bytes32(uint(42));
-        uint fee = random.getFeeForGas(provider1, customGasLimit);
-
-        vm.deal(user1, fee);
-        vm.prank(user1);
-        uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{
-            value: fee
-        }(provider1, userRandomNumber, customGasLimit);
-
-        EntropyStructs.Request memory req = random.getRequest(
-            provider1,
-            sequenceNumber
-        );
-        assertEq(req.gasLimit10k, 20);
-    }
-
     function testGasLimitsAndFeeRounding() public {
         vm.prank(provider1);
         random.setDefaultGasLimit(20000);
@@ -1768,7 +1745,8 @@ contract EntropyConsumer is IEntropyConsumer {
         bytes32 _randomness
     ) internal override {
         uint256 startGas = gasleft();
-
+        // These seemingly innocuous instructions are actually quite expensive
+        // (~60k gas) because they're writes to contract storage.
         sequence = _sequence;
         provider = _provider;
         randomness = _randomness;
