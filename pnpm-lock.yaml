@@ -2351,6 +2351,9 @@ importers:
       '@matterlabs/hardhat-zksync-solc':
         specifier: ^0.3.14
         version: 0.3.17(encoding@0.1.13)(hardhat@2.22.19(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.14.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@6.0.3))
+      '@nomad-xyz/excessively-safe-call':
+        specifier: ^0.0.1-rc.1
+        version: 0.0.1-rc.1
       '@nomiclabs/hardhat-etherscan':
         specifier: ^3.1.7
         version: 3.1.8(hardhat@2.22.19(bufferutil@4.0.7)(ts-node@10.9.2(@types/node@22.14.0)(typescript@5.8.2))(typescript@5.8.2)(utf-8-validate@6.0.3))
@@ -6084,6 +6087,9 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
+
+  '@nomad-xyz/excessively-safe-call@0.0.1-rc.1':
+    resolution: {integrity: sha512-Q5GVakBy8J1kWjydH6W5LNbkYY+Cw2doBiLodOfbFGujeng6zM+EtMLb/V+vkWbskbM81y2r+LG5NmxsxyElPA==}
 
   '@nomicfoundation/edr-darwin-arm64@0.8.0':
     resolution: {integrity: sha512-sKTmOu/P5YYhxT0ThN2Pe3hmCE/5Ag6K/eYoiavjLWbR7HEb5ZwPu2rC3DpuUk1H+UKJqt7o4/xIgJxqw9wu6A==}
@@ -28244,6 +28250,8 @@ snapshots:
       fastq: 1.19.1
 
   '@nolyfill/is-core-module@1.0.39': {}
+
+  '@nomad-xyz/excessively-safe-call@0.0.1-rc.1': {}
 
   '@nomicfoundation/edr-darwin-arm64@0.8.0': {}
 

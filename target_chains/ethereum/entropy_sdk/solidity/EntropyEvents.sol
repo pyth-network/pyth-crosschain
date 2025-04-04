@@ -29,6 +29,16 @@ interface EntropyEvents {
         bytes32 randomNumber
     );
 
+    event CallbackFailed(
+        address indexed provider,
+        address indexed requestor,
+        uint64 indexed sequenceNumber,
+        bytes32 userRandomNumber,
+        bytes32 providerRevelation,
+        bytes32 randomNumber,
+        bytes errorCode
+    );
+
     event ProviderFeeUpdated(address provider, uint128 oldFee, uint128 newFee);
 
     event ProviderUriUpdated(address provider, bytes oldUri, bytes newUri);
