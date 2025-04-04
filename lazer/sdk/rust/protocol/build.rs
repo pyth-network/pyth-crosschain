@@ -2,7 +2,7 @@ use std::io::Result;
 
 fn main() -> Result<()> {
     let proto_files = vec![
-        "../../proto/pyth_lazer.proto",
+        "../../proto/pyth_lazer_transaction.proto",
         "../../proto/publisher_update.proto",
     ];
 

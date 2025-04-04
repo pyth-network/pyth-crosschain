@@ -1,13 +1,13 @@
 import * as $protobuf from "protobufjs";
 import Long = require("long");
-/** Namespace pyth_lazer. */
-export namespace pyth_lazer {
+/** Namespace pyth_lazer_transaction. */
+export namespace pyth_lazer_transaction {
 
     /** Properties of a PublisherUpdatePayload. */
     interface IPublisherUpdatePayload {
 
         /** PublisherUpdatePayload updates */
-        updates?: (pyth_lazer.IPublisherUpdate[]|null);
+        updates?: (pyth_lazer_transaction.IPublisherUpdate[]|null);
 
         /** PublisherUpdatePayload batchTimestampUs */
         batchTimestampUs?: (number|Long|null);
@@ -20,10 +20,10 @@ export namespace pyth_lazer {
          * Constructs a new PublisherUpdatePayload.
          * @param [properties] Properties to set
          */
-        constructor(properties?: pyth_lazer.IPublisherUpdatePayload);
+        constructor(properties?: pyth_lazer_transaction.IPublisherUpdatePayload);
 
         /** PublisherUpdatePayload updates. */
-        public updates: pyth_lazer.IPublisherUpdate[];
+        public updates: pyth_lazer_transaction.IPublisherUpdate[];
 
         /** PublisherUpdatePayload batchTimestampUs. */
         public batchTimestampUs: (number|Long);
@@ -33,23 +33,23 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          * @returns PublisherUpdatePayload instance
          */
-        public static create(properties?: pyth_lazer.IPublisherUpdatePayload): pyth_lazer.PublisherUpdatePayload;
+        public static create(properties?: pyth_lazer_transaction.IPublisherUpdatePayload): pyth_lazer_transaction.PublisherUpdatePayload;
 
         /**
-         * Encodes the specified PublisherUpdatePayload message. Does not implicitly {@link pyth_lazer.PublisherUpdatePayload.verify|verify} messages.
+         * Encodes the specified PublisherUpdatePayload message. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdatePayload.verify|verify} messages.
          * @param message PublisherUpdatePayload message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: pyth_lazer.IPublisherUpdatePayload, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: pyth_lazer_transaction.IPublisherUpdatePayload, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified PublisherUpdatePayload message, length delimited. Does not implicitly {@link pyth_lazer.PublisherUpdatePayload.verify|verify} messages.
+         * Encodes the specified PublisherUpdatePayload message, length delimited. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdatePayload.verify|verify} messages.
          * @param message PublisherUpdatePayload message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: pyth_lazer.IPublisherUpdatePayload, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: pyth_lazer_transaction.IPublisherUpdatePayload, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes a PublisherUpdatePayload message from the specified reader or buffer.
@@ -59,7 +59,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer.PublisherUpdatePayload;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer_transaction.PublisherUpdatePayload;
 
         /**
          * Decodes a PublisherUpdatePayload message from the specified reader or buffer, length delimited.
@@ -68,7 +68,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer.PublisherUpdatePayload;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer_transaction.PublisherUpdatePayload;
 
         /**
          * Verifies a PublisherUpdatePayload message.
@@ -82,7 +82,7 @@ export namespace pyth_lazer {
          * @param object Plain object
          * @returns PublisherUpdatePayload
          */
-        public static fromObject(object: { [k: string]: any }): pyth_lazer.PublisherUpdatePayload;
+        public static fromObject(object: { [k: string]: any }): pyth_lazer_transaction.PublisherUpdatePayload;
 
         /**
          * Creates a plain object from a PublisherUpdatePayload message. Also converts values to other types if specified.
@@ -90,7 +90,7 @@ export namespace pyth_lazer {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: pyth_lazer.PublisherUpdatePayload, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: pyth_lazer_transaction.PublisherUpdatePayload, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this PublisherUpdatePayload to JSON.
@@ -110,10 +110,10 @@ export namespace pyth_lazer {
     interface IPublisherUpdate {
 
         /** PublisherUpdate priceUpdateV1 */
-        priceUpdateV1?: (pyth_lazer.IPriceUpdateV1|null);
+        priceUpdateV1?: (pyth_lazer_transaction.IPriceUpdateV1|null);
 
         /** PublisherUpdate fundingRateUpdateV1 */
-        fundingRateUpdateV1?: (pyth_lazer.IFundingRateUpdateV1|null);
+        fundingRateUpdateV1?: (pyth_lazer_transaction.IFundingRateUpdateV1|null);
     }
 
     /** Represents a PublisherUpdate. */
@@ -123,13 +123,13 @@ export namespace pyth_lazer {
          * Constructs a new PublisherUpdate.
          * @param [properties] Properties to set
          */
-        constructor(properties?: pyth_lazer.IPublisherUpdate);
+        constructor(properties?: pyth_lazer_transaction.IPublisherUpdate);
 
         /** PublisherUpdate priceUpdateV1. */
-        public priceUpdateV1?: (pyth_lazer.IPriceUpdateV1|null);
+        public priceUpdateV1?: (pyth_lazer_transaction.IPriceUpdateV1|null);
 
         /** PublisherUpdate fundingRateUpdateV1. */
-        public fundingRateUpdateV1?: (pyth_lazer.IFundingRateUpdateV1|null);
+        public fundingRateUpdateV1?: (pyth_lazer_transaction.IFundingRateUpdateV1|null);
 
         /** PublisherUpdate update. */
         public update?: ("priceUpdateV1"|"fundingRateUpdateV1");
@@ -139,23 +139,23 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          * @returns PublisherUpdate instance
          */
-        public static create(properties?: pyth_lazer.IPublisherUpdate): pyth_lazer.PublisherUpdate;
+        public static create(properties?: pyth_lazer_transaction.IPublisherUpdate): pyth_lazer_transaction.PublisherUpdate;
 
         /**
-         * Encodes the specified PublisherUpdate message. Does not implicitly {@link pyth_lazer.PublisherUpdate.verify|verify} messages.
+         * Encodes the specified PublisherUpdate message. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdate.verify|verify} messages.
          * @param message PublisherUpdate message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: pyth_lazer.IPublisherUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: pyth_lazer_transaction.IPublisherUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified PublisherUpdate message, length delimited. Does not implicitly {@link pyth_lazer.PublisherUpdate.verify|verify} messages.
+         * Encodes the specified PublisherUpdate message, length delimited. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdate.verify|verify} messages.
          * @param message PublisherUpdate message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: pyth_lazer.IPublisherUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: pyth_lazer_transaction.IPublisherUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes a PublisherUpdate message from the specified reader or buffer.
@@ -165,7 +165,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer.PublisherUpdate;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer_transaction.PublisherUpdate;
 
         /**
          * Decodes a PublisherUpdate message from the specified reader or buffer, length delimited.
@@ -174,7 +174,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer.PublisherUpdate;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer_transaction.PublisherUpdate;
 
         /**
          * Verifies a PublisherUpdate message.
@@ -188,7 +188,7 @@ export namespace pyth_lazer {
          * @param object Plain object
          * @returns PublisherUpdate
          */
-        public static fromObject(object: { [k: string]: any }): pyth_lazer.PublisherUpdate;
+        public static fromObject(object: { [k: string]: any }): pyth_lazer_transaction.PublisherUpdate;
 
         /**
          * Creates a plain object from a PublisherUpdate message. Also converts values to other types if specified.
@@ -196,7 +196,7 @@ export namespace pyth_lazer {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: pyth_lazer.PublisherUpdate, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: pyth_lazer_transaction.PublisherUpdate, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this PublisherUpdate to JSON.
@@ -241,7 +241,7 @@ export namespace pyth_lazer {
          * Constructs a new PriceUpdateV1.
          * @param [properties] Properties to set
          */
-        constructor(properties?: pyth_lazer.IPriceUpdateV1);
+        constructor(properties?: pyth_lazer_transaction.IPriceUpdateV1);
 
         /** PriceUpdateV1 priceFeedId. */
         public priceFeedId: number;
@@ -266,23 +266,23 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          * @returns PriceUpdateV1 instance
          */
-        public static create(properties?: pyth_lazer.IPriceUpdateV1): pyth_lazer.PriceUpdateV1;
+        public static create(properties?: pyth_lazer_transaction.IPriceUpdateV1): pyth_lazer_transaction.PriceUpdateV1;
 
         /**
-         * Encodes the specified PriceUpdateV1 message. Does not implicitly {@link pyth_lazer.PriceUpdateV1.verify|verify} messages.
+         * Encodes the specified PriceUpdateV1 message. Does not implicitly {@link pyth_lazer_transaction.PriceUpdateV1.verify|verify} messages.
          * @param message PriceUpdateV1 message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: pyth_lazer.IPriceUpdateV1, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: pyth_lazer_transaction.IPriceUpdateV1, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified PriceUpdateV1 message, length delimited. Does not implicitly {@link pyth_lazer.PriceUpdateV1.verify|verify} messages.
+         * Encodes the specified PriceUpdateV1 message, length delimited. Does not implicitly {@link pyth_lazer_transaction.PriceUpdateV1.verify|verify} messages.
          * @param message PriceUpdateV1 message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: pyth_lazer.IPriceUpdateV1, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: pyth_lazer_transaction.IPriceUpdateV1, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes a PriceUpdateV1 message from the specified reader or buffer.
@@ -292,7 +292,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer.PriceUpdateV1;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer_transaction.PriceUpdateV1;
 
         /**
          * Decodes a PriceUpdateV1 message from the specified reader or buffer, length delimited.
@@ -301,7 +301,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer.PriceUpdateV1;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer_transaction.PriceUpdateV1;
 
         /**
          * Verifies a PriceUpdateV1 message.
@@ -315,7 +315,7 @@ export namespace pyth_lazer {
          * @param object Plain object
          * @returns PriceUpdateV1
          */
-        public static fromObject(object: { [k: string]: any }): pyth_lazer.PriceUpdateV1;
+        public static fromObject(object: { [k: string]: any }): pyth_lazer_transaction.PriceUpdateV1;
 
         /**
          * Creates a plain object from a PriceUpdateV1 message. Also converts values to other types if specified.
@@ -323,7 +323,7 @@ export namespace pyth_lazer {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: pyth_lazer.PriceUpdateV1, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: pyth_lazer_transaction.PriceUpdateV1, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this PriceUpdateV1 to JSON.
@@ -365,7 +365,7 @@ export namespace pyth_lazer {
          * Constructs a new FundingRateUpdateV1.
          * @param [properties] Properties to set
          */
-        constructor(properties?: pyth_lazer.IFundingRateUpdateV1);
+        constructor(properties?: pyth_lazer_transaction.IFundingRateUpdateV1);
 
         /** FundingRateUpdateV1 priceFeedId. */
         public priceFeedId: number;
@@ -387,23 +387,23 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          * @returns FundingRateUpdateV1 instance
          */
-        public static create(properties?: pyth_lazer.IFundingRateUpdateV1): pyth_lazer.FundingRateUpdateV1;
+        public static create(properties?: pyth_lazer_transaction.IFundingRateUpdateV1): pyth_lazer_transaction.FundingRateUpdateV1;
 
         /**
-         * Encodes the specified FundingRateUpdateV1 message. Does not implicitly {@link pyth_lazer.FundingRateUpdateV1.verify|verify} messages.
+         * Encodes the specified FundingRateUpdateV1 message. Does not implicitly {@link pyth_lazer_transaction.FundingRateUpdateV1.verify|verify} messages.
          * @param message FundingRateUpdateV1 message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: pyth_lazer.IFundingRateUpdateV1, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: pyth_lazer_transaction.IFundingRateUpdateV1, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified FundingRateUpdateV1 message, length delimited. Does not implicitly {@link pyth_lazer.FundingRateUpdateV1.verify|verify} messages.
+         * Encodes the specified FundingRateUpdateV1 message, length delimited. Does not implicitly {@link pyth_lazer_transaction.FundingRateUpdateV1.verify|verify} messages.
          * @param message FundingRateUpdateV1 message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: pyth_lazer.IFundingRateUpdateV1, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: pyth_lazer_transaction.IFundingRateUpdateV1, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes a FundingRateUpdateV1 message from the specified reader or buffer.
@@ -413,7 +413,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer.FundingRateUpdateV1;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer_transaction.FundingRateUpdateV1;
 
         /**
          * Decodes a FundingRateUpdateV1 message from the specified reader or buffer, length delimited.
@@ -422,7 +422,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer.FundingRateUpdateV1;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer_transaction.FundingRateUpdateV1;
 
         /**
          * Verifies a FundingRateUpdateV1 message.
@@ -436,7 +436,7 @@ export namespace pyth_lazer {
          * @param object Plain object
          * @returns FundingRateUpdateV1
          */
-        public static fromObject(object: { [k: string]: any }): pyth_lazer.FundingRateUpdateV1;
+        public static fromObject(object: { [k: string]: any }): pyth_lazer_transaction.FundingRateUpdateV1;
 
         /**
          * Creates a plain object from a FundingRateUpdateV1 message. Also converts values to other types if specified.
@@ -444,7 +444,7 @@ export namespace pyth_lazer {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: pyth_lazer.FundingRateUpdateV1, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: pyth_lazer_transaction.FundingRateUpdateV1, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this FundingRateUpdateV1 to JSON.
@@ -469,7 +469,7 @@ export namespace pyth_lazer {
     interface ISignedLazerTransaction {
 
         /** SignedLazerTransaction signatureType */
-        signatureType?: (pyth_lazer.TransactionSignatureType|null);
+        signatureType?: (pyth_lazer_transaction.TransactionSignatureType|null);
 
         /** SignedLazerTransaction signature */
         signature?: (Uint8Array|null);
@@ -485,10 +485,10 @@ export namespace pyth_lazer {
          * Constructs a new SignedLazerTransaction.
          * @param [properties] Properties to set
          */
-        constructor(properties?: pyth_lazer.ISignedLazerTransaction);
+        constructor(properties?: pyth_lazer_transaction.ISignedLazerTransaction);
 
         /** SignedLazerTransaction signatureType. */
-        public signatureType: pyth_lazer.TransactionSignatureType;
+        public signatureType: pyth_lazer_transaction.TransactionSignatureType;
 
         /** SignedLazerTransaction signature. */
         public signature: Uint8Array;
@@ -501,23 +501,23 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          * @returns SignedLazerTransaction instance
          */
-        public static create(properties?: pyth_lazer.ISignedLazerTransaction): pyth_lazer.SignedLazerTransaction;
+        public static create(properties?: pyth_lazer_transaction.ISignedLazerTransaction): pyth_lazer_transaction.SignedLazerTransaction;
 
         /**
-         * Encodes the specified SignedLazerTransaction message. Does not implicitly {@link pyth_lazer.SignedLazerTransaction.verify|verify} messages.
+         * Encodes the specified SignedLazerTransaction message. Does not implicitly {@link pyth_lazer_transaction.SignedLazerTransaction.verify|verify} messages.
          * @param message SignedLazerTransaction message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: pyth_lazer.ISignedLazerTransaction, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: pyth_lazer_transaction.ISignedLazerTransaction, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified SignedLazerTransaction message, length delimited. Does not implicitly {@link pyth_lazer.SignedLazerTransaction.verify|verify} messages.
+         * Encodes the specified SignedLazerTransaction message, length delimited. Does not implicitly {@link pyth_lazer_transaction.SignedLazerTransaction.verify|verify} messages.
          * @param message SignedLazerTransaction message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: pyth_lazer.ISignedLazerTransaction, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: pyth_lazer_transaction.ISignedLazerTransaction, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes a SignedLazerTransaction message from the specified reader or buffer.
@@ -527,7 +527,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer.SignedLazerTransaction;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer_transaction.SignedLazerTransaction;
 
         /**
          * Decodes a SignedLazerTransaction message from the specified reader or buffer, length delimited.
@@ -536,7 +536,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer.SignedLazerTransaction;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer_transaction.SignedLazerTransaction;
 
         /**
          * Verifies a SignedLazerTransaction message.
@@ -550,7 +550,7 @@ export namespace pyth_lazer {
          * @param object Plain object
          * @returns SignedLazerTransaction
          */
-        public static fromObject(object: { [k: string]: any }): pyth_lazer.SignedLazerTransaction;
+        public static fromObject(object: { [k: string]: any }): pyth_lazer_transaction.SignedLazerTransaction;
 
         /**
          * Creates a plain object from a SignedLazerTransaction message. Also converts values to other types if specified.
@@ -558,7 +558,7 @@ export namespace pyth_lazer {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: pyth_lazer.SignedLazerTransaction, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: pyth_lazer_transaction.SignedLazerTransaction, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this SignedLazerTransaction to JSON.
@@ -578,7 +578,7 @@ export namespace pyth_lazer {
     interface ILazerTransaction {
 
         /** LazerTransaction publisherUpdates */
-        publisherUpdates?: (pyth_lazer.IPublisherUpdatePayload|null);
+        publisherUpdates?: (pyth_lazer_transaction.IPublisherUpdatePayload|null);
     }
 
     /** Represents a LazerTransaction. */
@@ -588,10 +588,10 @@ export namespace pyth_lazer {
          * Constructs a new LazerTransaction.
          * @param [properties] Properties to set
          */
-        constructor(properties?: pyth_lazer.ILazerTransaction);
+        constructor(properties?: pyth_lazer_transaction.ILazerTransaction);
 
         /** LazerTransaction publisherUpdates. */
-        public publisherUpdates?: (pyth_lazer.IPublisherUpdatePayload|null);
+        public publisherUpdates?: (pyth_lazer_transaction.IPublisherUpdatePayload|null);
 
         /** LazerTransaction transaction. */
         public transaction?: "publisherUpdates";
@@ -601,23 +601,23 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          * @returns LazerTransaction instance
          */
-        public static create(properties?: pyth_lazer.ILazerTransaction): pyth_lazer.LazerTransaction;
+        public static create(properties?: pyth_lazer_transaction.ILazerTransaction): pyth_lazer_transaction.LazerTransaction;
 
         /**
-         * Encodes the specified LazerTransaction message. Does not implicitly {@link pyth_lazer.LazerTransaction.verify|verify} messages.
+         * Encodes the specified LazerTransaction message. Does not implicitly {@link pyth_lazer_transaction.LazerTransaction.verify|verify} messages.
          * @param message LazerTransaction message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: pyth_lazer.ILazerTransaction, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: pyth_lazer_transaction.ILazerTransaction, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified LazerTransaction message, length delimited. Does not implicitly {@link pyth_lazer.LazerTransaction.verify|verify} messages.
+         * Encodes the specified LazerTransaction message, length delimited. Does not implicitly {@link pyth_lazer_transaction.LazerTransaction.verify|verify} messages.
          * @param message LazerTransaction message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: pyth_lazer.ILazerTransaction, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: pyth_lazer_transaction.ILazerTransaction, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes a LazerTransaction message from the specified reader or buffer.
@@ -627,7 +627,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer.LazerTransaction;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer_transaction.LazerTransaction;
 
         /**
          * Decodes a LazerTransaction message from the specified reader or buffer, length delimited.
@@ -636,7 +636,7 @@ export namespace pyth_lazer {
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer.LazerTransaction;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer_transaction.LazerTransaction;
 
         /**
          * Verifies a LazerTransaction message.
@@ -650,7 +650,7 @@ export namespace pyth_lazer {
          * @param object Plain object
          * @returns LazerTransaction
          */
-        public static fromObject(object: { [k: string]: any }): pyth_lazer.LazerTransaction;
+        public static fromObject(object: { [k: string]: any }): pyth_lazer_transaction.LazerTransaction;
 
         /**
          * Creates a plain object from a LazerTransaction message. Also converts values to other types if specified.
@@ -658,7 +658,7 @@ export namespace pyth_lazer {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: pyth_lazer.LazerTransaction, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: pyth_lazer_transaction.LazerTransaction, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this LazerTransaction to JSON.
