@@ -284,9 +284,6 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
          * Properties of a PublisherUpdate.
          * @memberof pyth_lazer
          * @interface IPublisherUpdate
-         * @property {number|null} [priceFeedId] PublisherUpdate priceFeedId
-         * @property {number|Long|null} [sourceTimestampUs] PublisherUpdate sourceTimestampUs
-         * @property {number|Long|null} [publisherTimestampUs] PublisherUpdate publisherTimestampUs
          * @property {pyth_lazer.IPriceUpdateV1|null} [priceUpdateV1] PublisherUpdate priceUpdateV1
          * @property {pyth_lazer.IFundingRateUpdateV1|null} [fundingRateUpdateV1] PublisherUpdate fundingRateUpdateV1
          */
@@ -305,30 +302,6 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
-
-        /**
-         * PublisherUpdate priceFeedId.
-         * @member {number} priceFeedId
-         * @memberof pyth_lazer.PublisherUpdate
-         * @instance
-         */
-        PublisherUpdate.prototype.priceFeedId = 0;
-
-        /**
-         * PublisherUpdate sourceTimestampUs.
-         * @member {number|Long} sourceTimestampUs
-         * @memberof pyth_lazer.PublisherUpdate
-         * @instance
-         */
-        PublisherUpdate.prototype.sourceTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
-
-        /**
-         * PublisherUpdate publisherTimestampUs.
-         * @member {number|Long} publisherTimestampUs
-         * @memberof pyth_lazer.PublisherUpdate
-         * @instance
-         */
-        PublisherUpdate.prototype.publisherTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * PublisherUpdate priceUpdateV1.
@@ -384,16 +357,10 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         PublisherUpdate.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.priceFeedId != null && Object.hasOwnProperty.call(message, "priceFeedId"))
-                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.priceFeedId);
-            if (message.sourceTimestampUs != null && Object.hasOwnProperty.call(message, "sourceTimestampUs"))
-                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.sourceTimestampUs);
-            if (message.publisherTimestampUs != null && Object.hasOwnProperty.call(message, "publisherTimestampUs"))
-                writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.publisherTimestampUs);
             if (message.priceUpdateV1 != null && Object.hasOwnProperty.call(message, "priceUpdateV1"))
-                $root.pyth_lazer.PriceUpdateV1.encode(message.priceUpdateV1, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                $root.pyth_lazer.PriceUpdateV1.encode(message.priceUpdateV1, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             if (message.fundingRateUpdateV1 != null && Object.hasOwnProperty.call(message, "fundingRateUpdateV1"))
-                $root.pyth_lazer.FundingRateUpdateV1.encode(message.fundingRateUpdateV1, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                $root.pyth_lazer.FundingRateUpdateV1.encode(message.fundingRateUpdateV1, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             return writer;
         };
 
@@ -428,23 +395,11 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1: {
-                        message.priceFeedId = reader.uint32();
-                        break;
-                    }
-                case 2: {
-                        message.sourceTimestampUs = reader.uint64();
-                        break;
-                    }
                 case 3: {
-                        message.publisherTimestampUs = reader.uint64();
-                        break;
-                    }
-                case 4: {
                         message.priceUpdateV1 = $root.pyth_lazer.PriceUpdateV1.decode(reader, reader.uint32());
                         break;
                     }
-                case 5: {
+                case 4: {
                         message.fundingRateUpdateV1 = $root.pyth_lazer.FundingRateUpdateV1.decode(reader, reader.uint32());
                         break;
                     }
@@ -484,15 +439,6 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             let properties = {};
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
-                if (!$util.isInteger(message.priceFeedId))
-                    return "priceFeedId: integer expected";
-            if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
-                if (!$util.isInteger(message.sourceTimestampUs) && !(message.sourceTimestampUs && $util.isInteger(message.sourceTimestampUs.low) && $util.isInteger(message.sourceTimestampUs.high)))
-                    return "sourceTimestampUs: integer|Long expected";
-            if (message.publisherTimestampUs != null && message.hasOwnProperty("publisherTimestampUs"))
-                if (!$util.isInteger(message.publisherTimestampUs) && !(message.publisherTimestampUs && $util.isInteger(message.publisherTimestampUs.low) && $util.isInteger(message.publisherTimestampUs.high)))
-                    return "publisherTimestampUs: integer|Long expected";
             if (message.priceUpdateV1 != null && message.hasOwnProperty("priceUpdateV1")) {
                 properties.update = 1;
                 {
@@ -526,26 +472,6 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (object instanceof $root.pyth_lazer.PublisherUpdate)
                 return object;
             let message = new $root.pyth_lazer.PublisherUpdate();
-            if (object.priceFeedId != null)
-                message.priceFeedId = object.priceFeedId >>> 0;
-            if (object.sourceTimestampUs != null)
-                if ($util.Long)
-                    (message.sourceTimestampUs = $util.Long.fromValue(object.sourceTimestampUs)).unsigned = true;
-                else if (typeof object.sourceTimestampUs === "string")
-                    message.sourceTimestampUs = parseInt(object.sourceTimestampUs, 10);
-                else if (typeof object.sourceTimestampUs === "number")
-                    message.sourceTimestampUs = object.sourceTimestampUs;
-                else if (typeof object.sourceTimestampUs === "object")
-                    message.sourceTimestampUs = new $util.LongBits(object.sourceTimestampUs.low >>> 0, object.sourceTimestampUs.high >>> 0).toNumber(true);
-            if (object.publisherTimestampUs != null)
-                if ($util.Long)
-                    (message.publisherTimestampUs = $util.Long.fromValue(object.publisherTimestampUs)).unsigned = true;
-                else if (typeof object.publisherTimestampUs === "string")
-                    message.publisherTimestampUs = parseInt(object.publisherTimestampUs, 10);
-                else if (typeof object.publisherTimestampUs === "number")
-                    message.publisherTimestampUs = object.publisherTimestampUs;
-                else if (typeof object.publisherTimestampUs === "object")
-                    message.publisherTimestampUs = new $util.LongBits(object.publisherTimestampUs.low >>> 0, object.publisherTimestampUs.high >>> 0).toNumber(true);
             if (object.priceUpdateV1 != null) {
                 if (typeof object.priceUpdateV1 !== "object")
                     throw TypeError(".pyth_lazer.PublisherUpdate.priceUpdateV1: object expected");
@@ -572,31 +498,6 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (!options)
                 options = {};
             let object = {};
-            if (options.defaults) {
-                object.priceFeedId = 0;
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, true);
-                    object.sourceTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.sourceTimestampUs = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, true);
-                    object.publisherTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.publisherTimestampUs = options.longs === String ? "0" : 0;
-            }
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
-                object.priceFeedId = message.priceFeedId;
-            if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
-                if (typeof message.sourceTimestampUs === "number")
-                    object.sourceTimestampUs = options.longs === String ? String(message.sourceTimestampUs) : message.sourceTimestampUs;
-                else
-                    object.sourceTimestampUs = options.longs === String ? $util.Long.prototype.toString.call(message.sourceTimestampUs) : options.longs === Number ? new $util.LongBits(message.sourceTimestampUs.low >>> 0, message.sourceTimestampUs.high >>> 0).toNumber(true) : message.sourceTimestampUs;
-            if (message.publisherTimestampUs != null && message.hasOwnProperty("publisherTimestampUs"))
-                if (typeof message.publisherTimestampUs === "number")
-                    object.publisherTimestampUs = options.longs === String ? String(message.publisherTimestampUs) : message.publisherTimestampUs;
-                else
-                    object.publisherTimestampUs = options.longs === String ? $util.Long.prototype.toString.call(message.publisherTimestampUs) : options.longs === Number ? new $util.LongBits(message.publisherTimestampUs.low >>> 0, message.publisherTimestampUs.high >>> 0).toNumber(true) : message.publisherTimestampUs;
             if (message.priceUpdateV1 != null && message.hasOwnProperty("priceUpdateV1")) {
                 object.priceUpdateV1 = $root.pyth_lazer.PriceUpdateV1.toObject(message.priceUpdateV1, options);
                 if (options.oneofs)
@@ -645,6 +546,9 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
          * Properties of a PriceUpdateV1.
          * @memberof pyth_lazer
          * @interface IPriceUpdateV1
+         * @property {number|null} [priceFeedId] PriceUpdateV1 priceFeedId
+         * @property {number|Long|null} [sourceTimestampUs] PriceUpdateV1 sourceTimestampUs
+         * @property {number|Long|null} [publisherTimestampUs] PriceUpdateV1 publisherTimestampUs
          * @property {number|Long|null} [price] PriceUpdateV1 price
          * @property {number|Long|null} [bestBidPrice] PriceUpdateV1 bestBidPrice
          * @property {number|Long|null} [bestAskPrice] PriceUpdateV1 bestAskPrice
@@ -664,6 +568,30 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
+
+        /**
+         * PriceUpdateV1 priceFeedId.
+         * @member {number} priceFeedId
+         * @memberof pyth_lazer.PriceUpdateV1
+         * @instance
+         */
+        PriceUpdateV1.prototype.priceFeedId = 0;
+
+        /**
+         * PriceUpdateV1 sourceTimestampUs.
+         * @member {number|Long} sourceTimestampUs
+         * @memberof pyth_lazer.PriceUpdateV1
+         * @instance
+         */
+        PriceUpdateV1.prototype.sourceTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * PriceUpdateV1 publisherTimestampUs.
+         * @member {number|Long} publisherTimestampUs
+         * @memberof pyth_lazer.PriceUpdateV1
+         * @instance
+         */
+        PriceUpdateV1.prototype.publisherTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * PriceUpdateV1 price.
@@ -734,12 +662,18 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         PriceUpdateV1.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
+            if (message.priceFeedId != null && Object.hasOwnProperty.call(message, "priceFeedId"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.priceFeedId);
+            if (message.sourceTimestampUs != null && Object.hasOwnProperty.call(message, "sourceTimestampUs"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.sourceTimestampUs);
+            if (message.publisherTimestampUs != null && Object.hasOwnProperty.call(message, "publisherTimestampUs"))
+                writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.publisherTimestampUs);
             if (message.price != null && Object.hasOwnProperty.call(message, "price"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int64(message.price);
+                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.price);
             if (message.bestBidPrice != null && Object.hasOwnProperty.call(message, "bestBidPrice"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.bestBidPrice);
+                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.bestBidPrice);
             if (message.bestAskPrice != null && Object.hasOwnProperty.call(message, "bestAskPrice"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.bestAskPrice);
+                writer.uint32(/* id 6, wireType 0 =*/48).int64(message.bestAskPrice);
             return writer;
         };
 
@@ -775,14 +709,26 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.price = reader.int64();
+                        message.priceFeedId = reader.uint32();
                         break;
                     }
                 case 2: {
-                        message.bestBidPrice = reader.int64();
+                        message.sourceTimestampUs = reader.uint64();
                         break;
                     }
                 case 3: {
+                        message.publisherTimestampUs = reader.uint64();
+                        break;
+                    }
+                case 4: {
+                        message.price = reader.int64();
+                        break;
+                    }
+                case 5: {
+                        message.bestBidPrice = reader.int64();
+                        break;
+                    }
+                case 6: {
                         message.bestAskPrice = reader.int64();
                         break;
                     }
@@ -822,6 +768,15 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             let properties = {};
+            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
+                if (!$util.isInteger(message.priceFeedId))
+                    return "priceFeedId: integer expected";
+            if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
+                if (!$util.isInteger(message.sourceTimestampUs) && !(message.sourceTimestampUs && $util.isInteger(message.sourceTimestampUs.low) && $util.isInteger(message.sourceTimestampUs.high)))
+                    return "sourceTimestampUs: integer|Long expected";
+            if (message.publisherTimestampUs != null && message.hasOwnProperty("publisherTimestampUs"))
+                if (!$util.isInteger(message.publisherTimestampUs) && !(message.publisherTimestampUs && $util.isInteger(message.publisherTimestampUs.low) && $util.isInteger(message.publisherTimestampUs.high)))
+                    return "publisherTimestampUs: integer|Long expected";
             if (message.price != null && message.hasOwnProperty("price")) {
                 properties._price = 1;
                 if (!$util.isInteger(message.price) && !(message.price && $util.isInteger(message.price.low) && $util.isInteger(message.price.high)))
@@ -852,6 +807,26 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (object instanceof $root.pyth_lazer.PriceUpdateV1)
                 return object;
             let message = new $root.pyth_lazer.PriceUpdateV1();
+            if (object.priceFeedId != null)
+                message.priceFeedId = object.priceFeedId >>> 0;
+            if (object.sourceTimestampUs != null)
+                if ($util.Long)
+                    (message.sourceTimestampUs = $util.Long.fromValue(object.sourceTimestampUs)).unsigned = true;
+                else if (typeof object.sourceTimestampUs === "string")
+                    message.sourceTimestampUs = parseInt(object.sourceTimestampUs, 10);
+                else if (typeof object.sourceTimestampUs === "number")
+                    message.sourceTimestampUs = object.sourceTimestampUs;
+                else if (typeof object.sourceTimestampUs === "object")
+                    message.sourceTimestampUs = new $util.LongBits(object.sourceTimestampUs.low >>> 0, object.sourceTimestampUs.high >>> 0).toNumber(true);
+            if (object.publisherTimestampUs != null)
+                if ($util.Long)
+                    (message.publisherTimestampUs = $util.Long.fromValue(object.publisherTimestampUs)).unsigned = true;
+                else if (typeof object.publisherTimestampUs === "string")
+                    message.publisherTimestampUs = parseInt(object.publisherTimestampUs, 10);
+                else if (typeof object.publisherTimestampUs === "number")
+                    message.publisherTimestampUs = object.publisherTimestampUs;
+                else if (typeof object.publisherTimestampUs === "object")
+                    message.publisherTimestampUs = new $util.LongBits(object.publisherTimestampUs.low >>> 0, object.publisherTimestampUs.high >>> 0).toNumber(true);
             if (object.price != null)
                 if ($util.Long)
                     (message.price = $util.Long.fromValue(object.price)).unsigned = false;
@@ -895,6 +870,31 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (!options)
                 options = {};
             let object = {};
+            if (options.defaults) {
+                object.priceFeedId = 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, true);
+                    object.sourceTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.sourceTimestampUs = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, true);
+                    object.publisherTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.publisherTimestampUs = options.longs === String ? "0" : 0;
+            }
+            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
+                object.priceFeedId = message.priceFeedId;
+            if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
+                if (typeof message.sourceTimestampUs === "number")
+                    object.sourceTimestampUs = options.longs === String ? String(message.sourceTimestampUs) : message.sourceTimestampUs;
+                else
+                    object.sourceTimestampUs = options.longs === String ? $util.Long.prototype.toString.call(message.sourceTimestampUs) : options.longs === Number ? new $util.LongBits(message.sourceTimestampUs.low >>> 0, message.sourceTimestampUs.high >>> 0).toNumber(true) : message.sourceTimestampUs;
+            if (message.publisherTimestampUs != null && message.hasOwnProperty("publisherTimestampUs"))
+                if (typeof message.publisherTimestampUs === "number")
+                    object.publisherTimestampUs = options.longs === String ? String(message.publisherTimestampUs) : message.publisherTimestampUs;
+                else
+                    object.publisherTimestampUs = options.longs === String ? $util.Long.prototype.toString.call(message.publisherTimestampUs) : options.longs === Number ? new $util.LongBits(message.publisherTimestampUs.low >>> 0, message.publisherTimestampUs.high >>> 0).toNumber(true) : message.publisherTimestampUs;
             if (message.price != null && message.hasOwnProperty("price")) {
                 if (typeof message.price === "number")
                     object.price = options.longs === String ? String(message.price) : message.price;
@@ -957,6 +957,9 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
          * Properties of a FundingRateUpdateV1.
          * @memberof pyth_lazer
          * @interface IFundingRateUpdateV1
+         * @property {number|null} [priceFeedId] FundingRateUpdateV1 priceFeedId
+         * @property {number|Long|null} [sourceTimestampUs] FundingRateUpdateV1 sourceTimestampUs
+         * @property {number|Long|null} [publisherTimestampUs] FundingRateUpdateV1 publisherTimestampUs
          * @property {number|Long|null} [price] FundingRateUpdateV1 price
          * @property {number|Long|null} [rate] FundingRateUpdateV1 rate
          */
@@ -975,6 +978,30 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
+
+        /**
+         * FundingRateUpdateV1 priceFeedId.
+         * @member {number} priceFeedId
+         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @instance
+         */
+        FundingRateUpdateV1.prototype.priceFeedId = 0;
+
+        /**
+         * FundingRateUpdateV1 sourceTimestampUs.
+         * @member {number|Long} sourceTimestampUs
+         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @instance
+         */
+        FundingRateUpdateV1.prototype.sourceTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+
+        /**
+         * FundingRateUpdateV1 publisherTimestampUs.
+         * @member {number|Long} publisherTimestampUs
+         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @instance
+         */
+        FundingRateUpdateV1.prototype.publisherTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * FundingRateUpdateV1 price.
@@ -1031,10 +1058,16 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         FundingRateUpdateV1.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
+            if (message.priceFeedId != null && Object.hasOwnProperty.call(message, "priceFeedId"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.priceFeedId);
+            if (message.sourceTimestampUs != null && Object.hasOwnProperty.call(message, "sourceTimestampUs"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.sourceTimestampUs);
+            if (message.publisherTimestampUs != null && Object.hasOwnProperty.call(message, "publisherTimestampUs"))
+                writer.uint32(/* id 3, wireType 0 =*/24).uint64(message.publisherTimestampUs);
             if (message.price != null && Object.hasOwnProperty.call(message, "price"))
-                writer.uint32(/* id 1, wireType 0 =*/8).int64(message.price);
+                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.price);
             if (message.rate != null && Object.hasOwnProperty.call(message, "rate"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.rate);
+                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.rate);
             return writer;
         };
 
@@ -1070,10 +1103,22 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.price = reader.int64();
+                        message.priceFeedId = reader.uint32();
                         break;
                     }
                 case 2: {
+                        message.sourceTimestampUs = reader.uint64();
+                        break;
+                    }
+                case 3: {
+                        message.publisherTimestampUs = reader.uint64();
+                        break;
+                    }
+                case 4: {
+                        message.price = reader.int64();
+                        break;
+                    }
+                case 5: {
                         message.rate = reader.int64();
                         break;
                     }
@@ -1113,6 +1158,15 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             let properties = {};
+            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
+                if (!$util.isInteger(message.priceFeedId))
+                    return "priceFeedId: integer expected";
+            if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
+                if (!$util.isInteger(message.sourceTimestampUs) && !(message.sourceTimestampUs && $util.isInteger(message.sourceTimestampUs.low) && $util.isInteger(message.sourceTimestampUs.high)))
+                    return "sourceTimestampUs: integer|Long expected";
+            if (message.publisherTimestampUs != null && message.hasOwnProperty("publisherTimestampUs"))
+                if (!$util.isInteger(message.publisherTimestampUs) && !(message.publisherTimestampUs && $util.isInteger(message.publisherTimestampUs.low) && $util.isInteger(message.publisherTimestampUs.high)))
+                    return "publisherTimestampUs: integer|Long expected";
             if (message.price != null && message.hasOwnProperty("price")) {
                 properties._price = 1;
                 if (!$util.isInteger(message.price) && !(message.price && $util.isInteger(message.price.low) && $util.isInteger(message.price.high)))
@@ -1138,6 +1192,26 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (object instanceof $root.pyth_lazer.FundingRateUpdateV1)
                 return object;
             let message = new $root.pyth_lazer.FundingRateUpdateV1();
+            if (object.priceFeedId != null)
+                message.priceFeedId = object.priceFeedId >>> 0;
+            if (object.sourceTimestampUs != null)
+                if ($util.Long)
+                    (message.sourceTimestampUs = $util.Long.fromValue(object.sourceTimestampUs)).unsigned = true;
+                else if (typeof object.sourceTimestampUs === "string")
+                    message.sourceTimestampUs = parseInt(object.sourceTimestampUs, 10);
+                else if (typeof object.sourceTimestampUs === "number")
+                    message.sourceTimestampUs = object.sourceTimestampUs;
+                else if (typeof object.sourceTimestampUs === "object")
+                    message.sourceTimestampUs = new $util.LongBits(object.sourceTimestampUs.low >>> 0, object.sourceTimestampUs.high >>> 0).toNumber(true);
+            if (object.publisherTimestampUs != null)
+                if ($util.Long)
+                    (message.publisherTimestampUs = $util.Long.fromValue(object.publisherTimestampUs)).unsigned = true;
+                else if (typeof object.publisherTimestampUs === "string")
+                    message.publisherTimestampUs = parseInt(object.publisherTimestampUs, 10);
+                else if (typeof object.publisherTimestampUs === "number")
+                    message.publisherTimestampUs = object.publisherTimestampUs;
+                else if (typeof object.publisherTimestampUs === "object")
+                    message.publisherTimestampUs = new $util.LongBits(object.publisherTimestampUs.low >>> 0, object.publisherTimestampUs.high >>> 0).toNumber(true);
             if (object.price != null)
                 if ($util.Long)
                     (message.price = $util.Long.fromValue(object.price)).unsigned = false;
@@ -1172,6 +1246,31 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (!options)
                 options = {};
             let object = {};
+            if (options.defaults) {
+                object.priceFeedId = 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, true);
+                    object.sourceTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.sourceTimestampUs = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, true);
+                    object.publisherTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.publisherTimestampUs = options.longs === String ? "0" : 0;
+            }
+            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
+                object.priceFeedId = message.priceFeedId;
+            if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
+                if (typeof message.sourceTimestampUs === "number")
+                    object.sourceTimestampUs = options.longs === String ? String(message.sourceTimestampUs) : message.sourceTimestampUs;
+                else
+                    object.sourceTimestampUs = options.longs === String ? $util.Long.prototype.toString.call(message.sourceTimestampUs) : options.longs === Number ? new $util.LongBits(message.sourceTimestampUs.low >>> 0, message.sourceTimestampUs.high >>> 0).toNumber(true) : message.sourceTimestampUs;
+            if (message.publisherTimestampUs != null && message.hasOwnProperty("publisherTimestampUs"))
+                if (typeof message.publisherTimestampUs === "number")
+                    object.publisherTimestampUs = options.longs === String ? String(message.publisherTimestampUs) : message.publisherTimestampUs;
+                else
+                    object.publisherTimestampUs = options.longs === String ? $util.Long.prototype.toString.call(message.publisherTimestampUs) : options.longs === Number ? new $util.LongBits(message.publisherTimestampUs.low >>> 0, message.publisherTimestampUs.high >>> 0).toNumber(true) : message.publisherTimestampUs;
             if (message.price != null && message.hasOwnProperty("price")) {
                 if (typeof message.price === "number")
                     object.price = options.longs === String ? String(message.price) : message.price;

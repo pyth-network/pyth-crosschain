@@ -109,15 +109,6 @@ export namespace pyth_lazer {
     /** Properties of a PublisherUpdate. */
     interface IPublisherUpdate {
 
-        /** PublisherUpdate priceFeedId */
-        priceFeedId?: (number|null);
-
-        /** PublisherUpdate sourceTimestampUs */
-        sourceTimestampUs?: (number|Long|null);
-
-        /** PublisherUpdate publisherTimestampUs */
-        publisherTimestampUs?: (number|Long|null);
-
         /** PublisherUpdate priceUpdateV1 */
         priceUpdateV1?: (pyth_lazer.IPriceUpdateV1|null);
 
@@ -133,15 +124,6 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          */
         constructor(properties?: pyth_lazer.IPublisherUpdate);
-
-        /** PublisherUpdate priceFeedId. */
-        public priceFeedId: number;
-
-        /** PublisherUpdate sourceTimestampUs. */
-        public sourceTimestampUs: (number|Long);
-
-        /** PublisherUpdate publisherTimestampUs. */
-        public publisherTimestampUs: (number|Long);
 
         /** PublisherUpdate priceUpdateV1. */
         public priceUpdateV1?: (pyth_lazer.IPriceUpdateV1|null);
@@ -233,6 +215,15 @@ export namespace pyth_lazer {
     /** Properties of a PriceUpdateV1. */
     interface IPriceUpdateV1 {
 
+        /** PriceUpdateV1 priceFeedId */
+        priceFeedId?: (number|null);
+
+        /** PriceUpdateV1 sourceTimestampUs */
+        sourceTimestampUs?: (number|Long|null);
+
+        /** PriceUpdateV1 publisherTimestampUs */
+        publisherTimestampUs?: (number|Long|null);
+
         /** PriceUpdateV1 price */
         price?: (number|Long|null);
 
@@ -251,6 +242,15 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          */
         constructor(properties?: pyth_lazer.IPriceUpdateV1);
+
+        /** PriceUpdateV1 priceFeedId. */
+        public priceFeedId: number;
+
+        /** PriceUpdateV1 sourceTimestampUs. */
+        public sourceTimestampUs: (number|Long);
+
+        /** PriceUpdateV1 publisherTimestampUs. */
+        public publisherTimestampUs: (number|Long);
 
         /** PriceUpdateV1 price. */
         public price?: (number|Long|null);
@@ -342,6 +342,15 @@ export namespace pyth_lazer {
     /** Properties of a FundingRateUpdateV1. */
     interface IFundingRateUpdateV1 {
 
+        /** FundingRateUpdateV1 priceFeedId */
+        priceFeedId?: (number|null);
+
+        /** FundingRateUpdateV1 sourceTimestampUs */
+        sourceTimestampUs?: (number|Long|null);
+
+        /** FundingRateUpdateV1 publisherTimestampUs */
+        publisherTimestampUs?: (number|Long|null);
+
         /** FundingRateUpdateV1 price */
         price?: (number|Long|null);
 
@@ -357,6 +366,15 @@ export namespace pyth_lazer {
          * @param [properties] Properties to set
          */
         constructor(properties?: pyth_lazer.IFundingRateUpdateV1);
+
+        /** FundingRateUpdateV1 priceFeedId. */
+        public priceFeedId: number;
+
+        /** FundingRateUpdateV1 sourceTimestampUs. */
+        public sourceTimestampUs: (number|Long);
+
+        /** FundingRateUpdateV1 publisherTimestampUs. */
+        public publisherTimestampUs: (number|Long);
 
         /** FundingRateUpdateV1 price. */
         public price?: (number|Long|null);
