@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package pyth_lazer;
+package pyth_lazer_transaction;
 
 import "publisher_update.proto";
 

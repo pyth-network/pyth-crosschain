@@ -5,14 +5,14 @@ pub mod binary_update;
 pub mod message;
 pub mod payload;
 pub mod publisher;
-pub mod pyth_lazer {
-    include!(concat!(env!("OUT_DIR"), "/pyth_lazer.rs"));
-}
 pub mod router;
 mod serde_price_as_i64;
 mod serde_str;
 pub mod subscription;
 pub mod symbol_state;
+pub mod transaction {
+    include!(concat!(env!("OUT_DIR"), "/pyth_lazer_transaction.rs"));
+}
 
 #[test]
 fn magics_in_big_endian() {

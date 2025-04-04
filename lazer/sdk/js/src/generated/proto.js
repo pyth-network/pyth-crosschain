@@ -7,32 +7,32 @@ const $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.
 // Exported root namespace
 const $root = $protobuf.roots["default"] || ($protobuf.roots["default"] = {});
 
-export const pyth_lazer = $root.pyth_lazer = (() => {
+export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
 
     /**
-     * Namespace pyth_lazer.
-     * @exports pyth_lazer
+     * Namespace pyth_lazer_transaction.
+     * @exports pyth_lazer_transaction
      * @namespace
      */
-    const pyth_lazer = {};
+    const pyth_lazer_transaction = {};
 
-    pyth_lazer.PublisherUpdatePayload = (function() {
+    pyth_lazer_transaction.PublisherUpdatePayload = (function() {
 
         /**
          * Properties of a PublisherUpdatePayload.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @interface IPublisherUpdatePayload
-         * @property {Array.<pyth_lazer.IPublisherUpdate>|null} [updates] PublisherUpdatePayload updates
+         * @property {Array.<pyth_lazer_transaction.IPublisherUpdate>|null} [updates] PublisherUpdatePayload updates
          * @property {number|Long|null} [batchTimestampUs] PublisherUpdatePayload batchTimestampUs
          */
 
         /**
          * Constructs a new PublisherUpdatePayload.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @classdesc Represents a PublisherUpdatePayload.
          * @implements IPublisherUpdatePayload
          * @constructor
-         * @param {pyth_lazer.IPublisherUpdatePayload=} [properties] Properties to set
+         * @param {pyth_lazer_transaction.IPublisherUpdatePayload=} [properties] Properties to set
          */
         function PublisherUpdatePayload(properties) {
             this.updates = [];
@@ -44,8 +44,8 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
 
         /**
          * PublisherUpdatePayload updates.
-         * @member {Array.<pyth_lazer.IPublisherUpdate>} updates
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @member {Array.<pyth_lazer_transaction.IPublisherUpdate>} updates
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @instance
          */
         PublisherUpdatePayload.prototype.updates = $util.emptyArray;
@@ -53,7 +53,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * PublisherUpdatePayload batchTimestampUs.
          * @member {number|Long} batchTimestampUs
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @instance
          */
         PublisherUpdatePayload.prototype.batchTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
@@ -61,21 +61,21 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a new PublisherUpdatePayload instance using the specified properties.
          * @function create
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
-         * @param {pyth_lazer.IPublisherUpdatePayload=} [properties] Properties to set
-         * @returns {pyth_lazer.PublisherUpdatePayload} PublisherUpdatePayload instance
+         * @param {pyth_lazer_transaction.IPublisherUpdatePayload=} [properties] Properties to set
+         * @returns {pyth_lazer_transaction.PublisherUpdatePayload} PublisherUpdatePayload instance
          */
         PublisherUpdatePayload.create = function create(properties) {
             return new PublisherUpdatePayload(properties);
         };
 
         /**
-         * Encodes the specified PublisherUpdatePayload message. Does not implicitly {@link pyth_lazer.PublisherUpdatePayload.verify|verify} messages.
+         * Encodes the specified PublisherUpdatePayload message. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdatePayload.verify|verify} messages.
          * @function encode
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
-         * @param {pyth_lazer.IPublisherUpdatePayload} message PublisherUpdatePayload message or plain object to encode
+         * @param {pyth_lazer_transaction.IPublisherUpdatePayload} message PublisherUpdatePayload message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -84,18 +84,18 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                 writer = $Writer.create();
             if (message.updates != null && message.updates.length)
                 for (let i = 0; i < message.updates.length; ++i)
-                    $root.pyth_lazer.PublisherUpdate.encode(message.updates[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                    $root.pyth_lazer_transaction.PublisherUpdate.encode(message.updates[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             if (message.batchTimestampUs != null && Object.hasOwnProperty.call(message, "batchTimestampUs"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.batchTimestampUs);
             return writer;
         };
 
         /**
-         * Encodes the specified PublisherUpdatePayload message, length delimited. Does not implicitly {@link pyth_lazer.PublisherUpdatePayload.verify|verify} messages.
+         * Encodes the specified PublisherUpdatePayload message, length delimited. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdatePayload.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
-         * @param {pyth_lazer.IPublisherUpdatePayload} message PublisherUpdatePayload message or plain object to encode
+         * @param {pyth_lazer_transaction.IPublisherUpdatePayload} message PublisherUpdatePayload message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -106,25 +106,25 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a PublisherUpdatePayload message from the specified reader or buffer.
          * @function decode
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {pyth_lazer.PublisherUpdatePayload} PublisherUpdatePayload
+         * @returns {pyth_lazer_transaction.PublisherUpdatePayload} PublisherUpdatePayload
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         PublisherUpdatePayload.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer.PublisherUpdatePayload();
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.PublisherUpdatePayload();
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
                         if (!(message.updates && message.updates.length))
                             message.updates = [];
-                        message.updates.push($root.pyth_lazer.PublisherUpdate.decode(reader, reader.uint32()));
+                        message.updates.push($root.pyth_lazer_transaction.PublisherUpdate.decode(reader, reader.uint32()));
                         break;
                     }
                 case 2: {
@@ -142,10 +142,10 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a PublisherUpdatePayload message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {pyth_lazer.PublisherUpdatePayload} PublisherUpdatePayload
+         * @returns {pyth_lazer_transaction.PublisherUpdatePayload} PublisherUpdatePayload
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -158,7 +158,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Verifies a PublisherUpdatePayload message.
          * @function verify
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -170,7 +170,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                 if (!Array.isArray(message.updates))
                     return "updates: array expected";
                 for (let i = 0; i < message.updates.length; ++i) {
-                    let error = $root.pyth_lazer.PublisherUpdate.verify(message.updates[i]);
+                    let error = $root.pyth_lazer_transaction.PublisherUpdate.verify(message.updates[i]);
                     if (error)
                         return "updates." + error;
                 }
@@ -184,23 +184,23 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a PublisherUpdatePayload message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {pyth_lazer.PublisherUpdatePayload} PublisherUpdatePayload
+         * @returns {pyth_lazer_transaction.PublisherUpdatePayload} PublisherUpdatePayload
          */
         PublisherUpdatePayload.fromObject = function fromObject(object) {
-            if (object instanceof $root.pyth_lazer.PublisherUpdatePayload)
+            if (object instanceof $root.pyth_lazer_transaction.PublisherUpdatePayload)
                 return object;
-            let message = new $root.pyth_lazer.PublisherUpdatePayload();
+            let message = new $root.pyth_lazer_transaction.PublisherUpdatePayload();
             if (object.updates) {
                 if (!Array.isArray(object.updates))
-                    throw TypeError(".pyth_lazer.PublisherUpdatePayload.updates: array expected");
+                    throw TypeError(".pyth_lazer_transaction.PublisherUpdatePayload.updates: array expected");
                 message.updates = [];
                 for (let i = 0; i < object.updates.length; ++i) {
                     if (typeof object.updates[i] !== "object")
-                        throw TypeError(".pyth_lazer.PublisherUpdatePayload.updates: object expected");
-                    message.updates[i] = $root.pyth_lazer.PublisherUpdate.fromObject(object.updates[i]);
+                        throw TypeError(".pyth_lazer_transaction.PublisherUpdatePayload.updates: object expected");
+                    message.updates[i] = $root.pyth_lazer_transaction.PublisherUpdate.fromObject(object.updates[i]);
                 }
             }
             if (object.batchTimestampUs != null)
@@ -218,9 +218,9 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a plain object from a PublisherUpdatePayload message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
-         * @param {pyth_lazer.PublisherUpdatePayload} message PublisherUpdatePayload
+         * @param {pyth_lazer_transaction.PublisherUpdatePayload} message PublisherUpdatePayload
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -239,7 +239,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (message.updates && message.updates.length) {
                 object.updates = [];
                 for (let j = 0; j < message.updates.length; ++j)
-                    object.updates[j] = $root.pyth_lazer.PublisherUpdate.toObject(message.updates[j], options);
+                    object.updates[j] = $root.pyth_lazer_transaction.PublisherUpdate.toObject(message.updates[j], options);
             }
             if (message.batchTimestampUs != null && message.hasOwnProperty("batchTimestampUs"))
                 if (typeof message.batchTimestampUs === "number")
@@ -252,7 +252,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Converts this PublisherUpdatePayload to JSON.
          * @function toJSON
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -263,7 +263,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Gets the default type url for PublisherUpdatePayload
          * @function getTypeUrl
-         * @memberof pyth_lazer.PublisherUpdatePayload
+         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -272,29 +272,29 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/pyth_lazer.PublisherUpdatePayload";
+            return typeUrlPrefix + "/pyth_lazer_transaction.PublisherUpdatePayload";
         };
 
         return PublisherUpdatePayload;
     })();
 
-    pyth_lazer.PublisherUpdate = (function() {
+    pyth_lazer_transaction.PublisherUpdate = (function() {
 
         /**
          * Properties of a PublisherUpdate.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @interface IPublisherUpdate
-         * @property {pyth_lazer.IPriceUpdateV1|null} [priceUpdateV1] PublisherUpdate priceUpdateV1
-         * @property {pyth_lazer.IFundingRateUpdateV1|null} [fundingRateUpdateV1] PublisherUpdate fundingRateUpdateV1
+         * @property {pyth_lazer_transaction.IPriceUpdateV1|null} [priceUpdateV1] PublisherUpdate priceUpdateV1
+         * @property {pyth_lazer_transaction.IFundingRateUpdateV1|null} [fundingRateUpdateV1] PublisherUpdate fundingRateUpdateV1
          */
 
         /**
          * Constructs a new PublisherUpdate.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @classdesc Represents a PublisherUpdate.
          * @implements IPublisherUpdate
          * @constructor
-         * @param {pyth_lazer.IPublisherUpdate=} [properties] Properties to set
+         * @param {pyth_lazer_transaction.IPublisherUpdate=} [properties] Properties to set
          */
         function PublisherUpdate(properties) {
             if (properties)
@@ -305,16 +305,16 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
 
         /**
          * PublisherUpdate priceUpdateV1.
-         * @member {pyth_lazer.IPriceUpdateV1|null|undefined} priceUpdateV1
-         * @memberof pyth_lazer.PublisherUpdate
+         * @member {pyth_lazer_transaction.IPriceUpdateV1|null|undefined} priceUpdateV1
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @instance
          */
         PublisherUpdate.prototype.priceUpdateV1 = null;
 
         /**
          * PublisherUpdate fundingRateUpdateV1.
-         * @member {pyth_lazer.IFundingRateUpdateV1|null|undefined} fundingRateUpdateV1
-         * @memberof pyth_lazer.PublisherUpdate
+         * @member {pyth_lazer_transaction.IFundingRateUpdateV1|null|undefined} fundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @instance
          */
         PublisherUpdate.prototype.fundingRateUpdateV1 = null;
@@ -325,7 +325,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * PublisherUpdate update.
          * @member {"priceUpdateV1"|"fundingRateUpdateV1"|undefined} update
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @instance
          */
         Object.defineProperty(PublisherUpdate.prototype, "update", {
@@ -336,21 +336,21 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a new PublisherUpdate instance using the specified properties.
          * @function create
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
-         * @param {pyth_lazer.IPublisherUpdate=} [properties] Properties to set
-         * @returns {pyth_lazer.PublisherUpdate} PublisherUpdate instance
+         * @param {pyth_lazer_transaction.IPublisherUpdate=} [properties] Properties to set
+         * @returns {pyth_lazer_transaction.PublisherUpdate} PublisherUpdate instance
          */
         PublisherUpdate.create = function create(properties) {
             return new PublisherUpdate(properties);
         };
 
         /**
-         * Encodes the specified PublisherUpdate message. Does not implicitly {@link pyth_lazer.PublisherUpdate.verify|verify} messages.
+         * Encodes the specified PublisherUpdate message. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdate.verify|verify} messages.
          * @function encode
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
-         * @param {pyth_lazer.IPublisherUpdate} message PublisherUpdate message or plain object to encode
+         * @param {pyth_lazer_transaction.IPublisherUpdate} message PublisherUpdate message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -358,18 +358,18 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (!writer)
                 writer = $Writer.create();
             if (message.priceUpdateV1 != null && Object.hasOwnProperty.call(message, "priceUpdateV1"))
-                $root.pyth_lazer.PriceUpdateV1.encode(message.priceUpdateV1, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                $root.pyth_lazer_transaction.PriceUpdateV1.encode(message.priceUpdateV1, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             if (message.fundingRateUpdateV1 != null && Object.hasOwnProperty.call(message, "fundingRateUpdateV1"))
-                $root.pyth_lazer.FundingRateUpdateV1.encode(message.fundingRateUpdateV1, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                $root.pyth_lazer_transaction.FundingRateUpdateV1.encode(message.fundingRateUpdateV1, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified PublisherUpdate message, length delimited. Does not implicitly {@link pyth_lazer.PublisherUpdate.verify|verify} messages.
+         * Encodes the specified PublisherUpdate message, length delimited. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdate.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
-         * @param {pyth_lazer.IPublisherUpdate} message PublisherUpdate message or plain object to encode
+         * @param {pyth_lazer_transaction.IPublisherUpdate} message PublisherUpdate message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -380,27 +380,27 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a PublisherUpdate message from the specified reader or buffer.
          * @function decode
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {pyth_lazer.PublisherUpdate} PublisherUpdate
+         * @returns {pyth_lazer_transaction.PublisherUpdate} PublisherUpdate
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         PublisherUpdate.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer.PublisherUpdate();
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.PublisherUpdate();
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 3: {
-                        message.priceUpdateV1 = $root.pyth_lazer.PriceUpdateV1.decode(reader, reader.uint32());
+                        message.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.decode(reader, reader.uint32());
                         break;
                     }
                 case 4: {
-                        message.fundingRateUpdateV1 = $root.pyth_lazer.FundingRateUpdateV1.decode(reader, reader.uint32());
+                        message.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.decode(reader, reader.uint32());
                         break;
                     }
                 default:
@@ -414,10 +414,10 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a PublisherUpdate message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {pyth_lazer.PublisherUpdate} PublisherUpdate
+         * @returns {pyth_lazer_transaction.PublisherUpdate} PublisherUpdate
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -430,7 +430,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Verifies a PublisherUpdate message.
          * @function verify
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -442,7 +442,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (message.priceUpdateV1 != null && message.hasOwnProperty("priceUpdateV1")) {
                 properties.update = 1;
                 {
-                    let error = $root.pyth_lazer.PriceUpdateV1.verify(message.priceUpdateV1);
+                    let error = $root.pyth_lazer_transaction.PriceUpdateV1.verify(message.priceUpdateV1);
                     if (error)
                         return "priceUpdateV1." + error;
                 }
@@ -452,7 +452,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                     return "update: multiple values";
                 properties.update = 1;
                 {
-                    let error = $root.pyth_lazer.FundingRateUpdateV1.verify(message.fundingRateUpdateV1);
+                    let error = $root.pyth_lazer_transaction.FundingRateUpdateV1.verify(message.fundingRateUpdateV1);
                     if (error)
                         return "fundingRateUpdateV1." + error;
                 }
@@ -463,24 +463,24 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a PublisherUpdate message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {pyth_lazer.PublisherUpdate} PublisherUpdate
+         * @returns {pyth_lazer_transaction.PublisherUpdate} PublisherUpdate
          */
         PublisherUpdate.fromObject = function fromObject(object) {
-            if (object instanceof $root.pyth_lazer.PublisherUpdate)
+            if (object instanceof $root.pyth_lazer_transaction.PublisherUpdate)
                 return object;
-            let message = new $root.pyth_lazer.PublisherUpdate();
+            let message = new $root.pyth_lazer_transaction.PublisherUpdate();
             if (object.priceUpdateV1 != null) {
                 if (typeof object.priceUpdateV1 !== "object")
-                    throw TypeError(".pyth_lazer.PublisherUpdate.priceUpdateV1: object expected");
-                message.priceUpdateV1 = $root.pyth_lazer.PriceUpdateV1.fromObject(object.priceUpdateV1);
+                    throw TypeError(".pyth_lazer_transaction.PublisherUpdate.priceUpdateV1: object expected");
+                message.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.fromObject(object.priceUpdateV1);
             }
             if (object.fundingRateUpdateV1 != null) {
                 if (typeof object.fundingRateUpdateV1 !== "object")
-                    throw TypeError(".pyth_lazer.PublisherUpdate.fundingRateUpdateV1: object expected");
-                message.fundingRateUpdateV1 = $root.pyth_lazer.FundingRateUpdateV1.fromObject(object.fundingRateUpdateV1);
+                    throw TypeError(".pyth_lazer_transaction.PublisherUpdate.fundingRateUpdateV1: object expected");
+                message.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.fromObject(object.fundingRateUpdateV1);
             }
             return message;
         };
@@ -488,9 +488,9 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a plain object from a PublisherUpdate message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
-         * @param {pyth_lazer.PublisherUpdate} message PublisherUpdate
+         * @param {pyth_lazer_transaction.PublisherUpdate} message PublisherUpdate
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -499,12 +499,12 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                 options = {};
             let object = {};
             if (message.priceUpdateV1 != null && message.hasOwnProperty("priceUpdateV1")) {
-                object.priceUpdateV1 = $root.pyth_lazer.PriceUpdateV1.toObject(message.priceUpdateV1, options);
+                object.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.toObject(message.priceUpdateV1, options);
                 if (options.oneofs)
                     object.update = "priceUpdateV1";
             }
             if (message.fundingRateUpdateV1 != null && message.hasOwnProperty("fundingRateUpdateV1")) {
-                object.fundingRateUpdateV1 = $root.pyth_lazer.FundingRateUpdateV1.toObject(message.fundingRateUpdateV1, options);
+                object.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.toObject(message.fundingRateUpdateV1, options);
                 if (options.oneofs)
                     object.update = "fundingRateUpdateV1";
             }
@@ -514,7 +514,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Converts this PublisherUpdate to JSON.
          * @function toJSON
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -525,7 +525,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Gets the default type url for PublisherUpdate
          * @function getTypeUrl
-         * @memberof pyth_lazer.PublisherUpdate
+         * @memberof pyth_lazer_transaction.PublisherUpdate
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -534,17 +534,17 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/pyth_lazer.PublisherUpdate";
+            return typeUrlPrefix + "/pyth_lazer_transaction.PublisherUpdate";
         };
 
         return PublisherUpdate;
     })();
 
-    pyth_lazer.PriceUpdateV1 = (function() {
+    pyth_lazer_transaction.PriceUpdateV1 = (function() {
 
         /**
          * Properties of a PriceUpdateV1.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @interface IPriceUpdateV1
          * @property {number|null} [priceFeedId] PriceUpdateV1 priceFeedId
          * @property {number|Long|null} [sourceTimestampUs] PriceUpdateV1 sourceTimestampUs
@@ -556,11 +556,11 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
 
         /**
          * Constructs a new PriceUpdateV1.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @classdesc Represents a PriceUpdateV1.
          * @implements IPriceUpdateV1
          * @constructor
-         * @param {pyth_lazer.IPriceUpdateV1=} [properties] Properties to set
+         * @param {pyth_lazer_transaction.IPriceUpdateV1=} [properties] Properties to set
          */
         function PriceUpdateV1(properties) {
             if (properties)
@@ -572,7 +572,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * PriceUpdateV1 priceFeedId.
          * @member {number} priceFeedId
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @instance
          */
         PriceUpdateV1.prototype.priceFeedId = 0;
@@ -580,7 +580,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * PriceUpdateV1 sourceTimestampUs.
          * @member {number|Long} sourceTimestampUs
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @instance
          */
         PriceUpdateV1.prototype.sourceTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
@@ -588,7 +588,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * PriceUpdateV1 publisherTimestampUs.
          * @member {number|Long} publisherTimestampUs
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @instance
          */
         PriceUpdateV1.prototype.publisherTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
@@ -596,7 +596,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * PriceUpdateV1 price.
          * @member {number|Long|null|undefined} price
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @instance
          */
         PriceUpdateV1.prototype.price = null;
@@ -604,7 +604,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * PriceUpdateV1 bestBidPrice.
          * @member {number|Long|null|undefined} bestBidPrice
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @instance
          */
         PriceUpdateV1.prototype.bestBidPrice = null;
@@ -612,7 +612,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * PriceUpdateV1 bestAskPrice.
          * @member {number|Long|null|undefined} bestAskPrice
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @instance
          */
         PriceUpdateV1.prototype.bestAskPrice = null;
@@ -641,21 +641,21 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a new PriceUpdateV1 instance using the specified properties.
          * @function create
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
-         * @param {pyth_lazer.IPriceUpdateV1=} [properties] Properties to set
-         * @returns {pyth_lazer.PriceUpdateV1} PriceUpdateV1 instance
+         * @param {pyth_lazer_transaction.IPriceUpdateV1=} [properties] Properties to set
+         * @returns {pyth_lazer_transaction.PriceUpdateV1} PriceUpdateV1 instance
          */
         PriceUpdateV1.create = function create(properties) {
             return new PriceUpdateV1(properties);
         };
 
         /**
-         * Encodes the specified PriceUpdateV1 message. Does not implicitly {@link pyth_lazer.PriceUpdateV1.verify|verify} messages.
+         * Encodes the specified PriceUpdateV1 message. Does not implicitly {@link pyth_lazer_transaction.PriceUpdateV1.verify|verify} messages.
          * @function encode
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
-         * @param {pyth_lazer.IPriceUpdateV1} message PriceUpdateV1 message or plain object to encode
+         * @param {pyth_lazer_transaction.IPriceUpdateV1} message PriceUpdateV1 message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -678,11 +678,11 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         };
 
         /**
-         * Encodes the specified PriceUpdateV1 message, length delimited. Does not implicitly {@link pyth_lazer.PriceUpdateV1.verify|verify} messages.
+         * Encodes the specified PriceUpdateV1 message, length delimited. Does not implicitly {@link pyth_lazer_transaction.PriceUpdateV1.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
-         * @param {pyth_lazer.IPriceUpdateV1} message PriceUpdateV1 message or plain object to encode
+         * @param {pyth_lazer_transaction.IPriceUpdateV1} message PriceUpdateV1 message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -693,18 +693,18 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a PriceUpdateV1 message from the specified reader or buffer.
          * @function decode
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {pyth_lazer.PriceUpdateV1} PriceUpdateV1
+         * @returns {pyth_lazer_transaction.PriceUpdateV1} PriceUpdateV1
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         PriceUpdateV1.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer.PriceUpdateV1();
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.PriceUpdateV1();
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -743,10 +743,10 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a PriceUpdateV1 message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {pyth_lazer.PriceUpdateV1} PriceUpdateV1
+         * @returns {pyth_lazer_transaction.PriceUpdateV1} PriceUpdateV1
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -759,7 +759,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Verifies a PriceUpdateV1 message.
          * @function verify
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -798,15 +798,15 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a PriceUpdateV1 message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {pyth_lazer.PriceUpdateV1} PriceUpdateV1
+         * @returns {pyth_lazer_transaction.PriceUpdateV1} PriceUpdateV1
          */
         PriceUpdateV1.fromObject = function fromObject(object) {
-            if (object instanceof $root.pyth_lazer.PriceUpdateV1)
+            if (object instanceof $root.pyth_lazer_transaction.PriceUpdateV1)
                 return object;
-            let message = new $root.pyth_lazer.PriceUpdateV1();
+            let message = new $root.pyth_lazer_transaction.PriceUpdateV1();
             if (object.priceFeedId != null)
                 message.priceFeedId = object.priceFeedId >>> 0;
             if (object.sourceTimestampUs != null)
@@ -860,9 +860,9 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a plain object from a PriceUpdateV1 message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
-         * @param {pyth_lazer.PriceUpdateV1} message PriceUpdateV1
+         * @param {pyth_lazer_transaction.PriceUpdateV1} message PriceUpdateV1
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -925,7 +925,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Converts this PriceUpdateV1 to JSON.
          * @function toJSON
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -936,7 +936,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Gets the default type url for PriceUpdateV1
          * @function getTypeUrl
-         * @memberof pyth_lazer.PriceUpdateV1
+         * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -945,17 +945,17 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/pyth_lazer.PriceUpdateV1";
+            return typeUrlPrefix + "/pyth_lazer_transaction.PriceUpdateV1";
         };
 
         return PriceUpdateV1;
     })();
 
-    pyth_lazer.FundingRateUpdateV1 = (function() {
+    pyth_lazer_transaction.FundingRateUpdateV1 = (function() {
 
         /**
          * Properties of a FundingRateUpdateV1.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @interface IFundingRateUpdateV1
          * @property {number|null} [priceFeedId] FundingRateUpdateV1 priceFeedId
          * @property {number|Long|null} [sourceTimestampUs] FundingRateUpdateV1 sourceTimestampUs
@@ -966,11 +966,11 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
 
         /**
          * Constructs a new FundingRateUpdateV1.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @classdesc Represents a FundingRateUpdateV1.
          * @implements IFundingRateUpdateV1
          * @constructor
-         * @param {pyth_lazer.IFundingRateUpdateV1=} [properties] Properties to set
+         * @param {pyth_lazer_transaction.IFundingRateUpdateV1=} [properties] Properties to set
          */
         function FundingRateUpdateV1(properties) {
             if (properties)
@@ -982,7 +982,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * FundingRateUpdateV1 priceFeedId.
          * @member {number} priceFeedId
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @instance
          */
         FundingRateUpdateV1.prototype.priceFeedId = 0;
@@ -990,7 +990,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * FundingRateUpdateV1 sourceTimestampUs.
          * @member {number|Long} sourceTimestampUs
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @instance
          */
         FundingRateUpdateV1.prototype.sourceTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
@@ -998,7 +998,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * FundingRateUpdateV1 publisherTimestampUs.
          * @member {number|Long} publisherTimestampUs
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @instance
          */
         FundingRateUpdateV1.prototype.publisherTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
@@ -1006,7 +1006,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * FundingRateUpdateV1 price.
          * @member {number|Long|null|undefined} price
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @instance
          */
         FundingRateUpdateV1.prototype.price = null;
@@ -1014,7 +1014,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * FundingRateUpdateV1 rate.
          * @member {number|Long|null|undefined} rate
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @instance
          */
         FundingRateUpdateV1.prototype.rate = null;
@@ -1037,21 +1037,21 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a new FundingRateUpdateV1 instance using the specified properties.
          * @function create
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
-         * @param {pyth_lazer.IFundingRateUpdateV1=} [properties] Properties to set
-         * @returns {pyth_lazer.FundingRateUpdateV1} FundingRateUpdateV1 instance
+         * @param {pyth_lazer_transaction.IFundingRateUpdateV1=} [properties] Properties to set
+         * @returns {pyth_lazer_transaction.FundingRateUpdateV1} FundingRateUpdateV1 instance
          */
         FundingRateUpdateV1.create = function create(properties) {
             return new FundingRateUpdateV1(properties);
         };
 
         /**
-         * Encodes the specified FundingRateUpdateV1 message. Does not implicitly {@link pyth_lazer.FundingRateUpdateV1.verify|verify} messages.
+         * Encodes the specified FundingRateUpdateV1 message. Does not implicitly {@link pyth_lazer_transaction.FundingRateUpdateV1.verify|verify} messages.
          * @function encode
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
-         * @param {pyth_lazer.IFundingRateUpdateV1} message FundingRateUpdateV1 message or plain object to encode
+         * @param {pyth_lazer_transaction.IFundingRateUpdateV1} message FundingRateUpdateV1 message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1072,11 +1072,11 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         };
 
         /**
-         * Encodes the specified FundingRateUpdateV1 message, length delimited. Does not implicitly {@link pyth_lazer.FundingRateUpdateV1.verify|verify} messages.
+         * Encodes the specified FundingRateUpdateV1 message, length delimited. Does not implicitly {@link pyth_lazer_transaction.FundingRateUpdateV1.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
-         * @param {pyth_lazer.IFundingRateUpdateV1} message FundingRateUpdateV1 message or plain object to encode
+         * @param {pyth_lazer_transaction.IFundingRateUpdateV1} message FundingRateUpdateV1 message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1087,18 +1087,18 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a FundingRateUpdateV1 message from the specified reader or buffer.
          * @function decode
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {pyth_lazer.FundingRateUpdateV1} FundingRateUpdateV1
+         * @returns {pyth_lazer_transaction.FundingRateUpdateV1} FundingRateUpdateV1
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         FundingRateUpdateV1.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer.FundingRateUpdateV1();
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.FundingRateUpdateV1();
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -1133,10 +1133,10 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a FundingRateUpdateV1 message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {pyth_lazer.FundingRateUpdateV1} FundingRateUpdateV1
+         * @returns {pyth_lazer_transaction.FundingRateUpdateV1} FundingRateUpdateV1
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -1149,7 +1149,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Verifies a FundingRateUpdateV1 message.
          * @function verify
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -1183,15 +1183,15 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a FundingRateUpdateV1 message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {pyth_lazer.FundingRateUpdateV1} FundingRateUpdateV1
+         * @returns {pyth_lazer_transaction.FundingRateUpdateV1} FundingRateUpdateV1
          */
         FundingRateUpdateV1.fromObject = function fromObject(object) {
-            if (object instanceof $root.pyth_lazer.FundingRateUpdateV1)
+            if (object instanceof $root.pyth_lazer_transaction.FundingRateUpdateV1)
                 return object;
-            let message = new $root.pyth_lazer.FundingRateUpdateV1();
+            let message = new $root.pyth_lazer_transaction.FundingRateUpdateV1();
             if (object.priceFeedId != null)
                 message.priceFeedId = object.priceFeedId >>> 0;
             if (object.sourceTimestampUs != null)
@@ -1236,9 +1236,9 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a plain object from a FundingRateUpdateV1 message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
-         * @param {pyth_lazer.FundingRateUpdateV1} message FundingRateUpdateV1
+         * @param {pyth_lazer_transaction.FundingRateUpdateV1} message FundingRateUpdateV1
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -1293,7 +1293,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Converts this FundingRateUpdateV1 to JSON.
          * @function toJSON
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -1304,7 +1304,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Gets the default type url for FundingRateUpdateV1
          * @function getTypeUrl
-         * @memberof pyth_lazer.FundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -1313,7 +1313,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/pyth_lazer.FundingRateUpdateV1";
+            return typeUrlPrefix + "/pyth_lazer_transaction.FundingRateUpdateV1";
         };
 
         return FundingRateUpdateV1;
@@ -1321,34 +1321,34 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
 
     /**
      * TransactionSignatureType enum.
-     * @name pyth_lazer.TransactionSignatureType
+     * @name pyth_lazer_transaction.TransactionSignatureType
      * @enum {number}
      * @property {number} ed25519=0 ed25519 value
      */
-    pyth_lazer.TransactionSignatureType = (function() {
+    pyth_lazer_transaction.TransactionSignatureType = (function() {
         const valuesById = {}, values = Object.create(valuesById);
         values[valuesById[0] = "ed25519"] = 0;
         return values;
     })();
 
-    pyth_lazer.SignedLazerTransaction = (function() {
+    pyth_lazer_transaction.SignedLazerTransaction = (function() {
 
         /**
          * Properties of a SignedLazerTransaction.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @interface ISignedLazerTransaction
-         * @property {pyth_lazer.TransactionSignatureType|null} [signatureType] SignedLazerTransaction signatureType
+         * @property {pyth_lazer_transaction.TransactionSignatureType|null} [signatureType] SignedLazerTransaction signatureType
          * @property {Uint8Array|null} [signature] SignedLazerTransaction signature
          * @property {Uint8Array|null} [transaction] SignedLazerTransaction transaction
          */
 
         /**
          * Constructs a new SignedLazerTransaction.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @classdesc Represents a SignedLazerTransaction.
          * @implements ISignedLazerTransaction
          * @constructor
-         * @param {pyth_lazer.ISignedLazerTransaction=} [properties] Properties to set
+         * @param {pyth_lazer_transaction.ISignedLazerTransaction=} [properties] Properties to set
          */
         function SignedLazerTransaction(properties) {
             if (properties)
@@ -1359,8 +1359,8 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
 
         /**
          * SignedLazerTransaction signatureType.
-         * @member {pyth_lazer.TransactionSignatureType} signatureType
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @member {pyth_lazer_transaction.TransactionSignatureType} signatureType
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @instance
          */
         SignedLazerTransaction.prototype.signatureType = 0;
@@ -1368,7 +1368,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * SignedLazerTransaction signature.
          * @member {Uint8Array} signature
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @instance
          */
         SignedLazerTransaction.prototype.signature = $util.newBuffer([]);
@@ -1376,7 +1376,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * SignedLazerTransaction transaction.
          * @member {Uint8Array} transaction
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @instance
          */
         SignedLazerTransaction.prototype.transaction = $util.newBuffer([]);
@@ -1384,21 +1384,21 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a new SignedLazerTransaction instance using the specified properties.
          * @function create
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
-         * @param {pyth_lazer.ISignedLazerTransaction=} [properties] Properties to set
-         * @returns {pyth_lazer.SignedLazerTransaction} SignedLazerTransaction instance
+         * @param {pyth_lazer_transaction.ISignedLazerTransaction=} [properties] Properties to set
+         * @returns {pyth_lazer_transaction.SignedLazerTransaction} SignedLazerTransaction instance
          */
         SignedLazerTransaction.create = function create(properties) {
             return new SignedLazerTransaction(properties);
         };
 
         /**
-         * Encodes the specified SignedLazerTransaction message. Does not implicitly {@link pyth_lazer.SignedLazerTransaction.verify|verify} messages.
+         * Encodes the specified SignedLazerTransaction message. Does not implicitly {@link pyth_lazer_transaction.SignedLazerTransaction.verify|verify} messages.
          * @function encode
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
-         * @param {pyth_lazer.ISignedLazerTransaction} message SignedLazerTransaction message or plain object to encode
+         * @param {pyth_lazer_transaction.ISignedLazerTransaction} message SignedLazerTransaction message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1415,11 +1415,11 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         };
 
         /**
-         * Encodes the specified SignedLazerTransaction message, length delimited. Does not implicitly {@link pyth_lazer.SignedLazerTransaction.verify|verify} messages.
+         * Encodes the specified SignedLazerTransaction message, length delimited. Does not implicitly {@link pyth_lazer_transaction.SignedLazerTransaction.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
-         * @param {pyth_lazer.ISignedLazerTransaction} message SignedLazerTransaction message or plain object to encode
+         * @param {pyth_lazer_transaction.ISignedLazerTransaction} message SignedLazerTransaction message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1430,18 +1430,18 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a SignedLazerTransaction message from the specified reader or buffer.
          * @function decode
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {pyth_lazer.SignedLazerTransaction} SignedLazerTransaction
+         * @returns {pyth_lazer_transaction.SignedLazerTransaction} SignedLazerTransaction
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         SignedLazerTransaction.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer.SignedLazerTransaction();
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.SignedLazerTransaction();
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
@@ -1468,10 +1468,10 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a SignedLazerTransaction message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {pyth_lazer.SignedLazerTransaction} SignedLazerTransaction
+         * @returns {pyth_lazer_transaction.SignedLazerTransaction} SignedLazerTransaction
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -1484,7 +1484,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Verifies a SignedLazerTransaction message.
          * @function verify
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -1511,15 +1511,15 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a SignedLazerTransaction message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {pyth_lazer.SignedLazerTransaction} SignedLazerTransaction
+         * @returns {pyth_lazer_transaction.SignedLazerTransaction} SignedLazerTransaction
          */
         SignedLazerTransaction.fromObject = function fromObject(object) {
-            if (object instanceof $root.pyth_lazer.SignedLazerTransaction)
+            if (object instanceof $root.pyth_lazer_transaction.SignedLazerTransaction)
                 return object;
-            let message = new $root.pyth_lazer.SignedLazerTransaction();
+            let message = new $root.pyth_lazer_transaction.SignedLazerTransaction();
             switch (object.signatureType) {
             default:
                 if (typeof object.signatureType === "number") {
@@ -1548,9 +1548,9 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a plain object from a SignedLazerTransaction message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
-         * @param {pyth_lazer.SignedLazerTransaction} message SignedLazerTransaction
+         * @param {pyth_lazer_transaction.SignedLazerTransaction} message SignedLazerTransaction
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -1576,7 +1576,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                 }
             }
             if (message.signatureType != null && message.hasOwnProperty("signatureType"))
-                object.signatureType = options.enums === String ? $root.pyth_lazer.TransactionSignatureType[message.signatureType] === undefined ? message.signatureType : $root.pyth_lazer.TransactionSignatureType[message.signatureType] : message.signatureType;
+                object.signatureType = options.enums === String ? $root.pyth_lazer_transaction.TransactionSignatureType[message.signatureType] === undefined ? message.signatureType : $root.pyth_lazer_transaction.TransactionSignatureType[message.signatureType] : message.signatureType;
             if (message.signature != null && message.hasOwnProperty("signature"))
                 object.signature = options.bytes === String ? $util.base64.encode(message.signature, 0, message.signature.length) : options.bytes === Array ? Array.prototype.slice.call(message.signature) : message.signature;
             if (message.transaction != null && message.hasOwnProperty("transaction"))
@@ -1587,7 +1587,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Converts this SignedLazerTransaction to JSON.
          * @function toJSON
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -1598,7 +1598,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Gets the default type url for SignedLazerTransaction
          * @function getTypeUrl
-         * @memberof pyth_lazer.SignedLazerTransaction
+         * @memberof pyth_lazer_transaction.SignedLazerTransaction
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -1607,28 +1607,28 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/pyth_lazer.SignedLazerTransaction";
+            return typeUrlPrefix + "/pyth_lazer_transaction.SignedLazerTransaction";
         };
 
         return SignedLazerTransaction;
     })();
 
-    pyth_lazer.LazerTransaction = (function() {
+    pyth_lazer_transaction.LazerTransaction = (function() {
 
         /**
          * Properties of a LazerTransaction.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @interface ILazerTransaction
-         * @property {pyth_lazer.IPublisherUpdatePayload|null} [publisherUpdates] LazerTransaction publisherUpdates
+         * @property {pyth_lazer_transaction.IPublisherUpdatePayload|null} [publisherUpdates] LazerTransaction publisherUpdates
          */
 
         /**
          * Constructs a new LazerTransaction.
-         * @memberof pyth_lazer
+         * @memberof pyth_lazer_transaction
          * @classdesc Represents a LazerTransaction.
          * @implements ILazerTransaction
          * @constructor
-         * @param {pyth_lazer.ILazerTransaction=} [properties] Properties to set
+         * @param {pyth_lazer_transaction.ILazerTransaction=} [properties] Properties to set
          */
         function LazerTransaction(properties) {
             if (properties)
@@ -1639,8 +1639,8 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
 
         /**
          * LazerTransaction publisherUpdates.
-         * @member {pyth_lazer.IPublisherUpdatePayload|null|undefined} publisherUpdates
-         * @memberof pyth_lazer.LazerTransaction
+         * @member {pyth_lazer_transaction.IPublisherUpdatePayload|null|undefined} publisherUpdates
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @instance
          */
         LazerTransaction.prototype.publisherUpdates = null;
@@ -1651,7 +1651,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * LazerTransaction transaction.
          * @member {"publisherUpdates"|undefined} transaction
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @instance
          */
         Object.defineProperty(LazerTransaction.prototype, "transaction", {
@@ -1662,21 +1662,21 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a new LazerTransaction instance using the specified properties.
          * @function create
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
-         * @param {pyth_lazer.ILazerTransaction=} [properties] Properties to set
-         * @returns {pyth_lazer.LazerTransaction} LazerTransaction instance
+         * @param {pyth_lazer_transaction.ILazerTransaction=} [properties] Properties to set
+         * @returns {pyth_lazer_transaction.LazerTransaction} LazerTransaction instance
          */
         LazerTransaction.create = function create(properties) {
             return new LazerTransaction(properties);
         };
 
         /**
-         * Encodes the specified LazerTransaction message. Does not implicitly {@link pyth_lazer.LazerTransaction.verify|verify} messages.
+         * Encodes the specified LazerTransaction message. Does not implicitly {@link pyth_lazer_transaction.LazerTransaction.verify|verify} messages.
          * @function encode
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
-         * @param {pyth_lazer.ILazerTransaction} message LazerTransaction message or plain object to encode
+         * @param {pyth_lazer_transaction.ILazerTransaction} message LazerTransaction message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1684,16 +1684,16 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (!writer)
                 writer = $Writer.create();
             if (message.publisherUpdates != null && Object.hasOwnProperty.call(message, "publisherUpdates"))
-                $root.pyth_lazer.PublisherUpdatePayload.encode(message.publisherUpdates, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                $root.pyth_lazer_transaction.PublisherUpdatePayload.encode(message.publisherUpdates, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             return writer;
         };
 
         /**
-         * Encodes the specified LazerTransaction message, length delimited. Does not implicitly {@link pyth_lazer.LazerTransaction.verify|verify} messages.
+         * Encodes the specified LazerTransaction message, length delimited. Does not implicitly {@link pyth_lazer_transaction.LazerTransaction.verify|verify} messages.
          * @function encodeDelimited
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
-         * @param {pyth_lazer.ILazerTransaction} message LazerTransaction message or plain object to encode
+         * @param {pyth_lazer_transaction.ILazerTransaction} message LazerTransaction message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1704,23 +1704,23 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a LazerTransaction message from the specified reader or buffer.
          * @function decode
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
-         * @returns {pyth_lazer.LazerTransaction} LazerTransaction
+         * @returns {pyth_lazer_transaction.LazerTransaction} LazerTransaction
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
         LazerTransaction.decode = function decode(reader, length) {
             if (!(reader instanceof $Reader))
                 reader = $Reader.create(reader);
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer.LazerTransaction();
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.LazerTransaction();
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.publisherUpdates = $root.pyth_lazer.PublisherUpdatePayload.decode(reader, reader.uint32());
+                        message.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdatePayload.decode(reader, reader.uint32());
                         break;
                     }
                 default:
@@ -1734,10 +1734,10 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Decodes a LazerTransaction message from the specified reader or buffer, length delimited.
          * @function decodeDelimited
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {pyth_lazer.LazerTransaction} LazerTransaction
+         * @returns {pyth_lazer_transaction.LazerTransaction} LazerTransaction
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -1750,7 +1750,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Verifies a LazerTransaction message.
          * @function verify
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
          * @param {Object.<string,*>} message Plain object to verify
          * @returns {string|null} `null` if valid, otherwise the reason why it is not
@@ -1762,7 +1762,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (message.publisherUpdates != null && message.hasOwnProperty("publisherUpdates")) {
                 properties.transaction = 1;
                 {
-                    let error = $root.pyth_lazer.PublisherUpdatePayload.verify(message.publisherUpdates);
+                    let error = $root.pyth_lazer_transaction.PublisherUpdatePayload.verify(message.publisherUpdates);
                     if (error)
                         return "publisherUpdates." + error;
                 }
@@ -1773,19 +1773,19 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a LazerTransaction message from a plain object. Also converts values to their respective internal types.
          * @function fromObject
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
          * @param {Object.<string,*>} object Plain object
-         * @returns {pyth_lazer.LazerTransaction} LazerTransaction
+         * @returns {pyth_lazer_transaction.LazerTransaction} LazerTransaction
          */
         LazerTransaction.fromObject = function fromObject(object) {
-            if (object instanceof $root.pyth_lazer.LazerTransaction)
+            if (object instanceof $root.pyth_lazer_transaction.LazerTransaction)
                 return object;
-            let message = new $root.pyth_lazer.LazerTransaction();
+            let message = new $root.pyth_lazer_transaction.LazerTransaction();
             if (object.publisherUpdates != null) {
                 if (typeof object.publisherUpdates !== "object")
-                    throw TypeError(".pyth_lazer.LazerTransaction.publisherUpdates: object expected");
-                message.publisherUpdates = $root.pyth_lazer.PublisherUpdatePayload.fromObject(object.publisherUpdates);
+                    throw TypeError(".pyth_lazer_transaction.LazerTransaction.publisherUpdates: object expected");
+                message.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdatePayload.fromObject(object.publisherUpdates);
             }
             return message;
         };
@@ -1793,9 +1793,9 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Creates a plain object from a LazerTransaction message. Also converts values to other types if specified.
          * @function toObject
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
-         * @param {pyth_lazer.LazerTransaction} message LazerTransaction
+         * @param {pyth_lazer_transaction.LazerTransaction} message LazerTransaction
          * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
@@ -1804,7 +1804,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
                 options = {};
             let object = {};
             if (message.publisherUpdates != null && message.hasOwnProperty("publisherUpdates")) {
-                object.publisherUpdates = $root.pyth_lazer.PublisherUpdatePayload.toObject(message.publisherUpdates, options);
+                object.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdatePayload.toObject(message.publisherUpdates, options);
                 if (options.oneofs)
                     object.transaction = "publisherUpdates";
             }
@@ -1814,7 +1814,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Converts this LazerTransaction to JSON.
          * @function toJSON
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @instance
          * @returns {Object.<string,*>} JSON object
          */
@@ -1825,7 +1825,7 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
         /**
          * Gets the default type url for LazerTransaction
          * @function getTypeUrl
-         * @memberof pyth_lazer.LazerTransaction
+         * @memberof pyth_lazer_transaction.LazerTransaction
          * @static
          * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns {string} The default type url
@@ -1834,13 +1834,13 @@ export const pyth_lazer = $root.pyth_lazer = (() => {
             if (typeUrlPrefix === undefined) {
                 typeUrlPrefix = "type.googleapis.com";
             }
-            return typeUrlPrefix + "/pyth_lazer.LazerTransaction";
+            return typeUrlPrefix + "/pyth_lazer_transaction.LazerTransaction";
         };
 
         return LazerTransaction;
     })();
 
-    return pyth_lazer;
+    return pyth_lazer_transaction;
 })();
 
 export { $root as default };
