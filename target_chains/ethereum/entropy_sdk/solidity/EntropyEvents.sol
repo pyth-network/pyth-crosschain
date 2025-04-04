@@ -51,11 +51,10 @@ interface EntropyEvents {
 
     event ProviderFeeUpdated(address provider, uint128 oldFee, uint128 newFee);
 
-    // TODO: uint32
     event ProviderDefaultGasLimitUpdated(
         address indexed provider,
-        uint64 oldDefaultGasLimit,
-        uint64 newDefaultGasLimit
+        uint32 oldDefaultGasLimit,
+        uint32 newDefaultGasLimit
     );
 
     event ProviderUriUpdated(address provider, bytes oldUri, bytes newUri);

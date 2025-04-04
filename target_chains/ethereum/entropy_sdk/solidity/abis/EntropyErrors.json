@@ -26,11 +26,6 @@
   },
   {
     "inputs": [],
-    "name": "InvalidArgument",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidRevealCall",
     "type": "error"
   },

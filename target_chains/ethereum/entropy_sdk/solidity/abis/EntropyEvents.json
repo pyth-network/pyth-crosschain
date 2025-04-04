@@ -108,15 +108,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint64",
+        "internalType": "uint32",
         "name": "oldDefaultGasLimit",
-        "type": "uint64"
+        "type": "uint32"
       },
       {
         "indexed": false,
-        "internalType": "uint64",
+        "internalType": "uint32",
         "name": "newDefaultGasLimit",
-        "type": "uint64"
+        "type": "uint32"
       }
     ],
     "name": "ProviderDefaultGasLimitUpdated",

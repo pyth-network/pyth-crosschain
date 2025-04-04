@@ -317,7 +317,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             requestWithCallbackAndGasLimit(
                 provider,
                 userRandomNumber,
-                _state.providers[provider].defaultGasLimit
+                0 // Passing 0 will assign the request the provider's default gas limit
             );
     }
 

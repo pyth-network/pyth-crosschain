@@ -48,14 +48,30 @@ interface IEntropy is EntropyEvents {
     //
     // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
     // The `entropyCallback` method on that interface will receive a callback with the generated random number.
+    // `entropyCallback` will be run with the provider's default gas limit (see `getProviderInfo(provider).defaultGasLimit`).
+    // If your callback needs additional gas, please use `requestWithCallbackAndGasLimit`.
     //
-    // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
+    // This method will revert unless the caller provides a sufficient fee (at least `getFee(provider)`) as msg.value.
     // Note that excess value is *not* refunded to the caller.
     function requestWithCallback(
         address provider,
         bytes32 userRandomNumber
     ) external payable returns (uint64 assignedSequenceNumber);
 
+    // Request a random number from `provider`, getting a callback with the result.
+    // The caller must specify a provider to fulfill the request -- `getDefaultProvider()` is a sane default --
+    // and a `userRandomNumber` to combine into the result. The method returns a sequence number which callers
+    // should save to correlate the request with the callback.
+    //
+    // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
+    // The `entropyCallback` method on that interface will receive a callback with the returned sequence number and
+    // the generated random number. `entropyCallback` will be run with the `gasLimit` provided to this function.
+    // The `gasLimit` will be rounded up to a multiple of 10k (e.g., 19000 -> 20000), and furthermore is lower bounded
+    // by the provider's configured default limit.
+    //
+    // This method will revert unless the caller provides a sufficient fee (at least `getFeeForGas(provider, gasLimit)`) as msg.value.
+    // Note that provider fees can change over time. Thus, callers of this method should explictly compute `getFeeForGas(provider, gasLimit)`
+    // prior to each invocation (as opposed to  hardcoding a value). Further note that excess value is *not* refunded to the caller.
     function requestWithCallbackAndGasLimit(
         address provider,
         bytes32 userRandomNumber,
@@ -104,8 +120,11 @@ interface IEntropy is EntropyEvents {
         uint64 sequenceNumber
     ) external view returns (EntropyStructs.Request memory req);
 
+    // Get the fee charged by provider for a request with the default gasLimit (`request` or `requestWithCallback`).
+    // If you are calling `requestWithCallbackAndGasLimit`, please use `getFeeForGas`.
     function getFee(address provider) external view returns (uint128 feeAmount);
 
+    // Get the fee charged by `provider` for a request with a specific `gasLimit` (`requestWithCallbackAndGasLimit`).
     function getFeeForGas(
         address provider,
         uint32 gasLimit
