@@ -369,17 +369,51 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
         0);
 }
 
+;; Helper function to parse price IDs from a slice, handling cell chain traversal
+;; Returns a tuple containing the parsed price IDs
+tuple parse_price_ids_from_slice(slice price_ids_slice) {
+    int price_ids_len = price_ids_slice~load_uint(8);
+    tuple price_ids = empty_tuple();
+
+    ;; Process each price ID, handling potential cell boundaries
+    int i = 0;
+    while (i < price_ids_len) {
+        builder price_id_builder = begin_cell();
+        int bits_loaded = 0;
+
+        ;; We need to load exactly 256 bits for each price ID
+        while (bits_loaded < 256) {
+            ;; Calculate how many bits we can load from the current slice
+            int bits_to_load = min(price_ids_slice.slice_bits(), 256 - bits_loaded);
+
+            ;; Load and store those bits
+            price_id_builder = price_id_builder.store_slice(price_ids_slice~load_bits(bits_to_load));
+            bits_loaded += bits_to_load;
+
+            ;; If we haven't loaded all 256 bits yet, we need to move to the next cell
+            if (bits_loaded < 256) {
+                ;; Make sure we have a next cell to load from
+                throw_unless(35, ~ price_ids_slice.slice_refs_empty?());
+                price_ids_slice = price_ids_slice~load_ref().begin_parse();
+            }
+        }
+
+        ;; Extract the complete price ID from the builder
+        slice price_id_slice = price_id_builder.end_cell().begin_parse();
+        int price_id = price_id_slice~load_uint(256);
+        price_ids~tpush(price_id);
+        i += 1;
+    }
+
+    return price_ids;
+}
+
 () parse_price_feed_updates(int msg_value, slice update_data_slice, slice price_ids_slice, int min_publish_time, int max_publish_time, slice sender_address, slice target_address, slice custom_payload) impure {
     try {
         load_data();
 
-        ;; Load price_ids tuple
-        int price_ids_len = price_ids_slice~load_uint(8);
-        tuple price_ids = empty_tuple();
-        repeat(price_ids_len) {
-            int price_id = price_ids_slice~load_uint(256);
-            price_ids~tpush(price_id);
-        }
+        ;; Use the helper function to parse price IDs
+        tuple price_ids = parse_price_ids_from_slice(price_ids_slice);
 
         tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, min_publish_time, max_publish_time, false);
         send_price_feeds_response(price_feeds, msg_value, OP_PARSE_PRICE_FEED_UPDATES,
@@ -395,13 +429,8 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     try {
         load_data();
 
-        ;; Load price_ids tuple
-        int price_ids_len = price_ids_slice~load_uint(8);
-        tuple price_ids = empty_tuple();
-        repeat(price_ids_len) {
-            int price_id = price_ids_slice~load_uint(256);
-            price_ids~tpush(price_id);
-        }
+        ;; Use the helper function to parse price IDs
+        tuple price_ids = parse_price_ids_from_slice(price_ids_slice);
 
         tuple price_feeds = parse_price_feeds_from_data(msg_value, update_data_slice, price_ids, publish_time, publish_time + max_staleness, true);
         send_price_feeds_response(price_feeds, msg_value, OP_PARSE_UNIQUE_PRICE_FEED_UPDATES, sender_address, target_address, custom_payload);
