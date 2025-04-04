@@ -45,4 +45,6 @@ library EntropyErrors {
     error UpdateTooOld();
     // Not enough gas was provided to the function to execute the callback with the desired amount of gas.
     error InsufficientGas();
+    // An argument to the function call was invalid or out of the expected range.
+    error InvalidArgument();
 }

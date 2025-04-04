@@ -262,8 +262,17 @@ abstract contract Entropy is IEntropy, EntropyState {
             // Set gasLimit10k to 0 to disable.
             req.gasLimit10k = 0;
         } else {
-            req.gasLimit10k = roundGas(callbackGasLimit);
-        }        
+            // This check does two important things:
+            // 1. Providers have a minimum fee set for their defaultGasLimit. If users request less gas than that,
+            //    they still pay for the full gas limit. So we may as well give them the full limit here.
+            // 2. If a provider has a defaultGasLimit != 0, we need to ensure that all requests have a >0 gas limit
+            //    so that we opt-in to the new callback failure state flow.
+            req.gasLimit10k = roundGas(
+                callbackGasLimit < providerInfo.defaultGasLimit
+                    ? providerInfo.defaultGasLimit
+                    : callbackGasLimit
+            );
+        }
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
