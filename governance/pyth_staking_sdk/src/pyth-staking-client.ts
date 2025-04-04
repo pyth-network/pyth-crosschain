@@ -14,7 +14,6 @@ import {
   getAssociatedTokenAddressSync,
   getMint,
 } from "@solana/spl-token";
-import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
   PublicKey,
@@ -48,6 +47,7 @@ import type {
   VestingSchedule,
 } from "./types";
 import { PositionState } from "./types";
+import type { Staking } from "../types/staking";
 import { bigintMax, bigintMin } from "./utils/bigint";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
 import { epochToDate, getCurrentEpoch } from "./utils/clock";
@@ -59,22 +59,22 @@ import {
 } from "./utils/position";
 import { sendTransaction } from "./utils/transaction";
 import { getUnlockSchedule } from "./utils/vesting";
+import type { PythStakingWallet } from "./utils/wallet";
 import { DummyWallet } from "./utils/wallet";
 import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
 import * as PublisherCapsIdl from "../idl/publisher-caps.json";
 import * as StakingIdl from "../idl/staking.json";
 import type { IntegrityPool } from "../types/integrity-pool";
 import type { PublisherCaps } from "../types/publisher-caps";
-import type { Staking } from "../types/staking";
 
 export type PythStakingClientConfig = {
   connection: Connection;
-  wallet?: AnchorWallet;
+  wallet?: PythStakingWallet;
 };
 
 export class PythStakingClient {
   connection: Connection;
-  wallet: AnchorWallet;
+  wallet: PythStakingWallet;
   provider: AnchorProvider;
   stakingProgram: Program<Staking>;
   integrityPoolProgram: Program<IntegrityPool>;

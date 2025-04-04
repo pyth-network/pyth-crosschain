@@ -195,6 +195,7 @@ const useApiContext = (
               publicKey: wallet.publicKey,
               signAllTransactions: wallet.signAllTransactions,
               signTransaction: wallet.signTransaction,
+              sendTransaction: wallet.sendTransaction,
             },
           })
         : undefined,
@@ -202,6 +203,7 @@ const useApiContext = (
       wallet.publicKey,
       wallet.signAllTransactions,
       wallet.signTransaction,
+      wallet.sendTransaction,
       connection,
     ],
   );
