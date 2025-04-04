@@ -1229,7 +1229,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     // Test the corner case caused by the CALL opcode passing at most 63/64ths of the current gas
     // to the sub-call.
     function testRequestWithCallbackUsingTooMuchGas2() public {
-        // With a 64M gas limit, we will pass ~63M gas to the callback (which is insufficient), but still 
+        // With a 64M gas limit, we will pass ~63M gas to the callback (which is insufficient), but still
         // have ~1M gas to execute code within the revealWithCallback method, which should be enough to
         // run all of the logic subsequent to the excessivelySafeCall.
         uint32 defaultGasLimit = 64000000;
@@ -1245,10 +1245,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         vm.prank(user1);
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
-        );
-        EntropyStructs.Request memory req = random.getRequest(
-            provider1,
-            assignedSequenceNumber
         );
 
         // The transaction reverts if the provider does not provide enough gas to forward
@@ -1573,32 +1569,66 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         assertEq(fee, random.getFee(provider1));
     }
 
-    function testRoundGas() public {
-        // TODO: test this with the full request/reveal flow and update the max value
+    function testGasLimitsAndFeeRounding() public {
+        vm.prank(provider1);
+        random.setDefaultGasLimit(20000);
+        vm.prank(provider1);
+        random.setProviderFee(1);
 
         // Test exact multiples of 10,000
-        assertEq(random.roundGas(0), 0);
-        assertEq(random.roundGas(10000), 1);
-        assertEq(random.roundGas(20000), 2);
-        assertEq(random.roundGas(100000), 10);
+        assertGasLimit10k(0, 0, 1);
+        assertGasLimit10k(10000, 1, 1);
+        assertGasLimit10k(20000, 2, 1);
+        assertGasLimit10k(100000, 10, 5);
 
         // Test values just below multiples of 10,000
-        assertEq(random.roundGas(9999), 1);
-        assertEq(random.roundGas(19999), 2);
-        assertEq(random.roundGas(99999), 10);
+        assertGasLimit10k(9999, 1, 1);
+        assertGasLimit10k(19999, 2, 1);
+        assertGasLimit10k(39999, 4, 2);
+        assertGasLimit10k(99999, 10, 5);
 
         // Test values just above multiples of 10,000
-        assertEq(random.roundGas(10001), 2);
-        assertEq(random.roundGas(20001), 3);
-        assertEq(random.roundGas(100001), 11);
+        assertGasLimit10k(10001, 2, 1);
+        assertGasLimit10k(20001, 3, 1);
+        assertGasLimit10k(100001, 11, 5);
+        assertGasLimit10k(110001, 12, 6);
 
         // Test middle values
-        assertEq(random.roundGas(5000), 1);
-        assertEq(random.roundGas(15000), 2);
-        assertEq(random.roundGas(25000), 3);
+        assertGasLimit10k(5000, 1, 1);
+        assertGasLimit10k(15000, 2, 1);
+        assertGasLimit10k(25000, 3, 1);
 
-        // Test maximum uint32 value
-        assertEq(random.roundGas(type(uint32).max), 429497); // (2^32 - 1) / 10000 rounded up
+        // Test maximum value
+        assertGasLimit10k(
+            uint32(type(uint16).max) * 10000,
+            type(uint16).max,
+            uint128(type(uint16).max) / 2
+        );
+    }
+
+    // Helper method to create a request with a specific gas limit and check the gasLimit10k field
+    function assertGasLimit10k(
+        uint32 gasLimit,
+        uint16 expectedGasLimit10k,
+        uint128 expectedProviderFee
+    ) internal {
+        // Create a request with callback
+        bytes32 userRandomNumber = bytes32(uint(42));
+        uint fee = random.getFeeForGas(provider1, gasLimit);
+        assertEq(fee - random.getPythFee(), expectedProviderFee);
+
+        vm.deal(user1, fee);
+        vm.prank(user1);
+        uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{
+            value: fee
+        }(provider1, userRandomNumber, gasLimit);
+
+        // Check the gasLimit10k field in the request
+        EntropyStructs.Request memory req = random.getRequest(
+            provider1,
+            sequenceNumber
+        );
+        assertEq(req.gasLimit10k, expectedGasLimit10k);
     }
 }
 

@@ -515,17 +515,20 @@ abstract contract Entropy is IEntropy, EntropyState {
         // any reverts will be reported as an event. Any failing requests move to a failure state
         // at which point they can be recovered. The recovery flow invokes the callback directly
         // (no catching errors) which allows callers to easily see the revert reason.
-        if (req.gasLimit10k != 0 && req.callbackStatus == EntropyStatusConstants.CALLBACK_NOT_STARTED) {
+        if (
+            req.gasLimit10k != 0 &&
+            req.callbackStatus == EntropyStatusConstants.CALLBACK_NOT_STARTED
+        ) {
             req.callbackStatus = EntropyStatusConstants.CALLBACK_IN_PROGRESS;
             bool success;
             bytes memory ret;
             uint256 startingGas = gasleft();
             (success, ret) = callAddress.excessivelySafeCall(
                 // Warning: the provided gas limit below is only an *upper bound* on the gas provided to the call.
-                // If the current context has less gas the desired value, 63/64ths of the current context's gas will
-                // be provided instead. (See CALL opcode docs here https://www.evm.codes/?fork=cancun#f1)
+                // At most 63/64ths of the current context's gas will be provided to a call, which may be less
+                // than the indicated gas limit. (See CALL opcode docs here https://www.evm.codes/?fork=cancun#f1)
                 // Consequently, out-of-gas reverts need to be handled carefully to ensure that the callback
-                // was truly provided with a sufficient amount of gas.                
+                // was truly provided with a sufficient amount of gas.
                 uint256(req.gasLimit10k) * 10000,
                 256, // copy at most 256 bytes of the return value into ret.
                 abi.encodeWithSelector(
@@ -535,7 +538,6 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 )
             );
-            uint256 endingGas = gasleft();
             // Reset status to not started here in case the transaction reverts.
             req.callbackStatus = EntropyStatusConstants.CALLBACK_NOT_STARTED;
 
@@ -547,10 +549,15 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 );
                 clearRequest(provider, sequenceNumber);
-            } else if (ret.length > 0 || startingGas - endingGas >= uint256(req.gasLimit10k) * 10000) {
+            } else if (
+                ret.length > 0 ||
+                (startingGas * 31) / 32 > uint256(req.gasLimit10k) * 10000
+            ) {
                 // The callback reverted for some reason.
-                // If ret.length == 0, then the callback ran out of gas. In this case, ensure that the
-                // callback was provided with sufficient gas.
+                // If ret.length > 0, then we know the callback manually triggered a revert, so it's safe to mark it as failed.
+                // If ret.length == 0, then the callback might have run out of gas (though there are other ways to trigger a revert with ret.length == 0).
+                // In this case, ensure that the callback was provided with sufficient gas. Technically, 63/64ths of the startingGas is forwarded,
+                // but we're using 31/32 to introduce a margin of safety.
                 emit CallbackFailed(
                     provider,
                     req.requester,
@@ -562,11 +569,11 @@ abstract contract Entropy is IEntropy, EntropyState {
                 );
                 req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
             } else {
-                // Callback reverted by running out of gas, but the calling context did not have enough gas
+                // Callback reverted by (potentially) running out of gas, but the calling context did not have enough gas
                 // to run the callback. This is a corner case that can happen due to the nuances of gas passing
                 // in calls (see the comment on the call above).
-                // 
-                // (Note that reverting here plays nicely with the estimateGas RPC method, which binary searches for 
+                //
+                // (Note that reverting here plays nicely with the estimateGas RPC method, which binary searches for
                 // the smallest gas value that causes the transaction to *succeed*. See https://github.com/ethereum/go-ethereum/pull/3587 )
                 revert EntropyErrors.InsufficientGas();
             }
@@ -640,11 +647,15 @@ abstract contract Entropy is IEntropy, EntropyState {
         ];
 
         uint32 roundedGasLimit = uint32(roundGas(gasLimit)) * 10000;
-        if (roundedGasLimit > provider.defaultGasLimit) {
+        if (
+            provider.defaultGasLimit > 0 &&
+            roundedGasLimit > provider.defaultGasLimit
+        ) {
             // This calculation rounds down the fee, which means that users can get some gas in the callback for free.
             // However, the value of the free gas is < 1 wei, which is insignificant.
-            uint128 additionalFee = ((roundedGasLimit - provider.defaultGasLimit) *
-                provider.feeInWei) / provider.defaultGasLimit;
+            uint128 additionalFee = ((roundedGasLimit -
+                provider.defaultGasLimit) * provider.feeInWei) /
+                provider.defaultGasLimit;
             return provider.feeInWei + additionalFee;
         } else {
             return provider.feeInWei;
@@ -777,9 +788,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
     // Rounds the provided quantity of gas into units of 10k gas.
     // If gas is not evenly divisible by 10k, rounds up.
-    function roundGas(
-        uint32 gas
-    ) public pure returns (uint16) {
+    function roundGas(uint32 gas) internal pure returns (uint16) {
         uint32 gas10k = gas / 10000;
         if (gas10k * 10000 < gas) {
             gas10k += 1;
