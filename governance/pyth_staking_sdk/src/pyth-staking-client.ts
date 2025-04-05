@@ -21,6 +21,8 @@ import {
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
+import { JSONParser } from "@streamparser/json";
+import { z } from "zod";
 
 import {
   GOVERNANCE_ADDRESS,
@@ -1030,5 +1032,119 @@ export class PythStakingClient {
     );
 
     return getAccount(this.connection, rewardCustodyAccountAddress);
+  }
+
+  /**
+   * Return all stake account positions for all owners.  Note that this method
+   * is unique in a few ways:
+   *
+   * 1. It's very, very expensive.  Don't call it if you don't _really_ need it,
+   *    and expect it to take a few minutes to respond.
+   * 2. Because the full positionData is so large, json parsing it with a
+   *    typical json parser would involve buffering to a string that's too large
+   *    for node.  So instead we use `stream-json` to parse it as a stream.
+   */
+  public async getAllStakeAccountPositionsAllOwners(): Promise<
+    StakeAccountPositions[]
+  > {
+    const res = await fetch(this.connection.rpcEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getProgramAccounts",
+        params: [
+          this.stakingProgram.programId.toBase58(),
+          {
+            encoding: "base64",
+            filters: [
+              {
+                memcmp: this.stakingProgram.coder.accounts.memcmp(
+                  "positionData",
+                ) as {
+                  offset: number;
+                  bytes: string;
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (res.ok) {
+      const { body } = res;
+      if (body) {
+        const accounts = await new Promise<unknown>((resolve, reject) => {
+          const jsonparser = new JSONParser({ paths: ["$.result"] });
+          jsonparser.onValue = ({ value }) => {
+            resolve(value);
+          };
+          const parse = async () => {
+            const reader = body.getReader();
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            while (true) {
+              const res = await reader.read();
+              if (res.done) break;
+              if (typeof res.value === "string") {
+                jsonparser.write(res.value);
+              }
+            }
+          };
+
+          parse().catch((error: unknown) => {
+            reject(error instanceof Error ? error : new Error("Unknown Error"));
+          });
+        });
+
+        return accountSchema
+          .parse(accounts)
+          .map(({ pubkey, account }) =>
+            deserializeStakeAccountPositions(
+              pubkey,
+              account.data,
+              this.stakingProgram.idl,
+            ),
+          );
+      } else {
+        throw new NoBodyError();
+      }
+    } else {
+      throw new NotOKError(res);
+    }
+  }
+}
+
+const accountSchema = z.array(
+  z.object({
+    account: z.object({
+      data: z
+        .array(z.string())
+        .min(1)
+        .transform((data) =>
+          // Safe because `min(1)` guarantees that `data` is nonempty
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          Buffer.from(data[0]!, "base64"),
+        ),
+    }),
+    pubkey: z.string().transform((value) => new PublicKey(value)),
+  }),
+);
+
+class NotOKError extends Error {
+  constructor(result: Response) {
+    super(`Received a ${result.status.toString()} response for ${result.url}`);
+    this.cause = result;
+    this.name = "NotOKError";
+  }
+}
+
+class NoBodyError extends Error {
+  constructor() {
+    super("Response did not contain a body!");
+    this.name = "NoBodyError";
   }
 }
