@@ -111,3 +111,33 @@ export const getVotingTokenAmount = (
   );
   return totalVotingTokenAmount;
 };
+
+export const summarizeAccountPositions = (
+  positions: StakeAccountPositions,
+  epoch: bigint,
+) => {
+  const summary = {
+    voting: {
+      [PositionState.LOCKED]: 0n,
+      [PositionState.LOCKING]: 0n,
+      [PositionState.PREUNLOCKING]: 0n,
+      [PositionState.UNLOCKED]: 0n,
+      [PositionState.UNLOCKING]: 0n,
+    },
+    integrityPool: {
+      [PositionState.LOCKED]: 0n,
+      [PositionState.LOCKING]: 0n,
+      [PositionState.PREUNLOCKING]: 0n,
+      [PositionState.UNLOCKED]: 0n,
+      [PositionState.UNLOCKING]: 0n,
+    },
+  };
+  for (const position of positions.data.positions) {
+    const category = position.targetWithParameters.voting
+      ? "voting"
+      : "integrityPool";
+    const state = getPositionState(position, epoch);
+    summary[category][state] += position.amount;
+  }
+  return summary;
+};

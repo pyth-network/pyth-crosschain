@@ -80,6 +80,10 @@ export const SIMULATION_PAYER_ADDRESS = getOr(
   "SIMULATION_PAYER_ADDRESS",
   "E5KR7yfb9UyVB6ZhmhQki1rM1eBcxHvyGKFZakAC5uc",
 );
+export const AMOUNT_STAKED_PER_ACCOUNT_SECRET = demandInProduction(
+  "AMOUNT_STAKED_PER_ACCOUNT_SECRET",
+);
+
 class MissingEnvironmentError extends Error {
   constructor(name: string) {
     super(`Missing environment variable: ${name}!`);
