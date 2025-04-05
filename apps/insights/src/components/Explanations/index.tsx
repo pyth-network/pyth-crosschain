@@ -29,7 +29,7 @@ export const ExplainPermissioned = ({
     <Explain size="xs" title="Permissioned Feeds">
       <p>
         This is the number of <b>Price Feeds</b> that a <b>Publisher</b> has
-        permissions to publish to. The publisher is not necessarily push data
+        permissions to publish to. The publisher is not necessarily pushing data
         for all the feeds they have access to, and some feeds may not be live
         yet.
       </p>
