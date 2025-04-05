@@ -1047,6 +1047,9 @@ export class PythStakingClient {
   public async getAllStakeAccountPositionsAllOwners(): Promise<
     StakeAccountPositions[]
   > {
+    // eslint-disable-next-line no-console
+    console.log("Calling RPC");
+
     const res = await fetch(this.connection.rpcEndpoint, {
       method: "POST",
       headers: {
@@ -1075,6 +1078,9 @@ export class PythStakingClient {
       }),
     });
 
+    // eslint-disable-next-line no-console
+    console.log("Received response");
+
     if (res.ok) {
       const { body } = res;
       if (body) {
@@ -1095,10 +1101,16 @@ export class PythStakingClient {
             }
           };
 
+          // eslint-disable-next-line no-console
+          console.log("Running JSON parser");
+
           parse().catch((error: unknown) => {
             reject(error instanceof Error ? error : new Error("Unknown Error"));
           });
         });
+
+        // eslint-disable-next-line no-console
+        console.log("Parsed JSON");
 
         return accountSchema
           .parse(accounts)
