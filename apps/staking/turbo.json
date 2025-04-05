@@ -12,8 +12,7 @@
         "MAINNET_API_RPC",
         "BLOCKED_REGIONS",
         "AMPLITUDE_API_KEY",
-        "GOOGLE_ANALYTICS_ID",
-        "AMOUNT_STAKED_PER_ACCOUNT_SECRET"
+        "GOOGLE_ANALYTICS_ID"
       ]
     },
     "start:dev": {
