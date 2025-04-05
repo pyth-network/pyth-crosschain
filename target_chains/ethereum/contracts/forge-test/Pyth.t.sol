@@ -100,6 +100,61 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         );
     }
 
+    // This method divides messages into a couple of batches and creates
+    // twap updateData for them. It returns the updateData and the updateFee
+    function createBatchedTwapUpdateDataFromMessagesWithConfig(
+        PriceFeedMessage[] memory messages,
+        MerkleUpdateConfig memory config
+    ) public returns (bytes[][] memory updateData, uint updateFee) {
+        require(messages.length >= 2, "At least 2 messages required for TWAP");
+
+        // Select first two messages for TWAP calculation
+        PriceFeedMessage[] memory startMessages = new PriceFeedMessage[](1);
+        startMessages[0] = messages[0];
+
+        PriceFeedMessage[] memory endMessages = new PriceFeedMessage[](1);
+        endMessages[0] = messages[1];
+
+        // Generate the update data for start and end
+        bytes[] memory startUpdateData = new bytes[](1);
+        startUpdateData[0] = generateWhMerkleUpdateWithSource(
+            startMessages,
+            config
+        );
+
+        bytes[] memory endUpdateData = new bytes[](1);
+        endUpdateData[0] = generateWhMerkleUpdateWithSource(
+            endMessages,
+            config
+        );
+
+        // Create the updateData array with exactly 2 elements as required by parseTwapPriceFeedUpdates
+        updateData = new bytes[][](2);
+        updateData[0] = startUpdateData;
+        updateData[1] = endUpdateData;
+
+        // Calculate the update fee
+        updateFee = pyth.getUpdateFee(updateData[0]);
+    }
+
+    function createBatchedTwapUpdateDataFromMessages(
+        PriceFeedMessage[] memory messages
+    ) internal returns (bytes[][] memory updateData, uint updateFee) {
+        (
+            updateData,
+            updateFee
+        ) = createBatchedTwapUpdateDataFromMessagesWithConfig(
+            messages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
+    }
+
     /// Testing parsePriceFeedUpdates method.
     function testParsePriceFeedUpdatesWorks(uint seed) public {
         setRandSeed(seed);
@@ -308,5 +363,64 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             0,
             MAX_UINT64
         );
+    }
+
+    function testParseTwapPriceFeedUpdates() public {
+        // Define a single price ID we'll use for the test
+        uint numMessages = 1;
+        bytes32[] memory priceIds = new bytes32[](numMessages);
+        priceIds[0] = bytes32(uint256(1));
+
+        // Create two PriceFeedMessage instances for the start and end points
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+
+        // Start message
+        messages[0].priceId = priceIds[0];
+        messages[0].price = 100;
+        messages[0].conf = 10;
+        messages[0].expo = -8;
+        messages[0].publishTime = 1000;
+        messages[0].prevPublishTime = 900;
+        messages[0].emaPrice = 100;
+        messages[0].emaConf = 10;
+
+        // End message
+        messages[1].priceId = priceIds[0];
+        messages[1].price = 110;
+        messages[1].conf = 8;
+        messages[1].expo = -8;
+        messages[1].publishTime = 1100;
+        messages[1].prevPublishTime = 1000;
+        messages[1].emaPrice = 110;
+        messages[1].emaConf = 8;
+
+        // Create update data for TWAP calculation
+        (
+            bytes[][] memory updateData,
+            uint updateFee
+        ) = createBatchedTwapUpdateDataFromMessages(messages);
+
+        // log the updateData
+        console.logBytes(updateData[0][0]);
+        console.logBytes(updateData[1][0]);
+
+        // Parse the TWAP updates
+        PythStructs.TwapPriceFeed[] memory twapPriceFeeds = pyth
+            .parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
+
+        // Validate basic properties
+        assertEq(twapPriceFeeds[0].id, priceIds[0]);
+        assertEq(twapPriceFeeds[0].startTime, uint64(1000)); // publishTime start
+        assertEq(twapPriceFeeds[0].endTime, uint64(1100)); // publishTime end
+        assertEq(twapPriceFeeds[0].twap.expo, int32(-8)); // expo
+
+        // The TWAP price should be the difference in cumulative price divided by the slot difference
+        assertEq(twapPriceFeeds[0].twap.price, int64(105));
+
+        // The TWAP conf should be the difference in cumulative conf divided by the slot difference
+        assertEq(twapPriceFeeds[0].twap.conf, uint64(9));
+
+        // Validate the downSlotsRatio is 0 in our test implementation
+        assertEq(twapPriceFeeds[0].downSlotsRatio, uint32(0));
     }
 }

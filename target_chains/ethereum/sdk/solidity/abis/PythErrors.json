@@ -26,6 +26,16 @@
   },
   {
     "inputs": [],
+    "name": "InvalidTwapUpdateData",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidTwapUpdateDataSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidUpdateData",
     "type": "error"
   },

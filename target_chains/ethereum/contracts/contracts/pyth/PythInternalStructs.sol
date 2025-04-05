@@ -26,8 +26,34 @@ contract PythInternalStructs {
         uint64 emaConf;
     }
 
+    struct TwapPriceInfo {
+        // slot 1
+        int128 cumulativePrice;
+        uint128 cumulativeConf;
+        // slot 2
+        uint64 numDownSlots;
+        uint64 publishSlot;
+        uint64 publishTime;
+        uint64 prevPublishTime;
+        // slot 3
+
+        int32 expo;
+    }
+
     struct DataSource {
         uint16 chainId;
         bytes32 emitterAddress;
+    }
+
+    // Define a struct that encapsulates these related variables. This will reduce the number of individual variables on the stack.
+    struct TwapUpdateData {
+        uint offsetStart;
+        uint offsetEnd;
+        bytes20 digestStart;
+        bytes20 digestEnd;
+        uint8 numUpdatesStart;
+        uint8 numUpdatesEnd;
+        bytes encodedStart;
+        bytes encodedEnd;
     }
 }
