@@ -7,11 +7,11 @@ import {
 } from "@pythnetwork/client";
 import { Connection } from "@solana/web3.js";
 
-import { getStakeCapsParametersAddress } from "./pdas";
-import { convertBNToBigInt } from "./utils/bn";
-import { DummyWallet } from "./utils/wallet";
-import * as StakeCapsParametersIdl from "../idl/stake-caps-parameters.json";
-import type { StakeCapsParameters } from "../types/stake-caps-parameters";
+import StakeCapsParametersIdl from "./idl/stake-caps-parameters.json" with { type: "json" };
+import { getStakeCapsParametersAddress } from "./pdas.js";
+import type { StakeCapsParameters } from "./types/stake-caps-parameters.js";
+import { convertBNToBigInt } from "./utils/bn.js";
+import { DummyWallet } from "./utils/wallet.js";
 export class PythnetClient {
   connection: Connection;
   provider: AnchorProvider;

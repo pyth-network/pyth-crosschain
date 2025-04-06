@@ -30,7 +30,10 @@ import {
   FRACTION_PRECISION_N,
   ONE_YEAR_IN_SECONDS,
   POSITIONS_ACCOUNT_SIZE,
-} from "./constants";
+} from "./constants.js";
+import IntegrityPoolIdl from "./idl/integrity-pool.json" with { type: "json" };
+import PublisherCapsIdl from "./idl/publisher-caps.json" with { type: "json" };
+import StakingIdl from "./idl/staking.json" with { type: "json" };
 import {
   getConfigAddress,
   getDelegationRecordAddress,
@@ -38,7 +41,10 @@ import {
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
   getTargetAccountAddress,
-} from "./pdas";
+} from "./pdas.js";
+import type { IntegrityPool } from "./types/integrity-pool.js";
+import type { PublisherCaps } from "./types/publisher-caps.js";
+import type { Staking } from "./types/staking.js";
 import type {
   GlobalConfig,
   PoolConfig,
@@ -47,27 +53,21 @@ import type {
   TargetAccount,
   VoterWeightAction,
   VestingSchedule,
-} from "./types";
-import { PositionState } from "./types";
-import type { Staking } from "../types/staking";
-import { bigintMax, bigintMin } from "./utils/bigint";
-import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
-import { epochToDate, getCurrentEpoch } from "./utils/clock";
-import { extractPublisherData } from "./utils/pool";
+} from "./types.js";
+import { PositionState } from "./types.js";
+import { bigintMax, bigintMin } from "./utils/bigint.js";
+import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn.js";
+import { epochToDate, getCurrentEpoch } from "./utils/clock.js";
+import { extractPublisherData } from "./utils/pool.js";
 import {
   deserializeStakeAccountPositions,
   getPositionState,
   getVotingTokenAmount,
-} from "./utils/position";
-import { sendTransaction } from "./utils/transaction";
-import { getUnlockSchedule } from "./utils/vesting";
-import type { PythStakingWallet } from "./utils/wallet";
-import { DummyWallet } from "./utils/wallet";
-import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
-import * as PublisherCapsIdl from "../idl/publisher-caps.json";
-import * as StakingIdl from "../idl/staking.json";
-import type { IntegrityPool } from "../types/integrity-pool";
-import type { PublisherCaps } from "../types/publisher-caps";
+} from "./utils/position.js";
+import { sendTransaction } from "./utils/transaction.js";
+import { getUnlockSchedule } from "./utils/vesting.js";
+import type { PythStakingWallet } from "./utils/wallet.js";
+import { DummyWallet } from "./utils/wallet.js";
 
 export type PythStakingClientConfig = {
   connection: Connection;

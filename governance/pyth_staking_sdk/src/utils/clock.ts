@@ -1,6 +1,6 @@
 import { Connection } from "@solana/web3.js";
 
-import { EPOCH_DURATION } from "../constants";
+import { EPOCH_DURATION } from "../constants.js";
 
 export const getCurrentSolanaTimestamp = async (connection: Connection) => {
   const slot = await connection.getSlot("finalized");

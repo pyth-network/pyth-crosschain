@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { BN } from "@coral-xyz/anchor";
 
-import type { ConvertBigIntToBN, ConvertBNToBigInt } from "../types";
+import type { ConvertBigIntToBN, ConvertBNToBigInt } from "../types.js";
 
 export const convertBNToBigInt = <T>(obj: T): ConvertBNToBigInt<T> => {
   if (obj instanceof BN) {

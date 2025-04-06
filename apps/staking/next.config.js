@@ -22,8 +22,6 @@ export default {
     return config;
   },
 
-  transpilePackages: ["@pythnetwork/*"],
-
   headers: () => [
     {
       source: "/:path*",

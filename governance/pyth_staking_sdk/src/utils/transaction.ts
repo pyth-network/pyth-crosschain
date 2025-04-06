@@ -1,7 +1,7 @@
 import { TransactionBuilder } from "@pythnetwork/solana-utils";
 import { Connection, TransactionInstruction } from "@solana/web3.js";
 
-import type { PythStakingWallet } from "./wallet";
+import type { PythStakingWallet } from "./wallet.js";
 
 export const sendTransaction = async (
   instructions: TransactionInstruction[],

@@ -4,7 +4,7 @@ import {
   INTEGRITY_POOL_PROGRAM_ADDRESS,
   STAKE_CAPS_PARAMETERS_PROGRAM_ADDRESS,
   STAKING_PROGRAM_ADDRESS,
-} from "./constants";
+} from "./constants.js";
 
 export const getConfigAddress = () => {
   return PublicKey.findProgramAddressSync(
