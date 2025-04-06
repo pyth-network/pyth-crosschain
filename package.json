@@ -9,13 +9,11 @@
   "scripts": {
     "fix:format": "prettier --write .",
     "install:modules": "[ $CI ] && true || pnpm install",
-    "publish": "lerna publish from-package --no-private --no-git-tag-version --yes",
     "test:format": "prettier --check .",
     "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
   },
   "devDependencies": {
     "@cprussin/prettier-config": "catalog:",
-    "lerna": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
     "turbo": "^2.4.4"
