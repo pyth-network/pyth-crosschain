@@ -27,4 +27,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm run turbo build
-      - run: pnpm run publish
+      - run: pnpm publish -r
