@@ -65,7 +65,7 @@ const PriceFeedTagImpl = ({ className, compact, ...props }: ImplProps) => {
       className={clsx(styles.priceFeedTag, className)}
       data-compact={compact ? "" : undefined}
       data-loading={props.isLoading ? "" : undefined}
-      {...omitKeys(props, ["feedName", "icon", "description"])}
+      {...omitKeys(props, ["feedName", "icon", "description", "isLoading"])}
     >
       {props.isLoading ? (
         <Skeleton fill className={styles.icon} />

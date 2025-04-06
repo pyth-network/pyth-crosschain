@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 
-export { ZoomLayoutTransition as default } from "../../components/ZoomLayoutTransition";
+const Layout = ({ children }: { children: ReactNode }) => children;
+export default Layout;
+// export { ZoomLayoutTransition as default } from "../../components/ZoomLayoutTransition";
 
 export const metadata: Metadata = {
   title: {
