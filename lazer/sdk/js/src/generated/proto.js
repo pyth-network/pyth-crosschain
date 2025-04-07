@@ -358,9 +358,9 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (!writer)
                 writer = $Writer.create();
             if (message.priceUpdateV1 != null && Object.hasOwnProperty.call(message, "priceUpdateV1"))
-                $root.pyth_lazer_transaction.PriceUpdateV1.encode(message.priceUpdateV1, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                $root.pyth_lazer_transaction.PriceUpdateV1.encode(message.priceUpdateV1, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             if (message.fundingRateUpdateV1 != null && Object.hasOwnProperty.call(message, "fundingRateUpdateV1"))
-                $root.pyth_lazer_transaction.FundingRateUpdateV1.encode(message.fundingRateUpdateV1, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                $root.pyth_lazer_transaction.FundingRateUpdateV1.encode(message.fundingRateUpdateV1, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -395,11 +395,11 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 3: {
+                case 1: {
                         message.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.decode(reader, reader.uint32());
                         break;
                     }
-                case 4: {
+                case 2: {
                         message.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.decode(reader, reader.uint32());
                         break;
                     }
