@@ -9,8 +9,8 @@ message PublisherUpdate {
 
 message FeedUpdate {
   oneof update {
-    PriceUpdateV1 price_update_v1 = 3;
-    FundingRateUpdateV1 funding_rate_update_v1 = 4;
+    PriceUpdateV1 price_update_v1 = 1;
+    FundingRateUpdateV1 funding_rate_update_v1 = 2;
   }
 }
 
