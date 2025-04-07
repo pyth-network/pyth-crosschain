@@ -14,14 +14,6 @@
         "AMPLITUDE_API_KEY",
         "GOOGLE_ANALYTICS_ID"
       ]
-    },
-    "start:dev": {
-      "dependsOn": [
-        "//#install:modules",
-        "pull:env",
-        "@pythnetwork/hermes-client#build",
-        "@pythnetwork/solana-utils#build"
-      ]
     }
   }
 }

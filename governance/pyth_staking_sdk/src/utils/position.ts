@@ -1,19 +1,19 @@
 import { BorshCoder } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 
-import { convertBNToBigInt } from "./bn";
-import type { Staking } from "../../types/staking";
+import { convertBNToBigInt } from "./bn.js";
 import {
   POSITION_BUFFER_SIZE,
   POSITIONS_ACCOUNT_HEADER_SIZE,
-} from "../constants";
+} from "../constants.js";
+import type { Staking } from "../types/staking.js";
 import type {
   Position,
   PositionAnchor,
   StakeAccountPositions,
   TargetWithParameters,
-} from "../types";
-import { PositionState } from "../types";
+} from "../types.js";
+import { PositionState } from "../types.js";
 
 export const getPositionState = (
   position: Position,

@@ -14,13 +14,6 @@
         "DISABLE_ACCESSIBILITY_REPORTING"
       ]
     },
-    "start:dev": {
-      "dependsOn": [
-        "//#install:modules",
-        "pull:env",
-        "@pythnetwork/solana-utils#build"
-      ]
-    },
     "fix:lint": {
       "dependsOn": [
         "//#install:modules",

@@ -22,8 +22,6 @@ const config = {
     return config;
   },
 
-  transpilePackages: ["@pythnetwork/*"],
-
   headers: async () => [
     {
       source: "/:path*",

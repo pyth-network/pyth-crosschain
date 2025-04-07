@@ -1,8 +1,8 @@
 import type { BN, IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 
-import type { IntegrityPool } from "../types/integrity-pool";
-import type { Staking } from "../types/staking";
+import type { IntegrityPool } from "./types/integrity-pool.js";
+import type { Staking } from "./types/staking.js";
 
 // This type converts all From types to To types in a given object.
 export type Convert<T, From, To> = T extends From

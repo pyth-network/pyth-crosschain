@@ -1,4 +1,4 @@
-import type { UnlockSchedule, VestingSchedule } from "../types";
+import type { UnlockSchedule, VestingSchedule } from "../types.js";
 
 export const getUnlockSchedule = (options: {
   pythTokenListTime: bigint;
