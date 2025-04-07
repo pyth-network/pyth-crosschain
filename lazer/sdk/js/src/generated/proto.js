@@ -16,276 +16,14 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
      */
     const pyth_lazer_transaction = {};
 
-    pyth_lazer_transaction.PublisherUpdatePayload = (function() {
-
-        /**
-         * Properties of a PublisherUpdatePayload.
-         * @memberof pyth_lazer_transaction
-         * @interface IPublisherUpdatePayload
-         * @property {Array.<pyth_lazer_transaction.IPublisherUpdate>|null} [updates] PublisherUpdatePayload updates
-         * @property {number|Long|null} [batchTimestampUs] PublisherUpdatePayload batchTimestampUs
-         */
-
-        /**
-         * Constructs a new PublisherUpdatePayload.
-         * @memberof pyth_lazer_transaction
-         * @classdesc Represents a PublisherUpdatePayload.
-         * @implements IPublisherUpdatePayload
-         * @constructor
-         * @param {pyth_lazer_transaction.IPublisherUpdatePayload=} [properties] Properties to set
-         */
-        function PublisherUpdatePayload(properties) {
-            this.updates = [];
-            if (properties)
-                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * PublisherUpdatePayload updates.
-         * @member {Array.<pyth_lazer_transaction.IPublisherUpdate>} updates
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @instance
-         */
-        PublisherUpdatePayload.prototype.updates = $util.emptyArray;
-
-        /**
-         * PublisherUpdatePayload batchTimestampUs.
-         * @member {number|Long} batchTimestampUs
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @instance
-         */
-        PublisherUpdatePayload.prototype.batchTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
-
-        /**
-         * Creates a new PublisherUpdatePayload instance using the specified properties.
-         * @function create
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {pyth_lazer_transaction.IPublisherUpdatePayload=} [properties] Properties to set
-         * @returns {pyth_lazer_transaction.PublisherUpdatePayload} PublisherUpdatePayload instance
-         */
-        PublisherUpdatePayload.create = function create(properties) {
-            return new PublisherUpdatePayload(properties);
-        };
-
-        /**
-         * Encodes the specified PublisherUpdatePayload message. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdatePayload.verify|verify} messages.
-         * @function encode
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {pyth_lazer_transaction.IPublisherUpdatePayload} message PublisherUpdatePayload message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        PublisherUpdatePayload.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.updates != null && message.updates.length)
-                for (let i = 0; i < message.updates.length; ++i)
-                    $root.pyth_lazer_transaction.PublisherUpdate.encode(message.updates[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            if (message.batchTimestampUs != null && Object.hasOwnProperty.call(message, "batchTimestampUs"))
-                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.batchTimestampUs);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified PublisherUpdatePayload message, length delimited. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdatePayload.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {pyth_lazer_transaction.IPublisherUpdatePayload} message PublisherUpdatePayload message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        PublisherUpdatePayload.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a PublisherUpdatePayload message from the specified reader or buffer.
-         * @function decode
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {pyth_lazer_transaction.PublisherUpdatePayload} PublisherUpdatePayload
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        PublisherUpdatePayload.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.PublisherUpdatePayload();
-            while (reader.pos < end) {
-                let tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1: {
-                        if (!(message.updates && message.updates.length))
-                            message.updates = [];
-                        message.updates.push($root.pyth_lazer_transaction.PublisherUpdate.decode(reader, reader.uint32()));
-                        break;
-                    }
-                case 2: {
-                        message.batchTimestampUs = reader.uint64();
-                        break;
-                    }
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a PublisherUpdatePayload message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {pyth_lazer_transaction.PublisherUpdatePayload} PublisherUpdatePayload
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        PublisherUpdatePayload.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a PublisherUpdatePayload message.
-         * @function verify
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        PublisherUpdatePayload.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.updates != null && message.hasOwnProperty("updates")) {
-                if (!Array.isArray(message.updates))
-                    return "updates: array expected";
-                for (let i = 0; i < message.updates.length; ++i) {
-                    let error = $root.pyth_lazer_transaction.PublisherUpdate.verify(message.updates[i]);
-                    if (error)
-                        return "updates." + error;
-                }
-            }
-            if (message.batchTimestampUs != null && message.hasOwnProperty("batchTimestampUs"))
-                if (!$util.isInteger(message.batchTimestampUs) && !(message.batchTimestampUs && $util.isInteger(message.batchTimestampUs.low) && $util.isInteger(message.batchTimestampUs.high)))
-                    return "batchTimestampUs: integer|Long expected";
-            return null;
-        };
-
-        /**
-         * Creates a PublisherUpdatePayload message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {pyth_lazer_transaction.PublisherUpdatePayload} PublisherUpdatePayload
-         */
-        PublisherUpdatePayload.fromObject = function fromObject(object) {
-            if (object instanceof $root.pyth_lazer_transaction.PublisherUpdatePayload)
-                return object;
-            let message = new $root.pyth_lazer_transaction.PublisherUpdatePayload();
-            if (object.updates) {
-                if (!Array.isArray(object.updates))
-                    throw TypeError(".pyth_lazer_transaction.PublisherUpdatePayload.updates: array expected");
-                message.updates = [];
-                for (let i = 0; i < object.updates.length; ++i) {
-                    if (typeof object.updates[i] !== "object")
-                        throw TypeError(".pyth_lazer_transaction.PublisherUpdatePayload.updates: object expected");
-                    message.updates[i] = $root.pyth_lazer_transaction.PublisherUpdate.fromObject(object.updates[i]);
-                }
-            }
-            if (object.batchTimestampUs != null)
-                if ($util.Long)
-                    (message.batchTimestampUs = $util.Long.fromValue(object.batchTimestampUs)).unsigned = true;
-                else if (typeof object.batchTimestampUs === "string")
-                    message.batchTimestampUs = parseInt(object.batchTimestampUs, 10);
-                else if (typeof object.batchTimestampUs === "number")
-                    message.batchTimestampUs = object.batchTimestampUs;
-                else if (typeof object.batchTimestampUs === "object")
-                    message.batchTimestampUs = new $util.LongBits(object.batchTimestampUs.low >>> 0, object.batchTimestampUs.high >>> 0).toNumber(true);
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a PublisherUpdatePayload message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {pyth_lazer_transaction.PublisherUpdatePayload} message PublisherUpdatePayload
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        PublisherUpdatePayload.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            let object = {};
-            if (options.arrays || options.defaults)
-                object.updates = [];
-            if (options.defaults)
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, true);
-                    object.batchTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.batchTimestampUs = options.longs === String ? "0" : 0;
-            if (message.updates && message.updates.length) {
-                object.updates = [];
-                for (let j = 0; j < message.updates.length; ++j)
-                    object.updates[j] = $root.pyth_lazer_transaction.PublisherUpdate.toObject(message.updates[j], options);
-            }
-            if (message.batchTimestampUs != null && message.hasOwnProperty("batchTimestampUs"))
-                if (typeof message.batchTimestampUs === "number")
-                    object.batchTimestampUs = options.longs === String ? String(message.batchTimestampUs) : message.batchTimestampUs;
-                else
-                    object.batchTimestampUs = options.longs === String ? $util.Long.prototype.toString.call(message.batchTimestampUs) : options.longs === Number ? new $util.LongBits(message.batchTimestampUs.low >>> 0, message.batchTimestampUs.high >>> 0).toNumber(true) : message.batchTimestampUs;
-            return object;
-        };
-
-        /**
-         * Converts this PublisherUpdatePayload to JSON.
-         * @function toJSON
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        PublisherUpdatePayload.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        /**
-         * Gets the default type url for PublisherUpdatePayload
-         * @function getTypeUrl
-         * @memberof pyth_lazer_transaction.PublisherUpdatePayload
-         * @static
-         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns {string} The default type url
-         */
-        PublisherUpdatePayload.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-            if (typeUrlPrefix === undefined) {
-                typeUrlPrefix = "type.googleapis.com";
-            }
-            return typeUrlPrefix + "/pyth_lazer_transaction.PublisherUpdatePayload";
-        };
-
-        return PublisherUpdatePayload;
-    })();
-
     pyth_lazer_transaction.PublisherUpdate = (function() {
 
         /**
          * Properties of a PublisherUpdate.
          * @memberof pyth_lazer_transaction
          * @interface IPublisherUpdate
-         * @property {pyth_lazer_transaction.IPriceUpdateV1|null} [priceUpdateV1] PublisherUpdate priceUpdateV1
-         * @property {pyth_lazer_transaction.IFundingRateUpdateV1|null} [fundingRateUpdateV1] PublisherUpdate fundingRateUpdateV1
+         * @property {Array.<pyth_lazer_transaction.IFeedUpdate>|null} [updates] PublisherUpdate updates
+         * @property {number|Long|null} [batchTimestampUs] PublisherUpdate batchTimestampUs
          */
 
         /**
@@ -297,6 +35,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
          * @param {pyth_lazer_transaction.IPublisherUpdate=} [properties] Properties to set
          */
         function PublisherUpdate(properties) {
+            this.updates = [];
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -304,34 +43,20 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         }
 
         /**
-         * PublisherUpdate priceUpdateV1.
-         * @member {pyth_lazer_transaction.IPriceUpdateV1|null|undefined} priceUpdateV1
+         * PublisherUpdate updates.
+         * @member {Array.<pyth_lazer_transaction.IFeedUpdate>} updates
          * @memberof pyth_lazer_transaction.PublisherUpdate
          * @instance
          */
-        PublisherUpdate.prototype.priceUpdateV1 = null;
+        PublisherUpdate.prototype.updates = $util.emptyArray;
 
         /**
-         * PublisherUpdate fundingRateUpdateV1.
-         * @member {pyth_lazer_transaction.IFundingRateUpdateV1|null|undefined} fundingRateUpdateV1
+         * PublisherUpdate batchTimestampUs.
+         * @member {number|Long} batchTimestampUs
          * @memberof pyth_lazer_transaction.PublisherUpdate
          * @instance
          */
-        PublisherUpdate.prototype.fundingRateUpdateV1 = null;
-
-        // OneOf field names bound to virtual getters and setters
-        let $oneOfFields;
-
-        /**
-         * PublisherUpdate update.
-         * @member {"priceUpdateV1"|"fundingRateUpdateV1"|undefined} update
-         * @memberof pyth_lazer_transaction.PublisherUpdate
-         * @instance
-         */
-        Object.defineProperty(PublisherUpdate.prototype, "update", {
-            get: $util.oneOfGetter($oneOfFields = ["priceUpdateV1", "fundingRateUpdateV1"]),
-            set: $util.oneOfSetter($oneOfFields)
-        });
+        PublisherUpdate.prototype.batchTimestampUs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
 
         /**
          * Creates a new PublisherUpdate instance using the specified properties.
@@ -357,10 +82,11 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         PublisherUpdate.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.priceUpdateV1 != null && Object.hasOwnProperty.call(message, "priceUpdateV1"))
-                $root.pyth_lazer_transaction.PriceUpdateV1.encode(message.priceUpdateV1, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
-            if (message.fundingRateUpdateV1 != null && Object.hasOwnProperty.call(message, "fundingRateUpdateV1"))
-                $root.pyth_lazer_transaction.FundingRateUpdateV1.encode(message.fundingRateUpdateV1, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.updates != null && message.updates.length)
+                for (let i = 0; i < message.updates.length; ++i)
+                    $root.pyth_lazer_transaction.FeedUpdate.encode(message.updates[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.batchTimestampUs != null && Object.hasOwnProperty.call(message, "batchTimestampUs"))
+                writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.batchTimestampUs);
             return writer;
         };
 
@@ -395,12 +121,14 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 3: {
-                        message.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.decode(reader, reader.uint32());
+                case 1: {
+                        if (!(message.updates && message.updates.length))
+                            message.updates = [];
+                        message.updates.push($root.pyth_lazer_transaction.FeedUpdate.decode(reader, reader.uint32()));
                         break;
                     }
-                case 4: {
-                        message.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.decode(reader, reader.uint32());
+                case 2: {
+                        message.batchTimestampUs = reader.uint64();
                         break;
                     }
                 default:
@@ -438,25 +166,18 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         PublisherUpdate.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            let properties = {};
-            if (message.priceUpdateV1 != null && message.hasOwnProperty("priceUpdateV1")) {
-                properties.update = 1;
-                {
-                    let error = $root.pyth_lazer_transaction.PriceUpdateV1.verify(message.priceUpdateV1);
+            if (message.updates != null && message.hasOwnProperty("updates")) {
+                if (!Array.isArray(message.updates))
+                    return "updates: array expected";
+                for (let i = 0; i < message.updates.length; ++i) {
+                    let error = $root.pyth_lazer_transaction.FeedUpdate.verify(message.updates[i]);
                     if (error)
-                        return "priceUpdateV1." + error;
+                        return "updates." + error;
                 }
             }
-            if (message.fundingRateUpdateV1 != null && message.hasOwnProperty("fundingRateUpdateV1")) {
-                if (properties.update === 1)
-                    return "update: multiple values";
-                properties.update = 1;
-                {
-                    let error = $root.pyth_lazer_transaction.FundingRateUpdateV1.verify(message.fundingRateUpdateV1);
-                    if (error)
-                        return "fundingRateUpdateV1." + error;
-                }
-            }
+            if (message.batchTimestampUs != null && message.hasOwnProperty("batchTimestampUs"))
+                if (!$util.isInteger(message.batchTimestampUs) && !(message.batchTimestampUs && $util.isInteger(message.batchTimestampUs.low) && $util.isInteger(message.batchTimestampUs.high)))
+                    return "batchTimestampUs: integer|Long expected";
             return null;
         };
 
@@ -472,16 +193,25 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (object instanceof $root.pyth_lazer_transaction.PublisherUpdate)
                 return object;
             let message = new $root.pyth_lazer_transaction.PublisherUpdate();
-            if (object.priceUpdateV1 != null) {
-                if (typeof object.priceUpdateV1 !== "object")
-                    throw TypeError(".pyth_lazer_transaction.PublisherUpdate.priceUpdateV1: object expected");
-                message.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.fromObject(object.priceUpdateV1);
+            if (object.updates) {
+                if (!Array.isArray(object.updates))
+                    throw TypeError(".pyth_lazer_transaction.PublisherUpdate.updates: array expected");
+                message.updates = [];
+                for (let i = 0; i < object.updates.length; ++i) {
+                    if (typeof object.updates[i] !== "object")
+                        throw TypeError(".pyth_lazer_transaction.PublisherUpdate.updates: object expected");
+                    message.updates[i] = $root.pyth_lazer_transaction.FeedUpdate.fromObject(object.updates[i]);
+                }
             }
-            if (object.fundingRateUpdateV1 != null) {
-                if (typeof object.fundingRateUpdateV1 !== "object")
-                    throw TypeError(".pyth_lazer_transaction.PublisherUpdate.fundingRateUpdateV1: object expected");
-                message.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.fromObject(object.fundingRateUpdateV1);
-            }
+            if (object.batchTimestampUs != null)
+                if ($util.Long)
+                    (message.batchTimestampUs = $util.Long.fromValue(object.batchTimestampUs)).unsigned = true;
+                else if (typeof object.batchTimestampUs === "string")
+                    message.batchTimestampUs = parseInt(object.batchTimestampUs, 10);
+                else if (typeof object.batchTimestampUs === "number")
+                    message.batchTimestampUs = object.batchTimestampUs;
+                else if (typeof object.batchTimestampUs === "object")
+                    message.batchTimestampUs = new $util.LongBits(object.batchTimestampUs.low >>> 0, object.batchTimestampUs.high >>> 0).toNumber(true);
             return message;
         };
 
@@ -498,16 +228,24 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (!options)
                 options = {};
             let object = {};
-            if (message.priceUpdateV1 != null && message.hasOwnProperty("priceUpdateV1")) {
-                object.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.toObject(message.priceUpdateV1, options);
-                if (options.oneofs)
-                    object.update = "priceUpdateV1";
+            if (options.arrays || options.defaults)
+                object.updates = [];
+            if (options.defaults)
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, true);
+                    object.batchTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.batchTimestampUs = options.longs === String ? "0" : 0;
+            if (message.updates && message.updates.length) {
+                object.updates = [];
+                for (let j = 0; j < message.updates.length; ++j)
+                    object.updates[j] = $root.pyth_lazer_transaction.FeedUpdate.toObject(message.updates[j], options);
             }
-            if (message.fundingRateUpdateV1 != null && message.hasOwnProperty("fundingRateUpdateV1")) {
-                object.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.toObject(message.fundingRateUpdateV1, options);
-                if (options.oneofs)
-                    object.update = "fundingRateUpdateV1";
-            }
+            if (message.batchTimestampUs != null && message.hasOwnProperty("batchTimestampUs"))
+                if (typeof message.batchTimestampUs === "number")
+                    object.batchTimestampUs = options.longs === String ? String(message.batchTimestampUs) : message.batchTimestampUs;
+                else
+                    object.batchTimestampUs = options.longs === String ? $util.Long.prototype.toString.call(message.batchTimestampUs) : options.longs === Number ? new $util.LongBits(message.batchTimestampUs.low >>> 0, message.batchTimestampUs.high >>> 0).toNumber(true) : message.batchTimestampUs;
             return object;
         };
 
@@ -540,13 +278,275 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         return PublisherUpdate;
     })();
 
+    pyth_lazer_transaction.FeedUpdate = (function() {
+
+        /**
+         * Properties of a FeedUpdate.
+         * @memberof pyth_lazer_transaction
+         * @interface IFeedUpdate
+         * @property {pyth_lazer_transaction.IPriceUpdateV1|null} [priceUpdateV1] FeedUpdate priceUpdateV1
+         * @property {pyth_lazer_transaction.IFundingRateUpdateV1|null} [fundingRateUpdateV1] FeedUpdate fundingRateUpdateV1
+         */
+
+        /**
+         * Constructs a new FeedUpdate.
+         * @memberof pyth_lazer_transaction
+         * @classdesc Represents a FeedUpdate.
+         * @implements IFeedUpdate
+         * @constructor
+         * @param {pyth_lazer_transaction.IFeedUpdate=} [properties] Properties to set
+         */
+        function FeedUpdate(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * FeedUpdate priceUpdateV1.
+         * @member {pyth_lazer_transaction.IPriceUpdateV1|null|undefined} priceUpdateV1
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @instance
+         */
+        FeedUpdate.prototype.priceUpdateV1 = null;
+
+        /**
+         * FeedUpdate fundingRateUpdateV1.
+         * @member {pyth_lazer_transaction.IFundingRateUpdateV1|null|undefined} fundingRateUpdateV1
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @instance
+         */
+        FeedUpdate.prototype.fundingRateUpdateV1 = null;
+
+        // OneOf field names bound to virtual getters and setters
+        let $oneOfFields;
+
+        /**
+         * FeedUpdate update.
+         * @member {"priceUpdateV1"|"fundingRateUpdateV1"|undefined} update
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @instance
+         */
+        Object.defineProperty(FeedUpdate.prototype, "update", {
+            get: $util.oneOfGetter($oneOfFields = ["priceUpdateV1", "fundingRateUpdateV1"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        /**
+         * Creates a new FeedUpdate instance using the specified properties.
+         * @function create
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {pyth_lazer_transaction.IFeedUpdate=} [properties] Properties to set
+         * @returns {pyth_lazer_transaction.FeedUpdate} FeedUpdate instance
+         */
+        FeedUpdate.create = function create(properties) {
+            return new FeedUpdate(properties);
+        };
+
+        /**
+         * Encodes the specified FeedUpdate message. Does not implicitly {@link pyth_lazer_transaction.FeedUpdate.verify|verify} messages.
+         * @function encode
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {pyth_lazer_transaction.IFeedUpdate} message FeedUpdate message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        FeedUpdate.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.priceUpdateV1 != null && Object.hasOwnProperty.call(message, "priceUpdateV1"))
+                $root.pyth_lazer_transaction.PriceUpdateV1.encode(message.priceUpdateV1, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.fundingRateUpdateV1 != null && Object.hasOwnProperty.call(message, "fundingRateUpdateV1"))
+                $root.pyth_lazer_transaction.FundingRateUpdateV1.encode(message.fundingRateUpdateV1, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified FeedUpdate message, length delimited. Does not implicitly {@link pyth_lazer_transaction.FeedUpdate.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {pyth_lazer_transaction.IFeedUpdate} message FeedUpdate message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        FeedUpdate.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a FeedUpdate message from the specified reader or buffer.
+         * @function decode
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {pyth_lazer_transaction.FeedUpdate} FeedUpdate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        FeedUpdate.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.FeedUpdate();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 3: {
+                        message.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 4: {
+                        message.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.decode(reader, reader.uint32());
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a FeedUpdate message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {pyth_lazer_transaction.FeedUpdate} FeedUpdate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        FeedUpdate.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a FeedUpdate message.
+         * @function verify
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        FeedUpdate.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            let properties = {};
+            if (message.priceUpdateV1 != null && message.hasOwnProperty("priceUpdateV1")) {
+                properties.update = 1;
+                {
+                    let error = $root.pyth_lazer_transaction.PriceUpdateV1.verify(message.priceUpdateV1);
+                    if (error)
+                        return "priceUpdateV1." + error;
+                }
+            }
+            if (message.fundingRateUpdateV1 != null && message.hasOwnProperty("fundingRateUpdateV1")) {
+                if (properties.update === 1)
+                    return "update: multiple values";
+                properties.update = 1;
+                {
+                    let error = $root.pyth_lazer_transaction.FundingRateUpdateV1.verify(message.fundingRateUpdateV1);
+                    if (error)
+                        return "fundingRateUpdateV1." + error;
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a FeedUpdate message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {pyth_lazer_transaction.FeedUpdate} FeedUpdate
+         */
+        FeedUpdate.fromObject = function fromObject(object) {
+            if (object instanceof $root.pyth_lazer_transaction.FeedUpdate)
+                return object;
+            let message = new $root.pyth_lazer_transaction.FeedUpdate();
+            if (object.priceUpdateV1 != null) {
+                if (typeof object.priceUpdateV1 !== "object")
+                    throw TypeError(".pyth_lazer_transaction.FeedUpdate.priceUpdateV1: object expected");
+                message.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.fromObject(object.priceUpdateV1);
+            }
+            if (object.fundingRateUpdateV1 != null) {
+                if (typeof object.fundingRateUpdateV1 !== "object")
+                    throw TypeError(".pyth_lazer_transaction.FeedUpdate.fundingRateUpdateV1: object expected");
+                message.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.fromObject(object.fundingRateUpdateV1);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a FeedUpdate message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {pyth_lazer_transaction.FeedUpdate} message FeedUpdate
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        FeedUpdate.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (message.priceUpdateV1 != null && message.hasOwnProperty("priceUpdateV1")) {
+                object.priceUpdateV1 = $root.pyth_lazer_transaction.PriceUpdateV1.toObject(message.priceUpdateV1, options);
+                if (options.oneofs)
+                    object.update = "priceUpdateV1";
+            }
+            if (message.fundingRateUpdateV1 != null && message.hasOwnProperty("fundingRateUpdateV1")) {
+                object.fundingRateUpdateV1 = $root.pyth_lazer_transaction.FundingRateUpdateV1.toObject(message.fundingRateUpdateV1, options);
+                if (options.oneofs)
+                    object.update = "fundingRateUpdateV1";
+            }
+            return object;
+        };
+
+        /**
+         * Converts this FeedUpdate to JSON.
+         * @function toJSON
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        FeedUpdate.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for FeedUpdate
+         * @function getTypeUrl
+         * @memberof pyth_lazer_transaction.FeedUpdate
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        FeedUpdate.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/pyth_lazer_transaction.FeedUpdate";
+        };
+
+        return FeedUpdate;
+    })();
+
     pyth_lazer_transaction.PriceUpdateV1 = (function() {
 
         /**
          * Properties of a PriceUpdateV1.
          * @memberof pyth_lazer_transaction
          * @interface IPriceUpdateV1
-         * @property {number|null} [priceFeedId] PriceUpdateV1 priceFeedId
+         * @property {number|null} [feedId] PriceUpdateV1 feedId
          * @property {number|Long|null} [sourceTimestampUs] PriceUpdateV1 sourceTimestampUs
          * @property {number|Long|null} [publisherTimestampUs] PriceUpdateV1 publisherTimestampUs
          * @property {number|Long|null} [price] PriceUpdateV1 price
@@ -570,12 +570,12 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         }
 
         /**
-         * PriceUpdateV1 priceFeedId.
-         * @member {number} priceFeedId
+         * PriceUpdateV1 feedId.
+         * @member {number} feedId
          * @memberof pyth_lazer_transaction.PriceUpdateV1
          * @instance
          */
-        PriceUpdateV1.prototype.priceFeedId = 0;
+        PriceUpdateV1.prototype.feedId = 0;
 
         /**
          * PriceUpdateV1 sourceTimestampUs.
@@ -662,8 +662,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         PriceUpdateV1.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.priceFeedId != null && Object.hasOwnProperty.call(message, "priceFeedId"))
-                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.priceFeedId);
+            if (message.feedId != null && Object.hasOwnProperty.call(message, "feedId"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.feedId);
             if (message.sourceTimestampUs != null && Object.hasOwnProperty.call(message, "sourceTimestampUs"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.sourceTimestampUs);
             if (message.publisherTimestampUs != null && Object.hasOwnProperty.call(message, "publisherTimestampUs"))
@@ -709,7 +709,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.priceFeedId = reader.uint32();
+                        message.feedId = reader.uint32();
                         break;
                     }
                 case 2: {
@@ -768,9 +768,9 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             let properties = {};
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
-                if (!$util.isInteger(message.priceFeedId))
-                    return "priceFeedId: integer expected";
+            if (message.feedId != null && message.hasOwnProperty("feedId"))
+                if (!$util.isInteger(message.feedId))
+                    return "feedId: integer expected";
             if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
                 if (!$util.isInteger(message.sourceTimestampUs) && !(message.sourceTimestampUs && $util.isInteger(message.sourceTimestampUs.low) && $util.isInteger(message.sourceTimestampUs.high)))
                     return "sourceTimestampUs: integer|Long expected";
@@ -807,8 +807,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (object instanceof $root.pyth_lazer_transaction.PriceUpdateV1)
                 return object;
             let message = new $root.pyth_lazer_transaction.PriceUpdateV1();
-            if (object.priceFeedId != null)
-                message.priceFeedId = object.priceFeedId >>> 0;
+            if (object.feedId != null)
+                message.feedId = object.feedId >>> 0;
             if (object.sourceTimestampUs != null)
                 if ($util.Long)
                     (message.sourceTimestampUs = $util.Long.fromValue(object.sourceTimestampUs)).unsigned = true;
@@ -871,7 +871,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 options = {};
             let object = {};
             if (options.defaults) {
-                object.priceFeedId = 0;
+                object.feedId = 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, true);
                     object.sourceTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
@@ -883,8 +883,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 } else
                     object.publisherTimestampUs = options.longs === String ? "0" : 0;
             }
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
-                object.priceFeedId = message.priceFeedId;
+            if (message.feedId != null && message.hasOwnProperty("feedId"))
+                object.feedId = message.feedId;
             if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
                 if (typeof message.sourceTimestampUs === "number")
                     object.sourceTimestampUs = options.longs === String ? String(message.sourceTimestampUs) : message.sourceTimestampUs;
@@ -957,7 +957,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
          * Properties of a FundingRateUpdateV1.
          * @memberof pyth_lazer_transaction
          * @interface IFundingRateUpdateV1
-         * @property {number|null} [priceFeedId] FundingRateUpdateV1 priceFeedId
+         * @property {number|null} [feedId] FundingRateUpdateV1 feedId
          * @property {number|Long|null} [sourceTimestampUs] FundingRateUpdateV1 sourceTimestampUs
          * @property {number|Long|null} [publisherTimestampUs] FundingRateUpdateV1 publisherTimestampUs
          * @property {number|Long|null} [price] FundingRateUpdateV1 price
@@ -980,12 +980,12 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         }
 
         /**
-         * FundingRateUpdateV1 priceFeedId.
-         * @member {number} priceFeedId
+         * FundingRateUpdateV1 feedId.
+         * @member {number} feedId
          * @memberof pyth_lazer_transaction.FundingRateUpdateV1
          * @instance
          */
-        FundingRateUpdateV1.prototype.priceFeedId = 0;
+        FundingRateUpdateV1.prototype.feedId = 0;
 
         /**
          * FundingRateUpdateV1 sourceTimestampUs.
@@ -1058,8 +1058,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         FundingRateUpdateV1.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.priceFeedId != null && Object.hasOwnProperty.call(message, "priceFeedId"))
-                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.priceFeedId);
+            if (message.feedId != null && Object.hasOwnProperty.call(message, "feedId"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.feedId);
             if (message.sourceTimestampUs != null && Object.hasOwnProperty.call(message, "sourceTimestampUs"))
                 writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.sourceTimestampUs);
             if (message.publisherTimestampUs != null && Object.hasOwnProperty.call(message, "publisherTimestampUs"))
@@ -1103,7 +1103,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.priceFeedId = reader.uint32();
+                        message.feedId = reader.uint32();
                         break;
                     }
                 case 2: {
@@ -1158,9 +1158,9 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             let properties = {};
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
-                if (!$util.isInteger(message.priceFeedId))
-                    return "priceFeedId: integer expected";
+            if (message.feedId != null && message.hasOwnProperty("feedId"))
+                if (!$util.isInteger(message.feedId))
+                    return "feedId: integer expected";
             if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
                 if (!$util.isInteger(message.sourceTimestampUs) && !(message.sourceTimestampUs && $util.isInteger(message.sourceTimestampUs.low) && $util.isInteger(message.sourceTimestampUs.high)))
                     return "sourceTimestampUs: integer|Long expected";
@@ -1192,8 +1192,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (object instanceof $root.pyth_lazer_transaction.FundingRateUpdateV1)
                 return object;
             let message = new $root.pyth_lazer_transaction.FundingRateUpdateV1();
-            if (object.priceFeedId != null)
-                message.priceFeedId = object.priceFeedId >>> 0;
+            if (object.feedId != null)
+                message.feedId = object.feedId >>> 0;
             if (object.sourceTimestampUs != null)
                 if ($util.Long)
                     (message.sourceTimestampUs = $util.Long.fromValue(object.sourceTimestampUs)).unsigned = true;
@@ -1247,7 +1247,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 options = {};
             let object = {};
             if (options.defaults) {
-                object.priceFeedId = 0;
+                object.feedId = 0;
                 if ($util.Long) {
                     let long = new $util.Long(0, 0, true);
                     object.sourceTimestampUs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
@@ -1259,8 +1259,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 } else
                     object.publisherTimestampUs = options.longs === String ? "0" : 0;
             }
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId"))
-                object.priceFeedId = message.priceFeedId;
+            if (message.feedId != null && message.hasOwnProperty("feedId"))
+                object.feedId = message.feedId;
             if (message.sourceTimestampUs != null && message.hasOwnProperty("sourceTimestampUs"))
                 if (typeof message.sourceTimestampUs === "number")
                     object.sourceTimestampUs = options.longs === String ? String(message.sourceTimestampUs) : message.sourceTimestampUs;
@@ -1619,7 +1619,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
          * Properties of a LazerTransaction.
          * @memberof pyth_lazer_transaction
          * @interface ILazerTransaction
-         * @property {pyth_lazer_transaction.IPublisherUpdatePayload|null} [publisherUpdates] LazerTransaction publisherUpdates
+         * @property {pyth_lazer_transaction.IPublisherUpdate|null} [publisherUpdates] LazerTransaction publisherUpdates
          */
 
         /**
@@ -1639,7 +1639,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
 
         /**
          * LazerTransaction publisherUpdates.
-         * @member {pyth_lazer_transaction.IPublisherUpdatePayload|null|undefined} publisherUpdates
+         * @member {pyth_lazer_transaction.IPublisherUpdate|null|undefined} publisherUpdates
          * @memberof pyth_lazer_transaction.LazerTransaction
          * @instance
          */
@@ -1649,12 +1649,12 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         let $oneOfFields;
 
         /**
-         * LazerTransaction transaction.
-         * @member {"publisherUpdates"|undefined} transaction
+         * LazerTransaction payload.
+         * @member {"publisherUpdates"|undefined} payload
          * @memberof pyth_lazer_transaction.LazerTransaction
          * @instance
          */
-        Object.defineProperty(LazerTransaction.prototype, "transaction", {
+        Object.defineProperty(LazerTransaction.prototype, "payload", {
             get: $util.oneOfGetter($oneOfFields = ["publisherUpdates"]),
             set: $util.oneOfSetter($oneOfFields)
         });
@@ -1684,7 +1684,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (!writer)
                 writer = $Writer.create();
             if (message.publisherUpdates != null && Object.hasOwnProperty.call(message, "publisherUpdates"))
-                $root.pyth_lazer_transaction.PublisherUpdatePayload.encode(message.publisherUpdates, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                $root.pyth_lazer_transaction.PublisherUpdate.encode(message.publisherUpdates, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             return writer;
         };
 
@@ -1720,7 +1720,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1: {
-                        message.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdatePayload.decode(reader, reader.uint32());
+                        message.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdate.decode(reader, reader.uint32());
                         break;
                     }
                 default:
@@ -1760,9 +1760,9 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 return "object expected";
             let properties = {};
             if (message.publisherUpdates != null && message.hasOwnProperty("publisherUpdates")) {
-                properties.transaction = 1;
+                properties.payload = 1;
                 {
-                    let error = $root.pyth_lazer_transaction.PublisherUpdatePayload.verify(message.publisherUpdates);
+                    let error = $root.pyth_lazer_transaction.PublisherUpdate.verify(message.publisherUpdates);
                     if (error)
                         return "publisherUpdates." + error;
                 }
@@ -1785,7 +1785,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (object.publisherUpdates != null) {
                 if (typeof object.publisherUpdates !== "object")
                     throw TypeError(".pyth_lazer_transaction.LazerTransaction.publisherUpdates: object expected");
-                message.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdatePayload.fromObject(object.publisherUpdates);
+                message.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdate.fromObject(object.publisherUpdates);
             }
             return message;
         };
@@ -1804,9 +1804,9 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 options = {};
             let object = {};
             if (message.publisherUpdates != null && message.hasOwnProperty("publisherUpdates")) {
-                object.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdatePayload.toObject(message.publisherUpdates, options);
+                object.publisherUpdates = $root.pyth_lazer_transaction.PublisherUpdate.toObject(message.publisherUpdates, options);
                 if (options.oneofs)
-                    object.transaction = "publisherUpdates";
+                    object.payload = "publisherUpdates";
             }
             return object;
         };

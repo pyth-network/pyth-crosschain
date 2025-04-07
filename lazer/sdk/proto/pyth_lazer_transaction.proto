@@ -15,7 +15,7 @@ message SignedLazerTransaction {
 }
 
 message LazerTransaction {
-  oneof transaction {
-    PublisherUpdatePayload publisher_updates = 1;
+  oneof payload {
+    PublisherUpdate publisher_updates = 1;
   }
 }

@@ -30,7 +30,7 @@
     "fix:format": "prettier --write .",
     "example": "node --loader ts-node/esm examples/index.js",
     "doc": "typedoc --out docs/typedoc src",
-    "publish": "pnpm run script -- publish",
+    "publish": "pnpm run prebuild && pnpm run script -- publish",
     "proto-codegen": "mkdir -p src/generated && pnpm exec pbjs -t static-module -w es6 -o src/generated/proto.js ../proto/*.proto && pnpm exec pbts -o src/generated/proto.d.ts src/generated/proto.js",
     "prebuild": "rm -rf ./src/generated && npm run proto-codegen"
   },

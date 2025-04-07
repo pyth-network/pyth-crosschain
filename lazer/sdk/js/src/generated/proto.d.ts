@@ -3,117 +3,14 @@ import Long = require("long");
 /** Namespace pyth_lazer_transaction. */
 export namespace pyth_lazer_transaction {
 
-    /** Properties of a PublisherUpdatePayload. */
-    interface IPublisherUpdatePayload {
-
-        /** PublisherUpdatePayload updates */
-        updates?: (pyth_lazer_transaction.IPublisherUpdate[]|null);
-
-        /** PublisherUpdatePayload batchTimestampUs */
-        batchTimestampUs?: (number|Long|null);
-    }
-
-    /** Represents a PublisherUpdatePayload. */
-    class PublisherUpdatePayload implements IPublisherUpdatePayload {
-
-        /**
-         * Constructs a new PublisherUpdatePayload.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: pyth_lazer_transaction.IPublisherUpdatePayload);
-
-        /** PublisherUpdatePayload updates. */
-        public updates: pyth_lazer_transaction.IPublisherUpdate[];
-
-        /** PublisherUpdatePayload batchTimestampUs. */
-        public batchTimestampUs: (number|Long);
-
-        /**
-         * Creates a new PublisherUpdatePayload instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns PublisherUpdatePayload instance
-         */
-        public static create(properties?: pyth_lazer_transaction.IPublisherUpdatePayload): pyth_lazer_transaction.PublisherUpdatePayload;
-
-        /**
-         * Encodes the specified PublisherUpdatePayload message. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdatePayload.verify|verify} messages.
-         * @param message PublisherUpdatePayload message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: pyth_lazer_transaction.IPublisherUpdatePayload, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified PublisherUpdatePayload message, length delimited. Does not implicitly {@link pyth_lazer_transaction.PublisherUpdatePayload.verify|verify} messages.
-         * @param message PublisherUpdatePayload message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: pyth_lazer_transaction.IPublisherUpdatePayload, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a PublisherUpdatePayload message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns PublisherUpdatePayload
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer_transaction.PublisherUpdatePayload;
-
-        /**
-         * Decodes a PublisherUpdatePayload message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns PublisherUpdatePayload
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer_transaction.PublisherUpdatePayload;
-
-        /**
-         * Verifies a PublisherUpdatePayload message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a PublisherUpdatePayload message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns PublisherUpdatePayload
-         */
-        public static fromObject(object: { [k: string]: any }): pyth_lazer_transaction.PublisherUpdatePayload;
-
-        /**
-         * Creates a plain object from a PublisherUpdatePayload message. Also converts values to other types if specified.
-         * @param message PublisherUpdatePayload
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: pyth_lazer_transaction.PublisherUpdatePayload, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this PublisherUpdatePayload to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-
-        /**
-         * Gets the default type url for PublisherUpdatePayload
-         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns The default type url
-         */
-        public static getTypeUrl(typeUrlPrefix?: string): string;
-    }
-
     /** Properties of a PublisherUpdate. */
     interface IPublisherUpdate {
 
-        /** PublisherUpdate priceUpdateV1 */
-        priceUpdateV1?: (pyth_lazer_transaction.IPriceUpdateV1|null);
+        /** PublisherUpdate updates */
+        updates?: (pyth_lazer_transaction.IFeedUpdate[]|null);
 
-        /** PublisherUpdate fundingRateUpdateV1 */
-        fundingRateUpdateV1?: (pyth_lazer_transaction.IFundingRateUpdateV1|null);
+        /** PublisherUpdate batchTimestampUs */
+        batchTimestampUs?: (number|Long|null);
     }
 
     /** Represents a PublisherUpdate. */
@@ -125,14 +22,11 @@ export namespace pyth_lazer_transaction {
          */
         constructor(properties?: pyth_lazer_transaction.IPublisherUpdate);
 
-        /** PublisherUpdate priceUpdateV1. */
-        public priceUpdateV1?: (pyth_lazer_transaction.IPriceUpdateV1|null);
+        /** PublisherUpdate updates. */
+        public updates: pyth_lazer_transaction.IFeedUpdate[];
 
-        /** PublisherUpdate fundingRateUpdateV1. */
-        public fundingRateUpdateV1?: (pyth_lazer_transaction.IFundingRateUpdateV1|null);
-
-        /** PublisherUpdate update. */
-        public update?: ("priceUpdateV1"|"fundingRateUpdateV1");
+        /** PublisherUpdate batchTimestampUs. */
+        public batchTimestampUs: (number|Long);
 
         /**
          * Creates a new PublisherUpdate instance using the specified properties.
@@ -212,11 +106,117 @@ export namespace pyth_lazer_transaction {
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
+    /** Properties of a FeedUpdate. */
+    interface IFeedUpdate {
+
+        /** FeedUpdate priceUpdateV1 */
+        priceUpdateV1?: (pyth_lazer_transaction.IPriceUpdateV1|null);
+
+        /** FeedUpdate fundingRateUpdateV1 */
+        fundingRateUpdateV1?: (pyth_lazer_transaction.IFundingRateUpdateV1|null);
+    }
+
+    /** Represents a FeedUpdate. */
+    class FeedUpdate implements IFeedUpdate {
+
+        /**
+         * Constructs a new FeedUpdate.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: pyth_lazer_transaction.IFeedUpdate);
+
+        /** FeedUpdate priceUpdateV1. */
+        public priceUpdateV1?: (pyth_lazer_transaction.IPriceUpdateV1|null);
+
+        /** FeedUpdate fundingRateUpdateV1. */
+        public fundingRateUpdateV1?: (pyth_lazer_transaction.IFundingRateUpdateV1|null);
+
+        /** FeedUpdate update. */
+        public update?: ("priceUpdateV1"|"fundingRateUpdateV1");
+
+        /**
+         * Creates a new FeedUpdate instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns FeedUpdate instance
+         */
+        public static create(properties?: pyth_lazer_transaction.IFeedUpdate): pyth_lazer_transaction.FeedUpdate;
+
+        /**
+         * Encodes the specified FeedUpdate message. Does not implicitly {@link pyth_lazer_transaction.FeedUpdate.verify|verify} messages.
+         * @param message FeedUpdate message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: pyth_lazer_transaction.IFeedUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified FeedUpdate message, length delimited. Does not implicitly {@link pyth_lazer_transaction.FeedUpdate.verify|verify} messages.
+         * @param message FeedUpdate message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: pyth_lazer_transaction.IFeedUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a FeedUpdate message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns FeedUpdate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): pyth_lazer_transaction.FeedUpdate;
+
+        /**
+         * Decodes a FeedUpdate message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns FeedUpdate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): pyth_lazer_transaction.FeedUpdate;
+
+        /**
+         * Verifies a FeedUpdate message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a FeedUpdate message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns FeedUpdate
+         */
+        public static fromObject(object: { [k: string]: any }): pyth_lazer_transaction.FeedUpdate;
+
+        /**
+         * Creates a plain object from a FeedUpdate message. Also converts values to other types if specified.
+         * @param message FeedUpdate
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: pyth_lazer_transaction.FeedUpdate, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this FeedUpdate to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FeedUpdate
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
     /** Properties of a PriceUpdateV1. */
     interface IPriceUpdateV1 {
 
-        /** PriceUpdateV1 priceFeedId */
-        priceFeedId?: (number|null);
+        /** PriceUpdateV1 feedId */
+        feedId?: (number|null);
 
         /** PriceUpdateV1 sourceTimestampUs */
         sourceTimestampUs?: (number|Long|null);
@@ -243,8 +243,8 @@ export namespace pyth_lazer_transaction {
          */
         constructor(properties?: pyth_lazer_transaction.IPriceUpdateV1);
 
-        /** PriceUpdateV1 priceFeedId. */
-        public priceFeedId: number;
+        /** PriceUpdateV1 feedId. */
+        public feedId: number;
 
         /** PriceUpdateV1 sourceTimestampUs. */
         public sourceTimestampUs: (number|Long);
@@ -342,8 +342,8 @@ export namespace pyth_lazer_transaction {
     /** Properties of a FundingRateUpdateV1. */
     interface IFundingRateUpdateV1 {
 
-        /** FundingRateUpdateV1 priceFeedId */
-        priceFeedId?: (number|null);
+        /** FundingRateUpdateV1 feedId */
+        feedId?: (number|null);
 
         /** FundingRateUpdateV1 sourceTimestampUs */
         sourceTimestampUs?: (number|Long|null);
@@ -367,8 +367,8 @@ export namespace pyth_lazer_transaction {
          */
         constructor(properties?: pyth_lazer_transaction.IFundingRateUpdateV1);
 
-        /** FundingRateUpdateV1 priceFeedId. */
-        public priceFeedId: number;
+        /** FundingRateUpdateV1 feedId. */
+        public feedId: number;
 
         /** FundingRateUpdateV1 sourceTimestampUs. */
         public sourceTimestampUs: (number|Long);
@@ -578,7 +578,7 @@ export namespace pyth_lazer_transaction {
     interface ILazerTransaction {
 
         /** LazerTransaction publisherUpdates */
-        publisherUpdates?: (pyth_lazer_transaction.IPublisherUpdatePayload|null);
+        publisherUpdates?: (pyth_lazer_transaction.IPublisherUpdate|null);
     }
 
     /** Represents a LazerTransaction. */
@@ -591,10 +591,10 @@ export namespace pyth_lazer_transaction {
         constructor(properties?: pyth_lazer_transaction.ILazerTransaction);
 
         /** LazerTransaction publisherUpdates. */
-        public publisherUpdates?: (pyth_lazer_transaction.IPublisherUpdatePayload|null);
+        public publisherUpdates?: (pyth_lazer_transaction.IPublisherUpdate|null);
 
-        /** LazerTransaction transaction. */
-        public transaction?: "publisherUpdates";
+        /** LazerTransaction payload. */
+        public payload?: "publisherUpdates";
 
         /**
          * Creates a new LazerTransaction instance using the specified properties.
