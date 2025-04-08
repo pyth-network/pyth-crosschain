@@ -73,6 +73,17 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         uint64 emaConf;
     }
 
+    struct TwapPriceFeedMessage {
+        bytes32 priceId;
+        int128 cumulativePrice;
+        uint128 cumulativeConf;
+        uint64 numDownSlots;
+        uint64 publishSlot;
+        uint64 publishTime;
+        uint64 prevPublishTime;
+        int32 expo;
+    }
+
     struct MerkleUpdateConfig {
         uint8 depth;
         uint8 numSigners;
@@ -97,6 +108,28 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
                 priceFeedMessages[i].prevPublishTime,
                 priceFeedMessages[i].emaPrice,
                 priceFeedMessages[i].emaConf
+            );
+        }
+    }
+
+    function encodeTwapPriceFeedMessages(
+        TwapPriceFeedMessage[] memory twapPriceFeedMessages
+    ) internal pure returns (bytes[] memory encodedTwapPriceFeedMessages) {
+        encodedTwapPriceFeedMessages = new bytes[](
+            twapPriceFeedMessages.length
+        );
+
+        for (uint i = 0; i < twapPriceFeedMessages.length; i++) {
+            encodedTwapPriceFeedMessages[i] = abi.encodePacked(
+                uint8(PythAccumulator.MessageType.TwapPriceFeed),
+                twapPriceFeedMessages[i].priceId,
+                twapPriceFeedMessages[i].cumulativePrice,
+                twapPriceFeedMessages[i].cumulativeConf,
+                twapPriceFeedMessages[i].numDownSlots,
+                twapPriceFeedMessages[i].publishSlot,
+                twapPriceFeedMessages[i].publishTime,
+                twapPriceFeedMessages[i].prevPublishTime,
+                twapPriceFeedMessages[i].expo
             );
         }
     }
@@ -154,6 +187,65 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
                 whMerkleUpdateData,
                 uint16(encodedPriceFeedMessages[i].length),
                 encodedPriceFeedMessages[i],
+                proofs[i]
+            );
+        }
+    }
+
+    function generateWhMerkleTwapUpdateWithSource(
+        TwapPriceFeedMessage[] memory twapPriceFeedMessages,
+        MerkleUpdateConfig memory config
+    ) internal returns (bytes memory whMerkleTwapUpdateData) {
+        bytes[]
+            memory encodedTwapPriceFeedMessages = encodeTwapPriceFeedMessages(
+                twapPriceFeedMessages
+            );
+
+        (bytes20 rootDigest, bytes[] memory proofs) = MerkleTree
+            .constructProofs(encodedTwapPriceFeedMessages, config.depth);
+
+        bytes memory wormholePayload = abi.encodePacked(
+            uint32(0x41555756), // PythAccumulator.ACCUMULATOR_WORMHOLE_MAGIC
+            uint8(PythAccumulator.UpdateType.WormholeMerkle),
+            uint64(0), // Slot, not used in target networks
+            uint32(0), // Ring size, not used in target networks
+            rootDigest
+        );
+
+        bytes memory wormholeMerkleVaa = generateVaa(
+            0,
+            config.source_chain_id,
+            config.source_emitter_address,
+            0,
+            wormholePayload,
+            config.numSigners
+        );
+
+        if (config.brokenVaa) {
+            uint mutPos = getRandUint() % wormholeMerkleVaa.length;
+
+            // mutate the random position by 1 bit
+            wormholeMerkleVaa[mutPos] = bytes1(
+                uint8(wormholeMerkleVaa[mutPos]) ^ 1
+            );
+        }
+
+        whMerkleTwapUpdateData = abi.encodePacked(
+            uint32(0x504e4155), // PythAccumulator.ACCUMULATOR_MAGIC
+            uint8(1), // major version
+            uint8(0), // minor version
+            uint8(0), // trailing header size
+            uint8(PythAccumulator.UpdateType.WormholeMerkle),
+            uint16(wormholeMerkleVaa.length),
+            wormholeMerkleVaa,
+            uint8(twapPriceFeedMessages.length)
+        );
+
+        for (uint i = 0; i < twapPriceFeedMessages.length; i++) {
+            whMerkleTwapUpdateData = abi.encodePacked(
+                whMerkleTwapUpdateData,
+                uint16(encodedTwapPriceFeedMessages[i].length),
+                encodedTwapPriceFeedMessages[i],
                 proofs[i]
             );
         }

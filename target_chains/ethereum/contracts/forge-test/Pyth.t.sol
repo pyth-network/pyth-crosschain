@@ -108,23 +108,48 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     ) public returns (bytes[][] memory updateData, uint updateFee) {
         require(messages.length >= 2, "At least 2 messages required for TWAP");
 
-        // Select first two messages for TWAP calculation
-        PriceFeedMessage[] memory startMessages = new PriceFeedMessage[](1);
-        startMessages[0] = messages[0];
+        // Create TWAP messages from regular price feed messages
+        // For TWAP calculation, we need cumulative values that increase over time
+        TwapPriceFeedMessage[]
+            memory startTwapMessages = new TwapPriceFeedMessage[](1);
+        startTwapMessages[0].priceId = messages[0].priceId;
+        // For test purposes, we'll set cumulative values for start message
+        startTwapMessages[0].cumulativePrice = int128(messages[0].price) * 1000;
+        startTwapMessages[0].cumulativeConf = uint128(messages[0].conf) * 1000;
+        startTwapMessages[0].numDownSlots = 0; // No down slots for testing
+        startTwapMessages[0].expo = messages[0].expo;
+        startTwapMessages[0].publishTime = messages[0].publishTime;
+        startTwapMessages[0].prevPublishTime = messages[0].prevPublishTime;
+        startTwapMessages[0].publishSlot = 1000; // Start slot
 
-        PriceFeedMessage[] memory endMessages = new PriceFeedMessage[](1);
-        endMessages[0] = messages[1];
+        TwapPriceFeedMessage[]
+            memory endTwapMessages = new TwapPriceFeedMessage[](1);
+        endTwapMessages[0].priceId = messages[1].priceId;
+        // For end message, make sure cumulative values are higher than start
+        endTwapMessages[0].cumulativePrice =
+            int128(messages[1].price) *
+            1000 +
+            startTwapMessages[0].cumulativePrice;
+        endTwapMessages[0].cumulativeConf =
+            uint128(messages[1].conf) *
+            1000 +
+            startTwapMessages[0].cumulativeConf;
+        endTwapMessages[0].numDownSlots = 0; // No down slots for testing
+        endTwapMessages[0].expo = messages[1].expo;
+        endTwapMessages[0].publishTime = messages[1].publishTime;
+        endTwapMessages[0].prevPublishTime = messages[1].prevPublishTime;
+        endTwapMessages[0].publishSlot = 1100; // End slot (100 slots after start)
 
-        // Generate the update data for start and end
+        // Generate the update data for start and end using the TWAP-specific function
         bytes[] memory startUpdateData = new bytes[](1);
-        startUpdateData[0] = generateWhMerkleUpdateWithSource(
-            startMessages,
+        startUpdateData[0] = generateWhMerkleTwapUpdateWithSource(
+            startTwapMessages,
             config
         );
 
         bytes[] memory endUpdateData = new bytes[](1);
-        endUpdateData[0] = generateWhMerkleUpdateWithSource(
-            endMessages,
+        endUpdateData[0] = generateWhMerkleTwapUpdateWithSource(
+            endTwapMessages,
             config
         );
 
@@ -400,10 +425,6 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             uint updateFee
         ) = createBatchedTwapUpdateDataFromMessages(messages);
 
-        // log the updateData
-        console.logBytes(updateData[0][0]);
-        console.logBytes(updateData[1][0]);
-
         // Parse the TWAP updates
         PythStructs.TwapPriceFeed[] memory twapPriceFeeds = pyth
             .parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -414,11 +435,18 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         assertEq(twapPriceFeeds[0].endTime, uint64(1100)); // publishTime end
         assertEq(twapPriceFeeds[0].twap.expo, int32(-8)); // expo
 
-        // The TWAP price should be the difference in cumulative price divided by the slot difference
-        assertEq(twapPriceFeeds[0].twap.price, int64(105));
+        // Expected TWAP price calculation:
+        // (endCumulativePrice - startCumulativePrice) / (endSlot - startSlot)
+        // ((110 * 1000 + 100 * 1000) - (100 * 1000)) / (1100 - 1000)
+        // = (210000 - 100000) / 100 = 1100
+        // The smart contract will convert this to int64, and our calculation simplified for clarity
+        assertEq(twapPriceFeeds[0].twap.price, int64(1100));
 
-        // The TWAP conf should be the difference in cumulative conf divided by the slot difference
-        assertEq(twapPriceFeeds[0].twap.conf, uint64(9));
+        // Expected TWAP conf calculation:
+        // (endCumulativeConf - startCumulativeConf) / (endSlot - startSlot)
+        // ((8 * 1000 + 10 * 1000) - (10 * 1000)) / (1100 - 1000)
+        // = (18000 - 10000) / 100 = 80
+        assertEq(twapPriceFeeds[0].twap.conf, uint64(80));
 
         // Validate the downSlotsRatio is 0 in our test implementation
         assertEq(twapPriceFeeds[0].downSlotsRatio, uint32(0));

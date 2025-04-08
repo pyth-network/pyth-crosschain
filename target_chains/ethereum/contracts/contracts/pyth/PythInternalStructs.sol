@@ -44,16 +44,4 @@ contract PythInternalStructs {
         uint16 chainId;
         bytes32 emitterAddress;
     }
-
-    // Define a struct that encapsulates these related variables. This will reduce the number of individual variables on the stack.
-    struct TwapUpdateData {
-        uint offsetStart;
-        uint offsetEnd;
-        bytes20 digestStart;
-        bytes20 digestEnd;
-        uint8 numUpdatesStart;
-        uint8 numUpdatesEnd;
-        bytes encodedStart;
-        bytes encodedEnd;
-    }
 }
