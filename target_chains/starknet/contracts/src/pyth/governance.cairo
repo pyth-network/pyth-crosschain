@@ -1,10 +1,10 @@
 use pyth::reader::ReaderTrait;
 use core::array::ArrayTrait;
-use pyth::reader::{Reader, ReaderImpl};
+use pyth::reader::ReaderImpl;
 use pyth::byte_buffer::ByteBuffer;
 use pyth::pyth::errors::GovernanceActionError;
 use core::panic_with_felt252;
-use core::starknet::{ContractAddress, ClassHash};
+use starknet::{ContractAddress, ClassHash};
 use super::DataSource;
 
 const MAGIC: u32 = 0x5054474d;

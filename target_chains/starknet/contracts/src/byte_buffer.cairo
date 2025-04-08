@@ -75,8 +75,7 @@ pub impl ByteBufferImpl of ByteBufferTrait {
 
 #[cfg(test)]
 mod tests {
-    use super::{ByteBuffer, ByteBufferImpl};
-    use pyth::util::array_try_into;
+    use super::{ ByteBufferImpl};
 
     #[test]
     fn empty_byte_array() {

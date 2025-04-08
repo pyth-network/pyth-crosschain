@@ -25,14 +25,14 @@ mod pyth {
         PriceInfo, PriceFeedMessage, read_and_verify_message, read_and_verify_header,
         parse_wormhole_proof
     };
-    use pyth::reader::{Reader, ReaderImpl};
+    use pyth::reader::ReaderImpl;
     use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
     use core::panic_with_felt252;
-    use core::starknet::{
-        ContractAddress, get_caller_address, get_execution_info, ClassHash, SyscallResultTrait,
+    use starknet::{
+        ContractAddress, get_execution_info, ClassHash, SyscallResultTrait,
         get_contract_address, get_block_timestamp,
     };
-    use core::starknet::syscalls::replace_class_syscall;
+    use starknet::syscalls::replace_class_syscall;
     use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
     use super::{
         DataSource, GetDataSource, UpdatePriceFeedsError, GovernanceActionError, Price,

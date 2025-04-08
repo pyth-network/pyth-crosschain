@@ -1,16 +1,15 @@
 use snforge_std::{
-    declare, ContractClass, ContractClassTrait, start_prank, stop_prank, CheatTarget, Event,
-    event_name_hash, spy_events, SpyOn, EventFetcher,
+    declare, ContractClass, ContractClassTrait, Event, spy_events, EventSpyTrait,
+    DeclareResultTrait, EventsFilterTrait
 };
 use pyth::wormhole::{
-    IWormholeDispatcher, IWormholeDispatcherTrait, ParseAndVerifyVmError, Event as WormholeEvent,
+    IWormholeDispatcher, IWormholeDispatcherTrait, Event as WormholeEvent,
     GuardianSetAdded
 };
 use pyth::reader::ReaderImpl;
 use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
-use pyth::util::{UnwrapWithFelt252, array_try_into, one_shift_left_bytes_u256};
-use core::starknet::{ContractAddress, EthAddress};
-use core::panic_with_felt252;
+use pyth::util::{array_try_into, one_shift_left_bytes_u256};
+use starknet::{ContractAddress, EthAddress};
 use super::data;
 use super::wormhole_guardians::{
     guardian_set0, guardian_set1, guardian_set2, guardian_set3, guardian_set4
@@ -25,7 +24,7 @@ impl DecodeEventHelpers of DecodeEventHelpersTrait {
 
 fn decode_event(mut event: Event) -> WormholeEvent {
     let key0: felt252 = event.keys.pop();
-    let output = if key0 == event_name_hash('GuardianSetAdded') {
+    let output = if key0 == selector!("GuardianSetAdded") {
         let event = GuardianSetAdded { index: event.data.pop(), };
         WormholeEvent::GuardianSetAdded(event)
     } else {
@@ -109,7 +108,7 @@ fn test_submit_guardian_set_rejects_wrong_index_in_signer() {
 fn test_submit_guardian_set_emits_events() {
     let dispatcher = deploy_with_mainnet_guardian_set0();
 
-    let mut spy = spy_events(SpyOn::One(dispatcher.contract_address));
+    let mut spy = spy_events();
 
     assert!(dispatcher.get_current_guardian_set_index() == 0);
     let hash1 = 107301215816534416941414788869570552056251358022232518071775510605007996627157;
@@ -118,12 +117,11 @@ fn test_submit_guardian_set_emits_events() {
     assert!(!dispatcher.governance_action_is_consumed(hash2));
     let hash3 = 98574986520203705693876007869045870422906099682167905265431258750902697716275;
     assert!(!dispatcher.governance_action_is_consumed(hash3));
-
+    
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
-
-    spy.fetch_events();
-    assert!(spy.events.len() == 1);
-    let (from, event) = spy.events.pop_front().unwrap();
+    let mut events = spy.get_events().emitted_by(dispatcher.contract_address).events;
+    assert!(events.len() == 1);
+    let (from, event) = events.pop_front().unwrap();
     assert!(from == dispatcher.contract_address);
     let event = decode_event(event);
     let expected = GuardianSetAdded { index: 1 };
@@ -133,12 +131,13 @@ fn test_submit_guardian_set_emits_events() {
     assert!(dispatcher.governance_action_is_consumed(hash1));
     assert!(!dispatcher.governance_action_is_consumed(hash2));
     assert!(!dispatcher.governance_action_is_consumed(hash3));
-
+    
+    let mut spy = spy_events();
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade2());
 
-    spy.fetch_events();
-    assert!(spy.events.len() == 1);
-    let (from, event) = spy.events.pop_front().unwrap();
+    let mut events = spy.get_events().emitted_by(dispatcher.contract_address).events;
+    assert!(events.len() == 1);
+    let (from, event) = events.pop_front().unwrap();
     assert!(from == dispatcher.contract_address);
     let event = decode_event(event);
     let expected = GuardianSetAdded { index: 2 };
@@ -232,6 +231,7 @@ fn test_submit_guardian_set_rejects_corrupted(pos: usize, random1: usize, random
 }
 
 #[test]
+#[fuzzer(runs: 100, seed: 0)]
 #[should_panic(expected: ('wrong governance chain',))]
 fn test_submit_guardian_set_rejects_non_governance(pos: usize, random1: usize, random2: usize) {
     let dispatcher = deploy_with_mainnet_guardian_set0();
@@ -261,9 +261,9 @@ pub fn deploy_declared_at(
         Option::Some(address) => class.deploy_at(@args, address),
         Option::None => class.deploy(@args),
     };
-    let contract_address = match result {
+    let (contract_address, _) = match result {
         Result::Ok(v) => { v },
-        Result::Err(err) => { panic(err.panic_data) },
+        Result::Err(err) => { panic(err) },
     };
     IWormholeDispatcher { contract_address }
 }
@@ -276,7 +276,7 @@ fn deploy(
     governance_chain_id: u16,
     governance_contract: u256,
 ) -> IWormholeDispatcher {
-    let class = declare("wormhole");
+    let class = declare("wormhole").unwrap().contract_class().deref();
     deploy_declared_at(
         @class,
         guardian_set_index,

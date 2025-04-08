@@ -2,7 +2,7 @@ use pyth::reader::{Reader, ReaderImpl};
 use pyth::util::UNEXPECTED_OVERFLOW;
 use super::GovernanceError;
 use core::panic_with_felt252;
-use core::starknet::EthAddress;
+use starknet::EthAddress;
 
 // "Core" (left padded)
 const MODULE: u256 = 0x00000000000000000000000000000000000000000000000000000000436f7265;

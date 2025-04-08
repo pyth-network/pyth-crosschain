@@ -1,7 +1,7 @@
 use super::errors::SubmitNewGuardianSetError;
 use pyth::byte_buffer::ByteBuffer;
-use core::starknet::secp256_trait::Signature;
-use core::starknet::EthAddress;
+use starknet::secp256_trait::Signature;
+use starknet::EthAddress;
 
 /// Wormhole provides a secure means for communication between multiple chains.
 /// This contract allows users to parse and verify a Wormhole message that informs

@@ -1,4 +1,4 @@
-use super::hash::{Hasher, HasherImpl};
+use super::hash::HasherImpl;
 use super::reader::{Reader, ReaderImpl};
 use super::byte_buffer::ByteBuffer;
 use super::util::ONE_SHIFT_96;

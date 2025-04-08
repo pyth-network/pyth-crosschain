@@ -1,7 +1,7 @@
 use super::{GetPriceUnsafeError, GetPriceNoOlderThanError};
 use pyth::byte_buffer::ByteBuffer;
 use pyth::wormhole::VerifiedVM;
-use core::starknet::ContractAddress;
+use starknet::ContractAddress;
 use core::fmt::{Debug, Formatter};
 use pyth::util::write_i64;
 

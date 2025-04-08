@@ -1,8 +1,5 @@
 use core::option::OptionTrait;
 use core::array::ArrayTrait;
-use core::keccak::cairo_keccak;
-use core::integer::u128_byte_reverse;
-use core::fmt::{Debug, Formatter};
 use pyth::util::{UNEXPECTED_OVERFLOW, UNEXPECTED_ZERO, one_shift_left_bytes_u128};
 use super::byte_buffer::{ByteBuffer, ByteBufferImpl};
 

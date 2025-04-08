@@ -1,5 +1,5 @@
 use pyth::util::array_try_into;
-use core::starknet::EthAddress;
+use starknet::EthAddress;
 
 // Initial mainnet guardian set.
 pub fn guardian_set0() -> Array<EthAddress> {

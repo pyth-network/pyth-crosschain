@@ -13,4 +13,4 @@ snforge_std = "0.38.3"
 [lib]
 
 [[target.starknet-contract]]
-build-external-contracts = ["openzeppelin::presets::erc20::ERC20"]
+build-external-contracts = ["openzeppelin::presets::erc20::ERC20Upgradeable"]

@@ -1,7 +1,7 @@
 use pyth::reader::{Reader, ReaderImpl};
-use pyth::hash::{Hasher, HasherImpl};
+use pyth::hash::HasherImpl;
 use super::{VerifiedVM, GuardianSignature, ParseAndVerifyVmError};
-use core::starknet::secp256_trait::Signature;
+use starknet::secp256_trait::Signature;
 use pyth::byte_buffer::ByteBuffer;
 use core::panic_with_felt252;
 
@@ -51,7 +51,6 @@ pub fn parse_vm(encoded_vm: ByteBuffer) -> VerifiedVM {
     let consistency_level = reader.read_u8();
     let payload_len = reader.len();
     let payload = reader.read_byte_array(payload_len);
-
     VerifiedVM {
         version,
         guardian_set_index,

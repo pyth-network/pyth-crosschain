@@ -16,7 +16,6 @@ pub use wormhole::{Event, GuardianSetAdded};
 #[starknet::contract]
 mod wormhole {
     use pyth::util::UnwrapWithFelt252;
-    use core::box::BoxTrait;
     use core::array::ArrayTrait;
     use super::{
         VerifiedVM, IWormhole, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError,
@@ -24,10 +23,10 @@ mod wormhole {
     };
     use super::governance;
     use super::parse_vm::parse_vm;
-    use pyth::reader::{Reader, ReaderImpl};
+    use pyth::reader::ReaderImpl;
     use pyth::byte_buffer::ByteBuffer;
-    use core::starknet::{get_block_timestamp, EthAddress};
-    use core::starknet::eth_signature::is_eth_signature_valid;
+    use starknet::{get_block_timestamp, EthAddress};
+    use starknet::eth_signature::is_eth_signature_valid;
     use core::panic_with_felt252;
     use pyth::util::{UNEXPECTED_OVERFLOW};
     use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess, Map, StoragePathEntry};
@@ -121,14 +120,12 @@ mod wormhole {
                     Option::None => { break; },
                 };
 
-                match last_index {
-                    Option::Some(last_index) => {
-                        if *(@signature).guardian_index <= last_index {
-                            panic_with_felt252(ParseAndVerifyVmError::InvalidSignatureOrder.into());
-                        }
-                    },
-                    Option::None => {},
-                };
+                if let Some(last_index) = last_index {
+                    let guardian_index = *(@signature).guardian_index;
+                    if guardian_index <= last_index {
+                        panic_with_felt252(ParseAndVerifyVmError::InvalidSignatureOrder.into());
+                    }
+                }
                 last_index = Option::Some(*(@signature).guardian_index);
 
                 if signature.guardian_index.into() >= guardian_set.num_guardians {
