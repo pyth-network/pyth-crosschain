@@ -21,8 +21,7 @@
     }
   },
   "scripts": {
-    "proto-codegen": "mkdir -p src/generated && pnpm exec pbjs -t static-module -w es6 -o src/generated/proto.js ../proto/*.proto && pnpm exec pbts -o src/generated/proto.d.ts src/generated/proto.js",
-    "prebuild": "rm -rf ./src/generated && pnpm run proto-codegen",
+    "build:proto-codegen": "mkdir -p src/generated && pnpm exec pbjs -t static-module -w es6 -o src/generated/proto.js ../proto/*.proto && pnpm exec pbts -o src/generated/proto.d.ts src/generated/proto.js",
     "build:cjs": "tsc --project tsconfig.build.json --verbatimModuleSyntax false --module commonjs --outDir ./dist/cjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "build:esm": "tsc --project tsconfig.build.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "fix:lint": "eslint --fix . --max-warnings 0",
