@@ -373,11 +373,14 @@ abstract contract Pyth is
         if (updateData.length != 2) {
             revert PythErrors.InvalidUpdateData();
         }
+        // We only charge fee for 1 update even though we need 2 updates to derive TWAP.
+        // This is for better UX since user's intention is to get a single TWAP price.
         uint requiredFee = getUpdateFee(updateData[0]);
 
         if (requiredFee != getUpdateFee(updateData[1])) {
             revert PythErrors.InvalidUpdateData();
         }
+
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
         unchecked {
