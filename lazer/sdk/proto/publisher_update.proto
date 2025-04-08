@@ -1,32 +1,55 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package pyth_lazer_transaction;
 
+// PublisherUpdate contains an array of individual updates and a timestamp
 message PublisherUpdate {
+  // Array of updates, each of which target a single feed
   repeated FeedUpdate updates = 1;
-  uint64 batch_timestamp_us = 2;
+
+  // Timestamp when this message was created
+  optional google.protobuf.Timestamp publisher_timestamp = 2;
 }
 
+// Update to a feed. May contain different types of data depending on what kind of update it is
 message FeedUpdate {
+  // Feed which the update should be applied to
+  // Should match a feed id recognized by PythLazer
+  optional uint32 feed_id = 1;
+
+  // Timestamp when this data was first acquired or generated
+  optional google.protobuf.Timestamp source_timestamp = 2;
+
+  // one of the valid updates allowed by publishers for a lazer feed
   oneof update {
-    PriceUpdateV1 price_update_v1 = 1;
-    FundingRateUpdateV1 funding_rate_update_v1 = 2;
-  }
+    PriceUpdate price_update = 3;
+    FundingRateUpdate funding_rate_update = 4;
+  };
 }
 
-message PriceUpdateV1 {
-  uint32 feed_id = 1;
-  uint64 source_timestamp_us = 2;
-  uint64 publisher_timestamp_us = 3;
-  optional int64 price = 4;
-  optional int64 best_bid_price = 5;
-  optional int64 best_ask_price = 6;
+message PriceUpdate {
+  // Price for the symbol as an integer
+  // Should be produced with a matching exponent to the configured exponent value in PythLazer
+  // May be missing if no price data is available
+  optional int64 price = 1;
+
+  // Best Bid Price for the symbol as an integer
+  // Should be produced with a matching exponent to the configured exponent value in PythLazer
+  // May be missing if no data is available
+  optional int64 best_bid_price = 2;
+
+  // Best Ask Price for the symbol as an integer
+  // Should be produced with a matching exponent to the configured exponent value in PythLazer
+  // May be missing if no data is available
+  optional int64 best_ask_price = 3;
 }
 
-message FundingRateUpdateV1 {
-  uint32 feed_id = 1;
-  uint64 source_timestamp_us = 2;
-  uint64 publisher_timestamp_us = 3;
-  optional int64 price = 4;
-  optional int64 rate = 5;
+message FundingRateUpdate {
+  // Price for which the funding rate applies to
+  optional int64 price = 1;
+
+  // Perpetual Future funding rate
+  optional int64 rate = 2;
 }
