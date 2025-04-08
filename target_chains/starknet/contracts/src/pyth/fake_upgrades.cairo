@@ -1,4 +1,4 @@
-use pyth::pyth::{GetPriceUnsafeError, DataSource, Price};
+use pyth::pyth::{GetPriceUnsafeError, Price};
 
 // Only used for tests.
 
@@ -10,8 +10,7 @@ pub trait IFakePyth<T> {
 
 #[starknet::contract]
 mod pyth_fake_upgrade1 {
-    use pyth::pyth::{GetPriceUnsafeError, DataSource, Price};
-    use pyth::byte_buffer::ByteBuffer;
+    use pyth::pyth::{GetPriceUnsafeError, Price};
 
     #[storage]
     struct Storage {}
@@ -35,8 +34,7 @@ mod pyth_fake_upgrade1 {
 
 #[starknet::contract]
 mod pyth_fake_upgrade_wrong_magic {
-    use pyth::pyth::{GetPriceUnsafeError, DataSource, Price};
-    use pyth::byte_buffer::ByteBuffer;
+    use pyth::pyth::{GetPriceUnsafeError, Price};
 
     #[storage]
     struct Storage {}
