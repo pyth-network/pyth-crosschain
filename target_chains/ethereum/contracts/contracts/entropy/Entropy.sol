@@ -80,6 +80,10 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyStatusConstants.sol";
 abstract contract Entropy is IEntropy, EntropyState {
     using ExcessivelySafeCall for address;
 
+    uint32 public constant TEN_THOUSAND = 10000;
+    uint32 public constant MAX_GAS_LIMIT =
+        uint32(type(uint16).max) * TEN_THOUSAND;
+
     function _initialize(
         address admin,
         uint128 pythFeeInWei,
@@ -267,7 +271,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             //    they still pay for the full gas limit. So we may as well give them the full limit here.
             // 2. If a provider has a defaultGasLimit != 0, we need to ensure that all requests have a >0 gas limit
             //    so that we opt-in to the new callback failure state flow.
-            req.gasLimit10k = roundGas(
+            req.gasLimit10k = roundTo10kGas(
                 callbackGasLimit < providerInfo.defaultGasLimit
                     ? providerInfo.defaultGasLimit
                     : callbackGasLimit
@@ -546,7 +550,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                 // than the indicated gas limit. (See CALL opcode docs here https://www.evm.codes/?fork=cancun#f1)
                 // Consequently, out-of-gas reverts need to be handled carefully to ensure that the callback
                 // was truly provided with a sufficient amount of gas.
-                uint256(req.gasLimit10k) * 10000,
+                uint256(req.gasLimit10k) * TEN_THOUSAND,
                 256, // copy at most 256 bytes of the return value into ret.
                 abi.encodeWithSelector(
                     IEntropyConsumer._entropyCallback.selector,
@@ -568,7 +572,8 @@ abstract contract Entropy is IEntropy, EntropyState {
                 clearRequest(provider, sequenceNumber);
             } else if (
                 ret.length > 0 ||
-                (startingGas * 31) / 32 > uint256(req.gasLimit10k) * 10000
+                (startingGas * 31) / 32 >
+                uint256(req.gasLimit10k) * TEN_THOUSAND
             ) {
                 // The callback reverted for some reason.
                 // If ret.length > 0, then we know the callback manually triggered a revert, so it's safe to mark it as failed.
@@ -668,7 +673,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         // This approach may be somewhat simplistic, but it allows us to continue using the
         // existing feeInWei parameter for the callback failure flow instead of defining new
         // configuration values.
-        uint32 roundedGasLimit = uint32(roundGas(gasLimit)) * 10000;
+        uint32 roundedGasLimit = uint32(roundTo10kGas(gasLimit)) * TEN_THOUSAND;
         if (
             provider.defaultGasLimit > 0 &&
             roundedGasLimit > provider.defaultGasLimit
@@ -787,6 +792,10 @@ abstract contract Entropy is IEntropy, EntropyState {
             revert EntropyErrors.NoSuchProvider();
         }
 
+        // Check that we can round the gas limit into the 10k gas. This reverts
+        // if the provided value exceeds the max.
+        roundTo10kGas(gasLimit);
+
         uint32 oldGasLimit = provider.defaultGasLimit;
         provider.defaultGasLimit = gasLimit;
         emit ProviderDefaultGasLimitUpdated(msg.sender, oldGasLimit, gasLimit);
@@ -810,11 +819,16 @@ abstract contract Entropy is IEntropy, EntropyState {
 
     // Rounds the provided quantity of gas into units of 10k gas.
     // If gas is not evenly divisible by 10k, rounds up.
-    function roundGas(uint32 gas) internal pure returns (uint16) {
-        uint32 gas10k = gas / 10000;
-        if (gas10k * 10000 < gas) {
+    function roundTo10kGas(uint32 gas) internal pure returns (uint16) {
+        if (gas > MAX_GAS_LIMIT) {
+            revert EntropyErrors.MaxGasLimitExceeded();
+        }
+
+        uint32 gas10k = gas / TEN_THOUSAND;
+        if (gas10k * TEN_THOUSAND < gas) {
             gas10k += 1;
         }
+        // Note: safe cast here should never revert due to the if statement above.
         return SafeCast.toUint16(gas10k);
     }
 

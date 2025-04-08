@@ -41,6 +41,11 @@
   },
   {
     "inputs": [],
+    "name": "MaxGasLimitExceeded",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NoSuchProvider",
     "type": "error"
   },

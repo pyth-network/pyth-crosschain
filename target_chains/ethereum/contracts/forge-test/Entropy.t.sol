@@ -1463,6 +1463,19 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         random.setDefaultGasLimit(0);
         info = random.getProviderInfo(provider1);
         assertEq(info.defaultGasLimit, 0);
+
+        // Can set to maximum value.
+        uint32 maxLimit = random.MAX_GAS_LIMIT();
+        vm.prank(provider1);
+        random.setDefaultGasLimit(maxLimit);
+        info = random.getProviderInfo(provider1);
+        assertEq(info.defaultGasLimit, random.MAX_GAS_LIMIT());
+
+        // Reverts if max value is exceeded
+        uint32 exceedsGasLimit = random.MAX_GAS_LIMIT() + 1;
+        vm.prank(provider1);
+        vm.expectRevert(EntropyErrors.MaxGasLimitExceeded.selector);
+        random.setDefaultGasLimit(exceedsGasLimit);
     }
 
     function testSetDefaultGasLimitRevertIfNotFromProvider() public {
@@ -1526,6 +1539,17 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             uint32(type(uint16).max) * 10000,
             type(uint16).max,
             uint128(type(uint16).max) / 2
+        );
+
+        // Test larger than max value reverts with expected error
+        uint32 exceedsGasLimit = uint32(type(uint16).max) * 10000 + 1;
+        vm.expectRevert(EntropyErrors.MaxGasLimitExceeded.selector);
+        random.getFeeForGas(provider1, exceedsGasLimit);
+        vm.expectRevert(EntropyErrors.MaxGasLimitExceeded.selector);
+        random.requestWithCallbackAndGasLimit{value: 10000000000000}(
+            provider1,
+            bytes32(uint(42)),
+            exceedsGasLimit
         );
 
         // A provider with a 0 gas limit is opted-out of the failure state flow, indicated by
