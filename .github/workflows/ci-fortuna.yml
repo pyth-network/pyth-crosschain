@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/ci-fortuna.yml
       - apps/fortuna/**
+      - target_chains/ethereum/entropy_sdk/solidity/abis/**
   push:
     branches: [main]
 jobs:

@@ -90,7 +90,7 @@ async fn inspect_chain(
 }
 
 async fn process_request(rpc_provider: Provider<Http>, request: Request) -> Result<()> {
-    if request.sequence_number != 0 && request.is_request_with_callback {
+    if request.sequence_number != 0 && request.callback_status != 0 {
         let block = rpc_provider
             .get_block(request.block_number)
             .await?
