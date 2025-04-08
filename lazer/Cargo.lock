@@ -3882,6 +3882,7 @@ dependencies = [
  "libsecp256k1 0.7.1",
  "prost",
  "prost-build",
+ "prost-types",
  "rust_decimal",
  "serde",
  "serde_json",
