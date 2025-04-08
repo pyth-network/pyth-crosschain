@@ -558,7 +558,7 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.4-alpha.1";
+        return "1.4.4-alpha.2";
     }
 
     function calculateTwap(
