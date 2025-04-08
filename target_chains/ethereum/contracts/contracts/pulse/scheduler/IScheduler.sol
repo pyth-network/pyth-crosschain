@@ -88,7 +88,7 @@ interface IScheduler is SchedulerEvents {
         uint256 subscriptionId,
         uint256 amount
     ) external;
-    
+
     /**
      * @notice Gets all active subscriptions with their parameters
      * @return subscriptionIds Array of active subscription IDs

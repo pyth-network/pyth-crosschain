@@ -14,16 +14,16 @@ contract SchedulerState {
 
         // Pyth contract for parsing updates and verifying sigs & timestamps
         address pyth;
-        
+
         // Sub ID -> subscription parameters (which price feeds, when to update, etc)
         mapping(uint256 => SubscriptionParams) subscriptionParams;
-        
+
         // Sub ID -> subscription status (metadata about their sub)
         mapping(uint256 => SubscriptionStatus) subscriptionStatuses;
 
         // Sub ID -> price ID -> latest parsed price update for the subscribed feed
         mapping(uint256 => mapping(bytes32 => PythStructs.PriceFeed)) priceUpdates;
-        
+
         // Manager -> sub ID
         mapping(address => uint256) managerToSubscriptionId;
     }
