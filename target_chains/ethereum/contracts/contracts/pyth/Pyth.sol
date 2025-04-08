@@ -11,7 +11,6 @@ import "./PythAccumulator.sol";
 import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
-
 abstract contract Pyth is
     PythGetters,
     PythSetters,
@@ -380,7 +379,6 @@ abstract contract Pyth is
         if (requiredFee != getUpdateFee(updateData[1])) {
             revert PythErrors.InvalidUpdateData();
         }
-
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
         unchecked {

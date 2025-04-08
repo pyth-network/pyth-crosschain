@@ -159,6 +159,8 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         updateData[1] = endUpdateData;
 
         // Calculate the update fee
+        // We only charge fee for 1 update even though we need 2 updates to derive TWAP.
+        // This is for better UX since user's intention is to get a single TWAP price.
         updateFee = pyth.getUpdateFee(updateData[0]);
     }
 
@@ -450,5 +452,165 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
 
         // Validate the downSlotsRatio is 0 in our test implementation
         assertEq(twapPriceFeeds[0].downSlotsRatio, uint32(0));
+    }
+
+    function testParseTwapPriceFeedUpdatesRevertsWithInvalidUpdateDataLength()
+        public
+    {
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = bytes32(uint256(1));
+
+        // Create invalid update data with wrong length
+        bytes[][] memory updateData = new bytes[][](1); // Should be 2
+        updateData[0] = new bytes[](1);
+
+        vm.expectRevert(PythErrors.InvalidUpdateData.selector);
+        pyth.parseTwapPriceFeedUpdates{value: 0}(updateData, priceIds);
+    }
+
+    function testParseTwapPriceFeedUpdatesRevertsWithMismatchedPriceIds()
+        public
+    {
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = bytes32(uint256(1));
+
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+
+        // Start message with priceId 1
+        messages[0].priceId = bytes32(uint256(1));
+        messages[0].price = 100;
+        messages[0].publishTime = 1000;
+        messages[0].prevPublishTime = 900;
+
+        // End message with different priceId 2
+        messages[1].priceId = bytes32(uint256(2)); // Different priceId
+        messages[1].price = 110;
+        messages[1].publishTime = 1100;
+        messages[1].prevPublishTime = 1000;
+
+        (
+            bytes[][] memory updateData,
+            uint updateFee
+        ) = createBatchedTwapUpdateDataFromMessages(messages);
+
+        vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
+        pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
+    }
+
+    function testParseTwapPriceFeedUpdatesRevertsWithInvalidTimeOrdering()
+        public
+    {
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = bytes32(uint256(1));
+
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+
+        // Start message with later time
+        messages[0].priceId = priceIds[0];
+        messages[0].price = 100;
+        messages[0].publishTime = 1100; // Later time
+        messages[0].prevPublishTime = 1000;
+
+        // End message with earlier time
+        messages[1].priceId = priceIds[0];
+        messages[1].price = 110;
+        messages[1].publishTime = 1000; // Earlier time
+        messages[1].prevPublishTime = 900;
+
+        (
+            bytes[][] memory updateData,
+            uint updateFee
+        ) = createBatchedTwapUpdateDataFromMessages(messages);
+
+        vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
+        pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
+    }
+
+    function testParseTwapPriceFeedUpdatesRevertsWithMismatchedExponents()
+        public
+    {
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = bytes32(uint256(1));
+
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+
+        // Start message with expo -8
+        messages[0].priceId = priceIds[0];
+        messages[0].price = 100;
+        messages[0].expo = -8;
+        messages[0].publishTime = 1000;
+        messages[0].prevPublishTime = 900;
+
+        // End message with different expo -6
+        messages[1].priceId = priceIds[0];
+        messages[1].price = 110;
+        messages[1].expo = -6; // Different exponent
+        messages[1].publishTime = 1100;
+        messages[1].prevPublishTime = 1000;
+
+        (
+            bytes[][] memory updateData,
+            uint updateFee
+        ) = createBatchedTwapUpdateDataFromMessages(messages);
+
+        vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
+        pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
+    }
+
+    function testParseTwapPriceFeedUpdatesRevertsWithInvalidPrevPublishTime()
+        public
+    {
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = bytes32(uint256(1));
+
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+
+        // Start message with invalid prevPublishTime
+        messages[0].priceId = priceIds[0];
+        messages[0].price = 100;
+        messages[0].publishTime = 1000;
+        messages[0].prevPublishTime = 1100; // Invalid: prevPublishTime > publishTime
+
+        // End message
+        messages[1].priceId = priceIds[0];
+        messages[1].price = 110;
+        messages[1].publishTime = 1200;
+        messages[1].prevPublishTime = 1000;
+
+        (
+            bytes[][] memory updateData,
+            uint updateFee
+        ) = createBatchedTwapUpdateDataFromMessages(messages);
+
+        vm.expectRevert(PythErrors.InvalidTwapUpdateData.selector);
+        pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
+    }
+
+    function testParseTwapPriceFeedUpdatesRevertsWithInsufficientFee() public {
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = bytes32(uint256(1));
+
+        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+
+        messages[0].priceId = priceIds[0];
+        messages[0].price = 100;
+        messages[0].publishTime = 1000;
+        messages[0].prevPublishTime = 900;
+
+        messages[1].priceId = priceIds[0];
+        messages[1].price = 110;
+        messages[1].publishTime = 1100;
+        messages[1].prevPublishTime = 1000;
+
+        (
+            bytes[][] memory updateData,
+            uint updateFee
+        ) = createBatchedTwapUpdateDataFromMessages(messages);
+
+        vm.expectRevert(PythErrors.InsufficientFee.selector);
+        pyth.parseTwapPriceFeedUpdates{value: updateFee - 1}(
+            updateData,
+            priceIds
+        ); // Send insufficient fee
     }
 }
