@@ -183,6 +183,34 @@ contract MockPyth is AbstractPyth {
         for (uint i = 0; i < priceIds.length; i++) {
             processTwapPriceFeed(updateData, priceIds[i], i, twapPriceFeeds);
         }
+
+        return twapPriceFeeds;
+    }
+
+    function findPriceFeed(
+        bytes[][] calldata updateData,
+        bytes32 priceId,
+        uint index
+    )
+        private
+        pure
+        returns (
+            PythStructs.PriceFeed memory feed,
+            uint64 prevPublishTime,
+            bool found
+        )
+    {
+        for (uint j = 0; j < updateData[index].length; j++) {
+            (feed, prevPublishTime) = abi.decode(
+                updateData[index][j],
+                (PythStructs.PriceFeed, uint64)
+            );
+
+            if (feed.id == priceId) {
+                found = true;
+                break;
+            }
+        }
     }
 
     function processTwapPriceFeed(
@@ -194,41 +222,45 @@ contract MockPyth is AbstractPyth {
         // Find start price feed
         PythStructs.PriceFeed memory startFeed;
         uint64 startPrevPublishTime;
-        bool foundStart = false;
-
-        for (uint j = 0; j < updateData[0].length; j++) {
-            (startFeed, startPrevPublishTime) = abi.decode(
-                updateData[0][j],
-                (PythStructs.PriceFeed, uint64)
-            );
-
-            if (startFeed.id == priceId) {
-                foundStart = true;
-                break;
-            }
-        }
-
+        bool foundStart;
+        (startFeed, startPrevPublishTime, foundStart) = findPriceFeed(
+            updateData,
+            priceId,
+            0
+        );
         if (!foundStart) revert PythErrors.PriceFeedNotFoundWithinRange();
 
         // Find end price feed
         PythStructs.PriceFeed memory endFeed;
         uint64 endPrevPublishTime;
-        bool foundEnd = false;
-
-        for (uint j = 0; j < updateData[1].length; j++) {
-            (endFeed, endPrevPublishTime) = abi.decode(
-                updateData[1][j],
-                (PythStructs.PriceFeed, uint64)
-            );
-
-            if (endFeed.id == priceId) {
-                foundEnd = true;
-                break;
-            }
-        }
-
+        bool foundEnd;
+        (endFeed, endPrevPublishTime, foundEnd) = findPriceFeed(
+            updateData,
+            priceId,
+            1
+        );
         if (!foundEnd) revert PythErrors.PriceFeedNotFoundWithinRange();
 
+        validateAndCalculateTwap(
+            priceId,
+            startFeed,
+            endFeed,
+            startPrevPublishTime,
+            endPrevPublishTime,
+            index,
+            twapPriceFeeds
+        );
+    }
+
+    function validateAndCalculateTwap(
+        bytes32 priceId,
+        PythStructs.PriceFeed memory startFeed,
+        PythStructs.PriceFeed memory endFeed,
+        uint64 startPrevPublishTime,
+        uint64 endPrevPublishTime,
+        uint index,
+        PythStructs.TwapPriceFeed[] memory twapPriceFeeds
+    ) private {
         // Validate time ordering
         if (startFeed.price.publishTime >= endFeed.price.publishTime) {
             revert PythErrors.InvalidTwapUpdateDataSet();
@@ -248,7 +280,7 @@ contract MockPyth is AbstractPyth {
             revert PythErrors.InvalidTwapUpdateDataSet();
         }
 
-        // Calculate and store TWAP
+        // Calculate TWAP
         twapPriceFeeds[index] = PythUtils.calculateTwap(
             priceId,
             startInfo,
