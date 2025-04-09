@@ -167,6 +167,7 @@ contract MockPyth is AbstractPyth {
     )
         external
         payable
+        override
         returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds)
     {
         // Validate inputs and fee

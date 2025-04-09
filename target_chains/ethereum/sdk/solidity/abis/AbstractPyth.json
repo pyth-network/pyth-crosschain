@@ -569,9 +569,9 @@
   {
     "inputs": [
       {
-        "internalType": "bytes[][]",
+        "internalType": "bytes[]",
         "name": "updateData",
-        "type": "bytes[][]"
+        "type": "bytes[]"
       },
       {
         "internalType": "bytes32[]",
