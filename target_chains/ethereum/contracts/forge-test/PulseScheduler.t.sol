@@ -335,6 +335,36 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         );
     }
 
+    function testUpdatePriceFeedsRevertsOnMismatchedTimestamps() public {
+        // First add a subscription and funds
+        uint256 subscriptionId = addTestSubscription();
+        uint256 fundAmount = 1 ether;
+        scheduler.addFunds{value: fundAmount}(subscriptionId);
+
+        // Create two price feeds with mismatched timestamps
+        bytes32[] memory priceIds = createPriceIds(2);
+        uint64 time1 = SafeCast.toUint64(block.timestamp);
+        uint64 time2 = time1 + 10;
+        PythStructs.PriceFeed[] memory priceFeeds = new PythStructs.PriceFeed[](
+            2
+        );
+        priceFeeds[0] = createSingleMockPriceFeed(time1);
+        priceFeeds[1] = createSingleMockPriceFeed(time2);
+
+        // Mock Pyth response to return these feeds
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds); // Data needs to match expected length
+
+        // Expect revert with PriceTimestampMismatch error
+        vm.expectRevert(
+            abi.encodeWithSelector(PriceTimestampMismatch.selector)
+        );
+
+        // Attempt to update price feeds
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
+    }
+
     function testGetLatestPricesAllFeeds() public {
         // First add a subscription, funds, and update price feeds
         uint256 subscriptionId = addTestSubscription();

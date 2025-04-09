@@ -67,6 +67,13 @@ abstract contract PulseTestUtils is Test {
         return priceIds;
     }
 
+    // Helper function to create a single mock price feed
+    function createSingleMockPriceFeed(
+        uint256 publishTime
+    ) internal pure returns (PythStructs.PriceFeed memory) {
+        return createMockPriceFeeds(publishTime, 1)[0];
+    }
+
     // Helper function to create mock price feeds with default 2 feeds
     function createMockPriceFeeds(
         uint256 publishTime

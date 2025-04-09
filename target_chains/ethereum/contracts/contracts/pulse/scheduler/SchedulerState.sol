@@ -41,6 +41,8 @@ contract SchedulerState {
     }
 
     struct GasConfig {
+        // TODO: Figure out what controls to give users for gas strategy
+
         // Gas price limit to prevent runaway costs in high-gas environments
         uint256 maxGasPrice;
         // Gas limit for update operations
