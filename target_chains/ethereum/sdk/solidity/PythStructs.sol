@@ -40,7 +40,15 @@ contract PythStructs {
         uint endTime;
         // TWAP price
         Price twap;
-        // Down slot ratio
+        // Down slot ratio represents the ratio of price feed updates that were missed or unavailable
+        // during the TWAP period, expressed as a fixed-point number between 0 and 1e6 (100%).
+        // For example:
+        //   - 0 means all price updates were available
+        //   - 500_000 means 50% of updates were missed
+        //   - 1_000_000 means all updates were missed
+        // This can be used to assess the quality/reliability of the TWAP calculation.
+        // Applications should define a maximum acceptable ratio (e.g. 100000 for 10%)
+        // and revert if downSlotsRatio exceeds it.
         uint32 downSlotsRatio;
     }
 
