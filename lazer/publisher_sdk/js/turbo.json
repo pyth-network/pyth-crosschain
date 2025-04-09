@@ -1,0 +1,24 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build:proto-codegen": {
+      "dependsOn": ["//#install:modules"],
+      "inputs": ["../proto/**"],
+      "outputs": ["src/generated/**"],
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["build:cjs", "build:esm"],
+      "outputs": ["dist/**"]
+    },
+    "build:cjs": {
+      "dependsOn": ["build:proto-codegen", "^build"],
+      "outputs": ["dist/cjs/**"]
+    },
+    "build:esm": {
+      "dependsOn": ["build:proto-codegen", "^build"],
+      "outputs": ["dist/esm/**"]
+    }
+  }
+}

@@ -43,6 +43,7 @@ packages:
   - contract_manager
   - lazer/contracts/solana
   - lazer/sdk/js
+  - lazer/publisher_sdk/js
 
 catalog:
   "@amplitude/analytics-browser": ^2.13.0
