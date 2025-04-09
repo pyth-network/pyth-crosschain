@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+  "publisher_sdk/rust",
   "sdk/rust/protocol",
   "sdk/rust/client",
   "contracts/solana/programs/pyth-lazer-solana-contract", "publisher_sdk/rust",
