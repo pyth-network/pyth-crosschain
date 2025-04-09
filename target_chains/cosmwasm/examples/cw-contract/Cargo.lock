@@ -485,9 +485,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk-cw"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c04e9f2961bce1ef13b09afcdb5aee7d4ddde83669e5f9d2824ba422cb00de48"
+version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
