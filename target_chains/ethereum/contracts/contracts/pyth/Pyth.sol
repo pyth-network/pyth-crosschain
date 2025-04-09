@@ -370,6 +370,8 @@ abstract contract Pyth is
         override
         returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds)
     {
+        // TWAP requires exactly 2 updates - one for the start point and one for the end point
+        // to calculate the time-weighted average price between those two points
         if (updateData.length != 2) {
             revert PythErrors.InvalidUpdateData();
         }
