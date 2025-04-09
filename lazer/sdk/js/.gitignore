@@ -20,6 +20,3 @@ node_modules/
 dist/
 
 tsconfig.tsbuildinfo
-
-# Types generated for .proto files
-src/generated/
