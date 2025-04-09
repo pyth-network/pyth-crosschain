@@ -27,7 +27,13 @@ interface IScheduler is SchedulerEvents {
      */
     function getSubscription(
         uint256 subscriptionId
-    ) external view returns (SchedulerState.SubscriptionParams memory params, SchedulerState.SubscriptionStatus memory status);
+    )
+        external
+        view
+        returns (
+            SchedulerState.SubscriptionParams memory params,
+            SchedulerState.SubscriptionStatus memory status
+        );
 
     /**
      * @notice Updates an existing subscription
@@ -43,9 +49,7 @@ interface IScheduler is SchedulerEvents {
      * @notice Deactivates a subscription
      * @param subscriptionId The ID of the subscription to deactivate
      */
-    function deactivateSubscription(
-        uint256 subscriptionId
-    ) external;
+    function deactivateSubscription(uint256 subscriptionId) external;
 
     /**
      * @notice Updates price feeds for a subscription
@@ -75,27 +79,26 @@ interface IScheduler is SchedulerEvents {
      * @notice Adds funds to a subscription's balance
      * @param subscriptionId The ID of the subscription
      */
-    function addFunds(
-        uint256 subscriptionId
-    ) external payable;
+    function addFunds(uint256 subscriptionId) external payable;
 
     /**
      * @notice Withdraws funds from a subscription's balance
      * @param subscriptionId The ID of the subscription
      * @param amount The amount to withdraw
      */
-    function withdrawFunds(
-        uint256 subscriptionId,
-        uint256 amount
-    ) external;
+    function withdrawFunds(uint256 subscriptionId, uint256 amount) external;
 
     /**
      * @notice Gets all active subscriptions with their parameters
+     * @dev This function has no access control to allow keepers to discover active subscriptions
      * @return subscriptionIds Array of active subscription IDs
      * @return subscriptionParams Array of subscription parameters for each active subscription
      */
-    function getActiveSubscriptions() external view returns (
-        uint256[] memory subscriptionIds,
-        SchedulerState.SubscriptionParams[] memory subscriptionParams
-    );
+    function getActiveSubscriptions()
+        external
+        view
+        returns (
+            uint256[] memory subscriptionIds,
+            SchedulerState.SubscriptionParams[] memory subscriptionParams
+        );
 }

@@ -29,10 +29,7 @@ contract SchedulerUpgradeable is
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Scheduler._initialize(
-            admin,
-            pythAddress
-        );
+        Scheduler._initialize(admin, pythAddress);
 
         _transferOwnership(owner);
     }

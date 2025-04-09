@@ -9,10 +9,7 @@ import "./SchedulerState.sol";
 import "./SchedulerErrors.sol";
 
 abstract contract Scheduler is IScheduler, SchedulerState {
-    function _initialize(
-        address admin,
-        address pythAddress
-    ) internal {
+    function _initialize(address admin, address pythAddress) internal {
         require(admin != address(0), "admin is zero address");
         require(pythAddress != address(0), "pyth is zero address");
 
@@ -24,18 +21,25 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         SubscriptionParams calldata subscriptionParams
     ) external override returns (uint256 subscriptionId) {
         if (subscriptionParams.priceIds.length > MAX_PRICE_IDS) {
-            revert TooManyPriceIds(subscriptionParams.priceIds.length, MAX_PRICE_IDS);
+            revert TooManyPriceIds(
+                subscriptionParams.priceIds.length,
+                MAX_PRICE_IDS
+            );
         }
 
         // Validate update criteria
-        if (!subscriptionParams.updateCriteria.updateOnHeartbeat &&
-            !subscriptionParams.updateCriteria.updateOnDeviation) {
+        if (
+            !subscriptionParams.updateCriteria.updateOnHeartbeat &&
+            !subscriptionParams.updateCriteria.updateOnDeviation
+        ) {
             revert InvalidUpdateCriteria();
         }
 
         // Validate gas config
-        if (subscriptionParams.gasConfig.maxGasPrice == 0 ||
-            subscriptionParams.gasConfig.maxGasLimit == 0) {
+        if (
+            subscriptionParams.gasConfig.maxGasPrice == 0 ||
+            subscriptionParams.gasConfig.maxGasLimit == 0
+        ) {
             revert InvalidGasConfig();
         }
 
@@ -45,15 +49,17 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         _state.subscriptionParams[subscriptionId] = subscriptionParams;
 
         // Initialize subscription status
-        SubscriptionStatus storage status = _state.subscriptionStatuses[subscriptionId];
+        SubscriptionStatus storage status = _state.subscriptionStatuses[
+            subscriptionId
+        ];
         status.priceLastUpdatedAt = 0;
         status.balanceInWei = 0;
         status.totalUpdates = 0;
         status.totalSpent = 0;
         status.isActive = true;
 
-        // Map manager to subscription ID
-        _state.managerToSubscriptionId[msg.sender] = subscriptionId;
+        // Map subscription ID to manager
+        _state.subscriptionManager[subscriptionId] = msg.sender;
 
         emit SubscriptionCreated(subscriptionId, msg.sender);
         return subscriptionId;
@@ -61,8 +67,19 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
     function getSubscription(
         uint256 subscriptionId
-    ) external view override returns (SubscriptionParams memory params, SubscriptionStatus memory status) {
-        return (_state.subscriptionParams[subscriptionId], _state.subscriptionStatuses[subscriptionId]);
+    )
+        external
+        view
+        override
+        returns (
+            SubscriptionParams memory params,
+            SubscriptionStatus memory status
+        )
+    {
+        return (
+            _state.subscriptionParams[subscriptionId],
+            _state.subscriptionStatuses[subscriptionId]
+        );
     }
 
     function updateSubscription(
@@ -74,18 +91,25 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         if (newSubscriptionParams.priceIds.length > MAX_PRICE_IDS) {
-            revert TooManyPriceIds(newSubscriptionParams.priceIds.length, MAX_PRICE_IDS);
+            revert TooManyPriceIds(
+                newSubscriptionParams.priceIds.length,
+                MAX_PRICE_IDS
+            );
         }
 
         // Validate update criteria
-        if (!newSubscriptionParams.updateCriteria.updateOnHeartbeat &&
-            !newSubscriptionParams.updateCriteria.updateOnDeviation) {
+        if (
+            !newSubscriptionParams.updateCriteria.updateOnHeartbeat &&
+            !newSubscriptionParams.updateCriteria.updateOnDeviation
+        ) {
             revert InvalidUpdateCriteria();
         }
 
         // Validate gas config
-        if (newSubscriptionParams.gasConfig.maxGasPrice == 0 ||
-            newSubscriptionParams.gasConfig.maxGasLimit == 0) {
+        if (
+            newSubscriptionParams.gasConfig.maxGasPrice == 0 ||
+            newSubscriptionParams.gasConfig.maxGasLimit == 0
+        ) {
             revert InvalidGasConfig();
         }
 
@@ -112,8 +136,12 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         bytes[] calldata updateData,
         bytes32[] calldata priceIds
     ) external override onlyPusher {
-        SubscriptionStatus storage status = _state.subscriptionStatuses[subscriptionId];
-        SubscriptionParams storage params = _state.subscriptionParams[subscriptionId];
+        SubscriptionStatus storage status = _state.subscriptionStatuses[
+            subscriptionId
+        ];
+        SubscriptionParams storage params = _state.subscriptionParams[
+            subscriptionId
+        ];
 
         if (!status.isActive) {
             revert InactiveSubscription();
@@ -144,22 +172,19 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         uint64 publishTime = SafeCast.toUint64(block.timestamp);
         PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
             value: pythFee
-        }(
-            updateData,
-            priceIds,
-            publishTime,
-            publishTime
-        );
+        }(updateData, priceIds, publishTime, publishTime);
 
         // Verify all price feeds have the same timestamp
         uint64 timestamp = SafeCast.toUint64(priceFeeds[0].price.publishTime);
         for (uint8 i = 1; i < priceFeeds.length; i++) {
-            if (SafeCast.toUint64(priceFeeds[i].price.publishTime) != timestamp) {
+            if (
+                SafeCast.toUint64(priceFeeds[i].price.publishTime) != timestamp
+            ) {
                 revert PriceTimestampMismatch();
             }
         }
 
-        // Store the price updates in the mapping
+        // Store the price updates
         for (uint8 i = 0; i < priceFeeds.length; i++) {
             _state.priceUpdates[subscriptionId][priceIds[i]] = priceFeeds[i];
         }
@@ -176,24 +201,40 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function getLatestPrices(
         uint256 subscriptionId,
         bytes32[] calldata priceIds
-    ) external view override onlyWhitelistedReader(subscriptionId) returns (PythStructs.PriceFeed[] memory) {
+    )
+        external
+        view
+        override
+        onlyWhitelistedReader(subscriptionId)
+        returns (PythStructs.PriceFeed[] memory)
+    {
         if (!_state.subscriptionStatuses[subscriptionId].isActive) {
             revert InactiveSubscription();
         }
 
-        SubscriptionParams storage params = _state.subscriptionParams[subscriptionId];
+        SubscriptionParams storage params = _state.subscriptionParams[
+            subscriptionId
+        ];
 
         // If no price IDs provided, return all price feeds for the subscription
         if (priceIds.length == 0) {
-            PythStructs.PriceFeed[] memory allFeeds = new PythStructs.PriceFeed[](params.priceIds.length);
+            PythStructs.PriceFeed[]
+                memory allFeeds = new PythStructs.PriceFeed[](
+                    params.priceIds.length
+                );
             for (uint8 i = 0; i < params.priceIds.length; i++) {
-                allFeeds[i] = _state.priceUpdates[subscriptionId][params.priceIds[i]];
+                allFeeds[i] = _state.priceUpdates[subscriptionId][
+                    params.priceIds[i]
+                ];
             }
             return allFeeds;
         }
 
         // Return only the requested price feeds
-        PythStructs.PriceFeed[] memory requestedFeeds = new PythStructs.PriceFeed[](priceIds.length);
+        PythStructs.PriceFeed[]
+            memory requestedFeeds = new PythStructs.PriceFeed[](
+                priceIds.length
+            );
         for (uint8 i = 0; i < priceIds.length; i++) {
             // Verify the requested price ID is part of the subscription
             bool validPriceId = false;
@@ -208,7 +249,9 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 revert InvalidPriceId(priceIds[i], params.priceIds[0]);
             }
 
-            requestedFeeds[i] = _state.priceUpdates[subscriptionId][priceIds[i]];
+            requestedFeeds[i] = _state.priceUpdates[subscriptionId][
+                priceIds[i]
+            ];
         }
 
         return requestedFeeds;
@@ -228,7 +271,9 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         uint256 subscriptionId,
         uint256 amount
     ) external override onlyManager(subscriptionId) {
-        SubscriptionStatus storage status = _state.subscriptionStatuses[subscriptionId];
+        SubscriptionStatus storage status = _state.subscriptionStatuses[
+            subscriptionId
+        ];
 
         if (!status.isActive) {
             revert InactiveSubscription();
@@ -244,53 +289,20 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         require(sent, "Failed to send funds");
     }
 
-    // Helper functions for access control
-    modifier onlyPusher() {
-        // In a real implementation, this would check if the caller is an authorized pusher
-        // For now, we'll allow any address to push updates
-        _;
-    }
+    // This function is intentionally public with no access control to allow keepers to discover active subscriptions
+    function getActiveSubscriptions()
+        external
+        view
+        override
+        returns (
+            uint256[] memory subscriptionIds,
+            SubscriptionParams[] memory subscriptionParams
+        )
+    {
+        // TODO: This is gonna be expensive because we're iterating through
+        // all subscriptions, including deactivated ones. But because its a view
+        // function maybe it's not bad? We can optimize this.
 
-    modifier onlyManager(uint256 subscriptionId) {
-        if (_state.managerToSubscriptionId[msg.sender] != subscriptionId) {
-            revert Unauthorized();
-        }
-        _;
-    }
-
-    modifier onlyWhitelistedReader(uint256 subscriptionId) {
-        // Manager is always allowed
-        if (_state.managerToSubscriptionId[msg.sender] == subscriptionId) {
-            _;
-            return;
-        }
-
-        // If whitelist is not used, allow any reader
-        if (!_state.subscriptionParams[subscriptionId].useWhitelist) {
-            _;
-            return;
-        }
-
-        // Check if caller is in whitelist
-        address[] storage whitelist = _state.subscriptionParams[subscriptionId].readerWhitelist;
-        bool isWhitelisted = false;
-        for (uint i = 0; i < whitelist.length; i++) {
-            if (whitelist[i] == msg.sender) {
-                isWhitelisted = true;
-                break;
-            }
-        }
-
-        if (!isWhitelisted) {
-            revert Unauthorized();
-        }
-        _;
-    }
-
-    function getActiveSubscriptions() external view override returns (
-        uint256[] memory subscriptionIds,
-        SubscriptionParams[] memory subscriptionParams
-    ) {
         // Count active subscriptions first to determine array size
         uint256 activeCount = 0;
         for (uint256 i = 1; i < _state.subscriptionNumber; i++) {
@@ -314,5 +326,49 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         return (subscriptionIds, subscriptionParams);
+    }
+
+    // Helper functions for access control
+    modifier onlyPusher() {
+        // TODO
+        _;
+    }
+
+    modifier onlyManager(uint256 subscriptionId) {
+        if (_state.subscriptionManager[subscriptionId] != msg.sender) {
+            revert Unauthorized();
+        }
+        _;
+    }
+
+    modifier onlyWhitelistedReader(uint256 subscriptionId) {
+        // Manager is always allowed
+        if (_state.subscriptionManager[subscriptionId] == msg.sender) {
+            _;
+            return;
+        }
+
+        // If whitelist is not used, allow any reader
+        if (!_state.subscriptionParams[subscriptionId].useWhitelist) {
+            _;
+            return;
+        }
+
+        // Check if caller is in whitelist
+        address[] storage whitelist = _state
+            .subscriptionParams[subscriptionId]
+            .readerWhitelist;
+        bool isWhitelisted = false;
+        for (uint i = 0; i < whitelist.length; i++) {
+            if (whitelist[i] == msg.sender) {
+                isWhitelisted = true;
+                break;
+            }
+        }
+
+        if (!isWhitelisted) {
+            revert Unauthorized();
+        }
+        _;
     }
 }
