@@ -189,6 +189,60 @@
         "internalType": "bytes32",
         "name": "id",
         "type": "bytes32"
+      },
+      {
+        "internalType": "int128",
+        "name": "cumulativePrice",
+        "type": "int128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "cumulativeConf",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint64",
+        "name": "numDownSlots",
+        "type": "uint64"
+      },
+      {
+        "internalType": "int32",
+        "name": "expo",
+        "type": "int32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "publishTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "prevPublishTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "publishSlot",
+        "type": "uint64"
+      }
+    ],
+    "name": "createTwapPriceFeedUpdateData",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "twapData",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "id",
+        "type": "bytes32"
       }
     ],
     "name": "getEmaPrice",

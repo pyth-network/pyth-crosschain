@@ -390,56 +390,68 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory priceIds = new bytes32[](numMessages);
         priceIds[0] = bytes32(uint256(1));
 
-        // Create two PriceFeedMessage instances for the start and end points
-        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+        // Create start and end TWAP messages directly
+        TwapPriceFeedMessage[]
+            memory startTwapMessages = new TwapPriceFeedMessage[](1);
+        startTwapMessages[0].priceId = priceIds[0];
+        startTwapMessages[0].cumulativePrice = 100_000; // Base cumulative value
+        startTwapMessages[0].cumulativeConf = 10_000; // Base cumulative conf
+        startTwapMessages[0].numDownSlots = 0;
+        startTwapMessages[0].expo = -8;
+        startTwapMessages[0].publishTime = 1000;
+        startTwapMessages[0].prevPublishTime = 900;
+        startTwapMessages[0].publishSlot = 1000;
 
-        // Start message
-        messages[0].priceId = priceIds[0];
-        messages[0].price = 100;
-        messages[0].conf = 10;
-        messages[0].expo = -8;
-        messages[0].publishTime = 1000;
-        messages[0].prevPublishTime = 900;
-        messages[0].emaPrice = 100;
-        messages[0].emaConf = 10;
+        TwapPriceFeedMessage[]
+            memory endTwapMessages = new TwapPriceFeedMessage[](1);
+        endTwapMessages[0].priceId = priceIds[0];
+        endTwapMessages[0].cumulativePrice = 210_000; // Increased by 110_000
+        endTwapMessages[0].cumulativeConf = 18_000; // Increased by 8_000
+        endTwapMessages[0].numDownSlots = 0;
+        endTwapMessages[0].expo = -8;
+        endTwapMessages[0].publishTime = 1100;
+        endTwapMessages[0].prevPublishTime = 1000;
+        endTwapMessages[0].publishSlot = 1100;
 
-        // End message
-        messages[1].priceId = priceIds[0];
-        messages[1].price = 110;
-        messages[1].conf = 8;
-        messages[1].expo = -8;
-        messages[1].publishTime = 1100;
-        messages[1].prevPublishTime = 1000;
-        messages[1].emaPrice = 110;
-        messages[1].emaConf = 8;
+        // Create update data directly from TWAP messages
+        bytes[] memory updateData = new bytes[](2);
+        updateData[0] = generateWhMerkleTwapUpdateWithSource(
+            startTwapMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
+        updateData[1] = generateWhMerkleTwapUpdateWithSource(
+            endTwapMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
 
-        // Create update data for TWAP calculation
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedTwapUpdateDataFromMessages(messages);
+        uint updateFee = pyth.getUpdateFee(updateData);
 
         // Parse the TWAP updates
         PythStructs.TwapPriceFeed[] memory twapPriceFeeds = pyth
             .parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
 
-        // Validate basic properties
+        // Validate results
         assertEq(twapPriceFeeds[0].id, priceIds[0]);
-        assertEq(twapPriceFeeds[0].startTime, uint64(1000)); // publishTime start
-        assertEq(twapPriceFeeds[0].endTime, uint64(1100)); // publishTime end
-        assertEq(twapPriceFeeds[0].twap.expo, int32(-8)); // expo
+        assertEq(twapPriceFeeds[0].startTime, uint64(1000));
+        assertEq(twapPriceFeeds[0].endTime, uint64(1100));
+        assertEq(twapPriceFeeds[0].twap.expo, int32(-8));
 
-        // Expected TWAP price calculation:
-        // (endCumulativePrice - startCumulativePrice) / (endSlot - startSlot)
-        // ((110 * 1000 + 100 * 1000) - (100 * 1000)) / (1100 - 1000)
-        // = (210000 - 100000) / 100 = 1100
-        // The smart contract will convert this to int64, and our calculation simplified for clarity
+        // Expected TWAP price: (210_000 - 100_000) / (1100 - 1000) = 1100
         assertEq(twapPriceFeeds[0].twap.price, int64(1100));
 
-        // Expected TWAP conf calculation:
-        // (endCumulativeConf - startCumulativeConf) / (endSlot - startSlot)
-        // ((8 * 1000 + 10 * 1000) - (10 * 1000)) / (1100 - 1000)
-        // = (18000 - 10000) / 100 = 80
+        // Expected TWAP conf: (18_000 - 10_000) / (1100 - 1000) = 80
         assertEq(twapPriceFeeds[0].twap.conf, uint64(80));
 
         // Validate the downSlotsRatio is 0 in our test implementation
