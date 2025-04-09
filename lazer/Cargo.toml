@@ -4,7 +4,7 @@ members = [
   "publisher_sdk/rust",
   "sdk/rust/protocol",
   "sdk/rust/client",
-  "contracts/solana/programs/pyth-lazer-solana-contract", "publisher_sdk/rust",
+  "contracts/solana/programs/pyth-lazer-solana-contract",
 ]
 
 # TODO: only for solana programs
