@@ -314,6 +314,9 @@ abstract contract Pyth is
         private
         view
         returns (
+            /// @return newOffset The next position in the update data after processing this TWAP update
+            /// @return twapPriceInfo The extracted time-weighted average price information
+            /// @return priceId The unique identifier for this price feed
             uint newOffset,
             PythStructs.TwapPriceInfo memory twapPriceInfo,
             bytes32 priceId
