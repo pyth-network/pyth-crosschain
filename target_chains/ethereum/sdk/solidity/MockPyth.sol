@@ -215,62 +215,22 @@ contract MockPyth is AbstractPyth {
         uint index,
         PythStructs.TwapPriceFeed[] memory twapPriceFeeds
     ) private {
-        // Find start price feed
-        PythStructs.PriceFeed memory startFeed;
-        uint64 startPrevPublishTime;
-        bool foundStart;
-        (startFeed, startPrevPublishTime, foundStart) = findPriceFeed(
-            updateData,
-            priceId,
-            0
+        // Decode start and end TWAP info
+        (bytes32 startId, PythStructs.TwapPriceInfo memory startInfo) = abi
+            .decode(updateData[0], (bytes32, PythStructs.TwapPriceInfo));
+        (bytes32 endId, PythStructs.TwapPriceInfo memory endInfo) = abi.decode(
+            updateData[1],
+            (bytes32, PythStructs.TwapPriceInfo)
         );
-        if (!foundStart) revert PythErrors.PriceFeedNotFoundWithinRange();
 
-        // Find end price feed
-        PythStructs.PriceFeed memory endFeed;
-        uint64 endPrevPublishTime;
-        bool foundEnd;
-        (endFeed, endPrevPublishTime, foundEnd) = findPriceFeed(
-            updateData,
-            priceId,
-            1
-        );
-        if (!foundEnd) revert PythErrors.PriceFeedNotFoundWithinRange();
+        // Validate IDs match
+        if (startId != priceId || endId != priceId)
+            revert PythErrors.InvalidTwapUpdateDataSet();
 
-        validateAndCalculateTwap(
-            priceId,
-            startFeed,
-            endFeed,
-            startPrevPublishTime,
-            endPrevPublishTime,
-            index,
-            twapPriceFeeds
-        );
-    }
-
-    function validateAndCalculateTwap(
-        bytes32 priceId,
-        PythStructs.PriceFeed memory startFeed,
-        PythStructs.PriceFeed memory endFeed,
-        uint64 startPrevPublishTime,
-        uint64 endPrevPublishTime,
-        uint index,
-        PythStructs.TwapPriceFeed[] memory twapPriceFeeds
-    ) private {
         // Validate time ordering
-        if (startFeed.price.publishTime >= endFeed.price.publishTime) {
+        if (startInfo.publishTime >= endInfo.publishTime) {
             revert PythErrors.InvalidTwapUpdateDataSet();
         }
-
-        // Convert to TwapPriceInfo
-        PythStructs.TwapPriceInfo memory startInfo = createMockTwapInfo(
-            startFeed,
-            startPrevPublishTime
-        );
-        PythStructs.TwapPriceInfo memory endInfo = createMockTwapInfo(
-            endFeed,
-            endPrevPublishTime
-        );
 
         if (startInfo.publishSlot >= endInfo.publishSlot) {
             revert PythErrors.InvalidTwapUpdateDataSet();
@@ -294,36 +254,26 @@ contract MockPyth is AbstractPyth {
         );
     }
 
-    function createMockTwapInfo(
-        PythStructs.PriceFeed memory feed,
-        uint64 prevPublishTime
-    ) internal pure returns (PythStructs.TwapPriceInfo memory mockInfo) {
-        // Set basic fields
-        mockInfo.expo = feed.price.expo;
-        mockInfo.publishTime = uint64(feed.price.publishTime);
-        mockInfo.prevPublishTime = prevPublishTime;
+    function createTwapPriceFeedUpdateData(
+        bytes32 id,
+        int128 cumulativePrice,
+        uint128 cumulativeConf,
+        uint64 numDownSlots,
+        int32 expo,
+        uint64 publishTime,
+        uint64 prevPublishTime,
+        uint64 publishSlot
+    ) public pure returns (bytes memory twapData) {
+        PythStructs.TwapPriceInfo memory twapInfo;
+        twapInfo.cumulativePrice = cumulativePrice;
+        twapInfo.cumulativeConf = cumulativeConf;
+        twapInfo.numDownSlots = numDownSlots;
+        twapInfo.expo = expo;
+        twapInfo.publishTime = publishTime;
+        twapInfo.prevPublishTime = prevPublishTime;
+        twapInfo.publishSlot = publishSlot;
 
-        // Use publishTime as publishSlot in mock implementation
-        // In real implementation, this would be actual slot number
-        mockInfo.publishSlot = uint64(feed.price.publishTime);
-
-        // Calculate cumulative values
-        // In mock implementation, we simulate cumulative values by multiplying current values by slot
-        // This creates a linear accumulation which is sufficient for testing
-        // In real implementation, these would be actual accumulated values over time
-        mockInfo.cumulativePrice =
-            int128(feed.price.price) *
-            int128(uint128(mockInfo.publishSlot));
-        mockInfo.cumulativeConf =
-            uint128(feed.price.conf) *
-            uint128(mockInfo.publishSlot);
-
-        // Set number of down slots
-        // In mock implementation we default to 0 down slots
-        // In real implementation this would track actual network downtime
-        mockInfo.numDownSlots = 0;
-
-        return mockInfo;
+        twapData = abi.encode(id, twapInfo);
     }
 
     function createPriceFeedUpdateData(
