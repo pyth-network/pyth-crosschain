@@ -54,6 +54,10 @@ import {
   HERMES_SOL_UNIQUE_PRICE,
   HERMES_SOL_UNIQUE_CONF,
   HERMES_SOL_UNIQUE_EXPO,
+  HERMES_USDT_UNIQUE_PRICE,
+  HERMES_USDT_UNIQUE_EXPO,
+  HERMES_USDT_UNIQUE_CONF,
+  HERMES_USDT_UNIQUE_PUBLISH_TIME,
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
@@ -1187,6 +1191,37 @@ describe("PythTest", () => {
     expect(solCurrentPrice.loadInt(32)).toBe(HERMES_SOL_UNIQUE_EXPO);
     expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_PUBLISH_TIME);
 
+    // Move through TON and PYTH price feeds to reach USDT
+    currentCell = solCs.loadRef(); // Move to TON
+    const tonCs = currentCell.beginParse();
+    tonCs.loadUintBig(256); // Skip TON price ID
+    tonCs.loadRef(); // Skip TON price data
+
+    currentCell = tonCs.loadRef(); // Move to PYTH
+    const pythCs = currentCell.beginParse();
+    pythCs.loadUintBig(256); // Skip PYTH price ID
+    pythCs.loadRef(); // Skip PYTH price data
+
+    currentCell = pythCs.loadRef(); // Move to USDT
+    const usdtCs = currentCell.beginParse();
+    const usdtPriceId =
+      "0x" + usdtCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(usdtPriceId).toBe(USDT_PRICE_FEED_ID);
+
+    const usdtPriceFeedCell = usdtCs.loadRef();
+    const usdtPriceFeedSlice = usdtPriceFeedCell.beginParse();
+
+    // Verify USDT current price
+    const usdtCurrentPriceCell = usdtPriceFeedSlice.loadRef();
+    const usdtCurrentPrice = usdtCurrentPriceCell.beginParse();
+    expect(usdtCurrentPrice.loadInt(64)).toBe(HERMES_USDT_UNIQUE_PRICE);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_CONF);
+    expect(usdtCurrentPrice.loadInt(32)).toBe(HERMES_USDT_UNIQUE_EXPO);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(usdtCs.remainingRefs).toBe(0);
+
     // Verify sender address
     const senderAddress = cs.loadAddress();
     expect(senderAddress?.toString()).toBe(
@@ -1390,6 +1425,38 @@ describe("PythTest", () => {
     expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_CONF);
     expect(solCurrentPrice.loadInt(32)).toBe(HERMES_SOL_UNIQUE_EXPO);
     expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_PUBLISH_TIME);
+
+    // Move through TON and PYTH price feeds to reach USDT
+    currentCell = solCs.loadRef(); // Move to TON
+    const tonCs = currentCell.beginParse();
+    tonCs.loadUintBig(256); // Skip TON price ID
+    tonCs.loadRef(); // Skip TON price data
+
+    currentCell = tonCs.loadRef(); // Move to PYTH
+    const pythCs = currentCell.beginParse();
+    pythCs.loadUintBig(256); // Skip PYTH price ID
+    pythCs.loadRef(); // Skip PYTH price data
+
+    currentCell = pythCs.loadRef(); // Move to USDT
+    const usdtCs = currentCell.beginParse();
+    const usdtPriceId =
+      "0x" + usdtCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(usdtPriceId).toBe(USDT_PRICE_FEED_ID);
+
+    const usdtPriceFeedCell = usdtCs.loadRef();
+    const usdtPriceFeedSlice = usdtPriceFeedCell.beginParse();
+
+    // Verify USDT current price
+    const usdtCurrentPriceCell = usdtPriceFeedSlice.loadRef();
+    const usdtCurrentPrice = usdtCurrentPriceCell.beginParse();
+    expect(usdtCurrentPrice.loadInt(64)).toBe(HERMES_USDT_UNIQUE_PRICE);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_CONF);
+    expect(usdtCurrentPrice.loadInt(32)).toBe(HERMES_USDT_UNIQUE_EXPO);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(usdtCs.remainingRefs).toBe(0);
+
     // Verify sender address
     const senderAddress = cs.loadAddress();
     expect(senderAddress?.toString()).toBe(
