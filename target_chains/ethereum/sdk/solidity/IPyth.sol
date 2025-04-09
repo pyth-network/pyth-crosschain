@@ -119,26 +119,26 @@ interface IPyth is IPythEvents {
         uint64 maxPublishTime
     ) external payable returns (PythStructs.PriceFeed[] memory priceFeeds);
 
-    /// @notice Parse time-weighted average price (TWAP) from two sets of price update data for the given `priceIds`.
+    /// @notice Parse time-weighted average price (TWAP) from two consecutive price updates for the given `priceIds`.
     ///
     /// This method calculates TWAP between two data points by processing the difference in cumulative price values
-    /// divided by the time period. It requires two sets of update data that contain valid price information
+    /// divided by the time period. It requires exactly two updates that contain valid price information
     /// for all the requested price IDs.
     ///
     /// This method requires the caller to pay a fee in wei; the required fee can be computed by calling
-    /// `getUpdateFee` with the length of either updateData array (both arrays must have the same length).
+    /// `getUpdateFee` with the updateData array.
     ///
     /// @dev Reverts if:
     /// - The transferred fee is not sufficient
     /// - The updateData is invalid or malformed
+    /// - The updateData array does not contain exactly 2 updates
     /// - There is no update for any of the given `priceIds`
-    /// - The two update datasets are not comparable (different number of updates or mismatched price IDs)
     /// - The time ordering between data points is invalid (start time must be before end time)
-    /// @param updateData Array containing two arrays of price update data (start and end points for TWAP calculation)
+    /// @param updateData Array containing exactly two price updates (start and end points for TWAP calculation)
     /// @param priceIds Array of price ids to calculate TWAP for
     /// @return twapPriceFeeds Array of TWAP price feeds corresponding to the given `priceIds` (with the same order)
     function parseTwapPriceFeedUpdates(
-        bytes[][] calldata updateData,
+        bytes[] calldata updateData,
         bytes32[] calldata priceIds
     )
         external

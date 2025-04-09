@@ -362,7 +362,7 @@ abstract contract Pyth is
     }
 
     function parseTwapPriceFeedUpdates(
-        bytes[][] calldata updateData,
+        bytes[] calldata updateData,
         bytes32[] calldata priceIds
     )
         external
@@ -375,24 +375,19 @@ abstract contract Pyth is
         if (updateData.length != 2) {
             revert PythErrors.InvalidUpdateData();
         }
-        // We only charge fee for 1 update even though we need 2 updates to derive TWAP.
-        // This is for better UX since user's intention is to get a single TWAP price.
-        uint requiredFee = getUpdateFee(updateData[0]);
 
-        if (requiredFee != getUpdateFee(updateData[1])) {
-            revert PythErrors.InvalidUpdateData();
-        }
+        uint requiredFee = getUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
         unchecked {
             twapPriceFeeds = new PythStructs.TwapPriceFeed[](priceIds.length);
-            for (uint i = 0; i < updateData[0].length; i++) {
+            for (uint i = 0; i < updateData.length - 1; i++) {
                 if (
-                    (updateData[0][i].length > 4 &&
-                        UnsafeCalldataBytesLib.toUint32(updateData[0][i], 0) ==
+                    (updateData[i].length > 4 &&
+                        UnsafeCalldataBytesLib.toUint32(updateData[i], 0) ==
                         ACCUMULATOR_MAGIC) &&
-                    (updateData[1][i].length > 4 &&
-                        UnsafeCalldataBytesLib.toUint32(updateData[1][i], 0) ==
+                    (updateData[i + 1].length > 4 &&
+                        UnsafeCalldataBytesLib.toUint32(updateData[i + 1], 0) ==
                         ACCUMULATOR_MAGIC)
                 ) {
                     uint offsetStart;
@@ -405,19 +400,16 @@ abstract contract Pyth is
                         offsetStart,
                         twapPriceInfoStart,
                         priceIdStart
-                    ) = processSingleTwapUpdate(updateData[0][i]);
+                    ) = processSingleTwapUpdate(updateData[i]);
                     (
                         offsetEnd,
                         twapPriceInfoEnd,
                         priceIdEnd
-                    ) = processSingleTwapUpdate(updateData[1][i]);
+                    ) = processSingleTwapUpdate(updateData[i + 1]);
 
                     if (priceIdStart != priceIdEnd)
                         revert PythErrors.InvalidTwapUpdateDataSet();
 
-                    // Perform additional validation checks on the TWAP price data
-                    // to ensure proper time ordering, consistent exponents, and timestamp integrity
-                    // before using the data for calculations
                     validateTwapPriceInfo(twapPriceInfoStart, twapPriceInfoEnd);
 
                     uint k = findIndexOfPriceId(priceIds, priceIdStart);

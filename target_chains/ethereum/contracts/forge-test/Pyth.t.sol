@@ -11,6 +11,7 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
+import "forge-std/console.sol";
 
 contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     IPyth public pyth;
@@ -105,7 +106,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     function createBatchedTwapUpdateDataFromMessagesWithConfig(
         PriceFeedMessage[] memory messages,
         MerkleUpdateConfig memory config
-    ) public returns (bytes[][] memory updateData, uint updateFee) {
+    ) public returns (bytes[] memory updateData, uint updateFee) {
         require(messages.length >= 2, "At least 2 messages required for TWAP");
 
         // Create TWAP messages from regular price feed messages
@@ -140,33 +141,24 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         endTwapMessages[0].prevPublishTime = messages[1].prevPublishTime;
         endTwapMessages[0].publishSlot = 1100; // End slot (100 slots after start)
 
-        // Generate the update data for start and end using the TWAP-specific function
-        bytes[] memory startUpdateData = new bytes[](1);
-        startUpdateData[0] = generateWhMerkleTwapUpdateWithSource(
+        // Create the updateData array with exactly 2 elements as required by parseTwapPriceFeedUpdates
+        updateData = new bytes[](2);
+        updateData[0] = generateWhMerkleTwapUpdateWithSource(
             startTwapMessages,
             config
         );
-
-        bytes[] memory endUpdateData = new bytes[](1);
-        endUpdateData[0] = generateWhMerkleTwapUpdateWithSource(
+        updateData[1] = generateWhMerkleTwapUpdateWithSource(
             endTwapMessages,
             config
         );
 
-        // Create the updateData array with exactly 2 elements as required by parseTwapPriceFeedUpdates
-        updateData = new bytes[][](2);
-        updateData[0] = startUpdateData;
-        updateData[1] = endUpdateData;
-
         // Calculate the update fee
-        // We only charge fee for 1 update even though we need 2 updates to derive TWAP.
-        // This is for better UX since user's intention is to get a single TWAP price.
-        updateFee = pyth.getUpdateFee(updateData[0]);
+        updateFee = pyth.getUpdateFee(updateData);
     }
 
     function createBatchedTwapUpdateDataFromMessages(
         PriceFeedMessage[] memory messages
-    ) internal returns (bytes[][] memory updateData, uint updateFee) {
+    ) internal returns (bytes[] memory updateData, uint updateFee) {
         (
             updateData,
             updateFee
@@ -423,7 +415,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
 
         // Create update data for TWAP calculation
         (
-            bytes[][] memory updateData,
+            bytes[] memory updateData,
             uint updateFee
         ) = createBatchedTwapUpdateDataFromMessages(messages);
 
@@ -461,8 +453,8 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         priceIds[0] = bytes32(uint256(1));
 
         // Create invalid update data with wrong length
-        bytes[][] memory updateData = new bytes[][](1); // Should be 2
-        updateData[0] = new bytes[](1);
+        bytes[] memory updateData = new bytes[](1); // Should be 2
+        updateData[0] = new bytes(1);
 
         vm.expectRevert(PythErrors.InvalidUpdateData.selector);
         pyth.parseTwapPriceFeedUpdates{value: 0}(updateData, priceIds);
@@ -489,7 +481,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         messages[1].prevPublishTime = 1000;
 
         (
-            bytes[][] memory updateData,
+            bytes[] memory updateData,
             uint updateFee
         ) = createBatchedTwapUpdateDataFromMessages(messages);
 
@@ -518,7 +510,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         messages[1].prevPublishTime = 900;
 
         (
-            bytes[][] memory updateData,
+            bytes[] memory updateData,
             uint updateFee
         ) = createBatchedTwapUpdateDataFromMessages(messages);
 
@@ -549,7 +541,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         messages[1].prevPublishTime = 1000;
 
         (
-            bytes[][] memory updateData,
+            bytes[] memory updateData,
             uint updateFee
         ) = createBatchedTwapUpdateDataFromMessages(messages);
 
@@ -578,7 +570,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         messages[1].prevPublishTime = 1000;
 
         (
-            bytes[][] memory updateData,
+            bytes[] memory updateData,
             uint updateFee
         ) = createBatchedTwapUpdateDataFromMessages(messages);
 
@@ -603,7 +595,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         messages[1].prevPublishTime = 1000;
 
         (
-            bytes[][] memory updateData,
+            bytes[] memory updateData,
             uint updateFee
         ) = createBatchedTwapUpdateDataFromMessages(messages);
 

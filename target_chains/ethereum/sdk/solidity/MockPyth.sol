@@ -162,7 +162,7 @@ contract MockPyth is AbstractPyth {
     }
 
     function parseTwapPriceFeedUpdates(
-        bytes[][] calldata updateData,
+        bytes[] calldata updateData,
         bytes32[] calldata priceIds
     )
         external
@@ -172,9 +172,7 @@ contract MockPyth is AbstractPyth {
         // Validate inputs and fee
         if (updateData.length != 2) revert PythErrors.InvalidUpdateData();
 
-        uint requiredFee = getUpdateFee(updateData[0]);
-        if (requiredFee != getUpdateFee(updateData[1]))
-            revert PythErrors.InvalidUpdateData();
+        uint requiredFee = getUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
         twapPriceFeeds = new PythStructs.TwapPriceFeed[](priceIds.length);
@@ -188,7 +186,7 @@ contract MockPyth is AbstractPyth {
     }
 
     function findPriceFeed(
-        bytes[][] calldata updateData,
+        bytes[] calldata updateData,
         bytes32 priceId,
         uint index
     )
@@ -200,21 +198,18 @@ contract MockPyth is AbstractPyth {
             bool found
         )
     {
-        for (uint j = 0; j < updateData[index].length; j++) {
-            (feed, prevPublishTime) = abi.decode(
-                updateData[index][j],
-                (PythStructs.PriceFeed, uint64)
-            );
+        (feed, prevPublishTime) = abi.decode(
+            updateData[index],
+            (PythStructs.PriceFeed, uint64)
+        );
 
-            if (feed.id == priceId) {
-                found = true;
-                break;
-            }
+        if (feed.id == priceId) {
+            found = true;
         }
     }
 
     function processTwapPriceFeed(
-        bytes[][] calldata updateData,
+        bytes[] calldata updateData,
         bytes32 priceId,
         uint index,
         PythStructs.TwapPriceFeed[] memory twapPriceFeeds
