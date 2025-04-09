@@ -104,7 +104,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             .SubscriptionParams({
                 priceIds: priceIds,
                 readerWhitelist: readerWhitelist,
-                useWhitelist: true,
+                whitelistEnabled: true,
                 updateCriteria: updateCriteria,
                 gasConfig: gasConfig
             });
@@ -133,9 +133,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             "Whitelist length mismatch"
         );
         assertEq(
-            storedParams.useWhitelist,
+            storedParams.whitelistEnabled,
             true,
-            "useWhitelist should be true"
+            "whitelistEnabled should be true"
         );
         assertEq(
             storedParams.updateCriteria.heartbeatSeconds,
@@ -185,7 +185,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             .SubscriptionParams({
                 priceIds: newPriceIds,
                 readerWhitelist: newReaderWhitelist,
-                useWhitelist: false, // Changed from true
+                whitelistEnabled: false, // Changed from true
                 updateCriteria: newUpdateCriteria,
                 gasConfig: newGasConfig
             });
@@ -211,9 +211,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             "Whitelist length mismatch"
         );
         assertEq(
-            storedParams.useWhitelist,
+            storedParams.whitelistEnabled,
             false,
-            "useWhitelist should be false"
+            "whitelistEnabled should be false"
         );
         assertEq(
             storedParams.updateCriteria.heartbeatSeconds,
@@ -420,7 +420,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testOptionalWhitelist() public {
-        // Add a subscription with useWhitelist = false
+        // Add a subscription with whitelistEnabled = false
         bytes32[] memory priceIds = createPriceIds();
         address[] memory emptyWhitelist = new address[](0);
 
@@ -441,7 +441,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             .SubscriptionParams({
                 priceIds: priceIds,
                 readerWhitelist: emptyWhitelist,
-                useWhitelist: false, // No whitelist
+                whitelistEnabled: false, // No whitelist
                 updateCriteria: updateCriteria,
                 gasConfig: gasConfig
             });
@@ -510,7 +510,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             .SubscriptionParams({
                 priceIds: priceIds,
                 readerWhitelist: emptyWhitelist,
-                useWhitelist: false,
+                whitelistEnabled: false,
                 updateCriteria: updateCriteria,
                 gasConfig: gasConfig
             });
@@ -577,7 +577,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             .SubscriptionParams({
                 priceIds: priceIds,
                 readerWhitelist: readerWhitelist,
-                useWhitelist: true,
+                whitelistEnabled: true,
                 updateCriteria: updateCriteria,
                 gasConfig: gasConfig
             });
@@ -610,7 +610,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             .SubscriptionParams({
                 priceIds: priceIds,
                 readerWhitelist: readerWhitelist,
-                useWhitelist: true,
+                whitelistEnabled: true,
                 updateCriteria: updateCriteria,
                 gasConfig: gasConfig
             });

@@ -328,9 +328,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         return (subscriptionIds, subscriptionParams);
     }
 
-    // Helper functions for access control
+    // ACCESS CONTROL MODIFIERS
+
     modifier onlyPusher() {
-        // TODO
+        // TODO: we may not make this permissioned.
         _;
     }
 
@@ -349,7 +350,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         // If whitelist is not used, allow any reader
-        if (!_state.subscriptionParams[subscriptionId].useWhitelist) {
+        if (!_state.subscriptionParams[subscriptionId].whitelistEnabled) {
             _;
             return;
         }

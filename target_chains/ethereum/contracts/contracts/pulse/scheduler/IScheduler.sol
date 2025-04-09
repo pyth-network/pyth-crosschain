@@ -52,8 +52,8 @@ interface IScheduler is SchedulerEvents {
     function deactivateSubscription(uint256 subscriptionId) external;
 
     /**
-     * @notice Updates price feeds for a subscription
-     * @dev Verifies the updateData using the Pyth contract and validates that all feeds have the same timestamp
+     * @notice Updates price feeds for a subscription.
+     * Verifies the updateData using the Pyth contract and validates that all feeds have the same timestamp.
      * @param subscriptionId The ID of the subscription
      * @param updateData The price update data from Pyth
      * @param priceIds The IDs of the price feeds to update

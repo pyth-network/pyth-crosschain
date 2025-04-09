@@ -27,7 +27,7 @@ contract SchedulerState {
     struct SubscriptionParams {
         bytes32[] priceIds;
         address[] readerWhitelist;
-        bool useWhitelist;
+        bool whitelistEnabled;
         UpdateCriteria updateCriteria;
         GasConfig gasConfig;
     }
