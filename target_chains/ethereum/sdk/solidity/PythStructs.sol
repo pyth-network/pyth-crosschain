@@ -43,4 +43,18 @@ contract PythStructs {
         // Down slot ratio
         uint32 downSlotsRatio;
     }
+
+    // Information used to calculate time-weighted average prices (TWAP)
+    struct TwapPriceInfo {
+        // slot 1
+        int128 cumulativePrice;
+        uint128 cumulativeConf;
+        // slot 2
+        uint64 numDownSlots;
+        uint64 publishSlot;
+        uint64 publishTime;
+        uint64 prevPublishTime;
+        // slot 3
+        int32 expo;
+    }
 }

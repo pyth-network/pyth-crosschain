@@ -7,6 +7,7 @@ import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythUtils.sol";
 import "./PythAccumulator.sol";
 import "./PythGetters.sol";
 import "./PythSetters.sol";
@@ -314,7 +315,7 @@ abstract contract Pyth is
         view
         returns (
             uint newOffset,
-            PythInternalStructs.TwapPriceInfo memory twapPriceInfo,
+            PythStructs.TwapPriceInfo memory twapPriceInfo,
             bytes32 priceId
         )
     {
@@ -396,8 +397,8 @@ abstract contract Pyth is
                     uint offsetEnd;
                     bytes32 priceIdStart;
                     bytes32 priceIdEnd;
-                    PythInternalStructs.TwapPriceInfo memory twapPriceInfoStart;
-                    PythInternalStructs.TwapPriceInfo memory twapPriceInfoEnd;
+                    PythStructs.TwapPriceInfo memory twapPriceInfoStart;
+                    PythStructs.TwapPriceInfo memory twapPriceInfoEnd;
                     (
                         offsetStart,
                         twapPriceInfoStart,
@@ -444,8 +445,8 @@ abstract contract Pyth is
     }
 
     function validateTwapPriceInfo(
-        PythInternalStructs.TwapPriceInfo memory twapPriceInfoStart,
-        PythInternalStructs.TwapPriceInfo memory twapPriceInfoEnd
+        PythStructs.TwapPriceInfo memory twapPriceInfoStart,
+        PythStructs.TwapPriceInfo memory twapPriceInfoEnd
     ) private pure {
         // First validate each individual price's uniqueness
         if (
@@ -563,47 +564,14 @@ abstract contract Pyth is
 
     function calculateTwap(
         bytes32 priceId,
-        PythInternalStructs.TwapPriceInfo memory twapPriceInfoStart,
-        PythInternalStructs.TwapPriceInfo memory twapPriceInfoEnd
-    ) private pure returns (PythStructs.TwapPriceFeed memory twapPriceFeed) {
-        // Calculate differences between start and end points for slots and cumulative values
-        // These differences represent the changes that occurred over the time window
-        uint64 slotDiff = twapPriceInfoEnd.publishSlot -
-            twapPriceInfoStart.publishSlot;
-        int128 priceDiff = twapPriceInfoEnd.cumulativePrice -
-            twapPriceInfoStart.cumulativePrice;
-        uint128 confDiff = twapPriceInfoEnd.cumulativeConf -
-            twapPriceInfoStart.cumulativeConf;
-
-        // Calculate time-weighted average price (TWAP) and confidence by dividing
-        // the difference in cumulative values by the number of slots between data points
-        int128 twapPrice = priceDiff / int128(uint128(slotDiff));
-        uint128 twapConf = confDiff / uint128(slotDiff);
-
-        // Initialize the TWAP price feed structure
-        twapPriceFeed.id = priceId;
-
-        // The conversion from int128 to int64 is safe because:
-        // 1. Individual prices fit within int64 by protocol design
-        // 2. TWAP is essentially an average price over time (cumulativePrice₂-cumulativePrice₁)/slotDiff
-        // 3. This average must be within the range of individual prices that went into the calculation
-        // We use int128 only as an intermediate type to safely handle cumulative sums
-        twapPriceFeed.twap.price = int64(twapPrice);
-        twapPriceFeed.twap.conf = uint64(twapConf);
-        twapPriceFeed.twap.expo = twapPriceInfoStart.expo;
-        twapPriceFeed.twap.publishTime = twapPriceInfoEnd.publishTime;
-        twapPriceFeed.startTime = twapPriceInfoStart.publishTime;
-        twapPriceFeed.endTime = twapPriceInfoEnd.publishTime;
-
-        // Calculate downSlotsRatio as a value between 0 and 1,000,000
-        // 0 means no slots were missed, 1,000,000 means all slots were missed
-        uint64 totalDownSlots = twapPriceInfoEnd.numDownSlots -
-            twapPriceInfoStart.numDownSlots;
-        uint64 downSlotsRatio = (totalDownSlots * 1_000_000) / slotDiff;
-
-        // Safely downcast to uint32 (sufficient for value range 0-1,000,000)
-        twapPriceFeed.downSlotsRatio = uint32(downSlotsRatio);
-
-        return twapPriceFeed;
+        PythStructs.TwapPriceInfo memory twapPriceInfoStart,
+        PythStructs.TwapPriceInfo memory twapPriceInfoEnd
+    ) private pure returns (PythStructs.TwapPriceFeed memory) {
+        return
+            PythUtils.calculateTwap(
+                priceId,
+                twapPriceInfoStart,
+                twapPriceInfoEnd
+            );
     }
 }

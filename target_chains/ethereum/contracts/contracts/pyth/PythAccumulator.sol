@@ -256,7 +256,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         pure
         returns (
             uint endOffset,
-            PythInternalStructs.TwapPriceInfo memory twapPriceInfo,
+            PythStructs.TwapPriceInfo memory twapPriceInfo,
             bytes32 priceId
         )
     {
@@ -396,7 +396,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         private
         pure
         returns (
-            PythInternalStructs.TwapPriceInfo memory twapPriceInfo,
+            PythStructs.TwapPriceInfo memory twapPriceInfo,
             bytes32 priceId
         )
     {
