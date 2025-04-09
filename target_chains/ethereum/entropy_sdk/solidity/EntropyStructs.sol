@@ -37,6 +37,8 @@ contract EntropyStructs {
         // Maximum number of hashes to record in a request. This should be set according to the maximum gas limit
         // the provider supports for callbacks.
         uint32 maxNumHashes;
+        // Default gas limit to use for callbacks.
+        uint32 defaultGasLimit;
     }
 
     struct Request {
@@ -61,6 +63,9 @@ contract EntropyStructs {
         bool useBlockhash;
         // Status flag for requests with callbacks. See EntropyConstants for the possible values of this flag.
         uint8 callbackStatus;
-        // 2 bytes of space left in this struct.
+        // The gasLimit in units of 10k gas. (i.e., 2 = 20k gas). We're using units of 10k in order to fit this
+        // field into the remaining 2 bytes of this storage slot. The dynamic range here is 10k - 655M, which should
+        // cover all real-world use cases.
+        uint16 gasLimit10k;
     }
 }

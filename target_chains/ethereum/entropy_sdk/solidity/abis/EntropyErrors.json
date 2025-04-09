@@ -21,6 +21,11 @@
   },
   {
     "inputs": [],
+    "name": "InsufficientGas",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidRevealCall",
     "type": "error"
   },
@@ -32,6 +37,11 @@
   {
     "inputs": [],
     "name": "LastRevealedTooOld",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MaxGasLimitExceeded",
     "type": "error"
   },
   {
