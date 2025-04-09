@@ -1,4 +1,4 @@
-import * as crypto from "crypto";
+import crypto from "crypto"; // eslint-disable-line unicorn/prefer-node-protocol
 
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
@@ -752,7 +752,7 @@ export class PythStakingClient {
             publisherStakeAccountPositions: stakeAccount,
             publisherStakeAccountCustody: stakeAccount
               ? getStakeAccountCustodyAddress(stakeAccount)
-              : null,
+              : null, // eslint-disable-line unicorn/no-null
             stakeAccountPositions,
             stakeAccountCustody: getStakeAccountCustodyAddress(
               stakeAccountPositions,
@@ -839,6 +839,7 @@ export class PythStakingClient {
       .setPublisherStakeAccount()
       .accounts({
         currentStakeAccountPositionsOption: stakeAccountPositions,
+        // eslint-disable-next-line unicorn/no-null
         newStakeAccountPositionsOption: newStakeAccountPositions ?? null,
         publisher,
       })
@@ -1088,22 +1089,25 @@ export class PythStakingClient {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             while (true) {
               const res = await reader.read();
-              if (res.done) break;
-              if (typeof res.value === "string") {
+              if (res.done) {
+                break;
+              } else if (
+                typeof res.value === "string" ||
+                res.value instanceof Uint8Array
+              ) {
                 jsonparser.write(res.value);
               }
             }
           };
 
-          parse().catch((error: unknown) => {
-            reject(
-              error instanceof Error
-                ? error
-                : new Error(
-                    typeof error === "string" ? error : "Unknown Error",
-                  ),
-            );
-          });
+          parse().then(
+            () => {
+              reject(new EndOfStreamError());
+            },
+            (error: unknown) => {
+              reject(intoError(error));
+            },
+          );
         });
 
         return accountSchema
@@ -1140,6 +1144,16 @@ const accountSchema = z.array(
   }),
 );
 
+const intoError = (error: unknown): Error => {
+  if (error instanceof Error) {
+    return error;
+  } else if (typeof error === "string") {
+    return new Error(error);
+  } else {
+    return new UnknownError();
+  }
+};
+
 class NotOKError extends Error {
   constructor(result: Response) {
     super(`Received a ${result.status.toString()} response for ${result.url}`);
@@ -1152,5 +1166,19 @@ class NoBodyError extends Error {
   constructor() {
     super("Response did not contain a body!");
     this.name = "NoBodyError";
+  }
+}
+
+class EndOfStreamError extends Error {
+  constructor() {
+    super("Reached end of stream without finding accounts");
+    this.name = "EndOfStreamError";
+  }
+}
+
+class UnknownError extends Error {
+  constructor() {
+    super("Unknown error");
+    this.name = "UnknownError";
   }
 }
