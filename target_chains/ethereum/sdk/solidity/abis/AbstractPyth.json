@@ -589,14 +589,14 @@
             "type": "bytes32"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint64",
             "name": "startTime",
-            "type": "uint256"
+            "type": "uint64"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint64",
             "name": "endTime",
-            "type": "uint256"
+            "type": "uint64"
           },
           {
             "components": [

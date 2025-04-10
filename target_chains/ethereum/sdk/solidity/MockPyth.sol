@@ -236,8 +236,8 @@ contract MockPyth is AbstractPyth {
      */
     function createTwapPriceFeedUpdateData(
         bytes32 id,
-        uint startTime,
-        uint endTime,
+        uint64 startTime,
+        uint64 endTime,
         int64 price,
         uint64 conf,
         int32 expo,

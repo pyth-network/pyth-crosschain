@@ -32,11 +32,6 @@
   },
   {
     "inputs": [],
-    "name": "InvalidUpdateData",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "NoFreshUpdate",
     "type": "error"
   },
@@ -191,6 +186,16 @@
         "type": "bytes32"
       },
       {
+        "internalType": "uint64",
+        "name": "startTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "endTime",
+        "type": "uint64"
+      },
+      {
         "internalType": "int64",
         "name": "price",
         "type": "int64"
@@ -206,14 +211,9 @@
         "type": "int32"
       },
       {
-        "internalType": "uint64",
-        "name": "publishTime",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "publishSlot",
-        "type": "uint64"
+        "internalType": "uint32",
+        "name": "downSlotsRatio",
+        "type": "uint32"
       }
     ],
     "name": "createTwapPriceFeedUpdateData",
@@ -728,14 +728,14 @@
             "type": "bytes32"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint64",
             "name": "startTime",
-            "type": "uint256"
+            "type": "uint64"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint64",
             "name": "endTime",
-            "type": "uint256"
+            "type": "uint64"
           },
           {
             "components": [

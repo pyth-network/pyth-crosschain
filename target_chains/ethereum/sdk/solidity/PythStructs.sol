@@ -35,9 +35,9 @@ contract PythStructs {
         // The price ID.
         bytes32 id;
         // Start time of the TWAP
-        uint startTime;
+        uint64 startTime;
         // End time of the TWAP
-        uint endTime;
+        uint64 endTime;
         // TWAP price
         Price twap;
         // Down slot ratio represents the ratio of price feed updates that were missed or unavailable
