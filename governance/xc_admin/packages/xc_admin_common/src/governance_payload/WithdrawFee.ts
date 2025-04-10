@@ -12,7 +12,7 @@ export class WithdrawFee extends PythGovernanceActionImpl {
     Readonly<{ targetAddress: string; amount: bigint }>
   > = BufferLayout.struct([
     BufferLayoutExt.hexBytes(20, "targetAddress"), // Ethereum address as hex string
-    BufferLayoutExt.u256be("amount"),             // uint256 for amount in wei
+    BufferLayoutExt.u256be("amount"), // uint256 for amount in wei
   ]);
 
   constructor(
@@ -33,14 +33,14 @@ export class WithdrawFee extends PythGovernanceActionImpl {
 
     return new WithdrawFee(
       decoded[0].targetChainId,
-      Buffer.from(decoded[1].targetAddress, 'hex'),
+      Buffer.from(decoded[1].targetAddress, "hex"),
       decoded[1].amount,
     );
   }
 
   encode(): Buffer {
     return super.encodeWithPayload(WithdrawFee.layout, {
-      targetAddress: this.targetAddress.toString('hex'),
+      targetAddress: this.targetAddress.toString("hex"),
       amount: this.amount,
     });
   }

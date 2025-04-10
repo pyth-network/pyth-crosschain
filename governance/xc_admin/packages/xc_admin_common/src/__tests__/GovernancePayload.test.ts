@@ -439,7 +439,11 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
           amount: fc.bigUintN(256),
         })
         .map(({ targetAddress, amount }) => {
-          return new WithdrawFee(header.targetChainId, Buffer.from(targetAddress, 'hex'), amount);
+          return new WithdrawFee(
+            header.targetChainId,
+            Buffer.from(targetAddress, "hex"),
+            amount,
+          );
         });
     } else {
       throw new Error("Unsupported action type");
