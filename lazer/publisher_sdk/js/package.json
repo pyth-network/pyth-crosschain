@@ -8,16 +8,16 @@
   "files": [
     "dist/**/*"
   ],
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/cjs/index.d.ts",
+  "main": "./src/generated/proto.js",
+  "types": "./src/generated/proto.d.ts",
   "exports": {
     "import": {
-      "types": "./dist/esm/index.d.ts",
-      "default": "./dist/esm/index.js"
+      "types": "./src/generated/proto.d.ts",
+      "default": "./src/generated//proto.js"
     },
     "require": {
-      "types": "./dist/cjs/index.d.ts",
-      "default": "./dist/cjs/index.js"
+      "types": "./src/generated/proto.d.ts",
+      "default": "./src/generated//proto.js"
     }
   },
   "scripts": {
@@ -29,7 +29,6 @@
     "test:types": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "example": "node --loader ts-node/esm examples/index.js",
     "doc": "typedoc --out docs/typedoc src",
     "prepublishOnly": "pnpm run build",
     "publish": "pnpm run script -- publish"
