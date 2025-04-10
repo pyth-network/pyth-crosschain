@@ -33,6 +33,7 @@ import {
   SetDataSources,
 } from "../governance_payload/SetDataSources";
 import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
+import { WithdrawFee } from "../governance_payload/WithdrawFee";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);
@@ -430,6 +431,15 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
         .record({ v: fc.bigUintN(64), e: fc.bigUintN(64) })
         .map(({ v, e }) => {
           return new SetTransactionFee(header.targetChainId, v, e);
+        });
+    } else if (header.action === "WithdrawFee") {
+      return fc
+        .record({
+          targetAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
+          amount: fc.bigUintN(256),
+        })
+        .map(({ targetAddress, amount }) => {
+          return new WithdrawFee(header.targetChainId, Buffer.from(targetAddress, 'hex'), amount);
         });
     } else {
       throw new Error("Unsupported action type");

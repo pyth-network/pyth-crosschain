@@ -21,6 +21,7 @@ import {
 } from "./SetWormholeAddress";
 import { EvmExecute } from "./ExecuteAction";
 import { SetTransactionFee } from "./SetTransactionFee";
+import { WithdrawFee } from "./WithdrawFee";
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(
@@ -76,6 +77,8 @@ export function decodeGovernancePayload(
       return EvmExecute.decode(data);
     case "SetTransactionFee":
       return SetTransactionFee.decode(data);
+    case "WithdrawFee":
+      return WithdrawFee.decode(data);
     default:
       return undefined;
   }
@@ -92,3 +95,4 @@ export * from "./SetFee";
 export * from "./SetTransactionFee";
 export * from "./SetWormholeAddress";
 export * from "./ExecuteAction";
+export * from "./WithdrawFee";

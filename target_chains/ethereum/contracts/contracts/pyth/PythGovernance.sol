@@ -39,6 +39,7 @@ abstract contract PythGovernance is
         address newWormholeAddress
     );
     event TransactionFeeSet(uint oldFee, uint newFee);
+    event FeeWithdrawn(address targetAddress, uint amount);
 
     function verifyGovernanceVM(
         bytes memory encodedVM
@@ -100,6 +101,8 @@ abstract contract PythGovernance is
             );
         } else if (gi.action == GovernanceAction.SetTransactionFee) {
             setTransactionFee(parseSetTransactionFeePayload(gi.payload));
+        } else if (gi.action == GovernanceAction.WithdrawFee) {
+            withdrawFee(parseWithdrawFeePayload(gi.payload));
         } else {
             revert PythErrors.InvalidGovernanceMessage();
         }
@@ -254,5 +257,17 @@ abstract contract PythGovernance is
         setTransactionFeeInWei(payload.newFee);
 
         emit TransactionFeeSet(oldFee, transactionFeeInWei());
+    }
+
+    function withdrawFee(WithdrawFeePayload memory payload) internal {
+        if (payload.amount > address(this).balance)
+            revert PythErrors.InsufficientFee();
+
+        (bool success, ) = payload.targetAddress.call{value: payload.amount}(
+            ""
+        );
+        require(success, "Failed to withdraw fees");
+
+        emit FeeWithdrawn(payload.targetAddress, payload.amount);
     }
 }
