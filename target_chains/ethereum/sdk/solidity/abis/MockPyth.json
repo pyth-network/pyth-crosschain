@@ -191,18 +191,13 @@
         "type": "bytes32"
       },
       {
-        "internalType": "int128",
-        "name": "cumulativePrice",
-        "type": "int128"
-      },
-      {
-        "internalType": "uint128",
-        "name": "cumulativeConf",
-        "type": "uint128"
+        "internalType": "int64",
+        "name": "price",
+        "type": "int64"
       },
       {
         "internalType": "uint64",
-        "name": "numDownSlots",
+        "name": "conf",
         "type": "uint64"
       },
       {
@@ -213,11 +208,6 @@
       {
         "internalType": "uint64",
         "name": "publishTime",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "prevPublishTime",
         "type": "uint64"
       },
       {
