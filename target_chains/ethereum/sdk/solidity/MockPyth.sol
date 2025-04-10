@@ -254,23 +254,32 @@ contract MockPyth is AbstractPyth {
         );
     }
 
+    /**
+     * @notice Creates TWAP price feed update data with simplified parameters for testing
+     * @param id The price feed ID
+     * @param price The price value
+     * @param conf The confidence interval
+     * @param expo Price exponent
+     * @param publishTime Timestamp when price was published
+     * @param publishSlot Slot number for this update
+     * @return twapData Encoded TWAP price feed data ready for parseTwapPriceFeedUpdates
+     */
     function createTwapPriceFeedUpdateData(
         bytes32 id,
-        int128 cumulativePrice,
-        uint128 cumulativeConf,
-        uint64 numDownSlots,
+        int64 price,
+        uint64 conf,
         int32 expo,
         uint64 publishTime,
-        uint64 prevPublishTime,
         uint64 publishSlot
     ) public pure returns (bytes memory twapData) {
         PythStructs.TwapPriceInfo memory twapInfo;
-        twapInfo.cumulativePrice = cumulativePrice;
-        twapInfo.cumulativeConf = cumulativeConf;
-        twapInfo.numDownSlots = numDownSlots;
+        // Calculate cumulative values based on single price point
+        twapInfo.cumulativePrice = int128(price);
+        twapInfo.cumulativeConf = uint128(conf);
+        twapInfo.numDownSlots = 0; // Assume no down slots for test data
         twapInfo.expo = expo;
         twapInfo.publishTime = publishTime;
-        twapInfo.prevPublishTime = prevPublishTime;
+        twapInfo.prevPublishTime = publishTime > 60 ? publishTime - 60 : 0; // Set a reasonable previous time
         twapInfo.publishSlot = publishSlot;
 
         twapData = abi.encode(id, twapInfo);
