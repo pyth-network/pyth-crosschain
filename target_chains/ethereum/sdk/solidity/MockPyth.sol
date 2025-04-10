@@ -170,9 +170,6 @@ contract MockPyth is AbstractPyth {
         override
         returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds)
     {
-        // Validate inputs and fee
-        if (updateData.length != 2) revert PythErrors.InvalidUpdateData();
-
         uint requiredFee = getUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
@@ -186,103 +183,82 @@ contract MockPyth is AbstractPyth {
         return twapPriceFeeds;
     }
 
-    function findPriceFeed(
-        bytes[] calldata updateData,
-        bytes32 priceId,
-        uint index
-    )
-        private
-        pure
-        returns (
-            PythStructs.PriceFeed memory feed,
-            uint64 prevPublishTime,
-            bool found
-        )
-    {
-        (feed, prevPublishTime) = abi.decode(
-            updateData[index],
-            (PythStructs.PriceFeed, uint64)
-        );
-
-        if (feed.id == priceId) {
-            found = true;
-        }
-    }
-
+    // You can create this data either by calling createTwapPriceFeedUpdateData.
+    // @note: The updateData expected here is different from the one used in the main contract.
+    // In particular, the expected format is:
+    // [
+    //     abi.encode(
+    //         bytes32 id,
+    //         PythStructs.TwapPriceInfo startInfo,
+    //         PythStructs.TwapPriceInfo endInfo
+    //     )
+    // ]
     function processTwapPriceFeed(
         bytes[] calldata updateData,
         bytes32 priceId,
         uint index,
         PythStructs.TwapPriceFeed[] memory twapPriceFeeds
     ) private {
-        // Decode start and end TWAP info
-        (bytes32 startId, PythStructs.TwapPriceInfo memory startInfo) = abi
-            .decode(updateData[0], (bytes32, PythStructs.TwapPriceInfo));
-        (bytes32 endId, PythStructs.TwapPriceInfo memory endInfo) = abi.decode(
-            updateData[1],
-            (bytes32, PythStructs.TwapPriceInfo)
+        // Decode TWAP feed directly
+        PythStructs.TwapPriceFeed memory twapFeed = abi.decode(
+            updateData[0],
+            (PythStructs.TwapPriceFeed)
         );
 
-        // Validate IDs match
-        if (startId != priceId || endId != priceId)
+        // Validate ID matches
+        if (twapFeed.id != priceId)
             revert PythErrors.InvalidTwapUpdateDataSet();
 
-        // Validate time ordering
-        if (startInfo.publishTime >= endInfo.publishTime) {
-            revert PythErrors.InvalidTwapUpdateDataSet();
-        }
-
-        if (startInfo.publishSlot >= endInfo.publishSlot) {
-            revert PythErrors.InvalidTwapUpdateDataSet();
-        }
-
-        // Calculate TWAP
-        twapPriceFeeds[index] = PythUtils.calculateTwap(
-            priceId,
-            startInfo,
-            endInfo
-        );
+        // Store the TWAP feed
+        twapPriceFeeds[index] = twapFeed;
 
         // Emit event
         emit TwapPriceFeedUpdate(
             priceId,
-            startInfo.publishTime,
-            endInfo.publishTime,
-            twapPriceFeeds[index].twap.price,
-            twapPriceFeeds[index].twap.conf,
-            twapPriceFeeds[index].downSlotsRatio
+            twapFeed.startTime,
+            twapFeed.endTime,
+            twapFeed.twap.price,
+            twapFeed.twap.conf,
+            twapFeed.downSlotsRatio
         );
     }
 
     /**
      * @notice Creates TWAP price feed update data with simplified parameters for testing
      * @param id The price feed ID
+     * @param startTime Start time of the TWAP
+     * @param endTime End time of the TWAP
      * @param price The price value
      * @param conf The confidence interval
      * @param expo Price exponent
-     * @param publishTime Timestamp when price was published
-     * @param publishSlot Slot number for this update
+     * @param downSlotsRatio Down slots ratio
      * @return twapData Encoded TWAP price feed data ready for parseTwapPriceFeedUpdates
      */
     function createTwapPriceFeedUpdateData(
         bytes32 id,
+        uint startTime,
+        uint endTime,
         int64 price,
         uint64 conf,
         int32 expo,
-        uint64 publishTime,
-        uint64 publishSlot
+        uint32 downSlotsRatio
     ) public pure returns (bytes memory twapData) {
-        PythStructs.TwapPriceInfo memory twapInfo;
-        // Calculate cumulative values based on single price point
-        twapInfo.cumulativePrice = int128(price);
-        twapInfo.cumulativeConf = uint128(conf);
-        twapInfo.numDownSlots = 0; // Assume no down slots for test data
-        twapInfo.expo = expo;
-        twapInfo.publishTime = publishTime;
-        twapInfo.prevPublishTime = publishTime > 60 ? publishTime - 60 : 0; // Set a reasonable previous time
-        twapInfo.publishSlot = publishSlot;
+        PythStructs.Price memory twapPrice = PythStructs.Price({
+            price: price,
+            conf: conf,
+            expo: expo,
+            publishTime: endTime
+        });
 
-        twapData = abi.encode(id, twapInfo);
+        PythStructs.TwapPriceFeed memory twapFeed = PythStructs.TwapPriceFeed({
+            id: id,
+            startTime: startTime,
+            endTime: endTime,
+            twap: twapPrice,
+            downSlotsRatio: downSlotsRatio
+        });
+
+        twapData = abi.encode(twapFeed);
     }
 
     function createPriceFeedUpdateData(
