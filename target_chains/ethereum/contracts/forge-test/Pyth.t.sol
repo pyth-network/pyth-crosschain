@@ -26,8 +26,38 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     // We will have less than 512 price for a foreseeable future.
     uint8 constant MERKLE_TREE_DEPTH = 9;
 
+    // Base TWAP messages that will be used as templates for tests
+    TwapPriceFeedMessage[1] baseTwapStartMessages;
+    TwapPriceFeedMessage[1] baseTwapEndMessages;
+    bytes32[1] basePriceIds;
+
     function setUp() public {
         pyth = IPyth(setUpPyth(setUpWormholeReceiver(NUM_GUARDIAN_SIGNERS)));
+
+        // Initialize base TWAP messages
+        basePriceIds[0] = bytes32(uint256(1));
+
+        baseTwapStartMessages[0] = TwapPriceFeedMessage({
+            priceId: basePriceIds[0],
+            cumulativePrice: 100_000, // Base cumulative value
+            cumulativeConf: 10_000, // Base cumulative conf
+            numDownSlots: 0,
+            publishSlot: 1000,
+            publishTime: 1000,
+            prevPublishTime: 900,
+            expo: -8
+        });
+
+        baseTwapEndMessages[0] = TwapPriceFeedMessage({
+            priceId: basePriceIds[0],
+            cumulativePrice: 210_000, // Increased by 110_000
+            cumulativeConf: 18_000, // Increased by 8_000
+            numDownSlots: 0,
+            publishSlot: 1100,
+            publishTime: 1100,
+            prevPublishTime: 1000,
+            expo: -8
+        });
     }
 
     function generateRandomPriceMessages(
@@ -385,38 +415,21 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function testParseTwapPriceFeedUpdates() public {
-        // Define a single price ID we'll use for the test
-        uint numMessages = 1;
-        bytes32[] memory priceIds = new bytes32[](numMessages);
-        priceIds[0] = bytes32(uint256(1));
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = basePriceIds[0];
 
-        // Create start and end TWAP messages directly
-        TwapPriceFeedMessage[]
-            memory startTwapMessages = new TwapPriceFeedMessage[](1);
-        startTwapMessages[0].priceId = priceIds[0];
-        startTwapMessages[0].cumulativePrice = 100_000; // Base cumulative value
-        startTwapMessages[0].cumulativeConf = 10_000; // Base cumulative conf
-        startTwapMessages[0].numDownSlots = 0;
-        startTwapMessages[0].expo = -8;
-        startTwapMessages[0].publishTime = 1000;
-        startTwapMessages[0].prevPublishTime = 900;
-        startTwapMessages[0].publishSlot = 1000;
-
-        TwapPriceFeedMessage[]
-            memory endTwapMessages = new TwapPriceFeedMessage[](1);
-        endTwapMessages[0].priceId = priceIds[0];
-        endTwapMessages[0].cumulativePrice = 210_000; // Increased by 110_000
-        endTwapMessages[0].cumulativeConf = 18_000; // Increased by 8_000
-        endTwapMessages[0].numDownSlots = 0;
-        endTwapMessages[0].expo = -8;
-        endTwapMessages[0].publishTime = 1100;
-        endTwapMessages[0].prevPublishTime = 1000;
-        endTwapMessages[0].publishSlot = 1100;
-
-        // Create update data directly from TWAP messages
+        // Create update data directly from base TWAP messages
         bytes[] memory updateData = new bytes[](2);
+        TwapPriceFeedMessage[]
+            memory startMessages = new TwapPriceFeedMessage[](1);
+        TwapPriceFeedMessage[] memory endMessages = new TwapPriceFeedMessage[](
+            1
+        );
+        startMessages[0] = baseTwapStartMessages[0];
+        endMessages[0] = baseTwapEndMessages[0];
+
         updateData[0] = generateWhMerkleTwapUpdateWithSource(
-            startTwapMessages,
+            startMessages,
             MerkleUpdateConfig(
                 MERKLE_TREE_DEPTH,
                 NUM_GUARDIAN_SIGNERS,
@@ -426,7 +439,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             )
         );
         updateData[1] = generateWhMerkleTwapUpdateWithSource(
-            endTwapMessages,
+            endMessages,
             MerkleUpdateConfig(
                 MERKLE_TREE_DEPTH,
                 NUM_GUARDIAN_SIGNERS,
@@ -443,10 +456,13 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             .parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
 
         // Validate results
-        assertEq(twapPriceFeeds[0].id, priceIds[0]);
-        assertEq(twapPriceFeeds[0].startTime, uint64(1000));
-        assertEq(twapPriceFeeds[0].endTime, uint64(1100));
-        assertEq(twapPriceFeeds[0].twap.expo, int32(-8));
+        assertEq(twapPriceFeeds[0].id, basePriceIds[0]);
+        assertEq(
+            twapPriceFeeds[0].startTime,
+            baseTwapStartMessages[0].publishTime
+        );
+        assertEq(twapPriceFeeds[0].endTime, baseTwapEndMessages[0].publishTime);
+        assertEq(twapPriceFeeds[0].twap.expo, baseTwapStartMessages[0].expo);
 
         // Expected TWAP price: (210_000 - 100_000) / (1100 - 1000) = 1100
         assertEq(twapPriceFeeds[0].twap.price, int64(1100));
@@ -478,24 +494,42 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
 
-        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+        // Copy base messages
+        TwapPriceFeedMessage[]
+            memory startMessages = new TwapPriceFeedMessage[](1);
+        TwapPriceFeedMessage[] memory endMessages = new TwapPriceFeedMessage[](
+            1
+        );
+        startMessages[0] = baseTwapStartMessages[0];
+        endMessages[0] = baseTwapEndMessages[0];
 
-        // Start message with priceId 1
-        messages[0].priceId = bytes32(uint256(1));
-        messages[0].price = 100;
-        messages[0].publishTime = 1000;
-        messages[0].prevPublishTime = 900;
+        // Change end message priceId to create mismatch
+        endMessages[0].priceId = bytes32(uint256(2));
 
-        // End message with different priceId 2
-        messages[1].priceId = bytes32(uint256(2)); // Different priceId
-        messages[1].price = 110;
-        messages[1].publishTime = 1100;
-        messages[1].prevPublishTime = 1000;
+        // Create update data
+        bytes[] memory updateData = new bytes[](2);
+        updateData[0] = generateWhMerkleTwapUpdateWithSource(
+            startMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
+        updateData[1] = generateWhMerkleTwapUpdateWithSource(
+            endMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
 
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedTwapUpdateDataFromMessages(messages);
+        uint updateFee = pyth.getUpdateFee(updateData);
 
         vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -507,24 +541,46 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
 
-        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+        // Copy base messages
+        TwapPriceFeedMessage[]
+            memory startMessages = new TwapPriceFeedMessage[](1);
+        TwapPriceFeedMessage[] memory endMessages = new TwapPriceFeedMessage[](
+            1
+        );
+        startMessages[0] = baseTwapStartMessages[0];
+        endMessages[0] = baseTwapEndMessages[0];
 
-        // Start message with later time
-        messages[0].priceId = priceIds[0];
-        messages[0].price = 100;
-        messages[0].publishTime = 1100; // Later time
-        messages[0].prevPublishTime = 1000;
+        // Modify times to create invalid ordering
+        startMessages[0].publishTime = 1100;
+        startMessages[0].publishSlot = 1100;
+        endMessages[0].publishTime = 1000;
+        endMessages[0].publishSlot = 1000;
+        endMessages[0].prevPublishTime = 900;
 
-        // End message with earlier time
-        messages[1].priceId = priceIds[0];
-        messages[1].price = 110;
-        messages[1].publishTime = 1000; // Earlier time
-        messages[1].prevPublishTime = 900;
+        // Create update data
+        bytes[] memory updateData = new bytes[](2);
+        updateData[0] = generateWhMerkleTwapUpdateWithSource(
+            startMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
+        updateData[1] = generateWhMerkleTwapUpdateWithSource(
+            endMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
 
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedTwapUpdateDataFromMessages(messages);
+        uint updateFee = pyth.getUpdateFee(updateData);
 
         vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -536,26 +592,42 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
 
-        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+        // Copy base messages
+        TwapPriceFeedMessage[]
+            memory startMessages = new TwapPriceFeedMessage[](1);
+        TwapPriceFeedMessage[] memory endMessages = new TwapPriceFeedMessage[](
+            1
+        );
+        startMessages[0] = baseTwapStartMessages[0];
+        endMessages[0] = baseTwapEndMessages[0];
 
-        // Start message with expo -8
-        messages[0].priceId = priceIds[0];
-        messages[0].price = 100;
-        messages[0].expo = -8;
-        messages[0].publishTime = 1000;
-        messages[0].prevPublishTime = 900;
+        // Change end message expo to create mismatch
+        endMessages[0].expo = -6;
 
-        // End message with different expo -6
-        messages[1].priceId = priceIds[0];
-        messages[1].price = 110;
-        messages[1].expo = -6; // Different exponent
-        messages[1].publishTime = 1100;
-        messages[1].prevPublishTime = 1000;
+        // Create update data
+        bytes[] memory updateData = new bytes[](2);
+        updateData[0] = generateWhMerkleTwapUpdateWithSource(
+            startMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
+        updateData[1] = generateWhMerkleTwapUpdateWithSource(
+            endMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
 
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedTwapUpdateDataFromMessages(messages);
+        uint updateFee = pyth.getUpdateFee(updateData);
 
         vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -567,24 +639,42 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
 
-        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+        // Copy base messages
+        TwapPriceFeedMessage[]
+            memory startMessages = new TwapPriceFeedMessage[](1);
+        TwapPriceFeedMessage[] memory endMessages = new TwapPriceFeedMessage[](
+            1
+        );
+        startMessages[0] = baseTwapStartMessages[0];
+        endMessages[0] = baseTwapEndMessages[0];
 
-        // Start message with invalid prevPublishTime
-        messages[0].priceId = priceIds[0];
-        messages[0].price = 100;
-        messages[0].publishTime = 1000;
-        messages[0].prevPublishTime = 1100; // Invalid: prevPublishTime > publishTime
+        // Set invalid prevPublishTime (greater than publishTime)
+        startMessages[0].prevPublishTime = 1100;
 
-        // End message
-        messages[1].priceId = priceIds[0];
-        messages[1].price = 110;
-        messages[1].publishTime = 1200;
-        messages[1].prevPublishTime = 1000;
+        // Create update data
+        bytes[] memory updateData = new bytes[](2);
+        updateData[0] = generateWhMerkleTwapUpdateWithSource(
+            startMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
+        updateData[1] = generateWhMerkleTwapUpdateWithSource(
+            endMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
 
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedTwapUpdateDataFromMessages(messages);
+        uint updateFee = pyth.getUpdateFee(updateData);
 
         vm.expectRevert(PythErrors.InvalidTwapUpdateData.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -594,27 +684,44 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint256(1));
 
-        PriceFeedMessage[] memory messages = new PriceFeedMessage[](2);
+        // Copy base messages
+        TwapPriceFeedMessage[]
+            memory startMessages = new TwapPriceFeedMessage[](1);
+        TwapPriceFeedMessage[] memory endMessages = new TwapPriceFeedMessage[](
+            1
+        );
+        startMessages[0] = baseTwapStartMessages[0];
+        endMessages[0] = baseTwapEndMessages[0];
 
-        messages[0].priceId = priceIds[0];
-        messages[0].price = 100;
-        messages[0].publishTime = 1000;
-        messages[0].prevPublishTime = 900;
+        // Create update data
+        bytes[] memory updateData = new bytes[](2);
+        updateData[0] = generateWhMerkleTwapUpdateWithSource(
+            startMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
+        updateData[1] = generateWhMerkleTwapUpdateWithSource(
+            endMessages,
+            MerkleUpdateConfig(
+                MERKLE_TREE_DEPTH,
+                NUM_GUARDIAN_SIGNERS,
+                SOURCE_EMITTER_CHAIN_ID,
+                SOURCE_EMITTER_ADDRESS,
+                false
+            )
+        );
 
-        messages[1].priceId = priceIds[0];
-        messages[1].price = 110;
-        messages[1].publishTime = 1100;
-        messages[1].prevPublishTime = 1000;
-
-        (
-            bytes[] memory updateData,
-            uint updateFee
-        ) = createBatchedTwapUpdateDataFromMessages(messages);
+        uint updateFee = pyth.getUpdateFee(updateData);
 
         vm.expectRevert(PythErrors.InsufficientFee.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee - 1}(
             updateData,
             priceIds
-        ); // Send insufficient fee
+        );
     }
 }
