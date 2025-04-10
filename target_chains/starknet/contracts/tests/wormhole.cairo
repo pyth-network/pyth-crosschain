@@ -1,19 +1,18 @@
-use snforge_std::{
-    declare, ContractClass, ContractClassTrait, Event, spy_events, EventSpyTrait,
-    DeclareResultTrait, EventsFilterTrait
-};
-use pyth::wormhole::{
-    IWormholeDispatcher, IWormholeDispatcherTrait, Event as WormholeEvent,
-    GuardianSetAdded
-};
-use pyth::reader::ReaderImpl;
 use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
+use pyth::reader::ReaderImpl;
 use pyth::util::{array_try_into, one_shift_left_bytes_u256};
-use starknet::{ContractAddress, EthAddress};
-use super::data;
-use super::wormhole_guardians::{
-    guardian_set0, guardian_set1, guardian_set2, guardian_set3, guardian_set4
+use pyth::wormhole::{
+    Event as WormholeEvent, GuardianSetAdded, IWormholeDispatcher, IWormholeDispatcherTrait,
 };
+use snforge_std::{
+    ContractClass, ContractClassTrait, DeclareResultTrait, Event, EventSpyTrait, EventsFilterTrait,
+    declare, spy_events,
+};
+use starknet::{ContractAddress, EthAddress};
+use super::wormhole_guardians::{
+    guardian_set0, guardian_set1, guardian_set2, guardian_set3, guardian_set4,
+};
+use super::data;
 
 #[generate_trait]
 impl DecodeEventHelpers of DecodeEventHelpersTrait {
@@ -25,7 +24,7 @@ impl DecodeEventHelpers of DecodeEventHelpersTrait {
 fn decode_event(mut event: Event) -> WormholeEvent {
     let key0: felt252 = event.keys.pop();
     let output = if key0 == selector!("GuardianSetAdded") {
-        let event = GuardianSetAdded { index: event.data.pop(), };
+        let event = GuardianSetAdded { index: event.data.pop() };
         WormholeEvent::GuardianSetAdded(event)
     } else {
         panic!("unrecognized event")
@@ -64,7 +63,7 @@ fn test_parse_and_verify_vm_works() {
     assert!(vm.nonce == 0);
     assert!(vm.emitter_chain_id == 26);
     assert!(
-        vm.emitter_address == 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71
+        vm.emitter_address == 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
     );
     assert!(vm.sequence == 0x2f03161);
     assert!(vm.consistency_level == 1);
@@ -117,7 +116,7 @@ fn test_submit_guardian_set_emits_events() {
     assert!(!dispatcher.governance_action_is_consumed(hash2));
     let hash3 = 98574986520203705693876007869045870422906099682167905265431258750902697716275;
     assert!(!dispatcher.governance_action_is_consumed(hash3));
-    
+
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade1());
     let mut events = spy.get_events().emitted_by(dispatcher.contract_address).events;
     assert!(events.len() == 1);
@@ -131,7 +130,7 @@ fn test_submit_guardian_set_emits_events() {
     assert!(dispatcher.governance_action_is_consumed(hash1));
     assert!(!dispatcher.governance_action_is_consumed(hash2));
     assert!(!dispatcher.governance_action_is_consumed(hash3));
-    
+
     let mut spy = spy_events();
     dispatcher.submit_new_guardian_set(data::mainnet_guardian_set_upgrade2());
 
@@ -284,7 +283,7 @@ fn deploy(
         chain_id,
         governance_chain_id,
         governance_contract,
-        Option::None
+        Option::None,
     )
 }
 
@@ -314,7 +313,8 @@ pub fn deploy_with_mainnet_guardian_set0() -> IWormholeDispatcher {
     deploy(0, guardian_set0(), CHAIN_ID, GOVERNANCE_CHAIN_ID, GOVERNANCE_CONTRACT)
 }
 
-// Declares and deploys the contract with the test guardian address that's used to sign VAAs generated in `test_vaas`.
+// Declares and deploys the contract with the test guardian address that's used to sign VAAs
+// generated in `test_vaas`.
 pub fn deploy_with_test_guardian() -> IWormholeDispatcher {
     deploy(
         0,
@@ -328,7 +328,7 @@ pub fn deploy_with_test_guardian() -> IWormholeDispatcher {
 // Deploys a previously declared wormhole contract class
 // with the test guardian address that's used to sign VAAs generated in `test_vaas`.
 pub fn deploy_declared_with_test_guardian_at(
-    class: @ContractClass, address: ContractAddress
+    class: @ContractClass, address: ContractAddress,
 ) -> IWormholeDispatcher {
     deploy_declared_at(
         class,
@@ -342,7 +342,7 @@ pub fn deploy_declared_with_test_guardian_at(
 }
 
 pub fn corrupted_vm(
-    mut real_data: ByteBuffer, pos: usize, random1: usize, random2: usize
+    mut real_data: ByteBuffer, pos: usize, random1: usize, random2: usize,
 ) -> ByteBuffer {
     let mut new_data = array![];
 
@@ -356,7 +356,7 @@ pub fn corrupted_vm(
     loop {
         let (real_bytes, num_bytes) = match real_data.pop_front() {
             Option::Some(v) => v,
-            Option::None => { break; }
+            Option::None => { break; },
         };
         if num_bytes < 31 {
             new_data.append(real_bytes);
@@ -370,7 +370,7 @@ pub fn corrupted_vm(
             new_data.append(real_bytes);
         }
         i += 1;
-    };
+    }
     ByteBufferImpl::new(new_data, num_last_bytes)
 }
 
@@ -395,7 +395,7 @@ fn corrupted_bytes(input: felt252, index: usize, random1: usize, random2: usize)
         };
         value = value * 256 + new_byte.into();
         i += 1;
-    };
+    }
     let value: felt252 = value.try_into().expect('corrupted bytes overflow');
     value.try_into().expect('corrupted bytes overflow')
 }

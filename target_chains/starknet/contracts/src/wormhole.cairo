@@ -1,35 +1,35 @@
-mod interface;
 mod errors;
 mod governance;
+mod interface;
 mod parse_vm;
 
 pub use errors::{
-    GovernanceError, SubmitNewGuardianSetError, ParseAndVerifyVmError, GetGuardianSetError
+    GetGuardianSetError, GovernanceError, ParseAndVerifyVmError, SubmitNewGuardianSetError,
 };
 pub use interface::{
-    VerifiedVM, IWormhole, IWormholeDispatcher, IWormholeDispatcherTrait, GuardianSignature, quorum,
-    GuardianSet
+    GuardianSet, GuardianSignature, IWormhole, IWormholeDispatcher, IWormholeDispatcherTrait,
+    VerifiedVM, quorum,
 };
 pub use wormhole::{Event, GuardianSetAdded};
 
 /// Implementation of the Wormhole contract.
 #[starknet::contract]
 mod wormhole {
-    use pyth::util::UnwrapWithFelt252;
     use core::array::ArrayTrait;
-    use super::{
-        VerifiedVM, IWormhole, quorum, ParseAndVerifyVmError, SubmitNewGuardianSetError,
-        GovernanceError, GetGuardianSetError
-    };
-    use super::governance;
-    use super::parse_vm::parse_vm;
-    use pyth::reader::ReaderImpl;
-    use pyth::byte_buffer::ByteBuffer;
-    use starknet::{get_block_timestamp, EthAddress};
-    use starknet::eth_signature::is_eth_signature_valid;
     use core::panic_with_felt252;
-    use pyth::util::{UNEXPECTED_OVERFLOW};
-    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess, Map, StoragePathEntry};
+    use pyth::byte_buffer::ByteBuffer;
+    use pyth::reader::ReaderImpl;
+    use pyth::util::{UNEXPECTED_OVERFLOW, UnwrapWithFelt252};
+    use starknet::eth_signature::is_eth_signature_valid;
+    use starknet::storage::{
+        Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
+    };
+    use starknet::{EthAddress, get_block_timestamp};
+    use super::parse_vm::parse_vm;
+    use super::{
+        GetGuardianSetError, GovernanceError, IWormhole, ParseAndVerifyVmError,
+        SubmitNewGuardianSetError, VerifiedVM, governance, quorum,
+    };
 
     /// Events emitted by the contract.
     #[event]
@@ -141,7 +141,7 @@ mod wormhole {
 
                 is_eth_signature_valid(vm.hash, signature.signature, guardian_key)
                     .unwrap_with_felt252();
-            };
+            }
             vm
         }
 
@@ -155,14 +155,14 @@ mod wormhole {
             while i.into() < set.num_guardians {
                 keys.append(self.guardian_keys.entry((index, i)).read());
                 i += 1;
-            };
+            }
             super::GuardianSet {
                 keys,
                 expiration_time: if set.expiration_time == 0 {
                     Option::None
                 } else {
                     Option::Some(set.expiration_time)
-                }
+                },
             }
         }
         fn get_current_guardian_set_index(self: @ContractState) -> u32 {
@@ -212,7 +212,7 @@ mod wormhole {
         /// Validates the new guardian set and writes it to the storage.
         /// `SubmitNewGuardianSetError` enumerates possible panic payloads.
         fn store_guardian_set(
-            ref self: ContractState, set_index: u32, guardians: @Array<EthAddress>
+            ref self: ContractState, set_index: u32, guardians: @Array<EthAddress>,
         ) {
             if guardians.len() == 0 {
                 panic_with_felt252(SubmitNewGuardianSetError::NoGuardiansSpecified.into());
@@ -227,7 +227,7 @@ mod wormhole {
                     panic_with_felt252(SubmitNewGuardianSetError::InvalidGuardianKey.into());
                 }
                 i += 1;
-            };
+            }
 
             let set = GuardianSet { num_guardians: guardians.len(), expiration_time: 0 };
             self.guardian_sets.entry(set_index).write(set);
@@ -240,7 +240,7 @@ mod wormhole {
                     .entry((set_index, i.try_into().expect(UNEXPECTED_OVERFLOW)))
                     .write(key.into());
                 i += 1;
-            };
+            }
             self.current_guardian_set_index.write(set_index);
         }
 

@@ -1,53 +1,54 @@
 mod errors;
-mod interface;
-mod price_update;
-pub mod governance;
 
 mod fake_upgrades;
-
-pub use pyth::{
-    Event, PriceFeedUpdated, WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded,
-    DataSourcesSet, FeeSet,
-};
+pub mod governance;
+mod interface;
+mod price_update;
 pub use errors::{
-    GetPriceUnsafeError, GovernanceActionError, UpdatePriceFeedsError, GetPriceNoOlderThanError,
-    UpdatePriceFeedsIfNecessaryError, ParsePriceFeedsError, GetSingleUpdateFeeError,
+    GetPriceNoOlderThanError, GetPriceUnsafeError, GetSingleUpdateFeeError, GovernanceActionError,
+    ParsePriceFeedsError, UpdatePriceFeedsError, UpdatePriceFeedsIfNecessaryError,
 };
 pub use interface::{
-    IPyth, IPythDispatcher, IPythDispatcherTrait, DataSource, GetDataSource, Price,
-    PriceFeedPublishTime, PriceFeed
+    DataSource, GetDataSource, IPyth, IPythDispatcher, IPythDispatcherTrait, Price, PriceFeed,
+    PriceFeedPublishTime,
+};
+
+pub use pyth::{
+    ContractUpgraded, DataSourcesSet, Event, FeeSet, GovernanceDataSourceSet, PriceFeedUpdated,
+    WormholeAddressSet,
 };
 
 #[starknet::contract]
 mod pyth {
-    use pyth::pyth::interface::IPyth;
-    use super::price_update::{
-        PriceInfo, PriceFeedMessage, read_and_verify_message, read_and_verify_header,
-        parse_wormhole_proof
-    };
-    use pyth::reader::ReaderImpl;
-    use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
+    use core::dict::Felt252Dict;
+    use core::fmt::{Debug, Formatter};
+    use core::nullable::{FromNullableResult, NullableTrait, match_nullable};
     use core::panic_with_felt252;
-    use starknet::{
-        ContractAddress, get_execution_info, ClassHash, SyscallResultTrait,
-        get_contract_address, get_block_timestamp,
+    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+    use pyth::byte_buffer::{ByteBuffer, ByteBufferImpl};
+    use pyth::pyth::interface::IPyth;
+    use pyth::reader::ReaderImpl;
+    use pyth::util::{ResultMapErrInto, write_i64};
+    use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
+    use starknet::storage::{
+        Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
     };
     use starknet::syscalls::replace_class_syscall;
-    use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait, VerifiedVM};
-    use super::{
-        DataSource, GetDataSource, UpdatePriceFeedsError, GovernanceActionError, Price,
-        GetPriceUnsafeError, IPythDispatcher, IPythDispatcherTrait, PriceFeedPublishTime,
-        GetPriceNoOlderThanError, UpdatePriceFeedsIfNecessaryError, PriceFeed, ParsePriceFeedsError,
-        GetSingleUpdateFeeError,
+    use starknet::{
+        ClassHash, ContractAddress, SyscallResultTrait, get_block_timestamp, get_contract_address,
+        get_execution_info,
     };
-    use super::governance;
+    use super::price_update::{
+        PriceFeedMessage, PriceInfo, parse_wormhole_proof, read_and_verify_header,
+        read_and_verify_message,
+    };
     use super::governance::GovernancePayload;
-    use openzeppelin::token::erc20::interface::{IERC20CamelDispatcherTrait, IERC20CamelDispatcher};
-    use pyth::util::{ResultMapErrInto, write_i64};
-    use core::nullable::{NullableTrait, match_nullable, FromNullableResult};
-    use core::fmt::{Debug, Formatter};
-    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess, Map, StoragePathEntry};
-    use core::dict::Felt252Dict;
+    use super::{
+        DataSource, GetDataSource, GetPriceNoOlderThanError, GetPriceUnsafeError,
+        GetSingleUpdateFeeError, GovernanceActionError, IPythDispatcher, IPythDispatcherTrait,
+        ParsePriceFeedsError, Price, PriceFeed, PriceFeedPublishTime, UpdatePriceFeedsError,
+        UpdatePriceFeedsIfNecessaryError, governance,
+    };
 
     #[event]
     #[derive(Drop, Clone, Debug, PartialEq, Serde, starknet::Event)]
@@ -81,7 +82,7 @@ mod pyth {
     #[cfg(test)]
     #[test]
     fn test_debug_price_feed_updated() {
-        let value = PriceFeedUpdated { price_id: 1, price: 2, conf: 3, publish_time: 5, };
+        let value = PriceFeedUpdated { price_id: 1, price: 2, conf: 3, publish_time: 5 };
         let expected = "PriceFeedUpdated { price_id: 1, price: 2, conf: 3, publish_time: 5 }";
         let actual = format!("{:?}", value);
         assert!(actual == expected);
@@ -140,18 +141,20 @@ mod pyth {
 
     /// Initializes the Pyth contract.
     ///
-    /// `wormhole_address` is the address of the deployed Wormhole contract implemented in the `wormhole` module.
+    /// `wormhole_address` is the address of the deployed Wormhole contract implemented in the
+    /// `wormhole` module.
     ///
     /// `fee_token_address1` is the address of the ERC20 token used to pay fees to Pyth
     /// for price updates. There is no native token on Starknet so an ERC20 contract has to be used.
-    /// On Katana, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens are
-    /// available. Any other ERC20-compatible token can also be used.
+    /// On Katana, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens
+    /// are available. Any other ERC20-compatible token can also be used.
     /// In a Starknet Forge testing environment, a fee contract must be deployed manually.
     ///
-    /// `single_update_fee1` is the number of tokens of `fee_token_address1` charged for a single price update.
+    /// `single_update_fee1` is the number of tokens of `fee_token_address1` charged for a single
+    /// price update.
     ///
-    /// `fee_token_address2` and `single_update_fee2` specify the secondary fee contract and fee rate
-    /// that can be used instead of the main fee token.
+    /// `fee_token_address2` and `single_update_fee2` specify the secondary fee contract and fee
+    /// rate that can be used instead of the main fee token.
     ///
     /// `data_sources` is the list of Wormhole data sources accepted by this contract.
     #[constructor]
@@ -179,7 +182,7 @@ mod pyth {
                 DataSource {
                     emitter_chain_id: governance_emitter_chain_id,
                     emitter_address: governance_emitter_address,
-                }
+                },
             );
         self.last_executed_governance_sequence.write(governance_initial_sequence);
     }
@@ -187,7 +190,7 @@ mod pyth {
     #[abi(embed_v0)]
     impl PythImpl of super::IPyth<ContractState> {
         fn get_price_no_older_than(
-            self: @ContractState, price_id: u256, age: u64
+            self: @ContractState, price_id: u256, age: u64,
         ) -> Result<Price, GetPriceNoOlderThanError> {
             let info = self.get_price_unsafe(price_id).map_err_into()?;
             if !is_no_older_than(info.publish_time, age) {
@@ -197,7 +200,7 @@ mod pyth {
         }
 
         fn get_price_unsafe(
-            self: @ContractState, price_id: u256
+            self: @ContractState, price_id: u256,
         ) -> Result<Price, GetPriceUnsafeError> {
             let info = self.latest_price_info.entry(price_id).read();
             if info.publish_time == 0 {
@@ -213,7 +216,7 @@ mod pyth {
         }
 
         fn get_ema_price_no_older_than(
-            self: @ContractState, price_id: u256, age: u64
+            self: @ContractState, price_id: u256, age: u64,
         ) -> Result<Price, GetPriceNoOlderThanError> {
             let info = self.get_ema_price_unsafe(price_id).map_err_into()?;
             if !is_no_older_than(info.publish_time, age) {
@@ -223,7 +226,7 @@ mod pyth {
         }
 
         fn get_ema_price_unsafe(
-            self: @ContractState, price_id: u256
+            self: @ContractState, price_id: u256,
         ) -> Result<Price, GetPriceUnsafeError> {
             let info = self.latest_price_info.entry(price_id).read();
             if info.publish_time == 0 {
@@ -239,7 +242,7 @@ mod pyth {
         }
 
         fn query_price_feed_no_older_than(
-            self: @ContractState, price_id: u256, age: u64
+            self: @ContractState, price_id: u256, age: u64,
         ) -> Result<PriceFeed, GetPriceNoOlderThanError> {
             let feed = self.query_price_feed_unsafe(price_id).map_err_into()?;
             if !is_no_older_than(feed.price.publish_time, age) {
@@ -249,7 +252,7 @@ mod pyth {
         }
 
         fn query_price_feed_unsafe(
-            self: @ContractState, price_id: u256
+            self: @ContractState, price_id: u256,
         ) -> Result<PriceFeed, GetPriceUnsafeError> {
             let info = self.latest_price_info.entry(price_id).read();
             if info.publish_time == 0 {
@@ -307,7 +310,7 @@ mod pyth {
         fn update_price_feeds_if_necessary(
             ref self: ContractState,
             update: ByteBuffer,
-            required_publish_times: Array<PriceFeedPublishTime>
+            required_publish_times: Array<PriceFeedPublishTime>,
         ) {
             let mut i = 0;
             let mut found = false;
@@ -320,7 +323,7 @@ mod pyth {
                     break;
                 }
                 i += 1;
-            };
+            }
             if !found {
                 panic_with_felt252(UpdatePriceFeedsIfNecessaryError::NoFreshUpdate.into());
             }
@@ -331,11 +334,11 @@ mod pyth {
             data: ByteBuffer,
             price_ids: Array<u256>,
             min_publish_time: u64,
-            max_publish_time: u64
+            max_publish_time: u64,
         ) -> Array<PriceFeed> {
             self
                 .update_price_feeds_internal(
-                    data, price_ids, min_publish_time, max_publish_time, false
+                    data, price_ids, min_publish_time, max_publish_time, false,
                 )
         }
 
@@ -348,7 +351,7 @@ mod pyth {
         ) -> Array<PriceFeed> {
             self
                 .update_price_feeds_internal(
-                    data, price_ids, publish_time, publish_time + max_staleness, true
+                    data, price_ids, publish_time, publish_time + max_staleness, true,
                 )
         }
 
@@ -377,7 +380,7 @@ mod pyth {
             while i < count {
                 output.append(self.data_sources.entry(i).read());
                 i += 1;
-            };
+            }
             output
         }
 
@@ -452,7 +455,7 @@ mod pyth {
                         panic_with_felt252(GovernanceActionError::InvalidGovernanceTarget.into());
                     }
                     self.upgrade_contract(payload.new_implementation);
-                }
+                },
             }
         }
 
@@ -468,7 +471,7 @@ mod pyth {
     #[generate_trait]
     impl PrivateImpl of PrivateTrait {
         fn write_data_sources(
-            ref self: ContractState, data_sources: @Array<DataSource>
+            ref self: ContractState, data_sources: @Array<DataSource>,
         ) -> Array<DataSource> {
             let num_old = self.num_data_sources.read();
             let mut i = 0;
@@ -479,7 +482,7 @@ mod pyth {
                 self.is_valid_data_source.entry(old_source).write(false);
                 self.data_sources.entry(i).write(Default::default());
                 i += 1;
-            };
+            }
 
             self.num_data_sources.write(data_sources.len());
             i = 0;
@@ -488,12 +491,16 @@ mod pyth {
                 self.is_valid_data_source.entry(*source).write(true);
                 self.data_sources.entry(i).write(*source);
                 i += 1;
-            };
+            }
             old_data_sources
         }
 
         fn update_latest_price_if_necessary(ref self: ContractState, message: @PriceFeedMessage) {
-            let latest_publish_time = self.latest_price_info.entry(*message.price_id).read().publish_time;
+            let latest_publish_time = self
+                .latest_price_info
+                .entry(*message.price_id)
+                .read()
+                .publish_time;
             if *message.publish_time > latest_publish_time {
                 let info = PriceInfo {
                     price: *message.price,
@@ -532,7 +539,7 @@ mod pyth {
         }
 
         fn check_new_wormhole(
-            ref self: ContractState, wormhole_address: ContractAddress, vm: ByteBuffer
+            ref self: ContractState, wormhole_address: ContractAddress, vm: ByteBuffer,
         ) {
             let wormhole = IWormholeDispatcher { contract_address: wormhole_address };
             let vm = wormhole.parse_and_verify_vm(vm);
@@ -548,22 +555,22 @@ mod pyth {
             if vm.sequence != self.last_executed_governance_sequence.read() {
                 panic_with_felt252(GovernanceActionError::InvalidWormholeAddressToSet.into());
             }
-            // Purposefully, we don't check whether the chainId is the same as the current chainId because
-            // we might want to change the chain id of the wormhole contract.
+            // Purposefully, we don't check whether the chainId is the same as the current chainId
+            // because we might want to change the chain id of the wormhole contract.
             let data = governance::parse_instruction(vm.payload);
             match data.payload {
                 GovernancePayload::SetWormholeAddress(payload) => {
-                    // The following check is not necessary for security, but is a sanity check that the new wormhole
-                    // contract parses the payload correctly.
+                    // The following check is not necessary for security, but is a sanity check that
+                    // the new wormhole contract parses the payload correctly.
                     if payload.address != wormhole_address {
                         panic_with_felt252(
-                            GovernanceActionError::InvalidWormholeAddressToSet.into()
+                            GovernanceActionError::InvalidWormholeAddressToSet.into(),
                         );
                     }
                 },
                 _ => {
                     panic_with_felt252(GovernanceActionError::InvalidWormholeAddressToSet.into());
-                }
+                },
             }
         }
 
@@ -578,7 +585,7 @@ mod pyth {
             }
             let request_payload = match instruction.payload {
                 GovernancePayload::RequestGovernanceDataSourceTransfer(payload) => payload,
-                _ => { panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into()) }
+                _ => { panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into()) },
             };
             // Governance data source index is used to prevent replay attacks,
             // so a claimVaa cannot be used twice.
@@ -687,16 +694,16 @@ mod pyth {
                             if should_output {
                                 output
                                     .insert(
-                                        output_index.into(), NullableTrait::new(message.into())
+                                        output_index.into(), NullableTrait::new(message.into()),
                                     );
                             }
                         }
                     },
-                    Option::None => {}
+                    Option::None => {},
                 }
 
                 i += 1;
-            };
+            }
 
             if reader.len() != 0 {
                 panic_with_felt252(UpdatePriceFeedsError::InvalidUpdateData.into());
@@ -709,13 +716,13 @@ mod pyth {
                 match match_nullable(value) {
                     FromNullableResult::Null => {
                         panic_with_felt252(
-                            ParsePriceFeedsError::PriceFeedNotFoundWithinRange.into()
+                            ParsePriceFeedsError::PriceFeedNotFoundWithinRange.into(),
                         )
                     },
-                    FromNullableResult::NotNull(value) => { output_array.append(value.unbox()); }
+                    FromNullableResult::NotNull(value) => { output_array.append(value.unbox()); },
                 }
                 i += 1;
-            };
+            }
             output_array
         }
 
@@ -743,7 +750,7 @@ mod pyth {
         while i < expo {
             output *= 10;
             i += 1;
-        };
+        }
         output
     }
 
@@ -764,7 +771,7 @@ mod pyth {
                 break;
             }
             i += 1;
-        };
+        }
         if i == ids.len() {
             Option::None
         } else {

@@ -1,17 +1,19 @@
-use snforge_std::{
-    declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address, spy_events,
-    Event, start_cheat_block_timestamp, stop_cheat_block_timestamp, ContractClass, EventSpyTrait, EventsFilterTrait
-};
-use pyth::pyth::{
-    IPythDispatcher, IPythDispatcherTrait, DataSource, Event as PythEvent, PriceFeedUpdated,
-    WormholeAddressSet, GovernanceDataSourceSet, ContractUpgraded, DataSourcesSet, FeeSet,
-    PriceFeedPublishTime, GetPriceNoOlderThanError, Price, PriceFeed, GetPriceUnsafeError,
-};
-use pyth::byte_buffer::ByteBufferImpl;
-use pyth::util::{array_try_into, UnwrapWithFelt252};
-use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait};
-use starknet::ContractAddress;
 use openzeppelin::token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use pyth::byte_buffer::ByteBufferImpl;
+use pyth::pyth::{
+    ContractUpgraded, DataSource, DataSourcesSet, Event as PythEvent, FeeSet,
+    GetPriceNoOlderThanError, GetPriceUnsafeError, GovernanceDataSourceSet, IPythDispatcher,
+    IPythDispatcherTrait, Price, PriceFeed, PriceFeedPublishTime, PriceFeedUpdated,
+    WormholeAddressSet,
+};
+use pyth::util::{UnwrapWithFelt252, array_try_into};
+use pyth::wormhole::{IWormholeDispatcher, IWormholeDispatcherTrait};
+use snforge_std::{
+    ContractClass, ContractClassTrait, DeclareResultTrait, Event, EventSpyTrait, EventsFilterTrait,
+    declare, spy_events, start_cheat_block_timestamp, start_cheat_caller_address,
+    stop_cheat_block_timestamp, stop_cheat_caller_address,
+};
+use starknet::ContractAddress;
 use super::wormhole::corrupted_vm;
 use super::data;
 
@@ -22,11 +24,11 @@ impl DecodeEventHelpers of DecodeEventHelpersTrait {
     }
 
     fn pop_u256(ref self: Array<felt252>) -> u256 {
-        u256 { low: self.pop(), high: self.pop(), }
+        u256 { low: self.pop(), high: self.pop() }
     }
 
     fn pop_data_source(ref self: Array<felt252>) -> DataSource {
-        DataSource { emitter_chain_id: self.pop(), emitter_address: self.pop_u256(), }
+        DataSource { emitter_chain_id: self.pop(), emitter_address: self.pop_u256() }
     }
 
     fn pop_data_sources(ref self: Array<felt252>) -> Array<DataSource> {
@@ -36,7 +38,7 @@ impl DecodeEventHelpers of DecodeEventHelpersTrait {
         while i < count {
             output.append(self.pop_data_source());
             i += 1;
-        };
+        }
         output
     }
 }
@@ -95,7 +97,7 @@ fn test_getters_work() {
         pyth
             .fee_token_addresses() == array![
                 ctx.fee_contract.contract_address, ctx.fee_contract2.contract_address,
-            ]
+            ],
     );
     assert!(pyth.get_single_update_fee(ctx.fee_contract.contract_address) == 1000);
     assert!(pyth.get_single_update_fee(ctx.fee_contract2.contract_address) == 2000);
@@ -105,8 +107,8 @@ fn test_getters_work() {
                 DataSource {
                     emitter_chain_id: 26,
                     emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
-                }
-            ]
+                },
+            ],
     );
     assert!(
         pyth
@@ -114,11 +116,11 @@ fn test_getters_work() {
                 DataSource {
                     emitter_chain_id: 26,
                     emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
-                }
-            )
+                },
+            ),
     );
     assert!(
-        !pyth.is_valid_data_source(DataSource { emitter_chain_id: 26, emitter_address: 0xbad, })
+        !pyth.is_valid_data_source(DataSource { emitter_chain_id: 26, emitter_address: 0xbad }),
     );
     assert!(
         !pyth
@@ -126,23 +128,23 @@ fn test_getters_work() {
                 DataSource {
                     emitter_chain_id: 27,
                     emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
-                }
-            )
+                },
+            ),
     );
     assert!(
-        pyth.governance_data_source() == DataSource { emitter_chain_id: 1, emitter_address: 41, }
+        pyth.governance_data_source() == DataSource { emitter_chain_id: 1, emitter_address: 41 },
     );
     assert!(
         pyth
             .is_valid_governance_data_source(
-                DataSource { emitter_chain_id: 1, emitter_address: 41, }
-            )
+                DataSource { emitter_chain_id: 1, emitter_address: 41 },
+            ),
     );
     assert!(
         !pyth
             .is_valid_governance_data_source(
-                DataSource { emitter_chain_id: 1, emitter_address: 42, }
-            )
+                DataSource { emitter_chain_id: 1, emitter_address: 42 },
+            ),
     );
     assert!(pyth.last_executed_governance_sequence() == 0);
     assert!(pyth.governance_data_source_index() == 0);
@@ -155,13 +157,13 @@ fn update_price_feeds_works() {
     let pyth = ctx.pyth;
 
     assert!(
-        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
     );
     assert!(
         pyth
             .latest_price_info_publish_time(
-                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
-            ) == 0
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+            ) == 0,
     );
 
     let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
@@ -217,13 +219,13 @@ fn update_price_feeds_works() {
     assert!(feed.ema_price.publish_time == 1712589206);
 
     assert!(
-        pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
     );
     assert!(
         pyth
             .latest_price_info_publish_time(
-                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
-            ) == 1712589206
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+            ) == 1712589206,
     );
 }
 
@@ -245,13 +247,13 @@ fn test_accepts_secondary_fee() {
     let pyth = ctx.pyth;
 
     assert!(
-        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
     );
     assert!(
         pyth
             .latest_price_info_publish_time(
-                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
-            ) == 0
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+            ) == 0,
     );
 
     let fee2 = pyth.get_update_fee(data::good_update1(), ctx.fee_contract2.contract_address);
@@ -273,13 +275,13 @@ fn test_accepts_secondary_fee_if_first_allowance_insufficient() {
     let pyth = ctx.pyth;
 
     assert!(
-        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
     );
     assert!(
         pyth
             .latest_price_info_publish_time(
-                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
-            ) == 0
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+            ) == 0,
     );
 
     let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
@@ -313,13 +315,13 @@ fn test_accepts_secondary_fee_if_first_balance_insufficient() {
     stop_cheat_caller_address(ctx.fee_contract2.contract_address);
 
     assert!(
-        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
     );
     assert!(
         pyth
             .latest_price_info_publish_time(
-                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
-            ) == 0
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+            ) == 0,
     );
 
     let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
@@ -350,13 +352,13 @@ fn test_rejects_if_both_fees_insufficient() {
     let pyth = ctx.pyth;
 
     assert!(
-        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43)
+        !pyth.price_feed_exists(0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43),
     );
     assert!(
         pyth
             .latest_price_info_publish_time(
-                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
-            ) == 0
+                0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+            ) == 0,
     );
 
     let fee = pyth.get_update_fee(data::good_update1(), ctx.fee_contract.contract_address);
@@ -441,16 +443,14 @@ fn test_parse_price_feed_updates_works() {
             data::good_update1(),
             array![0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43],
             0,
-            1712589208
+            1712589208,
         );
     stop_cheat_caller_address(pyth.contract_address);
     assert!(output.len() == 1);
     let output = output.at(0).clone();
     let expected = PriceFeed {
         id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
-        price: Price {
-            price: 7192002930010, conf: 3596501465, expo: -8, publish_time: 1712589206,
-        },
+        price: Price { price: 7192002930010, conf: 3596501465, expo: -8, publish_time: 1712589206 },
         ema_price: Price {
             price: 7181868900000, conf: 4096812700, expo: -8, publish_time: 1712589206,
         },
@@ -517,7 +517,7 @@ fn test_parse_price_feed_updates_rejects_out_of_range() {
             data::good_update1(),
             array![0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43],
             0,
-            1712589000
+            1712589000,
         );
 }
 
@@ -543,9 +543,7 @@ fn test_parse_price_feed_updates_unique_works() {
     let output = output.at(0).clone();
     let expected = PriceFeed {
         id: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
-        price: Price {
-            price: 6751021151231, conf: 7471389383, expo: -8, publish_time: 1716904943,
-        },
+        price: Price { price: 6751021151231, conf: 7471389383, expo: -8, publish_time: 1716904943 },
         ema_price: Price {
             price: 6815630100000, conf: 6236878200, expo: -8, publish_time: 1716904943,
         },
@@ -707,7 +705,7 @@ fn test_governance_set_fee_works() {
     assert!(from == pyth.contract_address);
     let event = decode_event(event);
     let expected = FeeSet {
-        old_fee: 1000, new_fee: 4200, token: ctx.fee_contract.contract_address
+        old_fee: 1000, new_fee: 4200, token: ctx.fee_contract.contract_address,
     };
     assert!(event == PythEvent::FeeSet(expected));
 
@@ -761,7 +759,7 @@ fn test_governance_set_fee_in_token_works() {
     assert!(from == pyth.contract_address);
     let event = decode_event(event);
     let expected = FeeSet {
-        old_fee: 2000, new_fee: 4200, token: ctx.fee_contract2.contract_address
+        old_fee: 2000, new_fee: 4200, token: ctx.fee_contract2.contract_address,
     };
     assert!(event == PythEvent::FeeSet(expected));
 
@@ -823,14 +821,14 @@ fn test_governance_set_data_sources_works() {
             DataSource {
                 emitter_chain_id: 26,
                 emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
-            }
+            },
         ],
         new_data_sources: array![
             DataSource {
                 emitter_chain_id: 1,
                 emitter_address: 0x6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25,
             },
-            DataSource { emitter_chain_id: 3, emitter_address: 0x12d, },
+            DataSource { emitter_chain_id: 3, emitter_address: 0x12d },
         ],
     };
     assert!(event == PythEvent::DataSourcesSet(expected));
@@ -876,7 +874,7 @@ fn test_governance_set_wormhole_works() {
     // Arbitrary
     let wormhole_address = 0x42.try_into().unwrap();
     let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
-        wormhole_class, wormhole_address
+        wormhole_class, wormhole_address,
     );
 
     let user = 'user'.try_into().unwrap();
@@ -884,7 +882,7 @@ fn test_governance_set_wormhole_works() {
     let fee_contract = deploy_fee_contract(fee_class, fee_address1(), user);
     let fee_contract2 = deploy_fee_contract(fee_class, fee_address2(), user);
     let pyth = deploy_pyth_default(
-        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address,
     );
 
     start_cheat_caller_address(fee_contract.contract_address, user);
@@ -904,7 +902,7 @@ fn test_governance_set_wormhole_works() {
         .try_into()
         .unwrap();
     let wormhole2 = super::wormhole::deploy_declared_with_test_guardian_at(
-        wormhole_class, wormhole2_address
+        wormhole_class, wormhole2_address,
     );
     wormhole2.submit_new_guardian_set(data::upgrade_to_test2());
 
@@ -962,7 +960,7 @@ fn test_rejects_set_wormhole_without_deploying() {
     // Arbitrary
     let wormhole_address = 0x42.try_into().unwrap();
     let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
-        wormhole_class, wormhole_address
+        wormhole_class, wormhole_address,
     );
 
     let user = 'user'.try_into().unwrap();
@@ -970,7 +968,7 @@ fn test_rejects_set_wormhole_without_deploying() {
     let fee_contract = deploy_fee_contract(fee_class, fee_address1(), user);
     let fee_contract2 = deploy_fee_contract(fee_class, fee_address2(), user);
     let pyth = deploy_pyth_default(
-        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address,
     );
     pyth.execute_governance_instruction(data::pyth_set_wormhole());
 }
@@ -982,7 +980,7 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
     // Arbitrary
     let wormhole_address = 0x42.try_into().unwrap();
     let wormhole = super::wormhole::deploy_declared_with_test_guardian_at(
-        wormhole_class, wormhole_address
+        wormhole_class, wormhole_address,
     );
 
     let user = 'user'.try_into().unwrap();
@@ -990,7 +988,7 @@ fn test_rejects_set_wormhole_with_incompatible_guardians() {
     let fee_contract = deploy_fee_contract(fee_class, fee_address1(), user);
     let fee_contract2 = deploy_fee_contract(fee_class, fee_address2(), user);
     let pyth = deploy_pyth_default(
-        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address,
     );
 
     // Address used in the governance instruction
@@ -1022,8 +1020,8 @@ fn test_governance_transfer_works() {
     assert!(from == pyth.contract_address);
     let event = decode_event(event);
     let expected = GovernanceDataSourceSet {
-        old_data_source: DataSource { emitter_chain_id: 1, emitter_address: 41, },
-        new_data_source: DataSource { emitter_chain_id: 2, emitter_address: 43, },
+        old_data_source: DataSource { emitter_chain_id: 1, emitter_address: 41 },
+        new_data_source: DataSource { emitter_chain_id: 2, emitter_address: 43 },
         last_executed_governance_sequence: 1,
     };
     assert!(event == PythEvent::GovernanceDataSourceSet(expected));
@@ -1174,7 +1172,7 @@ fn deploy_with_wormhole(wormhole: IWormholeDispatcher) -> Context {
     let fee_contract = deploy_fee_contract(fee_class, fee_address1(), user);
     let fee_contract2 = deploy_fee_contract(fee_class, fee_address2(), user);
     let pyth = deploy_pyth_default(
-        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address
+        wormhole.contract_address, fee_contract.contract_address, fee_contract2.contract_address,
     );
     Context { user, wormhole, fee_contract, fee_contract2, pyth }
 }
@@ -1182,7 +1180,7 @@ fn deploy_with_wormhole(wormhole: IWormholeDispatcher) -> Context {
 fn deploy_pyth_default(
     wormhole_address: ContractAddress,
     fee_token_address1: ContractAddress,
-    fee_token_address2: ContractAddress
+    fee_token_address2: ContractAddress,
 ) -> IPythDispatcher {
     deploy_pyth(
         wormhole_address,
@@ -1194,7 +1192,7 @@ fn deploy_pyth_default(
             DataSource {
                 emitter_chain_id: 26,
                 emitter_address: 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71,
-            }
+            },
         ],
         1,
         41,
@@ -1234,7 +1232,7 @@ fn fee_address2() -> ContractAddress {
 }
 
 fn deploy_fee_contract(
-    class: ContractClass, at: ContractAddress, recipient: ContractAddress
+    class: ContractClass, at: ContractAddress, recipient: ContractAddress,
 ) -> IERC20CamelDispatcher {
     let mut args = array![];
     let name: ByteArray = "eth";

@@ -1,10 +1,10 @@
-use super::reader::{Reader, ReaderImpl};
 use core::cmp::min;
 use core::integer::u128_byte_reverse;
 use pyth::util::{
-    ONE_SHIFT_160, UNEXPECTED_OVERFLOW, UNEXPECTED_ZERO, ONE_SHIFT_64, one_shift_left_bytes_u64,
+    ONE_SHIFT_160, ONE_SHIFT_64, UNEXPECTED_OVERFLOW, UNEXPECTED_ZERO, one_shift_left_bytes_u64,
     u64_byte_reverse,
 };
+use super::reader::{Reader, ReaderImpl};
 
 /// Allows to push data as big endian to a buffer and apply
 /// the keccak256 hash.
@@ -77,9 +77,9 @@ pub impl HasherImpl of HasherTrait {
             u64_byte_reverse(self.last_be) / one_shift_left_bytes_u64(8 - self.num_last_bytes)
         };
         let hash_le = core::keccak::cairo_keccak(
-            ref self.inputs_le, last_le, self.num_last_bytes.into()
+            ref self.inputs_le, last_le, self.num_last_bytes.into(),
         );
-        u256 { low: u128_byte_reverse(hash_le.high), high: u128_byte_reverse(hash_le.low), }
+        u256 { low: u128_byte_reverse(hash_le.high), high: u128_byte_reverse(hash_le.low) }
     }
 }
 
@@ -91,7 +91,7 @@ impl HasherPrivateImpl of HasherPrivateTrait {
         if num_bytes != 8 {
             assert!(
                 value / one_shift_left_bytes_u64(num_bytes) == 0,
-                "Hasher::push_num_bytes: value is too large"
+                "Hasher::push_num_bytes: value is too large",
             );
         }
         let num_high_bytes = min(num_bytes, 8 - self.num_last_bytes);
@@ -107,14 +107,14 @@ impl HasherPrivateImpl of HasherPrivateTrait {
         if num_bytes != 8 {
             assert!(
                 value / one_shift_left_bytes_u64(num_bytes) == 0,
-                "Hasher::push_to_last: value is too large"
+                "Hasher::push_to_last: value is too large",
             );
         }
         if num_bytes == 8 {
             self.last_be = value;
         } else {
             self.last_be = self.last_be * one_shift_left_bytes_u64(num_bytes) + value;
-        };
+        }
         self.num_last_bytes += num_bytes;
         if self.num_last_bytes == 8 {
             self.inputs_le.append(u64_byte_reverse(self.last_be));

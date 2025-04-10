@@ -185,7 +185,8 @@ pub fn unique_update1() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 11)
 }
 
-// An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+// An actual mainnet wormhole governance VAA from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
 pub fn mainnet_guardian_set_upgrade1() -> ByteBuffer {
     let bytes = array![
         1766847064779994277746302277072294871108550301449637470263976489521154979,
@@ -210,7 +211,8 @@ pub fn mainnet_guardian_set_upgrade1() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 16)
 }
 
-// An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+// An actual mainnet wormhole governance VAA from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
 pub fn mainnet_guardian_set_upgrade2() -> ByteBuffer {
     let bytes = array![
         1766847065210651126944505525521222069599854288126726949998063840465138797,
@@ -261,7 +263,8 @@ pub fn mainnet_guardian_set_upgrade2() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 2)
 }
 
-// An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+// An actual mainnet wormhole governance VAA from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
 pub fn mainnet_guardian_set_upgrade3() -> ByteBuffer {
     let bytes = array![
         1766847065622031860560134801367788401015571316785630090767859240961980367,
@@ -312,7 +315,8 @@ pub fn mainnet_guardian_set_upgrade3() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 2)
 }
 
-// An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+// An actual mainnet wormhole governance VAA from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
 pub fn mainnet_guardian_set_upgrade4() -> ByteBuffer {
     let bytes = array![
         1766847066033426987337757245669159273063358729535478806850006662056807068,
@@ -405,7 +409,8 @@ pub fn wrong_index_upgrade() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 28)
 }
 
-// A wormhole governance guardian set upgrade instruction signed by test guardian #1 containing test guardian #2 as the new guardian set.
+// A wormhole governance guardian set upgrade instruction signed by test guardian #1 containing test
+// guardian #2 as the new guardian set.
 pub fn upgrade_to_test2() -> ByteBuffer {
     let bytes = array![
         1766847064779995287375101177319600239435018729139341591012343354326614060,
@@ -470,7 +475,8 @@ pub fn pyth_set_wormhole() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 8)
 }
 
-// A Pyth governance instruction to request governance data source transfer signed by the test guardian #1.
+// A Pyth governance instruction to request governance data source transfer signed by the test
+// guardian #1.
 pub fn pyth_request_transfer() -> ByteBuffer {
     let bytes = array![
         1766847064779995673162446580588349917525470038054832932592992288867429640,
@@ -482,7 +488,8 @@ pub fn pyth_request_transfer() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 11)
 }
 
-// A Pyth governance instruction to authorize governance data source transfer signed by the test guardian #1.
+// A Pyth governance instruction to authorize governance data source transfer signed by the test
+// guardian #1.
 pub fn pyth_auth_transfer() -> ByteBuffer {
     let bytes = array![
         1766847064779996877169354131457289870145133774197236214231189828595607612,

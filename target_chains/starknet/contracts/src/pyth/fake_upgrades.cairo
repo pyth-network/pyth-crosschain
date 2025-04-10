@@ -21,9 +21,9 @@ mod pyth_fake_upgrade1 {
     #[abi(embed_v0)]
     impl PythImpl of super::IFakePyth<ContractState> {
         fn get_price_unsafe(
-            self: @ContractState, price_id: u256
+            self: @ContractState, price_id: u256,
         ) -> Result<Price, GetPriceUnsafeError> {
-            let price = Price { price: 42, conf: 2, expo: -5, publish_time: 101, };
+            let price = Price { price: 42, conf: 2, expo: -5, publish_time: 101 };
             Result::Ok(price)
         }
         fn pyth_upgradable_magic(self: @ContractState) -> u32 {
@@ -45,7 +45,7 @@ mod pyth_fake_upgrade_wrong_magic {
     #[abi(embed_v0)]
     impl PythImpl of super::IFakePyth<ContractState> {
         fn get_price_unsafe(
-            self: @ContractState, price_id: u256
+            self: @ContractState, price_id: u256,
         ) -> Result<Price, GetPriceUnsafeError> {
             panic!("unsupported")
         }
