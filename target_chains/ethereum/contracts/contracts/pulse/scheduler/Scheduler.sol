@@ -275,10 +275,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             subscriptionId
         ];
 
-        if (!status.isActive) {
-            revert InactiveSubscription();
-        }
-
         if (status.balanceInWei < amount) {
             revert InsufficientBalance();
         }

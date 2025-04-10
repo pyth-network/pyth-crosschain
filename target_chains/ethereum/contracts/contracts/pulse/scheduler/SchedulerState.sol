@@ -54,5 +54,11 @@ contract SchedulerState {
         uint32 heartbeatSeconds;
         bool updateOnDeviation;
         uint32 deviationThresholdBps;
+
+        // TODO: add updateOnConfidenceRatio?
+
+        // TODO: add "early update" support? i.e. update all feeds when at least one feed
+        //          meets the triggering conditions, rather than waiting for all feeds
+        //          to meet the conditions
     }
 }
