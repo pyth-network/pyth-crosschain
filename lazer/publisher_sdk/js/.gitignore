@@ -1,8 +1,0 @@
-# Coverage directory used by tools like istanbul
-coverage
-
-# Build directory
-dist/
-
-# Types generated for .proto files
-src/generated/
