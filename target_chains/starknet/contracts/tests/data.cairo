@@ -185,7 +185,8 @@ pub fn unique_update1() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 11)
 }
 
-// An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+// An actual mainnet wormhole governance VAA from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
 pub fn mainnet_guardian_set_upgrade1() -> ByteBuffer {
     let bytes = array![
         1766847064779994277746302277072294871108550301449637470263976489521154979,
@@ -210,7 +211,8 @@ pub fn mainnet_guardian_set_upgrade1() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 16)
 }
 
-// An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+// An actual mainnet wormhole governance VAA from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
 pub fn mainnet_guardian_set_upgrade2() -> ByteBuffer {
     let bytes = array![
         1766847065210651126944505525521222069599854288126726949998063840465138797,
@@ -261,7 +263,8 @@ pub fn mainnet_guardian_set_upgrade2() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 2)
 }
 
-// An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+// An actual mainnet wormhole governance VAA from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
 pub fn mainnet_guardian_set_upgrade3() -> ByteBuffer {
     let bytes = array![
         1766847065622031860560134801367788401015571316785630090767859240961980367,
@@ -312,7 +315,8 @@ pub fn mainnet_guardian_set_upgrade3() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 2)
 }
 
-// An actual mainnet wormhole governance VAA from https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
+// An actual mainnet wormhole governance VAA from
+// https://github.com/pyth-network/pyth-crosschain/blob/main/contract_manager/src/contracts/wormhole.ts#L32-L37
 pub fn mainnet_guardian_set_upgrade4() -> ByteBuffer {
     let bytes = array![
         1766847066033426987337757245669159273063358729535478806850006662056807068,
@@ -405,7 +409,8 @@ pub fn wrong_index_upgrade() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 28)
 }
 
-// A wormhole governance guardian set upgrade instruction signed by test guardian #1 containing test guardian #2 as the new guardian set.
+// A wormhole governance guardian set upgrade instruction signed by test guardian #1 containing test
+// guardian #2 as the new guardian set.
 pub fn upgrade_to_test2() -> ByteBuffer {
     let bytes = array![
         1766847064779995287375101177319600239435018729139341591012343354326614060,
@@ -470,7 +475,8 @@ pub fn pyth_set_wormhole() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 8)
 }
 
-// A Pyth governance instruction to request governance data source transfer signed by the test guardian #1.
+// A Pyth governance instruction to request governance data source transfer signed by the test
+// guardian #1.
 pub fn pyth_request_transfer() -> ByteBuffer {
     let bytes = array![
         1766847064779995673162446580588349917525470038054832932592992288867429640,
@@ -482,7 +488,8 @@ pub fn pyth_request_transfer() -> ByteBuffer {
     ByteBufferImpl::new(bytes, 11)
 }
 
-// A Pyth governance instruction to authorize governance data source transfer signed by the test guardian #1.
+// A Pyth governance instruction to authorize governance data source transfer signed by the test
+// guardian #1.
 pub fn pyth_auth_transfer() -> ByteBuffer {
     let bytes = array![
         1766847064779996877169354131457289870145133774197236214231189828595607612,
@@ -513,12 +520,12 @@ pub fn pyth_set_fee_alt_emitter() -> ByteBuffer {
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
 pub fn pyth_upgrade_fake1() -> ByteBuffer {
     let bytes = array![
-        1766847064779994791169214817472264547450542145364282319310439743685771618,
-        175385590228001769706203572954671062839210335359545531991708252078677402742,
-        338282801975945534678621806212670914146735662234331326855531973960850735104,
+        1766847064779993492421078898621749108301966584597749110380074216576492888,
+        60258065057775975798387405360763783639924599499836853429424581305786207127,
+        294385177406295901350483669059442590907311847252050490331308693098780950528,
         49565958604199796163020368,
-        148907253453589022320407306335457538262203456299261498528172020674942501293,
-        9624434269354675143,
+        148907253453589022392359363374850830855966874133251507057423871596698519420,
+        10995973506805932843,
     ];
     ByteBufferImpl::new(bytes, 8)
 }
@@ -526,12 +533,12 @@ pub fn pyth_upgrade_fake1() -> ByteBuffer {
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
 pub fn pyth_upgrade_not_pyth() -> ByteBuffer {
     let bytes = array![
-        1766847064779994185568390976518139178339359117743780499979078006447412818,
-        312550937452923367391560946919832045570249370029901542796468563830775031789,
-        297548922588419398887374641748895591794744646787122275140580663536136486912,
+        1766847064779995437839944646329090026725755072259133687464299849962947211,
+        364933187739398371603726688032548912702512452515951176241438841103710487524,
+        168967372750473928993542488698926019424107017631122163941566426102978576384,
         49565958604199796163020368,
-        148907253453589022305803196061110108233921773465491227564264876752079119569,
-        6736708290019375278,
+        148907253453589022290209221717003441680286754164662723445001054939097582646,
+        12012828459144055253,
     ];
     ByteBufferImpl::new(bytes, 8)
 }
@@ -539,12 +546,12 @@ pub fn pyth_upgrade_not_pyth() -> ByteBuffer {
 // A Pyth governance instruction to upgrade the contract signed by the test guardian #1.
 pub fn pyth_upgrade_wrong_magic() -> ByteBuffer {
     let bytes = array![
-        1766847064779993581380818181711092803131812037068363180730038764700119064,
-        43179698701133869693008541869474965453366967663087320291846878688486859828,
-        257191826617037171240065659464096594985467828231875472974396182656981139456,
+        1766847064779994990936574265957823314838802547799335095459100055033612531,
+        337609657713579979105798034723839884757527387288729213036462364653817969892,
+        344707358034822539834365850761803570529219340665056667519361118443881365504,
         49565958604199796163020368,
-        148907253453589022340563264373887392414227070562033595690783947835630084766,
-        5698494087895763928,
+        148907253453589022385922519334474515578648255544414696069419539273709501349,
+        9034297375272282805,
     ];
     ByteBufferImpl::new(bytes, 8)
 }

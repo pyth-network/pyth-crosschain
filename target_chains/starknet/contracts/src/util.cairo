@@ -1,9 +1,8 @@
 mod exp10_;
+use core::fmt::Formatter;
+use core::integer::u128_byte_reverse;
 
 pub use exp10_::exp10;
-
-use core::integer::u128_byte_reverse;
-use core::fmt::Formatter;
 
 pub const ONE_SHIFT_160: u256 = 0x10000000000000000000000000000000000000000;
 pub const ONE_SHIFT_96: u256 = 0x1000000000000000000000000;
@@ -156,7 +155,7 @@ pub fn array_try_into<T, U, +TryInto<T, U>, +Drop<T>, +Drop<U>>(mut input: Array
             Option::Some(v) => { output.append(v.try_into().unwrap()); },
             Option::None => { break; },
         }
-    };
+    }
     output
 }
 
@@ -175,7 +174,7 @@ impl ResultMapErrIntoImpl<T, E1, E2, +Into<E1, E2>> of ResultMapErrInto<T, E1, E
 
 #[cfg(test)]
 mod tests {
-    use super::{u64_as_i64, u32_as_i32};
+    use super::{u32_as_i32, u64_as_i64};
 
     #[test]
     fn test_u64_as_i64() {

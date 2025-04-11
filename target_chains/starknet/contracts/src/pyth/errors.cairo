@@ -27,7 +27,7 @@ impl GetPriceNoOlderThanErrorIntoFelt252 of Into<GetPriceNoOlderThanError, felt2
 }
 
 impl GetPriceUnsafeErrorIntoGetPriceNoOlderThanError of Into<
-    GetPriceUnsafeError, GetPriceNoOlderThanError
+    GetPriceUnsafeError, GetPriceNoOlderThanError,
 > {
     fn into(self: GetPriceUnsafeError) -> GetPriceNoOlderThanError {
         match self {
@@ -87,7 +87,7 @@ pub enum UpdatePriceFeedsIfNecessaryError {
 }
 
 impl UpdatePriceFeedsIfNecessaryErrorIntoFelt252 of Into<
-    UpdatePriceFeedsIfNecessaryError, felt252
+    UpdatePriceFeedsIfNecessaryError, felt252,
 > {
     fn into(self: UpdatePriceFeedsIfNecessaryError) -> felt252 {
         match self {

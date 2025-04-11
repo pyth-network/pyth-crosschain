@@ -1,7 +1,7 @@
-use super::errors::SubmitNewGuardianSetError;
 use pyth::byte_buffer::ByteBuffer;
-use core::starknet::secp256_trait::Signature;
-use core::starknet::EthAddress;
+use starknet::EthAddress;
+use starknet::secp256_trait::Signature;
+use super::errors::SubmitNewGuardianSetError;
 
 /// Wormhole provides a secure means for communication between multiple chains.
 /// This contract allows users to parse and verify a Wormhole message that informs
@@ -42,7 +42,8 @@ pub trait IWormhole<T> {
     // in the Pyth contract.
 
     /// Executes a governance instruction to add a new guardian set. The new set becomes
-    /// active immediately. The previous guardian set will be available for 24 hours and then expire.
+    /// active immediately. The previous guardian set will be available for 24 hours and then
+    /// expire.
     /// `SubmitNewGuardianSetError` enumerates possible panic payloads.
     fn submit_new_guardian_set(ref self: T, encoded_vm: ByteBuffer);
 }
