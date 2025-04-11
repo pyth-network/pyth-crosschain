@@ -108,6 +108,7 @@ export const RECEIVER_CHAINS = {
   story: 60078,
   hyperevm: 60079,
   bittensor_mainnet: 60080,
+  xion: 60081,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
