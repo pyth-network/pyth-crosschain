@@ -39,6 +39,12 @@ abstract contract PythGovernance is
         address newWormholeAddress
     );
     event TransactionFeeSet(uint oldFee, uint newFee);
+    event CustomFeeSet(address indexed target, uint oldFee, uint newFee);
+
+    struct SetCustomFeePayload {
+        address target;
+        uint newFee;
+    }
 
     function verifyGovernanceVM(
         bytes memory encodedVM
@@ -254,5 +260,12 @@ abstract contract PythGovernance is
         setTransactionFeeInWei(payload.newFee);
 
         emit TransactionFeeSet(oldFee, transactionFeeInWei());
+    }
+
+    function setCustomFee(SetCustomFeePayload memory payload) internal {
+        uint oldFee = customUpdateFeeInWei(payload.target);
+        setCustomUpdateFeeInWei(payload.target, payload.newFee);
+
+        emit CustomFeeSet(payload.target, oldFee, payload.newFee);
     }
 }

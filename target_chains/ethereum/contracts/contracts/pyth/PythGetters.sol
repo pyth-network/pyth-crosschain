@@ -95,4 +95,8 @@ contract PythGetters is PythState {
     function transactionFeeInWei() public view returns (uint) {
         return _state.transactionFeeInWei;
     }
+
+    function customUpdateFeeInWei(address addr) public view returns (uint) {
+        return _state.customUpdateFeeInWei[addr];
+    }
 }
