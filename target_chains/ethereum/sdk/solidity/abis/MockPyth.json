@@ -27,6 +27,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidTwapUpdateDataSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NoFreshUpdate",
     "type": "error"
   },
@@ -77,6 +82,49 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "id",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "startTime",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "endTime",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "int64",
+        "name": "twapPrice",
+        "type": "int64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "twapConf",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "downSlotsRatio",
+        "type": "uint32"
+      }
+    ],
+    "name": "TwapPriceFeedUpdate",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes32",
@@ -124,6 +172,55 @@
       {
         "internalType": "bytes",
         "name": "priceFeedData",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "id",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "startTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "endTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "int64",
+        "name": "price",
+        "type": "int64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "conf",
+        "type": "uint64"
+      },
+      {
+        "internalType": "int32",
+        "name": "expo",
+        "type": "int32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "downSlotsRatio",
+        "type": "uint32"
+      }
+    ],
+    "name": "createTwapPriceFeedUpdateData",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "twapData",
         "type": "bytes"
       }
     ],
@@ -602,6 +699,79 @@
         ],
         "internalType": "struct PythStructs.PriceFeed[]",
         "name": "feeds",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "updateData",
+        "type": "bytes[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "priceIds",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "parseTwapPriceFeedUpdates",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "id",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "startTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "endTime",
+            "type": "uint64"
+          },
+          {
+            "components": [
+              {
+                "internalType": "int64",
+                "name": "price",
+                "type": "int64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "conf",
+                "type": "uint64"
+              },
+              {
+                "internalType": "int32",
+                "name": "expo",
+                "type": "int32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "publishTime",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct PythStructs.Price",
+            "name": "twap",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint32",
+            "name": "downSlotsRatio",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct PythStructs.TwapPriceFeed[]",
+        "name": "twapPriceFeeds",
         "type": "tuple[]"
       }
     ],
