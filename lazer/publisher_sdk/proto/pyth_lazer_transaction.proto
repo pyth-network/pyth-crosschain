@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package pyth_lazer_transaction;
+
+import "publisher_update.proto";
+
+// Types of Signatures allowed for signing Lazer Transactions
+enum TransactionSignatureType {
+  // signature is 64 bytes long
+  ed25519 = 0;
+}
+
+// Signed lazer transaction payload
+// This is what Pyth Lazer expects as input to the system
+message SignedLazerTransaction {
+  // Type and signature should match
+  optional TransactionSignatureType signature_type = 1;
+
+  // Signature derived by signing payload with private key
+  optional bytes signature = 2;
+
+  // a LazerTransaction message which is already encoded with protobuf as bytes
+  // The encoded bytes are what should be signed
+  optional bytes payload = 3;
+}
+
+// Transaction contianing one of the valid Lazer Transactions
+message LazerTransaction {
+  oneof payload {
+    // Expected transaction sent by Publishers
+    // May contain many individual updates to various feeds
+    PublisherUpdate publisher_update = 1;
+  }
+}

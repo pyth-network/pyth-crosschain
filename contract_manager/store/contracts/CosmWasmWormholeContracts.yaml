@@ -46,3 +46,6 @@
 - chain: xion_testnet_2
   address: xion1qlrdccrcw4rew9ervlazeyt9qmcx84r87vrq74sfd48f4q8y3qrqf59syp
   type: CosmWasmWormholeContract
+- chain: xion
+  address: xion1zfdqgkd9lcqwc4ywkeg2pr2v2p5xxa7n2s9layq2623pvhp4xv0sr4659c
+  type: CosmWasmWormholeContract
