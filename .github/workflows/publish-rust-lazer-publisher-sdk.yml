@@ -6,7 +6,7 @@ on:
       - rust-pyth-lazer-publisher-sdk-v*
 jobs:
   publish-pyth-lazer-publisher-sdk:
-    name: Publish Rust package pyth-lazer-published-sdk to crates.io
+    name: Publish Rust package pyth-lazer-publisher-sdk to crates.io
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -15,4 +15,4 @@ jobs:
       - run: cargo publish --token ${CARGO_REGISTRY_TOKEN}
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        working-directory: "lazer/sdk/rust/published-sdk"
+        working-directory: "lazer/publisher-sdk/rust"
