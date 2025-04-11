@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 
 import "./PythState.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPythEvents.sol";
+import "./PythInternalStructs.sol";
 
 contract PythSetters is PythState, IPythEvents {
     function setWormhole(address wh) internal {
@@ -51,5 +52,9 @@ contract PythSetters is PythState, IPythEvents {
 
     function setTransactionFeeInWei(uint fee) internal {
         _state.transactionFeeInWei = fee;
+    }
+
+    function setCustomUpdateFeeInWei(address addr, uint fee) internal {
+        _state.customUpdateFeeInWei[addr] = fee;
     }
 }

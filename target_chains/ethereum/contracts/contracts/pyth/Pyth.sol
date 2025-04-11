@@ -493,8 +493,11 @@ abstract contract Pyth is
     function getTotalFee(
         uint totalNumUpdates
     ) private view returns (uint requiredFee) {
-        return
-            (totalNumUpdates * singleUpdateFeeInWei()) + transactionFeeInWei();
+        uint updateFee = customUpdateFeeInWei(msg.sender);
+        if (updateFee == 0) {
+            updateFee = singleUpdateFeeInWei();
+        }
+        return (totalNumUpdates * updateFee) + transactionFeeInWei();
     }
 
     function findIndexOfPriceId(
@@ -557,6 +560,11 @@ abstract contract Pyth is
 
     function version() public pure returns (string memory) {
         return "1.4.4-alpha.2";
+    }
+
+    // @dev Only for testing gas benchmarks
+    function setCustomFeeForAddress(address addr, uint fee) public {
+        setCustomUpdateFeeInWei(addr, fee);
     }
 
     function calculateTwap(

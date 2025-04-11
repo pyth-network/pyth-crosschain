@@ -40,6 +40,8 @@ contract PythStorage {
         mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
         // Fee charged per transaction, in addition to per-update fees
         uint transactionFeeInWei;
+        // Mapping of address to custom fee per update (0 means use default fee)
+        mapping(address => uint) customUpdateFeeInWei;
     }
 }
 
