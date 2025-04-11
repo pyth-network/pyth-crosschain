@@ -562,11 +562,6 @@ abstract contract Pyth is
         return "1.4.4-alpha.2";
     }
 
-    // @dev Only for testing gas benchmarks
-    function setCustomFeeForAddress(address addr, uint fee) public {
-        setCustomUpdateFeeInWei(addr, fee);
-    }
-
     function calculateTwap(
         bytes32 priceId,
         PythStructs.TwapPriceInfo memory twapPriceInfoStart,
