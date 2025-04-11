@@ -3,6 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "./IScheduler.sol";
 import "./SchedulerState.sol";
@@ -168,34 +170,143 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InsufficientBalance();
         }
 
-        // Parse price feed updates with the same timestamp for all feeds
-        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+        // Parse price feed updates with an expected timestamp range of [-10s, now]
+        // We will validate the trigger conditions and timestamps ourselves
+        // using the returned PriceFeeds.
+        uint64 maxPublishTime = SafeCast.toUint64(block.timestamp);
+        uint64 minPublishTime = maxPublishTime - 10 seconds;
         PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
             value: pythFee
-        }(updateData, priceIds, publishTime, publishTime);
+        }(updateData, priceIds, minPublishTime, maxPublishTime);
 
         // Verify all price feeds have the same timestamp
-        uint64 timestamp = SafeCast.toUint64(priceFeeds[0].price.publishTime);
+        uint256 timestamp = priceFeeds[0].price.publishTime;
         for (uint8 i = 1; i < priceFeeds.length; i++) {
-            if (
-                SafeCast.toUint64(priceFeeds[i].price.publishTime) != timestamp
-            ) {
+            if (priceFeeds[i].price.publishTime != timestamp) {
                 revert PriceTimestampMismatch();
             }
         }
 
+        // Verify that update conditions are met, and that the timestamp
+        // is more recent than latest stored update's. Reverts if not.
+        _validateShouldUpdatePrices(subscriptionId, params, status, priceFeeds);
+
+        // Store the price updates, update status, and emit event
+        _storePriceUpdatesAndStatus(
+            subscriptionId,
+            status,
+            priceFeeds,
+            pythFee
+        );
+    }
+
+    /**
+     * @notice Stores the price updates, updates subscription status, and emits event.
+     */
+    function _storePriceUpdatesAndStatus(
+        uint256 subscriptionId,
+        SubscriptionStatus storage status,
+        PythStructs.PriceFeed[] memory priceFeeds,
+        uint256 pythFee
+    ) internal {
         // Store the price updates
         for (uint8 i = 0; i < priceFeeds.length; i++) {
-            _state.priceUpdates[subscriptionId][priceIds[i]] = priceFeeds[i];
+            _state.priceUpdates[subscriptionId][priceFeeds[i].id] = priceFeeds[
+                i
+            ];
         }
-
-        // Update subscription status
-        status.priceLastUpdatedAt = timestamp;
+        status.priceLastUpdatedAt = priceFeeds[0].price.publishTime;
         status.balanceInWei -= pythFee;
         status.totalUpdates += 1;
         status.totalSpent += pythFee;
 
-        emit PricesUpdated(subscriptionId, timestamp);
+        emit PricesUpdated(subscriptionId, priceFeeds[0].price.publishTime);
+    }
+
+    /**
+     * @notice Validates whether the update trigger criteria is met for a subscription. Reverts if not met.
+     * @dev This function assumes that all updates in priceFeeds have the same timestamp. The caller is expected to enforce this invariant.
+     * @param subscriptionId The ID of the subscription (needed for reading previous prices).
+     * @param params The subscription's parameters struct.
+     * @param status The subscription's status struct.
+     * @param priceFeeds The array of price feeds to validate.
+     */
+    function _validateShouldUpdatePrices(
+        uint256 subscriptionId,
+        SubscriptionParams storage params,
+        SubscriptionStatus storage status,
+        PythStructs.PriceFeed[] memory priceFeeds
+    ) internal view returns (bool) {
+        // SECURITY NOTE: this check assumes that all updates in priceFeeds have the same timestamp.
+        // The caller is expected to enforce this invariant.
+        uint256 updateTimestamp = priceFeeds[0].price.publishTime;
+
+        // Reject updates if they're older than the latest stored ones
+        if (
+            status.priceLastUpdatedAt > 0 &&
+            updateTimestamp <= status.priceLastUpdatedAt
+        ) {
+            revert TimestampOlderThanLastUpdate(
+                updateTimestamp,
+                status.priceLastUpdatedAt
+            );
+        }
+
+        // If updateOnHeartbeat is enabled and the heartbeat interval has passed, trigger update
+        if (params.updateCriteria.updateOnHeartbeat) {
+            uint256 lastUpdateTime = status.priceLastUpdatedAt;
+
+            if (
+                lastUpdateTime == 0 ||
+                updateTimestamp >=
+                lastUpdateTime + params.updateCriteria.heartbeatSeconds
+            ) {
+                return true;
+            }
+        }
+
+        // If updateOnDeviation is enabled, check if any price has deviated enough
+        if (params.updateCriteria.updateOnDeviation) {
+            for (uint8 i = 0; i < priceFeeds.length; i++) {
+                // Get the previous price feed for this price ID using subscriptionId
+                PythStructs.PriceFeed storage previousFeed = _state
+                    .priceUpdates[subscriptionId][priceFeeds[i].id];
+
+                // If there's no previous price, this is the first update
+                if (previousFeed.id == bytes32(0)) {
+                    return true;
+                }
+
+                // Calculate the deviation percentage
+                int64 currentPrice = priceFeeds[i].price.price;
+                int64 previousPrice = previousFeed.price.price;
+
+                // Skip if either price is zero to avoid division by zero
+                if (previousPrice == 0 || currentPrice == 0) {
+                    continue;
+                }
+
+                // Calculate absolute deviation basis points (scaled by 1e4)
+                uint256 numerator = SignedMath.abs(
+                    currentPrice - previousPrice
+                );
+                uint256 denominator = SignedMath.abs(previousPrice);
+                uint256 deviationBps = Math.mulDiv(
+                    numerator,
+                    10_000,
+                    denominator
+                );
+
+                // If deviation exceeds threshold, trigger update
+                if (
+                    deviationBps >= params.updateCriteria.deviationThresholdBps
+                ) {
+                    return true;
+                }
+            }
+        }
+
+        revert UpdateConditionsNotMet();
     }
 
     function getLatestPrices(

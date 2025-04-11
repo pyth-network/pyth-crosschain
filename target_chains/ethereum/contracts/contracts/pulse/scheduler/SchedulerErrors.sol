@@ -11,3 +11,8 @@ error InvalidUpdateCriteria();
 error InvalidGasConfig();
 error PriceTimestampMismatch();
 error TooManyPriceIds(uint256 provided, uint256 maximum);
+error UpdateConditionsNotMet();
+error TimestampOlderThanLastUpdate(
+    uint256 providedUpdateTimestamp,
+    uint256 lastUpdatedAt
+);

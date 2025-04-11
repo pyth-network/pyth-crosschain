@@ -33,7 +33,7 @@ contract SchedulerState {
     }
 
     struct SubscriptionStatus {
-        uint64 priceLastUpdatedAt;
+        uint256 priceLastUpdatedAt;
         uint256 balanceInWei;
         uint256 totalUpdates;
         uint256 totalSpent;
@@ -57,8 +57,8 @@ contract SchedulerState {
 
         // TODO: add updateOnConfidenceRatio?
 
-        // TODO: add "early update" support? i.e. update all feeds when at least one feed
+        // TODO: add explicit "early update" support? i.e. update all feeds when at least one feed
         //          meets the triggering conditions, rather than waiting for all feeds
-        //          to meet the conditions
+        //          to meet the conditions. Currently, "early update" is the only mode of operation.
     }
 }
