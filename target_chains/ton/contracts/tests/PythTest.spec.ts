@@ -45,6 +45,19 @@ import {
   HERMES_ETH_UNIQUE_EXPO,
   HERMES_ETH_UNIQUE_PRICE,
   HERMES_ETH_UNIQUE_PUBLISH_TIME,
+  HERMES_SOL_TON_PYTH_USDT_UPDATE,
+  PYTH_PRICE_FEED_ID,
+  SOL_PRICE_FEED_ID,
+  TON_PRICE_FEED_ID,
+  USDT_PRICE_FEED_ID,
+  HERMES_SOL_UNIQUE_PUBLISH_TIME,
+  HERMES_SOL_UNIQUE_PRICE,
+  HERMES_SOL_UNIQUE_CONF,
+  HERMES_SOL_UNIQUE_EXPO,
+  HERMES_USDT_UNIQUE_PRICE,
+  HERMES_USDT_UNIQUE_EXPO,
+  HERMES_USDT_UNIQUE_CONF,
+  HERMES_USDT_UNIQUE_PUBLISH_TIME,
 } from "./utils/pyth";
 import { GUARDIAN_SET_0, MAINNET_UPGRADE_VAAS } from "./utils/wormhole";
 import { DataSource } from "@pythnetwork/xc-admin-common";
@@ -1110,6 +1123,122 @@ describe("PythTest", () => {
     );
   });
 
+  it("should successfully parse price feed updates with more than 3 price feed ids", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParsePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_SOL_TON_PYTH_USDT_UPDATE, "hex"),
+      sentValue,
+      [
+        SOL_PRICE_FEED_ID,
+        TON_PRICE_FEED_ID,
+        PYTH_PRICE_FEED_ID,
+        USDT_PRICE_FEED_ID,
+      ],
+      HERMES_SOL_UNIQUE_PUBLISH_TIME,
+      HERMES_SOL_UNIQUE_PUBLISH_TIME,
+      deployer.address,
+      CUSTOM_PAYLOAD,
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins,
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(5); // OP_PARSE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(4); // We expect SOL, TON, PYTH and USDT price feeds
+
+    // Load and verify price feeds
+    const priceFeedsCell = cs.loadRef();
+    let currentCell = priceFeedsCell;
+
+    // First price feed (SOL)
+    const solCs = currentCell.beginParse();
+    const solPriceId =
+      "0x" + solCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(solPriceId).toBe(SOL_PRICE_FEED_ID);
+
+    const solPriceFeedCell = solCs.loadRef();
+    const solPriceFeedSlice = solPriceFeedCell.beginParse();
+
+    // Verify SOL current price
+    const solCurrentPriceCell = solPriceFeedSlice.loadRef();
+    const solCurrentPrice = solCurrentPriceCell.beginParse();
+    expect(solCurrentPrice.loadInt(64)).toBe(HERMES_SOL_UNIQUE_PRICE);
+    expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_CONF);
+    expect(solCurrentPrice.loadInt(32)).toBe(HERMES_SOL_UNIQUE_EXPO);
+    expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_PUBLISH_TIME);
+
+    // Move through TON and PYTH price feeds to reach USDT
+    currentCell = solCs.loadRef(); // Move to TON
+    const tonCs = currentCell.beginParse();
+    tonCs.loadUintBig(256); // Skip TON price ID
+    tonCs.loadRef(); // Skip TON price data
+
+    currentCell = tonCs.loadRef(); // Move to PYTH
+    const pythCs = currentCell.beginParse();
+    pythCs.loadUintBig(256); // Skip PYTH price ID
+    pythCs.loadRef(); // Skip PYTH price data
+
+    currentCell = pythCs.loadRef(); // Move to USDT
+    const usdtCs = currentCell.beginParse();
+    const usdtPriceId =
+      "0x" + usdtCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(usdtPriceId).toBe(USDT_PRICE_FEED_ID);
+
+    const usdtPriceFeedCell = usdtCs.loadRef();
+    const usdtPriceFeedSlice = usdtPriceFeedCell.beginParse();
+
+    // Verify USDT current price
+    const usdtCurrentPriceCell = usdtPriceFeedSlice.loadRef();
+    const usdtCurrentPrice = usdtCurrentPriceCell.beginParse();
+    expect(usdtCurrentPrice.loadInt(64)).toBe(HERMES_USDT_UNIQUE_PRICE);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_CONF);
+    expect(usdtCurrentPrice.loadInt(32)).toBe(HERMES_USDT_UNIQUE_EXPO);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(usdtCs.remainingRefs).toBe(0);
+
+    // Verify sender address
+    const senderAddress = cs.loadAddress();
+    expect(senderAddress?.toString()).toBe(
+      deployer.getSender().address.toString(),
+    );
+
+    // Verify custom payload
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    const receivedPayload = Buffer.from(
+      customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length),
+    );
+    expect(receivedPayload.toString("hex")).toBe(
+      CUSTOM_PAYLOAD.toString("hex"),
+    );
+  });
+
   it("should successfully parse unique price feed updates", async () => {
     await deployContract();
     await updateGuardianSets(pythTest, deployer);
@@ -1211,6 +1340,122 @@ describe("PythTest", () => {
 
     // Verify this is the end of the chain
     expect(ethCs.remainingRefs).toBe(0);
+
+    // Verify sender address
+    const senderAddress = cs.loadAddress();
+    expect(senderAddress?.toString()).toBe(
+      deployer.getSender().address.toString(),
+    );
+
+    // Verify custom payload
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    const receivedPayload = Buffer.from(
+      customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length),
+    );
+    expect(receivedPayload.toString("hex")).toBe(
+      CUSTOM_PAYLOAD.toString("hex"),
+    );
+  });
+
+  it("should successfully parse unique price feed updates with more than 3 price feed ids", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_SOL_TON_PYTH_USDT_UPDATE, "hex"),
+      sentValue,
+      [
+        SOL_PRICE_FEED_ID,
+        TON_PRICE_FEED_ID,
+        PYTH_PRICE_FEED_ID,
+        USDT_PRICE_FEED_ID,
+      ],
+      HERMES_SOL_UNIQUE_PUBLISH_TIME,
+      60,
+      deployer.address,
+      CUSTOM_PAYLOAD,
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins,
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(6); // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(4); // We expect SOL, TON, PYTH and USDT price feeds
+
+    // Load and verify price feeds
+    const priceFeedsCell = cs.loadRef();
+    let currentCell = priceFeedsCell;
+
+    // First price feed (SOL)
+    const solCs = currentCell.beginParse();
+    const solPriceId =
+      "0x" + solCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(solPriceId).toBe(SOL_PRICE_FEED_ID);
+
+    const solPriceFeedCell = solCs.loadRef();
+    const solPriceFeedSlice = solPriceFeedCell.beginParse();
+
+    // Verify SOL current price
+    const solCurrentPriceCell = solPriceFeedSlice.loadRef();
+    const solCurrentPrice = solCurrentPriceCell.beginParse();
+    expect(solCurrentPrice.loadInt(64)).toBe(HERMES_SOL_UNIQUE_PRICE);
+    expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_CONF);
+    expect(solCurrentPrice.loadInt(32)).toBe(HERMES_SOL_UNIQUE_EXPO);
+    expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_PUBLISH_TIME);
+
+    // Move through TON and PYTH price feeds to reach USDT
+    currentCell = solCs.loadRef(); // Move to TON
+    const tonCs = currentCell.beginParse();
+    tonCs.loadUintBig(256); // Skip TON price ID
+    tonCs.loadRef(); // Skip TON price data
+
+    currentCell = tonCs.loadRef(); // Move to PYTH
+    const pythCs = currentCell.beginParse();
+    pythCs.loadUintBig(256); // Skip PYTH price ID
+    pythCs.loadRef(); // Skip PYTH price data
+
+    currentCell = pythCs.loadRef(); // Move to USDT
+    const usdtCs = currentCell.beginParse();
+    const usdtPriceId =
+      "0x" + usdtCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(usdtPriceId).toBe(USDT_PRICE_FEED_ID);
+
+    const usdtPriceFeedCell = usdtCs.loadRef();
+    const usdtPriceFeedSlice = usdtPriceFeedCell.beginParse();
+
+    // Verify USDT current price
+    const usdtCurrentPriceCell = usdtPriceFeedSlice.loadRef();
+    const usdtCurrentPrice = usdtCurrentPriceCell.beginParse();
+    expect(usdtCurrentPrice.loadInt(64)).toBe(HERMES_USDT_UNIQUE_PRICE);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_CONF);
+    expect(usdtCurrentPrice.loadInt(32)).toBe(HERMES_USDT_UNIQUE_EXPO);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(usdtCs.remainingRefs).toBe(0);
 
     // Verify sender address
     const senderAddress = cs.loadAddress();
