@@ -32,6 +32,7 @@ contract SchedulerState {
         bytes32[] priceIds;
         address[] readerWhitelist;
         bool whitelistEnabled;
+        bool isActive;
         UpdateCriteria updateCriteria;
         GasConfig gasConfig;
     }
