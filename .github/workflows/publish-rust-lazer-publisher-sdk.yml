@@ -1,6 +1,7 @@
 name: Publish Rust package pyth-lazer-publisher-sdk to crates.io
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - rust-pyth-lazer-publisher-sdk-v*
