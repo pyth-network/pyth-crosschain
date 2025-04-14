@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package pyth_lazer_transaction;
+
+// PublisherUpdate contains an array of individual updates and a timestamp
+message PublisherUpdate {
+  // Array of updates, each of which target a single feed
+  repeated FeedUpdate updates = 1;
+
+  // ID of the Publisher that is sending the update
+  // Should match ID stored in Pyth Lazer
+  optional uint32 publisher_id = 2;
+
+  // Timestamp when this message was created
+  optional google.protobuf.Timestamp publisher_timestamp = 3;
+}
+
+// Update to a feed. May contain different types of data depending on what kind of update it is
+message FeedUpdate {
+  // Feed which the update should be applied to
+  // Should match a feed id recognized by PythLazer
+  optional uint32 feed_id = 1;
+
+  // Timestamp when this data was first acquired or generated
+  optional google.protobuf.Timestamp source_timestamp = 2;
+
+  // one of the valid updates allowed by publishers for a lazer feed
+  oneof update {
+    PriceUpdate price_update = 3;
+    FundingRateUpdate funding_rate_update = 4;
+  };
+}
+
+message PriceUpdate {
+  // Price for the symbol as an integer
+  // Should be produced with a matching exponent to the configured exponent value in PythLazer
+  // May be missing if no price data is available
+  optional int64 price = 1;
+
+  // Best Bid Price for the symbol as an integer
+  // Should be produced with a matching exponent to the configured exponent value in PythLazer
+  // May be missing if no data is available
+  optional int64 best_bid_price = 2;
+
+  // Best Ask Price for the symbol as an integer
+  // Should be produced with a matching exponent to the configured exponent value in PythLazer
+  // May be missing if no data is available
+  optional int64 best_ask_price = 3;
+}
+
+message FundingRateUpdate {
+  // Price for which the funding rate applies to
+  optional int64 price = 1;
+
+  // Perpetual Future funding rate
+  optional int64 rate = 2;
+}

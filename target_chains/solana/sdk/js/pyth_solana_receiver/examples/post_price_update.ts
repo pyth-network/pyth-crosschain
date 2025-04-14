@@ -32,7 +32,7 @@ async function main() {
   );
   // Use a stable treasury ID of 0, since its address is indexed in the address lookup table.
   // This is a tx size optimization and is optional. If not provided, a random treasury account will be used.
-  const treasuryId = 1;
+  const treasuryId = 0;
   const pythSolanaReceiver = new PythSolanaReceiver({
     connection,
     wallet,
