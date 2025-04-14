@@ -14,10 +14,11 @@ interface IScheduler is SchedulerEvents {
      * @notice Adds a new subscription
      * @param subscriptionParams The parameters for the subscription
      * @return subscriptionId The ID of the newly created subscription
+     * @dev Requires msg.value to be at least the minimum balance for the subscription
      */
     function addSubscription(
         SchedulerState.SubscriptionParams calldata subscriptionParams
-    ) external returns (uint256 subscriptionId);
+    ) external payable returns (uint256 subscriptionId);
 
     /**
      * @notice Gets a subscription's parameters and status
@@ -43,13 +44,9 @@ interface IScheduler is SchedulerEvents {
     function updateSubscription(
         uint256 subscriptionId,
         SchedulerState.SubscriptionParams calldata newSubscriptionParams
-    ) external;
+    ) external payable;
 
-    /**
-     * @notice Deactivates a subscription
-     * @param subscriptionId The ID of the subscription to deactivate
-     */
-    function deactivateSubscription(uint256 subscriptionId) external;
+    // Deactivation is now handled through updateSubscription by setting isActive to false
 
     /**
      * @notice Updates price feeds for a subscription.
@@ -116,7 +113,7 @@ interface IScheduler is SchedulerEvents {
      */
     function getMinimumBalance(
         uint8 numPriceFeeds
-    ) external returns (uint256 minimumBalance);
+    ) external view returns (uint256 minimumBalance);
 
     /**
      * @notice Gets all active subscriptions with their parameters

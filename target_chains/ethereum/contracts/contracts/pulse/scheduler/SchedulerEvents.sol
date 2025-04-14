@@ -10,5 +10,6 @@ interface SchedulerEvents {
     );
     event SubscriptionUpdated(uint256 indexed subscriptionId);
     event SubscriptionDeactivated(uint256 indexed subscriptionId);
+    event SubscriptionActivated(uint256 indexed subscriptionId);
     event PricesUpdated(uint256 indexed subscriptionId, uint256 timestamp);
 }

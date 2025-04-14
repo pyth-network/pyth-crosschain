@@ -61,4 +61,16 @@ contract SchedulerUpgradeable is
     function version() public pure returns (string memory) {
         return "1.0.0";
     }
+    
+    // Implementation of deactivateSubscription that forwards to updateSubscription
+    function deactivateSubscription(uint256 subscriptionId) external onlyManager(subscriptionId) {
+        // Get current subscription parameters
+        SchedulerState.SubscriptionParams memory params = _state.subscriptionParams[subscriptionId];
+        
+        // Set isActive to false
+        params.isActive = false;
+        
+        // Call updateSubscription to handle the deactivation
+        this.updateSubscription(subscriptionId, params);
+    }
 }
