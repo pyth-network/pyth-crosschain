@@ -12,3 +12,4 @@ protobuf = "3.7.2"
 
 [build-dependencies]
 protobuf-codegen = "3.7.2"
+
