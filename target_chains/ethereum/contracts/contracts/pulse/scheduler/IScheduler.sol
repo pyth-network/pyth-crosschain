@@ -125,7 +125,7 @@ interface IScheduler is SchedulerEvents {
      * @param maxResults The maximum number of results to return
      * @return subscriptionIds Array of active subscription IDs
      * @return subscriptionParams Array of subscription parameters for each active subscription
-     * @return totalCount Total returned number of active subscriptions
+     * @return totalCount Total number of active subscriptions
      */
     function getActiveSubscriptions(
         uint256 startIndex,

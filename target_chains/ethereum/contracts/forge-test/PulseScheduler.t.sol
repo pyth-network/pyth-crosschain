@@ -30,7 +30,8 @@ contract MockReader {
         uint256 subscriptionId,
         bytes32[] memory priceIds
     ) external view returns (PythStructs.Price[] memory) {
-        return IScheduler(_scheduler).getEmaPriceUnsafe(subscriptionId, priceIds);
+        return
+            IScheduler(_scheduler).getEmaPriceUnsafe(subscriptionId, priceIds);
     }
 
     function verifyPriceFeeds(
@@ -49,7 +50,8 @@ contract MockReader {
             if (
                 actualPrices[i].price != expectedFeeds[i].price.price ||
                 actualPrices[i].conf != expectedFeeds[i].price.conf ||
-                actualPrices[i].publishTime != expectedFeeds[i].price.publishTime
+                actualPrices[i].publishTime !=
+                expectedFeeds[i].price.publishTime
             ) {
                 return false;
             }
@@ -731,7 +733,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             "Price feeds verification failed"
         );
     }
-    
+
     function testGetEmaPriceUnsafe() public {
         // First add a subscription, funds, and update price feeds
         uint256 subscriptionId = addTestSubscription();
@@ -743,7 +745,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
             publishTime
         );
-        
+
         // Ensure EMA prices are set in the mock price feeds
         for (uint i = 0; i < priceFeeds.length; i++) {
             priceFeeds[i].emaPrice.price = priceFeeds[i].price.price * 2; // Make EMA price different for testing
@@ -751,7 +753,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             priceFeeds[i].emaPrice.publishTime = publishTime;
             priceFeeds[i].emaPrice.expo = priceFeeds[i].price.expo;
         }
-        
+
         mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
@@ -771,7 +773,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             priceIds.length,
             "Should return all EMA prices"
         );
-        
+
         // Verify EMA price values
         for (uint i = 0; i < emaPrices.length; i++) {
             assertEq(
@@ -841,11 +843,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             3,
             "Should have 3 active subscription params"
         );
-        assertEq(
-            totalCount,
-            3,
-            "Total count should be 3"
-        );
+        assertEq(totalCount, 3, "Total count should be 3");
 
         // Verify subscription params
         for (uint i = 0; i < activeIds.length; i++) {
@@ -866,7 +864,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
                 "Heartbeat seconds mismatch"
             );
         }
-        
+
         // Test pagination - get only the first subscription
         vm.prank(owner);
         (
@@ -874,10 +872,14 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             SchedulerState.SubscriptionParams[] memory firstPageParams,
             uint256 firstPageTotal
         ) = scheduler.getActiveSubscriptions(0, 1);
-        
-        assertEq(firstPageIds.length, 1, "Should have 1 subscription in first page");
+
+        assertEq(
+            firstPageIds.length,
+            1,
+            "Should have 1 subscription in first page"
+        );
         assertEq(firstPageTotal, 3, "Total count should still be 3");
-        
+
         // Test pagination - get the second page
         vm.prank(owner);
         (
@@ -885,10 +887,14 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             SchedulerState.SubscriptionParams[] memory secondPageParams,
             uint256 secondPageTotal
         ) = scheduler.getActiveSubscriptions(1, 2);
-        
-        assertEq(secondPageIds.length, 2, "Should have 2 subscriptions in second page");
+
+        assertEq(
+            secondPageIds.length,
+            2,
+            "Should have 2 subscriptions in second page"
+        );
         assertEq(secondPageTotal, 3, "Total count should still be 3");
-        
+
         // Test pagination - start index beyond total count
         vm.prank(owner);
         (
@@ -896,8 +902,12 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             SchedulerState.SubscriptionParams[] memory emptyPageParams,
             uint256 emptyPageTotal
         ) = scheduler.getActiveSubscriptions(10, 10);
-        
-        assertEq(emptyPageIds.length, 0, "Should have 0 subscriptions when start index is beyond total");
+
+        assertEq(
+            emptyPageIds.length,
+            0,
+            "Should have 0 subscriptions when start index is beyond total"
+        );
         assertEq(emptyPageTotal, 3, "Total count should still be 3");
     }
 
