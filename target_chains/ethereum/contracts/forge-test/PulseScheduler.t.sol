@@ -19,11 +19,18 @@ contract MockReader {
         _scheduler = scheduler;
     }
 
-    function getLatestPrices(
+    function getPricesUnsafe(
         uint256 subscriptionId,
         bytes32[] memory priceIds
-    ) external view returns (PythStructs.PriceFeed[] memory) {
-        return IScheduler(_scheduler).getLatestPrices(subscriptionId, priceIds);
+    ) external view returns (PythStructs.Price[] memory) {
+        return IScheduler(_scheduler).getPricesUnsafe(subscriptionId, priceIds);
+    }
+
+    function getEmaPriceUnsafe(
+        uint256 subscriptionId,
+        bytes32[] memory priceIds
+    ) external view returns (PythStructs.Price[] memory) {
+        return IScheduler(_scheduler).getEmaPriceUnsafe(subscriptionId, priceIds);
     }
 
     function verifyPriceFeeds(
@@ -31,20 +38,18 @@ contract MockReader {
         bytes32[] memory priceIds,
         PythStructs.PriceFeed[] memory expectedFeeds
     ) external view returns (bool) {
-        PythStructs.PriceFeed[] memory actualFeeds = IScheduler(_scheduler)
-            .getLatestPrices(subscriptionId, priceIds);
+        PythStructs.Price[] memory actualPrices = IScheduler(_scheduler)
+            .getPricesUnsafe(subscriptionId, priceIds);
 
-        if (actualFeeds.length != expectedFeeds.length) {
+        if (actualPrices.length != expectedFeeds.length) {
             return false;
         }
 
-        for (uint i = 0; i < actualFeeds.length; i++) {
+        for (uint i = 0; i < actualPrices.length; i++) {
             if (
-                actualFeeds[i].id != expectedFeeds[i].id ||
-                actualFeeds[i].price.price != expectedFeeds[i].price.price ||
-                actualFeeds[i].price.conf != expectedFeeds[i].price.conf ||
-                actualFeeds[i].price.publishTime !=
-                expectedFeeds[i].price.publishTime
+                actualPrices[i].price != expectedFeeds[i].price.price ||
+                actualPrices[i].conf != expectedFeeds[i].price.conf ||
+                actualPrices[i].publishTime != expectedFeeds[i].price.publishTime
             ) {
                 return false;
             }
@@ -100,8 +105,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasPrice: 100 gwei,
-            maxGasLimit: 1_000_000
+            maxGasMultiplierCapPct: 10_000,
+            maxFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -152,9 +157,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             "Deviation threshold mismatch"
         );
         assertEq(
-            storedParams.gasConfig.maxGasPrice,
-            100 gwei,
-            "Max gas price mismatch"
+            storedParams.gasConfig.maxGasMultiplierCapPct,
+            10_000,
+            "Max gas multiplier mismatch"
         );
 
         assertTrue(status.isActive, "Subscription should be active");
@@ -181,8 +186,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
         SchedulerState.GasConfig memory newGasConfig = SchedulerState
             .GasConfig({
-                maxGasPrice: 200 gwei, // Changed from 100 gwei
-                maxGasLimit: 2_000_000 // Changed from 1_000_000
+                maxGasMultiplierCapPct: 20_000, // Changed from 10_000
+                maxFeeMultiplierCapPct: 20_000 // Changed from 10_000
             });
 
         SchedulerState.SubscriptionParams memory newParams = SchedulerState
@@ -230,9 +235,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             "Deviation threshold mismatch"
         );
         assertEq(
-            storedParams.gasConfig.maxGasPrice,
-            200 gwei,
-            "Max gas price mismatch"
+            storedParams.gasConfig.maxGasMultiplierCapPct,
+            20_000,
+            "Max gas multiplier mismatch"
         );
     }
 
@@ -583,7 +588,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
     }
 
-    function testGetLatestPricesAllFeeds() public {
+    function testGetPricesUnsafeAllFeeds() public {
         // First add a subscription, funds, and update price feeds
         uint256 subscriptionId = addTestSubscription();
         uint256 fundAmount = 1 ether;
@@ -602,7 +607,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
         // Get all latest prices (empty priceIds array)
         bytes32[] memory emptyPriceIds = new bytes32[](0);
-        PythStructs.PriceFeed[] memory latestPrices = scheduler.getLatestPrices(
+        PythStructs.Price[] memory latestPrices = scheduler.getPricesUnsafe(
             subscriptionId,
             emptyPriceIds
         );
@@ -621,7 +626,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         );
     }
 
-    function testGetLatestPricesSelectiveFeeds() public {
+    function testGetPricesUnsafeSelectiveFeeds() public {
         // First add a subscription with 3 price feeds, funds, and update price feeds
         uint256 subscriptionId = addTestSubscriptionWithFeeds(3);
         uint256 fundAmount = 1 ether;
@@ -643,7 +648,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         bytes32[] memory selectedPriceIds = new bytes32[](1);
         selectedPriceIds[0] = priceIds[0];
 
-        PythStructs.PriceFeed[] memory latestPrices = scheduler.getLatestPrices(
+        PythStructs.Price[] memory latestPrices = scheduler.getPricesUnsafe(
             subscriptionId,
             selectedPriceIds
         );
@@ -681,8 +686,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasPrice: 100 gwei,
-            maxGasLimit: 1_000_000
+            maxGasMultiplierCapPct: 10_000,
+            maxFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -717,7 +722,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
         // Should not revert since whitelist is disabled
         // We'll just check that it doesn't revert
-        scheduler.getLatestPrices(subscriptionId, emptyPriceIds);
+        scheduler.getPricesUnsafe(subscriptionId, emptyPriceIds);
         vm.stopPrank();
 
         // Verify the data is correct
@@ -725,6 +730,61 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             reader.verifyPriceFeeds(subscriptionId, emptyPriceIds, priceFeeds),
             "Price feeds verification failed"
         );
+    }
+    
+    function testGetEmaPriceUnsafe() public {
+        // First add a subscription, funds, and update price feeds
+        uint256 subscriptionId = addTestSubscription();
+        uint256 fundAmount = 1 ether;
+        scheduler.addFunds{value: fundAmount}(subscriptionId);
+
+        bytes32[] memory priceIds = createPriceIds();
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        
+        // Ensure EMA prices are set in the mock price feeds
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            priceFeeds[i].emaPrice.price = priceFeeds[i].price.price * 2; // Make EMA price different for testing
+            priceFeeds[i].emaPrice.conf = priceFeeds[i].price.conf;
+            priceFeeds[i].emaPrice.publishTime = publishTime;
+            priceFeeds[i].emaPrice.expo = priceFeeds[i].price.expo;
+        }
+        
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
+
+        // Get EMA prices
+        bytes32[] memory emptyPriceIds = new bytes32[](0);
+        PythStructs.Price[] memory emaPrices = scheduler.getEmaPriceUnsafe(
+            subscriptionId,
+            emptyPriceIds
+        );
+
+        // Verify all EMA prices were returned
+        assertEq(
+            emaPrices.length,
+            priceIds.length,
+            "Should return all EMA prices"
+        );
+        
+        // Verify EMA price values
+        for (uint i = 0; i < emaPrices.length; i++) {
+            assertEq(
+                emaPrices[i].price,
+                priceFeeds[i].emaPrice.price,
+                "EMA price value mismatch"
+            );
+            assertEq(
+                emaPrices[i].publishTime,
+                priceFeeds[i].emaPrice.publishTime,
+                "EMA price publish time mismatch"
+            );
+        }
     }
 
     function testGetActiveSubscriptions() public {
@@ -750,8 +810,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasPrice: 100 gwei,
-            maxGasLimit: 1_000_000
+            maxGasMultiplierCapPct: 10_000,
+            maxFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -770,8 +830,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         vm.prank(owner);
         (
             uint256[] memory activeIds,
-            SchedulerState.SubscriptionParams[] memory activeParams
-        ) = scheduler.getActiveSubscriptions();
+            SchedulerState.SubscriptionParams[] memory activeParams,
+            uint256 totalCount
+        ) = scheduler.getActiveSubscriptions(0, 10); // Start at index 0, get up to 10 results
 
         // Verify active subscriptions
         assertEq(activeIds.length, 3, "Should have 3 active subscriptions");
@@ -779,6 +840,11 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             activeParams.length,
             3,
             "Should have 3 active subscription params"
+        );
+        assertEq(
+            totalCount,
+            3,
+            "Total count should be 3"
         );
 
         // Verify subscription params
@@ -800,6 +866,39 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
                 "Heartbeat seconds mismatch"
             );
         }
+        
+        // Test pagination - get only the first subscription
+        vm.prank(owner);
+        (
+            uint256[] memory firstPageIds,
+            SchedulerState.SubscriptionParams[] memory firstPageParams,
+            uint256 firstPageTotal
+        ) = scheduler.getActiveSubscriptions(0, 1);
+        
+        assertEq(firstPageIds.length, 1, "Should have 1 subscription in first page");
+        assertEq(firstPageTotal, 3, "Total count should still be 3");
+        
+        // Test pagination - get the second page
+        vm.prank(owner);
+        (
+            uint256[] memory secondPageIds,
+            SchedulerState.SubscriptionParams[] memory secondPageParams,
+            uint256 secondPageTotal
+        ) = scheduler.getActiveSubscriptions(1, 2);
+        
+        assertEq(secondPageIds.length, 2, "Should have 2 subscriptions in second page");
+        assertEq(secondPageTotal, 3, "Total count should still be 3");
+        
+        // Test pagination - start index beyond total count
+        vm.prank(owner);
+        (
+            uint256[] memory emptyPageIds,
+            SchedulerState.SubscriptionParams[] memory emptyPageParams,
+            uint256 emptyPageTotal
+        ) = scheduler.getActiveSubscriptions(10, 10);
+        
+        assertEq(emptyPageIds.length, 0, "Should have 0 subscriptions when start index is beyond total");
+        assertEq(emptyPageTotal, 3, "Total count should still be 3");
     }
 
     // Helper function to add a test subscription
@@ -817,8 +916,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasPrice: 100 gwei,
-            maxGasLimit: 1_000_000
+            maxGasMultiplierCapPct: 10_000,
+            maxFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -850,8 +949,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasPrice: 100 gwei,
-            maxGasLimit: 1_000_000
+            maxGasMultiplierCapPct: 10_000,
+            maxFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -875,8 +974,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         readerWhitelist[0] = address(reader);
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasPrice: 100 gwei,
-            maxGasLimit: 1_000_000
+            maxGasMultiplierCapPct: 10_000,
+            maxFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState

@@ -512,6 +512,17 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         return (subscriptionIds, subscriptionParams, totalCount);
     }
 
+    /**
+     * @notice Returns the minimum balance an active subscription of a given size needs to hold.
+     * @param numPriceFeeds The number of price feeds in the subscription.
+     */
+    function getMinimumBalance(
+        uint8 numPriceFeeds
+    ) external view override returns (uint256 minimumBalance) {
+        // Simple implementation - minimum balance is 0.01 ETH per price feed
+        return numPriceFeeds * 0.01 ether;
+    }
+
     // ACCESS CONTROL MODIFIERS
 
     modifier onlyManager(uint256 subscriptionId) {
