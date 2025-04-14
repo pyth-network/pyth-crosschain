@@ -405,7 +405,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         );
     }
 
-    function testUpdatePriceFeedsRevertsOnUpdateConditionsNotMet_Heartbeat()
+    function testUpdatePriceFeedsRevertsOnHeartbeatUpdateConditionNotMet()
         public
     {
         // Add a subscription with only heartbeat criteria (60 seconds)
@@ -451,7 +451,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         scheduler.updatePriceFeeds(subscriptionId, updateData2, priceIds);
     }
 
-    function testUpdatePriceFeedsRevertsOnUpdateConditionsNotMet_Deviation()
+    function testUpdatePriceFeedsRevertsOnDeviationUpdateConditionNotMet()
         public
     {
         // Add a subscription with only deviation criteria (100 bps / 1%)

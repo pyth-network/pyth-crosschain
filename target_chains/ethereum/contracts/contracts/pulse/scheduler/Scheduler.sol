@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 import "./IScheduler.sol";
 import "./SchedulerState.sol";
 import "./SchedulerErrors.sol";
@@ -20,7 +21,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     }
 
     function addSubscription(
-        SubscriptionParams calldata subscriptionParams
+        SubscriptionParams memory subscriptionParams
     ) external override returns (uint256 subscriptionId) {
         if (subscriptionParams.priceIds.length > MAX_PRICE_IDS) {
             revert TooManyPriceIds(
@@ -37,12 +38,17 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InvalidUpdateCriteria();
         }
 
-        // Validate gas config
+        // If gas config is unset, set it to the default (100x multipliers)
         if (
-            subscriptionParams.gasConfig.maxGasPrice == 0 ||
-            subscriptionParams.gasConfig.maxGasLimit == 0
+            subscriptionParams.gasConfig.maxGasMultiplierCapPct == 0 ||
+            subscriptionParams.gasConfig.maxFeeMultiplierCapPct == 0
         ) {
-            revert InvalidGasConfig();
+            subscriptionParams
+                .gasConfig
+                .maxFeeMultiplierCapPct = DEFAULT_MAX_FEE_MULTIPLIER_CAP_PCT;
+            subscriptionParams
+                .gasConfig
+                .maxGasMultiplierCapPct = DEFAULT_MAX_GAS_MULTIPLIER_CAP_PCT;
         }
 
         subscriptionId = _state.subscriptionNumber++;
@@ -86,7 +92,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
     function updateSubscription(
         uint256 subscriptionId,
-        SubscriptionParams calldata newSubscriptionParams
+        SubscriptionParams memory newSubscriptionParams
     ) external override onlyManager(subscriptionId) {
         if (!_state.subscriptionStatuses[subscriptionId].isActive) {
             revert InactiveSubscription();
@@ -107,12 +113,17 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InvalidUpdateCriteria();
         }
 
-        // Validate gas config
+        // If gas config is unset, set it to the default (100x multipliers)
         if (
-            newSubscriptionParams.gasConfig.maxGasPrice == 0 ||
-            newSubscriptionParams.gasConfig.maxGasLimit == 0
+            newSubscriptionParams.gasConfig.maxGasMultiplierCapPct == 0 ||
+            newSubscriptionParams.gasConfig.maxFeeMultiplierCapPct == 0
         ) {
-            revert InvalidGasConfig();
+            newSubscriptionParams
+                .gasConfig
+                .maxFeeMultiplierCapPct = DEFAULT_MAX_FEE_MULTIPLIER_CAP_PCT;
+            newSubscriptionParams
+                .gasConfig
+                .maxGasMultiplierCapPct = DEFAULT_MAX_GAS_MULTIPLIER_CAP_PCT;
         }
 
         // Update subscription parameters
@@ -137,7 +148,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         uint256 subscriptionId,
         bytes[] calldata updateData,
         bytes32[] calldata priceIds
-    ) external override onlyPusher {
+    ) external override {
         SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
@@ -309,16 +320,18 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         revert UpdateConditionsNotMet();
     }
 
-    function getLatestPrices(
+    /// FETCH PRICES
+
+    /**
+     * @notice Internal helper function to retrieve price feeds for a subscription.
+     * @param subscriptionId The ID of the subscription.
+     * @param priceIds The specific price IDs requested, or empty array to get all.
+     * @return priceFeeds An array of PriceFeed structs corresponding to the requested IDs.
+     */
+    function _getPricesInternal(
         uint256 subscriptionId,
         bytes32[] calldata priceIds
-    )
-        external
-        view
-        override
-        onlyWhitelistedReader(subscriptionId)
-        returns (PythStructs.PriceFeed[] memory)
-    {
+    ) internal view returns (PythStructs.PriceFeed[] memory priceFeeds) {
         if (!_state.subscriptionStatuses[subscriptionId].isActive) {
             revert InactiveSubscription();
         }
@@ -334,9 +347,14 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                     params.priceIds.length
                 );
             for (uint8 i = 0; i < params.priceIds.length; i++) {
-                allFeeds[i] = _state.priceUpdates[subscriptionId][
-                    params.priceIds[i]
-                ];
+                PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+                    subscriptionId
+                ][params.priceIds[i]];
+                // Check if the price feed exists (price ID is valid and has been updated)
+                if (priceFeed.id == bytes32(0)) {
+                    revert InvalidPriceId(params.priceIds[i], bytes32(0));
+                }
+                allFeeds[i] = priceFeed;
             }
             return allFeeds;
         }
@@ -347,26 +365,62 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 priceIds.length
             );
         for (uint8 i = 0; i < priceIds.length; i++) {
-            // Verify the requested price ID is part of the subscription
-            bool validPriceId = false;
-            for (uint8 j = 0; j < params.priceIds.length; j++) {
-                if (priceIds[i] == params.priceIds[j]) {
-                    validPriceId = true;
-                    break;
-                }
-            }
+            PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+                subscriptionId
+            ][priceIds[i]];
 
-            if (!validPriceId) {
-                revert InvalidPriceId(priceIds[i], params.priceIds[0]);
+            // Check if the price feed exists (price ID is valid and has been updated)
+            if (priceFeed.id == bytes32(0)) {
+                revert InvalidPriceId(priceIds[i], bytes32(0));
             }
-
-            requestedFeeds[i] = _state.priceUpdates[subscriptionId][
-                priceIds[i]
-            ];
+            requestedFeeds[i] = priceFeed;
         }
-
         return requestedFeeds;
     }
+
+    function getPricesUnsafe(
+        uint256 subscriptionId,
+        bytes32[] calldata priceIds
+    )
+        external
+        view
+        override
+        onlyWhitelistedReader(subscriptionId)
+        returns (PythStructs.Price[] memory prices)
+    {
+        PythStructs.PriceFeed[] memory priceFeeds = _getPricesInternal(
+            subscriptionId,
+            priceIds
+        );
+        prices = new PythStructs.Price[](priceFeeds.length);
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            prices[i] = priceFeeds[i].price;
+        }
+        return prices;
+    }
+
+    function getEmaPriceUnsafe(
+        uint256 subscriptionId,
+        bytes32[] calldata priceIds
+    )
+        external
+        view
+        override
+        onlyWhitelistedReader(subscriptionId)
+        returns (PythStructs.Price[] memory prices)
+    {
+        PythStructs.PriceFeed[] memory priceFeeds = _getPricesInternal(
+            subscriptionId,
+            priceIds
+        );
+        prices = new PythStructs.Price[](priceFeeds.length);
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            prices[i] = priceFeeds[i].emaPrice;
+        }
+        return prices;
+    }
+
+    /// BALANCE MANAGEMENT
 
     function addFunds(
         uint256 subscriptionId
@@ -397,50 +451,68 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     }
 
     // This function is intentionally public with no access control to allow keepers to discover active subscriptions
-    function getActiveSubscriptions()
+    function getActiveSubscriptions(
+        uint256 startIndex,
+        uint256 maxResults
+    )
         external
         view
         override
         returns (
             uint256[] memory subscriptionIds,
-            SubscriptionParams[] memory subscriptionParams
+            SubscriptionParams[] memory subscriptionParams,
+            uint256 totalCount
         )
     {
-        // TODO: This is gonna be expensive because we're iterating through
-        // all subscriptions, including deactivated ones. But because its a view
-        // function maybe it's not bad? We can optimize this.
-
-        // Count active subscriptions first to determine array size
-        uint256 activeCount = 0;
+        // Count active subscriptions first to determine total count
+        // TODO: Optimize this. store numActiveSubscriptions or something.
+        totalCount = 0;
         for (uint256 i = 1; i < _state.subscriptionNumber; i++) {
             if (_state.subscriptionStatuses[i].isActive) {
-                activeCount++;
+                totalCount++;
             }
+        }
+
+        // If startIndex is beyond the total count, return empty arrays
+        if (startIndex >= totalCount) {
+            return (new uint256[](0), new SubscriptionParams[](0), totalCount);
+        }
+
+        // Calculate how many results to return (bounded by maxResults and remaining items)
+        uint256 resultCount = totalCount - startIndex;
+        if (resultCount > maxResults) {
+            resultCount = maxResults;
         }
 
         // Create arrays for subscription IDs and parameters
-        subscriptionIds = new uint256[](activeCount);
-        subscriptionParams = new SubscriptionParams[](activeCount);
+        subscriptionIds = new uint256[](resultCount);
+        subscriptionParams = new SubscriptionParams[](resultCount);
 
-        // Populate arrays with active subscription data
-        uint256 index = 0;
-        for (uint256 i = 1; i < _state.subscriptionNumber; i++) {
+        // Find and populate the requested page of active subscriptions
+        uint256 activeIndex = 0;
+        uint256 resultIndex = 0;
+
+        for (
+            uint256 i = 1;
+            i < _state.subscriptionNumber && resultIndex < resultCount;
+            i++
+        ) {
             if (_state.subscriptionStatuses[i].isActive) {
-                subscriptionIds[index] = i;
-                subscriptionParams[index] = _state.subscriptionParams[i];
-                index++;
+                if (activeIndex >= startIndex) {
+                    subscriptionIds[resultIndex] = i;
+                    subscriptionParams[resultIndex] = _state.subscriptionParams[
+                        i
+                    ];
+                    resultIndex++;
+                }
+                activeIndex++;
             }
         }
 
-        return (subscriptionIds, subscriptionParams);
+        return (subscriptionIds, subscriptionParams, totalCount);
     }
 
     // ACCESS CONTROL MODIFIERS
-
-    modifier onlyPusher() {
-        // TODO: we may not make this permissioned.
-        _;
-    }
 
     modifier onlyManager(uint256 subscriptionId) {
         if (_state.subscriptionManager[subscriptionId] != msg.sender) {

@@ -5,21 +5,25 @@ pragma solidity ^0.8.0;
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 contract SchedulerState {
-    // Maximum number of price feeds per subscription
-    uint8 public constant MAX_PRICE_IDS = 10;
+    /// Maximum number of price feeds per subscription
+    uint8 public constant MAX_PRICE_IDS = 255;
+    /// Default max gas multiplier
+    uint32 public constant DEFAULT_MAX_GAS_MULTIPLIER_CAP_PCT = 10_000;
+    /// Default max fee multiplier
+    uint32 public constant DEFAULT_MAX_FEE_MULTIPLIER_CAP_PCT = 10_000;
 
     struct State {
-        // Monotonically increasing counter for subscription IDs
+        /// Monotonically increasing counter for subscription IDs
         uint256 subscriptionNumber;
-        // Pyth contract for parsing updates and verifying sigs & timestamps
+        /// Pyth contract for parsing updates and verifying sigs & timestamps
         address pyth;
-        // Sub ID -> subscription parameters (which price feeds, when to update, etc)
+        /// Sub ID -> subscription parameters (which price feeds, when to update, etc)
         mapping(uint256 => SubscriptionParams) subscriptionParams;
-        // Sub ID -> subscription status (metadata about their sub)
+        /// Sub ID -> subscription status (metadata about their sub)
         mapping(uint256 => SubscriptionStatus) subscriptionStatuses;
-        // Sub ID -> price ID -> latest parsed price update for the subscribed feed
+        /// Sub ID -> price ID -> latest parsed price update for the subscribed feed
         mapping(uint256 => mapping(bytes32 => PythStructs.PriceFeed)) priceUpdates;
-        // Sub ID -> manager address
+        /// Sub ID -> manager address
         mapping(uint256 => address) subscriptionManager;
     }
     State internal _state;
@@ -40,13 +44,17 @@ contract SchedulerState {
         bool isActive;
     }
 
+    /// @dev When pushing prices, providers will use a "fast gas" estimation as default.
+    /// If the gas is insufficient to land the transaction, the provider will linearly scale
+    /// gas and fee multipliers until the transaction lands. These parameters allow the subscriber
+    /// to impose limits on these multipliers.
+    /// For example, with maxGasMultiplierCapPct = 10_000 (default), the provider can
+    /// use a max of 100x (10000%) of the estimated gas as reported by the RPC.
     struct GasConfig {
-        // TODO: Figure out what controls to give users for gas strategy
-
-        // Gas price limit to prevent runaway costs in high-gas environments
-        uint256 maxGasPrice;
-        // Gas limit for update operations
-        uint256 maxGasLimit;
+        /// Gas price multiplier limit percent for update operations
+        uint32 maxGasMultiplierCapPct;
+        // Priority fee multiplier limit for update operations (EIP-1559)
+        uint32 maxFeeMultiplierCapPct;
     }
 
     struct UpdateCriteria {
@@ -54,11 +62,5 @@ contract SchedulerState {
         uint32 heartbeatSeconds;
         bool updateOnDeviation;
         uint32 deviationThresholdBps;
-
-        // TODO: add updateOnConfidenceRatio?
-
-        // TODO: add explicit "early update" support? i.e. update all feeds when at least one feed
-        //          meets the triggering conditions, rather than waiting for all feeds
-        //          to meet the conditions. Currently, "early update" is the only mode of operation.
     }
 }
