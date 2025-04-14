@@ -1,9 +1,10 @@
 name: Publish Rust package pyth-lazer-protocol to crates.io
 
 on:
-  push:
-    tags:
-      - rust-pyth-lazer-protocol-v*
+  workflow_dispatch:
+    push:
+      tags:
+        - rust-pyth-lazer-protocol-v*
 jobs:
   publish-pyth-lazer-protocol:
     name: Publish Rust package pyth-lazer-protocol to crates.io
