@@ -80,6 +80,10 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyStatusConstants.sol";
 abstract contract Entropy is IEntropy, EntropyState {
     using ExcessivelySafeCall for address;
 
+    uint32 public constant TEN_THOUSAND = 10000;
+    uint32 public constant MAX_GAS_LIMIT =
+        uint32(type(uint16).max) * TEN_THOUSAND;
+
     function _initialize(
         address admin,
         uint128 pythFeeInWei,
@@ -207,7 +211,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userCommitment,
         bool useBlockhash,
-        bool isRequestWithCallback
+        bool isRequestWithCallback,
+        uint32 callbackGasLimit
     ) internal returns (EntropyStructs.Request storage req) {
         EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
             provider
@@ -222,11 +227,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
-        uint128 requiredFee = getFee(provider);
+        uint128 requiredFee = getFeeForGas(provider, callbackGasLimit);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
-        providerInfo.accruedFeesInWei += providerInfo.feeInWei;
+        uint128 providerFee = getProviderFee(provider, callbackGasLimit);
+        providerInfo.accruedFeesInWei += providerFee;
         _state.accruedPythFeesInWei += (SafeCast.toUint128(msg.value) -
-            providerInfo.feeInWei);
+            providerFee);
 
         // Store the user's commitment so that we can fulfill the request later.
         // Warning: this code needs to overwrite *every* field in the request, because the returned request can be
@@ -251,9 +257,26 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
+
         req.callbackStatus = isRequestWithCallback
             ? EntropyStatusConstants.CALLBACK_NOT_STARTED
             : EntropyStatusConstants.CALLBACK_NOT_NECESSARY;
+        if (providerInfo.defaultGasLimit == 0) {
+            // Provider doesn't support the new callback failure state flow (toggled by setting the gas limit field).
+            // Set gasLimit10k to 0 to disable.
+            req.gasLimit10k = 0;
+        } else {
+            // This check does two important things:
+            // 1. Providers have a minimum fee set for their defaultGasLimit. If users request less gas than that,
+            //    they still pay for the full gas limit. So we may as well give them the full limit here.
+            // 2. If a provider has a defaultGasLimit != 0, we need to ensure that all requests have a >0 gas limit
+            //    so that we opt-in to the new callback failure state flow.
+            req.gasLimit10k = roundTo10kGas(
+                callbackGasLimit < providerInfo.defaultGasLimit
+                    ? providerInfo.defaultGasLimit
+                    : callbackGasLimit
+            );
+        }
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -275,7 +298,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             provider,
             userCommitment,
             useBlockHash,
-            false
+            false,
+            0
         );
         assignedSequenceNumber = req.sequenceNumber;
         emit Requested(req);
@@ -293,6 +317,19 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userRandomNumber
     ) public payable override returns (uint64) {
+        return
+            requestWithCallbackAndGasLimit(
+                provider,
+                userRandomNumber,
+                0 // Passing 0 will assign the request the provider's default gas limit
+            );
+    }
+
+    function requestWithCallbackAndGasLimit(
+        address provider,
+        bytes32 userRandomNumber,
+        uint32 gasLimit
+    ) public payable override returns (uint64) {
         EntropyStructs.Request storage req = requestHelper(
             provider,
             constructUserCommitment(userRandomNumber),
@@ -300,7 +337,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             // If we remove the blockHash from this, the provider would have no choice but to provide its committed
             // random number. Hence, useBlockHash is set to false.
             false,
-            true
+            true,
+            gasLimit
         );
 
         emit RequestedWithCallback(
@@ -310,7 +348,6 @@ abstract contract Entropy is IEntropy, EntropyState {
             userRandomNumber,
             req
         );
-
         return req.sequenceNumber;
     }
 
@@ -493,16 +530,27 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         address callAddress = req.requester;
 
+        // If the request has an explicit gas limit, then run the new callback failure state flow.
+        //
         // Requests that haven't been invoked yet will be invoked safely (catching reverts), and
         // any reverts will be reported as an event. Any failing requests move to a failure state
         // at which point they can be recovered. The recovery flow invokes the callback directly
         // (no catching errors) which allows callers to easily see the revert reason.
-        if (req.callbackStatus == EntropyStatusConstants.CALLBACK_NOT_STARTED) {
+        if (
+            req.gasLimit10k != 0 &&
+            req.callbackStatus == EntropyStatusConstants.CALLBACK_NOT_STARTED
+        ) {
             req.callbackStatus = EntropyStatusConstants.CALLBACK_IN_PROGRESS;
             bool success;
             bytes memory ret;
+            uint256 startingGas = gasleft();
             (success, ret) = callAddress.excessivelySafeCall(
-                gasleft(), // TODO: providers need to be able to configure this in the future.
+                // Warning: the provided gas limit below is only an *upper bound* on the gas provided to the call.
+                // At most 63/64ths of the current context's gas will be provided to a call, which may be less
+                // than the indicated gas limit. (See CALL opcode docs here https://www.evm.codes/?fork=cancun#f1)
+                // Consequently, out-of-gas reverts need to be handled carefully to ensure that the callback
+                // was truly provided with a sufficient amount of gas.
+                uint256(req.gasLimit10k) * TEN_THOUSAND,
                 256, // copy at most 256 bytes of the return value into ret.
                 abi.encodeWithSelector(
                     IEntropyConsumer._entropyCallback.selector,
@@ -522,8 +570,16 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 );
                 clearRequest(provider, sequenceNumber);
-            } else if (ret.length > 0) {
-                // Callback reverted for some reason that is *not* out-of-gas.
+            } else if (
+                ret.length > 0 ||
+                (startingGas * 31) / 32 >
+                uint256(req.gasLimit10k) * TEN_THOUSAND
+            ) {
+                // The callback reverted for some reason.
+                // If ret.length > 0, then we know the callback manually triggered a revert, so it's safe to mark it as failed.
+                // If ret.length == 0, then the callback might have run out of gas (though there are other ways to trigger a revert with ret.length == 0).
+                // In this case, ensure that the callback was provided with sufficient gas. Technically, 63/64ths of the startingGas is forwarded,
+                // but we're using 31/32 to introduce a margin of safety.
                 emit CallbackFailed(
                     provider,
                     req.requester,
@@ -535,9 +591,13 @@ abstract contract Entropy is IEntropy, EntropyState {
                 );
                 req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
             } else {
-                // The callback ran out of gas
-                // TODO: this case will go away once we add provider gas limits, so we're not putting in a custom error type.
-                require(false, "provider needs to send more gas");
+                // Callback reverted by (potentially) running out of gas, but the calling context did not have enough gas
+                // to run the callback. This is a corner case that can happen due to the nuances of gas passing
+                // in calls (see the comment on the call above).
+                //
+                // (Note that reverting here plays nicely with the estimateGas RPC method, which binary searches for
+                // the smallest gas value that causes the transaction to *succeed*. See https://github.com/ethereum/go-ethereum/pull/3587 )
+                revert EntropyErrors.InsufficientGas();
             }
         } else {
             // This case uses the checks-effects-interactions pattern to avoid reentry attacks
@@ -590,7 +650,43 @@ abstract contract Entropy is IEntropy, EntropyState {
     function getFee(
         address provider
     ) public view override returns (uint128 feeAmount) {
-        return _state.providers[provider].feeInWei + _state.pythFeeInWei;
+        return getFeeForGas(provider, 0);
+    }
+
+    function getFeeForGas(
+        address provider,
+        uint32 gasLimit
+    ) public view override returns (uint128 feeAmount) {
+        return getProviderFee(provider, gasLimit) + _state.pythFeeInWei;
+    }
+
+    function getProviderFee(
+        address providerAddr,
+        uint32 gasLimit
+    ) internal view returns (uint128 feeAmount) {
+        EntropyStructs.ProviderInfo memory provider = _state.providers[
+            providerAddr
+        ];
+
+        // Providers charge a minimum of their configured feeInWei for every request.
+        // Requests using more than the defaultGasLimit get a proportionally scaled fee.
+        // This approach may be somewhat simplistic, but it allows us to continue using the
+        // existing feeInWei parameter for the callback failure flow instead of defining new
+        // configuration values.
+        uint32 roundedGasLimit = uint32(roundTo10kGas(gasLimit)) * TEN_THOUSAND;
+        if (
+            provider.defaultGasLimit > 0 &&
+            roundedGasLimit > provider.defaultGasLimit
+        ) {
+            // This calculation rounds down the fee, which means that users can get some gas in the callback for free.
+            // However, the value of the free gas is < 1 wei, which is insignificant.
+            uint128 additionalFee = ((roundedGasLimit -
+                provider.defaultGasLimit) * provider.feeInWei) /
+                provider.defaultGasLimit;
+            return provider.feeInWei + additionalFee;
+        } else {
+            return provider.feeInWei;
+        }
     }
 
     function getPythFee() public view returns (uint128 feeAmount) {
@@ -687,6 +783,24 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
     }
 
+    // Set the default gas limit for a request.
+    function setDefaultGasLimit(uint32 gasLimit) external override {
+        EntropyStructs.ProviderInfo storage provider = _state.providers[
+            msg.sender
+        ];
+        if (provider.sequenceNumber == 0) {
+            revert EntropyErrors.NoSuchProvider();
+        }
+
+        // Check that we can round the gas limit into the 10k gas. This reverts
+        // if the provided value exceeds the max.
+        roundTo10kGas(gasLimit);
+
+        uint32 oldGasLimit = provider.defaultGasLimit;
+        provider.defaultGasLimit = gasLimit;
+        emit ProviderDefaultGasLimitUpdated(msg.sender, oldGasLimit, gasLimit);
+    }
+
     function constructUserCommitment(
         bytes32 userRandomness
     ) public pure override returns (bytes32 userCommitment) {
@@ -701,6 +815,21 @@ abstract contract Entropy is IEntropy, EntropyState {
         combinedRandomness = keccak256(
             abi.encodePacked(userRandomness, providerRandomness, blockHash)
         );
+    }
+
+    // Rounds the provided quantity of gas into units of 10k gas.
+    // If gas is not evenly divisible by 10k, rounds up.
+    function roundTo10kGas(uint32 gas) internal pure returns (uint16) {
+        if (gas > MAX_GAS_LIMIT) {
+            revert EntropyErrors.MaxGasLimitExceeded();
+        }
+
+        uint32 gas10k = gas / TEN_THOUSAND;
+        if (gas10k * TEN_THOUSAND < gas) {
+            gas10k += 1;
+        }
+        // Note: safe cast here should never revert due to the if statement above.
+        return SafeCast.toUint16(gas10k);
     }
 
     // Create a unique key for an in-flight randomness request. Returns both a long key for use in the requestsOverflow
