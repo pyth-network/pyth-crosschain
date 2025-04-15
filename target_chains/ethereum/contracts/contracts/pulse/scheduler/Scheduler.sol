@@ -20,7 +20,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         _state.subscriptionNumber = 1;
     }
 
-    function addSubscription(
+    function createSubscription(
         SubscriptionParams memory subscriptionParams
     ) external payable override returns (uint256 subscriptionId) {
         if (subscriptionParams.priceIds.length > MAX_PRICE_IDS) {

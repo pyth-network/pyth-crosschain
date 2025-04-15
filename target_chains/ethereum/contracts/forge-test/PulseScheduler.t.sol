@@ -96,7 +96,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         vm.deal(pusher, 100 ether);
     }
 
-    function testAddSubscription() public {
+    function testcreateSubscription() public {
         // Create subscription parameters
         bytes32[] memory priceIds = createPriceIds();
         address[] memory readerWhitelist = new address[](1);
@@ -134,7 +134,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         vm.expectEmit();
         emit SubscriptionCreated(1, address(this));
 
-        uint256 subscriptionId = scheduler.addSubscription{
+        uint256 subscriptionId = scheduler.createSubscription{
             value: minimumBalance
         }(params);
         assertEq(subscriptionId, 1, "Subscription ID should be 1");
@@ -260,7 +260,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         );
     }
 
-    function testAddSubscriptionWithInsufficientFundsReverts() public {
+    function testcreateSubscriptionWithInsufficientFundsReverts() public {
         // Create subscription parameters
         bytes32[] memory priceIds = createPriceIds();
         address[] memory readerWhitelist = new address[](1);
@@ -296,7 +296,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
         // Try to add subscription with insufficient funds
         vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
-        scheduler.addSubscription{value: minimumBalance - 1 wei}(params);
+        scheduler.createSubscription{value: minimumBalance - 1 wei}(params);
     }
 
     function testActivateDeactivateSubscription() public {
@@ -331,7 +331,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(priceIds.length)
         );
-        uint256 subscriptionId = scheduler.addSubscription{
+        uint256 subscriptionId = scheduler.createSubscription{
             value: minimumBalance
         }(params);
 
@@ -430,7 +430,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
                 gasConfig: gasConfig
             });
 
-        uint256 subscriptionId = scheduler.addSubscription{
+        uint256 subscriptionId = scheduler.createSubscription{
             value: minimumBalance
         }(params);
 
@@ -877,7 +877,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(priceIds.length)
         );
-        uint256 subscriptionId = scheduler.addSubscription{
+        uint256 subscriptionId = scheduler.createSubscription{
             value: minimumBalance
         }(params);
 
@@ -1004,7 +1004,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             uint8(priceIds.length)
         );
         vm.deal(pusher, minimumBalance);
-        scheduler.addSubscription{value: minimumBalance}(pusherParams);
+        scheduler.createSubscription{value: minimumBalance}(pusherParams);
         vm.stopPrank();
 
         // Get active subscriptions directly - should work without any special permissions
@@ -1113,7 +1113,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(priceIds.length)
         );
-        return scheduler.addSubscription{value: minimumBalance}(params);
+        return scheduler.createSubscription{value: minimumBalance}(params);
     }
 
     // Helper function to add a test subscription with variable number of feeds
@@ -1150,7 +1150,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(priceIds.length)
         );
-        return scheduler.addSubscription{value: minimumBalance}(params);
+        return scheduler.createSubscription{value: minimumBalance}(params);
     }
 
     // Helper function to add a test subscription with specific update criteria
@@ -1179,7 +1179,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(priceIds.length)
         );
-        return scheduler.addSubscription{value: minimumBalance}(params);
+        return scheduler.createSubscription{value: minimumBalance}(params);
     }
 
     // Required to receive ETH when withdrawing funds

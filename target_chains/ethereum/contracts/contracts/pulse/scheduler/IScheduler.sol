@@ -11,12 +11,12 @@ interface IScheduler is SchedulerEvents {
     // CORE FUNCTIONS
 
     /**
-     * @notice Adds a new subscription
+     * @notice Creates a new subscription
      * @dev Requires msg.value to be at least the minimum balance for the subscription (calculated by getMinimumBalance()).
      * @param subscriptionParams The parameters for the subscription
      * @return subscriptionId The ID of the newly created subscription
      */
-    function addSubscription(
+    function createSubscription(
         SchedulerState.SubscriptionParams calldata subscriptionParams
     ) external payable returns (uint256 subscriptionId);
 
