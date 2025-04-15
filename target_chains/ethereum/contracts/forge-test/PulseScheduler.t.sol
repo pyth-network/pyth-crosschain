@@ -260,6 +260,91 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         );
     }
 
+    function testUpdateSubscriptionClearsRemovedPriceFeeds() public {
+        // 1. Setup: Add subscription with 3 price feeds, update prices
+        uint256 numInitialFeeds = 3;
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(numInitialFeeds);
+        uint256 fundAmount = 1 ether;
+        scheduler.addFunds{value: fundAmount}(subscriptionId);
+
+        bytes32[] memory initialPriceIds = createPriceIds(numInitialFeeds);
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+        PythStructs.PriceFeed[] memory initialPriceFeeds = createMockPriceFeeds(
+            publishTime,
+            numInitialFeeds
+        );
+        mockParsePriceFeedUpdates(pyth, initialPriceFeeds);
+        bytes[] memory updateData = createMockUpdateData(initialPriceFeeds);
+
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData, initialPriceIds);
+
+        // Verify initial state: All 3 feeds should be readable
+        assertTrue(
+            reader.verifyPriceFeeds(
+                subscriptionId,
+                initialPriceIds,
+                initialPriceFeeds
+            ),
+            "Initial price feeds verification failed"
+        );
+
+        // 2. Action: Update subscription to remove the last price feed
+        bytes32[] memory newPriceIds = new bytes32[](numInitialFeeds - 1);
+        for (uint i = 0; i < newPriceIds.length; i++) {
+            newPriceIds[i] = initialPriceIds[i];
+        }
+        bytes32 removedPriceId = initialPriceIds[numInitialFeeds - 1]; // The ID we removed
+
+        (SchedulerState.SubscriptionParams memory currentParams, ) = scheduler
+            .getSubscription(subscriptionId);
+        SchedulerState.SubscriptionParams memory newParams = currentParams; // Copy existing params
+        newParams.priceIds = newPriceIds; // Update price IDs
+
+        vm.expectEmit(); // Expect SubscriptionUpdated
+        emit SubscriptionUpdated(subscriptionId);
+        scheduler.updateSubscription(subscriptionId, newParams);
+
+        // 3. Verification:
+        // - Querying the removed price ID should revert
+        bytes32[] memory removedIdArray = new bytes32[](1);
+        removedIdArray[0] = removedPriceId;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InvalidPriceId.selector,
+                removedPriceId,
+                bytes32(0)
+            )
+        );
+        scheduler.getPricesUnsafe(subscriptionId, removedIdArray);
+
+        // - Querying the remaining price IDs should still work
+        PythStructs.PriceFeed[]
+            memory expectedRemainingFeeds = new PythStructs.PriceFeed[](
+                newPriceIds.length
+            );
+        for (uint i = 0; i < newPriceIds.length; i++) {
+            expectedRemainingFeeds[i] = initialPriceFeeds[i]; // Prices remain from the initial update
+        }
+        assertTrue(
+            reader.verifyPriceFeeds(
+                subscriptionId,
+                newPriceIds,
+                expectedRemainingFeeds
+            ),
+            "Remaining price feeds verification failed after update"
+        );
+
+        // - Querying all feeds (empty array) should return only the remaining feeds
+        PythStructs.Price[] memory allPricesAfterUpdate = scheduler
+            .getPricesUnsafe(subscriptionId, new bytes32[](0));
+        assertEq(
+            allPricesAfterUpdate.length,
+            newPriceIds.length,
+            "Querying all should only return remaining feeds"
+        );
+    }
+
     function testcreateSubscriptionWithInsufficientFundsReverts() public {
         // Create subscription parameters
         bytes32[] memory priceIds = createPriceIds();

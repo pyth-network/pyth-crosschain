@@ -150,10 +150,48 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             emit SubscriptionDeactivated(subscriptionId);
         }
 
+        // Clear price updates for removed price IDs before updating params
+        _clearRemovedPriceUpdates(
+            subscriptionId,
+            currentParams.priceIds,
+            newParams.priceIds
+        );
+
         // Update subscription parameters
         _state.subscriptionParams[subscriptionId] = newParams;
 
         emit SubscriptionUpdated(subscriptionId);
+    }
+
+    /**
+     * @notice Internal helper to clear stored PriceFeed data for price IDs removed from a subscription.
+     * @param subscriptionId The ID of the subscription being updated.
+     * @param currentPriceIds The array of price IDs currently associated with the subscription.
+     * @param newPriceIds The new array of price IDs for the subscription.
+     */
+    function _clearRemovedPriceUpdates(
+        uint256 subscriptionId,
+        bytes32[] storage currentPriceIds,
+        bytes32[] memory newPriceIds
+    ) internal {
+        // Iterate through old price IDs
+        for (uint i = 0; i < currentPriceIds.length; i++) {
+            bytes32 oldPriceId = currentPriceIds[i];
+            bool found = false;
+
+            // Check if the old price ID exists in the new list
+            for (uint j = 0; j < newPriceIds.length; j++) {
+                if (newPriceIds[j] == oldPriceId) {
+                    found = true;
+                    break; // Found it, no need to check further
+                }
+            }
+
+            // If not found in the new list, delete its stored update data
+            if (!found) {
+                delete _state.priceUpdates[subscriptionId][oldPriceId];
+            }
+        }
     }
 
     function updatePriceFeeds(

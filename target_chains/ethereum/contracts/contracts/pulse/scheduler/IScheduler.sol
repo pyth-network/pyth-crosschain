@@ -8,8 +8,6 @@ import "./SchedulerEvents.sol";
 import "./SchedulerState.sol";
 
 interface IScheduler is SchedulerEvents {
-    // CORE FUNCTIONS
-
     /**
      * @notice Creates a new subscription
      * @dev Requires msg.value to be at least the minimum balance for the subscription (calculated by getMinimumBalance()).
