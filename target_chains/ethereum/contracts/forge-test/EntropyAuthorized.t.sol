@@ -174,4 +174,138 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         vm.expectRevert(EntropyErrors.Unauthorized.selector);
         random.acceptAdmin();
     }
+
+    function testWithdrawFeeByAdmin() public {
+        // Register provider1 first
+        bytes32[] memory hashChain = generateHashChain(provider1, 0, 100);
+        vm.prank(provider1);
+        random.register(0, hashChain[0], hex"0100", 100, "");
+
+        // First accrue some fees through requests
+        vm.prank(admin);
+        random.setPythFee(10);
+
+        // Make a few requests to accrue fees
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(42))
+        );
+        vm.deal(address(this), 50);
+        for (uint i = 0; i < 5; i++) {
+            random.request{value: 10}(provider1, userCommitment, false);
+        }
+        assertEq(random.getAccruedPythFees(), 50);
+
+        address targetAddress = address(123);
+        uint128 withdrawAmount = 30;
+
+        vm.prank(admin);
+        random.withdrawFee(targetAddress, withdrawAmount);
+
+        assertEq(random.getAccruedPythFees(), 20);
+        assertEq(targetAddress.balance, withdrawAmount);
+    }
+
+    function testWithdrawFeeByOwner() public {
+        // Register provider1 first
+        bytes32[] memory hashChain = generateHashChain(provider1, 0, 100);
+        vm.prank(provider1);
+        random.register(0, hashChain[0], hex"0100", 100, "");
+
+        // First accrue some fees through requests
+        vm.prank(admin);
+        random.setPythFee(10);
+
+        // Make a few requests to accrue fees
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(42))
+        );
+        vm.deal(address(this), 50);
+        for (uint i = 0; i < 5; i++) {
+            random.request{value: 10}(provider1, userCommitment, false);
+        }
+        assertEq(random.getAccruedPythFees(), 50);
+
+        address targetAddress = address(123);
+        uint128 withdrawAmount = 30;
+
+        vm.prank(owner);
+        random.withdrawFee(targetAddress, withdrawAmount);
+
+        assertEq(random.getAccruedPythFees(), 20);
+        assertEq(targetAddress.balance, withdrawAmount);
+    }
+
+    function testWithdrawFeeByUnauthorized() public {
+        // Register provider1 first
+        bytes32[] memory hashChain = generateHashChain(provider1, 0, 100);
+        vm.prank(provider1);
+        random.register(0, hashChain[0], hex"0100", 100, "");
+
+        // First accrue some fees through requests
+        vm.prank(admin);
+        random.setPythFee(10);
+
+        // Make a few requests to accrue fees
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(42))
+        );
+        vm.deal(address(this), 50);
+        for (uint i = 0; i < 5; i++) {
+            random.request{value: 10}(provider1, userCommitment, false);
+        }
+
+        vm.prank(admin2);
+        vm.expectRevert(EntropyErrors.Unauthorized.selector);
+        random.withdrawFee(address(123), 30);
+    }
+
+    function testWithdrawFeeInsufficientBalance() public {
+        // Register provider1 first
+        bytes32[] memory hashChain = generateHashChain(provider1, 0, 100);
+        vm.prank(provider1);
+        random.register(0, hashChain[0], hex"0100", 100, "");
+
+        // First accrue some fees through requests
+        vm.prank(admin);
+        random.setPythFee(10);
+
+        // Make a few requests to accrue fees
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(42))
+        );
+        vm.deal(address(this), 50);
+        for (uint i = 0; i < 5; i++) {
+            random.request{value: 10}(provider1, userCommitment, false);
+        }
+        assertEq(random.getAccruedPythFees(), 50);
+
+        vm.prank(admin);
+        vm.expectRevert(EntropyErrors.InsufficientFee.selector);
+        random.withdrawFee(address(123), 60);
+    }
+
+    function testWithdrawFeeToZeroAddress() public {
+        // Register provider1 first
+        bytes32[] memory hashChain = generateHashChain(provider1, 0, 100);
+        vm.prank(provider1);
+        random.register(0, hashChain[0], hex"0100", 100, "");
+
+        // First accrue some fees through requests
+        vm.prank(admin);
+        random.setPythFee(10);
+
+        // Make a few requests to accrue fees
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(42))
+        );
+        vm.deal(address(this), 50);
+        for (uint i = 0; i < 5; i++) {
+            random.request{value: 10}(provider1, userCommitment, false);
+        }
+        assertEq(random.getAccruedPythFees(), 50);
+
+        vm.prank(admin);
+        vm.expectRevert("targetAddress is zero address");
+        random.withdrawFee(address(0), 30);
+    }
 }
