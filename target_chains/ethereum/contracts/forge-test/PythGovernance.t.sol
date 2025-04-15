@@ -563,7 +563,6 @@ contract PythGovernanceTest is
         assertEq(address(pyth).balance, 1 ether);
 
         address recipient = makeAddr("recipient");
-        uint256 withdrawAmount = 0.5 ether;
 
         // Create governance VAA to withdraw fee
         bytes memory withdrawMessage = abi.encodePacked(
@@ -572,7 +571,8 @@ contract PythGovernanceTest is
             uint8(GovernanceAction.WithdrawFee),
             TARGET_CHAIN_ID,
             recipient,
-            withdrawAmount
+            uint64(5), // value = 5
+            uint64(17) // exponent = 17 (5 * 10^17 = 0.5 ether)
         );
 
         bytes memory vaa = encodeAndSignMessage(
@@ -583,7 +583,7 @@ contract PythGovernanceTest is
         );
 
         vm.expectEmit(true, true, true, true);
-        emit FeeWithdrawn(recipient, withdrawAmount);
+        emit FeeWithdrawn(recipient, 0.5 ether);
 
         PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
 
@@ -598,7 +598,6 @@ contract PythGovernanceTest is
         assertEq(address(pyth).balance, 1 ether);
 
         address recipient = makeAddr("recipient");
-        uint256 withdrawAmount = 2 ether; // More than contract balance
 
         // Create governance VAA to withdraw fee
         bytes memory withdrawMessage = abi.encodePacked(
@@ -607,7 +606,8 @@ contract PythGovernanceTest is
             uint8(GovernanceAction.WithdrawFee),
             TARGET_CHAIN_ID,
             recipient,
-            withdrawAmount
+            uint64(2), // value = 2
+            uint64(18) // exponent = 18 (2 * 10^18 = 2 ether, more than balance)
         );
 
         bytes memory vaa = encodeAndSignMessage(
@@ -627,7 +627,6 @@ contract PythGovernanceTest is
 
     function testWithdrawFeeInvalidGovernance() public {
         address recipient = makeAddr("recipient");
-        uint256 withdrawAmount = 0.5 ether;
 
         // Create governance VAA with wrong emitter
         bytes memory withdrawMessage = abi.encodePacked(
@@ -636,7 +635,8 @@ contract PythGovernanceTest is
             uint8(GovernanceAction.WithdrawFee),
             TARGET_CHAIN_ID,
             recipient,
-            withdrawAmount
+            uint64(5), // value = 5
+            uint64(17) // exponent = 17 (5 * 10^17 = 0.5 ether)
         );
 
         bytes memory vaa = encodeAndSignMessage(

@@ -260,8 +260,13 @@ contract PythGovernanceInstructions {
         wf.targetAddress = address(encodedPayload.toAddress(index));
         index += 20;
 
-        wf.amount = encodedPayload.toUint256(index);
-        index += 32;
+        uint64 val = encodedPayload.toUint64(index);
+        index += 8;
+
+        uint64 expo = encodedPayload.toUint64(index);
+        index += 8;
+
+        wf.amount = uint256(val) * uint256(10) ** uint256(expo);
 
         if (encodedPayload.length != index)
             revert PythErrors.InvalidGovernanceMessage();
