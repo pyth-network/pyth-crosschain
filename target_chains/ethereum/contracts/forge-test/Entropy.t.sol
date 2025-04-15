@@ -1451,6 +1451,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint32 newGasLimit = 100000;
 
         vm.prank(provider1);
+        vm.expectEmit(false, false, false, true, address(random));
+        emit ProviderDefaultGasLimitUpdated(provider1, 0, newGasLimit);
         random.setDefaultGasLimit(newGasLimit);
 
         EntropyStructs.ProviderInfo memory info = random.getProviderInfo(
