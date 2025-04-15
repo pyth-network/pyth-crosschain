@@ -3,6 +3,7 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { PythnetClient, PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useLocalStorageValue } from "@react-hookz/web";
+import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";
 import type { ComponentProps } from "react";
@@ -25,8 +26,6 @@ export enum StateType {
 }
 
 const State = {
-  [StateType.NotLoaded]: () => ({ type: StateType.NotLoaded as const }),
-
   [StateType.NoWallet]: () => ({ type: StateType.NoWallet as const }),
 
   [StateType.WalletDisconnecting]: () => ({
@@ -37,11 +36,18 @@ const State = {
     type: StateType.WalletConnecting as const,
   }),
 
-  [StateType.LoadingStakeAccounts]: () => ({
+  [StateType.NotLoaded]: (wallet: AnchorWallet) => ({
+    type: StateType.NotLoaded as const,
+    wallet,
+  }),
+
+  [StateType.LoadingStakeAccounts]: (wallet: AnchorWallet) => ({
     type: StateType.LoadingStakeAccounts as const,
+    wallet,
   }),
 
   [StateType.LoadedNoStakeAccount]: (
+    wallet: AnchorWallet,
     isMainnet: boolean,
     client: PythStakingClient,
     pythnetClient: PythnetClient,
@@ -58,9 +64,11 @@ const State = {
       const account = await api.createStakeAccountAndDeposit(client, amount);
       return onCreateAccount(account);
     },
+    wallet,
   }),
 
   [StateType.Loaded]: (
+    wallet: AnchorWallet,
     isMainnet: boolean,
     client: PythStakingClient,
     pythnetClient: PythnetClient,
@@ -95,6 +103,7 @@ const State = {
       allAccounts,
       selectAccount,
       dashboardDataCacheKey,
+      wallet,
 
       loadData: () =>
         api.loadData(
@@ -121,9 +130,15 @@ const State = {
   },
 
   [StateType.ErrorLoadingStakeAccounts]: (
+    wallet: AnchorWallet,
     error: LoadStakeAccountsError,
     reset: () => void,
-  ) => ({ type: StateType.ErrorLoadingStakeAccounts as const, error, reset }),
+  ) => ({
+    type: StateType.ErrorLoadingStakeAccounts as const,
+    error,
+    reset,
+    wallet,
+  }),
 };
 
 export type States = {
@@ -180,6 +195,7 @@ const useApiContext = (
               publicKey: wallet.publicKey,
               signAllTransactions: wallet.signAllTransactions,
               signTransaction: wallet.signTransaction,
+              sendTransaction: wallet.sendTransaction,
             },
           })
         : undefined,
@@ -187,6 +203,7 @@ const useApiContext = (
       wallet.publicKey,
       wallet.signAllTransactions,
       wallet.signTransaction,
+      wallet.sendTransaction,
       connection,
     ],
   );
@@ -219,13 +236,16 @@ const useApiContext = (
     } else if (wallet.connected && pythStakingClient) {
       switch (stakeAccounts.type) {
         case DataStateType.NotLoaded: {
-          return State[StateType.NotLoaded]();
+          return State[StateType.NotLoaded](pythStakingClient.wallet);
         }
         case DataStateType.Loading: {
-          return State[StateType.LoadingStakeAccounts]();
+          return State[StateType.LoadingStakeAccounts](
+            pythStakingClient.wallet,
+          );
         }
         case DataStateType.Error: {
           return State[StateType.ErrorLoadingStakeAccounts](
+            pythStakingClient.wallet,
             new LoadStakeAccountsError(stakeAccounts.error),
             stakeAccounts.reset,
           );
@@ -248,6 +268,7 @@ const useApiContext = (
                 localStorageValue.set(firstAccount.toBase58());
               }
               return State[StateType.Loaded](
+                pythStakingClient.wallet,
                 isMainnet,
                 pythStakingClient,
                 pythnetClient,
@@ -262,6 +283,7 @@ const useApiContext = (
               );
             } else {
               return State[StateType.LoadedNoStakeAccount](
+                pythStakingClient.wallet,
                 isMainnet,
                 pythStakingClient,
                 pythnetClient,

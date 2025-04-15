@@ -27,7 +27,7 @@ import { EntityList } from "../EntityList";
 import {
   ExplainPermissioned,
   ExplainActive,
-  ExplainInactive,
+  ExplainRanking,
 } from "../Explanations";
 import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
@@ -49,7 +49,6 @@ type Publisher = {
   ranking: number;
   permissionedFeeds: number;
   activeFeeds: number;
-  inactiveFeeds: number;
   averageScore: number;
 } & (
   | { name: string; icon: ReactNode }
@@ -106,7 +105,6 @@ const ResolvedPublishersCard = ({
         case "ranking":
         case "permissionedFeeds":
         case "activeFeeds":
-        case "inactiveFeeds":
         case "averageScore": {
           return (
             (direction === "descending" ? -1 : 1) * (a[column] - b[column])
@@ -139,7 +137,6 @@ const ResolvedPublishersCard = ({
           averageScore,
           permissionedFeeds,
           activeFeeds,
-          inactiveFeeds,
           ...publisher
         }) => ({
           id,
@@ -163,14 +160,6 @@ const ResolvedPublishersCard = ({
                 invert
               >
                 {activeFeeds}
-              </Link>
-            ),
-            inactiveFeeds: (
-              <Link
-                href={`/publishers/${cluster}/${id}/price-feeds?status=Inactive`}
-                invert
-              >
-                {inactiveFeeds}
               </Link>
             ),
             averageScore: (
@@ -236,7 +225,6 @@ type PublishersCardContentsProps = Pick<Props, "className" | "explainAverage"> &
           | "name"
           | "permissionedFeeds"
           | "activeFeeds"
-          | "inactiveFeeds"
           | "averageScore"
         > & { textValue: string })[];
       }
@@ -314,7 +302,6 @@ const PublishersCardContents = ({
         { id: "averageScore", name: "Average Score" },
         { id: "permissionedFeeds", name: "Permissioned Feeds" },
         { id: "activeFeeds", name: "Active Feeds" },
-        { id: "inactiveFeeds", name: "Inactive Feeds" },
       ]}
       isLoading={props.isLoading}
       rows={
@@ -340,7 +327,12 @@ const PublishersCardContents = ({
       columns={[
         {
           id: "ranking",
-          name: "RANKING",
+          name: (
+            <>
+              RANKING
+              <ExplainRanking />
+            </>
+          ),
           width: 25,
           loadingSkeleton: <Ranking isLoading />,
           allowsSorting: true,
@@ -357,7 +349,7 @@ const PublishersCardContents = ({
           id: "permissionedFeeds",
           name: (
             <>
-              FEEDS
+              PERMISSIONED
               <ExplainPermissioned />
             </>
           ),
@@ -374,19 +366,7 @@ const PublishersCardContents = ({
             </>
           ),
           alignment: "center",
-          width: 30,
-          allowsSorting: true,
-        },
-        {
-          id: "inactiveFeeds",
-          name: (
-            <>
-              INACTIVE
-              <ExplainInactive />
-            </>
-          ),
-          alignment: "center",
-          width: 30,
+          width: 24,
           allowsSorting: true,
         },
         {

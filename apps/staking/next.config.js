@@ -22,8 +22,6 @@ export default {
     return config;
   },
 
-  transpilePackages: ["@pythnetwork/*"],
-
   headers: () => [
     {
       source: "/:path*",
@@ -58,14 +56,6 @@ export default {
       source: "/api/publishers-ranking",
       destination:
         "https://web-api.pyth.network/publishers_ranking?cluster=pythnet",
-    },
-  ],
-
-  redirects: () => [
-    {
-      source: "/test",
-      destination: "https://staking-legacy.pyth.network/test",
-      permanent: false,
     },
   ],
 };

@@ -1,21 +1,27 @@
 {
   "name": "@pythnetwork/staking-sdk",
-  "version": "0.0.3",
+  "version": "0.2.1",
   "description": "Pyth staking SDK",
-  "main": "src/index.ts",
-  "types": "src/index.d.ts",
   "type": "module",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist/**/*"
   ],
+  "engines": {
+    "node": "22"
+  },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --noEmit false --incremental false --declaration true --outDir ./dist",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
-    "prepublishOnly": "node scripts/update-package-json.mjs",
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc"
@@ -34,11 +40,13 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1",
+    "@coral-xyz/anchor": "catalog:",
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/solana-utils": "workspace:*",
     "@solana/spl-governance": "^0.3.28",
     "@solana/spl-token": "^0.3.7",
-    "@solana/web3.js": "catalog:"
+    "@solana/web3.js": "catalog:",
+    "@streamparser/json": "^0.0.22",
+    "zod": "catalog:"
   }
 }

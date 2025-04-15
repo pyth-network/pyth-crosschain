@@ -82,3 +82,11 @@
   prefix: xion
   feeDenom: uxion
   type: CosmWasmChain
+- endpoint: https://rpc.xion-mainnet-1.burnt.com:443
+  id: xion
+  wormholeChainName: xion
+  mainnet: true
+  gasPrice: "0.025"
+  prefix: xion
+  feeDenom: uxion
+  type: CosmWasmChain

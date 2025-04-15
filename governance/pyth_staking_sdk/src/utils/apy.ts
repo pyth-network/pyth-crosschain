@@ -1,4 +1,4 @@
-import { FRACTION_PRECISION } from "../constants";
+import { FRACTION_PRECISION } from "../constants.js";
 
 export const convertEpochYieldToApy = (epochYield: bigint) => {
   return (Number(epochYield) * 52 * 100) / FRACTION_PRECISION;

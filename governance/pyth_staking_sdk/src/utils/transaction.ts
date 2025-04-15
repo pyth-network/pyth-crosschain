@@ -1,14 +1,12 @@
-import {
-  sendTransactions,
-  TransactionBuilder,
-} from "@pythnetwork/solana-utils";
-import type { AnchorWallet } from "@solana/wallet-adapter-react";
+import { TransactionBuilder } from "@pythnetwork/solana-utils";
 import { Connection, TransactionInstruction } from "@solana/web3.js";
+
+import type { PythStakingWallet } from "./wallet.js";
 
 export const sendTransaction = async (
   instructions: TransactionInstruction[],
   connection: Connection,
-  wallet: AnchorWallet,
+  wallet: PythStakingWallet,
 ) => {
   const transactions = await TransactionBuilder.batchIntoVersionedTransactions(
     wallet.publicKey,
@@ -20,5 +18,7 @@ export const sendTransaction = async (
     {},
   );
 
-  return sendTransactions(transactions, connection, wallet);
+  for (const transaction of transactions) {
+    await wallet.sendTransaction(transaction.tx, connection);
+  }
 };

@@ -3,9 +3,9 @@ import { PublicKey } from "@solana/web3.js";
 import {
   computeDelegatorRewardPercentage,
   convertEpochYieldToApy,
-} from "./apy";
-import { FRACTION_PRECISION_N } from "../constants";
-import type { PoolDataAccount, PublisherData } from "../types";
+} from "./apy.js";
+import { FRACTION_PRECISION_N } from "../constants.js";
+import type { PoolDataAccount, PublisherData } from "../types.js";
 
 export const extractPublisherData = (
   poolData: PoolDataAccount,
@@ -17,7 +17,7 @@ export const extractPublisherData = (
       stakeAccount:
         poolData.publisherStakeAccounts[index] === undefined ||
         poolData.publisherStakeAccounts[index].equals(PublicKey.default)
-          ? null
+          ? null // eslint-disable-line unicorn/no-null
           : poolData.publisherStakeAccounts[index],
       totalDelegation:
         (poolData.delState[index]?.totalDelegation ?? 0n) +

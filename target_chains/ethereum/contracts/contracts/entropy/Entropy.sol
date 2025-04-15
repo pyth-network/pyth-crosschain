@@ -8,7 +8,9 @@ import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@nomad-xyz/excessively-safe-call/src/ExcessivelySafeCall.sol";
 import "./EntropyState.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyStatusConstants.sol";
 
 // Entropy implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
@@ -76,6 +78,8 @@ import "./EntropyState.sol";
 // the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
 // cases where the user chooses not to reveal.
 abstract contract Entropy is IEntropy, EntropyState {
+    using ExcessivelySafeCall for address;
+
     function _initialize(
         address admin,
         uint128 pythFeeInWei,
@@ -247,7 +251,9 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         req.blockNumber = SafeCast.toUint64(block.number);
         req.useBlockhash = useBlockhash;
-        req.isRequestWithCallback = isRequestWithCallback;
+        req.callbackStatus = isRequestWithCallback
+            ? EntropyStatusConstants.CALLBACK_NOT_STARTED
+            : EntropyStatusConstants.CALLBACK_NOT_NECESSARY;
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -403,7 +409,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     }
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
-    // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
+    // against the corresponding commitments in the in-flight request. If both values are validated, this method returns
     // the corresponding random number.
     //
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
@@ -423,7 +429,9 @@ abstract contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
 
-        if (req.isRequestWithCallback) {
+        if (
+            req.callbackStatus != EntropyStatusConstants.CALLBACK_NOT_NECESSARY
+        ) {
             revert EntropyErrors.InvalidRevealCall();
         }
 
@@ -467,9 +475,14 @@ abstract contract Entropy is IEntropy, EntropyState {
             sequenceNumber
         );
 
-        if (!req.isRequestWithCallback) {
+        if (
+            !(req.callbackStatus ==
+                EntropyStatusConstants.CALLBACK_NOT_STARTED ||
+                req.callbackStatus == EntropyStatusConstants.CALLBACK_FAILED)
+        ) {
             revert EntropyErrors.InvalidRevealCall();
         }
+
         bytes32 blockHash;
         bytes32 randomNumber;
         (randomNumber, blockHash) = revealHelper(
@@ -480,26 +493,75 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         address callAddress = req.requester;
 
-        emit RevealedWithCallback(
-            req,
-            userRandomNumber,
-            providerRevelation,
-            randomNumber
-        );
+        // Requests that haven't been invoked yet will be invoked safely (catching reverts), and
+        // any reverts will be reported as an event. Any failing requests move to a failure state
+        // at which point they can be recovered. The recovery flow invokes the callback directly
+        // (no catching errors) which allows callers to easily see the revert reason.
+        if (req.callbackStatus == EntropyStatusConstants.CALLBACK_NOT_STARTED) {
+            req.callbackStatus = EntropyStatusConstants.CALLBACK_IN_PROGRESS;
+            bool success;
+            bytes memory ret;
+            (success, ret) = callAddress.excessivelySafeCall(
+                gasleft(), // TODO: providers need to be able to configure this in the future.
+                256, // copy at most 256 bytes of the return value into ret.
+                abi.encodeWithSelector(
+                    IEntropyConsumer._entropyCallback.selector,
+                    sequenceNumber,
+                    provider,
+                    randomNumber
+                )
+            );
+            // Reset status to not started here in case the transaction reverts.
+            req.callbackStatus = EntropyStatusConstants.CALLBACK_NOT_STARTED;
 
-        clearRequest(provider, sequenceNumber);
-
-        // Check if the callAddress is a contract account.
-        uint len;
-        assembly {
-            len := extcodesize(callAddress)
-        }
-        if (len != 0) {
-            IEntropyConsumer(callAddress)._entropyCallback(
-                sequenceNumber,
-                provider,
+            if (success) {
+                emit RevealedWithCallback(
+                    req,
+                    userRandomNumber,
+                    providerRevelation,
+                    randomNumber
+                );
+                clearRequest(provider, sequenceNumber);
+            } else if (ret.length > 0) {
+                // Callback reverted for some reason that is *not* out-of-gas.
+                emit CallbackFailed(
+                    provider,
+                    req.requester,
+                    sequenceNumber,
+                    userRandomNumber,
+                    providerRevelation,
+                    randomNumber,
+                    ret
+                );
+                req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
+            } else {
+                // The callback ran out of gas
+                // TODO: this case will go away once we add provider gas limits, so we're not putting in a custom error type.
+                require(false, "provider needs to send more gas");
+            }
+        } else {
+            // This case uses the checks-effects-interactions pattern to avoid reentry attacks
+            emit RevealedWithCallback(
+                req,
+                userRandomNumber,
+                providerRevelation,
                 randomNumber
             );
+
+            clearRequest(provider, sequenceNumber);
+
+            // Check if the callAddress is a contract account.
+            uint len;
+            assembly {
+                len := extcodesize(callAddress)
+            }
+            if (len != 0) {
+                IEntropyConsumer(callAddress)._entropyCallback(
+                    sequenceNumber,
+                    provider,
+                    randomNumber
+                );
+            }
         }
     }
 

@@ -1,31 +1,21 @@
 {
   "name": "@pythnetwork/pyth-crosschain",
   "private": true,
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.7.0",
   "engines": {
-    "node": "^22.11.0",
-    "pnpm": "^9.15.3"
+    "node": "^22.14.0",
+    "pnpm": "^10.7.0"
   },
   "scripts": {
     "fix:format": "prettier --write .",
     "install:modules": "[ $CI ] && true || pnpm install",
-    "publish": "lerna publish from-package --no-private --no-git-tag-version --yes",
     "test:format": "prettier --check .",
     "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
   },
   "devDependencies": {
     "@cprussin/prettier-config": "catalog:",
-    "lerna": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
     "turbo": "^2.4.4"
-  },
-  "pnpm": {
-    "overrides": {
-      "@solana/web3.js@1.77.4>rpc-websockets": "7.11.0"
-    },
-    "patchedDependencies": {
-      "eccrypto@1.1.6": "patches/eccrypto@1.1.6.patch"
-    }
   }
 }

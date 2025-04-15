@@ -1,19 +1,19 @@
 import { BorshCoder } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 
-import { convertBNToBigInt } from "./bn";
-import type { Staking } from "../../types/staking";
+import { convertBNToBigInt } from "./bn.js";
 import {
   POSITION_BUFFER_SIZE,
   POSITIONS_ACCOUNT_HEADER_SIZE,
-} from "../constants";
+} from "../constants.js";
+import type { Staking } from "../types/staking.js";
 import type {
   Position,
   PositionAnchor,
   StakeAccountPositions,
   TargetWithParameters,
-} from "../types";
-import { PositionState } from "../types";
+} from "../types.js";
+import { PositionState } from "../types.js";
 
 export const getPositionState = (
   position: Position,
@@ -110,4 +110,34 @@ export const getVotingTokenAmount = (
     0n,
   );
   return totalVotingTokenAmount;
+};
+
+export const summarizeAccountPositions = (
+  positions: StakeAccountPositions,
+  epoch: bigint,
+) => {
+  const summary = {
+    voting: {
+      [PositionState.LOCKED]: 0n,
+      [PositionState.LOCKING]: 0n,
+      [PositionState.PREUNLOCKING]: 0n,
+      [PositionState.UNLOCKED]: 0n,
+      [PositionState.UNLOCKING]: 0n,
+    },
+    integrityPool: {
+      [PositionState.LOCKED]: 0n,
+      [PositionState.LOCKING]: 0n,
+      [PositionState.PREUNLOCKING]: 0n,
+      [PositionState.UNLOCKED]: 0n,
+      [PositionState.UNLOCKING]: 0n,
+    },
+  };
+  for (const position of positions.data.positions) {
+    const category = position.targetWithParameters.voting
+      ? "voting"
+      : "integrityPool";
+    const state = getPositionState(position, epoch);
+    summary[category][state] += position.amount;
+  }
+  return summary;
 };

@@ -148,7 +148,6 @@ const toTableRow = ({
   key,
   rank,
   permissionedFeeds,
-  inactiveFeeds,
   activeFeeds,
   averageScore,
 }: Awaited<ReturnType<typeof getPublishers>>[number]) => {
@@ -158,7 +157,6 @@ const toTableRow = ({
     ranking: rank,
     permissionedFeeds,
     activeFeeds,
-    inactiveFeeds,
     averageScore,
     ...(knownPublisher && {
       name: knownPublisher.name,

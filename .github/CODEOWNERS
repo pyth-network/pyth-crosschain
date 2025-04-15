@@ -8,7 +8,6 @@ packages/fonts @pyth-network/web-team
 packages/known-publishers @pyth-network/web-team
 packages/next-root @pyth-network/web-team
 Dockerfile.node @pyth-network/web-team
-lerna.json @pyth-network/web-team
 package.json @pyth-network/web-team
 pnpm-workspace.yaml @pyth-network/web-team
 turbo.json @pyth-network/web-team

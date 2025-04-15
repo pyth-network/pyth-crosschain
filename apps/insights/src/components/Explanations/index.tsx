@@ -4,6 +4,22 @@ import { useMemo } from "react";
 import { Explain } from "../Explain";
 import { FormattedDate } from "../FormattedDate";
 
+export const ExplainRanking = ({
+  scoreTime,
+}: {
+  scoreTime?: Date | undefined;
+}) => {
+  return (
+    <Explain size="xs" title="Permissioned Feeds">
+      <p>
+        The publisher{"'"}s <b>ranking</b> is determined by the number of{" "}
+        <b>Price Feeds</b> that publisher has permissions to publish to.
+      </p>
+      {scoreTime && <EvaluationTime scoreTime={scoreTime} />}
+    </Explain>
+  );
+};
+
 export const ExplainPermissioned = ({
   scoreTime,
 }: {
@@ -13,7 +29,7 @@ export const ExplainPermissioned = ({
     <Explain size="xs" title="Permissioned Feeds">
       <p>
         This is the number of <b>Price Feeds</b> that a <b>Publisher</b> has
-        permissions to publish to. The publisher is not necessarily push data
+        permissions to publish to. The publisher is not necessarily pushing data
         for all the feeds they have access to, and some feeds may not be live
         yet.
       </p>

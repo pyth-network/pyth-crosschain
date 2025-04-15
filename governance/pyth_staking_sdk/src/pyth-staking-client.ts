@@ -1,4 +1,4 @@
-import * as crypto from "crypto";
+import crypto from "crypto"; // eslint-disable-line unicorn/prefer-node-protocol
 
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
@@ -14,7 +14,6 @@ import {
   getAssociatedTokenAddressSync,
   getMint,
 } from "@solana/spl-token";
-import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   Connection,
   PublicKey,
@@ -22,6 +21,8 @@ import {
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
+import { JSONParser } from "@streamparser/json";
+import { z } from "zod";
 
 import {
   GOVERNANCE_ADDRESS,
@@ -29,7 +30,10 @@ import {
   FRACTION_PRECISION_N,
   ONE_YEAR_IN_SECONDS,
   POSITIONS_ACCOUNT_SIZE,
-} from "./constants";
+} from "./constants.js";
+import IntegrityPoolIdl from "./idl/integrity-pool.json" with { type: "json" };
+import PublisherCapsIdl from "./idl/publisher-caps.json" with { type: "json" };
+import StakingIdl from "./idl/staking.json" with { type: "json" };
 import {
   getConfigAddress,
   getDelegationRecordAddress,
@@ -37,7 +41,10 @@ import {
   getStakeAccountCustodyAddress,
   getStakeAccountMetadataAddress,
   getTargetAccountAddress,
-} from "./pdas";
+} from "./pdas.js";
+import type { IntegrityPool } from "./types/integrity-pool.js";
+import type { PublisherCaps } from "./types/publisher-caps.js";
+import type { Staking } from "./types/staking.js";
 import type {
   GlobalConfig,
   PoolConfig,
@@ -46,35 +53,30 @@ import type {
   TargetAccount,
   VoterWeightAction,
   VestingSchedule,
-} from "./types";
-import { PositionState } from "./types";
-import { bigintMax, bigintMin } from "./utils/bigint";
-import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn";
-import { epochToDate, getCurrentEpoch } from "./utils/clock";
-import { extractPublisherData } from "./utils/pool";
+} from "./types.js";
+import { PositionState } from "./types.js";
+import { bigintMax, bigintMin } from "./utils/bigint.js";
+import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn.js";
+import { epochToDate, getCurrentEpoch } from "./utils/clock.js";
+import { extractPublisherData } from "./utils/pool.js";
 import {
   deserializeStakeAccountPositions,
   getPositionState,
   getVotingTokenAmount,
-} from "./utils/position";
-import { sendTransaction } from "./utils/transaction";
-import { getUnlockSchedule } from "./utils/vesting";
-import { DummyWallet } from "./utils/wallet";
-import * as IntegrityPoolIdl from "../idl/integrity-pool.json";
-import * as PublisherCapsIdl from "../idl/publisher-caps.json";
-import * as StakingIdl from "../idl/staking.json";
-import type { IntegrityPool } from "../types/integrity-pool";
-import type { PublisherCaps } from "../types/publisher-caps";
-import type { Staking } from "../types/staking";
+} from "./utils/position.js";
+import { sendTransaction } from "./utils/transaction.js";
+import { getUnlockSchedule } from "./utils/vesting.js";
+import type { PythStakingWallet } from "./utils/wallet.js";
+import { DummyWallet } from "./utils/wallet.js";
 
 export type PythStakingClientConfig = {
   connection: Connection;
-  wallet?: AnchorWallet;
+  wallet?: PythStakingWallet;
 };
 
 export class PythStakingClient {
   connection: Connection;
-  wallet: AnchorWallet;
+  wallet: PythStakingWallet;
   provider: AnchorProvider;
   stakingProgram: Program<Staking>;
   integrityPoolProgram: Program<IntegrityPool>;
@@ -750,7 +752,7 @@ export class PythStakingClient {
             publisherStakeAccountPositions: stakeAccount,
             publisherStakeAccountCustody: stakeAccount
               ? getStakeAccountCustodyAddress(stakeAccount)
-              : null,
+              : null, // eslint-disable-line unicorn/no-null
             stakeAccountPositions,
             stakeAccountCustody: getStakeAccountCustodyAddress(
               stakeAccountPositions,
@@ -837,6 +839,7 @@ export class PythStakingClient {
       .setPublisherStakeAccount()
       .accounts({
         currentStakeAccountPositionsOption: stakeAccountPositions,
+        // eslint-disable-next-line unicorn/no-null
         newStakeAccountPositionsOption: newStakeAccountPositions ?? null,
         publisher,
       })
@@ -1030,5 +1033,152 @@ export class PythStakingClient {
     );
 
     return getAccount(this.connection, rewardCustodyAccountAddress);
+  }
+
+  /**
+   * Return all stake account positions for all owners.  Note that this method
+   * is unique in a few ways:
+   *
+   * 1. It's very, very expensive.  Don't call it if you don't _really_ need it,
+   *    and expect it to take a few minutes to respond.
+   * 2. Because the full positionData is so large, json parsing it with a
+   *    typical json parser would involve buffering to a string that's too large
+   *    for node.  So instead we use `stream-json` to parse it as a stream.
+   */
+  public async getAllStakeAccountPositionsAllOwners(): Promise<
+    StakeAccountPositions[]
+  > {
+    const res = await fetch(this.connection.rpcEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getProgramAccounts",
+        params: [
+          this.stakingProgram.programId.toBase58(),
+          {
+            encoding: "base64",
+            filters: [
+              {
+                memcmp: this.stakingProgram.coder.accounts.memcmp(
+                  "positionData",
+                ) as {
+                  offset: number;
+                  bytes: string;
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (res.ok) {
+      const { body } = res;
+      if (body) {
+        const accounts = await new Promise<unknown>((resolve, reject) => {
+          const jsonparser = new JSONParser({ paths: ["$.result"] });
+          jsonparser.onValue = ({ value }) => {
+            resolve(value);
+          };
+          const parse = async () => {
+            const reader = body.getReader();
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            while (true) {
+              const res = await reader.read();
+              if (res.done) {
+                break;
+              } else if (
+                typeof res.value === "string" ||
+                res.value instanceof Uint8Array
+              ) {
+                jsonparser.write(res.value);
+              }
+            }
+          };
+
+          parse().then(
+            () => {
+              reject(new EndOfStreamError());
+            },
+            (error: unknown) => {
+              reject(intoError(error));
+            },
+          );
+        });
+
+        return accountSchema
+          .parse(accounts)
+          .map(({ pubkey, account }) =>
+            deserializeStakeAccountPositions(
+              pubkey,
+              account.data,
+              this.stakingProgram.idl,
+            ),
+          );
+      } else {
+        throw new NoBodyError();
+      }
+    } else {
+      throw new NotOKError(res);
+    }
+  }
+}
+
+const accountSchema = z.array(
+  z.object({
+    account: z.object({
+      data: z
+        .array(z.string())
+        .min(1)
+        .transform((data) =>
+          // Safe because `min(1)` guarantees that `data` is nonempty
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          Buffer.from(data[0]!, "base64"),
+        ),
+    }),
+    pubkey: z.string().transform((value) => new PublicKey(value)),
+  }),
+);
+
+const intoError = (error: unknown): Error => {
+  if (error instanceof Error) {
+    return error;
+  } else if (typeof error === "string") {
+    return new Error(error);
+  } else {
+    return new UnknownError();
+  }
+};
+
+class NotOKError extends Error {
+  constructor(result: Response) {
+    super(`Received a ${result.status.toString()} response for ${result.url}`);
+    this.cause = result;
+    this.name = "NotOKError";
+  }
+}
+
+class NoBodyError extends Error {
+  constructor() {
+    super("Response did not contain a body!");
+    this.name = "NoBodyError";
+  }
+}
+
+class EndOfStreamError extends Error {
+  constructor() {
+    super("Reached end of stream without finding accounts");
+    this.name = "EndOfStreamError";
+  }
+}
+
+class UnknownError extends Error {
+  constructor() {
+    super("Unknown error");
+    this.name = "UnknownError";
   }
 }

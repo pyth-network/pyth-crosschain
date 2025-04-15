@@ -3,6 +3,55 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "requestor",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "userRandomNumber",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "providerRevelation",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "randomNumber",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "errorCode",
+        "type": "bytes"
+      }
+    ],
+    "name": "CallbackFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "address",
         "name": "provider",
@@ -215,9 +264,9 @@
             "type": "bool"
           },
           {
-            "internalType": "bool",
-            "name": "isRequestWithCallback",
-            "type": "bool"
+            "internalType": "uint8",
+            "name": "callbackStatus",
+            "type": "uint8"
           }
         ],
         "indexed": false,
@@ -294,9 +343,9 @@
             "type": "bool"
           },
           {
-            "internalType": "bool",
-            "name": "isRequestWithCallback",
-            "type": "bool"
+            "internalType": "uint8",
+            "name": "callbackStatus",
+            "type": "uint8"
           }
         ],
         "indexed": false,
@@ -349,9 +398,9 @@
             "type": "bool"
           },
           {
-            "internalType": "bool",
-            "name": "isRequestWithCallback",
-            "type": "bool"
+            "internalType": "uint8",
+            "name": "callbackStatus",
+            "type": "uint8"
           }
         ],
         "indexed": false,
@@ -428,9 +477,9 @@
             "type": "bool"
           },
           {
-            "internalType": "bool",
-            "name": "isRequestWithCallback",
-            "type": "bool"
+            "internalType": "uint8",
+            "name": "callbackStatus",
+            "type": "uint8"
           }
         ],
         "indexed": false,

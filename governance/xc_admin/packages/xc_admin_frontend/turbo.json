@@ -8,9 +8,6 @@
         "NEXT_PUBLIC_MAINNET_RPC",
         "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID"
       ]
-    },
-    "start:dev": {
-      "dependsOn": ["//#install:modules", "pull:env", "^build"]
     }
   }
 }

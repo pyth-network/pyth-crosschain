@@ -238,7 +238,6 @@ abstract contract Pyth is
                             encoded,
                             offset
                         );
-                        updateLatestPriceIfNecessary(priceId, priceInfo);
                         {
                             // check whether caller requested for this data
                             uint k = findIndexOfPriceId(priceIds, priceId);
@@ -556,7 +555,7 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.4-alpha.3";
+        return "1.4.4-alpha.5";
     }
 
     function calculateTwap(

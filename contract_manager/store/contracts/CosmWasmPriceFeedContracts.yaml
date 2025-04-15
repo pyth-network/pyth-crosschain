@@ -46,3 +46,6 @@
 - chain: xion_testnet_2
   address: xion1wptw89weav8tnpgxg4fyhcahgk8yy99lka3w308536ktadkvjwxqe463hl
   type: CosmWasmPriceFeedContract
+- chain: xion
+  address: xion18nsqwhfwnqzs4vkxdr02x40awm0gz9pl0wn4ecsl8qqra2vxqppq57qx5a
+  type: CosmWasmPriceFeedContract

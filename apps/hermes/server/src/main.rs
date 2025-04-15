@@ -44,7 +44,7 @@ async fn init() -> Result<()> {
             // Initialize a cache store with a 1000 element circular buffer.
             let state = state::new(
                 update_tx.clone(),
-                1000,
+                opts.cache.size_slots,
                 opts.benchmarks.endpoint.clone(),
                 opts.aggregate.readiness_staleness_threshold.into(),
                 opts.aggregate.readiness_max_allowed_slot_lag,
