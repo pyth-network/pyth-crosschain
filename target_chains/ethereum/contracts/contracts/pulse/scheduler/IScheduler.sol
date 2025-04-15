@@ -44,7 +44,7 @@ interface IScheduler is SchedulerEvents {
     function updateSubscription(
         uint256 subscriptionId,
         SchedulerState.SubscriptionParams calldata newSubscriptionParams
-    ) external payable;
+    ) external;
 
     // Deactivation is now handled through updateSubscription by setting isActive to false
 
@@ -113,7 +113,7 @@ interface IScheduler is SchedulerEvents {
      */
     function getMinimumBalance(
         uint8 numPriceFeeds
-    ) external view returns (uint256 minimumBalance);
+    ) external view returns (uint256 minimumBalanceInWei);
 
     /**
      * @notice Gets all active subscriptions with their parameters

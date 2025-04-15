@@ -77,7 +77,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         status.balanceInWei = msg.value;
         status.totalUpdates = 0;
         status.totalSpent = 0;
-        status.isActive = true;
 
         // Map subscription ID to manager
         _state.subscriptionManager[subscriptionId] = msg.sender;
@@ -86,66 +85,47 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         return subscriptionId;
     }
 
-    function getSubscription(
-        uint256 subscriptionId
-    )
-        external
-        view
-        override
-        returns (
-            SubscriptionParams memory params,
-            SubscriptionStatus memory status
-        )
-    {
-        return (
-            _state.subscriptionParams[subscriptionId],
-            _state.subscriptionStatuses[subscriptionId]
-        );
-    }
-
     function updateSubscription(
         uint256 subscriptionId,
-        SubscriptionParams memory newSubscriptionParams
-    ) external payable override onlyManager(subscriptionId) {
-        SubscriptionStatus storage status = _state.subscriptionStatuses[
-            subscriptionId
-        ];
-        bool wasActive = status.isActive;
-        bool willBeActive = newSubscriptionParams.isActive;
+        SubscriptionParams memory newParams
+    ) external override onlyManager(subscriptionId) {
+        SchedulerState.SubscriptionStatus storage currentStatus = _state
+            .subscriptionStatuses[subscriptionId];
+        SchedulerState.SubscriptionParams storage currentParams = _state
+            .subscriptionParams[subscriptionId];
+        bool wasActive = currentParams.isActive;
+        bool willBeActive = newParams.isActive;
 
         // If subscription is inactive and will remain inactive, no need to validate parameters
         if (!wasActive && !willBeActive) {
             // Update subscription parameters
-            _state.subscriptionParams[subscriptionId] = newSubscriptionParams;
+            _state.subscriptionParams[subscriptionId] = newParams;
             emit SubscriptionUpdated(subscriptionId);
             return;
         }
 
         // Validate parameters for active or to-be-activated subscriptions
-        if (newSubscriptionParams.priceIds.length > MAX_PRICE_IDS) {
-            revert TooManyPriceIds(
-                newSubscriptionParams.priceIds.length,
-                MAX_PRICE_IDS
-            );
+        if (newParams.priceIds.length > MAX_PRICE_IDS) {
+            revert TooManyPriceIds(newParams.priceIds.length, MAX_PRICE_IDS);
         }
 
         // Validate update criteria
         if (
-            !newSubscriptionParams.updateCriteria.updateOnHeartbeat &&
-            !newSubscriptionParams.updateCriteria.updateOnDeviation
+            !newParams.updateCriteria.updateOnHeartbeat &&
+            !newParams.updateCriteria.updateOnDeviation
         ) {
             revert InvalidUpdateCriteria();
         }
 
         // If gas config is unset, set it to the default (100x multipliers)
         if (
-            newSubscriptionParams.gasConfig.maxGasMultiplierCapPct == 0 ||
-            newSubscriptionParams.gasConfig.maxFeeMultiplierCapPct == 0
+            newParams.gasConfig.maxGasMultiplierCapPct == 0 ||
+            newParams.gasConfig.maxFeeMultiplierCapPct == 0
         ) {
-            newSubscriptionParams
+            newParams
                 .gasConfig
                 .maxFeeMultiplierCapPct = DEFAULT_MAX_FEE_MULTIPLIER_CAP_PCT;
-            newSubscriptionParams
+            newParams
                 .gasConfig
                 .maxGasMultiplierCapPct = DEFAULT_MAX_GAS_MULTIPLIER_CAP_PCT;
         }
@@ -154,32 +134,27 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         if (!wasActive && willBeActive) {
             // Reactivating a subscription - ensure minimum balance
             uint256 minimumBalance = this.getMinimumBalance(
-                uint8(newSubscriptionParams.priceIds.length)
+                uint8(newParams.priceIds.length)
             );
 
-            // Add any funds sent with this transaction
-            status.balanceInWei += msg.value;
-
             // Check if balance meets minimum requirement
-            if (status.balanceInWei < minimumBalance) {
+            if (currentStatus.balanceInWei < minimumBalance) {
                 revert InsufficientBalance();
             }
 
-            status.isActive = true;
+            currentParams.isActive = true;
             emit SubscriptionActivated(subscriptionId);
         } else if (wasActive && !willBeActive) {
             // Deactivating a subscription
-            status.isActive = false;
+            currentParams.isActive = false;
             emit SubscriptionDeactivated(subscriptionId);
         }
 
         // Update subscription parameters
-        _state.subscriptionParams[subscriptionId] = newSubscriptionParams;
+        _state.subscriptionParams[subscriptionId] = newParams;
 
         emit SubscriptionUpdated(subscriptionId);
     }
-
-    // Removed standalone deactivateSubscription function as it's now handled in updateSubscription
 
     function updatePriceFeeds(
         uint256 subscriptionId,
@@ -193,7 +168,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             subscriptionId
         ];
 
-        if (!status.isActive) {
+        if (!params.isActive) {
             revert InactiveSubscription();
         }
 
@@ -369,7 +344,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         uint256 subscriptionId,
         bytes32[] calldata priceIds
     ) internal view returns (PythStructs.PriceFeed[] memory priceFeeds) {
-        if (!_state.subscriptionStatuses[subscriptionId].isActive) {
+        if (!_state.subscriptionParams[subscriptionId].isActive) {
             revert InactiveSubscription();
         }
 
@@ -462,7 +437,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function addFunds(
         uint256 subscriptionId
     ) external payable override onlyManager(subscriptionId) {
-        if (!_state.subscriptionStatuses[subscriptionId].isActive) {
+        if (!_state.subscriptionParams[subscriptionId].isActive) {
             revert InactiveSubscription();
         }
 
@@ -485,7 +460,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         // If subscription is active, ensure minimum balance is maintained
-        if (status.isActive) {
+        if (params.isActive) {
             uint256 minimumBalance = this.getMinimumBalance(
                 uint8(params.priceIds.length)
             );
@@ -498,6 +473,25 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "Failed to send funds");
+    }
+
+    // FETCH SUBSCRIPTIONS
+
+    function getSubscription(
+        uint256 subscriptionId
+    )
+        external
+        view
+        override
+        returns (
+            SubscriptionParams memory params,
+            SubscriptionStatus memory status
+        )
+    {
+        return (
+            _state.subscriptionParams[subscriptionId],
+            _state.subscriptionStatuses[subscriptionId]
+        );
     }
 
     // This function is intentionally public with no access control to allow keepers to discover active subscriptions
@@ -518,7 +512,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // TODO: Optimize this. store numActiveSubscriptions or something.
         totalCount = 0;
         for (uint256 i = 1; i < _state.subscriptionNumber; i++) {
-            if (_state.subscriptionStatuses[i].isActive) {
+            if (_state.subscriptionParams[i].isActive) {
                 totalCount++;
             }
         }
@@ -547,7 +541,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             i < _state.subscriptionNumber && resultIndex < resultCount;
             i++
         ) {
-            if (_state.subscriptionStatuses[i].isActive) {
+            if (_state.subscriptionParams[i].isActive) {
                 if (activeIndex >= startIndex) {
                     subscriptionIds[resultIndex] = i;
                     subscriptionParams[resultIndex] = _state.subscriptionParams[
@@ -568,7 +562,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      */
     function getMinimumBalance(
         uint8 numPriceFeeds
-    ) external pure override returns (uint256 minimumBalance) {
+    ) external pure override returns (uint256 minimumBalanceInWei) {
         // Simple implementation - minimum balance is 0.01 ETH per price feed
         return numPriceFeeds * 0.01 ether;
     }

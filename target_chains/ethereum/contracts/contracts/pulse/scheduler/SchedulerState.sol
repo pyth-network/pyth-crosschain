@@ -42,7 +42,6 @@ contract SchedulerState {
         uint256 balanceInWei;
         uint256 totalUpdates;
         uint256 totalSpent;
-        bool isActive;
     }
 
     /// @dev When pushing prices, providers will use a "fast gas" estimation as default.

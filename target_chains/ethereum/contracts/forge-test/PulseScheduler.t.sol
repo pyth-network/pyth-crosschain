@@ -91,6 +91,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         // Start tests at timestamp 100 to avoid underflow when we set
         // `minPublishTime = timestamp - 10 seconds` in updatePriceFeeds
         vm.warp(100);
+
+        // Give pusher 100 ETH for testing
+        vm.deal(pusher, 100 ether);
     }
 
     function testAddSubscription() public {
@@ -157,6 +160,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             true,
             "whitelistEnabled should be true"
         );
+        assertTrue(storedParams.isActive, "Subscription should be active");
         assertEq(
             storedParams.updateCriteria.heartbeatSeconds,
             60,
@@ -173,7 +177,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             "Max gas multiplier mismatch"
         );
 
-        assertTrue(status.isActive, "Subscription should be active");
         assertEq(
             status.balanceInWei,
             minimumBalance,
@@ -257,7 +260,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         );
     }
 
-    function testAddSubscriptionInsufficientFunds() public {
+    function testAddSubscriptionWithInsufficientFundsReverts() public {
         // Create subscription parameters
         bytes32[] memory priceIds = createPriceIds();
         address[] memory readerWhitelist = new address[](1);
@@ -348,11 +351,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             SchedulerState.SubscriptionStatus memory status
         ) = scheduler.getSubscription(subscriptionId);
 
-        assertFalse(status.isActive, "Subscription should be inactive");
-        assertFalse(
-            storedParams.isActive,
-            "Subscription params should show inactive"
-        );
+        assertFalse(storedParams.isActive, "Subscription should be inactive");
 
         // Reactivate subscription using updateSubscription
         params.isActive = true;
@@ -367,7 +366,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         // Verify subscription was reactivated
         (storedParams, status) = scheduler.getSubscription(subscriptionId);
 
-        assertTrue(status.isActive, "Subscription should be active");
+        assertTrue(storedParams.isActive, "Subscription should be active");
         assertTrue(
             storedParams.isActive,
             "Subscription params should show active"
@@ -969,13 +968,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testGetActiveSubscriptions() public {
-        console.log("Starting testGetActiveSubscriptions");
-
         // Add two subscriptions with the test contract as manager
-        uint256 sub1 = addTestSubscription();
-        uint256 sub2 = addTestSubscription();
-
-        console.log("Added 2 test subscriptions with IDs:", sub1, sub2);
+        addTestSubscription();
+        addTestSubscription();
 
         // Create a subscription with pusher as manager
         vm.startPrank(pusher);
@@ -1008,10 +1003,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(priceIds.length)
         );
-        uint256 pusherSub = scheduler.addSubscription{value: minimumBalance}(
-            pusherParams
-        );
-        console.log("Added pusher subscription with ID:", pusherSub);
+        vm.deal(pusher, minimumBalance);
+        scheduler.addSubscription{value: minimumBalance}(pusherParams);
         vm.stopPrank();
 
         // Get active subscriptions directly - should work without any special permissions
@@ -1021,10 +1014,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
         (activeIds, activeParams, totalCount) = scheduler
             .getActiveSubscriptions(0, 10);
-        console.log(
-            "getActiveSubscriptions succeeded, total count:",
-            totalCount
-        );
 
         // We added 3 subscriptions and all should be active
         assertEq(activeIds.length, 3, "Should have 3 active subscriptions");
@@ -1081,11 +1070,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
         // Test pagination - start index beyond total count
         vm.prank(owner);
-        (
-            uint256[] memory emptyPageIds,
-            SchedulerState.SubscriptionParams[] memory emptyPageParams,
-            uint256 emptyPageTotal
-        ) = scheduler.getActiveSubscriptions(10, 10);
+        (uint256[] memory emptyPageIds, , uint256 emptyPageTotal) = scheduler
+            .getActiveSubscriptions(10, 10);
 
         assertEq(
             emptyPageIds.length,
