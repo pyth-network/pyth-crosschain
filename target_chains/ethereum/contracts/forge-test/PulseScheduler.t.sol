@@ -931,10 +931,69 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         );
     }
 
-    function testOptionalWhitelist() public {
+    function testDisabledWhitelistAllowsUnrestrictedReads() public {
         // Add a subscription with whitelistEnabled = false
         bytes32[] memory priceIds = createPriceIds();
-        address[] memory emptyWhitelist = new address[](0);
+        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
+            .UpdateCriteria({
+                updateOnHeartbeat: true,
+                heartbeatSeconds: 60,
+                updateOnDeviation: true,
+                deviationThresholdBps: 100
+            });
+
+        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
+            maxGasMultiplierCapPct: 10_000,
+            maxFeeMultiplierCapPct: 10_000
+        });
+
+        SchedulerState.SubscriptionParams memory params = SchedulerState
+            .SubscriptionParams({
+                priceIds: priceIds,
+                readerWhitelist: new address[](0),
+                whitelistEnabled: false, // No whitelist
+                isActive: true,
+                updateCriteria: updateCriteria,
+                gasConfig: gasConfig
+            });
+
+        // Create subscription and fund the subscription with enough to update it
+        uint256 subscriptionId = scheduler.createSubscription{value: 1 ether}(
+            params
+        );
+
+        // Update price feeds for the subscription
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+        PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
+            publishTime
+        );
+        mockParsePriceFeedUpdates(pyth, priceFeeds);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
+
+        // Try to access from a non-whitelisted address (should succeed)
+        address randomUser = address(0xdead);
+        vm.startPrank(randomUser);
+        bytes32[] memory emptyPriceIds = new bytes32[](0);
+
+        // Should not revert since whitelist is disabled
+        scheduler.getPricesUnsafe(subscriptionId, emptyPriceIds);
+        vm.stopPrank();
+
+        // Verify the data is correct using the test's reader
+        assertTrue(
+            reader.verifyPriceFeeds(subscriptionId, emptyPriceIds, priceFeeds),
+            "Whitelist Disabled: Price feeds verification failed"
+        );
+    }
+
+    function testEnabledWhitelistEnforcesOnlyAuthorizedReads() public {
+        // Add a subscription with whitelistEnabled = true
+        bytes32[] memory priceIds = createPriceIds(2);
+        address[] memory readerWhitelist = new address[](1);
+        readerWhitelist[0] = address(reader); // Only the test's reader is whitelisted
 
         SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
             .UpdateCriteria({
@@ -952,27 +1011,23 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         SchedulerState.SubscriptionParams memory params = SchedulerState
             .SubscriptionParams({
                 priceIds: priceIds,
-                readerWhitelist: emptyWhitelist,
-                whitelistEnabled: false, // No whitelist
+                readerWhitelist: readerWhitelist,
+                whitelistEnabled: true, // Whitelist IS enabled
                 isActive: true,
                 updateCriteria: updateCriteria,
                 gasConfig: gasConfig
             });
 
-        uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(priceIds.length)
+        // Create subscription and fund the subscription with enough to update it
+        uint256 subscriptionId = scheduler.createSubscription{value: 1 ether}(
+            params
         );
-        uint256 subscriptionId = scheduler.createSubscription{
-            value: minimumBalance
-        }(params);
 
-        // Update price feeds
-        uint256 fundAmount = 1 ether;
-        scheduler.addFunds{value: fundAmount}(subscriptionId);
-
-        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+        // Update price feeds for the subscription
+        uint64 publishTime = SafeCast.toUint64(block.timestamp + 10); // Slightly different time
         PythStructs.PriceFeed[] memory priceFeeds = createMockPriceFeeds(
-            publishTime
+            publishTime,
+            priceIds.length
         );
         mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
@@ -980,21 +1035,43 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         vm.prank(pusher);
         scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
 
-        // Try to access from a non-whitelisted address
+        // Try to access from the non-whitelisted address (should fail)
         address randomUser = address(0xdead);
+        address manager = address(this); // Test contract is the manager
         vm.startPrank(randomUser);
         bytes32[] memory emptyPriceIds = new bytes32[](0);
-
-        // Should not revert since whitelist is disabled
-        // We'll just check that it doesn't revert
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector));
         scheduler.getPricesUnsafe(subscriptionId, emptyPriceIds);
         vm.stopPrank();
 
-        // Verify the data is correct
+        // Try to access from the whitelisted reader address (should succeed)
+        // Note: We call via the reader contract instance itself
+        PythStructs.Price[] memory pricesFromReader = reader.getPricesUnsafe(
+            subscriptionId,
+            emptyPriceIds
+        );
+        assertEq(
+            pricesFromReader.length,
+            priceIds.length,
+            "Whitelist Enabled: Reader should get correct number of prices"
+        );
+
+        // Verify the data obtained by the whitelisted reader is correct
         assertTrue(
             reader.verifyPriceFeeds(subscriptionId, emptyPriceIds, priceFeeds),
-            "Price feeds verification failed"
+            "Whitelist Enabled: Price feeds verification failed via reader"
         );
+
+        // Try to access from the manager address (should succeed)
+        vm.startPrank(manager);
+        PythStructs.Price[] memory pricesFromManager = scheduler
+            .getPricesUnsafe(subscriptionId, emptyPriceIds);
+        assertEq(
+            pricesFromManager.length,
+            priceIds.length,
+            "Whitelist Enabled: Manager should get correct number of prices"
+        );
+        vm.stopPrank();
     }
 
     function testGetEmaPriceUnsafe() public {
