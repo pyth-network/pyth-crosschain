@@ -12,9 +12,9 @@ interface IScheduler is SchedulerEvents {
 
     /**
      * @notice Adds a new subscription
+     * @dev Requires msg.value to be at least the minimum balance for the subscription (calculated by getMinimumBalance()).
      * @param subscriptionParams The parameters for the subscription
      * @return subscriptionId The ID of the newly created subscription
-     * @dev Requires msg.value to be at least the minimum balance for the subscription
      */
     function addSubscription(
         SchedulerState.SubscriptionParams calldata subscriptionParams
@@ -38,6 +38,8 @@ interface IScheduler is SchedulerEvents {
 
     /**
      * @notice Updates an existing subscription
+     * @dev You can activate or deactivate a subscription by setting isActive to true or false.
+     * @dev Reactivating a subscription requires the subscription to hold at least the minimum balance (calculated by getMinimumBalance()).
      * @param subscriptionId The ID of the subscription to update
      * @param newSubscriptionParams The new parameters for the subscription
      */
@@ -45,8 +47,6 @@ interface IScheduler is SchedulerEvents {
         uint256 subscriptionId,
         SchedulerState.SubscriptionParams calldata newSubscriptionParams
     ) external;
-
-    // Deactivation is now handled through updateSubscription by setting isActive to false
 
     /**
      * @notice Updates price feeds for a subscription.
