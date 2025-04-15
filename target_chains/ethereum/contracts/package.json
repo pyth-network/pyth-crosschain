@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-evm-contract",
-  "version": "1.4.4-alpha.3",
+  "version": "1.4.4-alpha.5",
   "description": "",
   "private": "true",
   "devDependencies": {
