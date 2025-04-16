@@ -21,8 +21,10 @@ import {
   StateType as UseAsyncStateType,
 } from "../../hooks/use-async";
 import { useData, StateType as UseDataStateType } from "../../hooks/use-data";
+import { useNetwork } from "../../hooks/use-network";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
+import { Switch } from "../Switch";
 
 const MAX_TEST_RETRIES = 10;
 
@@ -65,13 +67,14 @@ const ConnectWallet = ({ isLoading }: { isLoading?: boolean | undefined }) => {
   const showModal = useCallback(() => {
     modal.setVisible(true);
   }, [modal]);
+  const { isMainnet, toggleMainnet } = useNetwork();
 
   return (
     <>
       <Description className="mb-10 text-neutral-400">
         Please connect your wallet to get started.
       </Description>
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center gap-4">
         <Button
           className="px-10 py-4"
           size="nopad"
@@ -87,6 +90,14 @@ const ConnectWallet = ({ isLoading }: { isLoading?: boolean | undefined }) => {
             </>
           )}
         </Button>
+        <Switch
+          isSelected={isMainnet}
+          postLabel="Mainnet"
+          preLabel="Devnet"
+          className="px-4 py-1"
+          size="small"
+          onChange={toggleMainnet}
+        />
       </div>
     </>
   );
