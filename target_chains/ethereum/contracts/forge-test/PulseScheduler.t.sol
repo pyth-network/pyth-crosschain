@@ -111,8 +111,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -172,7 +172,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             "Deviation threshold mismatch"
         );
         assertEq(
-            storedParams.gasConfig.maxGasMultiplierCapPct,
+            storedParams.gasConfig.maxBaseFeeMultiplierCapPct,
             10_000,
             "Max gas multiplier mismatch"
         );
@@ -204,8 +204,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
         SchedulerState.GasConfig memory newGasConfig = SchedulerState
             .GasConfig({
-                maxGasMultiplierCapPct: 20_000, // Changed from 10_000
-                maxFeeMultiplierCapPct: 20_000 // Changed from 10_000
+                maxBaseFeeMultiplierCapPct: 20_000, // Changed from 10_000
+                maxPriorityFeeMultiplierCapPct: 20_000 // Changed from 10_000
             });
 
         SchedulerState.SubscriptionParams memory newParams = SchedulerState
@@ -254,7 +254,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             "Deviation threshold mismatch"
         );
         assertEq(
-            storedParams.gasConfig.maxGasMultiplierCapPct,
+            storedParams.gasConfig.maxBaseFeeMultiplierCapPct,
             20_000,
             "Max gas multiplier mismatch"
         );
@@ -360,8 +360,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -399,8 +399,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -501,8 +501,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -943,8 +943,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -1004,8 +1004,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -1148,8 +1148,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory pusherParams = SchedulerState
@@ -1258,8 +1258,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -1295,8 +1295,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState
@@ -1324,8 +1324,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         readerWhitelist[0] = address(reader);
 
         SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxGasMultiplierCapPct: 10_000,
-            maxFeeMultiplierCapPct: 10_000
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
         });
 
         SchedulerState.SubscriptionParams memory params = SchedulerState

@@ -23,10 +23,12 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function createSubscription(
         SubscriptionParams memory subscriptionParams
     ) external payable override returns (uint256 subscriptionId) {
-        if (subscriptionParams.priceIds.length > MAX_PRICE_IDS) {
+        if (
+            subscriptionParams.priceIds.length > MAX_PRICE_IDS_PER_SUBSCRIPTION
+        ) {
             revert TooManyPriceIds(
                 subscriptionParams.priceIds.length,
-                MAX_PRICE_IDS
+                MAX_PRICE_IDS_PER_SUBSCRIPTION
             );
         }
 
@@ -40,15 +42,15 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // If gas config is unset, set it to the default (100x multipliers)
         if (
-            subscriptionParams.gasConfig.maxGasMultiplierCapPct == 0 ||
-            subscriptionParams.gasConfig.maxFeeMultiplierCapPct == 0
+            subscriptionParams.gasConfig.maxBaseFeeMultiplierCapPct == 0 ||
+            subscriptionParams.gasConfig.maxPriorityFeeMultiplierCapPct == 0
         ) {
             subscriptionParams
                 .gasConfig
-                .maxFeeMultiplierCapPct = DEFAULT_MAX_FEE_MULTIPLIER_CAP_PCT;
+                .maxPriorityFeeMultiplierCapPct = DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT;
             subscriptionParams
                 .gasConfig
-                .maxGasMultiplierCapPct = DEFAULT_MAX_GAS_MULTIPLIER_CAP_PCT;
+                .maxBaseFeeMultiplierCapPct = DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT;
         }
 
         // Calculate minimum balance required for this subscription
@@ -105,8 +107,11 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         // Validate parameters for active or to-be-activated subscriptions
-        if (newParams.priceIds.length > MAX_PRICE_IDS) {
-            revert TooManyPriceIds(newParams.priceIds.length, MAX_PRICE_IDS);
+        if (newParams.priceIds.length > MAX_PRICE_IDS_PER_SUBSCRIPTION) {
+            revert TooManyPriceIds(
+                newParams.priceIds.length,
+                MAX_PRICE_IDS_PER_SUBSCRIPTION
+            );
         }
 
         // Validate update criteria
@@ -119,15 +124,15 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // If gas config is unset, set it to the default (100x multipliers)
         if (
-            newParams.gasConfig.maxGasMultiplierCapPct == 0 ||
-            newParams.gasConfig.maxFeeMultiplierCapPct == 0
+            newParams.gasConfig.maxBaseFeeMultiplierCapPct == 0 ||
+            newParams.gasConfig.maxPriorityFeeMultiplierCapPct == 0
         ) {
             newParams
                 .gasConfig
-                .maxFeeMultiplierCapPct = DEFAULT_MAX_FEE_MULTIPLIER_CAP_PCT;
+                .maxPriorityFeeMultiplierCapPct = DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT;
             newParams
                 .gasConfig
-                .maxGasMultiplierCapPct = DEFAULT_MAX_GAS_MULTIPLIER_CAP_PCT;
+                .maxBaseFeeMultiplierCapPct = DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT;
         }
 
         // Handle activation/deactivation
