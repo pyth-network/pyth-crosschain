@@ -1,1 +1,7 @@
-pub mod protobuf;
+pub mod transaction {
+    pub use crate::protobuf::pyth_lazer_transaction::*;
+}
+pub mod publisher_update {
+    pub use crate::protobuf::publisher_update::*;
+}
+mod protobuf;
