@@ -33,3 +33,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   sed -i '/build.*build\.rs/d' Cargo.toml
 fi
+
+echo "publishing package"
+cargo publish --token ${CARGO_REGISTRY_TOKEN}
