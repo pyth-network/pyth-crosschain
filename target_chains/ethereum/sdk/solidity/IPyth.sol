@@ -164,4 +164,26 @@ interface IPyth is IPythEvents {
         uint64 minPublishTime,
         uint64 maxPublishTime
     ) external payable returns (PythStructs.PriceFeed[] memory priceFeeds);
+
+    /// @dev Same as `parsePriceFeedUpdates`, but also returns the Pythnet slot
+    /// associated with each price update.
+    /// @param updateData Array of price update data.
+    /// @param priceIds Array of price ids.
+    /// @param minPublishTime minimum acceptable publishTime for the given `priceIds`.
+    /// @param maxPublishTime maximum acceptable publishTime for the given `priceIds`.
+    /// @return priceFeeds Array of the price feeds corresponding to the given `priceIds` (with the same order).
+    /// @return slots Array of the Pythnet slot corresponding to the given `priceIds` (with the same order).
+    /// @
+    function parsePriceFeedUpdatesWithSlots(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        returns (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        );
 }

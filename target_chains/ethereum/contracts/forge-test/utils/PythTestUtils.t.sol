@@ -148,7 +148,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         bytes memory wormholePayload = abi.encodePacked(
             uint32(0x41555756), // PythAccumulator.ACCUMULATOR_WORMHOLE_MAGIC
             uint8(PythAccumulator.UpdateType.WormholeMerkle),
-            uint64(0), // Slot, not used in target networks
+            uint64(1), // Slot, not used in target networks
             uint32(0), // Ring size, not used in target networks
             rootDigest
         );

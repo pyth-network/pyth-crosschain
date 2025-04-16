@@ -237,6 +237,50 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         }
     }
 
+    /// Testing parsePriceFeedUpdatesWithSlots method.
+    function testParsePriceFeedUpdatesWithSlotsWorks(uint seed) public {
+        setRandSeed(seed);
+        uint numMessages = 1 + (getRandUint() % 10);
+        (
+            bytes32[] memory priceIds,
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromMessages(messages);
+        (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        ) = pyth.parsePriceFeedUpdatesWithSlots{value: updateFee}(
+                updateData,
+                priceIds,
+                0,
+                MAX_UINT64
+            );
+
+        assertEq(priceFeeds.length, numMessages);
+        assertEq(slots.length, numMessages);
+
+        for (uint i = 0; i < numMessages; i++) {
+            assertEq(priceFeeds[i].id, priceIds[i]);
+            assertEq(priceFeeds[i].price.price, messages[i].price);
+            assertEq(priceFeeds[i].price.conf, messages[i].conf);
+            assertEq(priceFeeds[i].price.expo, messages[i].expo);
+            assertEq(priceFeeds[i].price.publishTime, messages[i].publishTime);
+            assertEq(priceFeeds[i].emaPrice.price, messages[i].emaPrice);
+            assertEq(priceFeeds[i].emaPrice.conf, messages[i].emaConf);
+            assertEq(priceFeeds[i].emaPrice.expo, messages[i].expo);
+            assertEq(
+                priceFeeds[i].emaPrice.publishTime,
+                messages[i].publishTime
+            );
+            // Check that the slot returned is 1, as set in generateWhMerkleUpdateWithSource
+            assertEq(slots[i], 1);
+        }
+    }
+
     function testParsePriceFeedUpdatesWorksWithOverlappingWithinTimeRangeUpdates()
         public
     {

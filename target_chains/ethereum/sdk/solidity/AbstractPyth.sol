@@ -136,6 +136,23 @@ abstract contract AbstractPyth is IPyth {
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds);
 
+    /// @dev Same as `parsePriceFeedUpdates`, but also returns the Pythnet slot
+    /// associated with each price update.
+    function parsePriceFeedUpdatesWithSlots(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        virtual
+        override
+        returns (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        );
+
     function parseTwapPriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds

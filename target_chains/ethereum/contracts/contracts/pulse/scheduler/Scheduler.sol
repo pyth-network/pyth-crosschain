@@ -173,16 +173,19 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // Parse price feed updates with an expected timestamp range of [-10s, now]
         // We will validate the trigger conditions and timestamps ourselves
         // using the returned PriceFeeds.
-        uint64 maxPublishTime = SafeCast.toUint64(block.timestamp);
-        uint64 minPublishTime = maxPublishTime - 10 seconds;
-        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
+        uint64 maxPublishTime = SafeCast.toUint64(block.timestamp) +
+            FUTURE_TIMESTAMP_GRACE_PERIOD;
+        uint64 minPublishTime = maxPublishTime - PAST_TIMESTAMP_GRACE_PERIOD;
+        PythStructs.PriceFeed[] memory priceFeeds;
+        uint64[] memory slots;
+        (priceFeeds, slots) = pyth.parsePriceFeedUpdatesWithSlots{
             value: pythFee
         }(updateData, priceIds, minPublishTime, maxPublishTime);
 
-        // Verify all price feeds have the same timestamp
-        uint256 timestamp = priceFeeds[0].price.publishTime;
-        for (uint8 i = 1; i < priceFeeds.length; i++) {
-            if (priceFeeds[i].price.publishTime != timestamp) {
+        // Verify all price feeds have the same Pythnet slot
+        uint64 slot = slots[0];
+        for (uint8 i = 1; i < slots.length; i++) {
+            if (slots[i] != slot) {
                 revert PriceTimestampMismatch();
             }
         }
