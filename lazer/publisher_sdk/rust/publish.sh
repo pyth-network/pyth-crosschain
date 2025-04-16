@@ -16,7 +16,13 @@ mv "${PACKAGE_DIR}/build.rs"
 
 echo "updating lib.rs to export local protobuf files"
 cat > "${PACKAGE_DIR}/src/lib.rs" << EOF
-pub mod protobuf;
+pub mod transaction {
+    pub use crate::protobuf::pyth_lazer_transaction::*;
+}
+pub mod publisher_update {
+    pub use crate::protobuf::publisher_update::*;
+}
+mod protobuf;
 EOF
 
 echo "removing build spec from Cargo.toml"
