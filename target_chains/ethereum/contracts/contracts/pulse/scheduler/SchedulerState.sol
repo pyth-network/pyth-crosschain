@@ -8,6 +8,9 @@ contract SchedulerState {
     // Maximum number of price feeds per subscription
     uint8 public constant MAX_PRICE_IDS = 10;
 
+    uint256 public constant PAST_TIMESTAMP_GRACE_PERIOD = 1 hours;
+    uint256 public constant FUTURE_TIMESTAMP_GRACE_PERIOD = 10 seconds;
+
     struct State {
         // Monotonically increasing counter for subscription IDs
         uint256 subscriptionNumber;
