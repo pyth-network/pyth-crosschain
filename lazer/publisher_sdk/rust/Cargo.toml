@@ -5,7 +5,6 @@ edition = "2021"
 description = "Pyth Lazer Publisher SDK types."
 license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
-build = "build.rs"
 
 [dependencies]
 protobuf = "3.7.2"
