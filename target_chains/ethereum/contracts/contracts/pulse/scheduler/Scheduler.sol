@@ -239,20 +239,21 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // Parse price feed updates with an expected timestamp range of [-10s, now]
         // We will validate the trigger conditions and timestamps ourselves
         // using the returned PriceFeeds.
-        uint64 maxPublishTime = SafeCast.toUint64(block.timestamp) +
-            FUTURE_TIMESTAMP_GRACE_PERIOD;
-        uint64 minPublishTime = maxPublishTime - PAST_TIMESTAMP_GRACE_PERIOD;
+        uint64 curTime = SafeCast.toUint64(block.timestamp);
+        uint64 maxPublishTime = curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD;
+        uint64 minPublishTime = curTime - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD;
         PythStructs.PriceFeed[] memory priceFeeds;
         uint64[] memory slots;
         (priceFeeds, slots) = pyth.parsePriceFeedUpdatesWithSlots{
             value: pythFee
         }(updateData, priceIds, minPublishTime, maxPublishTime);
 
-        // Verify all price feeds have the same Pythnet slot
+        // Verify all price feeds have the same Pythnet slot.
+        // All feeds in a subscription must be updated at the same time.
         uint64 slot = slots[0];
         for (uint8 i = 1; i < slots.length; i++) {
             if (slots[i] != slot) {
-                revert PriceTimestampMismatch();
+                revert PriceSlotMismatch();
             }
         }
 
@@ -294,7 +295,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
     /**
      * @notice Validates whether the update trigger criteria is met for a subscription. Reverts if not met.
-     * @dev This function assumes that all updates in priceFeeds have the same timestamp. The caller is expected to enforce this invariant.
      * @param subscriptionId The ID of the subscription (needed for reading previous prices).
      * @param params The subscription's parameters struct.
      * @param status The subscription's status struct.
@@ -306,9 +306,16 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         SubscriptionStatus storage status,
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal view returns (bool) {
-        // SECURITY NOTE: this check assumes that all updates in priceFeeds have the same timestamp.
-        // The caller is expected to enforce this invariant.
-        uint256 updateTimestamp = priceFeeds[0].price.publishTime;
+        // Use the most recent timestamp, as some asset markets may be closed.
+        // Closed markets will have a publishTime from their last trading period.
+        // Since we verify all updates share the same Pythnet slot, we still ensure
+        // that all price feeds are synchronized from the same update cycle.
+        uint256 updateTimestamp = 0;
+        for (uint8 i = 0; i < priceFeeds.length; i++) {
+            if (priceFeeds[i].price.publishTime > updateTimestamp) {
+                updateTimestamp = priceFeeds[i].price.publishTime;
+            }
+        }
 
         // Reject updates if they're older than the latest stored ones
         if (

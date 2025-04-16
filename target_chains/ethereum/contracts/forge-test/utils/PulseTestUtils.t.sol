@@ -74,6 +74,29 @@ abstract contract PulseTestUtils is Test {
         return createMockPriceFeeds(publishTime, 1)[0];
     }
 
+    // Helper function to create mock price feeds with slots
+    function createMockPriceFeedsWithSlots(
+        uint256 publishTime,
+        uint256 numFeeds
+    )
+        internal
+        pure
+        returns (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        )
+    {
+        priceFeeds = createMockPriceFeeds(publishTime, numFeeds);
+        slots = new uint64[](numFeeds);
+
+        // Set all slots to the publishTime as a mock value
+        for (uint256 i = 0; i < numFeeds; i++) {
+            slots[i] = uint64(publishTime);
+        }
+
+        return (priceFeeds, slots);
+    }
+
     // Helper function to create mock price feeds with default 2 feeds
     function createMockPriceFeeds(
         uint256 publishTime
@@ -134,6 +157,30 @@ abstract contract PulseTestUtils is Test {
             expectedFee,
             abi.encodeWithSelector(IPyth.parsePriceFeedUpdates.selector),
             abi.encode(priceFeeds)
+        );
+    }
+
+    // Helper function to mock Pyth response with slots
+    function mockParsePriceFeedUpdatesWithSlots(
+        address pyth,
+        PythStructs.PriceFeed[] memory priceFeeds,
+        uint64[] memory slots
+    ) internal {
+        uint expectedFee = MOCK_PYTH_FEE_PER_FEED * priceFeeds.length;
+
+        vm.mockCall(
+            pyth,
+            abi.encodeWithSelector(IPyth.getUpdateFee.selector),
+            abi.encode(expectedFee)
+        );
+
+        vm.mockCall(
+            pyth,
+            expectedFee,
+            abi.encodeWithSelector(
+                IPyth.parsePriceFeedUpdatesWithSlots.selector
+            ),
+            abi.encode(priceFeeds, slots)
         );
     }
 
