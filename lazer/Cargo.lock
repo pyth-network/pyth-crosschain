@@ -3863,7 +3863,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "protobuf",
  "protobuf-codegen",
