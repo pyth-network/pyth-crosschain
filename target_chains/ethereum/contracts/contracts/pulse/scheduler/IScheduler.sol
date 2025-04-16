@@ -8,16 +8,15 @@ import "./SchedulerEvents.sol";
 import "./SchedulerState.sol";
 
 interface IScheduler is SchedulerEvents {
-    // CORE FUNCTIONS
-
     /**
-     * @notice Adds a new subscription
+     * @notice Creates a new subscription
+     * @dev Requires msg.value to be at least the minimum balance for the subscription (calculated by getMinimumBalance()).
      * @param subscriptionParams The parameters for the subscription
      * @return subscriptionId The ID of the newly created subscription
      */
-    function addSubscription(
+    function createSubscription(
         SchedulerState.SubscriptionParams calldata subscriptionParams
-    ) external returns (uint256 subscriptionId);
+    ) external payable returns (uint256 subscriptionId);
 
     /**
      * @notice Gets a subscription's parameters and status
@@ -37,6 +36,8 @@ interface IScheduler is SchedulerEvents {
 
     /**
      * @notice Updates an existing subscription
+     * @dev You can activate or deactivate a subscription by setting isActive to true or false.
+     * @dev Reactivating a subscription requires the subscription to hold at least the minimum balance (calculated by getMinimumBalance()).
      * @param subscriptionId The ID of the subscription to update
      * @param newSubscriptionParams The new parameters for the subscription
      */
@@ -44,12 +45,6 @@ interface IScheduler is SchedulerEvents {
         uint256 subscriptionId,
         SchedulerState.SubscriptionParams calldata newSubscriptionParams
     ) external;
-
-    /**
-     * @notice Deactivates a subscription
-     * @param subscriptionId The ID of the subscription to deactivate
-     */
-    function deactivateSubscription(uint256 subscriptionId) external;
 
     /**
      * @notice Updates price feeds for a subscription.
@@ -64,16 +59,36 @@ interface IScheduler is SchedulerEvents {
         bytes32[] calldata priceIds
     ) external;
 
-    /**
-     * @notice Gets the latest prices for a subscription
-     * @param subscriptionId The ID of the subscription
-     * @param priceIds Optional array of price IDs to retrieve. If empty, returns all price feeds for the subscription.
-     * @return The latest price feeds for the requested price IDs
+    /** @notice Returns the price of a price feed without any sanity checks.
+     * @dev This function returns the most recent price update in this contract without any recency checks.
+     * This function is unsafe as the returned price update may be arbitrarily far in the past.
+     *
+     * Users of this function should check the `publishTime` in the price to ensure that the returned price is
+     * sufficiently recent for their application. If you are considering using this function, it may be
+     * safer / easier to use `getPriceNoOlderThan`.
+     * @return prices - please read the documentation of PythStructs.Price to understand how to use this safely.
      */
-    function getLatestPrices(
+    function getPricesUnsafe(
         uint256 subscriptionId,
         bytes32[] calldata priceIds
-    ) external view returns (PythStructs.PriceFeed[] memory);
+    ) external view returns (PythStructs.Price[] memory prices);
+
+    /** @notice Returns the exponentially-weighted moving average price of a price feed without any sanity checks.
+     * @dev This function returns the same price as `getEmaPrice` in the case where the price is available.
+     * However, if the price is not recent this function returns the latest available price.
+     *
+     * The returned price can be from arbitrarily far in the past; this function makes no guarantees that
+     * the returned price is recent or useful for any particular application.
+     *
+     * Users of this function should check the `publishTime` in the price to ensure that the returned price is
+     * sufficiently recent for their application. If you are considering using this function, it may be
+     * safer / easier to use either `getEmaPrice` or `getEmaPriceNoOlderThan`.
+     * @return price - please read the documentation of PythStructs.Price to understand how to use this safely.
+     */
+    function getEmaPriceUnsafe(
+        uint256 subscriptionId,
+        bytes32[] calldata priceIds
+    ) external view returns (PythStructs.Price[] memory price);
 
     /**
      * @notice Adds funds to a subscription's balance
@@ -82,23 +97,40 @@ interface IScheduler is SchedulerEvents {
     function addFunds(uint256 subscriptionId) external payable;
 
     /**
-     * @notice Withdraws funds from a subscription's balance
+     * @notice Withdraws funds from a subscription's balance.
+     * @dev A minimum balance must be maintained for active subscriptions. To withdraw past
+     * the minimum balance limit, deactivate the subscription first.
      * @param subscriptionId The ID of the subscription
      * @param amount The amount to withdraw
      */
     function withdrawFunds(uint256 subscriptionId, uint256 amount) external;
 
     /**
+     * @notice Returns the minimum balance an active subscription of a given size needs to hold.
+     * @param numPriceFeeds The number of price feeds in the subscription.
+     */
+    function getMinimumBalance(
+        uint8 numPriceFeeds
+    ) external view returns (uint256 minimumBalanceInWei);
+
+    /**
      * @notice Gets all active subscriptions with their parameters
      * @dev This function has no access control to allow keepers to discover active subscriptions
+     * @param startIndex The starting index for pagination
+     * @param maxResults The maximum number of results to return
      * @return subscriptionIds Array of active subscription IDs
      * @return subscriptionParams Array of subscription parameters for each active subscription
+     * @return totalCount Total number of active subscriptions
      */
-    function getActiveSubscriptions()
+    function getActiveSubscriptions(
+        uint256 startIndex,
+        uint256 maxResults
+    )
         external
         view
         returns (
             uint256[] memory subscriptionIds,
-            SchedulerState.SubscriptionParams[] memory subscriptionParams
+            SchedulerState.SubscriptionParams[] memory subscriptionParams,
+            uint256 totalCount
         );
 }
