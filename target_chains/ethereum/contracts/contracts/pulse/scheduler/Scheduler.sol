@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 import "./IScheduler.sol";
 import "./SchedulerState.sol";
 import "./SchedulerErrors.sol";
@@ -19,13 +20,15 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         _state.subscriptionNumber = 1;
     }
 
-    function addSubscription(
-        SubscriptionParams calldata subscriptionParams
-    ) external override returns (uint256 subscriptionId) {
-        if (subscriptionParams.priceIds.length > MAX_PRICE_IDS) {
+    function createSubscription(
+        SubscriptionParams memory subscriptionParams
+    ) external payable override returns (uint256 subscriptionId) {
+        if (
+            subscriptionParams.priceIds.length > MAX_PRICE_IDS_PER_SUBSCRIPTION
+        ) {
             revert TooManyPriceIds(
                 subscriptionParams.priceIds.length,
-                MAX_PRICE_IDS
+                MAX_PRICE_IDS_PER_SUBSCRIPTION
             );
         }
 
@@ -37,13 +40,31 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InvalidUpdateCriteria();
         }
 
-        // Validate gas config
+        // If gas config is unset, set it to the default (100x multipliers)
         if (
-            subscriptionParams.gasConfig.maxGasPrice == 0 ||
-            subscriptionParams.gasConfig.maxGasLimit == 0
+            subscriptionParams.gasConfig.maxBaseFeeMultiplierCapPct == 0 ||
+            subscriptionParams.gasConfig.maxPriorityFeeMultiplierCapPct == 0
         ) {
-            revert InvalidGasConfig();
+            subscriptionParams
+                .gasConfig
+                .maxPriorityFeeMultiplierCapPct = DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT;
+            subscriptionParams
+                .gasConfig
+                .maxBaseFeeMultiplierCapPct = DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT;
         }
+
+        // Calculate minimum balance required for this subscription
+        uint256 minimumBalance = this.getMinimumBalance(
+            uint8(subscriptionParams.priceIds.length)
+        );
+
+        // Ensure enough funds were provided
+        if (msg.value < minimumBalance) {
+            revert InsufficientBalance();
+        }
+
+        // Set subscription to active
+        subscriptionParams.isActive = true;
 
         subscriptionId = _state.subscriptionNumber++;
 
@@ -55,10 +76,9 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             subscriptionId
         ];
         status.priceLastUpdatedAt = 0;
-        status.balanceInWei = 0;
+        status.balanceInWei = msg.value;
         status.totalUpdates = 0;
         status.totalSpent = 0;
-        status.isActive = true;
 
         // Map subscription ID to manager
         _state.subscriptionManager[subscriptionId] = msg.sender;
@@ -67,77 +87,123 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         return subscriptionId;
     }
 
-    function getSubscription(
-        uint256 subscriptionId
-    )
-        external
-        view
-        override
-        returns (
-            SubscriptionParams memory params,
-            SubscriptionStatus memory status
-        )
-    {
-        return (
-            _state.subscriptionParams[subscriptionId],
-            _state.subscriptionStatuses[subscriptionId]
-        );
-    }
-
     function updateSubscription(
         uint256 subscriptionId,
-        SubscriptionParams calldata newSubscriptionParams
+        SubscriptionParams memory newParams
     ) external override onlyManager(subscriptionId) {
-        if (!_state.subscriptionStatuses[subscriptionId].isActive) {
-            revert InactiveSubscription();
+        SchedulerState.SubscriptionStatus storage currentStatus = _state
+            .subscriptionStatuses[subscriptionId];
+        SchedulerState.SubscriptionParams storage currentParams = _state
+            .subscriptionParams[subscriptionId];
+        bool wasActive = currentParams.isActive;
+        bool willBeActive = newParams.isActive;
+
+        // If subscription is inactive and will remain inactive, no need to validate parameters
+        if (!wasActive && !willBeActive) {
+            // Update subscription parameters
+            _state.subscriptionParams[subscriptionId] = newParams;
+            emit SubscriptionUpdated(subscriptionId);
+            return;
         }
 
-        if (newSubscriptionParams.priceIds.length > MAX_PRICE_IDS) {
+        // Validate parameters for active or to-be-activated subscriptions
+        if (newParams.priceIds.length > MAX_PRICE_IDS_PER_SUBSCRIPTION) {
             revert TooManyPriceIds(
-                newSubscriptionParams.priceIds.length,
-                MAX_PRICE_IDS
+                newParams.priceIds.length,
+                MAX_PRICE_IDS_PER_SUBSCRIPTION
             );
         }
 
         // Validate update criteria
         if (
-            !newSubscriptionParams.updateCriteria.updateOnHeartbeat &&
-            !newSubscriptionParams.updateCriteria.updateOnDeviation
+            !newParams.updateCriteria.updateOnHeartbeat &&
+            !newParams.updateCriteria.updateOnDeviation
         ) {
             revert InvalidUpdateCriteria();
         }
 
-        // Validate gas config
+        // If gas config is unset, set it to the default (100x multipliers)
         if (
-            newSubscriptionParams.gasConfig.maxGasPrice == 0 ||
-            newSubscriptionParams.gasConfig.maxGasLimit == 0
+            newParams.gasConfig.maxBaseFeeMultiplierCapPct == 0 ||
+            newParams.gasConfig.maxPriorityFeeMultiplierCapPct == 0
         ) {
-            revert InvalidGasConfig();
+            newParams
+                .gasConfig
+                .maxPriorityFeeMultiplierCapPct = DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT;
+            newParams
+                .gasConfig
+                .maxBaseFeeMultiplierCapPct = DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT;
         }
 
+        // Handle activation/deactivation
+        if (!wasActive && willBeActive) {
+            // Reactivating a subscription - ensure minimum balance
+            uint256 minimumBalance = this.getMinimumBalance(
+                uint8(newParams.priceIds.length)
+            );
+
+            // Check if balance meets minimum requirement
+            if (currentStatus.balanceInWei < minimumBalance) {
+                revert InsufficientBalance();
+            }
+
+            currentParams.isActive = true;
+            emit SubscriptionActivated(subscriptionId);
+        } else if (wasActive && !willBeActive) {
+            // Deactivating a subscription
+            currentParams.isActive = false;
+            emit SubscriptionDeactivated(subscriptionId);
+        }
+
+        // Clear price updates for removed price IDs before updating params
+        _clearRemovedPriceUpdates(
+            subscriptionId,
+            currentParams.priceIds,
+            newParams.priceIds
+        );
+
         // Update subscription parameters
-        _state.subscriptionParams[subscriptionId] = newSubscriptionParams;
+        _state.subscriptionParams[subscriptionId] = newParams;
 
         emit SubscriptionUpdated(subscriptionId);
     }
 
-    function deactivateSubscription(
-        uint256 subscriptionId
-    ) external override onlyManager(subscriptionId) {
-        if (!_state.subscriptionStatuses[subscriptionId].isActive) {
-            revert InactiveSubscription();
+    /**
+     * @notice Internal helper to clear stored PriceFeed data for price IDs removed from a subscription.
+     * @param subscriptionId The ID of the subscription being updated.
+     * @param currentPriceIds The array of price IDs currently associated with the subscription.
+     * @param newPriceIds The new array of price IDs for the subscription.
+     */
+    function _clearRemovedPriceUpdates(
+        uint256 subscriptionId,
+        bytes32[] storage currentPriceIds,
+        bytes32[] memory newPriceIds
+    ) internal {
+        // Iterate through old price IDs
+        for (uint i = 0; i < currentPriceIds.length; i++) {
+            bytes32 oldPriceId = currentPriceIds[i];
+            bool found = false;
+
+            // Check if the old price ID exists in the new list
+            for (uint j = 0; j < newPriceIds.length; j++) {
+                if (newPriceIds[j] == oldPriceId) {
+                    found = true;
+                    break; // Found it, no need to check further
+                }
+            }
+
+            // If not found in the new list, delete its stored update data
+            if (!found) {
+                delete _state.priceUpdates[subscriptionId][oldPriceId];
+            }
         }
-
-        _state.subscriptionStatuses[subscriptionId].isActive = false;
-
-        emit SubscriptionDeactivated(subscriptionId);
     }
 
     function updatePriceFeeds(
         uint256 subscriptionId,
         bytes[] calldata updateData,
         bytes32[] calldata priceIds
-    ) external override onlyPusher {
+    ) external override {
         SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
@@ -145,7 +211,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             subscriptionId
         ];
 
-        if (!status.isActive) {
+        if (!params.isActive) {
             revert InactiveSubscription();
         }
 
@@ -312,17 +378,19 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         revert UpdateConditionsNotMet();
     }
 
-    function getLatestPrices(
+    /// FETCH PRICES
+
+    /**
+     * @notice Internal helper function to retrieve price feeds for a subscription.
+     * @param subscriptionId The ID of the subscription.
+     * @param priceIds The specific price IDs requested, or empty array to get all.
+     * @return priceFeeds An array of PriceFeed structs corresponding to the requested IDs.
+     */
+    function _getPricesInternal(
         uint256 subscriptionId,
         bytes32[] calldata priceIds
-    )
-        external
-        view
-        override
-        onlyWhitelistedReader(subscriptionId)
-        returns (PythStructs.PriceFeed[] memory)
-    {
-        if (!_state.subscriptionStatuses[subscriptionId].isActive) {
+    ) internal view returns (PythStructs.PriceFeed[] memory priceFeeds) {
+        if (!_state.subscriptionParams[subscriptionId].isActive) {
             revert InactiveSubscription();
         }
 
@@ -337,9 +405,14 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                     params.priceIds.length
                 );
             for (uint8 i = 0; i < params.priceIds.length; i++) {
-                allFeeds[i] = _state.priceUpdates[subscriptionId][
-                    params.priceIds[i]
-                ];
+                PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+                    subscriptionId
+                ][params.priceIds[i]];
+                // Check if the price feed exists (price ID is valid and has been updated)
+                if (priceFeed.id == bytes32(0)) {
+                    revert InvalidPriceId(params.priceIds[i], bytes32(0));
+                }
+                allFeeds[i] = priceFeed;
             }
             return allFeeds;
         }
@@ -350,31 +423,67 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 priceIds.length
             );
         for (uint8 i = 0; i < priceIds.length; i++) {
-            // Verify the requested price ID is part of the subscription
-            bool validPriceId = false;
-            for (uint8 j = 0; j < params.priceIds.length; j++) {
-                if (priceIds[i] == params.priceIds[j]) {
-                    validPriceId = true;
-                    break;
-                }
-            }
+            PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+                subscriptionId
+            ][priceIds[i]];
 
-            if (!validPriceId) {
-                revert InvalidPriceId(priceIds[i], params.priceIds[0]);
+            // Check if the price feed exists (price ID is valid and has been updated)
+            if (priceFeed.id == bytes32(0)) {
+                revert InvalidPriceId(priceIds[i], bytes32(0));
             }
-
-            requestedFeeds[i] = _state.priceUpdates[subscriptionId][
-                priceIds[i]
-            ];
+            requestedFeeds[i] = priceFeed;
         }
-
         return requestedFeeds;
     }
+
+    function getPricesUnsafe(
+        uint256 subscriptionId,
+        bytes32[] calldata priceIds
+    )
+        external
+        view
+        override
+        onlyWhitelistedReader(subscriptionId)
+        returns (PythStructs.Price[] memory prices)
+    {
+        PythStructs.PriceFeed[] memory priceFeeds = _getPricesInternal(
+            subscriptionId,
+            priceIds
+        );
+        prices = new PythStructs.Price[](priceFeeds.length);
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            prices[i] = priceFeeds[i].price;
+        }
+        return prices;
+    }
+
+    function getEmaPriceUnsafe(
+        uint256 subscriptionId,
+        bytes32[] calldata priceIds
+    )
+        external
+        view
+        override
+        onlyWhitelistedReader(subscriptionId)
+        returns (PythStructs.Price[] memory prices)
+    {
+        PythStructs.PriceFeed[] memory priceFeeds = _getPricesInternal(
+            subscriptionId,
+            priceIds
+        );
+        prices = new PythStructs.Price[](priceFeeds.length);
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            prices[i] = priceFeeds[i].emaPrice;
+        }
+        return prices;
+    }
+
+    /// BALANCE MANAGEMENT
 
     function addFunds(
         uint256 subscriptionId
     ) external payable override onlyManager(subscriptionId) {
-        if (!_state.subscriptionStatuses[subscriptionId].isActive) {
+        if (!_state.subscriptionParams[subscriptionId].isActive) {
             revert InactiveSubscription();
         }
 
@@ -388,9 +497,22 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
+        SubscriptionParams storage params = _state.subscriptionParams[
+            subscriptionId
+        ];
 
         if (status.balanceInWei < amount) {
             revert InsufficientBalance();
+        }
+
+        // If subscription is active, ensure minimum balance is maintained
+        if (params.isActive) {
+            uint256 minimumBalance = this.getMinimumBalance(
+                uint8(params.priceIds.length)
+            );
+            if (status.balanceInWei - amount < minimumBalance) {
+                revert InsufficientBalance();
+            }
         }
 
         status.balanceInWei -= amount;
@@ -399,51 +521,99 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         require(sent, "Failed to send funds");
     }
 
+    // FETCH SUBSCRIPTIONS
+
+    function getSubscription(
+        uint256 subscriptionId
+    )
+        external
+        view
+        override
+        returns (
+            SubscriptionParams memory params,
+            SubscriptionStatus memory status
+        )
+    {
+        return (
+            _state.subscriptionParams[subscriptionId],
+            _state.subscriptionStatuses[subscriptionId]
+        );
+    }
+
     // This function is intentionally public with no access control to allow keepers to discover active subscriptions
-    function getActiveSubscriptions()
+    function getActiveSubscriptions(
+        uint256 startIndex,
+        uint256 maxResults
+    )
         external
         view
         override
         returns (
             uint256[] memory subscriptionIds,
-            SubscriptionParams[] memory subscriptionParams
+            SubscriptionParams[] memory subscriptionParams,
+            uint256 totalCount
         )
     {
-        // TODO: This is gonna be expensive because we're iterating through
-        // all subscriptions, including deactivated ones. But because its a view
-        // function maybe it's not bad? We can optimize this.
-
-        // Count active subscriptions first to determine array size
-        uint256 activeCount = 0;
+        // Count active subscriptions first to determine total count
+        // TODO: Optimize this. store numActiveSubscriptions or something.
+        totalCount = 0;
         for (uint256 i = 1; i < _state.subscriptionNumber; i++) {
-            if (_state.subscriptionStatuses[i].isActive) {
-                activeCount++;
+            if (_state.subscriptionParams[i].isActive) {
+                totalCount++;
             }
+        }
+
+        // If startIndex is beyond the total count, return empty arrays
+        if (startIndex >= totalCount) {
+            return (new uint256[](0), new SubscriptionParams[](0), totalCount);
+        }
+
+        // Calculate how many results to return (bounded by maxResults and remaining items)
+        uint256 resultCount = totalCount - startIndex;
+        if (resultCount > maxResults) {
+            resultCount = maxResults;
         }
 
         // Create arrays for subscription IDs and parameters
-        subscriptionIds = new uint256[](activeCount);
-        subscriptionParams = new SubscriptionParams[](activeCount);
+        subscriptionIds = new uint256[](resultCount);
+        subscriptionParams = new SubscriptionParams[](resultCount);
 
-        // Populate arrays with active subscription data
-        uint256 index = 0;
-        for (uint256 i = 1; i < _state.subscriptionNumber; i++) {
-            if (_state.subscriptionStatuses[i].isActive) {
-                subscriptionIds[index] = i;
-                subscriptionParams[index] = _state.subscriptionParams[i];
-                index++;
+        // Find and populate the requested page of active subscriptions
+        uint256 activeIndex = 0;
+        uint256 resultIndex = 0;
+
+        for (
+            uint256 i = 1;
+            i < _state.subscriptionNumber && resultIndex < resultCount;
+            i++
+        ) {
+            if (_state.subscriptionParams[i].isActive) {
+                if (activeIndex >= startIndex) {
+                    subscriptionIds[resultIndex] = i;
+                    subscriptionParams[resultIndex] = _state.subscriptionParams[
+                        i
+                    ];
+                    resultIndex++;
+                }
+                activeIndex++;
             }
         }
 
-        return (subscriptionIds, subscriptionParams);
+        return (subscriptionIds, subscriptionParams, totalCount);
+    }
+
+    /**
+     * @notice Returns the minimum balance an active subscription of a given size needs to hold.
+     * @param numPriceFeeds The number of price feeds in the subscription.
+     */
+    function getMinimumBalance(
+        uint8 numPriceFeeds
+    ) external pure override returns (uint256 minimumBalanceInWei) {
+        // Simple implementation - minimum balance is 0.01 ETH per price feed
+        return numPriceFeeds * 0.01 ether;
     }
 
     // ACCESS CONTROL MODIFIERS
-
-    modifier onlyPusher() {
-        // TODO: we may not make this permissioned.
-        _;
-    }
 
     modifier onlyManager(uint256 subscriptionId) {
         if (_state.subscriptionManager[subscriptionId] != msg.sender) {
