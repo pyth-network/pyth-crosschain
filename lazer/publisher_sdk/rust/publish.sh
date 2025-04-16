@@ -12,7 +12,7 @@ echo "copying files from protobuf output to package directory"
 cp -r "${OUT_DIR}/protobuf" "${PACKAGE_DIR}/src/"
 
 echo "deleting build.rs file"
-mv "${PACKAGE_DIR}/build.rs"
+rm -f "${PACKAGE_DIR}/build.rs"
 
 echo "updating lib.rs to export local protobuf files"
 cat > "${PACKAGE_DIR}/src/lib.rs" << EOF
