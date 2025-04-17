@@ -98,6 +98,33 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         bool wasActive = currentParams.isActive;
         bool willBeActive = newParams.isActive;
 
+        // Check for permanent subscription restrictions
+        if (currentParams.isPermanent) {
+            // Cannot disable isPermanent flag once set
+            if (!newParams.isPermanent) {
+                revert IllegalPermanentSubscriptionModification();
+            }
+
+            // Cannot remove price feeds from a permanent subscription
+            if (newParams.priceIds.length < currentParams.priceIds.length) {
+                revert IllegalPermanentSubscriptionModification();
+            }
+
+            // Check that all existing price IDs are preserved
+            for (uint i = 0; i < currentParams.priceIds.length; i++) {
+                bool found = false;
+                for (uint j = 0; j < newParams.priceIds.length; j++) {
+                    if (currentParams.priceIds[i] == newParams.priceIds[j]) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    revert IllegalPermanentSubscriptionModification();
+                }
+            }
+        }
+
         // If subscription is inactive and will remain inactive, no need to validate parameters
         if (!wasActive && !willBeActive) {
             // Update subscription parameters
@@ -487,9 +514,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
     /// BALANCE MANAGEMENT
 
-    function addFunds(
-        uint256 subscriptionId
-    ) external payable override onlyManager(subscriptionId) {
+    function addFunds(uint256 subscriptionId) external payable override {
         if (!_state.subscriptionParams[subscriptionId].isActive) {
             revert InactiveSubscription();
         }
@@ -507,6 +532,11 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         SubscriptionParams storage params = _state.subscriptionParams[
             subscriptionId
         ];
+
+        // Prevent withdrawals from permanent subscriptions
+        if (params.isPermanent) {
+            revert IllegalPermanentSubscriptionModification();
+        }
 
         if (status.balanceInWei < amount) {
             revert InsufficientBalance();
