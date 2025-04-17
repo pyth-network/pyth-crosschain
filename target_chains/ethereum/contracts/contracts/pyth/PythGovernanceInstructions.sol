@@ -35,7 +35,8 @@ contract PythGovernanceInstructions {
         SetValidPeriod, // 4
         RequestGovernanceDataSourceTransfer, // 5
         SetWormholeAddress, // 6
-        SetTransactionFee // 7
+        SetTransactionFee, // 7
+        WithdrawFee // 8
     }
 
     struct GovernanceInstruction {
@@ -80,6 +81,12 @@ contract PythGovernanceInstructions {
 
     struct SetTransactionFeePayload {
         uint newFee;
+    }
+
+    struct WithdrawFeePayload {
+        address targetAddress;
+        // Fee in wei, matching the native uint256 type used for address.balance in EVM
+        uint256 fee;
     }
 
     /// @dev Parse a GovernanceInstruction
@@ -239,6 +246,27 @@ contract PythGovernanceInstructions {
         index += 8;
 
         stf.newFee = uint256(val) * uint256(10) ** uint256(expo);
+
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
+    }
+
+    /// @dev Parse a WithdrawFeePayload (action 8) with minimal validation
+    function parseWithdrawFeePayload(
+        bytes memory encodedPayload
+    ) public pure returns (WithdrawFeePayload memory wf) {
+        uint index = 0;
+
+        wf.targetAddress = address(encodedPayload.toAddress(index));
+        index += 20;
+
+        uint64 val = encodedPayload.toUint64(index);
+        index += 8;
+
+        uint64 expo = encodedPayload.toUint64(index);
+        index += 8;
+
+        wf.fee = uint256(val) * uint256(10) ** uint256(expo);
 
         if (encodedPayload.length != index)
             revert PythErrors.InvalidGovernanceMessage();

@@ -556,6 +556,100 @@ contract PythGovernanceTest is
         pyth.updatePriceFeeds{value: 1000}(updateData);
     }
 
+    function testWithdrawFee() public {
+        // First send some ETH to the contract
+        bytes[] memory updateData = new bytes[](0);
+        pyth.updatePriceFeeds{value: 1 ether}(updateData);
+        assertEq(address(pyth).balance, 1 ether);
+
+        address recipient = makeAddr("recipient");
+
+        // Create governance VAA to withdraw fee
+        bytes memory withdrawMessage = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.WithdrawFee),
+            TARGET_CHAIN_ID,
+            recipient,
+            uint64(5), // value = 5
+            uint64(17) // exponent = 17 (5 * 10^17 = 0.5 ether)
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            withdrawMessage,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit FeeWithdrawn(recipient, 0.5 ether);
+
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+
+        assertEq(address(pyth).balance, 0.5 ether);
+        assertEq(recipient.balance, 0.5 ether);
+    }
+
+    function testWithdrawFeeInsufficientBalance() public {
+        // First send some ETH to the contract
+        bytes[] memory updateData = new bytes[](0);
+        pyth.updatePriceFeeds{value: 1 ether}(updateData);
+        assertEq(address(pyth).balance, 1 ether);
+
+        address recipient = makeAddr("recipient");
+
+        // Create governance VAA to withdraw fee
+        bytes memory withdrawMessage = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.WithdrawFee),
+            TARGET_CHAIN_ID,
+            recipient,
+            uint64(2), // value = 2
+            uint64(18) // exponent = 18 (2 * 10^18 = 2 ether, more than balance)
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            withdrawMessage,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        vm.expectRevert(PythErrors.InsufficientFee.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+
+        // Balances should remain unchanged
+        assertEq(address(pyth).balance, 1 ether);
+        assertEq(recipient.balance, 0);
+    }
+
+    function testWithdrawFeeInvalidGovernance() public {
+        address recipient = makeAddr("recipient");
+
+        // Create governance VAA with wrong emitter
+        bytes memory withdrawMessage = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.WithdrawFee),
+            TARGET_CHAIN_ID,
+            recipient,
+            uint64(5), // value = 5
+            uint64(17) // exponent = 17 (5 * 10^17 = 0.5 ether)
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            withdrawMessage,
+            TEST_GOVERNANCE_CHAIN_ID,
+            bytes32(uint256(0x1111)), // Wrong emitter
+            1
+        );
+
+        vm.expectRevert(PythErrors.InvalidGovernanceDataSource.selector);
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+    }
+
     function encodeAndSignWormholeMessage(
         bytes memory data,
         uint16 emitterChainId,
@@ -611,4 +705,5 @@ contract PythGovernanceTest is
         address newWormholeAddress
     );
     event TransactionFeeSet(uint oldFee, uint newFee);
+    event FeeWithdrawn(address recipient, uint256 fee);
 }
