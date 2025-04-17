@@ -112,7 +112,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
+    function extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedAndSlotFromAccumulatorUpdate(
         bytes calldata accumulatorUpdate,
         uint encodedOffset
     )
@@ -122,7 +122,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             uint offset,
             bytes20 digest,
             uint8 numUpdates,
-            bytes calldata encoded
+            bytes calldata encoded,
+            uint64 slot
         )
     {
         unchecked {
@@ -175,8 +176,10 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     if (updateType != UpdateType.WormholeMerkle)
                         revert PythErrors.InvalidUpdateData();
 
-                    // This field is not used
-                    // uint64 slot = UnsafeBytesLib.toUint64(encodedPayload, payloadoffset);
+                    slot = UnsafeBytesLib.toUint64(
+                        encodedPayload,
+                        payloadOffset
+                    );
                     payloadOffset += 8;
 
                     // This field is not used
@@ -467,12 +470,14 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         uint offset;
         bytes20 digest;
         bytes calldata encoded;
+        uint64 slot;
         (
             offset,
             digest,
             numUpdates,
-            encoded
-        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
+            encoded,
+            slot
+        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedAndSlotFromAccumulatorUpdate(
             accumulatorUpdate,
             encodedOffset
         );

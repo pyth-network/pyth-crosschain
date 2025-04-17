@@ -179,111 +179,152 @@ abstract contract Pyth is
         if (price.publishTime == 0) revert PythErrors.PriceFeedNotFound();
     }
 
-    function parsePriceFeedUpdatesInternal(
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds,
-        PythInternalStructs.ParseConfig memory config
-    ) internal returns (PythStructs.PriceFeed[] memory priceFeeds) {
-        {
-            uint requiredFee = getUpdateFee(updateData);
-            if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
-        }
-        unchecked {
-            priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
-            for (uint i = 0; i < updateData.length; i++) {
-                if (
-                    updateData[i].length > 4 &&
-                    UnsafeCalldataBytesLib.toUint32(updateData[i], 0) ==
-                    ACCUMULATOR_MAGIC
-                ) {
-                    uint offset;
-                    {
-                        UpdateType updateType;
-                        (
-                            offset,
-                            updateType
-                        ) = extractUpdateTypeFromAccumulatorHeader(
-                            updateData[i]
-                        );
+    /// @dev Helper function to parse a single price update within a Merkle proof.
+    /// Parsed price feeds will be stored in the context.
+    function _parseSingleMerkleUpdate(
+        PythInternalStructs.MerkleData memory merkleData,
+        bytes calldata encoded,
+        uint offset,
+        PythInternalStructs.UpdateParseContext memory context
+    ) internal pure returns (uint newOffset) {
+        PythInternalStructs.PriceInfo memory priceInfo;
+        bytes32 priceId;
+        uint64 prevPublishTime;
 
-                        if (updateType != UpdateType.WormholeMerkle) {
-                            revert PythErrors.InvalidUpdateData();
-                        }
-                    }
+        (
+            newOffset,
+            priceInfo,
+            priceId,
+            prevPublishTime
+        ) = extractPriceInfoFromMerkleProof(merkleData.digest, encoded, offset);
 
-                    bytes20 digest;
-                    uint8 numUpdates;
-                    bytes calldata encoded;
-                    (
-                        offset,
-                        digest,
-                        numUpdates,
-                        encoded
-                    ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
-                        updateData[i],
-                        offset
-                    );
-
-                    for (uint j = 0; j < numUpdates; j++) {
-                        PythInternalStructs.PriceInfo memory priceInfo;
-                        bytes32 priceId;
-                        uint64 prevPublishTime;
-                        (
-                            offset,
-                            priceInfo,
-                            priceId,
-                            prevPublishTime
-                        ) = extractPriceInfoFromMerkleProof(
-                            digest,
-                            encoded,
-                            offset
-                        );
-                        {
-                            // check whether caller requested for this data
-                            uint k = findIndexOfPriceId(priceIds, priceId);
-
-                            // If priceFeed[k].id != 0 then it means that there was a valid
-                            // update for priceIds[k] and we don't need to process this one.
-                            if (k == priceIds.length || priceFeeds[k].id != 0) {
-                                continue;
-                            }
-
-                            uint publishTime = uint(priceInfo.publishTime);
-                            // Check the publish time of the price is within the given range
-                            // and only fill the priceFeedsInfo if it is.
-                            // If is not, default id value of 0 will still be set and
-                            // this will allow other updates for this price id to be processed.
-                            if (
-                                publishTime >= config.minPublishTime &&
-                                publishTime <= config.maxPublishTime &&
-                                (!config.checkUniqueness ||
-                                    config.minPublishTime > prevPublishTime)
-                            ) {
-                                fillPriceFeedFromPriceInfo(
-                                    priceFeeds,
-                                    k,
-                                    priceId,
-                                    priceInfo,
-                                    publishTime
-                                );
-                            }
-                        }
-                    }
-                    if (offset != encoded.length)
-                        revert PythErrors.InvalidUpdateData();
-                } else {
-                    revert PythErrors.InvalidUpdateData();
-                }
+        uint k = 0;
+        for (; k < context.priceIds.length; k++) {
+            if (context.priceIds[k] == priceId) {
+                break;
             }
+        }
 
-            for (uint k = 0; k < priceIds.length; k++) {
-                if (priceFeeds[k].id == 0) {
-                    revert PythErrors.PriceFeedNotFoundWithinRange();
-                }
+        // Check if the priceId was requested and not already filled
+        if (k < context.priceIds.length && context.priceFeeds[k].id == 0) {
+            uint publishTime = uint(priceInfo.publishTime);
+            if (
+                publishTime >= context.config.minPublishTime &&
+                publishTime <= context.config.maxPublishTime &&
+                (!context.config.checkUniqueness ||
+                    context.config.minPublishTime > prevPublishTime)
+            ) {
+                context.priceFeeds[k].id = priceId;
+                context.priceFeeds[k].price.price = priceInfo.price;
+                context.priceFeeds[k].price.conf = priceInfo.conf;
+                context.priceFeeds[k].price.expo = priceInfo.expo;
+                context.priceFeeds[k].price.publishTime = publishTime;
+                context.priceFeeds[k].emaPrice.price = priceInfo.emaPrice;
+                context.priceFeeds[k].emaPrice.conf = priceInfo.emaConf;
+                context.priceFeeds[k].emaPrice.expo = priceInfo.expo;
+                context.priceFeeds[k].emaPrice.publishTime = publishTime;
+                context.slots[k] = merkleData.slot;
             }
         }
     }
 
+    /// @dev Processes a single entry from the updateData array.
+    function _processSingleUpdateDataBlob(
+        bytes calldata singleUpdateData,
+        PythInternalStructs.UpdateParseContext memory context
+    ) internal view {
+        // Check magic number and length first
+        if (
+            singleUpdateData.length <= 4 ||
+            UnsafeCalldataBytesLib.toUint32(singleUpdateData, 0) !=
+            ACCUMULATOR_MAGIC
+        ) {
+            revert PythErrors.InvalidUpdateData();
+        }
+
+        uint offset;
+        {
+            UpdateType updateType;
+            (offset, updateType) = extractUpdateTypeFromAccumulatorHeader(
+                singleUpdateData
+            );
+
+            if (updateType != UpdateType.WormholeMerkle) {
+                revert PythErrors.InvalidUpdateData();
+            }
+        }
+
+        // Extract Merkle data
+        PythInternalStructs.MerkleData memory merkleData;
+        bytes calldata encoded;
+        (
+            offset,
+            merkleData.digest,
+            merkleData.numUpdates,
+            encoded,
+            merkleData.slot
+        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedAndSlotFromAccumulatorUpdate(
+            singleUpdateData,
+            offset
+        );
+
+        // Process each update within the Merkle proof
+        for (uint j = 0; j < merkleData.numUpdates; j++) {
+            offset = _parseSingleMerkleUpdate(
+                merkleData,
+                encoded,
+                offset,
+                context
+            );
+        }
+
+        // Check final offset
+        if (offset != encoded.length) {
+            revert PythErrors.InvalidUpdateData();
+        }
+    }
+
+    function parsePriceFeedUpdatesInternal(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        PythInternalStructs.ParseConfig memory config
+    )
+        internal
+        returns (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        )
+    {
+        {
+            uint requiredFee = getUpdateFee(updateData);
+            if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
+        }
+
+        // Create the context struct that holds all shared parameters
+        PythInternalStructs.UpdateParseContext memory context;
+        context.priceIds = priceIds;
+        context.config = config;
+        context.priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
+        context.slots = new uint64[](priceIds.length);
+
+        unchecked {
+            // Process each update, passing the context struct
+            // Parsed results will be filled in context.priceFeeds and context.slots
+            for (uint i = 0; i < updateData.length; i++) {
+                _processSingleUpdateDataBlob(updateData[i], context);
+            }
+        }
+
+        // Check all price feeds were found
+        for (uint k = 0; k < priceIds.length; k++) {
+            if (context.priceFeeds[k].id == 0) {
+                revert PythErrors.PriceFeedNotFoundWithinRange();
+            }
+        }
+
+        // Return results
+        return (context.priceFeeds, context.slots);
+    }
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
@@ -294,6 +335,31 @@ abstract contract Pyth is
         payable
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
+    {
+        (priceFeeds, ) = parsePriceFeedUpdatesInternal(
+            updateData,
+            priceIds,
+            PythInternalStructs.ParseConfig(
+                minPublishTime,
+                maxPublishTime,
+                false
+            )
+        );
+    }
+
+    function parsePriceFeedUpdatesWithSlots(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        override
+        returns (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        )
     {
         return
             parsePriceFeedUpdatesInternal(
@@ -339,8 +405,10 @@ abstract contract Pyth is
             offset,
             digest,
             numUpdates,
-            encoded
-        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
+            encoded,
+            // slot ignored
+
+        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedAndSlotFromAccumulatorUpdate(
             updateData,
             offset
         );
@@ -477,16 +545,15 @@ abstract contract Pyth is
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
-        return
-            parsePriceFeedUpdatesInternal(
-                updateData,
-                priceIds,
-                PythInternalStructs.ParseConfig(
-                    minPublishTime,
-                    maxPublishTime,
-                    true
-                )
-            );
+        (priceFeeds, ) = parsePriceFeedUpdatesInternal(
+            updateData,
+            priceIds,
+            PythInternalStructs.ParseConfig(
+                minPublishTime,
+                maxPublishTime,
+                true
+            )
+        );
     }
 
     function getTotalFee(
@@ -514,7 +581,9 @@ abstract contract Pyth is
         uint k,
         bytes32 priceId,
         PythInternalStructs.PriceInfo memory info,
-        uint publishTime
+        uint publishTime,
+        uint64[] memory slots,
+        uint64 slot
     ) private pure {
         priceFeeds[k].id = priceId;
         priceFeeds[k].price.price = info.price;
@@ -525,6 +594,7 @@ abstract contract Pyth is
         priceFeeds[k].emaPrice.conf = info.emaConf;
         priceFeeds[k].emaPrice.expo = info.expo;
         priceFeeds[k].emaPrice.publishTime = publishTime;
+        slots[k] = slot;
     }
 
     function queryPriceFeed(

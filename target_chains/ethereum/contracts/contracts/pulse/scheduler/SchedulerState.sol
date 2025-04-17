@@ -12,6 +12,14 @@ contract SchedulerState {
     /// Default max fee multiplier
     uint32 public constant DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT = 10_000;
 
+    // TODO: make these updateable via governance
+    /// Maximum time in the past (relative to current block timestamp)
+    /// for which a price update timestamp is considered valid
+    uint64 public constant PAST_TIMESTAMP_MAX_VALIDITY_PERIOD = 1 hours;
+    /// Maximum time in the future (relative to current block timestamp)
+    /// for which a price update timestamp is considered valid
+    uint64 public constant FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD = 10 seconds;
+
     struct State {
         /// Monotonically increasing counter for subscription IDs
         uint256 subscriptionNumber;

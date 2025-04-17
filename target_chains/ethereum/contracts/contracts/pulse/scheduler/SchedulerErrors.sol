@@ -9,7 +9,7 @@ error InvalidPriceId(bytes32 providedPriceId, bytes32 expectedPriceId);
 error InvalidPriceIdsLength(bytes32 providedLength, bytes32 expectedLength);
 error InvalidUpdateCriteria();
 error InvalidGasConfig();
-error PriceTimestampMismatch();
+error PriceSlotMismatch();
 error TooManyPriceIds(uint256 provided, uint256 maximum);
 error UpdateConditionsNotMet();
 error TimestampOlderThanLastUpdate(

@@ -86,11 +86,15 @@ contract MockPyth is AbstractPyth {
         uint64 minPublishTime,
         uint64 maxPublishTime,
         bool unique
-    ) internal returns (PythStructs.PriceFeed[] memory feeds) {
+    )
+        internal
+        returns (PythStructs.PriceFeed[] memory feeds, uint64[] memory slots)
+    {
         uint requiredFee = getUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
         feeds = new PythStructs.PriceFeed[](priceIds.length);
+        slots = new uint64[](priceIds.length);
 
         for (uint i = 0; i < priceIds.length; i++) {
             for (uint j = 0; j < updateData.length; j++) {
@@ -101,6 +105,7 @@ contract MockPyth is AbstractPyth {
                 );
 
                 uint publishTime = feeds[i].price.publishTime;
+                slots[i] = uint64(publishTime); // use PublishTime as mock slot
                 if (priceFeeds[feeds[i].id].price.publishTime < publishTime) {
                     priceFeeds[feeds[i].id] = feeds[i];
                     emit PriceFeedUpdate(
@@ -135,14 +140,13 @@ contract MockPyth is AbstractPyth {
         uint64 minPublishTime,
         uint64 maxPublishTime
     ) external payable override returns (PythStructs.PriceFeed[] memory feeds) {
-        return
-            parsePriceFeedUpdatesInternal(
-                updateData,
-                priceIds,
-                minPublishTime,
-                maxPublishTime,
-                false
-            );
+        (feeds, ) = parsePriceFeedUpdatesInternal(
+            updateData,
+            priceIds,
+            minPublishTime,
+            maxPublishTime,
+            false
+        );
     }
 
     function parsePriceFeedUpdatesUnique(
@@ -151,13 +155,33 @@ contract MockPyth is AbstractPyth {
         uint64 minPublishTime,
         uint64 maxPublishTime
     ) external payable override returns (PythStructs.PriceFeed[] memory feeds) {
+        (feeds, ) = parsePriceFeedUpdatesInternal(
+            updateData,
+            priceIds,
+            minPublishTime,
+            maxPublishTime,
+            true
+        );
+    }
+
+    function parsePriceFeedUpdatesWithSlots(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        override
+        returns (PythStructs.PriceFeed[] memory feeds, uint64[] memory slots)
+    {
         return
             parsePriceFeedUpdatesInternal(
                 updateData,
                 priceIds,
                 minPublishTime,
                 maxPublishTime,
-                true
+                false
             );
     }
 

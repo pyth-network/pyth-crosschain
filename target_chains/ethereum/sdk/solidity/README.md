@@ -92,7 +92,7 @@ You can find a list of available price feeds [here](https://pyth.network/develop
 
 ### ABIs
 
-When making changes to a contract interface, please make sure to update the ABI files too. You can update it using `pnpm generate-abi` and it will update the ABI files in [abis](./abis) directory.
+When making changes to a contract interface, please make sure to update the ABI files too. You can update it using `pnpm turbo run build:abis` and it will update the ABI files in [abis](./abis) directory.
 
 ### Releases
 
