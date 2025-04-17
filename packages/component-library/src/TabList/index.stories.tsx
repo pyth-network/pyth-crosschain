@@ -11,7 +11,7 @@ const meta = {
         disable: true,
       },
     },
-    pathname: {
+    currentTab: {
       table: {
         disable: true,
       },

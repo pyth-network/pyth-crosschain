@@ -8,4 +8,5 @@
   overflow: hidden auto;
   transform: scale(calc(100% - (var(--offset) * 5%)));
   height: 100dvh;
+  scrollbar-gutter: stable;
 }

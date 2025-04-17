@@ -55,7 +55,7 @@ export const EntityList = <T extends string>({
     {...props}
   >
     {isLoading ? (
-      <GridListItem className={styles.entityItem ?? ""}>
+      <GridListItem className={styles.entityItem ?? ""} textValue="Loading">
         <div className={styles.itemHeader}>{headerLoadingSkeleton}</div>
         <dl className={styles.itemDetails}>
           {fields.map((field) => (

@@ -1,19 +1,27 @@
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Alert as AlertComponent, AlertTrigger } from "./index.js";
+import { useAlert as useAlertImpl } from "./index.js";
 import { Button } from "../Button/index.js";
 
+const ShowButton = (
+  props: Parameters<ReturnType<typeof useAlertImpl>["open"]>[0],
+) => {
+  const drawer = useAlertImpl();
+  return (
+    <Button
+      onPress={() => {
+        drawer.open(props);
+      }}
+    >
+      Show alert
+    </Button>
+  );
+};
+
 const meta = {
-  component: AlertComponent,
-  decorators: [
-    (Story) => (
-      <AlertTrigger>
-        <Button>Click me!</Button>
-        <Story />
-      </AlertTrigger>
-    ),
-  ],
+  title: "hooks/useAlert",
+  component: ShowButton,
   argTypes: {
     icon: {
       control: "select",
@@ -41,13 +49,14 @@ const meta = {
       },
     },
   },
-} satisfies Meta<typeof AlertComponent>;
+} satisfies Meta<typeof ShowButton>;
 export default meta;
 
-export const Alert = {
+export const useAlert = {
+  name: "useAlert",
   args: {
     title: "An Alert",
     children:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
   },
-} satisfies StoryObj<typeof AlertComponent>;
+} satisfies StoryObj<typeof ShowButton>;

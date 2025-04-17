@@ -7,17 +7,16 @@ import { Heading } from "react-aria-components";
 
 import styles from "./index.module.scss";
 import { Button } from "../Button/index.js";
-import { ModalDialog } from "../ModalDialog/index.js";
-
-export { ModalDialogTrigger as AlertTrigger } from "../ModalDialog/index.js";
+import type { OpenArgs } from "../ModalDialog/index.js";
+import { ModalDialog, createModalDialogContext } from "../ModalDialog/index.js";
 
 const CLOSE_DURATION_IN_S = 0.1;
-export const CLOSE_DURATION_IN_MS = CLOSE_DURATION_IN_S * 1000;
 
-type OwnProps = Pick<ComponentProps<typeof ModalDialog>, "children"> & {
+type OwnProps = {
   icon?: ReactNode | undefined;
   title: ReactNode;
   bodyClassName?: string | undefined;
+  contents: ReactNode;
 };
 
 type Props = Omit<
@@ -26,10 +25,10 @@ type Props = Omit<
 > &
   OwnProps;
 
-export const Alert = ({
+const Alert = ({
   icon,
   title,
-  children,
+  contents,
   className,
   bodyClassName,
   ...props
@@ -50,27 +49,27 @@ export const Alert = ({
     className={clsx(styles.alert, className)}
     {...props}
   >
-    {(...args) => (
-      <>
-        <Button
-          className={styles.closeButton ?? ""}
-          beforeIcon={(props) => <XCircle weight="fill" {...props} />}
-          slot="close"
-          hideText
-          rounded
-          variant="ghost"
-          size="sm"
-        >
-          Close
-        </Button>
-        <Heading className={styles.title} slot="title">
-          {icon && <div className={styles.icon}>{icon}</div>}
-          <div>{title}</div>
-        </Heading>
-        <div className={clsx(styles.body, bodyClassName)}>
-          {typeof children === "function" ? children(...args) : children}
-        </div>
-      </>
-    )}
+    <Button
+      className={styles.closeButton ?? ""}
+      beforeIcon={(props) => <XCircle weight="fill" {...props} />}
+      slot="close"
+      hideText
+      rounded
+      variant="ghost"
+      size="sm"
+    >
+      Close
+    </Button>
+    <Heading className={styles.title} slot="title">
+      {icon && <div className={styles.icon}>{icon}</div>}
+      <div>{title}</div>
+    </Heading>
+    <div className={clsx(styles.body, bodyClassName)}>{contents}</div>
   </ModalDialog>
 );
+
+const { Provider, useValue } = createModalDialogContext<Props>(Alert);
+
+export const AlertProvider = Provider;
+export const useAlert = useValue;
+export type OpenAlertArgs = OpenArgs<Props>;

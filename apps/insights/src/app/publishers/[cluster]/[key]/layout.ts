@@ -1,7 +1,7 @@
 import { lookup } from "@pythnetwork/known-publishers";
 import type { Metadata } from "next";
 
-export { PublishersLayout as default } from "../../../../components/Publisher/layout";
+export { PublisherLayout as default } from "../../../../components/Publisher/layout";
 
 type Props = {
   params: Promise<{
@@ -22,5 +22,4 @@ export const generateMetadata = async ({
   };
 };
 
-export const dynamic = "error";
 export const revalidate = 3600;
