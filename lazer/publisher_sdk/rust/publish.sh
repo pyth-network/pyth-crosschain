@@ -15,24 +15,24 @@ echo "deleting build.rs file"
 rm -f "${PACKAGE_DIR}/build.rs"
 
 echo "updating lib.rs to export local protobuf files"
-cat > "${PACKAGE_DIR}/src/lib.rs" << EOF
-pub mod transaction {
-    pub use crate::protobuf::pyth_lazer_transaction::*;
-}
-pub mod publisher_update {
-    pub use crate::protobuf::publisher_update::*;
-}
-mod protobuf;
-EOF
+python3 -c "
+import re
 
-echo "removing build spec from Cargo.toml"
-# MacOS sed command is slightly different
-# This script shouldn't be run locally anyway, but I may as well make sure it works
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  sed -i '' '/build.*build\.rs/d' Cargo.toml
-else
-  sed -i '/build.*build\.rs/d' Cargo.toml
-fi
+def replace_mod_protobuf(file_path):
+    with open(file_path, 'r') as f:
+        content = f.read()
+
+    pattern = re.compile(r'mod\s+protobuf\s*\{.*?\}', re.DOTALL)
+
+    replacement = 'mod protobuf;'
+
+    new_content = pattern.sub(replacement, content)
+
+    with open(file_path, 'w') as f:
+        f.write(new_content)
+
+replace_mod_protobuf('${PACKAGE_DIR}/src/lib.rs')
+"
 
 echo "publishing package"
 cargo publish --token ${CARGO_REGISTRY_TOKEN}
