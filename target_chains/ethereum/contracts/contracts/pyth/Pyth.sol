@@ -492,8 +492,11 @@ abstract contract Pyth is
     function getTotalFee(
         uint totalNumUpdates
     ) private view returns (uint requiredFee) {
-        return
-            (totalNumUpdates * singleUpdateFeeInWei()) + transactionFeeInWei();
+        uint updateFee = customUpdateFeeInWei(msg.sender);
+        if (updateFee == 0) {
+            updateFee = singleUpdateFeeInWei();
+        }
+        return (totalNumUpdates * updateFee) + transactionFeeInWei();
     }
 
     function findIndexOfPriceId(
