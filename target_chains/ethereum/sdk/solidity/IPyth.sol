@@ -173,7 +173,6 @@ interface IPyth is IPythEvents {
     /// @param maxPublishTime maximum acceptable publishTime for the given `priceIds`.
     /// @return priceFeeds Array of the price feeds corresponding to the given `priceIds` (with the same order).
     /// @return slots Array of the Pythnet slot corresponding to the given `priceIds` (with the same order).
-    /// @
     function parsePriceFeedUpdatesWithSlots(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,

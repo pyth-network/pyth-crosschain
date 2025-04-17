@@ -204,7 +204,6 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         );
     }
 
-    /// Testing parsePriceFeedUpdates method.
     function testParsePriceFeedUpdatesWorks(uint seed) public {
         setRandSeed(seed);
         uint numMessages = 1 + (getRandUint() % 10);
@@ -237,7 +236,6 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         }
     }
 
-    /// Testing parsePriceFeedUpdatesWithSlots method.
     function testParsePriceFeedUpdatesWithSlotsWorks(uint seed) public {
         setRandSeed(seed);
         uint numMessages = 1 + (getRandUint() % 10);

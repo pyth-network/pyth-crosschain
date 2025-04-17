@@ -179,34 +179,13 @@ abstract contract Pyth is
         if (price.publishTime == 0) revert PythErrors.PriceFeedNotFound();
     }
 
-    /// Internal struct to hold parameters for update processing
-    /// @dev Storing these variable in a struct rather than local variables
-    /// helps reduce stack depth.
-    struct UpdateProcessingContext {
-        bytes32[] priceIds;
-        uint64 minPublishTime;
-        uint64 maxPublishTime;
-        bool checkUniqueness;
-        PythStructs.PriceFeed[] priceFeeds;
-        uint64[] slots;
-    }
-
-    /// The initial Merkle header data in an updateData. The encoded bytes
-    /// are kept in calldata for gas efficiency.
-    /// @dev Storing these variable in a struct rather than local variables
-    /// helps reduce stack depth.
-    struct MerkleData {
-        bytes20 digest;
-        uint8 numUpdates;
-        uint64 slot;
-    }
-
-    /// @dev Helper function to process a single price update within a Merkle proof.
-    function _processSingleMerkleUpdate(
-        MerkleData memory merkleData,
+    /// @dev Helper function to parse a single price update within a Merkle proof.
+    /// Parsed price feeds will be stored in the context.
+    function _parseSingleMerkleUpdate(
+        PythInternalStructs.MerkleData memory merkleData,
         bytes calldata encoded,
         uint offset,
-        UpdateProcessingContext memory context
+        PythInternalStructs.UpdateParseContext memory context
     ) internal pure returns (uint newOffset) {
         PythInternalStructs.PriceInfo memory priceInfo;
         bytes32 priceId;
@@ -230,10 +209,10 @@ abstract contract Pyth is
         if (k < context.priceIds.length && context.priceFeeds[k].id == 0) {
             uint publishTime = uint(priceInfo.publishTime);
             if (
-                publishTime >= context.minPublishTime &&
-                publishTime <= context.maxPublishTime &&
-                (!context.checkUniqueness ||
-                    context.minPublishTime > prevPublishTime)
+                publishTime >= context.config.minPublishTime &&
+                publishTime <= context.config.maxPublishTime &&
+                (!context.config.checkUniqueness ||
+                    context.config.minPublishTime > prevPublishTime)
             ) {
                 context.priceFeeds[k].id = priceId;
                 context.priceFeeds[k].price.price = priceInfo.price;
@@ -252,7 +231,7 @@ abstract contract Pyth is
     /// @dev Processes a single entry from the updateData array.
     function _processSingleUpdateDataBlob(
         bytes calldata singleUpdateData,
-        UpdateProcessingContext memory context
+        PythInternalStructs.UpdateParseContext memory context
     ) internal view {
         // Check magic number and length first
         if (
@@ -276,7 +255,7 @@ abstract contract Pyth is
         }
 
         // Extract Merkle data
-        MerkleData memory merkleData;
+        PythInternalStructs.MerkleData memory merkleData;
         bytes calldata encoded;
         (
             offset,
@@ -291,7 +270,7 @@ abstract contract Pyth is
 
         // Process each update within the Merkle proof
         for (uint j = 0; j < merkleData.numUpdates; j++) {
-            offset = _processSingleMerkleUpdate(
+            offset = _parseSingleMerkleUpdate(
                 merkleData,
                 encoded,
                 offset,
@@ -322,16 +301,15 @@ abstract contract Pyth is
         }
 
         // Create the context struct that holds all shared parameters
-        UpdateProcessingContext memory context;
+        PythInternalStructs.UpdateParseContext memory context;
         context.priceIds = priceIds;
-        context.minPublishTime = config.minPublishTime;
-        context.maxPublishTime = config.maxPublishTime;
-        context.checkUniqueness = config.checkUniqueness;
+        context.config = config;
         context.priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
         context.slots = new uint64[](priceIds.length);
 
         unchecked {
             // Process each update, passing the context struct
+            // Parsed results will be filled in context.priceFeeds and context.slots
             for (uint i = 0; i < updateData.length; i++) {
                 _processSingleUpdateDataBlob(updateData[i], context);
             }
@@ -369,8 +347,6 @@ abstract contract Pyth is
         );
     }
 
-    /// @dev Same as `parsePriceFeedUpdates`, but also returns the Pythnet slot
-    /// associated with each price update.
     function parsePriceFeedUpdatesWithSlots(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,

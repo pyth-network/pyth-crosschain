@@ -1044,7 +1044,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         vm.prank(pusher);
         scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
 
-        // Try to access from the non-whitelisted address (should fail)
+        // Try to access from a non-whitelisted address (should fail)
         vm.startPrank(address(0xdead));
         bytes32[] memory emptyPriceIds = new bytes32[](0);
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector));

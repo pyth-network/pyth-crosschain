@@ -15,6 +15,26 @@ contract PythInternalStructs {
         bool checkUniqueness;
     }
 
+    /// Internal struct to hold parameters for update processing
+    /// @dev Storing these variable in a struct rather than local variables
+    /// helps reduce stack depth when passing arguments to functions.
+    struct UpdateParseContext {
+        bytes32[] priceIds;
+        ParseConfig config;
+        PythStructs.PriceFeed[] priceFeeds;
+        uint64[] slots;
+    }
+
+    /// The initial Merkle header data in an AccumulatorUpdate. The encoded bytes
+    /// are kept in calldata for gas efficiency.
+    /// @dev Storing these variable in a struct rather than local variables
+    /// helps reduce stack depth when passing arguments to functions.
+    struct MerkleData {
+        bytes20 digest;
+        uint8 numUpdates;
+        uint64 slot;
+    }
+
     struct PriceInfo {
         // slot 1
         uint64 publishTime;
