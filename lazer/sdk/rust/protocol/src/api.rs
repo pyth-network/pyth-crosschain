@@ -4,7 +4,7 @@ use crate::router::{
     Channel, Format, JsonBinaryEncoding, JsonUpdate, PriceFeedId, PriceFeedProperty, TimestampUs,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LatestPriceRequest {
     pub price_feed_ids: Vec<PriceFeedId>,
@@ -21,7 +21,7 @@ pub struct LatestPriceRequest {
     pub channel: Channel,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PriceRequest {
     pub timestamp: TimestampUs,
@@ -37,7 +37,7 @@ pub struct PriceRequest {
     pub channel: Channel,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReducePriceRequest {
     pub payload: JsonUpdate,
