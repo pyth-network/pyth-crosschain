@@ -24,7 +24,6 @@ pyth-lazer-protocol = { path = "../../../../sdk/rust/protocol", version = "0.7.0
 anchor-lang = "0.30.1"
 bytemuck = "1.20.0"
 byteorder = "1.5.0"
-proc-macro2 = "=1.0.94"
 thiserror = "2.0.3"
 
 [dev-dependencies]

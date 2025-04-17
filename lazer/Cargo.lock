@@ -3877,7 +3877,6 @@ dependencies = [
  "bytemuck",
  "byteorder",
  "hex",
- "proc-macro2",
  "pyth-lazer-protocol",
  "solana-program-test",
  "solana-sdk",
