@@ -47,5 +47,7 @@ jobs:
           rustup install 1.79.0
           rustup install nightly-2025-04-15
           RUSTFLAGS= cargo +1.79.0 install --git https://github.com/coral-xyz/anchor --tag v0.30.1 --locked anchor-cli
+      - name: Build Solana program
+        run: cargo build-sbf
       - name: Run anchor tests
         run: pnpm run test:anchor
