@@ -8,7 +8,7 @@ use {
 };
 
 /// A request sent from the client to the server.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
 pub enum Request {
@@ -16,10 +16,10 @@ pub enum Request {
     Unsubscribe(UnsubscribeRequest),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SubscriptionId(pub u64);
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscribeRequest {
     pub subscription_id: SubscriptionId,
@@ -27,7 +27,7 @@ pub struct SubscribeRequest {
     pub params: SubscriptionParams,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UnsubscribeRequest {
     pub subscription_id: SubscriptionId,
