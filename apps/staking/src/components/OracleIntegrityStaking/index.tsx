@@ -608,9 +608,17 @@ const PublisherList = ({
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [currentPage, setPage] = useState(1);
   const collator = useCollator();
+  const activePublishers = useMemo(
+    () =>
+      publishers.filter(
+        (publisher) =>
+          publisher.poolCapacity > 0n || hasAnyPositions(publisher),
+      ),
+    [publishers],
+  );
   const filteredSortedPublishers = useMemo(
     () =>
-      publishers
+      activePublishers
         .filter(
           (publisher) =>
             filter.contains(publisher.publicKey.toBase58(), search) ||
@@ -629,7 +637,7 @@ const PublisherList = ({
           }
           return compare(collator, a, b, yieldRate, sort);
         }),
-    [publishers, search, sort, filter, yieldRate, yoursFirst, collator],
+    [activePublishers, search, sort, filter, yieldRate, yoursFirst, collator],
   );
 
   const paginatedPublishers = useMemo(
@@ -1467,7 +1475,7 @@ const UtilizationMeter = ({ publisher, ...props }: UtilizationMeterProps) => {
               })}
             >
               {Number.isNaN(utilizationPercent)
-                ? "Empty Pool"
+                ? "Inactive Pool"
                 : `${utilizationPercent.toString()}%`}
             </div>
           </div>
@@ -1612,7 +1620,9 @@ const StakeToPublisherButton = ({
     publisher.publicKey,
   );
 
-  return (
+  return publisher.poolCapacity === 0n ? (
+    <></>
+  ) : (
     <TransferButton
       size="small"
       actionDescription={
