@@ -17,6 +17,7 @@ abstract contract EntropyGovernance is EntropyState {
 
     event NewAdminProposed(address oldAdmin, address newAdmin);
     event NewAdminAccepted(address oldAdmin, address newAdmin);
+    event FeeWithdrawn(address targetAddress, uint amount);
 
     /**
      * @dev Returns the address of the proposed admin.
@@ -90,6 +91,28 @@ abstract contract EntropyGovernance is EntropyState {
         _state.defaultProvider = newDefaultProvider;
 
         emit DefaultProviderSet(oldDefaultProvider, newDefaultProvider);
+    }
+
+    /**
+     * @dev Withdraw accumulated Pyth fees to a target address
+     *
+     * Calls {_authoriseAdminAction}.
+     *
+     * Emits a {FeeWithdrawn} event.
+     */
+    function withdrawFee(address targetAddress, uint128 amount) external {
+        require(targetAddress != address(0), "targetAddress is zero address");
+        _authoriseAdminAction();
+
+        if (amount > _state.accruedPythFeesInWei)
+            revert EntropyErrors.InsufficientFee();
+
+        _state.accruedPythFeesInWei -= amount;
+
+        (bool success, ) = targetAddress.call{value: amount}("");
+        require(success, "Failed to withdraw fees");
+
+        emit FeeWithdrawn(targetAddress, amount);
     }
 
     function _authoriseAdminAction() internal virtual;

@@ -174,4 +174,82 @@ contract EntropyAuthorized is Test, EntropyTestUtils {
         vm.expectRevert(EntropyErrors.Unauthorized.selector);
         random.acceptAdmin();
     }
+
+    // Helper function to setup contract with fees
+    function setupContractWithFees(
+        uint128 feeAmount,
+        uint numRequests
+    ) internal returns (uint128 totalFees) {
+        // Register provider1
+        bytes32[] memory hashChain = generateHashChain(provider1, 0, 100);
+        vm.prank(provider1);
+        random.register(0, hashChain[0], hex"0100", 100, "");
+
+        // Set Pyth fee
+        vm.prank(admin);
+        random.setPythFee(feeAmount);
+
+        // Make requests to accrue fees
+        bytes32 userCommitment = random.constructUserCommitment(
+            bytes32(uint256(42))
+        );
+        vm.deal(address(this), feeAmount * numRequests);
+        for (uint i = 0; i < numRequests; i++) {
+            random.request{value: feeAmount}(provider1, userCommitment, false);
+        }
+
+        totalFees = uint128(feeAmount * numRequests);
+        assertEq(random.getAccruedPythFees(), totalFees);
+        return totalFees;
+    }
+
+    function testWithdrawFeeByAdmin() public {
+        uint128 totalFees = setupContractWithFees(10, 5);
+
+        address targetAddress = address(123);
+        uint128 withdrawAmount = 30;
+
+        vm.prank(admin);
+        random.withdrawFee(targetAddress, withdrawAmount);
+
+        assertEq(random.getAccruedPythFees(), totalFees - withdrawAmount);
+        assertEq(targetAddress.balance, withdrawAmount);
+    }
+
+    function testWithdrawFeeByOwner() public {
+        uint128 totalFees = setupContractWithFees(10, 5);
+
+        address targetAddress = address(123);
+        uint128 withdrawAmount = 30;
+
+        vm.prank(owner);
+        random.withdrawFee(targetAddress, withdrawAmount);
+
+        assertEq(random.getAccruedPythFees(), totalFees - withdrawAmount);
+        assertEq(targetAddress.balance, withdrawAmount);
+    }
+
+    function testWithdrawFeeByUnauthorized() public {
+        setupContractWithFees(10, 5);
+
+        vm.prank(admin2);
+        vm.expectRevert(EntropyErrors.Unauthorized.selector);
+        random.withdrawFee(address(123), 30);
+    }
+
+    function testWithdrawFeeInsufficientBalance() public {
+        uint128 totalFees = setupContractWithFees(10, 5);
+
+        vm.prank(admin);
+        vm.expectRevert(EntropyErrors.InsufficientFee.selector);
+        random.withdrawFee(address(123), totalFees + 10);
+    }
+
+    function testWithdrawFeeToZeroAddress() public {
+        setupContractWithFees(10, 5);
+
+        vm.prank(admin);
+        vm.expectRevert("targetAddress is zero address");
+        random.withdrawFee(address(0), 30);
+    }
 }
