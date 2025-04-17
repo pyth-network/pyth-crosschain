@@ -705,5 +705,5 @@ contract PythGovernanceTest is
         address newWormholeAddress
     );
     event TransactionFeeSet(uint oldFee, uint newFee);
-    event FeeWithdrawn(address recipient, uint256 amount);
+    event FeeWithdrawn(address recipient, uint256 fee);
 }

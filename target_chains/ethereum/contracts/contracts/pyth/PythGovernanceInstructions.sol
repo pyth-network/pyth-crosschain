@@ -85,8 +85,8 @@ contract PythGovernanceInstructions {
 
     struct WithdrawFeePayload {
         address targetAddress;
-        // Amount in wei, matching the native uint256 type used for address.balance in EVM
-        uint256 amount;
+        // Fee in wei, matching the native uint256 type used for address.balance in EVM
+        uint256 fee;
     }
 
     /// @dev Parse a GovernanceInstruction
@@ -266,7 +266,7 @@ contract PythGovernanceInstructions {
         uint64 expo = encodedPayload.toUint64(index);
         index += 8;
 
-        wf.amount = uint256(val) * uint256(10) ** uint256(expo);
+        wf.fee = uint256(val) * uint256(10) ** uint256(expo);
 
         if (encodedPayload.length != index)
             revert PythErrors.InvalidGovernanceMessage();
