@@ -23,35 +23,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function createSubscription(
         SubscriptionParams memory subscriptionParams
     ) external payable override returns (uint256 subscriptionId) {
-        if (
-            subscriptionParams.priceIds.length > MAX_PRICE_IDS_PER_SUBSCRIPTION
-        ) {
-            revert TooManyPriceIds(
-                subscriptionParams.priceIds.length,
-                MAX_PRICE_IDS_PER_SUBSCRIPTION
-            );
-        }
-
-        // Validate update criteria
-        if (
-            !subscriptionParams.updateCriteria.updateOnHeartbeat &&
-            !subscriptionParams.updateCriteria.updateOnDeviation
-        ) {
-            revert InvalidUpdateCriteria();
-        }
-
-        // If gas config is unset, set it to the default (100x multipliers)
-        if (
-            subscriptionParams.gasConfig.maxBaseFeeMultiplierCapPct == 0 ||
-            subscriptionParams.gasConfig.maxPriorityFeeMultiplierCapPct == 0
-        ) {
-            subscriptionParams
-                .gasConfig
-                .maxPriorityFeeMultiplierCapPct = DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT;
-            subscriptionParams
-                .gasConfig
-                .maxBaseFeeMultiplierCapPct = DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT;
-        }
+        // Validate params and set default gas config
+        _validateAndPrepareSubscriptionParams(subscriptionParams);
 
         // Calculate minimum balance required for this subscription
         uint256 minimumBalance = this.getMinimumBalance(
@@ -133,34 +106,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             return;
         }
 
-        // Validate parameters for active or to-be-activated subscriptions
-        if (newParams.priceIds.length > MAX_PRICE_IDS_PER_SUBSCRIPTION) {
-            revert TooManyPriceIds(
-                newParams.priceIds.length,
-                MAX_PRICE_IDS_PER_SUBSCRIPTION
-            );
-        }
-
-        // Validate update criteria
-        if (
-            !newParams.updateCriteria.updateOnHeartbeat &&
-            !newParams.updateCriteria.updateOnDeviation
-        ) {
-            revert InvalidUpdateCriteria();
-        }
-
-        // If gas config is unset, set it to the default (100x multipliers)
-        if (
-            newParams.gasConfig.maxBaseFeeMultiplierCapPct == 0 ||
-            newParams.gasConfig.maxPriorityFeeMultiplierCapPct == 0
-        ) {
-            newParams
-                .gasConfig
-                .maxPriorityFeeMultiplierCapPct = DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT;
-            newParams
-                .gasConfig
-                .maxBaseFeeMultiplierCapPct = DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT;
-        }
+        // Validate the new parameters, including setting default gas config
+        _validateAndPrepareSubscriptionParams(newParams);
 
         // Handle activation/deactivation
         if (!wasActive && willBeActive) {
@@ -193,6 +140,83 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         _state.subscriptionParams[subscriptionId] = newParams;
 
         emit SubscriptionUpdated(subscriptionId);
+    }
+
+    /**
+     * @notice Validates subscription parameters and sets default gas config if needed.
+     * @dev This function modifies the passed-in params struct in place for gas config defaults.
+     * @param params The subscription parameters to validate and prepare.
+     */
+    function _validateAndPrepareSubscriptionParams(
+        SubscriptionParams memory params
+    ) internal pure {
+        // No zero‐feed subscriptions
+        if (params.priceIds.length == 0) {
+            revert EmptyPriceIds();
+        }
+
+        // Price ID limits and uniqueness
+        if (params.priceIds.length > MAX_PRICE_IDS_PER_SUBSCRIPTION) {
+            revert TooManyPriceIds(
+                params.priceIds.length,
+                MAX_PRICE_IDS_PER_SUBSCRIPTION
+            );
+        }
+        for (uint i = 0; i < params.priceIds.length; i++) {
+            for (uint j = i + 1; j < params.priceIds.length; j++) {
+                if (params.priceIds[i] == params.priceIds[j]) {
+                    revert DuplicatePriceId(params.priceIds[i]);
+                }
+            }
+        }
+
+        // Whitelist size limit and uniqueness
+        if (params.readerWhitelist.length > MAX_READER_WHITELIST_SIZE) {
+            revert TooManyWhitelistedReaders(
+                params.readerWhitelist.length,
+                MAX_READER_WHITELIST_SIZE
+            );
+        }
+        for (uint i = 0; i < params.readerWhitelist.length; i++) {
+            for (uint j = i + 1; j < params.readerWhitelist.length; j++) {
+                if (params.readerWhitelist[i] == params.readerWhitelist[j]) {
+                    revert DuplicateWhitelistAddress(params.readerWhitelist[i]);
+                }
+            }
+        }
+
+        // Validate update criteria
+        if (
+            !params.updateCriteria.updateOnHeartbeat &&
+            !params.updateCriteria.updateOnDeviation
+        ) {
+            revert InvalidUpdateCriteria();
+        }
+        if (
+            params.updateCriteria.updateOnHeartbeat &&
+            params.updateCriteria.heartbeatSeconds == 0
+        ) {
+            revert InvalidUpdateCriteria();
+        }
+        if (
+            params.updateCriteria.updateOnDeviation &&
+            params.updateCriteria.deviationThresholdBps == 0
+        ) {
+            revert InvalidUpdateCriteria();
+        }
+
+        // If gas config is unset, set it to the default (100x multipliers)
+        if (
+            params.gasConfig.maxBaseFeeMultiplierCapPct == 0 ||
+            params.gasConfig.maxPriorityFeeMultiplierCapPct == 0
+        ) {
+            params
+                .gasConfig
+                .maxPriorityFeeMultiplierCapPct = DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT;
+            params
+                .gasConfig
+                .maxBaseFeeMultiplierCapPct = DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT;
+        }
     }
 
     /**
@@ -265,10 +289,11 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // Parse price feed updates with an expected timestamp range of [-10s, now]
         // We will validate the trigger conditions and timestamps ourselves
-        // using the returned PriceFeeds.
         uint64 curTime = SafeCast.toUint64(block.timestamp);
         uint64 maxPublishTime = curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD;
-        uint64 minPublishTime = curTime - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD;
+        uint64 minPublishTime = curTime > PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
+            ? curTime - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
+            : 0;
         PythStructs.PriceFeed[] memory priceFeeds;
         uint64[] memory slots;
         (priceFeeds, slots) = pyth.parsePriceFeedUpdatesWithSlots{
