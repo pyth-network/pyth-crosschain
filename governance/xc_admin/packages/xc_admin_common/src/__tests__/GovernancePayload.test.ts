@@ -436,13 +436,15 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       return fc
         .record({
           targetAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
-          amount: fc.bigUintN(256),
+          value: fc.bigUintN(64),
+          expo: fc.bigUintN(64),
         })
-        .map(({ targetAddress, amount }) => {
+        .map(({ targetAddress, value, expo }) => {
           return new WithdrawFee(
             header.targetChainId,
             Buffer.from(targetAddress, "hex"),
-            amount,
+            value,
+            expo,
           );
         });
     } else {
