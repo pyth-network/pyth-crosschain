@@ -270,12 +270,8 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
     function _runGetActiveSubscriptionsBenchmark(uint256 numSubscriptions) internal {
         console.log("Running benchmark for %d subscriptions", numSubscriptions);
         
-        // Limit to a reasonable number for testing to avoid gas issues
+        // Use the exact number of subscriptions requested
         uint256 actualSubscriptions = numSubscriptions;
-        if (actualSubscriptions > 20) {
-            actualSubscriptions = 20;
-            console.log("Limiting to %d subscriptions for testing", actualSubscriptions);
-        }
         
         // Setup: Create subscriptions and then deactivate every other one
         vm.startPrank(owner);
@@ -335,13 +331,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
             gasUsed
         );
         
-        // For larger subscription counts, provide context
-        if (numSubscriptions > actualSubscriptions) {
-            console.log("Note: For %d subscriptions, actual measurement was done with %d subscriptions", 
-                numSubscriptions, 
-                actualSubscriptions
-            );
-        }
+        // No limitations on subscription counts - using exact requested number
     }
 
     // Benchmark tests for updating price feeds with different feed counts
@@ -379,7 +369,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
     }
 
     function testGetActiveSubscriptions100() public {
-        _runGetActiveSubscriptionsBenchmark(20); // Limited to 20 for practical testing
+        _runGetActiveSubscriptionsBenchmark(100); // Using actual requested count
     }
 
     // We'll skip the 1000 test due to gas limitations
