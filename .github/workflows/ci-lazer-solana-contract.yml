@@ -44,12 +44,11 @@ jobs:
       - name: Create Solana key
         run: solana-keygen new --no-bip39-passphrase
       - name: Install Anchor
-        run: |
-          rustup install 1.79.0
-          RUSTFLAGS= cargo +1.80.0 install --git https://github.com/solana-foundation/anchor --tag v0.30.1 --locked anchor-cli
+        run: cargo install --git https://github.com/solana-foundation/anchor --tag v0.30.1 --locked anchor-cli
       - name: Build Solana program
         run: cargo build-sbf
       - name: Run anchor tests
         run: |
-          anchor build --no-idl
+          cargo update -p proc-macro2 --precise 1.0.94
+          RUSTUP_TOOLCHAIN=nightly-2025-04-14 anchor build
           pnpm run test:anchor
