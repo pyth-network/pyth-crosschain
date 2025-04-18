@@ -50,19 +50,30 @@ abstract contract PulseTestUtils is Test {
     function createPriceIds(
         uint256 numFeeds
     ) internal pure returns (bytes32[] memory) {
-        require(numFeeds <= 10, "Too many price feeds requested");
         bytes32[] memory priceIds = new bytes32[](numFeeds);
 
-        if (numFeeds > 0) priceIds[0] = BTC_PRICE_FEED_ID;
-        if (numFeeds > 1) priceIds[1] = ETH_PRICE_FEED_ID;
-        if (numFeeds > 2) priceIds[2] = SOL_PRICE_FEED_ID;
-        if (numFeeds > 3) priceIds[3] = AVAX_PRICE_FEED_ID;
-        if (numFeeds > 4) priceIds[4] = MELANIA_PRICE_FEED_ID;
-        if (numFeeds > 5) priceIds[5] = PYTH_PRICE_FEED_ID;
-        if (numFeeds > 6) priceIds[6] = UNI_PRICE_FEED_ID;
-        if (numFeeds > 7) priceIds[7] = AAVE_PRICE_FEED_ID;
-        if (numFeeds > 8) priceIds[8] = DOGE_PRICE_FEED_ID;
-        if (numFeeds > 9) priceIds[9] = ADA_PRICE_FEED_ID;
+        // First assign our predefined price feed IDs
+        uint256 predefinedCount = 10;
+        uint256 assignCount = numFeeds < predefinedCount
+            ? numFeeds
+            : predefinedCount;
+
+        if (assignCount > 0) priceIds[0] = BTC_PRICE_FEED_ID;
+        if (assignCount > 1) priceIds[1] = ETH_PRICE_FEED_ID;
+        if (assignCount > 2) priceIds[2] = SOL_PRICE_FEED_ID;
+        if (assignCount > 3) priceIds[3] = AVAX_PRICE_FEED_ID;
+        if (assignCount > 4) priceIds[4] = MELANIA_PRICE_FEED_ID;
+        if (assignCount > 5) priceIds[5] = PYTH_PRICE_FEED_ID;
+        if (assignCount > 6) priceIds[6] = UNI_PRICE_FEED_ID;
+        if (assignCount > 7) priceIds[7] = AAVE_PRICE_FEED_ID;
+        if (assignCount > 8) priceIds[8] = DOGE_PRICE_FEED_ID;
+        if (assignCount > 9) priceIds[9] = ADA_PRICE_FEED_ID;
+
+        // For any additional feeds beyond our predefined ones, generate derived IDs
+        for (uint256 i = predefinedCount; i < numFeeds; i++) {
+            // Derive new price IDs by incrementing the last predefined price ID
+            priceIds[i] = bytes32(uint256(ADA_PRICE_FEED_ID) + (i - 9));
+        }
 
         return priceIds;
     }
@@ -109,7 +120,6 @@ abstract contract PulseTestUtils is Test {
         uint256 publishTime,
         uint256 numFeeds
     ) internal pure returns (PythStructs.PriceFeed[] memory) {
-        require(numFeeds <= 10, "Too many price feeds requested");
         PythStructs.PriceFeed[] memory priceFeeds = new PythStructs.PriceFeed[](
             numFeeds
         );
