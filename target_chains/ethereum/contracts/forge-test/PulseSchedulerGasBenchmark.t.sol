@@ -205,6 +205,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
     }
 
     // Benchmark tests for the basic flow: updating and reading price feeds with different feed counts
+    // NOTE: run these tests with -vv to see the gas usage for the operations under test, without setup costs
 
     function testUpdateAndQueryPriceFeeds01Feed() public {
         _runUpdateAndQueryPriceFeedsBenchmark(1);
@@ -231,6 +232,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
     }
 
     // Benchmark tests for fetching active subscriptions with different counts
+    // NOTE: run these tests with -vv to see the gas usage for the operations under test, without setup costs
 
     function testGetActiveSubscriptions010() public {
         _runGetActiveSubscriptionsBenchmark(10);
