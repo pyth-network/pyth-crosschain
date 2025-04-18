@@ -6,7 +6,6 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "./utils/PulseTestUtils.t.sol";
 import "./utils/PulseSchedulerTestUtils.t.sol";
 import "../contracts/pulse/scheduler/SchedulerUpgradeable.sol";
 import "../contracts/pulse/scheduler/IScheduler.sol";
