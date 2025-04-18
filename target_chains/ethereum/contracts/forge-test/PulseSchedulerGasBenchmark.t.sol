@@ -126,6 +126,8 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
+        // Update the price feeds. We should have enough balance to cover the update
+        // because we funded the subscription with the minimum balance during creation.
         scheduler.updatePriceFeeds(subscriptionId, updateData, params.priceIds);
         return subscriptionId;
     }
