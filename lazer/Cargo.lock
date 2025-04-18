@@ -3856,6 +3856,7 @@ dependencies = [
  "hex",
  "itertools 0.13.0",
  "libsecp256k1 0.7.1",
+ "protobuf",
  "rust_decimal",
  "serde",
  "serde_json",
