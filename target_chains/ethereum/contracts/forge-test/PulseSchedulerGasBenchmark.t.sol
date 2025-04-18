@@ -81,9 +81,8 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
             priceIds = createCustomPriceIds(numFeeds);
         }
         
-        address[] memory readerWhitelist = new address[](2);
-        readerWhitelist[0] = address(this);
-        readerWhitelist[1] = pusher;
+        // No need for whitelist since it's disabled
+        address[] memory readerWhitelist = new address[](0);
 
         SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
             .UpdateCriteria({
