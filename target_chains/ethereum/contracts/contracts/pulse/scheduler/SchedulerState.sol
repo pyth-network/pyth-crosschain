@@ -7,6 +7,8 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 contract SchedulerState {
     /// Maximum number of price feeds per subscription
     uint8 public constant MAX_PRICE_IDS_PER_SUBSCRIPTION = 255;
+    /// Maximum number of addresses in the reader whitelist
+    uint8 public constant MAX_READER_WHITELIST_SIZE = 255;
     /// Default max gas multiplier
     uint32 public constant DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT = 10_000;
     /// Default max fee multiplier

@@ -1341,6 +1341,123 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             });
     }
 
+    function testSubscriptionParamValidations() public {
+        uint256 initialSubId = 0; // For update tests
+
+        // === Empty Price IDs ===
+        SchedulerState.SubscriptionParams
+            memory emptyPriceIdsParams = _createDefaultSubscriptionParams(1);
+        emptyPriceIdsParams.priceIds = new bytes32[](0);
+
+        vm.expectRevert(abi.encodeWithSelector(EmptyPriceIds.selector));
+        scheduler.createSubscription{value: 1 ether}(emptyPriceIdsParams);
+
+        initialSubId = addTestSubscription(); // Create a valid one for update test
+        vm.expectRevert(abi.encodeWithSelector(EmptyPriceIds.selector));
+        scheduler.updateSubscription(initialSubId, emptyPriceIdsParams);
+
+        // === Duplicate Price IDs ===
+        SchedulerState.SubscriptionParams
+            memory duplicatePriceIdsParams = _createDefaultSubscriptionParams(
+                2
+            );
+        bytes32 duplicateId = duplicatePriceIdsParams.priceIds[0];
+        duplicatePriceIdsParams.priceIds[1] = duplicateId;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(DuplicatePriceId.selector, duplicateId)
+        );
+        scheduler.createSubscription{value: 1 ether}(duplicatePriceIdsParams);
+
+        initialSubId = addTestSubscription();
+        vm.expectRevert(
+            abi.encodeWithSelector(DuplicatePriceId.selector, duplicateId)
+        );
+        scheduler.updateSubscription(initialSubId, duplicatePriceIdsParams);
+
+        // === Too Many Whitelist Readers ===
+        SchedulerState.SubscriptionParams
+            memory largeWhitelistParams = _createDefaultSubscriptionParams(1);
+        uint whitelistLength = uint(scheduler.MAX_READER_WHITELIST_SIZE()) + 1;
+        address[] memory largeWhitelist = new address[](whitelistLength);
+        for (uint i = 0; i < whitelistLength; i++) {
+            largeWhitelist[i] = address(uint160(i + 1)); // Unique addresses
+        }
+        largeWhitelistParams.readerWhitelist = largeWhitelist;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TooManyWhitelistedReaders.selector,
+                largeWhitelist.length,
+                scheduler.MAX_READER_WHITELIST_SIZE()
+            )
+        );
+        scheduler.createSubscription{value: 1 ether}(largeWhitelistParams);
+
+        initialSubId = addTestSubscription();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TooManyWhitelistedReaders.selector,
+                largeWhitelist.length,
+                scheduler.MAX_READER_WHITELIST_SIZE()
+            )
+        );
+        scheduler.updateSubscription(initialSubId, largeWhitelistParams);
+
+        // === Duplicate Whitelist Address ===
+        SchedulerState.SubscriptionParams
+            memory duplicateWhitelistParams = _createDefaultSubscriptionParams(
+                1
+            );
+        address[] memory duplicateWhitelist = new address[](2);
+        duplicateWhitelist[0] = address(reader);
+        duplicateWhitelist[1] = address(reader); // Duplicate
+        duplicateWhitelistParams.readerWhitelist = duplicateWhitelist;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DuplicateWhitelistAddress.selector,
+                address(reader)
+            )
+        );
+        scheduler.createSubscription{value: 1 ether}(duplicateWhitelistParams);
+
+        initialSubId = addTestSubscription();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DuplicateWhitelistAddress.selector,
+                address(reader)
+            )
+        );
+        scheduler.updateSubscription(initialSubId, duplicateWhitelistParams);
+
+        // === Invalid Heartbeat (Zero Seconds) ===
+        SchedulerState.SubscriptionParams
+            memory invalidHeartbeatParams = _createDefaultSubscriptionParams(1);
+        invalidHeartbeatParams.updateCriteria.updateOnHeartbeat = true;
+        invalidHeartbeatParams.updateCriteria.heartbeatSeconds = 0; // Invalid
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
+        scheduler.createSubscription{value: 1 ether}(invalidHeartbeatParams);
+
+        initialSubId = addTestSubscription();
+        vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
+        scheduler.updateSubscription(initialSubId, invalidHeartbeatParams);
+
+        // === Invalid Deviation (Zero Bps) ===
+        SchedulerState.SubscriptionParams
+            memory invalidDeviationParams = _createDefaultSubscriptionParams(1);
+        invalidDeviationParams.updateCriteria.updateOnDeviation = true;
+        invalidDeviationParams.updateCriteria.deviationThresholdBps = 0; // Invalid
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
+        scheduler.createSubscription{value: 1 ether}(invalidDeviationParams);
+
+        initialSubId = addTestSubscription();
+        vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
+        scheduler.updateSubscription(initialSubId, invalidDeviationParams);
+    }
+
     // Required to receive ETH when withdrawing funds
     receive() external payable {}
 }
