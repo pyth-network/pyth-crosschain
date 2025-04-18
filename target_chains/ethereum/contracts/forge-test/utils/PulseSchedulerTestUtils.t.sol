@@ -30,7 +30,7 @@ abstract contract PulseSchedulerTestUtils is Test, PulseTestUtils {
     /// Helper function to add a test subscription with variable number of feeds
     function addTestSubscriptionWithFeeds(
         SchedulerUpgradeable scheduler,
-        uint256 numFeeds,
+        uint8 numFeeds,
         address whitelistedReader
     ) internal returns (uint256) {
         SchedulerState.SubscriptionParams
@@ -78,7 +78,7 @@ abstract contract PulseSchedulerTestUtils is Test, PulseTestUtils {
 
     // Helper function to create default subscription parameters
     function createDefaultSubscriptionParams(
-        uint256 numFeeds,
+        uint8 numFeeds,
         address whitelistedReader
     ) internal pure returns (SchedulerState.SubscriptionParams memory) {
         bytes32[] memory priceIds = createPriceIds(numFeeds);

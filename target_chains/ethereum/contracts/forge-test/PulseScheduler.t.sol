@@ -98,12 +98,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
     }
 
     function testCreateSubscription() public {
-        uint256 numFeeds = 2; // Corresponds to default createPriceIds()
         SchedulerState.SubscriptionParams
-            memory params = createDefaultSubscriptionParams(
-                numFeeds,
-                address(reader)
-            );
+            memory params = createDefaultSubscriptionParams(2, address(reader));
         bytes32[] memory priceIds = params.priceIds; // Get the generated price IDs
 
         // Calculate minimum balance
@@ -247,7 +243,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
     function testUpdateSubscriptionClearsRemovedPriceFeeds() public {
         // 1. Setup: Add subscription with 3 price feeds, update prices
-        uint256 numInitialFeeds = 3;
+        uint8 numInitialFeeds = 3;
         uint256 subscriptionId = addTestSubscriptionWithFeeds(
             scheduler,
             numInitialFeeds,
@@ -338,7 +334,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
     }
 
     function testcreateSubscriptionWithInsufficientFundsReverts() public {
-        uint256 numFeeds = 2;
+        uint8 numFeeds = 2;
         SchedulerState.SubscriptionParams
             memory params = createDefaultSubscriptionParams(
                 numFeeds,

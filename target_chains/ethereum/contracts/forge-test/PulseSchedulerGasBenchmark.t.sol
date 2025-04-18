@@ -12,9 +12,9 @@ import "../contracts/pulse/scheduler/IScheduler.sol";
 import "../contracts/pulse/scheduler/SchedulerState.sol";
 import "../contracts/pulse/scheduler/SchedulerEvents.sol";
 import "../contracts/pulse/scheduler/SchedulerErrors.sol";
-import "./utils/PulseTestUtils.t.sol";
+import "./utils/PulseSchedulerTestUtils.t.sol";
 
-contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
+contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
     ERC1967Proxy public proxy;
     SchedulerUpgradeable public scheduler;
     address public owner;
@@ -41,61 +41,27 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
         // `minPublishTime = timestamp - 1 hour` in updatePriceFeeds
         vm.warp(100000);
 
-        // Give pusher 100 ETH for testing
-        vm.deal(pusher, 100 ether);
+        // Give pusher and owner 1000 ETH for testing
+        vm.deal(pusher, 1000 ether);
+        vm.deal(owner, 1000 ether);
     }
 
-    // Helper function to create a subscription with a specific number of feeds
-    function _createSubscriptionWithFeeds(
-        uint256 numFeeds
-    ) internal returns (uint256) {
-        bytes32[] memory priceIds = createPriceIds(numFeeds);
-
-        // No need for whitelist since it's disabled
-        address[] memory readerWhitelist = new address[](0);
-
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: false, // Disable whitelist for simplicity
-                isActive: true,
-                isPermanent: false, // Add missing parameter
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
-
-        uint256 minimumBalance = scheduler.getMinimumBalance(uint8(numFeeds));
-
-        // Add extra funds for updates
-        uint256 fundAmount = minimumBalance + 1 ether;
-
-        return scheduler.createSubscription{value: fundAmount}(params);
-    }
-
-    // Helper function to create a subscription and update its price feeds
-    function _setupSubscriptionWithFeeds(
-        uint256 numFeeds
-    ) internal returns (uint256, bytes32[] memory) {
-        // Create subscription as owner to avoid permission issues
+    // Helper function to run the price feed update benchmark with a specified number of feeds
+    function _runUpdateAndQueryPriceFeedsBenchmark(uint8 numFeeds) internal {
+        // Setup: Create subscription and initial price update
         vm.prank(owner);
-        uint256 subscriptionId = _createSubscriptionWithFeeds(numFeeds);
-        bytes32[] memory priceIds = createPriceIds(numFeeds);
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(
+            scheduler,
+            numFeeds,
+            address(owner)
+        );
 
-        // Create initial price feeds and update them
+        // Fetch the price IDS
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        bytes32[] memory priceIds = params.priceIds;
+
+        // Create initial price feed updates
         uint64 publishTime = SafeCast.toUint64(block.timestamp);
         PythStructs.PriceFeed[] memory priceFeeds;
         uint64[] memory slots;
@@ -106,70 +72,14 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
         );
 
         mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
-        bytes[] memory updateData = createMockUpdateData(priceFeeds);
-
-        // Update price feeds as pusher
+        bytes[] memory updateData1 = createMockUpdateData(priceFeeds);
         vm.prank(pusher);
-        scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
-
-        return (subscriptionId, priceIds);
-    }
-
-    // Helper function to create multiple subscriptions with alternating active status
-    function _createSubscriptionsWithGaps(
-        uint256 numSubscriptions
-    ) internal returns (uint256[] memory) {
-        // Limit to a reasonable number for testing to avoid gas issues
-        require(numSubscriptions <= 100, "Too many subscriptions for testing");
-
-        uint256[] memory subscriptionIds = new uint256[](numSubscriptions);
-
-        for (uint256 i = 0; i < numSubscriptions; i++) {
-            // Create subscription with 2 feeds to keep it lightweight
-            vm.prank(owner);
-            subscriptionIds[i] = _createSubscriptionWithFeeds(2);
-
-            // Deactivate every other subscription to create gaps
-            if (i % 2 == 1) {
-                // Get current params
-                (SchedulerState.SubscriptionParams memory params, ) = scheduler
-                    .getSubscription(subscriptionIds[i]);
-
-                // Deactivate subscription
-                params.isActive = false;
-                // Ensure isPermanent is set correctly
-                params.isPermanent = false;
-                vm.prank(owner); // Must be owner to update subscription
-                scheduler.updateSubscription(subscriptionIds[i], params);
-            }
-        }
-
-        return subscriptionIds;
-    }
-
-    // Helper function to run the price feed update benchmark with a specified number of feeds
-    function _runUpdatePriceFeedsBenchmark(uint256 numFeeds) internal {
-        // Skip if numFeeds is 0 or greater than 255 (max allowed by contract)
-        if (numFeeds == 0 || numFeeds > 255) {
-            console.log(
-                "Skipping benchmark for %s feeds - invalid feed count",
-                vm.toString(numFeeds)
-            );
-            return;
-        }
-
-        // Use actual gas measurements for all feed counts
-
-        // Setup: Create subscription and initial price update
-        (
-            uint256 subscriptionId,
-            bytes32[] memory priceIds
-        ) = _setupSubscriptionWithFeeds(numFeeds);
+        scheduler.updatePriceFeeds(subscriptionId, updateData1, priceIds);
 
         // Advance time to meet heartbeat criteria
         vm.warp(block.timestamp + 100);
 
-        // Create new price feeds with updated timestamp and prices
+        // Create new price feed updates with updated timestamp and prices
         uint64 newPublishTime = SafeCast.toUint64(block.timestamp);
         PythStructs.PriceFeed[] memory newPriceFeeds;
         uint64[] memory newSlots;
@@ -191,40 +101,52 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
         }
 
         mockParsePriceFeedUpdatesWithSlots(pyth, newPriceFeeds, newSlots);
-        bytes[] memory updateData = createMockUpdateData(newPriceFeeds);
+        bytes[] memory updateData2 = createMockUpdateData(newPriceFeeds);
 
         // Actual benchmark: Measure gas for updating price feeds
         vm.prank(pusher);
         uint256 startGas = gasleft();
-        scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
-        uint256 gasUsed = startGas - gasleft();
+        scheduler.updatePriceFeeds(subscriptionId, updateData2, priceIds);
+        uint256 updateGasUsed = startGas - gasleft();
 
         console.log(
             "Gas used for updating %s feeds: %s",
             vm.toString(numFeeds),
-            vm.toString(gasUsed)
+            vm.toString(updateGasUsed)
+        );
+
+        // Benchmark querying the price feeds after updating
+        uint256 queryStartGas = gasleft();
+        scheduler.getPricesUnsafe(subscriptionId, priceIds);
+        uint256 queryGasUsed = queryStartGas - gasleft();
+
+        console.log(
+            "Gas used for querying %s feeds: %s",
+            vm.toString(numFeeds),
+            vm.toString(queryGasUsed)
+        );
+        console.log(
+            "Total gas used for updating and querying %s feeds: %s",
+            vm.toString(numFeeds),
+            vm.toString(updateGasUsed + queryGasUsed)
         );
     }
 
-    // Benchmark for active subscriptions with actual gas measurements
+    /// Helper function for benchmarking querying active subscriptions with a specified number of total subscriptions.
+    /// Half of them will be inactive to simulate gaps in the subscriptions list.
+    /// Keepers will poll this function to get the list of active subscriptions.
     function _runGetActiveSubscriptionsBenchmark(
         uint256 numSubscriptions
     ) internal {
-        console.log("Running benchmark for %d subscriptions", numSubscriptions);
-
-        // Use the exact number of subscriptions requested
-        uint256 actualSubscriptions = numSubscriptions;
-
-        // Setup: Create subscriptions and then deactivate every other one
+        // Setup: Create subscriptions and then deactivate every other one.
         vm.startPrank(owner);
 
         // Array to store subscription IDs
-        uint256[] memory subscriptionIds = new uint256[](actualSubscriptions);
+        uint256[] memory subscriptionIds = new uint256[](numSubscriptions);
 
-        // First create all subscriptions as active
-        for (uint256 i = 0; i < actualSubscriptions; i++) {
-            // Create subscription with 2 feeds to keep it lightweight
-            bytes32[] memory priceIds = createPriceIds(2);
+        // First create all subscriptions as active with 2 price feeds
+        for (uint256 i = 0; i < numSubscriptions; i++) {
+            bytes32[] memory priceIds = createPriceIds();
             address[] memory readerWhitelist = new address[](0);
 
             SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
@@ -254,14 +176,13 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
 
             uint256 minimumBalance = scheduler.getMinimumBalance(2);
             subscriptionIds[i] = scheduler.createSubscription{
-                value: minimumBalance + 1 ether
+                value: minimumBalance
             }(params);
         }
 
-        // Now deactivate every other subscription
-        for (uint256 i = 0; i < actualSubscriptions; i++) {
+        // Deactivate every other subscription
+        for (uint256 i = 0; i < numSubscriptions; i++) {
             if (i % 2 == 1) {
-                // Deactivate odd-indexed subscriptions
                 (SchedulerState.SubscriptionParams memory params, ) = scheduler
                     .getSubscription(subscriptionIds[i]);
                 params.isActive = false;
@@ -272,42 +193,41 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
 
         // Actual benchmark: Measure gas for fetching active subscriptions
         uint256 startGas = gasleft();
-        scheduler.getActiveSubscriptions(0, actualSubscriptions);
+        scheduler.getActiveSubscriptions(0, numSubscriptions);
         uint256 gasUsed = startGas - gasleft();
 
         console.log(
-            "Gas used for fetching %d active subscriptions: %d",
-            (actualSubscriptions + 1) / 2, // Only half are active (rounded up)
-            gasUsed
+            "Gas used for fetching %s active subscriptions out of %s total: %s",
+            vm.toString((numSubscriptions + 1) / 2), // Only half are active (rounded up)
+            vm.toString(numSubscriptions),
+            vm.toString(gasUsed)
         );
-
-        // No limitations on subscription counts - using exact requested number
     }
 
-    // Benchmark tests for updating price feeds with different feed counts
+    // Benchmark tests for the basic flow: updating and reading price feeds with different feed counts
 
-    function testUpdatePriceFeeds01Feed() public {
-        _runUpdatePriceFeedsBenchmark(1);
+    function testUpdateAndQueryPriceFeeds01Feed() public {
+        _runUpdateAndQueryPriceFeedsBenchmark(1);
     }
 
-    function testUpdatePriceFeeds02Feeds() public {
-        _runUpdatePriceFeedsBenchmark(2);
+    function testUpdateAndQueryPriceFeeds02Feeds() public {
+        _runUpdateAndQueryPriceFeedsBenchmark(2);
     }
 
-    function testUpdatePriceFeeds04Feeds() public {
-        _runUpdatePriceFeedsBenchmark(4);
+    function testUpdateAndQueryPriceFeeds04Feeds() public {
+        _runUpdateAndQueryPriceFeedsBenchmark(4);
     }
 
-    function testUpdatePriceFeeds08Feeds() public {
-        _runUpdatePriceFeedsBenchmark(8);
+    function testUpdateAndQueryPriceFeeds08Feeds() public {
+        _runUpdateAndQueryPriceFeedsBenchmark(8);
     }
 
-    function testUpdatePriceFeeds10Feeds() public {
-        _runUpdatePriceFeedsBenchmark(10);
+    function testUpdateAndQueryPriceFeeds10Feeds() public {
+        _runUpdateAndQueryPriceFeedsBenchmark(10);
     }
 
-    function testUpdatePriceFeeds20Feeds() public {
-        _runUpdatePriceFeedsBenchmark(20);
+    function testUpdateAndQueryPriceFeeds20Feeds() public {
+        _runUpdateAndQueryPriceFeedsBenchmark(20);
     }
 
     // Benchmark tests for fetching active subscriptions with different counts
@@ -317,16 +237,10 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
     }
 
     function testGetActiveSubscriptions100() public {
-        _runGetActiveSubscriptionsBenchmark(100); // Using actual requested count
+        _runGetActiveSubscriptionsBenchmark(100);
     }
 
-    // We'll skip the 1000 test due to gas limitations
-    // The pattern will be clear from 10 and 100 subscriptions
-    // Uncomment if needed
-    // function testGetActiveSubscriptions1000() public {
-    //     _runGetActiveSubscriptionsBenchmark(1000);
-    // }
-
-    // Required to receive ETH when withdrawing funds
-    receive() external payable {}
+    function testGetActiveSubscriptions1000() public {
+        _runGetActiveSubscriptionsBenchmark(1000);
+    }
 }

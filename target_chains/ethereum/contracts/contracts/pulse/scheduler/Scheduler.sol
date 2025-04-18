@@ -671,8 +671,9 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function getMinimumBalance(
         uint8 numPriceFeeds
     ) external pure override returns (uint256 minimumBalanceInWei) {
-        // Simple implementation - minimum balance is 0.01 ETH per price feed
-        return numPriceFeeds * 0.01 ether;
+        // Placeholder implementation
+        // TODO: make this governable
+        return numPriceFeeds * 1 wei;
     }
 
     // ACCESS CONTROL MODIFIERS
