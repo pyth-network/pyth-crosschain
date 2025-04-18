@@ -673,7 +673,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     ) external pure override returns (uint256 minimumBalanceInWei) {
         // Placeholder implementation
         // TODO: make this governable
-        return numPriceFeeds * 1 wei;
+        return uint256(numPriceFeeds) * 0.01 ether;
     }
 
     // ACCESS CONTROL MODIFIERS
