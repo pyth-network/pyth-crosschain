@@ -44,6 +44,7 @@ jobs:
         run: solana-keygen new --no-bip39-passphrase
       - name: Install Anchor
         run: |
-          RUSTFLAGS= cargo install --git https://github.com/coral-xyz/anchor --tag v0.30.1 --locked anchor-cli
+          rustup install 1.79.0
+          RUSTFLAGS= cargo +1.79.0 install --git https://github.com/coral-xyz/anchor --tag v0.30.1 --locked anchor-cli --force
       - name: Run anchor tests
         run: pnpm turbo --filter @pythnetwork/pyth-lazer-solana-contract test:anchor
