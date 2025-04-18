@@ -47,6 +47,4 @@ jobs:
           rustup install 1.79.0
           RUSTFLAGS= cargo +1.79.0 install --git https://github.com/coral-xyz/anchor --tag v0.30.1 --locked anchor-cli --force
       - name: Run anchor tests
-        run: |
-          rustup install nightly-2024-08-04
-          RUSTUP_TOOLCHAIN=nightly-2024-08-04 pnpm turbo --filter @pythnetwork/pyth-lazer-solana-contract test:anchor
+        run: anchor test
