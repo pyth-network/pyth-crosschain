@@ -39,7 +39,7 @@ jobs:
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
       - name: Set Solana Cli version
-        run: agave-install init 1.18.26
+        run: agave-install init 2.1.0
       - name: Create Solana key
         run: solana-keygen new --no-bip39-passphrase
       - name: Install Anchor
