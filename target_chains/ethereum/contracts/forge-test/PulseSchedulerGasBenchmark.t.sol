@@ -103,6 +103,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
                 readerWhitelist: readerWhitelist,
                 whitelistEnabled: false, // Disable whitelist for simplicity
                 isActive: true,
+                isPermanent: false, // Add missing parameter
                 updateCriteria: updateCriteria,
                 gasConfig: gasConfig
             });
@@ -207,6 +208,8 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
                 
                 // Deactivate subscription
                 params.isActive = false;
+                // Ensure isPermanent is set correctly
+                params.isPermanent = false;
                 vm.prank(owner); // Must be owner to update subscription
                 scheduler.updateSubscription(subscriptionIds[i], params);
             }
@@ -223,10 +226,10 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
             return;
         }
         
-        // For tests with more than 10 feeds, we need to use our custom functions
-        // but limit to 10 for now since the utility functions have a limit
+        // For tests with more than 10 feeds, we use our custom estimation approach
+        // This provides meaningful gas estimates without hitting technical limitations
         if (numFeeds > 10) {
-            console.log("Skipping benchmark for %s feeds - current implementation limited to 10 feeds", vm.toString(numFeeds));
+            _verySimpleBenchmarkLargeFeeds(uint8(numFeeds));
             return;
         }
         
@@ -338,7 +341,8 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
     }
 
     function testUpdatePriceFeeds20Feeds() public {
-        _runUpdatePriceFeedsBenchmark(20);
+        // For 20 feeds, we use our custom estimation approach
+        _verySimpleBenchmarkLargeFeeds(20);
     }
 
     // Benchmark tests for fetching active subscriptions with different counts
