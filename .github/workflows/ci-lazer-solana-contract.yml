@@ -50,6 +50,4 @@ jobs:
       - name: Build Solana program
         run: cargo build-sbf
       - name: Run anchor tests
-        run: |
-          cargo update -p proc-macro2 --precise 1.0.94
-          pnpm run test:anchor
+        run: pnpm run test:anchor
