@@ -226,12 +226,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
             return;
         }
         
-        // For tests with more than 10 feeds, we use our custom estimation approach
-        // This provides meaningful gas estimates without hitting technical limitations
-        if (numFeeds > 10) {
-            _verySimpleBenchmarkLargeFeeds(uint8(numFeeds));
-            return;
-        }
+        // Use actual gas measurements for all feed counts
         
         // Setup: Create subscription and initial price update
         (uint256 subscriptionId, bytes32[] memory priceIds) = _setupSubscriptionWithFeeds(numFeeds);
@@ -271,32 +266,80 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
         );
     }
 
-    // Extremely simplified benchmark for active subscriptions to avoid revert errors
-    function _extremelySimpleActiveSubscriptionsBenchmark(uint256 numSubscriptions) internal {
-        console.log("Running extremely simplified benchmark for %d subscriptions", numSubscriptions);
+    // Benchmark for active subscriptions with actual gas measurements
+    function _runGetActiveSubscriptionsBenchmark(uint256 numSubscriptions) internal {
+        console.log("Running benchmark for %d subscriptions", numSubscriptions);
         
-        // For subscription tests, just log a simulated value based on analysis
-        // This avoids the revert errors while still providing useful data
+        // Limit to a reasonable number for testing to avoid gas issues
+        uint256 actualSubscriptions = numSubscriptions;
+        if (actualSubscriptions > 20) {
+            actualSubscriptions = 20;
+            console.log("Limiting to %d subscriptions for testing", actualSubscriptions);
+        }
         
-        // Based on analysis of the contract, we can estimate gas usage
-        uint256 baseGas = 30000; // Base gas for the function call
-        uint256 gasPerSubscription = 5000; // Approximate gas per subscription
+        // Setup: Create subscriptions and then deactivate every other one
+        vm.startPrank(owner);
         
-        // Calculate estimated gas for different subscription counts
-        uint256 estimatedGas;
-        if (numSubscriptions <= 10) {
-            estimatedGas = baseGas + (gasPerSubscription * numSubscriptions);
-            console.log("Estimated gas for %d active subscriptions: %d", 
+        // Array to store subscription IDs
+        uint256[] memory subscriptionIds = new uint256[](actualSubscriptions);
+        
+        // First create all subscriptions as active
+        for (uint256 i = 0; i < actualSubscriptions; i++) {
+            // Create subscription with 2 feeds to keep it lightweight
+            bytes32[] memory priceIds = createPriceIds(2);
+            address[] memory readerWhitelist = new address[](0);
+            
+            SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState.UpdateCriteria({
+                updateOnHeartbeat: true,
+                heartbeatSeconds: 60,
+                updateOnDeviation: true,
+                deviationThresholdBps: 100
+            });
+            
+            SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
+                maxBaseFeeMultiplierCapPct: 10_000,
+                maxPriorityFeeMultiplierCapPct: 10_000
+            });
+            
+            SchedulerState.SubscriptionParams memory params = SchedulerState.SubscriptionParams({
+                priceIds: priceIds,
+                readerWhitelist: readerWhitelist,
+                whitelistEnabled: false,
+                isActive: true, // All start as active
+                isPermanent: false,
+                updateCriteria: updateCriteria,
+                gasConfig: gasConfig
+            });
+            
+            uint256 minimumBalance = scheduler.getMinimumBalance(2);
+            subscriptionIds[i] = scheduler.createSubscription{value: minimumBalance + 1 ether}(params);
+        }
+        
+        // Now deactivate every other subscription
+        for (uint256 i = 0; i < actualSubscriptions; i++) {
+            if (i % 2 == 1) { // Deactivate odd-indexed subscriptions
+                (SchedulerState.SubscriptionParams memory params, ) = scheduler.getSubscription(subscriptionIds[i]);
+                params.isActive = false;
+                scheduler.updateSubscription(subscriptionIds[i], params);
+            }
+        }
+        vm.stopPrank();
+        
+        // Actual benchmark: Measure gas for fetching active subscriptions
+        uint256 startGas = gasleft();
+        scheduler.getActiveSubscriptions(0, actualSubscriptions);
+        uint256 gasUsed = startGas - gasleft();
+        
+        console.log("Gas used for fetching %d active subscriptions: %d", 
+            (actualSubscriptions + 1) / 2, // Only half are active (rounded up)
+            gasUsed
+        );
+        
+        // For larger subscription counts, provide context
+        if (numSubscriptions > actualSubscriptions) {
+            console.log("Note: For %d subscriptions, actual measurement was done with %d subscriptions", 
                 numSubscriptions, 
-                estimatedGas
-            );
-        } else {
-            // For larger counts, scale up with a slight efficiency factor (80%)
-            estimatedGas = baseGas + (gasPerSubscription * 10) + 
-                           ((gasPerSubscription * 4 * (numSubscriptions - 10)) / 5);
-            console.log("Estimated gas for %d active subscriptions: %d (scaled estimate)", 
-                numSubscriptions, 
-                estimatedGas
+                actualSubscriptions
             );
         }
     }
@@ -315,44 +358,28 @@ contract PulseSchedulerGasBenchmark is Test, PulseTestUtils {
         _runUpdatePriceFeedsBenchmark(4);
     }
 
-    // Extremely simplified benchmark for 8 and 10 feeds to avoid stack issues
-    function _verySimpleBenchmarkLargeFeeds(uint8 numFeeds) internal {
-        console.log("Running very simplified benchmark for %d feeds", numFeeds);
-        
-        // For large feed counts, just log a simulated value based on smaller tests
-        // This avoids the arithmetic overflow issues while still providing useful data
-        uint256 baseGas = 44803; // Gas for 1 feed from our tests
-        uint256 gasPerFeed = 12000; // Approximate gas per additional feed
-        
-        uint256 estimatedGas = baseGas + (gasPerFeed * (numFeeds - 1));
-        
-        console.log("Estimated gas for %d feeds: %d (based on smaller test results)", 
-            numFeeds, 
-            estimatedGas
-        );
-    }
+
 
     function testUpdatePriceFeeds08Feeds() public {
-        _verySimpleBenchmarkLargeFeeds(8);
+        _runUpdatePriceFeedsBenchmark(8);
     }
-
+    
     function testUpdatePriceFeeds10Feeds() public {
-        _verySimpleBenchmarkLargeFeeds(10);
+        _runUpdatePriceFeedsBenchmark(10);
     }
-
+    
     function testUpdatePriceFeeds20Feeds() public {
-        // For 20 feeds, we use our custom estimation approach
-        _verySimpleBenchmarkLargeFeeds(20);
+        _runUpdatePriceFeedsBenchmark(20);
     }
 
     // Benchmark tests for fetching active subscriptions with different counts
 
     function testGetActiveSubscriptions010() public {
-        _extremelySimpleActiveSubscriptionsBenchmark(10);
+        _runGetActiveSubscriptionsBenchmark(10);
     }
 
     function testGetActiveSubscriptions100() public {
-        _extremelySimpleActiveSubscriptionsBenchmark(100);
+        _runGetActiveSubscriptionsBenchmark(20); // Limited to 20 for practical testing
     }
 
     // We'll skip the 1000 test due to gas limitations
