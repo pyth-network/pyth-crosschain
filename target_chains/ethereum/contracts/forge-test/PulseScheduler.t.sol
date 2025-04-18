@@ -71,9 +71,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
     address public pyth;
     address public pusher;
 
-    // Constants
-    uint96 constant PYTH_FEE = 1 wei;
-
     function setUp() public {
         owner = address(1);
         admin = address(2);

@@ -21,9 +21,6 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
     address public admin;
     address public pyth;
 
-    // Constants
-    uint96 constant PYTH_FEE = 10 wei;
-
     function setUp() public {
         manager = address(1);
         admin = address(2);
