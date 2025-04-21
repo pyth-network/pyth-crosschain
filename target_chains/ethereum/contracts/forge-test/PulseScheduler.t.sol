@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "./utils/PulseTestUtils.t.sol";
+import "./utils/PulseSchedulerTestUtils.t.sol";
 import "../contracts/pulse/scheduler/SchedulerUpgradeable.sol";
 import "../contracts/pulse/scheduler/IScheduler.sol";
 import "../contracts/pulse/scheduler/SchedulerState.sol";
@@ -62,7 +62,7 @@ contract MockReader {
     }
 }
 
-contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
+contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
     ERC1967Proxy public proxy;
     SchedulerUpgradeable public scheduler;
     MockReader public reader;
@@ -70,9 +70,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     address public admin;
     address public pyth;
     address public pusher;
-
-    // Constants
-    uint96 constant PYTH_FEE = 1 wei;
 
     function setUp() public {
         owner = address(1);
@@ -97,9 +94,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testCreateSubscription() public {
-        uint256 numFeeds = 2; // Corresponds to default createPriceIds()
         SchedulerState.SubscriptionParams
-            memory params = _createDefaultSubscriptionParams(numFeeds);
+            memory params = createDefaultSubscriptionParams(2, address(reader));
         bytes32[] memory priceIds = params.priceIds; // Get the generated price IDs
 
         // Calculate minimum balance
@@ -163,7 +159,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testUpdateSubscription() public {
         // First add a subscription
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
 
         // Create updated parameters
         bytes32[] memory newPriceIds = createPriceIds(3); // Add one more price ID
@@ -240,8 +239,12 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testUpdateSubscriptionClearsRemovedPriceFeeds() public {
         // 1. Setup: Add subscription with 3 price feeds, update prices
-        uint256 numInitialFeeds = 3;
-        uint256 subscriptionId = addTestSubscriptionWithFeeds(numInitialFeeds);
+        uint8 numInitialFeeds = 3;
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(
+            scheduler,
+            numInitialFeeds,
+            address(reader)
+        );
         uint256 fundAmount = 1 ether;
         scheduler.addFunds{value: fundAmount}(subscriptionId);
 
@@ -327,9 +330,12 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testcreateSubscriptionWithInsufficientFundsReverts() public {
-        uint256 numFeeds = 2;
+        uint8 numFeeds = 2;
         SchedulerState.SubscriptionParams
-            memory params = _createDefaultSubscriptionParams(numFeeds);
+            memory params = createDefaultSubscriptionParams(
+                numFeeds,
+                address(reader)
+            );
 
         // Calculate minimum balance
         uint256 minimumBalance = scheduler.getMinimumBalance(
@@ -342,7 +348,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testActivateDeactivateSubscription() public {
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
 
         // Get current params
         (SchedulerState.SubscriptionParams memory params, ) = scheduler
@@ -388,7 +397,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testAddFunds() public {
         // First add a subscription
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
 
         // Get initial balance (which includes minimum balance)
         (, SchedulerState.SubscriptionStatus memory initialStatus) = scheduler
@@ -412,7 +424,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testWithdrawFunds() public {
         // Add a subscription and get the parameters
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
         (SchedulerState.SubscriptionParams memory params, ) = scheduler
             .getSubscription(subscriptionId);
         uint256 minimumBalance = scheduler.getMinimumBalance(
@@ -466,7 +481,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testPermanentSubscription() public {
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
 
         // Verify subscription was created as non-permanent initially
         (SchedulerState.SubscriptionParams memory params, ) = scheduler
@@ -635,7 +653,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testMakeExistingSubscriptionPermanent() public {
         // First create a non-permanent subscription
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
 
         // Verify it's not permanent
         (SchedulerState.SubscriptionParams memory params, ) = scheduler
@@ -666,7 +687,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testAnyoneCanAddFunds() public {
         // Create a subscription
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
 
         // Get initial balance
         (, SchedulerState.SubscriptionStatus memory initialStatus) = scheduler
@@ -695,7 +719,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     function testUpdatePriceFeedsWorks() public {
         // --- First Update ---
         // Add a subscription and funds
-        uint256 subscriptionId = addTestSubscription(); // Uses heartbeat 60s, deviation 100bps
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        ); // Uses heartbeat 60s, deviation 100bps
         uint256 fundAmount = 2 ether; // Add enough for two updates
         scheduler.addFunds{value: fundAmount}(subscriptionId);
 
@@ -813,7 +840,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
                 deviationThresholdBps: 0
             });
         uint256 subscriptionId = addTestSubscriptionWithUpdateCriteria(
-            criteria
+            scheduler,
+            criteria,
+            address(reader)
         );
         uint256 fundAmount = 1 ether;
         scheduler.addFunds{value: fundAmount}(subscriptionId);
@@ -858,7 +887,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
                 deviationThresholdBps: deviationBps
             });
         uint256 subscriptionId = addTestSubscriptionWithUpdateCriteria(
-            criteria
+            scheduler,
+            criteria,
+            address(reader)
         );
         uint256 fundAmount = 1 ether;
         scheduler.addFunds{value: fundAmount}(subscriptionId);
@@ -908,7 +939,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testUpdatePriceFeedsRevertsOnOlderTimestamp() public {
         // Add a subscription and funds
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
         uint256 fundAmount = 1 ether;
         scheduler.addFunds{value: fundAmount}(subscriptionId);
 
@@ -949,7 +983,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testUpdatePriceFeedsRevertsOnMismatchedSlots() public {
         // First add a subscription and funds
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
         uint256 fundAmount = 1 ether;
         scheduler.addFunds{value: fundAmount}(subscriptionId);
 
@@ -981,7 +1018,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testGetPricesUnsafeAllFeeds() public {
         // First add a subscription, funds, and update price feeds
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
         uint256 fundAmount = 1 ether;
         scheduler.addFunds{value: fundAmount}(subscriptionId);
 
@@ -1019,7 +1059,11 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testGetPricesUnsafeSelectiveFeeds() public {
         // First add a subscription with 3 price feeds, funds, and update price feeds
-        uint256 subscriptionId = addTestSubscriptionWithFeeds(3);
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(
+            scheduler,
+            3,
+            address(reader)
+        );
         uint256 fundAmount = 1 ether;
         scheduler.addFunds{value: fundAmount}(subscriptionId);
 
@@ -1063,7 +1107,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testDisabledWhitelistAllowsUnrestrictedReads() public {
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
 
         // Get params and modify them
         (SchedulerState.SubscriptionParams memory params, ) = scheduler
@@ -1104,7 +1151,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testEnabledWhitelistEnforcesOnlyAuthorizedReads() public {
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
 
         // Fund the subscription with enough to update it
         scheduler.addFunds{value: 1 ether}(subscriptionId);
@@ -1168,7 +1218,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testGetEmaPriceUnsafe() public {
         // First add a subscription, funds, and update price feeds
-        uint256 subscriptionId = addTestSubscription();
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
         uint256 fundAmount = 1 ether;
         scheduler.addFunds{value: fundAmount}(subscriptionId);
 
@@ -1223,8 +1276,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
 
     function testGetActiveSubscriptions() public {
         // Add two subscriptions with the test contract as manager
-        addTestSubscription();
-        addTestSubscription();
+        addTestSubscription(scheduler, address(reader));
+        addTestSubscription(scheduler, address(reader));
 
         // Create a subscription with pusher as manager
         vm.startPrank(pusher);
@@ -1336,56 +1389,135 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         assertEq(emptyPageTotal, 3, "Total count should still be 3");
     }
 
-    /// Helper function to add a test subscription with 2 price IDs
-    function addTestSubscription() internal returns (uint256) {
+    function testSubscriptionParamValidations() public {
+        uint256 initialSubId = 0; // For update tests
+
+        // === Empty Price IDs ===
         SchedulerState.SubscriptionParams
-            memory params = _createDefaultSubscriptionParams(2);
-        uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(params.priceIds.length)
-        );
-        return scheduler.createSubscription{value: minimumBalance}(params);
-    }
+            memory emptyPriceIdsParams = createDefaultSubscriptionParams(
+                1,
+                address(reader)
+            );
+        emptyPriceIdsParams.priceIds = new bytes32[](0);
 
-    /// Helper function to add a test subscription with variable number of feeds
-    function addTestSubscriptionWithFeeds(
-        uint256 numFeeds
-    ) internal returns (uint256) {
+        vm.expectRevert(abi.encodeWithSelector(EmptyPriceIds.selector));
+        scheduler.createSubscription{value: 1 ether}(emptyPriceIdsParams);
+
+        initialSubId = addTestSubscription(scheduler, address(reader)); // Create a valid one for update test
+        vm.expectRevert(abi.encodeWithSelector(EmptyPriceIds.selector));
+        scheduler.updateSubscription(initialSubId, emptyPriceIdsParams);
+
+        // === Duplicate Price IDs ===
         SchedulerState.SubscriptionParams
-            memory params = _createDefaultSubscriptionParams(numFeeds);
-        uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(params.priceIds.length)
+            memory duplicatePriceIdsParams = createDefaultSubscriptionParams(
+                2,
+                address(reader)
+            );
+        bytes32 duplicateId = duplicatePriceIdsParams.priceIds[0];
+        duplicatePriceIdsParams.priceIds[1] = duplicateId;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(DuplicatePriceId.selector, duplicateId)
         );
-        return scheduler.createSubscription{value: minimumBalance}(params);
-    }
+        scheduler.createSubscription{value: 1 ether}(duplicatePriceIdsParams);
 
-    /// Helper function to add a test subscription with specific update criteria
-    function addTestSubscriptionWithUpdateCriteria(
-        SchedulerState.UpdateCriteria memory updateCriteria
-    ) internal returns (uint256) {
-        bytes32[] memory priceIds = createPriceIds();
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader);
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true,
-                isActive: true,
-                isPermanent: false,
-                updateCriteria: updateCriteria, // Use provided criteria
-                gasConfig: gasConfig
-            });
-
-        uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(priceIds.length)
+        initialSubId = addTestSubscription(scheduler, address(reader));
+        vm.expectRevert(
+            abi.encodeWithSelector(DuplicatePriceId.selector, duplicateId)
         );
-        return scheduler.createSubscription{value: minimumBalance}(params);
+        scheduler.updateSubscription(initialSubId, duplicatePriceIdsParams);
+
+        // === Too Many Whitelist Readers ===
+        SchedulerState.SubscriptionParams
+            memory largeWhitelistParams = createDefaultSubscriptionParams(
+                1,
+                address(reader)
+            );
+        uint whitelistLength = uint(scheduler.MAX_READER_WHITELIST_SIZE()) + 1;
+        address[] memory largeWhitelist = new address[](whitelistLength);
+        for (uint i = 0; i < whitelistLength; i++) {
+            largeWhitelist[i] = address(uint160(i + 1)); // Unique addresses
+        }
+        largeWhitelistParams.readerWhitelist = largeWhitelist;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TooManyWhitelistedReaders.selector,
+                largeWhitelist.length,
+                scheduler.MAX_READER_WHITELIST_SIZE()
+            )
+        );
+        scheduler.createSubscription{value: 1 ether}(largeWhitelistParams);
+
+        initialSubId = addTestSubscription(scheduler, address(reader));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TooManyWhitelistedReaders.selector,
+                largeWhitelist.length,
+                scheduler.MAX_READER_WHITELIST_SIZE()
+            )
+        );
+        scheduler.updateSubscription(initialSubId, largeWhitelistParams);
+
+        // === Duplicate Whitelist Address ===
+        SchedulerState.SubscriptionParams
+            memory duplicateWhitelistParams = createDefaultSubscriptionParams(
+                1,
+                address(reader)
+            );
+        address[] memory duplicateWhitelist = new address[](2);
+        duplicateWhitelist[0] = address(reader);
+        duplicateWhitelist[1] = address(reader); // Duplicate
+        duplicateWhitelistParams.readerWhitelist = duplicateWhitelist;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DuplicateWhitelistAddress.selector,
+                address(reader)
+            )
+        );
+        scheduler.createSubscription{value: 1 ether}(duplicateWhitelistParams);
+
+        initialSubId = addTestSubscription(scheduler, address(reader));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DuplicateWhitelistAddress.selector,
+                address(reader)
+            )
+        );
+        scheduler.updateSubscription(initialSubId, duplicateWhitelistParams);
+
+        // === Invalid Heartbeat (Zero Seconds) ===
+        SchedulerState.SubscriptionParams
+            memory invalidHeartbeatParams = createDefaultSubscriptionParams(
+                1,
+                address(reader)
+            );
+        invalidHeartbeatParams.updateCriteria.updateOnHeartbeat = true;
+        invalidHeartbeatParams.updateCriteria.heartbeatSeconds = 0; // Invalid
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
+        scheduler.createSubscription{value: 1 ether}(invalidHeartbeatParams);
+
+        initialSubId = addTestSubscription(scheduler, address(reader));
+        vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
+        scheduler.updateSubscription(initialSubId, invalidHeartbeatParams);
+
+        // === Invalid Deviation (Zero Bps) ===
+        SchedulerState.SubscriptionParams
+            memory invalidDeviationParams = createDefaultSubscriptionParams(
+                1,
+                address(reader)
+            );
+        invalidDeviationParams.updateCriteria.updateOnDeviation = true;
+        invalidDeviationParams.updateCriteria.deviationThresholdBps = 0; // Invalid
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
+        scheduler.createSubscription{value: 1 ether}(invalidDeviationParams);
+
+        initialSubId = addTestSubscription(scheduler, address(reader));
+        vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
+        scheduler.updateSubscription(initialSubId, invalidDeviationParams);
     }
 
     // Helper function to create default subscription parameters
