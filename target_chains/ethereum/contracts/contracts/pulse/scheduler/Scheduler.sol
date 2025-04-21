@@ -404,6 +404,11 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert IllegalPermanentSubscriptionModification();
         }
 
+        // Cannot deactivate a permanent subscription
+        if (!newParams.isActive) {
+            revert IllegalPermanentSubscriptionModification();
+        }
+
         // Cannot remove price feeds from a permanent subscription
         if (newParams.priceIds.length < currentParams.priceIds.length) {
             revert IllegalPermanentSubscriptionModification();

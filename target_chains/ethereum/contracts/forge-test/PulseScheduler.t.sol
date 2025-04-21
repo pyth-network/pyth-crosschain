@@ -621,6 +621,16 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             );
             scheduler.updateSubscription(subscriptionId, updatedParams);
         }
+
+        // Test 10: Cannot deactivate a permanent subscription
+        updatedParams = storedParams;
+        updatedParams.isActive = false;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
     }
 
     function testMakeExistingSubscriptionPermanent() public {
