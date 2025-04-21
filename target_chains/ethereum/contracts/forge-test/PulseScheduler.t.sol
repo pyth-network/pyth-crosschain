@@ -551,6 +551,76 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             params.priceIds.length + 1,
             "Should be able to add price feeds to permanent subscription"
         );
+
+        // Test 5: Cannot change gasConfig
+        updatedParams = storedParams;
+        updatedParams.gasConfig.maxBaseFeeMultiplierCapPct =
+            storedParams.gasConfig.maxBaseFeeMultiplierCapPct +
+            100;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 6: Cannot change updateCriteria
+        updatedParams = storedParams;
+        updatedParams.updateCriteria.heartbeatSeconds =
+            storedParams.updateCriteria.heartbeatSeconds +
+            60;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 7: Cannot change whitelistEnabled
+        updatedParams = storedParams;
+        updatedParams.whitelistEnabled = !storedParams.whitelistEnabled;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 8: Cannot change the set of readers in the whitelist (add one)
+        updatedParams = storedParams;
+        address[] memory expandedWhitelist = new address[](
+            storedParams.readerWhitelist.length + 1
+        );
+        for (uint i = 0; i < storedParams.readerWhitelist.length; i++) {
+            expandedWhitelist[i] = storedParams.readerWhitelist[i];
+        }
+        expandedWhitelist[storedParams.readerWhitelist.length] = address(0x456);
+        updatedParams.readerWhitelist = expandedWhitelist;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 9: Cannot change the set of readers in the whitelist (remove one)
+        // Requires at least one reader in the initial setup
+        if (storedParams.readerWhitelist.length > 0) {
+            updatedParams = storedParams;
+            address[] memory reducedWhitelist = new address[](
+                storedParams.readerWhitelist.length - 1
+            );
+            for (uint i = 0; i < reducedWhitelist.length; i++) {
+                reducedWhitelist[i] = storedParams.readerWhitelist[i];
+            }
+            updatedParams.readerWhitelist = reducedWhitelist;
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IllegalPermanentSubscriptionModification.selector
+                )
+            );
+            scheduler.updateSubscription(subscriptionId, updatedParams);
+        }
     }
 
     function testMakeExistingSubscriptionPermanent() public {
