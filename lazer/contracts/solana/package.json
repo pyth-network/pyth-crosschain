@@ -5,7 +5,7 @@
   "scripts": {
     "fix:format": "prettier --write **/*.*",
     "test:format": "prettier --check **/*.*",
-    "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" anchor test",
+    "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor test",
     "setup": "pnpm ts-node scripts/setup.ts",
     "check-trusted-signer": "pnpm ts-node scripts/check_trusted_signer.ts"
   },

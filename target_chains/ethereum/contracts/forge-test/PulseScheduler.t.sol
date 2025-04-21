@@ -569,6 +569,86 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             params.priceIds.length + 1,
             "Should be able to add price feeds to permanent subscription"
         );
+
+        // Test 5: Cannot change gasConfig
+        updatedParams = storedParams;
+        updatedParams.gasConfig.maxBaseFeeMultiplierCapPct =
+            storedParams.gasConfig.maxBaseFeeMultiplierCapPct +
+            100;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 6: Cannot change updateCriteria
+        updatedParams = storedParams;
+        updatedParams.updateCriteria.heartbeatSeconds =
+            storedParams.updateCriteria.heartbeatSeconds +
+            60;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 7: Cannot change whitelistEnabled
+        updatedParams = storedParams;
+        updatedParams.whitelistEnabled = !storedParams.whitelistEnabled;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 8: Cannot change the set of readers in the whitelist (add one)
+        updatedParams = storedParams;
+        address[] memory expandedWhitelist = new address[](
+            storedParams.readerWhitelist.length + 1
+        );
+        for (uint i = 0; i < storedParams.readerWhitelist.length; i++) {
+            expandedWhitelist[i] = storedParams.readerWhitelist[i];
+        }
+        expandedWhitelist[storedParams.readerWhitelist.length] = address(0x456);
+        updatedParams.readerWhitelist = expandedWhitelist;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 9: Cannot change the set of readers in the whitelist (remove one)
+        // Requires at least one reader in the initial setup
+        if (storedParams.readerWhitelist.length > 0) {
+            updatedParams = storedParams;
+            address[] memory reducedWhitelist = new address[](
+                storedParams.readerWhitelist.length - 1
+            );
+            for (uint i = 0; i < reducedWhitelist.length; i++) {
+                reducedWhitelist[i] = storedParams.readerWhitelist[i];
+            }
+            updatedParams.readerWhitelist = reducedWhitelist;
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IllegalPermanentSubscriptionModification.selector
+                )
+            );
+            scheduler.updateSubscription(subscriptionId, updatedParams);
+        }
+
+        // Test 10: Cannot deactivate a permanent subscription
+        updatedParams = storedParams;
+        updatedParams.isActive = false;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
     }
 
     function testMakeExistingSubscriptionPermanent() public {
@@ -1438,6 +1518,39 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         initialSubId = addTestSubscription(scheduler, address(reader));
         vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
         scheduler.updateSubscription(initialSubId, invalidDeviationParams);
+    }
+
+    // Helper function to create default subscription parameters
+    function _createDefaultSubscriptionParams(
+        uint256 numFeeds
+    ) internal view returns (SchedulerState.SubscriptionParams memory) {
+        bytes32[] memory priceIds = createPriceIds(numFeeds);
+        address[] memory readerWhitelist = new address[](1);
+        readerWhitelist[0] = address(reader);
+
+        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
+            .UpdateCriteria({
+                updateOnHeartbeat: true,
+                heartbeatSeconds: 60,
+                updateOnDeviation: true,
+                deviationThresholdBps: 100
+            });
+
+        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
+        });
+
+        return
+            SchedulerState.SubscriptionParams({
+                priceIds: priceIds,
+                readerWhitelist: readerWhitelist,
+                whitelistEnabled: true,
+                isActive: true,
+                isPermanent: false,
+                updateCriteria: updateCriteria,
+                gasConfig: gasConfig
+            });
     }
 
     // Required to receive ETH when withdrawing funds

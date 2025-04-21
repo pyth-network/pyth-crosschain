@@ -22,6 +22,7 @@ error PriceSlotMismatch();
 error InvalidUpdateCriteria();
 error InvalidGasConfig();
 error UpdateConditionsNotMet();
+error IllegalPermanentSubscriptionModification();
 error TimestampOlderThanLastUpdate(
     uint256 providedUpdateTimestamp,
     uint256 lastUpdatedAt
