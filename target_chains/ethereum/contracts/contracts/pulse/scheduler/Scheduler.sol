@@ -414,7 +414,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert IllegalPermanentSubscriptionModification();
         }
 
-        // Check that all existing price IDs are preserved
+        // Check that all existing price IDs are preserved (adding is allowed, not removing)
         for (uint i = 0; i < currentParams.priceIds.length; i++) {
             bool found = false;
             for (uint j = 0; j < newParams.priceIds.length; j++) {
