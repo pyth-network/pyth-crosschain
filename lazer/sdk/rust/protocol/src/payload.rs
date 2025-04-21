@@ -40,7 +40,7 @@ pub enum PayloadPropertyValue {
     FundingTimestamp(Option<TimestampUs>),
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AggregatedPriceFeedData {
     pub price: Option<Price>,
     pub best_bid_price: Option<Price>,
