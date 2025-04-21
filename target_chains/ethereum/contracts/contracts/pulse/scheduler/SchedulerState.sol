@@ -41,6 +41,7 @@ contract SchedulerState {
         address[] readerWhitelist;
         bool whitelistEnabled;
         bool isActive;
+        bool isPermanent;
         UpdateCriteria updateCriteria;
         GasConfig gasConfig;
     }

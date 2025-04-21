@@ -97,33 +97,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testCreateSubscription() public {
-        // Create subscription parameters
-        bytes32[] memory priceIds = createPriceIds();
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader);
-
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true,
-                isActive: true,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
+        uint256 numFeeds = 2; // Corresponds to default createPriceIds()
+        SchedulerState.SubscriptionParams
+            memory params = _createDefaultSubscriptionParams(numFeeds);
+        bytes32[] memory priceIds = params.priceIds; // Get the generated price IDs
 
         // Calculate minimum balance
         uint256 minimumBalance = scheduler.getMinimumBalance(
@@ -152,28 +129,28 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         );
         assertEq(
             storedParams.readerWhitelist.length,
-            readerWhitelist.length,
+            params.readerWhitelist.length,
             "Whitelist length mismatch"
         );
         assertEq(
             storedParams.whitelistEnabled,
-            true,
-            "whitelistEnabled should be true"
+            params.whitelistEnabled,
+            "whitelistEnabled should match"
         );
         assertTrue(storedParams.isActive, "Subscription should be active");
         assertEq(
             storedParams.updateCriteria.heartbeatSeconds,
-            60,
+            params.updateCriteria.heartbeatSeconds,
             "Heartbeat seconds mismatch"
         );
         assertEq(
             storedParams.updateCriteria.deviationThresholdBps,
-            100,
+            params.updateCriteria.deviationThresholdBps,
             "Deviation threshold mismatch"
         );
         assertEq(
             storedParams.gasConfig.maxBaseFeeMultiplierCapPct,
-            10_000,
+            params.gasConfig.maxBaseFeeMultiplierCapPct,
             "Max gas multiplier mismatch"
         );
 
@@ -214,6 +191,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
                 readerWhitelist: newReaderWhitelist,
                 whitelistEnabled: false, // Changed from true
                 isActive: true,
+                isPermanent: false,
                 updateCriteria: newUpdateCriteria,
                 gasConfig: newGasConfig
             });
@@ -349,37 +327,13 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testcreateSubscriptionWithInsufficientFundsReverts() public {
-        // Create subscription parameters
-        bytes32[] memory priceIds = createPriceIds();
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader);
-
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true,
-                isActive: true,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
+        uint256 numFeeds = 2;
+        SchedulerState.SubscriptionParams
+            memory params = _createDefaultSubscriptionParams(numFeeds);
 
         // Calculate minimum balance
         uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(priceIds.length)
+            uint8(params.priceIds.length)
         );
 
         // Try to add subscription with insufficient funds
@@ -388,40 +342,11 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testActivateDeactivateSubscription() public {
-        // First add a subscription with minimum balance
-        bytes32[] memory priceIds = createPriceIds();
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader);
+        uint256 subscriptionId = addTestSubscription();
 
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true,
-                isActive: true,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
-
-        uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(priceIds.length)
-        );
-        uint256 subscriptionId = scheduler.createSubscription{
-            value: minimumBalance
-        }(params);
+        // Get current params
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
 
         // Deactivate subscription using updateSubscription
         params.isActive = false;
@@ -486,41 +411,13 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testWithdrawFunds() public {
-        // First add a subscription with minimum balance
-        bytes32[] memory priceIds = createPriceIds();
+        // Add a subscription and get the parameters
+        uint256 subscriptionId = addTestSubscription();
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
         uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(priceIds.length)
+            uint8(params.priceIds.length)
         );
-
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader);
-
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true,
-                isActive: true,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
-
-        uint256 subscriptionId = scheduler.createSubscription{
-            value: minimumBalance
-        }(params);
 
         // Add extra funds
         uint256 extraFunds = 1 ether;
@@ -565,6 +462,233 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             status.balanceInWei,
             0,
             "Balance should be 0 after withdrawing all funds"
+        );
+    }
+
+    function testPermanentSubscription() public {
+        uint256 subscriptionId = addTestSubscription();
+
+        // Verify subscription was created as non-permanent initially
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        assertFalse(params.isPermanent, "Should not be permanent initially");
+
+        // Make it permanent
+        params.isPermanent = true;
+        scheduler.updateSubscription(subscriptionId, params);
+
+        // Verify subscription is now permanent
+        (SchedulerState.SubscriptionParams memory storedParams, ) = scheduler
+            .getSubscription(subscriptionId);
+        assertTrue(
+            storedParams.isPermanent,
+            "Subscription should be permanent"
+        );
+
+        // Test 1: Cannot disable isPermanent flag
+        SchedulerState.SubscriptionParams memory updatedParams = storedParams;
+        updatedParams.isPermanent = false;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 2: Cannot remove price feeds
+        updatedParams = storedParams;
+        bytes32[] memory reducedPriceIds = new bytes32[](
+            params.priceIds.length - 1
+        );
+        for (uint i = 0; i < reducedPriceIds.length; i++) {
+            reducedPriceIds[i] = params.priceIds[i];
+        }
+        updatedParams.priceIds = reducedPriceIds;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 3: Cannot withdraw funds
+        uint256 extraFunds = 1 ether;
+        vm.deal(address(0x123), extraFunds);
+
+        // Anyone can add funds (not just manager)
+        vm.prank(address(0x123));
+        scheduler.addFunds{value: extraFunds}(subscriptionId);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.withdrawFunds(subscriptionId, 0.1 ether);
+
+        // Test 4: Can still add more price feeds
+        updatedParams = storedParams;
+        bytes32[] memory expandedPriceIds = new bytes32[](
+            params.priceIds.length + 1
+        );
+        for (uint i = 0; i < params.priceIds.length; i++) {
+            expandedPriceIds[i] = params.priceIds[i];
+        }
+        expandedPriceIds[params.priceIds.length] = bytes32(
+            uint256(keccak256(abi.encodePacked("additional-price-id")))
+        );
+        updatedParams.priceIds = expandedPriceIds;
+        updatedParams.isPermanent = true; // Ensure we keep isPermanent flag set to true
+
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Verify price feeds were added
+        (storedParams, ) = scheduler.getSubscription(subscriptionId);
+        assertEq(
+            storedParams.priceIds.length,
+            params.priceIds.length + 1,
+            "Should be able to add price feeds to permanent subscription"
+        );
+
+        // Test 5: Cannot change gasConfig
+        updatedParams = storedParams;
+        updatedParams.gasConfig.maxBaseFeeMultiplierCapPct =
+            storedParams.gasConfig.maxBaseFeeMultiplierCapPct +
+            100;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 6: Cannot change updateCriteria
+        updatedParams = storedParams;
+        updatedParams.updateCriteria.heartbeatSeconds =
+            storedParams.updateCriteria.heartbeatSeconds +
+            60;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 7: Cannot change whitelistEnabled
+        updatedParams = storedParams;
+        updatedParams.whitelistEnabled = !storedParams.whitelistEnabled;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 8: Cannot change the set of readers in the whitelist (add one)
+        updatedParams = storedParams;
+        address[] memory expandedWhitelist = new address[](
+            storedParams.readerWhitelist.length + 1
+        );
+        for (uint i = 0; i < storedParams.readerWhitelist.length; i++) {
+            expandedWhitelist[i] = storedParams.readerWhitelist[i];
+        }
+        expandedWhitelist[storedParams.readerWhitelist.length] = address(0x456);
+        updatedParams.readerWhitelist = expandedWhitelist;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+
+        // Test 9: Cannot change the set of readers in the whitelist (remove one)
+        // Requires at least one reader in the initial setup
+        if (storedParams.readerWhitelist.length > 0) {
+            updatedParams = storedParams;
+            address[] memory reducedWhitelist = new address[](
+                storedParams.readerWhitelist.length - 1
+            );
+            for (uint i = 0; i < reducedWhitelist.length; i++) {
+                reducedWhitelist[i] = storedParams.readerWhitelist[i];
+            }
+            updatedParams.readerWhitelist = reducedWhitelist;
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IllegalPermanentSubscriptionModification.selector
+                )
+            );
+            scheduler.updateSubscription(subscriptionId, updatedParams);
+        }
+
+        // Test 10: Cannot deactivate a permanent subscription
+        updatedParams = storedParams;
+        updatedParams.isActive = false;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, updatedParams);
+    }
+
+    function testMakeExistingSubscriptionPermanent() public {
+        // First create a non-permanent subscription
+        uint256 subscriptionId = addTestSubscription();
+
+        // Verify it's not permanent
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+
+        assertFalse(
+            params.isPermanent,
+            "Subscription should not be permanent initially"
+        );
+
+        // Make it permanent
+        params.isPermanent = true;
+        scheduler.updateSubscription(subscriptionId, params);
+
+        // Verify it's now permanent
+        (params, ) = scheduler.getSubscription(subscriptionId);
+        assertTrue(params.isPermanent, "Subscription should now be permanent");
+
+        // Verify we can't make it non-permanent again
+        params.isPermanent = false;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IllegalPermanentSubscriptionModification.selector
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, params);
+    }
+
+    function testAnyoneCanAddFunds() public {
+        // Create a subscription
+        uint256 subscriptionId = addTestSubscription();
+
+        // Get initial balance
+        (, SchedulerState.SubscriptionStatus memory initialStatus) = scheduler
+            .getSubscription(subscriptionId);
+        uint256 initialBalance = initialStatus.balanceInWei;
+
+        // Have a different address add funds
+        address funder = address(0x123);
+        uint256 fundAmount = 1 ether;
+        vm.deal(funder, fundAmount);
+
+        vm.prank(funder);
+        scheduler.addFunds{value: fundAmount}(subscriptionId);
+
+        // Verify funds were added
+        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+            .getSubscription(subscriptionId);
+
+        assertEq(
+            status.balanceInWei,
+            initialBalance + fundAmount,
+            "Balance should be increased by the funded amount"
         );
     }
 
@@ -939,35 +1063,17 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testDisabledWhitelistAllowsUnrestrictedReads() public {
-        // Add a subscription with whitelistEnabled = false
-        bytes32[] memory priceIds = createPriceIds();
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
+        uint256 subscriptionId = addTestSubscription();
 
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
+        // Get params and modify them
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        params.whitelistEnabled = false;
+        params.readerWhitelist = new address[](0);
+        scheduler.updateSubscription(subscriptionId, params);
 
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: new address[](0),
-                whitelistEnabled: false, // No whitelist
-                isActive: true,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
-
-        // Create subscription and fund the subscription with enough to update it
-        uint256 subscriptionId = scheduler.createSubscription{value: 1 ether}(
-            params
-        );
+        // Fund the subscription with enough to update it
+        scheduler.addFunds{value: 1 ether}(subscriptionId);
 
         // Update price feeds for the subscription
         uint64 publishTime = SafeCast.toUint64(block.timestamp);
@@ -976,6 +1082,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime, 2);
         mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
+        bytes32[] memory priceIds = params.priceIds;
 
         vm.prank(pusher);
         scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
@@ -997,38 +1104,15 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
     }
 
     function testEnabledWhitelistEnforcesOnlyAuthorizedReads() public {
-        // Add a subscription with whitelistEnabled = true
-        bytes32[] memory priceIds = createPriceIds(2);
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader); // Only the test's reader is whitelisted
+        uint256 subscriptionId = addTestSubscription();
 
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
+        // Fund the subscription with enough to update it
+        scheduler.addFunds{value: 1 ether}(subscriptionId);
 
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true, // Whitelist IS enabled
-                isActive: true,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
-
-        // Create subscription and fund the subscription with enough to update it
-        uint256 subscriptionId = scheduler.createSubscription{value: 1 ether}(
-            params
-        );
+        // Get the price IDs from the created subscription
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        bytes32[] memory priceIds = params.priceIds;
 
         // Update price feeds for the subscription
         uint64 publishTime = SafeCast.toUint64(block.timestamp + 10); // Slightly different time
@@ -1166,6 +1250,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
                 readerWhitelist: emptyWhitelist,
                 whitelistEnabled: false,
                 isActive: true,
+                isPermanent: false,
                 updateCriteria: updateCriteria,
                 gasConfig: gasConfig
             });
@@ -1251,79 +1336,29 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
         assertEq(emptyPageTotal, 3, "Total count should still be 3");
     }
 
-    // Helper function to add a test subscription
+    /// Helper function to add a test subscription with 2 price IDs
     function addTestSubscription() internal returns (uint256) {
-        bytes32[] memory priceIds = createPriceIds();
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader);
-
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true,
-                isActive: true,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
-
+        SchedulerState.SubscriptionParams
+            memory params = _createDefaultSubscriptionParams(2);
         uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(priceIds.length)
+            uint8(params.priceIds.length)
         );
         return scheduler.createSubscription{value: minimumBalance}(params);
     }
 
-    // Helper function to add a test subscription with variable number of feeds
+    /// Helper function to add a test subscription with variable number of feeds
     function addTestSubscriptionWithFeeds(
         uint256 numFeeds
     ) internal returns (uint256) {
-        bytes32[] memory priceIds = createPriceIds(numFeeds);
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader);
-
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        SchedulerState.SubscriptionParams memory params = SchedulerState
-            .SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true,
-                isActive: true,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
-
+        SchedulerState.SubscriptionParams
+            memory params = _createDefaultSubscriptionParams(numFeeds);
         uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(priceIds.length)
+            uint8(params.priceIds.length)
         );
         return scheduler.createSubscription{value: minimumBalance}(params);
     }
 
-    // Helper function to add a test subscription with specific update criteria
+    /// Helper function to add a test subscription with specific update criteria
     function addTestSubscriptionWithUpdateCriteria(
         SchedulerState.UpdateCriteria memory updateCriteria
     ) internal returns (uint256) {
@@ -1342,6 +1377,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
                 readerWhitelist: readerWhitelist,
                 whitelistEnabled: true,
                 isActive: true,
+                isPermanent: false,
                 updateCriteria: updateCriteria, // Use provided criteria
                 gasConfig: gasConfig
             });
@@ -1350,6 +1386,39 @@ contract SchedulerTest is Test, SchedulerEvents, PulseTestUtils {
             uint8(priceIds.length)
         );
         return scheduler.createSubscription{value: minimumBalance}(params);
+    }
+
+    // Helper function to create default subscription parameters
+    function _createDefaultSubscriptionParams(
+        uint256 numFeeds
+    ) internal view returns (SchedulerState.SubscriptionParams memory) {
+        bytes32[] memory priceIds = createPriceIds(numFeeds);
+        address[] memory readerWhitelist = new address[](1);
+        readerWhitelist[0] = address(reader);
+
+        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
+            .UpdateCriteria({
+                updateOnHeartbeat: true,
+                heartbeatSeconds: 60,
+                updateOnDeviation: true,
+                deviationThresholdBps: 100
+            });
+
+        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
+            maxBaseFeeMultiplierCapPct: 10_000,
+            maxPriorityFeeMultiplierCapPct: 10_000
+        });
+
+        return
+            SchedulerState.SubscriptionParams({
+                priceIds: priceIds,
+                readerWhitelist: readerWhitelist,
+                whitelistEnabled: true,
+                isActive: true,
+                isPermanent: false,
+                updateCriteria: updateCriteria,
+                gasConfig: gasConfig
+            });
     }
 
     // Required to receive ETH when withdrawing funds
