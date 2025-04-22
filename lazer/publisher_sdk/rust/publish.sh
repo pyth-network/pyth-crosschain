@@ -35,4 +35,4 @@ replace_mod_protobuf('${PACKAGE_DIR}/src/lib.rs')
 "
 
 echo "publishing package"
-cargo publish --token ${CARGO_REGISTRY_TOKEN}
+cargo publish --token ${CARGO_REGISTRY_TOKEN} --allow-dirty
