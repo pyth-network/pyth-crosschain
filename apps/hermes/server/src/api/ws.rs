@@ -189,7 +189,9 @@ where
     let requester_ip = headers
         .get(state.ws.requester_ip_header_name.as_str())
         .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.split(',').next()) // Only take the first ip if there are multiple
+        // Only take the last ip if there are multiple. Note: if the service is behind multiple load balancers,
+        // this will be the ip the last balancer sees.
+        .and_then(|value| value.split(',').last())
         .and_then(|value| value.parse().ok());
 
     ws.max_message_size(MAX_CLIENT_MESSAGE_SIZE)
