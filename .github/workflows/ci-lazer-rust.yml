@@ -30,7 +30,7 @@ jobs:
       - name: install extra tools
         run: |
           cargo install --locked taplo-cli@0.9.3
-          sudo apt-get install -y protobuf-compiler
+          sudo apt-get update && sudo apt-get install -y protobuf-compiler
       - name: Install Solana Cli
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"

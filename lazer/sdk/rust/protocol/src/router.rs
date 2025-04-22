@@ -4,6 +4,7 @@ use {
     crate::payload::AggregatedPriceFeedData,
     anyhow::{bail, Context},
     itertools::Itertools,
+    protobuf::well_known_types::timestamp::Timestamp,
     rust_decimal::{prelude::FromPrimitive, Decimal},
     serde::{de::Error, Deserialize, Serialize},
     std::{
@@ -25,6 +26,16 @@ pub struct ChannelId(pub u8);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TimestampUs(pub u64);
+
+impl TryFrom<&Timestamp> for TimestampUs {
+    type Error = anyhow::Error;
+
+    fn try_from(timestamp: &Timestamp) -> anyhow::Result<Self> {
+        let seconds_in_micros: u64 = (timestamp.seconds * 1_000_000).try_into()?;
+        let nanos_in_micros: u64 = (timestamp.nanos / 1_000).try_into()?;
+        Ok(TimestampUs(seconds_in_micros + nanos_in_micros))
+    }
+}
 
 impl TimestampUs {
     pub fn now() -> Self {

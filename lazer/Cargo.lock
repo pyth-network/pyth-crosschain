@@ -3856,6 +3856,7 @@ dependencies = [
  "hex",
  "itertools 0.13.0",
  "libsecp256k1 0.7.1",
+ "protobuf",
  "rust_decimal",
  "serde",
  "serde_json",
@@ -3863,7 +3864,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "protobuf",
  "protobuf-codegen",
