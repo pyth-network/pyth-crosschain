@@ -549,7 +549,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             "Should not be able to add price feeds to permanent subscription"
         );
 
-        // Test 5: Cannot change gasConfig (This check is now implicit in the general update rejection)
         // Test 6: Cannot change updateCriteria
         updatedParams = storedParams;
         updatedParams.updateCriteria.heartbeatSeconds =

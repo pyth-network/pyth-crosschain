@@ -64,7 +64,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         uint256 subscriptionId,
         SubscriptionParams memory newParams
     ) external override onlyManager(subscriptionId) {
-        // Re-add the definition for currentStatus
         SchedulerState.SubscriptionStatus storage currentStatus = _state
             .subscriptionStatuses[subscriptionId];
         SubscriptionParams storage currentParams = _state.subscriptionParams[
@@ -73,9 +72,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         bool wasActive = currentParams.isActive;
         bool willBeActive = newParams.isActive;
 
-        // Check for permanent subscription restrictions
+        // Updates to permanent subscriptions are not allowed
         if (currentParams.isPermanent) {
-            // For permanent subscriptions, no updates are allowed at all.
             revert CannotUpdatePermanentSubscription();
         }
 
