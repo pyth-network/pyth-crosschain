@@ -8,7 +8,7 @@ error Unauthorized();
 // Subscription state errors
 error InactiveSubscription();
 error InsufficientBalance();
-error IllegalPermanentSubscriptionModification();
+error CannotUpdatePermanentSubscription();
 
 // Price feed errors
 error InvalidPriceId(bytes32 providedPriceId, bytes32 expectedPriceId);
@@ -20,7 +20,6 @@ error PriceSlotMismatch();
 
 // Update criteria errors
 error InvalidUpdateCriteria();
-error InvalidGasConfig();
 error UpdateConditionsNotMet();
 error TimestampOlderThanLastUpdate(
     uint256 providedUpdateTimestamp,

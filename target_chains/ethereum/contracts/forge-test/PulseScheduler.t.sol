@@ -144,11 +144,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             params.updateCriteria.deviationThresholdBps,
             "Deviation threshold mismatch"
         );
-        assertEq(
-            storedParams.gasConfig.maxBaseFeeMultiplierCapPct,
-            params.gasConfig.maxBaseFeeMultiplierCapPct,
-            "Max gas multiplier mismatch"
-        );
 
         assertEq(
             status.balanceInWei,
@@ -178,12 +173,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
                 deviationThresholdBps: 200 // Changed from 100
             });
 
-        SchedulerState.GasConfig memory newGasConfig = SchedulerState
-            .GasConfig({
-                maxBaseFeeMultiplierCapPct: 20_000, // Changed from 10_000
-                maxPriorityFeeMultiplierCapPct: 20_000 // Changed from 10_000
-            });
-
         SchedulerState.SubscriptionParams memory newParams = SchedulerState
             .SubscriptionParams({
                 priceIds: newPriceIds,
@@ -191,8 +180,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
                 whitelistEnabled: false, // Changed from true
                 isActive: true,
                 isPermanent: false,
-                updateCriteria: newUpdateCriteria,
-                gasConfig: newGasConfig
+                updateCriteria: newUpdateCriteria
             });
 
         // Update subscription
@@ -229,11 +217,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             storedParams.updateCriteria.deviationThresholdBps,
             200,
             "Deviation threshold mismatch"
-        );
-        assertEq(
-            storedParams.gasConfig.maxBaseFeeMultiplierCapPct,
-            20_000,
-            "Max gas multiplier mismatch"
         );
     }
 
@@ -508,9 +491,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         updatedParams.isPermanent = false;
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
         );
         scheduler.updateSubscription(subscriptionId, updatedParams);
 
@@ -525,9 +506,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         updatedParams.priceIds = reducedPriceIds;
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
         );
         scheduler.updateSubscription(subscriptionId, updatedParams);
 
@@ -540,13 +519,11 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         scheduler.addFunds{value: extraFunds}(subscriptionId);
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
         );
         scheduler.withdrawFunds(subscriptionId, 0.1 ether);
 
-        // Test 4: Can still add more price feeds
+        // Test 4: Cannot add more price feeds
         updatedParams = storedParams;
         bytes32[] memory expandedPriceIds = new bytes32[](
             params.priceIds.length + 1
@@ -558,39 +535,28 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             uint256(keccak256(abi.encodePacked("additional-price-id")))
         );
         updatedParams.priceIds = expandedPriceIds;
-        updatedParams.isPermanent = true; // Ensure we keep isPermanent flag set to true
 
+        vm.expectRevert(
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
+        );
         scheduler.updateSubscription(subscriptionId, updatedParams);
 
-        // Verify price feeds were added
+        // Verify price feeds were not added (length should remain the same)
         (storedParams, ) = scheduler.getSubscription(subscriptionId);
         assertEq(
             storedParams.priceIds.length,
-            params.priceIds.length + 1,
-            "Should be able to add price feeds to permanent subscription"
+            params.priceIds.length, // Verify length hasn't changed
+            "Should not be able to add price feeds to permanent subscription"
         );
 
-        // Test 5: Cannot change gasConfig
-        updatedParams = storedParams;
-        updatedParams.gasConfig.maxBaseFeeMultiplierCapPct =
-            storedParams.gasConfig.maxBaseFeeMultiplierCapPct +
-            100;
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
-        );
-        scheduler.updateSubscription(subscriptionId, updatedParams);
-
+        // Test 5: Cannot change gasConfig (This check is now implicit in the general update rejection)
         // Test 6: Cannot change updateCriteria
         updatedParams = storedParams;
         updatedParams.updateCriteria.heartbeatSeconds =
             storedParams.updateCriteria.heartbeatSeconds +
             60;
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
         );
         scheduler.updateSubscription(subscriptionId, updatedParams);
 
@@ -598,9 +564,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         updatedParams = storedParams;
         updatedParams.whitelistEnabled = !storedParams.whitelistEnabled;
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
         );
         scheduler.updateSubscription(subscriptionId, updatedParams);
 
@@ -615,9 +579,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         expandedWhitelist[storedParams.readerWhitelist.length] = address(0x456);
         updatedParams.readerWhitelist = expandedWhitelist;
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
         );
         scheduler.updateSubscription(subscriptionId, updatedParams);
 
@@ -634,7 +596,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             updatedParams.readerWhitelist = reducedWhitelist;
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IllegalPermanentSubscriptionModification.selector
+                    CannotUpdatePermanentSubscription.selector
                 )
             );
             scheduler.updateSubscription(subscriptionId, updatedParams);
@@ -644,9 +606,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         updatedParams = storedParams;
         updatedParams.isActive = false;
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
         );
         scheduler.updateSubscription(subscriptionId, updatedParams);
     }
@@ -678,9 +638,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         // Verify we can't make it non-permanent again
         params.isPermanent = false;
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IllegalPermanentSubscriptionModification.selector
-            )
+            abi.encodeWithSelector(CannotUpdatePermanentSubscription.selector)
         );
         scheduler.updateSubscription(subscriptionId, params);
     }
@@ -1292,11 +1250,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
                 deviationThresholdBps: 100
             });
 
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
         SchedulerState.SubscriptionParams memory pusherParams = SchedulerState
             .SubscriptionParams({
                 priceIds: priceIds,
@@ -1304,8 +1257,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
                 whitelistEnabled: false,
                 isActive: true,
                 isPermanent: false,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
+                updateCriteria: updateCriteria
             });
 
         uint256 minimumBalance = scheduler.getMinimumBalance(
@@ -1518,39 +1470,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         initialSubId = addTestSubscription(scheduler, address(reader));
         vm.expectRevert(abi.encodeWithSelector(InvalidUpdateCriteria.selector));
         scheduler.updateSubscription(initialSubId, invalidDeviationParams);
-    }
-
-    // Helper function to create default subscription parameters
-    function _createDefaultSubscriptionParams(
-        uint256 numFeeds
-    ) internal view returns (SchedulerState.SubscriptionParams memory) {
-        bytes32[] memory priceIds = createPriceIds(numFeeds);
-        address[] memory readerWhitelist = new address[](1);
-        readerWhitelist[0] = address(reader);
-
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
-            .UpdateCriteria({
-                updateOnHeartbeat: true,
-                heartbeatSeconds: 60,
-                updateOnDeviation: true,
-                deviationThresholdBps: 100
-            });
-
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
-        return
-            SchedulerState.SubscriptionParams({
-                priceIds: priceIds,
-                readerWhitelist: readerWhitelist,
-                whitelistEnabled: true,
-                isActive: true,
-                isPermanent: false,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
-            });
     }
 
     // Required to receive ETH when withdrawing funds
