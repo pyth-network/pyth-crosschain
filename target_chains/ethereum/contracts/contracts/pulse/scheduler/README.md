@@ -34,12 +34,12 @@ Pyth Pulse ensures that on-chain Pyth prices remain up-to-date according to user
     - Provides functions for users (Readers) to read the latest pushed prices for a subscription.
     - Allows Managers to manage their subscription parameters and funds.
     - Allows Keepers to discover active subscriptions (`getActiveSubscriptions`).
-2.  **Keeper Network (Off-Chain):** A permissionless network of off-chain providers.
+2.  **Keeper Network (Off-Chain):** _Implementation pending._ A permissionless network of off-chain providers.
     - Keepers constantly monitor active subscriptions listed in this Scheduler Contract.
     - They fetch the latest off-chain price data from a Pyth Price Service endpoint (e.g., Hermes).
     - They compare the latest off-chain prices and timestamps with the last prices stored on-chain in this contract for each subscription.
     - If a subscription's trigger conditions (e.g., time since last update > `heartbeatSeconds`, or price deviation > `deviationThresholdBps`) are met, the Keeper submits a transaction to this contract's `updatePriceFeeds` function, including the necessary Pyth price update data.
-3.  **Web UI (Off-Chain):** The primary interface for users to interact with Pyth Pulse.
+3.  **Web UI (Off-Chain):** _Implementation pending._ The primary interface for users to interact with Pyth Pulse.
     - Allows users (Managers) to easily create, configure, monitor, and fund their price feed subscriptions by interacting with this Scheduler Contract's functions.
 
 ### High level flow
