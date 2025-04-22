@@ -13,7 +13,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - run: publish.sh
+      - run: ./publish.sh
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         working-directory: "lazer/publisher_sdk/rust"
