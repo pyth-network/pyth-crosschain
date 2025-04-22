@@ -64,13 +64,12 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         uint256 subscriptionId,
         SubscriptionParams memory newParams
     ) external override onlyManager(subscriptionId) {
-        SchedulerState.SubscriptionStatus storage currentStatus = _state
-            .subscriptionStatuses[subscriptionId];
+        SubscriptionStatus storage currentStatus = _state.subscriptionStatuses[
+            subscriptionId
+        ];
         SubscriptionParams storage currentParams = _state.subscriptionParams[
             subscriptionId
         ];
-        bool wasActive = currentParams.isActive;
-        bool willBeActive = newParams.isActive;
 
         // Updates to permanent subscriptions are not allowed
         if (currentParams.isPermanent) {
@@ -78,6 +77,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         // If subscription is inactive and will remain inactive, no need to validate parameters
+        bool wasActive = currentParams.isActive;
+        bool willBeActive = newParams.isActive;
         if (!wasActive && !willBeActive) {
             // Update subscription parameters
             _state.subscriptionParams[subscriptionId] = newParams;
