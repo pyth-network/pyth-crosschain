@@ -246,7 +246,7 @@ impl Serialize for Channel {
     }
 }
 
-mod channel_ids {
+pub mod channel_ids {
     use super::ChannelId;
 
     pub const FIXED_RATE_1: ChannelId = ChannelId(1);
