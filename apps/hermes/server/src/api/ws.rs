@@ -151,6 +151,8 @@ enum ClientMessage {
         binary: bool,
         #[serde(default)]
         allow_out_of_order: bool,
+        #[serde(default)]
+        ignore_invalid_price_ids: bool,
     },
     #[serde(rename = "unsubscribe")]
     Unsubscribe { ids: Vec<PriceIdInput> },
@@ -530,18 +532,22 @@ where
                 verbose,
                 binary,
                 allow_out_of_order,
+                ignore_invalid_price_ids,
             }) => {
                 let price_ids: Vec<PriceIdentifier> = ids.into_iter().map(|id| id.into()).collect();
                 let available_price_ids = Aggregates::get_price_feed_ids(&*self.state).await;
 
-                let not_found_price_ids: Vec<&PriceIdentifier> = price_ids
+                let (found_price_ids, not_found_price_ids): (
+                    Vec<&PriceIdentifier>,
+                    Vec<&PriceIdentifier>,
+                ) = price_ids
                     .iter()
-                    .filter(|price_id| !available_price_ids.contains(price_id))
-                    .collect();
+                    .partition(|price_id| available_price_ids.contains(price_id));
 
                 // If there is a single price id that is not found, we don't subscribe to any of the
-                // asked correct price feed ids and return an error to be more explicit and clear.
-                if !not_found_price_ids.is_empty() {
+                // asked correct price feed ids and return an error to be more explicit and clear,
+                // unless the client explicitly asked to ignore invalid ids
+                if !not_found_price_ids.is_empty() && !ignore_invalid_price_ids {
                     self.sender
                         .send(
                             serde_json::to_string(&ServerMessage::Response(
@@ -556,10 +562,22 @@ where
                         )
                         .await?;
                     return Ok(());
+                } else if found_price_ids.is_empty() {
+                    self.sender
+                        .send(
+                            serde_json::to_string(&ServerMessage::Response(
+                                ServerResponseMessage::Err {
+                                    error: "No price feeds available".to_string(),
+                                },
+                            ))?
+                            .into(),
+                        )
+                        .await?;
+                    return Ok(());
                 } else {
-                    for price_id in price_ids {
+                    for price_id in found_price_ids {
                         self.price_feeds_with_config.insert(
-                            price_id,
+                            *price_id,
                             PriceFeedClientConfig {
                                 verbose,
                                 binary,
