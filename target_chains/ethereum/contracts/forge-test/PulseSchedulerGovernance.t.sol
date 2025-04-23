@@ -92,7 +92,7 @@ contract PulseSchedulerGovernanceTest is Test {
         scheduler.upgradeTo(address(scheduler2));
 
         // Verify contract works
-        assertEq(scheduler.version(), "1.0.0");
+        assertEq(scheduler.getAdmin(), admin);
     }
 
     function testUpgradeByAdmin() public {

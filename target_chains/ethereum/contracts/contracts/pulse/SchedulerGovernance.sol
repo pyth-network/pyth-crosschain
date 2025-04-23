@@ -6,7 +6,6 @@ import "./SchedulerErrors.sol";
 
 /**
  * @dev `SchedulerGovernance` defines governance capabilities for the Pulse contract.
- * Initially, it only supports admin proposal/acceptance and contract upgrade functionality.
  */
 abstract contract SchedulerGovernance is SchedulerState {
     event NewAdminProposed(address oldAdmin, address newAdmin);
