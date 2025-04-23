@@ -33,9 +33,6 @@ contract SchedulerUpgradeable is
 
         Scheduler._initialize(admin, pythAddress);
         
-        // Set admin for governance
-        _admin = admin;
-
         _transferOwnership(owner);
     }
 
@@ -46,7 +43,7 @@ contract SchedulerUpgradeable is
     
     // Authorize actions that both admin and owner can perform
     function _authorizeAdminAction() internal view override {
-        if (msg.sender != owner() && msg.sender != _admin)
+        if (msg.sender != owner() && msg.sender != _state.admin)
             revert("Unauthorized");
     }
 

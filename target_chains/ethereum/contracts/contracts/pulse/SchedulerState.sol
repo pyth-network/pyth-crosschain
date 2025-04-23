@@ -45,9 +45,6 @@ contract SchedulerState {
     // proposedAdmin is the new admin's account address proposed by either the owner or the current admin.
     // If there is no pending transfer request, this value will hold `address(0)`.
     address internal _proposedAdmin;
-    
-    // Admin address for governance actions
-    address internal _admin;
 
     struct SubscriptionParams {
         bytes32[] priceIds;

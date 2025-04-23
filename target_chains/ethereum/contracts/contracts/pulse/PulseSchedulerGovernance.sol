@@ -22,7 +22,7 @@ abstract contract PulseSchedulerGovernance is SchedulerState {
      * @dev Returns the address of the current admin.
      */
     function getAdmin() external view returns (address) {
-        return _admin;
+        return _state.admin;
     }
 
     /**
@@ -35,7 +35,7 @@ abstract contract PulseSchedulerGovernance is SchedulerState {
         _authorizeAdminAction();
 
         _proposedAdmin = newAdmin;
-        emit NewAdminProposed(_admin, newAdmin);
+        emit NewAdminProposed(_state.admin, newAdmin);
     }
 
     /**
@@ -45,8 +45,8 @@ abstract contract PulseSchedulerGovernance is SchedulerState {
         if (msg.sender != _proposedAdmin)
             revert("Unauthorized");
 
-        address oldAdmin = _admin;
-        _admin = msg.sender;
+        address oldAdmin = _state.admin;
+        _state.admin = msg.sender;
 
         _proposedAdmin = address(0);
         emit NewAdminAccepted(oldAdmin, msg.sender);
