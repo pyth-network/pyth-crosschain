@@ -146,7 +146,7 @@ mod pyth {
     ///
     /// `fee_token_address1` is the address of the ERC20 token used to pay fees to Pyth
     /// for price updates. There is no native token on Starknet so an ERC20 contract has to be used.
-    /// On Katana, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens
+    /// On Devnet, an ETH fee contract is pre-deployed. On Starknet testnet, ETH and STRK fee tokens
     /// are available. Any other ERC20-compatible token can also be used.
     /// In a Starknet Forge testing environment, a fee contract must be deployed manually.
     ///
