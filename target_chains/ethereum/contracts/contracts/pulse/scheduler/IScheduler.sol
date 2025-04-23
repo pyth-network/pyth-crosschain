@@ -48,7 +48,7 @@ interface IScheduler is SchedulerEvents {
 
     /**
      * @notice Updates price feeds for a subscription.
-     * Verifies the updateData using the Pyth contract and validates that all feeds have the same timestamp.
+     * @dev Internally, this verifies the updateData using the Pyth contract and validates update conditions.
      * @param subscriptionId The ID of the subscription
      * @param updateData The price update data from Pyth
      * @param priceIds The IDs of the price feeds to update
@@ -73,7 +73,8 @@ interface IScheduler is SchedulerEvents {
         bytes32[] calldata priceIds
     ) external view returns (PythStructs.Price[] memory prices);
 
-    /** @notice Returns the exponentially-weighted moving average price of a price feed without any sanity checks.
+    /**
+     * @notice Returns the exponentially-weighted moving average price of a price feed without any sanity checks.
      * @dev This function returns the same price as `getEmaPrice` in the case where the price is available.
      * However, if the price is not recent this function returns the latest available price.
      *
@@ -114,10 +115,12 @@ interface IScheduler is SchedulerEvents {
     ) external view returns (uint256 minimumBalanceInWei);
 
     /**
-     * @notice Gets all active subscriptions with their parameters
-     * @dev This function has no access control to allow keepers to discover active subscriptions
-     * @param startIndex The starting index for pagination
-     * @param maxResults The maximum number of results to return
+     * @notice Gets all active subscriptions with their parameters, paginated.
+     * @dev This function has no access control to allow keepers to discover active subscriptions.
+     * @dev Note that the order of subscription IDs returned may not be sequential and can change
+     *      when subscriptions are deactivated or reactivated.
+     * @param startIndex The starting index within the list of active subscriptions (NOT the subscription ID).
+     * @param maxResults The maximum number of results to return starting from startIndex.
      * @return subscriptionIds Array of active subscription IDs
      * @return subscriptionParams Array of subscription parameters for each active subscription
      * @return totalCount Total number of active subscriptions
