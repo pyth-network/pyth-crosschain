@@ -56,6 +56,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // Map subscription ID to manager
         _state.subscriptionManager[subscriptionId] = msg.sender;
 
+        _addToActiveSubscriptions(subscriptionId);
+
         emit SubscriptionCreated(subscriptionId, msg.sender);
         return subscriptionId;
     }
@@ -102,10 +104,12 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             }
 
             currentParams.isActive = true;
+            _addToActiveSubscriptions(subscriptionId);
             emit SubscriptionActivated(subscriptionId);
         } else if (wasActive && !willBeActive) {
             // Deactivating a subscription
             currentParams.isActive = false;
+            _removeFromActiveSubscriptions(subscriptionId);
             emit SubscriptionDeactivated(subscriptionId);
         }
 
@@ -583,14 +587,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             uint256 totalCount
         )
     {
-        // Count active subscriptions first to determine total count
-        // TODO: Optimize this. store numActiveSubscriptions or something.
-        totalCount = 0;
-        for (uint256 i = 1; i < _state.subscriptionNumber; i++) {
-            if (_state.subscriptionParams[i].isActive) {
-                totalCount++;
-            }
-        }
+        totalCount = _state.activeSubscriptionIds.length;
 
         // If startIndex is beyond the total count, return empty arrays
         if (startIndex >= totalCount) {
@@ -607,25 +604,13 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         subscriptionIds = new uint256[](resultCount);
         subscriptionParams = new SubscriptionParams[](resultCount);
 
-        // Find and populate the requested page of active subscriptions
-        uint256 activeIndex = 0;
-        uint256 resultIndex = 0;
-
-        for (
-            uint256 i = 1;
-            i < _state.subscriptionNumber && resultIndex < resultCount;
-            i++
-        ) {
-            if (_state.subscriptionParams[i].isActive) {
-                if (activeIndex >= startIndex) {
-                    subscriptionIds[resultIndex] = i;
-                    subscriptionParams[resultIndex] = _state.subscriptionParams[
-                        i
-                    ];
-                    resultIndex++;
-                }
-                activeIndex++;
-            }
+        // Populate the arrays with the requested page of active subscriptions
+        for (uint256 i = 0; i < resultCount; i++) {
+            uint256 subscriptionId = _state.activeSubscriptionIds[
+                startIndex + i
+            ];
+            subscriptionIds[i] = subscriptionId;
+            subscriptionParams[i] = _state.subscriptionParams[subscriptionId];
         }
 
         return (subscriptionIds, subscriptionParams, totalCount);
@@ -681,5 +666,48 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert Unauthorized();
         }
         _;
+    }
+
+    /**
+     * @notice Adds a subscription to the active subscriptions list.
+     * @param subscriptionId The ID of the subscription to add.
+     */
+    function _addToActiveSubscriptions(uint256 subscriptionId) internal {
+        // Only add if not already in the list
+        if (_state.activeSubscriptionIndex[subscriptionId] == 0) {
+            _state.activeSubscriptionIds.push(subscriptionId);
+
+            // Store the index as 1-based, 0 means not in the list
+            _state.activeSubscriptionIndex[subscriptionId] = _state
+                .activeSubscriptionIds
+                .length;
+        }
+    }
+
+    /**
+     * @notice Removes a subscription from the active subscriptions list.
+     * @param subscriptionId The ID of the subscription to remove.
+     */
+    function _removeFromActiveSubscriptions(uint256 subscriptionId) internal {
+        uint256 index = _state.activeSubscriptionIndex[subscriptionId];
+
+        // Only remove if it's in the list
+        if (index > 0) {
+            // Adjust index to be 0-based instead of 1-based
+            index = index - 1;
+
+            // If it's not the last element, move the last element to its position
+            if (index < _state.activeSubscriptionIds.length - 1) {
+                uint256 lastId = _state.activeSubscriptionIds[
+                    _state.activeSubscriptionIds.length - 1
+                ];
+                _state.activeSubscriptionIds[index] = lastId;
+                _state.activeSubscriptionIndex[lastId] = index + 1; // 1-based index
+            }
+
+            // Remove the last element
+            _state.activeSubscriptionIds.pop();
+            _state.activeSubscriptionIndex[subscriptionId] = 0;
+        }
     }
 }
