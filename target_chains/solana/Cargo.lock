@@ -3120,7 +3120,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-solana-receiver-sdk"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "anchor-lang",
  "bytemuck_derive",
