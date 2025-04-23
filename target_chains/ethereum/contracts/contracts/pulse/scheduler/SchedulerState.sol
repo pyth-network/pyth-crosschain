@@ -35,6 +35,12 @@ contract SchedulerState {
         mapping(uint256 => mapping(bytes32 => PythStructs.PriceFeed)) priceUpdates;
         /// Sub ID -> manager address
         mapping(uint256 => address) subscriptionManager;
+        /// Array of active subscription IDs.
+        /// Gas optimization to avoid scanning through all subscriptions when querying for all active ones.
+        uint256[] activeSubscriptionIds;
+        /// Sub ID -> index in activeSubscriptionIds array + 1 (0 means not in array).
+        /// This lets us avoid a linear scan of `activeSubscriptionIds` when deactivating a subscription.
+        mapping(uint256 => uint256) activeSubscriptionIndex;
     }
     State internal _state;
 
