@@ -74,12 +74,12 @@ contract SchedulerUpgradeable is
         // Calling a method using `this.<method>` will cause a contract call that will use
         // the new contract. This call will fail if the method does not exists or the magic
         // is different.
-        if (this.schedulerUpgradableMagic() != 0x5055757)
+        if (this.schedulerUpgradableMagic() != 0x50554C5345)
             revert("Invalid upgrade magic");
     }
 
-    function schedulerUpgradableMagic() public pure virtual returns (uint32) {
-        return 0x5055757; // "PUW" in hex
+    function schedulerUpgradableMagic() public pure virtual returns (uint64) {
+        return 0x50554C5345; // "PULSE" in hex
     }
 
     function version() public pure returns (string memory) {

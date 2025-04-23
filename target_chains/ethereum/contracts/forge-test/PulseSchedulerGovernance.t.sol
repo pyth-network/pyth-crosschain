@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "../contracts/pulse/SchedulerUpgradeable.sol";
 
 contract InvalidMagicPulseScheduler is SchedulerUpgradeable {
-    function schedulerUpgradableMagic() public pure override returns (uint32) {
+    function schedulerUpgradableMagic() public pure override returns (uint64) {
         return 0x12345678; // Different magic
     }
 }
