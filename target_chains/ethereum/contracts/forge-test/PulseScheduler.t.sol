@@ -4,15 +4,13 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "../contracts/pulse/SchedulerUpgradeable.sol";
+import "../contracts/pulse/IScheduler.sol";
+import "../contracts/pulse/SchedulerState.sol";
+import "../contracts/pulse/SchedulerEvents.sol";
+import "../contracts/pulse/SchedulerErrors.sol";
 import "./utils/PulseSchedulerTestUtils.t.sol";
-import "../contracts/pulse/scheduler/SchedulerUpgradeable.sol";
-import "../contracts/pulse/scheduler/IScheduler.sol";
-import "../contracts/pulse/scheduler/SchedulerState.sol";
-import "../contracts/pulse/scheduler/SchedulerEvents.sol";
-import "../contracts/pulse/scheduler/SchedulerErrors.sol";
-
 contract MockReader {
     address private _scheduler;
 

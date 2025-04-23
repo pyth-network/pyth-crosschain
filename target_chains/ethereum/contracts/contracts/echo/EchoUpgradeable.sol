@@ -5,13 +5,13 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import "./Pulse.sol";
+import "./Echo.sol";
 
-contract PulseUpgradeable is
+contract EchoUpgradeable is
     Initializable,
     Ownable2StepUpgradeable,
     UUPSUpgradeable,
-    Pulse
+    Echo
 {
     event ContractUpgraded(
         address oldImplementation,
@@ -33,7 +33,7 @@ contract PulseUpgradeable is
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Pulse._initialize(
+        Echo._initialize(
             admin,
             pythFeeInWei,
             pythAddress,

@@ -3,38 +3,38 @@
 pragma solidity ^0.8.0;
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import "./PulseEvents.sol";
-import "./PulseState.sol";
+import "./EchoEvents.sol";
+import "./EchoState.sol";
 
-abstract contract IPulseConsumer {
-    // This method is called by Pulse to provide the price updates to the consumer.
-    // It asserts that the msg.sender is the Pulse contract. It is not meant to be
+abstract contract IEchoConsumer {
+    // This method is called by Echo to provide the price updates to the consumer.
+    // It asserts that the msg.sender is the Echo contract. It is not meant to be
     // overridden by the consumer.
-    function _pulseCallback(
+    function _echoCallback(
         uint64 sequenceNumber,
         PythStructs.PriceFeed[] memory priceFeeds
     ) external {
-        address pulse = getPulse();
-        require(pulse != address(0), "Pulse address not set");
-        require(msg.sender == pulse, "Only Pulse can call this function");
+        address echo = getEcho();
+        require(echo != address(0), "Echo address not set");
+        require(msg.sender == echo, "Only Echo can call this function");
 
-        pulseCallback(sequenceNumber, priceFeeds);
+        echoCallback(sequenceNumber, priceFeeds);
     }
 
-    // getPulse returns the Pulse contract address. The method is being used to check that the
-    // callback is indeed from the Pulse contract. The consumer is expected to implement this method.
-    function getPulse() internal view virtual returns (address);
+    // getEcho returns the Echo contract address. The method is being used to check that the
+    // callback is indeed from the Echo contract. The consumer is expected to implement this method.
+    function getEcho() internal view virtual returns (address);
 
     // This method is expected to be implemented by the consumer to handle the price updates.
-    // It will be called by _pulseCallback after _pulseCallback ensures that the call is
-    // indeed from Pulse contract.
-    function pulseCallback(
+    // It will be called by _echoCallback after _echoCallback ensures that the call is
+    // indeed from Echo contract.
+    function echoCallback(
         uint64 sequenceNumber,
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal virtual;
 }
 
-interface IPulse is PulseEvents {
+interface IEcho is EchoEvents {
     // Core functions
     /**
      * @notice Requests price updates with a callback
@@ -103,7 +103,7 @@ interface IPulse is PulseEvents {
 
     function getRequest(
         uint64 sequenceNumber
-    ) external view returns (PulseState.Request memory req);
+    ) external view returns (EchoState.Request memory req);
 
     function setFeeManager(address manager) external;
 
@@ -130,7 +130,7 @@ interface IPulse is PulseEvents {
 
     function getProviderInfo(
         address provider
-    ) external view returns (PulseState.ProviderInfo memory);
+    ) external view returns (EchoState.ProviderInfo memory);
 
     function getDefaultProvider() external view returns (address);
 
@@ -157,5 +157,5 @@ interface IPulse is PulseEvents {
     )
         external
         view
-        returns (PulseState.Request[] memory requests, uint256 actualCount);
+        returns (EchoState.Request[] memory requests, uint256 actualCount);
 }

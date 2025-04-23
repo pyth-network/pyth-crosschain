@@ -4,17 +4,17 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "../contracts/pulse/PulseUpgradeable.sol";
-import "../contracts/pulse/IPulse.sol";
-import "../contracts/pulse/PulseState.sol";
-import "../contracts/pulse/PulseEvents.sol";
-import "../contracts/pulse/PulseErrors.sol";
-import "./utils/PulseTestUtils.t.sol";
+import "../contracts/echo/EchoUpgradeable.sol";
+import "../contracts/echo/IEcho.sol";
+import "../contracts/echo/EchoState.sol";
+import "../contracts/echo/EchoEvents.sol";
+import "../contracts/echo/EchoErrors.sol";
+import "./utils/EchoTestUtils.sol";
 import {console} from "forge-std/console.sol";
-contract PulseGasBenchmark is Test, PulseTestUtils {
+contract EchoGasBenchmark is Test, EchoTestUtils {
     ERC1967Proxy public proxy;
-    PulseUpgradeable public pulse;
-    IPulseConsumer public consumer;
+    EchoUpgradeable public echo;
+    IEchoConsumer public consumer;
 
     address public owner;
     address public admin;
@@ -31,11 +31,11 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         admin = address(2);
         pyth = address(3);
         defaultProvider = address(4);
-        PulseUpgradeable _pulse = new PulseUpgradeable();
-        proxy = new ERC1967Proxy(address(_pulse), "");
-        pulse = PulseUpgradeable(address(proxy));
+        EchoUpgradeable _echo = new EchoUpgradeable();
+        proxy = new ERC1967Proxy(address(_echo), "");
+        echo = EchoUpgradeable(address(proxy));
 
-        pulse.initialize(
+        echo.initialize(
             owner,
             admin,
             PYTH_FEE,
@@ -45,16 +45,16 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
             15
         );
         vm.prank(defaultProvider);
-        pulse.registerProvider(
+        echo.registerProvider(
             DEFAULT_PROVIDER_BASE_FEE,
             DEFAULT_PROVIDER_FEE_PER_FEED,
             DEFAULT_PROVIDER_FEE_PER_GAS
         );
-        consumer = new VoidPulseConsumer(address(proxy));
+        consumer = new VoidEchoConsumer(address(proxy));
     }
 
     // Estimate how much gas is used by all of the data mocking functionality in the other gas benchmarks.
-    // Subtract this amount from the gas benchmarks to estimate the true usage of the pulse flow.
+    // Subtract this amount from the gas benchmarks to estimate the true usage of the echo flow.
     function testDataMocking() public {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
         createPriceIds();
@@ -72,14 +72,14 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         bytes32[] memory priceIds = createPriceIds(numFeeds);
 
         uint32 callbackGasLimit = 100000;
-        uint96 totalFee = pulse.getFee(
+        uint96 totalFee = echo.getFee(
             defaultProvider,
             callbackGasLimit,
             priceIds
         );
         vm.deal(address(consumer), 1 ether);
         vm.prank(address(consumer));
-        uint64 sequenceNumber = pulse.requestPriceUpdatesWithCallback{
+        uint64 sequenceNumber = echo.requestPriceUpdatesWithCallback{
             value: totalFee
         }(defaultProvider, timestamp, priceIds, callbackGasLimit);
 
@@ -90,7 +90,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         mockParsePriceFeedUpdates(pyth, priceFeeds);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
-        pulse.executeCallback(
+        echo.executeCallback(
             defaultProvider,
             sequenceNumber,
             updateData,
@@ -131,7 +131,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
         bytes32[] memory priceIds = createPriceIds(2);
         uint32 callbackGasLimit = 100000;
-        uint128 totalFee = pulse.getFee(
+        uint128 totalFee = echo.getFee(
             defaultProvider,
             callbackGasLimit,
             priceIds
@@ -143,7 +143,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
 
         for (uint i = 0; i < 10; i++) {
             vm.prank(address(consumer));
-            sequenceNumbers[i] = pulse.requestPriceUpdatesWithCallback{
+            sequenceNumbers[i] = echo.requestPriceUpdatesWithCallback{
                 value: totalFee
             }(
                 defaultProvider,
@@ -162,7 +162,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         // Execute callbacks in reverse
         uint startGas = gasleft();
         for (uint i = 9; i > 0; i--) {
-            pulse.executeCallback(
+            echo.executeCallback(
                 defaultProvider,
                 sequenceNumbers[i],
                 updateData,
@@ -174,7 +174,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         // Execute the first request last - this would be the most expensive
         // in the original implementation as it would need to loop through
         // all sequence numbers
-        pulse.executeCallback(
+        echo.executeCallback(
             defaultProvider,
             sequenceNumbers[0],
             updateData,
@@ -199,21 +199,21 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         uint64 timestamp = SafeCast.toUint64(block.timestamp);
         bytes32[] memory priceIds = createPriceIds(numFeeds);
         uint32 callbackGasLimit = 100000;
-        uint128 totalFee = pulse.getFee(
+        uint128 totalFee = echo.getFee(
             defaultProvider,
             callbackGasLimit,
             priceIds
         );
 
         // Create NUM_REQUESTS requests to fill up the main array
-        // The constant is defined in PulseState.sol as 32
+        // The constant is defined in EchoState.sol as 32
         uint64[] memory sequenceNumbers = new uint64[](32);
         vm.deal(address(consumer), 50 ether);
 
         // Use the same timestamp for all requests to avoid "Too far in future" error
         for (uint i = 0; i < 32; i++) {
             vm.prank(address(consumer));
-            sequenceNumbers[i] = pulse.requestPriceUpdatesWithCallback{
+            sequenceNumbers[i] = echo.requestPriceUpdatesWithCallback{
                 value: totalFee
             }(defaultProvider, timestamp, priceIds, callbackGasLimit);
         }
@@ -222,7 +222,7 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
         // (This could potentially happen earlier if a shortKey collides,
         // but this guarantees it.)
         vm.prank(address(consumer));
-        pulse.requestPriceUpdatesWithCallback{value: totalFee}(
+        echo.requestPriceUpdatesWithCallback{value: totalFee}(
             defaultProvider,
             timestamp,
             priceIds,
@@ -257,19 +257,19 @@ contract PulseGasBenchmark is Test, PulseTestUtils {
 }
 
 // A simple consumer that does nothing with the price updates.
-// Used to estimate the gas usage of the pulse flow.
-contract VoidPulseConsumer is IPulseConsumer {
-    address private _pulse;
+// Used to estimate the gas usage of the echo flow.
+contract VoidEchoConsumer is IEchoConsumer {
+    address private _echo;
 
-    constructor(address pulse) {
-        _pulse = pulse;
+    constructor(address echo) {
+        _echo = echo;
     }
 
-    function getPulse() internal view override returns (address) {
-        return _pulse;
+    function getEcho() internal view override returns (address) {
+        return _echo;
     }
 
-    function pulseCallback(
+    function echoCallback(
         uint64 sequenceNumber,
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal override {}

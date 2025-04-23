@@ -3,14 +3,12 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "../../contracts/pulse/IPulse.sol";
-import "../../contracts/pulse/scheduler/SchedulerState.sol";
-import "./PulseTestUtils.t.sol";
-import "../../contracts/pulse/scheduler/SchedulerUpgradeable.sol";
+import "../../contracts/pulse/SchedulerUpgradeable.sol";
+import "../../contracts/pulse/SchedulerState.sol";
+import "./MockPriceFeedTestUtils.sol";
 
-abstract contract PulseSchedulerTestUtils is Test, PulseTestUtils {
+abstract contract PulseSchedulerTestUtils is Test, MockPriceFeedTestUtils {
     /// Helper function to add a test subscription with 2 price IDs
     function addTestSubscription(
         SchedulerUpgradeable scheduler,

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./PulseState.sol";
+import "./EchoState.sol";
 
-interface PulseEvents {
-    event PriceUpdateRequested(PulseState.Request request, bytes32[] priceIds);
+interface EchoEvents {
+    event PriceUpdateRequested(EchoState.Request request, bytes32[] priceIds);
 
     event PriceUpdateExecuted(
         uint64 indexed sequenceNumber,
