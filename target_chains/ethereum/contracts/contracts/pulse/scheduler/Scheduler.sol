@@ -784,6 +784,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // Only add if not already in the list
         if (_state.activeSubscriptionIndex[subscriptionId] == 0) {
             _state.activeSubscriptionIds.push(subscriptionId);
+
+            // Store the index as 1-based, 0 means not in the list
             _state.activeSubscriptionIndex[subscriptionId] = _state
                 .activeSubscriptionIds
                 .length;

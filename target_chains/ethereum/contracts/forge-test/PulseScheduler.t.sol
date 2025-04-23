@@ -348,51 +348,172 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
     }
 
     function testActivateDeactivateSubscription() public {
-        uint256 subscriptionId = addTestSubscription(
-            scheduler,
-            address(reader)
+        // Add multiple subscriptions
+        uint256 subId1 = addTestSubscription(scheduler, address(reader)); // ID 1
+        uint256 subId2 = addTestSubscription(scheduler, address(reader)); // ID 2
+        uint256 subId3 = addTestSubscription(scheduler, address(reader)); // ID 3
+
+        // --- Verify initial state ---
+        (uint256[] memory activeIds, , uint256 totalCount) = scheduler
+            .getActiveSubscriptions(0, 10);
+        assertEq(totalCount, 3, "Initial: Total count should be 3");
+        assertEq(activeIds.length, 3, "Initial: Active IDs length should be 3");
+        assertEq(activeIds[0], subId1, "Initial: ID 1 should be active");
+        assertEq(activeIds[1], subId2, "Initial: ID 2 should be active");
+        assertEq(activeIds[2], subId3, "Initial: ID 3 should be active");
+
+        // --- Deactivate the middle subscription (ID 2) ---
+        (SchedulerState.SubscriptionParams memory params2, ) = scheduler
+            .getSubscription(subId2);
+        params2.isActive = false;
+        vm.expectEmit();
+        emit SubscriptionDeactivated(subId2);
+        vm.expectEmit();
+        emit SubscriptionUpdated(subId2);
+        scheduler.updateSubscription(subId2, params2);
+
+        // Verify state after deactivating ID 2
+        (activeIds, , totalCount) = scheduler.getActiveSubscriptions(0, 10);
+        assertEq(totalCount, 2, "After Deact 2: Total count should be 2");
+        assertEq(
+            activeIds.length,
+            2,
+            "After Deact 2: Active IDs length should be 2"
+        );
+        assertEq(activeIds[0], subId1, "After Deact 2: ID 1 should be active");
+        assertEq(
+            activeIds[1],
+            subId3,
+            "After Deact 2: ID 3 should be active (moved)"
+        ); // ID 3 takes the place of ID 2
+
+        // --- Deactivate the last subscription (ID 3, now at index 1) ---
+        (SchedulerState.SubscriptionParams memory params3, ) = scheduler
+            .getSubscription(subId3);
+        params3.isActive = false;
+        vm.expectEmit();
+        emit SubscriptionDeactivated(subId3);
+        vm.expectEmit();
+        emit SubscriptionUpdated(subId3);
+        scheduler.updateSubscription(subId3, params3);
+
+        // Verify state after deactivating ID 3
+        (activeIds, , totalCount) = scheduler.getActiveSubscriptions(0, 10);
+        assertEq(totalCount, 1, "After Deact 3: Total count should be 1");
+        assertEq(
+            activeIds.length,
+            1,
+            "After Deact 3: Active IDs length should be 1"
+        );
+        assertEq(
+            activeIds[0],
+            subId1,
+            "After Deact 3: Only ID 1 should be active"
         );
 
-        // Get current params
-        (SchedulerState.SubscriptionParams memory params, ) = scheduler
-            .getSubscription(subscriptionId);
-
-        // Deactivate subscription using updateSubscription
-        params.isActive = false;
-
+        // --- Reactivate the middle subscription (ID 2) ---
+        params2.isActive = true; // Use the params struct from earlier
         vm.expectEmit();
-        emit SubscriptionDeactivated(subscriptionId);
+        emit SubscriptionActivated(subId2);
         vm.expectEmit();
-        emit SubscriptionUpdated(subscriptionId);
+        emit SubscriptionUpdated(subId2);
+        scheduler.updateSubscription(subId2, params2);
 
-        scheduler.updateSubscription(subscriptionId, params);
-
-        // Verify subscription was deactivated
-        (
-            SchedulerState.SubscriptionParams memory storedParams,
-            SchedulerState.SubscriptionStatus memory status
-        ) = scheduler.getSubscription(subscriptionId);
-
-        assertFalse(storedParams.isActive, "Subscription should be inactive");
-
-        // Reactivate subscription using updateSubscription
-        params.isActive = true;
-
-        vm.expectEmit();
-        emit SubscriptionActivated(subscriptionId);
-        vm.expectEmit();
-        emit SubscriptionUpdated(subscriptionId);
-
-        scheduler.updateSubscription(subscriptionId, params);
-
-        // Verify subscription was reactivated
-        (storedParams, status) = scheduler.getSubscription(subscriptionId);
-
-        assertTrue(storedParams.isActive, "Subscription should be active");
-        assertTrue(
-            storedParams.isActive,
-            "Subscription params should show active"
+        // Verify state after reactivating ID 2
+        (activeIds, , totalCount) = scheduler.getActiveSubscriptions(0, 10);
+        assertEq(totalCount, 2, "After React 2: Total count should be 2");
+        assertEq(
+            activeIds.length,
+            2,
+            "After React 2: Active IDs length should be 2"
         );
+        assertEq(activeIds[0], subId1, "After React 2: ID 1 should be active");
+        assertEq(activeIds[1], subId2, "After React 2: ID 2 should be active"); // ID 2 is added back to the end
+
+        // --- Reactivate the last subscription (ID 3) ---
+        params3.isActive = true; // Use the params struct from earlier
+        vm.expectEmit();
+        emit SubscriptionActivated(subId3);
+        vm.expectEmit();
+        emit SubscriptionUpdated(subId3);
+        scheduler.updateSubscription(subId3, params3);
+
+        // Verify final state (all active)
+        (activeIds, , totalCount) = scheduler.getActiveSubscriptions(0, 10);
+        assertEq(totalCount, 3, "Final: Total count should be 3");
+        assertEq(activeIds.length, 3, "Final: Active IDs length should be 3");
+        assertEq(activeIds[0], subId1, "Final: ID 1 should be active");
+        assertEq(activeIds[1], subId2, "Final: ID 2 should be active");
+        assertEq(activeIds[2], subId3, "Final: ID 3 should be active"); // ID 3 is added back to the end
+
+        // --- Deactivate all remaining subscriptions ---
+        // Deactivate ID 1 (first element)
+        (SchedulerState.SubscriptionParams memory params1, ) = scheduler
+            .getSubscription(subId1);
+        params1.isActive = false;
+        vm.expectEmit();
+        emit SubscriptionDeactivated(subId1);
+        vm.expectEmit();
+        emit SubscriptionUpdated(subId1);
+        scheduler.updateSubscription(subId1, params1);
+
+        // Verify state after deactivating ID 1
+        (activeIds, , totalCount) = scheduler.getActiveSubscriptions(0, 10);
+        assertEq(totalCount, 2, "After Deact 1: Total count should be 2");
+        assertEq(
+            activeIds.length,
+            2,
+            "After Deact 1: Active IDs length should be 2"
+        );
+        assertEq(
+            activeIds[0],
+            subId3,
+            "After Deact 1: ID 3 should be at index 0"
+        ); // ID 3 moved to front
+        assertEq(
+            activeIds[1],
+            subId2,
+            "After Deact 1: ID 2 should be at index 1"
+        );
+
+        // Deactivate ID 2 (now last element)
+        params2.isActive = false; // Use existing params struct
+        vm.expectEmit();
+        emit SubscriptionDeactivated(subId2);
+        vm.expectEmit();
+        emit SubscriptionUpdated(subId2);
+        scheduler.updateSubscription(subId2, params2);
+
+        // Verify state after deactivating ID 2
+        (activeIds, , totalCount) = scheduler.getActiveSubscriptions(0, 10);
+        assertEq(
+            totalCount,
+            1,
+            "After Deact 2 (again): Total count should be 1"
+        );
+        assertEq(
+            activeIds.length,
+            1,
+            "After Deact 2 (again): Active IDs length should be 1"
+        );
+        assertEq(
+            activeIds[0],
+            subId3,
+            "After Deact 2 (again): Only ID 3 should be active"
+        );
+
+        // Deactivate ID 3 (last remaining element)
+        params3.isActive = false; // Use existing params struct
+        vm.expectEmit();
+        emit SubscriptionDeactivated(subId3);
+        vm.expectEmit();
+        emit SubscriptionUpdated(subId3);
+        scheduler.updateSubscription(subId3, params3);
+
+        // Verify final empty state
+        (activeIds, , totalCount) = scheduler.getActiveSubscriptions(0, 10);
+        assertEq(totalCount, 0, "Empty: Total count should be 0");
+        assertEq(activeIds.length, 0, "Empty: Active IDs length should be 0");
     }
 
     function testAddFunds() public {
