@@ -154,7 +154,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
         .route("/ready", get(ready))
         .route("/v1/chains", get(chain_ids))
         .route(
-            "/v1/chains/:chain_id/revelations/:sequence",
+            "/v1/chains/:chain_id/revelations/:block_number/:sequence",
             get(revelation),
         )
         .with_state(state)

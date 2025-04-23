@@ -1,3 +1,4 @@
+use crate::chain::reader::BlockNumber;
 use {
     crate::api::{ChainId, RequestLabel, RestError},
     anyhow::Result,
@@ -20,7 +21,7 @@ use {
 /// Callers must pass the appropriate chain_id to ensure they fetch the correct random number.
 #[utoipa::path(
 get,
-path = "/v1/chains/{chain_id}/revelations/{sequence}",
+path = "/v1/chains/{chain_id}/revelations/{block_number}/{sequence}",
 responses(
 (status = 200, description = "Random value successfully retrieved", body = GetRandomValueResponse),
 (status = 403, description = "Random value cannot currently be retrieved", body = String)
@@ -29,7 +30,11 @@ params(RevelationPathParams, RevelationQueryParams)
 )]
 pub async fn revelation(
     State(state): State<crate::api::ApiState>,
-    Path(RevelationPathParams { chain_id, sequence }): Path<RevelationPathParams>,
+    Path(RevelationPathParams {
+        chain_id,
+        sequence,
+        block_number,
+    }): Path<RevelationPathParams>,
     Query(RevelationQueryParams { encoding }): Query<RevelationQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     state
@@ -45,7 +50,11 @@ pub async fn revelation(
         .get(&chain_id)
         .ok_or(RestError::InvalidChainId)?;
 
-    let maybe_request_fut = state.contract.get_request(state.provider_address, sequence);
+    let maybe_request_fut = state.contract.get_request_with_callback_events(
+        block_number,
+        block_number,
+        state.provider_address,
+    );
 
     let current_block_number_fut = state
         .contract
@@ -57,28 +66,29 @@ pub async fn revelation(
             RestError::TemporarilyUnavailable
         })?;
 
-    match maybe_request {
-        Some(r)
-            if current_block_number.saturating_sub(state.reveal_delay_blocks) >= r.block_number =>
-        {
-            let value = &state.state.reveal(sequence).map_err(|e| {
-                tracing::error!(
-                    chain_id = chain_id,
-                    sequence = sequence,
-                    "Reveal failed {}",
-                    e
-                );
-                RestError::Unknown
-            })?;
-            let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), *value);
-
-            Ok(Json(GetRandomValueResponse {
-                value: encoded_value,
-            }))
-        }
-        Some(_) => Err(RestError::PendingConfirmation),
-        None => Err(RestError::NoPendingRequest),
+    if current_block_number.saturating_sub(state.reveal_delay_blocks) < block_number {
+        return Err(RestError::PendingConfirmation);
     }
+
+    maybe_request
+        .iter()
+        .find(|r| r.sequence_number == sequence)
+        .ok_or(RestError::NoPendingRequest)?;
+
+    let value = &state.state.reveal(sequence).map_err(|e| {
+        tracing::error!(
+            chain_id = chain_id,
+            sequence = sequence,
+            "Reveal failed {}",
+            e
+        );
+        RestError::Unknown
+    })?;
+    let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), *value);
+
+    Ok(Json(GetRandomValueResponse {
+        value: encoded_value,
+    }))
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
@@ -87,6 +97,8 @@ pub struct RevelationPathParams {
     #[param(value_type = String)]
     pub chain_id: ChainId,
     pub sequence: u64,
+    #[param(value_type = u64)]
+    pub block_number: BlockNumber,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
