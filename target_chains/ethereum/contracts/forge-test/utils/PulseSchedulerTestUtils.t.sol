@@ -54,11 +54,6 @@ abstract contract PulseSchedulerTestUtils is Test, PulseTestUtils {
         address[] memory readerWhitelist = new address[](1);
         readerWhitelist[0] = whitelistedReader;
 
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
         SchedulerState.SubscriptionParams memory params = SchedulerState
             .SubscriptionParams({
                 priceIds: priceIds,
@@ -66,12 +61,11 @@ abstract contract PulseSchedulerTestUtils is Test, PulseTestUtils {
                 whitelistEnabled: true,
                 isActive: true,
                 isPermanent: false,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
+                updateCriteria: updateCriteria
             });
 
         uint256 minimumBalance = scheduler.getMinimumBalance(
-            uint8(priceIds.length)
+            uint8(params.priceIds.length)
         );
         return scheduler.createSubscription{value: minimumBalance}(params);
     }
@@ -93,11 +87,6 @@ abstract contract PulseSchedulerTestUtils is Test, PulseTestUtils {
                 deviationThresholdBps: 100
             });
 
-        SchedulerState.GasConfig memory gasConfig = SchedulerState.GasConfig({
-            maxBaseFeeMultiplierCapPct: 10_000,
-            maxPriorityFeeMultiplierCapPct: 10_000
-        });
-
         return
             SchedulerState.SubscriptionParams({
                 priceIds: priceIds,
@@ -105,8 +94,7 @@ abstract contract PulseSchedulerTestUtils is Test, PulseTestUtils {
                 whitelistEnabled: true,
                 isActive: true,
                 isPermanent: false,
-                updateCriteria: updateCriteria,
-                gasConfig: gasConfig
+                updateCriteria: updateCriteria
             });
     }
 }

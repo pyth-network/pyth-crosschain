@@ -9,10 +9,6 @@ contract SchedulerState {
     uint8 public constant MAX_PRICE_IDS_PER_SUBSCRIPTION = 255;
     /// Maximum number of addresses in the reader whitelist
     uint8 public constant MAX_READER_WHITELIST_SIZE = 255;
-    /// Default max gas multiplier
-    uint32 public constant DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT = 10_000;
-    /// Default max fee multiplier
-    uint32 public constant DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT = 10_000;
 
     // TODO: make these updateable via governance
     /// Maximum time in the past (relative to current block timestamp)
@@ -45,7 +41,6 @@ contract SchedulerState {
         bool isActive;
         bool isPermanent;
         UpdateCriteria updateCriteria;
-        GasConfig gasConfig;
     }
 
     struct SubscriptionStatus {
@@ -53,19 +48,6 @@ contract SchedulerState {
         uint256 balanceInWei;
         uint256 totalUpdates;
         uint256 totalSpent;
-    }
-
-    /// @dev When pushing prices, providers will use a "fast gas" estimation as default.
-    /// If the gas is insufficient to land the transaction, the provider will linearly scale
-    /// base fee and priority fee multipliers until the transaction lands.
-    /// These parameters allow the subscriber to impose limits on these multipliers.
-    /// For example, with maxBaseFeeMultiplierCapPct = 10_000 (default), the provider can
-    /// use a max of 100x (10000%) of the estimated gas as reported by the RPC.
-    struct GasConfig {
-        /// Base gas fee price multiplier limit percent for update operations
-        uint32 maxBaseFeeMultiplierCapPct;
-        /// Priority fee multiplier limit for update operations
-        uint32 maxPriorityFeeMultiplierCapPct;
     }
 
     struct UpdateCriteria {

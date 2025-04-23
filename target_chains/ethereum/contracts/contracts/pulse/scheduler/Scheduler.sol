@@ -64,19 +64,21 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         uint256 subscriptionId,
         SubscriptionParams memory newParams
     ) external override onlyManager(subscriptionId) {
-        SchedulerState.SubscriptionStatus storage currentStatus = _state
-            .subscriptionStatuses[subscriptionId];
-        SchedulerState.SubscriptionParams storage currentParams = _state
-            .subscriptionParams[subscriptionId];
-        bool wasActive = currentParams.isActive;
-        bool willBeActive = newParams.isActive;
+        SubscriptionStatus storage currentStatus = _state.subscriptionStatuses[
+            subscriptionId
+        ];
+        SubscriptionParams storage currentParams = _state.subscriptionParams[
+            subscriptionId
+        ];
 
-        // Check for permanent subscription restrictions
+        // Updates to permanent subscriptions are not allowed
         if (currentParams.isPermanent) {
-            _validatePermanentSubscriptionUpdate(currentParams, newParams);
+            revert CannotUpdatePermanentSubscription();
         }
 
         // If subscription is inactive and will remain inactive, no need to validate parameters
+        bool wasActive = currentParams.isActive;
+        bool willBeActive = newParams.isActive;
         if (!wasActive && !willBeActive) {
             // Update subscription parameters
             _state.subscriptionParams[subscriptionId] = newParams;
@@ -181,19 +183,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             params.updateCriteria.deviationThresholdBps == 0
         ) {
             revert InvalidUpdateCriteria();
-        }
-
-        // If gas config is unset, set it to the default (100x multipliers)
-        if (
-            params.gasConfig.maxBaseFeeMultiplierCapPct == 0 ||
-            params.gasConfig.maxPriorityFeeMultiplierCapPct == 0
-        ) {
-            params
-                .gasConfig
-                .maxPriorityFeeMultiplierCapPct = DEFAULT_MAX_PRIORITY_FEE_MULTIPLIER_CAP_PCT;
-            params
-                .gasConfig
-                .maxBaseFeeMultiplierCapPct = DEFAULT_MAX_BASE_FEE_MULTIPLIER_CAP_PCT;
         }
     }
 
@@ -415,103 +404,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         revert UpdateConditionsNotMet();
     }
 
-    /**
-     * @notice Internal helper to validate modifications to a permanent subscription.
-     * @param currentParams The current subscription parameters (storage).
-     * @param newParams The proposed new subscription parameters (memory).
-     */
-    function _validatePermanentSubscriptionUpdate(
-        SubscriptionParams storage currentParams,
-        SubscriptionParams memory newParams
-    ) internal view {
-        // Cannot disable isPermanent flag once set
-        if (!newParams.isPermanent) {
-            revert IllegalPermanentSubscriptionModification();
-        }
-
-        // Cannot deactivate a permanent subscription
-        if (!newParams.isActive) {
-            revert IllegalPermanentSubscriptionModification();
-        }
-
-        // Cannot remove price feeds from a permanent subscription
-        if (newParams.priceIds.length < currentParams.priceIds.length) {
-            revert IllegalPermanentSubscriptionModification();
-        }
-
-        // Check that all existing price IDs are preserved (adding is allowed, not removing)
-        for (uint i = 0; i < currentParams.priceIds.length; i++) {
-            bool found = false;
-            for (uint j = 0; j < newParams.priceIds.length; j++) {
-                if (currentParams.priceIds[i] == newParams.priceIds[j]) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                revert IllegalPermanentSubscriptionModification();
-            }
-        }
-
-        // Cannot change reader whitelist settings for permanent subscriptions
-        if (newParams.whitelistEnabled != currentParams.whitelistEnabled) {
-            revert IllegalPermanentSubscriptionModification();
-        }
-
-        // Check if the set of addresses in the whitelist is the same
-        if (
-            newParams.readerWhitelist.length !=
-            currentParams.readerWhitelist.length
-        ) {
-            revert IllegalPermanentSubscriptionModification();
-        }
-        uint256 n = newParams.readerWhitelist.length;
-        bool[] memory currentVisited = new bool[](n);
-        uint256 matchesFound = 0;
-        for (uint256 i = 0; i < n; i++) {
-            bool foundInCurrent = false;
-            for (uint256 j = 0; j < n; j++) {
-                if (
-                    !currentVisited[j] &&
-                    newParams.readerWhitelist[i] ==
-                    currentParams.readerWhitelist[j]
-                ) {
-                    currentVisited[j] = true;
-                    foundInCurrent = true;
-                    matchesFound++;
-                    break;
-                }
-            }
-            if (!foundInCurrent) {
-                revert IllegalPermanentSubscriptionModification();
-            }
-        }
-
-        // Cannot change update criteria for permanent subscriptions
-        if (
-            newParams.updateCriteria.updateOnHeartbeat !=
-            currentParams.updateCriteria.updateOnHeartbeat ||
-            newParams.updateCriteria.heartbeatSeconds !=
-            currentParams.updateCriteria.heartbeatSeconds ||
-            newParams.updateCriteria.updateOnDeviation !=
-            currentParams.updateCriteria.updateOnDeviation ||
-            newParams.updateCriteria.deviationThresholdBps !=
-            currentParams.updateCriteria.deviationThresholdBps
-        ) {
-            revert IllegalPermanentSubscriptionModification();
-        }
-
-        // Cannot change gas config for permanent subscriptions
-        if (
-            newParams.gasConfig.maxBaseFeeMultiplierCapPct !=
-            currentParams.gasConfig.maxBaseFeeMultiplierCapPct ||
-            newParams.gasConfig.maxPriorityFeeMultiplierCapPct !=
-            currentParams.gasConfig.maxPriorityFeeMultiplierCapPct
-        ) {
-            revert IllegalPermanentSubscriptionModification();
-        }
-    }
-
     /// FETCH PRICES
 
     /**
@@ -635,7 +527,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // Prevent withdrawals from permanent subscriptions
         if (params.isPermanent) {
-            revert IllegalPermanentSubscriptionModification();
+            revert CannotUpdatePermanentSubscription();
         }
 
         if (status.balanceInWei < amount) {
