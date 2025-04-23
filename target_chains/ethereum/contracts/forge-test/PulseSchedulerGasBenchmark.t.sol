@@ -29,7 +29,16 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         proxy = new ERC1967Proxy(address(_scheduler), "");
         scheduler = SchedulerUpgradeable(address(proxy));
 
-        scheduler.initialize(manager, admin, pyth);
+        uint128 minBalancePerFeed = 10 ** 16; // 0.01 ether
+        uint128 keeperFee = 10 ** 15; // 0.001 ether
+
+        scheduler.initialize(
+            manager,
+            admin,
+            pyth,
+            minBalancePerFeed,
+            keeperFee
+        );
 
         // Start tests at a high timestamp to avoid underflow when we set
         // `minPublishTime = timestamp - 1 hour` in updatePriceFeeds
