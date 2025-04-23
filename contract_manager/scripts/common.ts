@@ -31,6 +31,7 @@ export async function deployIfNotCached(
   deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
   cacheKey?: string,
 ): Promise<string> {
+  console.log("artifactName: ", artifactName);
   const runIfNotCached = makeCacheFunction(cacheFile);
   const key = cacheKey ?? `${chain.getId()}-${artifactName}`;
   return runIfNotCached(key, async () => {
@@ -38,26 +39,28 @@ export async function deployIfNotCached(
       readFileSync(join(config.jsonOutputDir, `${artifactName}.json`), "utf8"),
     );
 
-    // Handle bytecode which can be either a string or an object with an 'object' property
-    let bytecode = artifact["bytecode"];
-    if (
-      typeof bytecode === "object" &&
-      bytecode !== null &&
-      "object" in bytecode
-    ) {
-      bytecode = bytecode.object;
-    }
 
-    // Ensure bytecode starts with 0x
-    if (!bytecode.startsWith("0x")) {
-      bytecode = `0x${bytecode}`;
-    }
+    console.log("artifact: ", artifact);
 
-    console.log(`Deploying ${artifactName} on ${chain.getId()}...`);
+    // // Handle bytecode which can be either a string or an object with an 'object' property
+    // let bytecode = artifact["bytecode"];
+    // if (
+    //   typeof bytecode === "object" &&
+    //   bytecode !== null &&
+    //   "object" in bytecode
+    // ) {
+    //   bytecode = bytecode.object;
+    // }
+
+    // // Ensure bytecode starts with 0x
+    // if (!bytecode.startsWith("0x")) {
+    //   bytecode = `0x${bytecode}`;
+    // }
+
     const addr = await chain.deploy(
       config.privateKey,
       artifact["abi"],
-      bytecode,
+      artifact["bytecode"],
       deployArgs,
       config.gasMultiplier,
       config.gasPriceMultiplier,
