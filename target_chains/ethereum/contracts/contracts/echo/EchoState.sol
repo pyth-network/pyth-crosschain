@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-contract PulseState {
+contract EchoState {
     uint8 public constant NUM_REQUESTS = 32;
     bytes1 public constant NUM_REQUESTS_MASK = 0x1f;
     // Maximum number of price feeds per request. This limit keeps gas costs predictable and reasonable. 10 is a reasonable number for most use cases.

@@ -5,9 +5,8 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "../../contracts/pulse/IPulse.sol";
 
-abstract contract PulseTestUtils is Test {
+abstract contract MockPriceFeedTestUtils is Test {
     bytes32 constant BTC_PRICE_FEED_ID =
         0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43;
     bytes32 constant ETH_PRICE_FEED_ID =
@@ -206,35 +205,5 @@ abstract contract PulseTestUtils is Test {
         }
 
         return updateData;
-    }
-
-    // Helper function to setup consumer request
-    function setupConsumerRequest(
-        IPulse pulse,
-        address provider,
-        address consumerAddress
-    )
-        internal
-        returns (
-            uint64 sequenceNumber,
-            bytes32[] memory priceIds,
-            uint64 publishTime
-        )
-    {
-        priceIds = createPriceIds();
-        publishTime = SafeCast.toUint64(block.timestamp);
-        vm.deal(consumerAddress, 1 gwei);
-
-        uint96 totalFee = pulse.getFee(provider, CALLBACK_GAS_LIMIT, priceIds);
-
-        vm.prank(consumerAddress);
-        sequenceNumber = pulse.requestPriceUpdatesWithCallback{value: totalFee}(
-            provider,
-            publishTime,
-            priceIds,
-            CALLBACK_GAS_LIMIT
-        );
-
-        return (sequenceNumber, priceIds, publishTime);
     }
 }

@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import "./IPulse.sol";
-import "./PulseState.sol";
-import "./PulseErrors.sol";
+import "./IEcho.sol";
+import "./EchoState.sol";
+import "./EchoErrors.sol";
 
-abstract contract Pulse is IPulse, PulseState {
+abstract contract Echo is IEcho, EchoState {
     function _initialize(
         address admin,
         uint96 pythFeeInWei,
@@ -174,7 +174,7 @@ abstract contract Pulse is IPulse, PulseState {
         }
 
         try
-            IPulseConsumer(req.requester)._pulseCallback{
+            IEchoConsumer(req.requester)._echoCallback{
                 gas: req.callbackGasLimit
             }(sequenceNumber, priceFeeds)
         {
