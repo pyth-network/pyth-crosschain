@@ -1,10 +1,9 @@
-use pyth::reader::ReaderTrait;
 use core::array::ArrayTrait;
-use pyth::reader::{Reader, ReaderImpl};
+use core::panic_with_felt252;
 use pyth::byte_buffer::ByteBuffer;
 use pyth::pyth::errors::GovernanceActionError;
-use core::panic_with_felt252;
-use core::starknet::{ContractAddress, ClassHash};
+use pyth::reader::{ReaderImpl, ReaderTrait};
+use starknet::{ClassHash, ContractAddress};
 use super::DataSource;
 
 const MAGIC: u32 = 0x5054474d;
@@ -33,7 +32,7 @@ impl U8TryIntoGovernanceAction of TryInto<u8, GovernanceAction> {
             5 => GovernanceAction::RequestGovernanceDataSourceTransfer,
             6 => GovernanceAction::SetWormholeAddress,
             7 => GovernanceAction::SetFeeInToken,
-            _ => { return Option::None; }
+            _ => { return Option::None; },
         };
         Option::Some(v)
     }
@@ -91,14 +90,15 @@ pub struct RequestGovernanceDataSourceTransfer {
 pub struct AuthorizeGovernanceDataSourceTransfer {
     // Transfer governance control over this contract to another data source.
     // The claim_vaa field is a VAA created by the new data source; using a VAA prevents mistakes
-    // in the handoff by ensuring that the new data source can send VAAs (i.e., is not an invalid address).
+    // in the handoff by ensuring that the new data source can send VAAs (i.e., is not an invalid
+    // address).
     pub claim_vaa: ByteBuffer,
 }
 
 #[derive(Drop, Clone, Debug, PartialEq, Serde)]
 pub struct UpgradeContract {
-    // Class hash of the new contract class. The contract class must already be deployed on the network
-    // (e.g. with `starkli declare`). Class hash is a Poseidon hash of all properties
+    // Class hash of the new contract class. The contract class must already be deployed on the
+    // network (e.g. with `starkli declare`). Class hash is a Poseidon hash of all properties
     // of the contract code, including entry points, ABI, and bytecode,
     // so specifying a hash securely identifies the new implementation.
     pub new_implementation: ClassHash,
@@ -139,13 +139,13 @@ pub fn parse_instruction(payload: ByteBuffer) -> GovernanceInstruction {
             let len = reader.len();
             let claim_vaa = reader.read_byte_array(len);
             GovernancePayload::AuthorizeGovernanceDataSourceTransfer(
-                AuthorizeGovernanceDataSourceTransfer { claim_vaa }
+                AuthorizeGovernanceDataSourceTransfer { claim_vaa },
             )
         },
         GovernanceAction::RequestGovernanceDataSourceTransfer => {
             let governance_data_source_index = reader.read_u32();
             GovernancePayload::RequestGovernanceDataSourceTransfer(
-                RequestGovernanceDataSourceTransfer { governance_data_source_index }
+                RequestGovernanceDataSourceTransfer { governance_data_source_index },
             )
         },
         GovernanceAction::SetDataSources => {
@@ -157,7 +157,7 @@ pub fn parse_instruction(payload: ByteBuffer) -> GovernanceInstruction {
                 let emitter_address = reader.read_u256();
                 sources.append(DataSource { emitter_chain_id, emitter_address });
                 i += 1;
-            };
+            }
             GovernancePayload::SetDataSources(SetDataSources { sources })
         },
         GovernanceAction::SetFee => {
@@ -197,5 +197,5 @@ pub fn parse_instruction(payload: ByteBuffer) -> GovernanceInstruction {
     if reader.len() != 0 {
         panic_with_felt252(GovernanceActionError::InvalidGovernanceMessage.into());
     }
-    GovernanceInstruction { target_chain_id, payload, }
+    GovernanceInstruction { target_chain_id, payload }
 }

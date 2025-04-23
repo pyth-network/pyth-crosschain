@@ -25,8 +25,8 @@ jobs:
           tool-versions: target_chains/starknet/contracts/.tool-versions
       - name: Install Starkli
         run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' .tool-versions)
-      - name: Install Katana
-        run: curl -L https://install.dojoengine.org | bash && PATH="$PATH:$HOME/.config/.dojo/bin" dojoup -v $(awk '/dojo/{print $2}' .tool-versions)
+      - name: Install Devnet
+        run: cargo install starknet-devnet --version $(awk '/starknet-devnet/{print $2}' .tool-versions)
       - name: Check formatting
         run: scarb fmt --check
       - name: Run tests
@@ -36,7 +36,7 @@ jobs:
       - name: Check ABI files
         run: |
           cat target/dev/pyth_pyth.contract_class.json | jq .abi > /tmp/pyth.json
-          cat target/dev/pyth_ERC20.contract_class.json | jq .abi > /tmp/erc20.json
+          cat target/dev/pyth_ERC20Upgradeable.contract_class.json | jq .abi > /tmp/erc20.json
           if ! cmp --silent /tmp/pyth.json ../sdk/js/src/abi/pyth.json ; then
             >&2 echo ABI file mismatch for sdk/js/src/abi/pyth.json
             exit 1
@@ -46,7 +46,7 @@ jobs:
             exit 1
           fi
       - name: Test local deployment script
-        run: bash -c 'PATH="$PATH:$HOME/.config/.dojo/bin" katana & . ~/.config/.starkli/env && deploy/deploy.sh'
+        run: bash -c 'starknet-devnet --seed 0 --account-class cairo1 & . ~/.config/.starkli/env && deploy/deploy.sh'
       - name: Verify version
         run: |
           version1=$(grep version Scarb.toml | cut -d '"' -f 2)

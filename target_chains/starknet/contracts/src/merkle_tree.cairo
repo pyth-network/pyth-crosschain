@@ -1,9 +1,9 @@
-use super::hash::{Hasher, HasherImpl};
+use core::cmp::{max, min};
+use core::panic_with_felt252;
+use super::hash::HasherImpl;
 use super::reader::{Reader, ReaderImpl};
 use super::byte_buffer::ByteBuffer;
 use super::util::ONE_SHIFT_96;
-use core::cmp::{min, max};
-use core::panic_with_felt252;
 
 const MERKLE_LEAF_PREFIX: u8 = 0;
 const MERKLE_NODE_PREFIX: u8 = 1;
@@ -60,7 +60,7 @@ pub fn read_and_verify_proof(root_digest: u256, message: @ByteBuffer, ref reader
         let sibling_digest = reader.read_u160();
         current_hash = node_hash(current_hash, sibling_digest);
         i += 1;
-    };
+    }
 
     if root_digest != current_hash {
         panic_with_felt252(MerkleVerificationError::DigestMismatch.into());

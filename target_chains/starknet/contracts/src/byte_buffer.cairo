@@ -22,7 +22,7 @@ impl DebugByteBuffer of Debug<ByteBuffer> {
                 Option::Some(v) => { write!(f, "{:?}, ", v).unwrap(); },
                 Option::None => { break; },
             }
-        };
+        }
         write!(f, "]}}")
     }
 }
@@ -45,7 +45,7 @@ pub impl ByteBufferImpl of ByteBufferTrait {
             let last: u256 = (*data.at(data.len() - 1)).into();
             assert!(
                 last / one_shift_left_bytes_u256(num_last_bytes) == 0,
-                "ByteBufferImpl::new: last value is too large"
+                "ByteBufferImpl::new: last value is too large",
             );
         }
         ByteBuffer { num_last_bytes, data }
@@ -75,8 +75,7 @@ pub impl ByteBufferImpl of ByteBufferTrait {
 
 #[cfg(test)]
 mod tests {
-    use super::{ByteBuffer, ByteBufferImpl};
-    use pyth::util::array_try_into;
+    use super::ByteBufferImpl;
 
     #[test]
     fn empty_byte_array() {
@@ -132,7 +131,7 @@ mod tests {
         let value2_31_bytes = 0x2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f;
         let value3_5_bytes = 0x4142434445;
         let mut array = ByteBufferImpl::new(
-            array![value_31_bytes, value2_31_bytes, value3_5_bytes], 5
+            array![value_31_bytes, value2_31_bytes, value3_5_bytes], 5,
         );
         assert!(array.len() == 67);
         assert!(array.pop_front() == Option::Some((value_31_bytes, 31)));

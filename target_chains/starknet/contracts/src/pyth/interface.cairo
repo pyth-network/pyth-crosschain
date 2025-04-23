@@ -1,22 +1,22 @@
-use super::{GetPriceUnsafeError, GetPriceNoOlderThanError};
-use pyth::byte_buffer::ByteBuffer;
-use pyth::wormhole::VerifiedVM;
-use core::starknet::ContractAddress;
 use core::fmt::{Debug, Formatter};
+use pyth::byte_buffer::ByteBuffer;
 use pyth::util::write_i64;
+use pyth::wormhole::VerifiedVM;
+use starknet::ContractAddress;
+use super::{GetPriceNoOlderThanError, GetPriceUnsafeError};
 
 #[starknet::interface]
 pub trait IPyth<T> {
     fn get_price_no_older_than(
-        self: @T, price_id: u256, age: u64
+        self: @T, price_id: u256, age: u64,
     ) -> Result<Price, GetPriceNoOlderThanError>;
     fn get_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
     fn get_ema_price_no_older_than(
-        self: @T, price_id: u256, age: u64
+        self: @T, price_id: u256, age: u64,
     ) -> Result<Price, GetPriceNoOlderThanError>;
     fn get_ema_price_unsafe(self: @T, price_id: u256) -> Result<Price, GetPriceUnsafeError>;
     fn query_price_feed_no_older_than(
-        self: @T, price_id: u256, age: u64
+        self: @T, price_id: u256, age: u64,
     ) -> Result<PriceFeed, GetPriceNoOlderThanError>;
     fn query_price_feed_unsafe(self: @T, price_id: u256) -> Result<PriceFeed, GetPriceUnsafeError>;
     fn price_feed_exists(self: @T, price_id: u256) -> bool;
@@ -24,14 +24,14 @@ pub trait IPyth<T> {
 
     fn update_price_feeds(ref self: T, data: ByteBuffer);
     fn update_price_feeds_if_necessary(
-        ref self: T, update: ByteBuffer, required_publish_times: Array<PriceFeedPublishTime>
+        ref self: T, update: ByteBuffer, required_publish_times: Array<PriceFeedPublishTime>,
     );
     fn parse_price_feed_updates(
         ref self: T,
         data: ByteBuffer,
         price_ids: Array<u256>,
         min_publish_time: u64,
-        max_publish_time: u64
+        max_publish_time: u64,
     ) -> Array<PriceFeed>;
     fn parse_unique_price_feed_updates(
         ref self: T,
@@ -70,7 +70,7 @@ pub trait GetDataSource<T> {
 impl GetDataSourceFromVerifiedVM of GetDataSource<VerifiedVM> {
     fn data_source(self: @VerifiedVM) -> DataSource {
         DataSource {
-            emitter_chain_id: *self.emitter_chain_id, emitter_address: *self.emitter_address
+            emitter_chain_id: *self.emitter_chain_id, emitter_address: *self.emitter_address,
         }
     }
 }
@@ -97,7 +97,7 @@ impl DebugPrice of Debug<Price> {
 #[cfg(test)]
 #[test]
 fn test_debug_price() {
-    let value = Price { price: 2, conf: 3, expo: -4, publish_time: 5, };
+    let value = Price { price: 2, conf: 3, expo: -4, publish_time: 5 };
     let expected = "Price { price: 2, conf: 3, expo: -4, publish_time: 5 }";
     let actual = format!("{:?}", value);
     assert!(actual == expected);

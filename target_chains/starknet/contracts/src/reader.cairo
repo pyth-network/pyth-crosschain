@@ -1,8 +1,5 @@
-use core::option::OptionTrait;
 use core::array::ArrayTrait;
-use core::keccak::cairo_keccak;
-use core::integer::u128_byte_reverse;
-use core::fmt::{Debug, Formatter};
+use core::option::OptionTrait;
 use pyth::util::{UNEXPECTED_OVERFLOW, UNEXPECTED_ZERO, one_shift_left_bytes_u128};
 use super::byte_buffer::{ByteBuffer, ByteBufferImpl};
 
@@ -117,7 +114,7 @@ pub impl ReaderImpl of ReaderTrait {
                 num_last_bytes = num_read;
                 break;
             }
-        };
+        }
         // num_last_bytes < 31
         let num_last_bytes = num_last_bytes.try_into().expect(UNEXPECTED_OVERFLOW);
         ByteBufferImpl::new(array, num_last_bytes)
@@ -179,7 +176,7 @@ impl ReaderPrivateImpl of ReaderPrivateTrait {
 
     // Moved out from `read_bytes` because we cannot use `return` or `?` within a loop.
     fn read_bytes_iteration(
-        ref self: Reader, num_bytes: usize, ref array: Array<felt252>
+        ref self: Reader, num_bytes: usize, ref array: Array<felt252>,
     ) -> (usize, bool) {
         if num_bytes >= 31 {
             let high = self.read_num_bytes(15);

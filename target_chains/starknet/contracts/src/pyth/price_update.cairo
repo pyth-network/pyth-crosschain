@@ -1,10 +1,10 @@
-use pyth::reader::{Reader, ReaderImpl};
-use pyth::pyth::{UpdatePriceFeedsError, PriceFeed, Price};
+use core::fmt::{Debug, Formatter};
 use core::panic_with_felt252;
 use pyth::byte_buffer::ByteBuffer;
 use pyth::merkle_tree::read_and_verify_proof;
+use pyth::pyth::{Price, PriceFeed, UpdatePriceFeedsError};
+use pyth::reader::{Reader, ReaderImpl};
 use pyth::util::{u32_as_i32, u64_as_i64, write_i64};
-use core::fmt::{Debug, Formatter};
 
 // Stands for PNAU (Pyth Network Accumulator Update)
 const ACCUMULATOR_MAGIC: u32 = 0x504e4155;
@@ -40,7 +40,7 @@ impl DebugPriceInfo of Debug<PriceInfo> {
 #[test]
 fn test_debug_price_info() {
     let value = PriceInfo {
-        price: 2, conf: 3, expo: -4, publish_time: 5, ema_price: 7, ema_conf: 8
+        price: 2, conf: 3, expo: -4, publish_time: 5, ema_price: 7, ema_conf: 8,
     };
     let expected =
         "PriceInfo { price: 2, conf: 3, expo: -4, publish_time: 5, ema_price: 7, ema_conf: 8 }";
@@ -56,7 +56,7 @@ impl DefaultPriceInfo of Default<PriceInfo> {
 
 #[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 enum UpdateType {
-    WormholeMerkle
+    WormholeMerkle,
 }
 
 impl U8TryIntoUpdateType of TryInto<u8, UpdateType> {
@@ -71,7 +71,7 @@ impl U8TryIntoUpdateType of TryInto<u8, UpdateType> {
 
 #[derive(Drop, Copy, Debug, PartialEq, Serde, Hash)]
 enum MessageType {
-    PriceFeed
+    PriceFeed,
 }
 
 impl U8TryIntoMessageType of TryInto<u8, MessageType> {
@@ -107,7 +107,7 @@ impl DebugPriceFeedMessage of Debug<PriceFeedMessage> {
             f,
             ", publish_time: {}, prev_publish_time: {}, ema_price: ",
             self.publish_time,
-            self.prev_publish_time
+            self.prev_publish_time,
         )?;
         write_i64(ref f, *self.ema_price)?;
         write!(f, ", ema_conf: {} }}", self.ema_conf)
@@ -125,7 +125,7 @@ fn test_debug_price_feed_message() {
         publish_time: 5,
         prev_publish_time: 6,
         ema_price: 7,
-        ema_conf: 8
+        ema_conf: 8,
     };
     let expected =
         "PriceFeedMessage { price_id: 1, price: 2, conf: 3, expo: -4, publish_time: 5, prev_publish_time: 6, ema_price: 7, ema_conf: 8 }";
@@ -143,7 +143,7 @@ impl DefaultPriceFeedMessage of Default<PriceFeedMessage> {
             publish_time: 0,
             prev_publish_time: 0,
             ema_price: 0,
-            ema_conf: 0
+            ema_conf: 0,
         }
     }
 }
@@ -168,7 +168,7 @@ pub fn read_and_verify_header(ref reader: Reader) {
         .expect(UpdatePriceFeedsError::InvalidUpdateData.into());
 
     match update_type {
-        UpdateType::WormholeMerkle => {}
+        UpdateType::WormholeMerkle => {},
     }
 }
 
@@ -184,7 +184,7 @@ pub fn parse_wormhole_proof(payload: ByteBuffer) -> u256 {
         .expect(UpdatePriceFeedsError::InvalidUpdateData.into());
 
     match update_type {
-        UpdateType::WormholeMerkle => {}
+        UpdateType::WormholeMerkle => {},
     }
 
     let _slot = reader.read_u64();
@@ -204,7 +204,7 @@ pub fn read_and_verify_message(ref reader: Reader, root_digest: u256) -> PriceFe
         .expect(UpdatePriceFeedsError::InvalidUpdateData.into());
 
     match message_type {
-        MessageType::PriceFeed => {}
+        MessageType::PriceFeed => {},
     }
 
     let price_id = message_reader.read_u256();
