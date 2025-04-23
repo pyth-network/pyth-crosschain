@@ -6,12 +6,14 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "./Scheduler.sol";
+import "./PulseSchedulerGovernance.sol";
 
 contract SchedulerUpgradeable is
     Initializable,
     Ownable2StepUpgradeable,
     UUPSUpgradeable,
-    Scheduler
+    Scheduler,
+    PulseSchedulerGovernance
 {
     event ContractUpgraded(
         address oldImplementation,
@@ -30,6 +32,9 @@ contract SchedulerUpgradeable is
         __UUPSUpgradeable_init();
 
         Scheduler._initialize(admin, pythAddress);
+        
+        // Set admin for governance
+        _admin = admin;
 
         _transferOwnership(owner);
     }
@@ -38,11 +43,19 @@ contract SchedulerUpgradeable is
     constructor() initializer {}
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
+    
+    // Authorize actions that both admin and owner can perform
+    function _authorizeAdminAction() internal view override {
+        if (msg.sender != owner() && msg.sender != _admin)
+            revert("Unauthorized");
+    }
 
     function upgradeTo(address newImplementation) external override onlyProxy {
         address oldImplementation = _getImplementation();
         _authorizeUpgrade(newImplementation);
         _upgradeToAndCallUUPS(newImplementation, new bytes(0), false);
+
+        magicCheck();
 
         emit ContractUpgraded(oldImplementation, _getImplementation());
     }
@@ -55,7 +68,21 @@ contract SchedulerUpgradeable is
         _authorizeUpgrade(newImplementation);
         _upgradeToAndCallUUPS(newImplementation, data, true);
 
+        magicCheck();
+
         emit ContractUpgraded(oldImplementation, _getImplementation());
+    }
+    
+    function magicCheck() internal view {
+        // Calling a method using `this.<method>` will cause a contract call that will use
+        // the new contract. This call will fail if the method does not exists or the magic
+        // is different.
+        if (this.schedulerUpgradableMagic() != 0x5055757)
+            revert("Invalid upgrade magic");
+    }
+
+    function schedulerUpgradableMagic() public pure virtual returns (uint32) {
+        return 0x5055757; // "PUW" in hex
     }
 
     function version() public pure returns (string memory) {

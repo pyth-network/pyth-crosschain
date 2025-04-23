@@ -17,6 +17,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         require(pythAddress != address(0), "pyth is zero address");
 
         _state.pyth = pythAddress;
+        _state.admin = admin;
         _state.subscriptionNumber = 1;
     }
 
