@@ -18,7 +18,7 @@
     "truffle-plugin-verify": "^0.6.1"
   },
   "scripts": {
-    "build": "rm -rf build && truffle compile --all",
+    "build": "rm -rf build && forge build --out build/",
     "test-contract": "truffle test",
     "migrate": "truffle migrate",
     "receiver-submit-guardian-sets": "truffle exec scripts/receiverSubmitGuardianSetUpgrades.js",

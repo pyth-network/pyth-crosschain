@@ -25,10 +25,10 @@ fi
 
 echo "Building the contracts..."
 # Ensure that we deploy a fresh build with up-to-date dependencies.
-rm -rf build && pnpm exec truffle compile --all
+rm -rf build && pnpm forge build --out build/
 
 echo "Deploying the contracts..."
 
 pushd ../../../contract_manager/
 
-pnpm exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir ../target_chains/ethereum/contracts/build/contracts --private-key $PK --chain "$@"
+pnpm exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir ../target_chains/ethereum/contracts/build --private-key $PK --chain "$@"
