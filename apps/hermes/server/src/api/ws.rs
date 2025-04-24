@@ -40,7 +40,10 @@ use {
         },
         time::Duration,
     },
-    tokio::sync::{broadcast::Receiver, watch},
+    tokio::{
+        sync::{broadcast::Receiver, watch},
+        time::Instant,
+    },
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
@@ -253,7 +256,7 @@ pub struct Subscriber<S> {
     sender: SplitSink<WebSocket, Message>,
     price_feeds_with_config: HashMap<PriceIdentifier, PriceFeedClientConfig>,
     ping_interval: tokio::time::Interval,
-    connection_timeout: tokio::time::Sleep,
+    connection_deadline: Instant,
     exit: watch::Receiver<bool>,
     responded_to_ping: bool,
 }
@@ -282,7 +285,7 @@ where
             sender,
             price_feeds_with_config: HashMap::new(),
             ping_interval: tokio::time::interval(PING_INTERVAL_DURATION),
-            connection_timeout: tokio::time::sleep(MAX_CONNECTION_DURATION),
+            connection_deadline: Instant::now() + MAX_CONNECTION_DURATION,
             exit: crate::EXIT.subscribe(),
             responded_to_ping: true, // We start with true so we don't close the connection immediately
         }
@@ -328,7 +331,7 @@ where
                 self.sender.send(Message::Ping(vec![])).await?;
                 Ok(())
             },
-            _ = &mut self.connection_timeout => {
+            _ = tokio::time::sleep_until(self.connection_deadline) => {
                 tracing::info!(
                     id = self.id,
                     ip = ?self.ip_addr,
