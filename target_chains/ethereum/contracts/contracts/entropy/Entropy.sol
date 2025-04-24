@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@nomad-xyz/excessively-safe-call/src/ExcessivelySafeCall.sol";
 import "./EntropyState.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStatusConstants.sol";
+import "./EntropyStructConverter.sol";
 
 // Entropy implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
@@ -149,7 +150,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         provider.sequenceNumber += 1;
 
-        emit Registered(provider);
+        emit Registered(EntropyStructConverter.toV1ProviderInfo(provider));
     }
 
     // Withdraw a portion of the accumulated fees for the provider msg.sender.
@@ -302,7 +303,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             0
         );
         assignedSequenceNumber = req.sequenceNumber;
-        emit Requested(req);
+        emit Requested(EntropyStructConverter.toV1Request(req));
     }
 
     // Request a random number. The method expects the provider address and a secret random number
@@ -346,7 +347,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             req.requester,
             req.sequenceNumber,
             userRandomNumber,
-            req
+            EntropyStructConverter.toV1Request(req)
         );
         return req.sequenceNumber;
     }
@@ -482,7 +483,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             providerRevelation
         );
         emit Revealed(
-            req,
+            EntropyStructConverter.toV1Request(req),
             userRevelation,
             providerRevelation,
             blockHash,
@@ -564,7 +565,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
             if (success) {
                 emit RevealedWithCallback(
-                    req,
+                    EntropyStructConverter.toV1Request(req),
                     userRandomNumber,
                     providerRevelation,
                     randomNumber
@@ -602,7 +603,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         } else {
             // This case uses the checks-effects-interactions pattern to avoid reentry attacks
             emit RevealedWithCallback(
-                req,
+                EntropyStructConverter.toV1Request(req),
                 userRandomNumber,
                 providerRevelation,
                 randomNumber
