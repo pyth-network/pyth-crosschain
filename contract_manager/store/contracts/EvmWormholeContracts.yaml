@@ -496,6 +496,3 @@
 - chain: swellchain
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
-- chain: base_test_tejas
-  address: "0x4551F6801bFF483322ad4bC643558baa2fc207b9"
-  type: EvmWormholeContract
