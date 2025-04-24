@@ -22,7 +22,7 @@ export interface BaseDeployConfig {
 // Deploys a contract if it was not deployed before.
 // It will check for the past deployments in file `cacheFile` against a key
 // If `cacheKey` is provided it will be used as the key, else it will use
-// a - `${chain.getId()}-${artifactName}`
+// a key of the form `${chain.getId()}-${artifactName}`
 export async function deployIfNotCached(
   cacheFile: string,
   chain: EvmChain,
@@ -56,6 +56,7 @@ export async function deployIfNotCached(
       bytecode = `0x${bytecode}`;
     }
 
+    console.log("deploying", artifactName, "on", chain.getId());
     const addr = await chain.deploy(
       config.privateKey,
       artifact["abi"],
