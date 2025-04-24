@@ -237,11 +237,6 @@
             "internalType": "uint32",
             "name": "maxNumHashes",
             "type": "uint32"
-          },
-          {
-            "internalType": "uint32",
-            "name": "defaultGasLimit",
-            "type": "uint32"
           }
         ],
         "indexed": false,
@@ -294,14 +289,9 @@
             "type": "bool"
           },
           {
-            "internalType": "uint8",
-            "name": "callbackStatus",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint16",
-            "name": "gasLimit10k",
-            "type": "uint16"
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -378,14 +368,9 @@
             "type": "bool"
           },
           {
-            "internalType": "uint8",
-            "name": "callbackStatus",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint16",
-            "name": "gasLimit10k",
-            "type": "uint16"
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -438,14 +423,9 @@
             "type": "bool"
           },
           {
-            "internalType": "uint8",
-            "name": "callbackStatus",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint16",
-            "name": "gasLimit10k",
-            "type": "uint16"
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -522,14 +502,9 @@
             "type": "bool"
           },
           {
-            "internalType": "uint8",
-            "name": "callbackStatus",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint16",
-            "name": "gasLimit10k",
-            "type": "uint16"
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
           }
         ],
         "indexed": false,
@@ -802,7 +777,7 @@
             "type": "uint32"
           }
         ],
-        "internalType": "struct EntropyStructs.ProviderInfo",
+        "internalType": "struct EntropyStructsV2.ProviderInfo",
         "name": "info",
         "type": "tuple"
       }
@@ -873,7 +848,7 @@
             "type": "uint16"
           }
         ],
-        "internalType": "struct EntropyStructs.Request",
+        "internalType": "struct EntropyStructsV2.Request",
         "name": "req",
         "type": "tuple"
       }

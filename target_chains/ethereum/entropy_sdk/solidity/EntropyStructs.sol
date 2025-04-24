@@ -2,6 +2,11 @@
 
 pragma solidity ^0.8.0;
 
+// This contract holds old versions of the Entropy structs that are no longer used for contract storage.
+// However, they are still used in EntropyEvents to maintain the public interface of prior versions of
+// the Entropy contract.
+//
+// See EntropyStructsV2 for the struct definitions currently in use.
 contract EntropyStructs {
     struct ProviderInfo {
         uint128 feeInWei;

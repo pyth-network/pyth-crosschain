@@ -6,7 +6,6 @@ import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructsV2.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
-import "@pythnetwork/entropy-sdk-solidity/EntropyEventsV2.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
