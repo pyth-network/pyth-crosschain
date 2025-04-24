@@ -807,7 +807,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 blockNumber: 1234,
                 requester: user1,
                 useBlockhash: false,
-                callbackStatus: EntropyStatusConstants.CALLBACK_NOT_STARTED
+                isRequestWithCallback: true
             })
         );
         vm.roll(1234);
