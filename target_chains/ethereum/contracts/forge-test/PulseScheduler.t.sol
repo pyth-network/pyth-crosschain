@@ -75,11 +75,14 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         pyth = address(3);
         pusher = address(4);
 
+        uint128 minBalancePerFeed = 10 ** 16; // 0.01 ether
+        uint128 keeperFee = 10 ** 15; // 0.001 ether
+
         SchedulerUpgradeable _scheduler = new SchedulerUpgradeable();
         proxy = new ERC1967Proxy(address(_scheduler), "");
         scheduler = SchedulerUpgradeable(address(proxy));
 
-        scheduler.initialize(owner, admin, pyth);
+        scheduler.initialize(owner, admin, pyth, minBalancePerFeed, keeperFee);
 
         reader = new MockReader(address(proxy));
 
@@ -180,6 +183,11 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
                 isPermanent: false,
                 updateCriteria: newUpdateCriteria
             });
+
+        // Add the required funds to cover the new minimum balance
+        scheduler.addFunds{
+            value: scheduler.getMinimumBalance(uint8(newPriceIds.length))
+        }(subscriptionId);
 
         // Update subscription
         vm.expectEmit();
@@ -1090,6 +1098,96 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         // Attempt to update price feeds
         vm.prank(pusher);
         scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
+    }
+
+    function testUpdateSubscriptionEnforcesMinimumBalanceOnAddingFeeds()
+        public
+    {
+        // Setup: Create subscription with 2 feeds, funded exactly to minimum
+        uint8 initialNumFeeds = 2;
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(
+            scheduler,
+            initialNumFeeds,
+            address(reader)
+        );
+        (
+            SchedulerState.SubscriptionParams memory currentParams,
+            SchedulerState.SubscriptionStatus memory initialStatus
+        ) = scheduler.getSubscription(subscriptionId);
+        uint256 initialMinimumBalance = scheduler.getMinimumBalance(
+            initialNumFeeds
+        );
+        assertEq(
+            initialStatus.balanceInWei,
+            initialMinimumBalance,
+            "Initial balance should be the minimum"
+        );
+
+        // Prepare new params with more feeds (4)
+        uint8 newNumFeeds = 4;
+        SchedulerState.SubscriptionParams memory newParams = currentParams;
+        newParams.priceIds = createPriceIds(newNumFeeds); // Increase feeds
+        newParams.isActive = true; // Keep it active
+
+        // Action 1: Try to update with insufficient funds
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        scheduler.updateSubscription(subscriptionId, newParams);
+
+        // Action 2: Supply enough funds to the updateSubscription call to meet the new minimum balance
+        uint256 newMinimumBalance = scheduler.getMinimumBalance(newNumFeeds);
+        uint256 requiredFunds = newMinimumBalance - initialMinimumBalance;
+
+        scheduler.updateSubscription{value: requiredFunds}(
+            subscriptionId,
+            newParams
+        );
+
+        // Verification 2: Update should now succeed
+        (SchedulerState.SubscriptionParams memory updatedParams, ) = scheduler
+            .getSubscription(subscriptionId);
+        assertEq(
+            updatedParams.priceIds.length,
+            newNumFeeds,
+            "Number of price feeds should be updated"
+        );
+
+        // Scenario 3: Deactivating while adding feeds - should NOT check min balance
+        // Reset state: create another subscription funded to minimum
+        uint8 initialNumFeeds_deact = 2;
+        uint256 subId_deact = addTestSubscriptionWithFeeds(
+            scheduler,
+            initialNumFeeds_deact,
+            address(reader)
+        );
+
+        // Prepare params to add feeds (4) but also deactivate
+        uint8 newNumFeeds_deact = 4;
+        (
+            SchedulerState.SubscriptionParams memory currentParams_deact,
+
+        ) = scheduler.getSubscription(subId_deact);
+        SchedulerState.SubscriptionParams
+            memory newParams_deact = currentParams_deact;
+        newParams_deact.priceIds = createPriceIds(newNumFeeds_deact);
+        newParams_deact.isActive = false; // Deactivate
+
+        // Action 3: Update (should succeed even with insufficient funds for 4 feeds)
+        scheduler.updateSubscription(subId_deact, newParams_deact);
+
+        // Verification 3: Subscription should be inactive and have 4 feeds
+        (
+            SchedulerState.SubscriptionParams memory updatedParams_deact,
+
+        ) = scheduler.getSubscription(subId_deact);
+        assertFalse(
+            updatedParams_deact.isActive,
+            "Subscription should be inactive"
+        );
+        assertEq(
+            updatedParams_deact.priceIds.length,
+            newNumFeeds_deact,
+            "Number of price feeds should be updated even when deactivating"
+        );
     }
 
     function testGetPricesUnsafeAllFeeds() public {

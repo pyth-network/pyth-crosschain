@@ -12,12 +12,20 @@ import "./SchedulerState.sol";
 import "./SchedulerErrors.sol";
 
 abstract contract Scheduler is IScheduler, SchedulerState {
-    function _initialize(address admin, address pythAddress) internal {
+    function _initialize(
+        address admin,
+        address pythAddress,
+        uint128 minimumBalancePerFeed,
+        uint128 singleUpdateKeeperFeeInWei
+    ) internal {
         require(admin != address(0), "admin is zero address");
         require(pythAddress != address(0), "pyth is zero address");
 
         _state.pyth = pythAddress;
+        _state.admin = admin;
         _state.subscriptionNumber = 1;
+        _state.minimumBalancePerFeed = minimumBalancePerFeed;
+        _state.singleUpdateKeeperFeeInWei = singleUpdateKeeperFeeInWei;
     }
 
     function createSubscription(
@@ -65,13 +73,16 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function updateSubscription(
         uint256 subscriptionId,
         SubscriptionParams memory newParams
-    ) external override onlyManager(subscriptionId) {
+    ) external payable override onlyManager(subscriptionId) {
         SubscriptionStatus storage currentStatus = _state.subscriptionStatuses[
             subscriptionId
         ];
         SubscriptionParams storage currentParams = _state.subscriptionParams[
             subscriptionId
         ];
+
+        // Add incoming funds to balance
+        currentStatus.balanceInWei += msg.value;
 
         // Updates to permanent subscriptions are not allowed
         if (currentParams.isPermanent) {
@@ -90,6 +101,19 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // Validate the new parameters, including setting default gas config
         _validateAndPrepareSubscriptionParams(newParams);
+
+        // Check minimum balance if number of feeds increases and subscription remains active
+        if (
+            willBeActive &&
+            newParams.priceIds.length > currentParams.priceIds.length
+        ) {
+            uint256 minimumBalance = this.getMinimumBalance(
+                uint8(newParams.priceIds.length)
+            );
+            if (currentStatus.balanceInWei < minimumBalance) {
+                revert InsufficientBalance();
+            }
+        }
 
         // Handle activation/deactivation
         if (!wasActive && willBeActive) {
@@ -258,18 +282,22 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InsufficientBalance();
         }
 
-        // Parse price feed updates with an expected timestamp range of [-10s, now]
-        // We will validate the trigger conditions and timestamps ourselves
+        // Parse the price feed updates with an acceptable timestamp range of [-1h, +10s] from now.
+        // We will validate the trigger conditions ourselves.
         uint64 curTime = SafeCast.toUint64(block.timestamp);
         uint64 maxPublishTime = curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD;
         uint64 minPublishTime = curTime > PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
             ? curTime - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
             : 0;
-        PythStructs.PriceFeed[] memory priceFeeds;
-        uint64[] memory slots;
-        (priceFeeds, slots) = pyth.parsePriceFeedUpdatesWithSlots{
-            value: pythFee
-        }(updateData, priceIds, minPublishTime, maxPublishTime);
+        (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        ) = pyth.parsePriceFeedUpdatesWithSlots{value: pythFee}(
+                updateData,
+                priceIds,
+                minPublishTime,
+                maxPublishTime
+            );
 
         // Verify all price feeds have the same Pythnet slot.
         // All feeds in a subscription must be updated at the same time.
@@ -622,10 +650,9 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      */
     function getMinimumBalance(
         uint8 numPriceFeeds
-    ) external pure override returns (uint256 minimumBalanceInWei) {
-        // Placeholder implementation
-        // TODO: make this governable
-        return uint256(numPriceFeeds) * 0.01 ether;
+    ) external view override returns (uint256 minimumBalanceInWei) {
+        // TODO: Consider adding a base minimum balance independent of feed count
+        return uint256(numPriceFeeds) * this.getMinimumBalancePerFeed();
     }
 
     // ACCESS CONTROL MODIFIERS

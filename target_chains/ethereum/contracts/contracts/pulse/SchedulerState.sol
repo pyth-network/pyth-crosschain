@@ -23,6 +23,15 @@ contract SchedulerState {
         uint256 subscriptionNumber;
         /// Pyth contract for parsing updates and verifying sigs & timestamps
         address pyth;
+        /// Admin address for governance actions
+        address admin;
+        // proposedAdmin is the new admin's account address proposed by either the owner or the current admin.
+        // If there is no pending transfer request, this value will hold `address(0)`.
+        address proposedAdmin;
+        /// Fee in wei charged to subscribers per single update triggered by a keeper
+        uint128 singleUpdateKeeperFeeInWei;
+        /// Minimum balance required per price feed in a subscription
+        uint128 minimumBalancePerFeed;
         /// Sub ID -> subscription parameters (which price feeds, when to update, etc)
         mapping(uint256 => SubscriptionParams) subscriptionParams;
         /// Sub ID -> subscription status (metadata about their sub)
@@ -61,5 +70,19 @@ contract SchedulerState {
         uint32 heartbeatSeconds;
         bool updateOnDeviation;
         uint32 deviationThresholdBps;
+    }
+
+    /**
+     * @dev Returns the minimum balance required per feed in a subscription.
+     */
+    function getMinimumBalancePerFeed() external view returns (uint128) {
+        return _state.minimumBalancePerFeed;
+    }
+
+    /**
+     * @dev Returns the fee in wei charged to subscribers per single update triggered by a keeper.
+     */
+    function getSingleUpdateKeeperFeeInWei() external view returns (uint128) {
+        return _state.singleUpdateKeeperFeeInWei;
     }
 }

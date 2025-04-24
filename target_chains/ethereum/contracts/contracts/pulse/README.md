@@ -1,4 +1,4 @@
-# Pyth Pulse Scheduler Contract
+# Pyth Pulse Contract
 
 Pyth Pulse is a service that regularly pushes Pyth price updates to on-chain contracts based on configurable conditions. It ensures that on-chain prices remain up-to-date without requiring users to manually update prices or run any infrastructure themselves. This is helpful for users who prefer to consume from a push-style feed rather than integrate the pull model, where users post the price update on-chain immediately before using it.
 
@@ -26,7 +26,7 @@ Pyth Pulse ensures that on-chain Pyth prices remain up-to-date according to user
 
 ### Components
 
-1.  **Scheduler Contract (This Contract):** Deployed on the target EVM blockchain, this contract manages the state of the subscription metadata and price feeds.
+1.  **Pulse Contract (This Contract):** Deployed on the target EVM blockchain, this contract manages the state of the subscription metadata and price feeds.
     - Manages user **subscriptions**, storing metadata like the set of desired Pyth price feed IDs, update trigger conditions (time-based heartbeat and/or price deviation percentage), and optional reader whitelists.
     - Receives price updates pushed by providers. Verifies the price updates using the core Pyth protocol contract (`IPyth`).
     - Stores the latest verified price updates for each feed within a subscription.
