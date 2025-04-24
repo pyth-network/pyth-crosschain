@@ -3,11 +3,13 @@ import express from "express";
 import { PriceInfo } from "./interface";
 import { Logger } from "pino";
 import { UpdateCondition } from "./price-config";
+import { Server } from "http";
 
 // Define the metrics we want to track
 export class PricePusherMetrics {
   private registry: Registry;
-  private server: express.Express;
+  private app: express.Express;
+  private server?: Server;
   private logger: Logger;
 
   // Metrics for price feed updates
@@ -16,11 +18,15 @@ export class PricePusherMetrics {
   public priceFeedsTotal: Gauge<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
+  // Market hours metrics
+  public marketIsOpen: Gauge<string>;
+  public nextMarketOpen: Gauge<string>;
+  public nextMarketClose: Gauge<string>;
 
   constructor(logger: Logger) {
     this.logger = logger;
     this.registry = new Registry();
-    this.server = express();
+    this.app = express();
 
     // Register the default metrics (memory, CPU, etc.)
     this.registry.setDefaultLabels({ app: "price_pusher" });
@@ -54,8 +60,30 @@ export class PricePusherMetrics {
       registers: [this.registry],
     });
 
+    // Market hours metrics
+    this.marketIsOpen = new Gauge({
+      name: "pyth_market_is_open",
+      help: "Whether the market is currently open (1) or closed (0)",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
+    this.nextMarketOpen = new Gauge({
+      name: "pyth_next_market_open",
+      help: "Unix timestamp of next market open time, -1 for 24/7 markets",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
+    this.nextMarketClose = new Gauge({
+      name: "pyth_next_market_close",
+      help: "Unix timestamp of next market close time, -1 for 24/7 markets",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
     // Setup the metrics endpoint
-    this.server.get("/metrics", async (req, res) => {
+    this.app.get("/metrics", async (req, res) => {
       res.set("Content-Type", this.registry.contentType);
       res.end(await this.registry.metrics());
     });
@@ -63,9 +91,16 @@ export class PricePusherMetrics {
 
   // Start the metrics server
   public start(port: number): void {
-    this.server.listen(port, () => {
+    this.server = this.app.listen(port, () => {
       this.logger.info(`Metrics server started on port ${port}`);
     });
+  }
+
+  // Stop metrics server
+  public stop(): void {
+    if (this.server) {
+      this.server.close();
+    }
   }
 
   // Update the last published time for a price feed
@@ -149,5 +184,37 @@ export class PricePusherMetrics {
     this.logger.debug(
       `Updated wallet balance metric: ${walletAddress} = ${balanceNum}`,
     );
+  }
+
+  // Update market hours metrics
+  public updateMarketHours(
+    priceId: string,
+    alias: string,
+    isOpen: boolean,
+    nextOpen: number | null,
+    nextClose: number | null,
+  ): void {
+    const labels = {
+      price_id: priceId,
+      alias,
+    };
+
+    const is24x7 = isOpen && nextOpen === null && nextClose === null;
+
+    this.marketIsOpen.set(labels, isOpen ? 1 : 0);
+
+    if (is24x7) {
+      this.nextMarketOpen.set(labels, -1);
+      this.nextMarketClose.set(labels, -1);
+    } else {
+      this.nextMarketOpen.set(
+        labels,
+        typeof nextOpen === "number" ? nextOpen : -1,
+      );
+      this.nextMarketClose.set(
+        labels,
+        typeof nextClose === "number" ? nextClose : -1,
+      );
+    }
   }
 }

@@ -13,6 +13,7 @@ import { createPythContract } from "./pyth-contract";
 import { isWsEndpoint, filterInvalidPriceItems } from "../utils";
 import { PricePusherMetrics } from "../metrics";
 import { createEvmBalanceTracker } from "./balance-tracker";
+import { initMarketHoursUpdates } from "../market-hours";
 
 export default {
   command: "evm",
@@ -139,10 +140,18 @@ export default {
 
     // Initialize metrics if enabled
     let metrics: PricePusherMetrics | undefined;
+    let marketHoursCleanup: (() => void) | undefined;
     if (enableMetrics) {
       metrics = new PricePusherMetrics(logger.child({ module: "Metrics" }));
       metrics.start(metricsPort);
       logger.info(`Metrics server started on port ${metricsPort}`);
+
+      // Initialize market hours updates
+      marketHoursCleanup = initMarketHoursUpdates(
+        metrics,
+        logger.child({ module: "MarketHours" }),
+        priceItems.map((item) => item.id),
+      );
     }
 
     const pythListener = new PythPriceListener(
@@ -218,6 +227,22 @@ export default {
       await balanceTracker.start();
     }
 
+    // Start the controller
     await controller.start();
+
+    // Cleanup function
+    const cleanup = () => {
+      if (metrics) {
+        metrics.stop();
+      }
+      if (marketHoursCleanup) {
+        marketHoursCleanup();
+      }
+      process.exit(0);
+    };
+
+    // Handle cleanup on process termination
+    process.on("SIGINT", cleanup);
+    process.on("SIGTERM", cleanup);
   },
 };
