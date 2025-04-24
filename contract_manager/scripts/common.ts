@@ -36,31 +36,31 @@ export async function deployIfNotCached(
   const key = cacheKey ?? `${chain.getId()}-${artifactName}`;
   return runIfNotCached(key, async () => {
     const artifact = JSON.parse(
-      readFileSync(join(config.jsonOutputDir, `${artifactName}.json`), "utf8"),
+      readFileSync(join(config.jsonOutputDir, `${artifactName}.sol/${artifactName}.json`), "utf8"),
     );
 
 
     console.log("artifact: ", artifact);
 
-    // // Handle bytecode which can be either a string or an object with an 'object' property
-    // let bytecode = artifact["bytecode"];
-    // if (
-    //   typeof bytecode === "object" &&
-    //   bytecode !== null &&
-    //   "object" in bytecode
-    // ) {
-    //   bytecode = bytecode.object;
-    // }
+    // Handle bytecode which can be either a string or an object with an 'object' property
+    let bytecode = artifact["bytecode"];
+    if (
+      typeof bytecode === "object" &&
+      bytecode !== null &&
+      "object" in bytecode
+    ) {
+      bytecode = bytecode.object;
+    }
 
-    // // Ensure bytecode starts with 0x
-    // if (!bytecode.startsWith("0x")) {
-    //   bytecode = `0x${bytecode}`;
-    // }
+    // Ensure bytecode starts with 0x
+    if (!bytecode.startsWith("0x")) {
+      bytecode = `0x${bytecode}`;
+    }
 
     const addr = await chain.deploy(
       config.privateKey,
       artifact["abi"],
-      artifact["bytecode"],
+      bytecode,
       deployArgs,
       config.gasMultiplier,
       config.gasPriceMultiplier,
