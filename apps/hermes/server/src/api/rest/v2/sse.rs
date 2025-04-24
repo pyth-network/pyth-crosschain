@@ -96,13 +96,12 @@ where
     // Convert the broadcast receiver into a Stream
     let stream = BroadcastStream::new(update_rx);
 
-    // Set connection deadline
-    let connection_deadline = Instant::now() + MAX_CONNECTION_DURATION;
+    // Set connection start time
+    let start_time = Instant::now();
 
     let sse_stream = stream
         .take_while(move |_| {
-            let now = Instant::now();
-            now < connection_deadline
+            start_time.elapsed() < MAX_CONNECTION_DURATION
         })
         .then(move |message| {
             let state_clone = state.clone(); // Clone again to use inside the async block
