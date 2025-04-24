@@ -35,8 +35,9 @@ contract PythGovernanceInstructions {
         SetValidPeriod, // 4
         RequestGovernanceDataSourceTransfer, // 5
         SetWormholeAddress, // 6
-        SetTransactionFee, // 7
-        WithdrawFee // 8
+        SetFeeInToken, // 7 - No-op for EVM chains
+        SetTransactionFee, // 8
+        WithdrawFee // 9
     }
 
     struct GovernanceInstruction {
@@ -233,7 +234,7 @@ contract PythGovernanceInstructions {
             revert PythErrors.InvalidGovernanceMessage();
     }
 
-    /// @dev Parse a SetTransactionFeePayload (action 7) with minimal validation
+    /// @dev Parse a SetTransactionFeePayload (action 8) with minimal validation
     function parseSetTransactionFeePayload(
         bytes memory encodedPayload
     ) public pure returns (SetTransactionFeePayload memory stf) {
@@ -251,7 +252,7 @@ contract PythGovernanceInstructions {
             revert PythErrors.InvalidGovernanceMessage();
     }
 
-    /// @dev Parse a WithdrawFeePayload (action 8) with minimal validation
+    /// @dev Parse a WithdrawFeePayload (action 9) with minimal validation
     function parseWithdrawFeePayload(
         bytes memory encodedPayload
     ) public pure returns (WithdrawFeePayload memory wf) {

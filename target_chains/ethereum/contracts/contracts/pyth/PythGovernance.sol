@@ -99,6 +99,8 @@ abstract contract PythGovernance is
                 parseSetWormholeAddressPayload(gi.payload),
                 encodedVM
             );
+        } else if (gi.action == GovernanceAction.SetFeeInToken) {
+            // No-op for EVM chains
         } else if (gi.action == GovernanceAction.SetTransactionFee) {
             setTransactionFee(parseSetTransactionFeePayload(gi.payload));
         } else if (gi.action == GovernanceAction.WithdrawFee) {
