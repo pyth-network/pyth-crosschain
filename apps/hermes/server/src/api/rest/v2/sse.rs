@@ -105,8 +105,8 @@ where
             now < connection_deadline
         })
         .then(move |message| {
-            let state_clone = state.clone();
-            let price_ids_clone = price_ids.clone();
+            let state_clone = state.clone(); // Clone again to use inside the async block
+            let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
             async move {
                 match message {
                     Ok(event) => {
