@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyStructsV2.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyErrors.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
@@ -106,7 +106,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             // use a more consistent amount of gas.
             // Note that these requests are not live because their sequenceNumber is 0.
             for (uint8 i = 0; i < NUM_REQUESTS; i++) {
-                EntropyStructs.Request storage req = _state.requests[i];
+                EntropyStructsV2.Request storage req = _state.requests[i];
                 req.provider = address(1);
                 req.blockNumber = 1234;
                 req.commitment = hex"0123";
@@ -128,7 +128,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     ) public override {
         if (chainLength == 0) revert EntropyErrors.AssertionFailure();
 
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructsV2.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
 
@@ -156,7 +156,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     // Calling this function will transfer `amount` wei to the caller (provided that they have accrued a sufficient
     // balance of fees in the contract).
     function withdraw(uint128 amount) public override {
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+        EntropyStructsV2.ProviderInfo storage providerInfo = _state.providers[
             msg.sender
         ];
 
@@ -178,7 +178,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         uint128 amount
     ) external override {
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+        EntropyStructsV2.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
 
@@ -213,8 +213,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         bool useBlockhash,
         bool isRequestWithCallback,
         uint32 callbackGasLimit
-    ) internal returns (EntropyStructs.Request storage req) {
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+    ) internal returns (EntropyStructsV2.Request storage req) {
+        EntropyStructsV2.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
         if (_state.providers[provider].sequenceNumber == 0)
@@ -294,7 +294,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 userCommitment,
         bool useBlockHash
     ) public payable override returns (uint64 assignedSequenceNumber) {
-        EntropyStructs.Request storage req = requestHelper(
+        EntropyStructsV2.Request storage req = requestHelper(
             provider,
             userCommitment,
             useBlockHash,
@@ -330,7 +330,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 userRandomNumber,
         uint32 gasLimit
     ) public payable override returns (uint64) {
-        EntropyStructs.Request storage req = requestHelper(
+        EntropyStructsV2.Request storage req = requestHelper(
             provider,
             constructUserCommitment(userRandomNumber),
             // If useBlockHash is set to true, it allows a scenario in which the provider and miner can collude.
@@ -355,7 +355,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     // commitment in the in-flight request. If both values are validated, this method will update the provider
     // current commitment and returns the generated random number.
     function revealHelper(
-        EntropyStructs.Request storage req,
+        EntropyStructsV2.Request storage req,
         bytes32 userRevelation,
         bytes32 providerRevelation
     ) internal returns (bytes32 randomNumber, bytes32 blockHash) {
@@ -391,7 +391,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             blockHash
         );
 
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+        EntropyStructsV2.ProviderInfo storage providerInfo = _state.providers[
             req.provider
         ];
         if (providerInfo.currentCommitmentSequenceNumber < req.sequenceNumber) {
@@ -407,7 +407,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         uint64 advancedSequenceNumber,
         bytes32 providerRevelation
     ) public override {
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+        EntropyStructsV2.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
         if (
@@ -461,7 +461,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 userRevelation,
         bytes32 providerRevelation
     ) public override returns (bytes32 randomNumber) {
-        EntropyStructs.Request storage req = findActiveRequest(
+        EntropyStructsV2.Request storage req = findActiveRequest(
             provider,
             sequenceNumber
         );
@@ -507,7 +507,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 userRandomNumber,
         bytes32 providerRevelation
     ) public override {
-        EntropyStructs.Request storage req = findActiveRequest(
+        EntropyStructsV2.Request storage req = findActiveRequest(
             provider,
             sequenceNumber
         );
@@ -627,7 +627,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
     function getProviderInfo(
         address provider
-    ) public view override returns (EntropyStructs.ProviderInfo memory info) {
+    ) public view override returns (EntropyStructsV2.ProviderInfo memory info) {
         info = _state.providers[provider];
     }
 
@@ -643,7 +643,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     function getRequest(
         address provider,
         uint64 sequenceNumber
-    ) public view override returns (EntropyStructs.Request memory req) {
+    ) public view override returns (EntropyStructsV2.Request memory req) {
         req = findRequest(provider, sequenceNumber);
     }
 
@@ -664,7 +664,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         address providerAddr,
         uint32 gasLimit
     ) internal view returns (uint128 feeAmount) {
-        EntropyStructs.ProviderInfo memory provider = _state.providers[
+        EntropyStructsV2.ProviderInfo memory provider = _state.providers[
             providerAddr
         ];
 
@@ -704,7 +704,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
     // Set provider fee. It will revert if provider is not registered.
     function setProviderFee(uint128 newFeeInWei) external override {
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructsV2.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
 
@@ -720,7 +720,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         uint128 newFeeInWei
     ) external override {
-        EntropyStructs.ProviderInfo storage providerInfo = _state.providers[
+        EntropyStructsV2.ProviderInfo storage providerInfo = _state.providers[
             provider
         ];
 
@@ -740,7 +740,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
     // Set provider uri. It will revert if provider is not registered.
     function setProviderUri(bytes calldata newUri) external override {
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructsV2.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
         if (provider.sequenceNumber == 0) {
@@ -752,7 +752,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     }
 
     function setFeeManager(address manager) external override {
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructsV2.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
         if (provider.sequenceNumber == 0) {
@@ -767,7 +767,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     // Set the maximum number of hashes to record in a request. This should be set according to the maximum gas limit
     // the provider supports for callbacks.
     function setMaxNumHashes(uint32 maxNumHashes) external override {
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructsV2.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
         if (provider.sequenceNumber == 0) {
@@ -785,7 +785,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
     // Set the default gas limit for a request.
     function setDefaultGasLimit(uint32 gasLimit) external override {
-        EntropyStructs.ProviderInfo storage provider = _state.providers[
+        EntropyStructsV2.ProviderInfo storage provider = _state.providers[
             msg.sender
         ];
         if (provider.sequenceNumber == 0) {
@@ -861,7 +861,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     function findActiveRequest(
         address provider,
         uint64 sequenceNumber
-    ) internal view returns (EntropyStructs.Request storage req) {
+    ) internal view returns (EntropyStructsV2.Request storage req) {
         req = findRequest(provider, sequenceNumber);
 
         // Check there is an active request for the given provider and sequence number.
@@ -878,7 +878,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     function findRequest(
         address provider,
         uint64 sequenceNumber
-    ) internal view returns (EntropyStructs.Request storage req) {
+    ) internal view returns (EntropyStructsV2.Request storage req) {
         (bytes32 key, uint8 shortKey) = requestKey(provider, sequenceNumber);
 
         req = _state.requests[shortKey];
@@ -893,7 +893,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     function clearRequest(address provider, uint64 sequenceNumber) internal {
         (bytes32 key, uint8 shortKey) = requestKey(provider, sequenceNumber);
 
-        EntropyStructs.Request storage req = _state.requests[shortKey];
+        EntropyStructsV2.Request storage req = _state.requests[shortKey];
         if (req.provider == provider && req.sequenceNumber == sequenceNumber) {
             req.sequenceNumber = 0;
         } else {
@@ -908,7 +908,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     function allocRequest(
         address provider,
         uint64 sequenceNumber
-    ) internal returns (EntropyStructs.Request storage req) {
+    ) internal returns (EntropyStructsV2.Request storage req) {
         (, uint8 shortKey) = requestKey(provider, sequenceNumber);
 
         req = _state.requests[shortKey];
@@ -929,7 +929,7 @@ abstract contract Entropy is IEntropy, EntropyState {
 
     // Returns true if a request is active, i.e., its corresponding random value has not yet been revealed.
     function isActive(
-        EntropyStructs.Request storage req
+        EntropyStructsV2.Request storage req
     ) internal view returns (bool) {
         // Note that a provider's initial registration occupies sequence number 0, so there is no way to construct
         // a randomness request with sequence number 0.

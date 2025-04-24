@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./EntropyEvents.sol";
+import "./EntropyStructsV2.sol";
 
 interface IEntropy is EntropyEvents {
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
@@ -111,14 +112,14 @@ interface IEntropy is EntropyEvents {
 
     function getProviderInfo(
         address provider
-    ) external view returns (EntropyStructs.ProviderInfo memory info);
+    ) external view returns (EntropyStructsV2.ProviderInfo memory info);
 
     function getDefaultProvider() external view returns (address provider);
 
     function getRequest(
         address provider,
         uint64 sequenceNumber
-    ) external view returns (EntropyStructs.Request memory req);
+    ) external view returns (EntropyStructsV2.Request memory req);
 
     // Get the fee charged by provider for a request with the default gasLimit (`request` or `requestWithCallback`).
     // If you are calling `requestWithCallbackAndGasLimit`, please use `getFeeForGas`.

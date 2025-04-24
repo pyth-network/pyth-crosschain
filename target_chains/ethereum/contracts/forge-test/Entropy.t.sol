@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyStructsV2.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyEvents.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyEventsV2.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -181,7 +183,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             random.getAccruedPythFees();
         assertEq(address(random).balance, expectedBalance);
 
-        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
         assert(
@@ -190,7 +192,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
         assert(info1.currentCommitmentSequenceNumber < info1.sequenceNumber);
         assert(info1.sequenceNumber <= info1.endSequenceNumber);
-        EntropyStructs.ProviderInfo memory info2 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info2 = random.getProviderInfo(
             provider2
         );
         assert(
@@ -219,7 +221,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             ALL_ZEROS
         );
 
-        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
             provider1,
             sequenceNumber
         );
@@ -520,7 +522,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Uri
         );
         assertInvariants();
-        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
         assertEq(info1.endSequenceNumber, newHashChainOffset + 10);
@@ -733,7 +735,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testGetProviderInfo() public {
-        EntropyStructs.ProviderInfo memory providerInfo1 = random
+        EntropyStructsV2.ProviderInfo memory providerInfo1 = random
             .getProviderInfo(provider1);
         // These two fields aren't used by the Entropy contract itself -- they're just convenient info to store
         // on-chain -- so they aren't tested in the other tests.
@@ -777,7 +779,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testRequestWithCallbackAndReveal() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyStructs.ProviderInfo memory providerInfo = random
+        EntropyStructsV2.ProviderInfo memory providerInfo = random
             .getProviderInfo(provider1);
 
         vm.roll(1234);
@@ -789,7 +791,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             user1,
             providerInfo.sequenceNumber,
             userRandomNumber,
-            EntropyStructs.Request({
+            EntropyStructsV2.Request({
                 provider: provider1,
                 sequenceNumber: providerInfo.sequenceNumber,
                 numHashes: SafeCast.toUint32(
@@ -843,7 +845,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
         );
-        EntropyStructs.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -880,7 +882,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             )
         );
 
-        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -896,7 +898,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             userRandomNumber
         );
-        EntropyStructs.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -919,7 +921,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Proofs[assignedSequenceNumber]
         );
 
-        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -973,7 +975,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
         );
-        EntropyStructs.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -1010,7 +1012,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             )
         );
 
-        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -1058,7 +1060,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify request is still active after failure
-        EntropyStructs.Request memory reqAfterFailure = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterFailure = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -1106,7 +1108,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify request is cleared after successful reveal
-        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -1129,7 +1131,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
         );
-        EntropyStructs.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -1172,7 +1174,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify request is still active after failure
-        EntropyStructs.Request memory reqAfterFailure = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterFailure = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -1219,7 +1221,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify request is cleared after successful reveal
-        EntropyStructs.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
             provider1,
             assignedSequenceNumber
         );
@@ -1283,7 +1285,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             request(user1, provider1, 42, false);
         }
         assertInvariants();
-        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
         assertEq(info1.currentCommitmentSequenceNumber, 0);
@@ -1353,7 +1355,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             seqNumber,
             provider1Proofs[seqNumber]
         );
-        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
         assertEq(info1.sequenceNumber, seqNumber + 1);
@@ -1374,7 +1376,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testSetMaxNumHashes(uint32 maxNumHashes) public {
         vm.prank(provider1);
         random.setMaxNumHashes(maxNumHashes);
-        EntropyStructs.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
         assertEq(info1.maxNumHashes, maxNumHashes);
@@ -1455,7 +1457,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         emit ProviderDefaultGasLimitUpdated(provider1, 0, newGasLimit);
         random.setDefaultGasLimit(newGasLimit);
 
-        EntropyStructs.ProviderInfo memory info = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info = random.getProviderInfo(
             provider1
         );
         assertEq(info.defaultGasLimit, newGasLimit);
@@ -1500,7 +1502,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             userRandomNumber
         );
 
-        EntropyStructs.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequest(
             provider1,
             sequenceNumber
         );
@@ -1601,7 +1603,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Check the gasLimit10k field in the request
-        EntropyStructs.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequest(
             provider1,
             sequenceNumber
         );
@@ -1649,7 +1651,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
         consumer.setTargetGasUsage(callbackGasUsage);
 
-        EntropyStructs.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequest(
             provider1,
             sequenceNumber
         );
@@ -1678,7 +1680,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             );
 
             // Verify request is still active after failure
-            EntropyStructs.Request memory reqAfterFailure = random.getRequest(
+            EntropyStructsV2.Request memory reqAfterFailure = random.getRequest(
                 provider1,
                 sequenceNumber
             );
@@ -1707,7 +1709,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             );
 
             // Verify request is cleared after successful callback
-            EntropyStructs.Request memory reqAfterSuccess = random.getRequest(
+            EntropyStructsV2.Request memory reqAfterSuccess = random.getRequest(
                 provider1,
                 sequenceNumber
             );

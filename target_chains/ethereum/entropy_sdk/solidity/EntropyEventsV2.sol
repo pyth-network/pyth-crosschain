@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./EntropyStructs.sol";
 
-// Deprecated -- these events are still emitted, but the lack of indexing
-// makes them hard to use.
-interface EntropyEvents {
-    event Registered(EntropyStructs.ProviderInfo provider);
+interface EntropyEventsV2 {
 
+    /*
+    event Registered(address indexed provider, EntropyStructs.ProviderInfo info);
+
+    // TODO
     event Requested(EntropyStructs.Request request);
+
     event RequestedWithCallback(
         address indexed provider,
         address indexed requestor,
@@ -41,7 +42,7 @@ interface EntropyEvents {
         bytes errorCode
     );
 
-    event ProviderFeeUpdated(address provider, uint128 oldFee, uint128 newFee);
+    event ProviderFeeUpdated(address indexed provider, uint128 oldFee, uint128 newFee);
 
     event ProviderDefaultGasLimitUpdated(
         address indexed provider,
@@ -49,22 +50,23 @@ interface EntropyEvents {
         uint32 newDefaultGasLimit
     );
 
-    event ProviderUriUpdated(address provider, bytes oldUri, bytes newUri);
+    event ProviderUriUpdated(address indexed provider, bytes oldUri, bytes newUri);
 
     event ProviderFeeManagerUpdated(
-        address provider,
+        address indexed provider,
         address oldFeeManager,
         address newFeeManager
     );
     event ProviderMaxNumHashesAdvanced(
-        address provider,
+        address indexed provider,
         uint32 oldMaxNumHashes,
         uint32 newMaxNumHashes
     );
 
     event Withdrawal(
-        address provider,
+        address indexed provider,
         address recipient,
         uint128 withdrawnAmount
     );
+    */
 }
