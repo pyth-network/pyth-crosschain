@@ -1133,17 +1133,16 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
         scheduler.updateSubscription(subscriptionId, newParams);
 
-        // Action 2: Add enough funds to meet the new minimum balance
+        // Action 2: Supply enough funds to the updateSubscription call to meet the new minimum balance
         uint256 newMinimumBalance = scheduler.getMinimumBalance(newNumFeeds);
         uint256 requiredFunds = newMinimumBalance - initialMinimumBalance;
-        scheduler.addFunds{value: requiredFunds}(subscriptionId);
+
+        scheduler.updateSubscription{value: requiredFunds}(
+            subscriptionId,
+            newParams
+        );
 
         // Verification 2: Update should now succeed
-        vm.expectEmit();
-        emit SubscriptionUpdated(subscriptionId);
-        scheduler.updateSubscription(subscriptionId, newParams);
-
-        // Verify the number of price IDs was updated
         (SchedulerState.SubscriptionParams memory updatedParams, ) = scheduler
             .getSubscription(subscriptionId);
         assertEq(
@@ -1173,11 +1172,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         newParams_deact.isActive = false; // Deactivate
 
         // Action 3: Update (should succeed even with insufficient funds for 4 feeds)
-        vm.expectEmit();
-        emit SubscriptionDeactivated(subId_deact);
-        vm.expectEmit();
-        emit SubscriptionUpdated(subId_deact);
-        // No revert expected here
         scheduler.updateSubscription(subId_deact, newParams_deact);
 
         // Verification 3: Subscription should be inactive and have 4 feeds

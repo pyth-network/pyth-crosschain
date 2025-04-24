@@ -73,13 +73,16 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function updateSubscription(
         uint256 subscriptionId,
         SubscriptionParams memory newParams
-    ) external override onlyManager(subscriptionId) {
+    ) external payable override onlyManager(subscriptionId) {
         SubscriptionStatus storage currentStatus = _state.subscriptionStatuses[
             subscriptionId
         ];
         SubscriptionParams storage currentParams = _state.subscriptionParams[
             subscriptionId
         ];
+
+        // Add incoming funds to balance
+        currentStatus.balanceInWei += msg.value;
 
         // Updates to permanent subscriptions are not allowed
         if (currentParams.isPermanent) {
