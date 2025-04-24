@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-sdk",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Pyth Lazer SDK",
   "publishConfig": {
     "access": "public"
@@ -44,7 +44,7 @@
     "typescript": "catalog:"
   },
   "bugs": {
-    "url": "https://github.com/pyth-lazer-sdk/pyth-lazer-sdk/issues"
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
   "type": "module",
   "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js",
