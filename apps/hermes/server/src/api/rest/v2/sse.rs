@@ -26,7 +26,7 @@ use {
 };
 
 // Constants
-const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(10); // 24 hours
+const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
