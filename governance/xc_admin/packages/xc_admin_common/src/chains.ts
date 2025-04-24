@@ -110,7 +110,6 @@ export const RECEIVER_CHAINS = {
   bittensor_mainnet: 60080,
   xion: 60081,
   swellchain: 60082,
-  base_test_tejas: 60083,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

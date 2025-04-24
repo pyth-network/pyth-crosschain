@@ -899,8 +899,3 @@
   rpcUrl: https://rpc.test.mezo.org
   networkId: 31611
   type: EvmChain
-- id: base_test_tejas
-  mainnet: true
-  rpcUrl: https://virtual.base.rpc.tenderly.co/444099c9-ce2d-4abd-b476-2068658c5e57
-  networkId: 12112
-  type: EvmChain
