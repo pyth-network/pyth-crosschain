@@ -349,7 +349,7 @@ where
                     .await?;
                 self.sender.close().await?;
                 self.closed = true;
-                return Ok(());
+                Ok(())
             },
             _ = self.exit.changed() => {
                 self.sender.close().await?;
