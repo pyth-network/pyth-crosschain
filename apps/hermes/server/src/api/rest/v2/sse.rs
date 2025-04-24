@@ -103,9 +103,7 @@ where
     let start_time = Instant::now();
 
     let sse_stream = stream
-        .take_while(move |_| {
-            start_time.elapsed() < MAX_CONNECTION_DURATION
-        })
+        .take_while(move |_| start_time.elapsed() < MAX_CONNECTION_DURATION)
         .then(move |message| {
             let state_clone = state.clone(); // Clone again to use inside the async block
             let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
