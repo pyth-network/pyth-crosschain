@@ -78,6 +78,9 @@ fn default_true() -> bool {
     params(StreamPriceUpdatesQueryParams)
 )]
 /// SSE route handler for streaming price updates.
+///
+/// The connection will automatically close after 24 hours to prevent resource leaks.
+/// Clients should implement reconnection logic to maintain continuous price updates.
 pub async fn price_stream_sse_handler<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<StreamPriceUpdatesQueryParams>,
