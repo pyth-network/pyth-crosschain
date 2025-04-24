@@ -29,8 +29,7 @@
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
     "example": "node --loader ts-node/esm examples/index.js",
-    "doc": "typedoc --out docs/typedoc src",
-    "publish": "pnpm run script -- publish"
+    "doc": "typedoc --out docs/typedoc src"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
