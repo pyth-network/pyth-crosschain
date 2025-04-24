@@ -22,7 +22,7 @@ export interface BaseDeployConfig {
 // Deploys a contract if it was not deployed before.
 // It will check for the past deployments in file `cacheFile` against a key
 // If `cacheKey` is provided it will be used as the key, else it will use
-// a key - `${chain.getId()}-${artifactName}`
+// a - `${chain.getId()}-${artifactName}`
 export async function deployIfNotCached(
   cacheFile: string,
   chain: EvmChain,
@@ -31,16 +31,15 @@ export async function deployIfNotCached(
   deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
   cacheKey?: string,
 ): Promise<string> {
-  console.log("artifactName: ", artifactName);
   const runIfNotCached = makeCacheFunction(cacheFile);
   const key = cacheKey ?? `${chain.getId()}-${artifactName}`;
   return runIfNotCached(key, async () => {
     const artifact = JSON.parse(
-      readFileSync(join(config.jsonOutputDir, `${artifactName}.sol/${artifactName}.json`), "utf8"),
+      readFileSync(
+        join(config.jsonOutputDir, `${artifactName}.sol/${artifactName}.json`),
+        "utf8",
+      ),
     );
-
-
-    console.log("artifact: ", artifact);
 
     // Handle bytecode which can be either a string or an object with an 'object' property
     let bytecode = artifact["bytecode"];
