@@ -250,6 +250,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         bytes[] calldata updateData,
         bytes32[] calldata priceIds
     ) external override {
+        uint256 startGas = gasleft();
+
         SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
@@ -261,9 +263,12 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InactiveSubscription();
         }
 
-        // Verify price IDs match subscription
+        // Verify price IDs match subscription length
         if (priceIds.length != params.priceIds.length) {
-            revert InvalidPriceIdsLength(priceIds[0], params.priceIds[0]);
+            revert InvalidPriceIdsLength(
+                priceIds.length,
+                params.priceIds.length
+            );
         }
 
         // Keepers must provide priceIds in the exact same order as defined in the subscription
@@ -277,7 +282,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         IPyth pyth = IPyth(_state.pyth);
         uint256 pythFee = pyth.getUpdateFee(updateData);
 
-        // Check if subscription has enough balance
+        // If we don't have enough balance, revert
         if (status.balanceInWei < pythFee) {
             revert InsufficientBalance();
         }
@@ -285,18 +290,16 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // Parse the price feed updates with an acceptable timestamp range of [-1h, +10s] from now.
         // We will validate the trigger conditions ourselves.
         uint64 curTime = SafeCast.toUint64(block.timestamp);
-        uint64 maxPublishTime = curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD;
-        uint64 minPublishTime = curTime > PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
-            ? curTime - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
-            : 0;
         (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
         ) = pyth.parsePriceFeedUpdatesWithSlots{value: pythFee}(
                 updateData,
                 priceIds,
-                minPublishTime,
-                maxPublishTime
+                curTime > PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
+                    ? curTime - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
+                    : 0,
+                curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
             );
 
         // Verify all price feeds have the same Pythnet slot.
@@ -312,36 +315,21 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // is more recent than latest stored update's. Reverts if not.
         _validateShouldUpdatePrices(subscriptionId, params, status, priceFeeds);
 
-        // Store the price updates, update status, and emit event
-        _storePriceUpdatesAndStatus(
-            subscriptionId,
-            status,
-            priceFeeds,
-            pythFee
-        );
-    }
-
-    /**
-     * @notice Stores the price updates, updates subscription status, and emits event.
-     */
-    function _storePriceUpdatesAndStatus(
-        uint256 subscriptionId,
-        SubscriptionStatus storage status,
-        PythStructs.PriceFeed[] memory priceFeeds,
-        uint256 pythFee
-    ) internal {
-        // Store the price updates
+        // Update status and store the updates
+        uint256 latestPublishTime = 0; // Use the most recent publish time from the validated feeds
         for (uint8 i = 0; i < priceFeeds.length; i++) {
-            _state.priceUpdates[subscriptionId][priceFeeds[i].id] = priceFeeds[
-                i
-            ];
+            if (priceFeeds[i].price.publishTime > latestPublishTime) {
+                latestPublishTime = priceFeeds[i].price.publishTime;
+            }
         }
-        status.priceLastUpdatedAt = priceFeeds[0].price.publishTime;
-        status.balanceInWei -= pythFee;
-        status.totalUpdates += 1;
-        status.totalSpent += pythFee;
+        status.priceLastUpdatedAt = latestPublishTime;
+        status.totalUpdates += priceFeeds.length;
 
-        emit PricesUpdated(subscriptionId, priceFeeds[0].price.publishTime);
+        _storePriceUpdates(subscriptionId, priceFeeds);
+
+        _processFeesAndPayKeeper(status, startGas, priceIds.length, pythFee);
+
+        emit PricesUpdated(subscriptionId, latestPublishTime);
     }
 
     /**
@@ -735,6 +723,57 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             // Remove the last element
             _state.activeSubscriptionIds.pop();
             _state.activeSubscriptionIndex[subscriptionId] = 0;
+        }
+    }
+
+    /**
+     * @notice Internal function to store the parsed price feeds.
+     * @param subscriptionId The ID of the subscription.
+     * @param priceFeeds The array of price feeds to store.
+     */
+    function _storePriceUpdates(
+        uint256 subscriptionId,
+        PythStructs.PriceFeed[] memory priceFeeds
+    ) internal {
+        for (uint8 i = 0; i < priceFeeds.length; i++) {
+            _state.priceUpdates[subscriptionId][priceFeeds[i].id] = priceFeeds[
+                i
+            ];
+        }
+    }
+
+    /**
+     * @notice Internal function to calculate total fees, deduct from balance, and pay the keeper.
+     * @dev This function sends funds to `msg.sender`, so be sure that this is being called by a keeper.
+     * @param status Storage reference to the subscription's status.
+     * @param startGas Gas remaining at the start of the parent function call.
+     * @param numPriceIds Number of price IDs being updated.
+     * @param pythFee Fee paid to Pyth for the update.
+     */
+    function _processFeesAndPayKeeper(
+        SubscriptionStatus storage status,
+        uint256 startGas,
+        uint256 numPriceIds,
+        uint256 pythFee
+    ) internal {
+        // Calculate fee components
+        uint256 gasCost = (startGas - gasleft() + GAS_OVERHEAD) * tx.gasprice;
+        uint256 keeperSpecificFee = uint256(_state.singleUpdateKeeperFeeInWei) *
+            numPriceIds;
+        uint256 totalKeeperFee = gasCost + keeperSpecificFee;
+        uint256 totalFee = totalKeeperFee + pythFee; // pythFee is already paid in the parsePriceFeedUpdatesWithSlots call
+
+        // Check balance
+        if (status.balanceInWei < totalFee) {
+            revert InsufficientBalance();
+        }
+
+        // Update status and pay keeper
+        status.balanceInWei -= totalFee;
+        status.totalSpent += totalFee;
+        (bool sent, ) = msg.sender.call{value: totalKeeperFee}(""); // Pay only the keeper portion
+        if (!sent) {
+            revert KeeperPaymentFailed();
         }
     }
 }
