@@ -14,7 +14,7 @@
   "scripts": {
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build": "generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyStructs EntropyStructsV2 EntropyStatusConstants PRNG",
+    "build": "generate-abis IEntropy IEntropyConsumer EntropyErrors EntropyEvents EntropyEventsV2 EntropyStructs EntropyStructsV2 EntropyStatusConstants PRNG",
     "test": "git diff --exit-code abis"
   },
   "keywords": [
