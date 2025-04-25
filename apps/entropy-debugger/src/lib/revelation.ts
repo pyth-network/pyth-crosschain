@@ -57,7 +57,7 @@ export async function fetchInfoFromTx(
 
 export async function getRevelation(
   chain: keyof typeof EntropyDeployments,
-  blockNumber: number,
+  blockNumber: bigint,
   sequenceNumber: number,
 ) {
   const deployment = EntropyDeployments[chain];
