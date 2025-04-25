@@ -19,7 +19,10 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
     let user_randomness = rand::random::<[u8; 32]>();
     let provider = opts.provider;
 
+    tracing::info!("starting");
+
     let mut last_block_number = contract.provider().get_block_number().await?;
+    tracing::info!(block_number = last_block_number.as_u64(), "block number");
 
     // Request a random number on the contract
     let sequence_number = contract
