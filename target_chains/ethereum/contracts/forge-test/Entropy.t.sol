@@ -176,13 +176,13 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
     function assertInvariants() public {
         uint expectedBalance = random
-            .getProviderInfo(provider1)
+            .getProviderInfoV2(provider1)
             .accruedFeesInWei +
-            random.getProviderInfo(provider2).accruedFeesInWei +
+            random.getProviderInfoV2(provider2).accruedFeesInWei +
             random.getAccruedPythFees();
         assertEq(address(random).balance, expectedBalance);
 
-        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfoV2(
             provider1
         );
         assert(
@@ -191,7 +191,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
         assert(info1.currentCommitmentSequenceNumber < info1.sequenceNumber);
         assert(info1.sequenceNumber <= info1.endSequenceNumber);
-        EntropyStructsV2.ProviderInfo memory info2 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info2 = random.getProviderInfoV2(
             provider2
         );
         assert(
@@ -205,9 +205,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testBasicFlow() public {
         vm.roll(17);
         uint64 sequenceNumber = request(user2, provider1, 42, false);
-        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 17);
         assertEq(
-            random.getRequest(provider1, sequenceNumber).useBlockhash,
+            random.getRequestV2(provider1, sequenceNumber).blockNumber,
+            17
+        );
+        assertEq(
+            random.getRequestV2(provider1, sequenceNumber).useBlockhash,
             false
         );
 
@@ -220,7 +223,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             ALL_ZEROS
         );
 
-        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequestV2(
             provider1,
             sequenceNumber
         );
@@ -245,9 +248,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             42,
             false
         );
-        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 20);
         assertEq(
-            random.getRequest(provider1, sequenceNumber).useBlockhash,
+            random.getRequestV2(provider1, sequenceNumber).blockNumber,
+            20
+        );
+        assertEq(
+            random.getRequestV2(provider1, sequenceNumber).useBlockhash,
             false
         );
 
@@ -281,7 +287,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
     function testAuthorization() public {
         uint64 sequenceNumber = request(user2, provider1, 42, false);
-        assertEq(random.getRequest(provider1, sequenceNumber).requester, user2);
+        assertEq(
+            random.getRequestV2(provider1, sequenceNumber).requester,
+            user2
+        );
 
         // user1 not authorized, must be user2.
         assertRevealReverts(
@@ -407,11 +416,11 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint64 sequenceNumber = request(user2, provider1, 42, true);
 
         assertEq(
-            random.getRequest(provider1, sequenceNumber).blockNumber,
+            random.getRequestV2(provider1, sequenceNumber).blockNumber,
             1234
         );
         assertEq(
-            random.getRequest(provider1, sequenceNumber).useBlockhash,
+            random.getRequestV2(provider1, sequenceNumber).useBlockhash,
             true
         );
 
@@ -521,7 +530,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Uri
         );
         assertInvariants();
-        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfoV2(
             provider1
         );
         assertEq(info1.endSequenceNumber, newHashChainOffset + 10);
@@ -679,11 +688,11 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         assertEq(
-            random.getProviderInfo(provider1).accruedFeesInWei,
+            random.getProviderInfoV2(provider1).accruedFeesInWei,
             provider1FeeInWei * 3
         );
         assertEq(
-            random.getProviderInfo(provider2).accruedFeesInWei,
+            random.getProviderInfoV2(provider2).accruedFeesInWei,
             provider2FeeInWei * 2
         );
         assertEq(random.getAccruedPythFees(), pythFeeInWei * 5 + 10000);
@@ -710,7 +719,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
         uint128 providerOneBalance = provider1FeeInWei * 3 + 12345;
         assertEq(
-            random.getProviderInfo(provider1).accruedFeesInWei,
+            random.getProviderInfoV2(provider1).accruedFeesInWei,
             providerOneBalance
         );
         assertInvariants();
@@ -723,7 +732,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         random.withdraw(1000);
 
         assertEq(
-            random.getProviderInfo(provider1).accruedFeesInWei,
+            random.getProviderInfoV2(provider1).accruedFeesInWei,
             providerOneBalance - 1000
         );
         assertInvariants();
@@ -733,9 +742,9 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         random.withdraw(providerOneBalance);
     }
 
-    function testGetProviderInfo() public {
+    function testgetProviderInfoV2() public {
         EntropyStructsV2.ProviderInfo memory providerInfo1 = random
-            .getProviderInfo(provider1);
+            .getProviderInfoV2(provider1);
         // These two fields aren't used by the Entropy contract itself -- they're just convenient info to store
         // on-chain -- so they aren't tested in the other tests.
         assertEq(providerInfo1.uri, provider1Uri);
@@ -743,12 +752,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     }
 
     function testSetProviderFee() public {
-        assertNotEq(random.getProviderInfo(provider1).feeInWei, 1);
+        assertNotEq(random.getProviderInfoV2(provider1).feeInWei, 1);
 
         vm.prank(provider1);
         random.setProviderFee(1);
 
-        assertEq(random.getProviderInfo(provider1).feeInWei, 1);
+        assertEq(random.getProviderInfoV2(provider1).feeInWei, 1);
     }
 
     function testSetProviderFeeByUnregistered() public {
@@ -760,12 +769,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testSetProviderUri() public {
         bytes memory newUri = bytes("https://new.com");
 
-        assertNotEq0(random.getProviderInfo(provider1).uri, newUri);
+        assertNotEq0(random.getProviderInfoV2(provider1).uri, newUri);
 
         vm.prank(provider1);
         random.setProviderUri(newUri);
 
-        assertEq0(random.getProviderInfo(provider1).uri, newUri);
+        assertEq0(random.getProviderInfoV2(provider1).uri, newUri);
     }
 
     function testSetProviderUriByUnregistered() public {
@@ -779,7 +788,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
         EntropyStructsV2.ProviderInfo memory providerInfo = random
-            .getProviderInfo(provider1);
+            .getProviderInfoV2(provider1);
 
         vm.roll(1234);
         vm.deal(user1, fee);
@@ -816,12 +825,12 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         assertEq(
-            random.getRequest(provider1, assignedSequenceNumber).requester,
+            random.getRequestV2(provider1, assignedSequenceNumber).requester,
             user1
         );
 
         assertEq(
-            random.getRequest(provider1, assignedSequenceNumber).provider,
+            random.getRequestV2(provider1, assignedSequenceNumber).provider,
             provider1
         );
         vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
@@ -843,7 +852,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
         );
-        EntropyStructsV2.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -880,7 +889,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             )
         );
 
-        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -896,7 +905,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1,
             userRandomNumber
         );
-        EntropyStructsV2.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -919,7 +928,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             provider1Proofs[assignedSequenceNumber]
         );
 
-        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -928,7 +937,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
     function testRequestAndRevealWithCallback() public {
         uint64 sequenceNumber = request(user2, provider1, 42, false);
-        assertEq(random.getRequest(provider1, sequenceNumber).requester, user2);
+        assertEq(
+            random.getRequestV2(provider1, sequenceNumber).requester,
+            user2
+        );
 
         vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
         vm.prank(user2);
@@ -973,7 +985,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
         );
-        EntropyStructsV2.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -1010,7 +1022,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             )
         );
 
-        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -1058,7 +1070,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify request is still active after failure
-        EntropyStructsV2.Request memory reqAfterFailure = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterFailure = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -1078,7 +1090,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Again, request stays active after failure
-        reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
+        reqAfterFailure = random.getRequestV2(
+            provider1,
+            assignedSequenceNumber
+        );
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertTrue(
             reqAfterFailure.callbackStatus ==
@@ -1106,7 +1121,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify request is cleared after successful reveal
-        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -1129,7 +1144,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
         );
-        EntropyStructsV2.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -1172,7 +1187,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify request is still active after failure
-        EntropyStructsV2.Request memory reqAfterFailure = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterFailure = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -1192,7 +1207,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Again, request stays active after failure
-        reqAfterFailure = random.getRequest(provider1, assignedSequenceNumber);
+        reqAfterFailure = random.getRequestV2(
+            provider1,
+            assignedSequenceNumber
+        );
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertEq(
             reqAfterFailure.callbackStatus,
@@ -1219,7 +1237,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Verify request is cleared after successful reveal
-        EntropyStructsV2.Request memory reqAfterReveal = random.getRequest(
+        EntropyStructsV2.Request memory reqAfterReveal = random.getRequestV2(
             provider1,
             assignedSequenceNumber
         );
@@ -1283,7 +1301,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             request(user1, provider1, 42, false);
         }
         assertInvariants();
-        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfoV2(
             provider1
         );
         assertEq(info1.currentCommitmentSequenceNumber, 0);
@@ -1293,7 +1311,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             updateSeqNumber,
             provider1Proofs[updateSeqNumber]
         );
-        info1 = random.getProviderInfo(provider1);
+        info1 = random.getProviderInfoV2(provider1);
         assertEq(info1.currentCommitmentSequenceNumber, updateSeqNumber);
         assertEq(info1.currentCommitment, provider1Proofs[updateSeqNumber]);
         assertEq(info1.sequenceNumber, requestCount + 1);
@@ -1353,7 +1371,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             seqNumber,
             provider1Proofs[seqNumber]
         );
-        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfoV2(
             provider1
         );
         assertEq(info1.sequenceNumber, seqNumber + 1);
@@ -1374,7 +1392,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testSetMaxNumHashes(uint32 maxNumHashes) public {
         vm.prank(provider1);
         random.setMaxNumHashes(maxNumHashes);
-        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info1 = random.getProviderInfoV2(
             provider1
         );
         assertEq(info1.maxNumHashes, maxNumHashes);
@@ -1427,13 +1445,13 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         uint startingBalance = manager.balance;
         vm.prank(manager);
         random.withdrawAsFeeManager(provider1, provider1FeeInWei);
-        assertEq(random.getProviderInfo(provider1).accruedFeesInWei, 0);
+        assertEq(random.getProviderInfoV2(provider1).accruedFeesInWei, 0);
         assertEq(manager.balance, startingBalance + provider1FeeInWei);
 
         // Setting provider fee updates the fee in the ProviderInfo.
         vm.prank(manager);
         random.setProviderFeeAsFeeManager(provider1, 10101);
-        assertEq(random.getProviderInfo(provider1).feeInWei, 10101);
+        assertEq(random.getProviderInfoV2(provider1).feeInWei, 10101);
 
         // Authorizing a different manager depermissions the previous one.
         address manager2 = address(13);
@@ -1455,7 +1473,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         emit ProviderDefaultGasLimitUpdated(provider1, 0, newGasLimit);
         random.setDefaultGasLimit(newGasLimit);
 
-        EntropyStructsV2.ProviderInfo memory info = random.getProviderInfo(
+        EntropyStructsV2.ProviderInfo memory info = random.getProviderInfoV2(
             provider1
         );
         assertEq(info.defaultGasLimit, newGasLimit);
@@ -1463,14 +1481,14 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         // Can reset back to 0.
         vm.prank(provider1);
         random.setDefaultGasLimit(0);
-        info = random.getProviderInfo(provider1);
+        info = random.getProviderInfoV2(provider1);
         assertEq(info.defaultGasLimit, 0);
 
         // Can set to maximum value.
         uint32 maxLimit = random.MAX_GAS_LIMIT();
         vm.prank(provider1);
         random.setDefaultGasLimit(maxLimit);
-        info = random.getProviderInfo(provider1);
+        info = random.getProviderInfoV2(provider1);
         assertEq(info.defaultGasLimit, random.MAX_GAS_LIMIT());
 
         // Reverts if max value is exceeded
@@ -1500,7 +1518,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             userRandomNumber
         );
 
-        EntropyStructsV2.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequestV2(
             provider1,
             sequenceNumber
         );
@@ -1587,7 +1605,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         uint128 startingAccruedProviderFee = random
-            .getProviderInfo(provider1)
+            .getProviderInfoV2(provider1)
             .accruedFeesInWei;
         vm.prank(user1);
         uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{
@@ -1595,13 +1613,13 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         }(provider1, userRandomNumber, gasLimit);
 
         assertEq(
-            random.getProviderInfo(provider1).accruedFeesInWei -
+            random.getProviderInfoV2(provider1).accruedFeesInWei -
                 startingAccruedProviderFee,
             expectedProviderFee
         );
 
         // Check the gasLimit10k field in the request
-        EntropyStructsV2.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequestV2(
             provider1,
             sequenceNumber
         );
@@ -1649,7 +1667,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
         consumer.setTargetGasUsage(callbackGasUsage);
 
-        EntropyStructsV2.Request memory req = random.getRequest(
+        EntropyStructsV2.Request memory req = random.getRequestV2(
             provider1,
             sequenceNumber
         );
@@ -1678,10 +1696,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             );
 
             // Verify request is still active after failure
-            EntropyStructsV2.Request memory reqAfterFailure = random.getRequest(
-                provider1,
-                sequenceNumber
-            );
+            EntropyStructsV2.Request memory reqAfterFailure = random
+                .getRequestV2(provider1, sequenceNumber);
             assertEq(reqAfterFailure.sequenceNumber, sequenceNumber);
             assertEq(
                 reqAfterFailure.callbackStatus,
@@ -1707,10 +1723,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             );
 
             // Verify request is cleared after successful callback
-            EntropyStructsV2.Request memory reqAfterSuccess = random.getRequest(
-                provider1,
-                sequenceNumber
-            );
+            EntropyStructsV2.Request memory reqAfterSuccess = random
+                .getRequestV2(provider1, sequenceNumber);
             assertEq(reqAfterSuccess.sequenceNumber, 0);
         }
     }

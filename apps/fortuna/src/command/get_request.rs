@@ -14,6 +14,10 @@ pub async fn get_request(opts: &GetRequestOptions) -> Result<()> {
         &Config::load(&opts.config.config)?.get_chain_config(&opts.chain_id)?,
     )?);
 
+    let p = contract.get_provider_info(opts.provider).call().await?;
+
+    tracing::info!("Found provider: {:?}", p);
+
     let r = contract
         .get_request(opts.provider, opts.sequence)
         .call()

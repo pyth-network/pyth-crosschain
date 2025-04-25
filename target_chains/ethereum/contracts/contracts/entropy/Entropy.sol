@@ -628,6 +628,14 @@ abstract contract Entropy is IEntropy, EntropyState {
 
     function getProviderInfo(
         address provider
+    ) public view override returns (EntropyStructs.ProviderInfo memory info) {
+        info = EntropyStructConverter.toV1ProviderInfo(
+            _state.providers[provider]
+        );
+    }
+
+    function getProviderInfoV2(
+        address provider
     ) public view override returns (EntropyStructsV2.ProviderInfo memory info) {
         info = _state.providers[provider];
     }
@@ -642,6 +650,15 @@ abstract contract Entropy is IEntropy, EntropyState {
     }
 
     function getRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) public view override returns (EntropyStructs.Request memory req) {
+        req = EntropyStructConverter.toV1Request(
+            findRequest(provider, sequenceNumber)
+        );
+    }
+
+    function getRequestV2(
         address provider,
         uint64 sequenceNumber
     ) public view override returns (EntropyStructsV2.Request memory req) {
