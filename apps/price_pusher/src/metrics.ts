@@ -151,7 +151,9 @@ export class PricePusherMetrics {
   ): void {
     this.priceUpdateDelay.set(
       { price_id: priceId, alias },
-      sourceLatestPricePublishTime - targetLatestPricePublishTime - priceConfigTimeDifference
+      sourceLatestPricePublishTime -
+        targetLatestPricePublishTime -
+        priceConfigTimeDifference,
     );
   }
 

@@ -71,7 +71,7 @@ export class Controller {
             priceConfig.timeDifference,
           );
         }
-        
+
         const priceShouldUpdate = shouldUpdate(
           priceConfig,
           sourceLatestPrice,
