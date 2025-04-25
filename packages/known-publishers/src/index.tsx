@@ -1,6 +1,7 @@
 import alenoColor from "./icons/color/aleno.svg";
 import finazonColor from "./icons/color/finazon.svg";
 import lotechColor from "./icons/color/lotech.svg";
+import nobiColor from "./icons/color/nobi.svg";
 import orcaColor from "./icons/color/orca.svg";
 import sentioColor from "./icons/color/sentio.svg";
 import wooColor from "./icons/color/woo.svg";
@@ -14,6 +15,7 @@ import finazonMonochrome from "./icons/monochrome/finazon.svg";
 import gluex from "./icons/monochrome/gluex.svg";
 import lotechMonochrome from "./icons/monochrome/lotech.svg";
 import ltpMonochrome from "./icons/monochrome/ltp.svg";
+import nobiMonochrome from "./icons/monochrome/nobi.svg";
 import orcaMonochrome from "./icons/monochrome/orca.svg";
 import sentioMonochrome from "./icons/monochrome/sentio.svg";
 import wooMonochrome from "./icons/monochrome/woo.svg";
@@ -91,6 +93,13 @@ export const knownPublishers = {
     icon: {
       monochrome: lotechMonochrome,
       color: lotechColor,
+    },
+  },
+  "6DNocjFJjocPLZnKBZyEJAC5o2QaiT5Mx8AkphfxDm5i": {
+    name: "NOBI Labs",
+    icon: {
+      monochrome: nobiMonochrome,
+      color: nobiColor,
     },
   },
 } as const;
