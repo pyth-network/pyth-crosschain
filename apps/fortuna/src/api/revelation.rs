@@ -30,11 +30,11 @@ params(RevelationPathParams, RevelationQueryParams)
 )]
 pub async fn revelation(
     State(state): State<crate::api::ApiState>,
-    Path(RevelationPathParams {
-        chain_id,
-        sequence,
-    }): Path<RevelationPathParams>,
-    Query(RevelationQueryParams { encoding, block_number }): Query<RevelationQueryParams>,
+    Path(RevelationPathParams { chain_id, sequence }): Path<RevelationPathParams>,
+    Query(RevelationQueryParams {
+        encoding,
+        block_number,
+    }): Query<RevelationQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     state
         .metrics
@@ -86,8 +86,11 @@ pub async fn revelation(
 
             match maybe_request {
                 Some(r)
-                if current_block_number.saturating_sub(state.reveal_delay_blocks) >= r.block_number =>
-                    { Ok(()) }
+                    if current_block_number.saturating_sub(state.reveal_delay_blocks)
+                        >= r.block_number =>
+                {
+                    Ok(())
+                }
                 Some(_) => Err(RestError::PendingConfirmation),
                 None => Err(RestError::NoPendingRequest),
             }?;
