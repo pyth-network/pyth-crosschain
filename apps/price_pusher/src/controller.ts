@@ -62,6 +62,16 @@ export class Controller {
           );
         }
 
+        if (this.metrics && targetLatestPrice && sourceLatestPrice) {
+          this.metrics.updatePriceDelay(
+            priceId,
+            alias,
+            targetLatestPrice.publishTime,
+            sourceLatestPrice.publishTime,
+            priceConfig.timeDifference,
+          );
+        }
+        
         const priceShouldUpdate = shouldUpdate(
           priceConfig,
           sourceLatestPrice,

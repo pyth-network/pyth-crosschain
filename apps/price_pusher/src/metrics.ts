@@ -14,6 +14,7 @@ export class PricePusherMetrics {
   public lastPublishedTime: Gauge<string>;
   public priceUpdateAttempts: Counter<string>;
   public priceFeedsTotal: Gauge<string>;
+  public priceUpdateDelay: Gauge<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
 
@@ -43,6 +44,13 @@ export class PricePusherMetrics {
     this.priceFeedsTotal = new Gauge({
       name: "pyth_price_feeds_total",
       help: "Total number of price feeds being monitored",
+      registers: [this.registry],
+    });
+
+    this.priceUpdateDelay = new Gauge({
+      name: "pyth_price_update_delay",
+      help: "Delay between source and target timestamps relative to configured threshold (positive means over threshold)",
+      labelNames: ["price_id", "alias"],
       registers: [this.registry],
     });
 
@@ -131,6 +139,20 @@ export class PricePusherMetrics {
   // Set the number of price feeds
   public setPriceFeedsTotal(count: number): void {
     this.priceFeedsTotal.set(count);
+  }
+
+  // Update price delay relative to threshold
+  public updatePriceDelay(
+    priceId: string,
+    alias: string,
+    targetLatestPricePublishTime: number,
+    sourceLatestPricePublishTime: number,
+    priceConfigTimeDifference: number,
+  ): void {
+    this.priceUpdateDelay.set(
+      { price_id: priceId, alias },
+      sourceLatestPricePublishTime - targetLatestPricePublishTime - priceConfigTimeDifference
+    );
   }
 
   // Update wallet balance
