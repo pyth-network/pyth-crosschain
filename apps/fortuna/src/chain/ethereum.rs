@@ -93,6 +93,38 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         }
     }
 
+    /// Submit a request for a random number to the contract.
+    ///
+    /// This method is a version of the autogenned `request` method that parses the emitted logs
+    /// to return the sequence number of the created Request.
+    pub async fn request_with_callback_wrapper(
+        &self,
+        provider: &Address,
+        user_randomness: &[u8; 32],
+    ) -> Result<u64> {
+        let fee = self.get_fee(*provider).call().await?;
+
+        let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
+
+        if let Some(r) = self
+            .request_with_callback(*provider, hashed_randomness)
+            .value(fee)
+            .send()
+            .await?
+            .await?
+        {
+            // Extract Log from TransactionReceipt.
+            let l: RawLog = r.logs[0].clone().into();
+            if let PythRandomEvents::RequestedFilter(r) = PythRandomEvents::decode_log(&l)? {
+                Ok(r.request.sequence_number)
+            } else {
+                Err(anyhow!("No log with sequence number"))
+            }
+        } else {
+            Err(anyhow!("Request failed"))
+        }
+    }
+
     /// Reveal the generated random number to the contract.
     ///
     /// This method is a version of the autogenned `reveal` method that parses the emitted logs
