@@ -137,6 +137,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let rpc_metrics = Arc::new(RpcMetrics::new(metrics_registry.clone()).await);
 
     let mut tasks = Vec::new();
+    tracing::info!("Starting Fortuna server...");
     for (chain_id, chain_config) in config.chains.clone() {
         let secret_copy = secret.clone();
         let rpc_metrics = rpc_metrics.clone();
@@ -155,6 +156,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         }));
     }
     let states = join_all(tasks).await;
+    tracing::info!("Finished setting up chains");
 
     let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
     for result in states {
@@ -249,6 +251,7 @@ async fn setup_chain_state(
     {
         return Err(anyhow!("The current hash chain for chain id {} has configured commitments for sequence numbers greater than the current on-chain sequence number. Are the commitments configured correctly?", &chain_id));
     }
+    tracing::info!("latest metadata: {:?}", latest_metadata);
 
     provider_commitments.push(Commitment {
         seed: latest_metadata.seed,
