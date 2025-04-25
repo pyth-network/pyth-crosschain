@@ -11,6 +11,7 @@ import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
+import "../contracts/entropy/EntropyGasTester.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStatusConstants.sol";
 
 // TODO
@@ -846,7 +847,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testRequestWithCallbackAndRevealWithCallbackByContract() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumer consumer = new EntropyConsumer(address(random), false);
+        EntropyGasTester consumer = new EntropyGasTester(
+            address(random),
+            false
+        );
         vm.deal(user1, fee);
         vm.prank(user1);
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
@@ -955,7 +959,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testRequestWithCallbackAndRevealWithCallbackFailing() public {
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumer consumer = new EntropyConsumer(address(random), true);
+        EntropyGasTester consumer = new EntropyGasTester(address(random), true);
         vm.deal(address(consumer), fee);
         vm.startPrank(address(consumer));
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
@@ -979,7 +983,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumer consumer = new EntropyConsumer(address(random), false);
+        EntropyGasTester consumer = new EntropyGasTester(
+            address(random),
+            false
+        );
         vm.deal(user1, fee);
         vm.prank(user1);
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
@@ -1036,7 +1043,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumer consumer = new EntropyConsumer(address(random), true);
+        EntropyGasTester consumer = new EntropyGasTester(address(random), true);
         vm.deal(user1, fee);
         vm.prank(user1);
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
@@ -1135,7 +1142,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumer consumer = new EntropyConsumer(address(random), false);
+        EntropyGasTester consumer = new EntropyGasTester(
+            address(random),
+            false
+        );
         // Consumer callback uses ~10% more gas than the provider's default
         consumer.setTargetGasUsage((defaultGasLimit * 110) / 100);
 
@@ -1256,7 +1266,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
         bytes32 userRandomNumber = bytes32(uint(42));
         uint fee = random.getFee(provider1);
-        EntropyConsumer consumer = new EntropyConsumer(address(random), false);
+        EntropyGasTester consumer = new EntropyGasTester(
+            address(random),
+            false
+        );
         consumer.setTargetGasUsage(defaultGasLimit);
 
         vm.deal(user1, fee);
@@ -1659,7 +1672,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
         vm.deal(user1, fee);
         vm.prank(user1);
-        EntropyConsumer consumer = new EntropyConsumer(address(random), false);
+        EntropyGasTester consumer = new EntropyGasTester(
+            address(random),
+            false
+        );
         uint64 sequenceNumber = consumer.requestEntropyWithGasLimit{value: fee}(
             userRandomNumber,
             gasLimit
@@ -1726,81 +1742,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             EntropyStructsV2.Request memory reqAfterSuccess = random
                 .getRequestV2(provider1, sequenceNumber);
             assertEq(reqAfterSuccess.sequenceNumber, 0);
-        }
-    }
-}
-
-contract EntropyConsumer is IEntropyConsumer {
-    uint64 public sequence;
-    bytes32 public randomness;
-    address public provider;
-    address public entropy;
-    bool public reverts;
-    uint256 public targetGasUsage;
-
-    constructor(address _entropy, bool _reverts) {
-        entropy = _entropy;
-        reverts = _reverts;
-        targetGasUsage = 0; // Default target
-    }
-
-    function requestEntropy(
-        bytes32 randomNumber
-    ) public payable returns (uint64 sequenceNumber) {
-        address _provider = IEntropy(entropy).getDefaultProvider();
-        sequenceNumber = IEntropy(entropy).requestWithCallback{
-            value: msg.value
-        }(_provider, randomNumber);
-    }
-
-    function requestEntropyWithGasLimit(
-        bytes32 randomNumber,
-        uint32 gasLimit
-    ) public payable returns (uint64 sequenceNumber) {
-        address _provider = IEntropy(entropy).getDefaultProvider();
-        sequenceNumber = IEntropy(entropy).requestWithCallbackAndGasLimit{
-            value: msg.value
-        }(_provider, randomNumber, gasLimit);
-    }
-
-    function getEntropy() internal view override returns (address) {
-        return entropy;
-    }
-
-    function setReverts(bool _reverts) public {
-        reverts = _reverts;
-    }
-
-    function setTargetGasUsage(uint256 _targetGasUsage) public {
-        require(
-            _targetGasUsage > 60000,
-            "Target gas usage cannot be below 60k (~the cost of storing callback results)"
-        );
-        targetGasUsage = _targetGasUsage;
-    }
-
-    function entropyCallback(
-        uint64 _sequence,
-        address _provider,
-        bytes32 _randomness
-    ) internal override {
-        uint256 startGas = gasleft();
-        // These seemingly innocuous instructions are actually quite expensive
-        // (~60k gas) because they're writes to contract storage.
-        sequence = _sequence;
-        provider = _provider;
-        randomness = _randomness;
-
-        // Keep consuming gas until we reach our target
-        uint256 currentGasUsed = startGas - gasleft();
-        while (currentGasUsed < targetGasUsage) {
-            // Consume gas with a hash operation
-            keccak256(abi.encodePacked(currentGasUsed, _randomness));
-            currentGasUsed = startGas - gasleft();
-        }
-
-        if (reverts) {
-            revert("Callback failed");
         }
     }
 }

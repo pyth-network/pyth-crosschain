@@ -45,7 +45,9 @@ pub async fn revelation(
         .get(&chain_id)
         .ok_or(RestError::InvalidChainId)?;
 
-    let maybe_request_fut = state.contract.get_request_v2(state.provider_address, sequence);
+    let maybe_request_fut = state
+        .contract
+        .get_request_v2(state.provider_address, sequence);
 
     let current_block_number_fut = state
         .contract

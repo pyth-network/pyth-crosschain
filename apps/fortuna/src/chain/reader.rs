@@ -42,8 +42,11 @@ pub trait EntropyReader: Send + Sync {
     /// Get an in-flight request (if it exists)
     /// Note that if we support additional blockchains in the future, the type of `provider` may
     /// need to become more generic.
-    async fn get_request_v2(&self, provider: Address, sequence_number: u64)
-        -> Result<Option<Request>>;
+    async fn get_request_v2(
+        &self,
+        provider: Address,
+        sequence_number: u64,
+    ) -> Result<Option<Request>>;
 
     async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber>;
 

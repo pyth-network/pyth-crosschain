@@ -233,6 +233,7 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
 
     // The gas limit on the simulated transaction is the maximum expected tx gas estimate,
     // but we are willing to pad the gas a bit to ensure reliable submission.
+    /*
     if gas_estimate > gas_limit {
         return Err(backoff::Error::permanent(anyhow!(
             "Gas estimate for reveal with callback is higher than the gas limit {} > {}",
@@ -240,6 +241,7 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
             gas_limit
         )));
     }
+    */
 
     // Pad the gas estimate after checking it against the simulation gas limit.
     let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
