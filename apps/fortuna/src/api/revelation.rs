@@ -21,7 +21,7 @@ use {
 /// Callers must pass the appropriate chain_id to ensure they fetch the correct random number.
 #[utoipa::path(
 get,
-path = "/v1/chains/{chain_id}/revelations/{block_number}/{sequence}",
+path = "/v1/chains/{chain_id}/revelations/{sequence}",
 responses(
 (status = 200, description = "Random value successfully retrieved", body = GetRandomValueResponse),
 (status = 403, description = "Random value cannot currently be retrieved", body = String)
@@ -33,9 +33,8 @@ pub async fn revelation(
     Path(RevelationPathParams {
         chain_id,
         sequence,
-        block_number,
     }): Path<RevelationPathParams>,
-    Query(RevelationQueryParams { encoding }): Query<RevelationQueryParams>,
+    Query(RevelationQueryParams { encoding, block_number }): Query<RevelationQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     state
         .metrics
@@ -50,30 +49,50 @@ pub async fn revelation(
         .get(&chain_id)
         .ok_or(RestError::InvalidChainId)?;
 
-    let maybe_request_fut = state.contract.get_request_with_callback_events(
-        block_number,
-        block_number,
-        state.provider_address,
-    );
-
     let current_block_number_fut = state
         .contract
         .get_block_number(state.confirmed_block_status);
 
-    let (maybe_request, current_block_number) =
-        try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
-            tracing::error!(chain_id = chain_id, "RPC request failed {}", e);
-            RestError::TemporarilyUnavailable
-        })?;
+    match block_number {
+        Some(block_number) => {
+            let maybe_request_fut = state.contract.get_request_with_callback_events(
+                block_number,
+                block_number,
+                state.provider_address,
+            );
 
-    if current_block_number.saturating_sub(state.reveal_delay_blocks) < block_number {
-        return Err(RestError::PendingConfirmation);
+            let (maybe_request, current_block_number) =
+                try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
+                    tracing::error!(chain_id = chain_id, "RPC request failed {}", e);
+                    RestError::TemporarilyUnavailable
+                })?;
+
+            if current_block_number.saturating_sub(state.reveal_delay_blocks) < block_number {
+                return Err(RestError::PendingConfirmation);
+            }
+
+            maybe_request
+                .iter()
+                .find(|r| r.sequence_number == sequence)
+                .ok_or(RestError::NoPendingRequest)?;
+        }
+        None => {
+            let maybe_request_fut = state.contract.get_request(state.provider_address, sequence);
+            let (maybe_request, current_block_number) =
+                try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
+                    tracing::error!(chain_id = chain_id, "RPC request failed {}", e);
+                    RestError::TemporarilyUnavailable
+                })?;
+
+            match maybe_request {
+                Some(r)
+                if current_block_number.saturating_sub(state.reveal_delay_blocks) >= r.block_number =>
+                    { Ok(()) }
+                Some(_) => Err(RestError::PendingConfirmation),
+                None => Err(RestError::NoPendingRequest),
+            }?;
+        }
     }
-
-    maybe_request
-        .iter()
-        .find(|r| r.sequence_number == sequence)
-        .ok_or(RestError::NoPendingRequest)?;
 
     let value = &state.state.reveal(sequence).map_err(|e| {
         tracing::error!(
@@ -97,14 +116,14 @@ pub struct RevelationPathParams {
     #[param(value_type = String)]
     pub chain_id: ChainId,
     pub sequence: u64,
-    #[param(value_type = u64)]
-    pub block_number: BlockNumber,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct RevelationQueryParams {
     pub encoding: Option<BinaryEncoding>,
+    #[param(value_type = u64)]
+    pub block_number: Option<BlockNumber>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]

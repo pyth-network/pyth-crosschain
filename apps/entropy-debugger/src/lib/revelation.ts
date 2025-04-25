@@ -62,7 +62,7 @@ export async function getRevelation(
 ) {
   const deployment = EntropyDeployments[chain];
   const url = new URL(
-    `/v1/chains/${chain}/revelations/${blockNumber.toString()}/${sequenceNumber.toString()}`,
+    `/v1/chains/${chain}/revelations/${sequenceNumber.toString()}?blockNumber=${blockNumber.toString()}`,
     deployment.network === "mainnet"
       ? "https://fortuna.dourolabs.app"
       : "https://fortuna-staging.dourolabs.app",
