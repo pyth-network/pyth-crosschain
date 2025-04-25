@@ -122,7 +122,11 @@ pub async fn process_single_block_batch(
     loop {
         let events_res = chain_state
             .contract
-            .get_request_with_callback_events(block_range.from, block_range.to)
+            .get_request_with_callback_events(
+                block_range.from,
+                block_range.to,
+                chain_state.provider_address,
+            )
             .await;
 
         match events_res {

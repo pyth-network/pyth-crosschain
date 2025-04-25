@@ -1,3 +1,4 @@
+use crate::chain::reader::BlockNumber;
 use {
     crate::api::{ChainId, RequestLabel, RestError},
     anyhow::Result,
@@ -30,7 +31,10 @@ params(RevelationPathParams, RevelationQueryParams)
 pub async fn revelation(
     State(state): State<crate::api::ApiState>,
     Path(RevelationPathParams { chain_id, sequence }): Path<RevelationPathParams>,
-    Query(RevelationQueryParams { encoding }): Query<RevelationQueryParams>,
+    Query(RevelationQueryParams {
+        encoding,
+        block_number,
+    }): Query<RevelationQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     state
         .metrics
@@ -45,40 +49,68 @@ pub async fn revelation(
         .get(&chain_id)
         .ok_or(RestError::InvalidChainId)?;
 
-    let maybe_request_fut = state.contract.get_request(state.provider_address, sequence);
-
     let current_block_number_fut = state
         .contract
         .get_block_number(state.confirmed_block_status);
 
-    let (maybe_request, current_block_number) =
-        try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
-            tracing::error!(chain_id = chain_id, "RPC request failed {}", e);
-            RestError::TemporarilyUnavailable
-        })?;
+    match block_number {
+        Some(block_number) => {
+            let maybe_request_fut = state.contract.get_request_with_callback_events(
+                block_number,
+                block_number,
+                state.provider_address,
+            );
 
-    match maybe_request {
-        Some(r)
-            if current_block_number.saturating_sub(state.reveal_delay_blocks) >= r.block_number =>
-        {
-            let value = &state.state.reveal(sequence).map_err(|e| {
-                tracing::error!(
-                    chain_id = chain_id,
-                    sequence = sequence,
-                    "Reveal failed {}",
-                    e
-                );
-                RestError::Unknown
-            })?;
-            let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), *value);
+            let (maybe_request, current_block_number) =
+                try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
+                    tracing::error!(chain_id = chain_id, "RPC request failed {}", e);
+                    RestError::TemporarilyUnavailable
+                })?;
 
-            Ok(Json(GetRandomValueResponse {
-                value: encoded_value,
-            }))
+            if current_block_number.saturating_sub(state.reveal_delay_blocks) < block_number {
+                return Err(RestError::PendingConfirmation);
+            }
+
+            maybe_request
+                .iter()
+                .find(|r| r.sequence_number == sequence)
+                .ok_or(RestError::NoPendingRequest)?;
         }
-        Some(_) => Err(RestError::PendingConfirmation),
-        None => Err(RestError::NoPendingRequest),
+        None => {
+            let maybe_request_fut = state.contract.get_request(state.provider_address, sequence);
+            let (maybe_request, current_block_number) =
+                try_join!(maybe_request_fut, current_block_number_fut).map_err(|e| {
+                    tracing::error!(chain_id = chain_id, "RPC request failed {}", e);
+                    RestError::TemporarilyUnavailable
+                })?;
+
+            match maybe_request {
+                Some(r)
+                    if current_block_number.saturating_sub(state.reveal_delay_blocks)
+                        >= r.block_number =>
+                {
+                    Ok(())
+                }
+                Some(_) => Err(RestError::PendingConfirmation),
+                None => Err(RestError::NoPendingRequest),
+            }?;
+        }
     }
+
+    let value = &state.state.reveal(sequence).map_err(|e| {
+        tracing::error!(
+            chain_id = chain_id,
+            sequence = sequence,
+            "Reveal failed {}",
+            e
+        );
+        RestError::Unknown
+    })?;
+    let encoded_value = Blob::new(encoding.unwrap_or(BinaryEncoding::Hex), *value);
+
+    Ok(Json(GetRandomValueResponse {
+        value: encoded_value,
+    }))
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
@@ -93,6 +125,8 @@ pub struct RevelationPathParams {
 #[into_params(parameter_in=Query)]
 pub struct RevelationQueryParams {
     pub encoding: Option<BinaryEncoding>,
+    #[param(value_type = u64)]
+    pub block_number: Option<BlockNumber>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
