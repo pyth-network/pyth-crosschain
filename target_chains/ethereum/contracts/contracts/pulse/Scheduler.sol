@@ -301,6 +301,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                     : 0,
                 curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
             );
+        status.balanceInWei -= pythFee;
+        status.totalSpent += pythFee;
 
         // Verify all price feeds have the same Pythnet slot.
         // All feeds in a subscription must be updated at the same time.
@@ -327,7 +329,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         _storePriceUpdates(subscriptionId, priceFeeds);
 
-        _processFeesAndPayKeeper(status, startGas, priceIds.length, pythFee);
+        _processFeesAndPayKeeper(status, startGas, priceIds.length);
 
         emit PricesUpdated(subscriptionId, latestPublishTime);
     }
@@ -745,35 +747,33 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     /**
      * @notice Internal function to calculate total fees, deduct from balance, and pay the keeper.
      * @dev This function sends funds to `msg.sender`, so be sure that this is being called by a keeper.
+     * @dev Note that the Pyth fee is already paid in the parsePriceFeedUpdatesWithSlots call.
      * @param status Storage reference to the subscription's status.
      * @param startGas Gas remaining at the start of the parent function call.
      * @param numPriceIds Number of price IDs being updated.
-     * @param pythFee Fee paid to Pyth for the update.
      */
     function _processFeesAndPayKeeper(
         SubscriptionStatus storage status,
         uint256 startGas,
-        uint256 numPriceIds,
-        uint256 pythFee
+        uint256 numPriceIds
     ) internal {
         // Calculate fee components
         uint256 gasCost = (startGas - gasleft() + GAS_OVERHEAD) * tx.gasprice;
         uint256 keeperSpecificFee = uint256(_state.singleUpdateKeeperFeeInWei) *
             numPriceIds;
         uint256 totalKeeperFee = gasCost + keeperSpecificFee;
-        uint256 totalFee = totalKeeperFee + pythFee; // pythFee is already paid in the parsePriceFeedUpdatesWithSlots call
 
         // Check balance
-        if (status.balanceInWei < totalFee) {
+        if (status.balanceInWei < totalKeeperFee) {
             revert InsufficientBalance();
         }
 
-        // Update status and pay keeper
-        status.balanceInWei -= totalFee;
-        status.totalSpent += totalFee;
-        (bool sent, ) = msg.sender.call{value: totalKeeperFee}(""); // Pay only the keeper portion
+        // Pay keeper and update status if successful
+        (bool sent, ) = msg.sender.call{value: totalKeeperFee}("");
         if (!sent) {
             revert KeeperPaymentFailed();
         }
+        status.balanceInWei -= totalKeeperFee;
+        status.totalSpent += totalKeeperFee;
     }
 }
