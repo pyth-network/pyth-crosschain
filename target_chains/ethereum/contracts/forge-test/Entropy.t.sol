@@ -205,7 +205,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
     function testBasicFlow() public {
         vm.roll(17);
         uint64 sequenceNumber = request(user2, provider1, 42, false);
-        assertEq(random.getRequestV2(provider1, sequenceNumber).blockNumber, 17);
+        assertEq(
+            random.getRequestV2(provider1, sequenceNumber).blockNumber,
+            17
+        );
         assertEq(
             random.getRequestV2(provider1, sequenceNumber).useBlockhash,
             false
@@ -245,7 +248,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             42,
             false
         );
-        assertEq(random.getRequestV2(provider1, sequenceNumber).blockNumber, 20);
+        assertEq(
+            random.getRequestV2(provider1, sequenceNumber).blockNumber,
+            20
+        );
         assertEq(
             random.getRequestV2(provider1, sequenceNumber).useBlockhash,
             false
@@ -281,7 +287,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
     function testAuthorization() public {
         uint64 sequenceNumber = request(user2, provider1, 42, false);
-        assertEq(random.getRequestV2(provider1, sequenceNumber).requester, user2);
+        assertEq(
+            random.getRequestV2(provider1, sequenceNumber).requester,
+            user2
+        );
 
         // user1 not authorized, must be user2.
         assertRevealReverts(
@@ -928,7 +937,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
 
     function testRequestAndRevealWithCallback() public {
         uint64 sequenceNumber = request(user2, provider1, 42, false);
-        assertEq(random.getRequestV2(provider1, sequenceNumber).requester, user2);
+        assertEq(
+            random.getRequestV2(provider1, sequenceNumber).requester,
+            user2
+        );
 
         vm.expectRevert(EntropyErrors.InvalidRevealCall.selector);
         vm.prank(user2);
@@ -1078,7 +1090,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Again, request stays active after failure
-        reqAfterFailure = random.getRequestV2(provider1, assignedSequenceNumber);
+        reqAfterFailure = random.getRequestV2(
+            provider1,
+            assignedSequenceNumber
+        );
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertTrue(
             reqAfterFailure.callbackStatus ==
@@ -1192,7 +1207,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         );
 
         // Again, request stays active after failure
-        reqAfterFailure = random.getRequestV2(provider1, assignedSequenceNumber);
+        reqAfterFailure = random.getRequestV2(
+            provider1,
+            assignedSequenceNumber
+        );
         assertEq(reqAfterFailure.sequenceNumber, assignedSequenceNumber);
         assertEq(
             reqAfterFailure.callbackStatus,
@@ -1678,10 +1696,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             );
 
             // Verify request is still active after failure
-            EntropyStructsV2.Request memory reqAfterFailure = random.getRequestV2(
-                provider1,
-                sequenceNumber
-            );
+            EntropyStructsV2.Request memory reqAfterFailure = random
+                .getRequestV2(provider1, sequenceNumber);
             assertEq(reqAfterFailure.sequenceNumber, sequenceNumber);
             assertEq(
                 reqAfterFailure.callbackStatus,
@@ -1707,10 +1723,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             );
 
             // Verify request is cleared after successful callback
-            EntropyStructsV2.Request memory reqAfterSuccess = random.getRequestV2(
-                provider1,
-                sequenceNumber
-            );
+            EntropyStructsV2.Request memory reqAfterSuccess = random
+                .getRequestV2(provider1, sequenceNumber);
             assertEq(reqAfterSuccess.sequenceNumber, 0);
         }
     }

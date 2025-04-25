@@ -1,6 +1,6 @@
 use {
     crate::{
-        chain::ethereum::{EntropyStructsV2Request, PythContract},
+        chain::ethereum::{EntropyStructsRequest, PythContract},
         config::{Config, EthereumConfig, InspectOptions},
     },
     anyhow::Result,
@@ -66,7 +66,7 @@ async fn inspect_chain(
                 );
                 current_request_number -= 1;
             }
-            let return_data: Vec<EntropyStructsV2Request> = multicall.call_array().await?;
+            let return_data: Vec<EntropyStructsRequest> = multicall.call_array().await?;
             for request in return_data {
                 process_request(rpc_provider.clone(), request).await?;
             }
@@ -91,9 +91,9 @@ async fn inspect_chain(
 
 async fn process_request(
     rpc_provider: Provider<Http>,
-    request: EntropyStructsV2Request,
+    request: EntropyStructsRequest,
 ) -> Result<()> {
-    if request.sequence_number != 0 && request.callback_status != 0 {
+    if request.sequence_number != 0 && request.is_request_with_callback {
         let block = rpc_provider
             .get_block(request.block_number)
             .await?

@@ -770,6 +770,87 @@
             "internalType": "uint32",
             "name": "maxNumHashes",
             "type": "uint32"
+          }
+        ],
+        "internalType": "struct EntropyStructs.ProviderInfo",
+        "name": "info",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      }
+    ],
+    "name": "getProviderInfoV2",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "feeInWei",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "accruedFeesInWei",
+            "type": "uint128"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "originalCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "originalCommitmentSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes",
+            "name": "commitmentMetadata",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "uri",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint64",
+            "name": "endSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "currentCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentCommitmentSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "address",
+            "name": "feeManager",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "maxNumHashes",
+            "type": "uint32"
           },
           {
             "internalType": "uint32",
@@ -799,6 +880,72 @@
       }
     ],
     "name": "getRequest",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "provider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "numHashes",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "commitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "blockNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "address",
+            "name": "requester",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "useBlockhash",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequestWithCallback",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct EntropyStructs.Request",
+        "name": "req",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "name": "getRequestV2",
     "outputs": [
       {
         "components": [
