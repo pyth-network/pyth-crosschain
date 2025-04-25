@@ -1,8 +1,12 @@
 use {
     crate::{
-        chain::ethereum::{SignablePythContract, RevealedWithCallbackFilter},
+        chain::ethereum::{RevealedWithCallbackFilter, SignablePythContract},
         config::{Config, GenerateOptions},
-    }, anyhow::Result, base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _}, ethers::providers::Middleware, std::sync::Arc,
+    },
+    anyhow::Result,
+    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
+    ethers::providers::Middleware,
+    std::sync::Arc,
     tokio::time::{self, Duration},
 };
 
@@ -19,19 +23,19 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
     let user_randomness = rand::random::<[u8; 32]>();
     let provider = opts.provider;
 
-    tracing::info!("starting");
-
     let mut last_block_number = contract.provider().get_block_number().await?;
     tracing::info!(block_number = last_block_number.as_u64(), "block number");
+
+    tracing::info!("Requesting random number...");
 
     // Request a random number on the contract
     let sequence_number = contract
         .request_with_callback_wrapper(&provider, &user_randomness)
         .await?;
 
-    tracing::info!(sequence_number = sequence_number, "random number requested",);
+    tracing::info!(sequence_number = sequence_number, "Random number requested",);
 
-    for _i in [0..10] {
+    for _i in 0..10 {
         let current_block_number = contract.provider().get_block_number().await?;
         tracing::info!(
             start_block = last_block_number.as_u64(),
@@ -40,7 +44,10 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
         );
 
         let mut event = contract.revealed_with_callback_filter();
-        event.filter = event.filter.from_block(last_block_number).to_block(current_block_number);
+        event.filter = event
+            .filter
+            .from_block(last_block_number)
+            .to_block(current_block_number);
 
         let res: Vec<RevealedWithCallbackFilter> = event.query().await?;
 
@@ -57,6 +64,8 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
         last_block_number = current_block_number;
         time::sleep(Duration::from_secs(1)).await;
     }
+
+    tracing::info!("Failed to receive a callback with the random number.");
 
     Ok(())
 }

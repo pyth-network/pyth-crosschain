@@ -102,11 +102,7 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         provider: &Address,
         user_randomness: &[u8; 32],
     ) -> Result<u64> {
-        println!("1");
-
         let fee = self.get_fee(*provider).call().await?;
-
-        println!("2");
 
         let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
 
@@ -117,10 +113,11 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
             .await?
         {
-            println!("3");
             // Extract Log from TransactionReceipt.
             let l: RawLog = r.logs[0].clone().into();
-            if let PythRandomEvents::RequestedFilter(r) = PythRandomEvents::decode_log(&l)? {
+            if let PythRandomEvents::RequestedWithCallbackFilter(r) =
+                PythRandomEvents::decode_log(&l)?
+            {
                 Ok(r.request.sequence_number)
             } else {
                 Err(anyhow!("No log with sequence number"))
