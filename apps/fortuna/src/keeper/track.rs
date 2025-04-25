@@ -50,7 +50,7 @@ pub async fn track_provider(
     provider_address: Address,
     metrics: Arc<KeeperMetrics>,
 ) {
-    let provider_info = match contract.get_provider_info(provider_address).call().await {
+    let provider_info = match contract.get_provider_info_v2(provider_address).call().await {
         Ok(info) => info,
         Err(e) => {
             tracing::error!("Error while getting provider info. error: {:?}", e);

@@ -136,7 +136,7 @@ pub struct EthereumConfig {
     pub legacy_tx: bool,
 
     /// The gas limit to use for entropy callback transactions.
-    pub gas_limit: u64,
+    pub gas_limit: u32,
 
     /// The percentage multiplier to apply to priority fee estimates (100 = no change, e.g. 150 = 150% of base fee)
     #[serde(default = "default_priority_fee_multiplier_pct")]

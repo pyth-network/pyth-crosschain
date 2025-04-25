@@ -48,7 +48,7 @@ pub async fn withdraw_fees_if_necessary(
         .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
 
     let provider_info = contract
-        .get_provider_info(provider_address)
+        .get_provider_info_v2(provider_address)
         .call()
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
@@ -142,7 +142,7 @@ pub async fn adjust_fee_if_necessary(
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
     let provider_info = contract
-        .get_provider_info(provider_address)
+        .get_provider_info_v2(provider_address)
         .call()
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;

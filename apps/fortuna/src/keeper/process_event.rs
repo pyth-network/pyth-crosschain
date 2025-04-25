@@ -119,7 +119,7 @@ pub async fn process_event_with_backoff(
             // the RPC gave us an error anyway.
             let req = chain_state
                 .contract
-                .get_request(event.provider_address, event.sequence_number)
+                .get_request_v2(event.provider_address, event.sequence_number)
                 .await;
 
             tracing::error!("Failed to process event: {:?}. Request: {:?}", e, req);

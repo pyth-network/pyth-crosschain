@@ -1,21 +1,15 @@
 use {
     crate::{
         api::{get_register_uri, ChainId},
-        chain::ethereum::{EntropyStructsProviderInfo, SignablePythContract},
+        chain::ethereum::{EntropyStructsV2ProviderInfo, SignablePythContract},
         command::register_provider::{register_provider_from_config, CommitmentMetadata},
         config::{Config, EthereumConfig, SetupProviderOptions},
         state::{HashChainState, PebbleHashChain},
-    },
-    anyhow::{anyhow, Result},
-    ethers::{
+    }, anyhow::{anyhow, Result}, ethers::{
         abi::Bytes as AbiBytes,
         signers::{LocalWallet, Signer},
         types::{Address, Bytes},
-    },
-    futures::future::join_all,
-    std::sync::Arc,
-    tokio::spawn,
-    tracing::Instrument,
+    }, futures::future::join_all, std::sync::Arc, tokio::spawn, tracing::Instrument
 };
 
 /// Setup provider for all the chains.
@@ -76,7 +70,7 @@ async fn setup_chain_provider(
     let contract = Arc::new(SignablePythContract::from_config(chain_config, &private_key).await?);
 
     tracing::info!("Fetching provider info");
-    let provider_info = contract.get_provider_info(provider_address).call().await?;
+    let provider_info = contract.get_provider_info_v2(provider_address).call().await?;
     tracing::info!("Provider info: {:?}", provider_info);
 
     let mut register = false;
@@ -146,7 +140,7 @@ async fn setup_chain_provider(
         tracing::info!("Registered");
     }
 
-    let provider_info = contract.get_provider_info(provider_address).call().await?;
+    let provider_info = contract.get_provider_info_v2(provider_address).call().await?;
 
     sync_fee(&contract, &provider_info, chain_config.fee)
         .in_current_span()
@@ -173,12 +167,20 @@ async fn setup_chain_provider(
     .in_current_span()
     .await?;
 
+    sync_default_gas_limit(
+        &contract,
+        &provider_info,
+        chain_config.gas_limit,
+    )
+    .in_current_span()
+    .await?;
+
     Ok(())
 }
 
 async fn sync_uri(
     contract: &Arc<SignablePythContract>,
-    provider_info: &EntropyStructsProviderInfo,
+    provider_info: &EntropyStructsV2ProviderInfo,
     uri: String,
 ) -> Result<()> {
     let uri_as_bytes: Bytes = AbiBytes::from(uri.as_str()).into();
@@ -198,7 +200,7 @@ async fn sync_uri(
 
 async fn sync_fee(
     contract: &Arc<SignablePythContract>,
-    provider_info: &EntropyStructsProviderInfo,
+    provider_info: &EntropyStructsV2ProviderInfo,
     provider_fee: u128,
 ) -> Result<()> {
     if provider_info.fee_in_wei != provider_fee {
@@ -217,7 +219,7 @@ async fn sync_fee(
 
 async fn sync_fee_manager(
     contract: &Arc<SignablePythContract>,
-    provider_info: &EntropyStructsProviderInfo,
+    provider_info: &EntropyStructsV2ProviderInfo,
     fee_manager: Address,
 ) -> Result<()> {
     if provider_info.fee_manager != fee_manager {
@@ -231,7 +233,7 @@ async fn sync_fee_manager(
 
 async fn sync_max_num_hashes(
     contract: &Arc<SignablePythContract>,
-    provider_info: &EntropyStructsProviderInfo,
+    provider_info: &EntropyStructsV2ProviderInfo,
     max_num_hashes: u32,
 ) -> Result<()> {
     if provider_info.max_num_hashes != max_num_hashes {
@@ -243,6 +245,25 @@ async fn sync_max_num_hashes(
             .await?
         {
             tracing::info!("Updated provider max num hashes to : {:?}", receipt);
+        }
+    }
+    Ok(())
+}
+
+async fn sync_default_gas_limit(
+    contract: &Arc<SignablePythContract>,
+    provider_info: &EntropyStructsV2ProviderInfo,
+    default_gas_limit: u32,
+) -> Result<()> {
+    if provider_info.default_gas_limit != default_gas_limit {
+        tracing::info!("Updating provider default gas limit to {:?}", default_gas_limit);
+        if let Some(receipt) = contract
+            .set_default_gas_limit(default_gas_limit)
+            .send()
+            .await?
+            .await?
+        {
+            tracing::info!("Updated provider default gas limit to : {:?}", receipt);
         }
     }
     Ok(())

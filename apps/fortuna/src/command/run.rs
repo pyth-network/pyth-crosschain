@@ -228,7 +228,7 @@ async fn setup_chain_state(
             .cmp(&c2.original_commitment_sequence_number)
     });
 
-    let provider_info = contract.get_provider_info(*provider).call().await?;
+    let provider_info = contract.get_provider_info_v2(*provider).call().await?;
     let latest_metadata = bincode::deserialize::<CommitmentMetadata>(
         &provider_info.commitment_metadata,
     )

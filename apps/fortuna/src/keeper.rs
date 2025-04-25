@@ -150,7 +150,7 @@ pub async fn run_keeper_threads(
             // near the maximum gas limit.
             // In the unlikely event that the keeper fees aren't sufficient, the solution to this is to configure the target
             // fee percentage to be higher on that specific chain.
-            chain_eth_config.gas_limit,
+            chain_eth_config.gas_limit.into(),
             // NOTE: unwrap() here so we panic early if someone configures these values below -100.
             u64::try_from(100 + chain_eth_config.min_profit_pct)
                 .expect("min_profit_pct must be >= -100"),

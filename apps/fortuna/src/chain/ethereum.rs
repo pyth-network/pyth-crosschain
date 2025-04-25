@@ -233,29 +233,21 @@ impl InstrumentedPythContract {
 
 #[async_trait]
 impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
-    async fn get_request(
+    async fn get_request_v2(
         &self,
         provider_address: Address,
         sequence_number: u64,
     ) -> Result<Option<reader::Request>> {
-        let r = self
-            .get_request(provider_address, sequence_number)
-            // TODO: This doesn't work for lighlink right now. Figure out how to do this in lightlink
-            // .block(ethers::core::types::BlockNumber::Finalized)
+        let request = self
+            .get_request_v2(provider_address, sequence_number)
             .call()
             .await?;
-
-        // sequence_number == 0 means the request does not exist.
-        if r.sequence_number != 0 {
-            Ok(Some(reader::Request {
-                provider: r.provider,
-                sequence_number: r.sequence_number,
-                block_number: r.block_number,
-                use_blockhash: r.use_blockhash,
-            }))
-        } else {
-            Ok(None)
-        }
+        Ok(Some(reader::Request {
+            provider: request.provider,
+            sequence_number: request.sequence_number,
+            block_number: request.block_number,
+            use_blockhash: request.use_blockhash,
+        }))
     }
 
     async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
