@@ -150,7 +150,9 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         provider.sequenceNumber += 1;
 
-        emit EntropyEvents.Registered(EntropyStructConverter.toV1ProviderInfo(provider));
+        emit EntropyEvents.Registered(
+            EntropyStructConverter.toV1ProviderInfo(provider)
+        );
         emit EntropyEventsV2.Registered(msg.sender, bytes(""));
     }
 
@@ -174,7 +176,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         require(sent, "withdrawal to msg.sender failed");
 
         emit EntropyEvents.Withdrawal(msg.sender, msg.sender, amount);
-        emit EntropyEventsV2.Withdrawal(msg.sender, msg.sender, amount, bytes(""));
+        emit EntropyEventsV2.Withdrawal(
+            msg.sender,
+            msg.sender,
+            amount,
+            bytes("")
+        );
     }
 
     function withdrawAsFeeManager(
@@ -205,7 +212,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         require(sent, "withdrawal to msg.sender failed");
 
         emit EntropyEvents.Withdrawal(provider, msg.sender, amount);
-        emit EntropyEventsV2.Withdrawal(provider, msg.sender, amount, bytes(""));
+        emit EntropyEventsV2.Withdrawal(
+            provider,
+            msg.sender,
+            amount,
+            bytes("")
+        );
     }
 
     // requestHelper allocates and returns a new request for the given provider.
@@ -769,7 +781,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         uint128 oldFeeInWei = provider.feeInWei;
         provider.feeInWei = newFeeInWei;
         emit ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei);
-        emit EntropyEventsV2.ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei, bytes(""));
+        emit EntropyEventsV2.ProviderFeeUpdated(
+            msg.sender,
+            oldFeeInWei,
+            newFeeInWei,
+            bytes("")
+        );
     }
 
     function setProviderFeeAsFeeManager(
@@ -792,7 +809,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.feeInWei = newFeeInWei;
 
         emit ProviderFeeUpdated(provider, oldFeeInWei, newFeeInWei);
-        emit EntropyEventsV2.ProviderFeeUpdated(provider, oldFeeInWei, newFeeInWei, bytes(""));
+        emit EntropyEventsV2.ProviderFeeUpdated(
+            provider,
+            oldFeeInWei,
+            newFeeInWei,
+            bytes("")
+        );
     }
 
     // Set provider uri. It will revert if provider is not registered.
@@ -806,7 +828,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes memory oldUri = provider.uri;
         provider.uri = newUri;
         emit ProviderUriUpdated(msg.sender, oldUri, newUri);
-        emit EntropyEventsV2.ProviderUriUpdated(msg.sender, oldUri, newUri, bytes(""));
+        emit EntropyEventsV2.ProviderUriUpdated(
+            msg.sender,
+            oldUri,
+            newUri,
+            bytes("")
+        );
     }
 
     function setFeeManager(address manager) external override {
@@ -820,7 +847,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         address oldFeeManager = provider.feeManager;
         provider.feeManager = manager;
         emit ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager);
-        emit EntropyEventsV2.ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager, bytes(""));
+        emit EntropyEventsV2.ProviderFeeManagerUpdated(
+            msg.sender,
+            oldFeeManager,
+            manager,
+            bytes("")
+        );
     }
 
     // Set the maximum number of hashes to record in a request. This should be set according to the maximum gas limit
