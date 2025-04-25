@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "./EntropyEvents.sol";
+import "./EntropyEventsV2.sol";
 import "./EntropyStructsV2.sol";
 
-interface IEntropy is EntropyEvents {
+interface IEntropy is EntropyEvents, EntropyEventsV2 {
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
     // and initial commitment. Re-registering the same provider rotates the provider's commitment (and updates
     // the feeInWei).
