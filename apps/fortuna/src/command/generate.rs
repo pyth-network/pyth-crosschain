@@ -35,7 +35,9 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
 
     tracing::info!(sequence_number = sequence_number, "Random number requested",);
 
-    for _i in 0..10 {
+    let mut num_retries = 0;
+    let mut found_request = false;
+    while !found_request && num_retries < 10 {
         let current_block_number = contract.provider().get_block_number().await?;
         tracing::info!(
             start_block = last_block_number.as_u64(),
@@ -57,15 +59,18 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
                     number = base64_standard_engine.encode(r.random_number),
                     "Random number generated."
                 );
-                break;
+                found_request = true;
             }
         }
 
         last_block_number = current_block_number;
+        num_retries += 1;
         time::sleep(Duration::from_secs(1)).await;
     }
 
-    tracing::info!("Failed to receive a callback with the random number.");
+    if !found_request {
+        tracing::info!("Failed to receive a callback with the random number.");
+    }
 
     Ok(())
 }

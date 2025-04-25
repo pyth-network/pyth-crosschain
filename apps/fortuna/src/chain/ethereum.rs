@@ -104,10 +104,8 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
     ) -> Result<u64> {
         let fee = self.get_fee(*provider).call().await?;
 
-        let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
-
         if let Some(r) = self
-            .request_with_callback(*provider, hashed_randomness)
+            .request_with_callback(*provider, *user_randomness)
             .value(fee)
             .send()
             .await?
