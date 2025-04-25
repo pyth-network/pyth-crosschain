@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "./EntropyStructs.sol";
 
+// Deprecated -- these events are still emitted, but the lack of indexing
+// makes them hard to use.
 interface EntropyEvents {
     event Registered(EntropyStructs.ProviderInfo provider);
 

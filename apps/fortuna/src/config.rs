@@ -25,7 +25,6 @@ mod setup_provider;
 mod withdraw_fees;
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
-const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";
 
 #[derive(Parser, Debug)]
 #[command(name = crate_name!())]

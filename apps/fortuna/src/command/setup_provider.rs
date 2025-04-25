@@ -1,7 +1,7 @@
 use {
     crate::{
         api::{get_register_uri, ChainId},
-        chain::ethereum::{ProviderInfo, SignablePythContract},
+        chain::ethereum::{EntropyStructsV2ProviderInfo, SignablePythContract},
         command::register_provider::{register_provider_from_config, CommitmentMetadata},
         config::{Config, EthereumConfig, SetupProviderOptions},
         state::{HashChainState, PebbleHashChain},
@@ -178,7 +178,7 @@ async fn setup_chain_provider(
 
 async fn sync_uri(
     contract: &Arc<SignablePythContract>,
-    provider_info: &ProviderInfo,
+    provider_info: &EntropyStructsV2ProviderInfo,
     uri: String,
 ) -> Result<()> {
     let uri_as_bytes: Bytes = AbiBytes::from(uri.as_str()).into();
@@ -198,7 +198,7 @@ async fn sync_uri(
 
 async fn sync_fee(
     contract: &Arc<SignablePythContract>,
-    provider_info: &ProviderInfo,
+    provider_info: &EntropyStructsV2ProviderInfo,
     provider_fee: u128,
 ) -> Result<()> {
     if provider_info.fee_in_wei != provider_fee {
@@ -217,7 +217,7 @@ async fn sync_fee(
 
 async fn sync_fee_manager(
     contract: &Arc<SignablePythContract>,
-    provider_info: &ProviderInfo,
+    provider_info: &EntropyStructsV2ProviderInfo,
     fee_manager: Address,
 ) -> Result<()> {
     if provider_info.fee_manager != fee_manager {
@@ -231,7 +231,7 @@ async fn sync_fee_manager(
 
 async fn sync_max_num_hashes(
     contract: &Arc<SignablePythContract>,
-    provider_info: &ProviderInfo,
+    provider_info: &EntropyStructsV2ProviderInfo,
     max_num_hashes: u32,
 ) -> Result<()> {
     if provider_info.max_num_hashes != max_num_hashes {

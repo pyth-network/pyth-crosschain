@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@pythnetwork/entropy-sdk-solidity/EntropyStructs.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyStructsV2.sol";
 
 contract EntropyInternalStructs {
     struct State {
@@ -30,10 +30,10 @@ contract EntropyInternalStructs {
         // considered active if their sequenceNumber is > 0.
         //
         // WARNING: the number of requests must be kept in sync with the constants below
-        EntropyStructs.Request[32] requests;
-        mapping(bytes32 => EntropyStructs.Request) requestsOverflow;
+        EntropyStructsV2.Request[32] requests;
+        mapping(bytes32 => EntropyStructsV2.Request) requestsOverflow;
         // Mapping from randomness providers to information about each them.
-        mapping(address => EntropyStructs.ProviderInfo) providers;
+        mapping(address => EntropyStructsV2.ProviderInfo) providers;
         // proposedAdmin is the new admin's account address proposed by either the owner or the current admin.
         // If there is no pending transfer request, this value will hold `address(0)`.
         address proposedAdmin;

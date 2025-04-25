@@ -2,12 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-// This contract holds old versions of the Entropy structs that are no longer used for contract storage.
-// However, they are still used in EntropyEvents to maintain the public interface of prior versions of
-// the Entropy contract.
-//
-// See EntropyStructsV2 for the struct definitions currently in use.
-contract EntropyStructs {
+contract EntropyStructsV2 {
     struct ProviderInfo {
         uint128 feeInWei;
         uint128 accruedFeesInWei;
@@ -42,6 +37,8 @@ contract EntropyStructs {
         // Maximum number of hashes to record in a request. This should be set according to the maximum gas limit
         // the provider supports for callbacks.
         uint32 maxNumHashes;
+        // Default gas limit to use for callbacks.
+        uint32 defaultGasLimit;
     }
 
     struct Request {
@@ -64,7 +61,11 @@ contract EntropyStructs {
         address requester;
         // If true, incorporate the blockhash of blockNumber into the generated random value.
         bool useBlockhash;
-        // True if this is a request that expects a callback.
-        bool isRequestWithCallback;
+        // Status flag for requests with callbacks. See EntropyConstants for the possible values of this flag.
+        uint8 callbackStatus;
+        // The gasLimit in units of 10k gas. (i.e., 2 = 20k gas). We're using units of 10k in order to fit this
+        // field into the remaining 2 bytes of this storage slot. The dynamic range here is 10k - 655M, which should
+        // cover all real-world use cases.
+        uint16 gasLimit10k;
     }
 }
