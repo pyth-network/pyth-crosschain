@@ -83,7 +83,7 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         {
             // Extract Log from TransactionReceipt.
             let l: RawLog = r.logs[0].clone().into();
-            if let PythRandomEvents::RequestedFilter(r) = PythRandomEvents::decode_log(&l)? {
+            if let PythRandomEvents::Requested1Filter(r) = PythRandomEvents::decode_log(&l)? {
                 Ok(r.request.sequence_number)
             } else {
                 Err(anyhow!("No log with sequence number"))
@@ -147,7 +147,7 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
             .await?
         {
-            if let PythRandomEvents::RevealedFilter(r) =
+            if let PythRandomEvents::Revealed1Filter(r) =
                 PythRandomEvents::decode_log(&r.logs[0].clone().into())?
             {
                 Ok(r.random_number)
