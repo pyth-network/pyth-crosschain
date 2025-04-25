@@ -11,6 +11,8 @@ import "../contracts/pulse/SchedulerState.sol";
 import "../contracts/pulse/SchedulerEvents.sol";
 import "../contracts/pulse/SchedulerErrors.sol";
 import "./utils/PulseSchedulerTestUtils.t.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+
 contract MockReader {
     address private _scheduler;
 
@@ -76,7 +78,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         pusher = address(4);
 
         uint128 minBalancePerFeed = 10 ** 16; // 0.01 ether
-        uint128 keeperFee = 10 ** 15; // 0.001 ether
+        uint128 keeperFee = 10 ** 14; // 0.0001 ether
 
         SchedulerUpgradeable _scheduler = new SchedulerUpgradeable();
         proxy = new ERC1967Proxy(address(_scheduler), "");
@@ -800,7 +802,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
     }
 
-    function testUpdatePriceFeedsWorks() public {
+    function testUpdatePriceFeedsUpdatesPricesCorrectly() public {
         // --- First Update ---
         // Add a subscription and funds
         uint256 subscriptionId = addTestSubscription(
@@ -828,7 +830,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         emit PricesUpdated(subscriptionId, publishTime1);
         vm.prank(pusher);
 
-        vm.breakpoint("a");
         scheduler.updatePriceFeeds(subscriptionId, updateData1, priceIds);
 
         // Verify first update
@@ -841,8 +842,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
         assertEq(
             status1.totalUpdates,
-            1,
-            "Total updates should be 1 after first update"
+            priceIds.length,
+            "Total updates should be equal to the number of price feeds"
         );
         assertTrue(
             status1.totalSpent > 0,
@@ -880,7 +881,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         emit PricesUpdated(subscriptionId, publishTime2);
         vm.prank(pusher);
 
-        vm.breakpoint("b");
         scheduler.updatePriceFeeds(subscriptionId, updateData2, priceIds);
 
         // Verify second update
@@ -893,8 +893,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
         assertEq(
             status2.totalUpdates,
-            2,
-            "Total updates should be 2 after second update"
+            priceIds.length * 2,
+            "Total updates should be equal to the number of price feeds * 2 (first + second update)"
         );
         assertTrue(
             status2.totalSpent > spentAfterFirst,
@@ -909,6 +909,148 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             ),
             "Price feeds verification failed after second update"
         );
+    }
+
+    function testUpdatePriceFeedsPaysKeeperCorrectly() public {
+        // Set gas price
+        uint256 gasPrice = 0.1 gwei;
+        vm.txGasPrice(gasPrice);
+
+        // Add subscription and funds
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+
+        // Prepare update data
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        ) = createMockPriceFeedsWithSlots(
+                SafeCast.toUint64(block.timestamp),
+                params.priceIds.length
+            );
+
+        uint256 mockPythFee = MOCK_PYTH_FEE_PER_FEED * params.priceIds.length;
+        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Get state before
+        uint256 pusherBalanceBefore = pusher.balance;
+        (, SchedulerState.SubscriptionStatus memory statusBefore) = scheduler
+            .getSubscription(subscriptionId);
+        console.log(
+            "Subscription balance before update:",
+            vm.toString(statusBefore.balanceInWei)
+        );
+
+        // Perform update
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData, params.priceIds);
+
+        // Get state after
+        (, SchedulerState.SubscriptionStatus memory statusAfter) = scheduler
+            .getSubscription(subscriptionId);
+
+        // Calculate total fee deducted from subscription
+        uint256 totalFeeDeducted = statusBefore.balanceInWei -
+            statusAfter.balanceInWei;
+
+        // Calculate minimum keeper fee (overhead + feed-specific fee)
+        // The real cost is more because of the gas used in the updatePriceFeeds function
+        uint256 minKeeperFee = (scheduler.GAS_OVERHEAD() * gasPrice) +
+            (uint256(scheduler.getSingleUpdateKeeperFeeInWei()) *
+                params.priceIds.length);
+
+        assertGt(
+            totalFeeDeducted,
+            minKeeperFee + mockPythFee,
+            "Total fee deducted should be greater than the sum of keeper fee and Pyth fee (since gas usage of updatePriceFeeds is not accounted for)"
+        );
+        assertEq(
+            statusAfter.totalSpent,
+            statusBefore.totalSpent + totalFeeDeducted,
+            "Total spent should increase by the total fee deducted"
+        );
+        assertEq(
+            pusher.balance,
+            pusherBalanceBefore + totalFeeDeducted - mockPythFee,
+            "Pusher balance should increase by the keeper fee"
+        );
+
+        // This assertion is self-evident based on the calculations above, but keeping it for clarity
+        assertEq(
+            statusAfter.balanceInWei,
+            statusBefore.balanceInWei - totalFeeDeducted,
+            "Subscription balance should decrease by the total fee deducted"
+        );
+    }
+
+    function testUpdatePriceFeedsRevertsInsufficientBalanceForKeeperFee()
+        public
+    {
+        // Set gas price
+        uint256 gasPrice = 0.5 gwei;
+        vm.txGasPrice(gasPrice);
+
+        // Mock the minimum balance for the subscription to be
+        // zero so that we can test the keeper fee
+        vm.mockCall(
+            address(scheduler),
+            abi.encodeWithSelector(Scheduler.getMinimumBalance.selector),
+            abi.encode(0)
+        );
+
+        // Add subscription
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+        bytes32[] memory priceIds = createPriceIds();
+
+        // Prepare update data and get Pyth fee
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+        PythStructs.PriceFeed[] memory priceFeeds;
+        uint64[] memory slots;
+        (priceFeeds, slots) = createMockPriceFeedsWithSlots(
+            publishTime,
+            priceIds.length
+        );
+        uint256 mockPythFee = MOCK_PYTH_FEE_PER_FEED * priceIds.length;
+        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Calculate minimum keeper fee (overhead + feed-specific fee)
+        // The real cost is more because of the gas used in the updatePriceFeeds function
+        uint256 minKeeperFee = (scheduler.GAS_OVERHEAD() * gasPrice) +
+            (uint256(scheduler.getSingleUpdateKeeperFeeInWei()) *
+                priceIds.length);
+
+        // Fund subscription without enough for Pyth fee + keeper fee
+        // It won't be enough because of the gas cost of updatePriceFeeds
+        uint256 fundAmount = mockPythFee + minKeeperFee;
+        scheduler.addFunds{value: fundAmount}(subscriptionId);
+
+        // Get and print the subscription balance before attempting the update
+        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+            .getSubscription(subscriptionId);
+        console.log(
+            "Subscription balance before update:",
+            vm.toString(status.balanceInWei)
+        );
+        console.log("Required Pyth fee:", vm.toString(mockPythFee));
+        console.log("Minimum keeper fee:", vm.toString(minKeeperFee));
+        console.log(
+            "Total minimum required:",
+            vm.toString(mockPythFee + minKeeperFee)
+        );
+
+        // Expect revert due to insufficient balance for total fee
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
     }
 
     function testUpdatePriceFeedsRevertsOnHeartbeatUpdateConditionNotMet()

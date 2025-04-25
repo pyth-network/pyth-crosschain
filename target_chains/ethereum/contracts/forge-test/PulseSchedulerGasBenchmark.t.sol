@@ -227,4 +227,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
     function testGetActiveSubscriptions1000() public {
         _runGetActiveSubscriptionsBenchmark(1000);
     }
+
+    // Allow the contract to receive Ether (for keeper payments during tests)
+    receive() external payable {}
 }

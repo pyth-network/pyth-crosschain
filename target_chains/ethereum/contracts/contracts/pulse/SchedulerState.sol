@@ -17,6 +17,9 @@ contract SchedulerState {
     /// Maximum time in the future (relative to current block timestamp)
     /// for which a price update timestamp is considered valid
     uint64 public constant FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD = 10 seconds;
+    /// Fixed gas overhead component used in keeper fee calculation.
+    /// This is a rough estimate of the tx overhead for a keeper to call updatePriceFeeds.
+    uint256 public constant GAS_OVERHEAD = 30000;
 
     struct State {
         /// Monotonically increasing counter for subscription IDs
