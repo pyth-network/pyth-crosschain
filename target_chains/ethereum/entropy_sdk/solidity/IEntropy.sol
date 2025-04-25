@@ -112,11 +112,20 @@ interface IEntropy is EntropyEvents {
 
     function getProviderInfo(
         address provider
+    ) external view returns (EntropyStructs.ProviderInfo memory info);
+
+    function getProviderInfoV2(
+        address provider
     ) external view returns (EntropyStructsV2.ProviderInfo memory info);
 
     function getDefaultProvider() external view returns (address provider);
 
     function getRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) external view returns (EntropyStructs.Request memory req);
+
+    function getRequestV2(
         address provider,
         uint64 sequenceNumber
     ) external view returns (EntropyStructsV2.Request memory req);
