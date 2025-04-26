@@ -26,8 +26,6 @@ import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
 import { Switch } from "../Switch";
 
-const MAX_TEST_RETRIES = 10;
-
 export const WalletTester = () => (
   <div className="grid size-full place-content-center">
     <div className="w-96 border border-neutral-600 p-10">
@@ -228,7 +226,6 @@ const testWallet = async (connection: Connection, wallet: AnchorWallet) => {
       ),
       connection,
       wallet,
-      MAX_TEST_RETRIES,
     );
   } else {
     throw new Error("No test method found in program");
