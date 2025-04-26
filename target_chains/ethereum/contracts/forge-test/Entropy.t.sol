@@ -825,6 +825,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             user1,
             providerInfo.sequenceNumber,
             userRandomNumber,
+            0,
             bytes("")
         );
         vm.roll(1234);
@@ -1018,6 +1019,15 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         uint fee = random.getFee(provider1);
         EntropyConsumer consumer = new EntropyConsumer(address(random), false);
         vm.deal(user1, fee);
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Requested(
+            provider1,
+            user1,
+            0,
+            userRandomNumber,
+            100000,
+            bytes("")
+        );
         vm.prank(user1);
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
@@ -1718,9 +1728,18 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             gasLimit
         );
 
-        uint128 startingAccruedProviderFee = random
-            .getProviderInfoV2(provider1)
-            .accruedFeesInWei;
+        EntropyStructsV2.ProviderInfo memory providerInfo = random.getProviderInfoV2(provider1);
+
+        uint128 startingAccruedProviderFee = providerInfo.accruedFeesInWei;
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Requested(
+            provider1,
+            user1,
+            providerInfo.sequenceNumber,
+            userRandomNumber,
+            uint32(expectedGasLimit10k) * 10000,
+            bytes("")
+        );            
         vm.prank(user1);
         uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{
             value: fee

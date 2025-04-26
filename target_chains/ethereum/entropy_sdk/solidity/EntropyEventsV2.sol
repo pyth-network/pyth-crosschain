@@ -24,6 +24,7 @@ interface EntropyEventsV2 {
      * @param caller The address of the user requesting the random number
      * @param sequenceNumber A unique identifier for this request
      * @param userRandomNumber A random number provided by the user for additional entropy
+     * @param gasLimit The gas limit for the callback.
      * @param extraArgs A field for extra data for forward compatibility.
      */
     event Requested(
@@ -31,6 +32,7 @@ interface EntropyEventsV2 {
         address indexed caller,
         uint64 indexed sequenceNumber,
         bytes32 userRandomNumber,
+        uint32 gasLimit,
         bytes extraArgs
     );
 

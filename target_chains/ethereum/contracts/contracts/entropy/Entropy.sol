@@ -369,6 +369,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             req.requester,
             req.sequenceNumber,
             userRandomNumber,
+            uint32(req.gasLimit10k) * TEN_THOUSAND,
             bytes("")
         );
         return req.sequenceNumber;
