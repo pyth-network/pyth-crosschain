@@ -9,12 +9,8 @@ message PublisherUpdate {
   // Array of updates, each of which target a single feed
   repeated FeedUpdate updates = 1;
 
-  // ID of the Publisher that is sending the update
-  // Should match ID stored in Pyth Lazer
-  optional uint32 publisher_id = 2;
-
   // Timestamp when this message was created
-  optional google.protobuf.Timestamp publisher_timestamp = 3;
+  optional google.protobuf.Timestamp publisher_timestamp = 2;
 }
 
 // Update to a feed. May contain different types of data depending on what kind of update it is
