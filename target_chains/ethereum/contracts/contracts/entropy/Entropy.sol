@@ -600,6 +600,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber,
                     false,
                     ret,
+                    SafeCast.toUint32(startingGas - gasleft()),
                     bytes("")
                 );
                 clearRequest(provider, sequenceNumber);
@@ -629,6 +630,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber,
                     true,
                     ret,
+                    SafeCast.toUint32(startingGas - gasleft()),
                     bytes("")
                 );
                 req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
@@ -656,6 +658,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                 randomNumber,
                 false,
                 bytes(""),
+                0, // gas usage not tracked in the old no-gas-limit flow.
                 bytes("")
             );
 

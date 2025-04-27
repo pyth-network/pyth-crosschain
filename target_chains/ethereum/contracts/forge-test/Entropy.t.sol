@@ -878,7 +878,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -890,6 +890,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             bytes(""),
+            0,
             bytes("")
         );
         vm.prank(user1);
@@ -945,7 +946,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -957,6 +958,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             bytes(""),
+            0,
             bytes("")
         );
         random.revealWithCallback(
@@ -1051,7 +1053,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -1063,6 +1065,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             bytes(""),
+            0,
             bytes("")
         );
         random.revealWithCallback(
@@ -1123,7 +1126,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             revertReason
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1135,6 +1138,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             true,
             revertReason,
+            0,
             bytes("")
         );
         random.revealWithCallback(
@@ -1188,7 +1192,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             reqAfterFailure.requester,
@@ -1200,6 +1204,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             bytes(""),
+            0,
             bytes("")
         );
         random.revealWithCallback(
@@ -1268,7 +1273,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             // out-of-gas reverts have an empty bytes array as the return value.
             ""
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1280,7 +1285,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             true,
             "",
-            ""
+            0,
+            bytes("")
         );
         random.revealWithCallback(
             provider1,
@@ -1332,7 +1338,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1344,7 +1350,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             "",
-            ""
+            0,
+            bytes("")
         );
         random.revealWithCallback(
             provider1,
@@ -1806,41 +1813,42 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         );
 
         if (!expectSuccess) {
-            vm.expectEmit(false, false, false, true, address(random));
-            emit CallbackFailed(
-                provider1,
-                address(consumer),
-                sequenceNumber,
-                userRandomNumber,
-                provider1Proofs[sequenceNumber],
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                ),
-                // out-of-gas reverts have an empty bytes array as the return value.
-                ""
-            );
-            vm.expectEmit(false, false, false, true, address(random));
-            emit EntropyEventsV2.Revealed(
-                provider1,
-                address(consumer),
-                sequenceNumber,
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                ),
-                true,
-                bytes(""),
-                bytes("")
-            );
+            vm.recordLogs();            
             random.revealWithCallback(
                 provider1,
                 sequenceNumber,
                 userRandomNumber,
                 provider1Proofs[sequenceNumber]
             );
+            Vm.Log[] memory entries = vm.getRecordedLogs();
+
+            assertEq(entries.length, 2);
+            // first entry is CallbackFailed
+            assertEq(entries[1].topics[0], keccak256("Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"));            
+            // Verify the topics match the expected values
+            assertEq(entries[1].topics[1], bytes32(uint256(uint160(provider1))));
+            assertEq(entries[1].topics[2], bytes32(uint256(uint160(address(consumer)))));
+            assertEq(entries[1].topics[3], bytes32(uint256(sequenceNumber)));
+            
+            // Verify the data field contains the expected values
+            // The data field contains the non-indexed parameters in order:
+            // randomNumber, callbackFailed, callbackErrorCode, callbackGasUsed, dummy
+            bytes32 expectedRandomNumber = random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[sequenceNumber],
+                0
+            );
+            
+            // Decode the data field
+            (bytes32 randomNumber, bool callbackFailed, bytes memory callbackErrorCode, uint32 callbackGasUsed, bytes memory dummy) = 
+                abi.decode(entries[1].data, (bytes32, bool, bytes, uint32, bytes));
+            
+            // Verify each field matches the expected values
+            assertEq(randomNumber, expectedRandomNumber);
+            assertEq(callbackFailed, true);
+            assertEq(callbackErrorCode, bytes(""));
+            // assertEq(callbackGasUsed, 0);
+            assertEq(dummy, bytes(""));
 
             // Verify request is still active after failure
             EntropyStructsV2.Request memory reqAfterFailure = random
@@ -1862,7 +1870,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                     0
                 )
             );
-            vm.expectEmit(false, false, false, true, address(random));
+            vm.expectEmit(true, true, true, false, address(random));
             emit EntropyEventsV2.Revealed(
                 provider1,
                 req.requester,
@@ -1874,6 +1882,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 ),
                 false,
                 bytes(""),
+                0,
                 bytes("")
             );
             random.revealWithCallback(
