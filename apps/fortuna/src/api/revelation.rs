@@ -125,7 +125,7 @@ pub struct RevelationPathParams {
 #[into_params(parameter_in=Query)]
 pub struct RevelationQueryParams {
     pub encoding: Option<BinaryEncoding>,
-    #[param(value_type = u64)]
+    #[param(value_type = Option<u64>)]
     pub block_number: Option<BlockNumber>,
 }
 
