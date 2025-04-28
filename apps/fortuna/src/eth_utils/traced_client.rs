@@ -1,6 +1,3 @@
-use reqwest::Client;
-use std::time::Duration;
-use url::Url;
 use {
     crate::api::ChainId,
     anyhow::Result,
@@ -14,8 +11,10 @@ use {
         metrics::{counter::Counter, family::Family, histogram::Histogram},
         registry::Registry,
     },
-    std::sync::Arc,
+    reqwest::Client,
+    std::{sync::Arc, time::Duration},
     tokio::{sync::RwLock, time::Instant},
+    url::Url,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, EncodeLabelSet)]
