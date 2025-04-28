@@ -1739,7 +1739,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             .getProviderInfoV2(provider1);
 
         uint128 startingAccruedProviderFee = providerInfo.accruedFeesInWei;
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Requested(
             provider1,
             user1,
