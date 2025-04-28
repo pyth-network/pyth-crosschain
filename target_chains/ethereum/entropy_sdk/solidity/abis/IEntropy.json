@@ -506,6 +506,12 @@
       },
       {
         "indexed": false,
+        "internalType": "uint32",
+        "name": "gasLimit",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
         "internalType": "bytes",
         "name": "extraArgs",
         "type": "bytes"
@@ -710,6 +716,12 @@
         "internalType": "bytes",
         "name": "callbackReturnValue",
         "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "callbackGasUsed",
+        "type": "uint32"
       },
       {
         "indexed": false,

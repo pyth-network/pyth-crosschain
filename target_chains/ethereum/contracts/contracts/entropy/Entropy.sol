@@ -369,6 +369,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             req.requester,
             req.sequenceNumber,
             userRandomNumber,
+            uint32(req.gasLimit10k) * TEN_THOUSAND,
             bytes("")
         );
         return req.sequenceNumber;
@@ -543,15 +544,12 @@ abstract contract Entropy is IEntropy, EntropyState {
             revert EntropyErrors.InvalidRevealCall();
         }
 
-        bytes32 blockHash;
         bytes32 randomNumber;
-        (randomNumber, blockHash) = revealHelper(
+        (randomNumber, ) = revealHelper(
             req,
             userRandomNumber,
             providerRevelation
         );
-
-        address callAddress = req.requester;
 
         // If the request has an explicit gas limit, then run the new callback failure state flow.
         //
@@ -567,7 +565,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             bool success;
             bytes memory ret;
             uint256 startingGas = gasleft();
-            (success, ret) = callAddress.excessivelySafeCall(
+            (success, ret) = req.requester.excessivelySafeCall(
                 // Warning: the provided gas limit below is only an *upper bound* on the gas provided to the call.
                 // At most 63/64ths of the current context's gas will be provided to a call, which may be less
                 // than the indicated gas limit. (See CALL opcode docs here https://www.evm.codes/?fork=cancun#f1)
@@ -582,6 +580,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 )
             );
+            uint32 gasUsed = SafeCast.toUint32(startingGas - gasleft());
             // Reset status to not started here in case the transaction reverts.
             req.callbackStatus = EntropyStatusConstants.CALLBACK_NOT_STARTED;
 
@@ -599,6 +598,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber,
                     false,
                     ret,
+                    SafeCast.toUint32(gasUsed),
                     bytes("")
                 );
                 clearRequest(provider, sequenceNumber);
@@ -628,6 +628,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber,
                     true,
                     ret,
+                    SafeCast.toUint32(gasUsed),
                     bytes("")
                 );
                 req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
@@ -655,13 +656,15 @@ abstract contract Entropy is IEntropy, EntropyState {
                 randomNumber,
                 false,
                 bytes(""),
+                0, // gas usage not tracked in the old no-gas-limit flow.
                 bytes("")
             );
 
             clearRequest(provider, sequenceNumber);
 
-            // Check if the callAddress is a contract account.
+            // Check if the requester is a contract account.
             uint len;
+            address callAddress = req.requester;
             assembly {
                 len := extcodesize(callAddress)
             }

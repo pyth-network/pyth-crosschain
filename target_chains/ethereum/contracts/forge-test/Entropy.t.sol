@@ -825,6 +825,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             user1,
             providerInfo.sequenceNumber,
             userRandomNumber,
+            0,
             bytes("")
         );
         vm.roll(1234);
@@ -877,7 +878,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(true, true, true, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -889,6 +890,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             bytes(""),
+            0,
             bytes("")
         );
         vm.prank(user1);
@@ -944,7 +946,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(true, true, true, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -956,6 +958,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             bytes(""),
+            0,
             bytes("")
         );
         random.revealWithCallback(
@@ -1018,6 +1021,15 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         uint fee = random.getFee(provider1);
         EntropyConsumer consumer = new EntropyConsumer(address(random), false);
         vm.deal(user1, fee);
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Requested(
+            provider1,
+            user1,
+            0,
+            userRandomNumber,
+            100000,
+            bytes("")
+        );
         vm.prank(user1);
         uint64 assignedSequenceNumber = consumer.requestEntropy{value: fee}(
             userRandomNumber
@@ -1041,7 +1053,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(true, true, true, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -1053,6 +1065,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             bytes(""),
+            0,
             bytes("")
         );
         random.revealWithCallback(
@@ -1113,7 +1126,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             revertReason
         );
-        vm.expectEmit(true, true, true, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1125,6 +1138,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             true,
             revertReason,
+            0,
             bytes("")
         );
         random.revealWithCallback(
@@ -1178,7 +1192,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(true, true, true, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             reqAfterFailure.requester,
@@ -1190,6 +1204,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             bytes(""),
+            0,
             bytes("")
         );
         random.revealWithCallback(
@@ -1258,7 +1273,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             // out-of-gas reverts have an empty bytes array as the return value.
             ""
         );
-        vm.expectEmit(true, true, true, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1270,7 +1285,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             true,
             "",
-            ""
+            0,
+            bytes("")
         );
         random.revealWithCallback(
             provider1,
@@ -1322,7 +1338,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(true, true, true, true, address(random));
+        vm.expectEmit(true, true, true, false, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1334,7 +1350,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             false,
             "",
-            ""
+            0,
+            bytes("")
         );
         random.revealWithCallback(
             provider1,
@@ -1718,9 +1735,19 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             gasLimit
         );
 
-        uint128 startingAccruedProviderFee = random
-            .getProviderInfoV2(provider1)
-            .accruedFeesInWei;
+        EntropyStructsV2.ProviderInfo memory providerInfo = random
+            .getProviderInfoV2(provider1);
+
+        uint128 startingAccruedProviderFee = providerInfo.accruedFeesInWei;
+        vm.expectEmit(true, true, true, true, address(random));
+        emit EntropyEventsV2.Requested(
+            provider1,
+            user1,
+            providerInfo.sequenceNumber,
+            userRandomNumber,
+            uint32(expectedGasLimit10k) * 10000,
+            bytes("")
+        );
         vm.prank(user1);
         uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{
             value: fee
@@ -1787,41 +1814,69 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         );
 
         if (!expectSuccess) {
-            vm.expectEmit(true, true, true, true, address(random));
-            emit CallbackFailed(
-                provider1,
-                address(consumer),
-                sequenceNumber,
-                userRandomNumber,
-                provider1Proofs[sequenceNumber],
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                ),
-                // out-of-gas reverts have an empty bytes array as the return value.
-                ""
-            );
-            vm.expectEmit(true, true, true, true, address(random));
-            emit EntropyEventsV2.Revealed(
-                provider1,
-                address(consumer),
-                sequenceNumber,
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                ),
-                true,
-                bytes(""),
-                bytes("")
-            );
+            vm.recordLogs();
             random.revealWithCallback(
                 provider1,
                 sequenceNumber,
                 userRandomNumber,
                 provider1Proofs[sequenceNumber]
             );
+            Vm.Log[] memory entries = vm.getRecordedLogs();
+
+            assertEq(entries.length, 2);
+            // first entry is CallbackFailed which we aren't going to check.
+            // Unfortunately event.selector was added in Solidity 0.8.15 and we're on 0.8.4 so we have to copy this spec here.
+            assertEq(
+                entries[1].topics[0],
+                keccak256(
+                    "Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"
+                )
+            );
+            // Verify the topics match the expected values
+            assertEq(
+                entries[1].topics[1],
+                bytes32(uint256(uint160(provider1)))
+            );
+            assertEq(
+                entries[1].topics[2],
+                bytes32(uint256(uint160(address(consumer))))
+            );
+            assertEq(entries[1].topics[3], bytes32(uint256(sequenceNumber)));
+
+            // Verify the data field contains the expected values (per event ABI)
+            (
+                bytes32 randomNumber,
+                bool callbackFailed,
+                bytes memory callbackErrorCode,
+                uint32 callbackGasUsed,
+                bytes memory extraArgs
+            ) = abi.decode(
+                    entries[1].data,
+                    (bytes32, bool, bytes, uint32, bytes)
+                );
+
+            assertEq(
+                randomNumber,
+                random.combineRandomValues(
+                    userRandomNumber,
+                    provider1Proofs[sequenceNumber],
+                    0
+                )
+            );
+            assertEq(callbackFailed, true);
+            assertEq(callbackErrorCode, bytes(""));
+
+            // callback gas usage is approximate and only triggered when the provider has set a gas limit.
+            // Note: this condition is somewhat janky, but we hit the stack limit so can't put in any more local variables :(
+            assertTrue(
+                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+                    ((callbackGasUsage * 90) / 100 < callbackGasUsed)
+            );
+            assertTrue(
+                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+                    (callbackGasUsed < (callbackGasUsage * 110) / 100)
+            );
+            assertEq(extraArgs, bytes(""));
 
             // Verify request is still active after failure
             EntropyStructsV2.Request memory reqAfterFailure = random
@@ -1832,37 +1887,73 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 EntropyStatusConstants.CALLBACK_FAILED
             );
         } else {
-            vm.expectEmit(true, true, true, true, address(random));
-            emit RevealedWithCallback(
-                EntropyStructConverter.toV1Request(req),
-                userRandomNumber,
-                provider1Proofs[sequenceNumber],
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                )
-            );
-            vm.expectEmit(true, true, true, true, address(random));
-            emit EntropyEventsV2.Revealed(
-                provider1,
-                req.requester,
-                req.sequenceNumber,
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                ),
-                false,
-                bytes(""),
-                bytes("")
-            );
+            vm.recordLogs();
             random.revealWithCallback(
                 provider1,
                 sequenceNumber,
                 userRandomNumber,
                 provider1Proofs[sequenceNumber]
             );
+
+            Vm.Log[] memory entries = vm.getRecordedLogs();
+
+            assertEq(entries.length, 2);
+            // first entry is CallbackFailed which we aren't going to check.
+            // Unfortunately event.selector was added in Solidity 0.8.15 and we're on 0.8.4 so we have to copy this spec here.
+            assertEq(
+                entries[1].topics[0],
+                keccak256(
+                    "Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"
+                )
+            );
+
+            // Verify the topics match the expected values
+            assertEq(
+                entries[1].topics[1],
+                bytes32(uint256(uint160(provider1)))
+            );
+            assertEq(
+                entries[1].topics[2],
+                bytes32(uint256(uint160(req.requester)))
+            );
+            assertEq(
+                entries[1].topics[3],
+                bytes32(uint256(req.sequenceNumber))
+            );
+
+            // Verify the data field contains the expected values (per event ABI)
+            (
+                bytes32 randomNumber,
+                bool callbackFailed,
+                bytes memory callbackErrorCode,
+                uint32 callbackGasUsed,
+                bytes memory extraArgs
+            ) = abi.decode(
+                    entries[1].data,
+                    (bytes32, bool, bytes, uint32, bytes)
+                );
+
+            assertEq(
+                randomNumber,
+                random.combineRandomValues(
+                    userRandomNumber,
+                    provider1Proofs[sequenceNumber],
+                    0
+                )
+            );
+            assertEq(callbackFailed, false);
+            assertEq(callbackErrorCode, bytes(""));
+            // callback gas usage is approximate and only triggered when the provider has set a gas limit
+            // Note: this condition is somewhat janky, but we hit the stack limit so can't put in any more local variables :(
+            assertTrue(
+                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+                    ((callbackGasUsage * 90) / 100 < callbackGasUsed)
+            );
+            assertTrue(
+                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+                    (callbackGasUsed < (callbackGasUsage * 110) / 100)
+            );
+            assertEq(extraArgs, bytes(""));
 
             // Verify request is cleared after successful callback
             EntropyStructsV2.Request memory reqAfterSuccess = random
