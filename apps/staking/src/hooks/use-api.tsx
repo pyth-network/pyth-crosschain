@@ -1,9 +1,9 @@
 "use client";
 
 import { HermesClient } from "@pythnetwork/hermes-client";
+import type { PythStakingWallet } from "@pythnetwork/staking-sdk";
 import { PythnetClient, PythStakingClient } from "@pythnetwork/staking-sdk";
 import { useLocalStorageValue } from "@react-hookz/web";
-import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";
 import type { ComponentProps } from "react";
@@ -36,18 +36,18 @@ const State = {
     type: StateType.WalletConnecting as const,
   }),
 
-  [StateType.NotLoaded]: (wallet: AnchorWallet) => ({
+  [StateType.NotLoaded]: (wallet: PythStakingWallet) => ({
     type: StateType.NotLoaded as const,
     wallet,
   }),
 
-  [StateType.LoadingStakeAccounts]: (wallet: AnchorWallet) => ({
+  [StateType.LoadingStakeAccounts]: (wallet: PythStakingWallet) => ({
     type: StateType.LoadingStakeAccounts as const,
     wallet,
   }),
 
   [StateType.LoadedNoStakeAccount]: (
-    wallet: AnchorWallet,
+    wallet: PythStakingWallet,
     isMainnet: boolean,
     client: PythStakingClient,
     pythnetClient: PythnetClient,
@@ -68,7 +68,7 @@ const State = {
   }),
 
   [StateType.Loaded]: (
-    wallet: AnchorWallet,
+    wallet: PythStakingWallet,
     isMainnet: boolean,
     client: PythStakingClient,
     pythnetClient: PythnetClient,
@@ -130,7 +130,7 @@ const State = {
   },
 
   [StateType.ErrorLoadingStakeAccounts]: (
-    wallet: AnchorWallet,
+    wallet: PythStakingWallet,
     error: LoadStakeAccountsError,
     reset: () => void,
   ) => ({
