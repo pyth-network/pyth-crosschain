@@ -25,6 +25,7 @@ use {
     },
     tracing::{self, Instrument},
 };
+use crate::api::History;
 
 pub(crate) mod block;
 pub(crate) mod commitment;
@@ -58,6 +59,7 @@ pub async fn run_keeper_threads(
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
+    history: Arc<RwLock<History>>,
     rpc_metrics: Arc<RpcMetrics>,
 ) {
     tracing::info!("starting keeper");

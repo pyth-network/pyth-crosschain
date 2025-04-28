@@ -2,7 +2,7 @@ use axum::extract::{Path, Query, State};
 use axum::Json;
 use ethers::types::TxHash;
 use utoipa::IntoParams;
-use crate::api::{BinaryEncoding, ChainId, GetRandomValueResponse, RestError, RevelationPathParams, RevelationQueryParams};
+use crate::api::{BinaryEncoding, ChainId, GetRandomValueResponse, RequestJournal, RestError, RevelationPathParams, RevelationQueryParams};
 use crate::chain::reader::BlockNumber;
 
 
@@ -40,17 +40,25 @@ pub enum ExplorerQueryParamsMode {
 pub async fn get_requests(
     State(state): State<crate::api::ApiState>,
     Query(query_params): Query<ExplorerQueryParams>,
-) -> anyhow::Result<Json<()>, RestError> {
-    match query_params.mode {
+) -> anyhow::Result<Json<Vec<RequestJournal>>, RestError> {
+    let result = match query_params.mode {
         ExplorerQueryParamsMode::TxHash => {
             let tx_hash = query_params.tx_hash.ok_or(RestError::BadFilterParameters("tx_hash is required when mode=tx-hash".to_string()))?;
-            state.history.read().await.get_request_logs_by_tx_hash(tx_hash);
+            state.history.read().await.get_request_logs_by_tx_hash(tx_hash)
         }
-        ExplorerQueryParamsMode::ChainAndSequence => {}
-        ExplorerQueryParamsMode::ChainAndTimestamp => {}
-        ExplorerQueryParamsMode::Timestamp => {}
+        ExplorerQueryParamsMode::ChainAndSequence => {
+            let chain_id = query_params.chain_id.ok_or(RestError::BadFilterParameters("chain_id is required when mode=chain-and-sequence".to_string()))?;
+            let sequence_id = query_params.sequence_id.ok_or(RestError::BadFilterParameters("sequence_id is required when mode=chain-and-sequence".to_string()))?;
+            state.history.read().await.get_request_logs(&(chain_id, sequence_id)).into_iter().collect()
+        }
+        ExplorerQueryParamsMode::ChainAndTimestamp => {
+            vec![]
+        }
+        ExplorerQueryParamsMode::Timestamp => {
+            vec![]
+        }
     };
     Ok(
-        Json(()),
+        Json(result),
     )
 }

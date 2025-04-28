@@ -1,6 +1,8 @@
 use std::collections::{BTreeMap, VecDeque};
 use chrono::DateTime;
 use ethers::types::TxHash;
+use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use {
     crate::{
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},
@@ -47,7 +49,7 @@ pub struct ApiMetrics {
 
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize)]
 enum JournalLog {
     Observed {
         tx_hash: TxHash
@@ -74,13 +76,13 @@ impl JournalLog {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize)]
 struct TimedJournalLog {
     pub timestamp: DateTime<chrono::Utc>,
     pub log:JournalLog,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize, ToSchema)]
 struct RequestJournal {
     pub chain_id: ChainId,
     pub sequence: u64,
@@ -90,7 +92,7 @@ struct RequestJournal {
 type RequestKey = (ChainId, u64);
 
 #[derive(Default)]
-struct History {
+pub struct History {
     pub by_hash: HashMap<TxHash, Vec<RequestKey>>,
     pub by_chain_and_time: BTreeMap<(ChainId, DateTime<chrono::Utc>), RequestKey>,
     pub by_time: BTreeMap<DateTime<chrono::Utc>, RequestKey>,
@@ -133,16 +135,16 @@ impl History {
         }
     }
 
-    pub fn get_request_logs(&self, request_key: &RequestKey) -> Option<&RequestJournal> {
-        self.by_request_key.get(request_key)
+    pub fn get_request_logs(&self, request_key: &RequestKey) -> Option<RequestJournal> {
+        self.by_request_key.get(request_key).cloned()
     }
 
-    pub fn get_request_logs_by_tx_hash(&self, tx_hash: TxHash) -> Option<Vec<&RequestJournal>> {
+    pub fn get_request_logs_by_tx_hash(&self, tx_hash: TxHash) -> Vec<RequestJournal> {
         self.by_hash.get(&tx_hash).map(|request_keys| {
             request_keys.iter()
-                .map(|request_key| self.by_request_key.get(request_key).unwrap())
+                .map(|request_key| self.by_request_key.get(request_key).unwrap().clone())
                 .collect()
-        })
+        }).unwrap_or_default()
     }
 
     pub fn get_latest_requests(&self, chain_id: Option<&ChainId>, limit: u64,
@@ -190,6 +192,7 @@ impl ApiState {
     pub async fn new(
         chains: HashMap<ChainId, BlockchainState>,
         metrics_registry: Arc<RwLock<Registry>>,
+        history: Arc<RwLock<History>>
     ) -> ApiState {
         let metrics = ApiMetrics {
             http_requests: Family::default(),
@@ -205,7 +208,7 @@ impl ApiState {
         ApiState {
             chains: Arc::new(chains),
             metrics: Arc::new(metrics),
-            history: Arc::new(RwLock::new(History::new())),
+            history,
             metrics_registry,
         }
     }

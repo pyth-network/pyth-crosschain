@@ -35,6 +35,7 @@ use {
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
+use crate::api::History;
 
 /// Track metrics in this interval
 const TRACK_INTERVAL: Duration = Duration::from_secs(10);
@@ -43,6 +44,7 @@ pub async fn run_api(
     socket_addr: SocketAddr,
     chains: HashMap<String, api::BlockchainState>,
     metrics_registry: Arc<RwLock<Registry>>,
+    history: Arc<RwLock<History>>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     #[derive(OpenApi)]
@@ -64,7 +66,7 @@ pub async fn run_api(
     )]
     struct ApiDoc;
 
-    let api_state = api::ApiState::new(chains, metrics_registry).await;
+    let api_state = api::ApiState::new(chains, metrics_registry, history).await;
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -98,6 +100,7 @@ pub async fn run_keeper(
     config: Config,
     private_key: String,
     metrics_registry: Arc<RwLock<Registry>>,
+    history: Arc<RwLock<History>>,
     rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<()> {
     let mut handles = Vec::new();
@@ -120,12 +123,14 @@ pub async fn run_keeper(
             chain_eth_config,
             chain_config.clone(),
             keeper_metrics.clone(),
+            history.clone(),
             rpc_metrics.clone(),
         )));
     }
 
     Ok(())
 }
+
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
@@ -187,12 +192,14 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
+    let history = Arc::new(RwLock::new(History::default()));
     if let Some(keeper_private_key) = config.keeper.private_key.load()? {
         spawn(run_keeper(
             chains.clone(),
             config.clone(),
             keeper_private_key,
             metrics_registry.clone(),
+            history.clone(),
             rpc_metrics.clone(),
         ));
     } else {
@@ -206,7 +213,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         rpc_metrics.clone(),
     ));
 
-    run_api(opts.addr, chains, metrics_registry, rx_exit).await?;
+    run_api(opts.addr, chains, metrics_registry, history, rx_exit).await?;
 
     Ok(())
 }
