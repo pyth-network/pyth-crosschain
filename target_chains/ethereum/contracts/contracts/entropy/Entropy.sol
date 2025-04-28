@@ -598,7 +598,7 @@ abstract contract Entropy is IEntropy, EntropyState {
                     req.sequenceNumber,
                     randomNumber,
                     false,
-                    bytes(""),
+                    ret,
                     bytes("")
                 );
                 clearRequest(provider, sequenceNumber);
