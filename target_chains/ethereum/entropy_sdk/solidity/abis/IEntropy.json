@@ -1359,6 +1359,62 @@
   {
     "inputs": [
       {
+        "internalType": "uint32",
+        "name": "gasLimit",
+        "type": "uint32"
+      }
+    ],
+    "name": "requestV2",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint32",
+        "name": "gasLimit",
+        "type": "uint32"
+      }
+    ],
+    "name": "requestV2",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "requestV2",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "provider",
         "type": "address"

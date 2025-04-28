@@ -37,6 +37,7 @@ contract EntropyInternalStructs {
         // proposedAdmin is the new admin's account address proposed by either the owner or the current admin.
         // If there is no pending transfer request, this value will hold `address(0)`.
         address proposedAdmin;
+        bytes32 seed;
     }
 }
 

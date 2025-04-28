@@ -1680,7 +1680,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         vm.expectRevert(EntropyErrors.MaxGasLimitExceeded.selector);
         random.getFeeForGas(provider1, exceedsGasLimit);
         vm.expectRevert(EntropyErrors.MaxGasLimitExceeded.selector);
-        random.requestWithCallbackAndGasLimit{value: 10000000000000}(
+        random.requestV2{value: 10000000000000}(
             provider1,
             bytes32(uint(42)),
             exceedsGasLimit
@@ -1712,7 +1712,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         vm.deal(user1, fee);
         vm.prank(user1);
         vm.expectRevert(EntropyErrors.InsufficientFee.selector);
-        random.requestWithCallbackAndGasLimit{value: fee - 1}(
+        random.requestV2{value: fee - 1}(
             provider1,
             userRandomNumber,
             gasLimit
@@ -1722,9 +1722,11 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             .getProviderInfoV2(provider1)
             .accruedFeesInWei;
         vm.prank(user1);
-        uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{
-            value: fee
-        }(provider1, userRandomNumber, gasLimit);
+        uint64 sequenceNumber = random.requestV2{value: fee}(
+            provider1,
+            userRandomNumber,
+            gasLimit
+        );
 
         assertEq(
             random.getProviderInfoV2(provider1).accruedFeesInWei -
@@ -1890,9 +1892,7 @@ contract EntropyConsumer is IEntropyConsumer {
         bytes32 randomNumber
     ) public payable returns (uint64 sequenceNumber) {
         address _provider = IEntropy(entropy).getDefaultProvider();
-        sequenceNumber = IEntropy(entropy).requestWithCallback{
-            value: msg.value
-        }(_provider, randomNumber);
+        sequenceNumber = IEntropy(entropy).requestV2{value: msg.value}(_provider, randomNumber, 0);
     }
 
     function requestEntropyWithGasLimit(
@@ -1900,9 +1900,11 @@ contract EntropyConsumer is IEntropyConsumer {
         uint32 gasLimit
     ) public payable returns (uint64 sequenceNumber) {
         address _provider = IEntropy(entropy).getDefaultProvider();
-        sequenceNumber = IEntropy(entropy).requestWithCallbackAndGasLimit{
-            value: msg.value
-        }(_provider, randomNumber, gasLimit);
+        sequenceNumber = IEntropy(entropy).requestV2{value: msg.value}(
+            _provider,
+            randomNumber,
+            gasLimit
+        );
     }
 
     function getEntropy() internal view override returns (address) {

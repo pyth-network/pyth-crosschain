@@ -29,6 +29,40 @@ interface IEntropy is EntropyEvents, EntropyEventsV2 {
     // balance of fees in the contract).
     function withdrawAsFeeManager(address provider, uint128 amount) external;
 
+    function requestV2()
+        external
+        payable
+        returns (uint64 assignedSequenceNumber);
+
+    function requestV2(
+        uint32 gasLimit
+    ) external payable returns (uint64 assignedSequenceNumber);
+
+    function requestV2(
+        address provider,
+        uint32 gasLimit
+    ) external payable returns (uint64 assignedSequenceNumber);
+
+    // Request a random number from `provider`, getting a callback with the result.
+    // The caller must specify a provider to fulfill the request -- `getDefaultProvider()` is a sane default --
+    // and a `userRandomNumber` to combine into the result. The method returns a sequence number which callers
+    // should save to correlate the request with the callback.
+    //
+    // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
+    // The `entropyCallback` method on that interface will receive a callback with the returned sequence number and
+    // the generated random number. `entropyCallback` will be run with the `gasLimit` provided to this function.
+    // The `gasLimit` will be rounded up to a multiple of 10k (e.g., 19000 -> 20000), and furthermore is lower bounded
+    // by the provider's configured default limit.
+    //
+    // This method will revert unless the caller provides a sufficient fee (at least `getFeeForGas(provider, gasLimit)`) as msg.value.
+    // Note that provider fees can change over time. Thus, callers of this method should explictly compute `getFeeForGas(provider, gasLimit)`
+    // prior to each invocation (as opposed to  hardcoding a value). Further note that excess value is *not* refunded to the caller.
+    function requestV2(
+        address provider,
+        bytes32 userRandomNumber,
+        uint32 gasLimit
+    ) external payable returns (uint64 assignedSequenceNumber);
+
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
     // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
@@ -58,26 +92,6 @@ interface IEntropy is EntropyEvents, EntropyEventsV2 {
     function requestWithCallback(
         address provider,
         bytes32 userRandomNumber
-    ) external payable returns (uint64 assignedSequenceNumber);
-
-    // Request a random number from `provider`, getting a callback with the result.
-    // The caller must specify a provider to fulfill the request -- `getDefaultProvider()` is a sane default --
-    // and a `userRandomNumber` to combine into the result. The method returns a sequence number which callers
-    // should save to correlate the request with the callback.
-    //
-    // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
-    // The `entropyCallback` method on that interface will receive a callback with the returned sequence number and
-    // the generated random number. `entropyCallback` will be run with the `gasLimit` provided to this function.
-    // The `gasLimit` will be rounded up to a multiple of 10k (e.g., 19000 -> 20000), and furthermore is lower bounded
-    // by the provider's configured default limit.
-    //
-    // This method will revert unless the caller provides a sufficient fee (at least `getFeeForGas(provider, gasLimit)`) as msg.value.
-    // Note that provider fees can change over time. Thus, callers of this method should explictly compute `getFeeForGas(provider, gasLimit)`
-    // prior to each invocation (as opposed to  hardcoding a value). Further note that excess value is *not* refunded to the caller.
-    function requestWithCallbackAndGasLimit(
-        address provider,
-        bytes32 userRandomNumber,
-        uint32 gasLimit
     ) external payable returns (uint64 assignedSequenceNumber);
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
