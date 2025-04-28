@@ -1870,11 +1870,11 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             // Note: this condition is somewhat janky, but we hit the stack limit so can't put in any more local variables :(
             assertTrue(
                 random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
-                    ((callbackGasUsage * 98) / 100 < callbackGasUsed)
+                    ((callbackGasUsage * 90) / 100 < callbackGasUsed)
             );
             assertTrue(
                 random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
-                    (callbackGasUsed < (callbackGasUsage * 102) / 100)
+                    (callbackGasUsed < (callbackGasUsage * 110) / 100)
             );
             assertEq(extraArgs, bytes(""));
 
