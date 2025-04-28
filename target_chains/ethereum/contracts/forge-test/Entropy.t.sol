@@ -794,7 +794,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         vm.roll(1234);
         vm.deal(user1, fee);
         vm.startPrank(user1);
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit RequestedWithCallback(
             provider1,
             user1,
@@ -819,7 +819,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 isRequestWithCallback: true
             })
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Requested(
             provider1,
             user1,
@@ -866,7 +866,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             assignedSequenceNumber
         );
 
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit RevealedWithCallback(
             EntropyStructConverter.toV1Request(req),
             userRandomNumber,
@@ -877,7 +877,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -933,7 +933,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             assignedSequenceNumber
         );
 
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit RevealedWithCallback(
             EntropyStructConverter.toV1Request(req),
             userRandomNumber,
@@ -944,7 +944,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -1030,7 +1030,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         // Verify the gas limit was set correctly
         assertEq(req.gasLimit10k, 10);
 
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit RevealedWithCallback(
             EntropyStructConverter.toV1Request(req),
             userRandomNumber,
@@ -1041,7 +1041,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             req.requester,
@@ -1099,7 +1099,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             0x08c379a0,
             "Callback failed"
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit CallbackFailed(
             provider1,
             address(consumer),
@@ -1113,7 +1113,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             ),
             revertReason
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1167,7 +1167,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
 
         // If the callback starts succeeding, we can invoke it and it emits the usual RevealedWithCallback event.
         consumer.setReverts(false);
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit RevealedWithCallback(
             EntropyStructConverter.toV1Request(reqAfterFailure),
             userRandomNumber,
@@ -1178,7 +1178,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             reqAfterFailure.requester,
@@ -1243,7 +1243,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
 
         // If called with enough gas, the transaction should succeed, but the callback should fail because
         // it uses too much gas.
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit CallbackFailed(
             provider1,
             address(consumer),
@@ -1258,7 +1258,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             // out-of-gas reverts have an empty bytes array as the return value.
             ""
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1311,7 +1311,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         );
 
         // Calling without a gas limit should succeed
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit RevealedWithCallback(
             EntropyStructConverter.toV1Request(reqAfterFailure),
             userRandomNumber,
@@ -1322,7 +1322,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 0
             )
         );
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.Revealed(
             provider1,
             address(consumer),
@@ -1576,9 +1576,9 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         uint32 newGasLimit = 100000;
 
         vm.prank(provider1);
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit ProviderDefaultGasLimitUpdated(provider1, 0, newGasLimit);
-        vm.expectEmit(false, false, false, true, address(random));
+        vm.expectEmit(true, true, true, true, address(random));
         emit EntropyEventsV2.ProviderDefaultGasLimitUpdated(
             provider1,
             0,
@@ -1787,7 +1787,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         );
 
         if (!expectSuccess) {
-            vm.expectEmit(false, false, false, true, address(random));
+            vm.expectEmit(true, true, true, true, address(random));
             emit CallbackFailed(
                 provider1,
                 address(consumer),
@@ -1802,7 +1802,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 // out-of-gas reverts have an empty bytes array as the return value.
                 ""
             );
-            vm.expectEmit(false, false, false, true, address(random));
+            vm.expectEmit(true, true, true, true, address(random));
             emit EntropyEventsV2.Revealed(
                 provider1,
                 address(consumer),
@@ -1832,7 +1832,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 EntropyStatusConstants.CALLBACK_FAILED
             );
         } else {
-            vm.expectEmit(false, false, false, true, address(random));
+            vm.expectEmit(true, true, true, true, address(random));
             emit RevealedWithCallback(
                 EntropyStructConverter.toV1Request(req),
                 userRandomNumber,
@@ -1843,7 +1843,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                     0
                 )
             );
-            vm.expectEmit(false, false, false, true, address(random));
+            vm.expectEmit(true, true, true, true, address(random));
             emit EntropyEventsV2.Revealed(
                 provider1,
                 req.requester,
