@@ -243,7 +243,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
-        uint128 requiredFee = getFeeForGas(provider, callbackGasLimit);
+        uint128 requiredFee = getFeeV2(provider, callbackGasLimit);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
         uint128 providerFee = getProviderFee(provider, callbackGasLimit);
         providerInfo.accruedFeesInWei += providerFee;
@@ -301,11 +301,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         override
         returns (uint64 assignedSequenceNumber)
     {
-        assignedSequenceNumber = requestV2(
-            getDefaultProvider(),
-            random(),
-            0
-        );
+        assignedSequenceNumber = requestV2(getDefaultProvider(), random(), 0);
     }
 
     function requestV2(
@@ -322,11 +318,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         uint32 gasLimit
     ) external payable override returns (uint64 assignedSequenceNumber) {
-        assignedSequenceNumber = requestV2(
-            provider,
-            random(),
-            gasLimit
-        );
+        assignedSequenceNumber = requestV2(provider, random(), gasLimit);
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -751,10 +743,20 @@ abstract contract Entropy is IEntropy, EntropyState {
     function getFee(
         address provider
     ) public view override returns (uint128 feeAmount) {
-        return getFeeForGas(provider, 0);
+        return getFeeV2(provider, 0);
     }
 
-    function getFeeForGas(
+    function getFeeV2() external view override returns (uint128 feeAmount) {
+        return getFeeV2(getDefaultProvider(), 0);
+    }
+
+    function getFeeV2(
+        uint32 gasLimit
+    ) external view override returns (uint128 feeAmount) {
+        return getFeeV2(getDefaultProvider(), gasLimit);
+    }
+
+    function getFeeV2(
         address provider,
         uint32 gasLimit
     ) public view override returns (uint128 feeAmount) {

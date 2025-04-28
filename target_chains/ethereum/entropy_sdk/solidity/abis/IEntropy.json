@@ -979,7 +979,39 @@
         "type": "uint32"
       }
     ],
-    "name": "getFeeForGas",
+    "name": "getFeeV2",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "feeAmount",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getFeeV2",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "feeAmount",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "gasLimit",
+        "type": "uint32"
+      }
+    ],
+    "name": "getFeeV2",
     "outputs": [
       {
         "internalType": "uint128",
@@ -1423,9 +1455,14 @@
         "internalType": "bytes32",
         "name": "userRandomNumber",
         "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "gasLimit",
+        "type": "uint32"
       }
     ],
-    "name": "requestWithCallback",
+    "name": "requestV2",
     "outputs": [
       {
         "internalType": "uint64",
@@ -1447,14 +1484,9 @@
         "internalType": "bytes32",
         "name": "userRandomNumber",
         "type": "bytes32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "gasLimit",
-        "type": "uint32"
       }
     ],
-    "name": "requestWithCallbackAndGasLimit",
+    "name": "requestWithCallback",
     "outputs": [
       {
         "internalType": "uint64",
