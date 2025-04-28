@@ -12,10 +12,11 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./utils/EntropyTestUtils.t.sol";
 import "../contracts/entropy/EntropyUpgradable.sol";
 import "@pythnetwork/entropy-sdk-solidity/EntropyStatusConstants.sol";
+import "@pythnetwork/entropy-sdk-solidity/EntropyEventsV2.sol";
 
 // TODO
 // - fuzz test?
-contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
+contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
     ERC1967Proxy public proxy;
     EntropyUpgradable public random;
 
@@ -742,7 +743,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         random.withdraw(providerOneBalance);
     }
 
-    function testgetProviderInfoV2() public {
+    function testGetProviderInfoV2() public {
         EntropyStructsV2.ProviderInfo memory providerInfo1 = random
             .getProviderInfoV2(provider1);
         // These two fields aren't used by the Entropy contract itself -- they're just convenient info to store
@@ -818,6 +819,14 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 isRequestWithCallback: true
             })
         );
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Requested(
+            provider1,
+            user1,
+            providerInfo.sequenceNumber,
+            userRandomNumber,
+            bytes("")
+        );
         vm.roll(1234);
         uint64 assignedSequenceNumber = random.requestWithCallback{value: fee}(
             provider1,
@@ -867,6 +876,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 provider1Proofs[assignedSequenceNumber],
                 0
             )
+        );
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Revealed(
+            provider1,
+            req.requester,
+            req.sequenceNumber,
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            ),
+            false,
+            bytes(""),
+            bytes("")
         );
         vm.prank(user1);
         random.revealWithCallback(
@@ -920,6 +943,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 provider1Proofs[assignedSequenceNumber],
                 0
             )
+        );
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Revealed(
+            provider1,
+            req.requester,
+            req.sequenceNumber,
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            ),
+            false,
+            bytes(""),
+            bytes("")
         );
         random.revealWithCallback(
             provider1,
@@ -1004,6 +1041,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 0
             )
         );
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Revealed(
+            provider1,
+            req.requester,
+            req.sequenceNumber,
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            ),
+            false,
+            bytes(""),
+            bytes("")
+        );
         random.revealWithCallback(
             provider1,
             assignedSequenceNumber,
@@ -1062,6 +1113,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             ),
             revertReason
         );
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Revealed(
+            provider1,
+            address(consumer),
+            assignedSequenceNumber,
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            ),
+            true,
+            revertReason,
+            bytes("")
+        );
         random.revealWithCallback(
             provider1,
             assignedSequenceNumber,
@@ -1112,6 +1177,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 provider1Proofs[assignedSequenceNumber],
                 0
             )
+        );
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Revealed(
+            provider1,
+            reqAfterFailure.requester,
+            reqAfterFailure.sequenceNumber,
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            ),
+            false,
+            bytes(""),
+            bytes("")
         );
         random.revealWithCallback(
             provider1,
@@ -1179,6 +1258,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
             // out-of-gas reverts have an empty bytes array as the return value.
             ""
         );
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Revealed(
+            provider1,
+            address(consumer),
+            assignedSequenceNumber,
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            ),
+            true,
+            "",
+            ""
+        );
         random.revealWithCallback(
             provider1,
             assignedSequenceNumber,
@@ -1228,6 +1321,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 provider1Proofs[assignedSequenceNumber],
                 0
             )
+        );
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.Revealed(
+            provider1,
+            address(consumer),
+            assignedSequenceNumber,
+            random.combineRandomValues(
+                userRandomNumber,
+                provider1Proofs[assignedSequenceNumber],
+                0
+            ),
+            false,
+            "",
+            ""
         );
         random.revealWithCallback(
             provider1,
@@ -1471,6 +1578,13 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
         vm.prank(provider1);
         vm.expectEmit(false, false, false, true, address(random));
         emit ProviderDefaultGasLimitUpdated(provider1, 0, newGasLimit);
+        vm.expectEmit(false, false, false, true, address(random));
+        emit EntropyEventsV2.ProviderDefaultGasLimitUpdated(
+            provider1,
+            0,
+            newGasLimit,
+            bytes("")
+        );
         random.setDefaultGasLimit(newGasLimit);
 
         EntropyStructsV2.ProviderInfo memory info = random.getProviderInfoV2(
@@ -1688,6 +1802,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                 // out-of-gas reverts have an empty bytes array as the return value.
                 ""
             );
+            vm.expectEmit(false, false, false, true, address(random));
+            emit EntropyEventsV2.Revealed(
+                provider1,
+                address(consumer),
+                sequenceNumber,
+                random.combineRandomValues(
+                    userRandomNumber,
+                    provider1Proofs[sequenceNumber],
+                    0
+                ),
+                true,
+                bytes(""),
+                bytes("")
+            );
             random.revealWithCallback(
                 provider1,
                 sequenceNumber,
@@ -1714,6 +1842,20 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents {
                     provider1Proofs[sequenceNumber],
                     0
                 )
+            );
+            vm.expectEmit(false, false, false, true, address(random));
+            emit EntropyEventsV2.Revealed(
+                provider1,
+                req.requester,
+                req.sequenceNumber,
+                random.combineRandomValues(
+                    userRandomNumber,
+                    provider1Proofs[sequenceNumber],
+                    0
+                ),
+                false,
+                bytes(""),
+                bytes("")
             );
             random.revealWithCallback(
                 provider1,

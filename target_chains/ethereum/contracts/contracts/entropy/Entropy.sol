@@ -150,7 +150,10 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         provider.sequenceNumber += 1;
 
-        emit Registered(EntropyStructConverter.toV1ProviderInfo(provider));
+        emit EntropyEvents.Registered(
+            EntropyStructConverter.toV1ProviderInfo(provider)
+        );
+        emit EntropyEventsV2.Registered(msg.sender, bytes(""));
     }
 
     // Withdraw a portion of the accumulated fees for the provider msg.sender.
@@ -172,7 +175,13 @@ abstract contract Entropy is IEntropy, EntropyState {
         (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "withdrawal to msg.sender failed");
 
-        emit Withdrawal(msg.sender, msg.sender, amount);
+        emit EntropyEvents.Withdrawal(msg.sender, msg.sender, amount);
+        emit EntropyEventsV2.Withdrawal(
+            msg.sender,
+            msg.sender,
+            amount,
+            bytes("")
+        );
     }
 
     function withdrawAsFeeManager(
@@ -202,7 +211,13 @@ abstract contract Entropy is IEntropy, EntropyState {
         (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "withdrawal to msg.sender failed");
 
-        emit Withdrawal(provider, msg.sender, amount);
+        emit EntropyEvents.Withdrawal(provider, msg.sender, amount);
+        emit EntropyEventsV2.Withdrawal(
+            provider,
+            msg.sender,
+            amount,
+            bytes("")
+        );
     }
 
     // requestHelper allocates and returns a new request for the given provider.
@@ -348,6 +363,13 @@ abstract contract Entropy is IEntropy, EntropyState {
             req.sequenceNumber,
             userRandomNumber,
             EntropyStructConverter.toV1Request(req)
+        );
+        emit EntropyEventsV2.Requested(
+            provider,
+            req.requester,
+            req.sequenceNumber,
+            userRandomNumber,
+            bytes("")
         );
         return req.sequenceNumber;
     }
@@ -570,6 +592,15 @@ abstract contract Entropy is IEntropy, EntropyState {
                     providerRevelation,
                     randomNumber
                 );
+                emit EntropyEventsV2.Revealed(
+                    provider,
+                    req.requester,
+                    req.sequenceNumber,
+                    randomNumber,
+                    false,
+                    ret,
+                    bytes("")
+                );
                 clearRequest(provider, sequenceNumber);
             } else if (
                 ret.length > 0 ||
@@ -590,6 +621,15 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber,
                     ret
                 );
+                emit EntropyEventsV2.Revealed(
+                    provider,
+                    req.requester,
+                    sequenceNumber,
+                    randomNumber,
+                    true,
+                    ret,
+                    bytes("")
+                );
                 req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
             } else {
                 // Callback reverted by (potentially) running out of gas, but the calling context did not have enough gas
@@ -607,6 +647,15 @@ abstract contract Entropy is IEntropy, EntropyState {
                 userRandomNumber,
                 providerRevelation,
                 randomNumber
+            );
+            emit EntropyEventsV2.Revealed(
+                provider,
+                req.requester,
+                req.sequenceNumber,
+                randomNumber,
+                false,
+                bytes(""),
+                bytes("")
             );
 
             clearRequest(provider, sequenceNumber);
@@ -732,6 +781,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         uint128 oldFeeInWei = provider.feeInWei;
         provider.feeInWei = newFeeInWei;
         emit ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei);
+        emit EntropyEventsV2.ProviderFeeUpdated(
+            msg.sender,
+            oldFeeInWei,
+            newFeeInWei,
+            bytes("")
+        );
     }
 
     function setProviderFeeAsFeeManager(
@@ -754,6 +809,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.feeInWei = newFeeInWei;
 
         emit ProviderFeeUpdated(provider, oldFeeInWei, newFeeInWei);
+        emit EntropyEventsV2.ProviderFeeUpdated(
+            provider,
+            oldFeeInWei,
+            newFeeInWei,
+            bytes("")
+        );
     }
 
     // Set provider uri. It will revert if provider is not registered.
@@ -767,6 +828,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes memory oldUri = provider.uri;
         provider.uri = newUri;
         emit ProviderUriUpdated(msg.sender, oldUri, newUri);
+        emit EntropyEventsV2.ProviderUriUpdated(
+            msg.sender,
+            oldUri,
+            newUri,
+            bytes("")
+        );
     }
 
     function setFeeManager(address manager) external override {
@@ -780,6 +847,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         address oldFeeManager = provider.feeManager;
         provider.feeManager = manager;
         emit ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager);
+        emit EntropyEventsV2.ProviderFeeManagerUpdated(
+            msg.sender,
+            oldFeeManager,
+            manager,
+            bytes("")
+        );
     }
 
     // Set the maximum number of hashes to record in a request. This should be set according to the maximum gas limit
@@ -799,6 +872,12 @@ abstract contract Entropy is IEntropy, EntropyState {
             oldMaxNumHashes,
             maxNumHashes
         );
+        emit EntropyEventsV2.ProviderMaxNumHashesAdvanced(
+            msg.sender,
+            oldMaxNumHashes,
+            maxNumHashes,
+            bytes("")
+        );
     }
 
     // Set the default gas limit for a request.
@@ -817,6 +896,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         uint32 oldGasLimit = provider.defaultGasLimit;
         provider.defaultGasLimit = gasLimit;
         emit ProviderDefaultGasLimitUpdated(msg.sender, oldGasLimit, gasLimit);
+        emit EntropyEventsV2.ProviderDefaultGasLimitUpdated(
+            msg.sender,
+            oldGasLimit,
+            gasLimit,
+            bytes("")
+        );
     }
 
     function constructUserCommitment(
