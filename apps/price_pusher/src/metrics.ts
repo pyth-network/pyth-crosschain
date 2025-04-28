@@ -1,6 +1,5 @@
 import { Registry, Counter, Gauge } from "prom-client";
 import express from "express";
-import { PriceInfo } from "./interface";
 import { Logger } from "pino";
 import { UpdateCondition } from "./price-config";
 
@@ -15,7 +14,6 @@ export class PricePusherMetrics {
   public priceUpdateAttempts: Counter<string>;
   public priceFeedsTotal: Gauge<string>;
   public sourceTimestamp: Gauge<string>;
-  public targetTimestamp: Gauge<string>;
   public configuredTimeDifference: Gauge<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
@@ -56,13 +54,6 @@ export class PricePusherMetrics {
       registers: [this.registry],
     });
 
-    this.targetTimestamp = new Gauge({
-      name: "pyth_target_timestamp",
-      help: "Latest target chain price publish timestamp",
-      labelNames: ["price_id", "alias"],
-      registers: [this.registry],
-    });
-
     this.configuredTimeDifference = new Gauge({
       name: "pyth_configured_time_difference",
       help: "Configured time difference threshold between source and target chains",
@@ -90,18 +81,6 @@ export class PricePusherMetrics {
     this.server.listen(port, () => {
       this.logger.info(`Metrics server started on port ${port}`);
     });
-  }
-
-  // Update the last published time for a price feed
-  public updateLastPublishedTime(
-    priceId: string,
-    alias: string,
-    priceInfo: PriceInfo,
-  ): void {
-    this.lastPublishedTime.set(
-      { price_id: priceId, alias },
-      priceInfo.publishTime,
-    );
   }
 
   // Record a successful price update
@@ -169,7 +148,7 @@ export class PricePusherMetrics {
       { price_id: priceId, alias },
       sourceLatestPricePublishTime,
     );
-    this.targetTimestamp.set(
+    this.lastPublishedTime.set(
       { price_id: priceId, alias },
       targetLatestPricePublishTime,
     );
