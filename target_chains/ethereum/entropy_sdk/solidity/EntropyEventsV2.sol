@@ -56,7 +56,7 @@ interface EntropyEventsV2 {
         bytes32 randomNumber,
         bool callbackFailed,
         bytes callbackReturnValue,
-        uint32 callbackGasUsed,        
+        uint32 callbackGasUsed,
         bytes extraArgs
     );
 

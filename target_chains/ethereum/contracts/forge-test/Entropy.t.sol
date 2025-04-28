@@ -1735,7 +1735,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             gasLimit
         );
 
-        EntropyStructsV2.ProviderInfo memory providerInfo = random.getProviderInfoV2(provider1);
+        EntropyStructsV2.ProviderInfo memory providerInfo = random
+            .getProviderInfoV2(provider1);
 
         uint128 startingAccruedProviderFee = providerInfo.accruedFeesInWei;
         vm.expectEmit(false, false, false, true, address(random));
@@ -1746,7 +1747,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             userRandomNumber,
             uint32(expectedGasLimit10k) * 10000,
             bytes("")
-        );            
+        );
         vm.prank(user1);
         uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{
             value: fee
@@ -1813,7 +1814,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         );
 
         if (!expectSuccess) {
-            vm.recordLogs();            
+            vm.recordLogs();
             random.revealWithCallback(
                 provider1,
                 sequenceNumber,
@@ -1823,28 +1824,59 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             Vm.Log[] memory entries = vm.getRecordedLogs();
 
             assertEq(entries.length, 2);
-            // first entry is CallbackFailed
-            assertEq(entries[1].topics[0], keccak256("Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"));            
+            // first entry is CallbackFailed which we aren't going to check.
+            // Unfortunately event.selector was added in Solidity 0.8.15 and we're on 0.8.4 so we have to copy this spec here.
+            assertEq(
+                entries[1].topics[0],
+                keccak256(
+                    "Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"
+                )
+            );
             // Verify the topics match the expected values
-            assertEq(entries[1].topics[1], bytes32(uint256(uint160(provider1))));
-            assertEq(entries[1].topics[2], bytes32(uint256(uint160(address(consumer)))));
+            assertEq(
+                entries[1].topics[1],
+                bytes32(uint256(uint160(provider1)))
+            );
+            assertEq(
+                entries[1].topics[2],
+                bytes32(uint256(uint160(address(consumer))))
+            );
             assertEq(entries[1].topics[3], bytes32(uint256(sequenceNumber)));
-            
+
             // Verify the data field contains the expected values (per event ABI)
-            (bytes32 randomNumber, bool callbackFailed, bytes memory callbackErrorCode, uint32 callbackGasUsed, bytes memory _dummy) = 
-                abi.decode(entries[1].data, (bytes32, bool, bytes, uint32, bytes));
-            
-            assertEq(randomNumber, random.combineRandomValues(
-                userRandomNumber,
-                provider1Proofs[sequenceNumber],
-                0
-            ));
+            (
+                bytes32 randomNumber,
+                bool callbackFailed,
+                bytes memory callbackErrorCode,
+                uint32 callbackGasUsed,
+                bytes memory extraArgs
+            ) = abi.decode(
+                    entries[1].data,
+                    (bytes32, bool, bytes, uint32, bytes)
+                );
+
+            assertEq(
+                randomNumber,
+                random.combineRandomValues(
+                    userRandomNumber,
+                    provider1Proofs[sequenceNumber],
+                    0
+                )
+            );
             assertEq(callbackFailed, true);
             assertEq(callbackErrorCode, bytes(""));
 
-            // callback gas usage is approximate and only triggered when the provider has set a gas limit
-            assertTrue(random.getProviderInfoV2(provider1).defaultGasLimit == 0 || ((callbackGasUsage * 98) / 100 < callbackGasUsed));
-            assertTrue(random.getProviderInfoV2(provider1).defaultGasLimit == 0 || (callbackGasUsed < (callbackGasUsage * 102) / 100));
+            // callback gas usage is approximate and only triggered when the provider has set a gas limit.
+            // Note: this condition is somewhat janky, but we hit the stack limit so can't put in any more local variables :(
+            assertTrue(
+                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+                    ((callbackGasUsage * 98) / 100 < callbackGasUsed)
+            );
+            assertTrue(
+                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+                    (callbackGasUsed < (callbackGasUsage * 102) / 100)
+            );
+            assertEq(extraArgs, bytes(""));
 
             // Verify request is still active after failure
             EntropyStructsV2.Request memory reqAfterFailure = random
@@ -1866,29 +1898,62 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             Vm.Log[] memory entries = vm.getRecordedLogs();
 
             assertEq(entries.length, 2);
-            assertEq(entries[1].topics[0], keccak256("Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"));
-            
+            // first entry is CallbackFailed which we aren't going to check.
+            // Unfortunately event.selector was added in Solidity 0.8.15 and we're on 0.8.4 so we have to copy this spec here.
+            assertEq(
+                entries[1].topics[0],
+                keccak256(
+                    "Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"
+                )
+            );
+
             // Verify the topics match the expected values
-            assertEq(entries[1].topics[1], bytes32(uint256(uint160(provider1))));
-            assertEq(entries[1].topics[2], bytes32(uint256(uint160(req.requester))));
-            assertEq(entries[1].topics[3], bytes32(uint256(req.sequenceNumber)));
-            
+            assertEq(
+                entries[1].topics[1],
+                bytes32(uint256(uint160(provider1)))
+            );
+            assertEq(
+                entries[1].topics[2],
+                bytes32(uint256(uint160(req.requester)))
+            );
+            assertEq(
+                entries[1].topics[3],
+                bytes32(uint256(req.sequenceNumber))
+            );
+
             // Verify the data field contains the expected values (per event ABI)
-            (bytes32 randomNumber, bool callbackFailed, bytes memory callbackErrorCode, uint32 callbackGasUsed, bytes memory _dummy) = 
-                abi.decode(entries[1].data, (bytes32, bool, bytes, uint32, bytes));
-            
-            assertEq(randomNumber, random.combineRandomValues(
-                userRandomNumber,
-                provider1Proofs[sequenceNumber],
-                0
-            ));
+            (
+                bytes32 randomNumber,
+                bool callbackFailed,
+                bytes memory callbackErrorCode,
+                uint32 callbackGasUsed,
+                bytes memory extraArgs
+            ) = abi.decode(
+                    entries[1].data,
+                    (bytes32, bool, bytes, uint32, bytes)
+                );
+
+            assertEq(
+                randomNumber,
+                random.combineRandomValues(
+                    userRandomNumber,
+                    provider1Proofs[sequenceNumber],
+                    0
+                )
+            );
             assertEq(callbackFailed, false);
             assertEq(callbackErrorCode, bytes(""));
-            console.log(callbackGasUsage);
-            console.log(callbackGasUsed);
             // callback gas usage is approximate and only triggered when the provider has set a gas limit
-            assertTrue(random.getProviderInfoV2(provider1).defaultGasLimit == 0 || ((callbackGasUsage * 90) / 100 < callbackGasUsed));
-            assertTrue(random.getProviderInfoV2(provider1).defaultGasLimit == 0 || (callbackGasUsed < (callbackGasUsage * 110) / 100));
+            // Note: this condition is somewhat janky, but we hit the stack limit so can't put in any more local variables :(
+            assertTrue(
+                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+                    ((callbackGasUsage * 90) / 100 < callbackGasUsed)
+            );
+            assertTrue(
+                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+                    (callbackGasUsed < (callbackGasUsage * 110) / 100)
+            );
+            assertEq(extraArgs, bytes(""));
 
             // Verify request is cleared after successful callback
             EntropyStructsV2.Request memory reqAfterSuccess = random
