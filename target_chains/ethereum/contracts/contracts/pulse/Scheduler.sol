@@ -768,12 +768,13 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InsufficientBalance();
         }
 
-        // Pay keeper and update status if successful
+        status.balanceInWei -= totalKeeperFee;
+        status.totalSpent += totalKeeperFee;
+
+        // Pay keeper and update status
         (bool sent, ) = msg.sender.call{value: totalKeeperFee}("");
         if (!sent) {
             revert KeeperPaymentFailed();
         }
-        status.balanceInWei -= totalKeeperFee;
-        status.totalSpent += totalKeeperFee;
     }
 }
