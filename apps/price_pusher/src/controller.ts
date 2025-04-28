@@ -63,7 +63,7 @@ export class Controller {
         }
 
         if (this.metrics && targetLatestPrice && sourceLatestPrice) {
-          this.metrics.updatePriceDelay(
+          this.metrics.updateTimestamps(
             priceId,
             alias,
             targetLatestPrice.publishTime,

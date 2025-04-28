@@ -14,7 +14,9 @@ export class PricePusherMetrics {
   public lastPublishedTime: Gauge<string>;
   public priceUpdateAttempts: Counter<string>;
   public priceFeedsTotal: Gauge<string>;
-  public priceUpdateDelay: Gauge<string>;
+  public sourceTimestamp: Gauge<string>;
+  public targetTimestamp: Gauge<string>;
+  public configuredTimeDifference: Gauge<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
 
@@ -47,9 +49,23 @@ export class PricePusherMetrics {
       registers: [this.registry],
     });
 
-    this.priceUpdateDelay = new Gauge({
-      name: "pyth_price_update_delay",
-      help: "Delay between source and target timestamps relative to configured threshold (positive means over threshold)",
+    this.sourceTimestamp = new Gauge({
+      name: "pyth_source_timestamp",
+      help: "Latest source chain price publish timestamp",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
+    this.targetTimestamp = new Gauge({
+      name: "pyth_target_timestamp",
+      help: "Latest target chain price publish timestamp",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
+    this.configuredTimeDifference = new Gauge({
+      name: "pyth_configured_time_difference",
+      help: "Configured time difference threshold between source and target chains",
       labelNames: ["price_id", "alias"],
       registers: [this.registry],
     });
@@ -141,19 +157,25 @@ export class PricePusherMetrics {
     this.priceFeedsTotal.set(count);
   }
 
-  // Update price delay relative to threshold
-  public updatePriceDelay(
+  // Update source, target and configured time difference timestamps
+  public updateTimestamps(
     priceId: string,
     alias: string,
     targetLatestPricePublishTime: number,
     sourceLatestPricePublishTime: number,
     priceConfigTimeDifference: number,
   ): void {
-    this.priceUpdateDelay.set(
+    this.sourceTimestamp.set(
       { price_id: priceId, alias },
-      sourceLatestPricePublishTime -
-        targetLatestPricePublishTime -
-        priceConfigTimeDifference,
+      sourceLatestPricePublishTime,
+    );
+    this.targetTimestamp.set(
+      { price_id: priceId, alias },
+      targetLatestPricePublishTime,
+    );
+    this.configuredTimeDifference.set(
+      { price_id: priceId, alias },
+      priceConfigTimeDifference,
     );
   }
 
