@@ -32,6 +32,7 @@ mod live;
 mod metrics;
 mod ready;
 mod revelation;
+mod explorer;
 
 pub type ChainId = String;
 
@@ -48,7 +49,9 @@ pub struct ApiMetrics {
 
 #[derive(Clone)]
 enum JournalLog {
-    Observed,
+    Observed {
+        tx_hash: TxHash
+    },
     FailedToReveal {
         reason: String,
     },
@@ -57,6 +60,17 @@ enum JournalLog {
     },
     Landed {
         block_number: BlockNumber,
+    }
+}
+
+impl JournalLog {
+    pub fn get_tx_hash(&self) -> Option<TxHash> {
+        match self {
+            JournalLog::Observed { tx_hash } => Some(*tx_hash),
+            JournalLog::FailedToReveal { .. } => None,
+            JournalLog::Revealed { tx_hash } => Some(*tx_hash),
+            JournalLog::Landed { .. } => None,
+        }
     }
 }
 
@@ -77,8 +91,10 @@ type RequestKey = (ChainId, u64);
 
 #[derive(Default)]
 struct History {
-    pub by_time: VecDeque<RequestKey>,
-    pub by_chain: BTreeMap<RequestKey, RequestJournal>,
+    pub by_hash: HashMap<TxHash, Vec<RequestKey>>,
+    pub by_chain_and_time: BTreeMap<(ChainId, DateTime<chrono::Utc>), RequestKey>,
+    pub by_time: BTreeMap<DateTime<chrono::Utc>, RequestKey>,
+    pub by_request_key: HashMap<RequestKey, RequestJournal>,
 }
 
 impl History {
@@ -88,9 +104,8 @@ impl History {
     }
 
     pub fn add(&mut self, (chain_id, sequence): RequestKey, request_journal_log: TimedJournalLog){
-        // Add to the by_chain map
         let mut new_entry = false;
-        let entry = self.by_chain.entry((chain_id.clone(), sequence)).or_insert_with(|| {
+        let entry = self.by_request_key.entry((chain_id.clone(), sequence)).or_insert_with(|| {
             new_entry = true;
             RequestJournal {
                 chain_id: chain_id.clone(),
@@ -98,44 +113,64 @@ impl History {
                 journal: vec![],
             }
         });
+        request_journal_log.log.get_tx_hash().map(|tx_hash| {
+            self.by_hash
+                .entry(tx_hash)
+                .or_insert_with(Vec::new)
+                .push((chain_id.clone(), sequence));
+        });
         entry.journal.push(request_journal_log);
         if new_entry {
-            self.by_time.push_back((chain_id.clone(), sequence));
+            let current_time = chrono::Utc::now();
+            self.by_chain_and_time
+                .insert((chain_id.clone(), current_time), (chain_id.clone(), sequence));
+            self.by_time
+                .insert(current_time, (chain_id.clone(), sequence));
+
             if self.by_time.len() > Self::MAX_HISTORY {
-                let oldest_key = self.by_time.pop_front().unwrap();
-                self.by_chain.remove(&oldest_key);
+                // TODO
             }
         }
     }
 
-    pub fn get_request_logs(&self, request_key: &RequestKey) -> Option<&Vec<TimedJournalLog>> {
-        self.by_chain.get(request_key).map(|entry| &entry.journal)
+    pub fn get_request_logs(&self, request_key: &RequestKey) -> Option<&RequestJournal> {
+        self.by_request_key.get(request_key)
     }
 
-    pub fn get_latest_requests(&self, chain_id: Option<&ChainId>, limit: u64) -> Vec<RequestJournal> {
+    pub fn get_request_logs_by_tx_hash(&self, tx_hash: TxHash) -> Option<Vec<&RequestJournal>> {
+        self.by_hash.get(&tx_hash).map(|request_keys| {
+            request_keys.iter()
+                .map(|request_key| self.by_request_key.get(request_key).unwrap())
+                .collect()
+        })
+    }
+
+    pub fn get_latest_requests(&self, chain_id: Option<&ChainId>, limit: u64,
+                               min_timestamp: Option<DateTime<chrono::Utc>>,
+                               max_timestamp: Option<DateTime<chrono::Utc>>) -> Vec<RequestJournal> {
         match chain_id {
             Some(chain_id) => {
-                let range = self.by_chain.range((chain_id.clone(), 0)..(chain_id.clone(), u64::MAX));
+                let range = self.by_chain_and_time.range((chain_id.clone(), min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC))..(chain_id.clone(), max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC)));
                 range.rev()
                     .take(limit as usize)
-                    .map(|(_, entry)| entry.clone())
+                    .map(|(_, request_key)| {
+                        self.by_request_key.get(request_key).unwrap().clone()
+                    })
                     .collect()
 
             },
             None => {
                 self.by_time
-                    .iter()
+                    .range(min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC)..max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC))
                     .rev()
                     .take(limit as usize)
-                    .map(|request_key| {
-                        self.by_chain.get(request_key).unwrap().clone()
+                    .map(|(_time, request_key)| {
+                        self.by_request_key.get(request_key).unwrap().clone()
                     })
                     .collect::<Vec<_>>()
             },
         }
     }
-
-
 }
 
 
@@ -143,7 +178,7 @@ impl History {
 pub struct ApiState {
     pub chains: Arc<HashMap<ChainId, BlockchainState>>,
 
-    // pub history: Arc<History>
+    pub history: Arc<RwLock<History>>,
 
     pub metrics_registry: Arc<RwLock<Registry>>,
 
@@ -170,6 +205,7 @@ impl ApiState {
         ApiState {
             chains: Arc::new(chains),
             metrics: Arc::new(metrics),
+            history: Arc::new(RwLock::new(History::new())),
             metrics_registry,
         }
     }
@@ -208,6 +244,7 @@ pub enum RestError {
     /// The server cannot currently communicate with the blockchain, so is not able to verify
     /// which random values have been requested.
     TemporarilyUnavailable,
+    BadFilterParameters(String),
     /// A catch-all error for all other types of errors that could occur during processing.
     Unknown,
 }
@@ -240,6 +277,11 @@ impl IntoResponse for RestError {
             RestError::Unknown => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "An unknown error occurred processing the request",
+            )
+                .into_response(),
+            RestError::BadFilterParameters(message) => (
+                StatusCode::BAD_REQUEST,
+                format!("Invalid filter parameters: {}", message),
             )
                 .into_response(),
         }
