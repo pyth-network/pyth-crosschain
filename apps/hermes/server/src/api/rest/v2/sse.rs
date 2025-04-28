@@ -19,11 +19,14 @@ use {
     pyth_sdk::PriceIdentifier,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
-    std::convert::Infallible,
-    tokio::sync::broadcast,
+    std::{convert::Infallible, time::Duration},
+    tokio::{sync::broadcast, time::Instant},
     tokio_stream::{wrappers::BroadcastStream, StreamExt as _},
     utoipa::IntoParams,
 };
+
+// Constants
+const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 
 #[derive(Debug, Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
@@ -75,6 +78,9 @@ fn default_true() -> bool {
     params(StreamPriceUpdatesQueryParams)
 )]
 /// SSE route handler for streaming price updates.
+///
+/// The connection will automatically close after 24 hours to prevent resource leaks.
+/// Clients should implement reconnection logic to maintain continuous price updates.
 pub async fn price_stream_sse_handler<S>(
     State(state): State<ApiState<S>>,
     QsQuery(params): QsQuery<StreamPriceUpdatesQueryParams>,
@@ -93,7 +99,11 @@ where
     // Convert the broadcast receiver into a Stream
     let stream = BroadcastStream::new(update_rx);
 
+    // Set connection start time
+    let start_time = Instant::now();
+
     let sse_stream = stream
+        .take_while(move |_| start_time.elapsed() < MAX_CONNECTION_DURATION)
         .then(move |message| {
             let state_clone = state.clone(); // Clone again to use inside the async block
             let price_ids_clone = price_ids.clone(); // Clone again for use inside the async block
@@ -122,7 +132,12 @@ where
                 }
             }
         })
-        .filter_map(|x| x);
+        .filter_map(|x| x)
+        .chain(futures::stream::once(async {
+            Ok(Event::default()
+                .event("error")
+                .data("Connection timeout reached (24h)"))
+        }));
 
     Ok(Sse::new(sse_stream).keep_alive(KeepAlive::default()))
 }
