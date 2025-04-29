@@ -4,39 +4,23 @@ use {
         chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
         config::{Commitment, Config, EthereumConfig, RunOptions},
-        eth_utils::traced_client::{RpcMetrics, TracedClient},
+        eth_utils::traced_client::RpcMetrics,
         keeper::{self, keeper_metrics::KeeperMetrics},
         state::{HashChainState, PebbleHashChain},
     },
     anyhow::{anyhow, Error, Result},
     axum::Router,
-    ethers::{
-        middleware::Middleware,
-        types::{Address, BlockNumber},
-    },
-    prometheus_client::{
-        encoding::EncodeLabelSet,
-        metrics::{family::Family, gauge::Gauge},
-        registry::Registry,
-    },
-    std::{
-        collections::HashMap,
-        net::SocketAddr,
-        sync::Arc,
-        time::{Duration, SystemTime, UNIX_EPOCH},
-    },
+    ethers::types::Address,
+    prometheus_client::{encoding::EncodeLabelSet, registry::Registry},
+    std::{collections::HashMap, net::SocketAddr, sync::Arc},
     tokio::{
         spawn,
         sync::{watch, RwLock},
-        time,
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
-
-/// Track metrics in this interval
-const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 
 pub async fn run_api(
     socket_addr: SocketAddr,
@@ -158,16 +142,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
-    // Spawn a thread to track latest block lag. This helps us know if the rpc is up and updated with the latest block.
-    //TODO: only run this after the chain is setup
-    spawn(track_block_timestamp_lag(
-        config,
-        metrics_registry.clone(),
-        rpc_metrics.clone(),
-    ));
-
     run_api(opts.addr, chains.clone(), metrics_registry.clone(), rx_exit).await?;
-    tracing::info!("Shut down server");
     Ok(())
 }
 
@@ -270,75 +245,4 @@ async fn setup_chain_state(
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct ChainLabel {
     pub chain_id: String,
-}
-
-#[tracing::instrument(name = "block_timestamp_lag", skip_all, fields(chain_id = chain_id))]
-pub async fn check_block_timestamp_lag(
-    chain_id: String,
-    chain_config: EthereumConfig,
-    metrics: Family<ChainLabel, Gauge>,
-    rpc_metrics: Arc<RpcMetrics>,
-) {
-    let provider =
-        match TracedClient::new(chain_id.clone(), &chain_config.geth_rpc_addr, rpc_metrics) {
-            Ok(r) => r,
-            Err(e) => {
-                tracing::error!("Failed to create provider for chain id - {:?}", e);
-                return;
-            }
-        };
-
-    const INF_LAG: i64 = 1000000; // value that definitely triggers an alert
-    let lag = match provider.get_block(BlockNumber::Latest).await {
-        Ok(block) => match block {
-            Some(block) => {
-                let block_timestamp = block.timestamp;
-                let server_timestamp = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs();
-                let lag: i64 = (server_timestamp as i64) - (block_timestamp.as_u64() as i64);
-                lag
-            }
-            None => {
-                tracing::error!("Block is None");
-                INF_LAG
-            }
-        },
-        Err(e) => {
-            tracing::error!("Failed to get block - {:?}", e);
-            INF_LAG
-        }
-    };
-    metrics
-        .get_or_create(&ChainLabel {
-            chain_id: chain_id.clone(),
-        })
-        .set(lag);
-}
-
-/// Tracks the difference between the server timestamp and the latest block timestamp for each chain
-pub async fn track_block_timestamp_lag(
-    config: Config,
-    metrics_registry: Arc<RwLock<Registry>>,
-    rpc_metrics: Arc<RpcMetrics>,
-) {
-    let metrics = Family::<ChainLabel, Gauge>::default();
-    metrics_registry.write().await.register(
-        "block_timestamp_lag",
-        "The difference between server timestamp and latest block timestamp",
-        metrics.clone(),
-    );
-    loop {
-        for (chain_id, chain_config) in &config.chains {
-            spawn(check_block_timestamp_lag(
-                chain_id.clone(),
-                chain_config.clone(),
-                metrics.clone(),
-                rpc_metrics.clone(),
-            ));
-        }
-
-        time::sleep(TRACK_INTERVAL).await;
-    }
 }

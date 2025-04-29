@@ -42,6 +42,7 @@ pub struct KeeperMetrics {
     pub final_fee_multiplier: Family<AccountLabel, Histogram>,
     pub gas_price_estimate: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub accrued_pyth_fees: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
+    pub block_timestamp_lag: Family<ChainIdLabel, Gauge>,
 }
 
 impl Default for KeeperMetrics {
@@ -83,6 +84,7 @@ impl Default for KeeperMetrics {
             }),
             gas_price_estimate: Family::default(),
             accrued_pyth_fees: Family::default(),
+            block_timestamp_lag: Family::default(),
         }
     }
 }
@@ -212,6 +214,12 @@ impl KeeperMetrics {
             keeper_metrics.accrued_pyth_fees.clone(),
         );
 
+        writable_registry.register(
+            "block_timestamp_lag",
+            "The difference between server timestamp and latest block timestamp",
+            keeper_metrics.block_timestamp_lag.clone(),
+        );
+
         // *Important*: When adding a new metric:
         // 1. Register it above using `writable_registry.register(...)`
         // 2. Add a get_or_create call in the add_chain function below to initialize it for each chain/provider pair
@@ -220,9 +228,11 @@ impl KeeperMetrics {
     }
 
     pub fn add_chain(&self, chain_id: String, provider_address: Address) {
-        let _ = self.accrued_pyth_fees.get_or_create(&ChainIdLabel {
+        let chain_id_label = ChainIdLabel {
             chain_id: chain_id.clone(),
-        });
+        };
+        let _ = self.accrued_pyth_fees.get_or_create(&chain_id_label);
+        let _ = self.block_timestamp_lag.get_or_create(&chain_id_label);
 
         let account_label = AccountLabel {
             chain_id,

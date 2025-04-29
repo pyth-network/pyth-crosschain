@@ -1,3 +1,4 @@
+use crate::keeper::track::track_block_timestamp_lag;
 use {
     crate::{
         api::{BlockchainState, ChainId},
@@ -211,6 +212,14 @@ pub async fn run_keeper_threads(
                     track_accrued_pyth_fees(
                         chain_id.clone(),
                         contract.clone(),
+                        keeper_metrics.clone(),
+                    )
+                    .in_current_span(),
+                );
+                spawn(
+                    track_block_timestamp_lag(
+                        chain_id.clone(),
+                        contract.client(),
                         keeper_metrics.clone(),
                     )
                     .in_current_span(),
