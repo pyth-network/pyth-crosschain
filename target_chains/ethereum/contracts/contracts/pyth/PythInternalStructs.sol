@@ -13,6 +13,10 @@ contract PythInternalStructs {
         uint64 minPublishTime;
         uint64 maxPublishTime;
         bool checkUniqueness;
+        /// When checkUpdateDataIsMinimal is true, parsing will revert
+        /// if the number of passed in updates exceeds or is less than
+        /// the length of priceIds.
+        bool checkUpdateDataIsMinimal;
     }
 
     /// Internal struct to hold parameters for update processing

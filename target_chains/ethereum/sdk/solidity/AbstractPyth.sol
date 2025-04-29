@@ -136,7 +136,7 @@ abstract contract AbstractPyth is IPyth {
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds);
 
-    function parsePriceFeedUpdatesWithSlots(
+    function parsePriceFeedUpdatesWithSlotsStrict(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
         uint64 minPublishTime,

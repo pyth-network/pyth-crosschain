@@ -299,6 +299,24 @@ abstract contract Pyth is
             if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
         }
 
+        // In minimal update data mode, revert if we have more or less updates than price IDs
+        if (config.checkUpdateDataIsMinimal) {
+            uint64 totalUpdatesAcrossBlobs = 0;
+            for (uint i = 0; i < updateData.length; i++) {
+                (uint offset, ) = extractUpdateTypeFromAccumulatorHeader(
+                    updateData[i]
+                );
+
+                totalUpdatesAcrossBlobs += parseWormholeMerkleHeaderNumUpdates(
+                    updateData[i],
+                    offset
+                );
+            }
+            if (totalUpdatesAcrossBlobs != priceIds.length) {
+                revert PythErrors.InvalidArgument();
+            }
+        }
+
         // Create the context struct that holds all shared parameters
         PythInternalStructs.UpdateParseContext memory context;
         context.priceIds = priceIds;
@@ -341,12 +359,13 @@ abstract contract Pyth is
             PythInternalStructs.ParseConfig(
                 minPublishTime,
                 maxPublishTime,
+                false,
                 false
             )
         );
     }
 
-    function parsePriceFeedUpdatesWithSlots(
+    function parsePriceFeedUpdatesWithSlotsStrict(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
         uint64 minPublishTime,
@@ -367,7 +386,8 @@ abstract contract Pyth is
                 PythInternalStructs.ParseConfig(
                     minPublishTime,
                     maxPublishTime,
-                    false
+                    false,
+                    true
                 )
             );
     }
@@ -550,7 +570,8 @@ abstract contract Pyth is
             PythInternalStructs.ParseConfig(
                 minPublishTime,
                 maxPublishTime,
-                true
+                true,
+                false
             )
         );
     }
@@ -624,7 +645,7 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.4-alpha.5";
+        return "1.4.4-alpha.6";
     }
 
     /// @notice Calculates TWAP from two price points
