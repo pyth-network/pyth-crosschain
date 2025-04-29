@@ -120,7 +120,8 @@ async fn setup_chain_provider(
                 &metadata.seed,
                 provider_config.chain_length,
                 provider_config.chain_sample_interval,
-            )?;
+            )
+            .await?;
             let chain_state = HashChainState {
                 offsets: vec![provider_info
                     .original_commitment_sequence_number

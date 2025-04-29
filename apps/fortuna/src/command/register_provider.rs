@@ -60,7 +60,8 @@ pub async fn register_provider_from_config(
         &random,
         commitment_length,
         provider_config.chain_sample_interval,
-    )?;
+    )
+    .await?;
     tracing::info!("Done generating hash chain");
 
     // Arguments to the contract to register our new provider.

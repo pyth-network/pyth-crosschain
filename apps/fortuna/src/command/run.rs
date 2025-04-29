@@ -238,6 +238,7 @@ async fn setup_chain_state(
             commitment.chain_length,
             chain_sample_interval,
         )
+        .await
         .map_err(|e| anyhow!("Failed to create hash chain: {}", e))?;
         hash_chains.push(pebble_hash_chain);
     }
