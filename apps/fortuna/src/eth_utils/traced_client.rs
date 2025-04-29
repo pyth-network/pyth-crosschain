@@ -11,8 +11,10 @@ use {
         metrics::{counter::Counter, family::Family, histogram::Histogram},
         registry::Registry,
     },
-    std::{str::FromStr, sync::Arc},
+    reqwest::Client,
+    std::{sync::Arc, time::Duration},
     tokio::{sync::RwLock, time::Instant},
+    url::Url,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, EncodeLabelSet)]
@@ -114,8 +116,13 @@ impl TracedClient {
         url: &str,
         metrics: Arc<RpcMetrics>,
     ) -> Result<Provider<TracedClient>> {
+        let url: Url = url.try_into()?;
+        let client = Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()
+            .expect("Failed to create HTTP client");
         Ok(Provider::new(TracedClient {
-            inner: Http::from_str(url)?,
+            inner: Http::new_with_client(url, client),
             chain_id,
             metrics,
         }))
