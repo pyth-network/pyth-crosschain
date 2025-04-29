@@ -185,4 +185,25 @@ interface IPyth is IPythEvents {
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
         );
+        
+    /// @dev Same as `parsePriceFeedUpdatesWithSlots`, but with minimal update data check enabled.
+    /// When checkUpdateDataIsMinimal is true, the function will revert if the number of updates exceeds the length of priceIds.
+    /// @param updateData Array of price update data.
+    /// @param priceIds Array of price ids.
+    /// @param minPublishTime minimum acceptable publishTime for the given `priceIds`.
+    /// @param maxPublishTime maximum acceptable publishTime for the given `priceIds`.
+    /// @return priceFeeds Array of the price feeds corresponding to the given `priceIds` (with the same order).
+    /// @return slots Array of the Pythnet slot corresponding to the given `priceIds` (with the same order).
+    function parsePriceFeedUpdatesWithSlotsStrict(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        returns (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        );
 }

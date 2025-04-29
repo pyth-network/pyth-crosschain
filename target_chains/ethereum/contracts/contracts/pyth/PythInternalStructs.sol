@@ -13,6 +13,7 @@ contract PythInternalStructs {
         uint64 minPublishTime;
         uint64 maxPublishTime;
         bool checkUniqueness;
+        bool checkUpdateDataIsMinimal;
     }
 
     /// Internal struct to hold parameters for update processing

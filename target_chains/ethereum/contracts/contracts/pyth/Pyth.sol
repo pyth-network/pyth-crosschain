@@ -314,6 +314,17 @@ abstract contract Pyth is
             }
         }
 
+        // In minimal update data mode, revert if we have more updates than price IDs
+        if (config.checkUpdateDataIsMinimal) {
+            uint64 totalUpdatesAcrossBlobs = 0;
+            for (uint i = 0; i < updateData.length; i++) {
+                totalUpdatesAcrossBlobs += getTotalUpdatesInBlob(updateData[i]);
+            }
+            if (totalUpdatesAcrossBlobs > priceIds.length) {
+                revert PythErrors.InvalidArgument();
+            }
+        }
+
         // Check all price feeds were found
         for (uint k = 0; k < priceIds.length; k++) {
             if (context.priceFeeds[k].id == 0) {
@@ -341,6 +352,7 @@ abstract contract Pyth is
             PythInternalStructs.ParseConfig(
                 minPublishTime,
                 maxPublishTime,
+                false,
                 false
             )
         );
@@ -367,7 +379,35 @@ abstract contract Pyth is
                 PythInternalStructs.ParseConfig(
                     minPublishTime,
                     maxPublishTime,
+                    false,
                     false
+                )
+            );
+    }
+
+    function parsePriceFeedUpdatesWithSlotsStrict(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        override
+        returns (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        )
+    {
+        return
+            parsePriceFeedUpdatesInternal(
+                updateData,
+                priceIds,
+                PythInternalStructs.ParseConfig(
+                    minPublishTime,
+                    maxPublishTime,
+                    false,
+                    true
                 )
             );
     }
@@ -550,7 +590,8 @@ abstract contract Pyth is
             PythInternalStructs.ParseConfig(
                 minPublishTime,
                 maxPublishTime,
-                true
+                true,
+                false
             )
         );
     }
@@ -624,7 +665,7 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.4-alpha.5";
+        return "1.4.4-alpha.6";
     }
 
     /// @notice Calculates TWAP from two price points
@@ -675,5 +716,26 @@ abstract contract Pyth is
         twapPriceFeed.downSlotsRatio = uint32(downSlotsRatio);
 
         return twapPriceFeed;
+    }
+
+    /// @dev Helper function to count the total number of updates in a single blob
+    function getTotalUpdatesInBlob(bytes calldata singleUpdateData) internal view returns (uint64) {
+        if (
+            singleUpdateData.length <= 4 ||
+            UnsafeCalldataBytesLib.toUint32(singleUpdateData, 0) !=
+            ACCUMULATOR_MAGIC
+        ) {
+            revert PythErrors.InvalidUpdateData();
+        }
+
+        uint offset;
+        UpdateType updateType;
+        (offset, updateType) = extractUpdateTypeFromAccumulatorHeader(singleUpdateData);
+
+        if (updateType != UpdateType.WormholeMerkle) {
+            revert PythErrors.InvalidUpdateData();
+        }
+
+        return parseWormholeMerkleHeaderNumUpdates(singleUpdateData, offset);
     }
 }

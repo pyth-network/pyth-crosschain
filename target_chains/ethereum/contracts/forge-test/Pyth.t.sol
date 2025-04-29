@@ -392,6 +392,39 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         );
     }
 
+    function testParsePriceFeedUpdatesWithSlotsStrictRevertsWithExcessUpdateData()
+        public
+    {
+        // Create a price update with more price updates than requested price IDs
+        uint numPriceIds = 2;
+        uint numMessages = numPriceIds + 1; // One more than the number of price IDs
+        
+        (
+            bytes32[] memory priceIds,
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
+        
+        // Only use a subset of the price IDs to trigger the strict check
+        bytes32[] memory requestedPriceIds = new bytes32[](numPriceIds);
+        for (uint i = 0; i < numPriceIds; i++) {
+            requestedPriceIds[i] = priceIds[i];
+        }
+        
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromMessages(messages);
+        
+        // Should revert in strict mode
+        vm.expectRevert(PythErrors.InvalidArgument.selector);
+        pyth.parsePriceFeedUpdatesWithSlotsStrict{value: updateFee}(
+            updateData,
+            requestedPriceIds,
+            0,
+            MAX_UINT64
+        );
+    }
+
     function testParsePriceFeedUpdatesRevertsIfUpdateSourceChainIsInvalid()
         public
     {
