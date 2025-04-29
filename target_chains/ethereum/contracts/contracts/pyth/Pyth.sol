@@ -320,7 +320,7 @@ abstract contract Pyth is
             for (uint i = 0; i < updateData.length; i++) {
                 totalUpdatesAcrossBlobs += getTotalUpdatesInBlob(updateData[i]);
             }
-            if (totalUpdatesAcrossBlobs > priceIds.length) {
+            if (totalUpdatesAcrossBlobs != priceIds.length) {
                 revert PythErrors.InvalidArgument();
             }
         }
