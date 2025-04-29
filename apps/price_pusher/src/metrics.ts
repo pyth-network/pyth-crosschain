@@ -1,6 +1,5 @@
 import { Registry, Counter, Gauge } from "prom-client";
 import express from "express";
-import { PriceInfo } from "./interface";
 import { Logger } from "pino";
 import { UpdateCondition } from "./price-config";
 
@@ -14,6 +13,8 @@ export class PricePusherMetrics {
   public lastPublishedTime: Gauge<string>;
   public priceUpdateAttempts: Counter<string>;
   public priceFeedsTotal: Gauge<string>;
+  public sourceTimestamp: Gauge<string>;
+  public configuredTimeDifference: Gauge<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
 
@@ -46,6 +47,20 @@ export class PricePusherMetrics {
       registers: [this.registry],
     });
 
+    this.sourceTimestamp = new Gauge({
+      name: "pyth_source_timestamp",
+      help: "Latest source chain price publish timestamp",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
+    this.configuredTimeDifference = new Gauge({
+      name: "pyth_configured_time_difference",
+      help: "Configured time difference threshold between source and target chains",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
     // Wallet balance metric
     this.walletBalance = new Gauge({
       name: "pyth_wallet_balance",
@@ -66,18 +81,6 @@ export class PricePusherMetrics {
     this.server.listen(port, () => {
       this.logger.info(`Metrics server started on port ${port}`);
     });
-  }
-
-  // Update the last published time for a price feed
-  public updateLastPublishedTime(
-    priceId: string,
-    alias: string,
-    priceInfo: PriceInfo,
-  ): void {
-    this.lastPublishedTime.set(
-      { price_id: priceId, alias },
-      priceInfo.publishTime,
-    );
   }
 
   // Record a successful price update
@@ -131,6 +134,28 @@ export class PricePusherMetrics {
   // Set the number of price feeds
   public setPriceFeedsTotal(count: number): void {
     this.priceFeedsTotal.set(count);
+  }
+
+  // Update source, target and configured time difference timestamps
+  public updateTimestamps(
+    priceId: string,
+    alias: string,
+    targetLatestPricePublishTime: number,
+    sourceLatestPricePublishTime: number,
+    priceConfigTimeDifference: number,
+  ): void {
+    this.sourceTimestamp.set(
+      { price_id: priceId, alias },
+      sourceLatestPricePublishTime,
+    );
+    this.lastPublishedTime.set(
+      { price_id: priceId, alias },
+      targetLatestPricePublishTime,
+    );
+    this.configuredTimeDifference.set(
+      { price_id: priceId, alias },
+      priceConfigTimeDifference,
+    );
   }
 
   // Update wallet balance
