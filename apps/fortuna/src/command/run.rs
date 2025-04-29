@@ -14,7 +14,6 @@ use {
         middleware::Middleware,
         types::{Address, BlockNumber},
     },
-    futures::future::join_all,
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{family::Family, gauge::Gauge},
@@ -41,7 +40,7 @@ const TRACK_INTERVAL: Duration = Duration::from_secs(10);
 
 pub async fn run_api(
     socket_addr: SocketAddr,
-    chains: HashMap<String, api::BlockchainState>,
+    chains: Arc<RwLock<HashMap<String, api::BlockchainState>>>,
     metrics_registry: Arc<RwLock<Registry>>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
@@ -93,40 +92,6 @@ pub async fn run_api(
     Ok(())
 }
 
-pub async fn run_keeper(
-    chains: HashMap<String, api::BlockchainState>,
-    config: Config,
-    private_key: String,
-    metrics_registry: Arc<RwLock<Registry>>,
-    rpc_metrics: Arc<RpcMetrics>,
-) -> Result<()> {
-    let mut handles = Vec::new();
-    let keeper_metrics: Arc<KeeperMetrics> = Arc::new({
-        let chain_labels: Vec<(String, Address)> = chains
-            .iter()
-            .map(|(id, state)| (id.clone(), state.provider_address))
-            .collect();
-        KeeperMetrics::new(metrics_registry.clone(), chain_labels).await
-    });
-    for (chain_id, chain_config) in chains {
-        let chain_eth_config = config
-            .chains
-            .get(&chain_id)
-            .expect("All chains should be present in the config file")
-            .clone();
-        let private_key = private_key.clone();
-        handles.push(spawn(keeper::run_keeper_threads(
-            private_key,
-            chain_eth_config,
-            chain_config.clone(),
-            keeper_metrics.clone(),
-            rpc_metrics.clone(),
-        )));
-    }
-
-    Ok(())
-}
-
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
     let secret = config.provider.secret.load()?.ok_or(anyhow!(
@@ -136,41 +101,49 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
     let rpc_metrics = Arc::new(RpcMetrics::new(metrics_registry.clone()).await);
 
-    let mut tasks = Vec::new();
+    let keeper_metrics: Arc<KeeperMetrics> =
+        Arc::new(KeeperMetrics::new(metrics_registry.clone()).await);
+    let keeper_private_key_option = config.keeper.private_key.load()?;
+    if keeper_private_key_option.is_none() {
+        tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
+    }
+    let chains: Arc<RwLock<HashMap<ChainId, BlockchainState>>> = Default::default();
     for (chain_id, chain_config) in config.chains.clone() {
+        let keeper_metrics = keeper_metrics.clone();
+        let keeper_private_key_option = keeper_private_key_option.clone();
+        let chains = chains.clone();
         let secret_copy = secret.clone();
         let rpc_metrics = rpc_metrics.clone();
-        tasks.push(spawn(async move {
+        spawn(async move {
             let state = setup_chain_state(
                 &config.provider.address,
                 &secret_copy,
                 config.provider.chain_sample_interval,
                 &chain_id,
                 &chain_config,
-                rpc_metrics,
+                rpc_metrics.clone(),
             )
             .await;
-
-            (chain_id, state)
-        }));
-    }
-    let states = join_all(tasks).await;
-
-    let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
-    for result in states {
-        let (chain_id, state) = result?;
-
-        match state {
-            Ok(state) => {
-                chains.insert(chain_id.clone(), state);
+            match state {
+                Ok(state) => {
+                    keeper_metrics.add_chain(chain_id.clone(), state.provider_address);
+                    chains.write().await.insert(chain_id.clone(), state.clone());
+                    if let Some(keeper_private_key) = keeper_private_key_option {
+                        spawn(keeper::run_keeper_threads(
+                            keeper_private_key,
+                            chain_config,
+                            state,
+                            keeper_metrics.clone(),
+                            rpc_metrics.clone(),
+                        ));
+                    }
+                }
+                Err(e) => {
+                    tracing::error!("Failed to setup {} {}", chain_id, e);
+                    //TODO: Retry
+                }
             }
-            Err(e) => {
-                tracing::error!("Failed to setup {} {}", chain_id, e);
-            }
-        }
-    }
-    if chains.is_empty() {
-        return Err(anyhow!("No chains were successfully setup"));
+        });
     }
 
     // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
@@ -185,27 +158,16 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
-    if let Some(keeper_private_key) = config.keeper.private_key.load()? {
-        spawn(run_keeper(
-            chains.clone(),
-            config.clone(),
-            keeper_private_key,
-            metrics_registry.clone(),
-            rpc_metrics.clone(),
-        ));
-    } else {
-        tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
-    }
-
     // Spawn a thread to track latest block lag. This helps us know if the rpc is up and updated with the latest block.
+    //TODO: only run this after the chain is setup
     spawn(track_block_timestamp_lag(
         config,
         metrics_registry.clone(),
         rpc_metrics.clone(),
     ));
 
-    run_api(opts.addr, chains, metrics_registry, rx_exit).await?;
-
+    run_api(opts.addr, chains.clone(), metrics_registry.clone(), rx_exit).await?;
+    tracing::info!("Shut down server");
     Ok(())
 }
 

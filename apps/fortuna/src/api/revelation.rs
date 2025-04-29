@@ -46,8 +46,11 @@ pub async fn revelation(
 
     let state = state
         .chains
+        .read()
+        .await
         .get(&chain_id)
-        .ok_or(RestError::InvalidChainId)?;
+        .ok_or(RestError::InvalidChainId)?
+        .clone();
 
     let current_block_number_fut = state
         .contract

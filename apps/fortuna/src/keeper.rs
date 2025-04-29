@@ -60,9 +60,9 @@ pub async fn run_keeper_threads(
     metrics: Arc<KeeperMetrics>,
     rpc_metrics: Arc<RpcMetrics>,
 ) {
-    tracing::info!("starting keeper");
+    tracing::info!("Starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
-    tracing::info!("latest safe block: {}", &latest_safe_block);
+    tracing::info!("Latest safe block: {}", &latest_safe_block);
 
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(

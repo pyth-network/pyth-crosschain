@@ -43,7 +43,7 @@ pub struct ApiMetrics {
 
 #[derive(Clone)]
 pub struct ApiState {
-    pub chains: Arc<HashMap<ChainId, BlockchainState>>,
+    pub chains: Arc<RwLock<HashMap<ChainId, BlockchainState>>>,
 
     pub metrics_registry: Arc<RwLock<Registry>>,
 
@@ -53,7 +53,7 @@ pub struct ApiState {
 
 impl ApiState {
     pub async fn new(
-        chains: HashMap<ChainId, BlockchainState>,
+        chains: Arc<RwLock<HashMap<ChainId, BlockchainState>>>,
         metrics_registry: Arc<RwLock<Registry>>,
     ) -> ApiState {
         let metrics = ApiMetrics {
@@ -68,7 +68,7 @@ impl ApiState {
         );
 
         ApiState {
-            chains: Arc::new(chains),
+            chains,
             metrics: Arc::new(metrics),
             metrics_registry,
         }
@@ -231,7 +231,7 @@ mod test {
         chains.insert("ethereum".into(), eth_state);
         chains.insert("avalanche".into(), avax_state);
 
-        let api_state = ApiState::new(chains, metrics_registry).await;
+        let api_state = ApiState::new(Arc::new(RwLock::new(chains)), metrics_registry).await;
 
         let app = api::routes(api_state);
         (TestServer::new(app).unwrap(), eth_read, avax_read)
