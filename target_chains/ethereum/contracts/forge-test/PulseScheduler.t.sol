@@ -1335,28 +1335,23 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
 
         // Deplete the balance by updating price feeds multiple times
-        (
-            PythStructs.PriceFeed[] memory priceFeeds_reduce,
-            uint64[] memory slots_reduce
-        ) = createMockPriceFeedsWithSlots(
-                SafeCast.toUint64(block.timestamp),
-                2
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+        for (uint i = 0; i < 50; i++) {
+            // Advance publish time by 60s for each update to satisfy update criteria
+            (
+                PythStructs.PriceFeed[] memory priceFeeds_reduce,
+                uint64[] memory slots_reduce
+            ) = createMockPriceFeedsWithSlots(publishTime + (i * 60), 2);
+            mockParsePriceFeedUpdatesWithSlots(
+                pyth,
+                priceFeeds_reduce,
+                slots_reduce
             );
-        mockParsePriceFeedUpdatesWithSlots(
-            pyth,
-            priceFeeds_reduce,
-            slots_reduce
-        );
-        bytes[] memory updateData_reduce = createMockUpdateData(
-            priceFeeds_reduce
-        );
-
-        // Update price feeds multiple times to deplete balance
-        for (uint i = 0; i < 10; i++) {
+            bytes[] memory updateData_reduce = createMockUpdateData(
+                priceFeeds_reduce
+            );
             vm.prank(pusher);
             scheduler.updatePriceFeeds(subId_reduce, updateData_reduce);
-            // Advance time to make updates valid
-            vm.warp(block.timestamp + 60);
         }
 
         // Check that balance is now below minimum for 1 feed
