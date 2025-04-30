@@ -1242,9 +1242,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
     }
 
-    function testUpdateSubscriptionEnforcesMinimumBalanceOnAddingFeeds()
-        public
-    {
+    function testUpdateSubscriptionEnforcesMinimumBalance() public {
         // Setup: Create subscription with 2 feeds, funded exactly to minimum
         uint8 initialNumFeeds = 2;
         uint256 subscriptionId = addTestSubscriptionWithFeeds(
@@ -1313,7 +1311,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         newParams_deact.priceIds = createPriceIds(newNumFeeds_deact);
         newParams_deact.isActive = false; // Deactivate
 
-        // Action 3: Update (should succeed even with insufficient funds for 4 feeds)
+        // Action 3: Update (should succeed even with insufficient min balance for 4 feeds)
         scheduler.updateSubscription(subId_deact, newParams_deact);
 
         // Verification 3: Subscription should be inactive and have 4 feeds
@@ -1329,6 +1327,83 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             updatedParams_deact.priceIds.length,
             newNumFeeds_deact,
             "Number of price feeds should be updated even when deactivating"
+        );
+
+        // Scenario 4: Reducing number of feeds still checks minimum balance
+        // Create a subscription with 2 feeds funded to minimum
+        uint8 initialNumFeeds_reduce = 2;
+        uint256 subId_reduce = addTestSubscriptionWithFeeds(
+            scheduler,
+            initialNumFeeds_reduce,
+            address(reader)
+        );
+
+        // Deplete the balance by updating price feeds multiple times
+        (
+            PythStructs.PriceFeed[] memory priceFeeds_reduce,
+            uint64[] memory slots_reduce
+        ) = createMockPriceFeedsWithSlots(
+                SafeCast.toUint64(block.timestamp),
+                2
+            );
+        mockParsePriceFeedUpdatesWithSlots(
+            pyth,
+            priceFeeds_reduce,
+            slots_reduce
+        );
+        bytes[] memory updateData_reduce = createMockUpdateData(
+            priceFeeds_reduce
+        );
+
+        // Update price feeds multiple times to deplete balance
+        for (uint i = 0; i < 10; i++) {
+            vm.prank(pusher);
+            scheduler.updatePriceFeeds(subId_reduce, updateData_reduce);
+            // Advance time to make updates valid
+            vm.warp(block.timestamp + 60);
+        }
+
+        // Check that balance is now below minimum for 1 feed
+        (, SchedulerState.SubscriptionStatus memory status_reduce) = scheduler
+            .getSubscription(subId_reduce);
+        uint256 minBalanceForOneFeed = scheduler.getMinimumBalance(1);
+        assertTrue(
+            status_reduce.balanceInWei < minBalanceForOneFeed,
+            "Balance should be below minimum for 1 feed"
+        );
+
+        // Prepare params to reduce feeds from 2 to 1
+        (
+            SchedulerState.SubscriptionParams memory currentParams_reduce,
+
+        ) = scheduler.getSubscription(subId_reduce);
+        SchedulerState.SubscriptionParams
+            memory newParams_reduce = currentParams_reduce;
+        newParams_reduce.priceIds = new bytes32[](1);
+        newParams_reduce.priceIds[0] = currentParams_reduce.priceIds[0];
+
+        // Action 4: Update should fail due to insufficient balance
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        scheduler.updateSubscription(subId_reduce, newParams_reduce);
+
+        // Add funds to cover minimum balance for 1 feed
+        uint256 additionalFunds = minBalanceForOneFeed -
+            status_reduce.balanceInWei +
+            0.01 ether;
+        scheduler.addFunds{value: additionalFunds}(subId_reduce);
+
+        // Now the update should succeed
+        scheduler.updateSubscription(subId_reduce, newParams_reduce);
+
+        // Verify the subscription now has 1 feed
+        (
+            SchedulerState.SubscriptionParams memory updatedParams_reduce,
+
+        ) = scheduler.getSubscription(subId_reduce);
+        assertEq(
+            updatedParams_reduce.priceIds.length,
+            1,
+            "Number of price feeds should be reduced to 1"
         );
     }
 

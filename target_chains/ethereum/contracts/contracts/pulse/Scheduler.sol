@@ -102,11 +102,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // Validate the new parameters, including setting default gas config
         _validateAndPrepareSubscriptionParams(newParams);
 
-        // Check minimum balance if number of feeds increases and subscription remains active
-        if (
-            willBeActive &&
-            newParams.priceIds.length > currentParams.priceIds.length
-        ) {
+        // Check minimum balance if subscription remains active
+        if (willBeActive) {
             uint256 minimumBalance = this.getMinimumBalance(
                 uint8(newParams.priceIds.length)
             );
