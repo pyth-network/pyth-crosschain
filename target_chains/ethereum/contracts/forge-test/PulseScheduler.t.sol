@@ -1825,6 +1825,106 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         scheduler.updateSubscription(initialSubId, invalidDeviationParams);
     }
 
+    function testUpdatePriceFeedsSucceedsWithStaleFeedIfLatestIsValid() public {
+        // Add a subscription and funds
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+
+        // Advance time past the validity period
+        vm.warp(
+            block.timestamp +
+                scheduler.PAST_TIMESTAMP_MAX_VALIDITY_PERIOD() +
+                600
+        ); // Warp 1 hour 10 mins
+
+        uint64 currentTime = SafeCast.toUint64(block.timestamp);
+        uint64 validPublishTime = currentTime - 1800; // 30 mins ago (within 1 hour validity)
+        uint64 stalePublishTime = currentTime -
+            (scheduler.PAST_TIMESTAMP_MAX_VALIDITY_PERIOD() + 300); // 1 hour 5 mins ago (outside validity)
+
+        PythStructs.PriceFeed[] memory priceFeeds = new PythStructs.PriceFeed[](
+            2
+        );
+        priceFeeds[0] = createSingleMockPriceFeed(stalePublishTime);
+        priceFeeds[1] = createSingleMockPriceFeed(validPublishTime);
+
+        uint64[] memory slots = new uint64[](2);
+        slots[0] = 100;
+        slots[1] = 100; // Same slot
+
+        // Mock Pyth response (should succeed in the real world as minValidTime is 0)
+        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Expect PricesUpdated event with the latest valid timestamp
+        vm.expectEmit();
+        emit PricesUpdated(subscriptionId, validPublishTime);
+
+        // Perform update - should succeed because the latest timestamp in the update data is valid
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
+
+        // Verify last updated timestamp
+        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+            .getSubscription(subscriptionId);
+        assertEq(
+            status.priceLastUpdatedAt,
+            validPublishTime,
+            "Last updated timestamp should be the latest valid one"
+        );
+    }
+
+    function testUpdatePriceFeedsRevertsIfLatestTimestampIsTooOld() public {
+        // Add a subscription and funds
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+
+        // Advance time past the validity period
+        vm.warp(
+            block.timestamp +
+                scheduler.PAST_TIMESTAMP_MAX_VALIDITY_PERIOD() +
+                600
+        ); // Warp 1 hour 10 mins
+
+        uint64 currentTime = SafeCast.toUint64(block.timestamp);
+        // Make the *latest* timestamp too old
+        uint64 stalePublishTime1 = currentTime -
+            (scheduler.PAST_TIMESTAMP_MAX_VALIDITY_PERIOD() + 300); // 1 hour 5 mins ago
+        uint64 stalePublishTime2 = currentTime -
+            (scheduler.PAST_TIMESTAMP_MAX_VALIDITY_PERIOD() + 600); // 1 hour 10 mins ago
+
+        PythStructs.PriceFeed[] memory priceFeeds = new PythStructs.PriceFeed[](
+            2
+        );
+        priceFeeds[0] = createSingleMockPriceFeed(stalePublishTime2); // Oldest
+        priceFeeds[1] = createSingleMockPriceFeed(stalePublishTime1); // Latest, but still too old
+
+        uint64[] memory slots = new uint64[](2);
+        slots[0] = 100;
+        slots[1] = 100; // Same slot
+
+        // Mock Pyth response (should succeed in the real world as minValidTime is 0)
+        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // Expect revert with TimestampTooOld (checked in _validateShouldUpdatePrices)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimestampTooOld.selector,
+                stalePublishTime1, // The latest timestamp from the update
+                currentTime
+            )
+        );
+
+        // Attempt to update price feeds
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
+    }
+
     // Required to receive ETH when withdrawing funds
     receive() external payable {}
 }
