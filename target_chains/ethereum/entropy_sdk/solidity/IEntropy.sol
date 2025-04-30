@@ -31,8 +31,21 @@ interface IEntropy is EntropyEvents, EntropyEventsV2 {
 
     /// @notice Request a random number using the default provider with default gas limit
     /// @return assignedSequenceNumber A unique identifier for this request
-    /// @dev This method will revert unless the caller provides a sufficient fee (at least getFeeV2(getDefaultProvider(), 0)) as msg.value.
-    /// Note that excess value is *not* refunded to the caller.
+    /// @dev The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
+    /// The `entropyCallback` method on that interface will receive a callback with the returned sequence number and
+    /// the generated random number.
+    ///
+    /// `entropyCallback` will be run with the `gasLimit` provided to this function.
+    /// The `gasLimit` will be rounded up to a multiple of 10k (e.g., 19000 -> 20000), and furthermore is lower bounded
+    /// by the provider's configured default limit.
+    ///
+    /// This method will revert unless the caller provides a sufficient fee (at least `getFeeV2()`) as msg.value.
+    /// Note that the fee can change over time. Callers of this method should explicitly compute `getFeeV2()`
+    /// prior to each invocation (as opposed to hardcoding a value). Further note that excess value is *not* refunded to the caller.
+    ///
+    /// Note that this method uses an in-contract PRNG to generate the user's portion of the random number.
+    /// Users must trust this PRNG in order to prove the result is random. If you wish to avoid this trust assumption,
+    /// call a variant of `requestV2` that accepts a `userRandomNumber` parameter.
     function requestV2()
         external
         payable
@@ -49,9 +62,13 @@ interface IEntropy is EntropyEvents, EntropyEventsV2 {
     /// The `gasLimit` will be rounded up to a multiple of 10k (e.g., 19000 -> 20000), and furthermore is lower bounded
     /// by the provider's configured default limit.
     ///
-    /// This method will revert unless the caller provides a sufficient fee (at least `getFeeV2(provider, gasLimit)`) as msg.value.
-    /// Note that provider fees can change over time. Callers of this method should explicitly compute `getFeeV2(provider, gasLimit)`
+    /// This method will revert unless the caller provides a sufficient fee (at least `getFeeV2(gasLimit)`) as msg.value.
+    /// Note that the fee can change over time. Callers of this method should explicitly compute `getFeeV2(gasLimit)`
     /// prior to each invocation (as opposed to hardcoding a value). Further note that excess value is *not* refunded to the caller.
+    ///
+    /// Note that this method uses an in-contract PRNG to generate the user's portion of the random number.
+    /// Users must trust this PRNG in order to prove the result is random. If you wish to avoid this trust assumption,
+    /// call a variant of `requestV2` that accepts a `userRandomNumber` parameter.
     function requestV2(
         uint32 gasLimit
     ) external payable returns (uint64 assignedSequenceNumber);
@@ -71,6 +88,10 @@ interface IEntropy is EntropyEvents, EntropyEventsV2 {
     /// This method will revert unless the caller provides a sufficient fee (at least `getFeeV2(provider, gasLimit)`) as msg.value.
     /// Note that provider fees can change over time. Callers of this method should explicitly compute `getFeeV2(provider, gasLimit)`
     /// prior to each invocation (as opposed to hardcoding a value). Further note that excess value is *not* refunded to the caller.
+    ///
+    /// Note that this method uses an in-contract PRNG to generate the user's portion of the random number.
+    /// Users must trust this PRNG in order to prove the result is random. If you wish to avoid this trust assumption,
+    /// call a variant of `requestV2` that accepts a `userRandomNumber` parameter.
     function requestV2(
         address provider,
         uint32 gasLimit
