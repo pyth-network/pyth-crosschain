@@ -13,14 +13,14 @@ import type {
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useQueryState, parseAsString } from "nuqs";
+import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import styles from "./price-feeds-card.module.scss";
-import { usePriceFeeds } from "../../hooks/use-price-feeds";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
-import { AssetClassTag } from "../AssetClassTag";
+import { AssetClassBadge } from "../AssetClassBadge";
 import { EntityList } from "../EntityList";
 import { FeedKey } from "../FeedKey";
 import {
@@ -36,13 +36,16 @@ import rootStyles from "../Root/index.module.scss";
 
 type Props = {
   id: string;
-  priceFeeds: PriceFeed[];
-};
-
-type PriceFeed = {
-  symbol: string;
-  exponent: number;
-  numQuoters: number;
+  priceFeeds: {
+    symbol: string;
+    exponent: number;
+    numQuoters: number;
+    assetClass: string;
+    displaySymbol: string;
+    key: string;
+    description: string;
+    icon: ReactNode;
+  }[];
 };
 
 export const PriceFeedsCard = ({ priceFeeds, ...props }: Props) => (
@@ -59,32 +62,12 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
     "assetClass",
     parseAsString.withDefault(""),
   );
-  const feeds = usePriceFeeds();
-  const priceFeedsWithContextInfo = useMemo(
-    () =>
-      priceFeeds.map((feed) => {
-        const contextFeed = feeds.get(feed.symbol);
-        if (contextFeed) {
-          return {
-            ...feed,
-            assetClass: contextFeed.assetClass,
-            displaySymbol: contextFeed.displaySymbol,
-            key: contextFeed.key[Cluster.Pythnet],
-          };
-        } else {
-          throw new NoSuchFeedError(feed.symbol);
-        }
-      }),
-    [feeds, priceFeeds],
-  );
   const feedsFilteredByAssetClass = useMemo(
     () =>
       assetClass
-        ? priceFeedsWithContextInfo.filter(
-            (feed) => feed.assetClass === assetClass,
-          )
-        : priceFeedsWithContextInfo,
-    [assetClass, priceFeedsWithContextInfo],
+        ? priceFeeds.filter((feed) => feed.assetClass === assetClass)
+        : priceFeeds,
+    [assetClass, priceFeeds],
   );
   const {
     search,
@@ -115,7 +98,16 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
   const rows = useMemo(
     () =>
       paginatedItems.map(
-        ({ displaySymbol, symbol, exponent, numQuoters, key }) => ({
+        ({
+          displaySymbol,
+          symbol,
+          exponent,
+          numQuoters,
+          key,
+          description,
+          icon,
+          assetClass,
+        }) => ({
           id: symbol,
           href: `/price-feeds/${encodeURIComponent(symbol)}`,
           textValue: displaySymbol,
@@ -140,8 +132,14 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
             confidenceInterval: (
               <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
             ),
-            priceFeedName: <PriceFeedTag compact symbol={symbol} />,
-            assetClass: <AssetClassTag symbol={symbol} />,
+            priceFeedName: (
+              <PriceFeedTag
+                description={description}
+                displaySymbol={displaySymbol}
+                icon={icon}
+              />
+            ),
+            assetClass: <AssetClassBadge>{assetClass}</AssetClassBadge>,
             priceFeedId: (
               <FeedKey feedKey={key} className={styles.feedKey ?? ""} />
             ),
@@ -163,10 +161,10 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
 
   const assetClasses = useMemo(
     () =>
-      [
-        ...new Set(priceFeedsWithContextInfo.map((feed) => feed.assetClass)),
-      ].sort((a, b) => collator.compare(a, b)),
-    [priceFeedsWithContextInfo, collator],
+      [...new Set(priceFeeds.map((feed) => feed.assetClass))].sort((a, b) =>
+        collator.compare(a, b),
+      ),
+    [priceFeeds, collator],
   );
 
   return (
@@ -292,7 +290,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
     <EntityList
       label="Price Feeds"
       className={styles.entityList ?? ""}
-      headerLoadingSkeleton={<PriceFeedTag compact isLoading />}
+      headerLoadingSkeleton={<PriceFeedTag isLoading />}
       fields={[
         { id: "assetClass", name: "Asset Class" },
         { id: "priceFeedId", name: "Price Feed ID" },
@@ -327,7 +325,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           name: "PRICE FEED",
           isRowHeader: true,
           alignment: "left",
-          loadingSkeleton: <PriceFeedTag compact isLoading />,
+          loadingSkeleton: <PriceFeedTag isLoading />,
           allowsSorting: true,
         },
         {
@@ -392,10 +390,3 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
     />
   </Card>
 );
-
-class NoSuchFeedError extends Error {
-  constructor(symbol: string) {
-    super(`No feed exists named ${symbol}`);
-    this.name = "NoSuchFeedError";
-  }
-}

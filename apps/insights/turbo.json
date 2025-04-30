@@ -29,6 +29,9 @@
       "dependsOn": ["//#install:modules"],
       "cache": false
     },
+    "start:prod": {
+      "dependsOn": ["//#install:modules", "build:vercel"]
+    },
     "test:lint": {
       "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
     },

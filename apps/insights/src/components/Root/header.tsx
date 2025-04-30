@@ -1,6 +1,5 @@
 import { Lifebuoy } from "@phosphor-icons/react/dist/ssr/Lifebuoy";
 import { Button } from "@pythnetwork/component-library/Button";
-import { DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { Link } from "@pythnetwork/component-library/Link";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
@@ -31,18 +30,16 @@ export const Header = ({ className, tabs, ...props }: Props) => (
         <MainNavTabs className={styles.mainNavTabs ?? ""} items={tabs} />
       </div>
       <div className={styles.rightMenu}>
-        <DrawerTrigger>
-          <Button
-            beforeIcon={Lifebuoy}
-            variant="ghost"
-            size="sm"
-            rounded
-            className={styles.supportButton ?? ""}
-          >
-            Support
-          </Button>
-          <SupportDrawer />
-        </DrawerTrigger>
+        <Button
+          variant="ghost"
+          size="sm"
+          rounded
+          beforeIcon={Lifebuoy}
+          drawer={SupportDrawer}
+          className={styles.supportButton ?? ""}
+        >
+          Support
+        </Button>
         <SearchButton
           className={styles.outlineSearchButton ?? ""}
           variant="outline"

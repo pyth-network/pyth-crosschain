@@ -6,15 +6,18 @@ body {
   width: 100%;
 }
 
-:root {
-  --primary-background: #{theme.color("background", "primary")};
-  --secondary-background: #{theme.color("background", "secondary")};
-}
-
 .light {
   color-scheme: light;
 }
 
 .dark {
   color-scheme: dark;
+}
+
+.secondary .mainContent {
+  background: theme.color("background", "secondary");
+}
+
+.mainContent {
+  padding: theme.spacing(10);
 }

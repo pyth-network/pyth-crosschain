@@ -26,15 +26,32 @@
     overflow-y: hidden;
 
     @include theme.breakpoint("sm") {
-      top: theme.spacing(4);
-      bottom: theme.spacing(4);
-      left: unset;
-      right: theme.spacing(4);
-      width: 60%;
-      max-width: theme.spacing(180);
-      max-height: unset;
-      border-radius: theme.border-radius("3xl");
-      padding-bottom: theme.border-radius("3xl");
+      &[data-variant="dialog"] {
+        position: relative;
+        top: theme.spacing(32);
+        left: unset;
+        right: unset;
+        bottom: unset;
+        margin: 0 auto;
+        background: theme.color("background", "secondary");
+        border: unset;
+        border-radius: theme.border-radius("2xl");
+        padding: theme.spacing(1);
+        max-height: theme.spacing(120);
+        width: max-content;
+      }
+
+      &[data-variant="default"] {
+        top: theme.spacing(4);
+        bottom: theme.spacing(4);
+        left: unset;
+        right: theme.spacing(4);
+        width: 60%;
+        max-width: theme.spacing(180);
+        max-height: unset;
+        border-radius: theme.border-radius("3xl");
+        padding-bottom: theme.border-radius("3xl");
+      }
     }
 
     .handle {
@@ -111,6 +128,7 @@
       flex: 1;
       overflow-y: auto;
       padding: theme.spacing(4);
+      grid-auto-rows: minmax(0, max-content);
 
       @include theme.breakpoint("sm") {
         padding: theme.spacing(6);
@@ -136,14 +154,8 @@
       }
     }
 
-    &[data-hide-heading] {
-      .heading {
-        display: none;
-
-        @include theme.breakpoint("sm") {
-          display: flex;
-        }
-      }
+    &[data-hide-heading] .heading {
+      @include theme.sr-only;
     }
   }
 }

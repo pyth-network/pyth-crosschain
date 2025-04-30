@@ -42,7 +42,7 @@ export const Card = (
     return <div {...cardProps(otherProps)} />;
   } else if ("href" in props) {
     return <Link {...cardProps(props)} />;
-  } else if (overlayState !== null || "onPress" in props) {
+  } else if (overlayState !== null || "onPress" in props || "drawer" in props) {
     return <Button {...cardProps(props)} />;
   } else {
     return <div {...cardProps(props)} />;

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { Cluster, getFeeds } from "../../../services/pyth";
 
 export { PriceFeedLayout as default } from "../../../components/PriceFeed/layout";
 
 type Props = {
+  feedCountBadge: ReactNode;
+  header: ReactNode;
   params: Promise<{
     slug: string;
   }>;
@@ -29,5 +32,4 @@ export const generateMetadata = async ({
     : notFound();
 };
 
-export const dynamic = "error";
 export const revalidate = 3600;
