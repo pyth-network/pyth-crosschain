@@ -248,7 +248,11 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             numInitialFeeds
         );
 
-        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, initialPriceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(
+            pyth,
+            initialPriceFeeds,
+            slots
+        );
         bytes[] memory updateData = createMockUpdateData(initialPriceFeeds);
 
         vm.prank(pusher);
@@ -1855,7 +1859,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         slots[1] = 100; // Same slot
 
         // Mock Pyth response (should succeed in the real world as minValidTime is 0)
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Expect PricesUpdated event with the latest valid timestamp
@@ -1908,7 +1912,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         slots[1] = 100; // Same slot
 
         // Mock Pyth response (should succeed in the real world as minValidTime is 0)
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Expect revert with TimestampTooOld (checked in _validateShouldUpdatePrices)

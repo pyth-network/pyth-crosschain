@@ -9,22 +9,18 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 contract PythInternalStructs {
     using BytesLib for bytes;
 
-    struct ParseConfig {
-        uint64 minPublishTime;
-        uint64 maxPublishTime;
-        bool checkUniqueness;
-        /// When checkUpdateDataIsMinimal is true, parsing will revert
-        /// if the number of passed in updates exceeds or is less than
-        /// the length of priceIds.
-        bool checkUpdateDataIsMinimal;
-    }
-
     /// Internal struct to hold parameters for update processing
     /// @dev Storing these variable in a struct rather than local variables
     /// helps reduce stack depth when passing arguments to functions.
     struct UpdateParseContext {
         bytes32[] priceIds;
-        ParseConfig config;
+        uint64 minAllowedPublishTime;
+        uint64 maxAllowedPublishTime;
+        bool checkUniqueness;
+        /// When checkUpdateDataIsMinimal is true, parsing will revert
+        /// if the number of passed in updates exceeds or is less than
+        /// the length of priceIds.
+        bool checkUpdateDataIsMinimal;
         PythStructs.PriceFeed[] priceFeeds;
         uint64[] slots;
     }

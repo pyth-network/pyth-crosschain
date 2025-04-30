@@ -164,7 +164,7 @@ contract MockPyth is AbstractPyth {
         );
     }
 
-    function parsePriceFeedUpdatesWithSlots(
+    function parsePriceFeedUpdatesWithSlotsStrict(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
         uint64 minPublishTime,
