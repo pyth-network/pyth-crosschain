@@ -76,8 +76,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         uint256 startGas = gasleft();
         scheduler.updatePriceFeeds(
             subscriptionId,
-            createMockUpdateData(newPriceFeeds),
-            params.priceIds
+            createMockUpdateData(newPriceFeeds)
         );
         uint256 updateGasUsed = startGas - gasleft();
 
@@ -114,10 +113,6 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
             address(manager)
         );
 
-        // Fetch the price IDs
-        (SchedulerState.SubscriptionParams memory params, ) = scheduler
-            .getSubscription(subscriptionId);
-
         // Create initial price feed updates
         uint64 publishTime = SafeCast.toUint64(block.timestamp);
         PythStructs.PriceFeed[] memory priceFeeds;
@@ -133,7 +128,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
 
         // Update the price feeds. We should have enough balance to cover the update
         // because we funded the subscription with the minimum balance during creation.
-        scheduler.updatePriceFeeds(subscriptionId, updateData, params.priceIds);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
         return subscriptionId;
     }
 

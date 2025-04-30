@@ -37,6 +37,8 @@ contract EntropyInternalStructs {
         // proposedAdmin is the new admin's account address proposed by either the owner or the current admin.
         // If there is no pending transfer request, this value will hold `address(0)`.
         address proposedAdmin;
+        // Seed for in-contract PRNG. This seed is used to generate user random numbers in some callback flows.
+        bytes32 seed;
     }
 }
 
