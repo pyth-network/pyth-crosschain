@@ -208,10 +208,10 @@ abstract contract Pyth is
         if (k < context.priceIds.length && context.priceFeeds[k].id == 0) {
             uint publishTime = uint(priceInfo.publishTime);
             if (
-                publishTime >= context.config.minPublishTime &&
-                publishTime <= context.config.maxPublishTime &&
-                (!context.config.checkUniqueness ||
-                    context.config.minPublishTime > prevPublishTime)
+                publishTime >= context.minAllowedPublishTime &&
+                publishTime <= context.maxAllowedPublishTime &&
+                (!context.checkUniqueness ||
+                    context.minAllowedPublishTime > prevPublishTime)
             ) {
                 context.priceFeeds[k].id = priceId;
                 context.priceFeeds[k].price.price = priceInfo.price;
@@ -281,7 +281,7 @@ abstract contract Pyth is
         if (offset != encoded.length) {
             revert PythErrors.InvalidUpdateData();
         }
-        
+
         // Return the number of updates in this blob for tracking
         return merkleData.numUpdates;
     }
@@ -289,7 +289,10 @@ abstract contract Pyth is
     function parsePriceFeedUpdatesInternal(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
-        PythInternalStructs.ParseConfig memory config
+        uint64 minAllowedPublishTime,
+        uint64 maxAllowedPublishTime,
+        bool checkUniqueness,
+        bool checkUpdateDataIsMinimal
     )
         internal
         returns (
@@ -305,10 +308,13 @@ abstract contract Pyth is
         // Create the context struct that holds all shared parameters
         PythInternalStructs.UpdateParseContext memory context;
         context.priceIds = priceIds;
-        context.config = config;
+        context.minAllowedPublishTime = minAllowedPublishTime;
+        context.maxAllowedPublishTime = maxAllowedPublishTime;
+        context.checkUniqueness = checkUniqueness;
+        context.checkUpdateDataIsMinimal = checkUpdateDataIsMinimal;
         context.priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
         context.slots = new uint64[](priceIds.length);
-        
+
         // Track total updates for minimal update data check
         uint64 totalUpdatesAcrossBlobs = 0;
 
@@ -321,7 +327,7 @@ abstract contract Pyth is
         }
 
         // In minimal update data mode, revert if we have more or less updates than price IDs
-        if (config.checkUpdateDataIsMinimal && totalUpdatesAcrossBlobs != priceIds.length) {
+        if (checkUpdateDataIsMinimal && totalUpdatesAcrossBlobs != priceIds.length) {
             revert PythErrors.InvalidArgument();
         }
 
@@ -338,8 +344,8 @@ abstract contract Pyth is
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
+        uint64 minAllowedPublishTime,
+        uint64 maxAllowedPublishTime
     )
         external
         payable
@@ -349,20 +355,18 @@ abstract contract Pyth is
         (priceFeeds, ) = parsePriceFeedUpdatesInternal(
             updateData,
             priceIds,
-            PythInternalStructs.ParseConfig(
-                minPublishTime,
-                maxPublishTime,
-                false,
-                false
-            )
+            minAllowedPublishTime,
+            maxAllowedPublishTime,
+            false,
+            false
         );
     }
 
     function parsePriceFeedUpdatesWithSlotsStrict(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
+        uint64 minAllowedPublishTime,
+        uint64 maxAllowedPublishTime
     )
         external
         payable
@@ -376,12 +380,10 @@ abstract contract Pyth is
             parsePriceFeedUpdatesInternal(
                 updateData,
                 priceIds,
-                PythInternalStructs.ParseConfig(
-                    minPublishTime,
-                    maxPublishTime,
-                    false,
-                    true
-                )
+                minAllowedPublishTime,
+                maxAllowedPublishTime,
+                false,
+                true
             );
     }
 
@@ -549,8 +551,8 @@ abstract contract Pyth is
     function parsePriceFeedUpdatesUnique(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
+        uint64 minAllowedPublishTime,
+        uint64 maxAllowedPublishTime
     )
         external
         payable
@@ -560,12 +562,10 @@ abstract contract Pyth is
         (priceFeeds, ) = parsePriceFeedUpdatesInternal(
             updateData,
             priceIds,
-            PythInternalStructs.ParseConfig(
-                minPublishTime,
-                maxPublishTime,
-                true,
-                false
-            )
+            minAllowedPublishTime,
+            maxAllowedPublishTime,
+            true,
+            false
         );
     }
 
