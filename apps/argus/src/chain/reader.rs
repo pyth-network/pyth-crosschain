@@ -31,15 +31,3 @@ pub struct RequestedWithCallbackEvent {
     pub user_random_number: [u8; 32],
     pub provider_address: Address,
 }
-
-/// An in-flight request stored in the contract.
-/// (This struct is missing many fields that are defined in the contract, as they
-/// aren't used in fortuna anywhere. Feel free to add any missing fields as necessary.)
-#[derive(Clone, Debug)]
-pub struct Request {
-    pub provider: Address,
-    pub sequence_number: u64,
-    // The block number where this request was created
-    pub block_number: BlockNumber,
-    pub use_blockhash: bool,
-}
