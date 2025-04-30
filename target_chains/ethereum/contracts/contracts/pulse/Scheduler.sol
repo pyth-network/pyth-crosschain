@@ -247,8 +247,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
     function updatePriceFeeds(
         uint256 subscriptionId,
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds
+        bytes[] calldata updateData
     ) external override {
         uint256 startGas = gasleft();
 
@@ -261,21 +260,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         if (!params.isActive) {
             revert InactiveSubscription();
-        }
-
-        // Verify price IDs match subscription length
-        if (priceIds.length != params.priceIds.length) {
-            revert InvalidPriceIdsLength(
-                priceIds.length,
-                params.priceIds.length
-            );
-        }
-
-        // Keepers must provide priceIds in the exact same order as defined in the subscription
-        for (uint8 i = 0; i < priceIds.length; i++) {
-            if (priceIds[i] != params.priceIds[i]) {
-                revert InvalidPriceId(priceIds[i], params.priceIds[i]);
-            }
         }
 
         // Get the Pyth contract and parse price updates
@@ -299,7 +283,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             uint64[] memory slots
         ) = pyth.parsePriceFeedUpdatesWithSlots{value: pythFee}(
                 updateData,
-                priceIds,
+                params.priceIds,
                 0, // We enforce the past max validity ourselves in _validateShouldUpdatePrices
                 curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
             );
@@ -330,7 +314,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         _storePriceUpdates(subscriptionId, priceFeeds);
 
-        _processFeesAndPayKeeper(status, startGas, priceIds.length);
+        _processFeesAndPayKeeper(status, startGas, params.priceIds.length);
 
         emit PricesUpdated(subscriptionId, latestPublishTime);
     }
