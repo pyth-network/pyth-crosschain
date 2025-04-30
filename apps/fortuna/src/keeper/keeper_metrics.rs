@@ -23,6 +23,7 @@ pub struct ChainIdLabel {
 
 pub struct KeeperMetrics {
     pub current_sequence_number: Family<AccountLabel, Gauge>,
+    pub current_commitment_sequence_number: Family<AccountLabel, Gauge>,
     pub end_sequence_number: Family<AccountLabel, Gauge>,
     pub balance: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub collected_fee: Family<AccountLabel, Gauge<f64, AtomicU64>>,
@@ -48,6 +49,7 @@ impl Default for KeeperMetrics {
     fn default() -> Self {
         Self {
             current_sequence_number: Family::default(),
+            current_commitment_sequence_number: Family::default(),
             end_sequence_number: Family::default(),
             balance: Family::default(),
             collected_fee: Family::default(),
@@ -99,6 +101,12 @@ impl KeeperMetrics {
             "current_sequence_number",
             "The sequence number for a new request",
             keeper_metrics.current_sequence_number.clone(),
+        );
+
+        writable_registry.register(
+            "current_commitment_sequence_number",
+            "The sequence number for the current commitment",
+            keeper_metrics.current_commitment_sequence_number.clone(),
         );
 
         writable_registry.register(
@@ -236,6 +244,9 @@ impl KeeperMetrics {
 
             let _ = keeper_metrics
                 .current_sequence_number
+                .get_or_create(&account_label);
+            let _ = keeper_metrics
+                .current_commitment_sequence_number
                 .get_or_create(&account_label);
             let _ = keeper_metrics
                 .end_sequence_number
