@@ -991,7 +991,39 @@
         "type": "uint32"
       }
     ],
-    "name": "getFeeForGas",
+    "name": "getFeeV2",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "feeAmount",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getFeeV2",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "feeAmount",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "gasLimit",
+        "type": "uint32"
+      }
+    ],
+    "name": "getFeeV2",
     "outputs": [
       {
         "internalType": "uint128",
@@ -1371,17 +1403,49 @@
   {
     "inputs": [
       {
+        "internalType": "uint32",
+        "name": "gasLimit",
+        "type": "uint32"
+      }
+    ],
+    "name": "requestV2",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "provider",
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "userRandomNumber",
-        "type": "bytes32"
+        "internalType": "uint32",
+        "name": "gasLimit",
+        "type": "uint32"
       }
     ],
-    "name": "requestWithCallback",
+    "name": "requestV2",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "requestV2",
     "outputs": [
       {
         "internalType": "uint64",
@@ -1410,7 +1474,31 @@
         "type": "uint32"
       }
     ],
-    "name": "requestWithCallbackAndGasLimit",
+    "name": "requestV2",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "userRandomNumber",
+        "type": "bytes32"
+      }
+    ],
+    "name": "requestWithCallback",
     "outputs": [
       {
         "internalType": "uint64",

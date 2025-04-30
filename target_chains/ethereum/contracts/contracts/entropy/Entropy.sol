@@ -243,7 +243,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
-        uint128 requiredFee = getFeeForGas(provider, callbackGasLimit);
+        uint128 requiredFee = getFeeV2(provider, callbackGasLimit);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
         uint128 providerFee = getProviderFee(provider, callbackGasLimit);
         providerInfo.accruedFeesInWei += providerFee;
@@ -295,6 +295,32 @@ abstract contract Entropy is IEntropy, EntropyState {
         }
     }
 
+    function requestV2()
+        external
+        payable
+        override
+        returns (uint64 assignedSequenceNumber)
+    {
+        assignedSequenceNumber = requestV2(getDefaultProvider(), random(), 0);
+    }
+
+    function requestV2(
+        uint32 gasLimit
+    ) external payable override returns (uint64 assignedSequenceNumber) {
+        assignedSequenceNumber = requestV2(
+            getDefaultProvider(),
+            random(),
+            gasLimit
+        );
+    }
+
+    function requestV2(
+        address provider,
+        uint32 gasLimit
+    ) external payable override returns (uint64 assignedSequenceNumber) {
+        assignedSequenceNumber = requestV2(provider, random(), gasLimit);
+    }
+
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
     // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
@@ -334,14 +360,14 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 userRandomNumber
     ) public payable override returns (uint64) {
         return
-            requestWithCallbackAndGasLimit(
+            requestV2(
                 provider,
                 userRandomNumber,
                 0 // Passing 0 will assign the request the provider's default gas limit
             );
     }
 
-    function requestWithCallbackAndGasLimit(
+    function requestV2(
         address provider,
         bytes32 userRandomNumber,
         uint32 gasLimit
@@ -720,10 +746,20 @@ abstract contract Entropy is IEntropy, EntropyState {
     function getFee(
         address provider
     ) public view override returns (uint128 feeAmount) {
-        return getFeeForGas(provider, 0);
+        return getFeeV2(provider, 0);
     }
 
-    function getFeeForGas(
+    function getFeeV2() external view override returns (uint128 feeAmount) {
+        return getFeeV2(getDefaultProvider(), 0);
+    }
+
+    function getFeeV2(
+        uint32 gasLimit
+    ) external view override returns (uint128 feeAmount) {
+        return getFeeV2(getDefaultProvider(), gasLimit);
+    }
+
+    function getFeeV2(
         address provider,
         uint32 gasLimit
     ) public view override returns (uint128 feeAmount) {
@@ -1040,5 +1076,17 @@ abstract contract Entropy is IEntropy, EntropyState {
         // Note that a provider's initial registration occupies sequence number 0, so there is no way to construct
         // a randomness request with sequence number 0.
         return req.sequenceNumber != 0;
+    }
+
+    function random() internal returns (bytes32) {
+        _state.seed = keccak256(
+            abi.encodePacked(
+                block.timestamp,
+                block.difficulty,
+                msg.sender,
+                _state.seed
+            )
+        );
+        return _state.seed;
     }
 }
