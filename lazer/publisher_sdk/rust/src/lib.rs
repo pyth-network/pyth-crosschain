@@ -1,3 +1,7 @@
+pub mod transaction_envelope {
+    pub use crate::protobuf::transaction_envelope::*;
+}
+
 pub mod transaction {
     pub use crate::protobuf::pyth_lazer_transaction::*;
 }
