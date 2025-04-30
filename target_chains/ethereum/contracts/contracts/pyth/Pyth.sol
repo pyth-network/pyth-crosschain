@@ -231,7 +231,7 @@ abstract contract Pyth is
     function _processSingleUpdateDataBlob(
         bytes calldata singleUpdateData,
         PythInternalStructs.UpdateParseContext memory context
-    ) internal view {
+    ) internal view returns (uint64 numUpdates) {
         // Check magic number and length first
         if (
             singleUpdateData.length <= 4 ||
@@ -281,6 +281,9 @@ abstract contract Pyth is
         if (offset != encoded.length) {
             revert PythErrors.InvalidUpdateData();
         }
+        
+        // Return the number of updates in this blob for tracking
+        return merkleData.numUpdates;
     }
 
     function parsePriceFeedUpdatesInternal(
@@ -299,37 +302,27 @@ abstract contract Pyth is
             if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
         }
 
-        // In minimal update data mode, revert if we have more or less updates than price IDs
-        if (config.checkUpdateDataIsMinimal) {
-            uint64 totalUpdatesAcrossBlobs = 0;
-            for (uint i = 0; i < updateData.length; i++) {
-                (uint offset, ) = extractUpdateTypeFromAccumulatorHeader(
-                    updateData[i]
-                );
-
-                totalUpdatesAcrossBlobs += parseWormholeMerkleHeaderNumUpdates(
-                    updateData[i],
-                    offset
-                );
-            }
-            if (totalUpdatesAcrossBlobs != priceIds.length) {
-                revert PythErrors.InvalidArgument();
-            }
-        }
-
         // Create the context struct that holds all shared parameters
         PythInternalStructs.UpdateParseContext memory context;
         context.priceIds = priceIds;
         context.config = config;
         context.priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
         context.slots = new uint64[](priceIds.length);
+        
+        // Track total updates for minimal update data check
+        uint64 totalUpdatesAcrossBlobs = 0;
 
         unchecked {
             // Process each update, passing the context struct
             // Parsed results will be filled in context.priceFeeds and context.slots
             for (uint i = 0; i < updateData.length; i++) {
-                _processSingleUpdateDataBlob(updateData[i], context);
+                totalUpdatesAcrossBlobs += _processSingleUpdateDataBlob(updateData[i], context);
             }
+        }
+
+        // In minimal update data mode, revert if we have more or less updates than price IDs
+        if (config.checkUpdateDataIsMinimal && totalUpdatesAcrossBlobs != priceIds.length) {
+            revert PythErrors.InvalidArgument();
         }
 
         // Check all price feeds were found
