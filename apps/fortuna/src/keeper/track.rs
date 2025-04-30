@@ -65,6 +65,7 @@ pub async fn track_provider(
 
     let current_sequence_number = provider_info.sequence_number;
     let end_sequence_number = provider_info.end_sequence_number;
+    let current_commitment_sequence_number = provider_info.current_commitment_sequence_number;
 
     metrics
         .collected_fee
@@ -92,6 +93,16 @@ pub async fn track_provider(
         // a long time for it to cross the limits of i64.
         // currently prometheus only supports i64 for Gauge types
         .set(current_sequence_number as i64);
+    metrics
+        .current_commitment_sequence_number
+        .get_or_create(&AccountLabel {
+            chain_id: chain_id.clone(),
+            address: provider_address.to_string(),
+        })
+        // sequence_number type on chain is u64 but practically it will take
+        // a long time for it to cross the limits of i64.
+        // currently prometheus only supports i64 for Gauge types
+        .set(current_commitment_sequence_number as i64);
     metrics
         .end_sequence_number
         .get_or_create(&AccountLabel {
