@@ -1,0 +1,61 @@
+syntax = "proto3";
+package pyth_lazer_transaction;
+
+import "google/protobuf/timestamp.proto";
+import "pyth_lazer_transaction.proto";
+
+// Used by Pyth Lazer Relayer
+// Envelope containing the signed transaction already encoded in bytes and some auxiliary information about the transaction set by Relayer
+message TransactionEnvelope {
+    // Signed transaction message encoded with protobuf
+    optional SignedLazerTransaction signed_transaction = 1;
+
+    // context attached by Relayer for the payload within the transaction
+    // the type of context is set based on the type of payload
+    optional PayloadContext payload_context = 2;
+}
+
+message PayloadContext {
+    // Publisher ID for which the signed transaction applies to
+    optional uint32 publisher_id = 1;
+
+    // time at which relayer received the signed transaction message
+    optional google.protobuf.Timestamp relayer_receive_timestamp = 2;
+
+    oneof context {
+        PublisherUpdateContext publisher_update_context = 3;
+    }
+}
+
+// contains context for each feed update inside the publisher update
+message PublisherUpdateContext {
+    repeated FeedUpdateContext feed_update_context = 1;
+}
+
+// state for each publisher update, if transaction is of type publisher update
+// update_index corresponds to the index of the feed update inside the publisher update
+message FeedUpdateContext {
+    // array ordering is preserved when encoded and decoded
+    uint64 update_index = 1;
+    oneof status {
+        Accepted accepted = 2;
+        Rejected rejected = 3;
+    }
+}
+
+// Accepted publisher update
+message Accepted {}
+
+// Rejected publisher update and its reason for being rejected
+message Rejected {
+    RejectReason reject_reason = 1;
+}
+
+// The reasons that a publisher update might be rejected for
+enum RejectReason {
+    InvalidTimestamp = 0;
+    PriceDeviation = 1;
+    PriceOverflow = 2;
+    InvalidFeedId = 3;
+    MissingFields = 4;
+}
