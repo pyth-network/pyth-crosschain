@@ -1832,8 +1832,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             address(reader)
         );
 
-        bytes32[] memory priceIds = createPriceIds(2);
-
         // Advance time past the validity period
         vm.warp(
             block.timestamp +
@@ -1866,7 +1864,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
         // Perform update - should succeed because the latest timestamp in the update data is valid
         vm.prank(pusher);
-        scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
 
         // Verify last updated timestamp
         (, SchedulerState.SubscriptionStatus memory status) = scheduler
@@ -1884,7 +1882,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             scheduler,
             address(reader)
         );
-        bytes32[] memory priceIds = createPriceIds(2);
 
         // Advance time past the validity period
         vm.warp(
@@ -1925,7 +1922,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
         // Attempt to update price feeds
         vm.prank(pusher);
-        scheduler.updatePriceFeeds(subscriptionId, updateData, priceIds);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
     }
 
     // Required to receive ETH when withdrawing funds
