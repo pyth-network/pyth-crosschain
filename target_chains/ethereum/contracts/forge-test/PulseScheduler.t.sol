@@ -1381,10 +1381,12 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         uint256 additionalFunds = minBalanceForOneFeed -
             status_reduce.balanceInWei +
             0.01 ether;
-        scheduler.addFunds{value: additionalFunds}(subId_reduce);
 
         // Now the update should succeed
-        scheduler.updateSubscription(subId_reduce, newParams_reduce);
+        scheduler.updateSubscription{value: additionalFunds}(
+            subId_reduce,
+            newParams_reduce
+        );
 
         // Verify the subscription now has 1 feed
         (
