@@ -1,6 +1,6 @@
 use {
     crate::{
-        api::{self, BlockchainState, ChainId},
+        api::{self, ApiBlockChainState, BlockchainState, ChainId},
         chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
         config::{Commitment, Config, EthereumConfig, RunOptions},
@@ -24,7 +24,7 @@ use {
 
 pub async fn run_api(
     socket_addr: SocketAddr,
-    chains: Arc<RwLock<HashMap<String, api::BlockchainState>>>,
+    chains: Arc<RwLock<HashMap<String, ApiBlockChainState>>>,
     metrics_registry: Arc<RwLock<Registry>>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
@@ -91,7 +91,13 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     if keeper_private_key_option.is_none() {
         tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
     }
-    let chains: Arc<RwLock<HashMap<ChainId, BlockchainState>>> = Default::default();
+    let chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>> = Arc::new(RwLock::new(
+        config
+            .chains
+            .keys()
+            .map(|chain_id| (chain_id.clone(), ApiBlockChainState::Uninitialized))
+            .collect(),
+    ));
     for (chain_id, chain_config) in config.chains.clone() {
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();
@@ -111,7 +117,10 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             match state {
                 Ok(state) => {
                     keeper_metrics.add_chain(chain_id.clone(), state.provider_address);
-                    chains.write().await.insert(chain_id.clone(), state.clone());
+                    chains.write().await.insert(
+                        chain_id.clone(),
+                        ApiBlockChainState::Initialized(state.clone()),
+                    );
                     if let Some(keeper_private_key) = keeper_private_key_option {
                         spawn(keeper::run_keeper_threads(
                             keeper_private_key,
@@ -204,7 +213,7 @@ async fn setup_chain_state(
         let offset = commitment.original_commitment_sequence_number.try_into()?;
         offsets.push(offset);
 
-        let pebble_hash_chain = PebbleHashChain::from_config(
+        let pebble_hash_chain = PebbleHashChain::from_config_async(
             secret,
             chain_id,
             provider,

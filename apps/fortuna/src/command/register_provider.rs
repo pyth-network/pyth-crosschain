@@ -52,7 +52,7 @@ pub async fn register_provider_from_config(
 
     let commitment_length = provider_config.chain_length;
     tracing::info!("Generating hash chain");
-    let chain = PebbleHashChain::from_config(
+    let chain = PebbleHashChain::from_config_async(
         &secret,
         chain_id,
         &private_key_string.parse::<LocalWallet>()?.address(),

@@ -43,7 +43,24 @@ impl PebbleHashChain {
         }
     }
 
-    pub async fn from_config(
+    fn generate_secret(
+        secret: &str,
+        chain_id: &ChainId,
+        provider_address: &Address,
+        contract_address: &Address,
+        random: &[u8; 32],
+    ) -> Result<[u8; 32]> {
+        let mut input: Vec<u8> = vec![];
+        input.extend_from_slice(&hex::decode(secret.trim())?);
+        input.extend_from_slice(chain_id.as_bytes());
+        input.extend_from_slice(provider_address.as_bytes());
+        input.extend_from_slice(contract_address.as_bytes());
+        input.extend_from_slice(random);
+        let secret: [u8; 32] = Keccak256::digest(input).into();
+        Ok(secret)
+    }
+
+    pub fn from_config(
         secret: &str,
         chain_id: &ChainId,
         provider_address: &Address,
@@ -52,15 +69,27 @@ impl PebbleHashChain {
         chain_length: u64,
         sample_interval: u64,
     ) -> Result<Self> {
-        let mut input: Vec<u8> = vec![];
-        input.extend_from_slice(&hex::decode(secret.trim())?);
-        input.extend_from_slice(chain_id.as_bytes());
-        input.extend_from_slice(provider_address.as_bytes());
-        input.extend_from_slice(contract_address.as_bytes());
-        input.extend_from_slice(random);
+        let secret: [u8; 32] =
+            Self::generate_secret(secret, chain_id, provider_address, contract_address, random)?;
+        Ok(Self::new(
+            secret,
+            chain_length.try_into()?,
+            sample_interval.try_into()?,
+        ))
+    }
 
-        let secret: [u8; 32] = Keccak256::digest(input).into();
-
+    /// Asynchronous version of `from_config` that runs the computation in a blocking thread.
+    pub async fn from_config_async(
+        secret: &str,
+        chain_id: &ChainId,
+        provider_address: &Address,
+        contract_address: &Address,
+        random: &[u8; 32],
+        chain_length: u64,
+        sample_interval: u64,
+    ) -> Result<Self> {
+        let secret: [u8; 32] =
+            Self::generate_secret(secret, chain_id, provider_address, contract_address, random)?;
         let chain_length: usize = chain_length.try_into()?;
         let sample_interval: usize = sample_interval.try_into()?;
         let hash_chain = spawn_blocking(move || Self::new(secret, chain_length, sample_interval))
