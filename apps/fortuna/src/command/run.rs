@@ -107,7 +107,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         let provider_config = config.provider.clone();
         spawn(async move {
             loop {
-                let setup_result = setup_chain(
+                let setup_result = setup_chain_and_run_keeper(
                     provider_config.clone(),
                     &chain_id,
                     chain_config.clone(),
@@ -149,7 +149,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn setup_chain(
+async fn setup_chain_and_run_keeper(
     provider_config: ProviderConfig,
     chain_id: &ChainId,
     chain_config: EthereumConfig,
