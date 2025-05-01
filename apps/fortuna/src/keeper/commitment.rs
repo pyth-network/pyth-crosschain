@@ -48,8 +48,11 @@ pub async fn update_commitments_if_necessary(
     }
     let threshold =
         ((provider_info.max_num_hashes as f64) * UPDATE_COMMITMENTS_THRESHOLD_FACTOR) as u64;
-    if provider_info.sequence_number - provider_info.current_commitment_sequence_number > threshold
-    {
+    let outstanding_requests =
+        provider_info.sequence_number - provider_info.current_commitment_sequence_number;
+    if outstanding_requests > threshold {
+        // NOTE: This log message triggers a a grafana alert. If you want to change the text, please change the alert also.
+        tracing::warn!("Update commitments threshold reached -- possible outage or DDOS attack. Number of outstanding requests: {:?} Threshold: {:?}", outstanding_requests, threshold);
         let seq_number = provider_info.sequence_number - 1;
         let provider_revelation = chain_state
             .state
