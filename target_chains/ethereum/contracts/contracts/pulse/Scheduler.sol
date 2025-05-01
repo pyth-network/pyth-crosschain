@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity ^0.8.0;
-
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -11,7 +11,12 @@ import "./IScheduler.sol";
 import "./SchedulerState.sol";
 import "./SchedulerErrors.sol";
 
-abstract contract Scheduler is IScheduler, SchedulerState {
+abstract contract Scheduler is IScheduler, SchedulerState, Initializable {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function _initialize(
         address admin,
         address pythAddress,
