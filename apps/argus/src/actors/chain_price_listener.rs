@@ -2,7 +2,7 @@ use {
     crate::actors::types::*,
     anyhow::Result,
     async_trait::async_trait,
-    ractor::{Actor, ActorProcessingErr, ActorRef, RpcReplyPort},
+    ractor::{Actor, ActorProcessingErr, ActorRef},
     std::{
         collections::{HashMap, HashSet},
         sync::Arc,
@@ -12,40 +12,27 @@ use {
     tracing,
 };
 
-pub struct ChainPriceListener {
+#[allow(dead_code)]
+pub struct ChainPriceListenerState {
     chain_id: String,
-    contract: Arc<dyn PulseContractInterface + Send + Sync>,
+    contract: Arc<dyn GetChainPrices + Send + Sync>,
     feed_ids: HashSet<PriceId>,
     latest_prices: Arc<RwLock<HashMap<PriceId, Price>>>,
     poll_interval: Duration,
 }
 
-#[async_trait]
-pub trait PulseContractInterface {
-    async fn get_price_unsafe(
-        &self,
-        subscription_id: SubscriptionId,
-        feed_id: &PriceId,
-    ) -> Result<Option<Price>>;
-
-    async fn subscribe_to_price_events(&self) -> Result<()>;
-}
-
+pub struct ChainPriceListener;
 impl Actor for ChainPriceListener {
     type Msg = ChainPriceListenerMessage;
-    type State = Self;
-    type Arguments = (
-        String,
-        Arc<dyn PulseContractInterface + Send + Sync>,
-        Duration,
-    );
+    type State = ChainPriceListenerState;
+    type Arguments = (String, Arc<dyn GetChainPrices + Send + Sync>, Duration);
 
     async fn pre_start(
         &self,
-        myself: ActorRef<Self::Msg>,
+        _myself: ActorRef<Self::Msg>,
         (chain_id, contract, poll_interval): Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        let listener = ChainPriceListener {
+        let state = ChainPriceListenerState {
             chain_id: chain_id.clone(),
             contract,
             feed_ids: HashSet::new(),
@@ -53,15 +40,15 @@ impl Actor for ChainPriceListener {
             poll_interval,
         };
 
-        if let Err(e) = listener.contract.subscribe_to_price_events().await {
+        if let Err(e) = state.contract.subscribe_to_price_events().await {
             tracing::error!(
-                chain_id = listener.chain_id,
+                chain_id = state.chain_id,
                 error = %e,
                 "Failed to subscribe to price events"
             );
         }
 
-        let poll_interval = listener.poll_interval;
+        let poll_interval = state.poll_interval;
         tokio::spawn(async move {
             let mut interval = time::interval(poll_interval);
             loop {
@@ -73,7 +60,7 @@ impl Actor for ChainPriceListener {
             }
         });
 
-        Ok(listener)
+        Ok(state)
     }
 
     async fn handle(
@@ -83,9 +70,32 @@ impl Actor for ChainPriceListener {
         _state: &mut Self::State,
     ) -> Result<(), ActorProcessingErr> {
         match message {
-            ChainPriceListenerMessage::GetLatestPrice(_) => {}
-            ChainPriceListenerMessage::UpdateFeedIdSet(_) => {}
+            ChainPriceListenerMessage::GetLatestPrice(feed_id, reply_port) => {
+                let price = _state.get_latest_price(&feed_id).await;
+                reply_port.send(price)?;
+            }
+            ChainPriceListenerMessage::UpdateFeedIdSet(_) => {
+                todo!()
+            }
         }
         Ok(())
     }
+}
+
+impl ChainPriceListenerState {
+    pub async fn get_latest_price(&self, feed_id: &PriceId) -> Option<Price> {
+        let latest_prices = self.latest_prices.read().await;
+        latest_prices.get(feed_id).cloned()
+    }
+}
+
+#[async_trait]
+pub trait GetChainPrices {
+    async fn get_price_unsafe(
+        &self,
+        subscription_id: SubscriptionId,
+        feed_id: &PriceId,
+    ) -> Result<Option<Price>>;
+
+    async fn subscribe_to_price_events(&self) -> Result<()>;
 }

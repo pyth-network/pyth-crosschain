@@ -83,7 +83,7 @@ pub async fn run_keeper(
             .expect("All chains should be present in the config file")
             .clone();
         let private_key = private_key.clone();
-        handles.push(spawn(keeper::run_keeper_threads(
+        handles.push(spawn(keeper::run_keeper_for_chain(
             private_key,
             chain_eth_config,
             chain_config.clone(),

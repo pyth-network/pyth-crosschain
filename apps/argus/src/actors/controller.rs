@@ -1,17 +1,18 @@
 use {
     crate::actors::types::*,
     anyhow::Result,
-    ractor::{call, call_t, Actor, ActorProcessingErr, ActorRef},
+    ractor::{cast, Actor, ActorProcessingErr, ActorRef},
     std::{
         collections::{HashMap, HashSet},
-        sync::Arc,
         time::Duration,
     },
+    tokio::sync::watch,
     tokio::time,
     tracing,
 };
 
-pub struct Controller {
+#[allow(dead_code)]
+pub struct ControllerState {
     chain_id: String,
     subscription_listener: ActorRef<SubscriptionListenerMessage>,
     pyth_price_listener: ActorRef<PythPriceListenerMessage>,
@@ -19,13 +20,15 @@ pub struct Controller {
     price_pusher: ActorRef<PricePusherMessage>,
     update_interval: Duration,
     update_loop_running: bool,
+    stop_sender: Option<watch::Sender<bool>>,
     active_subscriptions: HashMap<SubscriptionId, Subscription>,
     feed_ids: HashSet<PriceId>,
 }
 
+pub struct Controller;
 impl Actor for Controller {
     type Msg = ControllerMessage;
-    type State = Self;
+    type State = ControllerState;
     type Arguments = (
         String,
         ActorRef<SubscriptionListenerMessage>,
@@ -47,7 +50,7 @@ impl Actor for Controller {
             update_interval,
         ): Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        let controller = Controller {
+        let state = ControllerState {
             chain_id,
             subscription_listener,
             pyth_price_listener,
@@ -55,13 +58,14 @@ impl Actor for Controller {
             price_pusher,
             update_interval,
             update_loop_running: false,
+            stop_sender: None,
             active_subscriptions: HashMap::new(),
             feed_ids: HashSet::new(),
         };
 
-        let _ = myself.cast(ControllerMessage::StartUpdateLoop);
+        cast!(myself, ControllerMessage::StartUpdateLoop)?;
 
-        Ok(controller)
+        Ok(state)
     }
 
     async fn handle(
@@ -74,87 +78,55 @@ impl Actor for Controller {
             ControllerMessage::StartUpdateLoop => {
                 if !state.update_loop_running {
                     state.update_loop_running = true;
+                    let (tx, mut rx) = watch::channel(false);
+                    state.stop_sender = Some(tx);
 
                     let update_interval = state.update_interval;
                     let myself_clone = myself.clone();
-                    tokio::spawn(async move {
-                        let mut interval = time::interval(update_interval);
-                        while let Ok(ControllerResponse::UpdateLoopStarted) =
-                            call_t!(myself_clone, ControllerMessage::StartUpdateLoop).await
-                        {
-                            interval.tick().await;
-                            let _ = myself_clone.cast(ControllerMessage::CheckForUpdates);
-                        }
-                    });
+                    let chain_id_clone = state.chain_id.clone();
 
-                    tracing::info!(chain_id = state.chain_id, "Update loop started");
+                    tokio::spawn(async move {
+                        tracing::info!(chain_id = chain_id_clone, "Update loop task started");
+                        let mut interval = time::interval(update_interval);
+
+                        loop {
+                            tokio::select! {
+                                _ = interval.tick() => {
+                                    if let Err(e) = cast!(myself_clone, ControllerMessage::CheckForUpdates) {
+                                        tracing::error!(chain_id = chain_id_clone, error = %e, "Failed to check for updates");
+                                    }
+                                }
+                                _ = rx.changed() => {
+                                    if *rx.borrow() {
+                                        tracing::info!(chain_id = chain_id_clone, "Update loop received stop signal.");
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        tracing::info!(chain_id = chain_id_clone, "Update loop task finished");
+                    });
                 }
             }
             ControllerMessage::StopUpdateLoop => {
-                state.update_loop_running = false;
-                tracing::info!(chain_id = state.chain_id, "Update loop stopped");
+                if state.update_loop_running {
+                    state.update_loop_running = false;
+                    if let Some(sender) = state.stop_sender.take() {
+                        let _ = sender.send(true);
+                    }
+                    tracing::info!(chain_id = state.chain_id, "Stop signal sent to update loop");
+                } else {
+                    tracing::warn!(
+                        chain_id = state.chain_id,
+                        "StopUpdateLoop called but loop was not running."
+                    );
+                }
             }
             ControllerMessage::CheckForUpdates => {
-                match call_t!(
-                    state.subscription_listener,
-                    SubscriptionListenerMessage::GetActiveSubscriptions
-                )
-                .await
-                {
-                    Ok(SubscriptionListenerResponse::ActiveSubscriptions(subscriptions)) => {
-                        state.active_subscriptions = subscriptions;
-
-                        let mut feed_ids = HashSet::new();
-                        for subscription in state.active_subscriptions.values() {
-                            for price_id in &subscription.price_ids {
-                                feed_ids.insert(*price_id);
-                            }
-                        }
-
-                        if feed_ids != state.feed_ids {
-                            state.feed_ids = feed_ids.clone();
-
-                            let msg_builder =
-                                PythPriceListenerMessage::UpdateFeedIdSet(feed_ids.clone());
-                            let _ = state.pyth_price_listener.cast(msg_builder);
-
-                            let _ = call_t!(
-                                state.chain_price_listener,
-                                ChainPriceListenerMessage::UpdateFeedIdSet(feed_ids)
-                            )
-                            .await;
-                        }
-
-                        for (subscription_id, subscription) in &state.active_subscriptions {
-                            if state.should_update_subscription(subscription).await {
-                                let push_request = PushRequest {
-                                    subscription_id: *subscription_id,
-                                    price_ids: subscription.price_ids.clone(),
-                                };
-
-                                let _ = state
-                                    .price_pusher
-                                    .cast(PricePusherMessage::PushPriceUpdates(push_request));
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        tracing::error!(
-                            chain_id = state.chain_id,
-                            error = %e,
-                            "Failed to get active subscriptions"
-                        );
-                    }
-                    _ => {}
-                }
+                tracing::debug!(chain_id = state.chain_id, "Received CheckForUpdates");
+                todo!()
             }
         }
         Ok(())
-    }
-}
-
-impl Controller {
-    async fn should_update_subscription(&self, subscription: &Subscription) -> bool {
-        true
     }
 }

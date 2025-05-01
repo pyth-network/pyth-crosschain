@@ -1,7 +1,8 @@
 use {
     ethers::types::{Address, U256},
+    ractor::RpcReplyPort,
     serde::{Deserialize, Serialize},
-    std::collections::{HashMap, HashSet},
+    std::collections::HashSet,
 };
 
 pub type PriceId = [u8; 32];
@@ -41,15 +42,15 @@ pub enum SubscriptionListenerMessage {
     RefreshSubscriptions,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug)]
 pub enum PythPriceListenerMessage {
-    GetLatestPrice(PriceId),
+    GetLatestPrice(PriceId, RpcReplyPort<Option<Price>>),
     UpdateFeedIdSet(HashSet<PriceId>),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug)]
 pub enum ChainPriceListenerMessage {
-    GetLatestPrice(PriceId),
+    GetLatestPrice(PriceId, RpcReplyPort<Option<Price>>),
     UpdateFeedIdSet(HashSet<PriceId>),
 }
 
@@ -69,39 +70,4 @@ pub struct PushRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PricePusherMessage {
     PushPriceUpdates(PushRequest),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum SubscriptionListenerResponse {
-    ActiveSubscriptions(HashMap<SubscriptionId, Subscription>),
-    RefreshAcknowledged,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum PythPriceListenerResponse {
-    LatestPrice(Option<Price>),
-    FeedIdSetUpdated,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ChainPriceListenerResponse {
-    LatestPrice(Option<Price>),
-    FeedIdSetUpdated,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ControllerResponse {
-    UpdateLoopStarted,
-    UpdateLoopStopped,
-    UpdateCheckResult(Vec<PushRequest>),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum PricePusherResponse {
-    PushResult {
-        success: bool,
-        subscription_id: SubscriptionId,
-        tx_hash: Option<String>,
-        error: Option<String>,
-    },
 }

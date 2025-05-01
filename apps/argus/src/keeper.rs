@@ -1,18 +1,11 @@
 use {
     crate::{
         actors::{
-            chain_price_listener::{
-                ChainPriceListener, PulseContractInterface as ChainPriceContractInterface,
-            },
+            chain_price_listener::{ChainPriceListener, GetChainPrices},
             controller::Controller,
-            price_pusher::{
-                HermesClient, PricePusher, PulseContractInterface as PricePusherContractInterface,
-            },
-            pyth_price_listener::{HermesClient as PythPriceHermesClient, PythPriceListener},
-            subscription_listener::{
-                PulseContractInterface as SubscriptionContractInterface, SubscriptionListener,
-                SubscriptionListenerState,
-            },
+            price_pusher::{GetPythPrices, PricePusher, UpdateChainPrices},
+            pyth_price_listener::{PythPriceListener, StreamPythPrices},
+            subscription_listener::{ReadChainSubscriptions, SubscriptionListener},
             types::*,
         },
         api::BlockchainState,
@@ -37,7 +30,7 @@ use {
 pub(crate) mod keeper_metrics;
 
 #[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.id))]
-pub async fn run_keeper_threads(
+pub async fn run_keeper_for_chain(
     private_key: String,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
@@ -56,7 +49,7 @@ pub async fn run_keeper_threads(
         .await
         .expect("Chain config should be valid"),
     );
-    let _keeper_address = contract.wallet().address();
+    let keeper_address = contract.wallet().address();
 
     tracing::info!(
         chain_id = chain_state.id,
@@ -100,7 +93,7 @@ pub async fn run_keeper_threads(
         SubscriptionListener,
         (
             chain_state.id.clone(),
-            subscription_contract as Arc<dyn SubscriptionContractInterface + Send + Sync>,
+            subscription_contract as Arc<dyn ReadChainSubscriptions + Send + Sync>,
             subscription_poll_interval,
         ),
     )
@@ -112,42 +105,39 @@ pub async fn run_keeper_threads(
         PythPriceListener,
         (
             chain_state.id.clone(),
-            hermes_client.clone() as Arc<dyn PythPriceHermesClient + Send + Sync>,
+            hermes_client.clone() as Arc<dyn StreamPythPrices + Send + Sync>,
         ),
-        SupervisionStrategy::Restart(5),
     )
     .await
     .expect("Failed to spawn PythPriceListener actor");
 
     let (chain_price_listener, _) = Actor::spawn(
-        None,
+        Some(String::from("ChainPriceListener")),
         ChainPriceListener,
         (
             chain_state.id.clone(),
-            chain_price_contract as Arc<dyn ChainPriceContractInterface + Send + Sync>,
+            chain_price_contract as Arc<dyn GetChainPrices + Send + Sync>,
             chain_price_poll_interval,
         ),
-        SupervisionStrategy::Restart(5),
     )
     .await
     .expect("Failed to spawn ChainPriceListener actor");
 
     let (price_pusher, _) = Actor::spawn(
-        None,
+        Some(String::from("PricePusher")),
         PricePusher,
         (
             chain_state.id.clone(),
-            price_pusher_contract as Arc<dyn PricePusherContractInterface + Send + Sync>,
-            hermes_client as Arc<dyn HermesClient + Send + Sync>,
+            price_pusher_contract as Arc<dyn UpdateChainPrices + Send + Sync>,
+            hermes_client as Arc<dyn GetPythPrices + Send + Sync>,
             backoff_policy,
         ),
-        SupervisionStrategy::Restart(5),
     )
     .await
     .expect("Failed to spawn PricePusher actor");
 
     let (_controller, _) = Actor::spawn(
-        None,
+        Some(String::from("Controller")),
         Controller,
         (
             chain_state.id.clone(),
@@ -157,7 +147,6 @@ pub async fn run_keeper_threads(
             price_pusher,
             controller_update_interval,
         ),
-        SupervisionStrategy::Restart(5),
     )
     .await
     .expect("Failed to spawn Controller actor");
@@ -165,13 +154,14 @@ pub async fn run_keeper_threads(
     tracing::info!(chain_id = chain_state.id, "Keeper actors started");
 }
 
+#[allow(dead_code)]
 struct PulseContractAdapter {
     contract: Arc<InstrumentedSignablePythContract>,
     chain_id: String,
 }
 
 #[async_trait]
-impl SubscriptionContractInterface for PulseContractAdapter {
+impl ReadChainSubscriptions for PulseContractAdapter {
     async fn get_active_subscriptions(&self) -> Result<HashMap<SubscriptionId, Subscription>> {
         tracing::debug!(chain_id = self.chain_id, "Getting active subscriptions");
         Ok(HashMap::new())
@@ -184,7 +174,7 @@ impl SubscriptionContractInterface for PulseContractAdapter {
 }
 
 #[async_trait]
-impl ChainPriceContractInterface for PulseContractAdapter {
+impl GetChainPrices for PulseContractAdapter {
     async fn get_price_unsafe(
         &self,
         subscription_id: SubscriptionId,
@@ -206,7 +196,7 @@ impl ChainPriceContractInterface for PulseContractAdapter {
 }
 
 #[async_trait]
-impl PricePusherContractInterface for PulseContractAdapter {
+impl UpdateChainPrices for PulseContractAdapter {
     async fn update_price_feeds(
         &self,
         subscription_id: SubscriptionId,
@@ -229,7 +219,7 @@ struct HermesClientAdapter {
 }
 
 #[async_trait]
-impl PythPriceHermesClient for HermesClientAdapter {
+impl StreamPythPrices for HermesClientAdapter {
     async fn connect(&self) -> Result<()> {
         tracing::debug!(chain_id = self.chain_id, "Connecting to Hermes");
         Ok(())
@@ -243,19 +233,10 @@ impl PythPriceHermesClient for HermesClientAdapter {
         );
         Ok(())
     }
-
-    async fn get_latest_price(&self, feed_id: &PriceId) -> Result<Option<Price>> {
-        tracing::debug!(
-            chain_id = self.chain_id,
-            feed_id = hex::encode(feed_id),
-            "Getting latest price from Hermes"
-        );
-        Ok(None)
-    }
 }
 
 #[async_trait]
-impl HermesClient for HermesClientAdapter {
+impl GetPythPrices for HermesClientAdapter {
     async fn get_price_update_data(&self, feed_ids: &[PriceId]) -> Result<Vec<Vec<u8>>> {
         tracing::debug!(
             chain_id = self.chain_id,

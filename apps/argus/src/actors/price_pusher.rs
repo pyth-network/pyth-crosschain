@@ -3,41 +3,27 @@ use {
     anyhow::Result,
     async_trait::async_trait,
     backoff::{backoff::Backoff, ExponentialBackoff},
-    ractor::{Actor, ActorProcessingErr, ActorRef, RpcReplyPort},
-    std::{sync::Arc, time::Duration},
+    ractor::{Actor, ActorProcessingErr, ActorRef},
+    std::sync::Arc,
     tokio::time,
     tracing,
 };
 
-pub struct PricePusher {
+pub struct PricePusherState {
     chain_id: String,
-    contract: Arc<dyn PulseContractInterface + Send + Sync>,
-    hermes_client: Arc<dyn HermesClient + Send + Sync>,
+    contract: Arc<dyn UpdateChainPrices + Send + Sync>,
+    hermes_client: Arc<dyn GetPythPrices + Send + Sync>,
     backoff_policy: ExponentialBackoff,
 }
 
-#[async_trait]
-pub trait PulseContractInterface {
-    async fn update_price_feeds(
-        &self,
-        subscription_id: SubscriptionId,
-        price_ids: &[PriceId],
-        update_data: &[Vec<u8>],
-    ) -> Result<String>;
-}
-
-#[async_trait]
-pub trait HermesClient {
-    async fn get_price_update_data(&self, feed_ids: &[PriceId]) -> Result<Vec<Vec<u8>>>;
-}
-
+pub struct PricePusher;
 impl Actor for PricePusher {
     type Msg = PricePusherMessage;
-    type State = Self;
+    type State = PricePusherState;
     type Arguments = (
         String,
-        Arc<dyn PulseContractInterface + Send + Sync>,
-        Arc<dyn HermesClient + Send + Sync>,
+        Arc<dyn UpdateChainPrices + Send + Sync>,
+        Arc<dyn GetPythPrices + Send + Sync>,
         ExponentialBackoff,
     );
 
@@ -46,14 +32,14 @@ impl Actor for PricePusher {
         _myself: ActorRef<Self::Msg>,
         (chain_id, contract, hermes_client, backoff_policy): Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        let pusher = PricePusher {
+        let state = PricePusherState {
             chain_id,
             contract,
             hermes_client,
             backoff_policy,
         };
 
-        Ok(pusher)
+        Ok(state)
     }
 
     async fn handle(
@@ -130,4 +116,18 @@ impl Actor for PricePusher {
         }
         Ok(())
     }
+}
+
+#[async_trait]
+pub trait GetPythPrices {
+    async fn get_price_update_data(&self, feed_ids: &[PriceId]) -> Result<Vec<Vec<u8>>>;
+}
+#[async_trait]
+pub trait UpdateChainPrices {
+    async fn update_price_feeds(
+        &self,
+        subscription_id: SubscriptionId,
+        price_ids: &[PriceId],
+        update_data: &[Vec<u8>],
+    ) -> Result<String>;
 }

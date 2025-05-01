@@ -1,9 +1,8 @@
 use {
-    crate::{actors::types::*, api::BlockchainState},
+    super::{Subscription, SubscriptionId, SubscriptionListenerMessage},
     anyhow::Result,
     async_trait::async_trait,
-    ethers::providers::Middleware,
-    ractor::{Actor, ActorProcessingErr, ActorRef, RpcReplyPort},
+    ractor::{Actor, ActorProcessingErr, ActorRef},
     std::{
         collections::{HashMap, HashSet},
         sync::Arc,
@@ -15,7 +14,7 @@ use {
 
 pub struct SubscriptionListenerState {
     pub chain_name: String,
-    pub contract: Arc<dyn PulseContractInterface + Send + Sync>,
+    pub contract: Arc<dyn ReadChainSubscriptions + Send + Sync>,
     pub active_subscriptions: HashMap<SubscriptionId, Subscription>,
     pub poll_interval: Duration,
 }
@@ -46,19 +45,12 @@ impl SubscriptionListenerState {
 
 pub struct SubscriptionListener;
 
-#[async_trait]
-pub trait PulseContractInterface {
-    async fn get_active_subscriptions(&self) -> Result<HashMap<SubscriptionId, Subscription>>;
-
-    async fn subscribe_to_events(&self) -> Result<()>;
-}
-
 impl Actor for SubscriptionListener {
     type Msg = SubscriptionListenerMessage;
     type State = SubscriptionListenerState;
     type Arguments = (
         String,
-        Arc<dyn PulseContractInterface + Send + Sync>,
+        Arc<dyn ReadChainSubscriptions + Send + Sync>,
         Duration,
     );
 
@@ -113,7 +105,7 @@ impl Actor for SubscriptionListener {
 
     async fn handle(
         &self,
-        myself: ActorRef<Self::Msg>,
+        _myself: ActorRef<Self::Msg>,
         message: Self::Msg,
         state: &mut Self::State,
     ) -> Result<(), ActorProcessingErr> {
@@ -133,4 +125,11 @@ impl Actor for SubscriptionListener {
         }
         Ok(())
     }
+}
+
+#[async_trait]
+pub trait ReadChainSubscriptions {
+    async fn get_active_subscriptions(&self) -> Result<HashMap<SubscriptionId, Subscription>>;
+
+    async fn subscribe_to_events(&self) -> Result<()>;
 }
