@@ -8,7 +8,10 @@ import { Link as UnstyledLink } from "../unstyled/Link/index.js";
 type OwnProps = {
   invert?: boolean | undefined;
 };
-type Props<T extends ElementType> = Omit<ComponentProps<T>, keyof OwnProps> &
+export type Props<T extends ElementType> = Omit<
+  ComponentProps<T>,
+  keyof OwnProps
+> &
   OwnProps;
 
 export const Link = (

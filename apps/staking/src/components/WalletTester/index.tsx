@@ -3,14 +3,15 @@
 import type { Idl } from "@coral-xyz/anchor";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { WalletIcon } from "@heroicons/react/24/outline";
-import {
-  TransactionBuilder,
-  sendTransactions,
-} from "@pythnetwork/solana-utils";
-import type { AnchorWallet } from "@solana/wallet-adapter-react";
+import type { PythStakingWallet } from "@pythnetwork/staking-sdk";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { PublicKey, Connection } from "@solana/web3.js";
+import {
+  PublicKey,
+  Connection,
+  VersionedTransaction,
+  TransactionMessage,
+} from "@solana/web3.js";
 import type { ComponentProps } from "react";
 import { useCallback } from "react";
 
@@ -101,7 +102,7 @@ const ConnectWallet = ({ isLoading }: { isLoading?: boolean | undefined }) => {
   );
 };
 
-const WalletConnected = ({ wallet }: { wallet: AnchorWallet }) => {
+const WalletConnected = ({ wallet }: { wallet: PythStakingWallet }) => {
   const { connection } = useConnection();
 
   const testedStatus = useData(
@@ -139,7 +140,7 @@ const WalletConnected = ({ wallet }: { wallet: AnchorWallet }) => {
   }
 };
 
-const Tester = ({ wallet }: { wallet: AnchorWallet }) => {
+const Tester = ({ wallet }: { wallet: PythStakingWallet }) => {
   const toast = useToast();
   const { connection } = useConnection();
   const { state, execute } = useAsync(() => testWallet(connection, wallet));
@@ -195,7 +196,7 @@ const Tester = ({ wallet }: { wallet: AnchorWallet }) => {
 
 const getHasAlreadyTested = async (
   connection: Connection,
-  wallet: AnchorWallet,
+  wallet: PythStakingWallet,
 ) => {
   const receiptAddress = PublicKey.findProgramAddressSync(
     [wallet.publicKey.toBytes()],
@@ -205,28 +206,28 @@ const getHasAlreadyTested = async (
   return { hasTested: receipt !== null };
 };
 
-const testWallet = async (connection: Connection, wallet: AnchorWallet) => {
+const testWallet = async (
+  connection: Connection,
+  wallet: PythStakingWallet,
+) => {
   const walletTester = new Program(
     WalletTesterIDL as Idl,
     new AnchorProvider(connection, wallet),
   );
   const testMethod = walletTester.methods.test;
   if (testMethod) {
-    await sendTransactions(
-      await TransactionBuilder.batchIntoVersionedTransactions(
-        wallet.publicKey,
-        connection,
-        [
-          {
-            instruction: await testMethod().instruction(),
-            signers: [],
-          },
-        ],
-        {},
-      ),
-      connection,
-      wallet,
+    const instruction = await testMethod().instruction();
+    const { blockhash } = await connection.getLatestBlockhash({
+      commitment: "confirmed",
+    });
+    const transaction = new VersionedTransaction(
+      new TransactionMessage({
+        payerKey: wallet.publicKey,
+        recentBlockhash: blockhash,
+        instructions: [instruction],
+      }).compileToV0Message(),
     );
+    await wallet.sendTransaction(transaction, connection);
   } else {
     throw new Error("No test method found in program");
   }

@@ -11,18 +11,6 @@ const meta = {
         category: "Contents",
       },
     },
-    href: {
-      control: "text",
-      table: {
-        category: "Link",
-      },
-    },
-    target: {
-      control: "text",
-      table: {
-        category: "Link",
-      },
-    },
     isDisabled: {
       control: "boolean",
       table: {
@@ -46,5 +34,43 @@ export const Link = {
     target: "_blank",
     isDisabled: false,
     invert: false,
+  },
+  argTypes: {
+    href: {
+      control: "text",
+      table: {
+        category: "Link",
+      },
+    },
+    target: {
+      control: "text",
+      table: {
+        category: "Link",
+      },
+    },
+  },
+} satisfies StoryObj<typeof LinkComponent>;
+
+export const DrawerLink = {
+  args: {
+    children: "Open Drawer",
+    isDisabled: false,
+    invert: false,
+    drawer: {
+      title: "Hello world",
+      contents: "This is a drawer",
+    },
+  },
+} satisfies StoryObj<typeof LinkComponent>;
+
+export const AlertLink = {
+  args: {
+    children: "Open Alert",
+    isDisabled: false,
+    invert: false,
+    alert: {
+      title: "An alert",
+      contents: "This is an alert",
+    },
   },
 } satisfies StoryObj<typeof LinkComponent>;

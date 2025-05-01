@@ -4,7 +4,7 @@ import { Select as SelectComponent } from "./index.js";
 import buttonMeta from "../Button/index.stories.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { children, beforeIcon, onPress, ...argTypes } = buttonMeta.argTypes;
+const { children, beforeIcon, ...argTypes } = buttonMeta.argTypes;
 const meta = {
   component: SelectComponent,
   argTypes: {

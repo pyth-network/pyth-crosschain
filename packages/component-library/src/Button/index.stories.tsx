@@ -60,11 +60,6 @@ const meta = {
         category: "Contents",
       },
     },
-    onPress: {
-      table: {
-        category: "Behavior",
-      },
-    },
     isPending: {
       control: "boolean",
       table: {
@@ -96,5 +91,44 @@ export const Button = {
     isPending: false,
     rounded: false,
     hideText: false,
+  },
+  argTypes: {
+    onPress: {
+      table: {
+        category: "Behavior",
+      },
+    },
+  },
+} satisfies StoryObj<typeof ButtonComponent>;
+
+export const DrawerButton = {
+  args: {
+    children: "Open Drawer",
+    variant: "primary",
+    size: "md",
+    isDisabled: false,
+    isPending: false,
+    rounded: false,
+    hideText: false,
+    drawer: {
+      title: "Hello world",
+      contents: "This is a drawer",
+    },
+  },
+} satisfies StoryObj<typeof ButtonComponent>;
+
+export const AlertButton = {
+  args: {
+    children: "Open Alert",
+    variant: "primary",
+    size: "md",
+    isDisabled: false,
+    isPending: false,
+    rounded: false,
+    hideText: false,
+    alert: {
+      title: "Alert!",
+      contents: "This is an alert",
+    },
   },
 } satisfies StoryObj<typeof ButtonComponent>;

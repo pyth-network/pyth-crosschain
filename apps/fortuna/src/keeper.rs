@@ -1,3 +1,4 @@
+use crate::keeper::track::track_block_timestamp_lag;
 use {
     crate::{
         api::{BlockchainState, ChainId},
@@ -61,10 +62,10 @@ pub async fn run_keeper_threads(
     metrics: Arc<KeeperMetrics>,
     history: Arc<RwLock<History>>,
     rpc_metrics: Arc<RpcMetrics>,
-) {
-    tracing::info!("starting keeper");
+) -> anyhow::Result<()> {
+    tracing::info!("Starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
-    tracing::info!("latest safe block: {}", &latest_safe_block);
+    tracing::info!("Latest safe block: {}", &latest_safe_block);
 
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(
@@ -73,8 +74,7 @@ pub async fn run_keeper_threads(
             chain_state.id.clone(),
             rpc_metrics.clone(),
         )
-        .await
-        .expect("Chain config should be valid"),
+        .await?,
     );
     let keeper_address = contract.wallet().address();
 
@@ -217,10 +217,19 @@ pub async fn run_keeper_threads(
                     )
                     .in_current_span(),
                 );
+                spawn(
+                    track_block_timestamp_lag(
+                        chain_id.clone(),
+                        contract.client(),
+                        keeper_metrics.clone(),
+                    )
+                    .in_current_span(),
+                );
 
                 time::sleep(TRACK_INTERVAL).await;
             }
         }
         .in_current_span(),
     );
+    Ok(())
 }

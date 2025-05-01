@@ -1,3 +1,5 @@
+"use client";
+
 import clsx from "clsx";
 import type { ComponentProps } from "react";
 import { ProgressBar } from "react-aria-components";

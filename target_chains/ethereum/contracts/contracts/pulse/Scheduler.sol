@@ -247,8 +247,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
     function updatePriceFeeds(
         uint256 subscriptionId,
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds
+        bytes[] calldata updateData
     ) external override {
         uint256 startGas = gasleft();
 
@@ -263,21 +262,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InactiveSubscription();
         }
 
-        // Verify price IDs match subscription length
-        if (priceIds.length != params.priceIds.length) {
-            revert InvalidPriceIdsLength(
-                priceIds.length,
-                params.priceIds.length
-            );
-        }
-
-        // Keepers must provide priceIds in the exact same order as defined in the subscription
-        for (uint8 i = 0; i < priceIds.length; i++) {
-            if (priceIds[i] != params.priceIds[i]) {
-                revert InvalidPriceId(priceIds[i], params.priceIds[i]);
-            }
-        }
-
         // Get the Pyth contract and parse price updates
         IPyth pyth = IPyth(_state.pyth);
         uint256 pythFee = pyth.getUpdateFee(updateData);
@@ -287,18 +271,20 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InsufficientBalance();
         }
 
-        // Parse the price feed updates with an acceptable timestamp range of [-1h, +10s] from now.
-        // We will validate the trigger conditions ourselves.
+        // Parse the price feed updates with an acceptable timestamp range of [0, now+10s].
+        // Note: We don't want to reject update data if it contains a price
+        // from a market that closed a few days ago, since it will contain a timestamp
+        // from the last trading period. Thus, we use a minimum timestamp of zero while parsing,
+        // and we enforce the past max validity ourselves in _validateShouldUpdatePrices using
+        // the highest timestamp in the update data.
         uint64 curTime = SafeCast.toUint64(block.timestamp);
         (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
         ) = pyth.parsePriceFeedUpdatesWithSlots{value: pythFee}(
                 updateData,
-                priceIds,
-                curTime > PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
-                    ? curTime - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
-                    : 0,
+                params.priceIds,
+                0, // We enforce the past max validity ourselves in _validateShouldUpdatePrices
                 curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
             );
         status.balanceInWei -= pythFee;
@@ -315,21 +301,20 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // Verify that update conditions are met, and that the timestamp
         // is more recent than latest stored update's. Reverts if not.
-        _validateShouldUpdatePrices(subscriptionId, params, status, priceFeeds);
+        uint256 latestPublishTime = _validateShouldUpdatePrices(
+            subscriptionId,
+            params,
+            status,
+            priceFeeds
+        );
 
         // Update status and store the updates
-        uint256 latestPublishTime = 0; // Use the most recent publish time from the validated feeds
-        for (uint8 i = 0; i < priceFeeds.length; i++) {
-            if (priceFeeds[i].price.publishTime > latestPublishTime) {
-                latestPublishTime = priceFeeds[i].price.publishTime;
-            }
-        }
         status.priceLastUpdatedAt = latestPublishTime;
         status.totalUpdates += priceFeeds.length;
 
         _storePriceUpdates(subscriptionId, priceFeeds);
 
-        _processFeesAndPayKeeper(status, startGas, priceIds.length);
+        _processFeesAndPayKeeper(status, startGas, params.priceIds.length);
 
         emit PricesUpdated(subscriptionId, latestPublishTime);
     }
@@ -340,13 +325,14 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      * @param params The subscription's parameters struct.
      * @param status The subscription's status struct.
      * @param priceFeeds The array of price feeds to validate.
+     * @return The timestamp of the update if the trigger criteria is met, reverts if not met.
      */
     function _validateShouldUpdatePrices(
         uint256 subscriptionId,
         SubscriptionParams storage params,
         SubscriptionStatus storage status,
         PythStructs.PriceFeed[] memory priceFeeds
-    ) internal view returns (bool) {
+    ) internal view returns (uint256) {
         // Use the most recent timestamp, as some asset markets may be closed.
         // Closed markets will have a publishTime from their last trading period.
         // Since we verify all updates share the same Pythnet slot, we still ensure
@@ -356,6 +342,18 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             if (priceFeeds[i].price.publishTime > updateTimestamp) {
                 updateTimestamp = priceFeeds[i].price.publishTime;
             }
+        }
+
+        // Calculate the minimum acceptable timestamp (clamped at 0)
+        // The maximum acceptable timestamp is enforced by the parsePriceFeedUpdatesWithSlots call
+        uint256 minAllowedTimestamp = (block.timestamp >
+            PAST_TIMESTAMP_MAX_VALIDITY_PERIOD)
+            ? (block.timestamp - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD)
+            : 0;
+
+        // Validate that the update timestamp is not too old
+        if (updateTimestamp < minAllowedTimestamp) {
+            revert TimestampTooOld(updateTimestamp, block.timestamp);
         }
 
         // Reject updates if they're older than the latest stored ones
@@ -378,7 +376,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 updateTimestamp >=
                 lastUpdateTime + params.updateCriteria.heartbeatSeconds
             ) {
-                return true;
+                return updateTimestamp;
             }
         }
 
@@ -391,7 +389,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
                 // If there's no previous price, this is the first update
                 if (previousFeed.id == bytes32(0)) {
-                    return true;
+                    return updateTimestamp;
                 }
 
                 // Calculate the deviation percentage
@@ -418,7 +416,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 if (
                     deviationBps >= params.updateCriteria.deviationThresholdBps
                 ) {
-                    return true;
+                    return updateTimestamp;
                 }
             }
         }
@@ -768,12 +766,13 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InsufficientBalance();
         }
 
-        // Pay keeper and update status if successful
+        status.balanceInWei -= totalKeeperFee;
+        status.totalSpent += totalKeeperFee;
+
+        // Pay keeper and update status
         (bool sent, ) = msg.sender.call{value: totalKeeperFee}("");
         if (!sent) {
             revert KeeperPaymentFailed();
         }
-        status.balanceInWei -= totalKeeperFee;
-        status.totalSpent += totalKeeperFee;
     }
 }

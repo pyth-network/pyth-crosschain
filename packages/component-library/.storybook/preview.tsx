@@ -2,46 +2,35 @@ import { sans } from "@pythnetwork/fonts";
 import { withThemeByClassName } from "@storybook/addon-themes";
 import type { Preview, Decorator } from "@storybook/react";
 import clsx from "clsx";
-import { useState } from "react";
 
 import "../src/Html/base.scss";
 import styles from "./storybook.module.scss";
-import { OverlayVisibleContext } from "../src/overlay-visible-context.js";
+import { MainContent } from "../src/MainContent";
 
 const preview = {
   parameters: {
+    layout: "fullscreen",
     backgrounds: {
-      grid: {
-        cellSize: 4,
-        cellAmount: 4,
-      },
-      options: {
-        primary: { name: "Primary", value: "var(--primary-background)" },
-        secondary: { name: "Secondary", value: "var(--secondary-background)" },
-      },
+      disable: true,
     },
     actions: { argTypesRegex: "^on[A-Z].*" },
-  },
-  initialGlobals: {
-    backgrounds: { value: "primary" },
   },
 } satisfies Preview;
 
 export default preview;
 
 export const decorators: Decorator[] = [
-  (Story) => {
-    const overlayVisibleState = useState(false);
-    return (
-      <OverlayVisibleContext value={overlayVisibleState}>
-        <Story />
-      </OverlayVisibleContext>
-    );
-  },
+  (Story) => (
+    <MainContent className={clsx(sans.className, styles.mainContent)}>
+      <Story />
+    </MainContent>
+  ),
   withThemeByClassName({
     themes: {
-      Light: clsx(sans.className, styles.light),
-      Dark: clsx(sans.className, styles.dark),
+      Light: styles.light ?? "",
+      "Light (Secondary Background)": clsx(styles.light, styles.secondary),
+      Dark: styles.dark ?? "",
+      "Dark (Secondary Background)": clsx(styles.dark, styles.secondary),
     },
     defaultTheme: "Light",
   }),

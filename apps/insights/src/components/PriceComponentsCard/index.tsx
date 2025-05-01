@@ -35,6 +35,7 @@ import { EvaluationTime } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
 import { LivePrice, LiveConfidence, LiveComponentValue } from "../LivePrices";
 import { NoResults } from "../NoResults";
+import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceName } from "../PriceName";
 import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
@@ -44,21 +45,33 @@ const SCORE_WIDTH = 32;
 
 type Props<U extends string, T extends PriceComponent & Record<U, unknown>> = {
   className?: string | undefined;
-  priceComponents: T[];
-  metricsTime?: Date | undefined;
   nameLoadingSkeleton: ReactNode;
   label: string;
   searchPlaceholder: string;
-  onPriceComponentAction: (component: T) => void;
   toolbarExtra?: ReactNode;
   assetClass?: string | undefined;
   extraColumns?: ColumnConfig<U>[] | undefined;
   nameWidth?: number | undefined;
-};
+  identifiesPublisher?: boolean | undefined;
+} & (
+  | {
+      isLoading: true;
+    }
+  | {
+      isLoading?: false | undefined;
+      priceComponents: T[];
+      metricsTime?: Date | undefined;
+    }
+);
 
-type PriceComponent = {
+export type PriceComponent = {
   id: string;
   score: number | undefined;
+  rank: number | undefined;
+  symbol: string;
+  displaySymbol: string;
+  firstEvaluation?: Date | undefined;
+  assetClass: string;
   uptimeScore: number | undefined;
   deviationScore: number | undefined;
   stalledScore: number | undefined;
@@ -73,31 +86,45 @@ type PriceComponent = {
 export const PriceComponentsCard = <
   U extends string,
   T extends PriceComponent & Record<U, unknown>,
->({
-  priceComponents,
-  onPriceComponentAction,
-  ...props
-}: Props<U, T>) => (
-  <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
-    <ResolvedPriceComponentsCard
-      priceComponents={priceComponents}
-      onPriceComponentAction={onPriceComponentAction}
-      {...props}
-    />
-  </Suspense>
-);
+>(
+  props: Props<U, T>,
+) => {
+  if (props.isLoading) {
+    return <PriceComponentsCardContents {...props} />;
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { isLoading, priceComponents, ...otherProps } = props;
+    return (
+      <Suspense
+        fallback={<PriceComponentsCardContents isLoading {...otherProps} />}
+      >
+        <ResolvedPriceComponentsCard
+          priceComponents={priceComponents}
+          {...otherProps}
+        />
+      </Suspense>
+    );
+  }
+};
 
 export const ResolvedPriceComponentsCard = <
   U extends string,
   T extends PriceComponent & Record<U, unknown>,
 >({
   priceComponents,
-  onPriceComponentAction,
+  identifiesPublisher,
   ...props
-}: Props<U, T>) => {
+}: Omit<Props<U, T>, "isLoading"> & {
+  priceComponents: T[];
+  metricsTime?: Date | undefined;
+}) => {
   const logger = useLogger();
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
+  const { selectComponent } = usePriceComponentDrawer({
+    components: priceComponents,
+    identifiesPublisher,
+  });
   const [status, setStatus] = useQueryState(
     "status",
     parseAsStringEnum(["", ...Object.values(STATUS_NAMES)]).withDefault(""),
@@ -186,6 +213,9 @@ export const ResolvedPriceComponentsCard = <
       paginatedItems.map((component) => ({
         id: component.id,
         nameAsString: component.nameAsString,
+        onAction: () => {
+          selectComponent(component);
+        },
         data: {
           name: component.name,
           ...Object.fromEntries(
@@ -239,11 +269,8 @@ export const ResolvedPriceComponentsCard = <
           ),
           status: <StatusComponent status={component.status} />,
         },
-        onAction: () => {
-          onPriceComponentAction(component);
-        },
       })),
-    [paginatedItems, onPriceComponentAction, props.extraColumns],
+    [paginatedItems, props.extraColumns, selectComponent],
   );
 
   const updateStatus = useCallback(
@@ -294,7 +321,6 @@ type PriceComponentsCardProps<
 > = Pick<
   Props<U, T>,
   | "className"
-  | "metricsTime"
   | "nameLoadingSkeleton"
   | "label"
   | "searchPlaceholder"
@@ -307,6 +333,7 @@ type PriceComponentsCardProps<
     | { isLoading: true }
     | {
         isLoading?: false;
+        metricsTime?: Date | undefined;
         numResults: number;
         search: string;
         sortDescriptor: SortDescriptor;
@@ -331,7 +358,6 @@ export const PriceComponentsCardContents = <
   T extends PriceComponent & Record<U, unknown>,
 >({
   className,
-  metricsTime,
   nameLoadingSkeleton,
   label,
   searchPlaceholder,
@@ -347,11 +373,9 @@ export const PriceComponentsCardContents = <
       title={
         <>
           <span>{label}</span>
-          {!props.isLoading && (
-            <Badge style="filled" variant="neutral" size="md">
-              {props.numResults}
-            </Badge>
-          )}
+          <Badge style="filled" variant="neutral" size="md">
+            {!props.isLoading && props.numResults}
+          </Badge>
         </>
       }
       toolbar={
@@ -501,7 +525,9 @@ export const PriceComponentsCardContents = <
                       <b>Unranked</b> feeds have not yet been evaluated by Pyth
                     </li>
                   </ul>
-                  {metricsTime && <EvaluationTime scoreTime={metricsTime} />}
+                  {!props.isLoading && props.metricsTime && (
+                    <EvaluationTime scoreTime={props.metricsTime} />
+                  )}
                 </Explain>
               </>
             ),

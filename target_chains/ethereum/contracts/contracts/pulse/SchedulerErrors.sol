@@ -21,6 +21,10 @@ error PriceSlotMismatch();
 // Update criteria errors
 error InvalidUpdateCriteria();
 error UpdateConditionsNotMet();
+error TimestampTooOld(
+    uint256 providedUpdateTimestamp,
+    uint256 currentTimestamp
+);
 error TimestampOlderThanLastUpdate(
     uint256 providedUpdateTimestamp,
     uint256 lastUpdatedAt

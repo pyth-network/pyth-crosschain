@@ -1,10 +1,17 @@
 use {
     crate::{
         api::ChainId,
-        chain::reader::{
-            self, BlockNumber, BlockStatus, RequestedWithCallbackEvent,
-        },
+        chain::reader::{BlockNumber, BlockStatus},
         config::EthereumConfig,
+    },
+    anyhow::{Error, Result},
+    ethers::{
+        contract::abigen,
+        middleware::{gas_oracle::GasOracleMiddleware, SignerMiddleware},
+        prelude::JsonRpcClient,
+        providers::{Http, Middleware, Provider},
+        signers::{LocalWallet, Signer},
+        types::BlockNumber as EthersBlockNumber,
     },
     fortuna::eth_utils::{
         eth_gas_oracle::EthProviderOracle,
@@ -12,26 +19,14 @@ use {
         nonce_manager::NonceManagerMiddleware,
         traced_client::{RpcMetrics, TracedClient},
     },
-    anyhow::{anyhow, Error, Result},
-    ethers::{
-        abi::RawLog,
-        contract::{abigen, EthLogDecode},
-        core::types::Address,
-        middleware::{gas_oracle::GasOracleMiddleware, SignerMiddleware},
-        prelude::JsonRpcClient,
-        providers::{Http, Middleware, Provider},
-        signers::{LocalWallet, Signer},
-        types::{BlockNumber as EthersBlockNumber, U256},
-    },
-    sha3::{Digest, Keccak256},
     std::sync::Arc,
 };
 
-// TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
-// contract in the same repo.
+// FIXME: When public scheduler interface is extracted out to an SDK,
+// get the ABI from the SDK package.
 abigen!(
-    PythRandom,
-    "../../target_chains/ethereum/entropy_sdk/solidity/abis/IEntropy.json"
+    PythPulse,
+    "../../target_chains/ethereum/contracts/out/IScheduler.sol/IScheduler.abi.json"
 );
 
 pub type MiddlewaresWrapper<T> = LegacyTxMiddleware<
@@ -41,12 +36,12 @@ pub type MiddlewaresWrapper<T> = LegacyTxMiddleware<
     >,
 >;
 
-pub type SignablePythContractInner<T> = PythRandom<MiddlewaresWrapper<T>>;
+pub type SignablePythContractInner<T> = PythPulse<MiddlewaresWrapper<T>>;
 pub type SignablePythContract = SignablePythContractInner<Http>;
 pub type InstrumentedSignablePythContract = SignablePythContractInner<TracedClient>;
 
-pub type PythContract = PythRandom<Provider<Http>>;
-pub type InstrumentedPythContract = PythRandom<Provider<TracedClient>>;
+pub type PythContract = PythPulse<Provider<Http>>;
+pub type InstrumentedPythContract = PythPulse<Provider<TracedClient>>;
 
 impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
     /// Get the wallet that signs transactions sent to this contract.
@@ -57,73 +52,6 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
     /// Get the underlying provider that communicates with the blockchain.
     pub fn provider(&self) -> Provider<T> {
         self.client().inner().inner().inner().provider().clone()
-    }
-
-    /// Submit a request for a random number to the contract.
-    ///
-    /// This method is a version of the autogenned `request` method that parses the emitted logs
-    /// to return the sequence number of the created Request.
-    pub async fn request_wrapper(
-        &self,
-        provider: &Address,
-        user_randomness: &[u8; 32],
-        use_blockhash: bool,
-    ) -> Result<u64> {
-        let fee = self.get_fee(*provider).call().await?;
-
-        let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
-
-        if let Some(r) = self
-            .request(*provider, hashed_randomness, use_blockhash)
-            .value(fee)
-            .send()
-            .await?
-            .await?
-        {
-            // Extract Log from TransactionReceipt.
-            let l: RawLog = r.logs[0].clone().into();
-            if let PythRandomEvents::RequestedFilter(r) = PythRandomEvents::decode_log(&l)? {
-                Ok(r.request.sequence_number)
-            } else {
-                Err(anyhow!("No log with sequence number"))
-            }
-        } else {
-            Err(anyhow!("Request failed"))
-        }
-    }
-
-    /// Reveal the generated random number to the contract.
-    ///
-    /// This method is a version of the autogenned `reveal` method that parses the emitted logs
-    /// to return the generated random number.
-    pub async fn reveal_wrapper(
-        &self,
-        provider: &Address,
-        sequence_number: u64,
-        user_randomness: &[u8; 32],
-        provider_randomness: &[u8; 32],
-    ) -> Result<[u8; 32]> {
-        if let Some(r) = self
-            .reveal(
-                *provider,
-                sequence_number,
-                *user_randomness,
-                *provider_randomness,
-            )
-            .send()
-            .await?
-            .await?
-        {
-            if let PythRandomEvents::RevealedFilter(r) =
-                PythRandomEvents::decode_log(&r.logs[0].clone().into())?
-            {
-                Ok(r.random_number)
-            } else {
-                Err(anyhow!("No log with randomnumber"))
-            }
-        } else {
-            Err(anyhow!("Request failed"))
-        }
     }
 
     pub async fn from_config_and_provider(
@@ -140,7 +68,7 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
 
         let address = wallet__.address();
 
-        Ok(PythRandom::new(
+        Ok(PythPulse::new(
             chain_config.contract_addr,
             Arc::new(LegacyTxMiddleware::new(
                 chain_config.legacy_tx,
@@ -176,7 +104,7 @@ impl PythContract {
     pub fn from_config(chain_config: &EthereumConfig) -> Result<Self> {
         let provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
 
-        Ok(PythRandom::new(
+        Ok(PythPulse::new(
             chain_config.contract_addr,
             Arc::new(provider),
         ))
@@ -191,41 +119,18 @@ impl InstrumentedPythContract {
     ) -> Result<Self> {
         let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
 
-        Ok(PythRandom::new(
+        Ok(PythPulse::new(
             chain_config.contract_addr,
             Arc::new(provider),
         ))
     }
 }
 
-impl<M: Middleware + 'static> PythRandom<M> {
-
-    pub async fn get_request_wrapper(
+impl<M: Middleware + 'static> PythPulse<M> {
+    pub async fn get_block_number(
         &self,
-        provider_address: Address,
-        sequence_number: u64,
-    ) -> Result<Option<reader::Request>> {
-        let r = self
-            .get_request(provider_address, sequence_number)
-            // TODO: This doesn't work for lighlink right now. Figure out how to do this in lightlink
-            // .block(ethers::core::types::BlockNumber::Finalized)
-            .call()
-            .await?;
-
-        // sequence_number == 0 means the request does not exist.
-        if r.sequence_number != 0 {
-            Ok(Some(reader::Request {
-                provider: r.provider,
-                sequence_number: r.sequence_number,
-                block_number: r.block_number,
-                use_blockhash: r.use_blockhash,
-            }))
-        } else {
-            Ok(None)
-        }
-    }
-
-    pub async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
+        confirmed_block_status: BlockStatus,
+    ) -> Result<BlockNumber> {
         let block_number: EthersBlockNumber = confirmed_block_status.into();
         let block = self
             .client()
@@ -237,47 +142,5 @@ impl<M: Middleware + 'static> PythRandom<M> {
             .number
             .ok_or_else(|| Error::msg("pending confirmation"))?
             .as_u64())
-    }
-
-    pub async fn get_request_with_callback_events(
-        &self,
-        from_block: BlockNumber,
-        to_block: BlockNumber,
-    ) -> Result<Vec<RequestedWithCallbackEvent>> {
-        let mut event = self.requested_with_callback_filter();
-        event.filter = event.filter.from_block(from_block).to_block(to_block);
-
-        let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
-
-        Ok(res
-            .iter()
-            .map(|r| RequestedWithCallbackEvent {
-                sequence_number: r.sequence_number,
-                user_random_number: r.user_random_number,
-                provider_address: r.request.provider,
-            })
-            .collect())
-    }
-
-    pub async fn estimate_reveal_with_callback_gas(
-        &self,
-        sender: Address,
-        provider: Address,
-        sequence_number: u64,
-        user_random_number: [u8; 32],
-        provider_revelation: [u8; 32],
-    ) -> Result<U256> {
-        let result = self
-            .reveal_with_callback(
-                provider,
-                sequence_number,
-                user_random_number,
-                provider_revelation,
-            )
-            .from(sender)
-            .estimate_gas()
-            .await;
-
-        result.map_err(|e| e.into())
     }
 }
