@@ -1,3 +1,4 @@
+use crate::api::ApiBlockChainState;
 use crate::chain::reader::BlockNumber;
 use {
     crate::api::{ChainId, RequestLabel, RestError},
@@ -46,8 +47,18 @@ pub async fn revelation(
 
     let state = state
         .chains
+        .read()
+        .await
         .get(&chain_id)
-        .ok_or(RestError::InvalidChainId)?;
+        .ok_or(RestError::InvalidChainId)?
+        .clone();
+
+    let state = match state {
+        ApiBlockChainState::Initialized(state) => state,
+        ApiBlockChainState::Uninitialized => {
+            return Err(RestError::Uninitialized);
+        }
+    };
 
     let current_block_number_fut = state
         .contract
