@@ -1,7 +1,7 @@
-use std::collections::{BTreeMap, VecDeque};
 use chrono::DateTime;
 use ethers::types::TxHash;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use std::collections::BTreeMap;
 use utoipa::ToSchema;
 use {
     crate::{
@@ -27,14 +27,15 @@ use {
     url::Url,
 };
 pub use {chain_ids::*, index::*, live::*, metrics::*, ready::*, revelation::*};
+use crate::api::explorer::get_requests;
 
 mod chain_ids;
+mod explorer;
 mod index;
 mod live;
 mod metrics;
 mod ready;
 mod revelation;
-mod explorer;
 
 pub type ChainId = String;
 
@@ -47,22 +48,12 @@ pub struct ApiMetrics {
     pub http_requests: Family<RequestLabel, Counter>,
 }
 
-
-
 #[derive(Clone, Debug, Serialize)]
-enum JournalLog {
-    Observed {
-        tx_hash: TxHash
-    },
-    FailedToReveal {
-        reason: String,
-    },
-    Revealed {
-        tx_hash: TxHash
-    },
-    Landed {
-        block_number: BlockNumber,
-    }
+pub enum JournalLog {
+    Observed { tx_hash: TxHash },
+    FailedToReveal { reason: String },
+    Revealed { tx_hash: TxHash },
+    Landed { block_number: BlockNumber },
 }
 
 impl JournalLog {
@@ -77,13 +68,13 @@ impl JournalLog {
 }
 
 #[derive(Clone, Debug, Serialize)]
-struct TimedJournalLog {
+pub struct TimedJournalLog {
     pub timestamp: DateTime<chrono::Utc>,
-    pub log:JournalLog,
+    pub log: JournalLog,
 }
 
 #[derive(Clone, Debug, Serialize, ToSchema)]
-struct RequestJournal {
+pub struct RequestJournal {
     pub chain_id: ChainId,
     pub sequence: u64,
     pub journal: Vec<TimedJournalLog>,
@@ -105,27 +96,32 @@ impl History {
         Self::default()
     }
 
-    pub fn add(&mut self, (chain_id, sequence): RequestKey, request_journal_log: TimedJournalLog){
+    pub fn add(&mut self, (chain_id, sequence): RequestKey, request_journal_log: TimedJournalLog) {
         let mut new_entry = false;
-        let entry = self.by_request_key.entry((chain_id.clone(), sequence)).or_insert_with(|| {
-            new_entry = true;
-            RequestJournal {
-                chain_id: chain_id.clone(),
-                sequence,
-                journal: vec![],
-            }
-        });
-        request_journal_log.log.get_tx_hash().map(|tx_hash| {
+        let entry = self
+            .by_request_key
+            .entry((chain_id.clone(), sequence))
+            .or_insert_with(|| {
+                new_entry = true;
+                RequestJournal {
+                    chain_id: chain_id.clone(),
+                    sequence,
+                    journal: vec![],
+                }
+            });
+        if let Some(tx_hash) = request_journal_log.log.get_tx_hash() {
             self.by_hash
                 .entry(tx_hash)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push((chain_id.clone(), sequence));
-        });
+        }
         entry.journal.push(request_journal_log);
         if new_entry {
             let current_time = chrono::Utc::now();
-            self.by_chain_and_time
-                .insert((chain_id.clone(), current_time), (chain_id.clone(), sequence));
+            self.by_chain_and_time.insert(
+                (chain_id.clone(), current_time),
+                (chain_id.clone(), sequence),
+            );
             self.by_time
                 .insert(current_time, (chain_id.clone(), sequence));
 
@@ -140,41 +136,55 @@ impl History {
     }
 
     pub fn get_request_logs_by_tx_hash(&self, tx_hash: TxHash) -> Vec<RequestJournal> {
-        self.by_hash.get(&tx_hash).map(|request_keys| {
-            request_keys.iter()
-                .map(|request_key| self.by_request_key.get(request_key).unwrap().clone())
-                .collect()
-        }).unwrap_or_default()
+        self.by_hash
+            .get(&tx_hash)
+            .map(|request_keys| {
+                request_keys
+                    .iter()
+                    .map(|request_key| self.by_request_key.get(request_key).unwrap().clone())
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
-    pub fn get_latest_requests(&self, chain_id: Option<&ChainId>, limit: u64,
-                               min_timestamp: Option<DateTime<chrono::Utc>>,
-                               max_timestamp: Option<DateTime<chrono::Utc>>) -> Vec<RequestJournal> {
+    pub fn get_latest_requests(
+        &self,
+        chain_id: Option<&ChainId>,
+        limit: u64,
+        min_timestamp: Option<DateTime<chrono::Utc>>,
+        max_timestamp: Option<DateTime<chrono::Utc>>,
+    ) -> Vec<RequestJournal> {
         match chain_id {
             Some(chain_id) => {
-                let range = self.by_chain_and_time.range((chain_id.clone(), min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC))..(chain_id.clone(), max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC)));
-                range.rev()
-                    .take(limit as usize)
-                    .map(|(_, request_key)| {
-                        self.by_request_key.get(request_key).unwrap().clone()
-                    })
-                    .collect()
-
-            },
-            None => {
-                self.by_time
-                    .range(min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC)..max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC))
+                let range = self.by_chain_and_time.range(
+                    (
+                        chain_id.clone(),
+                        min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC),
+                    )
+                        ..(
+                        chain_id.clone(),
+                        max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC),
+                    ),
+                );
+                range
                     .rev()
                     .take(limit as usize)
-                    .map(|(_time, request_key)| {
-                        self.by_request_key.get(request_key).unwrap().clone()
-                    })
-                    .collect::<Vec<_>>()
-            },
+                    .map(|(_, request_key)| self.by_request_key.get(request_key).unwrap().clone())
+                    .collect()
+            }
+            None => self
+                .by_time
+                .range(
+                    min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC)
+                        ..max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC),
+                )
+                .rev()
+                .take(limit as usize)
+                .map(|(_time, request_key)| self.by_request_key.get(request_key).unwrap().clone())
+                .collect::<Vec<_>>(),
         }
     }
 }
-
 
 #[derive(Clone)]
 pub struct ApiState {
@@ -192,7 +202,7 @@ impl ApiState {
     pub async fn new(
         chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
         metrics_registry: Arc<RwLock<Registry>>,
-        history: Arc<RwLock<History>>
+        history: Arc<RwLock<History>>,
     ) -> ApiState {
         let metrics = ApiMetrics {
             http_requests: Family::default(),
@@ -312,6 +322,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
         .route("/metrics", get(metrics))
         .route("/ready", get(ready))
         .route("/v1/chains", get(chain_ids))
+        .route("/v1/explorer", get(get_requests))
         .route(
             "/v1/chains/:chain_id/revelations/:sequence",
             get(revelation),
@@ -397,7 +408,7 @@ mod test {
             ApiBlockChainState::Initialized(avax_state),
         );
 
-        let api_state = ApiState::new(Arc::new(RwLock::new(chains)), metrics_registry).await;
+        let api_state = ApiState::new(Arc::new(RwLock::new(chains)), metrics_registry, Default::default()).await;
 
         let app = api::routes(api_state);
         (TestServer::new(app).unwrap(), eth_read, avax_read)

@@ -1,10 +1,11 @@
-use axum::extract::{Path, Query, State};
+use crate::api::{
+    ChainId, RequestJournal, RestError
+    ,
+};
+use axum::extract::{Query, State};
 use axum::Json;
 use ethers::types::TxHash;
 use utoipa::IntoParams;
-use crate::api::{BinaryEncoding, ChainId, GetRandomValueResponse, RequestJournal, RestError, RevelationPathParams, RevelationQueryParams};
-use crate::chain::reader::BlockNumber;
-
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
@@ -43,13 +44,31 @@ pub async fn get_requests(
 ) -> anyhow::Result<Json<Vec<RequestJournal>>, RestError> {
     let result = match query_params.mode {
         ExplorerQueryParamsMode::TxHash => {
-            let tx_hash = query_params.tx_hash.ok_or(RestError::BadFilterParameters("tx_hash is required when mode=tx-hash".to_string()))?;
-            state.history.read().await.get_request_logs_by_tx_hash(tx_hash)
+            let tx_hash = query_params.tx_hash.ok_or(RestError::BadFilterParameters(
+                "tx_hash is required when mode=tx-hash".to_string(),
+            ))?;
+            state
+                .history
+                .read()
+                .await
+                .get_request_logs_by_tx_hash(tx_hash)
         }
         ExplorerQueryParamsMode::ChainAndSequence => {
-            let chain_id = query_params.chain_id.ok_or(RestError::BadFilterParameters("chain_id is required when mode=chain-and-sequence".to_string()))?;
-            let sequence_id = query_params.sequence_id.ok_or(RestError::BadFilterParameters("sequence_id is required when mode=chain-and-sequence".to_string()))?;
-            state.history.read().await.get_request_logs(&(chain_id, sequence_id)).into_iter().collect()
+            let chain_id = query_params.chain_id.ok_or(RestError::BadFilterParameters(
+                "chain_id is required when mode=chain-and-sequence".to_string(),
+            ))?;
+            let sequence_id = query_params
+                .sequence_id
+                .ok_or(RestError::BadFilterParameters(
+                    "sequence_id is required when mode=chain-and-sequence".to_string(),
+                ))?;
+            state
+                .history
+                .read()
+                .await
+                .get_request_logs(&(chain_id, sequence_id))
+                .into_iter()
+                .collect()
         }
         ExplorerQueryParamsMode::ChainAndTimestamp => {
             vec![]
@@ -58,7 +77,5 @@ pub async fn get_requests(
             vec![]
         }
     };
-    Ok(
-        Json(result),
-    )
+    Ok(Json(result))
 }

@@ -1,3 +1,4 @@
+use crate::api::History;
 use {
     crate::{
         api::{self, ApiBlockChainState, BlockchainState, ChainId},
@@ -21,7 +22,6 @@ use {
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
-use crate::api::History;
 
 pub async fn run_api(
     socket_addr: SocketAddr,
@@ -148,8 +148,15 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
         Ok::<(), Error>(())
     });
-    
-    run_api(opts.addr, chains.clone(), metrics_registry.clone(),history, rx_exit).await?;
+
+    run_api(
+        opts.addr,
+        chains.clone(),
+        metrics_registry.clone(),
+        history,
+        rx_exit,
+    )
+    .await?;
     Ok(())
 }
 

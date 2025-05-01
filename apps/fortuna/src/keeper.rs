@@ -1,3 +1,4 @@
+use crate::api::History;
 use crate::keeper::track::track_block_timestamp_lag;
 use {
     crate::{
@@ -26,7 +27,6 @@ use {
     },
     tracing::{self, Instrument},
 };
-use crate::api::History;
 
 pub(crate) mod block;
 pub(crate) mod commitment;
@@ -60,7 +60,7 @@ pub async fn run_keeper_threads(
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
-    history: Arc<RwLock<History>>,
+    _history: Arc<RwLock<History>>,
     rpc_metrics: Arc<RpcMetrics>,
 ) -> anyhow::Result<()> {
     tracing::info!("Starting keeper");
