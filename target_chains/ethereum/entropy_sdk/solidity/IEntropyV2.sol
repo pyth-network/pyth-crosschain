@@ -96,6 +96,11 @@ interface IEntropyV2 is EntropyEventsV2 {
         uint32 gasLimit
     ) external payable returns (uint64 assignedSequenceNumber);
 
+    /// @notice Get information about a specific entropy provider
+    /// @param provider The address of the provider to query
+    /// @return info The provider information including configuration, fees, and operational status
+    /// @dev This method returns detailed information about a provider's configuration and capabilities.
+    /// The returned ProviderInfo struct contains information such as the provider's fee structure and gas limits.
     function getProviderInfoV2(
         address provider
     ) external view returns (EntropyStructsV2.ProviderInfo memory info);
