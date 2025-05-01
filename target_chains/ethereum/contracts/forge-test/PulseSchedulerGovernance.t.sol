@@ -26,19 +26,27 @@ contract PulseSchedulerGovernanceTest is Test {
 
     function setUp() public {
         SchedulerUpgradeable _scheduler = new SchedulerUpgradeable();
+        uint128 minBalancePerFeed = 10 ** 16; // 0.01 ether
+        uint128 keeperFee = 10 ** 15; // 0.001 ether
+
         // Deploy proxy contract and point it to implementation
-        proxy = new ERC1967Proxy(address(_scheduler), "");
+        proxy = new ERC1967Proxy(
+            address(_scheduler),
+            abi.encodeWithSelector(
+                SchedulerUpgradeable.initialize.selector,
+                owner,
+                admin,
+                pyth,
+                minBalancePerFeed,
+                keeperFee
+            )
+        );
         // Wrap in ABI to support easier calls
         scheduler = SchedulerUpgradeable(address(proxy));
 
         // For testing upgrades
         scheduler2 = new SchedulerUpgradeable();
         schedulerInvalidMagic = new SchedulerInvalidMagic();
-
-        uint128 minBalancePerFeed = 10 ** 16; // 0.01 ether
-        uint128 keeperFee = 10 ** 15; // 0.001 ether
-
-        scheduler.initialize(owner, admin, pyth, minBalancePerFeed, keeperFee);
     }
 
     function testGetAdmin() public {

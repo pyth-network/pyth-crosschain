@@ -12,11 +12,6 @@ import "./SchedulerState.sol";
 import "./SchedulerErrors.sol";
 
 abstract contract Scheduler is IScheduler, SchedulerState, Initializable {
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
     function _initialize(
         address admin,
         address pythAddress,
