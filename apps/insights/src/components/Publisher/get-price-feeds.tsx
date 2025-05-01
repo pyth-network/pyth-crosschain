@@ -14,9 +14,6 @@ export const getPriceFeeds = async (cluster: Cluster, key: string) => {
         ranking.symbol === feed.symbol &&
         ranking.cluster === ClusterToName[cluster],
     );
-    //if (!ranking) {
-    //  console.log(`No ranking for feed: ${feed.symbol} in cluster ${ClusterToName[cluster]}`);
-    //}
     return {
       ranking,
       feed,

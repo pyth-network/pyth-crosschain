@@ -2,12 +2,8 @@
 
 import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
-import {
-  CLOSE_DURATION_IN_MS,
-  Drawer,
-  DrawerTrigger,
-} from "@pythnetwork/component-library/Drawer";
 import { Table } from "@pythnetwork/component-library/Table";
+import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { usePathname } from "next/navigation";
 import {
   parseAsString,
@@ -15,56 +11,15 @@ import {
   useQueryStates,
   createSerializer,
 } from "nuqs";
-import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { useCollator } from "react-aria";
 
 type Props = {
   numFeedsByAssetClass: Record<string, number>;
-  children: ReactNode;
 };
 
-export const AssetClassesDrawer = ({
-  numFeedsByAssetClass,
-  children,
-}: Props) => {
-  const numAssetClasses = useMemo(
-    () => Object.keys(numFeedsByAssetClass).length,
-    [numFeedsByAssetClass],
-  );
-
-  return (
-    <DrawerTrigger>
-      {children}
-      <Drawer
-        fill
-        title={
-          <>
-            <span>Asset Classes</span>
-            <Badge>{numAssetClasses}</Badge>
-          </>
-        }
-      >
-        {({ state }) => (
-          <AssetClassTable
-            numFeedsByAssetClass={numFeedsByAssetClass}
-            state={state}
-          />
-        )}
-      </Drawer>
-    </DrawerTrigger>
-  );
-};
-
-type AssetClassTableProps = {
-  numFeedsByAssetClass: Record<string, number>;
-  state: { close: () => void };
-};
-
-const AssetClassTable = ({
-  numFeedsByAssetClass,
-  state,
-}: AssetClassTableProps) => {
+export const AssetClassTable = ({ numFeedsByAssetClass }: Props) => {
+  const drawer = useDrawer();
   const logger = useLogger();
   const collator = useCollator();
   const pathname = usePathname();
@@ -85,12 +40,12 @@ const AssetClassTable = ({
             id: assetClass,
             href: `${pathname}${serialize(newQuery)}`,
             onAction: () => {
-              state.close();
-              setTimeout(() => {
-                setQuery(newQuery).catch((error: unknown) => {
-                  logger.error("Failed to update query", error);
-                });
-              }, CLOSE_DURATION_IN_MS);
+              drawer.close().catch((error: unknown) => {
+                logger.error(error);
+              });
+              setQuery(newQuery).catch((error: unknown) => {
+                logger.error("Failed to update query", error);
+              });
             },
             data: {
               assetClass,
@@ -101,7 +56,7 @@ const AssetClassTable = ({
     [
       numFeedsByAssetClass,
       collator,
-      state,
+      drawer,
       pathname,
       setQuery,
       serialize,

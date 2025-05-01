@@ -49,15 +49,15 @@ interface IScheduler is SchedulerEvents {
 
     /**
      * @notice Updates price feeds for a subscription.
-     * @dev Internally, this verifies the updateData using the Pyth contract and validates update conditions.
+     * @dev The updateData must contain all price feeds for the subscription, not a subset or superset.
+     * @dev Internally, the updateData is verified using the Pyth contract and validates update conditions.
+     *      The call will only succeed if the update conditions for the subscription are met.
      * @param subscriptionId The ID of the subscription
      * @param updateData The price update data from Pyth
-     * @param priceIds The IDs of the price feeds to update
      */
     function updatePriceFeeds(
         uint256 subscriptionId,
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds
+        bytes[] calldata updateData
     ) external;
 
     /** @notice Returns the price of a price feed without any sanity checks.

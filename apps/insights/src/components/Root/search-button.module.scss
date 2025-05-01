@@ -1,26 +1,5 @@
 @use "@pythnetwork/component-library/theme";
 
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(from black r g b / 30%);
-  z-index: 1;
-
-  .searchMenu {
-    position: relative;
-    top: theme.spacing(32);
-    margin: 0 auto;
-    outline: none;
-    background: theme.color("background", "secondary");
-    border-radius: theme.border-radius("2xl");
-    padding: theme.spacing(1);
-    max-height: theme.spacing(120);
-    width: min-content;
-    overflow: hidden;
-    display: flex;
-  }
-}
-
 .searchDialogContents {
   gap: theme.spacing(1);
   display: flex;
@@ -101,7 +80,7 @@
 
     .listbox {
       outline: none;
-      overflow: auto;
+      overflow-y: scroll;
       flex-grow: 1;
 
       .item {

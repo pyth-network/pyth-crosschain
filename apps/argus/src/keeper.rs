@@ -41,7 +41,7 @@ pub async fn run_keeper_threads(
     private_key: String,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
-    metrics: Arc<KeeperMetrics>,
+    _metrics: Arc<KeeperMetrics>,
     rpc_metrics: Arc<RpcMetrics>,
 ) {
     tracing::info!("starting keeper");
@@ -56,7 +56,7 @@ pub async fn run_keeper_threads(
         .await
         .expect("Chain config should be valid"),
     );
-    let keeper_address = contract.wallet().address();
+    let _keeper_address = contract.wallet().address();
 
     tracing::info!(
         chain_id = chain_state.id,

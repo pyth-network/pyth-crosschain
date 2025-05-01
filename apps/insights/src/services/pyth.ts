@@ -68,16 +68,11 @@ export const getPublishersForFeed = async (
 export const getFeeds = async (cluster: Cluster) => {
   const data = await clients[cluster].getData();
   return priceFeedsSchema.parse(
-    data.symbols
-      .filter(
-        (symbol) =>
-          data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
-      )
-      .map((symbol) => ({
-        symbol,
-        product: data.productFromSymbol.get(symbol),
-        price: data.productPrice.get(symbol),
-      })),
+    data.symbols.map((symbol) => ({
+      symbol,
+      product: data.productFromSymbol.get(symbol),
+      price: data.productPrice.get(symbol),
+    })),
   );
 };
 

@@ -7,7 +7,6 @@ import { Footer } from "./footer";
 import { Header } from "./header";
 import styles from "./index.module.scss";
 import { MobileNavTabs } from "./mobile-nav-tabs";
-import { SearchDialogProvider } from "./search-dialog";
 import { TabRoot, TabPanel } from "./tabs";
 import {
   ENABLE_ACCESSIBILITY_REPORTING,
@@ -15,11 +14,11 @@ import {
   AMPLITUDE_API_KEY,
 } from "../../config/server";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
-import { PriceFeedsProvider as PriceFeedsProviderImpl } from "../../hooks/use-price-feeds";
 import { getPublishers } from "../../services/clickhouse";
 import { Cluster, getFeeds } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
+import { SearchButtonProvider as SearchButtonProviderImpl } from "./search-button";
 
 export const TABS = [
   { href: "/", id: "", children: "Overview" },
@@ -35,21 +34,16 @@ type Props = {
   children: ReactNode;
 };
 
-export const Root = async ({ children }: Props) => {
-  const publishers = await Promise.all([
-    getPublishersForSearchDialog(Cluster.Pythnet),
-    getPublishersForSearchDialog(Cluster.PythtestConformance),
-  ]);
-
+export const Root = ({ children }: Props) => {
   return (
     <BaseRoot
       amplitudeApiKey={AMPLITUDE_API_KEY}
       googleAnalyticsId={GOOGLE_ANALYTICS_ID}
       enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-      providers={[NuqsAdapter, LivePriceDataProvider, PriceFeedsProvider]}
+      providers={[NuqsAdapter, LivePriceDataProvider]}
       className={styles.root}
     >
-      <SearchDialogProvider publishers={publishers.flat()}>
+      <SearchButtonProvider>
         <TabRoot className={styles.tabRoot ?? ""}>
           <Header className={styles.header} tabs={TABS} />
           <main className={styles.main}>
@@ -58,12 +52,29 @@ export const Root = async ({ children }: Props) => {
           <Footer />
           <MobileNavTabs tabs={TABS} className={styles.mobileNavTabs} />
         </TabRoot>
-      </SearchDialogProvider>
+      </SearchButtonProvider>
     </BaseRoot>
   );
 };
 
+const SearchButtonProvider = async ({ children }: { children: ReactNode }) => {
+  const [publishers, feeds] = await Promise.all([
+    Promise.all([
+      getPublishersForSearchDialog(Cluster.Pythnet),
+      getPublishersForSearchDialog(Cluster.PythtestConformance),
+    ]),
+    getFeedsForSearchDialog(Cluster.Pythnet),
+  ]);
+
+  return (
+    <SearchButtonProviderImpl publishers={publishers.flat()} feeds={feeds}>
+      {children}
+    </SearchButtonProviderImpl>
+  );
+};
+
 const getPublishersForSearchDialog = async (cluster: Cluster) => {
+  "use cache";
   const publishers = await getPublishers(cluster);
   return publishers.map((publisher) => {
     const knownPublisher = lookupPublisher(publisher.key);
@@ -80,37 +91,20 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
   });
 };
 
-const PriceFeedsProvider = async ({ children }: { children: ReactNode }) => {
-  const [pythnetFeeds, pythtestConformanceFeeds] = await Promise.all([
-    getFeeds(Cluster.Pythnet),
-    getFeeds(Cluster.PythtestConformance),
-  ]);
+const getFeedsForSearchDialog = async (cluster: Cluster) => {
+  "use cache";
+  const feeds = await getFeeds(cluster);
 
-  const feedMap = new Map(
-    pythnetFeeds.map((feed) => [
-      feed.symbol,
-      {
-        displaySymbol: feed.product.display_symbol,
-        icon: (
-          <PriceFeedIcon
-            assetClass={feed.product.asset_type}
-            symbol={feed.product.display_symbol}
-          />
-        ),
-        description: feed.product.description,
-        key: {
-          [Cluster.Pythnet]: feed.product.price_account,
-          [Cluster.PythtestConformance]:
-            pythtestConformanceFeeds.find(
-              (conformanceFeed) => conformanceFeed.symbol === feed.symbol,
-            )?.product.price_account ?? "",
-        },
-        assetClass: feed.product.asset_type,
-      },
-    ]),
-  );
-
-  return (
-    <PriceFeedsProviderImpl value={feedMap}>{children}</PriceFeedsProviderImpl>
-  );
+  return feeds.map((feed) => ({
+    symbol: feed.symbol,
+    displaySymbol: feed.product.display_symbol,
+    assetClass: feed.product.asset_type,
+    description: feed.product.description,
+    icon: (
+      <PriceFeedIcon
+        assetClass={feed.product.asset_type}
+        symbol={feed.symbol}
+      />
+    ),
+  }));
 };

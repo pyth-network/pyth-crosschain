@@ -43,7 +43,7 @@ pub struct ApiMetrics {
 
 #[derive(Clone)]
 pub struct ApiState {
-    pub chains: Arc<HashMap<ChainId, BlockchainState>>,
+    pub chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
 
     pub metrics_registry: Arc<RwLock<Registry>>,
 
@@ -53,7 +53,7 @@ pub struct ApiState {
 
 impl ApiState {
     pub async fn new(
-        chains: HashMap<ChainId, BlockchainState>,
+        chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
         metrics_registry: Arc<RwLock<Registry>>,
     ) -> ApiState {
         let metrics = ApiMetrics {
@@ -68,7 +68,7 @@ impl ApiState {
         );
 
         ApiState {
-            chains: Arc::new(chains),
+            chains,
             metrics: Arc::new(metrics),
             metrics_registry,
         }
@@ -94,6 +94,12 @@ pub struct BlockchainState {
     pub confirmed_block_status: BlockStatus,
 }
 
+#[derive(Clone)]
+pub enum ApiBlockChainState {
+    Uninitialized,
+    Initialized(BlockchainState),
+}
+
 pub enum RestError {
     /// The caller passed a sequence number that isn't within the supported range
     InvalidSequenceNumber,
@@ -108,6 +114,9 @@ pub enum RestError {
     /// The server cannot currently communicate with the blockchain, so is not able to verify
     /// which random values have been requested.
     TemporarilyUnavailable,
+    /// The server is not able to process the request because the blockchain initialization
+    /// has not been completed yet.
+    Uninitialized,
     /// A catch-all error for all other types of errors that could occur during processing.
     Unknown,
 }
@@ -135,6 +144,11 @@ impl IntoResponse for RestError {
             RestError::TemporarilyUnavailable => (
                 StatusCode::SERVICE_UNAVAILABLE,
                 "This service is temporarily unavailable",
+            )
+                .into_response(),
+            RestError::Uninitialized => (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "The service is not yet initialized for this chain, please try again in a few minutes",
             )
                 .into_response(),
             RestError::Unknown => (
@@ -172,6 +186,7 @@ pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
 
 #[cfg(test)]
 mod test {
+    use crate::api::ApiBlockChainState;
     use {
         crate::{
             api::{self, ApiState, BinaryEncoding, Blob, BlockchainState, GetRandomValueResponse},
@@ -228,10 +243,16 @@ mod test {
         };
 
         let mut chains = HashMap::new();
-        chains.insert("ethereum".into(), eth_state);
-        chains.insert("avalanche".into(), avax_state);
+        chains.insert(
+            "ethereum".into(),
+            ApiBlockChainState::Initialized(eth_state),
+        );
+        chains.insert(
+            "avalanche".into(),
+            ApiBlockChainState::Initialized(avax_state),
+        );
 
-        let api_state = ApiState::new(chains, metrics_registry).await;
+        let api_state = ApiState::new(Arc::new(RwLock::new(chains)), metrics_registry).await;
 
         let app = api::routes(api_state);
         (TestServer::new(app).unwrap(), eth_read, avax_read)

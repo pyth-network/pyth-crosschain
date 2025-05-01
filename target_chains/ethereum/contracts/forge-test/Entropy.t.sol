@@ -1695,9 +1695,9 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         // Test larger than max value reverts with expected error
         uint32 exceedsGasLimit = uint32(type(uint16).max) * 10000 + 1;
         vm.expectRevert(EntropyErrors.MaxGasLimitExceeded.selector);
-        random.getFeeForGas(provider1, exceedsGasLimit);
+        random.getFeeV2(provider1, exceedsGasLimit);
         vm.expectRevert(EntropyErrors.MaxGasLimitExceeded.selector);
-        random.requestWithCallbackAndGasLimit{value: 10000000000000}(
+        random.requestV2{value: 10000000000000}(
             provider1,
             bytes32(uint(42)),
             exceedsGasLimit
@@ -1722,18 +1722,14 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
     ) internal {
         // Create a request with callback
         bytes32 userRandomNumber = bytes32(uint(42));
-        uint fee = random.getFeeForGas(provider1, gasLimit);
+        uint fee = random.getFeeV2(provider1, gasLimit);
         assertEq(fee - random.getPythFee(), expectedProviderFee);
 
         // Passing 1 wei less than the expected fee causes a revert.
         vm.deal(user1, fee);
         vm.prank(user1);
         vm.expectRevert(EntropyErrors.InsufficientFee.selector);
-        random.requestWithCallbackAndGasLimit{value: fee - 1}(
-            provider1,
-            userRandomNumber,
-            gasLimit
-        );
+        random.requestV2{value: fee - 1}(provider1, userRandomNumber, gasLimit);
 
         EntropyStructsV2.ProviderInfo memory providerInfo = random
             .getProviderInfoV2(provider1);
@@ -1749,9 +1745,11 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             bytes("")
         );
         vm.prank(user1);
-        uint64 sequenceNumber = random.requestWithCallbackAndGasLimit{
-            value: fee
-        }(provider1, userRandomNumber, gasLimit);
+        uint64 sequenceNumber = random.requestV2{value: fee}(
+            provider1,
+            userRandomNumber,
+            gasLimit
+        );
 
         assertEq(
             random.getProviderInfoV2(provider1).accruedFeesInWei -
@@ -1796,7 +1794,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
     ) internal {
         // Create a request with callback
         bytes32 userRandomNumber = bytes32(uint(42));
-        uint fee = random.getFeeForGas(provider1, gasLimit);
+        uint fee = random.getFeeV2(provider1, gasLimit);
 
         vm.deal(user1, fee);
         vm.prank(user1);
@@ -1981,9 +1979,11 @@ contract EntropyConsumer is IEntropyConsumer {
         bytes32 randomNumber
     ) public payable returns (uint64 sequenceNumber) {
         address _provider = IEntropy(entropy).getDefaultProvider();
-        sequenceNumber = IEntropy(entropy).requestWithCallback{
-            value: msg.value
-        }(_provider, randomNumber);
+        sequenceNumber = IEntropy(entropy).requestV2{value: msg.value}(
+            _provider,
+            randomNumber,
+            0
+        );
     }
 
     function requestEntropyWithGasLimit(
@@ -1991,9 +1991,11 @@ contract EntropyConsumer is IEntropyConsumer {
         uint32 gasLimit
     ) public payable returns (uint64 sequenceNumber) {
         address _provider = IEntropy(entropy).getDefaultProvider();
-        sequenceNumber = IEntropy(entropy).requestWithCallbackAndGasLimit{
-            value: msg.value
-        }(_provider, randomNumber, gasLimit);
+        sequenceNumber = IEntropy(entropy).requestV2{value: msg.value}(
+            _provider,
+            randomNumber,
+            gasLimit
+        );
     }
 
     function getEntropy() internal view override returns (address) {
