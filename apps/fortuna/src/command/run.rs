@@ -3,7 +3,7 @@ use {
         api::{self, ApiBlockChainState, BlockchainState, ChainId},
         chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
-        config::{Commitment, Config, EthereumConfig, RunOptions},
+        config::{Commitment, Config, EthereumConfig, ProviderConfig, RunOptions},
         eth_utils::traced_client::RpcMetrics,
         keeper::{self, keeper_metrics::KeeperMetrics},
         state::{HashChainState, PebbleHashChain},
@@ -104,36 +104,29 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         let chains = chains.clone();
         let secret_copy = secret.clone();
         let rpc_metrics = rpc_metrics.clone();
+        let provider_config = config.provider.clone();
         spawn(async move {
-            let state = setup_chain_state(
-                &config.provider.address,
-                &secret_copy,
-                config.provider.chain_sample_interval,
-                &chain_id,
-                &chain_config,
-                rpc_metrics.clone(),
-            )
-            .await;
-            match state {
-                Ok(state) => {
-                    keeper_metrics.add_chain(chain_id.clone(), state.provider_address);
-                    chains.write().await.insert(
-                        chain_id.clone(),
-                        ApiBlockChainState::Initialized(state.clone()),
-                    );
-                    if let Some(keeper_private_key) = keeper_private_key_option {
-                        spawn(keeper::run_keeper_threads(
-                            keeper_private_key,
-                            chain_config,
-                            state,
-                            keeper_metrics.clone(),
-                            rpc_metrics.clone(),
-                        ));
+            loop {
+                let setup_result = setup_chain(
+                    provider_config.clone(),
+                    &chain_id,
+                    chain_config.clone(),
+                    keeper_metrics.clone(),
+                    keeper_private_key_option.clone(),
+                    chains.clone(),
+                    &secret_copy,
+                    rpc_metrics.clone(),
+                )
+                .await;
+                match setup_result {
+                    Ok(_) => {
+                        tracing::info!("Chain {} initialized successfully", chain_id);
+                        break;
                     }
-                }
-                Err(e) => {
-                    tracing::error!("Failed to setup {} {}", chain_id, e);
-                    //TODO: Retry
+                    Err(e) => {
+                        tracing::error!("Failed to initialize chain {}: {}", chain_id, e);
+                        tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
+                    }
                 }
             }
         });
@@ -152,6 +145,44 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     });
 
     run_api(opts.addr, chains.clone(), metrics_registry.clone(), rx_exit).await?;
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn setup_chain(
+    provider_config: ProviderConfig,
+    chain_id: &ChainId,
+    chain_config: EthereumConfig,
+    keeper_metrics: Arc<KeeperMetrics>,
+    keeper_private_key_option: Option<String>,
+    chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
+    secret_copy: &str,
+    rpc_metrics: Arc<RpcMetrics>,
+) -> Result<()> {
+    let state = setup_chain_state(
+        &provider_config.address,
+        secret_copy,
+        provider_config.chain_sample_interval,
+        chain_id,
+        &chain_config,
+        rpc_metrics.clone(),
+    )
+    .await?;
+    keeper_metrics.add_chain(chain_id.clone(), state.provider_address);
+    chains.write().await.insert(
+        chain_id.clone(),
+        ApiBlockChainState::Initialized(state.clone()),
+    );
+    if let Some(keeper_private_key) = keeper_private_key_option {
+        keeper::run_keeper_threads(
+            keeper_private_key,
+            chain_config,
+            state,
+            keeper_metrics.clone(),
+            rpc_metrics.clone(),
+        )
+        .await?;
+    }
     Ok(())
 }
 

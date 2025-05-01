@@ -60,7 +60,7 @@ pub async fn run_keeper_threads(
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
     rpc_metrics: Arc<RpcMetrics>,
-) {
+) -> anyhow::Result<()> {
     tracing::info!("Starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("Latest safe block: {}", &latest_safe_block);
@@ -72,8 +72,7 @@ pub async fn run_keeper_threads(
             chain_state.id.clone(),
             rpc_metrics.clone(),
         )
-        .await
-        .expect("Chain config should be valid"),
+        .await?,
     );
     let keeper_address = contract.wallet().address();
 
@@ -230,4 +229,5 @@ pub async fn run_keeper_threads(
         }
         .in_current_span(),
     );
+    Ok(())
 }
