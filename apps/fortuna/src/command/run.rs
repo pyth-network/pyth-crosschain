@@ -35,10 +35,13 @@ pub async fn run_api(
     paths(
     crate::api::revelation,
     crate::api::chain_ids,
+    crate::api::explorer,
     ),
     components(
     schemas(
     crate::api::GetRandomValueResponse,
+    crate::api::RequestJournal,
+    crate::api::ExplorerQueryParamsMode,
     crate::api::Blob,
     crate::api::BinaryEncoding,
     )

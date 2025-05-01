@@ -5,7 +5,7 @@ use crate::api::{
 use axum::extract::{Query, State};
 use axum::Json;
 use ethers::types::TxHash;
-use utoipa::IntoParams;
+use utoipa::{IntoParams, ToSchema};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
@@ -20,7 +20,7 @@ pub struct ExplorerQueryParams {
     #[param(value_type = Option<String>)]
     pub chain_id: Option<ChainId>,
 }
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum ExplorerQueryParamsMode {
     TxHash,
@@ -31,14 +31,13 @@ pub enum ExplorerQueryParamsMode {
 
 #[utoipa::path(
     get,
-    path = "/v1/explorer/",
+    path = "/v1/explorer",
     responses(
-(status = 200, description = "Random value successfully retrieved", body = GetRandomValueResponse),
-(status = 403, description = "Random value cannot currently be retrieved", body = String)
+    (status = 200, description = "Random value successfully retrieved", body = Vec<RequestJournal>)
     ),
     params(ExplorerQueryParams)
 )]
-pub async fn get_requests(
+pub async fn explorer(
     State(state): State<crate::api::ApiState>,
     Query(query_params): Query<ExplorerQueryParams>,
 ) -> anyhow::Result<Json<Vec<RequestJournal>>, RestError> {

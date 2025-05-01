@@ -26,8 +26,7 @@ use {
     tokio::sync::RwLock,
     url::Url,
 };
-pub use {chain_ids::*, index::*, live::*, metrics::*, ready::*, revelation::*};
-use crate::api::explorer::get_requests;
+pub use {chain_ids::*, index::*, live::*, metrics::*, ready::*, revelation::*, explorer::*};
 
 mod chain_ids;
 mod explorer;
@@ -322,7 +321,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
         .route("/metrics", get(metrics))
         .route("/ready", get(ready))
         .route("/v1/chains", get(chain_ids))
-        .route("/v1/explorer", get(get_requests))
+        .route("/v1/explorer", get(explorer))
         .route(
             "/v1/chains/:chain_id/revelations/:sequence",
             get(revelation),
