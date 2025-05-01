@@ -1,11 +1,18 @@
 use {
     crate::{
         actors::{
-            chain_price_listener::{ChainPriceListener, PulseContractInterface as ChainPriceContractInterface},
+            chain_price_listener::{
+                ChainPriceListener, PulseContractInterface as ChainPriceContractInterface,
+            },
             controller::Controller,
-            price_pusher::{PricePusher, PulseContractInterface as PricePusherContractInterface, HermesClient},
-            pyth_price_listener::{PythPriceListener, HermesClient as PythPriceHermesClient},
-            subscription_listener::{SubscriptionListener, PulseContractInterface as SubscriptionContractInterface},
+            price_pusher::{
+                HermesClient, PricePusher, PulseContractInterface as PricePusherContractInterface,
+            },
+            pyth_price_listener::{HermesClient as PythPriceHermesClient, PythPriceListener},
+            subscription_listener::{
+                PulseContractInterface as SubscriptionContractInterface, SubscriptionListener,
+                SubscriptionListenerState,
+            },
             types::*,
         },
         api::BlockchainState,
@@ -18,8 +25,12 @@ use {
     ethers::signers::Signer,
     fortuna::eth_utils::traced_client::RpcMetrics,
     keeper_metrics::KeeperMetrics,
-    ractor::{Actor, ActorRef, SupervisionStrategy},
-    std::{collections::{HashMap, HashSet}, sync::Arc, time::Duration},
+    ractor::Actor,
+    std::{
+        collections::{HashMap, HashSet},
+        sync::Arc,
+        time::Duration,
+    },
     tracing,
 };
 
@@ -85,14 +96,13 @@ pub async fn run_keeper_threads(
     };
 
     let (subscription_listener, _) = Actor::spawn(
-        None,
+        Some("SubscriptionListener".to_string()),
         SubscriptionListener,
         (
             chain_state.id.clone(),
             subscription_contract as Arc<dyn SubscriptionContractInterface + Send + Sync>,
             subscription_poll_interval,
         ),
-        SupervisionStrategy::Restart(5),
     )
     .await
     .expect("Failed to spawn SubscriptionListener actor");
@@ -175,7 +185,11 @@ impl SubscriptionContractInterface for PulseContractAdapter {
 
 #[async_trait]
 impl ChainPriceContractInterface for PulseContractAdapter {
-    async fn get_price_unsafe(&self, subscription_id: SubscriptionId, feed_id: &PriceId) -> Result<Option<Price>> {
+    async fn get_price_unsafe(
+        &self,
+        subscription_id: SubscriptionId,
+        feed_id: &PriceId,
+    ) -> Result<Option<Price>> {
         tracing::debug!(
             chain_id = self.chain_id,
             subscription_id = subscription_id,
