@@ -451,7 +451,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                     params.priceIds.length
                 );
             for (uint8 i = 0; i < params.priceIds.length; i++) {
-                PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+                PythStructs.PriceFeed memory priceFeed = _state.priceUpdates[
                     subscriptionId
                 ][params.priceIds[i]];
                 // Check if the price feed exists (price ID is valid and has been updated)
@@ -469,7 +469,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 priceIds.length
             );
         for (uint8 i = 0; i < priceIds.length; i++) {
-            PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+            PythStructs.PriceFeed memory priceFeed = _state.priceUpdates[
                 subscriptionId
             ][priceIds[i]];
 
