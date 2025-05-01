@@ -64,7 +64,7 @@ pub async fn withdraw_fees_if_necessary(
         let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
         send_and_confirm(contract_call).await?;
     } else if keeper_balance < min_balance {
-        // NOTE: This log message triggers a a grafana alert. If you want to change the text, please change the alert also.
+        // NOTE: This log message triggers a grafana alert. If you want to change the text, please change the alert also.
         tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up.", keeper_balance, min_balance)
     }
 
