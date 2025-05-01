@@ -2,11 +2,8 @@ apps/api-reference @pyth-network/web-team
 apps/entropy-debugger @pyth-network/web-team
 apps/insights @pyth-network/web-team
 apps/staking @pyth-network/web-team
-packages/app-logger @pyth-network/web-team
 packages/component-library @pyth-network/web-team
-packages/fonts @pyth-network/web-team
 packages/known-publishers @pyth-network/web-team
-packages/next-root @pyth-network/web-team
 Dockerfile.node @pyth-network/web-team
 package.json @pyth-network/web-team
 pnpm-workspace.yaml @pyth-network/web-team

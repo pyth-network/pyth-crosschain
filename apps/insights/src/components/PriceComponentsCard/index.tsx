@@ -1,6 +1,5 @@
 "use client";
 
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
@@ -14,6 +13,7 @@ import type {
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import clsx from "clsx";
 import { useQueryState, parseAsStringEnum, parseAsBoolean } from "nuqs";
 import type { ReactNode } from "react";
@@ -37,7 +37,6 @@ import { LivePrice, LiveConfidence, LiveComponentValue } from "../LivePrices";
 import { NoResults } from "../NoResults";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceName } from "../PriceName";
-import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
 
@@ -490,7 +489,7 @@ export const PriceComponentsCardContents = <
         label={label}
         fill
         rounded
-        stickyHeader={rootStyles.headerHeight}
+        stickyHeader={styles.headerHeight}
         className={styles.table ?? ""}
         columns={[
           {

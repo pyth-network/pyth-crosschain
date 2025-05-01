@@ -26,6 +26,8 @@
     overflow-y: hidden;
 
     @include theme.breakpoint("sm") {
+      max-height: unset;
+
       &[data-variant="dialog"] {
         position: relative;
         top: theme.spacing(32);
@@ -37,7 +39,6 @@
         border: unset;
         border-radius: theme.border-radius("2xl");
         padding: theme.spacing(1);
-        max-height: theme.spacing(120);
         width: max-content;
       }
 
@@ -48,7 +49,6 @@
         right: theme.spacing(4);
         width: 60%;
         max-width: theme.spacing(180);
-        max-height: unset;
         border-radius: theme.border-radius("3xl");
         padding-bottom: theme.border-radius("3xl");
       }
@@ -128,7 +128,7 @@
       flex: 1;
       overflow-y: auto;
       padding: theme.spacing(4);
-      grid-auto-rows: minmax(0, max-content);
+      grid-auto-rows: minmax(min-content, max-content);
 
       @include theme.breakpoint("sm") {
         padding: theme.spacing(6);

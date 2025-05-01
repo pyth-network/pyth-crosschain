@@ -2,8 +2,8 @@
 
 import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy";
-import { useLogger } from "@pythnetwork/app-logger";
 import { Button } from "@pythnetwork/component-library/unstyled/Button";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
 import { useCallback, useEffect, useState } from "react";

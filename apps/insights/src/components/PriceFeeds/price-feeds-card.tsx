@@ -1,7 +1,6 @@
 "use client";
 
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
@@ -12,6 +11,7 @@ import type {
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryState, parseAsString } from "nuqs";
 import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
@@ -32,7 +32,6 @@ import {
 import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
-import rootStyles from "../Root/index.module.scss";
 
 type Props = {
   id: string;
@@ -317,7 +316,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       rounded
       fill
       label="Price Feeds"
-      stickyHeader={rootStyles.headerHeight}
+      stickyHeader={styles.headerHeight}
       className={styles.table ?? ""}
       columns={[
         {

@@ -22,13 +22,10 @@
   "dependencies": {
     "@clickhouse/client": "catalog:",
     "@phosphor-icons/react": "catalog:",
-    "@pythnetwork/app-logger": "workspace:*",
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
-    "@pythnetwork/fonts": "workspace:*",
     "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/known-publishers": "workspace:*",
-    "@pythnetwork/next-root": "workspace:*",
     "@react-hookz/web": "catalog:",
     "@solana/web3.js": "catalog:",
     "bs58": "catalog:",

@@ -1,4 +1,4 @@
-import { useLogger } from "@pythnetwork/app-logger";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useCallback } from "react";
 import type { KeyedMutator } from "swr";
 import useSWR from "swr";
