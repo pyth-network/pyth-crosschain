@@ -88,7 +88,30 @@ pub async fn run_keeper_for_chain(
         ..ExponentialBackoff::default()
     };
 
-    let (subscription_listener, _) = Actor::spawn(
+    let (controller, controller_cell) = Actor::spawn(
+        Some(String::from("Controller")),
+        Controller,
+        (
+            chain_state.id.clone(),
+            ActorRef::null(),
+            ActorRef::null(),
+            ActorRef::null(),
+            ActorRef::null(),
+            subscription_contract.clone() as Arc<dyn ReadChainSubscriptions + Send + Sync>,
+            hermes_client.clone() as Arc<dyn StreamPythPrices + Send + Sync>,
+            chain_price_contract.clone() as Arc<dyn GetChainPrices + Send + Sync>,
+            price_pusher_contract.clone() as Arc<dyn UpdateChainPrices + Send + Sync>,
+            hermes_client.clone() as Arc<dyn GetPythPrices + Send + Sync>,
+            subscription_poll_interval,
+            chain_price_poll_interval,
+            controller_update_interval,
+            backoff_policy.clone(),
+        ),
+    )
+    .await
+    .expect("Failed to spawn Controller actor");
+
+    let (subscription_listener, _) = spawn_linked(
         Some("SubscriptionListener".to_string()),
         SubscriptionListener,
         (
@@ -96,22 +119,24 @@ pub async fn run_keeper_for_chain(
             subscription_contract as Arc<dyn ReadChainSubscriptions + Send + Sync>,
             subscription_poll_interval,
         ),
+        controller_cell.clone(),
     )
     .await
     .expect("Failed to spawn SubscriptionListener actor");
 
-    let (pyth_price_listener, _) = Actor::spawn(
-        None,
+    let (pyth_price_listener, _) = spawn_linked(
+        Some("PythPriceListener".to_string()),
         PythPriceListener,
         (
             chain_state.id.clone(),
             hermes_client.clone() as Arc<dyn StreamPythPrices + Send + Sync>,
         ),
+        controller_cell.clone(),
     )
     .await
     .expect("Failed to spawn PythPriceListener actor");
 
-    let (chain_price_listener, _) = Actor::spawn(
+    let (chain_price_listener, _) = spawn_linked(
         Some(String::from("ChainPriceListener")),
         ChainPriceListener,
         (
@@ -119,11 +144,12 @@ pub async fn run_keeper_for_chain(
             chain_price_contract as Arc<dyn GetChainPrices + Send + Sync>,
             chain_price_poll_interval,
         ),
+        controller_cell.clone(),
     )
     .await
     .expect("Failed to spawn ChainPriceListener actor");
 
-    let (price_pusher, _) = Actor::spawn(
+    let (price_pusher, _) = spawn_linked(
         Some(String::from("PricePusher")),
         PricePusher,
         (
@@ -132,24 +158,18 @@ pub async fn run_keeper_for_chain(
             hermes_client as Arc<dyn GetPythPrices + Send + Sync>,
             backoff_policy,
         ),
+        controller_cell.clone(),
     )
     .await
     .expect("Failed to spawn PricePusher actor");
 
-    let (_controller, _) = Actor::spawn(
-        Some(String::from("Controller")),
-        Controller,
-        (
-            chain_state.id.clone(),
-            subscription_listener,
-            pyth_price_listener,
-            chain_price_listener,
-            price_pusher,
-            controller_update_interval,
-        ),
-    )
-    .await
-    .expect("Failed to spawn Controller actor");
+    cast!(controller, ControllerMessage::UpdateActorRefs(
+        subscription_listener.clone(),
+        pyth_price_listener.clone(),
+        chain_price_listener.clone(),
+        price_pusher.clone()
+    ))
+    .expect("Failed to update Controller with actor references");
 
     tracing::info!(chain_id = chain_state.id, "Keeper actors started");
 }

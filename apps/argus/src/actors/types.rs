@@ -1,6 +1,6 @@
 use {
     ethers::types::{Address, U256},
-    ractor::RpcReplyPort,
+    ractor::{actor::messages::SupervisionEvent, ActorCell, ActorProcessingErr, RpcReplyPort},
     serde::{Deserialize, Serialize},
     std::collections::HashSet,
 };
@@ -59,6 +59,17 @@ pub enum ControllerMessage {
     StartUpdateLoop,
     StopUpdateLoop,
     CheckForUpdates,
+    SupervisionEvent(SupervisionEvent),
+    UpdateActorRefs(
+        ActorRef<SubscriptionListenerMessage>,
+        ActorRef<PythPriceListenerMessage>,
+        ActorRef<ChainPriceListenerMessage>,
+        ActorRef<PricePusherMessage>,
+    ),
+    RestartSubscriptionListener,
+    RestartPythPriceListener,
+    RestartChainPriceListener,
+    RestartPricePusher,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
