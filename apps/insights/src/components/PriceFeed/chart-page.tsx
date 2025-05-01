@@ -1,11 +1,11 @@
 import { Info } from "@phosphor-icons/react/dist/ssr/Info";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Link } from "@pythnetwork/component-library/Link";
-import { notFound } from "next/navigation";
+import { Spinner } from "@pythnetwork/component-library/Spinner";
 
 import { Chart } from "./chart";
 import styles from "./chart-page.module.scss";
-import { Cluster, getFeeds } from "../../services/pyth";
+import { getFeed } from "./get-feed";
 
 type Props = {
   params: Promise<{
@@ -13,25 +13,44 @@ type Props = {
   }>;
 };
 
-export const ChartPage = async ({ params }: Props) => {
-  const [{ slug }, feeds] = await Promise.all([
-    params,
-    getFeeds(Cluster.Pythnet),
-  ]);
-  const symbol = decodeURIComponent(slug);
-  const feed = feeds.find((item) => item.symbol === symbol);
+export const ChartPage = async ({ params }: Props) => (
+  <ChartPageImpl {...await getFeed(params)} />
+);
 
-  return feed ? (
-    <Card title="Chart" className={styles.chartCard}>
-      <div className={styles.chart}>
-        <Chart symbol={symbol} feedId={feed.product.price_account} />
-      </div>
-      <Disclaimer symbol={symbol} displaySymbol={feed.product.display_symbol} />
-    </Card>
-  ) : (
-    notFound()
-  );
-};
+export const ChartPageLoading = () => <ChartPageImpl isLoading />;
+
+type ChartPageImplProps =
+  | { isLoading: true }
+  | (Awaited<ReturnType<typeof getFeed>> & {
+      isLoading?: false | undefined;
+    });
+
+const ChartPageImpl = (props: ChartPageImplProps) => (
+  <Card title="Chart" className={styles.chartCard}>
+    <div className={styles.chart}>
+      {props.isLoading ? (
+        <div className={styles.spinnerContainer}>
+          <Spinner
+            label="Loading chart"
+            isIndeterminate
+            className={styles.spinner ?? ""}
+          />
+        </div>
+      ) : (
+        <Chart
+          symbol={props.symbol}
+          feedId={props.feed.product.price_account}
+        />
+      )}
+    </div>
+    {!props.isLoading && (
+      <Disclaimer
+        symbol={props.symbol}
+        displaySymbol={props.feed.product.display_symbol}
+      />
+    )}
+  </Card>
+);
 
 type DisclaimerProps = {
   displaySymbol: string;

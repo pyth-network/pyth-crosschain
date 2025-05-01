@@ -7,7 +7,6 @@ import { Badge } from "@pythnetwork/component-library/Badge";
 import { Button } from "@pythnetwork/component-library/Button";
 import type { Props as CardProps } from "@pythnetwork/component-library/Card";
 import { Card } from "@pythnetwork/component-library/Card";
-import { Drawer, DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { TabList } from "@pythnetwork/component-library/TabList";
 import {
@@ -16,7 +15,7 @@ import {
 } from "@pythnetwork/component-library/unstyled/Tabs";
 import type { ElementType } from "react";
 
-import { AssetClassesDrawer } from "./asset-classes-drawer";
+import { AssetClassTable } from "./asset-class-table";
 import { ComingSoonList } from "./coming-soon-list";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
@@ -29,6 +28,7 @@ import {
   YesterdaysPricesProvider,
   PriceFeedChangePercent,
 } from "../PriceFeedChangePercent";
+import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
@@ -50,6 +50,7 @@ export const PriceFeeds = async () => {
     priceFeeds.activeFeeds,
     priceFeedsStaticConfig.featuredFeeds,
   );
+  const numAssetClasses = Object.keys(numFeedsByAssetClass).length;
 
   return (
     <div className={styles.priceFeeds}>
@@ -73,13 +74,23 @@ export const PriceFeeds = async () => {
           target="_blank"
           corner={<ArrowSquareOut weight="fill" />}
         />
-        <AssetClassesDrawer numFeedsByAssetClass={numFeedsByAssetClass}>
-          <StatCard
-            header="Asset Classes"
-            stat={Object.keys(numFeedsByAssetClass).length}
-            corner={<ArrowsOutSimple />}
-          />
-        </AssetClassesDrawer>
+        <StatCard
+          header="Asset Classes"
+          stat={Object.keys(numFeedsByAssetClass).length}
+          corner={<ArrowsOutSimple />}
+          drawer={{
+            fill: true,
+            title: (
+              <>
+                <span>Asset Classes</span>
+                <Badge>{numAssetClasses}</Badge>
+              </>
+            ),
+            contents: (
+              <AssetClassTable numFeedsByAssetClass={numFeedsByAssetClass} />
+            ),
+          }}
+        />
       </Cards>
       <section className={styles.bigScreenBody}>
         <FeaturedFeeds
@@ -90,9 +101,19 @@ export const PriceFeeds = async () => {
         <PriceFeedsCard
           id={PRICE_FEEDS_ANCHOR}
           priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
+            key: feed.product.price_account,
             symbol: feed.symbol,
             exponent: feed.price.exponent,
             numQuoters: feed.price.numQuoters,
+            assetClass: feed.product.asset_type,
+            description: feed.product.description,
+            displaySymbol: feed.product.display_symbol,
+            icon: (
+              <PriceFeedIcon
+                assetClass={feed.product.asset_type}
+                symbol={feed.symbol}
+              />
+            ),
           }))}
         />
       </section>
@@ -108,9 +129,19 @@ export const PriceFeeds = async () => {
           <PriceFeedsCard
             id={PRICE_FEEDS_ANCHOR}
             priceFeeds={priceFeeds.activeFeeds.map((feed) => ({
+              key: feed.product.price_account,
               symbol: feed.symbol,
               exponent: feed.price.exponent,
               numQuoters: feed.price.numQuoters,
+              assetClass: feed.product.asset_type,
+              description: feed.product.description,
+              displaySymbol: feed.product.display_symbol,
+              icon: (
+                <PriceFeedIcon
+                  assetClass={feed.product.asset_type}
+                  symbol={feed.symbol}
+                />
+              ),
             }))}
           />
         </UnstyledTabPanel>
@@ -129,7 +160,7 @@ export const PriceFeeds = async () => {
 type FeaturedFeedsProps = {
   featuredFeeds: FeaturedFeed[];
   featuredComingSoon: FeaturedFeed[];
-  allComingSoon: { symbol: string }[];
+  allComingSoon: FeaturedFeed[];
 };
 
 const FeaturedFeeds = ({
@@ -159,25 +190,38 @@ const FeaturedFeeds = ({
       feeds={featuredComingSoon}
       toolbarAlwaysOnTop
       toolbar={
-        <DrawerTrigger>
-          <Button size="sm" variant="outline">
-            Show all
-          </Button>
-          <Drawer
-            fill
-            className={styles.comingSoonCard ?? ""}
-            title={
+        <Button
+          size="sm"
+          variant="outline"
+          drawer={{
+            fill: true,
+            className: styles.comingSoonCard ?? "",
+            title: (
               <>
                 <span>Coming Soon</span>
                 <Badge>{allComingSoon.length}</Badge>
               </>
-            }
-          >
-            <ComingSoonList
-              comingSoonSymbols={allComingSoon.map(({ symbol }) => symbol)}
-            />
-          </Drawer>
-        </DrawerTrigger>
+            ),
+            contents: (
+              <ComingSoonList
+                comingSoonFeeds={allComingSoon.map((feed) => ({
+                  assetClass: feed.product.asset_type,
+                  description: feed.product.description,
+                  displaySymbol: feed.product.display_symbol,
+                  symbol: feed.symbol,
+                  icon: (
+                    <PriceFeedIcon
+                      assetClass={feed.product.asset_type}
+                      symbol={feed.symbol}
+                    />
+                  ),
+                }))}
+              />
+            ),
+          }}
+        >
+          Show all
+        </Button>
       }
     />
   </>
@@ -197,6 +241,7 @@ type FeaturedFeed = {
     display_symbol: string;
     price_account: string;
     description: string;
+    asset_type: string;
   };
 };
 
@@ -214,7 +259,16 @@ const FeaturedFeedsCard = <T extends ElementType>({
           href={`/price-feeds/${encodeURIComponent(feed.symbol)}`}
         >
           <div className={styles.feedCardContents}>
-            <PriceFeedTag symbol={feed.symbol} />
+            <PriceFeedTag
+              displaySymbol={feed.product.display_symbol}
+              description={feed.product.description}
+              icon={
+                <PriceFeedIcon
+                  assetClass={feed.product.asset_type}
+                  symbol={feed.symbol}
+                />
+              }
+            />
             {showPrices && (
               <div className={styles.prices}>
                 <LivePrice

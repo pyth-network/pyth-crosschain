@@ -6,6 +6,17 @@
     height: theme.spacing(140);
     border-radius: theme.border-radius("xl");
     overflow: hidden;
+
+    .spinnerContainer {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-content: center;
+
+      .spinner {
+        font-size: theme.spacing(12);
+      }
+    }
   }
 }
 

@@ -142,6 +142,7 @@ const ResolvedPublishersCard = ({
           id,
           href: `/publishers/${cluster}/${id}`,
           textValue: publisher.name ?? id,
+          prefetch: false,
           data: {
             ranking: <Ranking>{ranking}</Ranking>,
             name: (
@@ -158,6 +159,7 @@ const ResolvedPublishersCard = ({
               <Link
                 href={`/publishers/${cluster}/${id}/price-feeds?status=Active`}
                 invert
+                prefetch={false}
               >
                 {activeFeeds}
               </Link>

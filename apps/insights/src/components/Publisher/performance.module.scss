@@ -16,7 +16,7 @@
 
   .publishersRankingCard {
     .publishersRankingList {
-      @include theme.breakpoint("sm") {
+      @include theme.breakpoint("lg") {
         display: none;
       }
 
@@ -28,7 +28,7 @@
     .publishersRankingTable {
       display: none;
 
-      @include theme.breakpoint("sm") {
+      @include theme.breakpoint("lg") {
         display: unset;
       }
     }

@@ -6,10 +6,7 @@ use {
     },
     anyhow::{anyhow, Error, Result},
     axum::Router,
-    ethers::{
-        middleware::Middleware,
-        types::{Address, BlockNumber},
-    },
+    ethers::{middleware::Middleware, types::BlockNumber},
     fortuna::eth_utils::traced_client::{RpcMetrics, TracedClient},
     futures::future::join_all,
     prometheus_client::{
@@ -76,10 +73,7 @@ pub async fn run_keeper(
 ) -> Result<()> {
     let mut handles = Vec::new();
     let keeper_metrics: Arc<KeeperMetrics> = Arc::new({
-        let chain_labels: Vec<(String, Address)> = chains
-            .iter()
-            .map(|(id, state)| (id.clone(), state.provider_address))
-            .collect();
+        let chain_labels: Vec<String> = chains.iter().map(|(id, _)| id.clone()).collect();
         KeeperMetrics::new(metrics_registry.clone(), chain_labels).await
     });
     for (chain_id, chain_config) in chains {
@@ -110,7 +104,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     let mut tasks = Vec::new();
     for (chain_id, chain_config) in config.chains.clone() {
         tasks.push(spawn(async move {
-            let state = setup_chain_state(&config.provider.address, &chain_id, &chain_config).await;
+            let state = setup_chain_state(&chain_id, &chain_config).await;
 
             (chain_id, state)
         }));
@@ -171,13 +165,11 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 }
 
 async fn setup_chain_state(
-    provider: &Address,
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
 ) -> Result<BlockchainState> {
     let state = BlockchainState {
         id: chain_id.clone(),
-        provider_address: *provider,
         confirmed_block_status: chain_config.confirmed_block_status,
     };
     Ok(state)

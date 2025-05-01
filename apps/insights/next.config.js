@@ -3,6 +3,10 @@ const config = {
 
   pageExtensions: ["ts", "tsx", "mdx"],
 
+  experimental: {
+    useCache: true,
+  },
+
   logging: {
     fetches: {
       fullUrl: true,

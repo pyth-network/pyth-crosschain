@@ -34,6 +34,7 @@ const config = {
                   modules: {
                     auto: true,
                     localIdentName: "[name]__[local]--[hash:base64:5]",
+                    exportLocalsConvention: "as-is",
                   },
                   importLoaders: 1,
                   esModule: false,

@@ -1,6 +1,5 @@
 import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
 import { Button } from "@pythnetwork/component-library/Button";
-import { DrawerTrigger } from "@pythnetwork/component-library/Drawer";
 import { Link } from "@pythnetwork/component-library/Link";
 import type { ComponentProps, ElementType } from "react";
 
@@ -19,10 +18,7 @@ export const Footer = () => (
         </Link>
         <div className={styles.divider} />
         <div className={styles.help}>
-          <DrawerTrigger>
-            <Link>Help</Link>
-            <SupportDrawer />
-          </DrawerTrigger>
+          <Link drawer={SupportDrawer}>Help</Link>
           <Link href="https://docs.pyth.network" target="_blank">
             Documentation
           </Link>

@@ -8,9 +8,6 @@ import {
 import { useSelectedLayoutSegment, usePathname } from "next/navigation";
 import type { ComponentProps } from "react";
 
-import type { VariantArg } from "../LayoutTransition";
-import { LayoutTransition } from "../LayoutTransition";
-
 export const TabRoot = (
   props: Omit<ComponentProps<typeof Tabs>, "selectedKey">,
 ) => {
@@ -27,46 +24,10 @@ export const MainNavTabs = (
   return <MainNavTabsComponent pathname={pathname} {...props} />;
 };
 
-export const TabPanel = ({
-  children,
-  ...props
-}: Omit<ComponentProps<typeof UnstyledTabPanel>, "id">) => {
+export const TabPanel = (
+  props: Omit<ComponentProps<typeof UnstyledTabPanel>, "id">,
+) => {
   const tabId = useSelectedLayoutSegment() ?? "";
 
-  return (
-    <UnstyledTabPanel key="tabpanel" id={tabId} {...props}>
-      {(args) => (
-        <LayoutTransition
-          variants={{
-            initial: (custom) => ({
-              opacity: 0,
-              x: isMovingLeft(custom) ? "-2%" : "2%",
-            }),
-            exit: (custom) => ({
-              opacity: 0,
-              x: isMovingLeft(custom) ? "2%" : "-2%",
-              transition: {
-                x: { type: "spring", bounce: 0 },
-              },
-            }),
-          }}
-          initial="initial"
-          animate={{
-            opacity: 1,
-            x: 0,
-            transition: {
-              x: { type: "spring", bounce: 0 },
-            },
-          }}
-          exit="exit"
-        >
-          {typeof children === "function" ? children(args) : children}
-        </LayoutTransition>
-      )}
-    </UnstyledTabPanel>
-  );
+  return <UnstyledTabPanel key="tabpanel" id={tabId} {...props} />;
 };
-
-const isMovingLeft = ({ segment, prevSegment }: VariantArg): boolean =>
-  segment === null ||
-  (segment === "publishers" && prevSegment === "price-feeds");
