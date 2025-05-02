@@ -4,6 +4,9 @@ import { Table as TableComponent } from "./index.js";
 
 const meta = {
   component: TableComponent,
+  parameters: {
+    layout: "padded",
+  },
   argTypes: {
     columns: {
       table: {

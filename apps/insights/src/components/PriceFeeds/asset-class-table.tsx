@@ -1,9 +1,9 @@
 "use client";
 
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { usePathname } from "next/navigation";
 import {
   parseAsString,

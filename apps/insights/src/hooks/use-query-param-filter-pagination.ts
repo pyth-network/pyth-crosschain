@@ -1,7 +1,7 @@
 "use client";
 
-import { useLogger } from "@pythnetwork/app-logger";
 import type { SortDescriptor } from "@pythnetwork/component-library/unstyled/Table";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { usePathname } from "next/navigation";
 import {
   parseAsString,

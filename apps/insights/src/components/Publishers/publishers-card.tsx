@@ -2,7 +2,6 @@
 
 import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
 import { Database } from "@phosphor-icons/react/dist/ssr/Database";
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Link } from "@pythnetwork/component-library/Link";
@@ -14,6 +13,7 @@ import type {
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import clsx from "clsx";
 import { useQueryState, parseAsStringEnum } from "nuqs";
 import type { ReactNode } from "react";
@@ -32,7 +32,6 @@ import {
 import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
-import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 
 const PUBLISHER_SCORE_WIDTH = 38;
@@ -324,7 +323,7 @@ const PublishersCardContents = ({
       rounded
       fill
       label="Publishers"
-      stickyHeader={rootStyles.headerHeight}
+      stickyHeader={styles.headerHeight}
       className={styles.table ?? ""}
       columns={[
         {

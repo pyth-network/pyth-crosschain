@@ -87,3 +87,8 @@
     }
   }
 }
+
+:export {
+  // stylelint-disable-next-line property-no-unknown
+  headerHeight: theme.$header-height;
+}

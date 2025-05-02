@@ -19,6 +19,10 @@
     gap: theme.spacing(2);
     justify-content: space-between;
 
+    .assetClassBadge {
+      align-self: start;
+    }
+
     @include theme.breakpoint("sm") {
       flex-flow: row nowrap;
       align-items: center;

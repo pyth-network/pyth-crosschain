@@ -1,0 +1,140 @@
+@use "../theme";
+
+.footer {
+  padding: theme.spacing(8) 0;
+
+  .topContent {
+    display: flex;
+    gap: theme.spacing(6);
+    flex-flow: column nowrap;
+    align-items: stretch;
+    justify-content: space-between;
+    margin-bottom: theme.spacing(6);
+
+    @include theme.max-width;
+
+    @include theme.breakpoint("sm") {
+      flex-flow: row nowrap;
+      align-items: center;
+    }
+
+    .main {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: theme.spacing(6);
+
+      .logoLink {
+        height: theme.spacing(5);
+        box-sizing: content-box;
+        padding: theme.spacing(3);
+        margin: -#{theme.spacing(3)};
+        color: theme.color("foreground");
+
+        .logo {
+          height: 100%;
+        }
+
+        .logoLabel {
+          @include theme.sr-only;
+        }
+      }
+
+      .divider {
+        display: none;
+        background-color: theme.color("background", "secondary");
+        width: 1px;
+
+        @include theme.breakpoint("sm") {
+          display: unset;
+        }
+      }
+
+      .help {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        gap: theme.spacing(3);
+        font-size: theme.font-size("sm");
+
+        @include theme.breakpoint("sm") {
+          gap: theme.spacing(6);
+        }
+      }
+    }
+
+    .socialLinks {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: theme.spacing(2);
+      max-width: theme.spacing(80);
+      width: 100%;
+      align-self: center;
+
+      @include theme.breakpoint("sm") {
+        margin: 0 -#{theme.button-padding("sm", false)};
+        width: unset;
+        max-width: unset;
+        align-self: unset;
+        justify-content: flex-end;
+      }
+    }
+  }
+
+  .trademarkDisclaimer {
+    @include theme.max-width;
+
+    .trademarkDisclaimerContent {
+      padding-top: theme.spacing(6);
+      padding-bottom: theme.spacing(6);
+      border-top: 1px solid theme.color("background", "secondary");
+      border-bottom: 1px solid theme.color("background", "secondary");
+      color: theme.color("muted");
+
+      @include theme.breakpoint("sm") {
+        padding-top: theme.spacing(12);
+        padding-bottom: theme.spacing(12);
+      }
+
+      .trademarkDisclaimerHeader {
+        @include theme.text("sm", "medium");
+
+        margin-bottom: theme.spacing(2);
+      }
+
+      .trademarkDisclaimerBody {
+        @include theme.text("xs", "normal");
+
+        line-height: 150%;
+      }
+    }
+  }
+
+  .bottomContent {
+    display: flex;
+    gap: theme.spacing(6);
+    flex-flow: column nowrap;
+    justify-content: space-between;
+    margin-top: theme.spacing(6);
+
+    @include theme.max-width;
+
+    @include theme.breakpoint("sm") {
+      flex-flow: row nowrap;
+    }
+
+    .copyright {
+      font-size: theme.font-size("xs");
+      color: theme.color("muted");
+    }
+
+    .legal {
+      display: flex;
+      flex-flow: row nowrap;
+      font-size: theme.font-size("xs");
+      gap: theme.spacing(6);
+    }
+  }
+}

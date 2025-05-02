@@ -1,7 +1,7 @@
 "use client";
 
-import { useLogger } from "@pythnetwork/app-logger";
 import { Switch } from "@pythnetwork/component-library/Switch";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { Suspense, useCallback, useMemo } from "react";
 
