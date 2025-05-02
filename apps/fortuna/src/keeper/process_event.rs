@@ -1,13 +1,11 @@
+use crate::api::{JournalLog, TimedJournalLog};
 use {
-    super::keeper_metrics::{AccountLabel, KeeperMetrics},
+    super::keeper_metrics::AccountLabel,
     crate::{
-        api::BlockchainState,
-        chain::{ethereum::InstrumentedSignablePythContract, reader::RequestedWithCallbackEvent},
-        eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
+        chain::reader::RequestedWithCallbackEvent, eth_utils::utils::submit_tx_with_backoff,
+        keeper::block::ProcessParams,
     },
     anyhow::{anyhow, Result},
-    ethers::types::U256,
-    std::sync::Arc,
     tracing,
 };
 
@@ -17,12 +15,17 @@ use {
 ))]
 pub async fn process_event_with_backoff(
     event: RequestedWithCallbackEvent,
-    chain_state: BlockchainState,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
-    escalation_policy: EscalationPolicy,
-    metrics: Arc<KeeperMetrics>,
+    process_param: ProcessParams,
 ) -> Result<()> {
+    let ProcessParams {
+        chain_state,
+        contract,
+        gas_limit,
+        escalation_policy,
+        metrics,
+        ..
+    } = process_param;
+
     // ignore requests that are not for the configured provider
     if chain_state.provider_address != event.provider_address {
         return Ok(());
@@ -35,6 +38,12 @@ pub async fn process_event_with_backoff(
 
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing event");
+    process_param.history.write().await.add(
+        (chain_state.id.clone(), event.sequence_number),
+        TimedJournalLog::with_current_time(JournalLog::Observed {
+            tx_hash: event.tx_hash,
+        }),
+    );
 
     let provider_revelation = chain_state
         .state

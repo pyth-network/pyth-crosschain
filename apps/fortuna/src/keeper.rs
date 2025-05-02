@@ -1,4 +1,5 @@
 use crate::api::History;
+use crate::keeper::block::ProcessParams;
 use crate::keeper::track::track_block_timestamp_lag;
 use {
     crate::{
@@ -60,7 +61,7 @@ pub async fn run_keeper_threads(
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
-    _history: Arc<RwLock<History>>,
+    history: Arc<RwLock<History>>,
     rpc_metrics: Arc<RpcMetrics>,
 ) -> anyhow::Result<()> {
     tracing::info!("Starting keeper");
@@ -82,18 +83,22 @@ pub async fn run_keeper_threads(
 
     // Spawn a thread to handle the events from last backlog_range blocks.
     let gas_limit: U256 = chain_eth_config.gas_limit.into();
+    let process_params = ProcessParams {
+        chain_state: chain_state.clone(),
+        contract: contract.clone(),
+        gas_limit,
+        escalation_policy: chain_eth_config.escalation_policy.to_policy(),
+        metrics: metrics.clone(),
+        fulfilled_requests_cache,
+        history,
+    };
     spawn(
         process_backlog(
+            process_params.clone(),
             BlockRange {
                 from: latest_safe_block.saturating_sub(chain_eth_config.backlog_range),
                 to: latest_safe_block,
             },
-            contract.clone(),
-            gas_limit,
-            chain_eth_config.escalation_policy.to_policy(),
-            chain_state.clone(),
-            metrics.clone(),
-            fulfilled_requests_cache.clone(),
             chain_eth_config.block_delays.clone(),
         )
         .in_current_span(),
@@ -114,13 +119,8 @@ pub async fn run_keeper_threads(
     // Spawn a thread for block processing with configured delays
     spawn(
         process_new_blocks(
-            chain_state.clone(),
+            process_params.clone(),
             rx,
-            Arc::clone(&contract),
-            gas_limit,
-            chain_eth_config.escalation_policy.to_policy(),
-            metrics.clone(),
-            fulfilled_requests_cache.clone(),
             chain_eth_config.block_delays.clone(),
         )
         .in_current_span(),

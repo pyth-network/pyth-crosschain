@@ -1,7 +1,4 @@
-use crate::api::{
-    ChainId, RequestJournal, RestError
-    ,
-};
+use crate::api::{ChainId, RequestJournal, RestError};
 use axum::extract::{Query, State};
 use axum::Json;
 use ethers::types::TxHash;

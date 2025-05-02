@@ -26,7 +26,7 @@ use {
     tokio::sync::RwLock,
     url::Url,
 };
-pub use {chain_ids::*, index::*, live::*, metrics::*, ready::*, revelation::*, explorer::*};
+pub use {chain_ids::*, explorer::*, index::*, live::*, metrics::*, ready::*, revelation::*};
 
 mod chain_ids;
 mod explorer;
@@ -70,6 +70,15 @@ impl JournalLog {
 pub struct TimedJournalLog {
     pub timestamp: DateTime<chrono::Utc>,
     pub log: JournalLog,
+}
+
+impl TimedJournalLog {
+    pub fn with_current_time(log: JournalLog) -> Self {
+        TimedJournalLog {
+            timestamp: chrono::Utc::now(),
+            log,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, ToSchema)]
@@ -161,9 +170,9 @@ impl History {
                         min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC),
                     )
                         ..(
-                        chain_id.clone(),
-                        max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC),
-                    ),
+                            chain_id.clone(),
+                            max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC),
+                        ),
                 );
                 range
                     .rev()
@@ -407,7 +416,12 @@ mod test {
             ApiBlockChainState::Initialized(avax_state),
         );
 
-        let api_state = ApiState::new(Arc::new(RwLock::new(chains)), metrics_registry, Default::default()).await;
+        let api_state = ApiState::new(
+            Arc::new(RwLock::new(chains)),
+            metrics_registry,
+            Default::default(),
+        )
+        .await;
 
         let app = api::routes(api_state);
         (TestServer::new(app).unwrap(), eth_read, avax_read)
