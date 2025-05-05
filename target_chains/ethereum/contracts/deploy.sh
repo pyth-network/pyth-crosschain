@@ -25,7 +25,7 @@ fi
 
 echo "Building the contracts..."
 # Ensure that we deploy a fresh build with up-to-date dependencies.
-rm -rf build && pnpm forge install && pnpm forge build --out build/
+rm -rf build && pnpm forge build --out build/
 
 echo "Deploying the contracts..."
 
