@@ -42,7 +42,7 @@ module wormhole::state {
     const E_INVALID_BUILD_DIGEST: u64 = 1;
 
     /// Iota's chain ID is hard-coded to one value.
-    const CHAIN_ID: u16 = 50118;
+    const CHAIN_ID: u16 = 60085;
 
     /// Capability reflecting that the current build version is used to invoke
     /// state methods.
