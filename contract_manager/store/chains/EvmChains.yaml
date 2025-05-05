@@ -884,3 +884,13 @@
   rpcUrl: https://carrot.megaeth.com/rpc
   networkId: 6342
   type: EvmChain
+- id: converge_testnet
+  mainnet: false
+  rpcUrl: https://rpc-converge-testnet-0.t.conduit.xyz
+  networkId: 52085144
+  type: EvmChain
+- id: worldchain
+  mainnet: true
+  rpcUrl: https://worldchain-mainnet.g.alchemy.com/public
+  networkId: 480
+  type: EvmChain

@@ -490,3 +490,9 @@
 - chain: megaeth_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
+- chain: converge_testnet
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
+- chain: worldchain
+  address: "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7"
+  type: EvmWormholeContract

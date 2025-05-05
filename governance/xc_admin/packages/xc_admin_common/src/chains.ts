@@ -109,6 +109,7 @@ export const RECEIVER_CHAINS = {
   hyperevm: 60079,
   bittensor_mainnet: 60080,
   xion: 60081,
+  worldchain: 60082,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -236,6 +237,7 @@ export const RECEIVER_CHAINS = {
   iota_sui_testnet: 50118,
   berachain_bepolia: 50119,
   megaeth_testnet: 50120,
+  converge_testnet: 50121,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
