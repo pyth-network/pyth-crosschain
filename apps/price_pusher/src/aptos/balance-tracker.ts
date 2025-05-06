@@ -1,4 +1,4 @@
-import { AptosClient } from "aptos";
+import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import {
   BaseBalanceTracker,
   BaseBalanceTrackerConfig,
@@ -24,7 +24,7 @@ export interface AptosBalanceTrackerConfig extends BaseBalanceTrackerConfig {
  * Aptos-specific implementation of the balance tracker
  */
 export class AptosBalanceTracker extends BaseBalanceTracker {
-  private client: AptosClient;
+  private client: Aptos;
   private aptosAddress: string;
   private decimals: number;
 
@@ -33,8 +33,9 @@ export class AptosBalanceTracker extends BaseBalanceTracker {
       ...config,
       logger: config.logger.child({ module: "AptosBalanceTracker" }),
     });
-
-    this.client = new AptosClient(config.endpoint);
+    this.client = new Aptos(
+      new AptosConfig({ network: Network.CUSTOM, fullnode: config.endpoint }),
+    );
     this.aptosAddress = config.address;
     // APT has 8 decimal places by default
     this.decimals = config.decimals ?? 8;
@@ -47,16 +48,12 @@ export class AptosBalanceTracker extends BaseBalanceTracker {
   protected async updateBalance(): Promise<void> {
     try {
       // Get account resource to check the balance
-      const accountResource = await this.client.getAccountResource(
-        this.aptosAddress,
-        "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>",
-      );
+      const accountAPTAmount = await this.client.getAccountAPTAmount({
+        accountAddress: this.aptosAddress,
+      });
 
-      // Extract the balance value from the account resource
-      const rawBalance = (accountResource.data as any).coin.value;
-
-      // Convert the balance to a bigint
-      const balance = BigInt(rawBalance);
+      // Convert the amount to a bigint
+      const balance = BigInt(accountAPTAmount);
 
       // Calculate the normalized balance for display
       const normalizedBalance = Number(balance) / Math.pow(10, this.decimals);
