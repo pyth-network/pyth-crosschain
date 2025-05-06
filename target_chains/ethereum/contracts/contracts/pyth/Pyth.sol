@@ -474,11 +474,9 @@ abstract contract Pyth is
         bytes32[] memory endPriceIds;
         {
             uint offsetEnd;
-            (
-                offsetEnd,
-                endTwapPriceInfos,
-                endPriceIds
-            ) = extractTwapPriceInfos(updateData[1]);
+            (offsetEnd, endTwapPriceInfos, endPriceIds) = extractTwapPriceInfos(
+                updateData[1]
+            );
         }
 
         // Verify that we have the same number of price feeds in start and end updates
@@ -486,22 +484,10 @@ abstract contract Pyth is
             revert PythErrors.InvalidTwapUpdateDataSet();
         }
 
-        // Create a mapping to check that every startPriceId has a matching endPriceId
-        // This ensures price feed continuity between start and end points
-        bool[] memory endPriceIdMatched = new bool[](endPriceIds.length);
+        // Hermes always returns price feeds in the same order for start and end updates
+        // This allows us to assume startPriceIds[i] == endPriceIds[i] for efficiency
         for (uint i = 0; i < startPriceIds.length; i++) {
-            bool foundMatch = false;
-            for (uint j = 0; j < endPriceIds.length; j++) {
-                if (
-                    startPriceIds[i] == endPriceIds[j] && !endPriceIdMatched[j]
-                ) {
-                    endPriceIdMatched[j] = true;
-                    foundMatch = true;
-                    break;
-                }
-            }
-            // If a price ID in start doesn't have a match in end, it's invalid
-            if (!foundMatch) {
+            if (startPriceIds[i] != endPriceIds[i]) {
                 revert PythErrors.InvalidTwapUpdateDataSet();
             }
         }
@@ -513,9 +499,9 @@ abstract contract Pyth is
         for (uint i = 0; i < priceIds.length; i++) {
             bytes32 requestedPriceId = priceIds[i];
             int startIdx = -1;
-            int endIdx = -1;
 
-            // Find the index of this price ID in start and end arrays
+            // Find the index of this price ID in the startPriceIds array
+            // (which is the same as the endPriceIds array based on our validation above)
             for (uint j = 0; j < startPriceIds.length; j++) {
                 if (startPriceIds[j] == requestedPriceId) {
                     startIdx = int(j);
@@ -523,26 +509,20 @@ abstract contract Pyth is
                 }
             }
 
-            for (uint j = 0; j < endPriceIds.length; j++) {
-                if (endPriceIds[j] == requestedPriceId) {
-                    endIdx = int(j);
-                    break;
-                }
-            }
-
-            // If we found both start and end data for this price ID
-            if (startIdx >= 0 && endIdx >= 0) {
+            // If we found the price ID
+            if (startIdx >= 0) {
+                uint idx = uint(startIdx);
                 // Validate the pair of price infos
                 validateTwapPriceInfo(
-                    startTwapPriceInfos[uint(startIdx)],
-                    endTwapPriceInfos[uint(endIdx)]
+                    startTwapPriceInfos[idx],
+                    endTwapPriceInfos[idx]
                 );
 
                 // Calculate TWAP from these data points
                 twapPriceFeeds[i] = calculateTwap(
                     requestedPriceId,
-                    startTwapPriceInfos[uint(startIdx)],
-                    endTwapPriceInfos[uint(endIdx)]
+                    startTwapPriceInfos[idx],
+                    endTwapPriceInfos[idx]
                 );
             }
         }
