@@ -2,6 +2,7 @@ syntax = "proto3";
 package pyth_lazer_transaction;
 
 import "publisher_update.proto";
+import "governance_instruction.proto";
 
 // if any fields marked as [required] are missing, transaction will be rejected
 // if signature does not match payload bytes, transaction will be rejected
@@ -19,7 +20,7 @@ message SignedLazerTransaction {
 
     // [required] lazer transaction encoded as bytes through protobuf
     optional bytes payload = 3;
-    
+
     // TODO: Add public key
 }
 
@@ -33,7 +34,10 @@ enum TransactionSignatureType {
 message LazerTransaction {
     // [required] valid transaction types supported by pyth lazer
     oneof payload {
-      // updates to feeds, sent by authorized publishers
-      PublisherUpdate publisher_update = 1;
+        // Expected transaction sent by Publishers
+        // May contain many individual updates to various feeds
+        PublisherUpdate publisher_update = 1;
+        // Sent by governance.
+        GovernanceInstruction governance_instruction = 2;
     }
 }
