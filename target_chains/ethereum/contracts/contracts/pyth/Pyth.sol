@@ -372,7 +372,7 @@ abstract contract Pyth is
             );
     }
 
-    function processSingleTwapUpdate(
+    function extractTwapPriceInfos(
         bytes calldata updateData
     )
         private
@@ -466,7 +466,7 @@ abstract contract Pyth is
                 offsetStart,
                 startTwapPriceInfos,
                 startPriceIds
-            ) = processSingleTwapUpdate(updateData[0]);
+            ) = extractTwapPriceInfos(updateData[0]);
         }
 
         // Process end update data
@@ -478,7 +478,7 @@ abstract contract Pyth is
                 offsetEnd,
                 endTwapPriceInfos,
                 endPriceIds
-            ) = processSingleTwapUpdate(updateData[1]);
+            ) = extractTwapPriceInfos(updateData[1]);
         }
 
         // Verify that we have the same number of price feeds in start and end updates
