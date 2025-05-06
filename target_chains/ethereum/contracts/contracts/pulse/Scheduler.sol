@@ -30,8 +30,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function createSubscription(
         SubscriptionParams memory subscriptionParams
     ) external payable override returns (uint256 subscriptionId) {
-        // Validate params and set default gas config
-        _validateAndPrepareSubscriptionParams(subscriptionParams);
+        _validateSubscriptionParams(subscriptionParams);
 
         // Calculate minimum balance required for this subscription
         uint256 minimumBalance = this.getMinimumBalance(
@@ -97,9 +96,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             emit SubscriptionUpdated(subscriptionId);
             return;
         }
-
-        // Validate the new parameters, including setting default gas config
-        _validateAndPrepareSubscriptionParams(newParams);
+        _validateSubscriptionParams(newParams);
 
         // Check minimum balance if number of feeds increases and subscription remains active
         if (
@@ -150,11 +147,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     }
 
     /**
-     * @notice Validates subscription parameters and sets default gas config if needed.
-     * @dev This function modifies the passed-in params struct in place for gas config defaults.
-     * @param params The subscription parameters to validate and prepare.
+     * @notice Validates subscription parameters.
+     * @param params The subscription parameters to validate.
      */
-    function _validateAndPrepareSubscriptionParams(
+    function _validateSubscriptionParams(
         SubscriptionParams memory params
     ) internal pure {
         // No zero‐feed subscriptions
