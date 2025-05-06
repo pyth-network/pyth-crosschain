@@ -81,10 +81,18 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         uint128 keeperFee = 10 ** 14; // 0.0001 ether
 
         SchedulerUpgradeable _scheduler = new SchedulerUpgradeable();
-        proxy = new ERC1967Proxy(address(_scheduler), "");
+        proxy = new ERC1967Proxy(
+            address(_scheduler),
+            abi.encodeWithSelector(
+                SchedulerUpgradeable.initialize.selector,
+                owner,
+                admin,
+                pyth,
+                minBalancePerFeed,
+                keeperFee
+            )
+        );
         scheduler = SchedulerUpgradeable(address(proxy));
-
-        scheduler.initialize(owner, admin, pyth, minBalancePerFeed, keeperFee);
 
         reader = new MockReader(address(proxy));
 

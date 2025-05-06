@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity ^0.8.0;
-
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
