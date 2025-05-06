@@ -1,0 +1,286 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+import "dynamic_value.proto";
+
+// If any field documented as `[required]` is not present in the instruction,
+// the instruction will be rejected.
+
+package pyth_lazer_transaction;
+
+// Representation of a complete governance instruction. This value will be signed
+// by a governance source.
+message GovernanceInstruction {
+    // Action requested by this instruction. For the instruction to be accepted, all directives
+    // must be successfully applied. In case of any failure, the whole instruction is reverted.
+    // However, note that if the instruction targets multiple (or all) shards, each shard will
+    // accept or reject the instruction independently of other shards.
+    repeated GovernanceDirective directives = 1;
+    // [optional] If specified, the instruction will be rejected if the current timestamp
+    // is less than the specified value. In case of rejection, the same instruction can be resubmitted
+    // and executed later once the time requirement is met.
+    optional google.protobuf.Timestamp min_execution_timestamp = 2;
+    // [optional] If specified, the instruction will be rejected if the current timestamp
+    // is greater than the specified value. After `max_execution_timestamp` is in the past,
+    // it will no longer be possible to execute this instruction.
+    optional google.protobuf.Timestamp max_execution_timestamp = 3;
+    // [required] Sequence number of this instruction. It must be greater than 0.
+    // It must always be increasing, but not required to be
+    // strictly sequential (i.e. gaps are allowed). Each shard separately keeps track of the last executed
+    // governance instruction and will reject instructions with the same or smaller sequence no.
+    // Note that if instructions are received out of order, some of them may become permanently
+    // rejected (e.g. if instruction #3 has been successfully processed before instruction #2 was observed,
+    // #2 will always be rejected).
+    // Sequence numbers are assigned and tracked separately for each governance source.
+    optional uint32 governance_sequence_no = 4;
+}
+
+// Specifies which shards the governance instruction applies to.
+message ShardFilter {
+    // The instruction applies to the specified shards.
+    message ShardNames {
+        // Must not be empty.
+        repeated string shard_names = 1;
+    }
+    // The instruction applies to the specified shard groups.
+    message ShardGroups {
+        // Must not be empty.
+        repeated string shard_groups = 1;
+    }
+    // [required]
+    oneof filter {
+        // The instruction applies to all shards.
+        google.protobuf.Empty all_shards = 1;
+        ShardNames shard_names = 2;
+        ShardGroups shard_groups = 3;
+    }
+}
+
+// An item of a governance instruction.
+message GovernanceDirective {
+    // [required] Specifies which shards the governance instruction applies to.
+    // The instruction applies to each shard independently of other shards and may apply
+    // at a different time. The instruction may succeed on some shards and fail on other shards.
+    // Note that each shard has its own list of governance sources and permissions,
+    // and a `GovernanceInstruction` is issued by a single source, so multiple instructions
+    // from different sources may be needed to apply a change to multiple shards or shard groups.
+    optional ShardFilter shard_filter = 1;
+    // [required]
+    oneof action {
+        AddGovernanceSource add_governance_source = 101;
+        UpdateGovernanceSource update_governance_source = 102;
+        SetShardName set_shard_name = 103;
+        SetShardGroup set_shard_group = 104;
+        AddPublisher add_publisher = 105;
+        UpdatePublisher update_publisher = 106;
+        AddFeed add_feed = 107;
+        UpdateFeed update_feed = 108;
+    }
+}
+
+// Permissions granted to a governance source.
+// bool fields in this message are optional and default to false (no permission).
+message Permissions {
+    // All operations, including operations added in the future.
+    optional bool all = 1;
+    optional bool add_governance_source = 2;
+    // All operations under `UpdateGovernanceSource` (update and delete),
+    // including operations added in the future.
+    optional bool update_governance_source_all = 3;
+    optional bool update_governance_source_permissions = 4;
+    optional bool remove_governance_source = 5;
+    optional bool set_shard_name = 6;
+    optional bool set_shard_group = 7;
+    optional bool add_publisher = 8;
+    // All operations under `UpdatePublisher` (update and delete),
+    // including operations added in the future.
+    optional bool update_publisher_all = 9;
+    optional bool set_publisher_name = 10;
+    optional bool add_publisher_public_keys = 11;
+    optional bool remove_publisher_public_keys = 12;
+    optional bool set_publisher_public_keys = 13;
+    optional bool set_publisher_active = 14;
+    optional bool remove_publisher = 15;
+    optional bool add_feed = 16;
+    // All operations under `UpdateFeed` (update and delete),
+    // including operations added in the future.
+    optional bool update_feed_all = 17;
+    optional bool update_feed_metadata = 18;
+    optional bool activate_feed = 19;
+    optional bool deactivate_feed = 20;
+    optional bool remove_feed = 21;
+}
+
+// Specifies the way governance transactions are signed and verified.
+message GovernanceSource {
+    // Governance transactions are signed by a single Ed25519 signature.
+    // This will generally be used in development and testing environments.
+    message SingleEd25519 {
+        // [required] Ed25519 public key that signs governance transactions.
+        optional bytes public_key = 1;
+    }
+
+    // [required]
+    oneof source {
+        SingleEd25519 single_ed25519 = 1;
+        // TODO: wormhole source goes here.
+    }
+}
+
+message AddGovernanceSource {
+    // [required] Governance source that should be added.
+    optional GovernanceSource new_source = 1;
+    // [required] Permissions granted to this source.
+    optional Permissions permissions = 2;
+}
+
+message UpdateGovernanceSource {
+    // [required] Governance source that should be updated. Rejects if there is no such source.
+    optional GovernanceSource source = 1;
+    // [required]
+    oneof action {
+        SetGovernanceSourcePermissions set_governance_source_permissions = 2;
+        // Removes a governance source. Note that the last sequence number associated with this source
+        // will be retained in the state to prevent repeated execution of instructions in case
+        // the same source is re-added later.
+        google.protobuf.Empty remove_governance_source = 3;
+    }
+}
+
+message SetGovernanceSourcePermissions {
+    // [required] Permissions granted to this source. Replaces all previous permissions.
+    optional Permissions permissions = 2;
+}
+
+// Set shard name. This action will be rejected if `GovernanceDirective.shard_names` is empty or contains
+// more than one item.
+message SetShardName {
+    // [required] New shard name. Must be unique across all shards in all environments.
+    // (Warning: it's not possible to enforce this rule within a shard!)
+    optional string shard_name = 1;
+}
+
+// Set shard group. This action will be rejected if `GovernanceDirective.shard_names` is empty or contains
+// more than one item.
+message SetShardGroup {
+    // [required] Group name, e.g. "production", "staging", "testing", etc.
+    // Data from shards belonging to the same group can be joined and served to consumers as a whole.
+    // Active feed names must be unique within a group, but not across all groups.
+    optional string shard_group = 1;
+}
+
+message AddPublisher {
+    // [required] Publisher ID. Restricted to uint16. Must be different from existing ids.
+    optional uint32 publisher_id = 1;
+    // [required] Publisher name (only for debug/monitoring/management purposes).
+    // Must be different from existing publisher names.
+    optional string name = 2;
+    // Public keys used to sign publisher update transactions.
+    repeated bytes public_keys = 3;
+    // [required] If true, the publisher is active, i.e. it's allowed to publish updates.
+    optional bool is_active = 4;
+}
+
+message UpdatePublisher {
+    // [required] ID of the publisher that is being updated. Rejects if there is no such publisher.
+    optional uint32 publisher_id = 1;
+    // [required]
+    oneof action {
+        SetPublisherName set_publisher_name = 2;
+        AddPublisherPublicKeys add_publisher_public_keys = 3;
+        RemovePublisherPublicKeys remove_publisher_public_keys = 4;
+        SetPublisherPublicKeys set_publisher_public_keys = 5;
+        SetPublisherActive set_publisher_active = 6;
+        google.protobuf.Empty remove_publisher = 7;
+    }
+}
+
+message SetPublisherName {
+    // [required] New name.
+    optional string name = 1;
+}
+
+// Add new keys.
+message AddPublisherPublicKeys {
+    // Must not be empty.
+    repeated bytes public_keys = 1;
+}
+
+// Remove existing keys.
+message RemovePublisherPublicKeys {
+    // Must not be empty.
+    repeated bytes public_keys = 1;
+}
+
+// Remove all existing public keys and add new keys (if specified).
+message SetPublisherPublicKeys {
+    repeated bytes public_keys = 1;
+}
+
+message SetPublisherActive {
+    // [required]
+    optional bool is_active = 1;
+}
+
+// Feed is inactive when added, meaning that it will be available to publishers but not to consumers.
+message AddFeed {
+    // [required] ID of the price feed. Must be unique (within the shard).
+    optional uint32 price_feed_id = 1;
+    // [required] Feed metadata. Some properties are required (name, exponent, etc.).
+    // Known properties must have the expected type.
+    // Additional arbitrary properties are allowed.
+    // (TODO: document known metadata properties)
+    optional DynamicValue.Map metadata = 2;
+    // IDs of publishers enabled for this feed.
+    repeated uint32 permissioned_publishers = 3;
+}
+
+message UpdateFeed {
+    // [required] ID of the feed that is being updated. Rejects if there is no such feed.
+    optional uint32 price_feed_id = 1;
+    // [required]
+    oneof action {
+        UpdateFeedMetadata update_feed_metadata = 2;
+        ActivateFeed activate_feed = 3;
+        DeactivateFeed deactivate_feed = 4;
+        google.protobuf.Empty remove_feed = 5;
+    }
+}
+
+message UpdateFeedMetadata {
+    // [required] Property name.
+    optional string name = 1;
+    // [optional] Property value. If unset, the property will be removed.
+    optional DynamicValue value = 2;
+}
+
+// Set the feed as active or shedule an activation.
+// If there was already a pending activation or deactivation, it will be cleared
+// when this governance instruction is processed.
+// Warning: there must never be two feeds with the same name active at the same time
+// within a shard group. This cannot be enforced within a shard. When a feed needs to be
+// moved between shards, use `activation_timestamp` and `deactivation_timestamp`
+// to deactivate it in the old shard and activate it in the new shard at the same time.
+message ActivateFeed {
+    // [optional] If provided, the feed will activate at the specified timestamp.
+    // If `activation_timestamp` is already passed or if it's unset,
+    // the feed will be activated immediately when this
+    // governance instruction is processed.
+    optional google.protobuf.Timestamp activation_timestamp = 1;
+}
+
+// Set the feed as inactive or shedule a deactivation.
+// If there was already a pending activation or deactivation, it will be cleared
+// when this governance instruction is processed.
+// See also: `ActivateFeed` docs.
+message DeactivateFeed {
+    // [optional] If provided, the feed will deactivate at the specified timestamp.
+    // If `deactivation_timestamp` is already passed or if it's unset,
+    // the feed will be deactivated immediately when this
+    // governance instruction is processed.
+    optional google.protobuf.Timestamp deactivation_timestamp = 1;
+}
+

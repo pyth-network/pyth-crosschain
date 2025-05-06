@@ -3,6 +3,7 @@ syntax = "proto3";
 package pyth_lazer_transaction;
 
 import "publisher_update.proto";
+import "governance_instruction.proto";
 
 // Types of Signatures allowed for signing Lazer Transactions
 enum TransactionSignatureType {
@@ -30,5 +31,7 @@ message LazerTransaction {
     // Expected transaction sent by Publishers
     // May contain many individual updates to various feeds
     PublisherUpdate publisher_update = 1;
+    // Sent by governance.
+    GovernanceInstruction governance_instruction = 2;
   }
 }

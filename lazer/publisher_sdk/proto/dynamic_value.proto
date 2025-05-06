@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+package pyth_lazer_transaction;
+
+// A dynamically typed value similar to `google.protobuf.Value`
+// but supporting more types.
+message DynamicValue {
+    message List {
+        repeated DynamicValue items = 1;
+    }
+    message MapItem {
+        // [required] Must be unique.
+        optional string key = 1;
+        // [required]
+        optional DynamicValue value = 2;
+    }
+    message Map {
+        repeated MapItem items = 1;
+    }
+
+    oneof value {
+        string string_value = 1;
+        double double_value = 2;
+        uint64 uint_value = 3;
+        sint64 int_value = 4;
+        bool bool_value = 5;
+        bytes bytes_value = 6;
+        google.protobuf.Duration duration_value = 7;
+        google.protobuf.Timestamp timestamp_value = 8;
+        List list = 9;
+        Map map = 10;
+    }
+}
