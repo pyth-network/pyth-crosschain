@@ -112,7 +112,7 @@ export const RECEIVER_CHAINS = {
   worldchain: 60082,
   swellchain: 60083,
   // empty chain id 60084
-  iota_mainnet: 60085,
+  iota_sui_mainnet: 60085,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
