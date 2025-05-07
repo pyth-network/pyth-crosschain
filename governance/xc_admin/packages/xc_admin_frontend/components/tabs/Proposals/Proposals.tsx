@@ -5,6 +5,7 @@ import { ClusterContext } from '../../../contexts/ClusterContext'
 import { useMultisigContext } from '../../../contexts/MultisigContext'
 import { PROPOSAL_STATUSES } from './utils'
 import ClusterSwitch from '../../ClusterSwitch'
+import ProgramSwitch from '../../ProgramSwitch'
 import Loadbar from '../../loaders/Loadbar'
 import { Select } from '../../Select'
 import { useQueryState, parseAsStringLiteral } from 'nuqs'
@@ -195,7 +196,10 @@ const Proposals = () => {
           <>
             <div className="flex flex-col justify-between md:flex-row">
               <div className="mb-4 flex items-center md:mb-0">
-                <ClusterSwitch />
+                <div className="flex space-x-4 items-center">
+                  <ProgramSwitch />
+                  <ClusterSwitch />
+                </div>
               </div>
               <div className="flex space-x-2">
                 {refreshData && (
