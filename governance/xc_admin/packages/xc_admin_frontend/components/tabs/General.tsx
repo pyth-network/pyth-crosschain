@@ -29,6 +29,7 @@ import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
+import ProgramSwitch from '../ProgramSwitch'
 import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
@@ -960,7 +961,10 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
       <div className="container min-h-[50vh]">
         <div className="flex justify-between">
           <div className="mb-4 md:mb-0">
-            <ClusterSwitch />
+            <div className="flex space-x-4 items-center">
+              <ProgramSwitch />
+              <ClusterSwitch />
+            </div>
           </div>
         </div>
         <div className="relative mt-6 flex space-x-4">
