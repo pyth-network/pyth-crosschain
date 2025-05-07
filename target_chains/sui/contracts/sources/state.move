@@ -1,8 +1,8 @@
 module pyth::state {
     use std::vector;
-    use sui::object::{Self, UID, ID};
-    use sui::tx_context::{Self, TxContext};
-    use sui::package::{UpgradeCap, UpgradeTicket, UpgradeReceipt};
+    use iota::object::{Self, UID, ID};
+    use iota::tx_context::{Self, TxContext};
+    use iota::package::{UpgradeCap, UpgradeTicket, UpgradeReceipt};
 
     use pyth::data_source::{Self, DataSource};
     use pyth::price_info::{Self};
@@ -280,7 +280,7 @@ module pyth::state {
 
     /// Issue an `UpgradeTicket` for the upgrade.
     ///
-    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// NOTE: The Iota VM performs a check that this method is executed from the
     /// latest published package. If someone were to try to execute this using
     /// a stale build, the transaction will revert with `PackageUpgradeError`,
     /// specifically `PackageIDDoesNotMatch`.
@@ -294,7 +294,7 @@ module pyth::state {
 
     /// Finalize the upgrade that ran to produce the given `receipt`.
     ///
-    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// NOTE: The Iota VM performs a check that this method is executed from the
     /// latest published package. If someone were to try to execute this using
     /// a stale build, the transaction will revert with `PackageUpgradeError`,
     /// specifically `PackageIDDoesNotMatch`.
@@ -362,7 +362,7 @@ module pyth::state {
         // Add back in old dynamic field(s)...
 
         // Add dummy hash since this is the first time the package is published.
-        sui::dynamic_field::add(&mut self.id, CurrentDigest {}, bytes32::from_bytes(b"new build"));
+        iota::dynamic_field::add(&mut self.id, CurrentDigest {}, bytes32::from_bytes(b"new build"));
     }
 
     #[test_only]

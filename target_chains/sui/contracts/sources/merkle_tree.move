@@ -2,7 +2,7 @@
 // with a given depth, as well as proving that a leaf node belongs to the tree.
 module pyth::merkle_tree {
     use std::vector::{Self};
-    use sui::hash::{keccak256};
+    use iota::hash::{keccak256};
     use wormhole::bytes20::{Self, Bytes20, data};
     use wormhole::cursor::Cursor;
     use pyth::deserialize::{Self};
@@ -89,9 +89,9 @@ module pyth::merkle_tree {
         false
     }
 
-    // The Sui Move stdlb insert function shifts v[i] and subsequent elements to the right.
+    // The Iota Move stdlb insert function shifts v[i] and subsequent elements to the right.
     // We don't want this behavior, so we define our own set_element function that instead replaces the ith element.
-    // Reference: https://github.com/MystenLabs/sui/blob/main/crates/sui-framework/packages/move-stdlib/sources/vector.move
+    // Reference: https://github.com/MystenLabs/iota/blob/main/crates/iota-framework/packages/move-stdlib/sources/vector.move
     fun set_element<T: drop>(a: &mut vector<T>, value: T, index: u64){
         vector::push_back<T>(a, value); // push value to end
         vector::swap_remove(a, index); // swap value to correct position and pop last value

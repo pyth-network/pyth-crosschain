@@ -1,11 +1,11 @@
 module pyth::pyth {
     use std::vector;
-    use sui::tx_context::{TxContext};
-    use sui::coin::{Self, Coin};
-    use sui::sui::{SUI};
-    use sui::transfer::{Self};
-    use sui::clock::{Self, Clock};
-    use sui::package::{UpgradeCap};
+    use iota::tx_context::{TxContext};
+    use iota::coin::{Self, Coin};
+    use iota::iota::{IOTA};
+    use iota::transfer::{Self};
+    use iota::clock::{Self, Clock};
+    use iota::package::{UpgradeCap};
 
     use pyth::event::{Self as pyth_event};
     use pyth::data_source::{Self, DataSource};
@@ -166,7 +166,7 @@ module pyth::pyth {
         while (!vector::is_empty(&price_infos)){
             let cur_price_info = vector::pop_back(&mut price_infos);
 
-            // Only create new Sui PriceInfoObject if not already
+            // Only create new Iota PriceInfoObject if not already
             // registered with the Pyth State object.
             if (!state::price_feed_object_exists(
                     pyth_state,
@@ -175,7 +175,7 @@ module pyth::pyth {
                         )
                     )
             ){
-                // Create and share newly created Sui PriceInfoObject containing a price feed,
+                // Create and share newly created Iota PriceInfoObject containing a price feed,
                 // and then register a copy of its ID with State.
                 let new_price_info_object = price_info::new_price_info_object(cur_price_info, ctx);
                 let price_identifier = price_info::get_price_identifier(&cur_price_info);
@@ -263,12 +263,12 @@ module pyth::pyth {
         pyth_state: &PythState,
         price_updates: HotPotatoVector<PriceInfo>,
         price_info_object: &mut PriceInfoObject,
-        fee: Coin<SUI>,
+        fee: Coin<IOTA>,
         clock: &Clock
     ): HotPotatoVector<PriceInfo> {
         let latest_only = state::assert_latest_only(pyth_state);
 
-        // On Sui, users get to choose which price feeds to update. They specify a single price feed to
+        // On Iota, users get to choose which price feeds to update. They specify a single price feed to
         // update at a time. We therefore charge the base fee for each such individual update.
         // This is a departure from Eth, where users don't get to necessarily choose.
         assert!(state::get_base_update_fee(pyth_state) <= coin::value(&fee), E_INSUFFICIENT_FEE);
@@ -359,7 +359,7 @@ module pyth::pyth {
     /// get_price() is likely to abort unless you call update_price_feeds() to update the cached price
     /// beforehand, as the cached prices may be older than the stale price threshold.
     ///
-    /// The price_info_object is a Sui object with the key ability that uniquely
+    /// The price_info_object is a Iota object with the key ability that uniquely
     /// contains a price feed for a given price_identifier.
     ///
     public fun get_price(state: &PythState, price_info_object: &PriceInfoObject, clock: &Clock): Price {
@@ -419,12 +419,12 @@ module pyth::pyth {
 module pyth::pyth_tests{
     use std::vector::{Self};
 
-    use sui::sui::SUI;
-    use sui::coin::{Self, Coin};
-    use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
-    use sui::package::Self;
-    use sui::object::{Self, ID};
-    use sui::clock::{Self, Clock};
+    use iota::iota::IOTA;
+    use iota::coin::{Self, Coin};
+    use iota::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
+    use iota::package::Self;
+    use iota::object::{Self, ID};
+    use iota::clock::{Self, Clock};
 
     use pyth::state::{State as PythState};
     use pyth::setup::{Self};
@@ -501,8 +501,8 @@ module pyth::pyth_tests{
     #[test_only]
     /// Init Wormhole core bridge state.
     /// Init Pyth state.
-    /// Set initial Sui clock time.
-    /// Mint some SUI fee coins.
+    /// Set initial Iota clock time.
+    /// Mint some IOTA fee coins.
     public fun setup_test(
         stale_price_threshold: u64,
         governance_emitter_chain_id: u64,
@@ -511,7 +511,7 @@ module pyth::pyth_tests{
         initial_guardians: vector<vector<u8>>,
         base_update_fee: u64,
         to_mint: u64
-    ): (Scenario, Coin<SUI>, Clock) {
+    ): (Scenario, Coin<IOTA>, Clock) {
 
         let scenario = test_scenario::begin(DEPLOYER);
 
@@ -576,7 +576,7 @@ module pyth::pyth_tests{
             ctx(&mut scenario)
         );
 
-        let coins = coin::mint_for_testing<SUI>(to_mint, ctx(&mut scenario));
+        let coins = coin::mint_for_testing<IOTA>(to_mint, ctx(&mut scenario));
         let clock = clock::create_for_testing(ctx(&mut scenario));
         (scenario, coins, clock)
     }
@@ -673,7 +673,7 @@ module pyth::pyth_tests{
         assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&multiple_vaas)) == 5*DEFAULT_BASE_UPDATE_FEE, 1);
 
         return_shared(pyth_state);
-        coin::burn_for_testing<SUI>(test_coins);
+        coin::burn_for_testing<IOTA>(test_coins);
         clock::destroy_for_testing(_clock);
         test_scenario::end(scenario);
     }
@@ -699,7 +699,7 @@ module pyth::pyth_tests{
         );
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
-        coin::burn_for_testing<SUI>(test_coins);
+        coin::burn_for_testing<IOTA>(test_coins);
         test_scenario::end(scenario);
     }
 
@@ -730,7 +730,7 @@ module pyth::pyth_tests{
         );
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
-        coin::burn_for_testing<SUI>(test_coins);
+        coin::burn_for_testing<IOTA>(test_coins);
         test_scenario::end(scenario);
     }
 
@@ -779,7 +779,7 @@ module pyth::pyth_tests{
         let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
         let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
 
-        // Create vector of price info objects (Sui objects with key ability and living in global store),
+        // Create vector of price info objects (Iota objects with key ability and living in global store),
         // which contain the price feeds we want to update. Note that these can be passed into
         // update_price_feeds in any order!
         //let price_info_object_vec = vector[price_info_object_1, price_info_object_2, price_info_object_3, price_info_object_4];
@@ -930,7 +930,7 @@ module pyth::pyth_tests{
 
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        coin::burn_for_testing<SUI>(coins);
+        coin::burn_for_testing<IOTA>(coins);
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
@@ -963,7 +963,7 @@ module pyth::pyth_tests{
 
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        coin::burn_for_testing<SUI>(coins);
+        coin::burn_for_testing<IOTA>(coins);
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
@@ -996,7 +996,7 @@ module pyth::pyth_tests{
 
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        coin::burn_for_testing<SUI>(coins);
+        coin::burn_for_testing<IOTA>(coins);
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
@@ -1029,7 +1029,7 @@ module pyth::pyth_tests{
 
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        coin::burn_for_testing<SUI>(coins);
+        coin::burn_for_testing<IOTA>(coins);
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
@@ -1072,7 +1072,7 @@ module pyth::pyth_tests{
 
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        coin::burn_for_testing<SUI>(coins);
+        coin::burn_for_testing<IOTA>(coins);
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
@@ -1110,7 +1110,7 @@ module pyth::pyth_tests{
 
     #[test]
     fun test_create_and_update_multiple_price_feeds_with_accumulator_success() {
-        use sui::coin::Self;
+        use iota::coin::Self;
 
         let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
 
@@ -1165,7 +1165,7 @@ module pyth::pyth_tests{
             return_shared(price_info_object);
             idx = idx + 1;
         };
-        coin::burn_for_testing<SUI>(coins);
+        coin::burn_for_testing<IOTA>(coins);
 
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
@@ -1211,7 +1211,7 @@ module pyth::pyth_tests{
         let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
         let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
 
-        // Create vector of price info objects (Sui objects with key ability and living in global store),
+        // Create vector of price info objects (Iota objects with key ability and living in global store),
         // which contain the price feeds we want to update. Note that these can be passed into
         // update_price_feeds in any order!
         //let price_info_object_vec = vector[price_info_object_1, price_info_object_2, price_info_object_3, price_info_object_4];
@@ -1300,7 +1300,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
-        coin::burn_for_testing<SUI>(test_coins);
+        coin::burn_for_testing<IOTA>(test_coins);
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
@@ -1395,7 +1395,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
-        coin::burn_for_testing<SUI>(test_coins);
+        coin::burn_for_testing<IOTA>(test_coins);
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
@@ -1403,8 +1403,8 @@ module pyth::pyth_tests{
     // pyth accumulator tests (included in this file instead of pyth_accumulator.move to avoid dependency cycle - as we need pyth_tests::setup_test)
     #[test]
     fun test_parse_and_verify_accumulator_updates(){
-        use sui::test_scenario::{Self, take_shared, return_shared};
-        use sui::transfer::{Self};
+        use iota::test_scenario::{Self, take_shared, return_shared};
+        use iota::transfer::{Self};
 
         let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, vector[], ACCUMULATOR_TESTS_INITIAL_GUARDIANS, 50, 0);
         let worm_state = take_shared<WormState>(&scenario);
@@ -1434,8 +1434,8 @@ module pyth::pyth_tests{
 
     #[test]
     fun test_parse_and_verify_accumulator_updates_with_extra_bytes_at_end_of_message(){
-        use sui::test_scenario::{Self, take_shared, return_shared};
-        use sui::transfer::{Self};
+        use iota::test_scenario::{Self, take_shared, return_shared};
+        use iota::transfer::{Self};
 
         let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, vector[], ACCUMULATOR_TESTS_INITIAL_GUARDIANS, 50, 0);
         let worm_state = take_shared<WormState>(&scenario);
