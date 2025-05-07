@@ -1,6 +1,6 @@
 "use client";
 
-import { LoggerProvider } from "@pythnetwork/app-logger/provider";
+import { LoggerProvider } from "@pythnetwork/component-library/useLogger";
 import type { ComponentProps } from "react";
 
 import { Error } from "../components/Error";

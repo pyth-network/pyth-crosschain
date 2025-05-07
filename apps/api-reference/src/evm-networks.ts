@@ -893,6 +893,12 @@ export const NETWORK_INFO = {
     isMainnet: true,
     contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   },
+  [146]: {
+    name: "sonic_mainnet",
+    rpcUrl: " https://rpc.soniclabs.com",
+    isMainnet: true,
+    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+  },
 } satisfies Record<number, NetworkInfo>;
 
 export const NETWORK_IDS = Object.keys(NETWORK_INFO).map((key) =>

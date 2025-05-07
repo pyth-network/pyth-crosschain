@@ -2,7 +2,6 @@
 
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
 import { Button } from "@pythnetwork/component-library/Button";
@@ -19,15 +18,9 @@ import {
   ListBoxItem,
 } from "@pythnetwork/component-library/unstyled/ListBox";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
-import type { ReactNode, ComponentProps } from "react";
-import {
-  useMemo,
-  useCallback,
-  useEffect,
-  useState,
-  createContext,
-  use,
-} from "react";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
+import type { ReactNode } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { useIsSSR, useCollator, useFilter } from "react-aria";
 
 import styles from "./search-button.module.scss";
@@ -40,9 +33,18 @@ import { Score } from "../Score";
 
 const INPUTS = new Set(["input", "select", "button", "textarea"]);
 
-const SearchButtonContext = createContext<undefined | (() => void)>(undefined);
+type Props =
+  | { isLoading: true }
+  | (ResolvedSearchButtonProps & { isLoading?: false | undefined });
 
-type Props = Omit<ComponentProps<typeof SearchButtonContext>, "value"> & {
+export const SearchButton = (props: Props) =>
+  props.isLoading ? (
+    <SearchButtonImpl isPending />
+  ) : (
+    <ResolvedSearchButton {...props} />
+  );
+
+type ResolvedSearchButtonProps = {
   feeds: {
     symbol: string;
     displaySymbol: string;
@@ -60,11 +62,43 @@ type Props = Omit<ComponentProps<typeof SearchButtonContext>, "value"> & {
   ))[];
 };
 
-export const SearchButtonProvider = ({
-  feeds,
-  publishers,
-  ...props
-}: Props) => {
+const ResolvedSearchButton = (props: ResolvedSearchButtonProps) => {
+  const openSearchDrawer = useSearchDrawer(props);
+
+  useSearchHotkey(openSearchDrawer);
+
+  return <SearchButtonImpl onPress={openSearchDrawer} />;
+};
+
+const SearchButtonImpl = (
+  props: Omit<ButtonProps<typeof UnstyledButton>, "children">,
+) => (
+  <div className={styles.searchButton}>
+    <Button
+      className={styles.largeScreenSearchButton ?? ""}
+      variant="outline"
+      beforeIcon={MagnifyingGlass}
+      size="sm"
+      rounded
+      {...props}
+    >
+      <SearchShortcutText />
+    </Button>
+    <Button
+      className={styles.smallScreenSearchButton ?? ""}
+      hideText
+      variant="ghost"
+      beforeIcon={MagnifyingGlass}
+      size="sm"
+      rounded
+      {...props}
+    >
+      Search
+    </Button>
+  </div>
+);
+
+const useSearchDrawer = ({ feeds, publishers }: ResolvedSearchButtonProps) => {
   const drawer = useDrawer();
 
   const searchDrawer = useMemo(
@@ -82,6 +116,10 @@ export const SearchButtonProvider = ({
     drawer.open(searchDrawer);
   }, [drawer, searchDrawer]);
 
+  return openSearchDrawer;
+};
+
+const useSearchHotkey = (openSearchDrawer: () => void) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       const activeElement = document.activeElement;
@@ -110,34 +148,9 @@ export const SearchButtonProvider = ({
       globalThis.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
-
-  return <SearchButtonContext value={openSearchDrawer} {...props} />;
 };
 
-export const SearchButton = (
-  props: Omit<
-    ButtonProps<typeof UnstyledButton>,
-    "beforeIcon" | "size" | "rounded" | "onPress"
-  >,
-) => {
-  const openSearchDrawer = use(SearchButtonContext);
-  if (openSearchDrawer) {
-    return (
-      <Button
-        className={styles.outlineSearchButton ?? ""}
-        beforeIcon={MagnifyingGlass}
-        size="sm"
-        rounded
-        onPress={openSearchDrawer}
-        {...props}
-      />
-    );
-  } else {
-    throw new Error("Search drawer context not initialized!");
-  }
-};
-
-export const SearchShortcutText = () => {
+const SearchShortcutText = () => {
   const isSSR = useIsSSR();
   return isSSR ? <Skeleton width={7} /> : <SearchTextImpl />;
 };
@@ -147,10 +160,7 @@ const SearchTextImpl = () => {
   return isMac ? "⌘ K" : "Ctrl K";
 };
 
-type SearchDialogContentsProps = {
-  feeds: Props["feeds"];
-  publishers: Props["publishers"];
-};
+type SearchDialogContentsProps = ResolvedSearchButtonProps;
 
 const SearchDialogContents = ({
   feeds,

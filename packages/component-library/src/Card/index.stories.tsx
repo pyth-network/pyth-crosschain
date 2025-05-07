@@ -5,6 +5,12 @@ import { Card as CardComponent, VARIANTS } from "./index.js";
 
 const meta = {
   component: CardComponent,
+  globals: {
+    background: "primary",
+  },
+  parameters: {
+    layout: "padded",
+  },
   argTypes: {
     href: {
       control: "text",

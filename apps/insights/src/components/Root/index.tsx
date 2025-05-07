@@ -1,13 +1,9 @@
+import { AppShell } from "@pythnetwork/component-library/AppShell";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
-import { Root as BaseRoot } from "@pythnetwork/next-root";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 
-import { Footer } from "./footer";
-import { Header } from "./header";
-import styles from "./index.module.scss";
-import { MobileNavTabs } from "./mobile-nav-tabs";
-import { TabRoot, TabPanel } from "./tabs";
 import {
   ENABLE_ACCESSIBILITY_REPORTING,
   GOOGLE_ANALYTICS_ID,
@@ -18,46 +14,37 @@ import { getPublishers } from "../../services/clickhouse";
 import { Cluster, getFeeds } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
-import { SearchButtonProvider as SearchButtonProviderImpl } from "./search-button";
+import { SearchButton as SearchButtonImpl } from "./search-button";
 
 export const TABS = [
-  { href: "/", id: "", children: "Overview" },
-  { href: "/publishers", id: "publishers", children: "Publishers" },
-  {
-    href: "/price-feeds",
-    id: "price-feeds",
-    children: "Price Feeds",
-  },
+  { segment: "", children: "Overview" },
+  { segment: "publishers", children: "Publishers" },
+  { segment: "price-feeds", children: "Price Feeds" },
 ];
 
 type Props = {
   children: ReactNode;
 };
 
-export const Root = ({ children }: Props) => {
-  return (
-    <BaseRoot
-      amplitudeApiKey={AMPLITUDE_API_KEY}
-      googleAnalyticsId={GOOGLE_ANALYTICS_ID}
-      enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-      providers={[NuqsAdapter, LivePriceDataProvider]}
-      className={styles.root}
-    >
-      <SearchButtonProvider>
-        <TabRoot className={styles.tabRoot ?? ""}>
-          <Header className={styles.header} tabs={TABS} />
-          <main className={styles.main}>
-            <TabPanel>{children}</TabPanel>
-          </main>
-          <Footer />
-          <MobileNavTabs tabs={TABS} className={styles.mobileNavTabs} />
-        </TabRoot>
-      </SearchButtonProvider>
-    </BaseRoot>
-  );
-};
+export const Root = ({ children }: Props) => (
+  <AppShell
+    appName="Insights"
+    amplitudeApiKey={AMPLITUDE_API_KEY}
+    googleAnalyticsId={GOOGLE_ANALYTICS_ID}
+    enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
+    providers={[NuqsAdapter, LivePriceDataProvider]}
+    tabs={TABS}
+    extraCta={
+      <Suspense fallback={<SearchButtonImpl isLoading />}>
+        <SearchButton />
+      </Suspense>
+    }
+  >
+    {children}
+  </AppShell>
+);
 
-const SearchButtonProvider = async ({ children }: { children: ReactNode }) => {
+const SearchButton = async () => {
   const [publishers, feeds] = await Promise.all([
     Promise.all([
       getPublishersForSearchDialog(Cluster.Pythnet),
@@ -66,11 +53,7 @@ const SearchButtonProvider = async ({ children }: { children: ReactNode }) => {
     getFeedsForSearchDialog(Cluster.Pythnet),
   ]);
 
-  return (
-    <SearchButtonProviderImpl publishers={publishers.flat()} feeds={feeds}>
-      {children}
-    </SearchButtonProviderImpl>
-  );
+  return <SearchButtonImpl publishers={publishers.flat()} feeds={feeds} />;
 };
 
 const getPublishersForSearchDialog = async (cluster: Cluster) => {

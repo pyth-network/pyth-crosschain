@@ -4,7 +4,7 @@ import clsx from "clsx";
 import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
-import Logo from "../Root/logo.svg";
+import Logo from "./logo.svg";
 
 type Props = Omit<ComponentProps<"span">, "children">;
 

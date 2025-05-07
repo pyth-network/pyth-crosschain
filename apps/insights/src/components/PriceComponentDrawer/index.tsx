@@ -1,6 +1,5 @@
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { Flask } from "@phosphor-icons/react/dist/ssr/Flask";
-import { useLogger } from "@pythnetwork/app-logger";
 import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
@@ -11,6 +10,7 @@ import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { Table } from "@pythnetwork/component-library/Table";
 import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useMountEffect } from "@react-hookz/web";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";

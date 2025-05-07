@@ -1,6 +1,6 @@
 "use client";
 
-import { useLogger } from "@pythnetwork/app-logger";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useResizeObserver } from "@react-hookz/web";
 import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
 import { LineSeries, LineStyle, createChart } from "lightweight-charts";

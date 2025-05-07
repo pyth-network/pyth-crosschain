@@ -7,7 +7,7 @@ import { TabListStateContext } from "react-aria-components";
 
 import { TabPanel as UnstyledTabPanel } from "../unstyled/Tabs/index.js";
 
-const AnimatedPanel = motion(UnstyledTabPanel);
+const AnimatedPanel = motion.create(UnstyledTabPanel);
 
 type Props = {
   items: {

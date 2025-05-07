@@ -45,7 +45,9 @@ contract SchedulerUpgradeable is
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /// Only the owner can upgrade the contract
     function _authorizeUpgrade(address) internal override onlyOwner {}

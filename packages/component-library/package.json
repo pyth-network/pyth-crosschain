@@ -26,13 +26,20 @@
     "react": "catalog:"
   },
   "dependencies": {
-    "@pythnetwork/fonts": "workspace:*",
+    "@amplitude/analytics-browser": "catalog:",
+    "@amplitude/plugin-autocapture-browser": "catalog:",
+    "@axe-core/react": "catalog:",
+    "@next/third-parties": "catalog:",
     "@react-hookz/web": "catalog:",
+    "bcp-47": "catalog:",
     "clsx": "catalog:",
     "modern-normalize": "catalog:",
     "motion": "catalog:",
+    "next-themes": "catalog:",
+    "pino": "catalog:",
     "react-aria": "catalog:",
-    "react-aria-components": "catalog:"
+    "react-aria-components": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
@@ -46,8 +53,10 @@
     "@storybook/blocks": "catalog:",
     "@storybook/nextjs": "catalog:",
     "@storybook/react": "catalog:",
+    "@svgr/webpack": "catalog:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "css-loader": "catalog:",
     "eslint": "catalog:",
