@@ -1,7 +1,7 @@
 use {
-    super::{Subscription, SubscriptionId, SubscriptionListenerMessage},
+    super::SubscriptionListenerMessage,
+    crate::adapters::types::{ReadChainSubscriptions, Subscription, SubscriptionId},
     anyhow::Result,
-    async_trait::async_trait,
     ractor::{Actor, ActorProcessingErr, ActorRef},
     std::{
         collections::{HashMap, HashSet},
@@ -83,7 +83,7 @@ impl Actor for SubscriptionListener {
             }
         }
 
-        if let Err(e) = listener.contract.subscribe_to_events().await {
+        if let Err(e) = listener.contract.subscribe_to_subscription_events().await {
             tracing::error!(
                 chain_name = listener.chain_name,
                 error = %e,
@@ -125,11 +125,4 @@ impl Actor for SubscriptionListener {
         }
         Ok(())
     }
-}
-
-#[async_trait]
-pub trait ReadChainSubscriptions {
-    async fn get_active_subscriptions(&self) -> Result<HashMap<SubscriptionId, Subscription>>;
-
-    async fn subscribe_to_events(&self) -> Result<()>;
 }

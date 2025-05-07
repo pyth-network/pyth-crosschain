@@ -1,7 +1,7 @@
 use {
-    crate::actors::types::*,
+    super::PricePusherMessage,
+    crate::adapters::types::{ReadPythPrices, UpdateChainPrices},
     anyhow::Result,
-    async_trait::async_trait,
     backoff::{backoff::Backoff, ExponentialBackoff},
     ractor::{Actor, ActorProcessingErr, ActorRef},
     std::sync::Arc,
@@ -12,7 +12,7 @@ use {
 pub struct PricePusherState {
     chain_id: String,
     contract: Arc<dyn UpdateChainPrices + Send + Sync>,
-    hermes_client: Arc<dyn GetPythPrices + Send + Sync>,
+    pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
     backoff_policy: ExponentialBackoff,
 }
 
@@ -23,7 +23,7 @@ impl Actor for PricePusher {
     type Arguments = (
         String,
         Arc<dyn UpdateChainPrices + Send + Sync>,
-        Arc<dyn GetPythPrices + Send + Sync>,
+        Arc<dyn ReadPythPrices + Send + Sync>,
         ExponentialBackoff,
     );
 
@@ -35,7 +35,7 @@ impl Actor for PricePusher {
         let state = PricePusherState {
             chain_id,
             contract,
-            hermes_client,
+            pyth_price_client: hermes_client,
             backoff_policy,
         };
 
@@ -51,11 +51,12 @@ impl Actor for PricePusher {
         match message {
             PricePusherMessage::PushPriceUpdates(push_request) => {
                 let price_ids = push_request.price_ids.clone();
-                match state.hermes_client.get_price_update_data(&price_ids).await {
+                match state.pyth_price_client.get_latest_prices(&price_ids).await {
                     Ok(update_data) => {
                         let mut backoff = state.backoff_policy.clone();
                         let mut attempt = 0;
 
+                        // TODO: gas escalation policy
                         loop {
                             attempt += 1;
 
@@ -72,7 +73,7 @@ impl Actor for PricePusher {
                                     tracing::info!(
                                         chain_id = state.chain_id,
                                         subscription_id = push_request.subscription_id,
-                                        tx_hash = tx_hash,
+                                        tx_hash = tx_hash.to_string(),
                                         attempt = attempt,
                                         "Successfully pushed price updates"
                                     );
@@ -108,7 +109,7 @@ impl Actor for PricePusher {
                             chain_id = state.chain_id,
                             subscription_id = push_request.subscription_id,
                             error = %e,
-                            "Failed to get price update data from Hermes"
+                            "Failed to get Pyth price update data"
                         );
                     }
                 }
@@ -116,18 +117,4 @@ impl Actor for PricePusher {
         }
         Ok(())
     }
-}
-
-#[async_trait]
-pub trait GetPythPrices {
-    async fn get_price_update_data(&self, feed_ids: &[PriceId]) -> Result<Vec<Vec<u8>>>;
-}
-#[async_trait]
-pub trait UpdateChainPrices {
-    async fn update_price_feeds(
-        &self,
-        subscription_id: SubscriptionId,
-        price_ids: &[PriceId],
-        update_data: &[Vec<u8>],
-    ) -> Result<String>;
 }

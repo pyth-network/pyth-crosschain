@@ -1,50 +1,49 @@
 use {
-    crate::actors::types::*,
-    anyhow::Result,
-    async_trait::async_trait,
-    ractor::{Actor, ActorProcessingErr, ActorRef},
-    std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
+    crate::{
+        actors::types::*,
+        adapters::types::{Price, PriceId, ReadPythPrices},
     },
+    anyhow::Result,
+    ractor::{Actor, ActorProcessingErr, ActorRef},
+    std::{collections::HashMap, sync::Arc},
     tokio::sync::RwLock,
-    tracing,
 };
 
-#[allow(dead_code)]
 pub struct PythPriceListenerState {
-    chain_id: String,
-    hermes_client: Arc<dyn StreamPythPrices + Send + Sync>,
-    feed_ids: HashSet<PriceId>,
+    pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
+    feed_ids: Vec<PriceId>,
     latest_prices: Arc<RwLock<HashMap<PriceId, Price>>>,
+}
+
+impl PythPriceListenerState {
+    pub async fn get_latest_price(&self, feed_id: &PriceId) -> Option<Price> {
+        let latest_prices = self.latest_prices.read().await;
+        latest_prices.get(feed_id).cloned()
+    }
+
+    pub async fn subscribe_to_price_updates(&self) -> Result<()> {
+        self.pyth_price_client
+            .subscribe_to_price_updates(&self.feed_ids)
+            .await
+    }
 }
 
 pub struct PythPriceListener;
 impl Actor for PythPriceListener {
     type Msg = PythPriceListenerMessage;
     type State = PythPriceListenerState;
-    type Arguments = (String, Arc<dyn StreamPythPrices + Send + Sync>);
+    type Arguments = Arc<dyn ReadPythPrices + Send + Sync>;
 
     async fn pre_start(
         &self,
         _myself: ActorRef<Self::Msg>,
-        (chain_id, hermes_client): Self::Arguments,
+        hermes_client: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
         let state = PythPriceListenerState {
-            chain_id,
-            hermes_client,
-            feed_ids: HashSet::new(),
+            pyth_price_client: hermes_client,
+            feed_ids: vec![],
             latest_prices: Arc::new(RwLock::new(HashMap::new())),
         };
-
-        if let Err(e) = state.hermes_client.connect().await {
-            tracing::error!(
-                chain_id = state.chain_id,
-                error = %e,
-                "Failed to connect to Hermes"
-            );
-        }
-
         Ok(state)
     }
 
@@ -65,18 +64,4 @@ impl Actor for PythPriceListener {
         }
         Ok(())
     }
-}
-
-impl PythPriceListenerState {
-    pub async fn get_latest_price(&self, feed_id: &PriceId) -> Option<Price> {
-        let latest_prices = self.latest_prices.read().await;
-        latest_prices.get(feed_id).cloned()
-    }
-}
-
-#[async_trait]
-pub trait StreamPythPrices {
-    async fn connect(&self) -> Result<()>;
-
-    async fn subscribe_to_price_updates(&self, feed_ids: &HashSet<PriceId>) -> Result<()>;
 }

@@ -1,7 +1,12 @@
 use {
-    crate::actors::types::*,
+    crate::{
+        actors::types::*,
+        adapters::{
+            contract::GetChainPrices,
+            types::{Price, PriceId},
+        },
+    },
     anyhow::Result,
-    async_trait::async_trait,
     ractor::{Actor, ActorProcessingErr, ActorRef},
     std::{
         collections::{HashMap, HashSet},
@@ -57,6 +62,7 @@ impl Actor for ChainPriceListener {
                     chain_id = chain_id.clone(),
                     "Polling for on-chain price updates"
                 );
+                todo!()
             }
         });
 
@@ -87,15 +93,4 @@ impl ChainPriceListenerState {
         let latest_prices = self.latest_prices.read().await;
         latest_prices.get(feed_id).cloned()
     }
-}
-
-#[async_trait]
-pub trait GetChainPrices {
-    async fn get_price_unsafe(
-        &self,
-        subscription_id: SubscriptionId,
-        feed_id: &PriceId,
-    ) -> Result<Option<Price>>;
-
-    async fn subscribe_to_price_events(&self) -> Result<()>;
 }

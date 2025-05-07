@@ -1,5 +1,5 @@
 use {
-    crate::chain::reader::BlockStatus,
+    crate::adapters::ethereum::BlockStatus,
     axum::{
         body::Body,
         http::StatusCode,

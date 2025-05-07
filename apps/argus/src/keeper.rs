@@ -1,29 +1,23 @@
 use {
     crate::{
         actors::{
-            chain_price_listener::{ChainPriceListener, GetChainPrices},
-            controller::Controller,
-            price_pusher::{GetPythPrices, PricePusher, UpdateChainPrices},
-            pyth_price_listener::{PythPriceListener, StreamPythPrices},
-            subscription_listener::{ReadChainSubscriptions, SubscriptionListener},
-            types::*,
+            chain_price_listener::ChainPriceListener, controller::Controller,
+            price_pusher::PricePusher, pyth_price_listener::PythPriceListener,
+            subscription_listener::SubscriptionListener,
+        },
+        adapters::{
+            ethereum::InstrumentedSignablePythContract, hermes::HermesClient,
+            types::ReadChainSubscriptions,
         },
         api::BlockchainState,
-        chain::ethereum::InstrumentedSignablePythContract,
         config::EthereumConfig,
     },
-    anyhow::Result,
-    async_trait::async_trait,
     backoff::ExponentialBackoff,
     ethers::signers::Signer,
     fortuna::eth_utils::traced_client::RpcMetrics,
     keeper_metrics::KeeperMetrics,
     ractor::Actor,
-    std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
-        time::Duration,
-    },
+    std::{sync::Arc, time::Duration},
     tracing,
 };
 
@@ -37,7 +31,7 @@ pub async fn run_keeper_for_chain(
     _metrics: Arc<KeeperMetrics>,
     rpc_metrics: Arc<RpcMetrics>,
 ) {
-    tracing::info!("starting keeper");
+    tracing::info!("Starting keeper");
 
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(
@@ -49,6 +43,7 @@ pub async fn run_keeper_for_chain(
         .await
         .expect("Chain config should be valid"),
     );
+
     let keeper_address = contract.wallet().address();
 
     tracing::info!(
@@ -57,43 +52,26 @@ pub async fn run_keeper_for_chain(
         "Keeper address"
     );
 
-    let subscription_contract = Arc::new(PulseContractAdapter {
-        contract: contract.clone(),
-        chain_id: chain_state.id.clone(),
-    });
+    let hermes_client = Arc::new(HermesClient);
 
-    let chain_price_contract = Arc::new(PulseContractAdapter {
-        contract: contract.clone(),
-        chain_id: chain_state.id.clone(),
-    });
-
-    let price_pusher_contract = Arc::new(PulseContractAdapter {
-        contract: contract.clone(),
-        chain_id: chain_state.id.clone(),
-    });
-
-    let hermes_client = Arc::new(HermesClientAdapter {
-        chain_id: chain_state.id.clone(),
-    });
-
-    let subscription_poll_interval = Duration::from_secs(60); // Poll for subscriptions every 60 seconds
-    let chain_price_poll_interval = Duration::from_secs(10); // Poll for on-chain prices every 10 seconds
-    let controller_update_interval = Duration::from_secs(5); // Run the update loop every 5 seconds
-
+    // TODO: Make these configurable
+    let subscription_poll_interval = Duration::from_secs(60);
+    let chain_price_poll_interval = Duration::from_secs(10);
+    let controller_update_interval = Duration::from_secs(5);
     let backoff_policy = ExponentialBackoff {
         initial_interval: Duration::from_secs(1),
         max_interval: Duration::from_secs(60),
         multiplier: 2.0,
-        max_elapsed_time: Some(Duration::from_secs(300)), // Give up after 5 minutes
+        max_elapsed_time: Some(Duration::from_secs(300)),
         ..ExponentialBackoff::default()
     };
 
     let (subscription_listener, _) = Actor::spawn(
-        Some("SubscriptionListener".to_string()),
+        Some(format!("SubscriptionListener-{}", chain_state.id)),
         SubscriptionListener,
         (
             chain_state.id.clone(),
-            subscription_contract as Arc<dyn ReadChainSubscriptions + Send + Sync>,
+            contract.clone() as Arc<dyn ReadChainSubscriptions + Send + Sync>,
             subscription_poll_interval,
         ),
     )
@@ -101,43 +79,49 @@ pub async fn run_keeper_for_chain(
     .expect("Failed to spawn SubscriptionListener actor");
 
     let (pyth_price_listener, _) = Actor::spawn(
-        None,
+        Some(format!("PythPriceListener-{}", chain_state.id)),
         PythPriceListener,
-        (
-            chain_state.id.clone(),
-            hermes_client.clone() as Arc<dyn StreamPythPrices + Send + Sync>,
-        ),
+        hermes_client.clone(),
     )
     .await
-    .expect("Failed to spawn PythPriceListener actor");
+    .expect(&format!(
+        "Failed to spawn PythPriceListener-{} actor",
+        chain_state.id
+    ));
 
     let (chain_price_listener, _) = Actor::spawn(
-        Some(String::from("ChainPriceListener")),
+        Some(format!("ChainPriceListener-{}", chain_state.id)),
         ChainPriceListener,
         (
             chain_state.id.clone(),
-            chain_price_contract as Arc<dyn GetChainPrices + Send + Sync>,
+            contract.clone(),
             chain_price_poll_interval,
         ),
     )
     .await
-    .expect("Failed to spawn ChainPriceListener actor");
+    .expect(&format!(
+        "Failed to spawn ChainPriceListener-{} actor",
+        chain_state.id
+    ));
 
     let (price_pusher, _) = Actor::spawn(
-        Some(String::from("PricePusher")),
+        Some(format!("PricePusher-{}", chain_state.id)),
         PricePusher,
         (
             chain_state.id.clone(),
-            price_pusher_contract as Arc<dyn UpdateChainPrices + Send + Sync>,
-            hermes_client as Arc<dyn GetPythPrices + Send + Sync>,
+            contract.clone(),
+            hermes_client.clone(),
             backoff_policy,
         ),
     )
     .await
-    .expect("Failed to spawn PricePusher actor");
+    .expect(&format!(
+        "Failed to spawn PricePusher-{} actor",
+        chain_state.id
+    ));
 
     let (_controller, _) = Actor::spawn(
-        Some(String::from("Controller")),
+        Some(format!("Controller-{}", chain_state.id)),
         Controller,
         (
             chain_state.id.clone(),
@@ -149,100 +133,10 @@ pub async fn run_keeper_for_chain(
         ),
     )
     .await
-    .expect("Failed to spawn Controller actor");
+    .expect(&format!(
+        "Failed to spawn Controller-{} actor",
+        chain_state.id
+    ));
 
     tracing::info!(chain_id = chain_state.id, "Keeper actors started");
-}
-
-#[allow(dead_code)]
-struct PulseContractAdapter {
-    contract: Arc<InstrumentedSignablePythContract>,
-    chain_id: String,
-}
-
-#[async_trait]
-impl ReadChainSubscriptions for PulseContractAdapter {
-    async fn get_active_subscriptions(&self) -> Result<HashMap<SubscriptionId, Subscription>> {
-        tracing::debug!(chain_id = self.chain_id, "Getting active subscriptions");
-        Ok(HashMap::new())
-    }
-
-    async fn subscribe_to_events(&self) -> Result<()> {
-        tracing::debug!(chain_id = self.chain_id, "Subscribing to contract events");
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl GetChainPrices for PulseContractAdapter {
-    async fn get_price_unsafe(
-        &self,
-        subscription_id: SubscriptionId,
-        feed_id: &PriceId,
-    ) -> Result<Option<Price>> {
-        tracing::debug!(
-            chain_id = self.chain_id,
-            subscription_id = subscription_id,
-            feed_id = hex::encode(feed_id),
-            "Getting on-chain price"
-        );
-        Ok(None)
-    }
-
-    async fn subscribe_to_price_events(&self) -> Result<()> {
-        tracing::debug!(chain_id = self.chain_id, "Subscribing to price events");
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl UpdateChainPrices for PulseContractAdapter {
-    async fn update_price_feeds(
-        &self,
-        subscription_id: SubscriptionId,
-        price_ids: &[PriceId],
-        update_data: &[Vec<u8>],
-    ) -> Result<String> {
-        tracing::debug!(
-            chain_id = self.chain_id,
-            subscription_id = subscription_id,
-            price_ids_count = price_ids.len(),
-            update_data_count = update_data.len(),
-            "Updating price feeds"
-        );
-        Ok("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef".to_string())
-    }
-}
-
-struct HermesClientAdapter {
-    chain_id: String,
-}
-
-#[async_trait]
-impl StreamPythPrices for HermesClientAdapter {
-    async fn connect(&self) -> Result<()> {
-        tracing::debug!(chain_id = self.chain_id, "Connecting to Hermes");
-        Ok(())
-    }
-
-    async fn subscribe_to_price_updates(&self, feed_ids: &HashSet<PriceId>) -> Result<()> {
-        tracing::debug!(
-            chain_id = self.chain_id,
-            feed_ids_count = feed_ids.len(),
-            "Subscribing to price updates"
-        );
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl GetPythPrices for HermesClientAdapter {
-    async fn get_price_update_data(&self, feed_ids: &[PriceId]) -> Result<Vec<Vec<u8>>> {
-        tracing::debug!(
-            chain_id = self.chain_id,
-            feed_ids_count = feed_ids.len(),
-            "Getting price update data from Hermes"
-        );
-        Ok(vec![vec![0u8; 32]; feed_ids.len()])
-    }
 }
