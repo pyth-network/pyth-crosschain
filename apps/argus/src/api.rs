@@ -22,7 +22,7 @@ mod live;
 mod metrics;
 mod ready;
 
-pub type ChainId = String;
+pub type ChainName = String;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct RequestLabel {
@@ -64,8 +64,8 @@ impl ApiState {
 /// The state of the service for a single blockchain.
 #[derive(Clone)]
 pub struct BlockchainState {
-    /// The chain id for this blockchain, useful for logging
-    pub id: ChainId,
+    /// The human friendly name for this blockchain, useful for logging
+    pub name: ChainName,
     /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
     /// For eg., Finalized, Safe
     pub confirmed_block_status: BlockStatus,

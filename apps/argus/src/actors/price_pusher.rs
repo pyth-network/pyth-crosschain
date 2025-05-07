@@ -10,7 +10,7 @@ use {
 };
 
 pub struct PricePusherState {
-    chain_id: String,
+    chain_name: String,
     contract: Arc<dyn UpdateChainPrices + Send + Sync>,
     pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
     backoff_policy: ExponentialBackoff,
@@ -30,10 +30,10 @@ impl Actor for PricePusher {
     async fn pre_start(
         &self,
         _myself: ActorRef<Self::Msg>,
-        (chain_id, contract, hermes_client, backoff_policy): Self::Arguments,
+        (chain_name, contract, hermes_client, backoff_policy): Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
         let state = PricePusherState {
-            chain_id,
+            chain_name,
             contract,
             pyth_price_client: hermes_client,
             backoff_policy,
@@ -71,8 +71,8 @@ impl Actor for PricePusher {
                             {
                                 Ok(tx_hash) => {
                                     tracing::info!(
-                                        chain_id = state.chain_id,
-                                        subscription_id = push_request.subscription_id,
+                                        chain_id = state.chain_name,
+                                        subscription_id = push_request.subscription_id.to_string(),
                                         tx_hash = tx_hash.to_string(),
                                         attempt = attempt,
                                         "Successfully pushed price updates"
@@ -82,8 +82,8 @@ impl Actor for PricePusher {
                                 Err(e) => {
                                     if let Some(duration) = backoff.next_backoff() {
                                         tracing::warn!(
-                                            chain_id = state.chain_id,
-                                            subscription_id = push_request.subscription_id,
+                                            chain_id = state.chain_name,
+                                            subscription_id = push_request.subscription_id.to_string(),
                                             error = %e,
                                             attempt = attempt,
                                             retry_after_ms = duration.as_millis(),
@@ -92,8 +92,8 @@ impl Actor for PricePusher {
                                         time::sleep(duration).await;
                                     } else {
                                         tracing::error!(
-                                            chain_id = state.chain_id,
-                                            subscription_id = push_request.subscription_id,
+                                            chain_id = state.chain_name,
+                                            subscription_id = push_request.subscription_id.to_string(),
                                             error = %e,
                                             attempt = attempt,
                                             "Failed to push price updates, giving up"
@@ -106,8 +106,8 @@ impl Actor for PricePusher {
                     }
                     Err(e) => {
                         tracing::error!(
-                            chain_id = state.chain_id,
-                            subscription_id = push_request.subscription_id,
+                            chain_id = state.chain_name,
+                            subscription_id = push_request.subscription_id.to_string(),
                             error = %e,
                             "Failed to get Pyth price update data"
                         );

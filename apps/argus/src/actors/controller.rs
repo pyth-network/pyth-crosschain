@@ -1,7 +1,8 @@
 use {
     crate::{
         actors::types::*,
-        adapters::types::{PriceId, Subscription, SubscriptionId},
+        adapters::ethereum::pyth_pulse::SubscriptionParams,
+        adapters::types::{PriceId, SubscriptionId},
     },
     anyhow::Result,
     ractor::{Actor, ActorProcessingErr, ActorRef},
@@ -22,7 +23,7 @@ pub struct ControllerState {
     update_interval: Duration,
     update_loop_running: bool,
     stop_sender: Option<watch::Sender<bool>>,
-    active_subscriptions: HashMap<SubscriptionId, Subscription>,
+    active_subscriptions: HashMap<SubscriptionId, SubscriptionParams>,
     feed_ids: HashSet<PriceId>,
 }
 
@@ -85,8 +86,9 @@ impl Actor for Controller {
         match message {
             ControllerMessage::PerformUpdate => {
                 // Main processing logic. Keep active subscriptions up-to-date, check for price updates, and push them to the chain.
-                todo!()
+                tracing::info!("Performing update (todo)");
             }
         }
+        Ok(())
     }
 }

@@ -1,8 +1,10 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use ethers::types::{Address, H256, U256};
+use ethers::types::{H256, U256};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use super::ethereum::pyth_pulse::SubscriptionParams;
 
 #[async_trait]
 pub trait UpdateChainPrices {
@@ -16,7 +18,8 @@ pub trait UpdateChainPrices {
 
 #[async_trait]
 pub trait ReadChainSubscriptions {
-    async fn get_active_subscriptions(&self) -> Result<HashMap<SubscriptionId, Subscription>>;
+    async fn get_active_subscriptions(&self)
+        -> Result<HashMap<SubscriptionId, SubscriptionParams>>;
     async fn subscribe_to_subscription_events(&self) -> Result<()>; // TODO: return a stream
 }
 
@@ -26,11 +29,11 @@ pub trait ReadPythPrices {
     async fn subscribe_to_price_updates(&self, feed_ids: &[PriceId]) -> Result<()>; // TODO: return a stream
 }
 
-// TODO: find a different home for these
+// TODO: find a different home for these (public SDK)
 
 pub type PriceId = [u8; 32];
 
-pub type SubscriptionId = u64;
+pub type SubscriptionId = U256;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Price {
@@ -39,24 +42,3 @@ pub struct Price {
     pub expo: i32,
     pub publish_time: u64,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Subscription {
-    pub id: SubscriptionId,
-    pub price_ids: Vec<PriceId>,
-    pub manager: Address,
-    pub is_active: bool,
-    pub update_criteria: UpdateCriteria,
-    pub last_updated_at: u64,
-    pub balance: U256,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UpdateCriteria {
-    pub update_on_heartbeat: bool,
-    pub heartbeat_seconds: u32,
-    pub update_on_deviation: bool,
-    pub deviation_threshold_bps: u32,
-}
-
-pub struct SubscriptionEvent;

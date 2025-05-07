@@ -1,5 +1,5 @@
 use {
-    crate::{api::ChainId, config::EthereumConfig},
+    crate::{api::ChainName, config::EthereumConfig},
     anyhow::{Error, Result},
     ethers::{
         contract::abigen,
@@ -88,7 +88,7 @@ impl InstrumentedSignablePythContract {
     pub async fn from_config(
         chain_config: &EthereumConfig,
         private_key: &str,
-        chain_id: ChainId,
+        chain_id: ChainName,
         metrics: Arc<RpcMetrics>,
     ) -> Result<Self> {
         let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
@@ -110,7 +110,7 @@ impl PythContract {
 impl InstrumentedPythContract {
     pub fn from_config(
         chain_config: &EthereumConfig,
-        chain_id: ChainId,
+        chain_id: ChainName,
         metrics: Arc<RpcMetrics>,
     ) -> Result<Self> {
         let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;

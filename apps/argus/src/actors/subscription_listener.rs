@@ -1,6 +1,7 @@
+use crate::adapters::ethereum::pyth_pulse::SubscriptionParams;
 use {
     super::SubscriptionListenerMessage,
-    crate::adapters::types::{ReadChainSubscriptions, Subscription, SubscriptionId},
+    crate::adapters::types::{ReadChainSubscriptions, SubscriptionId},
     anyhow::Result,
     ractor::{Actor, ActorProcessingErr, ActorRef},
     std::{
@@ -15,13 +16,20 @@ use {
 pub struct SubscriptionListenerState {
     pub chain_name: String,
     pub contract: Arc<dyn ReadChainSubscriptions + Send + Sync>,
-    pub active_subscriptions: HashMap<SubscriptionId, Subscription>,
+    pub active_subscriptions: HashMap<SubscriptionId, SubscriptionParams>,
     pub poll_interval: Duration,
 }
 
 impl SubscriptionListenerState {
     async fn refresh_subscriptions(&mut self) -> Result<()> {
         let subscriptions = self.contract.get_active_subscriptions().await?;
+
+        tracing::info!(
+            chain_name = self.chain_name,
+            subscription_count = subscriptions.len(),
+            subscription_ids = ?subscriptions.keys().collect::<Vec<_>>(),
+            "Retrieved active subscriptions"
+        );
 
         let old_ids: HashSet<_> = self.active_subscriptions.keys().cloned().collect();
         let new_ids: HashSet<_> = subscriptions.keys().cloned().collect();
@@ -35,6 +43,11 @@ impl SubscriptionListenerState {
                 added = added,
                 removed = removed,
                 "Subscription changes detected"
+            );
+        } else {
+            tracing::debug!(
+                chain_name = self.chain_name,
+                "No subscription changes detected"
             );
         }
 
@@ -59,39 +72,39 @@ impl Actor for SubscriptionListener {
         myself: ActorRef<Self::Msg>,
         (chain_name, contract, poll_interval): Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        let mut listener = SubscriptionListenerState {
+        let mut state = SubscriptionListenerState {
             chain_name,
             contract,
             active_subscriptions: HashMap::new(),
             poll_interval,
         };
 
-        match listener.refresh_subscriptions().await {
+        match state.refresh_subscriptions().await {
             Ok(_) => {
                 tracing::info!(
-                    chain_name = listener.chain_name,
+                    chain_name = state.chain_name,
                     "Loaded {} active subscriptions",
-                    listener.active_subscriptions.len()
+                    state.active_subscriptions.len()
                 );
             }
             Err(e) => {
                 tracing::error!(
-                    chain_name = listener.chain_name,
+                    chain_name = state.chain_name,
                     error = %e,
                     "Failed to load active subscriptions"
                 );
             }
         }
 
-        if let Err(e) = listener.contract.subscribe_to_subscription_events().await {
+        if let Err(e) = state.contract.subscribe_to_subscription_events().await {
             tracing::error!(
-                chain_name = listener.chain_name,
+                chain_name = state.chain_name,
                 error = %e,
                 "Failed to subscribe to contract events"
             );
         }
 
-        let poll_interval = listener.poll_interval;
+        let poll_interval = state.poll_interval;
         tokio::spawn(async move {
             let mut interval = time::interval(poll_interval);
             loop {
@@ -100,7 +113,7 @@ impl Actor for SubscriptionListener {
             }
         });
 
-        Ok(listener)
+        Ok(state)
     }
 
     async fn handle(

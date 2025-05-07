@@ -23,7 +23,7 @@ use {
 
 pub(crate) mod keeper_metrics;
 
-#[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.id))]
+#[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.name))]
 pub async fn run_keeper_for_chain(
     private_key: String,
     chain_eth_config: EthereumConfig,
@@ -37,17 +37,20 @@ pub async fn run_keeper_for_chain(
         InstrumentedSignablePythContract::from_config(
             &chain_eth_config,
             &private_key,
-            chain_state.id.clone(),
+            chain_state.name.clone(),
             rpc_metrics.clone(),
         )
         .await
-        .expect("Chain config should be valid"),
+        .expect(&format!(
+            "Failed to create InstrumentedSignablePythContract from config for chain {}",
+            chain_state.name
+        )),
     );
 
     let keeper_address = contract.wallet().address();
 
     tracing::info!(
-        chain_id = chain_state.id,
+        chain_id = chain_state.name,
         keeper_address = %keeper_address,
         "Keeper address"
     );
@@ -67,10 +70,10 @@ pub async fn run_keeper_for_chain(
     };
 
     let (subscription_listener, _) = Actor::spawn(
-        Some(format!("SubscriptionListener-{}", chain_state.id)),
+        Some(format!("SubscriptionListener-{}", chain_state.name)),
         SubscriptionListener,
         (
-            chain_state.id.clone(),
+            chain_state.name.clone(),
             contract.clone() as Arc<dyn ReadChainSubscriptions + Send + Sync>,
             subscription_poll_interval,
         ),
@@ -79,21 +82,21 @@ pub async fn run_keeper_for_chain(
     .expect("Failed to spawn SubscriptionListener actor");
 
     let (pyth_price_listener, _) = Actor::spawn(
-        Some(format!("PythPriceListener-{}", chain_state.id)),
+        Some(format!("PythPriceListener-{}", chain_state.name)),
         PythPriceListener,
         hermes_client.clone(),
     )
     .await
     .expect(&format!(
         "Failed to spawn PythPriceListener-{} actor",
-        chain_state.id
+        chain_state.name
     ));
 
     let (chain_price_listener, _) = Actor::spawn(
-        Some(format!("ChainPriceListener-{}", chain_state.id)),
+        Some(format!("ChainPriceListener-{}", chain_state.name)),
         ChainPriceListener,
         (
-            chain_state.id.clone(),
+            chain_state.name.clone(),
             contract.clone(),
             chain_price_poll_interval,
         ),
@@ -101,14 +104,14 @@ pub async fn run_keeper_for_chain(
     .await
     .expect(&format!(
         "Failed to spawn ChainPriceListener-{} actor",
-        chain_state.id
+        chain_state.name
     ));
 
     let (price_pusher, _) = Actor::spawn(
-        Some(format!("PricePusher-{}", chain_state.id)),
+        Some(format!("PricePusher-{}", chain_state.name)),
         PricePusher,
         (
-            chain_state.id.clone(),
+            chain_state.name.clone(),
             contract.clone(),
             hermes_client.clone(),
             backoff_policy,
@@ -117,14 +120,14 @@ pub async fn run_keeper_for_chain(
     .await
     .expect(&format!(
         "Failed to spawn PricePusher-{} actor",
-        chain_state.id
+        chain_state.name
     ));
 
     let (_controller, _) = Actor::spawn(
-        Some(format!("Controller-{}", chain_state.id)),
+        Some(format!("Controller-{}", chain_state.name)),
         Controller,
         (
-            chain_state.id.clone(),
+            chain_state.name.clone(),
             subscription_listener,
             pyth_price_listener,
             chain_price_listener,
@@ -135,8 +138,8 @@ pub async fn run_keeper_for_chain(
     .await
     .expect(&format!(
         "Failed to spawn Controller-{} actor",
-        chain_state.id
+        chain_state.name
     ));
 
-    tracing::info!(chain_id = chain_state.id, "Keeper actors started");
+    tracing::info!(chain_id = chain_state.name, "Keeper actors started");
 }
