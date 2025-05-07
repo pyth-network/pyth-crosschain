@@ -4,7 +4,7 @@
 
 use {
     super::router::{Price, PriceFeedId, Rate, TimestampUs},
-    derive_more::derive::From,
+    derive_more::From,
     serde::{Deserialize, Serialize},
 };
 

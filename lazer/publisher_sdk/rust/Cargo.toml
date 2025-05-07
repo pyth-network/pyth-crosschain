@@ -7,7 +7,7 @@ license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
 
 [dependencies]
-protobuf = "3.7.2"
+protobuf = "=3.1"
 
 [build-dependencies]
-protobuf-codegen = "3.7.2"
+protobuf-codegen = "=3.1"

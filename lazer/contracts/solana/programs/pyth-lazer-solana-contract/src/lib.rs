@@ -7,6 +7,7 @@ use {
         solana_program::{keccak, pubkey::PUBKEY_BYTES, secp256k1_recover::secp256k1_recover},
         system_program,
     },
+    solana_program::pubkey,
     std::mem::size_of,
 };
 
@@ -18,6 +19,7 @@ pub use {
 declare_id!("pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt");
 
 pub const STORAGE_ID: Pubkey = pubkey!("3rdJbqfnagQ4yx9HXJViD4zc4xpiSqmFsKpPuSCQVyQL");
+pub const TREASURY_ID: Pubkey = pubkey!("Gx4MBPb1vqZLJajZmsKLg8fGw9ErhoKsR8LeKcCKFyak");
 
 #[test]
 fn test_ids() {
