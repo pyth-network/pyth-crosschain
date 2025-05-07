@@ -14,3 +14,8 @@ export * from "./chains";
 export * from "./deterministic_stake_accounts";
 export * from "./price_store";
 export { default as lazerIdl } from "./multisig_transaction/idl/lazer.json";
+
+// Export program-related modules
+export * from "./programs/program_adapter";
+export * from "./programs/types";
+export * from "./programs/adapter_factory";
