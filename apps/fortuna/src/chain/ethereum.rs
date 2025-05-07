@@ -1,3 +1,4 @@
+use ethers::contract::LogMeta;
 use {
     crate::{
         api::ChainId,
@@ -285,14 +286,15 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             .to_block(to_block)
             .topic1(provider);
 
-        let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
+        let res: Vec<(RequestedWithCallbackFilter, LogMeta)> = event.query_with_meta().await?;
 
         Ok(res
             .iter()
-            .map(|r| RequestedWithCallbackEvent {
+            .map(|(r, meta)| RequestedWithCallbackEvent {
                 sequence_number: r.sequence_number,
                 user_random_number: r.user_random_number,
                 provider_address: r.request.provider,
+                tx_hash: meta.transaction_hash,
             })
             .filter(|r| r.provider_address == provider)
             .collect())

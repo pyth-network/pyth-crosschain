@@ -1,3 +1,4 @@
+use ethers::types::TxHash;
 use {
     anyhow::Result,
     axum::async_trait,
@@ -34,6 +35,7 @@ pub struct RequestedWithCallbackEvent {
     pub sequence_number: u64,
     pub user_random_number: [u8; 32],
     pub provider_address: Address,
+    pub tx_hash: TxHash,
 }
 
 /// EntropyReader is the read-only interface of the Entropy contract.
