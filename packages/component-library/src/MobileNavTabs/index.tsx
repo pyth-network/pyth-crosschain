@@ -1,6 +1,5 @@
 "use client";
 
-import { Link } from "@pythnetwork/component-library/unstyled/Link";
 import clsx from "clsx";
 import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
@@ -8,6 +7,7 @@ import type { ReactNode } from "react";
 import { useId, useMemo } from "react";
 
 import styles from "./index.module.scss";
+import { Link } from "../unstyled/Link/index.js";
 
 type Props = {
   className?: string | undefined;

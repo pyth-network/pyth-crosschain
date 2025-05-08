@@ -4,7 +4,9 @@ import { Broadcast } from "@phosphor-icons/react/dist/ssr/Broadcast";
 import { Database } from "@phosphor-icons/react/dist/ssr/Database";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
+import { EntityList } from "@pythnetwork/component-library/EntityList";
 import { Link } from "@pythnetwork/component-library/Link";
+import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
@@ -23,13 +25,11 @@ import { useFilter, useCollator } from "react-aria";
 import styles from "./publishers-card.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { CLUSTER_NAMES } from "../../services/pyth";
-import { EntityList } from "../EntityList";
 import {
   ExplainPermissioned,
   ExplainActive,
   ExplainRanking,
 } from "../Explanations";
-import { NoResults } from "../NoResults";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import { Score } from "../Score";
@@ -269,7 +269,7 @@ const PublishersCardContents = ({
           size="sm"
           variant="outline"
           hideLabel
-          options={CLUSTER_NAMES}
+          options={CLUSTER_NAMES.map((id) => ({ id }))}
           icon={Database}
           {...(props.isLoading
             ? { isPending: true, buttonLabel: "Cluster" }

@@ -1,3 +1,5 @@
+"use client";
+
 import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
@@ -21,7 +23,7 @@ import {
   ListBoxSection,
 } from "../unstyled/ListBox/index.js";
 
-type Props<T> = Omit<
+export type Props<T extends { id: string | number }> = Omit<
   ComponentProps<typeof BaseSelect>,
   "defaultSelectedKey" | "selectedKey" | "onSelectionChange"
 > &
@@ -30,18 +32,20 @@ type Props<T> = Omit<
     "variant" | "size" | "rounded" | "hideText" | "isPending"
   > &
   Pick<PopoverProps, "placement"> & {
-    show?: (value: T) => string;
+    show?: ((value: T) => ReactNode) | undefined;
+    textValue?: ((value: T) => string) | undefined;
     icon?: ComponentProps<typeof Button>["beforeIcon"];
     label: ReactNode;
     hideLabel?: boolean | undefined;
     buttonLabel?: ReactNode;
+    defaultButtonLabel?: ReactNode;
   } & (
     | {
-        defaultSelectedKey?: T | undefined;
+        defaultSelectedKey?: T["id"] | undefined;
       }
     | {
-        selectedKey: T;
-        onSelectionChange: (newValue: T) => void;
+        selectedKey: T["id"];
+        onSelectionChange: (newValue: T["id"]) => void;
       }
   ) &
   (
@@ -54,9 +58,10 @@ type Props<T> = Omit<
       }
   );
 
-export const Select = <T extends string | number>({
+export const Select = <T extends { id: string | number }>({
   className,
   show,
+  textValue,
   variant,
   size,
   rounded,
@@ -67,6 +72,7 @@ export const Select = <T extends string | number>({
   placement,
   isPending,
   buttonLabel,
+  defaultButtonLabel,
   ...props
 }: Props<T>) => (
   // @ts-expect-error react-aria coerces everything to Key for some reason...
@@ -88,40 +94,40 @@ export const Select = <T extends string | number>({
       beforeIcon={icon}
       isPending={isPending === true}
     >
-      {buttonLabel !== undefined && buttonLabel !== "" ? (
-        buttonLabel
-      ) : (
-        <SelectValue<{ id: T }>>
-          {({ selectedItem, selectedText }) =>
-            selectedItem
-              ? (show?.(selectedItem.id) ?? selectedItem.id)
-              : selectedText
-          }
-        </SelectValue>
-      )}
+      <ButtonLabel
+        buttonLabel={buttonLabel}
+        defaultButtonLabel={defaultButtonLabel}
+        show={show}
+      />
     </Button>
     <Popover
       {...(placement && { placement })}
-      data-group-label-hidden={
-        "hideGroupLabel" in props && props.hideGroupLabel ? "" : undefined
-      }
+      {...("optionGroups" in props && {
+        "data-grouped": "",
+        "data-group-label-hidden": props.hideGroupLabel ? "" : undefined,
+      })}
       className={styles.popover ?? ""}
     >
       <span className={styles.title}>{label}</span>
       {"options" in props ? (
-        <ListBox
-          className={styles.listbox ?? ""}
-          items={props.options.map((id) => ({ id }))}
-        >
-          {({ id }) => <Item show={show}>{id}</Item>}
+        <ListBox className={styles.listbox ?? ""} items={props.options}>
+          {(item) => (
+            <Item show={show} textValue={textValue}>
+              {item}
+            </Item>
+          )}
         </ListBox>
       ) : (
         <ListBox className={styles.listbox ?? ""} items={props.optionGroups}>
           {({ name, options }) => (
             <ListBoxSection className={styles.section ?? ""} id={name}>
               <Header className={styles.groupLabel ?? ""}>{name}</Header>
-              <Collection items={options.map((id) => ({ id }))}>
-                {({ id }) => <Item show={show}>{id}</Item>}
+              <Collection items={options}>
+                {(item) => (
+                  <Item show={show} textValue={textValue}>
+                    {item}
+                  </Item>
+                )}
               </Collection>
             </ListBoxSection>
           )}
@@ -133,16 +139,84 @@ export const Select = <T extends string | number>({
 
 type ItemProps<T> = {
   children: T;
-  show: ((value: T) => string) | undefined;
+  show: ((value: T) => ReactNode) | undefined;
+  textValue: ((value: T) => string) | undefined;
 };
 
-const Item = <T extends string | number>({ children, show }: ItemProps<T>) => (
+const Item = <T extends { id: string | number }>({
+  children,
+  show,
+  textValue,
+}: ItemProps<T>) => (
   <ListBoxItem
-    id={children}
+    id={typeof children === "object" ? children.id : children}
     className={styles.listboxItem ?? ""}
-    textValue={show?.(children) ?? children.toString()}
+    textValue={getTextValue({ children, show, textValue })}
   >
-    <span>{show?.(children) ?? children}</span>
+    <span>{show?.(children) ?? children.id}</span>
     <Check weight="bold" className={styles.check} />
   </ListBoxItem>
 );
+
+const getTextValue = <T extends { id: string | number }>({
+  children,
+  show,
+  textValue,
+}: ItemProps<T>) => {
+  if (textValue !== undefined) {
+    return textValue(children);
+  } else if (show === undefined) {
+    return children.id.toString();
+  } else {
+    const result = show(children);
+    return typeof result === "string" ? result : children.id.toString();
+  }
+};
+
+type ButtonLabelProps<T extends { id: string | number }> = Pick<
+  Props<T>,
+  "buttonLabel" | "defaultButtonLabel" | "show"
+>;
+
+const ButtonLabel = <T extends { id: string | number }>({
+  buttonLabel,
+  defaultButtonLabel,
+  show,
+}: ButtonLabelProps<T>) => {
+  if (buttonLabel !== undefined && buttonLabel !== "") {
+    return buttonLabel;
+  } else if (defaultButtonLabel !== undefined && defaultButtonLabel !== "") {
+    return (
+      <SelectValue<T>>
+        {(props) =>
+          props.selectedText === null ? (
+            defaultButtonLabel
+          ) : (
+            <SelectedValueLabel show={show} {...props} />
+          )
+        }
+      </SelectValue>
+    );
+  } else {
+    return (
+      <SelectValue<T>>
+        {(props) => <SelectedValueLabel show={show} {...props} />}
+      </SelectValue>
+    );
+  }
+};
+
+type SelectedValueLabelProps<T extends { id: string | number }> = Pick<
+  Props<T>,
+  "show"
+> & {
+  selectedItem: T | null;
+  selectedText: string | null;
+};
+
+const SelectedValueLabel = <T extends { id: string | number }>({
+  show,
+  selectedItem,
+  selectedText,
+}: SelectedValueLabelProps<T>) =>
+  selectedItem ? (show?.(selectedItem) ?? selectedItem.id) : selectedText;

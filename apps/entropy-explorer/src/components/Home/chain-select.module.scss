@@ -1,0 +1,15 @@
+@use "@pythnetwork/component-library/theme";
+
+.searchBar {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: theme.spacing(2);
+  width: 100%;
+}
+
+.chainSelectItem {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: theme.spacing(2);
+  align-items: center;
+}

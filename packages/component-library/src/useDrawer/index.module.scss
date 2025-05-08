@@ -117,7 +117,7 @@
           display: none;
 
           @include theme.breakpoint("sm") {
-            display: unset;
+            display: inline-flex;
           }
         }
       }

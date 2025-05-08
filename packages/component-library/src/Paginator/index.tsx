@@ -65,10 +65,10 @@ const PageSizeSelect = ({
     className={styles.pageSizeSelect ?? ""}
     label="Page size"
     hideLabel
-    options={pageSizeOptions}
+    options={pageSizeOptions.map((option) => ({ id: option }))}
     selectedKey={pageSize}
     onSelectionChange={onPageSizeChange}
-    show={(value) => `${value.toString()} per page`}
+    show={(value) => `${value.id.toString()} per page`}
     variant="ghost"
     size="sm"
   />

@@ -85,7 +85,7 @@
         display: none;
 
         @include theme.breakpoint("lg") {
-          display: unset;
+          display: inline-flex;
         }
       }
 

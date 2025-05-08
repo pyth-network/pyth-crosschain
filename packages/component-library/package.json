@@ -8,6 +8,7 @@
   },
   "exports": {
     "./*": "./src/*/index.tsx",
+    "./useData": "./src/useData/index.ts",
     "./theme": "./src/theme.scss"
   },
   "scripts": {
@@ -39,7 +40,8 @@
     "pino": "catalog:",
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "swr": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

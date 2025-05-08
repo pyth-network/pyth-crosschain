@@ -81,7 +81,7 @@ export const AppBody = ({ tabs, children, ...props }: AppBodyProps) => (
       <main className={styles.main}>
         <TabPanel>{children}</TabPanel>
       </main>
-      <Footer />
+      <Footer className={styles.footer} />
       {tabs && <MobileNavTabs tabs={tabs} className={styles.mobileNavTabs} />}
     </TabRoot>
   </BodyProviders>
