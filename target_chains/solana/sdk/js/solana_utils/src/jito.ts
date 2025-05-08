@@ -42,9 +42,23 @@ export async function sendTransactionsJito(
     tx: VersionedTransaction;
     signers?: Signer[] | undefined;
   }[],
-  searcherClient: SearcherClient,
+  searcherClients: SearcherClient | SearcherClient[],
   wallet: Wallet,
+  options: {
+    maxRetryTimeMs?: number;
+  } = {},
 ): Promise<string> {
+  const clients = Array.isArray(searcherClients)
+    ? searcherClients
+    : [searcherClients];
+
+  if (clients.length === 0) {
+    throw new Error("No searcher clients provided");
+  }
+
+  const maxRetryTimeMs = options.maxRetryTimeMs || 60000; // Default to 60 seconds
+  const startTime = Date.now();
+
   const signedTransactions = [];
 
   for (const transaction of transactions) {
@@ -64,7 +78,24 @@ export async function sendTransactionsJito(
   );
 
   const bundle = new Bundle(signedTransactions, 2);
-  await searcherClient.sendBundle(bundle);
 
-  return firstTransactionSignature;
+  let lastError: Error | null = null;
+  let clientIndex = 0;
+
+  while (Date.now() - startTime < maxRetryTimeMs) {
+    const currentClient = clients[clientIndex];
+    try {
+      await currentClient.sendBundle(bundle);
+      return firstTransactionSignature;
+    } catch (err: any) {
+      lastError = err;
+      clientIndex = (clientIndex + 1) % clients.length;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+
+  throw (
+    lastError ||
+    new Error("Failed to send transactions via JITO after maximum retry time")
+  );
 }

@@ -165,9 +165,10 @@ export class SolanaPricePusherJito implements IPricePusher {
     private defaultJitoTipLamports: number,
     private dynamicJitoTips: boolean,
     private maxJitoTipLamports: number,
-    private searcherClient: SearcherClient,
+    private searcherClients: SearcherClient[],
     private jitoBundleSize: number,
     private updatesPerJitoBundle: number,
+    private maxRetryTimeMs: number = 60000, // Default to 60 seconds max retry time
     private addressLookupTableAccount?: AddressLookupTableAccount,
   ) {}
 
@@ -242,27 +243,34 @@ export class SolanaPricePusherJito implements IPricePusher {
         jitoBundleSize: this.jitoBundleSize,
       });
 
-      let retries = 60;
-      while (retries > 0) {
-        try {
-          await sendTransactionsJito(
-            transactions,
-            this.searcherClient,
-            this.pythSolanaReceiver.wallet,
-          );
-          break;
-        } catch (err: any) {
-          if (err.code === 8 && err.details?.includes("Rate limit exceeded")) {
-            this.logger.warn("Rate limit hit, waiting before retry...");
-            await this.sleep(1100); // Wait slightly more than 1 second
-            retries--;
-            if (retries === 0) {
-              this.logger.error("Max retries reached for rate limit");
-              throw err;
-            }
-          } else {
-            throw err;
+      try {
+        await sendTransactionsJito(
+          transactions,
+          this.searcherClients,
+          this.pythSolanaReceiver.wallet,
+          { maxRetryTimeMs: this.maxRetryTimeMs },
+        );
+      } catch (err: any) {
+        if (err.code === 8 && err.details?.includes("Rate limit exceeded")) {
+          this.logger.warn("Rate limit hit, waiting before retry...");
+          await this.sleep(1100); // Wait slightly more than 1 second
+          try {
+            await sendTransactionsJito(
+              transactions,
+              this.searcherClients,
+              this.pythSolanaReceiver.wallet,
+              { maxRetryTimeMs: this.maxRetryTimeMs },
+            );
+          } catch (retryErr: any) {
+            this.logger.error("Failed after rate limit retry");
+            throw retryErr;
           }
+        } else {
+          this.logger.error(
+            { err },
+            "Failed to send transactions via all JITO endpoints",
+          );
+          throw err;
         }
       }
 

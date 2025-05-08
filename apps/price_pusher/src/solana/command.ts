@@ -50,7 +50,7 @@ export default {
       default: 50000,
     } as Options,
     "jito-endpoint": {
-      description: "Jito endpoint",
+      description: "Jito endpoint(s) - comma-separated list of endpoints",
       type: "string",
       optional: true,
     } as Options,
@@ -209,7 +209,13 @@ export default {
         Uint8Array.from(JSON.parse(fs.readFileSync(jitoKeypairFile, "ascii"))),
       );
 
-      const jitoClient = searcherClient(jitoEndpoint, jitoKeypair);
+      const jitoEndpoints = jitoEndpoint
+        .split(",")
+        .map((endpoint: string) => endpoint.trim());
+      const jitoClients: SearcherClient[] = jitoEndpoints.map(
+        (endpoint: string) => searcherClient(endpoint, jitoKeypair),
+      );
+
       solanaPricePusher = new SolanaPricePusherJito(
         pythSolanaReceiver,
         hermesClient,
@@ -218,13 +224,16 @@ export default {
         jitoTipLamports,
         dynamicJitoTips,
         maxJitoTipLamports,
-        jitoClient,
+        jitoClients,
         jitoBundleSize,
         updatesPerJitoBundle,
+        60000, // Default max retry time of 60 seconds
         lookupTableAccount,
       );
 
-      onBundleResult(jitoClient, logger.child({ module: "JitoClient" }));
+      jitoClients.forEach((client, index) => {
+        onBundleResult(client, logger.child({ module: `JitoClient-${index}` }));
+      });
     } else {
       solanaPricePusher = new SolanaPricePusher(
         pythSolanaReceiver,
