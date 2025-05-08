@@ -1866,12 +1866,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
 
             // callback gas usage is approximate and only triggered when the provider has set a gas limit.
             // Note: this condition is somewhat janky, but we hit the stack limit so can't put in any more local variables :(
-            assertTrue(
-                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+            assertTrue(                
                     ((callbackGasUsage * 90) / 100 < callbackGasUsed)
             );
-            assertTrue(
-                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
+            assertTrue(                
                     (callbackGasUsed < (callbackGasUsage * 110) / 100)
             );
             assertEq(extraArgs, bytes(""));

@@ -669,6 +669,24 @@ abstract contract Entropy is IEntropy, EntropyState {
             }
         } else {
             // This case uses the checks-effects-interactions pattern to avoid reentry attacks
+            clearRequest(provider, sequenceNumber);
+
+            // Check if the requester is a contract account.
+            uint len;
+            address callAddress = req.requester;
+            assembly {
+                len := extcodesize(callAddress)
+            }
+            uint256 startingGas = gasleft();            
+            if (len != 0) {
+                IEntropyConsumer(callAddress)._entropyCallback(
+                    sequenceNumber,
+                    provider,
+                    randomNumber
+                );
+            }
+            uint32 gasUsed = SafeCast.toUint32(startingGas - gasleft());
+
             emit RevealedWithCallback(
                 EntropyStructConverter.toV1Request(req),
                 userRandomNumber,
@@ -682,25 +700,9 @@ abstract contract Entropy is IEntropy, EntropyState {
                 randomNumber,
                 false,
                 bytes(""),
-                0, // gas usage not tracked in the old no-gas-limit flow.
+                gasUsed,
                 bytes("")
             );
-
-            clearRequest(provider, sequenceNumber);
-
-            // Check if the requester is a contract account.
-            uint len;
-            address callAddress = req.requester;
-            assembly {
-                len := extcodesize(callAddress)
-            }
-            if (len != 0) {
-                IEntropyConsumer(callAddress)._entropyCallback(
-                    sequenceNumber,
-                    provider,
-                    randomNumber
-                );
-            }
         }
     }
 
