@@ -403,22 +403,22 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
     function testCombinePrices() public {
         // Test case 1: Basic price combination (ETH/USD / BTC/USD = ETH/BTC)
         PythStructs.Price memory ethUsd = PythStructs.Price({
-            price: 99875005,  
+            price: 206487956502,  
             conf: 10,
             expo: -8,    
             publishTime: block.timestamp
         });
         
         PythStructs.Price memory btcUsd = PythStructs.Price({
-            price: 206362333702,
+            price: 206741615681,
             conf: 100,
             expo: -8,     
             publishTime: block.timestamp
         });
 
         (int64 price, int32 expo) = PythUtils.combinePrices(ethUsd, btcUsd);
-        assertApproxEqRel(price, 2016367433623696, 9e17); 
-        assertEq(expo, -18);
+        assertApproxEqRel(price, 99875203, 9e17); 
+        assertEq(expo, -8);
 
         // // Test case 2: Different exponents
         // PythStructs.Price memory smallPrice = PythStructs.Price({

@@ -66,18 +66,17 @@ library PythUtils {
         console.log("p1", p1);
         console.log("p2", p2);
 
-
         // Calculate the combined price
         uint256 combined = (p1 * 10**18) / p2;  // Multiply by 10^18 to maintain precision
         console.log("combined", combined);
         // Calculate the new exponent
-        int32 newExpo = -18;  
-        console.log("newExpo", newExpo);
+        combined = combined / 10 ** (18 - p1Decimals);
+        console.log("newExpo", p1Decimals);
         // Check if the combined price fits in int64
         if (combined > uint256(uint64(type(int64).max))) {
             revert();
         }
 
-        return (int64(uint64(combined)), newExpo);
+        return (int64(uint64(combined)), price1.expo);
     }
 }
