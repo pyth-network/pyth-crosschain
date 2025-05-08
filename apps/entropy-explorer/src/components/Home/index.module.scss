@@ -1,0 +1,30 @@
+@use "@pythnetwork/component-library/theme";
+
+.home {
+  .header {
+    @include theme.h3;
+    @include theme.max-width;
+
+    // stylelint-disable-next-line no-duplicate-selectors
+    & {
+      color: theme.color("heading");
+      margin-bottom: theme.spacing(4);
+    }
+
+    @include theme.breakpoint("sm") {
+      margin-bottom: theme.spacing(6);
+    }
+  }
+
+  .body {
+    @include theme.max-width;
+
+    .searchBar {
+      width: 100%;
+
+      @include theme.breakpoint("lg") {
+        width: theme.spacing(100);
+      }
+    }
+  }
+}

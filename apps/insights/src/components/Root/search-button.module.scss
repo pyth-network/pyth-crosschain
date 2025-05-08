@@ -5,7 +5,7 @@
     display: none;
 
     @include theme.breakpoint("md") {
-      display: unset;
+      display: inline-flex;
     }
   }
 
@@ -83,7 +83,7 @@
     display: none;
 
     @include theme.breakpoint("sm") {
-      display: inline flow-root;
+      display: inline-flex;
     }
   }
 

@@ -1,0 +1,75 @@
+@use "@pythnetwork/component-library/theme";
+
+.table {
+  display: none;
+
+  @include theme.breakpoint("xl") {
+    display: block;
+  }
+}
+
+.entityList {
+  background: white;
+  border-radius: theme.border-radius("xl");
+
+  @include theme.breakpoint("xl") {
+    display: none;
+  }
+}
+
+.timestamp {
+  @include theme.text("sm", "medium");
+
+  @include theme.breakpoint("xl") {
+    @include theme.text("base", "medium");
+  }
+}
+
+.address {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(2);
+  font-size: theme.font-size("sm");
+
+  .full {
+    display: none;
+  }
+
+  &:not([data-always-truncate]) {
+    @include theme.breakpoint("xl") {
+      .truncated {
+        display: none;
+      }
+
+      .full {
+        display: unset;
+      }
+    }
+  }
+}
+
+.requestDrawer {
+  .cards {
+    display: grid;
+    gap: theme.spacing(4);
+    margin-bottom: theme.spacing(10);
+    grid-template-columns: repeat(2, 1fr);
+    padding-left: theme.spacing(4);
+    padding-right: theme.spacing(4);
+  }
+
+  .details {
+    width: 100%;
+    overflow: auto;
+
+    .field {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("muted");
+    }
+
+    .gasMeterLabel {
+      @include theme.text("xs", "medium");
+    }
+  }
+}

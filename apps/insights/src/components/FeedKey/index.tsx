@@ -1,8 +1,8 @@
+import { CopyButton } from "@pythnetwork/component-library/CopyButton";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
 import { toHex, truncateHex } from "../../hex";
-import { CopyButton } from "../CopyButton";
 
 type OwnProps = {
   feedKey: string;

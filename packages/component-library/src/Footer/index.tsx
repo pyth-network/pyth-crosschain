@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import type { ComponentProps, ElementType } from "react";
 
 import styles from "./index.module.scss";
@@ -8,8 +9,8 @@ import { SupportDrawer } from "../Header/index.js";
 import { Link } from "../Link/index.js";
 import { socialLinks } from "../social-links.js";
 
-export const Footer = () => (
-  <footer className={styles.footer}>
+export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
+  <footer className={clsx(styles.footer, className)} {...props}>
     <div className={styles.topContent}>
       <div className={styles.main}>
         <Link href="https://www.pyth.network" className={styles.logoLink ?? ""}>
