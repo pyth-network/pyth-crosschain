@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./SchedulerState.sol";
-import "./SchedulerErrors.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerErrors.sol";
 
 /**
  * @dev `SchedulerGovernance` defines governance capabilities for the Pulse contract.

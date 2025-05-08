@@ -7,7 +7,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "./Scheduler.sol";
 import "./SchedulerGovernance.sol";
-import "./SchedulerErrors.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerErrors.sol";
+
 contract SchedulerUpgradeable is
     Initializable,
     Ownable2StepUpgradeable,

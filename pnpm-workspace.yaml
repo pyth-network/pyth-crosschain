@@ -26,6 +26,7 @@ packages:
   - target_chains/ethereum/contracts
   - target_chains/ethereum/abi_generator
   - target_chains/ethereum/entropy_sdk/solidity
+  - target_chains/ethereum/pulse_sdk/solidity
   - target_chains/ethereum/sdk/js
   - target_chains/ethereum/sdk/solidity
   - target_chains/ethereum/sdk/stylus/pyth-mock-solidity

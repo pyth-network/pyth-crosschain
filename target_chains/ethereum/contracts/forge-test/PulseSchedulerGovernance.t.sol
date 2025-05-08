@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "../contracts/pulse/SchedulerUpgradeable.sol";
-import "../contracts/pulse/SchedulerErrors.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerErrors.sol";
 contract SchedulerInvalidMagic is SchedulerUpgradeable {
     function schedulerUpgradableMagic() public pure override returns (uint32) {
         return 0x12345678; // Incorrect magic
