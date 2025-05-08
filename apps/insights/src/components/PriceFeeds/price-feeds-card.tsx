@@ -1,9 +1,10 @@
 "use client";
 
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
+import { EntityList } from "@pythnetwork/component-library/EntityList";
+import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
@@ -12,16 +13,16 @@ import type {
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryState, parseAsString } from "nuqs";
+import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import styles from "./price-feeds-card.module.scss";
-import { usePriceFeeds } from "../../hooks/use-price-feeds";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
-import { AssetClassTag } from "../AssetClassTag";
-import { EntityList } from "../EntityList";
+import { AssetClassBadge } from "../AssetClassBadge";
 import { FeedKey } from "../FeedKey";
 import {
   SKELETON_WIDTH,
@@ -29,20 +30,21 @@ import {
   LiveConfidence,
   LiveValue,
 } from "../LivePrices";
-import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
-import rootStyles from "../Root/index.module.scss";
 
 type Props = {
   id: string;
-  priceFeeds: PriceFeed[];
-};
-
-type PriceFeed = {
-  symbol: string;
-  exponent: number;
-  numQuoters: number;
+  priceFeeds: {
+    symbol: string;
+    exponent: number;
+    numQuoters: number;
+    assetClass: string;
+    displaySymbol: string;
+    key: string;
+    description: string;
+    icon: ReactNode;
+  }[];
 };
 
 export const PriceFeedsCard = ({ priceFeeds, ...props }: Props) => (
@@ -59,32 +61,12 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
     "assetClass",
     parseAsString.withDefault(""),
   );
-  const feeds = usePriceFeeds();
-  const priceFeedsWithContextInfo = useMemo(
-    () =>
-      priceFeeds.map((feed) => {
-        const contextFeed = feeds.get(feed.symbol);
-        if (contextFeed) {
-          return {
-            ...feed,
-            assetClass: contextFeed.assetClass,
-            displaySymbol: contextFeed.displaySymbol,
-            key: contextFeed.key[Cluster.Pythnet],
-          };
-        } else {
-          throw new NoSuchFeedError(feed.symbol);
-        }
-      }),
-    [feeds, priceFeeds],
-  );
   const feedsFilteredByAssetClass = useMemo(
     () =>
       assetClass
-        ? priceFeedsWithContextInfo.filter(
-            (feed) => feed.assetClass === assetClass,
-          )
-        : priceFeedsWithContextInfo,
-    [assetClass, priceFeedsWithContextInfo],
+        ? priceFeeds.filter((feed) => feed.assetClass === assetClass)
+        : priceFeeds,
+    [assetClass, priceFeeds],
   );
   const {
     search,
@@ -115,7 +97,16 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
   const rows = useMemo(
     () =>
       paginatedItems.map(
-        ({ displaySymbol, symbol, exponent, numQuoters, key }) => ({
+        ({
+          displaySymbol,
+          symbol,
+          exponent,
+          numQuoters,
+          key,
+          description,
+          icon,
+          assetClass,
+        }) => ({
           id: symbol,
           href: `/price-feeds/${encodeURIComponent(symbol)}`,
           textValue: displaySymbol,
@@ -140,8 +131,14 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
             confidenceInterval: (
               <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
             ),
-            priceFeedName: <PriceFeedTag compact symbol={symbol} />,
-            assetClass: <AssetClassTag symbol={symbol} />,
+            priceFeedName: (
+              <PriceFeedTag
+                description={description}
+                displaySymbol={displaySymbol}
+                icon={icon}
+              />
+            ),
+            assetClass: <AssetClassBadge>{assetClass}</AssetClassBadge>,
             priceFeedId: (
               <FeedKey feedKey={key} className={styles.feedKey ?? ""} />
             ),
@@ -163,10 +160,10 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
 
   const assetClasses = useMemo(
     () =>
-      [
-        ...new Set(priceFeedsWithContextInfo.map((feed) => feed.assetClass)),
-      ].sort((a, b) => collator.compare(a, b)),
-    [priceFeedsWithContextInfo, collator],
+      [...new Set(priceFeeds.map((feed) => feed.assetClass))].sort((a, b) =>
+        collator.compare(a, b),
+      ),
+    [priceFeeds, collator],
   );
 
   return (
@@ -252,7 +249,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
                 onChange: props.onSearchChange,
               })}
         />
-        <Select<string>
+        <Select
           label="Asset Class"
           size="sm"
           variant="outline"
@@ -261,11 +258,14 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
             ? { isPending: true, options: [], buttonLabel: "Asset Class" }
             : {
                 optionGroups: [
-                  { name: "All", options: [""] },
-                  { name: "Asset classes", options: props.assetClasses },
+                  { name: "All", options: [{ id: "" }] },
+                  {
+                    name: "Asset classes",
+                    options: props.assetClasses.map((id) => ({ id })),
+                  },
                 ],
                 hideGroupLabel: true,
-                show: (value) => (value === "" ? "All" : value),
+                show: ({ id }) => (id === "" ? "All" : id),
                 placement: "bottom end",
                 buttonLabel:
                   props.assetClass === "" ? "Asset Class" : props.assetClass,
@@ -292,7 +292,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
     <EntityList
       label="Price Feeds"
       className={styles.entityList ?? ""}
-      headerLoadingSkeleton={<PriceFeedTag compact isLoading />}
+      headerLoadingSkeleton={<PriceFeedTag isLoading />}
       fields={[
         { id: "assetClass", name: "Asset Class" },
         { id: "priceFeedId", name: "Price Feed ID" },
@@ -319,7 +319,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       rounded
       fill
       label="Price Feeds"
-      stickyHeader={rootStyles.headerHeight}
+      stickyHeader={styles.headerHeight}
       className={styles.table ?? ""}
       columns={[
         {
@@ -327,7 +327,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           name: "PRICE FEED",
           isRowHeader: true,
           alignment: "left",
-          loadingSkeleton: <PriceFeedTag compact isLoading />,
+          loadingSkeleton: <PriceFeedTag isLoading />,
           allowsSorting: true,
         },
         {
@@ -392,10 +392,3 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
     />
   </Card>
 );
-
-class NoSuchFeedError extends Error {
-  constructor(symbol: string) {
-    super(`No feed exists named ${symbol}`);
-    this.name = "NoSuchFeedError";
-  }
-}

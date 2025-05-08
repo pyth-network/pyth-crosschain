@@ -4,6 +4,9 @@ import { Paginator as PaginatorComponent } from "./index.js";
 
 const meta = {
   component: PaginatorComponent,
+  parameters: {
+    layout: "padded",
+  },
   argTypes: {
     currentPage: {
       control: "number",

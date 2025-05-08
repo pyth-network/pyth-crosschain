@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity ^0.8.0;
-
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -31,8 +30,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function createSubscription(
         SubscriptionParams memory subscriptionParams
     ) external payable override returns (uint256 subscriptionId) {
-        // Validate params and set default gas config
-        _validateAndPrepareSubscriptionParams(subscriptionParams);
+        _validateSubscriptionParams(subscriptionParams);
 
         // Calculate minimum balance required for this subscription
         uint256 minimumBalance = this.getMinimumBalance(
@@ -98,15 +96,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             emit SubscriptionUpdated(subscriptionId);
             return;
         }
+        _validateSubscriptionParams(newParams);
 
-        // Validate the new parameters, including setting default gas config
-        _validateAndPrepareSubscriptionParams(newParams);
-
-        // Check minimum balance if number of feeds increases and subscription remains active
-        if (
-            willBeActive &&
-            newParams.priceIds.length > currentParams.priceIds.length
-        ) {
+        // Check minimum balance if subscription remains active
+        if (willBeActive) {
             uint256 minimumBalance = this.getMinimumBalance(
                 uint8(newParams.priceIds.length)
             );
@@ -151,11 +144,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     }
 
     /**
-     * @notice Validates subscription parameters and sets default gas config if needed.
-     * @dev This function modifies the passed-in params struct in place for gas config defaults.
-     * @param params The subscription parameters to validate and prepare.
+     * @notice Validates subscription parameters.
+     * @param params The subscription parameters to validate.
      */
-    function _validateAndPrepareSubscriptionParams(
+    function _validateSubscriptionParams(
         SubscriptionParams memory params
     ) internal pure {
         // No zero‐feed subscriptions
@@ -451,7 +443,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                     params.priceIds.length
                 );
             for (uint8 i = 0; i < params.priceIds.length; i++) {
-                PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+                PythStructs.PriceFeed memory priceFeed = _state.priceUpdates[
                     subscriptionId
                 ][params.priceIds[i]];
                 // Check if the price feed exists (price ID is valid and has been updated)
@@ -469,7 +461,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 priceIds.length
             );
         for (uint8 i = 0; i < priceIds.length; i++) {
-            PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+            PythStructs.PriceFeed memory priceFeed = _state.priceUpdates[
                 subscriptionId
             ][priceIds[i]];
 

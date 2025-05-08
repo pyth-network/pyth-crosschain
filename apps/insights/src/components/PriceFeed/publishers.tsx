@@ -1,7 +1,6 @@
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 
-import { PublishersCard } from "./publishers-card";
 import { getRankingsBySymbol } from "../../services/clickhouse";
 import {
   Cluster,
@@ -12,6 +11,7 @@ import {
 import { getStatus } from "../../status";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
+import { PublishersCard } from "./publishers-card";
 
 type Props = {
   params: Promise<{
@@ -46,14 +46,11 @@ export const Publishers = async ({ params }: Props) => {
     notFound()
   ) : (
     <PublishersCard
-      label="Publishers"
-      searchPlaceholder="Publisher key or name"
       metricsTime={metricsTime}
-      nameLoadingSkeleton={<PublisherTag isLoading />}
       symbol={symbol}
       displaySymbol={feed.product.display_symbol}
       assetClass={feed.product.asset_type}
-      priceComponents={publishers.map(
+      publishers={publishers.map(
         ({ ranking, publisher, status, cluster, knownPublisher }) => ({
           id: `${publisher}-${ClusterToName[cluster]}`,
           feedKey:
@@ -85,6 +82,8 @@ export const Publishers = async ({ params }: Props) => {
     />
   );
 };
+
+export const PublishersLoading = () => <PublishersCard isLoading />;
 
 const getPublishers = async (cluster: Cluster, symbol: string) => {
   const [publishers, rankings] = await Promise.all([

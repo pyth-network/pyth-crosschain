@@ -9,8 +9,6 @@ import { useSelectedLayoutSegment, usePathname } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
-import { LayoutTransition } from "../LayoutTransition";
-
 export const TabRoot = (
   props: Omit<ComponentProps<typeof UnstyledTabs>, "selectedKey">,
 ) => {
@@ -20,7 +18,7 @@ export const TabRoot = (
 };
 
 type TabsProps = Omit<ComponentProps<typeof TabList>, "pathname" | "items"> & {
-  prefix: string;
+  prefix?: string;
   items: (Omit<
     ComponentProps<typeof TabList>["items"],
     "href" | "id"
@@ -31,55 +29,31 @@ type TabsProps = Omit<ComponentProps<typeof TabList>, "pathname" | "items"> & {
 
 export const Tabs = ({ prefix, items, ...props }: TabsProps) => {
   const pathname = usePathname();
+  const segment = useSelectedLayoutSegment();
+  const finalPrefix = useMemo(
+    () =>
+      (prefix ?? segment === null)
+        ? pathname
+        : pathname.replace(new RegExp(`/${segment}$`), ""),
+    [prefix, pathname, segment],
+  );
   const mappedItems = useMemo(
     () =>
       items.map((item) => ({
         ...item,
-        id: item.segment ?? "",
-        href: item.segment ? `${prefix}/${item.segment}` : prefix,
+        id: item.id ?? item.segment ?? "",
+        href: item.segment ? `${finalPrefix}/${item.segment}` : finalPrefix,
       })),
-    [items, prefix],
+    [items, finalPrefix],
   );
 
-  return <TabList pathname={pathname} items={mappedItems} {...props} />;
+  return <TabList currentTab={segment ?? ""} items={mappedItems} {...props} />;
 };
 
-export const TabPanel = ({
-  children,
-  ...props
-}: Omit<ComponentProps<typeof UnstyledTabPanel>, "id">) => {
+export const TabPanel = (
+  props: Omit<ComponentProps<typeof UnstyledTabPanel>, "id">,
+) => {
   const tabId = useSelectedLayoutSegment() ?? "";
 
-  return (
-    <UnstyledTabPanel key="tabpanel" id={tabId} {...props}>
-      {(args) => (
-        <LayoutTransition
-          variants={{
-            initial: ({ segment }) => ({
-              opacity: 0,
-              x: segment === null ? "-2%" : "2%",
-            }),
-            exit: ({ segment }) => ({
-              opacity: 0,
-              x: segment === null ? "2%" : "-2%",
-              transition: {
-                x: { type: "spring", bounce: 0 },
-              },
-            }),
-          }}
-          initial="initial"
-          animate={{
-            opacity: 1,
-            x: 0,
-            transition: {
-              x: { type: "spring", bounce: 0 },
-            },
-          }}
-          exit="exit"
-        >
-          {typeof children === "function" ? children(args) : children}
-        </LayoutTransition>
-      )}
-    </UnstyledTabPanel>
-  );
+  return <UnstyledTabPanel key="tabpanel" id={tabId} {...props} />;
 };

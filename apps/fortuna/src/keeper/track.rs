@@ -5,8 +5,11 @@ use {
         eth_utils::traced_client::TracedClient,
     },
     ethers::middleware::Middleware,
-    ethers::{providers::Provider, types::Address},
-    std::sync::Arc,
+    ethers::{prelude::BlockNumber, providers::Provider, types::Address},
+    std::{
+        sync::Arc,
+        time::{SystemTime, UNIX_EPOCH},
+    },
     tracing,
 };
 
@@ -39,6 +42,43 @@ pub async fn track_balance(
             address: address.to_string(),
         })
         .set(balance);
+}
+
+/// Tracks the difference between the server timestamp and the latest block timestamp for each chain
+#[tracing::instrument(skip_all)]
+pub async fn track_block_timestamp_lag(
+    chain_id: String,
+    provider: Arc<Provider<TracedClient>>,
+    metrics: Arc<KeeperMetrics>,
+) {
+    const INF_LAG: i64 = 1000000; // value that definitely triggers an alert
+    let lag = match provider.get_block(BlockNumber::Latest).await {
+        Ok(block) => match block {
+            Some(block) => {
+                let block_timestamp = block.timestamp;
+                let server_timestamp = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                let lag: i64 = (server_timestamp as i64) - (block_timestamp.as_u64() as i64);
+                lag
+            }
+            None => {
+                tracing::error!("Block is None");
+                INF_LAG
+            }
+        },
+        Err(e) => {
+            tracing::error!("Failed to get block - {:?}", e);
+            INF_LAG
+        }
+    };
+    metrics
+        .block_timestamp_lag
+        .get_or_create(&ChainIdLabel {
+            chain_id: chain_id.clone(),
+        })
+        .set(lag);
 }
 
 /// tracks the collected fees and the hashchain data of the given provider address on the given chain

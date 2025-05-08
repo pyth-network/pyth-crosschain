@@ -11,6 +11,9 @@ const cardMetaArgTypes = () => {
 
 const meta = {
   component: StatCardComponent,
+  parameters: {
+    layout: "padded",
+  },
   argTypes: {
     ...cardMetaArgTypes(),
     header: {

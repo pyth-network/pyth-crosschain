@@ -1,159 +1,115 @@
 "use client";
 
-import { useLogger } from "@pythnetwork/app-logger";
 import { Switch } from "@pythnetwork/component-library/Switch";
-import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
-import type { ComponentProps } from "react";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { useQueryState, parseAsBoolean } from "nuqs";
 import { Suspense, useCallback, useMemo } from "react";
 
-import { Cluster, ClusterToName } from "../../services/pyth";
-import { PriceComponentDrawer } from "../PriceComponentDrawer";
-import {
-  PriceComponentsCardContents,
-  ResolvedPriceComponentsCard,
-} from "../PriceComponentsCard";
+import { Cluster } from "../../services/pyth";
+import type { PriceComponent } from "../PriceComponentsCard";
+import { PriceComponentsCard } from "../PriceComponentsCard";
+import { PublisherTag } from "../PublisherTag";
 
-type Publisher = ComponentProps<
-  typeof ResolvedPriceComponentsCard
->["priceComponents"][number] &
-  Pick<ComponentProps<typeof PriceComponentDrawer>, "rank"> & {
-    firstEvaluation?: Date | undefined;
-  };
+type PublishersCardProps =
+  | { isLoading: true }
+  | (ResolvedPublishersCardProps & {
+      isLoading?: false | undefined;
+    });
 
-type Props = Omit<
-  ComponentProps<typeof ResolvedPriceComponentsCard>,
-  "onPriceComponentAction" | "priceComponents"
-> & {
-  priceComponents: Publisher[];
+export const PublishersCard = (props: PublishersCardProps) =>
+  props.isLoading ? (
+    <PublishersCardImpl {...props} />
+  ) : (
+    <Suspense>
+      <ResolvedPublishersCard {...props} />
+    </Suspense>
+  );
+
+type ResolvedPublishersCardProps = {
   symbol: string;
   displaySymbol: string;
   assetClass: string;
+  publishers: Omit<PriceComponent, "symbol" | "displaySymbol" | "assetClass">[];
+  metricsTime?: Date | undefined;
 };
 
-export const PublishersCard = ({
-  priceComponents,
-  symbol,
-  displaySymbol,
-  ...props
-}: Props) => (
-  <Suspense fallback={<PriceComponentsCardContents isLoading {...props} />}>
-    <ResolvedPublishersCard
-      priceComponents={priceComponents}
-      symbol={symbol}
-      displaySymbol={displaySymbol}
-      {...props}
-    />
-  </Suspense>
-);
-
 const ResolvedPublishersCard = ({
-  priceComponents,
-  symbol,
-  displaySymbol,
-  assetClass,
+  publishers,
   ...props
-}: Props) => {
+}: ResolvedPublishersCardProps) => {
   const logger = useLogger();
-  const { handleClose, selectedPublisher, updateSelectedPublisherKey } =
-    usePublisherDrawer(priceComponents);
-  const onPriceComponentAction = useCallback(
-    ({ publisherKey, cluster }: Publisher) => {
-      updateSelectedPublisherKey(
-        [ClusterToName[cluster], publisherKey].join(":"),
-      );
-    },
-    [updateSelectedPublisherKey],
-  );
+
   const [includeTestFeeds, setIncludeTestFeeds] = useQueryState(
     "includeTestFeeds",
     parseAsBoolean.withDefault(false),
   );
-  const componentsFilteredByCluster = useMemo(
-    () =>
-      includeTestFeeds
-        ? priceComponents
-        : priceComponents.filter(
-            (component) => component.cluster === Cluster.Pythnet,
-          ),
-    [includeTestFeeds, priceComponents],
-  );
+
   const updateIncludeTestFeeds = useCallback(
     (newValue: boolean) => {
       setIncludeTestFeeds(newValue).catch((error: unknown) => {
-        logger.error(
-          "Failed to update include test components query param",
-          error,
-        );
+        logger.error("Failed to update show quality", error);
       });
     },
     [setIncludeTestFeeds, logger],
   );
 
+  const publishersFilteredByCluster = useMemo(
+    () =>
+      includeTestFeeds
+        ? publishers
+        : publishers.filter(
+            (component) => component.cluster === Cluster.Pythnet,
+          ),
+    [includeTestFeeds, publishers],
+  );
+
   return (
-    <>
-      <ResolvedPriceComponentsCard
-        onPriceComponentAction={onPriceComponentAction}
-        priceComponents={componentsFilteredByCluster}
-        assetClass={assetClass}
-        toolbarExtra={
-          <Switch
-            isSelected={includeTestFeeds}
-            onChange={updateIncludeTestFeeds}
-          >
-            Include test publishers
-          </Switch>
-        }
-        {...props}
-      />
-      {selectedPublisher && (
-        <PriceComponentDrawer
-          publisherKey={selectedPublisher.publisherKey}
-          onClose={handleClose}
-          symbol={symbol}
-          displaySymbol={displaySymbol}
-          feedKey={selectedPublisher.feedKey}
-          rank={selectedPublisher.rank}
-          score={selectedPublisher.score}
-          status={selectedPublisher.status}
-          title={selectedPublisher.name}
-          cluster={selectedPublisher.cluster}
-          firstEvaluation={selectedPublisher.firstEvaluation ?? new Date()}
-          navigateHref={`/publishers/${ClusterToName[selectedPublisher.cluster]}/${selectedPublisher.publisherKey}`}
-          assetClass={assetClass}
-          identifiesPublisher
-        />
-      )}
-    </>
+    <PublishersCardImpl
+      includeTestFeeds={includeTestFeeds}
+      updateIncludeTestFeeds={updateIncludeTestFeeds}
+      publishers={publishersFilteredByCluster}
+      {...props}
+    />
   );
 };
 
-const usePublisherDrawer = (publishers: Publisher[]) => {
-  const logger = useLogger();
-  const [selectedPublisherKey, setSelectedPublisher] = useQueryState(
-    "publisher",
-    parseAsString.withDefault("").withOptions({
-      history: "push",
-    }),
-  );
-  const updateSelectedPublisherKey = useCallback(
-    (newPublisherKey: string) => {
-      setSelectedPublisher(newPublisherKey).catch((error: unknown) => {
-        logger.error("Failed to update selected publisher", error);
-      });
-    },
-    [setSelectedPublisher, logger],
-  );
-  const selectedPublisher = useMemo(() => {
-    const [cluster, publisherKey] = selectedPublisherKey.split(":");
-    return publishers.find(
-      (publisher) =>
-        publisher.publisherKey === publisherKey &&
-        ClusterToName[publisher.cluster] === cluster,
-    );
-  }, [selectedPublisherKey, publishers]);
-  const handleClose = useCallback(() => {
-    updateSelectedPublisherKey("");
-  }, [updateSelectedPublisherKey]);
+type PublishersCardImplProps =
+  | { isLoading: true }
+  | (ResolvedPublishersCardProps & {
+      isLoading?: false | undefined;
+      includeTestFeeds: boolean;
+      updateIncludeTestFeeds: (newValue: boolean) => void;
+    });
 
-  return { selectedPublisher, handleClose, updateSelectedPublisherKey };
-};
+const PublishersCardImpl = (props: PublishersCardImplProps) => (
+  <PriceComponentsCard
+    label="Publishers"
+    searchPlaceholder="Publisher key or name"
+    nameLoadingSkeleton={<PublisherTag isLoading />}
+    identifiesPublisher
+    toolbarExtra={
+      <Switch
+        {...(props.isLoading
+          ? { isPending: true }
+          : {
+              isSelected: props.includeTestFeeds,
+              onChange: props.updateIncludeTestFeeds,
+            })}
+      >
+        Include test publishers
+      </Switch>
+    }
+    {...(props.isLoading
+      ? { isLoading: true }
+      : {
+          assetClass: props.assetClass,
+          metricsTime: props.metricsTime,
+          priceComponents: props.publishers.map((feed) => ({
+            ...feed,
+            symbol: props.symbol,
+            displaySymbol: props.displaySymbol,
+            assetClass: props.assetClass,
+          })),
+        })}
+  />
+);

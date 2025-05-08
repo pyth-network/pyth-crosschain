@@ -6,7 +6,7 @@ import { useCollator } from "react-aria";
 
 import styles from "./reference-data.module.scss";
 import { Cluster } from "../../services/pyth";
-import { AssetClassTag } from "../AssetClassTag";
+import { AssetClassBadge } from "../AssetClassBadge";
 import { LiveValue } from "../LivePrices";
 
 type Props = {
@@ -43,7 +43,7 @@ export const ReferenceData = ({ feed }: Props) => {
     () =>
       [
         ...Object.entries({
-          "Asset Type": <AssetClassTag symbol={feed.symbol} />,
+          "Asset Type": <AssetClassBadge>{feed.assetClass}</AssetClassBadge>,
           Base: feed.base,
           Description: feed.description,
           Symbol: feed.symbol,
