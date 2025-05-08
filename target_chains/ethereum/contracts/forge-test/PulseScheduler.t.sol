@@ -1354,7 +1354,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
                 PythStructs.PriceFeed[] memory priceFeeds_reduce,
                 uint64[] memory slots_reduce
             ) = createMockPriceFeedsWithSlots(publishTime + (i * 60), 2);
-            mockParsePriceFeedUpdatesWithSlots(
+            mockParsePriceFeedUpdatesWithSlotsStrict(
                 pyth,
                 priceFeeds_reduce,
                 slots_reduce
