@@ -1,0 +1,27 @@
+@use "@pythnetwork/component-library/theme";
+
+.changeValue {
+  transition: color 100ms linear;
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(1);
+  align-items: center;
+
+  .caret {
+    width: theme.spacing(3);
+    height: theme.spacing(3);
+    transition: transform 300ms linear;
+  }
+
+  &[data-direction="up"] {
+    color: theme.color("states", "success", "base");
+  }
+
+  &[data-direction="down"] {
+    color: theme.color("states", "error", "base");
+
+    .caret {
+      transform: rotate3d(1, 0, 0, 180deg);
+    }
+  }
+}

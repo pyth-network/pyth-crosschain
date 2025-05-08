@@ -1,0 +1,73 @@
+@use "@pythnetwork/component-library/theme";
+
+.tabList {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(2);
+
+  .tab {
+    padding: theme.spacing(2) theme.spacing(6);
+    border-radius: theme.border-radius("lg");
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(2);
+    transition-property: background-color, border-color, outline-color;
+    transition-duration: 100ms;
+    transition-timing-function: linear;
+    border: 1px solid transparent;
+    outline-offset: 0;
+    outline: theme.spacing(1) solid transparent;
+    position: relative;
+
+    &::before {
+      content: "";
+      background: theme.color("border");
+      position: absolute;
+      left: 0;
+      top: theme.border-radius("lg");
+      height: calc(100% - (2 * theme.border-radius("lg")));
+      width: 1px;
+    }
+
+    & > h2 {
+      @include theme.text("xl", "medium");
+
+      color: theme.color("heading");
+      line-height: normal;
+    }
+
+    & > p {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("heading");
+      line-height: 140%;
+    }
+
+    & > .bar {
+      position: absolute;
+      left: 0;
+      top: theme.border-radius("lg");
+      height: calc(100% - (2 * theme.border-radius("lg")));
+      width: theme.spacing(0.75);
+      background: theme.color("foreground");
+    }
+
+    &[data-focus-visible] {
+      border-color: theme.color("focus");
+      outline-color: theme.color("focus-dim");
+    }
+
+    &:not([data-selected]) {
+      cursor: pointer;
+
+      &[data-hovered] {
+        background-color: theme.color(
+          "button",
+          "outline",
+          "background",
+          "hover"
+        );
+      }
+    }
+  }
+}

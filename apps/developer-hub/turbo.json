@@ -1,0 +1,45 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build:vercel": {
+      "env": [
+        "VERCEL_ENV",
+        "GOOGLE_ANALYTICS_ID",
+        "AMPLITUDE_API_KEY",
+        "CLICKHOUSE_URL",
+        "CLICKHOUSE_USERNAME",
+        "CLICKHOUSE_PASSWORD",
+        "SOLANA_RPC",
+        "DISABLE_ACCESSIBILITY_REPORTING"
+      ]
+    },
+    "fix:lint": {
+      "dependsOn": [
+        "//#install:modules",
+        "fix:lint:eslint",
+        "fix:lint:stylelint"
+      ]
+    },
+    "fix:lint:eslint": {
+      "dependsOn": ["//#install:modules", "^build"],
+      "cache": false
+    },
+    "fix:lint:stylelint": {
+      "dependsOn": ["//#install:modules"],
+      "cache": false
+    },
+    "start:prod": {
+      "dependsOn": ["//#install:modules", "build:vercel"]
+    },
+    "test:lint": {
+      "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
+    },
+    "test:lint:eslint": {
+      "dependsOn": ["//#install:modules", "^build"]
+    },
+    "test:lint:stylelint": {
+      "dependsOn": ["//#install:modules"]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+@use "@pythnetwork/component-library/theme";
+
+.chartCard {
+  .line {
+    color: theme.color("chart", "series", "neutral");
+  }
+
+  &[data-variant="primary"] {
+    .line {
+      color: theme.color("chart", "series", "primary");
+    }
+  }
+}

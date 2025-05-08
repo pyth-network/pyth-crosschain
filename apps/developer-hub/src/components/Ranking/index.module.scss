@@ -1,0 +1,32 @@
+@use "@pythnetwork/component-library/theme";
+
+.ranking {
+  height: theme.spacing(6);
+  border-radius: theme.border-radius("full");
+  width: 100%;
+  display: inline-block;
+  text-align: center;
+  font-size: theme.font-size("sm");
+  font-weight: theme.font-weight("medium");
+  line-height: theme.spacing(6);
+
+  .skeleton {
+    width: 100%;
+    height: 100%;
+    border-radius: theme.border-radius("full");
+  }
+
+  .content {
+    width: 100%;
+    height: 100%;
+    border-radius: theme.border-radius("full");
+    border: 1px solid theme.color("border");
+    color: theme.color("heading");
+  }
+
+  &[data-is-current] .content {
+    color: theme.pallette-color("white");
+    background-color: theme.color("button", "primary", "background", "normal");
+    border-color: theme.color("button", "primary", "background", "normal");
+  }
+}

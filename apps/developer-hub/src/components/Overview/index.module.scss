@@ -1,0 +1,100 @@
+@use "@pythnetwork/component-library/theme";
+
+.overview {
+  @include theme.max-width;
+
+  .header {
+    color: theme.color("heading");
+
+    @include theme.h3;
+  }
+
+  .overviewMainContent {
+    display: grid;
+    align-items: center;
+    padding-top: theme.spacing(6);
+    padding-bottom: theme.spacing(30);
+
+    @include theme.breakpoint("md") {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: theme.spacing(20);
+      padding-top: theme.spacing(12);
+    }
+
+    @include theme.breakpoint("xl") {
+      column-gap: theme.spacing(40);
+    }
+
+    .intro {
+      margin-bottom: theme.spacing(6);
+
+      .headline {
+        @include theme.text("3xl", "medium");
+
+        color: theme.color("heading");
+        line-height: 125%;
+        margin-top: theme.spacing(8);
+        margin-bottom: theme.spacing(4);
+      }
+
+      .message {
+        @include theme.text("base", "normal");
+
+        color: theme.color("heading");
+        line-height: 150%;
+      }
+    }
+
+    .tabList {
+      margin: theme.spacing(6) 0;
+
+      @include theme.breakpoint("md") {
+        margin: theme.spacing(12) 0;
+        grid-column: 1;
+        grid-row: 2;
+      }
+    }
+
+    .imagePanel {
+      display: flex;
+      place-content: center;
+
+      @include theme.breakpoint("md") {
+        grid-row: span 3 / span 3;
+        grid-column: 2;
+      }
+
+      .darkImage,
+      .lightImage {
+        max-height: theme.spacing(80);
+
+        @include theme.breakpoint("md") {
+          max-height: theme.spacing(120);
+        }
+      }
+
+      .lightImage {
+        @at-root html[data-theme="dark"] & {
+          display: none;
+        }
+      }
+
+      .darkImage {
+        @at-root html[data-theme="light"] & {
+          display: none;
+        }
+      }
+    }
+
+    .buttons {
+      display: flex;
+      flex-flow: row nowrap;
+      gap: theme.spacing(3);
+
+      @include theme.breakpoint("md") {
+        grid-column: 1;
+        grid-row: 3;
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+@use "@pythnetwork/component-library/theme";
+
+.price {
+  transition: color 100ms linear;
+
+  &[data-direction="up"] {
+    color: theme.color("states", "success", "base");
+  }
+
+  &[data-direction="down"] {
+    color: theme.color("states", "error", "base");
+  }
+}
+
+.confidence {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(2);
+  align-items: center;
+
+  .plusMinus {
+    width: theme.spacing(4);
+    height: theme.spacing(4);
+    display: inline-block;
+    color: theme.color("muted");
+  }
+}

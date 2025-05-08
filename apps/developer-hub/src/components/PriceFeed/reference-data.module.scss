@@ -1,0 +1,21 @@
+@use "@pythnetwork/component-library/theme";
+
+.referenceData {
+  .field,
+  .value {
+    font-size: theme.font-size("xs");
+
+    @include theme.breakpoint("sm") {
+      font-size: theme.font-size("sm");
+    }
+  }
+
+  .field {
+    color: theme.color("muted");
+    font-weight: theme.font-weight("normal");
+  }
+
+  .value {
+    color: theme.color("paragraph");
+  }
+}

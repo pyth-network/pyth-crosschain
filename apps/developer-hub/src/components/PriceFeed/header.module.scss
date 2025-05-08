@@ -1,0 +1,63 @@
+@use "@pythnetwork/component-library/theme";
+
+.header {
+  margin-bottom: theme.spacing(4);
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(4);
+
+  @include theme.max-width;
+
+  @include theme.breakpoint("sm") {
+    margin-bottom: theme.spacing(6);
+    gap: theme.spacing(6);
+  }
+
+  .headerRow {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(2);
+    justify-content: space-between;
+
+    .assetClassBadge {
+      align-self: start;
+    }
+
+    @include theme.breakpoint("sm") {
+      flex-flow: row nowrap;
+      align-items: center;
+      gap: unset;
+    }
+  }
+
+  .rightGroup {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: stretch;
+    gap: theme.spacing(4);
+
+    & > * {
+      flex: 1 1 0;
+      width: 0;
+
+      @include theme.breakpoint("sm") {
+        flex: unset;
+        width: unset;
+      }
+    }
+  }
+
+  .priceFeedSelect {
+    display: none;
+
+    @include theme.breakpoint("sm") {
+      display: block;
+    }
+  }
+
+  .priceFeedTag {
+    @include theme.breakpoint("sm") {
+      display: none;
+    }
+  }
+}

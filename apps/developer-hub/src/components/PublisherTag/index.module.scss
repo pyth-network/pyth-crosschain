@@ -1,0 +1,83 @@
+@use "@pythnetwork/component-library/theme";
+
+.publisherTag {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(3);
+  align-items: center;
+
+  .icon,
+  .undisclosedIconWrapper {
+    width: theme.spacing(10);
+    height: theme.spacing(10);
+  }
+
+  .icon {
+    flex: none;
+    display: grid;
+    place-content: center;
+
+    & > svg {
+      max-width: 100%;
+      max-height: 100%;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .name {
+    color: theme.color("heading");
+
+    @include theme.text("base", "medium");
+  }
+
+  .publisherKey,
+  .icon {
+    color: theme.color("foreground");
+  }
+
+  .nameAndKey {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(1);
+    align-items: flex-start;
+
+    .key {
+      font-size: theme.font-size("xs");
+      margin-bottom: -0.5em;
+    }
+  }
+
+  .undisclosedIconWrapper {
+    background: theme.color("button", "disabled", "background");
+    border-radius: theme.border-radius("full");
+    display: grid;
+    place-content: center;
+    width: theme.spacing(9);
+    height: theme.spacing(9);
+
+    .undisclosedIcon {
+      width: theme.spacing(4);
+      height: theme.spacing(4);
+      color: theme.color("button", "disabled", "foreground");
+    }
+  }
+
+  .testBadge {
+    margin-left: theme.spacing(2);
+  }
+
+  &[data-loading] {
+    .icon {
+      border-radius: theme.border-radius("full");
+    }
+  }
+
+  &[data-compact] {
+    .icon,
+    .undisclosedIconWrapper {
+      width: theme.spacing(6);
+      height: theme.spacing(6);
+    }
+  }
+}

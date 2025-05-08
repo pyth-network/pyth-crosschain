@@ -1,0 +1,24 @@
+@use "@pythnetwork/component-library/theme";
+
+.tokenIcon {
+  display: inline-block;
+  background: theme.pallette-color("purple", 200);
+  color: theme.pallette-color("steel", 950);
+  padding: 0.35em;
+  border-radius: theme.border-radius("full");
+  margin-right: 0.25em;
+  vertical-align: bottom;
+
+  .logoContainer {
+    width: 0.65em;
+    height: 0.65em;
+    position: relative;
+
+    .logo {
+      position: absolute;
+      width: 100%;
+      top: -0.05em;
+      left: 0;
+    }
+  }
+}

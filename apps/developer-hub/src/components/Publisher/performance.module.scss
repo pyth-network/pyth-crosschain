@@ -1,0 +1,36 @@
+@use "@pythnetwork/component-library/theme";
+
+.performance {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(12) theme.spacing(6);
+  align-items: flex-start;
+
+  @include theme.breakpoint("lg") {
+    grid-template-columns: 1fr 1fr;
+
+    .publishersRankingCard {
+      grid-column: span 2 / span 2;
+    }
+  }
+
+  .publishersRankingCard {
+    .publishersRankingList {
+      @include theme.breakpoint("lg") {
+        display: none;
+      }
+
+      .ranking {
+        width: theme.spacing(20);
+      }
+    }
+
+    .publishersRankingTable {
+      display: none;
+
+      @include theme.breakpoint("lg") {
+        display: unset;
+      }
+    }
+  }
+}

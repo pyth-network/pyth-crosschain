@@ -1,0 +1,16 @@
+@use "@pythnetwork/component-library/theme";
+
+.priceFeedLayout {
+  .priceComponentsTabLabel {
+    display: inline-flex;
+    flex-flow: row nowrap;
+    gap: theme.spacing(2);
+    align-items: center;
+  }
+
+  .body {
+    padding-top: theme.spacing(6);
+
+    @include theme.max-width;
+  }
+}

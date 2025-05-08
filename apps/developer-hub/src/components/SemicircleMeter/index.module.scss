@@ -1,0 +1,34 @@
+@use "@pythnetwork/component-library/theme";
+
+.semicircleChart {
+  width: 100%;
+  height: calc(var(--height) * (6 / 7));
+  overflow: hidden;
+  display: grid;
+  place-content: center;
+  position: relative;
+
+  .chart {
+    position: relative;
+    top: theme.spacing(8);
+
+    .bar {
+      fill: theme.color("button", "primary", "background", "normal");
+    }
+
+    .background {
+      fill: theme.color("button", "disabled", "background");
+    }
+  }
+
+  .legend {
+    text-align: center;
+    position: absolute;
+    top: calc(var(--height) * (2 / 5));
+    display: flex;
+    width: 100%;
+    flex-flow: column nowrap;
+    align-items: center;
+    gap: theme.spacing(1.5);
+  }
+}

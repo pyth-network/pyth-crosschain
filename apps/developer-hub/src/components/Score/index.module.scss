@@ -1,0 +1,76 @@
+@use "@pythnetwork/component-library/theme";
+
+.meter {
+  line-height: 0;
+  width: calc(theme.spacing(1) * var(--width));
+  display: grid;
+
+  .score {
+    height: theme.spacing(6);
+    border-radius: theme.border-radius("3xl");
+    position: relative;
+    display: inline-block;
+    width: 100%;
+
+    .fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      border-radius: theme.border-radius("3xl");
+      color: theme.color("background", "primary");
+      display: grid;
+      place-content: center;
+      text-shadow:
+        0 1px 2px rgb(0 0 0 / 10%),
+        0 1px 3px rgb(0 0 0 / 10%);
+      font-size: theme.font-size("xxs");
+      font-weight: theme.font-weight("semibold");
+      line-height: theme.spacing(6);
+    }
+
+    &[data-size-class="bad"] {
+      background: theme.color("states", "error", "background");
+
+      .fill {
+        background: theme.color("states", "error", "color");
+      }
+    }
+
+    &[data-size-class="weak"] {
+      background: theme.color("states", "warning", "background");
+
+      .fill {
+        background: theme.color("states", "warning", "normal");
+      }
+    }
+
+    &[data-size-class="warn"] {
+      background: theme.color("states", "yellow", "background");
+
+      .fill {
+        background: theme.color("states", "yellow", "normal");
+      }
+    }
+
+    &[data-size-class="ok"] {
+      background: theme.color("states", "lime", "background");
+
+      .fill {
+        background: theme.color("states", "lime", "normal");
+      }
+    }
+
+    &[data-size-class="good"] {
+      background: theme.color("states", "success", "background");
+
+      .fill {
+        background: theme.color("states", "success", "normal");
+      }
+    }
+  }
+
+  &[data-fill] {
+    width: 100%;
+  }
+}

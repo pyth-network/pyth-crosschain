@@ -1,0 +1,206 @@
+@use "@pythnetwork/component-library/theme";
+
+.priceFeedSelect {
+  .trigger {
+    background-color: transparent;
+    border: 1px solid theme.color("button", "outline", "border");
+    outline-offset: 0;
+    outline: theme.spacing(1) solid transparent;
+    cursor: pointer;
+    border-radius: theme.border-radius("xl");
+    padding: theme.spacing(2);
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: theme.spacing(4);
+    transition-property: background-color, color, border-color, outline-color;
+    transition-duration: 100ms;
+    transition-timing-function: linear;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+
+    .caret {
+      width: theme.spacing(8);
+      height: theme.spacing(8);
+      transition: transform 300ms ease;
+    }
+
+    &[data-hovered] {
+      background-color: theme.color("button", "outline", "background", "hover");
+    }
+
+    &[data-pressed] {
+      background-color: theme.color(
+        "button",
+        "outline",
+        "background",
+        "active"
+      );
+    }
+
+    &[data-focus-visible] {
+      border-color: theme.color("focus");
+      outline-color: theme.color("focus-dim");
+    }
+  }
+
+  &[data-open] {
+    .trigger .caret {
+      transform: rotate(-180deg);
+    }
+  }
+}
+
+.popover {
+  min-width: var(--trigger-width);
+  background-color: theme.color("background", "modal");
+  border-radius: theme.border-radius("lg");
+  border: 1px solid theme.color("border");
+  color: theme.color("paragraph");
+  display: flex;
+  font-size: theme.font-size("sm");
+  box-shadow:
+    0 4px 6px -4px rgb(from black r g b / 10%),
+    0 10px 15px -3px rgb(from black r g b / 10%);
+
+  .dialog {
+    display: flex;
+    flex-flow: column nowrap;
+    flex-grow: 1;
+    max-height: theme.spacing(100);
+    outline: none;
+
+    .searchField {
+      flex: 0;
+      z-index: 1;
+
+      .searchInput {
+        width: 100%;
+        padding: theme.spacing(3);
+        border: none;
+        border-top-left-radius: theme.border-radius("lg");
+        border-top-right-radius: theme.border-radius("lg");
+        border-bottom: 1px solid theme.color("border");
+        outline: theme.spacing(1) solid transparent;
+        outline-offset: 0;
+        transition:
+          border-color 100ms linear,
+          outline-color 100ms linear,
+          color 100ms linear;
+        background-color: transparent;
+
+        &[data-hovered] {
+          border-color: theme.color("forms", "input", "hover", "border");
+        }
+
+        &[data-focused] {
+          border-color: theme.color("focus");
+        }
+
+        &[data-focus-visible] {
+          outline-color: theme.color("focus-dim");
+        }
+
+        &::placeholder {
+          color: theme.color("button", "disabled", "foreground");
+        }
+      }
+    }
+
+    .listbox {
+      outline: none;
+      overflow: auto;
+      width: theme.spacing(110);
+      flex-grow: 1;
+
+      .priceFeed {
+        padding: theme.spacing(3) theme.spacing(4);
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        cursor: pointer;
+        transition: background-color 100ms linear;
+        outline: none;
+        text-decoration: none;
+        border-top: 1px solid theme.color("background", "secondary");
+        -webkit-tap-highlight-color: transparent;
+
+        &[data-is-first] {
+          border-top: none;
+        }
+
+        & > *:last-child {
+          flex-shrink: 0;
+        }
+
+        &[data-focused] {
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "hover"
+          );
+        }
+
+        &[data-pressed] {
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "active"
+          );
+        }
+      }
+    }
+  }
+
+  &[data-placement="top"] {
+    --origin: translateY(8px);
+    --scale: 1, 0.8;
+
+    transform-origin: bottom;
+  }
+
+  &[data-placement="bottom"] {
+    --origin: translateY(-8px);
+    --scale: 1, 0.8;
+
+    transform-origin: top;
+  }
+
+  &[data-placement="right"] {
+    --origin: translateX(-8px);
+    --scale: 0.8, 1;
+
+    transform-origin: left;
+  }
+
+  &[data-placement="left"] {
+    --origin: translateX(8px);
+    --scale: 0.8, 1;
+
+    transform-origin: right;
+  }
+
+  &[data-entering] {
+    animation: popover-slide 200ms;
+  }
+
+  &[data-exiting] {
+    animation: popover-slide 200ms reverse ease-in;
+  }
+}
+
+@keyframes popover-slide {
+  from {
+    transform: scale(var(--scale)) var(--origin);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1, 1) translateY(0);
+    opacity: 1;
+  }
+}

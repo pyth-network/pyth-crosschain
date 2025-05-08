@@ -1,0 +1,28 @@
+@use "@pythnetwork/component-library/theme";
+
+.priceFeedsCard {
+  .toolbar {
+    .searchInput {
+      flex-grow: 1;
+    }
+  }
+
+  .table {
+    display: none;
+
+    @include theme.breakpoint("2xl") {
+      display: unset;
+    }
+  }
+
+  .entityList {
+    @include theme.breakpoint("2xl") {
+      display: none;
+    }
+  }
+}
+
+:export {
+  // stylelint-disable-next-line property-no-unknown
+  headerHeight: theme.$header-height;
+}

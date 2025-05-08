@@ -1,0 +1,46 @@
+@use "@pythnetwork/component-library/theme";
+
+.chartCard {
+  .chart {
+    background: theme.color("background", "primary");
+    height: theme.spacing(140);
+    border-radius: theme.border-radius("xl");
+    overflow: hidden;
+
+    .spinnerContainer {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-content: center;
+
+      .spinner {
+        font-size: theme.spacing(12);
+      }
+    }
+  }
+}
+
+.disclaimer {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(1);
+  padding: theme.spacing(3);
+
+  .disclaimerIcon {
+    flex: none;
+    color: theme.color("states", "info", "icon");
+    font-size: theme.spacing(6);
+  }
+
+  .disclaimerBody {
+    @include theme.text("sm", "normal");
+
+    color: theme.color("paragraph");
+    padding: 0 theme.spacing(2);
+    line-height: 150%;
+
+    b {
+      font-weight: theme.font-weight("semibold");
+    }
+  }
+}

@@ -1,0 +1,119 @@
+@use "@pythnetwork/component-library/theme";
+
+$gap: theme.spacing(4);
+
+.publishers {
+  @include theme.max-width;
+
+  .headerContainer {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: space-between;
+
+    .header {
+      color: theme.color("heading");
+
+      @include theme.h3;
+    }
+
+    .rankingsLastUpdated {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("muted");
+      flex-flow: row nowrap;
+      gap: theme.spacing(1);
+      align-items: center;
+      line-height: normal;
+      display: none;
+
+      @include theme.breakpoint("sm") {
+        display: flex;
+      }
+
+      .clockIcon {
+        font-size: theme.spacing(5);
+      }
+    }
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $gap;
+    margin-top: theme.spacing(4);
+
+    @include theme.breakpoint("2xl") {
+      grid-template-columns: 15% 15% 1fr;
+      grid-template-rows: max-content 1fr;
+      margin-top: theme.spacing(6);
+    }
+
+    .statCard {
+      @include theme.breakpoint("2xl") {
+        position: sticky;
+        top: theme.$header-height;
+      }
+    }
+
+    .publishersCard {
+      grid-column: span 2 / span 2;
+
+      @include theme.breakpoint("2xl") {
+        grid-column: 3;
+        grid-row: span 2 / span 2;
+        margin-left: theme.spacing(6);
+      }
+    }
+
+    .oisCard {
+      grid-column: span 2 / span 2;
+
+      @include theme.breakpoint("2xl") {
+        grid-row: 2;
+        align-self: start;
+        position: sticky;
+
+        // TODO the following should be made into variables so we don't have
+        // to copy the values around...
+        $card-content: theme.spacing(15);
+        $card-pt: theme.spacing(3);
+        $card-pb: theme.spacing(2);
+        $card-wrapper-p: (2 * theme.spacing(1));
+        $card-height: $card-content + $card-pt + $card-pb + $card-wrapper-p;
+
+        top: calc(theme.$header-height + $gap + $card-height);
+      }
+
+      .oisPool {
+        .title {
+          font-size: theme.font-size("sm");
+          font-weight: theme.font-weight("normal");
+          color: theme.color("heading");
+          margin: 0;
+        }
+
+        .poolUsed {
+          line-height: 125%;
+          letter-spacing: letter-spacing("tighter");
+          color: theme.color("heading");
+
+          @include theme.text("xl", "medium");
+        }
+
+        .poolTotal {
+          margin: 0;
+          color: theme.color("muted");
+          font-size: theme.font-size("sm");
+          font-weight: theme.font-weight("normal");
+        }
+      }
+
+      .oisStats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: theme.spacing(1);
+      }
+    }
+  }
+}

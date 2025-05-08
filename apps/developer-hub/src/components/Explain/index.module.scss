@@ -1,0 +1,31 @@
+@use "@pythnetwork/component-library/theme";
+
+.explain {
+  display: none;
+
+  @include theme.breakpoint("sm") {
+    display: grid;
+  }
+
+  .trigger {
+    @each $size, $values in theme.$button-sizes {
+      &[data-size="#{$size}"] {
+        margin: -#{theme.map-get-strict($values, "padding")};
+      }
+    }
+  }
+}
+
+.description {
+  p {
+    margin: 0;
+  }
+
+  b {
+    font-weight: theme.font-weight("semibold");
+  }
+
+  ul {
+    margin: 0;
+  }
+}
