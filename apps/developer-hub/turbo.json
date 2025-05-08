@@ -7,10 +7,6 @@
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
         "AMPLITUDE_API_KEY",
-        "CLICKHOUSE_URL",
-        "CLICKHOUSE_USERNAME",
-        "CLICKHOUSE_PASSWORD",
-        "SOLANA_RPC",
         "DISABLE_ACCESSIBILITY_REPORTING"
       ]
     },

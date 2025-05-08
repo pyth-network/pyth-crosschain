@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from "next";
 
 export const metadata = {
-  metadataBase: new URL("https://insights.pyth.network"),
+  metadataBase: new URL("https://developer.pyth.network"),
   title: {
-    default: "Pyth Network Insights",
-    template: "%s | Pyth Network Insights",
+    default: "Pyth Developer Hub",
+    template: "%s | Pyth Developer Hub",
   },
-  applicationName: "Pyth Network Insights",
+  applicationName: "Pyth Developer Hub",
   description:
-    "Learn more about the Pyth network and explore data about the network's publishers and price feeds.",
+    "Learn more about Pyth and how to integrate into your application.",
   referrer: "strict-origin-when-cross-origin",
   openGraph: {
     type: "website",
