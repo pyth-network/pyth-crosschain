@@ -70,7 +70,9 @@ contract PulseSchedulerGovernanceTest is Test {
     function testProposeAdminByUnauthorized() public {
         address unauthorized = address(5);
         vm.prank(unauthorized);
-        vm.expectRevert(Unauthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SchedulerErrors.Unauthorized.selector)
+        );
         scheduler.proposeAdmin(admin2);
     }
 
@@ -91,7 +93,9 @@ contract PulseSchedulerGovernanceTest is Test {
 
         address unauthorized = address(5);
         vm.prank(unauthorized);
-        vm.expectRevert(Unauthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SchedulerErrors.Unauthorized.selector)
+        );
         scheduler.acceptAdmin();
     }
 

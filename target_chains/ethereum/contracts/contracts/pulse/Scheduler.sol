@@ -41,7 +41,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
         // Ensure enough funds were provided
         if (msg.value < minimumBalance) {
-            revert InsufficientBalance();
+            revert SchedulerErrors.InsufficientBalance();
         }
 
         // Set subscription to active
@@ -83,7 +83,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
         // Updates to permanent subscriptions are not allowed
         if (currentParams.isPermanent) {
-            revert CannotUpdatePermanentSubscription();
+            revert SchedulerErrors.CannotUpdatePermanentSubscription();
         }
 
         // If subscription is inactive and will remain inactive, no need to validate parameters
@@ -103,7 +103,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
                 uint8(newParams.priceIds.length)
             );
             if (currentStatus.balanceInWei < minimumBalance) {
-                revert InsufficientBalance();
+                revert SchedulerErrors.InsufficientBalance();
             }
         }
 
@@ -116,7 +116,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
             // Check if balance meets minimum requirement
             if (currentStatus.balanceInWei < minimumBalance) {
-                revert InsufficientBalance();
+                revert SchedulerErrors.InsufficientBalance();
             }
 
             currentParams.isActive = true;
@@ -149,7 +149,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
     ) internal pure {
         // No zero‐feed subscriptions
         if (params.priceIds.length == 0) {
-            revert EmptyPriceIds();
+            revert SchedulerErrors.EmptyPriceIds();
         }
 
         // Price ID limits and uniqueness
@@ -157,7 +157,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
             params.priceIds.length >
             SchedulerConstants.MAX_PRICE_IDS_PER_SUBSCRIPTION
         ) {
-            revert TooManyPriceIds(
+            revert SchedulerErrors.TooManyPriceIds(
                 params.priceIds.length,
                 SchedulerConstants.MAX_PRICE_IDS_PER_SUBSCRIPTION
             );
@@ -165,14 +165,14 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
         for (uint i = 0; i < params.priceIds.length; i++) {
             for (uint j = i + 1; j < params.priceIds.length; j++) {
                 if (params.priceIds[i] == params.priceIds[j]) {
-                    revert DuplicatePriceId(params.priceIds[i]);
+                    revert SchedulerErrors.DuplicatePriceId(params.priceIds[i]);
                 }
             }
         }
 
         // Whitelist size limit and uniqueness
         if (params.readerWhitelist.length > MAX_READER_WHITELIST_SIZE) {
-            revert TooManyWhitelistedReaders(
+            revert SchedulerErrors.TooManyWhitelistedReaders(
                 params.readerWhitelist.length,
                 MAX_READER_WHITELIST_SIZE
             );
@@ -180,7 +180,9 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
         for (uint i = 0; i < params.readerWhitelist.length; i++) {
             for (uint j = i + 1; j < params.readerWhitelist.length; j++) {
                 if (params.readerWhitelist[i] == params.readerWhitelist[j]) {
-                    revert DuplicateWhitelistAddress(params.readerWhitelist[i]);
+                    revert SchedulerErrors.DuplicateWhitelistAddress(
+                        params.readerWhitelist[i]
+                    );
                 }
             }
         }
@@ -190,19 +192,19 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
             !params.updateCriteria.updateOnHeartbeat &&
             !params.updateCriteria.updateOnDeviation
         ) {
-            revert InvalidUpdateCriteria();
+            revert SchedulerErrors.InvalidUpdateCriteria();
         }
         if (
             params.updateCriteria.updateOnHeartbeat &&
             params.updateCriteria.heartbeatSeconds == 0
         ) {
-            revert InvalidUpdateCriteria();
+            revert SchedulerErrors.InvalidUpdateCriteria();
         }
         if (
             params.updateCriteria.updateOnDeviation &&
             params.updateCriteria.deviationThresholdBps == 0
         ) {
-            revert InvalidUpdateCriteria();
+            revert SchedulerErrors.InvalidUpdateCriteria();
         }
     }
 
@@ -247,7 +249,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
             .subscriptionParams[subscriptionId];
 
         if (!params.isActive) {
-            revert InactiveSubscription();
+            revert SchedulerErrors.InactiveSubscription();
         }
 
         // Get the Pyth contract and parse price updates
@@ -256,7 +258,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
         // If we don't have enough balance, revert
         if (status.balanceInWei < pythFee) {
-            revert InsufficientBalance();
+            revert SchedulerErrors.InsufficientBalance();
         }
 
         // Parse the price feed updates with an acceptable timestamp range of [0, now+10s].
@@ -283,7 +285,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
         uint64 slot = slots[0];
         for (uint8 i = 1; i < slots.length; i++) {
             if (slots[i] != slot) {
-                revert PriceSlotMismatch();
+                revert SchedulerErrors.PriceSlotMismatch();
             }
         }
 
@@ -339,7 +341,10 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
         // Validate that the update timestamp is not too old
         if (updateTimestamp < minAllowedTimestamp) {
-            revert TimestampTooOld(updateTimestamp, block.timestamp);
+            revert SchedulerErrors.TimestampTooOld(
+                updateTimestamp,
+                block.timestamp
+            );
         }
 
         // Reject updates if they're older than the latest stored ones
@@ -347,7 +352,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
             status.priceLastUpdatedAt > 0 &&
             updateTimestamp <= status.priceLastUpdatedAt
         ) {
-            revert TimestampOlderThanLastUpdate(
+            revert SchedulerErrors.TimestampOlderThanLastUpdate(
                 updateTimestamp,
                 status.priceLastUpdatedAt
             );
@@ -407,7 +412,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
             }
         }
 
-        revert UpdateConditionsNotMet();
+        revert SchedulerErrors.UpdateConditionsNotMet();
     }
 
     /// FETCH PRICES
@@ -421,7 +426,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
         bytes32[] calldata priceIds
     ) internal view returns (PythStructs.PriceFeed[] memory priceFeeds) {
         if (!_state.subscriptionParams[subscriptionId].isActive) {
-            revert InactiveSubscription();
+            revert SchedulerErrors.InactiveSubscription();
         }
 
         SchedulerStructs.SubscriptionParams storage params = _state
@@ -439,7 +444,10 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
                 ][params.priceIds[i]];
                 // Check if the price feed exists (price ID is valid and has been updated)
                 if (priceFeed.id == bytes32(0)) {
-                    revert InvalidPriceId(params.priceIds[i], bytes32(0));
+                    revert SchedulerErrors.InvalidPriceId(
+                        params.priceIds[i],
+                        bytes32(0)
+                    );
                 }
                 allFeeds[i] = priceFeed;
             }
@@ -458,7 +466,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
             // Check if the price feed exists (price ID is valid and has been updated)
             if (priceFeed.id == bytes32(0)) {
-                revert InvalidPriceId(priceIds[i], bytes32(0));
+                revert SchedulerErrors.InvalidPriceId(priceIds[i], bytes32(0));
             }
             requestedFeeds[i] = priceFeed;
         }
@@ -555,7 +563,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
     function addFunds(uint256 subscriptionId) external payable override {
         if (!_state.subscriptionParams[subscriptionId].isActive) {
-            revert InactiveSubscription();
+            revert SchedulerErrors.InactiveSubscription();
         }
 
         _state.subscriptionStatuses[subscriptionId].balanceInWei += msg.value;
@@ -572,11 +580,11 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
         // Prevent withdrawals from permanent subscriptions
         if (params.isPermanent) {
-            revert CannotUpdatePermanentSubscription();
+            revert SchedulerErrors.CannotUpdatePermanentSubscription();
         }
 
         if (status.balanceInWei < amount) {
-            revert InsufficientBalance();
+            revert SchedulerErrors.InsufficientBalance();
         }
 
         // If subscription is active, ensure minimum balance is maintained
@@ -585,7 +593,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
                 uint8(params.priceIds.length)
             );
             if (status.balanceInWei - amount < minimumBalance) {
-                revert InsufficientBalance();
+                revert SchedulerErrors.InsufficientBalance();
             }
         }
 
@@ -676,7 +684,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
     modifier onlyManager(uint256 subscriptionId) {
         if (_state.subscriptionManager[subscriptionId] != msg.sender) {
-            revert Unauthorized();
+            revert SchedulerErrors.Unauthorized();
         }
         _;
     }
@@ -707,7 +715,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
         }
 
         if (!isWhitelisted) {
-            revert Unauthorized();
+            revert SchedulerErrors.Unauthorized();
         }
         _;
     }
@@ -784,7 +792,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
 
         // Check balance
         if (status.balanceInWei < totalKeeperFee) {
-            revert InsufficientBalance();
+            revert SchedulerErrors.InsufficientBalance();
         }
 
         status.balanceInWei -= totalKeeperFee;
@@ -793,7 +801,7 @@ abstract contract Scheduler is IScheduler, SchedulerState, SchedulerConstants {
         // Pay keeper and update status
         (bool sent, ) = msg.sender.call{value: totalKeeperFee}("");
         if (!sent) {
-            revert KeeperPaymentFailed();
+            revert SchedulerErrors.KeeperPaymentFailed();
         }
     }
 

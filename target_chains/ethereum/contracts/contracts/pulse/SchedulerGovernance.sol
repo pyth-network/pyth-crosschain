@@ -44,7 +44,8 @@ abstract contract SchedulerGovernance is SchedulerState {
      * @dev The proposed admin accepts the admin transfer.
      */
     function acceptAdmin() external {
-        if (msg.sender != _state.proposedAdmin) revert Unauthorized();
+        if (msg.sender != _state.proposedAdmin)
+            revert SchedulerErrors.Unauthorized();
 
         address oldAdmin = _state.admin;
         _state.admin = msg.sender;
