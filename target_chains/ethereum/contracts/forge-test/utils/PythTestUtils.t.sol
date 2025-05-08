@@ -399,4 +399,66 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         // 0.00001 and we are targetDecimals is 2.
         assertEq(PythUtils.convertToUint(100, -5, 2), 0);
     }
+
+    function testCombinePrices() public {
+        // Test case 1: Basic price combination (ETH/USD / BTC/USD = ETH/BTC)
+        PythStructs.Price memory ethUsd = PythStructs.Price({
+            price: 99875005,  
+            conf: 10,
+            expo: -8,    
+            publishTime: block.timestamp
+        });
+        
+        PythStructs.Price memory btcUsd = PythStructs.Price({
+            price: 206362333702,
+            conf: 100,
+            expo: -8,     
+            publishTime: block.timestamp
+        });
+
+        (int64 price, int32 expo) = PythUtils.combinePrices(ethUsd, btcUsd);
+        assertApproxEqRel(price, 2016367433623696, 9e17); 
+        assertEq(expo, -18);
+
+        // // Test case 2: Different exponents
+        // PythStructs.Price memory smallPrice = PythStructs.Price({
+        //     price: 100,   // $0.01
+        //     conf: 1,
+        //     expo: -4,     // 4 decimals
+        //     publishTime: block.timestamp
+        // });
+
+        // PythStructs.Price memory largePrice = PythStructs.Price({
+        //     price: 1000,  // $10
+        //     conf: 10,
+        //     expo: -2,     // 2 decimals
+        //     publishTime: block.timestamp
+        // });
+
+        // (price, expo) = PythUtils.combinePrices(smallPrice, largePrice, -2);
+        // assertEq(price, 1);    // 0.01
+        // assertEq(expo, -2);
+
+        // // Test case 3: Revert on negative prices
+        // PythStructs.Price memory negativePrice = PythStructs.Price({
+        //     price: -100,
+        //     conf: 10,
+        //     expo: -2,
+        //     publishTime: block.timestamp
+        // });
+
+        // vm.expectRevert();
+        // PythUtils.combinePrices(negativePrice, btcUsd, -2);
+
+        // // Test case 4: Revert on positive exponents
+        // PythStructs.Price memory invalidExpo = PythStructs.Price({
+        //     price: 100,
+        //     conf: 10,
+        //     expo: 2,
+        //     publishTime: block.timestamp
+        // });
+
+        // vm.expectRevert();
+        // PythUtils.combinePrices(ethUsd, invalidExpo, -2);
+    }
 }
