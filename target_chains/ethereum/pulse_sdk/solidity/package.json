@@ -14,7 +14,7 @@
   "scripts": {
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build": "generate-abis IScheduler SchedulerEvents SchedulerErrors SchedulerStructs",
+    "build": "generate-abis IScheduler SchedulerEvents SchedulerErrors SchedulerStructs AbstractPulse",
     "test": "git diff --exit-code abis"
   },
   "keywords": [

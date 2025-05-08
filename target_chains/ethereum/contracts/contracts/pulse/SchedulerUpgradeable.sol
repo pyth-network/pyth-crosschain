@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "./Scheduler.sol";
 import "./SchedulerGovernance.sol";
-import "./SchedulerErrors.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerErrors.sol";
 contract SchedulerUpgradeable is
     Initializable,
     Ownable2StepUpgradeable,
@@ -55,7 +55,7 @@ contract SchedulerUpgradeable is
     /// Authorize actions that both admin and owner can perform
     function _authorizeAdminAction() internal view override {
         if (msg.sender != owner() && msg.sender != _state.admin)
-            revert Unauthorized();
+            revert SchedulerErrors.Unauthorized();
     }
 
     function upgradeTo(address newImplementation) external override onlyProxy {

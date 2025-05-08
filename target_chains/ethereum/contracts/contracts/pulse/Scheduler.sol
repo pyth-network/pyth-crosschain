@@ -6,9 +6,10 @@ import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
-import "./IScheduler.sol";
+import "@pythnetwork/pulse-sdk-solidity/IScheduler.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerStructs.sol";
 import "./SchedulerState.sol";
-import "./SchedulerErrors.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerErrors.sol";
 
 abstract contract Scheduler is IScheduler, SchedulerState {
     function _initialize(
@@ -28,7 +29,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     }
 
     function createSubscription(
-        SubscriptionParams memory subscriptionParams
+        SchedulerStructs.SubscriptionParams memory subscriptionParams
     ) external payable override returns (uint256 subscriptionId) {
         _validateSubscriptionParams(subscriptionParams);
 
@@ -51,7 +52,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         _state.subscriptionParams[subscriptionId] = subscriptionParams;
 
         // Initialize subscription status
-        SubscriptionStatus storage status = _state.subscriptionStatuses[
+        SchedulerStructs.SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
         status.priceLastUpdatedAt = 0;
@@ -70,12 +71,12 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
     function updateSubscription(
         uint256 subscriptionId,
-        SubscriptionParams memory newParams
+        SchedulerStructs.SubscriptionParams memory newParams
     ) external payable override onlyManager(subscriptionId) {
-        SubscriptionStatus storage currentStatus = _state.subscriptionStatuses[
+        SchedulerStructs.SubscriptionStatus storage currentStatus = _state.subscriptionStatuses[
             subscriptionId
         ];
-        SubscriptionParams storage currentParams = _state.subscriptionParams[
+        SchedulerStructs.SubscriptionParams storage currentParams = _state.subscriptionParams[
             subscriptionId
         ];
 
@@ -148,7 +149,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      * @param params The subscription parameters to validate.
      */
     function _validateSubscriptionParams(
-        SubscriptionParams memory params
+        SchedulerStructs.SubscriptionParams memory params
     ) internal pure {
         // No zero‐feed subscriptions
         if (params.priceIds.length == 0) {
@@ -156,10 +157,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         // Price ID limits and uniqueness
-        if (params.priceIds.length > MAX_PRICE_IDS_PER_SUBSCRIPTION) {
+        if (params.priceIds.length > SchedulerStructs.MAX_PRICE_IDS_PER_SUBSCRIPTION) {
             revert TooManyPriceIds(
                 params.priceIds.length,
-                MAX_PRICE_IDS_PER_SUBSCRIPTION
+                SchedulerStructs.MAX_PRICE_IDS_PER_SUBSCRIPTION
             );
         }
         for (uint i = 0; i < params.priceIds.length; i++) {
@@ -171,10 +172,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         // Whitelist size limit and uniqueness
-        if (params.readerWhitelist.length > MAX_READER_WHITELIST_SIZE) {
+        if (params.readerWhitelist.length > SchedulerStructs.MAX_READER_WHITELIST_SIZE) {
             revert TooManyWhitelistedReaders(
                 params.readerWhitelist.length,
-                MAX_READER_WHITELIST_SIZE
+                SchedulerStructs.MAX_READER_WHITELIST_SIZE
             );
         }
         for (uint i = 0; i < params.readerWhitelist.length; i++) {
@@ -243,10 +244,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     ) external override {
         uint256 startGas = gasleft();
 
-        SubscriptionStatus storage status = _state.subscriptionStatuses[
+        SchedulerStructs.SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
-        SubscriptionParams storage params = _state.subscriptionParams[
+        SchedulerStructs.SubscriptionParams storage params = _state.subscriptionParams[
             subscriptionId
         ];
 
@@ -277,7 +278,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 updateData,
                 params.priceIds,
                 0, // We enforce the past max validity ourselves in _validateShouldUpdatePrices
-                curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
+                curTime + SchedulerStructs.FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
             );
         status.balanceInWei -= pythFee;
         status.totalSpent += pythFee;
@@ -321,8 +322,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      */
     function _validateShouldUpdatePrices(
         uint256 subscriptionId,
-        SubscriptionParams storage params,
-        SubscriptionStatus storage status,
+        SchedulerStructs.SubscriptionParams storage params,
+        SchedulerStructs.SubscriptionStatus storage status,
         PythStructs.PriceFeed[] memory priceFeeds
     ) internal view returns (uint256) {
         // Use the most recent timestamp, as some asset markets may be closed.
@@ -339,8 +340,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // Calculate the minimum acceptable timestamp (clamped at 0)
         // The maximum acceptable timestamp is enforced by the parsePriceFeedUpdatesWithSlots call
         uint256 minAllowedTimestamp = (block.timestamp >
-            PAST_TIMESTAMP_MAX_VALIDITY_PERIOD)
-            ? (block.timestamp - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD)
+            SchedulerStructs.PAST_TIMESTAMP_MAX_VALIDITY_PERIOD)
+            ? (block.timestamp - SchedulerStructs.PAST_TIMESTAMP_MAX_VALIDITY_PERIOD)
             : 0;
 
         // Validate that the update timestamp is not too old
@@ -432,7 +433,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InactiveSubscription();
         }
 
-        SubscriptionParams storage params = _state.subscriptionParams[
+        SchedulerStructs.SubscriptionParams storage params = _state.subscriptionParams[
             subscriptionId
         ];
 
@@ -530,10 +531,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         uint256 subscriptionId,
         uint256 amount
     ) external override onlyManager(subscriptionId) {
-        SubscriptionStatus storage status = _state.subscriptionStatuses[
+        SchedulerStructs.SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
-        SubscriptionParams storage params = _state.subscriptionParams[
+        SchedulerStructs.SubscriptionParams storage params = _state.subscriptionParams[
             subscriptionId
         ];
 
@@ -571,8 +572,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         view
         override
         returns (
-            SubscriptionParams memory params,
-            SubscriptionStatus memory status
+            SchedulerStructs.SubscriptionParams memory params,
+            SchedulerStructs.SubscriptionStatus memory status
         )
     {
         return (
@@ -591,7 +592,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         override
         returns (
             uint256[] memory subscriptionIds,
-            SubscriptionParams[] memory subscriptionParams,
+            SchedulerStructs.SubscriptionParams[] memory subscriptionParams,
             uint256 totalCount
         )
     {
@@ -599,7 +600,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // If startIndex is beyond the total count, return empty arrays
         if (startIndex >= totalCount) {
-            return (new uint256[](0), new SubscriptionParams[](0), totalCount);
+            return (new uint256[](0), new SchedulerStructs.SubscriptionParams[](0), totalCount);
         }
 
         // Calculate how many results to return (bounded by maxResults and remaining items)
@@ -610,7 +611,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // Create arrays for subscription IDs and parameters
         subscriptionIds = new uint256[](resultCount);
-        subscriptionParams = new SubscriptionParams[](resultCount);
+        subscriptionParams = new SchedulerStructs.SubscriptionParams[](resultCount);
 
         // Populate the arrays with the requested page of active subscriptions
         for (uint256 i = 0; i < resultCount; i++) {
@@ -743,12 +744,12 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      * @param numPriceIds Number of price IDs being updated.
      */
     function _processFeesAndPayKeeper(
-        SubscriptionStatus storage status,
+        SchedulerStructs.SubscriptionStatus storage status,
         uint256 startGas,
         uint256 numPriceIds
     ) internal {
         // Calculate fee components
-        uint256 gasCost = (startGas - gasleft() + GAS_OVERHEAD) * tx.gasprice;
+        uint256 gasCost = (startGas - gasleft() + SchedulerStructs.GAS_OVERHEAD) * tx.gasprice;
         uint256 keeperSpecificFee = uint256(_state.singleUpdateKeeperFeeInWei) *
             numPriceIds;
         uint256 totalKeeperFee = gasCost + keeperSpecificFee;

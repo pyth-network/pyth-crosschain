@@ -29,9 +29,32 @@ function generateAbi(contracts) {
   };
 
   function findImports(path) {
-    return {
-      contents: fs.readFileSync(path).toString(),
-    };
+    try {
+      if (path.startsWith('@pythnetwork/pyth-sdk-solidity/')) {
+        const sdkPath = path.replace('@pythnetwork/pyth-sdk-solidity/', '../../../sdk/solidity/');
+        return {
+          contents: fs.readFileSync(sdkPath).toString(),
+        };
+      } else if (path.startsWith('@pythnetwork/')) {
+        const nodeModulesPath = path.replace('@pythnetwork/', '../../../node_modules/@pythnetwork/');
+        try {
+          return {
+            contents: fs.readFileSync(nodeModulesPath).toString(),
+          };
+        } catch (innerError) {
+          const localPath = path.replace('@pythnetwork/', '../');
+          return {
+            contents: fs.readFileSync(localPath).toString(),
+          };
+        }
+      }
+      return {
+        contents: fs.readFileSync(path).toString(),
+      };
+    } catch (error) {
+      console.error(`Error importing ${path}: ${error.message}`);
+      return { error: `Error importing ${path}: ${error.message}` };
+    }
   }
 
   const output = JSON.parse(

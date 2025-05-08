@@ -3,29 +3,9 @@
 pragma solidity ^0.8.0;
 
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerStructs.sol";
 
 contract SchedulerState {
-    /// Maximum number of price feeds per subscription
-    uint8 public constant MAX_PRICE_IDS_PER_SUBSCRIPTION = 255;
-    /// Maximum number of addresses in the reader whitelist
-    uint8 public constant MAX_READER_WHITELIST_SIZE = 255;
-
-    /// Maximum time in the past (relative to current block timestamp)
-    /// for which a price update timestamp is considered valid
-    /// when validating the update conditions.
-    /// @dev Note: We don't use this when parsing update data from the Pyth contract
-    /// because don't want to reject update data if it contains a price from a market
-    /// that closed a few days ago, since it will contain a timestamp from the last
-    /// trading period. We enforce this value ourselves against the maximum
-    /// timestamp in the provided update data.
-    uint64 public constant PAST_TIMESTAMP_MAX_VALIDITY_PERIOD = 1 hours;
-
-    /// Maximum time in the future (relative to current block timestamp)
-    /// for which a price update timestamp is considered valid
-    uint64 public constant FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD = 10 seconds;
-    /// Fixed gas overhead component used in keeper fee calculation.
-    /// This is a rough estimate of the tx overhead for a keeper to call updatePriceFeeds.
-    uint256 public constant GAS_OVERHEAD = 30000;
 
     struct State {
         /// Monotonically increasing counter for subscription IDs
@@ -42,9 +22,9 @@ contract SchedulerState {
         /// Minimum balance required per price feed in a subscription
         uint128 minimumBalancePerFeed;
         /// Sub ID -> subscription parameters (which price feeds, when to update, etc)
-        mapping(uint256 => SubscriptionParams) subscriptionParams;
+        mapping(uint256 => SchedulerStructs.SubscriptionParams) subscriptionParams;
         /// Sub ID -> subscription status (metadata about their sub)
-        mapping(uint256 => SubscriptionStatus) subscriptionStatuses;
+        mapping(uint256 => SchedulerStructs.SubscriptionStatus) subscriptionStatuses;
         /// Sub ID -> price ID -> latest parsed price update for the subscribed feed
         mapping(uint256 => mapping(bytes32 => PythStructs.PriceFeed)) priceUpdates;
         /// Sub ID -> manager address
@@ -57,29 +37,6 @@ contract SchedulerState {
         mapping(uint256 => uint256) activeSubscriptionIndex;
     }
     State internal _state;
-
-    struct SubscriptionParams {
-        bytes32[] priceIds;
-        address[] readerWhitelist;
-        bool whitelistEnabled;
-        bool isActive;
-        bool isPermanent;
-        UpdateCriteria updateCriteria;
-    }
-
-    struct SubscriptionStatus {
-        uint256 priceLastUpdatedAt;
-        uint256 balanceInWei;
-        uint256 totalUpdates;
-        uint256 totalSpent;
-    }
-
-    struct UpdateCriteria {
-        bool updateOnHeartbeat;
-        uint32 heartbeatSeconds;
-        bool updateOnDeviation;
-        uint32 deviationThresholdBps;
-    }
 
     /**
      * @dev Returns the minimum balance required per feed in a subscription.
