@@ -19,3 +19,5 @@ export { default as lazerIdl } from "./multisig_transaction/idl/lazer.json";
 export * from "./programs/program_adapter";
 export * from "./programs/types";
 export * from "./programs/adapter_factory";
+export * from "./programs/core/core_adapter";
+export * from "./programs/lazer/lazer_adapter";
