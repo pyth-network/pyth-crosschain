@@ -56,15 +56,28 @@ struct SubscriptionParams {
 }
 ```
 
+### SubscriptionStatus
+
+This struct tracks the current status of a Pulse subscription:
+
+```solidity
+struct SubscriptionStatus {
+  uint256 priceLastUpdatedAt; // Timestamp of the last update. All feeds in the subscription are updated together.
+  uint256 balanceInWei; // Balance that will be used to fund the subscription's upkeep.
+  uint256 totalUpdates; // Tracks update count across all feeds in the subscription (increments by number of feeds per update)
+  uint256 totalSpent; // Counter of total fees paid for subscription upkeep in wei.
+}
+```
+
 ### UpdateCriteria
 
 This struct defines when price feeds should be updated:
 
 ```solidity
 struct UpdateCriteria {
-  bool updateOnHeartbeat; // Update based on time elapsed
+  bool updateOnHeartbeat; // Should update based on time elapsed
   uint32 heartbeatSeconds; // Time interval for heartbeat updates
-  bool updateOnDeviation; // Update based on price deviation
+  bool updateOnDeviation; // Should update on price deviation
   uint32 deviationThresholdBps; // Price deviation threshold in basis points
 }
 ```
@@ -93,13 +106,19 @@ uint256 minBalance = pulse.getMinimumBalance(uint8(params.priceIds.length));
 uint256 subscriptionId = pulse.createSubscription{value: minBalance}(params);
 ```
 
+## Updating a Subscription
+
+You can update an existing subscription's parameters using the `updateSubscription` method. Only the subscription manager (the address that created it) can update a subscription, and permanent subscriptions cannot be updated afterwards.
+
 ## Reading Price Feeds
 
 ```solidity
 bytes32[] memory priceIds = new bytes32[](1);
 priceIds[0] = bytes32(...);  // Pyth price feed ID
 
-PythStructs.Price[] memory prices = pulse.getPricesUnsafe(subscriptionId, priceIds);
+// Specify maximum age in seconds (e.g., 300 seconds = 5 minutes)
+uint256 maxAge = 300;
+PythStructs.Price[] memory prices = pulse.getPricesNoOlderThan(subscriptionId, priceIds, maxAge);
 
 // Access price data
 int64 price = prices[0].price;
