@@ -40,7 +40,7 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
   }))
 
   return (
-    <Menu as="div" className="relative z-[3] block w-[180px] text-left">
+    <Menu as="div" className="relative z-[5] block w-[180px] text-left">
       {({ open }) => (
         <>
           <Menu.Button
