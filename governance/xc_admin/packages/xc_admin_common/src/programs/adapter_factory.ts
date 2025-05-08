@@ -1,5 +1,6 @@
 import { ProgramAdapter } from "./program_adapter";
 import { ProgramType } from "./types";
+import { PythCoreAdapter } from "./core/core_adapter";
 
 /**
  * Factory function to get the appropriate program adapter based on program type.
@@ -11,8 +12,7 @@ import { ProgramType } from "./types";
 export function getProgramAdapter(type: ProgramType): ProgramAdapter {
   switch (type) {
     case ProgramType.PYTH_CORE:
-      // Will be implemented in a future commit
-      throw new Error("Pyth Core adapter not yet implemented");
+      return new PythCoreAdapter();
     case ProgramType.PYTH_LAZER:
       // Will be implemented in a future commit
       throw new Error("Pyth Lazer adapter not yet implemented");
