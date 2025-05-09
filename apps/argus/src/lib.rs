@@ -4,3 +4,4 @@ pub mod api;
 pub mod command;
 pub mod config;
 pub mod keeper;
+pub mod shared;
