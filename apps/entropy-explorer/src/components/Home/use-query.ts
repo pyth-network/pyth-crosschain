@@ -32,17 +32,23 @@ export const useQuery = () => {
   );
 
   const setChain = useCallback(
-    (newChain: keyof typeof EntropyDeployments | undefined) => {
+    (newChain: keyof typeof EntropyDeployments | "all") => {
       // eslint-disable-next-line unicorn/no-null
-      updateQuery({ chain: newChain ?? null });
+      updateQuery({ chain: newChain === "all" ? null : newChain });
     },
     [updateQuery],
   );
+
+  const clearChain = useCallback(() => {
+    // eslint-disable-next-line unicorn/no-null
+    updateQuery({ chain: null });
+  }, [updateQuery]);
 
   return {
     search,
     chain,
     setSearch,
     setChain,
+    clearChain,
   };
 };
