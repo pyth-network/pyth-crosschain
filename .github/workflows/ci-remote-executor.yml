@@ -27,7 +27,7 @@ jobs:
           workspaces: "governance/remote_executor -> target"
       - name: Install Solana
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.23/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.23/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Format check
         run: cargo fmt --all -- --check
