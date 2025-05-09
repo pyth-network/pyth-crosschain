@@ -49,7 +49,7 @@ export default {
       type: "number",
       default: 50000,
     } as Options,
-    "jito-endpoint": {
+    "jito-endpoints": {
       description: "Jito endpoint(s) - comma-separated list of endpoints",
       type: "string",
       optional: true,
@@ -117,7 +117,7 @@ export default {
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
-      jitoEndpoint,
+      jitoEndpoints,
       jitoKeypairFile,
       jitoTipLamports,
       dynamicJitoTips,
@@ -209,10 +209,10 @@ export default {
         Uint8Array.from(JSON.parse(fs.readFileSync(jitoKeypairFile, "ascii"))),
       );
 
-      const jitoEndpoints = jitoEndpoint
+      const jitoEndpointsList = jitoEndpoints
         .split(",")
         .map((endpoint: string) => endpoint.trim());
-      const jitoClients: SearcherClient[] = jitoEndpoints.map(
+      const jitoClients: SearcherClient[] = jitoEndpointsList.map(
         (endpoint: string) => searcherClient(endpoint, jitoKeypair),
       );
 
