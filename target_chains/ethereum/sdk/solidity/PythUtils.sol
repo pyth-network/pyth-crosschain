@@ -41,42 +41,29 @@ library PythUtils {
     /// @return expo The exponent of the combined price
     /// @dev This function will revert if either price is negative or if the exponents are invalid
     function combinePrices(
-        PythStructs.Price memory price1,
-        PythStructs.Price memory price2
+        int64 price1,
+        int32 expo1,
+        int64 price2,
+        int32 expo2
     ) public pure returns (int64 combinedPrice, int32 expo) {
-        if (price1.price < 0 || price2.price < 0 || price1.expo > 0 || price2.expo > 0 || price1.expo < -255 || price2.expo < -255) {
+        if (price1 < 0 || price2 < 0 || expo1 > 0 || expo2 > 0 || expo1 < -255 || expo2 < -255) {
             revert();
         }
 
-        uint8 p1Decimals = uint8(uint32(-1 * price1.expo));
-        uint8 p2Decimals = uint8(uint32(-1 * price2.expo));
+        // Convert both prices to the same decimal places (using the larger of the two)
+        uint8 maxDecimals = uint8(uint32(-1 * (expo1 < expo2 ? expo1 : expo2)));
+        uint256 p1 = convertToUint(price1, expo1, maxDecimals);
+        uint256 p2 = convertToUint(price2, expo2, maxDecimals);
 
-        uint256 p1;
-        uint256 p2;
+        // Calculate the combined price with precision
+        uint256 combined = (p1 * 10**18) / p2;
+        combined = combined / 10 ** (18 - maxDecimals);
 
-        if (p1Decimals >= p2Decimals) {
-            p2 = convertToUint(price2.price, price2.expo, p1Decimals);
-            p1 = uint256(uint64(price1.price));
-        } else {
-            p1 = convertToUint(price1.price, price1.expo, p2Decimals);
-            p2 = uint256(uint64(price2.price));
-        }
-
-
-        console.log("p1", p1);
-        console.log("p2", p2);
-
-        // Calculate the combined price
-        uint256 combined = (p1 * 10**18) / p2;  // Multiply by 10^18 to maintain precision
-        console.log("combined", combined);
-        // Calculate the new exponent
-        combined = combined / 10 ** (18 - p1Decimals);
-        console.log("newExpo", p1Decimals);
         // Check if the combined price fits in int64
         if (combined > uint256(uint64(type(int64).max))) {
             revert();
         }
 
-        return (int64(uint64(combined)), price1.expo);
+        return (int64(uint64(combined)), expo1 < expo2 ? expo1 : expo2);
     }
 }
