@@ -24,6 +24,11 @@ import {
   isPriceStorePublisherInitialized,
   createDetermisticPriceStoreInitializePublisherInstruction,
 } from "../../index";
+import { AccountInfo } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
+import { PythOracle } from "@pythnetwork/client/lib/anchor";
+import { MessageBuffer } from "message_buffer/idl/message_buffer";
 
 /**
  * Maximum sizes for instruction data to fit into transactions
@@ -95,6 +100,33 @@ export type RawConfig = {
 export type SymbolsSet = Set<string>;
 
 /**
+ * Type for downloadable price account configuration
+ */
+export type DownloadablePriceAccount = {
+  address: string;
+  publishers: string[];
+  expo: number;
+  minPub: number;
+  maxLatency: number;
+};
+
+/**
+ * Type for downloadable product configuration
+ */
+export type DownloadableProduct = {
+  address: string;
+  metadata: Omit<Product, "price_account">;
+  priceAccounts: DownloadablePriceAccount[];
+};
+
+/**
+ * Type for downloadable configuration
+ */
+export type DownloadableConfig = {
+  [symbol: string]: DownloadableProduct;
+};
+
+/**
  * Adapter for the original Pyth Core oracle program
  */
 export class PythCoreAdapter implements ProgramAdapter {
@@ -120,7 +152,9 @@ export class PythCoreAdapter implements ProgramAdapter {
   /**
    * Parse raw on-chain accounts into the Pyth Core configuration format
    */
-  getConfigFromRawAccounts(accounts: any[], cluster: PythCluster): RawConfig {
+  getConfigFromRawAccounts(
+    accounts: Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>,
+  ): RawConfig {
     const priceRawConfigs: { [key: string]: PriceRawConfig } = {};
     const rawConfig: RawConfig = { mappingAccounts: [] };
 
@@ -223,9 +257,9 @@ export class PythCoreAdapter implements ProgramAdapter {
   /**
    * Format configuration for download as JSON
    */
-  getDownloadableConfig(rawConfig: RawConfig): any {
+  getDownloadableConfig(rawConfig: RawConfig): DownloadableConfig {
     // Convert the raw config to a user-friendly format for download
-    const symbolToData: any = {};
+    const symbolToData: DownloadableConfig = {};
 
     if (rawConfig.mappingAccounts.length > 0) {
       rawConfig.mappingAccounts
@@ -263,47 +297,33 @@ export class PythCoreAdapter implements ProgramAdapter {
   /**
    * Sort configuration data for consistent output
    */
-  private sortData(data: any) {
-    const sortedData: any = {};
+  private sortData(data: DownloadableConfig): DownloadableConfig {
+    const sortedData: DownloadableConfig = {};
     const keys = Object.keys(data).sort();
     for (const key of keys) {
-      const sortedInnerData: any = {};
-      const innerKeys = Object.keys(data[key]).sort();
-      for (const innerKey of innerKeys) {
-        if (innerKey === "metadata") {
-          sortedInnerData[innerKey] = this.sortObjectByKeys(
-            data[key][innerKey],
-          );
-        } else if (innerKey === "priceAccounts") {
-          // Sort price accounts by address
-          sortedInnerData[innerKey] = data[key][innerKey].sort(
-            (priceAccount1: any, priceAccount2: any) =>
-              priceAccount1.address.localeCompare(priceAccount2.address),
-          );
-          // Sort price accounts keys
-          sortedInnerData[innerKey] = sortedInnerData[innerKey].map(
-            (priceAccount: any) => {
-              const sortedPriceAccount: any = {};
-              const priceAccountKeys = Object.keys(priceAccount).sort();
-              for (const priceAccountKey of priceAccountKeys) {
-                if (priceAccountKey === "publishers") {
-                  sortedPriceAccount[priceAccountKey] = priceAccount[
-                    priceAccountKey
-                  ].sort((pub1: string, pub2: string) =>
-                    pub1.localeCompare(pub2),
-                  );
-                } else {
-                  sortedPriceAccount[priceAccountKey] =
-                    priceAccount[priceAccountKey];
-                }
-              }
-              return sortedPriceAccount;
-            },
-          );
-        } else {
-          sortedInnerData[innerKey] = data[key][innerKey];
-        }
-      }
+      const productData = data[key];
+      const sortedInnerData: DownloadableProduct = {
+        address: productData.address,
+        metadata: this.sortObjectByKeys(productData.metadata),
+        priceAccounts: [],
+      };
+
+      // Sort price accounts by address
+      sortedInnerData.priceAccounts = [...productData.priceAccounts]
+        .sort((a, b) => a.address.localeCompare(b.address))
+        .map((priceAccount) => {
+          const sortedPriceAccount: DownloadablePriceAccount = {
+            address: priceAccount.address,
+            expo: priceAccount.expo,
+            minPub: priceAccount.minPub,
+            maxLatency: priceAccount.maxLatency,
+            publishers: [...priceAccount.publishers].sort((a, b) =>
+              a.localeCompare(b),
+            ),
+          };
+          return sortedPriceAccount;
+        });
+
       sortedData[key] = sortedInnerData;
     }
     return sortedData;
@@ -312,11 +332,11 @@ export class PythCoreAdapter implements ProgramAdapter {
   /**
    * Sort object by keys
    */
-  private sortObjectByKeys(obj: any) {
-    const sortedObj: any = {};
+  private sortObjectByKeys<T extends Record<string, any>>(obj: T): T {
+    const sortedObj = {} as T;
     const keys = Object.keys(obj).sort();
     for (const key of keys) {
-      sortedObj[key] = obj[key];
+      sortedObj[key as keyof T] = obj[key];
     }
     return sortedObj;
   }
@@ -325,73 +345,113 @@ export class PythCoreAdapter implements ProgramAdapter {
    * Validate an uploaded configuration against the current configuration
    */
   validateUploadedConfig(
-    existingConfig: any,
-    uploadedConfig: any,
+    existingConfig: DownloadableConfig,
+    uploadedConfig: unknown,
     cluster: PythCluster,
   ): {
     isValid: boolean;
     error?: string;
-    changes?: any;
+    changes?: Record<
+      string,
+      {
+        prev?: Partial<DownloadableProduct>;
+        new?: Partial<DownloadableProduct>;
+      }
+    >;
   } {
     try {
       // Validate that the uploaded data is valid JSON
-      if (typeof uploadedConfig !== "object") {
+      if (typeof uploadedConfig !== "object" || uploadedConfig === null) {
         return { isValid: false, error: "Invalid JSON format" };
       }
 
+      const uploadedConfigTyped = uploadedConfig as DownloadableConfig;
       const existingSymbols = new Set(Object.keys(existingConfig));
-      const changes: Record<string, any> = {};
+      const changes: Record<
+        string,
+        {
+          prev?: Partial<DownloadableProduct>;
+          new?: Partial<DownloadableProduct>;
+        }
+      > = {};
 
       // Check for changes to existing symbols
-      for (const symbol of Object.keys(uploadedConfig)) {
+      for (const symbol of Object.keys(uploadedConfigTyped)) {
         // Remove duplicate publishers
         if (
-          uploadedConfig[symbol]?.priceAccounts?.[0]?.publishers &&
-          Array.isArray(uploadedConfig[symbol].priceAccounts[0].publishers)
+          uploadedConfigTyped[symbol]?.priceAccounts?.[0]?.publishers &&
+          Array.isArray(uploadedConfigTyped[symbol].priceAccounts[0].publishers)
         ) {
-          uploadedConfig[symbol].priceAccounts[0].publishers = [
-            ...new Set(uploadedConfig[symbol].priceAccounts[0].publishers),
+          uploadedConfigTyped[symbol].priceAccounts[0].publishers = [
+            ...new Set(uploadedConfigTyped[symbol].priceAccounts[0].publishers),
           ];
         }
 
         if (!existingSymbols.has(symbol)) {
           // If symbol is not in existing symbols, create new entry
-          changes[symbol] = { new: {} };
-          changes[symbol].new = { ...uploadedConfig[symbol] };
-          changes[symbol].new.metadata = {
-            symbol,
-            ...changes[symbol].new.metadata,
-          };
+          const newProduct = { ...uploadedConfigTyped[symbol] };
+
+          // Add required metadata with symbol
+          if (newProduct.metadata) {
+            newProduct.metadata = {
+              symbol,
+              ...newProduct.metadata,
+            };
+          }
+
           // These fields are generated deterministically and should not be updated
-          delete changes[symbol].new.address;
-          if (changes[symbol].new.priceAccounts?.[0]) {
-            delete changes[symbol].new.priceAccounts[0].address;
+          if (newProduct.address) {
+            const { address, ...restProduct } = newProduct;
+            changes[symbol] = { new: restProduct };
+          } else {
+            changes[symbol] = { new: newProduct };
+          }
+
+          // Remove address from price accounts if present
+          if (changes[symbol].new?.priceAccounts?.[0]?.address) {
+            const newChanges = changes[symbol].new;
+
+            if (
+              newChanges &&
+              newChanges.priceAccounts &&
+              newChanges.priceAccounts[0]
+            ) {
+              const priceAccount = newChanges.priceAccounts[0];
+              const { address, ...restPriceAccount } = priceAccount;
+
+              newChanges.priceAccounts[0] = {
+                ...restPriceAccount,
+                address: "", // Placeholder to satisfy type requirements, will be overwritten when created
+              };
+            }
           }
         } else if (
           // If symbol is in existing symbols, check if data is different
           JSON.stringify(existingConfig[symbol]) !==
-          JSON.stringify(uploadedConfig[symbol])
+          JSON.stringify(uploadedConfigTyped[symbol])
         ) {
-          changes[symbol] = { prev: {}, new: {} };
-          changes[symbol].prev = { ...existingConfig[symbol] };
-          changes[symbol].new = { ...uploadedConfig[symbol] };
+          changes[symbol] = {
+            prev: { ...existingConfig[symbol] },
+            new: { ...uploadedConfigTyped[symbol] },
+          };
         }
       }
 
       // Check for symbols to remove (in existing but not in uploaded)
       for (const symbol of Object.keys(existingConfig)) {
-        if (!uploadedConfig[symbol]) {
-          changes[symbol] = { prev: {} };
-          changes[symbol].prev = { ...existingConfig[symbol] };
+        if (!uploadedConfigTyped[symbol]) {
+          changes[symbol] = {
+            prev: { ...existingConfig[symbol] },
+          };
         }
       }
 
       // Validate that address field is not changed for existing symbols
-      for (const symbol of Object.keys(uploadedConfig)) {
+      for (const symbol of Object.keys(uploadedConfigTyped)) {
         if (
           existingSymbols.has(symbol) &&
-          uploadedConfig[symbol].address &&
-          uploadedConfig[symbol].address !== existingConfig[symbol].address
+          uploadedConfigTyped[symbol].address &&
+          uploadedConfigTyped[symbol].address !== existingConfig[symbol].address
         ) {
           return {
             isValid: false,
@@ -401,13 +461,13 @@ export class PythCoreAdapter implements ProgramAdapter {
       }
 
       // Validate that priceAccounts address field is not changed
-      for (const symbol of Object.keys(uploadedConfig)) {
+      for (const symbol of Object.keys(uploadedConfigTyped)) {
         if (
           existingSymbols.has(symbol) &&
-          uploadedConfig[symbol].priceAccounts?.[0] &&
+          uploadedConfigTyped[symbol].priceAccounts?.[0] &&
           existingConfig[symbol].priceAccounts?.[0] &&
-          uploadedConfig[symbol].priceAccounts[0].address &&
-          uploadedConfig[symbol].priceAccounts[0].address !==
+          uploadedConfigTyped[symbol].priceAccounts[0].address &&
+          uploadedConfigTyped[symbol].priceAccounts[0].address !==
             existingConfig[symbol].priceAccounts[0].address
         ) {
           return {
@@ -418,11 +478,11 @@ export class PythCoreAdapter implements ProgramAdapter {
       }
 
       // Check that no price account has more than the maximum number of publishers
-      for (const symbol of Object.keys(uploadedConfig)) {
+      for (const symbol of Object.keys(uploadedConfigTyped)) {
         const maximumNumberOfPublishers = getMaximumNumberOfPublishers(cluster);
         if (
-          uploadedConfig[symbol].priceAccounts?.[0]?.publishers &&
-          uploadedConfig[symbol].priceAccounts[0].publishers.length >
+          uploadedConfigTyped[symbol].priceAccounts?.[0]?.publishers &&
+          uploadedConfigTyped[symbol].priceAccounts[0].publishers.length >
             maximumNumberOfPublishers
         ) {
           return {
@@ -436,10 +496,13 @@ export class PythCoreAdapter implements ProgramAdapter {
         isValid: true,
         changes,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         isValid: false,
-        error: error.message || "Failed to validate configuration",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to validate configuration",
       };
     }
   }
@@ -448,13 +511,19 @@ export class PythCoreAdapter implements ProgramAdapter {
    * Generate instructions to apply configuration changes
    */
   async generateInstructions(
-    changes: any,
+    changes: Record<
+      string,
+      {
+        prev?: Partial<DownloadableProduct>;
+        new?: Partial<DownloadableProduct>;
+      }
+    >,
     cluster: PythCluster,
     accounts: {
       fundingAccount: PublicKey;
-      pythProgramClient: any;
-      messageBufferClient?: any;
-      connection?: any;
+      pythProgramClient: Program<PythOracle>;
+      messageBufferClient?: Program<MessageBuffer>;
+      connection?: Connection;
       rawConfig: RawConfig;
     },
   ): Promise<TransactionInstruction[]> {
@@ -498,7 +567,7 @@ export class PythCoreAdapter implements ProgramAdapter {
       const { prev, new: newChanges } = changes[symbol];
 
       // if prev is undefined, it means that the symbol is new
-      if (!prev) {
+      if (!prev && newChanges) {
         // deterministically generate product account key
         const productAccountKey: PublicKey = (
           await findDetermisticAccountAddress(
@@ -508,23 +577,26 @@ export class PythCoreAdapter implements ProgramAdapter {
           )
         )[0];
 
-        // create add product account instruction
-        const instruction = await pythProgramClient.methods
-          .addProduct({ ...newChanges.metadata })
-          .accounts({
-            fundingAccount,
-            tailMappingAccount: rawConfig.mappingAccounts[0].address,
-            productAccount: productAccountKey,
-          })
-          .instruction();
+        // Ensure metadata exists before attempting to use it
+        if (newChanges.metadata) {
+          // create add product account instruction
+          const instruction = await pythProgramClient.methods
+            .addProduct({ ...newChanges.metadata })
+            .accounts({
+              fundingAccount,
+              tailMappingAccount: rawConfig.mappingAccounts[0].address,
+              productAccount: productAccountKey,
+            })
+            .instruction();
 
-        checkSizeOfProductInstruction(
-          instruction,
-          MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA,
-          symbol,
-        );
+          checkSizeOfProductInstruction(
+            instruction,
+            MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA,
+            symbol,
+          );
 
-        instructions.push(instruction);
+          instructions.push(instruction);
+        }
 
         // deterministically generate price account key
         const priceAccountKey: PublicKey = (
@@ -535,17 +607,20 @@ export class PythCoreAdapter implements ProgramAdapter {
           )
         )[0];
 
-        // create add price account instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .addPrice(newChanges.priceAccounts[0].expo, 1)
-            .accounts({
-              fundingAccount,
-              productAccount: productAccountKey,
-              priceAccount: priceAccountKey,
-            })
-            .instruction(),
-        );
+        // Ensure priceAccounts exists and has at least one element
+        if (newChanges.priceAccounts && newChanges.priceAccounts.length > 0) {
+          // create add price account instruction
+          instructions.push(
+            await pythProgramClient.methods
+              .addPrice(newChanges.priceAccounts[0].expo, 1)
+              .accounts({
+                fundingAccount,
+                productAccount: productAccountKey,
+                priceAccount: priceAccountKey,
+              })
+              .instruction(),
+          );
+        }
 
         if (isMessageBufferAvailable(cluster) && messageBufferClient) {
           // create create buffer instruction for the price account
@@ -575,22 +650,32 @@ export class PythCoreAdapter implements ProgramAdapter {
         }
 
         // create add publisher instruction if there are any publishers
-        for (const publisherKey of newChanges.priceAccounts[0].publishers) {
-          const publisherPubKey = new PublicKey(publisherKey);
-          instructions.push(
-            await pythProgramClient.methods
-              .addPublisher(publisherPubKey)
-              .accounts({
-                fundingAccount,
-                priceAccount: priceAccountKey,
-              })
-              .instruction(),
-          );
-          await initPublisherInPriceStore(publisherPubKey);
+        if (
+          newChanges.priceAccounts &&
+          newChanges.priceAccounts[0] &&
+          newChanges.priceAccounts[0].publishers
+        ) {
+          for (const publisherKey of newChanges.priceAccounts[0].publishers) {
+            const publisherPubKey = new PublicKey(publisherKey);
+            instructions.push(
+              await pythProgramClient.methods
+                .addPublisher(publisherPubKey)
+                .accounts({
+                  fundingAccount,
+                  priceAccount: priceAccountKey,
+                })
+                .instruction(),
+            );
+            await initPublisherInPriceStore(publisherPubKey);
+          }
         }
 
-        // create set min publisher instruction if there are any publishers
-        if (newChanges.priceAccounts[0].minPub !== undefined) {
+        // create set min publisher instruction if minPub is defined
+        if (
+          newChanges.priceAccounts &&
+          newChanges.priceAccounts[0] &&
+          newChanges.priceAccounts[0].minPub !== undefined
+        ) {
           instructions.push(
             await pythProgramClient.methods
               .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
@@ -604,6 +689,8 @@ export class PythCoreAdapter implements ProgramAdapter {
 
         // If maxLatency is set and is not 0, create update maxLatency instruction
         if (
+          newChanges.priceAccounts &&
+          newChanges.priceAccounts[0] &&
           newChanges.priceAccounts[0].maxLatency !== undefined &&
           newChanges.priceAccounts[0].maxLatency !== 0
         ) {
@@ -617,63 +704,72 @@ export class PythCoreAdapter implements ProgramAdapter {
               .instruction(),
           );
         }
-      } else if (!newChanges) {
-        const priceAccount = new PublicKey(prev.priceAccounts[0].address);
+      } else if (prev && !newChanges) {
+        // Ensure priceAccounts exists and has at least one element with an address
+        if (
+          prev.priceAccounts &&
+          prev.priceAccounts.length > 0 &&
+          prev.priceAccounts[0].address
+        ) {
+          const priceAccount = new PublicKey(prev.priceAccounts[0].address);
 
-        // if new is undefined, it means that the symbol is deleted
-        // create delete price account instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .delPrice()
-            .accounts({
-              fundingAccount,
-              productAccount: new PublicKey(prev.address),
-              priceAccount,
-            })
-            .instruction(),
-        );
-
-        // create delete product account instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .delProduct()
-            .accounts({
-              fundingAccount,
-              mappingAccount: rawConfig.mappingAccounts[0].address,
-              productAccount: new PublicKey(prev.address),
-            })
-            .instruction(),
-        );
-
-        if (isMessageBufferAvailable(cluster) && messageBufferClient) {
-          // create delete buffer instruction for the price buffer
+          // if new is undefined, it means that the symbol is deleted
+          // create delete price account instruction
           instructions.push(
-            await messageBufferClient.methods
-              .deleteBuffer(
-                getPythOracleMessageBufferCpiAuth(cluster),
-                priceAccount,
-              )
+            await pythProgramClient.methods
+              .delPrice()
               .accounts({
-                admin: fundingAccount,
-                payer: PRICE_FEED_OPS_KEY,
-                messageBuffer: getMessageBufferAddressForPrice(
-                  cluster,
-                  priceAccount,
-                ),
+                fundingAccount,
+                productAccount: new PublicKey(prev.address || ""),
+                priceAccount,
               })
               .instruction(),
           );
+
+          // create delete product account instruction
+          instructions.push(
+            await pythProgramClient.methods
+              .delProduct()
+              .accounts({
+                fundingAccount,
+                mappingAccount: rawConfig.mappingAccounts[0].address,
+                productAccount: new PublicKey(prev.address || ""),
+              })
+              .instruction(),
+          );
+
+          if (isMessageBufferAvailable(cluster) && messageBufferClient) {
+            // create delete buffer instruction for the price buffer
+            instructions.push(
+              await messageBufferClient.methods
+                .deleteBuffer(
+                  getPythOracleMessageBufferCpiAuth(cluster),
+                  priceAccount,
+                )
+                .accounts({
+                  admin: fundingAccount,
+                  payer: PRICE_FEED_OPS_KEY,
+                  messageBuffer: getMessageBufferAddressForPrice(
+                    cluster,
+                    priceAccount,
+                  ),
+                })
+                .instruction(),
+            );
+          }
         }
-      } else {
+      } else if (prev && newChanges) {
         // check if metadata has changed
         if (
+          prev.metadata &&
+          newChanges.metadata &&
           JSON.stringify(prev.metadata) !== JSON.stringify(newChanges.metadata)
         ) {
           const instruction = await pythProgramClient.methods
             .updProduct({ symbol, ...newChanges.metadata }) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
             .accounts({
               fundingAccount,
-              productAccount: new PublicKey(prev.address),
+              productAccount: new PublicKey(prev.address || ""),
             })
             .instruction();
 
@@ -687,8 +783,11 @@ export class PythCoreAdapter implements ProgramAdapter {
         }
 
         if (
-          JSON.stringify(prev.priceAccounts[0].expo) !==
-          JSON.stringify(newChanges.priceAccounts[0].expo)
+          prev.priceAccounts &&
+          prev.priceAccounts[0] &&
+          newChanges.priceAccounts &&
+          newChanges.priceAccounts[0] &&
+          prev.priceAccounts[0].expo !== newChanges.priceAccounts[0].expo
         ) {
           // create update exponent instruction
           instructions.push(
@@ -696,7 +795,9 @@ export class PythCoreAdapter implements ProgramAdapter {
               .setExponent(newChanges.priceAccounts[0].expo, 1)
               .accounts({
                 fundingAccount,
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                priceAccount: new PublicKey(
+                  prev.priceAccounts[0].address || "",
+                ),
               })
               .instruction(),
           );
@@ -704,64 +805,88 @@ export class PythCoreAdapter implements ProgramAdapter {
 
         // check if maxLatency has changed
         if (
+          prev.priceAccounts &&
+          prev.priceAccounts[0] &&
+          newChanges.priceAccounts &&
+          newChanges.priceAccounts[0] &&
           prev.priceAccounts[0].maxLatency !==
-          newChanges.priceAccounts[0].maxLatency
+            newChanges.priceAccounts[0].maxLatency
         ) {
           // create update product account instruction
           instructions.push(
             await pythProgramClient.methods
               .setMaxLatency(newChanges.priceAccounts[0].maxLatency, [0, 0, 0])
               .accounts({
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                priceAccount: new PublicKey(
+                  prev.priceAccounts[0].address || "",
+                ),
                 fundingAccount,
               })
               .instruction(),
           );
         }
 
-        // check if publishers have changed
-        const publisherKeysToAdd =
-          newChanges.priceAccounts[0].publishers.filter(
-            (newPublisher: string) =>
-              !prev.priceAccounts[0].publishers.includes(newPublisher),
+        // Check if both have valid price accounts with publishers
+        if (
+          prev.priceAccounts &&
+          prev.priceAccounts[0] &&
+          prev.priceAccounts[0].publishers &&
+          newChanges.priceAccounts &&
+          newChanges.priceAccounts[0] &&
+          newChanges.priceAccounts[0].publishers
+        ) {
+          // check if publishers have changed
+          const publisherKeysToAdd =
+            newChanges.priceAccounts[0].publishers.filter(
+              (newPublisher: string) =>
+                !prev.priceAccounts![0].publishers!.includes(newPublisher),
+            );
+
+          // check if there are any publishers to remove by comparing prev and new
+          const publisherKeysToRemove = prev.priceAccounts[0].publishers.filter(
+            (prevPublisher: string) =>
+              !newChanges.priceAccounts![0].publishers!.includes(prevPublisher),
           );
 
-        // check if there are any publishers to remove by comparing prev and new
-        const publisherKeysToRemove = prev.priceAccounts[0].publishers.filter(
-          (prevPublisher: string) =>
-            !newChanges.priceAccounts[0].publishers.includes(prevPublisher),
-        );
+          // add instructions to remove publishers
+          for (const publisherKey of publisherKeysToRemove) {
+            instructions.push(
+              await pythProgramClient.methods
+                .delPublisher(new PublicKey(publisherKey))
+                .accounts({
+                  fundingAccount,
+                  priceAccount: new PublicKey(
+                    prev.priceAccounts[0].address || "",
+                  ),
+                })
+                .instruction(),
+            );
+          }
 
-        // add instructions to remove publishers
-        for (const publisherKey of publisherKeysToRemove) {
-          instructions.push(
-            await pythProgramClient.methods
-              .delPublisher(new PublicKey(publisherKey))
-              .accounts({
-                fundingAccount,
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
-              })
-              .instruction(),
-          );
-        }
-
-        // add instructions to add new publishers
-        for (const publisherKey of publisherKeysToAdd) {
-          const publisherPubKey = new PublicKey(publisherKey);
-          instructions.push(
-            await pythProgramClient.methods
-              .addPublisher(publisherPubKey)
-              .accounts({
-                fundingAccount,
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
-              })
-              .instruction(),
-          );
-          await initPublisherInPriceStore(publisherPubKey);
+          // add instructions to add new publishers
+          for (const publisherKey of publisherKeysToAdd) {
+            const publisherPubKey = new PublicKey(publisherKey);
+            instructions.push(
+              await pythProgramClient.methods
+                .addPublisher(publisherPubKey)
+                .accounts({
+                  fundingAccount,
+                  priceAccount: new PublicKey(
+                    prev.priceAccounts[0].address || "",
+                  ),
+                })
+                .instruction(),
+            );
+            await initPublisherInPriceStore(publisherPubKey);
+          }
         }
 
         // check if minPub has changed
         if (
+          prev.priceAccounts &&
+          prev.priceAccounts[0] &&
+          newChanges.priceAccounts &&
+          newChanges.priceAccounts[0] &&
           prev.priceAccounts[0].minPub !== newChanges.priceAccounts[0].minPub
         ) {
           // create update product account instruction
@@ -769,7 +894,9 @@ export class PythCoreAdapter implements ProgramAdapter {
             await pythProgramClient.methods
               .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
               .accounts({
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                priceAccount: new PublicKey(
+                  prev.priceAccounts[0].address || "",
+                ),
                 fundingAccount,
               })
               .instruction(),
