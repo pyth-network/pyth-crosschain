@@ -857,7 +857,7 @@
 - id: berachain_mainnet
   mainnet: true
   networkId: 80094
-  rpcUrl: https://fluent-thrilling-scion.furtim-network.quiknode.pro/$ENV_RABECHAIN_API_KEY
+  rpcUrl: https://rpc.berachain.com
   type: EvmChain
 - id: story
   mainnet: true
