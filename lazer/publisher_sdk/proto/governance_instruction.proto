@@ -69,55 +69,85 @@ message GovernanceDirective {
     // from different sources may be needed to apply a change to multiple shards or shard groups.
     optional ShardFilter shard_filter = 1;
     // [required]
+    // Note: when adding a new variant here, update `Permissions` as well.
     oneof action {
-        AddGovernanceSource add_governance_source = 101;
-        UpdateGovernanceSource update_governance_source = 102;
-        SetShardName set_shard_name = 103;
-        SetShardGroup set_shard_group = 104;
-        AddPublisher add_publisher = 105;
-        UpdatePublisher update_publisher = 106;
-        AddFeed add_feed = 107;
-        UpdateFeed update_feed = 108;
+        CreateShard create_shard = 101;
+        AddGovernanceSource add_governance_source = 102;
+        UpdateGovernanceSource update_governance_source = 103;
+        SetShardName set_shard_name = 104;
+        SetShardGroup set_shard_group = 105;
+        ResetLastSequenceNo reset_last_sequence_no = 106;
+        AddPublisher add_publisher = 107;
+        UpdatePublisher update_publisher = 108;
+        AddFeed add_feed = 109;
+        UpdateFeed update_feed = 110;
     }
 }
 
 // Permissions granted to a governance source.
 // bool fields in this message are optional and default to false (no permission).
 message Permissions {
+    enum ShardAction {
+        // Required by protobuf. Instruction will be rejected if this value is encountered.
+        SHARD_ACTION_UNSPECIFIED = 0;
+        CREATE_SHARD = 101;
+        ADD_GOVERNANCE_SOURCE = 102;
+        UPDATE_GOVERNANCE_SOURCE = 103;
+        SET_SHARD_NAME = 104;
+        SET_SHARD_GROUP = 105;
+        RESET_LAST_SEQUENCE_NO = 106;
+        ADD_PUBLISHER = 107;
+        ADD_FEED = 109;
+    }
+
+    enum UpdateGovernanceSourceAction {
+        // Required by protobuf. Instruction will be rejected if this value is encountered.
+        UPDATE_GOVERNANCE_SOURCE_ACTION_UNSPECIFIED = 0;
+        SET_GOVERNANCE_SOURCE_PERMISSIONS = 101;
+        REMOVE_GOVERNANCE_SOURCE = 199;
+    }
+
+    enum UpdatePublisherAction {
+        // Required by protobuf. Instruction will be rejected if this value is encountered.
+        UPDATE_PUBLISHER_ACTION_UNSPECIFIED = 0;
+        SET_PUBLISHER_NAME = 101;
+        ADD_PUBLISHER_PUBLIC_KEYS = 102;
+        REMOVE_PUBLISHER_PUBLIC_KEYS = 103;
+        SET_PUBLISHER_PUBLIC_KEYS = 104;
+        SET_PUBLISHER_ACTIVE = 105;
+        REMOVE_PUBLISHER = 199;
+    }
+
+    enum UpdateFeedAction {
+        // Required by protobuf. Instruction will be rejected if this value is encountered.
+        UPDATE_FEED_ACTION_UNSPECIFIED = 0;
+        UPDATE_FEED_METADATA = 101;
+        ACTIVATE_FEED = 102;
+        DEACTIVATE_FEED = 103;
+        REMOVE_FEED = 199;
+    }
+
     // All operations, including operations added in the future.
-    optional bool all = 1;
-    optional bool add_governance_source = 2;
+    optional bool all_actions = 1;
+    repeated ShardAction shard_actions = 2;
     // All operations under `UpdateGovernanceSource` (update and delete),
     // including operations added in the future.
-    optional bool update_governance_source_all = 3;
-    optional bool update_governance_source_permissions = 4;
-    optional bool remove_governance_source = 5;
-    optional bool set_shard_name = 6;
-    optional bool set_shard_group = 7;
-    optional bool add_publisher = 8;
+    optional bool all_update_governance_source_actions = 3;
+    repeated UpdateGovernanceSourceAction update_governance_source_actions = 4;
     // All operations under `UpdatePublisher` (update and delete),
     // including operations added in the future.
-    optional bool update_publisher_all = 9;
-    optional bool set_publisher_name = 10;
-    optional bool add_publisher_public_keys = 11;
-    optional bool remove_publisher_public_keys = 12;
-    optional bool set_publisher_public_keys = 13;
-    optional bool set_publisher_active = 14;
-    optional bool remove_publisher = 15;
-    optional bool add_feed = 16;
+    optional bool all_update_publisher_action = 5;
+    repeated UpdatePublisherAction update_publisher_actions = 6;
     // All operations under `UpdateFeed` (update and delete),
     // including operations added in the future.
-    optional bool update_feed_all = 17;
-    optional bool update_feed_metadata = 18;
-    optional bool activate_feed = 19;
-    optional bool deactivate_feed = 20;
-    optional bool remove_feed = 21;
+    optional bool all_update_feed_actions = 7;
+    repeated UpdateFeedAction update_feed_actions = 8;
 }
 
 // Specifies the way governance transactions are signed and verified.
 message GovernanceSource {
     // Governance transactions are signed by a single Ed25519 signature.
-    // This will generally be used in development and testing environments.
+    // This will generally be used in development and testing groups.
     message SingleEd25519 {
         // [required] Ed25519 public key that signs governance transactions.
         optional bytes public_key = 1;
@@ -130,6 +160,23 @@ message GovernanceSource {
     }
 }
 
+// Create a new shard. Shard name will be determined by the value of `GovernanceDirective.filter`.
+// This action will be rejected unless `GovernanceDirective.filter` specified a single shard.
+// Shard name must be unique across all shards in all groups.
+// (Warning: it's not possible to enforce this rule within a shard!)
+message CreateShard {
+    // [required] ID of the new shard.
+    // Shard ID must be unique across all shards in all groups.
+    // (Warning: it's not possible to enforce this rule within a shard!)
+    optional uint32 shard_id = 1;
+    // [required] Group name, e.g. "production", "staging", "testing", etc.
+    // Data from shards belonging to the same group can be joined and served to consumers as a whole.
+    // Active feed names must be unique within a group, but not across all groups.
+    optional string shard_group = 2;
+    // [required] Minimal aggregation rate allowed in this shard.
+    optional google.protobuf.Duration min_rate = 3;
+}
+
 message AddGovernanceSource {
     // [required] Governance source that should be added.
     optional GovernanceSource new_source = 1;
@@ -139,26 +186,28 @@ message AddGovernanceSource {
 
 message UpdateGovernanceSource {
     // [required] Governance source that should be updated. Rejects if there is no such source.
+    // Rejects if the specified source is the same as the source of the current instruction.
     optional GovernanceSource source = 1;
     // [required]
+    // Note: when adding a new variant here, update `Permissions` as well.
     oneof action {
-        SetGovernanceSourcePermissions set_governance_source_permissions = 2;
+        SetGovernanceSourcePermissions set_governance_source_permissions = 101;
         // Removes a governance source. Note that the last sequence number associated with this source
         // will be retained in the state to prevent repeated execution of instructions in case
         // the same source is re-added later.
-        google.protobuf.Empty remove_governance_source = 3;
+        google.protobuf.Empty remove_governance_source = 199;
     }
 }
 
 message SetGovernanceSourcePermissions {
     // [required] Permissions granted to this source. Replaces all previous permissions.
-    optional Permissions permissions = 2;
+    optional Permissions permissions = 1;
 }
 
 // Set shard name. This action will be rejected if `GovernanceDirective.shard_names` is empty or contains
 // more than one item.
 message SetShardName {
-    // [required] New shard name. Must be unique across all shards in all environments.
+    // [required] New shard name. Must be unique across all shards in all groups.
     // (Warning: it's not possible to enforce this rule within a shard!)
     optional string shard_name = 1;
 }
@@ -170,6 +219,12 @@ message SetShardGroup {
     // Data from shards belonging to the same group can be joined and served to consumers as a whole.
     // Active feed names must be unique within a group, but not across all groups.
     optional string shard_group = 1;
+}
+
+// Set `last_sequence_no`. This can be used as a workaround in case some updates are lost and
+// the services are unable to proceed.
+message ResetLastSequenceNo {
+    optional uint64 last_sequence_no = 1;
 }
 
 message AddPublisher {
@@ -188,13 +243,14 @@ message UpdatePublisher {
     // [required] ID of the publisher that is being updated. Rejects if there is no such publisher.
     optional uint32 publisher_id = 1;
     // [required]
+    // Note: when adding a new variant here, update `Permissions` as well.
     oneof action {
-        SetPublisherName set_publisher_name = 2;
-        AddPublisherPublicKeys add_publisher_public_keys = 3;
-        RemovePublisherPublicKeys remove_publisher_public_keys = 4;
-        SetPublisherPublicKeys set_publisher_public_keys = 5;
-        SetPublisherActive set_publisher_active = 6;
-        google.protobuf.Empty remove_publisher = 7;
+        SetPublisherName set_publisher_name = 101;
+        AddPublisherPublicKeys add_publisher_public_keys = 102;
+        RemovePublisherPublicKeys remove_publisher_public_keys = 103;
+        SetPublisherPublicKeys set_publisher_public_keys = 104;
+        SetPublisherActive set_publisher_active = 105;
+        google.protobuf.Empty remove_publisher = 199;
     }
 }
 
@@ -242,11 +298,12 @@ message UpdateFeed {
     // [required] ID of the feed that is being updated. Rejects if there is no such feed.
     optional uint32 price_feed_id = 1;
     // [required]
+    // Note: when adding a new variant here, update `Permissions` as well.
     oneof action {
-        UpdateFeedMetadata update_feed_metadata = 2;
-        ActivateFeed activate_feed = 3;
-        DeactivateFeed deactivate_feed = 4;
-        google.protobuf.Empty remove_feed = 5;
+        UpdateFeedMetadata update_feed_metadata = 101;
+        ActivateFeed activate_feed = 102;
+        DeactivateFeed deactivate_feed = 103;
+        google.protobuf.Empty remove_feed = 199;
     }
 }
 
