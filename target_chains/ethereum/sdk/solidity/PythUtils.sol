@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./PythStructs.sol";
-import "forge-std/console.sol";
 library PythUtils {
     /// @notice Converts a Pyth price to a uint256 with a target number of decimals
     /// @param price The Pyth price

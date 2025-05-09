@@ -419,7 +419,7 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         (int64 price, int32 expo) = PythUtils.combinePrices(stEthEth.price, stEthEth.expo, ethUsd.price, ethUsd.expo);
         assertApproxEqRel(price, 100000000, 9e17); // $1
         assertEq(expo, -8);
-
+        
         // Test case 2: Different exponents
         PythStructs.Price memory smallPrice = PythStructs.Price({
             price: 100,   // $0.01
