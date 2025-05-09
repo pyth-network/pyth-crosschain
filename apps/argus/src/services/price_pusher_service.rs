@@ -6,12 +6,13 @@ use tokio::sync::{mpsc, watch};
 use tracing;
 
 use crate::adapters::types::{ReadPythPrices, UpdateChainPrices};
+use crate::services::{Service, SystemControlAware};
 use crate::services::types::PushRequest;
-use crate::state::ArgusState;
-use crate::services::Service;
+use crate::state::traits::SystemControl;
 
 pub struct PricePusherService {
     name: String,
+    chain_id: String,
     contract: Arc<dyn UpdateChainPrices + Send + Sync>,
     pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
     backoff_policy: ExponentialBackoff,
@@ -30,6 +31,7 @@ impl PricePusherService {
         
         Self {
             name: format!("PricePusherService-{}", chain_id),
+            chain_id: chain_id.clone(),
             contract,
             pyth_price_client,
             backoff_policy,
@@ -88,7 +90,22 @@ impl Service for PricePusherService {
         &self.name
     }
     
-    async fn start(&self, _state: Arc<ArgusState>, mut stop_rx: watch::Receiver<bool>) -> Result<()> {
+    async fn start(&self, stop_rx: watch::Receiver<bool>) -> Result<()> {
+        tracing::error!(
+            service = self.name,
+            "PricePusherService must be started with system control access"
+        );
+        Err(anyhow::anyhow!("PricePusherService requires system control access"))
+    }
+}
+
+#[async_trait]
+impl SystemControlAware for PricePusherService {
+    async fn start_with_system_control(
+        &self,
+        _system_control: Arc<dyn SystemControl>,
+        mut stop_rx: watch::Receiver<bool>
+    ) -> Result<()> {
         let mut receiver = self.request_rx.lock().expect("Mutex poisoned")
             .take()
             .expect("Request receiver already taken");

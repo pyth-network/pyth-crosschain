@@ -5,8 +5,8 @@ use tokio::sync::watch;
 use tracing;
 
 use crate::adapters::types::ReadPythPrices;
-use crate::state::ArgusState;
-use crate::services::Service;
+use crate::services::{Service, PythPriceAware};
+use crate::state::traits::{ReadPythPriceState, WritePythPriceState};
 
 pub struct PythPriceService {
     name: String,
@@ -31,8 +31,24 @@ impl Service for PythPriceService {
         &self.name
     }
     
-    async fn start(&self, state: Arc<ArgusState>, mut stop_rx: watch::Receiver<bool>) -> Result<()> {
-        let mut last_feed_ids = state.pyth_price_state.get_feed_ids();
+    async fn start(&self, stop_rx: watch::Receiver<bool>) -> Result<()> {
+        tracing::error!(
+            service = self.name,
+            "PythPriceService must be started with Pyth price state access"
+        );
+        Err(anyhow::anyhow!("PythPriceService requires Pyth price state access"))
+    }
+}
+
+#[async_trait]
+impl PythPriceAware for PythPriceService {
+    async fn start_with_pyth_price(
+        &self,
+        pyth_price_reader: Arc<dyn ReadPythPriceState>,
+        pyth_price_writer: Arc<dyn WritePythPriceState>,
+        mut stop_rx: watch::Receiver<bool>
+    ) -> Result<()> {
+        let mut last_feed_ids = pyth_price_reader.get_feed_ids();
         if !last_feed_ids.is_empty() {
             let feed_ids_vec: Vec<_> = last_feed_ids.iter().cloned().collect();
             if let Err(e) = self.pyth_price_client.subscribe_to_price_updates(&feed_ids_vec).await {
@@ -45,7 +61,7 @@ impl Service for PythPriceService {
         }
         
         loop {
-            let current_feed_ids = state.pyth_price_state.get_feed_ids();
+            let current_feed_ids = pyth_price_reader.get_feed_ids();
             if current_feed_ids != last_feed_ids {
                 let feed_ids_vec: Vec<_> = current_feed_ids.iter().cloned().collect();
                 if !feed_ids_vec.is_empty() {

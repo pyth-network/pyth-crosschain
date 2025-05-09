@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use anyhow::Result;
 use backoff::ExponentialBackoff;
-use tokio::sync::watch;
+use tokio::sync::{mpsc, watch};
 use tracing;
 
 use crate::adapters::{
@@ -14,11 +14,15 @@ use crate::api::BlockchainState;
 use crate::config::EthereumConfig;
 use crate::keeper::keeper_metrics::KeeperMetrics;
 use crate::services::{
+    ChainPriceAware,
     ChainPriceService,
     ControllerService,
     PricePusherService,
+    PythPriceAware,
     PythPriceService,
     Service,
+    SubscriptionAware,
+    SystemControlAware,
     SubscriptionService,
 };
 use crate::state::ArgusState;
@@ -77,51 +81,176 @@ pub async fn run_keeper_for_chain(
         ..ExponentialBackoff::default()
     };
 
-    let subscription_service = SubscriptionService::new(
+    let subscription_service = Arc::new(SubscriptionService::new(
         chain_state.name.clone(),
         contract.clone() as Arc<dyn ReadChainSubscriptions + Send + Sync>,
         subscription_poll_interval,
-    );
+    ));
 
-    let pyth_price_service = PythPriceService::new(
+    let pyth_price_service = Arc::new(PythPriceService::new(
         chain_state.name.clone(),
         hermes_client.clone(),
-    );
+    ));
 
-    let chain_price_service = ChainPriceService::new(
+    let chain_price_service = Arc::new(ChainPriceService::new(
         chain_state.name.clone(),
         contract.clone(),
         chain_price_poll_interval,
-    );
+    ));
 
-    let price_pusher_service = PricePusherService::new(
+    let price_pusher_service = Arc::new(PricePusherService::new(
         chain_state.name.clone(),
         contract.clone(),
         hermes_client.clone(),
         backoff_policy,
-    );
+    ));
 
-    let controller_service = ControllerService::new(
+    let mut controller_service = ControllerService::new(
         chain_state.name.clone(),
         controller_update_interval,
     );
-
-    let services: Vec<Arc<dyn Service>> = vec![
-        Arc::new(subscription_service),
-        Arc::new(pyth_price_service),
-        Arc::new(chain_price_service),
-        Arc::new(price_pusher_service),
-        Arc::new(controller_service),
-    ];
+    
+    let price_pusher_tx = price_pusher_service.request_sender();
+    controller_service.set_price_pusher_tx(price_pusher_tx);
+    let controller_service = Arc::new(controller_service);
 
     let mut handles = Vec::new();
-    for service in services {
-        let service_state = state.clone();
+    
+    {
+        let subscription_reader = state.subscription_reader();
+        let subscription_writer = state.subscription_writer();
+        let pyth_price_writer = state.pyth_price_writer();
+        let chain_price_writer = state.chain_price_writer();
         let service_stop_rx = stop_rx.clone();
         
+        let service = subscription_service.clone();
         let handle = tokio::spawn(async move {
             let service_name = service.name().to_string();
-            match service.start(service_state, service_stop_rx).await {
+            match service.start_with_subscription(
+                subscription_reader,
+                subscription_writer,
+                pyth_price_writer,
+                chain_price_writer,
+                service_stop_rx
+            ).await {
+                Ok(_) => {
+                    tracing::info!(service = service_name, "Service stopped gracefully");
+                }
+                Err(e) => {
+                    tracing::error!(
+                        service = service_name,
+                        error = %e,
+                        "Service stopped with error"
+                    );
+                }
+            }
+        });
+        
+        handles.push(handle);
+    }
+    
+    {
+        let pyth_price_reader = state.pyth_price_reader();
+        let pyth_price_writer = state.pyth_price_writer();
+        let service_stop_rx = stop_rx.clone();
+        
+        let service = pyth_price_service.clone();
+        let handle = tokio::spawn(async move {
+            let service_name = service.name().to_string();
+            match service.start_with_pyth_price(
+                pyth_price_reader,
+                pyth_price_writer,
+                service_stop_rx
+            ).await {
+                Ok(_) => {
+                    tracing::info!(service = service_name, "Service stopped gracefully");
+                }
+                Err(e) => {
+                    tracing::error!(
+                        service = service_name,
+                        error = %e,
+                        "Service stopped with error"
+                    );
+                }
+            }
+        });
+        
+        handles.push(handle);
+    }
+    
+    {
+        let chain_price_reader = state.chain_price_reader();
+        let chain_price_writer = state.chain_price_writer();
+        let service_stop_rx = stop_rx.clone();
+        
+        let service = chain_price_service.clone();
+        let handle = tokio::spawn(async move {
+            let service_name = service.name().to_string();
+            match service.start_with_chain_price(
+                chain_price_reader,
+                chain_price_writer,
+                service_stop_rx
+            ).await {
+                Ok(_) => {
+                    tracing::info!(service = service_name, "Service stopped gracefully");
+                }
+                Err(e) => {
+                    tracing::error!(
+                        service = service_name,
+                        error = %e,
+                        "Service stopped with error"
+                    );
+                }
+            }
+        });
+        
+        handles.push(handle);
+    }
+    
+    {
+        let system_control = state.system_control();
+        let service_stop_rx = stop_rx.clone();
+        
+        let service = price_pusher_service.clone();
+        let handle = tokio::spawn(async move {
+            let service_name = service.name().to_string();
+            match service.start_with_system_control(
+                system_control,
+                service_stop_rx
+            ).await {
+                Ok(_) => {
+                    tracing::info!(service = service_name, "Service stopped gracefully");
+                }
+                Err(e) => {
+                    tracing::error!(
+                        service = service_name,
+                        error = %e,
+                        "Service stopped with error"
+                    );
+                }
+            }
+        });
+        
+        handles.push(handle);
+    }
+    
+    {
+        let subscription_reader = state.subscription_reader();
+        let subscription_writer = state.subscription_writer();
+        let pyth_price_writer = state.pyth_price_writer();
+        let chain_price_writer = state.chain_price_writer();
+        let service_stop_rx = stop_rx.clone();
+        
+        let service = controller_service.clone();
+        let handle = tokio::spawn(async move {
+            let service_name = service.name().to_string();
+            match service.start_with_subscription(
+                subscription_reader,
+                subscription_writer,
+                pyth_price_writer,
+                chain_price_writer,
+                service_stop_rx
+            ).await {
                 Ok(_) => {
                     tracing::info!(service = service_name, "Service stopped gracefully");
                 }
