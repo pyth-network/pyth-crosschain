@@ -10,6 +10,10 @@ pub mod publisher_update {
     pub use crate::protobuf::publisher_update::*;
 }
 
+pub mod governance_instruction {
+    pub use crate::protobuf::governance_instruction::*;
+}
+
 mod protobuf {
     include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 }
