@@ -1,0 +1,35 @@
+@use "@pythnetwork/component-library/theme";
+
+.timestamp {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: theme.spacing(1) theme.spacing(2);
+  margin: -#{theme.spacing(1)} -#{theme.spacing(2)};
+  cursor: pointer;
+  border-radius: theme.border-radius("base");
+  transition-property: background-color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  display: inline-flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: 0.25em;
+
+  .clock {
+    color: theme.color("muted");
+    opacity: 0.75;
+  }
+
+  &[data-hovered] {
+    background-color: theme.color("button", "outline", "background", "hover");
+  }
+
+  &[data-show-relative] .absolute {
+    display: none;
+  }
+
+  &:not([data-show-relative]) .relative {
+    display: none;
+  }
+}

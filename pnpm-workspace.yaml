@@ -117,6 +117,7 @@ catalog:
   react-aria-components: ^1.7.1
   react-dom: ^19.1.0
   react-markdown: ^10.1.0
+  react-timeago: ^8.2.0
   recharts: ^2.15.1
   sass: ^1.86.1
   sass-loader: ^16.0.5

@@ -1,0 +1,59 @@
+@use "@pythnetwork/component-library/theme";
+
+.requestDrawer {
+  gap: theme.spacing(8);
+  padding-bottom: theme.spacing(8);
+
+  .cards {
+    display: grid;
+    gap: theme.spacing(4);
+    grid-template-columns: repeat(2, 1fr);
+    padding-left: theme.spacing(4);
+    padding-right: theme.spacing(4);
+  }
+
+  .details {
+    width: 100%;
+    overflow: auto;
+
+    .field {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("muted");
+    }
+
+    .gasMeter {
+      margin-right: 5%;
+
+      .gasMeterLabel {
+        @include theme.text("xs", "medium");
+      }
+    }
+  }
+
+  .message {
+    margin-left: theme.spacing(4);
+    margin-right: theme.spacing(4);
+    position: relative;
+
+    p {
+      margin: 0;
+
+      &.details {
+        margin-top: theme.spacing(2);
+      }
+    }
+
+    .code {
+      border-radius: theme.border-radius("lg");
+      font-size: theme.font-size("sm");
+      line-height: 125%;
+    }
+
+    .copyButton {
+      position: absolute;
+      top: theme.spacing(2);
+      right: calc(theme.spacing(2) + 0.25em);
+    }
+  }
+}

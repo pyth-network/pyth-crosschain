@@ -33,5 +33,5 @@ const ResolvedSearchBar = (
 
 const defaultProps = {
   size: "sm",
-  placeholder: "Sequence number, provider, caller or tx hash",
+  placeholder: "Sequence number, provider, sender or tx hash",
 } as const;
