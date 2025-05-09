@@ -395,7 +395,6 @@ export class EvmPricePusher implements IPricePusher {
     try {
       const receipt = await this.client.waitForTransactionReceipt({
         hash: hash,
-        timeout: 10000,
       });
 
       switch (receipt.status) {
