@@ -1,6 +1,7 @@
 "use client";
 
 import { Meter as MeterComponent } from "@pythnetwork/component-library/unstyled/Meter";
+import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
 import styles from "./index.module.scss";
@@ -21,11 +22,12 @@ export const Meter = ({
   endLabel,
   labelClassName,
   variant = "default",
+  className,
   ...props
 }: Props) => (
   <MeterComponent aria-label={label} {...props}>
     {({ percentage }) => (
-      <div data-variant={variant} className={styles.meter}>
+      <div data-variant={variant} className={clsx(styles.meter, className)}>
         {(startLabel !== undefined || endLabel !== undefined) && (
           <div className={styles.labels}>
             <div className={labelClassName}>{startLabel}</div>

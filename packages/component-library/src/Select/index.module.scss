@@ -69,6 +69,14 @@
       &:not(:first-child) {
         border-top: 1px solid theme.color("border");
       }
+
+      &[data-label-hidden] {
+        padding-top: theme.spacing(1);
+
+        .groupLabel {
+          @include theme.sr-only;
+        }
+      }
     }
 
     .listboxItem {

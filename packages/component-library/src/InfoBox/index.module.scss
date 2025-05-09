@@ -1,7 +1,6 @@
 @use "../theme";
 
 .infoBox {
-  background: theme.color("states", "info", "background");
   padding: theme.spacing(4);
   border-radius: theme.border-radius("xl");
   display: flex;
@@ -11,7 +10,6 @@
   .icon {
     flex: none;
     font-size: theme.spacing(6);
-    color: theme.color("states", "info", "icon");
   }
 
   .body {
@@ -32,6 +30,16 @@
 
       color: theme.color("paragraph");
       line-height: theme.spacing(6);
+    }
+  }
+
+  @each $variant in ("neutral", "info", "warning", "error", "data", "success") {
+    &[data-variant="#{$variant}"] {
+      background-color: theme.color("states", $variant, "background");
+
+      .icon {
+        color: theme.color("states", $variant, "normal");
+      }
     }
   }
 }

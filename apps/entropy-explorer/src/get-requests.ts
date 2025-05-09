@@ -1,31 +1,34 @@
 import { z } from "zod";
 
-import type { EntropyDeployments } from "./entropy-deployments";
+const MOCK_DATA_SIZE = 20;
 
-export const getRequestsForChain = async (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _chain: keyof typeof EntropyDeployments,
-) => {
+export const getRequests = async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  return resultSchema.parse(
-    range(20).map((i) => {
+  return requestsSchema.parse(
+    range(MOCK_DATA_SIZE).map((i) => {
       const completed = randomBoolean();
+      const gasLimit = randomBetween(10_000, 1_000_000);
+      const gasUsed = randomBetween(1000, 1_000_000);
+
       return {
-        sequenceNumber: i,
+        chain: randomElem(chains),
+        sequenceNumber: MOCK_DATA_SIZE - i,
         provider: `0x${randomHex(42)}`,
         caller: `0x${randomHex(42)}`,
         txHash: `0x${randomHex(42)}`,
-        gasLimit: randomBetween(10_000, 1_000_000),
+        gasLimit,
         timestamp: new Date().toLocaleString(),
         hasCallbackCompleted: completed,
+        userRandomNumber: `0x${randomHex(42)}`,
         ...(completed && {
           callbackResult: {
-            failed: randomBoolean(),
+            txHash: `0x${randomHex(42)}`,
+            failed: gasUsed > gasLimit || randomBoolean(),
             randomNumber: `0x${randomHex(10)}`,
-            returnValue: `0x${randomHex(10)}`, // "0xabcd1234", // will need to decode this in frontend. If failed == true, this contains the error code + additional debugging data. If it's "" and gasUsed is >= gasLimit, then it's an out of gas error.
-            gasUsed: randomBetween(1000, 1_000_000),
-            timestamp: new Date().toLocaleString(), // datetime in some reasonable format
+            returnValue: gasUsed > gasLimit ? "" : `0x${randomHex(10)}`, // "0xabcd1234", // will need to decode this in frontend. If failed == true, this contains the error code + additional debugging data. If it's "" and gasUsed is >= gasLimit, then it's an out of gas error.
+            gasUsed,
+            timestamp: new Date().toLocaleString(),
           },
         }),
       };
@@ -33,12 +36,22 @@ export const getRequestsForChain = async (
   );
 };
 
+const chains = [
+  "arbitrum",
+  "base",
+  "optimism",
+  "baseSepolia",
+  "optimismSepolia",
+] as const;
+
 const schemaBase = z.strictObject({
+  chain: z.enum(chains),
   sequenceNumber: z.number(),
   provider: z.string(),
   caller: z.string(),
   txHash: z.string(),
   gasLimit: z.number(),
+  userRandomNumber: z.string(),
   timestamp: z.string().transform((value) => new Date(value)),
 });
 const inProgressRequestScehma = schemaBase.extend({
@@ -47,6 +60,7 @@ const inProgressRequestScehma = schemaBase.extend({
 const completedRequestSchema = schemaBase.extend({
   hasCallbackCompleted: z.literal(true),
   callbackResult: z.strictObject({
+    txHash: z.string(),
     failed: z.boolean(),
     randomNumber: z.string(),
     returnValue: z.string(),
@@ -54,9 +68,14 @@ const completedRequestSchema = schemaBase.extend({
     timestamp: z.string().transform((value) => new Date(value)),
   }),
 });
-const resultSchema = z.array(
-  z.union([inProgressRequestScehma, completedRequestSchema]),
-);
+const requestSchema = z.union([
+  inProgressRequestScehma,
+  completedRequestSchema,
+]);
+const requestsSchema = z.array(requestSchema);
+
+export type Request = z.infer<typeof requestSchema>;
+export type CompletedRequest = z.infer<typeof completedRequestSchema>;
 
 const range = (i: number) => [...Array.from({ length: i }).keys()];
 
@@ -69,3 +88,6 @@ const randomHex = (length: number) =>
   Array.from({ length })
     .map(() => Math.floor(Math.random() * 16).toString(16))
     .join("");
+
+const randomElem = <T>(arr: T[] | readonly T[]) =>
+  arr[Math.floor(randomBetween(0, arr.length))];

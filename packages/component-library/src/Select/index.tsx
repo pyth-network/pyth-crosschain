@@ -54,7 +54,11 @@ export type Props<T extends { id: string | number }> = Omit<
       }
     | {
         hideGroupLabel?: boolean | undefined;
-        optionGroups: { name: string; options: readonly T[] }[];
+        optionGroups: {
+          name: string;
+          options: readonly T[];
+          hideLabel?: boolean | undefined;
+        }[];
       }
   );
 
@@ -119,8 +123,12 @@ export const Select = <T extends { id: string | number }>({
         </ListBox>
       ) : (
         <ListBox className={styles.listbox ?? ""} items={props.optionGroups}>
-          {({ name, options }) => (
-            <ListBoxSection className={styles.section ?? ""} id={name}>
+          {({ name, options, hideLabel }) => (
+            <ListBoxSection
+              data-label-hidden={hideLabel ? "" : undefined}
+              className={styles.section ?? ""}
+              id={name}
+            >
               <Header className={styles.groupLabel ?? ""}>{name}</Header>
               <Collection items={options}>
                 {(item) => (

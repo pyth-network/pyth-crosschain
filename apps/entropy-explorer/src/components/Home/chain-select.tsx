@@ -31,7 +31,9 @@ export const ChainSelect = (
   </Suspense>
 );
 
-type Deployment = ReturnType<typeof entropyDeploymentsByNetwork>[number];
+type Deployment =
+  | ReturnType<typeof entropyDeploymentsByNetwork>[number]
+  | { id: "all" };
 
 const ResolvedChainSelect = (
   props: ConstrainedOmit<
@@ -50,6 +52,11 @@ const useResolvedProps = () => {
   const chains = useMemo(
     () => [
       {
+        name: "ALL",
+        options: [{ id: "all" as const }],
+        hideLabel: true,
+      },
+      {
         name: "MAINNET",
         options: entropyDeploymentsByNetwork("mainnet", collator),
       },
@@ -62,30 +69,42 @@ const useResolvedProps = () => {
   );
 
   const showChain = useCallback(
-    (chain: Deployment) => (
-      <div className={styles.chainSelectItem}>
-        <ChainIcon id={chain.chainId} />
-        {chain.name}
-      </div>
-    ),
+    (chain: Deployment) =>
+      chain.id === "all" ? (
+        "All"
+      ) : (
+        <div className={styles.chainSelectItem}>
+          <ChainIcon id={chain.chainId} />
+          {chain.name}
+        </div>
+      ),
     [],
   );
 
-  const chainTextValue = useCallback((chain: Deployment) => chain.name, []);
+  const chainTextValue = useCallback(
+    (chain: Deployment) => (chain.id === "all" ? "All" : chain.name),
+    [],
+  );
+  // eslint-disable-next-line import/namespace
+  const viemChain = chain ? viemChains[chain] : undefined;
 
   return {
-    selectedKey: chain ?? undefined,
+    selectedKey: chain ?? ("all" as const),
     onSelectionChange: setChain,
     optionGroups: chains,
     show: showChain,
     textValue: chainTextValue,
+    buttonLabel: viemChain?.name ?? "Chain",
+    ...(viemChain && {
+      icon: () => <ChainIcon id={viemChain.id} />,
+    }),
   };
 };
 
 const defaultProps = {
   label: "Chain",
   hideLabel: true,
-  defaultButtonLabel: "Select Chain",
+  defaultButtonLabel: "Chain",
 } as const;
 
 const entropyDeploymentsByNetwork = (
