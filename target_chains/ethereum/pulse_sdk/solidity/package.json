@@ -1,0 +1,40 @@
+{
+  "name": "@pythnetwork/pulse-sdk-solidity",
+  "version": "1.0.0",
+  "description": "Automatically update price feeds with Pyth Pulse",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "target_chains/ethereum/pulse_sdk/solidity"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write .",
+    "build": "generate-abis IScheduler SchedulerConstants SchedulerErrors SchedulerEvents SchedulerStructs",
+    "test": "git diff --exit-code abis"
+  },
+  "keywords": [
+    "pyth",
+    "solidity",
+    "price feed",
+    "pulse"
+  ],
+  "author": "Douro Labs",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/pulse_sdk/solidity",
+  "devDependencies": {
+    "abi_generator": "workspace:*",
+    "prettier": "catalog:",
+    "prettier-plugin-solidity": "catalog:"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-sdk-solidity": "workspace:*"
+  }
+}
