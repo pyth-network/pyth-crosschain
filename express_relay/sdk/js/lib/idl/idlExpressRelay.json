@@ -1,0 +1,525 @@
+{
+  "address": "GwEtasTAxdS9neVE4GPUpcwR7DB7AizntQSPcG36ubZM",
+  "metadata": {
+    "name": "express_relay",
+    "version": "0.2.0",
+    "spec": "0.1.0",
+    "description": "Pyth Express Relay program for handling permissioning and bid distribution",
+    "repository": "https://github.com/pyth-network/per"
+  },
+  "instructions": [
+    {
+      "name": "check_permission",
+      "docs": [
+        "Checks if permissioning exists for a particular (permission, router) pair within the same transaction",
+        "Permissioning takes the form of a SubmitBid instruction with matching permission and router accounts",
+        "Returns the fees paid to the router in the matching instructions"
+      ],
+      "discriminator": [154, 199, 232, 242, 96, 72, 197, 236],
+      "accounts": [
+        {
+          "name": "sysvar_instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "router"
+        },
+        {
+          "name": "config_router",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99, 111, 110, 102, 105, 103, 95, 114, 111, 117, 116, 101, 114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "router"
+              }
+            ]
+          }
+        },
+        {
+          "name": "express_relay_metadata",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [],
+      "returns": "u64"
+    },
+    {
+      "name": "initialize",
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "express_relay_metadata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin"
+        },
+        {
+          "name": "relayer_signer"
+        },
+        {
+          "name": "fee_receiver_relayer"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "InitializeArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_admin",
+      "discriminator": [251, 163, 0, 52, 91, 194, 187, 92],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": ["express_relay_metadata"]
+        },
+        {
+          "name": "express_relay_metadata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_new"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_relayer",
+      "discriminator": [23, 243, 33, 88, 110, 84, 196, 37],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": ["express_relay_metadata"]
+        },
+        {
+          "name": "express_relay_metadata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        },
+        {
+          "name": "relayer_signer"
+        },
+        {
+          "name": "fee_receiver_relayer"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_router_split",
+      "discriminator": [16, 150, 106, 13, 27, 191, 104, 8],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": ["express_relay_metadata"]
+        },
+        {
+          "name": "config_router",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99, 111, 110, 102, 105, 103, 95, 114, 111, 117, 116, 101, 114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "router"
+              }
+            ]
+          }
+        },
+        {
+          "name": "express_relay_metadata",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        },
+        {
+          "name": "router"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "SetRouterSplitArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_splits",
+      "discriminator": [175, 2, 86, 49, 225, 202, 232, 189],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": ["express_relay_metadata"]
+        },
+        {
+          "name": "express_relay_metadata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "SetSplitsArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "submit_bid",
+      "docs": [
+        "Submits a bid for a particular (permission, router) pair and distributes bids according to splits"
+      ],
+      "discriminator": [19, 164, 237, 254, 64, 139, 237, 93],
+      "accounts": [
+        {
+          "name": "searcher",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "relayer_signer",
+          "signer": true,
+          "relations": ["express_relay_metadata"]
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "router",
+          "writable": true
+        },
+        {
+          "name": "config_router",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99, 111, 110, 102, 105, 103, 95, 114, 111, 117, 116, 101, 114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "router"
+              }
+            ]
+          }
+        },
+        {
+          "name": "express_relay_metadata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_receiver_relayer",
+          "writable": true,
+          "relations": ["express_relay_metadata"]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "sysvar_instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "SubmitBidArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw_fees",
+      "discriminator": [198, 212, 171, 109, 144, 215, 174, 89],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": ["express_relay_metadata"]
+        },
+        {
+          "name": "fee_receiver_admin",
+          "writable": true
+        },
+        {
+          "name": "express_relay_metadata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ConfigRouter",
+      "discriminator": [135, 66, 240, 166, 94, 198, 187, 36]
+    },
+    {
+      "name": "ExpressRelayMetadata",
+      "discriminator": [204, 75, 133, 7, 175, 241, 130, 11]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "FeeSplitLargerThanPrecision",
+      "msg": "Fee split(s) larger than fee precision"
+    },
+    {
+      "code": 6001,
+      "name": "FeesHigherThanBid",
+      "msg": "Fees higher than bid"
+    },
+    {
+      "code": 6002,
+      "name": "DeadlinePassed",
+      "msg": "Deadline passed"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidCPISubmitBid",
+      "msg": "Invalid CPI into submit bid instruction"
+    },
+    {
+      "code": 6004,
+      "name": "MissingPermission",
+      "msg": "Missing permission"
+    },
+    {
+      "code": 6005,
+      "name": "MultiplePermissions",
+      "msg": "Multiple permissions"
+    },
+    {
+      "code": 6006,
+      "name": "InsufficientSearcherFunds",
+      "msg": "Insufficient Searcher Funds"
+    },
+    {
+      "code": 6007,
+      "name": "InsufficientRent",
+      "msg": "Insufficient funds for rent"
+    }
+  ],
+  "types": [
+    {
+      "name": "ConfigRouter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "router",
+            "type": "pubkey"
+          },
+          {
+            "name": "split",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExpressRelayMetadata",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "relayer_signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_receiver_relayer",
+            "type": "pubkey"
+          },
+          {
+            "name": "split_router_default",
+            "type": "u64"
+          },
+          {
+            "name": "split_relayer",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "split_router_default",
+            "type": "u64"
+          },
+          {
+            "name": "split_relayer",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetRouterSplitArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "split_router",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetSplitsArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "split_router_default",
+            "type": "u64"
+          },
+          {
+            "name": "split_relayer",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SubmitBidArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "deadline",
+            "type": "i64"
+          },
+          {
+            "name": "bid_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

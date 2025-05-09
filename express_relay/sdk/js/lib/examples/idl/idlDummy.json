@@ -1,0 +1,141 @@
+{
+  "address": "HYCgALnu6CM2gkQVopa1HGaNf8Vzbs9bomWRiKP267P3",
+  "metadata": {
+    "name": "dummy",
+    "version": "0.2.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "do_nothing",
+      "discriminator": [112, 130, 224, 161, 71, 149, 192, 187],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "express_relay",
+          "address": "GwEtasTAxdS9neVE4GPUpcwR7DB7AizntQSPcG36ubZM"
+        },
+        {
+          "name": "express_relay_metadata",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [109, 101, 116, 97, 100, 97, 116, 97]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "express_relay"
+            }
+          }
+        },
+        {
+          "name": "sysvar_instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "permission"
+        },
+        {
+          "name": "router"
+        },
+        {
+          "name": "config_router",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99, 111, 110, 102, 105, 103, 95, 114, 111, 117, 116, 101, 114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "router"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "express_relay"
+            }
+          }
+        },
+        {
+          "name": "accounting",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 99, 99, 111, 117, 110, 116, 105, 110, 103]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Accounting",
+      "discriminator": [1, 249, 15, 214, 81, 88, 40, 108]
+    },
+    {
+      "name": "ExpressRelayMetadata",
+      "discriminator": [204, 75, 133, 7, 175, 241, 130, 11]
+    }
+  ],
+  "types": [
+    {
+      "name": "Accounting",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "total_fees",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExpressRelayMetadata",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "relayer_signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_receiver_relayer",
+            "type": "pubkey"
+          },
+          {
+            "name": "split_router_default",
+            "type": "u64"
+          },
+          {
+            "name": "split_relayer",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}
