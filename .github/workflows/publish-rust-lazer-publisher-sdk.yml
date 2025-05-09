@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "30.2"
 
       - run: ./publish.sh
         env:
