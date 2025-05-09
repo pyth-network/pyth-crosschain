@@ -94,6 +94,10 @@ interface IPyth is IPythEvents {
         bytes[] calldata updateData
     ) external view returns (uint feeAmount);
 
+    /// @notice Returns the required fee to update a TWAP price.
+    /// @return feeAmount The required fee in Wei.
+    function getTwapUpdateFee() external view returns (uint feeAmount);
+
     /// @notice Parse `updateData` and return price feeds of the given `priceIds` if they are all published
     /// within `minPublishTime` and `maxPublishTime`.
     ///

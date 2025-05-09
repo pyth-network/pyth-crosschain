@@ -345,6 +345,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getTwapUpdateFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "feeAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "bytes[]",

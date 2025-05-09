@@ -533,7 +533,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             )
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         // Parse the TWAP updates
         PythStructs.TwapPriceFeed[] memory twapPriceFeeds = pyth
@@ -613,7 +613,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             )
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -664,7 +664,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             )
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -711,7 +711,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             )
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         vm.expectRevert(PythErrors.InvalidTwapUpdateDataSet.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -758,7 +758,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             )
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         vm.expectRevert(PythErrors.InvalidTwapUpdateData.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -800,7 +800,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             )
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         vm.expectRevert(PythErrors.InsufficientFee.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee - 1}(
@@ -849,7 +849,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             config
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         // Parse the TWAP updates
         PythStructs.TwapPriceFeed[] memory twapPriceFeeds = pyth
@@ -924,7 +924,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             config
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         vm.expectRevert(PythErrors.InvalidUpdateData.selector);
         pyth.parseTwapPriceFeedUpdates{value: updateFee}(updateData, priceIds);
@@ -976,7 +976,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             config
         );
 
-        uint updateFee = pyth.getUpdateFee(updateData);
+        uint updateFee = pyth.getTwapUpdateFee();
 
         // Should revert because one of the requested price IDs is not found in the updates
         vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);

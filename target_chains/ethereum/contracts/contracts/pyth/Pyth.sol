@@ -120,6 +120,13 @@ abstract contract Pyth is
         return getTotalFee(totalNumUpdates);
     }
 
+    function getTwapUpdateFee() public view override returns (uint feeAmount) {
+        // In the accumulator update data a single update can contain
+        // up to 255 messages and we charge a singleUpdateFee per each
+        // message
+        return singleUpdateFeeInWei() + transactionFeeInWei();
+    }
+
     // This is an overwrite of the same method in AbstractPyth.sol
     // to be more gas efficient.
     function updatePriceFeedsIfNecessary(
@@ -454,7 +461,7 @@ abstract contract Pyth is
             revert PythErrors.InvalidUpdateData();
         }
 
-        uint requiredFee = getUpdateFee(updateData);
+        uint requiredFee = getTwapUpdateFee();
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
         // Process start update data
