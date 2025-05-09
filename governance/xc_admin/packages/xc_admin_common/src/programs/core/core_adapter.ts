@@ -265,50 +265,47 @@ export class PythCoreAdapter implements ProgramAdapter {
    */
   private sortData(data: any) {
     const sortedData: any = {};
-    Object.keys(data)
-      .sort()
-      .forEach((key) => {
-        const sortedInnerData: any = {};
-        Object.keys(data[key])
-          .sort()
-          .forEach((innerKey) => {
-            if (innerKey === "metadata") {
-              sortedInnerData[innerKey] = this.sortObjectByKeys(
-                data[key][innerKey],
-              );
-            } else if (innerKey === "priceAccounts") {
-              // Sort price accounts by address
-              sortedInnerData[innerKey] = data[key][innerKey].sort(
-                (priceAccount1: any, priceAccount2: any) =>
-                  priceAccount1.address.localeCompare(priceAccount2.address),
-              );
-              // Sort price accounts keys
-              sortedInnerData[innerKey] = sortedInnerData[innerKey].map(
-                (priceAccount: any) => {
-                  const sortedPriceAccount: any = {};
-                  Object.keys(priceAccount)
-                    .sort()
-                    .forEach((priceAccountKey) => {
-                      if (priceAccountKey === "publishers") {
-                        sortedPriceAccount[priceAccountKey] = priceAccount[
-                          priceAccountKey
-                        ].sort((pub1: string, pub2: string) =>
-                          pub1.localeCompare(pub2),
-                        );
-                      } else {
-                        sortedPriceAccount[priceAccountKey] =
-                          priceAccount[priceAccountKey];
-                      }
-                    });
-                  return sortedPriceAccount;
-                },
-              );
-            } else {
-              sortedInnerData[innerKey] = data[key][innerKey];
-            }
-          });
-        sortedData[key] = sortedInnerData;
-      });
+    const keys = Object.keys(data).sort();
+    for (const key of keys) {
+      const sortedInnerData: any = {};
+      const innerKeys = Object.keys(data[key]).sort();
+      for (const innerKey of innerKeys) {
+        if (innerKey === "metadata") {
+          sortedInnerData[innerKey] = this.sortObjectByKeys(
+            data[key][innerKey],
+          );
+        } else if (innerKey === "priceAccounts") {
+          // Sort price accounts by address
+          sortedInnerData[innerKey] = data[key][innerKey].sort(
+            (priceAccount1: any, priceAccount2: any) =>
+              priceAccount1.address.localeCompare(priceAccount2.address),
+          );
+          // Sort price accounts keys
+          sortedInnerData[innerKey] = sortedInnerData[innerKey].map(
+            (priceAccount: any) => {
+              const sortedPriceAccount: any = {};
+              const priceAccountKeys = Object.keys(priceAccount).sort();
+              for (const priceAccountKey of priceAccountKeys) {
+                if (priceAccountKey === "publishers") {
+                  sortedPriceAccount[priceAccountKey] = priceAccount[
+                    priceAccountKey
+                  ].sort((pub1: string, pub2: string) =>
+                    pub1.localeCompare(pub2),
+                  );
+                } else {
+                  sortedPriceAccount[priceAccountKey] =
+                    priceAccount[priceAccountKey];
+                }
+              }
+              return sortedPriceAccount;
+            },
+          );
+        } else {
+          sortedInnerData[innerKey] = data[key][innerKey];
+        }
+      }
+      sortedData[key] = sortedInnerData;
+    }
     return sortedData;
   }
 
@@ -317,11 +314,10 @@ export class PythCoreAdapter implements ProgramAdapter {
    */
   private sortObjectByKeys(obj: any) {
     const sortedObj: any = {};
-    Object.keys(obj)
-      .sort()
-      .forEach((key) => {
-        sortedObj[key] = obj[key];
-      });
+    const keys = Object.keys(obj).sort();
+    for (const key of keys) {
+      sortedObj[key] = obj[key];
+    }
     return sortedObj;
   }
 
@@ -347,7 +343,7 @@ export class PythCoreAdapter implements ProgramAdapter {
       const changes: Record<string, any> = {};
 
       // Check for changes to existing symbols
-      Object.keys(uploadedConfig).forEach((symbol) => {
+      for (const symbol of Object.keys(uploadedConfig)) {
         // Remove duplicate publishers
         if (
           uploadedConfig[symbol]?.priceAccounts?.[0]?.publishers &&
@@ -380,18 +376,18 @@ export class PythCoreAdapter implements ProgramAdapter {
           changes[symbol].prev = { ...existingConfig[symbol] };
           changes[symbol].new = { ...uploadedConfig[symbol] };
         }
-      });
+      }
 
       // Check for symbols to remove (in existing but not in uploaded)
-      Object.keys(existingConfig).forEach((symbol) => {
+      for (const symbol of Object.keys(existingConfig)) {
         if (!uploadedConfig[symbol]) {
           changes[symbol] = { prev: {} };
           changes[symbol].prev = { ...existingConfig[symbol] };
         }
-      });
+      }
 
       // Validate that address field is not changed for existing symbols
-      Object.keys(uploadedConfig).forEach((symbol) => {
+      for (const symbol of Object.keys(uploadedConfig)) {
         if (
           existingSymbols.has(symbol) &&
           uploadedConfig[symbol].address &&
@@ -402,10 +398,10 @@ export class PythCoreAdapter implements ProgramAdapter {
             error: `Address field for product cannot be changed for symbol ${symbol}. Please revert any changes to the address field and try again.`,
           };
         }
-      });
+      }
 
       // Validate that priceAccounts address field is not changed
-      Object.keys(uploadedConfig).forEach((symbol) => {
+      for (const symbol of Object.keys(uploadedConfig)) {
         if (
           existingSymbols.has(symbol) &&
           uploadedConfig[symbol].priceAccounts?.[0] &&
@@ -419,10 +415,10 @@ export class PythCoreAdapter implements ProgramAdapter {
             error: `Address field for priceAccounts cannot be changed for symbol ${symbol}. Please revert any changes to the address field and try again.`,
           };
         }
-      });
+      }
 
       // Check that no price account has more than the maximum number of publishers
-      Object.keys(uploadedConfig).forEach((symbol) => {
+      for (const symbol of Object.keys(uploadedConfig)) {
         const maximumNumberOfPublishers = getMaximumNumberOfPublishers(cluster);
         if (
           uploadedConfig[symbol].priceAccounts?.[0]?.publishers &&
@@ -434,7 +430,7 @@ export class PythCoreAdapter implements ProgramAdapter {
             error: `${symbol} has more than ${maximumNumberOfPublishers} publishers.`,
           };
         }
-      });
+      }
 
       return {
         isValid: true,
