@@ -3843,7 +3843,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.7.3"
+version = "0.7.2"
 dependencies = [
  "alloy-primitives",
  "anyhow",
