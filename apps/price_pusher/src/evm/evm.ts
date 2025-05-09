@@ -235,6 +235,12 @@ export class EvmPricePusher implements IPricePusher {
 
     const priceIdsWith0x = priceIds.map((priceId) => addLeading0x(priceId));
 
+    // Update lastAttempt
+    this.lastPushAttempt = {
+      nonce: txNonce,
+      gasPrice: gasPrice,
+    };
+
     try {
       const { request } =
         await this.pythContract.simulate.updatePriceFeedsIfNecessary(
@@ -383,18 +389,13 @@ export class EvmPricePusher implements IPricePusher {
       );
       throw err;
     }
-
-    // Update lastAttempt
-    this.lastPushAttempt = {
-      nonce: txNonce,
-      gasPrice: gasPrice,
-    };
   }
 
   private async waitForTransactionReceipt(hash: `0x${string}`): Promise<void> {
     try {
       const receipt = await this.client.waitForTransactionReceipt({
         hash: hash,
+        timeout: 10000,
       });
 
       switch (receipt.status) {
