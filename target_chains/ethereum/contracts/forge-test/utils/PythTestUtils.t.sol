@@ -416,7 +416,7 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
             publishTime: block.timestamp
         });
 
-        (int64 price, int32 expo) = PythUtils.combinePrices(ethUsd, btcUsd);
+        (int64 price, int32 expo) = PythUtils.combinePrices(ethUsd.price, ethUsd.expo, btcUsd.price, btcUsd.expo);
         assertApproxEqRel(price, 99875203, 9e17); 
         assertEq(expo, -8);
 
