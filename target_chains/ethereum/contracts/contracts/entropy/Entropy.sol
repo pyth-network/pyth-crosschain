@@ -669,31 +669,18 @@ abstract contract Entropy is IEntropy, EntropyState {
             }
         } else {
             // This case uses the checks-effects-interactions pattern to avoid reentry attacks
-            emit RevealedWithCallback(
-                EntropyStructConverter.toV1Request(req),
-                userRandomNumber,
-                providerRevelation,
-                randomNumber
-            );
-            emit EntropyEventsV2.Revealed(
-                provider,
-                req.requester,
-                req.sequenceNumber,
-                randomNumber,
-                false,
-                bytes(""),
-                0, // gas usage not tracked in the old no-gas-limit flow.
-                bytes("")
-            );
-
+            address callAddress = req.requester;
+            EntropyStructs.Request memory reqV1 = EntropyStructConverter
+                .toV1Request(req);
             clearRequest(provider, sequenceNumber);
+            // WARNING: DO NOT USE req BELOW HERE AS ITS CONTENTS HAS BEEN CLEARED
 
             // Check if the requester is a contract account.
             uint len;
-            address callAddress = req.requester;
             assembly {
                 len := extcodesize(callAddress)
             }
+            uint256 startingGas = gasleft();
             if (len != 0) {
                 IEntropyConsumer(callAddress)._entropyCallback(
                     sequenceNumber,
@@ -701,6 +688,24 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 );
             }
+            uint32 gasUsed = SafeCast.toUint32(startingGas - gasleft());
+
+            emit RevealedWithCallback(
+                reqV1,
+                userRandomNumber,
+                providerRevelation,
+                randomNumber
+            );
+            emit EntropyEventsV2.Revealed(
+                provider,
+                callAddress,
+                sequenceNumber,
+                randomNumber,
+                false,
+                bytes(""),
+                gasUsed,
+                bytes("")
+            );
         }
     }
 

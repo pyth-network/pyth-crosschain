@@ -1778,7 +1778,6 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         // can never cause a callback to fail because it runs out of gas.
         vm.prank(provider1);
         random.setDefaultGasLimit(0);
-
         assertCallbackResult(0, 190000, true);
         assertCallbackResult(0, 210000, true);
         assertCallbackResult(300000, 290000, true);
@@ -1864,8 +1863,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             assertEq(callbackFailed, true);
             assertEq(callbackErrorCode, bytes(""));
 
-            // callback gas usage is approximate and only triggered when the provider has set a gas limit.
-            // Note: this condition is somewhat janky, but we hit the stack limit so can't put in any more local variables :(
+            // callback gas usage is approximate
             assertTrue(
                 random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
                     ((callbackGasUsage * 90) / 100 < callbackGasUsed)
@@ -1941,16 +1939,9 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             );
             assertEq(callbackFailed, false);
             assertEq(callbackErrorCode, bytes(""));
-            // callback gas usage is approximate and only triggered when the provider has set a gas limit
-            // Note: this condition is somewhat janky, but we hit the stack limit so can't put in any more local variables :(
-            assertTrue(
-                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
-                    ((callbackGasUsage * 90) / 100 < callbackGasUsed)
-            );
-            assertTrue(
-                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
-                    (callbackGasUsed < (callbackGasUsage * 110) / 100)
-            );
+            // callback gas usage is approximate
+            assertTrue((callbackGasUsage * 90) / 100 < callbackGasUsed);
+            assertTrue(callbackGasUsed < (callbackGasUsage * 110) / 100);
             assertEq(extraArgs, bytes(""));
 
             // Verify request is cleared after successful callback
