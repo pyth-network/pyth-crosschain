@@ -1,9 +1,14 @@
 
+import { Homepage } from "../components/Homepage/index.js";
+import { HomepageHero } from "../components/HomepageHero/index.js";
+
 const Page = () => {
   return (
-    <div>
-      <h1>Developer Hub</h1>
-    </div>
+    <Homepage>
+      <HomepageHero />
+      
+      {/* Other sections will be added here */}
+    </Homepage>
   );
 };
 

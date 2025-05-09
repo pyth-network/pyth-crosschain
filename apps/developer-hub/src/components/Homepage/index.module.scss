@@ -1,0 +1,23 @@
+@use "@pythnetwork/component-library/theme";
+
+.homepage {
+  @include theme.max-width;
+
+  align-items: center;
+
+  > section {
+    width: 100%;
+
+    & + section {
+      margin-top: theme.spacing(12);
+
+      @include theme.breakpoint(md) {
+        margin-top: theme.spacing(16);
+      }
+
+      @include theme.breakpoint(lg) {
+        margin-top: theme.spacing(20);
+      }
+    }
+  }
+}

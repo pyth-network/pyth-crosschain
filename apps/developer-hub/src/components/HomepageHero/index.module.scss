@@ -1,0 +1,27 @@
+@use "@pythnetwork/component-library/theme";
+
+.homepageHero {
+  width: 100%;
+  padding: theme.spacing(8) theme.spacing(4);
+  position: relative;
+  overflow: hidden;
+
+  @include theme.breakpoint(md) {
+    padding: theme.spacing(12) theme.spacing(6);
+  }
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(6);
+  margin: 0 auto;
+
+  @include theme.breakpoint(md) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @include theme.breakpoint(lg) {
+    grid-template-columns: 2fr 1fr;
+  }
+}

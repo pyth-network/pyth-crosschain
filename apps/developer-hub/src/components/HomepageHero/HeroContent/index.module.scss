@@ -1,0 +1,59 @@
+@use "@pythnetwork/component-library/theme";
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  @include theme.breakpoint(md) {
+    grid-column: 1 / 2;
+  }
+
+  @include theme.breakpoint(lg) {
+    grid-column: 1 / 3;
+  }
+}
+
+.title {
+  font-size: theme.spacing(6);
+  line-height: 1.2;
+  font-weight: theme.font-weight(bold);
+  margin-bottom: theme.spacing(3);
+  color: theme.color("foreground");
+
+  @include theme.breakpoint(md) {
+    font-size: theme.spacing(8);
+  }
+}
+
+.subtitle {
+  font-size: theme.spacing(4);
+  line-height: 1.5;
+  margin-bottom: theme.spacing(6);
+  color: theme.color("muted");
+
+  @include theme.breakpoint(md) {
+    font-size: theme.spacing(5);
+  }
+}
+
+.ctaGroup {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+
+  @include theme.breakpoint(sm) {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.secondaryLink {
+  color: theme.color("foreground");
+  text-decoration: none;
+  font-weight: theme.font-weight(medium);
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

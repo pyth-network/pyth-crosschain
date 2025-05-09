@@ -1,0 +1,30 @@
+@use "@pythnetwork/component-library/theme";
+
+.heroGraphic {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  perspective: 1000px;
+
+  @include theme.breakpoint(md) {
+    grid-column: 2 / 3;
+    height: 500px;
+  }
+
+  @include theme.breakpoint(lg) {
+    grid-column: 3 / 4;
+    height: 600px;
+  }
+}
+
+.graphicContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease-out;
+
+  &[data-animation-complete] {
+    transform: rotateX(20deg) translateZ(-50px);
+  }
+}
