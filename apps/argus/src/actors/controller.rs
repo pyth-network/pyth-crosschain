@@ -1,7 +1,7 @@
 use {
     crate::{
         actors::types::*,
-        adapters::ethereum::pyth_pulse::SubscriptionParams,
+        state::SubscriptionParams,
         adapters::types::{PriceId, SubscriptionId},
     },
     anyhow::Result,

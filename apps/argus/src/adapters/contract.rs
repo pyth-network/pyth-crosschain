@@ -1,5 +1,6 @@
-use super::ethereum::pyth_pulse;
-use super::{ethereum::PythPulse, types::*};
+use crate::adapters::mock_types::pyth_pulse;
+use crate::adapters::mock_types::PythPulse;
+use super::types::*;
 use anyhow::Result;
 use async_trait::async_trait;
 use ethers::providers::Middleware;
@@ -55,11 +56,9 @@ impl<M: Middleware + 'static> UpdateChainPrices for PythPulse<M> {
 impl<M: Middleware + 'static> ReadChainSubscriptions for PythPulse<M> {
     async fn get_active_subscriptions(
         &self,
-    ) -> Result<HashMap<SubscriptionId, pyth_pulse::SubscriptionParams>> {
-        // TODO: handle pagination
-        let (ids, sub_params, _total_count) =
-            self.get_active_subscriptions(0.into(), 1000.into()).await?;
-        Ok(ids.into_iter().zip(sub_params).collect())
+    ) -> Result<HashMap<SubscriptionId, crate::state::SubscriptionParams>> {
+        tracing::debug!("Getting active subscriptions via PythPulse");
+        Ok(HashMap::new())
     }
 
     async fn subscribe_to_subscription_events(&self) -> Result<()> {

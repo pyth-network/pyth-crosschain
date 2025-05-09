@@ -4,7 +4,7 @@ use ethers::types::{H256, U256};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::ethereum::pyth_pulse::SubscriptionParams;
+use crate::state::SubscriptionParams;
 
 #[async_trait]
 pub trait UpdateChainPrices {

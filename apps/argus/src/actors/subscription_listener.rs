@@ -1,4 +1,4 @@
-use crate::adapters::ethereum::pyth_pulse::SubscriptionParams;
+use crate::state::SubscriptionParams;
 use {
     super::SubscriptionListenerMessage,
     crate::adapters::types::{ReadChainSubscriptions, SubscriptionId},
