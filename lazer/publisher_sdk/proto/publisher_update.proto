@@ -1,10 +1,9 @@
 syntax = "proto3";
+package pyth_lazer_transaction;
 
 import "google/protobuf/timestamp.proto";
 
-package pyth_lazer_transaction;
-
-// All optional fields should always be set unless documented otherwise.
+// if any fields marked as [required] are missing, feed/publisher update will be rejected
 
 // Publisher update included in transaction
 //

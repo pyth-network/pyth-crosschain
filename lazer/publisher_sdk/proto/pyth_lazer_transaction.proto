@@ -1,8 +1,10 @@
 syntax = "proto3";
-
 package pyth_lazer_transaction;
 
 import "publisher_update.proto";
+
+// if any fields marked as [required] are missing, transaction will be rejected
+// if signature does not match payload bytes, transaction will be rejected
 
 // Signed transaction for lazer
 // Payload should be created on the publisher side and encoded as bytes.
