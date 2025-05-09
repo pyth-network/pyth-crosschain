@@ -332,11 +332,11 @@ export class PythCoreAdapter implements ProgramAdapter {
   /**
    * Sort object by keys
    */
-  private sortObjectByKeys<T extends Record<string, any>>(obj: T): T {
+  private sortObjectByKeys<T extends Record<string, unknown>>(obj: T): T {
     const sortedObj = {} as T;
     const keys = Object.keys(obj).sort();
     for (const key of keys) {
-      sortedObj[key as keyof T] = obj[key];
+      sortedObj[key as keyof T] = obj[key] as T[keyof T];
     }
     return sortedObj;
   }
