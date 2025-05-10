@@ -6,9 +6,11 @@ use tokio::sync::watch;
 use tracing;
 
 use crate::adapters::types::ReadPythPrices;
+use crate::state::ChainName;
 use crate::services::Service;
 
 pub struct PythPriceService {
+    chain_name: ChainName,
     name: String,
     pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
     pyth_price_state: Arc<crate::state::PythPriceState>,
@@ -17,13 +19,14 @@ pub struct PythPriceService {
 
 impl PythPriceService {
     pub fn new(
-        chain_id: String,
+        chain_name: ChainName,
         poll_interval: Duration,
         pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
         pyth_price_state: Arc<crate::state::PythPriceState>,
     ) -> Self {
         Self {
-            name: format!("PythPriceService-{}", chain_id),
+            chain_name: chain_name.clone(),
+            name: format!("PythPriceService-{}", chain_name),
             poll_interval,
             pyth_price_client,
             pyth_price_state,

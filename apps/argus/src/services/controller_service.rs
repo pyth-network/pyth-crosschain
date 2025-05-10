@@ -9,6 +9,7 @@ use tracing;
 use crate::adapters::types::{PriceId, SubscriptionId};
 use crate::services::types::PushRequest;
 use crate::services::Service;
+use crate::state::ChainName;
 use crate::state::{ChainPriceState, PythPriceState, SubscriptionState};
 
 pub struct ControllerService {
@@ -21,14 +22,14 @@ pub struct ControllerService {
 
 impl ControllerService {
     pub fn new(
-        chain_id: String,
+        chain_name: ChainName,
         update_interval: Duration,
         subscription_state: Arc<SubscriptionState>,
         pyth_price_state: Arc<PythPriceState>,
         chain_price_state: Arc<ChainPriceState>,
     ) -> Self {
         Self {
-            name: format!("ControllerService-{}", chain_id),
+            name: format!("ControllerService-{}", chain_name),
             update_interval,
             subscription_state,
             pyth_price_state,

@@ -1,17 +1,10 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use ethers::{
-    contract::ContractError,
-    providers::Middleware,
-    types::{H256, U256},
-};
-use futures::Stream;
+use ethers::types::{H256, U256};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, pin::Pin};
+use std::collections::HashMap;
 
 use crate::adapters::ethereum::SubscriptionParams;
-
-use super::ethereum::SubscriptionUpdatedFilter;
 
 #[async_trait]
 pub trait UpdateChainPrices {

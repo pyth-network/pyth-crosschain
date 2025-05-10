@@ -1,37 +1,31 @@
-use {
-    crate::{
-        actors::{
-            chain_price_listener::ChainPriceListener, controller::Controller,
-            price_pusher::PricePusher, pyth_price_listener::PythPriceListener,
-            subscription_listener::SubscriptionListener,
-        },
-        adapters::{
-            ethereum::InstrumentedSignablePythContract, hermes::HermesClient,
-            types::ReadChainSubscriptions,
-        },
-        api::BlockchainState,
-        config::EthereumConfig,
-    },
-    backoff::ExponentialBackoff,
-    ethers::signers::Signer,
-    fortuna::eth_utils::traced_client::RpcMetrics,
-    keeper_metrics::KeeperMetrics,
-    ractor::Actor,
-    std::{sync::Arc, time::Duration},
-    tracing,
+use anyhow::Result;
+use backoff::ExponentialBackoff;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::watch;
+use tracing;
+
+use crate::adapters::{ethereum::InstrumentedSignablePythContract, hermes::HermesClient};
+use crate::config::EthereumConfig;
+use crate::metrics::KeeperMetrics;
+use crate::services::{
+    ChainPriceService, ControllerService, PricePusherService, PythPriceService, Service,
+    SubscriptionService,
 };
+use crate::state::ArgusState;
+use crate::state::BlockchainState;
+use ethers::signers::Signer;
+use fortuna::eth_utils::traced_client::RpcMetrics;
 
-pub(crate) mod keeper_metrics;
-
-#[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.name))]
+#[tracing::instrument(name = "keeper_shared", skip_all, fields(chain_name = chain_state.name))]
 pub async fn run_keeper_for_chain(
     private_key: String,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
-    _metrics: Arc<KeeperMetrics>,
+    _metrics: Arc<KeeperMetrics>, // TODO: add metrics
     rpc_metrics: Arc<RpcMetrics>,
-) {
-    tracing::info!("Starting keeper");
+) -> Result<()> {
+    tracing::info!("Starting keeper with shared memory architecture");
 
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(
@@ -48,18 +42,24 @@ pub async fn run_keeper_for_chain(
     );
 
     let keeper_address = contract.wallet().address();
-
     tracing::info!(
-        chain_id = chain_state.name,
         keeper_address = %keeper_address,
         "Keeper address"
     );
 
     let hermes_client = Arc::new(HermesClient);
 
-    // TODO: Make these configurable
+    let state = Arc::new(ArgusState::new());
+
+    let (stop_tx, stop_rx) = watch::channel(false);
+    {
+        let mut stop_sender = state.stop_sender.lock().expect("Mutex poisoned");
+        *stop_sender = Some(stop_tx);
+    }
+
     let subscription_poll_interval = Duration::from_secs(60);
     let chain_price_poll_interval = Duration::from_secs(10);
+    let pyth_price_poll_interval = Duration::from_secs(5);
     let controller_update_interval = Duration::from_secs(5);
     let backoff_policy = ExponentialBackoff {
         initial_interval: Duration::from_secs(1),
@@ -69,77 +69,80 @@ pub async fn run_keeper_for_chain(
         ..ExponentialBackoff::default()
     };
 
-    let (subscription_listener, _) = Actor::spawn(
-        Some(format!("SubscriptionListener-{}", chain_state.name)),
-        SubscriptionListener,
-        (
-            chain_state.name.clone(),
-            contract.clone() as Arc<dyn ReadChainSubscriptions + Send + Sync>,
-            subscription_poll_interval,
-        ),
-    )
-    .await
-    .expect("Failed to spawn SubscriptionListener actor");
+    let subscription_service = SubscriptionService::new(
+        chain_state.name.clone(),
+        contract.clone(),
+        subscription_poll_interval,
+        state.subscription_state.clone(),
+        state.pyth_price_state.clone(),
+        state.chain_price_state.clone(),
+    );
 
-    let (pyth_price_listener, _) = Actor::spawn(
-        Some(format!("PythPriceListener-{}", chain_state.name)),
-        PythPriceListener,
+    let pyth_price_service = PythPriceService::new(
+        chain_state.name.clone(),
+        pyth_price_poll_interval,
         hermes_client.clone(),
-    )
-    .await
-    .expect(&format!(
-        "Failed to spawn PythPriceListener-{} actor",
-        chain_state.name
-    ));
+        state.pyth_price_state.clone(),
+    );
 
-    let (chain_price_listener, _) = Actor::spawn(
-        Some(format!("ChainPriceListener-{}", chain_state.name)),
-        ChainPriceListener,
-        (
-            chain_state.name.clone(),
-            contract.clone(),
-            chain_price_poll_interval,
-        ),
-    )
-    .await
-    .expect(&format!(
-        "Failed to spawn ChainPriceListener-{} actor",
-        chain_state.name
-    ));
+    let chain_price_service = ChainPriceService::new(
+        chain_state.name.clone(),
+        contract.clone(),
+        chain_price_poll_interval,
+        state.chain_price_state.clone(),
+    );
 
-    let (price_pusher, _) = Actor::spawn(
-        Some(format!("PricePusher-{}", chain_state.name)),
-        PricePusher,
-        (
-            chain_state.name.clone(),
-            contract.clone(),
-            hermes_client.clone(),
-            backoff_policy,
-        ),
-    )
-    .await
-    .expect(&format!(
-        "Failed to spawn PricePusher-{} actor",
-        chain_state.name
-    ));
+    let price_pusher_service = PricePusherService::new(
+        chain_state.name.clone(),
+        contract.clone(),
+        hermes_client.clone(),
+        backoff_policy,
+    );
 
-    let (_controller, _) = Actor::spawn(
-        Some(format!("Controller-{}", chain_state.name)),
-        Controller,
-        (
-            chain_state.name.clone(),
-            subscription_listener,
-            pyth_price_listener,
-            chain_price_listener,
-            price_pusher,
-            controller_update_interval,
-        ),
-    )
-    .await
-    .expect(&format!(
-        "Failed to spawn Controller-{} actor",
-        chain_state.name
-    ));
+    let controller_service = ControllerService::new(
+        chain_state.name.clone(),
+        controller_update_interval,
+        state.subscription_state.clone(),
+        state.pyth_price_state.clone(),
+        state.chain_price_state.clone(),
+    );
 
-    tracing::info!(chain_id = chain_state.name, "Keeper actors started");
+    let services: Vec<Arc<dyn Service>> = vec![
+        Arc::new(subscription_service),
+        Arc::new(pyth_price_service),
+        Arc::new(chain_price_service),
+        Arc::new(price_pusher_service),
+        Arc::new(controller_service),
+    ];
+
+    let mut handles = Vec::new();
+    for service in services {
+        let service_stop_rx = stop_rx.clone();
+
+        let handle = tokio::spawn(async move {
+            let service_name = service.name().to_string();
+            match service.start(service_stop_rx).await {
+                Ok(_) => {
+                    tracing::info!(service = service_name, "Service stopped gracefully");
+                }
+                Err(e) => {
+                    tracing::error!(
+                        service = service_name,
+                        error = %e,
+                        "Service stopped with error"
+                    );
+                }
+            }
+        });
+
+        handles.push(handle);
+    }
+
+    tracing::info!("Keeper services started");
+
+    for handle in handles {
+        let _ = handle.await;
+    }
+
+    Ok(())
 }

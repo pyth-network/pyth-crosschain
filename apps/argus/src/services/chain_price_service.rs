@@ -7,10 +7,12 @@ use tokio::time;
 use tracing;
 
 use crate::adapters::contract::GetChainPrices;
+use crate::state::ChainName;
 use crate::services::Service;
 use crate::state::ChainPriceState;
 
 pub struct ChainPriceService {
+    chain_name: ChainName,
     name: String,
     contract: Arc<dyn GetChainPrices + Send + Sync>,
     poll_interval: Duration,
@@ -19,13 +21,14 @@ pub struct ChainPriceService {
 
 impl ChainPriceService {
     pub fn new(
-        chain_id: String,
+        chain_name: ChainName,
         contract: Arc<dyn GetChainPrices + Send + Sync>,
         poll_interval: Duration,
         chain_price_state: Arc<ChainPriceState>,
     ) -> Self {
         Self {
-            name: format!("ChainPriceService-{}", chain_id),
+            chain_name: chain_name.clone(),
+            name: format!("ChainPriceService-{}", chain_name),
             contract,
             poll_interval,
             chain_price_state,

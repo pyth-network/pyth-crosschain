@@ -1,16 +1,11 @@
-use super::ethereum::{PythPulse, SubscriptionUpdatedFilter};
+use super::ethereum::PythPulse;
 use super::types::*;
 use crate::adapters::ethereum::SubscriptionParams;
 use anyhow::Result;
 use async_trait::async_trait;
-use ethers::contract::stream::EventStream;
-use ethers::contract::{ContractError, EthEvent};
 use ethers::providers::Middleware;
-use ethers::types::{Filter, H256, U256};
-use futures::Stream;
-use futures::TryStreamExt;
+use ethers::types::H256;
 use std::collections::HashMap;
-use std::pin::Pin;
 
 #[async_trait]
 pub trait GetChainPrices {

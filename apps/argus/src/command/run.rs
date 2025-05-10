@@ -2,7 +2,8 @@ use {
     crate::{
         api::{self, BlockchainState, ChainName},
         config::{Config, EthereumConfig, RunOptions},
-        keeper::{self, keeper_metrics::KeeperMetrics},
+        keeper::{self, metrics::KeeperMetrics},
+        state::BlockchainState,
     },
     anyhow::{anyhow, Error, Result},
     axum::Router,
@@ -25,7 +26,9 @@ pub async fn run_api(
     metrics_registry: Arc<RwLock<Registry>>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
-    let api_state = api::ApiState::new(metrics_registry).await;
+    let api_state = api::ApiState {
+        metrics_registry: metrics_registry.clone(),
+    };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -54,7 +57,7 @@ pub async fn run_api(
 }
 
 pub async fn run_keeper(
-    chains: HashMap<String, api::BlockchainState>,
+    chains: HashMap<String, BlockchainState>,
     config: Config,
     private_key: String,
     metrics_registry: Arc<RwLock<Registry>>,

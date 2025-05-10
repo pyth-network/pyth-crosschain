@@ -2,22 +2,34 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, RwLock};
 use tokio::sync::watch;
 
-use crate::adapters::ethereum::SubscriptionParams;
+use crate::adapters::ethereum::{BlockStatus, SubscriptionParams};
 use crate::adapters::types::{Price, PriceId, SubscriptionId};
+
+pub type ChainName = String;
+
+/// The state of the service for a single blockchain.
+#[derive(Clone)]
+pub struct BlockchainState {
+    /// The human friendly name for this blockchain, useful for logging
+    pub name: ChainName,
+    /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
+    /// For eg., Finalized, Safe
+    pub confirmed_block_status: BlockStatus,
+}
 
 #[derive(Clone)]
 pub struct ArgusState {
-    pub chain_id: String,
     pub subscription_state: Arc<SubscriptionState>,
     pub pyth_price_state: Arc<PythPriceState>,
     pub chain_price_state: Arc<ChainPriceState>,
     pub stop_sender: Arc<Mutex<Option<watch::Sender<bool>>>>,
 }
 
+/// The state of Argus per chain.
+/// Each sub state object should be a singleton and shared across services.
 impl ArgusState {
-    pub fn new(chain_id: String) -> Self {
+    pub fn new() -> Self {
         Self {
-            chain_id,
             subscription_state: Arc::new(SubscriptionState::new()),
             pyth_price_state: Arc::new(PythPriceState::new()),
             chain_price_state: Arc::new(ChainPriceState::new()),

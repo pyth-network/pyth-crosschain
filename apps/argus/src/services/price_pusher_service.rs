@@ -8,8 +8,10 @@ use tracing;
 use crate::adapters::types::{ReadPythPrices, UpdateChainPrices};
 use crate::services::types::PushRequest;
 use crate::services::Service;
+use crate::state::ChainName;
 
 pub struct PricePusherService {
+    chain_name: ChainName,
     name: String,
     contract: Arc<dyn UpdateChainPrices + Send + Sync>,
     pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
@@ -20,7 +22,7 @@ pub struct PricePusherService {
 
 impl PricePusherService {
     pub fn new(
-        chain_id: String,
+        chain_name: ChainName,
         contract: Arc<dyn UpdateChainPrices + Send + Sync>,
         pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
         backoff_policy: ExponentialBackoff,
@@ -28,7 +30,8 @@ impl PricePusherService {
         let (request_tx, request_rx) = mpsc::channel(100);
 
         Self {
-            name: format!("PricePusherService-{}", chain_id),
+            chain_name: chain_name.clone(),
+            name: format!("PricePusherService-{}", chain_name),
             contract,
             pyth_price_client,
             backoff_policy,
@@ -41,6 +44,14 @@ impl PricePusherService {
         self.request_tx.clone()
     }
 
+    #[tracing::instrument(
+        skip(self),
+        fields(
+            name = "handle_request",
+            task = self.name,
+            subscription_id = request.subscription_id.to_string()
+        )
+    )]
     async fn handle_request(&self, request: PushRequest) {
         let price_ids = request.price_ids.clone();
 

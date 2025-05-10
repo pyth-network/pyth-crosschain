@@ -1,54 +1,54 @@
 use {
+    crate::state::ChainName,
     prometheus_client::{
         encoding::EncodeLabelSet,
         metrics::{counter::Counter, family::Family, gauge::Gauge, histogram::Histogram},
         registry::Registry,
     },
-    std::sync::atomic::AtomicU64,
-    std::sync::Arc,
+    std::sync::{atomic::AtomicU64, Arc},
     tokio::sync::RwLock,
 };
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct ChainIdLabel {
-    pub chain_id: String,
+pub struct ChainNameLabel {
+    pub chain_name: ChainName,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct SubscriptionIdLabel {
-    pub chain_id: String,
+    pub chain_name: ChainName,
     pub subscription_id: String,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct PriceFeedIdLabel {
-    pub chain_id: String,
+    pub chain_name: ChainName,
     pub price_feed_id: String,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct KeeperIdLabel {
-    pub chain_id: String,
+    pub chain_name: ChainName,
     pub keeper_id: String,
 }
 
 pub struct KeeperMetrics {
     /// Number of active subscriptions per chain
-    pub active_subscriptions: Family<ChainIdLabel, Gauge>,
+    pub active_subscriptions: Family<ChainNameLabel, Gauge>,
     /// Number of price feeds per chain that are in an active subscription
-    pub active_price_feeds: Family<ChainIdLabel, Gauge>,
+    pub active_price_feeds: Family<ChainNameLabel, Gauge>,
     /// Last published time for an active price feed (Unix timestamp seconds)
     pub last_published_time_s: Family<PriceFeedIdLabel, Gauge<f64, AtomicU64>>,
     /// Total gas fee (in native token) spent on price updates per chain
-    pub total_gas_fee_spent: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
+    pub total_gas_fee_spent: Family<ChainNameLabel, Gauge<f64, AtomicU64>>,
     /// Total payment received (in native token) per chain
-    pub total_payment_received: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
+    pub total_payment_received: Family<ChainNameLabel, Gauge<f64, AtomicU64>>,
     /// Number of successful price updates per chain
-    pub successful_price_updates: Family<ChainIdLabel, Counter>,
+    pub successful_price_updates: Family<ChainNameLabel, Counter>,
     /// Number of failed price updates per chain
-    pub failed_price_updates: Family<ChainIdLabel, Counter>,
+    pub failed_price_updates: Family<ChainNameLabel, Counter>,
     /// Current gas price estimate (in Gwei) per chain
-    pub gas_price_estimate: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
+    pub gas_price_estimate: Family<ChainNameLabel, Gauge<f64, AtomicU64>>,
     /// Keeper wallet balance (in native token) per chain
     pub keeper_wallet_balance: Family<KeeperIdLabel, Gauge<f64, AtomicU64>>,
     /// Duration from the time the keeper notices an eligible update criteria to the time the keeper lands the update on-chain in milliseconds per chain
@@ -81,7 +81,7 @@ impl Default for KeeperMetrics {
 }
 
 impl KeeperMetrics {
-    pub async fn new(registry: Arc<RwLock<Registry>>, chain_ids: Vec<String>) -> Self {
+    pub async fn new(registry: Arc<RwLock<Registry>>, chain_names: Vec<String>) -> Self {
         let mut writable_registry = registry.write().await;
         let keeper_metrics = KeeperMetrics::default();
 
@@ -146,8 +146,8 @@ impl KeeperMetrics {
         );
 
         // Initialize metrics for each chain_id
-        for chain_id in chain_ids {
-            let chain_label = ChainIdLabel { chain_id };
+        for chain_name in chain_names {
+            let chain_label = ChainNameLabel { chain_name };
 
             let _ = keeper_metrics
                 .active_subscriptions

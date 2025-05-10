@@ -7,9 +7,11 @@ use tokio::time;
 use tracing;
 
 use crate::adapters::types::ReadChainSubscriptions;
+use crate::state::ChainName;
 use crate::services::Service;
 
 pub struct SubscriptionService {
+    chain_name: ChainName,
     name: String,
     contract: Arc<dyn ReadChainSubscriptions + Send + Sync>,
     poll_interval: Duration,
@@ -20,7 +22,7 @@ pub struct SubscriptionService {
 
 impl SubscriptionService {
     pub fn new(
-        chain_id: String,
+        chain_name: ChainName,
         contract: Arc<dyn ReadChainSubscriptions + Send + Sync>,
         poll_interval: Duration,
         subscription_state: Arc<crate::state::SubscriptionState>,
@@ -28,7 +30,8 @@ impl SubscriptionService {
         chain_price_state: Arc<crate::state::ChainPriceState>,
     ) -> Self {
         Self {
-            name: format!("SubscriptionService-{}", chain_id),
+            chain_name: chain_name.clone(),
+            name: format!("SubscriptionService-{}", chain_name),
             contract,
             poll_interval,
             subscription_state,
@@ -76,7 +79,7 @@ impl Service for SubscriptionService {
         let _ = self.refresh_subscriptions().await;
 
         // Subscribe to contract events
-        let event_stream = match self.contract.subscribe_to_subscription_events().await {
+        let _event_stream = match self.contract.subscribe_to_subscription_events().await {
             Ok(stream) => {
                 tracing::info!(
                     service_name = self.name,

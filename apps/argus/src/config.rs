@@ -1,6 +1,6 @@
 pub use run::RunOptions;
 use {
-    crate::{adapters::ethereum::BlockStatus, api::ChainName},
+    crate::{adapters::ethereum::BlockStatus, state::ChainName},
     anyhow::{anyhow, Result},
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
     ethers::types::Address,
