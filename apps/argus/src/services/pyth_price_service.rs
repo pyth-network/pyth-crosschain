@@ -1,26 +1,32 @@
-use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
+use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::watch;
 use tracing;
 
 use crate::adapters::types::ReadPythPrices;
-use crate::state::ArgusState;
 use crate::services::Service;
 
 pub struct PythPriceService {
     name: String,
     pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
+    pyth_price_state: Arc<crate::state::PythPriceState>,
+    poll_interval: Duration,
 }
 
 impl PythPriceService {
     pub fn new(
         chain_id: String,
+        poll_interval: Duration,
         pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
+        pyth_price_state: Arc<crate::state::PythPriceState>,
     ) -> Self {
         Self {
             name: format!("PythPriceService-{}", chain_id),
+            poll_interval,
             pyth_price_client,
+            pyth_price_state,
         }
     }
 }
@@ -30,47 +36,46 @@ impl Service for PythPriceService {
     fn name(&self) -> &str {
         &self.name
     }
-    
-    async fn start(&self, state: Arc<ArgusState>, mut stop_rx: watch::Receiver<bool>) -> Result<()> {
-        let mut last_feed_ids = state.pyth_price_state.get_feed_ids();
-        if !last_feed_ids.is_empty() {
-            let feed_ids_vec: Vec<_> = last_feed_ids.iter().cloned().collect();
-            if let Err(e) = self.pyth_price_client.subscribe_to_price_updates(&feed_ids_vec).await {
-                tracing::error!(
-                    service = self.name,
-                    error = %e,
-                    "Failed to subscribe to Pyth price updates"
-                );
-            }
-        }
-        
+
+    async fn start(&self, mut stop_rx: watch::Receiver<bool>) -> Result<()> {
+        let mut interval_timer = tokio::time::interval(self.poll_interval);
+
         loop {
-            let current_feed_ids = state.pyth_price_state.get_feed_ids();
-            if current_feed_ids != last_feed_ids {
-                let feed_ids_vec: Vec<_> = current_feed_ids.iter().cloned().collect();
-                if !feed_ids_vec.is_empty() {
-                    if let Err(e) = self.pyth_price_client.subscribe_to_price_updates(&feed_ids_vec).await {
-                        tracing::error!(
-                            service = self.name,
-                            error = %e,
-                            "Failed to update Pyth price subscriptions"
-                        );
+            tokio::select! {
+                _ = interval_timer.tick() => {
+                    let feed_ids = self.pyth_price_state.get_feed_ids();
+                    if !feed_ids.is_empty() {
+                        let feed_ids_vec: Vec<_> = feed_ids.iter().cloned().collect();
+                        match self.pyth_price_client.get_latest_prices(&feed_ids_vec).await {
+                            Ok(_prices_data) => {
+                                tracing::debug!(
+                                    service = self.name,
+                                    feed_count = feed_ids_vec.len(),
+                                    "Successfully polled Pyth prices"
+                                );
+                                // TODO: update the prices in the state
+                                // self.pyth_price_state.update_prices(prices_data);
+
+                            }
+                            Err(e) => {
+                                tracing::error!(
+                                    service = self.name,
+                                    error = %e,
+                                    "Failed to poll Pyth prices"
+                                );
+                            }
+                        }
                     }
                 }
-                last_feed_ids = current_feed_ids;
+                _ = stop_rx.changed() => {
+                    if *stop_rx.borrow() {
+                        tracing::info!(service = self.name, "Stopping Pyth price service");
+                        break;
+                    }
+                }
             }
-            
-            if stop_rx.changed().await.is_ok() && *stop_rx.borrow() {
-                tracing::info!(
-                    service = self.name,
-                    "Stopping Pyth price service"
-                );
-                break;
-            }
-            
-            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         }
-        
+
         Ok(())
     }
 }

@@ -20,7 +20,10 @@ use {
 
 // FIXME: When public scheduler interface is extracted out to an SDK,
 // get the ABI from the SDK package.
-use crate::adapters::mock_types::PythPulse;
+abigen!(
+    PythPulse,
+    "../../target_chains/ethereum/contracts/out/IScheduler.sol/IScheduler.abi.json"
+);
 
 pub type MiddlewaresWrapper<T> = LegacyTxMiddleware<
     GasOracleMiddleware<

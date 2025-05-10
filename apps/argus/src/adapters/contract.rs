@@ -1,11 +1,16 @@
-use crate::adapters::mock_types::pyth_pulse;
-use crate::adapters::mock_types::PythPulse;
+use super::ethereum::{PythPulse, SubscriptionUpdatedFilter};
 use super::types::*;
+use crate::adapters::ethereum::SubscriptionParams;
 use anyhow::Result;
 use async_trait::async_trait;
+use ethers::contract::stream::EventStream;
+use ethers::contract::{ContractError, EthEvent};
 use ethers::providers::Middleware;
-use ethers::types::H256;
+use ethers::types::{Filter, H256, U256};
+use futures::Stream;
+use futures::TryStreamExt;
 use std::collections::HashMap;
+use std::pin::Pin;
 
 #[async_trait]
 pub trait GetChainPrices {
@@ -56,12 +61,11 @@ impl<M: Middleware + 'static> UpdateChainPrices for PythPulse<M> {
 impl<M: Middleware + 'static> ReadChainSubscriptions for PythPulse<M> {
     async fn get_active_subscriptions(
         &self,
-    ) -> Result<HashMap<SubscriptionId, crate::state::SubscriptionParams>> {
+    ) -> Result<HashMap<SubscriptionId, SubscriptionParams>> {
         tracing::debug!("Getting active subscriptions via PythPulse");
         Ok(HashMap::new())
     }
-
     async fn subscribe_to_subscription_events(&self) -> Result<()> {
-        Ok(())
+        todo!()
     }
 }

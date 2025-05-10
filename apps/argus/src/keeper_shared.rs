@@ -1,29 +1,25 @@
-use std::sync::Arc;
-use std::time::Duration;
 use anyhow::Result;
 use backoff::ExponentialBackoff;
+use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::watch;
 use tracing;
 
+use crate::adapters;
+use crate::adapters::types::ReadPythPrices;
 use crate::adapters::{
-    ethereum::InstrumentedSignablePythContract,
-    hermes::HermesClient,
-    types::ReadChainSubscriptions,
+    ethereum::InstrumentedSignablePythContract, hermes::HermesClient, types::ReadChainSubscriptions,
 };
 use crate::api::BlockchainState;
 use crate::config::EthereumConfig;
 use crate::keeper::keeper_metrics::KeeperMetrics;
 use crate::services::{
-    ChainPriceService,
-    ControllerService,
-    PricePusherService,
-    PythPriceService,
-    Service,
+    ChainPriceService, ControllerService, PricePusherService, PythPriceService, Service,
     SubscriptionService,
 };
 use crate::state::ArgusState;
-use fortuna::eth_utils::traced_client::RpcMetrics;
 use ethers::signers::Signer;
+use fortuna::eth_utils::traced_client::RpcMetrics;
 
 #[tracing::instrument(name = "keeper_shared", skip_all, fields(chain_id = chain_state.name))]
 pub async fn run_keeper_for_chain(
@@ -59,7 +55,7 @@ pub async fn run_keeper_for_chain(
     let hermes_client = Arc::new(HermesClient);
 
     let state = Arc::new(ArgusState::new(chain_state.name.clone()));
-    
+
     let (stop_tx, stop_rx) = watch::channel(false);
     {
         let mut stop_sender = state.stop_sender.lock().expect("Mutex poisoned");
@@ -68,6 +64,7 @@ pub async fn run_keeper_for_chain(
 
     let subscription_poll_interval = Duration::from_secs(60);
     let chain_price_poll_interval = Duration::from_secs(10);
+    let pyth_price_poll_interval = Duration::from_secs(5);
     let controller_update_interval = Duration::from_secs(5);
     let backoff_policy = ExponentialBackoff {
         initial_interval: Duration::from_secs(1),
@@ -79,19 +76,25 @@ pub async fn run_keeper_for_chain(
 
     let subscription_service = SubscriptionService::new(
         chain_state.name.clone(),
-        contract.clone() as Arc<dyn ReadChainSubscriptions + Send + Sync>,
+        contract.clone(),
         subscription_poll_interval,
+        state.subscription_state.clone(),
+        state.pyth_price_state.clone(),
+        state.chain_price_state.clone(),
     );
 
     let pyth_price_service = PythPriceService::new(
         chain_state.name.clone(),
+        pyth_price_poll_interval,
         hermes_client.clone(),
+        state.pyth_price_state.clone(),
     );
 
     let chain_price_service = ChainPriceService::new(
         chain_state.name.clone(),
         contract.clone(),
         chain_price_poll_interval,
+        state.chain_price_state.clone(),
     );
 
     let price_pusher_service = PricePusherService::new(
@@ -104,6 +107,9 @@ pub async fn run_keeper_for_chain(
     let controller_service = ControllerService::new(
         chain_state.name.clone(),
         controller_update_interval,
+        state.subscription_state.clone(),
+        state.pyth_price_state.clone(),
+        state.chain_price_state.clone(),
     );
 
     let services: Vec<Arc<dyn Service>> = vec![
@@ -116,12 +122,11 @@ pub async fn run_keeper_for_chain(
 
     let mut handles = Vec::new();
     for service in services {
-        let service_state = state.clone();
         let service_stop_rx = stop_rx.clone();
-        
+
         let handle = tokio::spawn(async move {
             let service_name = service.name().to_string();
-            match service.start(service_state, service_stop_rx).await {
+            match service.start(service_stop_rx).await {
                 Ok(_) => {
                     tracing::info!(service = service_name, "Service stopped gracefully");
                 }
@@ -134,7 +139,7 @@ pub async fn run_keeper_for_chain(
                 }
             }
         });
-        
+
         handles.push(handle);
     }
 

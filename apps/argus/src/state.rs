@@ -1,15 +1,9 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, RwLock, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use tokio::sync::watch;
 
+use crate::adapters::ethereum::SubscriptionParams;
 use crate::adapters::types::{Price, PriceId, SubscriptionId};
-
-#[derive(Clone)]
-pub struct SubscriptionParams {
-    pub price_feed_ids: Vec<PriceId>,
-    pub heartbeat_seconds: u32,
-    pub deviation_threshold_bps: u32,
-}
 
 #[derive(Clone)]
 pub struct ArgusState {
@@ -55,10 +49,7 @@ impl SubscriptionState {
             .cloned()
     }
 
-    pub fn update_subscriptions(
-        &self,
-        subscriptions: HashMap<SubscriptionId, SubscriptionParams>,
-    ) {
+    pub fn update_subscriptions(&self, subscriptions: HashMap<SubscriptionId, SubscriptionParams>) {
         let mut lock = self.subscriptions.write().expect("RwLock poisoned");
         *lock = subscriptions;
     }
@@ -66,13 +57,13 @@ impl SubscriptionState {
     pub fn get_feed_ids(&self) -> HashSet<PriceId> {
         let subscriptions = self.subscriptions.read().expect("RwLock poisoned");
         let mut feed_ids = HashSet::new();
-        
+
         for (_, params) in subscriptions.iter() {
-            for feed_id in &params.price_feed_ids {
+            for feed_id in &params.price_ids {
                 feed_ids.insert(*feed_id);
             }
         }
-        
+
         feed_ids
     }
 }

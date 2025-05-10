@@ -1,8 +1,10 @@
 use {
     crate::{
         actors::types::*,
-        state::SubscriptionParams,
-        adapters::types::{PriceId, SubscriptionId},
+        adapters::{
+            ethereum::SubscriptionParams,
+            types::{PriceId, SubscriptionId},
+        },
     },
     anyhow::Result,
     ractor::{Actor, ActorProcessingErr, ActorRef},

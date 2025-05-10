@@ -1,10 +1,17 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use ethers::types::{H256, U256};
+use ethers::{
+    contract::ContractError,
+    providers::Middleware,
+    types::{H256, U256},
+};
+use futures::Stream;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, pin::Pin};
 
-use crate::state::SubscriptionParams;
+use crate::adapters::ethereum::SubscriptionParams;
+
+use super::ethereum::SubscriptionUpdatedFilter;
 
 #[async_trait]
 pub trait UpdateChainPrices {
@@ -20,7 +27,7 @@ pub trait UpdateChainPrices {
 pub trait ReadChainSubscriptions {
     async fn get_active_subscriptions(&self)
         -> Result<HashMap<SubscriptionId, SubscriptionParams>>;
-    async fn subscribe_to_subscription_events(&self) -> Result<()>; // TODO: return a stream
+    async fn subscribe_to_subscription_events(&self) -> Result<()>;
 }
 
 #[async_trait]

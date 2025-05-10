@@ -1,7 +1,9 @@
-use crate::state::SubscriptionParams;
 use {
     super::SubscriptionListenerMessage,
-    crate::adapters::types::{ReadChainSubscriptions, SubscriptionId},
+    crate::adapters::{
+        ethereum::SubscriptionParams,
+        types::{ReadChainSubscriptions, SubscriptionId},
+    },
     anyhow::Result,
     ractor::{Actor, ActorProcessingErr, ActorRef},
     std::{

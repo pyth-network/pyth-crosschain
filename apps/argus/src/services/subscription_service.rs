@@ -1,19 +1,21 @@
-use std::sync::Arc;
-use std::time::Duration;
 use anyhow::Result;
 use async_trait::async_trait;
+use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::watch;
 use tokio::time;
 use tracing;
 
 use crate::adapters::types::ReadChainSubscriptions;
-use crate::state::ArgusState;
 use crate::services::Service;
 
 pub struct SubscriptionService {
     name: String,
     contract: Arc<dyn ReadChainSubscriptions + Send + Sync>,
     poll_interval: Duration,
+    subscription_state: Arc<crate::state::SubscriptionState>,
+    pyth_price_state: Arc<crate::state::PythPriceState>,
+    chain_price_state: Arc<crate::state::ChainPriceState>,
 }
 
 impl SubscriptionService {
@@ -21,34 +23,40 @@ impl SubscriptionService {
         chain_id: String,
         contract: Arc<dyn ReadChainSubscriptions + Send + Sync>,
         poll_interval: Duration,
+        subscription_state: Arc<crate::state::SubscriptionState>,
+        pyth_price_state: Arc<crate::state::PythPriceState>,
+        chain_price_state: Arc<crate::state::ChainPriceState>,
     ) -> Self {
         Self {
             name: format!("SubscriptionService-{}", chain_id),
             contract,
             poll_interval,
+            subscription_state,
+            pyth_price_state,
+            chain_price_state,
         }
     }
 
-    async fn refresh_subscriptions(&self, state: Arc<ArgusState>) -> Result<()> {
+    async fn refresh_subscriptions(&self) -> Result<()> {
         match self.contract.get_active_subscriptions().await {
             Ok(subscriptions) => {
                 tracing::info!(
-                    chain_name = state.chain_id,
+                    service_name = self.name,
                     subscription_count = subscriptions.len(),
                     "Retrieved active subscriptions"
                 );
-                
-                state.subscription_state.update_subscriptions(subscriptions);
-                
-                let feed_ids = state.subscription_state.get_feed_ids();
-                state.pyth_price_state.update_feed_ids(feed_ids.clone());
-                state.chain_price_state.update_feed_ids(feed_ids);
-                
+
+                self.subscription_state.update_subscriptions(subscriptions);
+
+                let feed_ids = self.subscription_state.get_feed_ids();
+                self.pyth_price_state.update_feed_ids(feed_ids.clone());
+                self.chain_price_state.update_feed_ids(feed_ids);
+
                 Ok(())
             }
             Err(e) => {
                 tracing::error!(
-                    chain_name = state.chain_id,
+                    service_name = self.name,
                     error = %e,
                     "Failed to load active subscriptions"
                 );
@@ -63,23 +71,46 @@ impl Service for SubscriptionService {
     fn name(&self) -> &str {
         &self.name
     }
-    
-    async fn start(&self, state: Arc<ArgusState>, mut stop_rx: watch::Receiver<bool>) -> Result<()> {
-        if let Err(e) = self.contract.subscribe_to_subscription_events().await {
-            tracing::error!(
-                chain_name = state.chain_id,
-                error = %e,
-                "Failed to subscribe to contract events"
-            );
-        }
-        
-        let _ = self.refresh_subscriptions(state.clone()).await;
-        
+    async fn start(&self, mut stop_rx: watch::Receiver<bool>) -> Result<()> {
+        // Initial load of subscriptions
+        let _ = self.refresh_subscriptions().await;
+
+        // Subscribe to contract events
+        let event_stream = match self.contract.subscribe_to_subscription_events().await {
+            Ok(stream) => {
+                tracing::info!(
+                    service_name = self.name,
+                    "Successfully subscribed to subscription events"
+                );
+                stream
+            }
+            Err(e) => {
+                tracing::error!(
+                    service_name = self.name,
+                    error = %e,
+                    "Failed to subscribe to contract events"
+                );
+                return Err(e);
+            }
+        };
+
         let mut interval = time::interval(self.poll_interval);
+
         loop {
             tokio::select! {
+                // Consume SubscriptionUpdated events
+                // Some(event) = event_stream.next() => {
+                //     tracing::info!(
+                //         service_name = self.name,
+                //         subscription_id = ?event.subscription_id,
+                //         "Received SubscriptionModified event"
+                //     );
+                //     // Refresh subscriptions when we get an event
+                //     let _ = self.refresh_subscriptions().await;
+                // }
                 _ = interval.tick() => {
-                    let _ = self.refresh_subscriptions(state.clone()).await;
+                    // Regular polling as a fallback
+                    let _ = self.refresh_subscriptions().await;
                 }
                 _ = stop_rx.changed() => {
                     if *stop_rx.borrow() {
@@ -92,7 +123,7 @@ impl Service for SubscriptionService {
                 }
             }
         }
-        
+
         Ok(())
     }
 }
