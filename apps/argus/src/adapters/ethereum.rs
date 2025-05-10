@@ -1,9 +1,5 @@
 use {
-    crate::{
-        api::ChainId,
-        chain::reader::{BlockNumber, BlockStatus},
-        config::EthereumConfig,
-    },
+    crate::{api::ChainName, config::EthereumConfig},
     anyhow::{Error, Result},
     ethers::{
         contract::abigen,
@@ -92,7 +88,7 @@ impl InstrumentedSignablePythContract {
     pub async fn from_config(
         chain_config: &EthereumConfig,
         private_key: &str,
-        chain_id: ChainId,
+        chain_id: ChainName,
         metrics: Arc<RpcMetrics>,
     ) -> Result<Self> {
         let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
@@ -114,7 +110,7 @@ impl PythContract {
 impl InstrumentedPythContract {
     pub fn from_config(
         chain_config: &EthereumConfig,
-        chain_id: ChainId,
+        chain_id: ChainName,
         metrics: Arc<RpcMetrics>,
     ) -> Result<Self> {
         let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
@@ -142,5 +138,32 @@ impl<M: Middleware + 'static> PythPulse<M> {
             .number
             .ok_or_else(|| Error::msg("pending confirmation"))?
             .as_u64())
+    }
+}
+
+// TODO: extract to a SDK
+
+pub type BlockNumber = u64;
+
+#[derive(
+    Copy, Clone, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
+)]
+pub enum BlockStatus {
+    /// Latest block
+    #[default]
+    Latest,
+    /// Finalized block accepted as canonical
+    Finalized,
+    /// Safe head block
+    Safe,
+}
+
+impl From<BlockStatus> for EthersBlockNumber {
+    fn from(val: BlockStatus) -> Self {
+        match val {
+            BlockStatus::Latest => EthersBlockNumber::Latest,
+            BlockStatus::Finalized => EthersBlockNumber::Finalized,
+            BlockStatus::Safe => EthersBlockNumber::Safe,
+        }
     }
 }
