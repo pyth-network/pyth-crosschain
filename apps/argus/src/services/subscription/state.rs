@@ -70,16 +70,16 @@ impl SubscriptionState {
     pub async fn update_feed_ids_from_subscriptions(&self) -> Result<()> {
         let subscriptions = self.active_subscriptions.read().await;
         let mut new_feed_ids = HashSet::new();
-        
+
         for (_, params) in subscriptions.iter() {
             for feed_id in &params.price_ids {
                 new_feed_ids.insert(*feed_id);
             }
         }
-        
+
         let mut feed_ids = self.feed_ids.write().await;
         *feed_ids = new_feed_ids;
-        
+
         Ok(())
     }
 }

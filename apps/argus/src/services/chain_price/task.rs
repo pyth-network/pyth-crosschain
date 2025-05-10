@@ -14,7 +14,7 @@ pub struct ChainPriceListenerTask {
 
 impl ChainPriceListenerTask {
     pub fn new(
-        chain_id: String, 
+        chain_id: String,
         chain_price_state: Arc<ChainPriceState>,
         poll_interval: Duration,
     ) -> Self {
@@ -27,7 +27,7 @@ impl ChainPriceListenerTask {
 
     pub async fn run(&self, mut stop: watch::Receiver<bool>) -> Result<()> {
         let mut interval = time::interval(self.poll_interval);
-        
+
         loop {
             tokio::select! {
                 _ = interval.tick() => {

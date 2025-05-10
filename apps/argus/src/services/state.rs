@@ -1,5 +1,5 @@
 use {
-    crate::shared::{
+    crate::services::{
         chain_price::ChainPriceState,
         price_pusher::{PushQueue, PushRequest},
         pyth_price::PythPriceState,
@@ -8,14 +8,14 @@ use {
     std::sync::Arc,
 };
 
-pub struct ArgusSharedState {
+pub struct ArgusState {
     subscription_state: SubscriptionState,
     pyth_price_state: PythPriceState,
     chain_price_state: ChainPriceState,
     push_queue: PushQueue,
 }
 
-impl ArgusSharedState {
+impl ArgusState {
     pub fn new() -> Self {
         Self {
             subscription_state: SubscriptionState::new(),

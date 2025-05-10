@@ -1,5 +1,5 @@
 use {
-    crate::shared::pyth_price::state::PythPriceState,
+    crate::services::pyth_price::state::PythPriceState,
     anyhow::Result,
     std::{sync::Arc, time::Duration},
     tokio::sync::watch,
@@ -12,10 +12,7 @@ pub struct PythPriceListenerTask {
 }
 
 impl PythPriceListenerTask {
-    pub fn new(
-        chain_id: String, 
-        pyth_price_state: Arc<PythPriceState>,
-    ) -> Self {
+    pub fn new(chain_id: String, pyth_price_state: Arc<PythPriceState>) -> Self {
         Self {
             chain_id,
             pyth_price_state,

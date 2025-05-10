@@ -17,7 +17,7 @@ pub struct SubscriptionListenerTask {
 
 impl SubscriptionListenerTask {
     pub fn new(
-        chain_id: String, 
+        chain_id: String,
         subscription_state: Arc<SubscriptionState>,
         poll_interval: Duration,
     ) -> Self {
@@ -30,7 +30,7 @@ impl SubscriptionListenerTask {
 
     pub async fn run(&self, mut stop: watch::Receiver<bool>) -> Result<()> {
         let mut interval = time::interval(self.poll_interval);
-        
+
         loop {
             tokio::select! {
                 _ = interval.tick() => {

@@ -37,7 +37,7 @@ impl TaskController {
     pub async fn start_update_loop(&self) -> Result<()> {
         let mut interval = time::interval(self.update_interval);
         let mut stop_receiver = self.stop_receiver.clone();
-        
+
         loop {
             tokio::select! {
                 _ = interval.tick() => {

@@ -40,7 +40,7 @@ impl TaskController {
     pub async fn start_update_loop(&self) -> Result<()> {
         let mut interval = time::interval(self.update_interval);
         let mut stop_receiver = self.stop_receiver.clone();
-        
+
         loop {
             tokio::select! {
                 _ = interval.tick() => {
@@ -78,7 +78,7 @@ pub struct SubscriptionListenerTask {
 
 impl SubscriptionListenerTask {
     pub fn new(
-        chain_id: String, 
+        chain_id: String,
         shared_state: Arc<ArgusSharedState>,
         poll_interval: Duration,
     ) -> Self {
@@ -91,7 +91,7 @@ impl SubscriptionListenerTask {
 
     pub async fn run(&self, mut stop: watch::Receiver<bool>) -> Result<()> {
         let mut interval = time::interval(self.poll_interval);
-        
+
         loop {
             tokio::select! {
                 _ = interval.tick() => {
@@ -128,7 +128,7 @@ pub struct PythPriceListenerTask {
 
 impl PythPriceListenerTask {
     pub fn new(
-        chain_id: String, 
+        chain_id: String,
         shared_state: Arc<ArgusSharedState>,
     ) -> Self {
         Self {
@@ -158,7 +158,7 @@ pub struct ChainPriceListenerTask {
 
 impl ChainPriceListenerTask {
     pub fn new(
-        chain_id: String, 
+        chain_id: String,
         shared_state: Arc<ArgusSharedState>,
         poll_interval: Duration,
     ) -> Self {
@@ -171,7 +171,7 @@ impl ChainPriceListenerTask {
 
     pub async fn run(&self, mut stop: watch::Receiver<bool>) -> Result<()> {
         let mut interval = time::interval(self.poll_interval);
-        
+
         loop {
             tokio::select! {
                 _ = interval.tick() => {
@@ -200,7 +200,7 @@ pub struct PricePusherTask {
 
 impl PricePusherTask {
     pub fn new(
-        chain_id: String, 
+        chain_id: String,
         shared_state: Arc<ArgusSharedState>,
     ) -> Self {
         Self {
@@ -212,12 +212,12 @@ impl PricePusherTask {
     pub async fn run(&self, mut stop: watch::Receiver<bool>) -> Result<()> {
         loop {
             self.process_queue().await?;
-            
+
             if stop.has_changed()? && *stop.borrow() {
                 tracing::info!(chain_id = self.chain_id, "Stopping price pusher");
                 break;
             }
-            
+
             time::sleep(Duration::from_millis(100)).await;
         }
 
@@ -236,11 +236,11 @@ impl PricePusherTask {
             subscription_id = request.subscription_id.to_string(),
             "Processing push request"
         );
-        
+
 
         Ok(())
     }
-    
+
     pub async fn queue_push_request(&self, request: PushRequest) -> Result<()> {
         let mut requests = self.shared_state.push_queue.requests.lock().await;
         requests.push(request);
