@@ -484,7 +484,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "updateData",
+        "type": "bytes[]"
+      }
+    ],
     "name": "getTwapUpdateFee",
     "outputs": [
       {

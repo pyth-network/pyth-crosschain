@@ -80,8 +80,10 @@ contract MockPyth is AbstractPyth {
         return singleUpdateFeeInWei * updateData.length;
     }
 
-    function getTwapUpdateFee() public view override returns (uint feeAmount) {
-        return singleUpdateFeeInWei;
+    function getTwapUpdateFee(
+        bytes[] calldata updateData
+    ) public view override returns (uint feeAmount) {
+        return singleUpdateFeeInWei * updateData.length;
     }
 
     function parsePriceFeedUpdatesInternal(

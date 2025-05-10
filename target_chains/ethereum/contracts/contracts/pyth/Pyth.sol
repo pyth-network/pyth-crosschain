@@ -120,11 +120,35 @@ abstract contract Pyth is
         return getTotalFee(totalNumUpdates);
     }
 
-    function getTwapUpdateFee() public view override returns (uint feeAmount) {
-        // In the accumulator update data a single update can contain
-        // up to 255 messages and we charge a singleUpdateFee per each
-        // message
-        return singleUpdateFeeInWei() + transactionFeeInWei();
+    function getTwapUpdateFee(
+        bytes[] calldata updateData
+    ) public view override returns (uint feeAmount) {
+        uint totalNumUpdates = 0;
+        // For TWAP updates, updateData is always length 2 (start and end points),
+        // but each VAA can contain multiple price feeds. We only need to count
+        // the number of updates in the first VAA since both VAAs will have the
+        // same number of price feeds.
+        if (
+            updateData[0].length > 4 &&
+            UnsafeCalldataBytesLib.toUint32(updateData[0], 0) ==
+            ACCUMULATOR_MAGIC
+        ) {
+            (
+                uint offset,
+                UpdateType updateType
+            ) = extractUpdateTypeFromAccumulatorHeader(updateData[0]);
+            if (updateType != UpdateType.WormholeMerkle) {
+                revert PythErrors.InvalidUpdateData();
+            }
+            totalNumUpdates += parseWormholeMerkleHeaderNumUpdates(
+                updateData[0],
+                offset
+            );
+        } else {
+            revert PythErrors.InvalidUpdateData();
+        }
+
+        return getTotalFee(totalNumUpdates);
     }
 
     // This is an overwrite of the same method in AbstractPyth.sol
@@ -461,7 +485,7 @@ abstract contract Pyth is
             revert PythErrors.InvalidUpdateData();
         }
 
-        uint requiredFee = getTwapUpdateFee();
+        uint requiredFee = getTwapUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
         // Process start update data
