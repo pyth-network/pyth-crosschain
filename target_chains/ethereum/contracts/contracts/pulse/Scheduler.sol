@@ -541,6 +541,16 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         status.balanceInWei += msg.value;
+
+        // If subscription is active, ensure minimum balance is maintained
+        if (params.isActive) {
+            uint256 minimumBalance = this.getMinimumBalance(
+                uint8(params.priceIds.length)
+            );
+            if (status.balanceInWei < minimumBalance) {
+                revert InsufficientBalance();
+            }
+        }
     }
 
     function withdrawFunds(
