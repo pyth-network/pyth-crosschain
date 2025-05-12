@@ -328,6 +328,120 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
     }
 
+    // Helper function to reduce stack depth in testUpdateSubscriptionResetsPriceLastUpdatedAt
+    function _setupSubscriptionAndFirstUpdate()
+        private
+        returns (uint256 subscriptionId, uint64 publishTime)
+    {
+        // Setup subscription with heartbeat criteria
+        uint32 heartbeatSeconds = 60; // 60 second heartbeat
+        SchedulerState.UpdateCriteria memory criteria = SchedulerState
+            .UpdateCriteria({
+                updateOnHeartbeat: true,
+                heartbeatSeconds: heartbeatSeconds,
+                updateOnDeviation: false,
+                deviationThresholdBps: 0
+            });
+
+        subscriptionId = addTestSubscriptionWithUpdateCriteria(
+            scheduler,
+            criteria,
+            address(reader)
+        );
+        scheduler.addFunds{value: 1 ether}(subscriptionId);
+
+        // Update prices to set priceLastUpdatedAt to a non-zero value
+        publishTime = SafeCast.toUint64(block.timestamp);
+        PythStructs.PriceFeed[] memory priceFeeds;
+        uint64[] memory slots;
+        (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime, 2);
+        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
+
+        return (subscriptionId, publishTime);
+    }
+
+    function testUpdateSubscriptionResetsPriceLastUpdatedAt() public {
+        // 1. Setup subscription and perform first update
+        (
+            uint256 subscriptionId,
+            uint64 publishTime1
+        ) = _setupSubscriptionAndFirstUpdate();
+
+        // Verify priceLastUpdatedAt is set
+        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+            .getSubscription(subscriptionId);
+        assertEq(
+            status.priceLastUpdatedAt,
+            publishTime1,
+            "priceLastUpdatedAt should be set to the first update timestamp"
+        );
+
+        // 2. Update subscription to change price IDs
+        (SchedulerState.SubscriptionParams memory currentParams, ) = scheduler
+            .getSubscription(subscriptionId);
+
+        // Create new price IDs (different from the original ones)
+        bytes32[] memory newPriceIds = createPriceIds(3); // Different number of price IDs
+
+        SchedulerState.SubscriptionParams memory newParams = currentParams;
+        newParams.priceIds = newPriceIds;
+
+        // Update the subscription
+        scheduler.updateSubscription(subscriptionId, newParams);
+
+        // 3. Verify priceLastUpdatedAt is reset to 0
+        (, status) = scheduler.getSubscription(subscriptionId);
+        assertEq(
+            status.priceLastUpdatedAt,
+            0,
+            "priceLastUpdatedAt should be reset to 0 after changing price IDs"
+        );
+
+        // 4. Verify immediate update is possible
+        _verifyImmediateUpdatePossible(subscriptionId);
+    }
+
+    function _verifyImmediateUpdatePossible(uint256 subscriptionId) private {
+        // Create new price feeds for the new price IDs
+        uint64 publishTime2 = SafeCast.toUint64(block.timestamp + 1); // Just 1 second later
+        PythStructs.PriceFeed[] memory priceFeeds;
+        uint64[] memory slots;
+        (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime2, 3); // 3 feeds for new price IDs
+        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // This should succeed even though we haven't waited for heartbeatSeconds
+        // because priceLastUpdatedAt was reset to 0
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
+
+        // Verify the update was processed
+        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+            .getSubscription(subscriptionId);
+        assertEq(
+            status.priceLastUpdatedAt,
+            publishTime2,
+            "Second update should be processed with new timestamp"
+        );
+
+        // Verify that normal heartbeat criteria apply again for subsequent updates
+        uint64 publishTime3 = SafeCast.toUint64(block.timestamp + 10); // Only 10 seconds later
+        (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime3, 3);
+        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        updateData = createMockUpdateData(priceFeeds);
+
+        // This should fail because we haven't waited for heartbeatSeconds since the last update
+        vm.expectRevert(
+            abi.encodeWithSelector(UpdateConditionsNotMet.selector)
+        );
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
+    }
+
     function testcreateSubscriptionWithInsufficientFundsReverts() public {
         uint8 numFeeds = 2;
         SchedulerState.SubscriptionParams
