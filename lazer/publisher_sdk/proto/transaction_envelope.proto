@@ -18,24 +18,24 @@ message TransactionEnvelope {
 // Has different context data depending on the type of transaction.
 // Submitted over Message Queue to be read by rest of Pyth Lazer service.
 message PayloadContext {
-    // [required] ID of publisher based on the access token used to connect
-    optional uint32 publisher_id = 1;
-
     // [required] timestamp wwhen relayer received the signed transaction
-    optional google.protobuf.Timestamp relayer_receive_timestamp = 2;
+    optional google.protobuf.Timestamp relayer_receive_timestamp = 1;
 
     // [required] context set based on type of transaction
     oneof context {
-        PublisherUpdateContext publisher_update_context = 3;
+        PublisherUpdateContext publisher_update_context = 2;
     }
 }
 
 // Context contains status of each feed update found in transaction
 message PublisherUpdateContext {
+    // [required] ID of publisher based on the access token used to connect
+    optional uint32 publisher_id = 1;
+
     // [required] context for each feed update
     // must exactly match length and order of feed updates
     // order of updates are preserved between encoding/decoding
-    repeated FeedUpdateContext feed_update_context = 1;
+    repeated FeedUpdateContext feed_update_context = 2;
 }
 
 // State for each feed update.
