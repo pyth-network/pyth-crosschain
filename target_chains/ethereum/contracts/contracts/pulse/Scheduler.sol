@@ -536,10 +536,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         ];
 
         // Check deposit limit for permanent subscriptions
-        if (
-            params.isPermanent &&
-            status.balanceInWei + msg.value > MAX_DEPOSIT_LIMIT
-        ) {
+        if (params.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
             revert MaxDepositLimitExceeded();
         }
 

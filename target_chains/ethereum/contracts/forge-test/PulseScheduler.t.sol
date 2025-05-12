@@ -818,14 +818,14 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             "Balance should match deposit amount"
         );
 
-        // Test 3: Adding funds to a permanent subscription that would exceed MAX_DEPOSIT_LIMIT should fail
-        uint256 additionalFunds = 1 wei;
-        vm.deal(address(this), additionalFunds);
+        // Test 3: Adding funds to a permanent subscription with deposit exceeding MAX_DEPOSIT_LIMIT should fail
+        uint256 largeAdditionalFunds = maxDepositLimit + 1;
+        vm.deal(address(this), largeAdditionalFunds);
 
         vm.expectRevert(
             abi.encodeWithSelector(MaxDepositLimitExceeded.selector)
         );
-        scheduler.addFunds{value: additionalFunds}(subscriptionId);
+        scheduler.addFunds{value: largeAdditionalFunds}(subscriptionId);
 
         // Test 4: Adding funds to a permanent subscription within MAX_DEPOSIT_LIMIT should succeed
         // Create a non-permanent subscription to test partial funding
