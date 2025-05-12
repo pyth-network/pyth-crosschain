@@ -225,11 +225,6 @@ contract EntropyTester is IEntropyConsumer {
         }
     }
 
-    /**
-     * @notice Gets the entropy contract address, using default if none specified
-     * @param _entropy Address of the entropy contract (uses default if address(0))
-     * @return entropy The entropy contract interface
-     */
     function getEntropy() internal view override returns (address) {
         return defaultEntropy;
     }
