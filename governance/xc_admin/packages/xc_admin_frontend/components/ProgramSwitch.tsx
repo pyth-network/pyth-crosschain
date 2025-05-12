@@ -1,4 +1,4 @@
-import { ProgramType } from '@pythnetwork/xc-admin-common'
+import { ProgramType, PROGRAM_TYPE_NAMES } from '@pythnetwork/xc-admin-common'
 import { useProgramContext } from '../contexts/ProgramContext'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react'
@@ -23,6 +23,17 @@ const Arrow = ({ className }: { className?: string }) => (
 )
 
 /**
+ * Format display name from enum name (e.g., "PYTH_CORE" -> "Pyth Core")
+ */
+const formatDisplayName = (value: ProgramType): string => {
+  const enumName = PROGRAM_TYPE_NAMES[value]
+  return enumName
+    .split('_')
+    .map((word: string) => word.charAt(0) + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
+/**
  * Component that allows users to switch between different Pyth programs
  * (Core, Lazer, etc.)
  */
@@ -30,14 +41,12 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
   const { programType, setProgramType } = useProgramContext()
 
   // Convert enum to array of options
-  const programOptions = Object.values(ProgramType).map((value) => ({
-    value,
-    // Format display name (e.g., "PYTH_CORE" -> "Pyth Core")
-    label: value
-      .split('_')
-      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
-      .join(' '),
-  }))
+  const programOptions = Object.values(ProgramType)
+    .filter((value): value is ProgramType => typeof value === 'number') // Filter out reverse mappings
+    .map((value) => ({
+      value,
+      label: formatDisplayName(value),
+    }))
 
   return (
     <Menu as="div" className="relative z-[5] block w-[180px] text-left">
@@ -50,7 +59,7 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
           >
             <span className="mr-3">
               {programOptions.find((option) => option.value === programType)
-                ?.label || programType}
+                ?.label || formatDisplayName(programType)}
             </span>
             <Arrow className={`${open ? 'rotate-180' : ''}`} />
           </Menu.Button>
@@ -77,9 +86,7 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
                             ? 'bg-darkGray2'
                             : 'bg-darkGray'
                       }`}
-                      onClick={() =>
-                        setProgramType(option.value as ProgramType)
-                      }
+                      onClick={() => setProgramType(option.value)}
                     >
                       {option.label}
                     </button>

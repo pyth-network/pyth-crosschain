@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { ProgramType } from '@pythnetwork/xc-admin-common'
-import { useQueryState, parseAsStringLiteral } from 'nuqs'
 
 /**
  * Interface defining the shape of the Program context
@@ -40,29 +39,26 @@ const ProgramContext = createContext<ProgramContextType>(defaultContext)
  * Provider component for the Program context
  */
 export const ProgramProvider = ({ children }: { children: ReactNode }) => {
-  // Use URL query parameter to persist program selection across page reloads
-  const [programTypeParam, setProgramTypeParam] = useQueryState(
-    'program',
-    parseAsStringLiteral(
-      Object.values(ProgramType) as readonly string[]
-    ).withDefault(ProgramType.PYTH_CORE)
+  // Local state for program type
+  const [programType, setProgramTypeState] = useState<ProgramType>(
+    ProgramType.PYTH_CORE
   )
 
   // Local state for program support
   const [isProgramSupported] = useState(true)
 
   /**
-   * Update both the URL parameter and context state
+   * Update program type
    */
   const setProgramType = (type: ProgramType) => {
-    setProgramTypeParam(type)
+    setProgramTypeState(type)
   }
 
   // TODO: Add effect to check if the selected program is supported on the current cluster
   // This will be implemented when we have the adapter implementations
 
   const value = {
-    programType: programTypeParam as ProgramType,
+    programType,
     setProgramType,
     isProgramSupported,
   }

@@ -8,14 +8,16 @@ import axios from 'axios'
 import { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
+  getDownloadableConfig,
   getMultisigCluster,
   isMessageBufferAvailable,
   isRemoteCluster,
   mapKey,
   MESSAGE_BUFFER_PROGRAM_ID,
   PRICE_FEED_MULTISIG,
-  getProgramAdapter,
   ProgramType,
+  validateUploadedConfig,
+  generateInstructions,
 } from '@pythnetwork/xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -48,9 +50,6 @@ const PythCore = ({ proposerServerUrl }: PythCoreProps) => {
   const [messageBufferClient, setMessageBufferClient] =
     useState<Program<MessageBuffer>>()
 
-  // Get program adapter based on the selected program type
-  const programAdapter = getProgramAdapter(ProgramType.PYTH_CORE)
-
   const openModal = () => {
     setIsModalOpen(true)
   }
@@ -61,10 +60,11 @@ const PythCore = ({ proposerServerUrl }: PythCoreProps) => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig) {
-      const downloadableConfig = programAdapter.getDownloadableConfig(rawConfig)
+      const downloadableConfig =
+        getDownloadableConfig[ProgramType.PYTH_CORE](rawConfig)
       setData(downloadableConfig)
     }
-  }, [rawConfig, dataIsLoading, programAdapter, cluster])
+  }, [rawConfig, dataIsLoading, cluster])
 
   // function to download json file
   const handleDownloadJsonButtonClick = () => {
@@ -93,7 +93,7 @@ const PythCore = ({ proposerServerUrl }: PythCoreProps) => {
           const fileData = e.target.result
           try {
             const uploadedConfig = JSON.parse(fileData as string)
-            const validation = programAdapter.validateUploadedConfig(
+            const validation = validateUploadedConfig[ProgramType.PYTH_CORE](
               data,
               uploadedConfig,
               cluster
@@ -132,18 +132,16 @@ const PythCore = ({ proposerServerUrl }: PythCoreProps) => {
             ? mapKey(multisigAuthority)
             : multisigAuthority
 
-          // Generate instructions using the program adapter
-          const instructions = await programAdapter.generateInstructions(
-            dataChanges,
-            cluster,
-            {
-              fundingAccount,
-              pythProgramClient,
-              messageBufferClient,
-              connection,
-              rawConfig,
-            }
-          )
+          // Generate instructions using the program registry functions
+          const instructions = await generateInstructions[
+            ProgramType.PYTH_CORE
+          ](dataChanges, cluster, {
+            fundingAccount,
+            pythProgramClient,
+            messageBufferClient,
+            connection,
+            rawConfig,
+          })
 
           const response = await axios.post(
             proposerServerUrl + '/api/propose',

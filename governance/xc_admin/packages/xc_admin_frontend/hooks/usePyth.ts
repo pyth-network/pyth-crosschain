@@ -8,13 +8,14 @@ import { Connection } from '@solana/web3.js'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
-import { getProgramAdapter, ProgramType } from '@pythnetwork/xc-admin-common'
 import {
+  ProgramType,
+  getConfigFromRawAccounts,
   RawConfig,
   MappingRawConfig,
   ProductRawConfig,
   PriceRawConfig,
-} from '@pythnetwork/xc-admin-common/src/programs/core/core_adapter'
+} from '@pythnetwork/xc-admin-common'
 
 interface PythHookData {
   isLoading: boolean
@@ -28,7 +29,6 @@ export const usePyth = (): PythHookData => {
   const [isLoading, setIsLoading] = useState(true)
   const [rawConfig, setRawConfig] = useState<RawConfig>({ mappingAccounts: [] })
   const [urlsIndex, setUrlsIndex] = useState(0)
-  const pythAdapter = useRef(getProgramAdapter(ProgramType.PYTH_CORE))
 
   useEffect(() => {
     setIsLoading(true)
@@ -56,8 +56,8 @@ export const usePyth = (): PythHookData => {
         ]
         if (cancelled) return
 
-        // Use the adapter to parse the accounts
-        const parsedConfig = pythAdapter.current.getConfigFromRawAccounts(
+        // Use the functional approach to parse the accounts
+        const parsedConfig = getConfigFromRawAccounts[ProgramType.PYTH_CORE](
           allPythAccounts,
           cluster as PythCluster
         )
