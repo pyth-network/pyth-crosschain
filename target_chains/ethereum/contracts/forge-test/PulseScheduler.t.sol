@@ -2008,7 +2008,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
     // Required to receive ETH when withdrawing funds
     receive() external payable {}
 
-    function testUpdateSubscriptionRemovesPriceUpdatesForRemovedPriceIds() public {
+    function testUpdateSubscriptionRemovesPriceUpdatesForRemovedPriceIds()
+        public
+    {
         // 1. Setup: Add subscription with 3 price feeds, update prices
         uint8 numInitialFeeds = 3;
         uint256 subscriptionId = addTestSubscriptionWithFeeds(
@@ -2021,42 +2023,49 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         // Get initial price IDs and create mock price feeds
         bytes32[] memory initialPriceIds = createPriceIds(numInitialFeeds);
         uint64 publishTime = SafeCast.toUint64(block.timestamp);
-        
+
         // Setup and perform initial price update
-        (PythStructs.PriceFeed[] memory priceFeeds, uint64[] memory slots) = 
-            createMockPriceFeedsWithSlots(publishTime, numInitialFeeds);
+        (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        ) = createMockPriceFeedsWithSlots(publishTime, numInitialFeeds);
         mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
-        
+
         vm.prank(pusher);
-        scheduler.updatePriceFeeds(subscriptionId, createMockUpdateData(priceFeeds));
+        scheduler.updatePriceFeeds(
+            subscriptionId,
+            createMockUpdateData(priceFeeds)
+        );
 
         // Store the removed price ID for later use
         bytes32 removedPriceId = initialPriceIds[numInitialFeeds - 1];
 
         // 2. Action: Update subscription to remove the last price feed
-        (SchedulerState.SubscriptionParams memory params, ) = scheduler.getSubscription(subscriptionId);
-        
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+
         // Create new price IDs array without the last ID
         bytes32[] memory newPriceIds = new bytes32[](numInitialFeeds - 1);
         for (uint i = 0; i < newPriceIds.length; i++) {
             newPriceIds[i] = initialPriceIds[i];
         }
-        
+
         params.priceIds = newPriceIds;
-        
+
         vm.expectEmit();
         emit SubscriptionUpdated(subscriptionId);
         scheduler.updateSubscription(subscriptionId, params);
 
         // 3. Verification:
         // - Verify that the removed price ID is no longer part of the subscription's price IDs
-        (SchedulerState.SubscriptionParams memory updatedParams, ) = scheduler.getSubscription(subscriptionId);
+        (SchedulerState.SubscriptionParams memory updatedParams, ) = scheduler
+            .getSubscription(subscriptionId);
         assertEq(
             updatedParams.priceIds.length,
             numInitialFeeds - 1,
             "Subscription should have one less price ID"
         );
-        
+
         bool removedPriceIdFound = false;
         for (uint i = 0; i < updatedParams.priceIds.length; i++) {
             if (updatedParams.priceIds[i] == removedPriceId) {
@@ -2077,7 +2086,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             newPriceIds.length,
             "Querying all should only return remaining feeds"
         );
-        
+
         // - Verify that the removed price ID is not included in the returned prices
         for (uint i = 0; i < allPricesAfterUpdate.length; i++) {
             // We can't directly check the price ID from the Price struct
@@ -2090,8 +2099,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             );
         }
     }
-    
-
 
     function testUpdateSubscriptionRevertsWithTooManyPriceIds() public {
         // 1. Setup: Create a subscription with a valid number of price IDs
@@ -2105,10 +2112,12 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         // 2. Prepare params with too many price IDs (MAX_PRICE_IDS_PER_SUBSCRIPTION + 1)
         (SchedulerState.SubscriptionParams memory currentParams, ) = scheduler
             .getSubscription(subscriptionId);
-        
-        uint16 tooManyFeeds = uint16(scheduler.MAX_PRICE_IDS_PER_SUBSCRIPTION()) + 1;
+
+        uint16 tooManyFeeds = uint16(
+            scheduler.MAX_PRICE_IDS_PER_SUBSCRIPTION()
+        ) + 1;
         bytes32[] memory tooManyPriceIds = createPriceIds(tooManyFeeds);
-        
+
         SchedulerState.SubscriptionParams memory newParams = currentParams;
         newParams.priceIds = tooManyPriceIds;
 
