@@ -130,101 +130,111 @@ export function getConfig(params: GetConfigParams): RawConfig {
   if (params.programType !== ProgramType.PYTH_CORE) {
     throw new Error("Invalid program type for Core getConfig");
   }
+
   const accounts = params.accounts;
-  const priceRawConfigs: { [key: string]: PriceRawConfig } = {};
-  const rawConfig: RawConfig = { mappingAccounts: [] };
 
-  // Make a copy of the accounts array to modify
-  const allPythAccounts = [...accounts];
+  // First pass: Extract price accounts
+  const priceRawConfigs = Object.fromEntries(
+    accounts
+      .filter(
+        (account) =>
+          parseBaseData(account.account.data)?.type === AccountType.Price,
+      )
+      .map((account) => {
+        const parsed = parsePriceData(account.account.data);
+        return [
+          account.pubkey.toBase58(),
+          {
+            next: parsed.nextPriceAccountKey,
+            address: account.pubkey,
+            publishers: parsed.priceComponents.map((x) => x.publisher!),
+            expo: parsed.exponent,
+            minPub: parsed.minPublishers,
+            maxLatency: parsed.maxLatency,
+          },
+        ];
+      }),
+  );
 
-  /// First pass, price accounts
-  let i = 0;
-  while (i < allPythAccounts.length) {
-    const base = parseBaseData(allPythAccounts[i].account.data);
-    switch (base?.type) {
-      case AccountType.Price:
-        const parsed = parsePriceData(allPythAccounts[i].account.data);
-        priceRawConfigs[allPythAccounts[i].pubkey.toBase58()] = {
-          next: parsed.nextPriceAccountKey,
-          address: allPythAccounts[i].pubkey,
-          publishers: parsed.priceComponents.map((x) => {
-            return x.publisher!;
-          }),
-          expo: parsed.exponent,
-          minPub: parsed.minPublishers,
-          maxLatency: parsed.maxLatency,
-        };
-        allPythAccounts[i] = allPythAccounts[allPythAccounts.length - 1];
-        allPythAccounts.pop();
-        break;
-      default:
-        i += 1;
-    }
-  }
+  // Second pass: Extract product accounts and link to price accounts
+  const productRawConfigs = Object.fromEntries(
+    accounts
+      .filter(
+        (account) =>
+          parseBaseData(account.account.data)?.type === AccountType.Product,
+      )
+      .map((account) => {
+        const parsed = parseProductData(account.account.data);
+        const priceAccounts: PriceRawConfig[] = [];
 
-  /// Second pass, product accounts
-  i = 0;
-  const productRawConfigs: { [key: string]: ProductRawConfig } = {};
-  while (i < allPythAccounts.length) {
-    const base = parseBaseData(allPythAccounts[i].account.data);
-    switch (base?.type) {
-      case AccountType.Product:
-        const parsed = parseProductData(allPythAccounts[i].account.data);
+        // Follow the linked list of price accounts
         if (parsed.priceAccountKey) {
           let priceAccountKey: string | undefined =
             parsed.priceAccountKey.toBase58();
-          const priceAccounts = [];
-          while (priceAccountKey) {
-            const toAdd: PriceRawConfig = priceRawConfigs[priceAccountKey];
-            priceAccounts.push(toAdd);
-            delete priceRawConfigs[priceAccountKey];
-            priceAccountKey = toAdd.next ? toAdd.next.toBase58() : undefined;
+          const processedPriceKeys = new Set<string>();
+
+          while (
+            priceAccountKey &&
+            !processedPriceKeys.has(priceAccountKey) &&
+            priceRawConfigs[priceAccountKey]
+          ) {
+            processedPriceKeys.add(priceAccountKey);
+            const priceConfig: PriceRawConfig =
+              priceRawConfigs[priceAccountKey];
+            priceAccounts.push(priceConfig);
+            priceAccountKey = priceConfig.next
+              ? priceConfig.next.toBase58()
+              : undefined;
           }
-          productRawConfigs[allPythAccounts[i].pubkey.toBase58()] = {
+        }
+
+        return [
+          account.pubkey.toBase58(),
+          {
             priceAccounts,
             metadata: parsed.product,
-            address: allPythAccounts[i].pubkey,
-          };
-        }
-        allPythAccounts[i] = allPythAccounts[allPythAccounts.length - 1];
-        allPythAccounts.pop();
-        break;
-      default:
-        i += 1;
-    }
-  }
+            address: account.pubkey,
+          },
+        ];
+      }),
+  );
 
-  /// Third pass, mapping accounts
-  i = 0;
-  while (i < allPythAccounts.length) {
-    const base = parseBaseData(allPythAccounts[i].account.data);
-    switch (base?.type) {
-      case AccountType.Mapping:
-        const parsed = parseMappingData(allPythAccounts[i].account.data);
-        rawConfig.mappingAccounts.push({
-          next: parsed.nextMappingAccount,
-          address: allPythAccounts[i].pubkey,
-          products: parsed.productAccountKeys
-            .filter((key) => productRawConfigs[key.toBase58()])
-            .map((key) => {
-              const toAdd = productRawConfigs[key.toBase58()];
-              delete productRawConfigs[key.toBase58()];
-              return toAdd;
-            }),
-        });
-        allPythAccounts[i] = allPythAccounts[allPythAccounts.length - 1];
-        allPythAccounts.pop();
-        break;
-      case AccountType.Permission:
-        rawConfig.permissionAccount = parsePermissionData(
-          allPythAccounts[i].account.data,
-        );
-        allPythAccounts[i] = allPythAccounts[allPythAccounts.length - 1];
-        allPythAccounts.pop();
-        break;
-      default:
-        i += 1;
-    }
+  // Third pass: Extract mapping accounts and permission data
+  const rawConfig: RawConfig = { mappingAccounts: [] };
+
+  // Process mapping accounts
+  const mappingAccounts = accounts
+    .filter(
+      (account) =>
+        parseBaseData(account.account.data)?.type === AccountType.Mapping,
+    )
+    .map((account) => {
+      const parsed = parseMappingData(account.account.data);
+      return {
+        next: parsed.nextMappingAccount,
+        address: account.pubkey,
+        products: parsed.productAccountKeys
+          .filter((key) => productRawConfigs[key.toBase58()])
+          .map((key) => {
+            const product = productRawConfigs[key.toBase58()];
+            delete productRawConfigs[key.toBase58()];
+            return product;
+          }),
+      };
+    });
+
+  rawConfig.mappingAccounts = mappingAccounts;
+
+  // Find permission account if it exists
+  const permissionAccount = accounts.find(
+    (account) =>
+      parseBaseData(account.account.data)?.type === AccountType.Permission,
+  );
+
+  if (permissionAccount) {
+    rawConfig.permissionAccount = parsePermissionData(
+      permissionAccount.account.data,
+    );
   }
 
   return rawConfig;
