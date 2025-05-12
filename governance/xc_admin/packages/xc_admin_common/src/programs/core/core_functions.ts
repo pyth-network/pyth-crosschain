@@ -68,14 +68,10 @@ function checkSizeOfProductInstruction(
 /**
  * Sort object by keys
  */
-function sortObjectByKeys<T extends Record<string, unknown>>(obj: T): T {
-  const sortedObj = {} as T;
-  const keys = Object.keys(obj).sort();
-  for (const key of keys) {
-    sortedObj[key as keyof T] = obj[key] as T[keyof T];
-  }
-  return sortedObj;
-}
+const sortObjectByKeys = <T extends Record<string, unknown>>(obj: T): T =>
+  Object.fromEntries(
+    Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)),
+  ) as T;
 
 /**
  * Sort configuration data for consistent output
