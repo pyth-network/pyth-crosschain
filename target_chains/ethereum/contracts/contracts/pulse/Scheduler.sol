@@ -524,16 +524,17 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     /// BALANCE MANAGEMENT
 
     function addFunds(uint256 subscriptionId) external payable override {
-        if (!_state.subscriptionParams[subscriptionId].isActive) {
-            revert InactiveSubscription();
-        }
-
         SubscriptionParams storage params = _state.subscriptionParams[
             subscriptionId
         ];
         SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
+        
+        if (!status.isActive) {
+            revert InactiveSubscription();
+        }
+
 
         // Check deposit limit for permanent subscriptions
         if (params.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
