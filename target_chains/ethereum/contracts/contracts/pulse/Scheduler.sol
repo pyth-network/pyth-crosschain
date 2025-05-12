@@ -530,11 +530,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
-        
+
         if (!params.isActive) {
             revert InactiveSubscription();
         }
-
 
         // Check deposit limit for permanent subscriptions
         if (params.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
@@ -542,7 +541,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         status.balanceInWei += msg.value;
-        
+
         // If subscription is active, ensure minimum balance is maintained
         if (params.isActive) {
             uint256 minimumBalance = this.getMinimumBalance(

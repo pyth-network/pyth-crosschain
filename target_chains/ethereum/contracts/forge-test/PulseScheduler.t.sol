@@ -541,36 +541,36 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             "Balance should match initial balance plus added funds"
         );
     }
-    
 
-    
     function testAddFundsEnforcesMinimumBalance() public {
         // First add a subscription with minimum balance
         uint256 subscriptionId = addTestSubscription(
             scheduler,
             address(reader)
         );
-        
+
         // Get subscription parameters and initial balance
-        (SchedulerState.SubscriptionParams memory params, SchedulerState.SubscriptionStatus memory status) = scheduler
-            .getSubscription(subscriptionId);
-            
+        (
+            SchedulerState.SubscriptionParams memory params,
+            SchedulerState.SubscriptionStatus memory status
+        ) = scheduler.getSubscription(subscriptionId);
+
         // Calculate minimum balance
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(params.priceIds.length)
         );
-        
+
         // Verify initial balance is at minimum
         assertEq(
             status.balanceInWei,
             minimumBalance,
             "Initial balance should equal minimum balance"
         );
-        
+
         // Add some funds to the subscription
         uint256 additionalFunds = 0.1 ether;
         scheduler.addFunds{value: additionalFunds}(subscriptionId);
-        
+
         // Verify funds were added
         (, SchedulerState.SubscriptionStatus memory statusAfterAdd) = scheduler
             .getSubscription(subscriptionId);
@@ -579,26 +579,29 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             minimumBalance + additionalFunds,
             "Balance should be increased by the added funds"
         );
-        
+
         // Now create a new subscription but don't fund it fully
-        SchedulerState.SubscriptionParams memory newParams = createDefaultSubscriptionParams(
-            2,
-            address(reader)
-        );
-        
+        SchedulerState.SubscriptionParams
+            memory newParams = createDefaultSubscriptionParams(
+                2,
+                address(reader)
+            );
+
         // Calculate minimum balance for this new subscription
         uint256 newMinimumBalance = scheduler.getMinimumBalance(
             uint8(newParams.priceIds.length)
         );
-        
+
         // Try to create with insufficient funds
         uint256 insufficientFunds = newMinimumBalance - 1 wei;
         vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
         scheduler.createSubscription{value: insufficientFunds}(newParams);
-        
+
         // Create with sufficient funds
-        uint256 newSubscriptionId = scheduler.createSubscription{value: newMinimumBalance}(newParams);
-        
+        uint256 newSubscriptionId = scheduler.createSubscription{
+            value: newMinimumBalance
+        }(newParams);
+
         // Verify subscription was created with minimum balance
         (, SchedulerState.SubscriptionStatus memory newStatus) = scheduler
             .getSubscription(newSubscriptionId);
@@ -608,38 +611,42 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             "New subscription balance should equal minimum balance"
         );
     }
-    
-    function testAddFundsEnforcesMinimumBalanceForPermanentSubscription() public {
+
+    function testAddFundsEnforcesMinimumBalanceForPermanentSubscription()
+        public
+    {
         // Create a non-permanent subscription first
         uint256 subscriptionId = addTestSubscription(
             scheduler,
             address(reader)
         );
-        
+
         // Get subscription parameters and initial balance
-        (SchedulerState.SubscriptionParams memory params, SchedulerState.SubscriptionStatus memory status) = scheduler
-            .getSubscription(subscriptionId);
-            
+        (
+            SchedulerState.SubscriptionParams memory params,
+            SchedulerState.SubscriptionStatus memory status
+        ) = scheduler.getSubscription(subscriptionId);
+
         // Calculate minimum balance
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(params.priceIds.length)
         );
-        
+
         // Verify initial balance is at minimum
         assertEq(
             status.balanceInWei,
             minimumBalance,
             "Initial balance should equal minimum balance"
         );
-        
+
         // Make it permanent
         params.isPermanent = true;
         scheduler.updateSubscription(subscriptionId, params);
-        
+
         // Try to add funds - this should succeed since we're adding to a permanent subscription
         uint256 additionalFunds = 0.1 ether;
         scheduler.addFunds{value: additionalFunds}(subscriptionId);
-        
+
         // Verify funds were added
         (, SchedulerState.SubscriptionStatus memory statusAfter) = scheduler
             .getSubscription(subscriptionId);
@@ -648,21 +655,25 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             minimumBalance + additionalFunds,
             "Balance should be increased by the added funds"
         );
-        
+
         // Now test the deposit limit for permanent subscriptions
         uint256 maxDepositLimit = 100 ether; // MAX_DEPOSIT_LIMIT from SchedulerState
-        
+
         // Try to add funds exceeding the deposit limit
-        vm.expectRevert(abi.encodeWithSelector(MaxDepositLimitExceeded.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(MaxDepositLimitExceeded.selector)
+        );
         scheduler.addFunds{value: maxDepositLimit + 1}(subscriptionId);
-        
+
         // Add funds within the deposit limit
         uint256 validDeposit = 1 ether;
         scheduler.addFunds{value: validDeposit}(subscriptionId);
-        
+
         // Verify funds were added
-        (, SchedulerState.SubscriptionStatus memory statusAfterValidDeposit) = scheduler
-            .getSubscription(subscriptionId);
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory statusAfterValidDeposit
+        ) = scheduler.getSubscription(subscriptionId);
         assertEq(
             statusAfterValidDeposit.balanceInWei,
             minimumBalance + additionalFunds + validDeposit,
