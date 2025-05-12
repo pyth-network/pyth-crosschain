@@ -1,6 +1,8 @@
+//! Configuration options for the Argus keeper service
+
 pub use run::RunOptions;
 use {
-    crate::{api::ChainId, chain::reader::BlockStatus},
+    crate::{adapters::ethereum::BlockStatus, state::ChainName},
     anyhow::{anyhow, Result},
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
     ethers::types::Address,
@@ -36,7 +38,7 @@ pub struct ConfigOptions {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
-    pub chains: HashMap<ChainId, EthereumConfig>,
+    pub chains: HashMap<ChainName, EthereumConfig>,
     pub keeper: KeeperConfig,
 }
 
@@ -44,13 +46,15 @@ impl Config {
     pub fn load(path: &str) -> Result<Config> {
         // Open and read the YAML file
         // TODO: the default serde deserialization doesn't enforce unique keys
-        let yaml_content = fs::read_to_string(path)?;
-        let config: Config = serde_yaml::from_str(&yaml_content)?;
+        let yaml_content = fs::read_to_string(path)
+            .map_err(|e| anyhow!("Failed to read config file '{}': {}", path, e))?;
+        let config: Config = serde_yaml::from_str(&yaml_content)
+            .map_err(|e| anyhow!("Failed to parse config file '{}': {}", path, e))?;
 
         Ok(config)
     }
 
-    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig> {
+    pub fn get_chain_config(&self, chain_id: &ChainName) -> Result<EthereumConfig> {
         self.chains.get(chain_id).cloned().ok_or(anyhow!(
             "Could not find chain id {} in the configuration",
             &chain_id
@@ -79,19 +83,12 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub legacy_tx: bool,
 
-    /// The gas limit to use for entropy callback transactions.
-    pub gas_limit: u64,
-
     /// The percentage multiplier to apply to priority fee estimates (100 = no change, e.g. 150 = 150% of base fee)
     pub priority_fee_multiplier_pct: u64,
 
     /// The escalation policy governs how the gas limit and fee are increased during backoff retries.
     #[serde(default)]
     pub escalation_policy: EscalationPolicyConfig,
-
-    /// How much the provider charges for a request on this chain.
-    #[serde(default)]
-    pub fee: u128,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]

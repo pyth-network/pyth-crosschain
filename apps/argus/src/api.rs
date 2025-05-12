@@ -1,106 +1,61 @@
-use {
-    crate::chain::reader::BlockStatus,
-    axum::{
-        body::Body,
-        http::StatusCode,
-        response::{IntoResponse, Response},
-        routing::get,
-        Router,
-    },
-    prometheus_client::{
-        encoding::EncodeLabelSet,
-        metrics::{counter::Counter, family::Family},
-        registry::Registry,
-    },
-    std::sync::Arc,
-    tokio::sync::RwLock,
-};
-pub use {index::*, live::*, metrics::*, ready::*};
+//! API server for Prometheus metrics and health checks
 
+use {
+    anyhow::{anyhow, Result},
+    axum::{body::Body, routing::get, Router},
+    index::index,
+    live::live,
+    metrics::metrics,
+    prometheus_client::registry::Registry,
+    ready::ready,
+    std::{net::SocketAddr, sync::Arc},
+    tokio::sync::{watch, RwLock},
+    tower_http::cors::CorsLayer,
+};
 mod index;
 mod live;
 mod metrics;
 mod ready;
-
-pub type ChainId = String;
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct RequestLabel {
-    pub value: String,
-}
-
-pub struct ApiMetrics {
-    pub http_requests: Family<RequestLabel, Counter>,
-}
-
 #[derive(Clone)]
 pub struct ApiState {
     pub metrics_registry: Arc<RwLock<Registry>>,
-
-    /// Prometheus metrics
-    pub metrics: Arc<ApiMetrics>,
 }
 
-impl ApiState {
-    pub async fn new(metrics_registry: Arc<RwLock<Registry>>) -> ApiState {
-        let metrics = ApiMetrics {
-            http_requests: Family::default(),
-        };
-
-        let http_requests = metrics.http_requests.clone();
-        metrics_registry.write().await.register(
-            "http_requests",
-            "Number of HTTP requests received",
-            http_requests,
-        );
-
-        ApiState {
-            metrics: Arc::new(metrics),
-            metrics_registry,
-        }
-    }
-}
-
-/// The state of the service for a single blockchain.
-#[derive(Clone)]
-pub struct BlockchainState {
-    /// The chain id for this blockchain, useful for logging
-    pub id: ChainId,
-    /// The BlockStatus of the block that is considered to be confirmed on the blockchain.
-    /// For eg., Finalized, Safe
-    pub confirmed_block_status: BlockStatus,
-}
-
-pub enum RestError {
-    /// The server cannot currently communicate with the blockchain, so is not able to verify
-    /// which random values have been requested.
-    TemporarilyUnavailable,
-    /// A catch-all error for all other types of errors that could occur during processing.
-    Unknown,
-}
-
-impl IntoResponse for RestError {
-    fn into_response(self) -> Response {
-        match self {
-            RestError::TemporarilyUnavailable => (
-                StatusCode::SERVICE_UNAVAILABLE,
-                "This service is temporarily unavailable",
-            )
-                .into_response(),
-            RestError::Unknown => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "An unknown error occurred processing the request",
-            )
-                .into_response(),
-        }
-    }
-}
-
-pub fn routes(state: ApiState) -> Router<(), Body> {
+pub fn routes(api_state: ApiState) -> Router<(), Body> {
     Router::new()
         .route("/", get(index))
         .route("/live", get(live))
-        .route("/metrics", get(metrics))
         .route("/ready", get(ready))
-        .with_state(state)
+        .route("/metrics", get(metrics))
+        .with_state(api_state)
+}
+
+pub async fn run_api_server(
+    socket_addr: SocketAddr,
+    metrics_registry: Arc<RwLock<Registry>>,
+    mut exit_rx: watch::Receiver<bool>,
+) -> Result<()> {
+    let api_state = ApiState {
+        metrics_registry: metrics_registry.clone(),
+    };
+
+    let app = Router::new();
+    let app = app
+        .merge(routes(api_state))
+        // Permissive CORS layer to allow all origins
+        .layer(CorsLayer::permissive());
+
+    tracing::info!("Starting API server on: {:?}", &socket_addr);
+    axum::Server::try_bind(&socket_addr)
+        .map_err(|e| anyhow!("Failed to bind to address {}: {}", &socket_addr, e))?
+        .serve(app.into_make_service())
+        .with_graceful_shutdown(async {
+            // Ctrl+c signal received
+            let _ = exit_rx.changed().await;
+
+            tracing::info!("Shutting down API server...");
+        })
+        .await?;
+
+    Ok(())
 }
