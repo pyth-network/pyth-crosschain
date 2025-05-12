@@ -3,7 +3,10 @@ import { Confetti } from "@phosphor-icons/react/dist/ssr/Confetti";
 import { Network } from "@phosphor-icons/react/dist/ssr/Network";
 import { SmileySad } from "@phosphor-icons/react/dist/ssr/SmileySad";
 import { Card } from "@pythnetwork/component-library/Card";
+import { EntityList } from "@pythnetwork/component-library/EntityList";
 import { Link } from "@pythnetwork/component-library/Link";
+import type { Variant as NoResultsVariant } from "@pythnetwork/component-library/NoResults";
+import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
@@ -16,14 +19,11 @@ import { getPublishers } from "../../services/clickhouse";
 import type { Cluster } from "../../services/pyth";
 import { ClusterToName, parseCluster } from "../../services/pyth";
 import { Status } from "../../status";
-import { EntityList } from "../EntityList";
 import {
   ExplainActive,
   ExplainInactive,
   ExplainAverage,
 } from "../Explanations";
-import type { Variant as NoResultsVariant } from "../NoResults";
-import { NoResults } from "../NoResults";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherIcon } from "../PublisherIcon";

@@ -9,13 +9,13 @@ This library is a client for interacting with Hermes, allowing your application 
 ### npm
 
 ```
-$ npm install --save @pythnetwork/hermes-client
+npm install --save @pythnetwork/hermes-client
 ```
 
 ### Yarn
 
 ```
-$ yarn add @pythnetwork/hermes-client
+yarn add @pythnetwork/hermes-client
 ```
 
 ## Quickstart

@@ -1,7 +1,10 @@
 @use "../theme";
 
 .status {
-  display: inline flow-root;
+  display: inline-flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
   border-radius: theme.border-radius("3xl");
   transition-property: color, background-color, border-color;
   transition-duration: 100ms;
@@ -11,45 +14,35 @@
   border-style: solid;
 
   .dot {
-    display: inline-block;
     border-radius: theme.border-radius("full");
-    position: relative;
     transition: background-color 100ms linear;
   }
 
   &[data-size="xs"] {
     height: theme.spacing(4);
-    padding: 0 theme.spacing(1);
+    padding: theme.spacing(1);
+    padding-right: theme.spacing(2);
     font-size: theme.font-size("xxs");
     font-weight: theme.font-weight("medium");
-
-    .text {
-      line-height: theme.spacing(4);
-      padding: 0 theme.spacing(1);
-    }
+    gap: theme.spacing(1);
 
     .dot {
       width: theme.spacing(2);
       height: theme.spacing(2);
-      top: theme.spacing(0.25);
     }
   }
 
   &[data-size="md"] {
     height: theme.spacing(6);
-    padding: 0 theme.spacing(1.5);
+    padding: theme.spacing(1.5);
+    padding-right: theme.spacing(3);
     font-size: theme.font-size("xs");
     font-weight: theme.font-weight("medium");
-
-    .text {
-      line-height: theme.spacing(6);
-      padding: 0 theme.spacing(1.5);
-    }
+    gap: theme.spacing(1.5);
 
     .dot {
       width: theme.spacing(3);
       height: theme.spacing(3);
-      top: theme.spacing(0.5);
     }
   }
 

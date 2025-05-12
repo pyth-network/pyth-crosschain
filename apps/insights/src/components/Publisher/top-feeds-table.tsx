@@ -1,5 +1,6 @@
 "use client";
 
+import { EntityList } from "@pythnetwork/component-library/EntityList";
 import type { RowConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import type { ReactNode } from "react";
@@ -9,7 +10,6 @@ import styles from "./top-feeds-table.module.scss";
 import type { Cluster } from "../../services/pyth";
 import type { Status } from "../../status";
 import { AssetClassBadge } from "../AssetClassBadge";
-import { EntityList } from "../EntityList";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { Score } from "../Score";
