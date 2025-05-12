@@ -37,15 +37,17 @@ library PythUtils {
     /// @notice Combines two prices to get a cross-rate
     /// @param price1 The first price (a/b)
     /// @param price2 The second price (c/b)
-    /// @return combinedPrice The combined price (a/c)
-    /// @return expo The exponent of the combined price
-    /// @dev This function will revert if either price is negative or if the exponents are invalid
-    function combinePrices(
+    /// @return crossRate The cross-rate (a/c)
+    /// @return expo The exponent of the cross-rate
+    /// @dev This function will revert if either price is negative or if the exponents are invalid.
+    /// @dev This function will also revert if the cross-rate is greater than int64.max
+    /// @notice This function doesn't return the combined confidence interval.
+    function deriveCrossRate(
         int64 price1,
         int32 expo1,
         int64 price2,
         int32 expo2
-    ) public pure returns (int64 combinedPrice, int32 expo) {
+    ) public pure returns (int64 crossRate, int32 expo) {
         if (price1 < 0 || price2 < 0 || expo1 > 0 || expo2 > 0 || expo1 < -255 || expo2 < -255) {
             revert();
         }
@@ -58,7 +60,6 @@ library PythUtils {
         // Calculate the combined price with precision
         uint256 combined = (p1 * 10**18) / p2;
         combined = combined / 10 ** (18 - maxDecimals);
-
         // Check if the combined price fits in int64
         if (combined > uint256(uint64(type(int64).max))) {
             revert();

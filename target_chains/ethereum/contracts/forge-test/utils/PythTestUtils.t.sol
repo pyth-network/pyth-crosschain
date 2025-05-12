@@ -370,6 +370,17 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
 }
 
 contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
+    function successTest(int64 price1, int32 expo1, int64 price2, int32 expo2, int64 expectedPrice, int32 expectedExpo) internal pure {
+        (int64 price, int32 expo) = PythUtils.deriveCrossRate(price1, expo1, price2, expo2);
+        assertEq(price, expectedPrice);
+        assertEq(expo, expectedExpo);
+    }
+
+    function revertTest(int64 price1, int32 expo1, int64 price2, int32 expo2) internal {
+        vm.expectRevert();
+        PythUtils.deriveCrossRate(price1, expo1, price2, expo2);
+    }
+
     function testConvertToUnit() public {
         // Price can't be negative
         vm.expectRevert();
@@ -401,64 +412,42 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
     }
 
     function testCombinePrices() public {
-        // Test case 1: Basic price combination (StEth/Eth / Eth/USD = ETH/BTC)
-        PythStructs.Price memory stEthEth = PythStructs.Price({
-            price: 206487956502,  
-            conf: 10,
-            expo: -8,    
-            publishTime: block.timestamp
-        });
-        
-        PythStructs.Price memory ethUsd = PythStructs.Price({
-            price: 206741615681,
-            conf: 100,
-            expo: -8,     
-            publishTime: block.timestamp
-        });
 
-        (int64 price, int32 expo) = PythUtils.combinePrices(stEthEth.price, stEthEth.expo, ethUsd.price, ethUsd.expo);
+        // Basic Tests 
+        successTest(100, -2, 100, -2, 100, -2);
+        successTest(10000, -2, 100, -2, 10000, -2);
+        successTest(1_000_000, -2, 10_000, -2, 10_000, -2);
+
+        // Negative Price Tests
+        revertTest(-100, -2, 100, -2);
+        revertTest(100, -2, -100, -2);
+        revertTest(-100, -2, -100, -2);
+
+        // Positive Exponent Tests
+        revertTest(100, 2, 100, -2);
+        revertTest(100, -2, 100, 2);
+        revertTest(100, 2, 100, 2);
+
+        // Different Exponent Tests
+        successTest(10_000, -2, 100, -4, 100_000_000, -4);
+        successTest(10_000, -2, 10_000, 0, 1, -2);
+        successTest(10_000, 0, 10_000, 0, 1, 0);
+
+        // End Range Tests
+        successTest(int64(type(int64).max), 0, int64(type(int64).max), 0, 1, 0);
+        successTest(int64(type(int64).max), 0, 1, 0, int64(type(int64).max), 0);
+        successTest(1, 0, int64(type(int64).max), 0, 1 / int64(type(int64).max), 0);
+        revertTest(10_000, -2, 10_000, -256);
+        
+        // More Realistic Tests
+        // Test case 1:  (StEth/Eth / Eth/USD = ETH/BTC)
+        (int64 price, int32 expo) = PythUtils.deriveCrossRate(206487956502, -8, 206741615681, -8);
         assertApproxEqRel(price, 100000000, 9e17); // $1
         assertEq(expo, -8);
-        
-        // Test case 2: Different exponents
-        PythStructs.Price memory smallPrice = PythStructs.Price({
-            price: 100,   // $0.01
-            conf: 1,
-            expo: -4,     // 4 decimals
-            publishTime: block.timestamp
-        });
 
-        PythStructs.Price memory largePrice = PythStructs.Price({
-            price: 1000,  // $10
-            conf: 10,
-            expo: -2,     // 2 decimals
-            publishTime: block.timestamp
-        });
-
-        (price, expo) = PythUtils.combinePrices(smallPrice.price, smallPrice.expo, largePrice.price, largePrice.expo);
-        assertEq(price, 10);    // 0.001
-        assertEq(expo, -4);
-
-        // Test case 3: Revert on negative prices
-        PythStructs.Price memory negativePrice = PythStructs.Price({
-            price: -100,
-            conf: 10,
-            expo: -2,
-            publishTime: block.timestamp
-        });
-
-        vm.expectRevert();
-        PythUtils.combinePrices(negativePrice.price, negativePrice.expo, ethUsd.price, ethUsd.expo);
-
-        // Test case 4: Revert on positive exponents
-        PythStructs.Price memory invalidExpo = PythStructs.Price({
-            price: 100,
-            conf: 10,
-            expo: 2,
-            publishTime: block.timestamp
-        });
-
-        vm.expectRevert();
-        PythUtils.combinePrices(ethUsd.price, ethUsd.expo, invalidExpo.price, invalidExpo.expo);
+        // Test case 2: 
+        (price, expo) = PythUtils.deriveCrossRate(520010, -8, 38591, -8);
+        assertApproxEqRel(price, 1347490347, 9e17); // $1
+        assertEq(expo, -8);
     }
 }
