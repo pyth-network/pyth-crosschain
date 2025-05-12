@@ -42,6 +42,11 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InsufficientBalance();
         }
 
+        // Check deposit limit for permanent subscriptions
+        if (subscriptionParams.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
+            revert MaxDepositLimitExceeded();
+        }
+
         // Set subscription to active
         subscriptionParams.isActive = true;
 
@@ -523,7 +528,22 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InactiveSubscription();
         }
 
-        _state.subscriptionStatuses[subscriptionId].balanceInWei += msg.value;
+        SubscriptionParams storage params = _state.subscriptionParams[
+            subscriptionId
+        ];
+        SubscriptionStatus storage status = _state.subscriptionStatuses[
+            subscriptionId
+        ];
+
+        // Check deposit limit for permanent subscriptions
+        if (
+            params.isPermanent &&
+            status.balanceInWei + msg.value > MAX_DEPOSIT_LIMIT
+        ) {
+            revert MaxDepositLimitExceeded();
+        }
+
+        status.balanceInWei += msg.value;
     }
 
     function withdrawFunds(

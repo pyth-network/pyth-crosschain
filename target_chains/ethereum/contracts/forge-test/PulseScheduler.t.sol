@@ -779,6 +779,115 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         scheduler.updateSubscription(subscriptionId, params);
     }
 
+    function testPermanentSubscriptionDepositLimit() public {
+        // Test 1: Creating a permanent subscription with deposit exceeding MAX_DEPOSIT_LIMIT should fail
+        SchedulerState.SubscriptionParams
+            memory params = createDefaultSubscriptionParams(2, address(reader));
+        params.isPermanent = true;
+
+        uint256 maxDepositLimit = 100 ether; // Same as MAX_DEPOSIT_LIMIT in SchedulerState
+        uint256 excessiveDeposit = maxDepositLimit + 1 ether;
+        vm.deal(address(this), excessiveDeposit);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(MaxDepositLimitExceeded.selector)
+        );
+        scheduler.createSubscription{value: excessiveDeposit}(params);
+
+        // Test 2: Creating a permanent subscription with deposit within MAX_DEPOSIT_LIMIT should succeed
+        uint256 validDeposit = maxDepositLimit;
+        vm.deal(address(this), validDeposit);
+
+        uint256 subscriptionId = scheduler.createSubscription{
+            value: validDeposit
+        }(params);
+
+        // Verify subscription was created correctly
+        (
+            SchedulerState.SubscriptionParams memory storedParams,
+            SchedulerState.SubscriptionStatus memory status
+        ) = scheduler.getSubscription(subscriptionId);
+
+        assertTrue(
+            storedParams.isPermanent,
+            "Subscription should be permanent"
+        );
+        assertEq(
+            status.balanceInWei,
+            validDeposit,
+            "Balance should match deposit amount"
+        );
+
+        // Test 3: Adding funds to a permanent subscription that would exceed MAX_DEPOSIT_LIMIT should fail
+        uint256 additionalFunds = 1 wei;
+        vm.deal(address(this), additionalFunds);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(MaxDepositLimitExceeded.selector)
+        );
+        scheduler.addFunds{value: additionalFunds}(subscriptionId);
+
+        // Test 4: Adding funds to a permanent subscription within MAX_DEPOSIT_LIMIT should succeed
+        // First withdraw some funds to create space under the limit
+        uint256 withdrawAmount = 10 ether;
+
+        // Create a non-permanent subscription to test partial funding
+        SchedulerState.SubscriptionParams
+            memory nonPermanentParams = createDefaultSubscriptionParams(
+                2,
+                address(reader)
+            );
+        uint256 minimumBalance = scheduler.getMinimumBalance(
+            uint8(nonPermanentParams.priceIds.length)
+        );
+        vm.deal(address(this), minimumBalance);
+
+        uint256 nonPermanentSubId = scheduler.createSubscription{
+            value: minimumBalance
+        }(nonPermanentParams);
+
+        // Add funds to the non-permanent subscription (should be within limit)
+        uint256 validAdditionalFunds = 5 ether;
+        vm.deal(address(this), validAdditionalFunds);
+
+        scheduler.addFunds{value: validAdditionalFunds}(nonPermanentSubId);
+
+        // Verify funds were added correctly
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory nonPermanentStatus
+        ) = scheduler.getSubscription(nonPermanentSubId);
+
+        assertEq(
+            nonPermanentStatus.balanceInWei,
+            minimumBalance + validAdditionalFunds,
+            "Balance should be increased by the funded amount"
+        );
+
+        // Test 5: Non-permanent subscriptions should not be subject to the deposit limit
+        uint256 largeDeposit = maxDepositLimit * 2;
+        vm.deal(address(this), largeDeposit);
+
+        SchedulerState.SubscriptionParams
+            memory unlimitedParams = createDefaultSubscriptionParams(
+                2,
+                address(reader)
+            );
+        uint256 unlimitedSubId = scheduler.createSubscription{
+            value: largeDeposit
+        }(unlimitedParams);
+
+        // Verify subscription was created with the large deposit
+        (, SchedulerState.SubscriptionStatus memory unlimitedStatus) = scheduler
+            .getSubscription(unlimitedSubId);
+
+        assertEq(
+            unlimitedStatus.balanceInWei,
+            largeDeposit,
+            "Non-permanent subscription should accept large deposits"
+        );
+    }
+
     function testAnyoneCanAddFunds() public {
         // Create a subscription
         uint256 subscriptionId = addTestSubscription(
