@@ -28,9 +28,6 @@ const Arrow = ({ className }: { className?: string }) => (
 const formatDisplayName = (value: ProgramType): string => {
   const enumName = PROGRAM_TYPE_NAMES[value]
   return enumName
-    .split('_')
-    .map((word: string) => word.charAt(0) + word.slice(1).toLowerCase())
-    .join(' ')
 }
 
 /**
