@@ -530,7 +530,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
-        
+
         if (!params.isActive) {
             revert InactiveSubscription();
         }
