@@ -55,7 +55,7 @@ contract EntropyTester is IEntropyConsumer {
     ) public payable returns (uint64 sequenceNumber) {
         requireGasUsageAboveLimit(callbackGasUsage);
 
-        IEntropy entropy = IEntropy(address(getEntropyWithDefault(_entropy)));
+        IEntropy entropy = getEntropyWithDefault(_entropy);
         address provider = getProviderWithDefault(entropy, _provider);
 
         uint128 fee = entropy.getFee(provider);
@@ -130,7 +130,7 @@ contract EntropyTester is IEntropyConsumer {
     ) public payable returns (uint64 sequenceNumber) {
         requireGasUsageAboveLimit(callbackGasUsage);
 
-        IEntropyV2 entropy = getEntropyWithDefault(_entropy);
+        IEntropy entropy = getEntropyWithDefault(_entropy);
         address provider = getProviderWithDefault(entropy, _provider);
 
         uint128 fee = entropy.getFeeV2(provider, gasLimit);
@@ -186,7 +186,7 @@ contract EntropyTester is IEntropyConsumer {
     ) public {
         requireGasUsageAboveLimit(callbackGasUsage);
 
-        IEntropyV2 entropy = getEntropyWithDefault(_entropy);
+        IEntropy entropy = getEntropyWithDefault(_entropy);
         address provider = getProviderWithDefault(entropy, _provider);
 
         callbackData[
@@ -236,11 +236,11 @@ contract EntropyTester is IEntropyConsumer {
      */
     function getEntropyWithDefault(
         address _entropy
-    ) internal view returns (IEntropyV2 entropy) {
+    ) internal view returns (IEntropy entropy) {
         if (_entropy != address(0)) {
-            entropy = IEntropyV2(_entropy);
+            entropy = IEntropy(_entropy);
         } else {
-            entropy = IEntropyV2(defaultEntropy);
+            entropy = IEntropy(defaultEntropy);
         }
     }
 
@@ -251,7 +251,7 @@ contract EntropyTester is IEntropyConsumer {
      * @return provider The provider address
      */
     function getProviderWithDefault(
-        IEntropyV2 entropy,
+        IEntropy entropy,
         address _provider
     ) internal view returns (address provider) {
         if (_provider == address(0)) {
@@ -268,7 +268,7 @@ contract EntropyTester is IEntropyConsumer {
     function requireGasUsageAboveLimit(uint32 gasUsage) internal pure {
         require(
             gasUsage > 60000,
-            "Target gas usage cannot be below 60k (~the cost of storing callback results)"
+            "Target gas usage cannot be below 60k (~upper bound on necessary callback operations)"
         );
     }
 
