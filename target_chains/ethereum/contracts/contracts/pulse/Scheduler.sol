@@ -531,10 +531,9 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             subscriptionId
         ];
         
-        if (!status.isActive) {
+        if (!params.isActive) {
             revert InactiveSubscription();
         }
-
 
         // Check deposit limit for permanent subscriptions
         if (params.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
