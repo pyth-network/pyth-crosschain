@@ -34,6 +34,8 @@ import {
   RawConfig,
   ValidationResult,
   CoreInstructionAccounts,
+  GetConfigParams,
+  ProgramType,
 } from "../types";
 
 /**
@@ -128,9 +130,11 @@ export function isAvailableOnCluster(cluster: PythCluster): boolean {
 /**
  * Parse raw on-chain accounts into the Pyth Core configuration format
  */
-export function getConfigFromRawAccounts(
-  accounts: Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>,
-): RawConfig {
+export function getConfig(params: GetConfigParams): RawConfig {
+  if (params.programType !== ProgramType.PYTH_CORE) {
+    throw new Error("Invalid program type for Core getConfig");
+  }
+  const accounts = params.accounts;
   const priceRawConfigs: { [key: string]: PriceRawConfig } = {};
   const rawConfig: RawConfig = { mappingAccounts: [] };
 

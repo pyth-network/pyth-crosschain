@@ -69,6 +69,59 @@ export type RawConfig = {
   permissionAccount?: PermissionData;
 };
 
+export type CoreConfigParams = {
+  accounts: Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>;
+  cluster: PythCluster;
+};
+
+/**
+ * Lazer-specific configuration type
+ * TODO: Change to actual Lazer config type
+ */
+export type LazerConfig = {
+  programType: ProgramType.PYTH_LAZER;
+  // Make cluster optional since Lazer might not be tied to a specific cluster
+  cluster?: PythCluster;
+  // More generic data source instead of Solana-specific accounts
+  feeds: LazerFeed[];
+  // Additional metadata that might be relevant for Lazer
+  metadata?: Record<string, unknown>;
+};
+
+/**
+ * Parameters for getting Lazer configuration
+ */
+export type LazerConfigParams = {
+  // Instead of requiring Solana accounts, allow any parameters needed
+  endpoint?: string;
+  network?: string;
+  options?: Record<string, unknown>;
+};
+
+/**
+ * Union type for configuration parameters that can vary by program type
+ */
+export type GetConfigParams =
+  | ({
+      programType: ProgramType.PYTH_CORE;
+    } & CoreConfigParams)
+  | ({ programType: ProgramType.PYTH_LAZER } & LazerConfigParams);
+
+/**
+ * Function to get configuration data
+ */
+export type GetConfigFn = (params: GetConfigParams) => ProgramConfig;
+
+/**
+ * Lazer feed configuration
+ * TODO: Change to actual Lazer feed type
+ */
+export type LazerFeed = {
+  id: string;
+  metadata: Record<string, string | number | boolean>;
+  // Add other feed-specific properties as needed
+};
+
 /**
  * Type for downloadable price account configuration
  */
@@ -97,6 +150,11 @@ export type DownloadableConfig = {
 };
 
 /**
+ * Type for configuration that can be either RawConfig for Pyth Core or LazerConfig for Lazer
+ */
+export type ProgramConfig = RawConfig | LazerConfig;
+
+/**
  * Core program instruction accounts needed for generateInstructions
  */
 export interface CoreInstructionAccounts {
@@ -112,8 +170,10 @@ export interface CoreInstructionAccounts {
  */
 export interface LazerInstructionAccounts {
   fundingAccount: PublicKey;
-  // TODO: Add Lazer-specific account requirements here
-  [key: string]: any;
+  // Lazer-specific properties
+  lazerProgramClient?: any; // Replace with proper type when available
+  cluster: PythCluster;
+  additionalAccounts?: Record<string, PublicKey>;
 }
 
 /**
@@ -142,17 +202,11 @@ export type GetProgramAddressFn = (cluster: PythCluster) => PublicKey;
 export type IsAvailableOnClusterFn = (cluster: PythCluster) => boolean;
 
 /**
- * Function to parse raw on-chain accounts into a configuration object
- */
-export type GetConfigFromRawAccountsFn = (
-  accounts: Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>,
-  cluster: PythCluster,
-) => RawConfig;
-
-/**
  * Function to format the configuration for downloading as a JSON file
  */
-export type GetDownloadableConfigFn = (config: RawConfig) => DownloadableConfig;
+export type GetDownloadableConfigFn = (
+  config: ProgramConfig,
+) => DownloadableConfig;
 
 /**
  * Result of validating an uploaded configuration
@@ -193,7 +247,7 @@ export type GenerateInstructionsFn<T extends ProgramType = ProgramType> = (
 export interface ProgramFunctions<T extends ProgramType = ProgramType> {
   getProgramAddress: GetProgramAddressFn;
   isAvailableOnCluster: IsAvailableOnClusterFn;
-  getConfigFromRawAccounts: GetConfigFromRawAccountsFn;
+  getConfig: GetConfigFn;
   getDownloadableConfig: GetDownloadableConfigFn;
   validateUploadedConfig: ValidateUploadedConfigFn;
   generateInstructions: GenerateInstructionsFn<T>;

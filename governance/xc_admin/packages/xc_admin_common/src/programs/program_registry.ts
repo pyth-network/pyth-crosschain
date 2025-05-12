@@ -1,6 +1,14 @@
 import { AccountInfo, PublicKey } from "@solana/web3.js";
 import { PythCluster } from "@pythnetwork/client";
-import { DownloadableConfig, ProgramType, RawConfig } from "./types";
+import {
+  DownloadableConfig,
+  ProgramType,
+  RawConfig,
+  LazerConfig,
+  ProgramConfig,
+  GetConfigParams,
+  LazerConfigParams,
+} from "./types";
 import {
   ProgramFunctions,
   ValidationResult,
@@ -34,17 +42,14 @@ export const isAvailableOnCluster: Record<
 };
 
 /**
- * Function to parse raw on-chain accounts into a configuration object
+ * Function to get configuration for each program type
  */
-export const getConfigFromRawAccounts: Record<
+export const getConfig: Record<
   ProgramType,
-  (
-    accounts: Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>,
-    cluster: PythCluster,
-  ) => RawConfig
+  (params: GetConfigParams) => ProgramConfig
 > = {
-  [ProgramType.PYTH_CORE]: pythCore.getConfigFromRawAccounts,
-  [ProgramType.PYTH_LAZER]: pythLazer.getConfigFromRawAccounts,
+  [ProgramType.PYTH_CORE]: pythCore.getConfig,
+  [ProgramType.PYTH_LAZER]: pythLazer.getConfig,
 };
 
 /**
@@ -52,10 +57,20 @@ export const getConfigFromRawAccounts: Record<
  */
 export const getDownloadableConfig: Record<
   ProgramType,
-  (config: RawConfig) => DownloadableConfig
+  (config: ProgramConfig) => DownloadableConfig
 > = {
-  [ProgramType.PYTH_CORE]: pythCore.getDownloadableConfig,
-  [ProgramType.PYTH_LAZER]: pythLazer.getDownloadableConfig,
+  [ProgramType.PYTH_CORE]: (config: ProgramConfig) => {
+    if ("mappingAccounts" in config) {
+      return pythCore.getDownloadableConfig(config as RawConfig);
+    }
+    throw new Error("Invalid config type for Pyth Core");
+  },
+  [ProgramType.PYTH_LAZER]: (config: ProgramConfig) => {
+    if ("feeds" in config && config.programType === ProgramType.PYTH_LAZER) {
+      return pythLazer.getDownloadableConfig(config as LazerConfig);
+    }
+    throw new Error("Invalid config type for Pyth Lazer");
+  },
 };
 
 /**
@@ -95,7 +110,7 @@ export function getProgramFunctions<T extends ProgramType>(
   return {
     getProgramAddress: getProgramAddress[type],
     isAvailableOnCluster: isAvailableOnCluster[type],
-    getConfigFromRawAccounts: getConfigFromRawAccounts[type],
+    getConfig: getConfig[type],
     getDownloadableConfig: getDownloadableConfig[type],
     validateUploadedConfig: validateUploadedConfig[type],
     generateInstructions: generateInstructions[
