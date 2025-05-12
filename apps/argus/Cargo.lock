@@ -139,6 +139,7 @@ dependencies = [
  "base64 0.21.4",
  "chrono",
  "clap",
+ "dashmap",
  "ethers",
  "fortuna",
  "futures",
@@ -899,6 +900,19 @@ dependencies = [
  "darling_core",
  "quote",
  "syn 2.0.101",
+]
+
+[[package]]
+name = "dashmap"
+version = "5.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
+dependencies = [
+ "cfg-if",
+ "hashbrown 0.14.1",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
 ]
 
 [[package]]

@@ -1,7 +1,8 @@
 //! This module contains the state of the service for a single blockchain.
 
+use dashmap::DashMap;
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 use crate::adapters::ethereum::SubscriptionParams;
 use crate::adapters::types::{Price, PriceId, SubscriptionId};
@@ -30,43 +31,41 @@ impl ArgusState {
 /// The state of active subscriptions for a single blockchain.
 /// Updated by the SubscriptionService.
 pub struct SubscriptionState {
-    subscriptions: RwLock<HashMap<SubscriptionId, SubscriptionParams>>,
+    subscriptions: DashMap<SubscriptionId, SubscriptionParams>,
 }
 
 impl SubscriptionState {
     pub fn new() -> Self {
         Self {
-            subscriptions: RwLock::new(HashMap::new()),
+            subscriptions: DashMap::new(),
         }
     }
 
     pub fn get_subscriptions(&self) -> HashMap<SubscriptionId, SubscriptionParams> {
-        self.subscriptions.read().expect("RwLock poisoned").clone()
+        self.subscriptions
+            .iter()
+            .map(|r| (*r.key(), r.value().clone()))
+            .collect()
     }
 
     pub fn get_subscription(&self, id: &SubscriptionId) -> Option<SubscriptionParams> {
-        self.subscriptions
-            .read()
-            .expect("RwLock poisoned")
-            .get(id)
-            .cloned()
+        self.subscriptions.get(id).map(|r| r.value().clone())
     }
 
     pub fn update_subscriptions(&self, subscriptions: HashMap<SubscriptionId, SubscriptionParams>) {
-        let mut lock = self.subscriptions.write().expect("RwLock poisoned");
-        *lock = subscriptions;
+        self.subscriptions.clear();
+        for (id, params) in subscriptions {
+            self.subscriptions.insert(id, params);
+        }
     }
 
     pub fn get_feed_ids(&self) -> HashSet<PriceId> {
-        let subscriptions = self.subscriptions.read().expect("RwLock poisoned");
         let mut feed_ids = HashSet::new();
-
-        for (_, params) in subscriptions.iter() {
-            for feed_id in &params.price_ids {
+        for entry in self.subscriptions.iter() {
+            for feed_id in &entry.value().price_ids {
                 feed_ids.insert(*feed_id);
             }
         }
-
         feed_ids
     }
 }
@@ -74,85 +73,81 @@ impl SubscriptionState {
 /// Stores the latest off-chain prices for a given set of price feeds.
 /// Updated by the PythPriceService.
 pub struct PythPriceState {
-    prices: RwLock<HashMap<PriceId, Price>>,
-    feed_ids: RwLock<HashSet<PriceId>>,
+    prices: DashMap<PriceId, Price>,
+    feed_ids: DashMap<PriceId, ()>,
 }
 
 impl PythPriceState {
     pub fn new() -> Self {
         Self {
-            prices: RwLock::new(HashMap::new()),
-            feed_ids: RwLock::new(HashSet::new()),
+            prices: DashMap::new(),
+            feed_ids: DashMap::new(),
         }
     }
 
     pub fn get_price(&self, feed_id: &PriceId) -> Option<Price> {
-        self.prices
-            .read()
-            .expect("RwLock poisoned")
-            .get(feed_id)
-            .cloned()
+        self.prices.get(feed_id).map(|r| r.value().clone())
     }
 
     pub fn update_price(&self, feed_id: PriceId, price: Price) {
-        let mut prices = self.prices.write().expect("RwLock poisoned");
-        prices.insert(feed_id, price);
+        self.prices.insert(feed_id, price);
     }
 
     pub fn update_prices(&self, prices: HashMap<PriceId, Price>) {
-        let mut lock = self.prices.write().expect("RwLock poisoned");
-        lock.extend(prices);
+        for (feed_id, price) in prices {
+            self.prices.insert(feed_id, price);
+        }
     }
 
     pub fn update_feed_ids(&self, feed_ids: HashSet<PriceId>) {
-        let mut lock = self.feed_ids.write().expect("RwLock poisoned");
-        *lock = feed_ids;
+        self.feed_ids.clear();
+        for feed_id in feed_ids {
+            self.feed_ids.insert(feed_id, ());
+        }
     }
 
     pub fn get_feed_ids(&self) -> HashSet<PriceId> {
-        self.feed_ids.read().expect("RwLock poisoned").clone()
+        self.feed_ids.iter().map(|r| *r.key()).collect()
     }
 }
 
 /// Stores the latest on-chain prices for a given set of price feeds.
 /// Updated by the ChainPriceService.
 pub struct ChainPriceState {
-    prices: RwLock<HashMap<PriceId, Price>>,
-    feed_ids: RwLock<HashSet<PriceId>>,
+    prices: DashMap<PriceId, Price>,
+    feed_ids: DashMap<PriceId, ()>,
 }
 
 impl ChainPriceState {
     pub fn new() -> Self {
         Self {
-            prices: RwLock::new(HashMap::new()),
-            feed_ids: RwLock::new(HashSet::new()),
+            prices: DashMap::new(),
+            feed_ids: DashMap::new(),
         }
     }
 
     pub fn get_price(&self, feed_id: &PriceId) -> Option<Price> {
-        self.prices
-            .read()
-            .expect("RwLock poisoned")
-            .get(feed_id)
-            .cloned()
+        self.prices.get(feed_id).map(|r| r.value().clone())
     }
 
     pub fn update_price(&self, feed_id: PriceId, price: Price) {
-        let mut prices = self.prices.write().expect("RwLock poisoned");
-        prices.insert(feed_id, price);
+        self.prices.insert(feed_id, price);
     }
 
     pub fn update_prices(&self, prices: HashMap<PriceId, Price>) {
-        let mut lock = self.prices.write().expect("RwLock poisoned");
-        lock.extend(prices);
+        for (feed_id, price) in prices {
+            self.prices.insert(feed_id, price);
+        }
     }
 
     pub fn update_feed_ids(&self, feed_ids: HashSet<PriceId>) {
-        let mut lock = self.feed_ids.write().expect("RwLock poisoned");
-        *lock = feed_ids;
+        self.feed_ids.clear();
+        for feed_id in feed_ids {
+            self.feed_ids.insert(feed_id, ());
+        }
     }
 
     pub fn get_feed_ids(&self) -> HashSet<PriceId> {
-        self.feed_ids.read().expect("RwLock poisoned").clone()
+        self.feed_ids.iter().map(|r| *r.key()).collect()
     }
 }
