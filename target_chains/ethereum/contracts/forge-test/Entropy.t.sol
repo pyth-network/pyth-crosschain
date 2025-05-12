@@ -1838,18 +1838,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             // first entry is CallbackFailed which we aren't going to check.
             assertRevealedEvent(
                 entries[1],
-                provider1,
                 address(consumer),
                 sequenceNumber,
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                ),
                 userRandomNumber,
-                provider1Proofs[sequenceNumber],
                 true,
-                bytes(""),
                 callbackGasUsage
             );
 
@@ -1875,18 +1867,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             assertEq(entries.length, 2);
             assertRevealedEvent(
                 entries[1],
-                provider1,
                 req.requester,
                 req.sequenceNumber,
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                ),
                 userRandomNumber,
-                provider1Proofs[sequenceNumber],
                 false,
-                bytes(""),
                 callbackGasUsage
             );
 
@@ -1900,14 +1884,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
     // Helper method to check the Revealed event
     function assertRevealedEvent(
         Vm.Log memory entry,
-        address expectedProvider,
         address expectedRequester,
         uint64 expectedSequenceNumber,
-        bytes32 expectedRandomNumber,
         bytes32 expectedUserContribution,
-        bytes32 expectedProviderContribution,
         bool expectedCallbackFailed,
-        bytes memory expectedCallbackErrorCode,
         uint32 expectedCallbackGasUsage
     ) internal {
         // Check event topic
@@ -1919,9 +1899,15 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
         );
 
         // Check event topics
-        assertEq(entry.topics[1], bytes32(uint256(uint160(expectedProvider))));
+        assertEq(entry.topics[1], bytes32(uint256(uint160(provider1))));
         assertEq(entry.topics[2], bytes32(uint256(uint160(expectedRequester))));
         assertEq(entry.topics[3], bytes32(uint256(expectedSequenceNumber)));
+
+        bytes32 expectedRandomNumber = random.combineRandomValues(
+            expectedUserContribution,
+            provider1Proofs[expectedSequenceNumber],
+            0
+        );
 
         // Decode and check event data
         (
@@ -1938,8 +1924,10 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             );
 
         assertEq(randomNumber, expectedRandomNumber);
+        assertEq(userContribution, expectedUserContribution);
+        assertEq(providerContribution, provider1Proofs[expectedSequenceNumber]);
         assertEq(callbackFailed, expectedCallbackFailed);
-        assertEq(callbackErrorCode, expectedCallbackErrorCode);
+        assertEq(callbackErrorCode, bytes(""));
         // callback gas usage is approximate
         assertTrue((expectedCallbackGasUsage * 90) / 100 < callbackGasUsed);
         assertTrue(callbackGasUsed < (expectedCallbackGasUsage * 110) / 100);
