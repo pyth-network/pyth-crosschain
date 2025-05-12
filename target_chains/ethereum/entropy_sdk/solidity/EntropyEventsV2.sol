@@ -23,7 +23,7 @@ interface EntropyEventsV2 {
      * @param provider The address of the provider handling the request
      * @param caller The address of the user requesting the random number
      * @param sequenceNumber A unique identifier for this request
-     * @param userRandomNumber A random number provided by the user for additional entropy
+     * @param userContribution The user's contribution to the random number
      * @param gasLimit The gas limit for the callback.
      * @param extraArgs A field for extra data for forward compatibility.
      */
@@ -31,7 +31,7 @@ interface EntropyEventsV2 {
         address indexed provider,
         address indexed caller,
         uint64 indexed sequenceNumber,
-        bytes32 userRandomNumber,
+        bytes32 userContribution,
         uint32 gasLimit,
         bytes extraArgs
     );
@@ -42,6 +42,8 @@ interface EntropyEventsV2 {
      * @param caller The address of the user who requested the random number (and who receives a callback)
      * @param sequenceNumber The unique identifier of the request
      * @param randomNumber The generated random number
+     * @param userContribution The user's contribution to the random number
+     * @param providerContribution The provider's contribution to the random number
      * @param callbackFailed Whether the callback to the caller failed
      * @param callbackReturnValue Return value from the callback. If the callback failed, this field contains
      * the error code and any additional returned data. Note that "" often indicates an out-of-gas error.
@@ -54,6 +56,8 @@ interface EntropyEventsV2 {
         address indexed caller,
         uint64 indexed sequenceNumber,
         bytes32 randomNumber,
+        bytes32 userContribution,
+        bytes32 providerContribution,
         bool callbackFailed,
         bytes callbackReturnValue,
         uint32 callbackGasUsed,

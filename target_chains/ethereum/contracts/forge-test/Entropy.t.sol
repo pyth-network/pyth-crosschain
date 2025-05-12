@@ -888,6 +888,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 provider1Proofs[assignedSequenceNumber],
                 0
             ),
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
             false,
             bytes(""),
             0,
@@ -956,6 +958,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 provider1Proofs[assignedSequenceNumber],
                 0
             ),
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
             false,
             bytes(""),
             0,
@@ -1063,6 +1067,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 provider1Proofs[assignedSequenceNumber],
                 0
             ),
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
             false,
             bytes(""),
             0,
@@ -1136,6 +1142,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 provider1Proofs[assignedSequenceNumber],
                 0
             ),
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
             true,
             revertReason,
             0,
@@ -1202,6 +1210,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 provider1Proofs[assignedSequenceNumber],
                 0
             ),
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
             false,
             bytes(""),
             0,
@@ -1283,6 +1293,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 provider1Proofs[assignedSequenceNumber],
                 0
             ),
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
             true,
             "",
             0,
@@ -1348,6 +1360,8 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
                 provider1Proofs[assignedSequenceNumber],
                 0
             ),
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber],
             false,
             "",
             0,
@@ -1822,57 +1836,14 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
 
             assertEq(entries.length, 2);
             // first entry is CallbackFailed which we aren't going to check.
-            // Unfortunately event.selector was added in Solidity 0.8.15 and we're on 0.8.4 so we have to copy this spec here.
-            assertEq(
-                entries[1].topics[0],
-                keccak256(
-                    "Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"
-                )
+            assertRevealedEvent(
+                entries[1],
+                address(consumer),
+                sequenceNumber,
+                userRandomNumber,
+                true,
+                callbackGasUsage
             );
-            // Verify the topics match the expected values
-            assertEq(
-                entries[1].topics[1],
-                bytes32(uint256(uint160(provider1)))
-            );
-            assertEq(
-                entries[1].topics[2],
-                bytes32(uint256(uint160(address(consumer))))
-            );
-            assertEq(entries[1].topics[3], bytes32(uint256(sequenceNumber)));
-
-            // Verify the data field contains the expected values (per event ABI)
-            (
-                bytes32 randomNumber,
-                bool callbackFailed,
-                bytes memory callbackErrorCode,
-                uint32 callbackGasUsed,
-                bytes memory extraArgs
-            ) = abi.decode(
-                    entries[1].data,
-                    (bytes32, bool, bytes, uint32, bytes)
-                );
-
-            assertEq(
-                randomNumber,
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                )
-            );
-            assertEq(callbackFailed, true);
-            assertEq(callbackErrorCode, bytes(""));
-
-            // callback gas usage is approximate
-            assertTrue(
-                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
-                    ((callbackGasUsage * 90) / 100 < callbackGasUsed)
-            );
-            assertTrue(
-                random.getProviderInfoV2(provider1).defaultGasLimit == 0 ||
-                    (callbackGasUsed < (callbackGasUsage * 110) / 100)
-            );
-            assertEq(extraArgs, bytes(""));
 
             // Verify request is still active after failure
             EntropyStructsV2.Request memory reqAfterFailure = random
@@ -1894,61 +1865,73 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             Vm.Log[] memory entries = vm.getRecordedLogs();
 
             assertEq(entries.length, 2);
-            // first entry is CallbackFailed which we aren't going to check.
-            // Unfortunately event.selector was added in Solidity 0.8.15 and we're on 0.8.4 so we have to copy this spec here.
-            assertEq(
-                entries[1].topics[0],
-                keccak256(
-                    "Revealed(address,address,uint64,bytes32,bool,bytes,uint32,bytes)"
-                )
+            assertRevealedEvent(
+                entries[1],
+                req.requester,
+                req.sequenceNumber,
+                userRandomNumber,
+                false,
+                callbackGasUsage
             );
-
-            // Verify the topics match the expected values
-            assertEq(
-                entries[1].topics[1],
-                bytes32(uint256(uint160(provider1)))
-            );
-            assertEq(
-                entries[1].topics[2],
-                bytes32(uint256(uint160(req.requester)))
-            );
-            assertEq(
-                entries[1].topics[3],
-                bytes32(uint256(req.sequenceNumber))
-            );
-
-            // Verify the data field contains the expected values (per event ABI)
-            (
-                bytes32 randomNumber,
-                bool callbackFailed,
-                bytes memory callbackErrorCode,
-                uint32 callbackGasUsed,
-                bytes memory extraArgs
-            ) = abi.decode(
-                    entries[1].data,
-                    (bytes32, bool, bytes, uint32, bytes)
-                );
-
-            assertEq(
-                randomNumber,
-                random.combineRandomValues(
-                    userRandomNumber,
-                    provider1Proofs[sequenceNumber],
-                    0
-                )
-            );
-            assertEq(callbackFailed, false);
-            assertEq(callbackErrorCode, bytes(""));
-            // callback gas usage is approximate
-            assertTrue((callbackGasUsage * 90) / 100 < callbackGasUsed);
-            assertTrue(callbackGasUsed < (callbackGasUsage * 110) / 100);
-            assertEq(extraArgs, bytes(""));
 
             // Verify request is cleared after successful callback
             EntropyStructsV2.Request memory reqAfterSuccess = random
                 .getRequestV2(provider1, sequenceNumber);
             assertEq(reqAfterSuccess.sequenceNumber, 0);
         }
+    }
+
+    // Helper method to check the Revealed event
+    function assertRevealedEvent(
+        Vm.Log memory entry,
+        address expectedRequester,
+        uint64 expectedSequenceNumber,
+        bytes32 expectedUserContribution,
+        bool expectedCallbackFailed,
+        uint32 expectedCallbackGasUsage
+    ) internal {
+        // Check event topic
+        assertEq(
+            entry.topics[0],
+            keccak256(
+                "Revealed(address,address,uint64,bytes32,bytes32,bytes32,bool,bytes,uint32,bytes)"
+            )
+        );
+
+        // Check event topics
+        assertEq(entry.topics[1], bytes32(uint256(uint160(provider1))));
+        assertEq(entry.topics[2], bytes32(uint256(uint160(expectedRequester))));
+        assertEq(entry.topics[3], bytes32(uint256(expectedSequenceNumber)));
+
+        bytes32 expectedRandomNumber = random.combineRandomValues(
+            expectedUserContribution,
+            provider1Proofs[expectedSequenceNumber],
+            0
+        );
+
+        // Decode and check event data
+        (
+            bytes32 randomNumber,
+            bytes32 userContribution,
+            bytes32 providerContribution,
+            bool callbackFailed,
+            bytes memory callbackErrorCode,
+            uint32 callbackGasUsed,
+            bytes memory extraArgs
+        ) = abi.decode(
+                entry.data,
+                (bytes32, bytes32, bytes32, bool, bytes, uint32, bytes)
+            );
+
+        assertEq(randomNumber, expectedRandomNumber);
+        assertEq(userContribution, expectedUserContribution);
+        assertEq(providerContribution, provider1Proofs[expectedSequenceNumber]);
+        assertEq(callbackFailed, expectedCallbackFailed);
+        assertEq(callbackErrorCode, bytes(""));
+        // callback gas usage is approximate
+        assertTrue((expectedCallbackGasUsage * 90) / 100 < callbackGasUsed);
+        assertTrue(callbackGasUsed < (expectedCallbackGasUsage * 110) / 100);
+        assertEq(extraArgs, bytes(""));
     }
 }
 
