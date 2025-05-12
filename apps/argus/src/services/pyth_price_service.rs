@@ -1,3 +1,10 @@
+//! Pyth Price Service
+//!
+//! This service is responsible for keeping the tracked set of price feeds up to date
+//! with latest prices from the Pyth Network. It updates the PythPriceState, which is read
+//! by the Controller service to compare the latest off-chain price with the on-chain price
+//! when deciding whether to update the on-chain price.
+
 use anyhow::Result;
 use async_trait::async_trait;
 use std::sync::Arc;

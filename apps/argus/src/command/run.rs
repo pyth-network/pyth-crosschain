@@ -1,3 +1,5 @@
+//! This module contains the main entrypoint for the Argus service.
+
 use {
     crate::{
         adapters::{ethereum::InstrumentedSignablePythContract, hermes::HermesClient},

@@ -28,6 +28,7 @@ impl ArgusState {
 }
 
 /// The state of active subscriptions for a single blockchain.
+/// Updated by the SubscriptionService.
 pub struct SubscriptionState {
     subscriptions: RwLock<HashMap<SubscriptionId, SubscriptionParams>>,
 }
@@ -70,7 +71,8 @@ impl SubscriptionState {
     }
 }
 
-/// The state of Pyth prices for a single blockchain.
+/// Stores the latest off-chain prices for a given set of price feeds.
+/// Updated by the PythPriceService.
 pub struct PythPriceState {
     prices: RwLock<HashMap<PriceId, Price>>,
     feed_ids: RwLock<HashSet<PriceId>>,
@@ -112,7 +114,8 @@ impl PythPriceState {
     }
 }
 
-/// The state of the chain prices for a single blockchain.
+/// Stores the latest on-chain prices for a given set of price feeds.
+/// Updated by the ChainPriceService.
 pub struct ChainPriceState {
     prices: RwLock<HashMap<PriceId, Price>>,
     feed_ids: RwLock<HashSet<PriceId>>,

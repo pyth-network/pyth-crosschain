@@ -1,3 +1,10 @@
+//! Chain Price Service
+//!
+//! This service is responsible for keeping the tracked set of price feeds up to date
+//! with latest prices from the target blockchain network. It updates the ChainPriceState
+//! which is read by the Controller service to compare the latest off-chain price with the
+//! on-chain price when deciding whether to update the on-chain price.
+
 use anyhow::Result;
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -7,8 +14,8 @@ use tokio::time;
 use tracing;
 
 use crate::adapters::contract::GetChainPrices;
-use crate::state::ChainName;
 use crate::services::Service;
+use crate::state::ChainName;
 use crate::state::ChainPriceState;
 
 pub struct ChainPriceService {

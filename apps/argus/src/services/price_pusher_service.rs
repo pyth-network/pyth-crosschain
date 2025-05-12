@@ -1,3 +1,11 @@
+//! Price Pusher Service
+//!
+//! This service is responsible for pushing price updates to the target blockchain network
+//! via the Pulse contract's updatePriceFeeds function.
+//! It is used by the Controller service to update the on-chain price when the update criteria
+//! is met for a given subscription.
+//! The service handles retries and gas escalation to ensure the price update is successful.
+
 use anyhow::Result;
 use async_trait::async_trait;
 use backoff::ExponentialBackoff;

@@ -1,3 +1,10 @@
+//! Controller Service
+//!
+//! This service orchestrates the price update process for a given blockchain network.
+//! It reads from the SubscriptionState, PythPriceState, and ChainPriceState to determine
+//! whether to update the on-chain price for a given subscription. It also triggers the
+//! PricePusherService to push the update to the target blockchain network.
+
 use anyhow::Result;
 use async_trait::async_trait;
 use std::sync::Arc;

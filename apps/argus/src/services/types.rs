@@ -1,3 +1,7 @@
+//! Service Types
+//!
+//! This module defines the core types and traits used across all services in the system.
+
 use anyhow::Result;
 use async_trait::async_trait;
 use tokio::sync::watch;

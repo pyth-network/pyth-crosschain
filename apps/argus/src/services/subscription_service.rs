@@ -1,3 +1,10 @@
+//! Subscription Service
+//!
+//! This service manages the lifecycle of price feed subscriptions for a specific blockchain network.
+//! Users can update their Pulse subscriptions by adding or removing price feeds any time. This service
+//! tracks the state of these subscriptions on-chain, and updates the tracked price IDs in the Pyth Price
+//! and Chain Price services.
+
 use anyhow::Result;
 use async_trait::async_trait;
 use std::sync::Arc;
