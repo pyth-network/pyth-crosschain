@@ -370,7 +370,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
 }
 
 contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
-    function successTest(int64 price1, int32 expo1, int64 price2, int32 expo2, int64 expectedPrice, int32 expectedExpo) internal pure {
+    function successTest(int64 price1, int32 expo1, int64 price2, int32 expo2, int64 expectedPrice, int32 expectedExpo) internal {
         (int64 price, int32 expo) = PythUtils.deriveCrossRate(price1, expo1, price2, expo2);
         assertEq(price, expectedPrice);
         assertEq(expo, expectedExpo);
