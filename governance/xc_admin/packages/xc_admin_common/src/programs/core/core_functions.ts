@@ -147,7 +147,9 @@ export function getConfig(params: GetConfigParams): RawConfig {
           {
             next: parsed.nextPriceAccountKey,
             address: account.pubkey,
-            publishers: parsed.priceComponents.map((x) => x.publisher!),
+            publishers: parsed.priceComponents
+              .filter((x) => x.publisher !== null && x.publisher !== undefined)
+              .map((x) => x.publisher),
             expo: parsed.exponent,
             minPub: parsed.minPublishers,
             maxLatency: parsed.maxLatency,
@@ -752,17 +754,18 @@ export async function generateInstructions(
         newChanges.priceAccounts[0] &&
         newChanges.priceAccounts[0].publishers
       ) {
+        // We've already checked that these properties exist above
+        const prevPublishers = prev.priceAccounts[0].publishers;
+        const newPublishers = newChanges.priceAccounts[0].publishers;
+
         // check if publishers have changed
-        const publisherKeysToAdd =
-          newChanges.priceAccounts[0].publishers.filter(
-            (newPublisher: string) =>
-              !prev.priceAccounts![0].publishers!.includes(newPublisher),
-          );
+        const publisherKeysToAdd = newPublishers.filter(
+          (newPublisher: string) => !prevPublishers.includes(newPublisher),
+        );
 
         // check if there are any publishers to remove by comparing prev and new
-        const publisherKeysToRemove = prev.priceAccounts[0].publishers.filter(
-          (prevPublisher: string) =>
-            !newChanges.priceAccounts![0].publishers!.includes(prevPublisher),
+        const publisherKeysToRemove = prevPublishers.filter(
+          (prevPublisher: string) => !newPublishers.includes(prevPublisher),
         );
 
         // add instructions to remove publishers
