@@ -10,7 +10,7 @@ import { ClusterContext } from '../contexts/ClusterContext'
 import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 import {
   ProgramType,
-  getConfigFromRawAccounts,
+  getConfig,
   RawConfig,
   MappingRawConfig,
   ProductRawConfig,
@@ -57,10 +57,11 @@ export const usePyth = (): PythHookData => {
         if (cancelled) return
 
         // Use the functional approach to parse the accounts
-        const parsedConfig = getConfigFromRawAccounts[ProgramType.PYTH_CORE](
-          allPythAccounts,
-          cluster as PythCluster
-        )
+        const parsedConfig = getConfig[ProgramType.PYTH_CORE]({
+          programType: ProgramType.PYTH_CORE,
+          accounts: allPythAccounts,
+          cluster: cluster as PythCluster,
+        })
 
         // Verify all accounts were processed
         const remainingAccounts = allPythAccounts.filter((account) => {
@@ -74,7 +75,7 @@ export const usePyth = (): PythHookData => {
           )
         }
 
-        setRawConfig(parsedConfig)
+        setRawConfig(parsedConfig as RawConfig)
         setIsLoading(false)
       } catch (e) {
         if (cancelled) return
