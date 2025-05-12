@@ -828,9 +828,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         scheduler.addFunds{value: additionalFunds}(subscriptionId);
 
         // Test 4: Adding funds to a permanent subscription within MAX_DEPOSIT_LIMIT should succeed
-        // First withdraw some funds to create space under the limit
-        uint256 withdrawAmount = 10 ether;
-
         // Create a non-permanent subscription to test partial funding
         SchedulerState.SubscriptionParams
             memory nonPermanentParams = createDefaultSubscriptionParams(
