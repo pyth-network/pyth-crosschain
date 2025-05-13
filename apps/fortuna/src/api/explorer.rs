@@ -1,5 +1,5 @@
 use crate::api::{ChainId, RestError};
-use crate::history::RequestLog;
+use crate::history::RequestStatus;
 use axum::extract::{Query, State};
 use axum::Json;
 use ethers::types::TxHash;
@@ -38,16 +38,13 @@ pub enum ExplorerQueryParamsMode {
 pub async fn explorer(
     State(state): State<crate::api::ApiState>,
     Query(query_params): Query<ExplorerQueryParams>,
-) -> anyhow::Result<Json<Vec<RequestLog>>, RestError> {
+) -> anyhow::Result<Json<Vec<RequestStatus>>, RestError> {
     let result = match query_params.mode {
         ExplorerQueryParamsMode::TxHash => {
             let tx_hash = query_params.tx_hash.ok_or(RestError::BadFilterParameters(
                 "tx_hash is required when mode=tx-hash".to_string(),
             ))?;
-            state
-                .history
-                .get_request_logs_by_tx_hash(tx_hash)
-                .await
+            state.history.get_request_logs_by_tx_hash(tx_hash).await
         }
         ExplorerQueryParamsMode::ChainAndSequence => {
             let chain_id = query_params.chain_id.ok_or(RestError::BadFilterParameters(

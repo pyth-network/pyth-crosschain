@@ -271,7 +271,7 @@ mod test {
         let api_state = ApiState::new(
             Arc::new(RwLock::new(chains)),
             metrics_registry,
-            Arc::new(RwLock::new(History::new().await)),
+            Arc::new(History::new().await),
         )
         .await;
 

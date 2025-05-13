@@ -1,3 +1,4 @@
+use crate::chain::reader::EntropyRequestInfo;
 use ethers::contract::LogMeta;
 use {
     crate::{
@@ -28,7 +29,6 @@ use {
     sha3::{Digest, Keccak256},
     std::sync::Arc,
 };
-use crate::chain::reader::EntropyRequestInfo;
 
 // TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
 // contract in the same repo.
@@ -288,7 +288,6 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             .topic1(provider);
 
         let res: Vec<(RequestedWithCallbackFilter, LogMeta)> = event.query_with_meta().await?;
-
         Ok(res
             .into_iter()
             .map(|(r, meta)| RequestedWithCallbackEvent {

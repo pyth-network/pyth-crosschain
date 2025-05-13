@@ -1,4 +1,4 @@
-use crate::history::{RequestLog, RequestLogType};
+use crate::history::{RequestEntryState, RequestStatus};
 use {
     super::keeper_metrics::AccountLabel,
     crate::{
@@ -23,6 +23,7 @@ pub async fn process_event_with_backoff(
         gas_limit,
         escalation_policy,
         metrics,
+        history,
         ..
     } = process_param;
 
@@ -38,21 +39,28 @@ pub async fn process_event_with_backoff(
 
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing event");
-    process_param.history.add(RequestLog {
+    let mut status = RequestStatus {
         chain_id: chain_state.id.clone(),
         sequence: event.sequence_number,
-        timestamp: chrono::Utc::now(),
-        log: RequestLogType::Observed {
-            tx_hash: event.log_meta.transaction_hash,
-            block_number: event.log_meta.block_number.as_u64(),
-            sender: event.requestor
-        },
-    });
+        created_at: chrono::Utc::now(),
+        last_updated_at: chrono::Utc::now(),
+        request_block_number: event.log_meta.block_number.as_u64(),
+        request_tx_hash: event.log_meta.transaction_hash,
+        sender: event.requestor,
+        state: RequestEntryState::Pending,
+    };
+    history.add(&status);
 
     let provider_revelation = chain_state
         .state
         .reveal(event.sequence_number)
-        .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
+        .map_err(|e| {
+            status.state = RequestEntryState::Failed {
+                reason: format!("Error revealing: {:?}", e),
+            };
+            history.add(&status);
+            anyhow!("Error revealing: {:?}", e)
+        })?;
 
     let contract_call = contract.reveal_with_callback(
         event.provider_address,
@@ -66,6 +74,7 @@ pub async fn process_event_with_backoff(
         contract_call,
         gas_limit,
         escalation_policy,
+        history.clone(),
     )
     .await;
 
@@ -76,6 +85,11 @@ pub async fn process_event_with_backoff(
 
     match success {
         Ok(result) => {
+            status.state = RequestEntryState::Completed {
+                reveal_block_number: result.receipt.block_number.unwrap_or_default().as_u64(),
+                reveal_tx_hash: result.receipt.transaction_hash,
+            };
+            history.add(&status);
             tracing::info!(
                 "Processed event successfully in {:?} after {} retries. Receipt: {:?}",
                 result.duration,
