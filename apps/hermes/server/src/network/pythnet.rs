@@ -27,11 +27,7 @@ use {
     solana_sdk::{
         account::Account, commitment_config::CommitmentConfig, pubkey::Pubkey, system_program,
     },
-    std::{
-        collections::{BTreeMap, HashSet},
-        sync::Arc,
-        time::Duration,
-    },
+    std::{collections::BTreeMap, sync::Arc, time::Duration},
     tokio::time::Instant,
 };
 
@@ -247,10 +243,13 @@ where
 
     // Wait for the crosschain price feed ids to be available in the state
     // This is to prune the price feeds that are not available crosschain yet (i.e. they are coming soon)
-    let mut all_ids = HashSet::new();
+    let mut all_ids;
     let mut retry_count = 0;
-    while all_ids.is_empty() {
+    loop {
         all_ids = Aggregates::get_price_feed_ids(state).await;
+        if !all_ids.is_empty() {
+            break;
+        }
         tracing::info!("Waiting for price feed ids...");
         tokio::time::sleep(Duration::from_secs(retry_count + 1)).await;
         retry_count += 1;
@@ -280,6 +279,7 @@ async fn fetch_price_feeds_metadata(
                 filters: Some(vec![RpcFilterType::Memcmp(Memcmp::new(
                     0, // offset
                     // Product account header: <magic:u32le:0xa1b2c3d4> <version:u32le:0x02> <account_type:u32le:0x02>
+                    // The string literal in hex::decode is represented as be (big endian).
                     MemcmpEncodedBytes::Bytes(hex::decode("d4c3b2a10200000002000000").unwrap()),
                 ))]),
                 account_config: RpcAccountInfoConfig {
