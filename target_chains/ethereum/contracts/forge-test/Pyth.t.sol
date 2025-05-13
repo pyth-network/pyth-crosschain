@@ -278,7 +278,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         }
     }
 
-    function testParsePriceFeedUpdatesWithSlotsWorks(uint seed) public {
+    function testParsePriceFeedUpdatesWithSlotsStrictWorks(uint seed) public {
         setRandSeed(seed);
         uint numMessages = 1 + (getRandUint() % 10);
         (
@@ -293,7 +293,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
-        ) = pyth.parsePriceFeedUpdatesWithSlots{value: updateFee}(
+        ) = pyth.parsePriceFeedUpdatesWithSlotsStrict{value: updateFee}(
                 updateData,
                 priceIds,
                 0,
@@ -429,6 +429,76 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
             priceIds,
+            0,
+            MAX_UINT64
+        );
+    }
+
+    function testParsePriceFeedUpdatesWithSlotsStrictRevertsWithExcessUpdateData()
+        public
+    {
+        // Create a price update with more price updates than requested price IDs
+        uint numPriceIds = 2;
+        uint numMessages = numPriceIds + 1; // One more than the number of price IDs
+
+        (
+            bytes32[] memory priceIds,
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
+
+        // Only use a subset of the price IDs to trigger the strict check
+        bytes32[] memory requestedPriceIds = new bytes32[](numPriceIds);
+        for (uint i = 0; i < numPriceIds; i++) {
+            requestedPriceIds[i] = priceIds[i];
+        }
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromMessages(messages);
+
+        // Should revert in strict mode
+        vm.expectRevert(PythErrors.InvalidArgument.selector);
+        pyth.parsePriceFeedUpdatesWithSlotsStrict{value: updateFee}(
+            updateData,
+            requestedPriceIds,
+            0,
+            MAX_UINT64
+        );
+    }
+
+    function testParsePriceFeedUpdatesWithSlotsStrictRevertsWithFewerUpdateData()
+        public
+    {
+        // Create a price update with fewer price updates than requested price IDs
+        uint numPriceIds = 3;
+        uint numMessages = numPriceIds - 1; // One less than the number of price IDs
+
+        (
+            bytes32[] memory priceIds,
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
+
+        // Create a larger array of requested price IDs to trigger the strict check
+        bytes32[] memory requestedPriceIds = new bytes32[](numPriceIds);
+        for (uint i = 0; i < numMessages; i++) {
+            requestedPriceIds[i] = priceIds[i];
+        }
+        // Add an extra price ID that won't be in the updates
+        requestedPriceIds[numMessages] = bytes32(
+            uint256(keccak256(abi.encodePacked("extra_id")))
+        );
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromMessages(messages);
+
+        // Should revert in strict mode because we have fewer updates than price IDs
+        vm.expectRevert(PythErrors.InvalidArgument.selector);
+        pyth.parsePriceFeedUpdatesWithSlotsStrict{value: updateFee}(
+            updateData,
+            requestedPriceIds,
             0,
             MAX_UINT64
         );

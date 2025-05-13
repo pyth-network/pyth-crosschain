@@ -273,7 +273,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
-        ) = pyth.parsePriceFeedUpdatesWithSlots{value: pythFee}(
+        ) = pyth.parsePriceFeedUpdatesWithSlotsStrict{value: pythFee}(
                 updateData,
                 params.priceIds,
                 0, // We enforce the past max validity ourselves in _validateShouldUpdatePrices
