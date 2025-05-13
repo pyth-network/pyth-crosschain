@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO log (chain_id, sequence, timestamp, type, tx_hash) VALUES (?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "9edb888549df4f5a5cbdf1e56c22b8c324dd8293ac74d46e1d2e82ddce87f070"
+}

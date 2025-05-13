@@ -1,6 +1,7 @@
+use crate::history::History;
 use {
     crate::{
-        api::{BlockchainState, History},
+        api::BlockchainState,
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
         eth_utils::utils::EscalationPolicy,
         keeper::keeper_metrics::KeeperMetrics,

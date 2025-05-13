@@ -1,4 +1,4 @@
-use crate::api::{JournalLog, TimedJournalLog};
+use crate::history::{JournalLog, TimedJournalLog};
 use {
     super::keeper_metrics::AccountLabel,
     crate::{

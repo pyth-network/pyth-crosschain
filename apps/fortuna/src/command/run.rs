@@ -1,4 +1,4 @@
-use crate::api::History;
+use crate::history::History;
 use {
     crate::{
         api::{self, ApiBlockChainState, BlockchainState, ChainId},
@@ -40,7 +40,7 @@ pub async fn run_api(
     components(
     schemas(
     crate::api::GetRandomValueResponse,
-    crate::api::RequestJournal,
+    crate::history::RequestJournal,
     crate::api::ExplorerQueryParamsMode,
     crate::api::Blob,
     crate::api::BinaryEncoding,
@@ -103,7 +103,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             .map(|chain_id| (chain_id.clone(), ApiBlockChainState::Uninitialized))
             .collect(),
     ));
-    let history = Arc::new(RwLock::new(History::default()));
+    let history = Arc::new(RwLock::new(History::new().await));
     for (chain_id, chain_config) in config.chains.clone() {
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();
