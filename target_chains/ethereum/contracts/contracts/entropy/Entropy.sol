@@ -1081,7 +1081,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         _state.seed = keccak256(
             abi.encodePacked(
                 block.timestamp,
-                block.difficulty,
+                block.prevrandao,
                 msg.sender,
                 _state.seed
             )
