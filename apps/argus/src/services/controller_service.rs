@@ -55,17 +55,18 @@ impl ControllerService {
 
         for (sub_id, params) in subscriptions {
             let mut _needs_update = false;
-            let mut feed_ids = Vec::new();
+            let mut feed_ids: Vec<PriceId> = Vec::new();
 
             for feed_id in &params.price_ids {
-                let pyth_price = self.pyth_price_state.get_price(feed_id);
-                let chain_price = self.chain_price_state.get_price(feed_id);
+                let feed_id = PriceId::new(*feed_id);
+                let pyth_price = self.pyth_price_state.get_price(&feed_id);
+                let chain_price = self.chain_price_state.get_price(&feed_id);
 
                 if pyth_price.is_none() || chain_price.is_none() {
                     continue;
                 }
 
-                feed_ids.push(*feed_id);
+                feed_ids.push(feed_id);
             }
 
             if _needs_update && !feed_ids.is_empty() {

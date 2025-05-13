@@ -13,7 +13,7 @@ use tokio::sync::watch;
 use tokio::time;
 use tracing;
 
-use crate::adapters::types::ReadChainSubscriptions;
+use crate::adapters::contract::ReadChainSubscriptions;
 use crate::services::Service;
 use crate::state::ChainName;
 
@@ -84,26 +84,6 @@ impl Service for SubscriptionService {
     async fn start(&self, mut exit_rx: watch::Receiver<bool>) -> Result<()> {
         // Initial load of subscriptions
         let _ = self.refresh_subscriptions().await;
-
-        // Subscribe to contract events
-        let _event_stream = match self.contract.subscribe_to_subscription_events().await {
-            Ok(stream) => {
-                tracing::info!(
-                    service_name = self.name,
-                    "Successfully subscribed to subscription events"
-                );
-                stream
-            }
-            Err(e) => {
-                tracing::error!(
-                    service_name = self.name,
-                    error = %e,
-                    "Failed to subscribe to contract events"
-                );
-                return Err(e);
-            }
-        };
-
         let mut interval = time::interval(self.poll_interval);
 
         loop {

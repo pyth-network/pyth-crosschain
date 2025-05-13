@@ -5,7 +5,8 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::adapters::ethereum::SubscriptionParams;
-use crate::adapters::types::{Price, PriceId, SubscriptionId};
+use crate::adapters::types::{PriceId, SubscriptionId};
+use pyth_sdk::Price;
 
 pub type ChainName = String;
 
@@ -60,10 +61,10 @@ impl SubscriptionState {
     }
 
     pub fn get_feed_ids(&self) -> HashSet<PriceId> {
-        let mut feed_ids = HashSet::new();
+        let mut feed_ids: HashSet<PriceId> = HashSet::new();
         for entry in self.subscriptions.iter() {
             for feed_id in &entry.value().price_ids {
-                feed_ids.insert(*feed_id);
+                feed_ids.insert(PriceId::new(*feed_id));
             }
         }
         feed_ids

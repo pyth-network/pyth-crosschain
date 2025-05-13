@@ -12,7 +12,7 @@ use std::time::Duration;
 use tokio::sync::watch;
 use tracing;
 
-use crate::adapters::types::ReadPythPrices;
+use crate::adapters::hermes::ReadPythPrices;
 use crate::services::Service;
 use crate::state::ChainName;
 

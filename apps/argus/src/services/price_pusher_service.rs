@@ -13,7 +13,8 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::{mpsc, watch};
 use tracing;
 
-use crate::adapters::types::{ReadPythPrices, UpdateChainPrices};
+use crate::adapters::contract::UpdateChainPrices;
+use crate::adapters::hermes::ReadPythPrices;
 use crate::services::types::PushRequest;
 use crate::services::Service;
 use crate::state::ChainName;

@@ -5,6 +5,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use ethers::providers::Middleware;
 use ethers::types::H256;
+use pyth_sdk::Price;
 use std::collections::HashMap;
 
 #[async_trait]
@@ -33,7 +34,15 @@ impl<M: Middleware + 'static> GetChainPrices for PythPulse<M> {
         Ok(())
     }
 }
-
+#[async_trait]
+pub trait UpdateChainPrices {
+    async fn update_price_feeds(
+        &self,
+        subscription_id: SubscriptionId,
+        price_ids: &[PriceId],
+        update_data: &[Vec<u8>],
+    ) -> Result<H256>;
+}
 #[async_trait]
 impl<M: Middleware + 'static> UpdateChainPrices for PythPulse<M> {
     async fn update_price_feeds(
@@ -51,6 +60,11 @@ impl<M: Middleware + 'static> UpdateChainPrices for PythPulse<M> {
         todo!()
     }
 }
+#[async_trait]
+pub trait ReadChainSubscriptions {
+    async fn get_active_subscriptions(&self)
+        -> Result<HashMap<SubscriptionId, SubscriptionParams>>;
+}
 
 #[async_trait]
 impl<M: Middleware + 'static> ReadChainSubscriptions for PythPulse<M> {
@@ -59,9 +73,5 @@ impl<M: Middleware + 'static> ReadChainSubscriptions for PythPulse<M> {
     ) -> Result<HashMap<SubscriptionId, SubscriptionParams>> {
         tracing::debug!("Getting active subscriptions via PythPulse");
         Ok(HashMap::new())
-    }
-    async fn subscribe_to_subscription_events(&self) -> Result<()> {
-        tracing::debug!("Subscribing to subscription events via PythPulse");
-        Ok(())
     }
 }
