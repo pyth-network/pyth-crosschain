@@ -44,7 +44,7 @@ pub struct ProcessParams {
     pub escalation_policy: EscalationPolicy,
     pub chain_state: BlockchainState,
     pub metrics: Arc<KeeperMetrics>,
-    pub history: Arc<RwLock<History>>,
+    pub history: Arc<History>,
     pub fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
 }
 

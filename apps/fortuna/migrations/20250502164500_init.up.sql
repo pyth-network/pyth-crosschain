@@ -6,10 +6,12 @@ CREATE TABLE log(
         type VARCHAR(255) NOT NULL,
         block_number INT,
         info TEXT,
-        tx_hash VARCHAR(255)
+        tx_hash VARCHAR(255),
+        sender VARCHAR(255)
 );
 
 CREATE INDEX idx_log_chain_id_sequence ON log (chain_id, sequence);
 CREATE INDEX idx_log_chain_id_timestamp ON log (chain_id, timestamp);
 CREATE INDEX idx_log_timestamp ON log (timestamp);
 CREATE INDEX idx_log_tx_hash ON log (tx_hash) WHERE tx_hash IS NOT NULL;
+CREATE INDEX idx_log_sender ON log (sender) WHERE sender IS NOT NULL;

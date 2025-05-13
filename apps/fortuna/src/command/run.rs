@@ -27,7 +27,7 @@ pub async fn run_api(
     socket_addr: SocketAddr,
     chains: Arc<RwLock<HashMap<String, ApiBlockChainState>>>,
     metrics_registry: Arc<RwLock<Registry>>,
-    history: Arc<RwLock<History>>,
+    history: Arc<History>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     #[derive(OpenApi)]
@@ -103,7 +103,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             .map(|chain_id| (chain_id.clone(), ApiBlockChainState::Uninitialized))
             .collect(),
     ));
-    let history = Arc::new(RwLock::new(History::new().await));
+    let history = Arc::new(History::new().await);
     for (chain_id, chain_config) in config.chains.clone() {
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();
@@ -172,7 +172,7 @@ async fn setup_chain_and_run_keeper(
     keeper_private_key_option: Option<String>,
     chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
     secret_copy: &str,
-    history: Arc<RwLock<History>>,
+    history: Arc<History>,
     rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<()> {
     let state = setup_chain_state(

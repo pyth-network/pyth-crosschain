@@ -38,12 +38,14 @@ pub async fn process_event_with_backoff(
 
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing event");
-    process_param.history.write().await.add(RequestLog {
+    process_param.history.add(RequestLog {
         chain_id: chain_state.id.clone(),
         sequence: event.sequence_number,
         timestamp: chrono::Utc::now(),
         log: RequestLogType::Observed {
-            tx_hash: event.tx_hash,
+            tx_hash: event.log_meta.transaction_hash,
+            block_number: event.log_meta.block_number.as_u64(),
+            sender: event.requestor
         },
     });
 

@@ -46,8 +46,6 @@ pub async fn explorer(
             ))?;
             state
                 .history
-                .read()
-                .await
                 .get_request_logs_by_tx_hash(tx_hash)
                 .await
         }
@@ -62,8 +60,6 @@ pub async fn explorer(
                 ))?;
             state
                 .history
-                .read()
-                .await
                 .get_request_logs(&(chain_id, sequence_id))
                 .await
                 .into_iter()

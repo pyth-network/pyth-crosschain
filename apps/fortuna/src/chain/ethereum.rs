@@ -28,6 +28,7 @@ use {
     sha3::{Digest, Keccak256},
     std::sync::Arc,
 };
+use crate::chain::reader::EntropyRequestInfo;
 
 // TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
 // contract in the same repo.
@@ -289,12 +290,23 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
         let res: Vec<(RequestedWithCallbackFilter, LogMeta)> = event.query_with_meta().await?;
 
         Ok(res
-            .iter()
+            .into_iter()
             .map(|(r, meta)| RequestedWithCallbackEvent {
                 sequence_number: r.sequence_number,
                 user_random_number: r.user_random_number,
                 provider_address: r.request.provider,
-                tx_hash: meta.transaction_hash,
+                requestor: r.requestor,
+                request: EntropyRequestInfo {
+                    provider: r.request.provider,
+                    sequence_number: r.request.sequence_number,
+                    num_hashes: r.request.num_hashes,
+                    commitment: r.request.commitment,
+                    block_number: r.request.block_number,
+                    requester: r.request.requester,
+                    use_blockhash: r.request.use_blockhash,
+                    is_request_with_callback: r.request.is_request_with_callback,
+                },
+                log_meta: meta,
             })
             .filter(|r| r.provider_address == provider)
             .collect())

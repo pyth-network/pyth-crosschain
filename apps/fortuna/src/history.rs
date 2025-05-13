@@ -1,7 +1,9 @@
+use std::sync::Arc;
 use crate::api::ChainId;
 use chrono::{DateTime, NaiveDateTime};
 use ethers::abi::AbiEncode;
 use ethers::prelude::TxHash;
+use ethers::types::Address;
 use serde::Serialize;
 use sqlx::{migrate, Pool, Sqlite, SqlitePool};
 use tokio::spawn;
@@ -10,16 +12,18 @@ use utoipa::ToSchema;
 
 #[derive(Clone, Debug, Serialize, PartialEq)]
 pub enum RequestLogType {
-    Observed { tx_hash: TxHash },
+    Observed { tx_hash: TxHash, block_number: u64, sender: Address, // user_contribution: U256
+        },
     FailedToReveal { reason: String },
     Revealed { tx_hash: TxHash },
     Landed { block_number: u64 },
 }
 
+
 impl RequestLogType {
     pub fn get_tx_hash(&self) -> Option<TxHash> {
         match self {
-            RequestLogType::Observed { tx_hash } => Some(*tx_hash),
+            RequestLogType::Observed { tx_hash, .. } => Some(*tx_hash),
             RequestLogType::FailedToReveal { .. } => None,
             RequestLogType::Revealed { tx_hash } => Some(*tx_hash),
             RequestLogType::Landed { .. } => None,
@@ -28,10 +32,10 @@ impl RequestLogType {
 
     pub fn get_info(&self) -> Option<String> {
         match self {
-            RequestLogType::Observed { tx_hash } => None,
+            RequestLogType::Observed { .. } => None,
             RequestLogType::FailedToReveal { reason } => Some(reason.clone()),
-            RequestLogType::Revealed { tx_hash } => None,
-            RequestLogType::Landed { block_number } => None,
+            RequestLogType::Revealed { .. } => None,
+            RequestLogType::Landed { .. } => None,
         }
     }
     pub fn get_type(&self) -> String {
@@ -45,10 +49,19 @@ impl RequestLogType {
 
     pub fn get_block_number(&self) -> Option<u64> {
         match self {
-            RequestLogType::Observed { .. } => None,
+            RequestLogType::Observed { block_number, .. } => Some(*block_number),
             RequestLogType::FailedToReveal { .. } => None,
             RequestLogType::Revealed { .. } => None,
             RequestLogType::Landed { block_number } => Some(*block_number),
+        }
+    }
+
+    pub fn get_sender(&self) -> Option<Address> {
+        match self {
+            RequestLogType::Observed { sender, .. } => Some(*sender),
+            RequestLogType::FailedToReveal { .. } => None,
+            RequestLogType::Revealed { .. } => None,
+            RequestLogType::Landed { .. } => None,
         }
     }
 }
@@ -72,6 +85,7 @@ struct LogRow {
     block_number: Option<i64>,
     info: Option<String>,
     tx_hash: Option<String>,
+    sender: Option<String>
 }
 
 impl From<LogRow> for RequestLog {
@@ -82,6 +96,8 @@ impl From<LogRow> for RequestLog {
         let log_type = match row.r#type.as_str() {
             "Observed" => RequestLogType::Observed {
                 tx_hash: row.tx_hash.unwrap_or_default().parse().unwrap(),
+                block_number: row.block_number.unwrap_or_default() as u64,
+                sender: row.sender.unwrap_or_default().parse().unwrap(),
             },
             "FailedToReveal" => RequestLogType::FailedToReveal {
                 reason: row.info.unwrap_or_default(),
@@ -106,7 +122,7 @@ impl From<LogRow> for RequestLog {
 pub struct History {
     pool: Pool<Sqlite>,
     write_queue: mpsc::Sender<RequestLog>,
-    writer_thread: tokio::task::JoinHandle<()>,
+    writer_thread: Arc<tokio::task::JoinHandle<()>>,
 }
 
 impl History {
@@ -139,7 +155,7 @@ impl History {
         Self {
             pool,
             write_queue: sender,
-            writer_thread,
+            writer_thread: Arc::new(writer_thread),
         }
     }
 
@@ -152,14 +168,16 @@ impl History {
             .map(|block_number| block_number as i64); // sqlite does not support u64
         let tx_hash = log.log.get_tx_hash().map(|tx_hash| tx_hash.encode_hex());
         let info = log.log.get_info();
-        sqlx::query!("INSERT INTO log (chain_id, sequence, timestamp, type, block_number, info, tx_hash) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        let sender = log.log.get_sender().map(|sender| sender.encode_hex());
+        sqlx::query!("INSERT INTO log (chain_id, sequence, timestamp, type, block_number, info, tx_hash, sender) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             log.chain_id,
             sequence,
             log.timestamp,
             log_type,
             block_number,
             info,
-            tx_hash)
+            tx_hash,
+            sender)
             .execute(pool)
             .await
             .unwrap();
@@ -179,7 +197,7 @@ impl History {
         row.into_iter().map(|row| row.into()).collect()
     }
 
-    pub fn add(&mut self, log: RequestLog) {
+    pub fn add(&self, log: RequestLog) {
         if let Err(e) = self.write_queue.try_send(log) {
             tracing::warn!("Failed to send log to write queue: {}", e);
         }
@@ -231,8 +249,8 @@ impl History {
 }
 
 mod tests {
-    use tokio::time::sleep;
     use super::*;
+    use tokio::time::sleep;
 
     #[tokio::test]
     async fn test_history() {

@@ -49,7 +49,7 @@ pub struct ApiMetrics {
 pub struct ApiState {
     pub chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
 
-    pub history: Arc<RwLock<History>>,
+    pub history: Arc<History>,
 
     pub metrics_registry: Arc<RwLock<Registry>>,
 
@@ -61,7 +61,7 @@ impl ApiState {
     pub async fn new(
         chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
         metrics_registry: Arc<RwLock<Registry>>,
-        history: Arc<RwLock<History>>,
+        history: Arc<History>,
     ) -> ApiState {
         let metrics = ApiMetrics {
             http_requests: Family::default(),

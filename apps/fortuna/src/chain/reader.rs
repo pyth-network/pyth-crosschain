@@ -1,3 +1,4 @@
+use ethers::prelude::LogMeta;
 use ethers::types::TxHash;
 use {
     anyhow::Result,
@@ -30,12 +31,26 @@ impl From<BlockStatus> for EthersBlockNumber {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct EntropyRequestInfo {
+    pub provider: Address,
+    pub sequence_number: u64,
+    pub num_hashes: u32,
+    pub commitment: [u8; 32],
+    pub block_number: u64,
+    pub requester: Address,
+    pub use_blockhash: bool,
+    pub is_request_with_callback: bool,
+}
+
 #[derive(Clone)]
 pub struct RequestedWithCallbackEvent {
     pub sequence_number: u64,
     pub user_random_number: [u8; 32],
     pub provider_address: Address,
-    pub tx_hash: TxHash,
+    pub requestor: Address,
+    pub request: EntropyRequestInfo,
+    pub log_meta: LogMeta,
 }
 
 /// EntropyReader is the read-only interface of the Entropy contract.
