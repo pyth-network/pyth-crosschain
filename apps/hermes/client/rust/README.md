@@ -36,6 +36,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## Examples
+
+The package includes example applications that demonstrate how to use the client:
+
+### Fetching Latest Prices
+
+This example fetches and displays the latest prices for BTC/USD and ETH/USD:
+
+```bash
+cargo run --example latest_prices
+```
+
+### Streaming Price Updates
+
+This example demonstrates how to subscribe to a real-time stream of price updates for BTC/USD and ETH/USD:
+
+```bash
+cargo run --example price_stream
+```
+
+To run the examples, clone the repository and execute the commands from the `apps/hermes/client/rust` directory.
+
 ## API Documentation
 
 For detailed API documentation, you can generate the documentation locally:

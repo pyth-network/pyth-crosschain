@@ -12,10 +12,18 @@ serde_with = { version = "3.8", default-features = false, features = ["base64", 
 serde_json = "1.0"
 serde_repr = "0.1"
 url = "2.5"
-reqwest = { version = "0.12", default-features = false, features = ["json", "multipart"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
 tokio = { version = "1.0", features = ["full"] }
 anyhow = "1.0"
 futures-util = "0.3"
 derive_more = { version = "1.0.0", features = ["from"] }
 base64 = "0.22.1"
 tracing = "0.1"
+
+[[example]]
+name = "latest_prices"
+path = "examples/latest_prices.rs"
+
+[[example]]
+name = "price_stream"
+path = "examples/price_stream.rs"
