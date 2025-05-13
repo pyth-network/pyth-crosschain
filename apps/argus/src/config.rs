@@ -7,7 +7,8 @@ use {
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
     ethers::types::Address,
     fortuna::eth_utils::utils::EscalationPolicy,
-    std::{collections::HashMap, fs},
+    serde::{Deserialize, Serialize},
+    std::{collections::HashMap, fs, time::Duration},
 };
 
 mod run;
@@ -170,11 +171,52 @@ impl EscalationPolicyConfig {
 }
 
 /// Configuration values for the keeper service that are shared across chains.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct KeeperConfig {
     /// This key is used by the keeper to submit transactions for feed update requests.
     /// Must be a 20-byte (40 char) hex encoded Ethereum private key.
     pub private_key: SecretString,
+
+    /// Interval for polling subscriptions
+    #[serde(
+        default = "default_subscription_poll_interval",
+        with = "humantime_serde"
+    )]
+    pub subscription_poll_interval: Duration,
+
+    /// Interval for polling chain prices
+    #[serde(
+        default = "default_chain_price_poll_interval",
+        with = "humantime_serde"
+    )]
+    pub chain_price_poll_interval: Duration,
+
+    /// Interval for polling Pyth prices
+    #[serde(default = "default_pyth_price_poll_interval", with = "humantime_serde")]
+    pub pyth_price_poll_interval: Duration,
+
+    /// Interval for controller updates
+    #[serde(
+        default = "default_controller_update_interval",
+        with = "humantime_serde"
+    )]
+    pub controller_update_interval: Duration,
+
+    /// Initial interval for backoff
+    #[serde(default = "default_backoff_initial_interval", with = "humantime_serde")]
+    pub backoff_initial_interval: Duration,
+
+    /// Maximum interval for backoff
+    #[serde(default = "default_backoff_max_interval", with = "humantime_serde")]
+    pub backoff_max_interval: Duration,
+
+    /// Multiplier for backoff intervals
+    #[serde(default = "default_backoff_multiplier")]
+    pub backoff_multiplier: f64,
+
+    /// Maximum elapsed time for backoff
+    #[serde(default = "default_backoff_max_elapsed_time", with = "humantime_serde")]
+    pub backoff_max_elapsed_time: Duration,
 }
 
 // A secret is a string that can be provided either as a literal in the config,
@@ -199,5 +241,56 @@ impl SecretString {
         }
 
         Ok(None)
+    }
+}
+
+fn default_subscription_poll_interval() -> Duration {
+    Duration::from_secs(60)
+}
+
+fn default_chain_price_poll_interval() -> Duration {
+    Duration::from_secs(10)
+}
+
+fn default_pyth_price_poll_interval() -> Duration {
+    Duration::from_secs(10)
+}
+
+fn default_controller_update_interval() -> Duration {
+    Duration::from_secs(10)
+}
+
+fn default_backoff_initial_interval() -> Duration {
+    Duration::from_secs(1)
+}
+
+fn default_backoff_max_interval() -> Duration {
+    Duration::from_secs(60)
+}
+
+fn default_backoff_multiplier() -> f64 {
+    2.0
+}
+
+fn default_backoff_max_elapsed_time() -> Duration {
+    Duration::from_secs(300)
+}
+
+impl Default for KeeperConfig {
+    fn default() -> Self {
+        Self {
+            private_key: SecretString {
+                value: None,
+                file: None,
+            },
+            subscription_poll_interval: default_subscription_poll_interval(),
+            chain_price_poll_interval: default_chain_price_poll_interval(),
+            pyth_price_poll_interval: default_pyth_price_poll_interval(),
+            controller_update_interval: default_controller_update_interval(),
+            backoff_initial_interval: default_backoff_initial_interval(),
+            backoff_max_interval: default_backoff_max_interval(),
+            backoff_multiplier: default_backoff_multiplier(),
+            backoff_max_elapsed_time: default_backoff_max_elapsed_time(),
+        }
     }
 }

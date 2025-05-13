@@ -66,6 +66,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             keeper_metrics.clone(),
             rpc_metrics.clone(),
             exit_rx.clone(),
+            config.clone(),
         )));
     }
 
@@ -84,6 +85,7 @@ pub async fn run_keeper_for_chain(
     _metrics: Arc<KeeperMetrics>, // TODO: add metrics
     rpc_metrics: Arc<RpcMetrics>,
     exit_rx: watch::Receiver<bool>,
+    config: Config,
 ) -> Result<()> {
     tracing::info!("Starting keeper for chain {}", chain_name);
 
@@ -111,22 +113,18 @@ pub async fn run_keeper_for_chain(
     let state = Arc::new(ArgusState::new());
 
     let hermes_client = Arc::new(HermesClient);
-    let subscription_poll_interval = Duration::from_secs(60);
-    let chain_price_poll_interval = Duration::from_secs(10);
-    let pyth_price_poll_interval = Duration::from_secs(5);
-    let controller_update_interval = Duration::from_secs(5);
     let backoff_policy = ExponentialBackoff {
-        initial_interval: Duration::from_secs(1),
-        max_interval: Duration::from_secs(60),
-        multiplier: 2.0,
-        max_elapsed_time: Some(Duration::from_secs(300)),
+        initial_interval: config.keeper.backoff_initial_interval,
+        max_interval: config.keeper.backoff_max_interval,
+        multiplier: config.keeper.backoff_multiplier,
+        max_elapsed_time: Some(config.keeper.backoff_max_elapsed_time),
         ..ExponentialBackoff::default()
     };
 
     let subscription_service = SubscriptionService::new(
         chain_name.clone(),
         contract.clone(),
-        subscription_poll_interval,
+        config.keeper.subscription_poll_interval,
         state.subscription_state.clone(),
         state.pyth_price_state.clone(),
         state.chain_price_state.clone(),
@@ -134,7 +132,7 @@ pub async fn run_keeper_for_chain(
 
     let pyth_price_service = PythPriceService::new(
         chain_name.clone(),
-        pyth_price_poll_interval,
+        config.keeper.pyth_price_poll_interval,
         hermes_client.clone(),
         state.pyth_price_state.clone(),
     );
@@ -142,7 +140,7 @@ pub async fn run_keeper_for_chain(
     let chain_price_service = ChainPriceService::new(
         chain_name.clone(),
         contract.clone(),
-        chain_price_poll_interval,
+        config.keeper.chain_price_poll_interval,
         state.chain_price_state.clone(),
     );
 
@@ -155,7 +153,7 @@ pub async fn run_keeper_for_chain(
 
     let controller_service = ControllerService::new(
         chain_name.clone(),
-        controller_update_interval,
+        config.keeper.controller_update_interval,
         state.subscription_state.clone(),
         state.pyth_price_state.clone(),
         state.chain_price_state.clone(),

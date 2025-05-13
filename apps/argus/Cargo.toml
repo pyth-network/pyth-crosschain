@@ -40,6 +40,7 @@ async-trait = "0.1.88"
 tokio-stream = "0.1.17"
 dashmap = "6.1.0"
 pyth-sdk = "0.8.0"
+humantime-serde = "1.1.1"
 
 
 [dev-dependencies]
