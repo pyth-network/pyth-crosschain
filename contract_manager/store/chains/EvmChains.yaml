@@ -598,11 +598,6 @@
   rpcUrl: https://rpc-kakarot-sepolia.karnot.xyz/
   networkId: 920637907288165
   type: EvmChain
-- id: berachain_testnet_v2
-  mainnet: false
-  rpcUrl: https://evm-rpc-bera.rhino-apis.com/
-  networkId: 80084
-  type: EvmChain
 - id: opbnb
   mainnet: true
   rpcUrl: https://opbnb-mainnet-rpc.bnbchain.org
@@ -784,11 +779,6 @@
   rpcUrl: https://api.hyperliquid-testnet.xyz/evm
   networkId: 998
   type: EvmChain
-- id: happy_bird_song_ends_with_tio
-  mainnet: false
-  rpcUrl: https://happy_bird_song_ends_with_tio.com
-  networkId: 80000
-  type: EvmChain
 - id: unichain
   mainnet: true
   rpcUrl: https://redacted.quiknode.pro/$ENV_UNICHAIN_API_KEY
@@ -838,11 +828,6 @@
   mainnet: true
   rpcUrl: $KRAKEN_INK_RPC_URL
   networkId: 57073
-  type: EvmChain
-- id: monad_devnet
-  mainnet: false
-  rpcUrl: https://rpc-devnet.monadinfra.com/rpc/dT2y6zgpggQ20WuJZ3corhJwfh9NwJPM
-  networkId: 20143
   type: EvmChain
 - id: coredao_testnet_v2
   mainnet: false
