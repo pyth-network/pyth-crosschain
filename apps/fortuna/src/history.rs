@@ -2,10 +2,10 @@ use crate::api::ChainId;
 use chrono::{DateTime, NaiveDateTime};
 use ethers::abi::AbiEncode;
 use ethers::prelude::TxHash;
-use ethers::types::BlockNumber;
 use serde::Serialize;
-use sqlx::{Pool, Sqlite, SqlitePool};
-use std::collections::{BTreeMap, HashMap};
+use sqlx::{migrate, Pool, Sqlite, SqlitePool};
+use tokio::spawn;
+use tokio::sync::mpsc;
 use utoipa::ToSchema;
 
 #[derive(Clone, Debug, Serialize, PartialEq)]
@@ -105,16 +105,45 @@ impl From<LogRow> for RequestLog {
 
 pub struct History {
     pool: Pool<Sqlite>,
+    write_queue: mpsc::Sender<RequestLog>,
+    writer_thread: tokio::task::JoinHandle<()>,
 }
 
 impl History {
     const MAX_HISTORY: usize = 1_000_000;
+    const MAX_WRITE_QUEUE: usize = 1_000;
     pub async fn new() -> Self {
-        let pool = SqlitePool::connect("sqlite:fortuna.db").await.unwrap();
-        Self { pool }
+        Self::new_with_url("sqlite:fortuna.db").await
     }
 
-    pub async fn add_to_db(&self, log: RequestLog) {
+    pub async fn new_in_memory() -> Self {
+        Self::new_with_url("sqlite::memory:").await
+    }
+
+    pub async fn new_with_url(url: &str) -> Self {
+        let pool = SqlitePool::connect(url).await.unwrap();
+        let migrator = migrate!("./migrations");
+        migrator.run(&pool).await.unwrap();
+        Self::new_with_pool(pool).await
+    }
+    pub async fn new_with_pool(pool: Pool<Sqlite>) -> Self {
+        let (sender, mut receiver) = mpsc::channel(Self::MAX_WRITE_QUEUE);
+        let pool_write_connection = pool.clone();
+        let writer_thread = spawn(
+            async move {
+                while let Some(log) = receiver.recv().await {
+                    Self::add_to_db(&pool_write_connection, log).await;
+                }
+            },
+        );
+        Self {
+            pool,
+            write_queue: sender,
+            writer_thread,
+        }
+    }
+
+    async fn add_to_db(pool: &Pool<Sqlite>, log: RequestLog) {
         let sequence = log.sequence as i64;
         let log_type = log.log.get_type();
         let block_number = log
@@ -131,7 +160,7 @@ impl History {
             block_number,
             info,
             tx_hash)
-            .execute(&self.pool)
+            .execute(pool)
             .await
             .unwrap();
     }
@@ -151,7 +180,9 @@ impl History {
     }
 
     pub fn add(&mut self, log: RequestLog) {
-        self.add_to_db(log);
+        if let Err(e) = self.write_queue.try_send(log) {
+            tracing::warn!("Failed to send log to write queue: {}", e);
+        }
     }
 
     pub async fn get_request_logs(&self, request_key: &RequestKey) -> Vec<RequestLog> {
@@ -200,11 +231,12 @@ impl History {
 }
 
 mod tests {
+    use tokio::time::sleep;
     use super::*;
 
-    #[sqlx::test]
-    async fn test_history(pool: Pool<Sqlite>) {
-        let history = History { pool };
+    #[tokio::test]
+    async fn test_history() {
+        let history = History::new_in_memory().await;
         let log = RequestLog {
             chain_id: "ethereum".to_string(),
             sequence: 1,
@@ -213,7 +245,25 @@ mod tests {
                 tx_hash: TxHash::zero(),
             },
         };
-        history.add_to_db(log.clone()).await;
+        History::add_to_db(&history.pool, log.clone()).await;
+        let logs = history.get_request_logs(&("ethereum".to_string(), 1)).await;
+        assert_eq!(logs, vec![log.clone()]);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_writer_thread() {
+        let mut history = History::new_in_memory().await;
+        let log = RequestLog {
+            chain_id: "ethereum".to_string(),
+            sequence: 1,
+            timestamp: chrono::Utc::now(),
+            log: RequestLogType::Observed {
+                tx_hash: TxHash::zero(),
+            },
+        };
+        history.add(log.clone());
+        // wait for the writer thread to write to the db
+        sleep(std::time::Duration::from_secs(1)).await;
         let logs = history.get_request_logs(&("ethereum".to_string(), 1)).await;
         assert_eq!(logs, vec![log.clone()]);
     }
