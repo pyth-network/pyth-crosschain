@@ -1,11 +1,13 @@
 #![allow(clippy::just_underscores_and_digits)]
+pub mod adapters;
+pub mod api;
+pub mod command;
+pub mod config;
+pub mod metrics;
+pub mod services;
+pub mod state;
 
-use {
-    anyhow::Result,
-    argus::{command, config},
-    clap::Parser,
-    std::io::IsTerminal,
-};
+use {anyhow::Result, clap::Parser, std::io::IsTerminal};
 
 #[tokio::main]
 #[tracing::instrument]
