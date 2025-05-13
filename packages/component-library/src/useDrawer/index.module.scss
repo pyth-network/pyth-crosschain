@@ -94,7 +94,6 @@
       }
 
       @include theme.breakpoint("sm") {
-        border-bottom: 1px solid theme.color("border");
         padding-left: theme.spacing(6);
       }
 
@@ -127,21 +126,22 @@
       display: grid;
       flex: 1;
       overflow-y: auto;
-      padding: theme.spacing(4);
       grid-auto-rows: minmax(min-content, max-content);
-
-      @include theme.breakpoint("sm") {
-        padding: theme.spacing(6);
-      }
     }
 
-    &[data-fill] {
+    &:not([data-fill]) {
       .heading {
-        border: none;
+        @include theme.breakpoint("sm") {
+          border-bottom: 1px solid theme.color("border");
+        }
       }
 
       .body {
-        padding: 0;
+        padding: theme.spacing(4);
+
+        @include theme.breakpoint("sm") {
+          padding: theme.spacing(6);
+        }
       }
     }
 

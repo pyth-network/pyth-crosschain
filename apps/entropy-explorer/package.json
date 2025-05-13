@@ -11,7 +11,7 @@
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
-    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TBkf9EyQjQF37gs4Vk0sQKJj97kE vercel env pull",
+    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_34F8THr7mZ3eAOQoCLdo8xWj9fdT vercel env pull",
     "start:dev": "next dev --port 3006",
     "start:prod": "next start --port 3006",
     "test:format": "prettier --check .",
@@ -29,6 +29,7 @@
     "react": "catalog:",
     "react-aria": "catalog:",
     "react-dom": "catalog:",
+    "react-timeago": "catalog:",
     "viem": "catalog:",
     "wagmi": "catalog:",
     "zod": "catalog:"

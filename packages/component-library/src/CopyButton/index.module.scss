@@ -69,4 +69,8 @@
       }
     }
   }
+
+  &[data-icon-only] .contents {
+    @include theme.sr-only;
+  }
 }
