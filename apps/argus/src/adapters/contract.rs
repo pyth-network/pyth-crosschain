@@ -15,8 +15,6 @@ pub trait GetChainPrices {
         subscription_id: SubscriptionId,
         feed_id: &PriceId,
     ) -> Result<Option<Price>>;
-
-    async fn subscribe_to_price_events(&self) -> Result<()>;
 }
 
 #[async_trait]
@@ -27,11 +25,6 @@ impl<M: Middleware + 'static> GetChainPrices for PythPulse<M> {
         _feed_id: &PriceId,
     ) -> Result<Option<Price>> {
         todo!()
-    }
-
-    async fn subscribe_to_price_events(&self) -> Result<()> {
-        tracing::debug!("Subscribing to price events via PythPulse");
-        Ok(())
     }
 }
 #[async_trait]

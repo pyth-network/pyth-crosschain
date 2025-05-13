@@ -60,14 +60,6 @@ impl Service for ChainPriceService {
     }
 
     async fn start(&self, mut stop_rx: watch::Receiver<bool>) -> Result<()> {
-        if let Err(e) = self.contract.subscribe_to_price_events().await {
-            tracing::error!(
-                service = self.name,
-                error = %e,
-                "Failed to subscribe to price events"
-            );
-        }
-
         let mut interval = time::interval(self.poll_interval);
         loop {
             tokio::select! {

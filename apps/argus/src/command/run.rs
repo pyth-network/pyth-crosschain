@@ -17,7 +17,7 @@ use {
     ethers::signers::Signer,
     fortuna::eth_utils::traced_client::RpcMetrics,
     prometheus_client::registry::Registry,
-    std::{sync::Arc, time::Duration},
+    std::sync::Arc,
     tokio::{
         spawn,
         sync::{watch, RwLock},
