@@ -1,6 +1,6 @@
 use {clap::Args, solana_sdk::pubkey::Pubkey};
 
-const DEFAULT_PYTHNET_MAPPING_ADDR: &str = "AHtgzX45WTKfkPG53L6WYhGEXwQkN1BVknET3sVsLL8J";
+const DEFAULT_PYTHNET_ORACLE_PROGRAM_ADDR: &str = "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH";
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Pythnet Options")]
@@ -16,9 +16,9 @@ pub struct Options {
     #[arg(env = "PYTHNET_HTTP_ADDR")]
     pub http_addr: String,
 
-    /// Pyth mapping account address on Pythnet.
-    #[arg(long = "pythnet-mapping-addr")]
-    #[arg(default_value = DEFAULT_PYTHNET_MAPPING_ADDR)]
-    #[arg(env = "PYTHNET_MAPPING_ADDR")]
-    pub mapping_addr: Pubkey,
+    /// Pythnet oracle program address.
+    #[arg(long = "pythnet-oracle-program-addr")]
+    #[arg(default_value = DEFAULT_PYTHNET_ORACLE_PROGRAM_ADDR)]
+    #[arg(env = "PYTHNET_ORACLE_PROGRAM_ADDR")]
+    pub oracle_program_addr: Pubkey,
 }
