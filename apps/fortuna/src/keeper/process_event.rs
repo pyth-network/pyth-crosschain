@@ -1,4 +1,4 @@
-use crate::history::{JournalLog, TimedJournalLog};
+use crate::history::{RequestLog, RequestLogType};
 use {
     super::keeper_metrics::AccountLabel,
     crate::{
@@ -38,12 +38,14 @@ pub async fn process_event_with_backoff(
 
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing event");
-    process_param.history.write().await.add(
-        (chain_state.id.clone(), event.sequence_number),
-        TimedJournalLog::with_current_time(JournalLog::Observed {
+    process_param.history.write().await.add(RequestLog {
+        chain_id: chain_state.id.clone(),
+        sequence: event.sequence_number,
+        timestamp: chrono::Utc::now(),
+        log: RequestLogType::Observed {
             tx_hash: event.tx_hash,
-        }),
-    );
+        },
+    });
 
     let provider_revelation = chain_state
         .state

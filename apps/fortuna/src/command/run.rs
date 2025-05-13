@@ -40,7 +40,7 @@ pub async fn run_api(
     components(
     schemas(
     crate::api::GetRandomValueResponse,
-    crate::history::RequestJournal,
+    crate::history::RequestLog,
     crate::api::ExplorerQueryParamsMode,
     crate::api::Blob,
     crate::api::BinaryEncoding,
