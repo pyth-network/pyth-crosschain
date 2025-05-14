@@ -2,29 +2,18 @@ use crate::api::{ChainId, RestError};
 use crate::history::RequestStatus;
 use axum::extract::{Query, State};
 use axum::Json;
-use ethers::types::TxHash;
+use ethers::types::{Address, TxHash};
+use std::str::FromStr;
 use utoipa::{IntoParams, ToSchema};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct ExplorerQueryParams {
-    pub mode: ExplorerQueryParamsMode,
-
     pub min_timestamp: Option<u64>,
     pub max_timestamp: Option<u64>,
-    pub sequence_id: Option<u64>,
-    #[param(value_type = Option<String>)]
-    pub tx_hash: Option<TxHash>,
+    pub query: Option<String>,
     #[param(value_type = Option<String>)]
     pub chain_id: Option<ChainId>,
-}
-#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum ExplorerQueryParamsMode {
-    TxHash,
-    ChainAndSequence,
-    ChainAndTimestamp,
-    Timestamp,
 }
 
 #[utoipa::path(
@@ -39,35 +28,27 @@ pub async fn explorer(
     State(state): State<crate::api::ApiState>,
     Query(query_params): Query<ExplorerQueryParams>,
 ) -> anyhow::Result<Json<Vec<RequestStatus>>, RestError> {
-    let result = match query_params.mode {
-        ExplorerQueryParamsMode::TxHash => {
-            let tx_hash = query_params.tx_hash.ok_or(RestError::BadFilterParameters(
-                "tx_hash is required when mode=tx-hash".to_string(),
-            ))?;
-            state.history.get_request_logs_by_tx_hash(tx_hash).await
+    if let Some(query) = query_params.query {
+        if let Ok(tx_hash) = TxHash::from_str(&query) {
+            return Ok(Json(state.history.get_requests_by_tx_hash(tx_hash).await));
         }
-        ExplorerQueryParamsMode::ChainAndSequence => {
-            let chain_id = query_params.chain_id.ok_or(RestError::BadFilterParameters(
-                "chain_id is required when mode=chain-and-sequence".to_string(),
-            ))?;
-            let sequence_id = query_params
-                .sequence_id
-                .ok_or(RestError::BadFilterParameters(
-                    "sequence_id is required when mode=chain-and-sequence".to_string(),
-                ))?;
-            state
-                .history
-                .get_request_logs(&(chain_id, sequence_id))
-                .await
-                .into_iter()
-                .collect()
+        if let Ok(sender) = Address::from_str(&query) {
+            return Ok(Json(
+                state
+                    .history
+                    .get_requests_by_sender(sender, query_params.chain_id)
+                    .await,
+            ));
         }
-        ExplorerQueryParamsMode::ChainAndTimestamp => {
-            vec![]
+        if let Ok(sequence_number) = u64::from_str(&query) {
+            return Ok(Json(
+                state
+                    .history
+                    .get_requests_by_sequence(sequence_number, query_params.chain_id)
+                    .await,
+            ));
         }
-        ExplorerQueryParamsMode::Timestamp => {
-            vec![]
-        }
-    };
-    Ok(Json(result))
+    }
+    //TODO: handle more types of queries
+    Ok(Json(vec![]))
 }

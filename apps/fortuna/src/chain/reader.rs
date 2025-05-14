@@ -1,5 +1,4 @@
 use ethers::prelude::LogMeta;
-use ethers::types::TxHash;
 use {
     anyhow::Result,
     axum::async_trait,

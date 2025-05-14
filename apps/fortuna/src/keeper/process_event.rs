@@ -74,7 +74,6 @@ pub async fn process_event_with_backoff(
         contract_call,
         gas_limit,
         escalation_policy,
-        history.clone(),
     )
     .await;
 

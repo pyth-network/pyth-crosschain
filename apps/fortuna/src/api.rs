@@ -1,6 +1,4 @@
 use crate::history::History;
-use serde::Serialize;
-use utoipa::ToSchema;
 use {
     crate::{
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},

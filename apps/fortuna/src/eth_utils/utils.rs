@@ -157,7 +157,6 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     call: ContractCall<T, ()>,
     gas_limit: U256,
     escalation_policy: EscalationPolicy,
-    history: Arc<History>,
 ) -> Result<SubmitTxResult> {
     let start_time = std::time::Instant::now();
 

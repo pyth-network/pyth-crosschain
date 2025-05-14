@@ -93,11 +93,10 @@ impl From<RequestRow> for RequestStatus {
 pub struct History {
     pool: Pool<Sqlite>,
     write_queue: mpsc::Sender<RequestStatus>,
-    writer_thread: Arc<tokio::task::JoinHandle<()>>,
+    _writer_thread: Arc<tokio::task::JoinHandle<()>>,
 }
 
 impl History {
-    const MAX_HISTORY: usize = 1_000_000;
     const MAX_WRITE_QUEUE: usize = 1_000;
     pub async fn new() -> Self {
         Self::new_with_url("sqlite:fortuna.db").await
@@ -124,14 +123,14 @@ impl History {
         Self {
             pool,
             write_queue: sender,
-            writer_thread: Arc::new(writer_thread),
+            _writer_thread: Arc::new(writer_thread),
         }
     }
 
     async fn update_request_status(pool: &Pool<Sqlite>, new_status: RequestStatus) {
         let sequence = new_status.sequence as i64;
         let chain_id = new_status.chain_id;
-        let state = match new_status.state {
+        match new_status.state {
             RequestEntryState::Pending => {
                 let block_number = new_status.request_block_number as i64;
                 let request_tx_hash: String = new_status.request_tx_hash.encode_hex();
@@ -204,7 +203,7 @@ impl History {
         self.get_from_db(request_key.clone()).await
     }
 
-    pub async fn get_request_logs_by_tx_hash(&self, tx_hash: TxHash) -> Vec<RequestStatus> {
+    pub async fn get_requests_by_tx_hash(&self, tx_hash: TxHash) -> Vec<RequestStatus> {
         let tx_hash: String = tx_hash.encode_hex();
         let rows = sqlx::query_as!(
             RequestRow,
@@ -215,6 +214,58 @@ impl History {
         .fetch_all(&self.pool)
         .await
         .unwrap();
+        rows.into_iter().map(|row| row.into()).collect()
+    }
+
+    pub async fn get_requests_by_sender(
+        &self,
+        sender: Address,
+        chain_id: Option<ChainId>,
+    ) -> Vec<RequestStatus> {
+        let sender: String = sender.encode_hex();
+        let rows = match chain_id {
+            Some(chain_id) => sqlx::query_as!(
+                RequestRow,
+                "SELECT * FROM request WHERE sender = ? AND chain_id = ?",
+                sender,
+                chain_id,
+            )
+            .fetch_all(&self.pool)
+            .await
+            .unwrap(),
+            None => sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE sender = ?", sender,)
+                .fetch_all(&self.pool)
+                .await
+                .unwrap(),
+        };
+        rows.into_iter().map(|row| row.into()).collect()
+    }
+
+    pub async fn get_requests_by_sequence(
+        &self,
+        sequence: u64,
+        chain_id: Option<ChainId>,
+    ) -> Vec<RequestStatus> {
+        let sequence = sequence as i64;
+        let rows = match chain_id {
+            Some(chain_id) => sqlx::query_as!(
+                RequestRow,
+                "SELECT * FROM request WHERE sequence = ? AND chain_id = ?",
+                sequence,
+                chain_id,
+            )
+            .fetch_all(&self.pool)
+            .await
+            .unwrap(),
+            None => sqlx::query_as!(
+                RequestRow,
+                "SELECT * FROM request WHERE sequence = ?",
+                sequence,
+            )
+            .fetch_all(&self.pool)
+            .await
+            .unwrap(),
+        };
         rows.into_iter().map(|row| row.into()).collect()
     }
 
@@ -251,7 +302,8 @@ impl History {
 }
 
 mod tests {
-    use super::*;
+    use crate::history::{History, RequestEntryState, RequestStatus};
+    use ethers::types::{Address, TxHash};
     use tokio::time::sleep;
 
     #[tokio::test]
@@ -274,7 +326,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_writer_thread() {
-        let mut history = History::new_in_memory().await;
+        let history = History::new_in_memory().await;
         let status = RequestStatus {
             chain_id: "ethereum".to_string(),
             sequence: 1,
