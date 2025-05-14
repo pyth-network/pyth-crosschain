@@ -141,6 +141,9 @@ catalogs:
     connectkit:
       specifier: ^1.9.0
       version: 1.9.0
+    copyfiles:
+      specifier: ^2.4.1
+      version: 2.4.1
     cryptocurrency-icons:
       specifier: ^0.18.1
       version: 0.18.1
@@ -1866,6 +1869,9 @@ importers:
       autoprefixer:
         specifier: 'catalog:'
         version: 10.4.21(postcss@8.5.3)
+      copyfiles:
+        specifier: 'catalog:'
+        version: 2.4.1
       css-loader:
         specifier: 'catalog:'
         version: 7.1.2(webpack@5.98.0(esbuild@0.25.2))

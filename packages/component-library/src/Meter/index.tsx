@@ -1,10 +1,10 @@
 "use client";
 
-import { Meter as MeterComponent } from "@pythnetwork/component-library/unstyled/Meter";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
 import styles from "./index.module.scss";
+import { Meter as MeterComponent } from "../unstyled/Meter";
 
 type OwnProps = {
   label: string;

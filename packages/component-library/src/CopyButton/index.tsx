@@ -7,8 +7,8 @@ import type { ComponentProps } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import styles from "./index.module.scss";
-import { Button } from "../unstyled/Button/index.js";
-import { useLogger } from "../useLogger/index.js";
+import { Button } from "../unstyled/Button/index.jsx";
+import { useLogger } from "../useLogger/index.jsx";
 
 const COPY_INDICATOR_TIME = 1000;
 

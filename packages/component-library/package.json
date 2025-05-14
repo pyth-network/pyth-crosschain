@@ -7,12 +7,21 @@
     "node": "22"
   },
   "exports": {
-    "./*": "./src/*/index.tsx",
-    "./useData": "./src/useData/index.ts",
-    "./theme": "./src/theme.scss"
+    "./*": {
+      "types": "./dist/esm/*/index.d.ts",
+      "default": "./dist/esm/*/index.jsx"
+    },
+    "./useData": {
+      "types": "./dist/esm/useData/index.d.ts",
+      "default": "./dist/esm/useData/index.js"
+    },
+    "./theme": "./dist/esm/theme.scss"
   },
   "scripts": {
+    "build:esm": "tsc --project tsconfig.build.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build:scss": "copyfiles -u 1 \"src/**/*.scss\" dist/esm",
     "build:storybook": "storybook build",
+    "build:svg": "copyfiles -u 1 \"src/**/*.svg\" dist/esm",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
@@ -60,6 +69,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
+    "copyfiles": "catalog:",
     "css-loader": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",

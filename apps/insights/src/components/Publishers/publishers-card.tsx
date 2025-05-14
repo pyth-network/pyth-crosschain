@@ -323,7 +323,7 @@ const PublishersCardContents = ({
       rounded
       fill
       label="Publishers"
-      stickyHeader={styles.headerHeight}
+      stickyHeader
       className={styles.table ?? ""}
       columns={[
         {

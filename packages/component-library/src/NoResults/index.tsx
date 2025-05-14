@@ -3,7 +3,7 @@ import clsx from "clsx";
 import type { ReactNode } from "react";
 
 import styles from "./index.module.scss";
-import { Button } from "../Button/index.js";
+import { Button } from "../Button/index.jsx";
 
 type Props = {
   className?: string | undefined;

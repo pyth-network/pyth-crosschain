@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Select as SelectComponent } from "./index.js";
-import buttonMeta from "../Button/index.stories.js";
+import { Select as SelectComponent } from "./index.jsx";
+import buttonMeta from "../Button/index.stories.jsx";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { children, beforeIcon, ...argTypes } = buttonMeta.argTypes;

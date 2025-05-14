@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Status as StatusComponent, VARIANTS, SIZES, STYLES } from "./index.js";
+import {
+  Status as StatusComponent,
+  VARIANTS,
+  SIZES,
+  STYLES,
+} from "./index.jsx";
 
 const meta = {
   component: StatusComponent,

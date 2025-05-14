@@ -3,7 +3,7 @@
 import { useSelectedLayoutSegment } from "next/navigation";
 import type { ComponentProps } from "react";
 
-import { TabPanel as UnstyledTabPanel, Tabs } from "../unstyled/Tabs/index.js";
+import { TabPanel as UnstyledTabPanel, Tabs } from "../unstyled/Tabs/index.jsx";
 
 export const TabRoot = (
   props: Omit<ComponentProps<typeof Tabs>, "selectedKey">,

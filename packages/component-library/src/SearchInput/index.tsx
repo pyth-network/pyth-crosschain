@@ -7,9 +7,9 @@ import clsx from "clsx";
 import type { CSSProperties, ComponentProps } from "react";
 
 import styles from "./index.module.scss";
-import { Button } from "../unstyled/Button/index.js";
-import { SearchField } from "../unstyled/SearchField/index.js";
-import { Input } from "../unstyled/TextField/index.js";
+import { Button } from "../unstyled/Button/index.jsx";
+import { SearchField } from "../unstyled/SearchField/index.jsx";
+import { Input } from "../unstyled/TextField/index.jsx";
 
 export const SIZES = ["xs", "sm", "md", "lg"] as const;
 

@@ -13,12 +13,12 @@ import type { ComponentProps, ReactNode } from "react";
 import { socialLinks } from "../social-links.js";
 import styles from "./index.module.scss";
 import Logo from "./logo.svg";
-import { ThemeSwitch } from "./theme-switch.js";
-import { Button } from "../Button/index.js";
-import type { Props as CardProps } from "../Card/index.js";
-import { Card } from "../Card/index.js";
-import { Link } from "../Link/index.js";
-import type { Link as UnstyledLink } from "../unstyled/Link/index.js";
+import { ThemeSwitch } from "./theme-switch.jsx";
+import { Button } from "../Button/index.jsx";
+import type { Props as CardProps } from "../Card/index.jsx";
+import { Card } from "../Card/index.jsx";
+import { Link } from "../Link/index.jsx";
+import type { Link as UnstyledLink } from "../unstyled/Link/index.jsx";
 
 type Props = ComponentProps<"header"> & {
   appName: string;

@@ -12,8 +12,8 @@ import { useCallback, useRef, useMemo } from "react";
 import { useIsSSR } from "react-aria";
 
 import styles from "./theme-switch.module.scss";
-import type { Props as ButtonProps } from "../Button/index.js";
-import { Button } from "../Button/index.js";
+import type { Props as ButtonProps } from "../Button/index.jsx";
+import { Button } from "../Button/index.jsx";
 
 type Props<T extends ElementType> = Omit<
   ButtonProps<T>,

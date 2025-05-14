@@ -6,7 +6,7 @@ import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
-import { Tab, TabList as UnstyledTabList } from "../unstyled/Tabs/index.js";
+import { Tab, TabList as UnstyledTabList } from "../unstyled/Tabs/index.jsx";
 
 type OwnProps = {
   label: string;

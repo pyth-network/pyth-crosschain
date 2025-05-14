@@ -1,8 +1,8 @@
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning";
-import { Button } from "@pythnetwork/component-library/Button";
-import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useEffect } from "react";
 
+import { Button } from "../Button";
+import { useLogger } from "../useLogger";
 import styles from "./index.module.scss";
 
 type Props = {

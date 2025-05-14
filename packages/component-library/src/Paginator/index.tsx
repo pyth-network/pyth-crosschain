@@ -6,11 +6,11 @@ import { useMemo, useCallback } from "react";
 import type { Link } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import type { Props as ButtonProps } from "../Button/index.js";
-import { Button } from "../Button/index.js";
+import type { Props as ButtonProps } from "../Button/index.jsx";
+import { Button } from "../Button/index.jsx";
 import buttonStyles from "../Button/index.module.scss";
-import { Select } from "../Select/index.js";
-import { Toolbar } from "../unstyled/Toolbar/index.js";
+import { Select } from "../Select/index.jsx";
+import { Toolbar } from "../unstyled/Toolbar/index.jsx";
 
 type Props = {
   numPages: number;

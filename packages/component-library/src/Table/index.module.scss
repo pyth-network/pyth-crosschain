@@ -105,7 +105,7 @@
 
         &[data-sticky-header] {
           position: sticky;
-          top: var(--sticky-header-top);
+          top: theme.$header-height;
           z-index: 1;
         }
 

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { MobileNavTabs as MobileNavTabsComponent } from "./index.js";
+import { MobileNavTabs as MobileNavTabsComponent } from "./index.jsx";
 
 const meta = {
   component: MobileNavTabsComponent,

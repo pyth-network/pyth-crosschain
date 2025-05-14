@@ -62,7 +62,8 @@ const config = {
       ...config.resolve,
       extensionAlias: {
         ...config.resolve?.extensionAlias,
-        ".js": [".js", ".ts", ".tsx"],
+        ".js": [".js", ".ts"],
+        ".jsx": [".jsx", ".tsx"],
       },
     };
 
