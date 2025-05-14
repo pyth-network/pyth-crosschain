@@ -1,6 +1,6 @@
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
-import { Button } from "@pythnetwork/component-library/Button";
 
+import { Button } from "../Button";
 import styles from "./index.module.scss";
 
 export const NotFoundPage = () => (

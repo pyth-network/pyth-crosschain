@@ -3,13 +3,17 @@ import { useMediaQuery } from "@react-hookz/web";
 import clsx from "clsx";
 import { animate, useMotionValue, useMotionValueEvent } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
-import { useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
+import { useIsSSR } from "react-aria";
 import { Heading } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { Button } from "../Button/index.js";
-import type { OpenArgs } from "../ModalDialog/index.js";
-import { ModalDialog, createModalDialogContext } from "../ModalDialog/index.js";
+import { Button } from "../Button/index.jsx";
+import type { OpenArgs } from "../ModalDialog/index.jsx";
+import {
+  ModalDialog,
+  createModalDialogContext,
+} from "../ModalDialog/index.jsx";
 
 const CLOSE_DURATION_IN_S = 0.15;
 
@@ -245,8 +249,19 @@ const useAnimationProps = (
       };
 };
 
-const useIsLarge = () =>
-  useMediaQuery(`(min-width: ${styles["breakpoint-sm"] ?? ""})`);
+const useIsLarge = () => {
+  const isSSR = useIsSSR();
+  const breakpoint = useMemo(
+    () =>
+      isSSR
+        ? ""
+        : getComputedStyle(
+            globalThis.document.documentElement,
+          ).getPropertyValue("--breakpoint-sm"),
+    [isSSR],
+  );
+  return useMediaQuery(`(min-width: ${breakpoint})`);
+};
 
 const { Provider, useValue } = createModalDialogContext<
   Props,

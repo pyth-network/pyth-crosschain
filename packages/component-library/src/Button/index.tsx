@@ -7,8 +7,8 @@ import type {
 } from "react";
 
 import styles from "./index.module.scss";
-import { Button as UnstyledButton } from "../unstyled/Button/index.js";
-import { Link } from "../unstyled/Link/index.js";
+import { Button as UnstyledButton } from "../unstyled/Button/index.jsx";
+import { Link } from "../unstyled/Link/index.jsx";
 
 export const VARIANTS = [
   "primary",

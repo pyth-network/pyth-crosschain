@@ -159,9 +159,3 @@
     }
   }
 }
-
-// stylelint-disable property-no-unknown
-:export {
-  breakpoint-sm: theme.map-get-strict(theme.$breakpoints, "sm");
-}
-// stylelint-enable property-no-unknown

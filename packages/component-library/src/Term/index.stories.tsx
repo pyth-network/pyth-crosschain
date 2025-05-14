@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Term as TermComponent } from "./index.js";
+import { Term as TermComponent } from "./index.jsx";
 
 const meta = {
   component: TermComponent,

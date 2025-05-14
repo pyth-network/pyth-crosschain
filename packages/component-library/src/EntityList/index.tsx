@@ -1,14 +1,11 @@
 "use client";
 
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import {
-  GridList,
-  GridListItem,
-} from "@pythnetwork/component-library/unstyled/GridList";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
 import styles from "./index.module.scss";
+import { Skeleton } from "../Skeleton/index.jsx";
+import { GridList, GridListItem } from "../unstyled/GridList";
 
 type Props<T extends string> = ComponentProps<typeof GridList<RowConfig<T>>> & {
   headerLoadingSkeleton?: ReactNode | undefined;

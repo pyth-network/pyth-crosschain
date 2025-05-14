@@ -14,14 +14,14 @@ import {
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import type { Props as ButtonProps } from "../Button/index.js";
-import { Button } from "../Button/index.js";
-import { DropdownCaretDown } from "../DropdownCaretDown/index.js";
+import type { Props as ButtonProps } from "../Button/index.jsx";
+import { Button } from "../Button/index.jsx";
+import { DropdownCaretDown } from "../DropdownCaretDown/index.jsx";
 import {
   ListBox,
   ListBoxItem,
   ListBoxSection,
-} from "../unstyled/ListBox/index.js";
+} from "../unstyled/ListBox/index.jsx";
 
 export type Props<T extends { id: string | number }> = Omit<
   ComponentProps<typeof BaseSelect>,

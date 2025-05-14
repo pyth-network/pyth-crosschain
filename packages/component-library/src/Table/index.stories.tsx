@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Table as TableComponent } from "./index.js";
+import { Table as TableComponent } from "./index.jsx";
 
 const meta = {
   component: TableComponent,

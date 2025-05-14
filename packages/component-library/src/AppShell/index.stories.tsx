@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { AppBody as AppShellComponent } from "./index.js";
+import { AppBody as AppShellComponent } from "./index.jsx";
 
 const meta = {
   component: AppShellComponent,
