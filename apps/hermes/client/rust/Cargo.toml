@@ -1,0 +1,39 @@
+[package]
+name = "hermes-client"
+version = "0.1.0"
+authors = ["Pyth Network Contributors"]
+description = "A Rust client for Pyth Hermes price service"
+license = "Apache-2.0"
+edition = "2021"
+repository = "https://github.com/pyth-network/pyth-crosschain"
+documentation = "https://docs.rs/hermes-client"
+readme = "README.md"
+keywords = ["pyth", "price", "oracle", "defi", "finance"]
+categories = ["api-bindings", "finance"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_with = { version = "3.8", default-features = false, features = ["base64", "std", "macros"] }
+serde_json = "1.0"
+serde_repr = "0.1"
+url = "2.5"
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "stream"] }
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+futures-util = "0.3"
+derive_more = { version = "1.0.0", features = ["from"] }
+base64 = "0.22.1"
+tracing = "0.1"
+eventsource-stream = "0.2.3"
+
+[[example]]
+name = "latest_prices"
+path = "examples/latest_prices.rs"
+
+[[example]]
+name = "price_stream"
+path = "examples/price_stream.rs"
+
+[[example]]
+name = "sse_price_stream"
+path = "examples/sse_price_stream.rs"
