@@ -22,6 +22,7 @@ pub mod governance_instruction {
     pub use crate::protobuf::governance_instruction::*;
 }
 
+#[allow(rustdoc::broken_intra_doc_links)]
 mod protobuf {
     include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 }
