@@ -269,39 +269,45 @@ export function getDownloadableConfig(
   rawConfig: RawConfig,
 ): DownloadableConfig {
   // Convert the raw config to a user-friendly format for download
-  const symbolToData: DownloadableConfig = {};
-
   if (rawConfig.mappingAccounts.length > 0) {
-    rawConfig.mappingAccounts
-      .sort(
-        (mapping1, mapping2) =>
-          mapping2.products.length - mapping1.products.length,
-      )[0]
-      .products.sort((product1, product2) =>
-        product1.metadata.symbol.localeCompare(product2.metadata.symbol),
-      )
-      .map((product) => {
-        symbolToData[product.metadata.symbol] = {
-          address: product.address.toBase58(),
-          metadata: {
-            ...product.metadata,
-          },
-          priceAccounts: product.priceAccounts.map((p: PriceRawConfig) => {
-            return {
-              address: p.address.toBase58(),
-              publishers: p.publishers.map((p) => p.toBase58()),
-              expo: p.expo,
-              minPub: p.minPub,
-              maxLatency: p.maxLatency,
-            };
-          }),
-        };
-        // This field is immutable and should not be updated
-        delete symbolToData[product.metadata.symbol].metadata.price_account;
-      });
+    const symbolToData = Object.fromEntries(
+      rawConfig.mappingAccounts
+        .sort(
+          (mapping1, mapping2) =>
+            mapping2.products.length - mapping1.products.length,
+        )[0]
+        .products.sort((product1, product2) =>
+          product1.metadata.symbol.localeCompare(product2.metadata.symbol),
+        )
+        .map((product) => {
+          const { price_account, ...metadataWithoutPriceAccount } =
+            product.metadata;
+
+          return [
+            product.metadata.symbol,
+            {
+              address: product.address.toBase58(),
+              metadata: {
+                ...metadataWithoutPriceAccount,
+              },
+              priceAccounts: product.priceAccounts.map((p: PriceRawConfig) => {
+                return {
+                  address: p.address.toBase58(),
+                  publishers: p.publishers.map((p) => p.toBase58()),
+                  expo: p.expo,
+                  minPub: p.minPub,
+                  maxLatency: p.maxLatency,
+                };
+              }),
+            },
+          ];
+        }),
+    );
+
+    return sortData(symbolToData);
   }
 
-  return sortData(symbolToData);
+  return {};
 }
 
 /**
