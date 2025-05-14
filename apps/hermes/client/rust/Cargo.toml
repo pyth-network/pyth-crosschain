@@ -25,6 +25,7 @@ futures-util = "0.3"
 derive_more = { version = "1.0.0", features = ["from"] }
 base64 = "0.22.1"
 tracing = "0.1"
+eventsource-stream = "0.2.3"
 
 [[example]]
 name = "latest_prices"
