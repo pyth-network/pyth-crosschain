@@ -30,12 +30,12 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
   const { programType, setProgramType } = useProgramContext()
 
   // Convert enum to array of options
-  const programOptions = Object.values(ProgramType)
-    .filter((value): value is ProgramType => typeof value === 'number') // Filter out reverse mappings
-    .map((value) => ({
-      value,
-      label: PROGRAM_TYPE_NAMES[value],
-    }))
+  const programOptions = Object.entries(PROGRAM_TYPE_NAMES).map(
+    ([value, label]) => ({
+      value: Number(value) as ProgramType,
+      label,
+    })
+  )
 
   return (
     <Menu as="div" className="relative z-[5] block w-[180px] text-left">

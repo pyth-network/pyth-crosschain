@@ -8,11 +8,7 @@ import {
   ProgramConfig,
   GetConfigParams,
   LazerConfigParams,
-} from "./types";
-import {
-  ProgramFunctions,
   ValidationResult,
-  GenerateInstructionsFn,
 } from "./types";
 
 // Import functions from each program implementation
@@ -92,29 +88,6 @@ export const validateUploadedConfig: Record<
  * Function to generate the necessary instructions to apply configuration changes
  */
 export const generateInstructions = {
-  [ProgramType.PYTH_CORE]:
-    pythCore.generateInstructions as GenerateInstructionsFn<ProgramType.PYTH_CORE>,
-  [ProgramType.PYTH_LAZER]:
-    pythLazer.generateInstructions as GenerateInstructionsFn<ProgramType.PYTH_LAZER>,
+  [ProgramType.PYTH_CORE]: pythCore.generateInstructions,
+  [ProgramType.PYTH_LAZER]: pythLazer.generateInstructions,
 };
-
-/**
- * Get the complete set of functions for a specific program type
- *
- * @param type The program type to get functions for
- * @returns All functions for the specified program type
- */
-export function getProgramFunctions<T extends ProgramType>(
-  type: T,
-): ProgramFunctions<T> {
-  return {
-    getProgramAddress: getProgramAddress[type],
-    isAvailableOnCluster: isAvailableOnCluster[type],
-    getConfig: getConfig[type],
-    getDownloadableConfig: getDownloadableConfig[type],
-    validateUploadedConfig: validateUploadedConfig[type],
-    generateInstructions: generateInstructions[
-      type
-    ] as GenerateInstructionsFn<T>,
-  };
-}

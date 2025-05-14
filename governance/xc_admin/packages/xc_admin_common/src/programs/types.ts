@@ -108,11 +108,6 @@ export type GetConfigParams =
   | ({ programType: ProgramType.PYTH_LAZER } & LazerConfigParams);
 
 /**
- * Function to get configuration data
- */
-export type GetConfigFn = (params: GetConfigParams) => ProgramConfig;
-
-/**
  * Lazer feed configuration
  * TODO: Change to actual Lazer feed type
  */
@@ -145,9 +140,7 @@ export type DownloadableProduct = {
 /**
  * Type for downloadable configuration
  */
-export type DownloadableConfig = {
-  [symbol: string]: DownloadableProduct;
-};
+export type DownloadableConfig = Record<string, DownloadableProduct>;
 
 /**
  * Type for configuration that can be either RawConfig for Pyth Core or LazerConfig for Lazer
@@ -192,63 +185,10 @@ export type InstructionAccountsTypeMap = {
 };
 
 /**
- * Function to get the program address for the given cluster and program type
- */
-export type GetProgramAddressFn = (cluster: PythCluster) => PublicKey;
-
-/**
- * Function to check if a program is available on a specific cluster
- */
-export type IsAvailableOnClusterFn = (cluster: PythCluster) => boolean;
-
-/**
- * Function to format the configuration for downloading as a JSON file
- */
-export type GetDownloadableConfigFn = (
-  config: ProgramConfig,
-) => DownloadableConfig;
-
-/**
  * Result of validating an uploaded configuration
  */
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
   changes?: any;
-}
-
-/**
- * Function to validate an uploaded configuration against the current configuration
- */
-export type ValidateUploadedConfigFn = (
-  existingConfig: DownloadableConfig,
-  uploadedConfig: unknown,
-  cluster: PythCluster,
-) => ValidationResult;
-
-/**
- * Generic type for generate instructions functions for a specific program type
- */
-export type GenerateInstructionsFn<T extends ProgramType = ProgramType> = (
-  changes: Record<
-    string,
-    {
-      prev?: Partial<DownloadableProduct>;
-      new?: Partial<DownloadableProduct>;
-    }
-  >,
-  cluster: PythCluster,
-  accounts: InstructionAccountsTypeMap[T],
-) => Promise<TransactionInstruction[]>;
-
-/**
- * Collection of functions for each program type
- */
-export interface ProgramFunctions<T extends ProgramType = ProgramType> {
-  getProgramAddress: GetProgramAddressFn;
-  isAvailableOnCluster: IsAvailableOnClusterFn;
-  getConfig: GetConfigFn;
-  getDownloadableConfig: GetDownloadableConfigFn;
-  validateUploadedConfig: ValidateUploadedConfigFn;
-  generateInstructions: GenerateInstructionsFn<T>;
 }
