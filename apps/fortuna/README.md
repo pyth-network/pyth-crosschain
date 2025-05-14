@@ -10,6 +10,14 @@ Each blockchain is configured in `config.yaml`.
 
 ## Build & Test
 
+We use sqlx query macros to check the SQL queries at compile time. This requires
+a database to be available at build time. You can create an sqlite db and apply the schema migrations on it
+via the following command:
+
+```bash
+DATABASE_URL="sqlite:fortuna.db?mode=rwc" cargo sqlx migrate run
+```
+
 Fortuna uses Cargo for building and dependency management.
 Simply run `cargo build` and `cargo test` to build and test the project.
 

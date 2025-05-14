@@ -111,6 +111,8 @@ pub enum RestError {
     InvalidSequenceNumber,
     /// The caller passed an unsupported chain id
     InvalidChainId,
+    /// The query is not parsable to a transaction hash, address, or sequence number
+    InvalidQueryString,
     /// The caller requested a random value that can't currently be revealed (because it
     /// hasn't been committed to on-chain)
     NoPendingRequest,
@@ -120,7 +122,6 @@ pub enum RestError {
     /// The server cannot currently communicate with the blockchain, so is not able to verify
     /// which random values have been requested.
     TemporarilyUnavailable,
-    BadFilterParameters(String),
     /// The server is not able to process the request because the blockchain initialization
     /// has not been completed yet.
     Uninitialized,
@@ -139,6 +140,11 @@ impl IntoResponse for RestError {
             RestError::InvalidChainId => {
                 (StatusCode::BAD_REQUEST, "The chain id is not supported").into_response()
             }
+            RestError::InvalidQueryString => (
+                StatusCode::BAD_REQUEST,
+                "The query string is not parsable to a transaction hash, address, or sequence number",
+            )
+                .into_response(),
             RestError::NoPendingRequest => (
                 StatusCode::FORBIDDEN,
                 "The request with the given sequence number has not been made yet, or the random value has already been revealed on chain.",
@@ -163,11 +169,6 @@ impl IntoResponse for RestError {
                 "An unknown error occurred processing the request",
             )
                 .into_response(),
-            RestError::BadFilterParameters(message) => (
-                StatusCode::BAD_REQUEST,
-                format!("Invalid filter parameters: {}", message),
-            )
-                .into_response(),
         }
     }
 }
@@ -179,7 +180,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
         .route("/metrics", get(metrics))
         .route("/ready", get(ready))
         .route("/v1/chains", get(chain_ids))
-        .route("/v1/explorer", get(explorer))
+        .route("/v1/logs", get(explorer))
         .route(
             "/v1/chains/:chain_id/revelations/:sequence",
             get(revelation),

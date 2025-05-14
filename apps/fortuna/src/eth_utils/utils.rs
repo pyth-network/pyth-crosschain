@@ -1,4 +1,3 @@
-use crate::history::History;
 use ethabi::ethereum_types::U64;
 use {
     crate::eth_utils::nonce_manager::NonceManaged,
@@ -183,7 +182,6 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
                 padded_gas_limit,
                 gas_multiplier_pct,
                 fee_multiplier_pct,
-                history.clone(),
             )
             .await
         },
@@ -223,7 +221,6 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     // A value of 100 submits the tx with the same gas/fee as the estimate.
     gas_estimate_multiplier_pct: u64,
     fee_estimate_multiplier_pct: u64,
-    history: Arc<History>,
 ) -> Result<TransactionReceipt, backoff::Error<anyhow::Error>> {
     let gas_estimate_res = call.estimate_gas().await;
 

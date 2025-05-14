@@ -207,7 +207,7 @@ impl History {
         let tx_hash: String = tx_hash.encode_hex();
         let rows = sqlx::query_as!(
             RequestRow,
-            "SELECT * FROM request WHERE request_tx_hash = ? || reveal_tx_hash = ?",
+            "SELECT * FROM request WHERE request_tx_hash = ? OR reveal_tx_hash = ?",
             tx_hash,
             tx_hash
         )
@@ -269,9 +269,9 @@ impl History {
         rows.into_iter().map(|row| row.into()).collect()
     }
 
-    pub async fn get_latest_requests(
+    pub async fn get_requests_by_time(
         &self,
-        chain_id: Option<&ChainId>,
+        chain_id: Option<ChainId>,
         limit: u64,
         min_timestamp: Option<DateTime<chrono::Utc>>,
         max_timestamp: Option<DateTime<chrono::Utc>>,
@@ -302,8 +302,7 @@ impl History {
 }
 
 mod tests {
-    use crate::history::{History, RequestEntryState, RequestStatus};
-    use ethers::types::{Address, TxHash};
+    use super::*;
     use tokio::time::sleep;
 
     #[tokio::test]
