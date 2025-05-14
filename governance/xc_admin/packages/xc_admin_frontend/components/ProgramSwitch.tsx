@@ -23,14 +23,6 @@ const Arrow = ({ className }: { className?: string }) => (
 )
 
 /**
- * Format display name from enum name (e.g., "PYTH_CORE" -> "Pyth Core")
- */
-const formatDisplayName = (value: ProgramType): string => {
-  const enumName = PROGRAM_TYPE_NAMES[value]
-  return enumName
-}
-
-/**
  * Component that allows users to switch between different Pyth programs
  * (Core, Lazer, etc.)
  */
@@ -42,7 +34,7 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
     .filter((value): value is ProgramType => typeof value === 'number') // Filter out reverse mappings
     .map((value) => ({
       value,
-      label: formatDisplayName(value),
+      label: PROGRAM_TYPE_NAMES[value],
     }))
 
   return (
@@ -56,7 +48,7 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
           >
             <span className="mr-3">
               {programOptions.find((option) => option.value === programType)
-                ?.label || formatDisplayName(programType)}
+                ?.label || PROGRAM_TYPE_NAMES[programType]}
             </span>
             <Arrow className={`${open ? 'rotate-180' : ''}`} />
           </Menu.Button>
