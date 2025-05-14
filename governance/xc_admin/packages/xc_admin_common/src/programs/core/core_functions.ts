@@ -149,12 +149,21 @@ export function getConfig(params: GetConfigParams): RawConfig {
 
   const accounts = params.accounts;
 
+  // Create a map of parsed base data for each account to avoid repeated parsing
+  const parsedBaseDataMap = new Map(
+    accounts.map((account) => {
+      const baseData = parseBaseData(account.account.data);
+      return [account.pubkey.toBase58(), baseData];
+    }),
+  );
+
   // First pass: Extract price accounts
   const priceRawConfigs = Object.fromEntries(
     accounts
       .filter(
         (account) =>
-          parseBaseData(account.account.data)?.type === AccountType.Price,
+          parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
+          AccountType.Price,
       )
       .map((account) => {
         const parsed = parsePriceData(account.account.data);
@@ -179,7 +188,8 @@ export function getConfig(params: GetConfigParams): RawConfig {
     accounts
       .filter(
         (account) =>
-          parseBaseData(account.account.data)?.type === AccountType.Product,
+          parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
+          AccountType.Product,
       )
       .map((account) => {
         const parsed = parseProductData(account.account.data);
@@ -225,7 +235,8 @@ export function getConfig(params: GetConfigParams): RawConfig {
   const mappingAccounts = accounts
     .filter(
       (account) =>
-        parseBaseData(account.account.data)?.type === AccountType.Mapping,
+        parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
+        AccountType.Mapping,
     )
     .map((account) => {
       const parsed = parseMappingData(account.account.data);
@@ -253,7 +264,8 @@ export function getConfig(params: GetConfigParams): RawConfig {
   // Find permission account if it exists
   const permissionAccount = accounts.find(
     (account) =>
-      parseBaseData(account.account.data)?.type === AccountType.Permission,
+      parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
+      AccountType.Permission,
   );
 
   if (permissionAccount) {
