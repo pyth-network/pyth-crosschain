@@ -174,4 +174,35 @@ library Math {
         }
     }
 
+    /**
+     * @dev Returns the multiplication of two unsigned integers, with a success flag (no overflow).
+     */
+    function tryMul(uint256 a, uint256 b) internal pure returns (bool success, uint256 result) {
+        unchecked {
+            uint256 c = a * b;
+             /// @solidity memory-safe-assembly
+            assembly {
+                // Only true when the multiplication doesn't overflow
+                // (c / a == b) || (a == 0)
+                success := or(eq(div(c, a), b), iszero(a))
+            }
+            // equivalent to: success ? c : 0
+            result = c * toUint(success);
+        }
+    }
+
+    /**
+     * @dev Returns the division of two unsigned integers, with a success flag (no division by zero).
+     */
+    function tryDiv(uint256 a, uint256 b) internal pure returns (bool success, uint256 result) {
+        unchecked {
+            success = b > 0;
+             /// @solidity memory-safe-assembly
+            assembly {
+                // The `DIV` opcode returns zero when the denominator is 0.
+                result := div(a, b)
+            }
+        }
+    }
+
 }

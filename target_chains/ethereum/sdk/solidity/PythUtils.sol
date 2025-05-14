@@ -29,12 +29,24 @@ library PythUtils {
             revert PythErrors.InvalidInputExpo();
         }
 
-        int256 combinedExpo = int32(int8(targetDecimals)) + int32(int8(uint8(uint32(expo))));
+        int256 combinedExpo = int32(int8(targetDecimals)) + expo;
+        console.log("combinedExpo", combinedExpo);
 
         if (combinedExpo > 0) {
-            return uint(uint64(price)) * 10 ** uint32(int32(combinedExpo));
+            (bool success, uint256 result) = Math.tryMul(uint64(price), 10 ** uint(uint32(int32(combinedExpo))));
+            if (!success) {
+                revert PythErrors.CombinedPriceOverflow();
+            }
+            return result;
         } else {
-            return uint(uint64(price)) / 10 ** uint32(Math.abs(combinedExpo));
+            console.log("combinedExpo < 0");
+            console.log("price", price);
+            console.log("Math.abs(combinedExpo)", Math.abs(combinedExpo));
+            (bool success, uint256 result) = Math.tryDiv(uint64(price), 10 ** uint(Math.abs(combinedExpo)));
+            if (!success) {
+                revert PythErrors.CombinedPriceOverflow();
+            }
+            return result;
         }
     }
 
