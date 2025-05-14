@@ -19,6 +19,8 @@ message SignedLazerTransaction {
 
     // [required] lazer transaction encoded as bytes through protobuf
     optional bytes payload = 3;
+    
+    // TODO: Add public key
 }
 
 // Types of signatures supported by Pyth Lazer
