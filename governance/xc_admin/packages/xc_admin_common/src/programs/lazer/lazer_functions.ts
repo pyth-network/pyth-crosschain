@@ -3,10 +3,7 @@ import { PythCluster } from "@pythnetwork/client";
 import {
   ValidationResult,
   DownloadableProduct,
-  LazerInstructionAccounts,
-  LazerConfig,
   DownloadableConfig,
-  LazerConfigParams,
   GetConfigParams,
 } from "../types";
 import { ProgramType } from "../types";
@@ -17,6 +14,51 @@ import { ProgramType } from "../types";
 const LAZER_PROGRAM_ID = new PublicKey(
   "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt",
 );
+
+/**
+ * Lazer-specific configuration type
+ * TODO: Change to actual Lazer config type
+ */
+export type LazerConfig = {
+  programType: ProgramType.PYTH_LAZER;
+  // Make cluster optional since Lazer might not be tied to a specific cluster
+  cluster?: PythCluster;
+  // More generic data source instead of Solana-specific accounts
+  feeds: LazerFeed[];
+  // Additional metadata that might be relevant for Lazer
+  metadata?: Record<string, unknown>;
+};
+
+/**
+ * Parameters for getting Lazer configuration
+ */
+export type LazerConfigParams = {
+  // Instead of requiring Solana accounts, allow any parameters needed
+  endpoint?: string;
+  network?: string;
+  options?: Record<string, unknown>;
+};
+
+/**
+ * Lazer program instruction accounts needed for generateInstructions
+ */
+export interface LazerInstructionAccounts {
+  fundingAccount: PublicKey;
+  // Lazer-specific properties
+  lazerProgramClient?: any; // Replace with proper type when available
+  cluster: PythCluster;
+  additionalAccounts?: Record<string, PublicKey>;
+}
+
+/**
+ * Lazer feed configuration
+ * TODO: Change to actual Lazer feed type
+ */
+export type LazerFeed = {
+  id: string;
+  metadata: Record<string, string | number | boolean>;
+  // Add other feed-specific properties as needed
+};
 
 /**
  * Get the program address for the given cluster

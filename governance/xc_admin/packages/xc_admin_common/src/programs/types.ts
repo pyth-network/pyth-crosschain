@@ -1,13 +1,14 @@
+import { PublicKey } from "@solana/web3.js";
+import { PermissionData, Product } from "@pythnetwork/client";
 import {
-  AccountInfo,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { PermissionData, Product, PythCluster } from "@pythnetwork/client";
-import { Connection } from "@solana/web3.js";
-import { Program } from "@coral-xyz/anchor";
-import { PythOracle } from "@pythnetwork/client/lib/anchor";
-import { MessageBuffer } from "message_buffer/idl/message_buffer";
+  LazerConfig,
+  LazerConfigParams,
+  LazerInstructionAccounts,
+} from "./lazer/lazer_functions";
+import {
+  CoreConfigParams,
+  CoreInstructionAccounts,
+} from "./core/core_functions";
 /**
  * Represents the different Pyth programs supported by the application.
  */
@@ -69,35 +70,6 @@ export type RawConfig = {
   permissionAccount?: PermissionData;
 };
 
-export type CoreConfigParams = {
-  accounts: Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>;
-  cluster: PythCluster;
-};
-
-/**
- * Lazer-specific configuration type
- * TODO: Change to actual Lazer config type
- */
-export type LazerConfig = {
-  programType: ProgramType.PYTH_LAZER;
-  // Make cluster optional since Lazer might not be tied to a specific cluster
-  cluster?: PythCluster;
-  // More generic data source instead of Solana-specific accounts
-  feeds: LazerFeed[];
-  // Additional metadata that might be relevant for Lazer
-  metadata?: Record<string, unknown>;
-};
-
-/**
- * Parameters for getting Lazer configuration
- */
-export type LazerConfigParams = {
-  // Instead of requiring Solana accounts, allow any parameters needed
-  endpoint?: string;
-  network?: string;
-  options?: Record<string, unknown>;
-};
-
 /**
  * Union type for configuration parameters that can vary by program type
  */
@@ -106,16 +78,6 @@ export type GetConfigParams =
       programType: ProgramType.PYTH_CORE;
     } & CoreConfigParams)
   | ({ programType: ProgramType.PYTH_LAZER } & LazerConfigParams);
-
-/**
- * Lazer feed configuration
- * TODO: Change to actual Lazer feed type
- */
-export type LazerFeed = {
-  id: string;
-  metadata: Record<string, string | number | boolean>;
-  // Add other feed-specific properties as needed
-};
 
 /**
  * Type for downloadable price account configuration
@@ -146,28 +108,6 @@ export type DownloadableConfig = Record<string, DownloadableProduct>;
  * Type for configuration that can be either RawConfig for Pyth Core or LazerConfig for Lazer
  */
 export type ProgramConfig = RawConfig | LazerConfig;
-
-/**
- * Core program instruction accounts needed for generateInstructions
- */
-export interface CoreInstructionAccounts {
-  fundingAccount: PublicKey;
-  pythProgramClient: Program<PythOracle>;
-  messageBufferClient?: Program<MessageBuffer>;
-  connection?: Connection;
-  rawConfig: RawConfig;
-}
-
-/**
- * Lazer program instruction accounts needed for generateInstructions
- */
-export interface LazerInstructionAccounts {
-  fundingAccount: PublicKey;
-  // Lazer-specific properties
-  lazerProgramClient?: any; // Replace with proper type when available
-  cluster: PythCluster;
-  additionalAccounts?: Record<string, PublicKey>;
-}
 
 /**
  * Union type for program instruction accounts

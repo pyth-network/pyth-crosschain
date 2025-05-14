@@ -2,6 +2,7 @@ import {
   PublicKey,
   TransactionInstruction,
   AccountInfo,
+  Connection,
 } from "@solana/web3.js";
 import {
   AccountType,
@@ -31,13 +32,14 @@ import {
   DownloadablePriceAccount,
   DownloadableProduct,
   PriceRawConfig,
-  ProductRawConfig,
   RawConfig,
   ValidationResult,
-  CoreInstructionAccounts,
   GetConfigParams,
   ProgramType,
 } from "../types";
+import { Program } from "@coral-xyz/anchor";
+import { PythOracle } from "@pythnetwork/client/lib/anchor";
+import { MessageBuffer } from "message_buffer/idl/message_buffer";
 
 /**
  * Maximum sizes for instruction data to fit into transactions
@@ -49,6 +51,22 @@ const MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA = 403; // upd product has one accoun
  * Type for a set of Pyth Core symbols
  */
 export type SymbolsSet = Set<string>;
+
+export type CoreConfigParams = {
+  accounts: Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>;
+  cluster: PythCluster;
+};
+
+/**
+ * Core program instruction accounts needed for generateInstructions
+ */
+export interface CoreInstructionAccounts {
+  fundingAccount: PublicKey;
+  pythProgramClient: Program<PythOracle>;
+  messageBufferClient?: Program<MessageBuffer>;
+  connection?: Connection;
+  rawConfig: RawConfig;
+}
 
 /**
  * Check if an instruction's data size is within limits

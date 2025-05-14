@@ -3,11 +3,8 @@ import { PythCluster } from "@pythnetwork/client";
 import {
   DownloadableConfig,
   ProgramType,
-  RawConfig,
-  LazerConfig,
   ProgramConfig,
   GetConfigParams,
-  LazerConfigParams,
   ValidationResult,
 } from "./types";
 
