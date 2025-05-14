@@ -12,6 +12,7 @@ import {
   parsePermissionData,
   parsePriceData,
   parseProductData,
+  Product,
 } from "@pythnetwork/client";
 import {
   findDetermisticAccountAddress,
@@ -68,10 +69,10 @@ function checkSizeOfProductInstruction(
 /**
  * Sort object by keys
  */
-const sortObjectByKeys = <T extends Record<string, unknown>>(obj: T): T =>
-  Object.fromEntries(
-    Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)),
-  ) as T;
+const sortObjectByKeys = <T extends Record<string, unknown>>(
+  obj: T,
+): Array<[string, unknown]> =>
+  Object.entries(obj).sort(([a], [b]) => a.localeCompare(b));
 
 /**
  * Sort configuration data for consistent output
@@ -81,9 +82,14 @@ function sortData(data: DownloadableConfig): DownloadableConfig {
   const keys = Object.keys(data).sort();
   for (const key of keys) {
     const productData = data[key];
+    const sortedKeyValues = sortObjectByKeys(productData.metadata);
+
     const sortedInnerData: DownloadableProduct = {
       address: productData.address,
-      metadata: sortObjectByKeys(productData.metadata),
+      metadata: Object.fromEntries(sortedKeyValues) as Omit<
+        Product,
+        "price_account"
+      >,
       priceAccounts: [],
     };
 
