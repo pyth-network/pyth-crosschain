@@ -68,9 +68,9 @@ export type LazerFeed = {
  */
 export function isAvailableOnCluster(cluster: PythCluster): boolean {
   return (
-    cluster === "pythnet" ??
-    cluster === "mainnet-beta" ??
-    cluster === "devnet" ??
+    cluster === "pythnet" ||
+    cluster === "mainnet-beta" ||
+    cluster === "devnet" ||
     cluster === "testnet"
   );
 }
@@ -105,8 +105,8 @@ export function getConfig(
     cluster: options?.cluster as PythCluster | undefined,
     feeds: [],
     metadata: {
-      source: endpoint || "unknown",
-      network: network || "unknown",
+      source: endpoint ?? "unknown",
+      network: network ?? "unknown",
     },
   };
 }
@@ -129,10 +129,10 @@ export function getDownloadableConfig(config: LazerConfig): DownloadableConfig {
         symbol: feed.id,
         // Convert feed metadata to match expected Product metadata format
         // This is a placeholder and will need to be adjusted based on actual metadata
-        asset_type: feed.metadata.asset_type?.toString() || "",
-        country: feed.metadata.country?.toString() || "",
-        quote_currency: feed.metadata.quote_currency?.toString() || "",
-        tenor: feed.metadata.tenor?.toString() || "",
+        asset_type: feed.metadata.asset_type?.toString() ?? "",
+        country: feed.metadata.country?.toString() ?? "",
+        quote_currency: feed.metadata.quote_currency?.toString() ?? "",
+        tenor: feed.metadata.tenor?.toString() ?? "",
         // Add other required fields
       },
       priceAccounts: [

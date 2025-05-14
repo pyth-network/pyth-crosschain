@@ -34,7 +34,6 @@ import {
   PriceRawConfig,
   RawConfig,
   ValidationResult,
-  GetConfigParams,
   ProgramType,
 } from "../types";
 import { Program } from "@coral-xyz/anchor";

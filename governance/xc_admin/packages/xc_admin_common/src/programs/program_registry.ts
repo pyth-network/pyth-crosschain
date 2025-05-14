@@ -80,7 +80,7 @@ export const validateUploadedConfig: Record<
   ProgramType,
   (
     existingConfig: DownloadableConfig,
-    uploadedConfig: unknown,
+    uploadedConfig: DownloadableConfig,
     cluster: PythCluster,
   ) => ValidationResult
 > = {
