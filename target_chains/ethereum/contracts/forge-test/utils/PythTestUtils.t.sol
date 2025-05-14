@@ -438,6 +438,11 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
 
         // Price with 4 decimals and exponent 5
         assertEq(PythUtils.convertToUint(100, 1, 2), 100_000); // 100 with 3 zeros  
+
+
+        // Edge Cases
+        assertEq(PythUtils.convertToUint(100, -255, 18), 0);
+        // assertEq(PythUtils.convertToUint(100, 255, 18), 100_00_000_000_000_000_000_000_000);
     }
 
     function testCombinePrices() public {
