@@ -72,12 +72,11 @@ export type RawConfig = {
 
 /**
  * Union type for configuration parameters that can vary by program type
+ * This is a discriminated union type that enforces program type at compile time
  */
 export type GetConfigParams =
-  | ({
-      programType: ProgramType.PYTH_CORE;
-    } & CoreConfigParams)
-  | ({ programType: ProgramType.PYTH_LAZER } & LazerConfigParams);
+  | (CoreConfigParams & { programType: ProgramType.PYTH_CORE })
+  | (LazerConfigParams & { programType: ProgramType.PYTH_LAZER });
 
 /**
  * Type for downloadable price account configuration

@@ -11,7 +11,7 @@ import { ProgramType } from "../types";
 /**
  * Program ID for the Pyth Lazer program
  */
-const LAZER_PROGRAM_ID = new PublicKey(
+export const LAZER_PROGRAM_ID = new PublicKey(
   "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt",
 );
 
@@ -61,18 +61,6 @@ export type LazerFeed = {
 };
 
 /**
- * Get the program address for the given cluster
- *
- * @param cluster The Pyth cluster to get the address for
- * @returns The program address
- */
-export function getProgramAddress(cluster: PythCluster): PublicKey {
-  // Currently using the same mock address for all clusters
-  // Will be updated with actual addresses for each cluster when available
-  return LAZER_PROGRAM_ID;
-}
-
-/**
  * Check if the Pyth Lazer program is available on the specified cluster
  *
  * @param cluster The Pyth cluster to check
@@ -80,9 +68,9 @@ export function getProgramAddress(cluster: PythCluster): PublicKey {
  */
 export function isAvailableOnCluster(cluster: PythCluster): boolean {
   return (
-    cluster === "pythnet" ||
-    cluster === "mainnet-beta" ||
-    cluster === "devnet" ||
+    cluster === "pythnet" ??
+    cluster === "mainnet-beta" ??
+    cluster === "devnet" ??
     cluster === "testnet"
   );
 }
@@ -93,16 +81,13 @@ export function isAvailableOnCluster(cluster: PythCluster): boolean {
  * @param params Parameters to fetch Lazer configuration
  * @returns Promise resolving to Lazer-specific configuration object
  */
-export function getConfig(params: GetConfigParams): LazerConfig {
-  // Only process if this is a Lazer config request
-  if (params.programType !== ProgramType.PYTH_LAZER) {
-    throw new Error("Invalid program type for Lazer getConfig");
-  }
+export function getConfig(
+  params: LazerConfigParams & { programType: ProgramType.PYTH_LAZER },
+): LazerConfig {
+  // No need for runtime check since it's enforced by the type system
 
-  // Cast to LazerConfigParams to extract the properties
-  const { endpoint, network, options } = params as {
-    programType: ProgramType.PYTH_LAZER;
-  } & LazerConfigParams;
+  // Extract the properties
+  const { endpoint, network, options } = params;
 
   // Example implementation that would fetch data from a non-Solana source
   // For now, return a placeholder with empty feeds

@@ -133,20 +133,12 @@ function sortData(data: DownloadableConfig): DownloadableConfig {
 }
 
 /**
- * Get the Pyth Core program address for the given cluster
- */
-export function getProgramAddress(cluster: PythCluster): PublicKey {
-  return getPythProgramKeyForCluster(cluster);
-}
-
-/**
  * Parse raw on-chain accounts into the Pyth Core configuration format
  */
-export function getConfig(params: GetConfigParams): RawConfig {
-  if (params.programType !== ProgramType.PYTH_CORE) {
-    throw new Error("Invalid program type for Core getConfig");
-  }
-
+export function getConfig(
+  params: CoreConfigParams & { programType: ProgramType.PYTH_CORE },
+): RawConfig {
+  // No need for runtime check since it's enforced by the type system
   const accounts = params.accounts;
 
   // Create a map of parsed base data for each account to avoid repeated parsing
