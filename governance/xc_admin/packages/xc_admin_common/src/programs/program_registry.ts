@@ -50,23 +50,22 @@ export const getConfig: Record<
 
 /**
  * Function to format the configuration for downloading as a JSON file
+ * Uses type narrowing to determine the correct implementation based on the config shape
  */
-export const getDownloadableConfig: Record<
-  ProgramType,
-  (config: ProgramConfig) => DownloadableConfig
-> = {
-  [ProgramType.PYTH_CORE]: (config: ProgramConfig) => {
-    if ("mappingAccounts" in config) {
-      return pythCore.getDownloadableConfig(config as RawConfig);
-    }
-    throw new Error("Invalid config type for Pyth Core");
-  },
-  [ProgramType.PYTH_LAZER]: (config: ProgramConfig) => {
-    if ("feeds" in config && config.programType === ProgramType.PYTH_LAZER) {
-      return pythLazer.getDownloadableConfig(config as LazerConfig);
-    }
-    throw new Error("Invalid config type for Pyth Lazer");
-  },
+export const getDownloadableConfig = (
+  config: ProgramConfig,
+): DownloadableConfig => {
+  if ("mappingAccounts" in config) {
+    return pythCore.getDownloadableConfig(config);
+  } else if (
+    "feeds" in config &&
+    config.programType === ProgramType.PYTH_LAZER
+  ) {
+    return pythLazer.getDownloadableConfig(config);
+  }
+  throw new Error(
+    "Invalid config type - could not determine program type from config structure",
+  );
 };
 
 /**
