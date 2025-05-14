@@ -118,36 +118,30 @@ export function getConfig(
  * @returns Configuration formatted for download
  */
 export function getDownloadableConfig(config: LazerConfig): DownloadableConfig {
-  // Transform LazerConfig to DownloadableConfig
-  const downloadableConfig: DownloadableConfig = {};
-
-  // Convert each feed to a format compatible with DownloadableProduct
-  config.feeds.forEach((feed) => {
-    downloadableConfig[feed.id] = {
-      address: "", // We'll need to determine how to represent this for Lazer
-      metadata: {
-        symbol: feed.id,
-        // Convert feed metadata to match expected Product metadata format
-        // This is a placeholder and will need to be adjusted based on actual metadata
-        asset_type: feed.metadata.asset_type?.toString() ?? "",
-        country: feed.metadata.country?.toString() ?? "",
-        quote_currency: feed.metadata.quote_currency?.toString() ?? "",
-        tenor: feed.metadata.tenor?.toString() ?? "",
-        // Add other required fields
-      },
-      priceAccounts: [
-        {
-          address: "", // Will need to be determined based on Lazer's structure
-          publishers: [], // Will need to be populated from Lazer data
-          expo: 0, // Default value, update based on actual data
-          minPub: 0, // Default value, update based on actual data
-          maxLatency: 0, // Default value, update based on actual data
+  return Object.fromEntries(
+    config.feeds.map((feed) => [
+      feed.id,
+      {
+        address: "",
+        metadata: {
+          symbol: feed.id,
+          asset_type: feed.metadata.asset_type?.toString() ?? "",
+          country: feed.metadata.country?.toString() ?? "",
+          quote_currency: feed.metadata.quote_currency?.toString() ?? "",
+          tenor: feed.metadata.tenor?.toString() ?? "",
         },
-      ],
-    };
-  });
-
-  return downloadableConfig;
+        priceAccounts: [
+          {
+            address: "",
+            publishers: [],
+            expo: 0,
+            minPub: 0,
+            maxLatency: 0,
+          },
+        ],
+      },
+    ]),
+  );
 }
 
 /**

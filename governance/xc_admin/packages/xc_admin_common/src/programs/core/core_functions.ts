@@ -92,43 +92,39 @@ const sortObjectByKeys = <T extends Record<string, unknown>>(
   Object.entries(obj).sort(([a], [b]) => a.localeCompare(b));
 
 /**
+ * Helper function to transform object values
+ */
+const mapValues = <T, U>(
+  obj: Record<string, T>,
+  fn: (value: T) => U,
+): Record<string, U> =>
+  Object.fromEntries(
+    Object.entries(obj).map(([key, value]) => [key, fn(value)]),
+  );
+
+/**
  * Sort configuration data for consistent output
  */
 function sortData(data: DownloadableConfig): DownloadableConfig {
-  const sortedData: DownloadableConfig = {};
-  const keys = Object.keys(data).sort();
-  for (const key of keys) {
-    const productData = data[key];
-    const sortedKeyValues = sortObjectByKeys(productData.metadata);
-
-    const sortedInnerData: DownloadableProduct = {
-      address: productData.address,
-      metadata: Object.fromEntries(sortedKeyValues) as Omit<
-        Product,
-        "price_account"
-      >,
-      priceAccounts: [],
-    };
-
-    // Sort price accounts by address
-    sortedInnerData.priceAccounts = [...productData.priceAccounts]
-      .sort((a, b) => a.address.localeCompare(b.address))
-      .map((priceAccount) => {
-        const sortedPriceAccount: DownloadablePriceAccount = {
-          address: priceAccount.address,
-          expo: priceAccount.expo,
-          minPub: priceAccount.minPub,
-          maxLatency: priceAccount.maxLatency,
-          publishers: [...priceAccount.publishers].sort((a, b) =>
-            a.localeCompare(b),
-          ),
-        };
-        return sortedPriceAccount;
-      });
-
-    sortedData[key] = sortedInnerData;
-  }
-  return sortedData;
+  return mapValues(data, (productData: DownloadableProduct) => ({
+    address: productData.address,
+    metadata: Object.fromEntries(
+      sortObjectByKeys(productData.metadata),
+    ) as Omit<Product, "price_account">,
+    priceAccounts: [...productData.priceAccounts]
+      .sort((a: DownloadablePriceAccount, b: DownloadablePriceAccount) =>
+        a.address.localeCompare(b.address),
+      )
+      .map((priceAccount: DownloadablePriceAccount) => ({
+        address: priceAccount.address,
+        expo: priceAccount.expo,
+        minPub: priceAccount.minPub,
+        maxLatency: priceAccount.maxLatency,
+        publishers: [...priceAccount.publishers].sort((a: string, b: string) =>
+          a.localeCompare(b),
+        ),
+      })),
+  }));
 }
 
 /**
@@ -149,73 +145,72 @@ export function getConfig(
   );
 
   // First pass: Extract price accounts
-  const priceRawConfigs = Object.fromEntries(
-    accounts
-      .filter(
-        (account) =>
-          parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
-          AccountType.Price,
-      )
-      .map((account) => {
-        const parsed = parsePriceData(account.account.data);
-        return [
-          account.pubkey.toBase58(),
-          {
-            next: parsed.nextPriceAccountKey,
-            address: account.pubkey,
-            publishers: parsed.priceComponents
-              .filter((x) => x.publisher !== null && x.publisher !== undefined)
-              .map((x) => x.publisher),
-            expo: parsed.exponent,
-            minPub: parsed.minPublishers,
-            maxLatency: parsed.maxLatency,
-          },
-        ];
-      }),
+  const priceAccounts = accounts.filter(
+    (account) =>
+      parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
+      AccountType.Price,
+  );
+
+  const priceRawConfigs = mapValues(
+    Object.fromEntries(
+      priceAccounts.map((account) => [account.pubkey.toBase58(), account]),
+    ),
+    (account) => {
+      const parsed = parsePriceData(account.account.data);
+      return {
+        next: parsed.nextPriceAccountKey,
+        address: account.pubkey,
+        publishers: parsed.priceComponents
+          .filter((x) => x.publisher !== null && x.publisher !== undefined)
+          .map((x) => x.publisher),
+        expo: parsed.exponent,
+        minPub: parsed.minPublishers,
+        maxLatency: parsed.maxLatency,
+      };
+    },
   );
 
   // Second pass: Extract product accounts and link to price accounts
-  const productRawConfigs = Object.fromEntries(
-    accounts
-      .filter(
-        (account) =>
-          parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
-          AccountType.Product,
-      )
-      .map((account) => {
-        const parsed = parseProductData(account.account.data);
-        const priceAccounts: PriceRawConfig[] = [];
+  const productAccounts = accounts.filter(
+    (account) =>
+      parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
+      AccountType.Product,
+  );
 
-        // Follow the linked list of price accounts
-        if (parsed.priceAccountKey) {
-          let priceAccountKey: string | undefined =
-            parsed.priceAccountKey.toBase58();
-          const processedPriceKeys = new Set<string>();
+  const productRawConfigs = mapValues(
+    Object.fromEntries(
+      productAccounts.map((account) => [account.pubkey.toBase58(), account]),
+    ),
+    (account) => {
+      const parsed = parseProductData(account.account.data);
+      const priceAccounts: PriceRawConfig[] = [];
 
-          while (
-            priceAccountKey &&
-            !processedPriceKeys.has(priceAccountKey) &&
-            priceRawConfigs[priceAccountKey]
-          ) {
-            processedPriceKeys.add(priceAccountKey);
-            const priceConfig: PriceRawConfig =
-              priceRawConfigs[priceAccountKey];
-            priceAccounts.push(priceConfig);
-            priceAccountKey = priceConfig.next
-              ? priceConfig.next.toBase58()
-              : undefined;
-          }
+      // Follow the linked list of price accounts
+      if (parsed.priceAccountKey) {
+        let priceAccountKey: string | undefined =
+          parsed.priceAccountKey.toBase58();
+        const processedPriceKeys = new Set<string>();
+
+        while (
+          priceAccountKey &&
+          !processedPriceKeys.has(priceAccountKey) &&
+          priceRawConfigs[priceAccountKey]
+        ) {
+          processedPriceKeys.add(priceAccountKey);
+          const priceConfig: PriceRawConfig = priceRawConfigs[priceAccountKey];
+          priceAccounts.push(priceConfig);
+          priceAccountKey = priceConfig.next
+            ? priceConfig.next.toBase58()
+            : undefined;
         }
+      }
 
-        return [
-          account.pubkey.toBase58(),
-          {
-            priceAccounts,
-            metadata: parsed.product,
-            address: account.pubkey,
-          },
-        ];
-      }),
+      return {
+        priceAccounts,
+        metadata: parsed.product,
+        address: account.pubkey,
+      };
+    },
   );
 
   // Third pass: Extract mapping accounts and permission data
