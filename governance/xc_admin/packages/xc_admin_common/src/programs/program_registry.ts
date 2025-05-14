@@ -37,7 +37,7 @@ export const isAvailableOnCluster: Record<
   ProgramType,
   (cluster: PythCluster) => boolean
 > = {
-  [ProgramType.PYTH_CORE]: pythCore.isAvailableOnCluster,
+  [ProgramType.PYTH_CORE]: () => true, // Pyth Core is available on all clusters - using direct value instead of a trivial function
   [ProgramType.PYTH_LAZER]: pythLazer.isAvailableOnCluster,
 };
 

@@ -122,14 +122,6 @@ export function getProgramAddress(cluster: PythCluster): PublicKey {
 }
 
 /**
- * Check if the Pyth Core program is available on the specified cluster
- */
-export function isAvailableOnCluster(cluster: PythCluster): boolean {
-  // Pyth Core is available on all clusters
-  return true;
-}
-
-/**
  * Parse raw on-chain accounts into the Pyth Core configuration format
  */
 export function getConfig(params: GetConfigParams): RawConfig {
