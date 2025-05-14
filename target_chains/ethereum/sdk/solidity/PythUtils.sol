@@ -2,8 +2,13 @@
 pragma solidity ^0.8.0;
 
 import "./PythStructs.sol";
+import "./PythErrors.sol";
+import "./Math.sol";
+import "forge-std/console.sol";
 
 library PythUtils {
+
+    uint32 internal constant PRECISION = 36;
     /// @notice Converts a Pyth price to a uint256 with a target number of decimals
     /// @param price The Pyth price
     /// @param expo The Pyth price exponent
@@ -17,26 +22,28 @@ library PythUtils {
         int32 expo,
         uint8 targetDecimals
     ) public pure returns (uint256) {
-        if (price < 0 || expo > 0 || expo < -255) {
-            revert();
+        if (price < 0) {
+            revert PythErrors.NegativeInputPrice();
+        }
+        if (expo < -255) {
+            revert PythErrors.InvalidInputExpo();
         }
 
-        uint8 priceDecimals = uint8(uint32(-1 * expo));
+        int256 combinedExpo = int32(int8(targetDecimals)) + int32(int8(uint8(uint32(expo))));
 
-        if (targetDecimals >= priceDecimals) {
-            return
-                uint(uint64(price)) *
-                10 ** uint32(targetDecimals - priceDecimals);
+        if (combinedExpo > 0) {
+            return uint(uint64(price)) * 10 ** uint32(int32(combinedExpo));
         } else {
-            return
-                uint(uint64(price)) /
-                10 ** uint32(priceDecimals - targetDecimals);
+            return uint(uint64(price)) / 10 ** uint32(Math.abs(combinedExpo));
         }
     }
 
     /// @notice Combines two prices to get a cross-rate
     /// @param price1 The first price (a/b)
+    /// @param expo1 The exponent of the first price
     /// @param price2 The second price (c/b)
+    /// @param expo2 The exponent of the second price
+    /// @param targetExpo The target exponent of the cross-rate
     /// @return crossRate The cross-rate (a/c)
     /// @return expo The exponent of the cross-rate
     /// @dev This function will revert if either price is negative or if the exponents are invalid.
@@ -46,25 +53,48 @@ library PythUtils {
         int64 price1,
         int32 expo1,
         int64 price2,
-        int32 expo2
+        int32 expo2,
+        int32 targetExpo
     ) public pure returns (int64 crossRate, int32 expo) {
-        if (price1 < 0 || price2 < 0 || expo1 > 0 || expo2 > 0 || expo1 < -255 || expo2 < -255) {
-            revert();
+        // Check if the input prices are negative
+        if (price1 < 0 || price2 < 0) {
+            revert PythErrors.NegativeInputPrice();
+        }
+        // Check if the input exponents are valid and not less than -255
+        if (expo1 > 0 || expo2 > 0 || expo1 < -255 || expo2 < -255) {
+            revert PythErrors.InvalidInputExpo();
+        }
+        // Check if the target exponent is valid and not less than -255
+        if (targetExpo > 0 || targetExpo < -255) {
+            revert PythErrors.InvalidTargetExpo();
         }
 
-        // Convert both prices to the same decimal places (using the larger of the two)
-        uint8 maxDecimals = uint8(uint32(-1 * (expo1 < expo2 ? expo1 : expo2)));
-        uint256 p1 = convertToUint(price1, expo1, maxDecimals);
-        uint256 p2 = convertToUint(price2, expo2, maxDecimals);
+        // Calculate the combined price with precision of 36
+        uint256 fixedPointPrice = Math.mulDiv(uint64(price1), 10 ** PRECISION, uint64(price2));
+        // TODO: Check for underflow
+        int32 combinedExpo = expo1 - expo2 - int32(PRECISION);
+        console.log("fixedPointPrice", fixedPointPrice);
+        console.log("combinedExpo", combinedExpo);
+        console.log("targetExpo", targetExpo);
+        // Convert the price to the target exponent
+        uint256 combined;
+        if (combinedExpo >= targetExpo) {
+            console.log("combinedExpo >= targetExpo");
+            // If combinedExpo is greater than or equal to targetExpo, we need to multiply
+            combined = fixedPointPrice * 10 ** uint32(combinedExpo + targetExpo);
+        } else {
+            console.log("combinedExpo - targetExpo", combinedExpo - targetExpo);            
+            // If combinedExpo is less than targetExpo, we need to divide
+            combined = fixedPointPrice / 10 ** uint32(targetExpo - combinedExpo);
+        }
 
-        // Calculate the combined price with precision
-        uint256 combined = (p1 * 10**18) / p2;
-        combined = combined / 10 ** (18 - maxDecimals);
+        console.log("combined", combined);
+
         // Check if the combined price fits in int64
         if (combined > uint256(uint64(type(int64).max))) {
             revert();
         }
 
-        return (int64(uint64(combined)), expo1 < expo2 ? expo1 : expo2);
+        return (int64(uint64(combined)), targetExpo);
     }
 }
