@@ -8,10 +8,12 @@ fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=../proto/");
 
     protobuf_codegen::Codegen::new()
-        .pure()
+        .protoc()
+        .protoc_extra_arg("--include_source_info")
         .include("../proto")
         .input("../proto/publisher_update.proto")
         .input("../proto/pyth_lazer_transaction.proto")
+        .input("../proto/transaction_envelope.proto")
         .cargo_out_dir("protobuf")
         .run_from_script();
 
