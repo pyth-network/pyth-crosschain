@@ -30,5 +30,7 @@ pub mod rpc_price_feed_metadata;
 pub use self::rpc_price_feed_metadata::RpcPriceFeedMetadata;
 pub mod rpc_price_feed_metadata_v2;
 pub use self::rpc_price_feed_metadata_v2::RpcPriceFeedMetadataV2;
+pub mod sse_event;
+pub use self::sse_event::SseEvent;
 pub mod twaps_response;
 pub use self::twaps_response::TwapsResponse;
