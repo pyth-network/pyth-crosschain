@@ -1,0 +1,80 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM request WHERE chain_id = ? AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "chain_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "sequence",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 2,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "last_updated_at",
+        "ordinal": 3,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "state",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "request_block_number",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "request_tx_hash",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "sender",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "reveal_block_number",
+        "ordinal": 8,
+        "type_info": "Integer"
+      },
+      {
+        "name": "reveal_tx_hash",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "info",
+        "ordinal": 10,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "ba011bb5690ad6821689bec939c5303c8619b6302ef33145db3bf62259492783"
+}

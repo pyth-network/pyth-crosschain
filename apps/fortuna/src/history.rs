@@ -22,8 +22,6 @@ pub enum RequestEntryState {
     },
 }
 
-type RequestKey = (ChainId, u64);
-
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 pub struct RequestStatus {
     pub chain_id: ChainId,
@@ -53,7 +51,6 @@ struct RequestRow {
 
 impl From<RequestRow> for RequestStatus {
     fn from(row: RequestRow) -> Self {
-        println!("from row: {:?}", &row);
         let chain_id = row.chain_id;
         let sequence = row.sequence as u64;
         let created_at = row.created_at.and_utc();
@@ -166,7 +163,7 @@ impl History {
                     .unwrap();
             }
             RequestEntryState::Failed { reason } => {
-                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ? WHERE chain_id = ? AND sequence = ?",
+                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ? WHERE chain_id = ? AND sequence = ? AND state = 'Pending'",
                     "Failed",
                     new_status.last_updated_at,
                     reason,
@@ -179,28 +176,10 @@ impl History {
         };
     }
 
-    pub async fn get_from_db(&self, (chain_id, sequence): RequestKey) -> Vec<RequestStatus> {
-        let sequence = sequence as i64;
-        let row = sqlx::query_as!(
-            RequestRow,
-            "SELECT * FROM request WHERE chain_id = ? AND sequence = ?",
-            chain_id,
-            sequence
-        )
-        .fetch_all(&self.pool)
-        .await
-        .unwrap();
-        row.into_iter().map(|row| row.into()).collect()
-    }
-
     pub fn add(&self, log: &RequestStatus) {
         if let Err(e) = self.write_queue.try_send(log.clone()) {
             tracing::warn!("Failed to send log to write queue: {}", e);
         }
-    }
-
-    pub async fn get_request_logs(&self, request_key: &RequestKey) -> Vec<RequestStatus> {
-        self.get_from_db(request_key.clone()).await
     }
 
     pub async fn get_requests_by_tx_hash(&self, tx_hash: TxHash) -> Vec<RequestStatus> {
@@ -276,12 +255,22 @@ impl History {
         min_timestamp: Option<DateTime<chrono::Utc>>,
         max_timestamp: Option<DateTime<chrono::Utc>>,
     ) -> Vec<RequestStatus> {
+        // UTC_MIN and UTC_MAX are not valid timestamps in SQLite
+        // So we need small and large enough timestamps to replace them
+        let min_timestamp = min_timestamp.unwrap_or(
+            "2012-12-12T12:12:12Z"
+                .parse::<DateTime<chrono::Utc>>()
+                .unwrap(),
+        );
+        let max_timestamp = max_timestamp.unwrap_or(
+            "2050-12-12T12:12:12Z"
+                .parse::<DateTime<chrono::Utc>>()
+                .unwrap(),
+        );
         let limit = limit as i64;
         let rows = match chain_id {
             Some(chain_id) => {
                 let chain_id = chain_id.to_string();
-                let min_timestamp = min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC);
-                let max_timestamp = max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC);
                 sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE chain_id = ? AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ?",
                     chain_id,
                     min_timestamp,
@@ -289,8 +278,6 @@ impl History {
                     limit).fetch_all(&self.pool).await
             }
             None => {
-                let min_timestamp = min_timestamp.unwrap_or(DateTime::<chrono::Utc>::MIN_UTC);
-                let max_timestamp = max_timestamp.unwrap_or(DateTime::<chrono::Utc>::MAX_UTC);
                 sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ?",
                     min_timestamp,
                     max_timestamp,
@@ -301,45 +288,150 @@ impl History {
     }
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use super::*;
+    use chrono::Duration;
     use tokio::time::sleep;
 
-    #[tokio::test]
-    async fn test_history() {
-        let history = History::new_in_memory().await;
-        let status = RequestStatus {
+    fn get_random_request_status() -> RequestStatus {
+        RequestStatus {
             chain_id: "ethereum".to_string(),
             sequence: 1,
             created_at: chrono::Utc::now(),
             last_updated_at: chrono::Utc::now(),
             request_block_number: 1,
-            request_tx_hash: TxHash::zero(),
-            sender: Address::zero(),
+            request_tx_hash: TxHash::random(),
+            sender: Address::random(),
             state: RequestEntryState::Pending,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_history_return_correct_logs() {
+        let history = History::new_in_memory().await;
+        let reveal_tx_hash = TxHash::random();
+        let mut status = get_random_request_status();
+        History::update_request_status(&history.pool, status.clone()).await;
+        status.state = RequestEntryState::Completed {
+            reveal_block_number: 1,
+            reveal_tx_hash,
         };
         History::update_request_status(&history.pool, status.clone()).await;
-        let logs = history.get_request_logs(&("ethereum".to_string(), 1)).await;
+
+        let logs = history
+            .get_requests_by_sequence(status.sequence, Some(status.chain_id.clone()))
+            .await;
         assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .get_requests_by_sequence(status.sequence, None)
+            .await;
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .get_requests_by_tx_hash(status.request_tx_hash)
+            .await;
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history.get_requests_by_tx_hash(reveal_tx_hash).await;
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .get_requests_by_sender(status.sender, Some(status.chain_id.clone()))
+            .await;
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history.get_requests_by_sender(status.sender, None).await;
+        assert_eq!(logs, vec![status.clone()]);
+    }
+
+    #[tokio::test]
+
+    async fn test_history_filter_irrelevant_logs() {
+        let history = History::new_in_memory().await;
+        let status = get_random_request_status();
+        History::update_request_status(&history.pool, status.clone()).await;
+
+        let logs = history
+            .get_requests_by_sequence(status.sequence, Some("not-ethereum".to_string()))
+            .await;
+        assert_eq!(logs, vec![]);
+
+        let logs = history
+            .get_requests_by_sequence(status.sequence + 1, None)
+            .await;
+        assert_eq!(logs, vec![]);
+
+        let logs = history.get_requests_by_tx_hash(TxHash::zero()).await;
+        assert_eq!(logs, vec![]);
+
+        let logs = history
+            .get_requests_by_sender(Address::zero(), Some(status.chain_id.clone()))
+            .await;
+        assert_eq!(logs, vec![]);
+
+        let logs = history.get_requests_by_sender(Address::zero(), None).await;
+        assert_eq!(logs, vec![]);
+    }
+
+    #[tokio::test]
+    async fn test_history_time_filters() {
+        let history = History::new_in_memory().await;
+        let status = get_random_request_status();
+        History::update_request_status(&history.pool, status.clone()).await;
+        for chain_id in [None, Some("ethereum".to_string())] {
+            // min = created_at = max
+            let logs = history
+                .get_requests_by_time(
+                    chain_id.clone(),
+                    10,
+                    Some(status.created_at),
+                    Some(status.created_at),
+                )
+                .await;
+            assert_eq!(logs, vec![status.clone()]);
+
+            // min = created_at + 1
+            let logs = history
+                .get_requests_by_time(
+                    chain_id.clone(),
+                    10,
+                    Some(status.created_at + Duration::seconds(1)),
+                    None,
+                )
+                .await;
+            assert_eq!(logs, vec![]);
+
+            // max = created_at - 1
+            let logs = history
+                .get_requests_by_time(
+                    chain_id.clone(),
+                    10,
+                    None,
+                    Some(status.created_at - Duration::seconds(1)),
+                )
+                .await;
+            assert_eq!(logs, vec![]);
+
+            // no min or max
+            let logs = history
+                .get_requests_by_time(chain_id.clone(), 10, None, None)
+                .await;
+            assert_eq!(logs, vec![status.clone()]);
+        }
     }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_writer_thread() {
         let history = History::new_in_memory().await;
-        let status = RequestStatus {
-            chain_id: "ethereum".to_string(),
-            sequence: 1,
-            created_at: chrono::Utc::now(),
-            last_updated_at: chrono::Utc::now(),
-            request_block_number: 1,
-            request_tx_hash: TxHash::zero(),
-            sender: Address::zero(),
-            state: RequestEntryState::Pending,
-        };
+        let status = get_random_request_status();
         history.add(&status);
         // wait for the writer thread to write to the db
         sleep(std::time::Duration::from_secs(1)).await;
-        let logs = history.get_request_logs(&("ethereum".to_string(), 1)).await;
+        let logs = history
+            .get_requests_by_sequence(1, Some("ethereum".to_string()))
+            .await;
         assert_eq!(logs, vec![status]);
     }
 }
