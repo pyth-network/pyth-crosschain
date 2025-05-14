@@ -14,19 +14,21 @@ package pyth_lazer_transaction;
 // Representation of a complete governance instruction. This value will be signed
 // by a governance source.
 message GovernanceInstruction {
+    // [required] Governance source that signed this instruction.
+    optional GovernanceSource source = 1;
     // Action requested by this instruction. For the instruction to be accepted, all directives
     // must be successfully applied. In case of any failure, the whole instruction is reverted.
     // However, note that if the instruction targets multiple (or all) shards, each shard will
     // accept or reject the instruction independently of other shards.
-    repeated GovernanceDirective directives = 1;
+    repeated GovernanceDirective directives = 2;
     // [optional] If specified, the instruction will be rejected if the current timestamp
     // is less than the specified value. In case of rejection, the same instruction can be resubmitted
     // and executed later once the time requirement is met.
-    optional google.protobuf.Timestamp min_execution_timestamp = 2;
+    optional google.protobuf.Timestamp min_execution_timestamp = 3;
     // [optional] If specified, the instruction will be rejected if the current timestamp
     // is greater than the specified value. After `max_execution_timestamp` is in the past,
     // it will no longer be possible to execute this instruction.
-    optional google.protobuf.Timestamp max_execution_timestamp = 3;
+    optional google.protobuf.Timestamp max_execution_timestamp = 4;
     // [required] Sequence number of this instruction. It must be greater than 0.
     // It must always be increasing, but not required to be
     // strictly sequential (i.e. gaps are allowed). Each shard separately keeps track of the last executed
@@ -35,7 +37,7 @@ message GovernanceInstruction {
     // rejected (e.g. if instruction #3 has been successfully processed before instruction #2 was observed,
     // #2 will always be rejected).
     // Sequence numbers are assigned and tracked separately for each governance source.
-    optional uint32 governance_sequence_no = 4;
+    optional uint32 governance_sequence_no = 5;
 }
 
 // Specifies which shards the governance instruction applies to.
@@ -160,7 +162,12 @@ message GovernanceSource {
     }
 }
 
-// Create a new shard. Shard name will be determined by the value of `GovernanceDirective.filter`.
+// Create a new shard. A shard is a partially isolated part of Lazer that has its own state and
+// cannot be directly influenced by other shards. The main purpose of shards in Lazer is
+// to allow horizontal scaling when the number of feeds grows. Feeds can be divided into subsets
+// and each subset will be assigned to a shard.
+//
+// Shard name will be determined by the value of `GovernanceDirective.filter`.
 // This action will be rejected unless `GovernanceDirective.filter` specified a single shard.
 // Shard name must be unique across all shards in all groups.
 // (Warning: it's not possible to enforce this rule within a shard!)
