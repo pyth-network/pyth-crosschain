@@ -315,7 +315,7 @@ export function getDownloadableConfig(
  */
 export function validateUploadedConfig(
   existingConfig: DownloadableConfig,
-  uploadedConfig: unknown,
+  uploadedConfig: DownloadableConfig,
   cluster: PythCluster,
 ): ValidationResult {
   try {
@@ -324,7 +324,6 @@ export function validateUploadedConfig(
       return { isValid: false, error: "Invalid JSON format" };
     }
 
-    const uploadedConfigTyped = uploadedConfig as DownloadableConfig;
     const existingSymbols = new Set(Object.keys(existingConfig));
     const changes: Record<
       string,
@@ -334,21 +333,34 @@ export function validateUploadedConfig(
       }
     > = {};
 
-    // Check for changes to existing symbols
-    for (const symbol of Object.keys(uploadedConfigTyped)) {
-      // Remove duplicate publishers
-      if (
-        uploadedConfigTyped[symbol]?.priceAccounts?.[0]?.publishers &&
-        Array.isArray(uploadedConfigTyped[symbol].priceAccounts[0].publishers)
-      ) {
-        uploadedConfigTyped[symbol].priceAccounts[0].publishers = [
-          ...new Set(uploadedConfigTyped[symbol].priceAccounts[0].publishers),
-        ];
-      }
+    // Create a deep copy of uploadedConfigTyped with deduplicated publishers
+    const processedConfig = Object.fromEntries(
+      Object.entries(uploadedConfig).map(([symbol, product]) => {
+        if (
+          product?.priceAccounts?.[0]?.publishers &&
+          Array.isArray(product.priceAccounts[0].publishers)
+        ) {
+          // Create a deep copy with deduplicated publishers
+          return [
+            symbol,
+            {
+              ...product,
+              priceAccounts: product.priceAccounts.map((priceAccount) => ({
+                ...priceAccount,
+                publishers: [...new Set(priceAccount.publishers)],
+              })),
+            },
+          ];
+        }
+        return [symbol, product];
+      }),
+    );
 
+    // Check for changes to existing symbols
+    for (const symbol of Object.keys(processedConfig)) {
       if (!existingSymbols.has(symbol)) {
         // If symbol is not in existing symbols, create new entry
-        const newProduct = { ...uploadedConfigTyped[symbol] };
+        const newProduct = { ...processedConfig[symbol] };
 
         // Add required metadata with symbol
         if (newProduct.metadata) {
@@ -387,30 +399,30 @@ export function validateUploadedConfig(
       } else if (
         // If symbol is in existing symbols, check if data is different
         JSON.stringify(existingConfig[symbol]) !==
-        JSON.stringify(uploadedConfigTyped[symbol])
+        JSON.stringify(processedConfig[symbol])
       ) {
         changes[symbol] = {
-          prev: { ...existingConfig[symbol] },
-          new: { ...uploadedConfigTyped[symbol] },
+          prev: existingConfig[symbol],
+          new: processedConfig[symbol],
         };
       }
     }
 
     // Check for symbols to remove (in existing but not in uploaded)
     for (const symbol of Object.keys(existingConfig)) {
-      if (!uploadedConfigTyped[symbol]) {
+      if (!processedConfig[symbol]) {
         changes[symbol] = {
-          prev: { ...existingConfig[symbol] },
+          prev: existingConfig[symbol],
         };
       }
     }
 
     // Validate that address field is not changed for existing symbols
-    for (const symbol of Object.keys(uploadedConfigTyped)) {
+    for (const symbol of Object.keys(processedConfig)) {
       if (
         existingSymbols.has(symbol) &&
-        uploadedConfigTyped[symbol].address &&
-        uploadedConfigTyped[symbol].address !== existingConfig[symbol].address
+        processedConfig[symbol].address &&
+        processedConfig[symbol].address !== existingConfig[symbol].address
       ) {
         return {
           isValid: false,
@@ -420,13 +432,13 @@ export function validateUploadedConfig(
     }
 
     // Validate that priceAccounts address field is not changed
-    for (const symbol of Object.keys(uploadedConfigTyped)) {
+    for (const symbol of Object.keys(processedConfig)) {
       if (
         existingSymbols.has(symbol) &&
-        uploadedConfigTyped[symbol].priceAccounts?.[0] &&
+        processedConfig[symbol].priceAccounts?.[0] &&
         existingConfig[symbol].priceAccounts?.[0] &&
-        uploadedConfigTyped[symbol].priceAccounts[0].address &&
-        uploadedConfigTyped[symbol].priceAccounts[0].address !==
+        processedConfig[symbol].priceAccounts[0].address &&
+        processedConfig[symbol].priceAccounts[0].address !==
           existingConfig[symbol].priceAccounts[0].address
       ) {
         return {
@@ -437,11 +449,11 @@ export function validateUploadedConfig(
     }
 
     // Check that no price account has more than the maximum number of publishers
-    for (const symbol of Object.keys(uploadedConfigTyped)) {
+    for (const symbol of Object.keys(processedConfig)) {
       const maximumNumberOfPublishers = getMaximumNumberOfPublishers(cluster);
       if (
-        uploadedConfigTyped[symbol].priceAccounts?.[0]?.publishers &&
-        uploadedConfigTyped[symbol].priceAccounts[0].publishers.length >
+        processedConfig[symbol].priceAccounts?.[0]?.publishers &&
+        processedConfig[symbol].priceAccounts[0].publishers.length >
           maximumNumberOfPublishers
       ) {
         return {
@@ -467,6 +479,370 @@ export function validateUploadedConfig(
 }
 
 /**
+ * Helper function to initialize a publisher in the price store if needed
+ */
+async function initializePublisherInPriceStore(
+  publisherKey: PublicKey,
+  connection: Connection | undefined,
+  fundingAccount: PublicKey,
+  verifiedPublishers: PublicKey[],
+): Promise<TransactionInstruction[]> {
+  const instructions: TransactionInstruction[] = [];
+
+  if (!connection || verifiedPublishers.some((el) => el.equals(publisherKey))) {
+    return instructions;
+  }
+
+  if (
+    (await isPriceStoreInitialized(connection)) &&
+    !(await isPriceStorePublisherInitialized(connection, publisherKey))
+  ) {
+    instructions.push(
+      await createDetermisticPriceStoreInitializePublisherInstruction(
+        fundingAccount,
+        publisherKey,
+      ),
+    );
+    verifiedPublishers.push(publisherKey);
+  }
+
+  return instructions;
+}
+
+/**
+ * Generate instructions for adding a new product and price account
+ */
+async function generateAddInstructions(
+  symbol: string,
+  newChanges: Partial<DownloadableProduct>,
+  cluster: PythCluster,
+  accounts: CoreInstructionAccounts,
+  verifiedPublishers: PublicKey[],
+): Promise<TransactionInstruction[]> {
+  const instructions: TransactionInstruction[] = [];
+  const {
+    fundingAccount,
+    pythProgramClient,
+    messageBufferClient,
+    connection,
+    rawConfig,
+  } = accounts;
+
+  // Generate product account
+  const [productAccountKey] = await findDetermisticAccountAddress(
+    AccountType.Product,
+    symbol,
+    cluster,
+  );
+
+  if (newChanges.metadata) {
+    const instruction = await pythProgramClient.methods
+      .addProduct({ ...newChanges.metadata })
+      .accounts({
+        fundingAccount,
+        tailMappingAccount: rawConfig.mappingAccounts[0].address,
+        productAccount: productAccountKey,
+      })
+      .instruction();
+
+    checkSizeOfProductInstruction(
+      instruction,
+      MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA,
+      symbol,
+    );
+    instructions.push(instruction);
+  }
+
+  // Generate price account
+  if (newChanges.priceAccounts?.[0]) {
+    const [priceAccountKey] = await findDetermisticAccountAddress(
+      AccountType.Price,
+      symbol,
+      cluster,
+    );
+
+    instructions.push(
+      await pythProgramClient.methods
+        .addPrice(newChanges.priceAccounts[0].expo, 1)
+        .accounts({
+          fundingAccount,
+          productAccount: productAccountKey,
+          priceAccount: priceAccountKey,
+        })
+        .instruction(),
+    );
+
+    // Create message buffer if available
+    if (isMessageBufferAvailable(cluster) && messageBufferClient) {
+      instructions.push(
+        await messageBufferClient.methods
+          .createBuffer(
+            getPythOracleMessageBufferCpiAuth(cluster),
+            priceAccountKey,
+            MESSAGE_BUFFER_BUFFER_SIZE,
+          )
+          .accounts({
+            admin: fundingAccount,
+            payer: PRICE_FEED_OPS_KEY,
+          })
+          .remainingAccounts([
+            {
+              pubkey: getMessageBufferAddressForPrice(cluster, priceAccountKey),
+              isSigner: false,
+              isWritable: true,
+            },
+          ])
+          .instruction(),
+      );
+    }
+
+    // Add publishers
+    if (newChanges.priceAccounts[0].publishers) {
+      for (const publisherKey of newChanges.priceAccounts[0].publishers) {
+        const publisherPubKey = new PublicKey(publisherKey);
+        instructions.push(
+          await pythProgramClient.methods
+            .addPublisher(publisherPubKey)
+            .accounts({
+              fundingAccount,
+              priceAccount: priceAccountKey,
+            })
+            .instruction(),
+        );
+        instructions.push(
+          ...(await initializePublisherInPriceStore(
+            publisherPubKey,
+            connection,
+            fundingAccount,
+            verifiedPublishers,
+          )),
+        );
+      }
+    }
+
+    // Set min publishers if specified
+    if (newChanges.priceAccounts[0].minPub !== undefined) {
+      instructions.push(
+        await pythProgramClient.methods
+          .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+          .accounts({
+            priceAccount: priceAccountKey,
+            fundingAccount,
+          })
+          .instruction(),
+      );
+    }
+
+    // Set max latency if specified and non-zero
+    if (
+      newChanges.priceAccounts[0].maxLatency !== undefined &&
+      newChanges.priceAccounts[0].maxLatency !== 0
+    ) {
+      instructions.push(
+        await pythProgramClient.methods
+          .setMaxLatency(newChanges.priceAccounts[0].maxLatency, [0, 0, 0])
+          .accounts({
+            priceAccount: priceAccountKey,
+            fundingAccount,
+          })
+          .instruction(),
+      );
+    }
+  }
+
+  return instructions;
+}
+
+/**
+ * Generate instructions for deleting an existing product and price account
+ */
+async function generateDeleteInstructions(
+  prev: Partial<DownloadableProduct>,
+  cluster: PythCluster,
+  accounts: CoreInstructionAccounts,
+): Promise<TransactionInstruction[]> {
+  const instructions: TransactionInstruction[] = [];
+  const { fundingAccount, pythProgramClient, messageBufferClient } = accounts;
+
+  if (prev.priceAccounts?.[0]?.address) {
+    const priceAccount = new PublicKey(prev.priceAccounts[0].address);
+
+    // Delete price account
+    instructions.push(
+      await pythProgramClient.methods
+        .delPrice()
+        .accounts({
+          fundingAccount,
+          productAccount: new PublicKey(prev.address || ""),
+          priceAccount,
+        })
+        .instruction(),
+    );
+
+    // Delete product account
+    instructions.push(
+      await pythProgramClient.methods
+        .delProduct()
+        .accounts({
+          fundingAccount,
+          mappingAccount: accounts.rawConfig.mappingAccounts[0].address,
+          productAccount: new PublicKey(prev.address || ""),
+        })
+        .instruction(),
+    );
+
+    // Delete message buffer if available
+    if (isMessageBufferAvailable(cluster) && messageBufferClient) {
+      instructions.push(
+        await messageBufferClient.methods
+          .deleteBuffer(
+            getPythOracleMessageBufferCpiAuth(cluster),
+            priceAccount,
+          )
+          .accounts({
+            admin: fundingAccount,
+            payer: PRICE_FEED_OPS_KEY,
+            messageBuffer: getMessageBufferAddressForPrice(
+              cluster,
+              priceAccount,
+            ),
+          })
+          .instruction(),
+      );
+    }
+  }
+
+  return instructions;
+}
+
+/**
+ * Generate instructions for updating an existing product and price account
+ */
+async function generateUpdateInstructions(
+  symbol: string,
+  prev: Partial<DownloadableProduct>,
+  newChanges: Partial<DownloadableProduct>,
+  accounts: CoreInstructionAccounts,
+  verifiedPublishers: PublicKey[],
+): Promise<TransactionInstruction[]> {
+  const instructions: TransactionInstruction[] = [];
+  const { fundingAccount, pythProgramClient, connection } = accounts;
+
+  // Update product metadata if changed
+  if (
+    prev.metadata &&
+    newChanges.metadata &&
+    JSON.stringify(prev.metadata) !== JSON.stringify(newChanges.metadata)
+  ) {
+    const instruction = await pythProgramClient.methods
+      .updProduct({ symbol, ...newChanges.metadata })
+      .accounts({
+        fundingAccount,
+        productAccount: new PublicKey(prev.address || ""),
+      })
+      .instruction();
+
+    checkSizeOfProductInstruction(
+      instruction,
+      MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA,
+      symbol,
+    );
+    instructions.push(instruction);
+  }
+
+  const prevPrice = prev.priceAccounts?.[0];
+  const newPrice = newChanges.priceAccounts?.[0];
+
+  if (prevPrice && newPrice) {
+    // Update exponent if changed
+    if (prevPrice.expo !== newPrice.expo) {
+      instructions.push(
+        await pythProgramClient.methods
+          .setExponent(newPrice.expo, 1)
+          .accounts({
+            fundingAccount,
+            priceAccount: new PublicKey(prevPrice.address || ""),
+          })
+          .instruction(),
+      );
+    }
+
+    // Update max latency if changed
+    if (prevPrice.maxLatency !== newPrice.maxLatency) {
+      instructions.push(
+        await pythProgramClient.methods
+          .setMaxLatency(newPrice.maxLatency, [0, 0, 0])
+          .accounts({
+            priceAccount: new PublicKey(prevPrice.address || ""),
+            fundingAccount,
+          })
+          .instruction(),
+      );
+    }
+
+    // Update publishers if changed
+    if (prevPrice.publishers && newPrice.publishers) {
+      const publishersToAdd = newPrice.publishers.filter(
+        (newPub) => !prevPrice.publishers?.includes(newPub),
+      );
+      const publishersToRemove = prevPrice.publishers.filter(
+        (prevPub) => !newPrice.publishers?.includes(prevPub),
+      );
+
+      // Remove publishers
+      for (const pubKey of publishersToRemove) {
+        instructions.push(
+          await pythProgramClient.methods
+            .delPublisher(new PublicKey(pubKey))
+            .accounts({
+              fundingAccount,
+              priceAccount: new PublicKey(prevPrice.address || ""),
+            })
+            .instruction(),
+        );
+      }
+
+      // Add publishers
+      for (const pubKey of publishersToAdd) {
+        const publisherPubKey = new PublicKey(pubKey);
+        instructions.push(
+          await pythProgramClient.methods
+            .addPublisher(publisherPubKey)
+            .accounts({
+              fundingAccount,
+              priceAccount: new PublicKey(prevPrice.address || ""),
+            })
+            .instruction(),
+        );
+        instructions.push(
+          ...(await initializePublisherInPriceStore(
+            publisherPubKey,
+            connection,
+            fundingAccount,
+            verifiedPublishers,
+          )),
+        );
+      }
+    }
+
+    // Update min publishers if changed
+    if (prevPrice.minPub !== newPrice.minPub) {
+      instructions.push(
+        await pythProgramClient.methods
+          .setMinPub(newPrice.minPub, [0, 0, 0])
+          .accounts({
+            priceAccount: new PublicKey(prevPrice.address || ""),
+            fundingAccount,
+          })
+          .instruction(),
+      );
+    }
+  }
+
+  return instructions;
+}
+
+/**
  * Generate instructions to apply configuration changes
  */
 export async function generateInstructions(
@@ -481,371 +857,38 @@ export async function generateInstructions(
   accounts: CoreInstructionAccounts,
 ): Promise<TransactionInstruction[]> {
   const instructions: TransactionInstruction[] = [];
-  const publisherInPriceStoreInitializationsVerified: PublicKey[] = [];
-  const {
-    fundingAccount,
-    pythProgramClient,
-    messageBufferClient,
-    connection,
-    rawConfig,
-  } = accounts;
+  const verifiedPublishers: PublicKey[] = [];
 
   for (const symbol of Object.keys(changes)) {
-    const initPublisherInPriceStore = async (publisherKey: PublicKey) => {
-      // Ignore this step if Price Store is not initialized (or not deployed)
-      if (!connection || !(await isPriceStoreInitialized(connection))) {
-        return;
-      }
-
-      if (
-        publisherInPriceStoreInitializationsVerified.every(
-          (el) => !el.equals(publisherKey),
-        )
-      ) {
-        if (
-          !connection ||
-          !(await isPriceStorePublisherInitialized(connection, publisherKey))
-        ) {
-          instructions.push(
-            await createDetermisticPriceStoreInitializePublisherInstruction(
-              fundingAccount,
-              publisherKey,
-            ),
-          );
-        }
-        publisherInPriceStoreInitializationsVerified.push(publisherKey);
-      }
-    };
-
     const { prev, new: newChanges } = changes[symbol];
 
-    // if prev is undefined, it means that the symbol is new
     if (!prev && newChanges) {
-      // deterministically generate product account key
-      const productAccountKey: PublicKey = (
-        await findDetermisticAccountAddress(
-          AccountType.Product,
+      // Add new product/price
+      instructions.push(
+        ...(await generateAddInstructions(
           symbol,
+          newChanges,
           cluster,
-        )
-      )[0];
-
-      // Ensure metadata exists before attempting to use it
-      if (newChanges.metadata) {
-        // create add product account instruction
-        const instruction = await pythProgramClient.methods
-          .addProduct({ ...newChanges.metadata })
-          .accounts({
-            fundingAccount,
-            tailMappingAccount: rawConfig.mappingAccounts[0].address,
-            productAccount: productAccountKey,
-          })
-          .instruction();
-
-        checkSizeOfProductInstruction(
-          instruction,
-          MAX_SIZE_ADD_PRODUCT_INSTRUCTION_DATA,
-          symbol,
-        );
-
-        instructions.push(instruction);
-      }
-
-      // deterministically generate price account key
-      const priceAccountKey: PublicKey = (
-        await findDetermisticAccountAddress(AccountType.Price, symbol, cluster)
-      )[0];
-
-      // Ensure priceAccounts exists and has at least one element
-      if (newChanges.priceAccounts && newChanges.priceAccounts.length > 0) {
-        // create add price account instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .addPrice(newChanges.priceAccounts[0].expo, 1)
-            .accounts({
-              fundingAccount,
-              productAccount: productAccountKey,
-              priceAccount: priceAccountKey,
-            })
-            .instruction(),
-        );
-      }
-
-      if (isMessageBufferAvailable(cluster) && messageBufferClient) {
-        // create create buffer instruction for the price account
-        instructions.push(
-          await messageBufferClient.methods
-            .createBuffer(
-              getPythOracleMessageBufferCpiAuth(cluster),
-              priceAccountKey,
-              MESSAGE_BUFFER_BUFFER_SIZE,
-            )
-            .accounts({
-              admin: fundingAccount,
-              payer: PRICE_FEED_OPS_KEY,
-            })
-            .remainingAccounts([
-              {
-                pubkey: getMessageBufferAddressForPrice(
-                  cluster,
-                  priceAccountKey,
-                ),
-                isSigner: false,
-                isWritable: true,
-              },
-            ])
-            .instruction(),
-        );
-      }
-
-      // create add publisher instruction if there are any publishers
-      if (
-        newChanges.priceAccounts &&
-        newChanges.priceAccounts[0] &&
-        newChanges.priceAccounts[0].publishers
-      ) {
-        for (const publisherKey of newChanges.priceAccounts[0].publishers) {
-          const publisherPubKey = new PublicKey(publisherKey);
-          instructions.push(
-            await pythProgramClient.methods
-              .addPublisher(publisherPubKey)
-              .accounts({
-                fundingAccount,
-                priceAccount: priceAccountKey,
-              })
-              .instruction(),
-          );
-          await initPublisherInPriceStore(publisherPubKey);
-        }
-      }
-
-      // create set min publisher instruction if minPub is defined
-      if (
-        newChanges.priceAccounts &&
-        newChanges.priceAccounts[0] &&
-        newChanges.priceAccounts[0].minPub !== undefined
-      ) {
-        instructions.push(
-          await pythProgramClient.methods
-            .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
-            .accounts({
-              priceAccount: priceAccountKey,
-              fundingAccount,
-            })
-            .instruction(),
-        );
-      }
-
-      // If maxLatency is set and is not 0, create update maxLatency instruction
-      if (
-        newChanges.priceAccounts &&
-        newChanges.priceAccounts[0] &&
-        newChanges.priceAccounts[0].maxLatency !== undefined &&
-        newChanges.priceAccounts[0].maxLatency !== 0
-      ) {
-        instructions.push(
-          await pythProgramClient.methods
-            .setMaxLatency(newChanges.priceAccounts[0].maxLatency, [0, 0, 0])
-            .accounts({
-              priceAccount: priceAccountKey,
-              fundingAccount,
-            })
-            .instruction(),
-        );
-      }
+          accounts,
+          verifiedPublishers,
+        )),
+      );
     } else if (prev && !newChanges) {
-      // Ensure priceAccounts exists and has at least one element with an address
-      if (
-        prev.priceAccounts &&
-        prev.priceAccounts.length > 0 &&
-        prev.priceAccounts[0].address
-      ) {
-        const priceAccount = new PublicKey(prev.priceAccounts[0].address);
-
-        // if new is undefined, it means that the symbol is deleted
-        // create delete price account instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .delPrice()
-            .accounts({
-              fundingAccount,
-              productAccount: new PublicKey(prev.address || ""),
-              priceAccount,
-            })
-            .instruction(),
-        );
-
-        // create delete product account instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .delProduct()
-            .accounts({
-              fundingAccount,
-              mappingAccount: rawConfig.mappingAccounts[0].address,
-              productAccount: new PublicKey(prev.address || ""),
-            })
-            .instruction(),
-        );
-
-        if (isMessageBufferAvailable(cluster) && messageBufferClient) {
-          // create delete buffer instruction for the price buffer
-          instructions.push(
-            await messageBufferClient.methods
-              .deleteBuffer(
-                getPythOracleMessageBufferCpiAuth(cluster),
-                priceAccount,
-              )
-              .accounts({
-                admin: fundingAccount,
-                payer: PRICE_FEED_OPS_KEY,
-                messageBuffer: getMessageBufferAddressForPrice(
-                  cluster,
-                  priceAccount,
-                ),
-              })
-              .instruction(),
-          );
-        }
-      }
+      // Delete existing product/price
+      instructions.push(
+        ...(await generateDeleteInstructions(prev, cluster, accounts)),
+      );
     } else if (prev && newChanges) {
-      // check if metadata has changed
-      if (
-        prev.metadata &&
-        newChanges.metadata &&
-        JSON.stringify(prev.metadata) !== JSON.stringify(newChanges.metadata)
-      ) {
-        const instruction = await pythProgramClient.methods
-          .updProduct({ symbol, ...newChanges.metadata }) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
-          .accounts({
-            fundingAccount,
-            productAccount: new PublicKey(prev.address || ""),
-          })
-          .instruction();
-
-        checkSizeOfProductInstruction(
-          instruction,
-          MAX_SIZE_UPD_PRODUCT_INSTRUCTION_DATA,
+      // Update existing product/price
+      instructions.push(
+        ...(await generateUpdateInstructions(
           symbol,
-        );
-
-        instructions.push(instruction);
-      }
-
-      if (
-        prev.priceAccounts &&
-        prev.priceAccounts[0] &&
-        newChanges.priceAccounts &&
-        newChanges.priceAccounts[0] &&
-        prev.priceAccounts[0].expo !== newChanges.priceAccounts[0].expo
-      ) {
-        // create update exponent instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .setExponent(newChanges.priceAccounts[0].expo, 1)
-            .accounts({
-              fundingAccount,
-              priceAccount: new PublicKey(prev.priceAccounts[0].address || ""),
-            })
-            .instruction(),
-        );
-      }
-
-      // check if maxLatency has changed
-      if (
-        prev.priceAccounts &&
-        prev.priceAccounts[0] &&
-        newChanges.priceAccounts &&
-        newChanges.priceAccounts[0] &&
-        prev.priceAccounts[0].maxLatency !==
-          newChanges.priceAccounts[0].maxLatency
-      ) {
-        // create update product account instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .setMaxLatency(newChanges.priceAccounts[0].maxLatency, [0, 0, 0])
-            .accounts({
-              priceAccount: new PublicKey(prev.priceAccounts[0].address || ""),
-              fundingAccount,
-            })
-            .instruction(),
-        );
-      }
-
-      // Check if both have valid price accounts with publishers
-      if (
-        prev.priceAccounts &&
-        prev.priceAccounts[0] &&
-        prev.priceAccounts[0].publishers &&
-        newChanges.priceAccounts &&
-        newChanges.priceAccounts[0] &&
-        newChanges.priceAccounts[0].publishers
-      ) {
-        // We've already checked that these properties exist above
-        const prevPublishers = prev.priceAccounts[0].publishers;
-        const newPublishers = newChanges.priceAccounts[0].publishers;
-
-        // check if publishers have changed
-        const publisherKeysToAdd = newPublishers.filter(
-          (newPublisher: string) => !prevPublishers.includes(newPublisher),
-        );
-
-        // check if there are any publishers to remove by comparing prev and new
-        const publisherKeysToRemove = prevPublishers.filter(
-          (prevPublisher: string) => !newPublishers.includes(prevPublisher),
-        );
-
-        // add instructions to remove publishers
-        for (const publisherKey of publisherKeysToRemove) {
-          instructions.push(
-            await pythProgramClient.methods
-              .delPublisher(new PublicKey(publisherKey))
-              .accounts({
-                fundingAccount,
-                priceAccount: new PublicKey(
-                  prev.priceAccounts[0].address || "",
-                ),
-              })
-              .instruction(),
-          );
-        }
-
-        // add instructions to add new publishers
-        for (const publisherKey of publisherKeysToAdd) {
-          const publisherPubKey = new PublicKey(publisherKey);
-          instructions.push(
-            await pythProgramClient.methods
-              .addPublisher(publisherPubKey)
-              .accounts({
-                fundingAccount,
-                priceAccount: new PublicKey(
-                  prev.priceAccounts[0].address || "",
-                ),
-              })
-              .instruction(),
-          );
-          await initPublisherInPriceStore(publisherPubKey);
-        }
-      }
-
-      // check if minPub has changed
-      if (
-        prev.priceAccounts &&
-        prev.priceAccounts[0] &&
-        newChanges.priceAccounts &&
-        newChanges.priceAccounts[0] &&
-        prev.priceAccounts[0].minPub !== newChanges.priceAccounts[0].minPub
-      ) {
-        // create update product account instruction
-        instructions.push(
-          await pythProgramClient.methods
-            .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
-            .accounts({
-              priceAccount: new PublicKey(prev.priceAccounts[0].address || ""),
-              fundingAccount,
-            })
-            .instruction(),
-        );
-      }
+          prev,
+          newChanges,
+          accounts,
+          verifiedPublishers,
+        )),
+      );
     }
   }
 
