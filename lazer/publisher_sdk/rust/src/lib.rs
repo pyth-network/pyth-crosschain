@@ -140,7 +140,7 @@ impl TryFrom<DynamicValue> for serde_value::Value {
                 for item in list.items {
                     output.push(item.try_into()?);
                 }
-                Ok(serde_value::Value::Seq(output).into())
+                Ok(serde_value::Value::Seq(output))
             }
             dynamic_value::Value::Map(map) => {
                 let mut output = BTreeMap::new();
@@ -154,7 +154,7 @@ impl TryFrom<DynamicValue> for serde_value::Value {
                     let old = output.insert(serde_value::Value::String(key), value);
                     ensure!(old.is_none(), "duplicate DynamicValue.MapItem.key");
                 }
-                Ok(serde_value::Value::Map(output).into())
+                Ok(serde_value::Value::Map(output))
             }
         }
     }
