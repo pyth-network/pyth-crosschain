@@ -60,8 +60,7 @@ const PythCore = ({ proposerServerUrl }: PythCoreProps) => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig) {
-      const downloadableConfig =
-        getDownloadableConfig[ProgramType.PYTH_CORE](rawConfig)
+      const downloadableConfig = getDownloadableConfig(rawConfig)
       setData(downloadableConfig)
     }
   }, [rawConfig, dataIsLoading, cluster])
