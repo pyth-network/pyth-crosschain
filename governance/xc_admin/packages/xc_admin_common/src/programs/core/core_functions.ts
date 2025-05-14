@@ -221,6 +221,7 @@ export function getConfig(params: GetConfigParams): RawConfig {
   const rawConfig: RawConfig = { mappingAccounts: [] };
 
   // Process mapping accounts
+  const processedProducts = new Map<string, boolean>();
   const mappingAccounts = accounts
     .filter(
       (account) =>
@@ -232,10 +233,16 @@ export function getConfig(params: GetConfigParams): RawConfig {
         next: parsed.nextMappingAccount,
         address: account.pubkey,
         products: parsed.productAccountKeys
-          .filter((key) => productRawConfigs[key.toBase58()])
+          .filter((key) => {
+            const keyStr = key.toBase58();
+            // Only include products that exist and haven't been processed yet
+            return productRawConfigs[keyStr] && !processedProducts.has(keyStr);
+          })
           .map((key) => {
-            const product = productRawConfigs[key.toBase58()];
-            delete productRawConfigs[key.toBase58()];
+            const keyStr = key.toBase58();
+            const product = productRawConfigs[keyStr];
+            // Mark this product as processed
+            processedProducts.set(keyStr, true);
             return product;
           }),
       };
