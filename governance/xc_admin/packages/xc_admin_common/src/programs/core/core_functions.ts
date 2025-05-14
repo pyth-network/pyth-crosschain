@@ -219,9 +219,6 @@ export function getConfig(
   );
 
   // Third pass: Extract mapping accounts and permission data
-  const rawConfig: RawConfig = { mappingAccounts: [] };
-
-  // Process mapping accounts
   const processedProducts = new Map<string, boolean>();
   const mappingAccounts = accounts
     .filter(
@@ -250,8 +247,6 @@ export function getConfig(
       };
     });
 
-  rawConfig.mappingAccounts = mappingAccounts;
-
   // Find permission account if it exists
   const permissionAccount = accounts.find(
     (account) =>
@@ -259,13 +254,12 @@ export function getConfig(
       AccountType.Permission,
   );
 
-  if (permissionAccount) {
-    rawConfig.permissionAccount = parsePermissionData(
-      permissionAccount.account.data,
-    );
-  }
-
-  return rawConfig;
+  return {
+    mappingAccounts,
+    ...(permissionAccount && {
+      permissionAccount: parsePermissionData(permissionAccount.account.data),
+    }),
+  };
 }
 
 /**
