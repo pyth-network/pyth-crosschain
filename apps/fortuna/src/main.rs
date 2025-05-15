@@ -1,7 +1,7 @@
 #![allow(clippy::just_underscores_and_digits)]
 #![cfg_attr(
     not(test),
-    warn(
+    deny(
         clippy::expect_used,
         clippy::indexing_slicing,
         clippy::panic,
