@@ -56,10 +56,13 @@ pub async fn track_block_timestamp_lag(
         Ok(block) => match block {
             Some(block) => {
                 let block_timestamp = block.timestamp;
-                let server_timestamp = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs();
+                let server_timestamp = match SystemTime::now().duration_since(UNIX_EPOCH) {
+                    Ok(duration) => duration.as_secs(),
+                    Err(e) => {
+                        tracing::error!("Failed to get system time: {}", e);
+                        u64::MAX
+                    }
+                };
                 let lag: i64 = (server_timestamp as i64) - (block_timestamp.as_u64() as i64);
                 lag
             }

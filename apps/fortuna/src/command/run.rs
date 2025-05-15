@@ -135,7 +135,10 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
     spawn(async move {
         tracing::info!("Registered shutdown signal handler...");
-        tokio::signal::ctrl_c().await.unwrap();
+        tokio::signal::ctrl_c().await.map_err(|e| {
+            tracing::error!("Failed to register ctrl-c handler: {}", e);
+            Error::msg(format!("Failed to register ctrl-c handler: {}", e))
+        })?;
         tracing::info!("Shut down signal received, waiting for tasks...");
         // no need to handle error here, as it will only occur when all the
         // receiver has been dropped and that's what we want to do
@@ -220,7 +223,7 @@ async fn setup_chain_state(
     let last_prior_commitment = provider_commitments.last();
     if last_prior_commitment.is_some()
         && last_prior_commitment
-            .unwrap()
+            .ok_or_else(|| anyhow!("No prior commitment found"))?
             .original_commitment_sequence_number
             >= provider_info.original_commitment_sequence_number
     {

@@ -120,7 +120,7 @@ impl TracedClient {
         let client = Client::builder()
             .timeout(Duration::from_secs(10))
             .build()
-            .expect("Failed to create HTTP client");
+            .map_err(|e| anyhow::anyhow!("Failed to create HTTP client: {}", e))?;
         Ok(Provider::new(TracedClient {
             inner: Http::new_with_client(url, client),
             chain_id,

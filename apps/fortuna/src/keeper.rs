@@ -145,11 +145,11 @@ pub async fn run_keeper_threads(
             chain_eth_config.gas_limit,
             // NOTE: unwrap() here so we panic early if someone configures these values below -100.
             u64::try_from(100 + chain_eth_config.min_profit_pct)
-                .expect("min_profit_pct must be >= -100"),
+                .map_err(|_| anyhow::anyhow!("min_profit_pct must be >= -100"))?,
             u64::try_from(100 + chain_eth_config.target_profit_pct)
-                .expect("target_profit_pct must be >= -100"),
+                .map_err(|_| anyhow::anyhow!("target_profit_pct must be >= -100"))?,
             u64::try_from(100 + chain_eth_config.max_profit_pct)
-                .expect("max_profit_pct must be >= -100"),
+                .map_err(|_| anyhow::anyhow!("max_profit_pct must be >= -100"))?,
             chain_eth_config.fee,
             metrics.clone(),
         )

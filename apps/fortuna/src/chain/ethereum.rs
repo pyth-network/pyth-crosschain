@@ -82,7 +82,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
         {
             // Extract Log from TransactionReceipt.
-            let l: RawLog = r.logs[0].clone().into();
+            let l: RawLog = r.logs.first()
+                .ok_or_else(|| anyhow!("No logs in receipt"))?
+                .clone()
+                .into();
             if let PythRandomEvents::Requested1Filter(r) = PythRandomEvents::decode_log(&l)? {
                 Ok(r.request.sequence_number)
             } else {
@@ -112,7 +115,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
         {
             // Extract Log from TransactionReceipt.
-            let l: RawLog = r.logs[0].clone().into();
+            let l: RawLog = r.logs.first()
+                .ok_or_else(|| anyhow!("No logs in receipt"))?
+                .clone()
+                .into();
             if let PythRandomEvents::RequestedWithCallbackFilter(r) =
                 PythRandomEvents::decode_log(&l)?
             {
@@ -148,7 +154,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
         {
             if let PythRandomEvents::Revealed1Filter(r) =
-                PythRandomEvents::decode_log(&r.logs[0].clone().into())?
+                PythRandomEvents::decode_log(&r.logs.first()
+                    .ok_or_else(|| anyhow!("No logs in receipt"))?
+                    .clone()
+                    .into())?
             {
                 Ok(r.random_number)
             } else {

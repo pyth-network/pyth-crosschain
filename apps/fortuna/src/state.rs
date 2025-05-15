@@ -94,7 +94,7 @@ impl PebbleHashChain {
         let sample_interval: usize = sample_interval.try_into()?;
         let hash_chain = spawn_blocking(move || Self::new(secret, chain_length, sample_interval))
             .await
-            .expect("Failed to make hash chain");
+            .map_err(|e| anyhow::anyhow!("Failed to make hash chain: {}", e))?;
 
         Ok(hash_chain)
     }
@@ -106,7 +106,8 @@ impl PebbleHashChain {
         // actually at the *front* of the list. Thus, it's easier to compute indexes from the end of the list.
         let index_from_end_of_subsampled_list = ((self.len() - 1) - i) / self.sample_interval;
         let mut i_index = self.len() - 1 - index_from_end_of_subsampled_list * self.sample_interval;
-        let mut val = self.hash[self.hash.len() - 1 - index_from_end_of_subsampled_list];
+        let mut val = *self.hash.get(self.hash.len().saturating_sub(1 + index_from_end_of_subsampled_list))
+            .ok_or_else(|| anyhow::anyhow!("Index out of bounds in hash chain"))?;
 
         while i_index > i {
             val = Keccak256::digest(val).into();
@@ -148,7 +149,11 @@ impl HashChainState {
             .ok_or(anyhow::anyhow!(
                 "Hash chain for the requested sequence number is not available."
             ))?;
-        self.hash_chains[chain_index].reveal_ith(sequence_number - self.offsets[chain_index])
+        let chain = self.hash_chains.get(chain_index)
+            .ok_or_else(|| anyhow::anyhow!("Chain index out of bounds"))?;
+        let offset = self.offsets.get(chain_index)
+            .ok_or_else(|| anyhow::anyhow!("Offset index out of bounds"))?;
+        chain.reveal_ith(sequence_number - offset)
     }
 }
 

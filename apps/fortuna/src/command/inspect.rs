@@ -37,7 +37,7 @@ async fn inspect_chain(
     let multicall_exists = rpc_provider
         .get_code(ethers::contract::MULTICALL_ADDRESS, None)
         .await
-        .expect("Failed to get code")
+        .map_err(|e| anyhow::anyhow!("Failed to get code: {}", e))?
         .len()
         > 0;
 
@@ -97,9 +97,9 @@ async fn process_request(
         let block = rpc_provider
             .get_block(request.block_number)
             .await?
-            .expect("Block not found");
+            .ok_or_else(|| anyhow::anyhow!("Block not found"))?;
         let datetime = chrono::DateTime::from_timestamp(block.timestamp.as_u64() as i64, 0)
-            .expect("Invalid timestamp");
+            .ok_or_else(|| anyhow::anyhow!("Invalid timestamp"))?;
         println!(
             "{} sequence_number:{} block_number:{} requester:{}",
             datetime, request.sequence_number, request.block_number, request.requester

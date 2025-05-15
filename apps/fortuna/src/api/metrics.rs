@@ -11,7 +11,10 @@ pub async fn metrics(State(state): State<crate::api::ApiState>) -> impl IntoResp
 
     // Should not fail if the metrics are valid and there is memory available
     // to write to the buffer.
-    encode(&mut buffer, &registry).unwrap();
+    if let Err(e) = encode(&mut buffer, &registry) {
+        tracing::error!("Failed to encode metrics: {}", e);
+        return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    }
 
-    buffer
+    buffer.into_response()
 }
