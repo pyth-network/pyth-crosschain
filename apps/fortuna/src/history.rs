@@ -25,6 +25,7 @@ pub enum RequestEntryState {
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 pub struct RequestStatus {
     pub chain_id: ChainId,
+    pub provider: Address,
     pub sequence: u64,
     pub created_at: DateTime<chrono::Utc>,
     pub last_updated_at: DateTime<chrono::Utc>,
@@ -37,6 +38,7 @@ pub struct RequestStatus {
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 struct RequestRow {
     chain_id: String,
+    provider: String,
     sequence: i64,
     created_at: NaiveDateTime,
     last_updated_at: NaiveDateTime,
@@ -52,6 +54,7 @@ struct RequestRow {
 impl From<RequestRow> for RequestStatus {
     fn from(row: RequestRow) -> Self {
         let chain_id = row.chain_id;
+        let provider = row.provider.parse().unwrap();
         let sequence = row.sequence as u64;
         let created_at = row.created_at.and_utc();
         let last_updated_at = row.last_updated_at.and_utc();
@@ -76,6 +79,7 @@ impl From<RequestRow> for RequestStatus {
         };
         Self {
             chain_id,
+            provider,
             sequence,
             created_at,
             last_updated_at,
@@ -96,7 +100,7 @@ pub struct History {
 impl History {
     const MAX_WRITE_QUEUE: usize = 1_000;
     pub async fn new() -> Self {
-        Self::new_with_url("sqlite:fortuna.db").await
+        Self::new_with_url("sqlite:fortuna.db?mode=rwc").await
     }
 
     pub async fn new_in_memory() -> Self {
@@ -127,13 +131,15 @@ impl History {
     async fn update_request_status(pool: &Pool<Sqlite>, new_status: RequestStatus) {
         let sequence = new_status.sequence as i64;
         let chain_id = new_status.chain_id;
+        let request_tx_hash: String = new_status.request_tx_hash.encode_hex();
+        let provider: String = new_status.provider.encode_hex();
         match new_status.state {
             RequestEntryState::Pending => {
                 let block_number = new_status.request_block_number as i64;
-                let request_tx_hash: String = new_status.request_tx_hash.encode_hex();
                 let sender: String = new_status.sender.encode_hex();
-                sqlx::query!("INSERT INTO request(chain_id, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, sender) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                sqlx::query!("INSERT INTO request(chain_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, sender) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     chain_id,
+                    provider,
                     sequence,
                     new_status.created_at,
                     new_status.last_updated_at,
@@ -151,24 +157,28 @@ impl History {
             } => {
                 let reveal_block_number = reveal_block_number as i64;
                 let reveal_tx_hash: String = reveal_tx_hash.encode_hex();
-                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ? WHERE chain_id = ? AND sequence = ?",
+                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
                     "Completed",
                     new_status.last_updated_at,
                     reveal_block_number,
                     reveal_tx_hash,
                     chain_id,
-                    sequence)
+                    sequence,
+                    provider,
+                    request_tx_hash)
                     .execute(pool)
                     .await
                     .unwrap();
             }
             RequestEntryState::Failed { reason } => {
-                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ? WHERE chain_id = ? AND sequence = ? AND state = 'Pending'",
+                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'",
                     "Failed",
                     new_status.last_updated_at,
                     reason,
                     chain_id,
-                    sequence)
+                    sequence,
+                    provider,
+                    request_tx_hash)
                     .execute(pool)
                     .await
                     .unwrap();

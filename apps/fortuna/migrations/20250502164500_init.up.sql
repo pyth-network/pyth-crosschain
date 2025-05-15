@@ -1,5 +1,6 @@
 CREATE TABLE request(
                     chain_id VARCHAR(255) NOT NULL,
+                    provider VARCHAR(255) NOT NULL,
                     sequence INTEGER NOT NULL,
                     created_at DATETIME NOT NULL,
                     last_updated_at DATETIME NOT NULL,
@@ -10,7 +11,7 @@ CREATE TABLE request(
                     reveal_block_number INT,
                     reveal_tx_hash VARCHAR(255),
                     info TEXT,
-                    PRIMARY KEY (chain_id, sequence)
+                    PRIMARY KEY (chain_id, sequence, provider, request_tx_hash)
 );
 
 CREATE INDEX idx_request_sequence ON request (sequence);

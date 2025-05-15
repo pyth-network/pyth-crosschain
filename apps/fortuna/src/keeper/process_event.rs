@@ -41,6 +41,7 @@ pub async fn process_event_with_backoff(
     tracing::info!("Started processing event");
     let mut status = RequestStatus {
         chain_id: chain_state.id.clone(),
+        provider: event.provider_address,
         sequence: event.sequence_number,
         created_at: chrono::Utc::now(),
         last_updated_at: chrono::Utc::now(),

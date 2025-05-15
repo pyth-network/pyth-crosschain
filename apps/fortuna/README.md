@@ -11,15 +11,29 @@ Each blockchain is configured in `config.yaml`.
 ## Build & Test
 
 We use sqlx query macros to check the SQL queries at compile time. This requires
-a database to be available at build time. You can create an sqlite db and apply the schema migrations on it
-via the following command:
+a database to be available at build time. Create a `.env` file in the root of the project with the following content:
+
+```
+DATABASE_URL="sqlite:fortuna.db?mode=rwc"
+```
+
+Next, you need to create the database and apply the schema migrations. You can do this by running:
 
 ```bash
-DATABASE_URL="sqlite:fortuna.db?mode=rwc" cargo sqlx migrate run
+cargo sqlx migrate run # automatically picks up the .env file
 ```
+This will create a SQLite database file called `fortuna.db` in the root of the project and apply the schema migrations to it.
+This will allow `cargo check` to check the queries against the existing database.
 
 Fortuna uses Cargo for building and dependency management.
 Simply run `cargo build` and `cargo test` to build and test the project.
+
+If you have changed any queries in the code, you need to update the .sqlx folder with the new queries:
+
+```bash
+cargo sqlx prepare
+```
+Please add the changed files in the `.sqlx` folder to your git commit.
 
 ## Command-Line Interface
 
