@@ -1,0 +1,74 @@
+@use "../theme";
+
+.html {
+  padding-right: 0 !important;
+
+  --header-height: #{theme.spacing(18)};
+
+  @each $name, $breakpoint in theme.$breakpoints {
+    --breakpoint-#{$name}: #{$breakpoint};
+  }
+
+  @include theme.breakpoint("md") {
+    --header-height: #{theme.spacing(20)};
+  }
+
+  .body {
+    background: black;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    line-height: 1;
+
+    *::selection {
+      color: theme.color("selection", "foreground");
+      background: theme.color("selection", "background");
+    }
+
+    .appShell {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      grid-template-columns: 100%;
+      color: theme.color("foreground");
+      background: theme.color("background", "primary");
+      border-top-left-radius: calc(var(--offset) * theme.border-radius("xl"));
+      border-top-right-radius: calc(var(--offset) * theme.border-radius("xl"));
+      overflow: hidden auto;
+      transform: scale(calc(100% - (var(--offset) * 5%)));
+      height: 100dvh;
+      scrollbar-gutter: stable;
+
+      .header {
+        z-index: 1;
+      }
+
+      .main {
+        isolation: isolate;
+        padding-top: theme.spacing(4);
+
+        @include theme.breakpoint("sm") {
+          min-height: unset;
+          padding-top: theme.spacing(6);
+        }
+      }
+
+      .mainNavTabs {
+        display: none;
+
+        @include theme.breakpoint("sm") {
+          display: flex;
+        }
+      }
+
+      .mobileNavTabs {
+        @include theme.breakpoint("sm") {
+          display: none;
+        }
+      }
+
+      .footer {
+        margin-top: theme.spacing(20);
+      }
+    }
+  }
+}

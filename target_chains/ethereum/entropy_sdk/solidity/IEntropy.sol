@@ -2,9 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "./EntropyEvents.sol";
+import "./EntropyEventsV2.sol";
 import "./EntropyStructsV2.sol";
+import "./IEntropyV2.sol";
 
-interface IEntropy is EntropyEvents {
+interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
     // and initial commitment. Re-registering the same provider rotates the provider's commitment (and updates
     // the feeInWei).
@@ -59,26 +61,6 @@ interface IEntropy is EntropyEvents {
         bytes32 userRandomNumber
     ) external payable returns (uint64 assignedSequenceNumber);
 
-    // Request a random number from `provider`, getting a callback with the result.
-    // The caller must specify a provider to fulfill the request -- `getDefaultProvider()` is a sane default --
-    // and a `userRandomNumber` to combine into the result. The method returns a sequence number which callers
-    // should save to correlate the request with the callback.
-    //
-    // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
-    // The `entropyCallback` method on that interface will receive a callback with the returned sequence number and
-    // the generated random number. `entropyCallback` will be run with the `gasLimit` provided to this function.
-    // The `gasLimit` will be rounded up to a multiple of 10k (e.g., 19000 -> 20000), and furthermore is lower bounded
-    // by the provider's configured default limit.
-    //
-    // This method will revert unless the caller provides a sufficient fee (at least `getFeeForGas(provider, gasLimit)`) as msg.value.
-    // Note that provider fees can change over time. Thus, callers of this method should explictly compute `getFeeForGas(provider, gasLimit)`
-    // prior to each invocation (as opposed to  hardcoding a value). Further note that excess value is *not* refunded to the caller.
-    function requestWithCallbackAndGasLimit(
-        address provider,
-        bytes32 userRandomNumber,
-        uint32 gasLimit
-    ) external payable returns (uint64 assignedSequenceNumber);
-
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
     // the corresponding random number.
@@ -114,31 +96,14 @@ interface IEntropy is EntropyEvents {
         address provider
     ) external view returns (EntropyStructs.ProviderInfo memory info);
 
-    function getProviderInfoV2(
-        address provider
-    ) external view returns (EntropyStructsV2.ProviderInfo memory info);
-
-    function getDefaultProvider() external view returns (address provider);
-
     function getRequest(
         address provider,
         uint64 sequenceNumber
     ) external view returns (EntropyStructs.Request memory req);
 
-    function getRequestV2(
-        address provider,
-        uint64 sequenceNumber
-    ) external view returns (EntropyStructsV2.Request memory req);
-
     // Get the fee charged by provider for a request with the default gasLimit (`request` or `requestWithCallback`).
-    // If you are calling `requestWithCallbackAndGasLimit`, please use `getFeeForGas`.
+    // If you are calling any of the `requestV2` methods, please use `getFeeV2`.
     function getFee(address provider) external view returns (uint128 feeAmount);
-
-    // Get the fee charged by `provider` for a request with a specific `gasLimit` (`requestWithCallbackAndGasLimit`).
-    function getFeeForGas(
-        address provider,
-        uint32 gasLimit
-    ) external view returns (uint128 feeAmount);
 
     function getAccruedPythFees()
         external

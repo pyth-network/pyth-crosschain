@@ -884,3 +884,28 @@
   rpcUrl: https://carrot.megaeth.com/rpc
   networkId: 6342
   type: EvmChain
+- id: converge_testnet
+  mainnet: false
+  rpcUrl: https://rpc-converge-testnet-0.t.conduit.xyz
+  networkId: 52085144
+  type: EvmChain
+- id: worldchain
+  mainnet: true
+  rpcUrl: https://worldchain-mainnet.g.alchemy.com/public
+  networkId: 480
+  type: EvmChain
+- id: worldchain_testnet
+  mainnet: false
+  rpcUrl: https://worldchain-sepolia.g.alchemy.com/public
+  networkId: 4801
+  type: EvmChain
+- id: swellchain_testnet
+  mainnet: false
+  rpcUrl: https://swell-testnet.alt.technology
+  networkId: 1924
+  type: EvmChain
+- id: swellchain
+  mainnet: true
+  rpcUrl: https://swell-mainnet.alt.technology
+  networkId: 1923
+  type: EvmChain

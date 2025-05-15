@@ -1,17 +1,23 @@
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { Flask } from "@phosphor-icons/react/dist/ssr/Flask";
+import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
-import { Drawer } from "@pythnetwork/component-library/Drawer";
 import { InfoBox } from "@pythnetwork/component-library/InfoBox";
 import { Select } from "@pythnetwork/component-library/Select";
 import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { Table } from "@pythnetwork/component-library/Table";
+import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
+import { StateType, useData } from "@pythnetwork/component-library/useData";
+import { useDrawer } from "@pythnetwork/component-library/useDrawer";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { useMountEffect } from "@react-hookz/web";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { useQueryState, parseAsString } from "nuqs";
 import type { ReactNode } from "react";
-import { Suspense, useState, useRef, useCallback, useMemo } from "react";
+import { Suspense, useState, useCallback, useMemo, useTransition } from "react";
 import {
   RouterProvider,
   useDateFormatter,
@@ -22,7 +28,6 @@ import type { CategoricalChartState } from "recharts/types/chart/types";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
-import { StateType, useData } from "../../hooks/use-data";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import type { Status } from "../../status";
 import { LiveConfidence, LivePrice, LiveComponentValue } from "../LivePrices";
@@ -37,10 +42,8 @@ const LineChart = dynamic(
   },
 );
 
-type Props = {
-  onClose: () => void;
-  title: ReactNode;
-  headingExtra?: ReactNode | undefined;
+type PriceComponent = {
+  name: ReactNode;
   publisherKey: string;
   symbol: string;
   displaySymbol: string;
@@ -50,50 +53,279 @@ type Props = {
   rank: number | undefined;
   status: Status;
   identifiesPublisher?: boolean | undefined;
-  navigateHref: string;
-  firstEvaluation: Date;
+  firstEvaluation?: Date | undefined;
   cluster: Cluster;
 };
 
-export const PriceComponentDrawer = ({
-  publisherKey,
-  onClose,
-  symbol,
-  displaySymbol,
-  assetClass,
-  feedKey,
-  score,
-  rank,
-  title,
-  status,
-  headingExtra,
-  navigateHref,
-  firstEvaluation,
-  cluster,
+export const usePriceComponentDrawer = ({
+  components,
   identifiesPublisher,
-}: Props) => {
-  const goToPriceFeedPageOnClose = useRef<boolean>(false);
-  const [isFeedDrawerOpen, setIsFeedDrawerOpen] = useState(true);
+}: {
+  components: PriceComponent[];
+  identifiesPublisher?: boolean | undefined;
+}) => {
+  const logger = useLogger();
+  const drawer = useDrawer();
   const router = useRouter();
-  const handleClose = useCallback(
-    (isOpen: boolean) => {
-      if (!isOpen) {
-        setIsFeedDrawerOpen(false);
+  const [isRouting, startTransition] = useTransition();
+
+  const navigate = useCallback(
+    (route: string) => {
+      startTransition(() => {
+        router.push(route);
+        drawer.close().catch((error: unknown) => {
+          logger.error(error);
+        });
+      });
+    },
+    [router, startTransition, logger, drawer],
+  );
+
+  const [selectedComponentId, setSelectedComponentId] = useQueryState(
+    identifiesPublisher ? "publisher" : "priceFeed",
+    parseAsString.withDefault(""),
+  );
+
+  const updateSelectedComponentId = useCallback(
+    (componentId: string) => {
+      if (!isRouting) {
+        setSelectedComponentId(componentId).catch((error: unknown) => {
+          logger.error(error);
+        });
       }
     },
-    [setIsFeedDrawerOpen],
+    [setSelectedComponentId, isRouting, logger],
   );
-  const handleCloseFinish = useCallback(() => {
-    if (goToPriceFeedPageOnClose.current) {
-      router.push(navigateHref);
-    } else {
-      onClose();
+
+  const clearSelectedComponent = useCallback(() => {
+    updateSelectedComponentId("");
+  }, [updateSelectedComponentId]);
+
+  useMountEffect(() => {
+    if (selectedComponentId) {
+      const component = components.find(
+        (component) =>
+          component[identifiesPublisher ? "publisherKey" : "feedKey"],
+      );
+      if (component) {
+        openDrawer(component);
+      }
     }
-  }, [router, onClose, navigateHref]);
-  const handleOpenFeed = useCallback(() => {
-    goToPriceFeedPageOnClose.current = true;
-    setIsFeedDrawerOpen(false);
-  }, [setIsFeedDrawerOpen]);
+  });
+
+  const openDrawer = useCallback(
+    (component: PriceComponent) => {
+      drawer.open({
+        title: component.name,
+        className: styles.priceComponentDrawer ?? "",
+        bodyClassName: styles.priceComponentDrawerBody ?? "",
+        onClose: clearSelectedComponent,
+        headingExtra: (
+          <RouterProvider navigate={navigate}>
+            <HeadingExtra
+              identifiesPublisher={identifiesPublisher}
+              status={component.status}
+              cluster={component.cluster}
+              publisherKey={component.publisherKey}
+              symbol={component.symbol}
+            />
+          </RouterProvider>
+        ),
+        headingAfter: (
+          <div className={styles.badges}>
+            <StatusComponent status={component.status} />
+          </div>
+        ),
+        contents: (
+          <RouterProvider navigate={navigate}>
+            {component.cluster === Cluster.PythtestConformance && (
+              <InfoBox
+                icon={<Flask />}
+                header={`This publisher is in test`}
+                className={styles.testFeedMessage}
+              >
+                This is a test publisher. Its prices are not included in the
+                Pyth aggregate price for {component.displaySymbol}.
+              </InfoBox>
+            )}
+            <div className={styles.stats}>
+              <StatCard
+                nonInteractive
+                header={
+                  <>
+                    Aggregated <PriceName assetClass={component.assetClass} />
+                  </>
+                }
+                small
+                stat={
+                  <LivePrice
+                    feedKey={component.feedKey}
+                    cluster={component.cluster}
+                  />
+                }
+              />
+              <StatCard
+                nonInteractive
+                header={
+                  <>
+                    Publisher <PriceName assetClass={component.assetClass} />
+                  </>
+                }
+                variant="primary"
+                small
+                stat={
+                  <LivePrice
+                    feedKey={component.feedKey}
+                    publisherKey={component.publisherKey}
+                    cluster={component.cluster}
+                  />
+                }
+              />
+              <StatCard
+                nonInteractive
+                header="Publisher Confidence"
+                small
+                stat={
+                  <LiveConfidence
+                    feedKey={component.feedKey}
+                    publisherKey={component.publisherKey}
+                    cluster={component.cluster}
+                  />
+                }
+              />
+              <StatCard
+                nonInteractive
+                header="Last Slot"
+                small
+                stat={
+                  <LiveComponentValue
+                    feedKey={component.feedKey}
+                    publisherKey={component.publisherKey}
+                    field="publishSlot"
+                    cluster={component.cluster}
+                  />
+                }
+              />
+              <StatCard
+                nonInteractive
+                header="Score"
+                small
+                stat={
+                  component.score ? (
+                    <Score fill score={component.score} />
+                  ) : (
+                    <></>
+                  )
+                }
+              />
+              <StatCard
+                nonInteractive
+                header="Quality Rank"
+                small
+                stat={component.rank ?? <></>}
+              />
+            </div>
+            {component.firstEvaluation && (
+              <ScoreBreakdown
+                firstEvaluation={component.firstEvaluation}
+                cluster={component.cluster}
+                publisherKey={component.publisherKey}
+                symbol={component.symbol}
+              />
+            )}
+          </RouterProvider>
+        ),
+      });
+    },
+    [clearSelectedComponent, drawer, identifiesPublisher, navigate],
+  );
+
+  const selectComponent = useCallback(
+    (component: PriceComponent) => {
+      updateSelectedComponentId(
+        component[identifiesPublisher ? "publisherKey" : "feedKey"],
+      );
+      openDrawer(component);
+    },
+    [updateSelectedComponentId, openDrawer, identifiesPublisher],
+  );
+
+  return { selectComponent };
+};
+
+type HeadingExtraProps = {
+  status: Status;
+  identifiesPublisher?: boolean | undefined;
+  cluster: Cluster;
+  publisherKey: string;
+  symbol: string;
+};
+
+const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
+  return (
+    <>
+      <div className={styles.bigScreenBadges}>
+        <StatusComponent status={status} />
+      </div>
+      <OpenButton
+        variant="ghost"
+        hideText
+        beforeIcon={ArrowSquareOut}
+        rounded
+        className={styles.ghostOpenButton ?? ""}
+        {...props}
+      />
+      <OpenButton
+        variant="outline"
+        className={styles.outlineOpenButton ?? ""}
+        {...props}
+      />
+    </>
+  );
+};
+
+type OpenButtonProps = Omit<ButtonProps<typeof UnstyledButton>, "children"> & {
+  identifiesPublisher?: boolean | undefined;
+  cluster: Cluster;
+  publisherKey: string;
+  symbol: string;
+};
+
+const OpenButton = ({
+  identifiesPublisher,
+  cluster,
+  publisherKey,
+  symbol,
+  ...props
+}: OpenButtonProps) => {
+  const href = useMemo(
+    () =>
+      identifiesPublisher
+        ? `/publishers/${ClusterToName[cluster]}/${publisherKey}`
+        : `/price-feeds/${encodeURIComponent(symbol)}`,
+    [identifiesPublisher, cluster, publisherKey, symbol],
+  );
+
+  return (
+    <Button size="sm" href={href} {...props}>
+      Open {identifiesPublisher ? "Publisher" : "Feed"}
+    </Button>
+  );
+};
+
+type ScoreBreakdownProps = {
+  firstEvaluation: Date;
+  cluster: Cluster;
+  publisherKey: string;
+  symbol: string;
+};
+
+const ScoreBreakdown = ({
+  firstEvaluation,
+  cluster,
+  publisherKey,
+  symbol,
+}: ScoreBreakdownProps) => {
   const { selectedPeriod, setSelectedPeriod, evaluationPeriods } =
     useEvaluationPeriods(firstEvaluation);
   const scoreHistoryState = useData(
@@ -102,152 +334,32 @@ export const PriceComponentDrawer = ({
   );
 
   return (
-    <Drawer
-      onOpenChange={handleClose}
-      onCloseFinish={handleCloseFinish}
-      title={title}
-      headingExtra={
-        <>
-          <div className={styles.bigScreenBadges}>
-            {headingExtra}
-            <StatusComponent status={status} />
-          </div>
-          <RouterProvider navigate={handleOpenFeed}>
-            <Button
-              size="sm"
-              variant="ghost"
-              href={navigateHref}
-              hideText
-              beforeIcon={ArrowSquareOut}
-              rounded
-              className={styles.ghostOpenButton ?? ""}
-            >
-              Open {identifiesPublisher ? "Publisher" : "Feed"}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              href={navigateHref}
-              className={styles.outlineOpenButton ?? ""}
-            >
-              Open {identifiesPublisher ? "Publisher" : "Feed"}
-            </Button>
-          </RouterProvider>
-        </>
+    <Card
+      title="Score Breakdown"
+      nonInteractive
+      className={styles.rankingBreakdown}
+      toolbar={
+        <Select
+          size="sm"
+          variant="outline"
+          hideLabel
+          label="Evaluation Period"
+          selectedKey={selectedPeriod.label}
+          onSelectionChange={(label) => {
+            const evaluationPeriod = evaluationPeriods.find(
+              (period) => period.label === label,
+            );
+            if (evaluationPeriod) {
+              setSelectedPeriod(evaluationPeriod);
+            }
+          }}
+          options={evaluationPeriods.map(({ label }) => ({ id: label }))}
+          placement="bottom end"
+        />
       }
-      headingAfter={
-        <div className={styles.badges}>
-          {headingExtra}
-          <StatusComponent status={status} />
-        </div>
-      }
-      isOpen={isFeedDrawerOpen}
-      className={styles.priceComponentDrawer ?? ""}
-      bodyClassName={styles.priceComponentDrawerBody ?? ""}
     >
-      {cluster === Cluster.PythtestConformance && (
-        <InfoBox
-          icon={<Flask />}
-          header={`This publisher is in test`}
-          className={styles.testFeedMessage}
-        >
-          This is a test publisher. Its prices are not included in the Pyth
-          aggregate price for {displaySymbol}.
-        </InfoBox>
-      )}
-      <div className={styles.stats}>
-        <StatCard
-          nonInteractive
-          header={
-            <>
-              Aggregated <PriceName assetClass={assetClass} />
-            </>
-          }
-          small
-          stat={<LivePrice feedKey={feedKey} cluster={cluster} />}
-        />
-        <StatCard
-          nonInteractive
-          header={
-            <>
-              Publisher <PriceName assetClass={assetClass} />
-            </>
-          }
-          variant="primary"
-          small
-          stat={
-            <LivePrice
-              feedKey={feedKey}
-              publisherKey={publisherKey}
-              cluster={cluster}
-            />
-          }
-        />
-        <StatCard
-          nonInteractive
-          header="Publisher Confidence"
-          small
-          stat={
-            <LiveConfidence
-              feedKey={feedKey}
-              publisherKey={publisherKey}
-              cluster={cluster}
-            />
-          }
-        />
-        <StatCard
-          nonInteractive
-          header="Last Slot"
-          small
-          stat={
-            <LiveComponentValue
-              feedKey={feedKey}
-              publisherKey={publisherKey}
-              field="publishSlot"
-              cluster={cluster}
-            />
-          }
-        />
-        <StatCard
-          nonInteractive
-          header="Score"
-          small
-          stat={score ? <Score fill score={score} /> : <></>}
-        />
-        <StatCard
-          nonInteractive
-          header="Quality Rank"
-          small
-          stat={rank ?? <></>}
-        />
-      </div>
-      <Card
-        title="Score Breakdown"
-        nonInteractive
-        className={styles.rankingBreakdown}
-        toolbar={
-          <Select
-            size="sm"
-            variant="outline"
-            hideLabel
-            label="Evaluation Period"
-            selectedKey={selectedPeriod.label}
-            onSelectionChange={(label) => {
-              const evaluationPeriod = evaluationPeriods.find(
-                (period) => period.label === label,
-              );
-              if (evaluationPeriod) {
-                setSelectedPeriod(evaluationPeriod);
-              }
-            }}
-            options={evaluationPeriods.map(({ label }) => label)}
-            placement="bottom end"
-          />
-        }
-      >
-        <ScoreHistory state={scoreHistoryState} />
-      </Card>
-    </Drawer>
+      <ScoreHistory state={scoreHistoryState} />
+    </Card>
   );
 };
 

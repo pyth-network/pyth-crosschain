@@ -1,6 +1,5 @@
+import { CopyButton } from "@pythnetwork/component-library/CopyButton";
 import type { ComponentProps } from "react";
-
-import { CopyButton } from "../CopyButton";
 
 type KeyProps = Omit<
   ComponentProps<typeof CopyButton>,

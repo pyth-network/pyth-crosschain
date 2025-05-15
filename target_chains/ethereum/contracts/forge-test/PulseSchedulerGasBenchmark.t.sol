@@ -24,21 +24,22 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         manager = address(1);
         admin = address(2);
         pyth = address(3);
-
-        SchedulerUpgradeable _scheduler = new SchedulerUpgradeable();
-        proxy = new ERC1967Proxy(address(_scheduler), "");
-        scheduler = SchedulerUpgradeable(address(proxy));
-
         uint128 minBalancePerFeed = 10 ** 16; // 0.01 ether
         uint128 keeperFee = 10 ** 15; // 0.001 ether
 
-        scheduler.initialize(
-            manager,
-            admin,
-            pyth,
-            minBalancePerFeed,
-            keeperFee
+        SchedulerUpgradeable _scheduler = new SchedulerUpgradeable();
+        proxy = new ERC1967Proxy(
+            address(_scheduler),
+            abi.encodeWithSelector(
+                SchedulerUpgradeable.initialize.selector,
+                manager,
+                admin,
+                pyth,
+                minBalancePerFeed,
+                keeperFee
+            )
         );
+        scheduler = SchedulerUpgradeable(address(proxy));
 
         // Start tests at a high timestamp to avoid underflow when we set
         // `minPublishTime = timestamp - 1 hour` in updatePriceFeeds
@@ -70,14 +71,13 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         );
 
         // Mock Pyth response for the benchmark
-        mockParsePriceFeedUpdatesWithSlots(pyth, newPriceFeeds, newSlots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, newPriceFeeds, newSlots);
 
         // Actual benchmark: Measure gas for updating price feeds
         uint256 startGas = gasleft();
         scheduler.updatePriceFeeds(
             subscriptionId,
-            createMockUpdateData(newPriceFeeds),
-            params.priceIds
+            createMockUpdateData(newPriceFeeds)
         );
         uint256 updateGasUsed = startGas - gasleft();
 
@@ -114,10 +114,6 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
             address(manager)
         );
 
-        // Fetch the price IDs
-        (SchedulerState.SubscriptionParams memory params, ) = scheduler
-            .getSubscription(subscriptionId);
-
         // Create initial price feed updates
         uint64 publishTime = SafeCast.toUint64(block.timestamp);
         PythStructs.PriceFeed[] memory priceFeeds;
@@ -128,12 +124,12 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
             numFeeds
         );
 
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Update the price feeds. We should have enough balance to cover the update
         // because we funded the subscription with the minimum balance during creation.
-        scheduler.updatePriceFeeds(subscriptionId, updateData, params.priceIds);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
         return subscriptionId;
     }
 
@@ -227,4 +223,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
     function testGetActiveSubscriptions1000() public {
         _runGetActiveSubscriptionsBenchmark(1000);
     }
+
+    // Allow the contract to receive Ether (for keeper payments during tests)
+    receive() external payable {}
 }

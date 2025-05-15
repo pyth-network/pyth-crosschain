@@ -1,0 +1,15 @@
+[package]
+name = "Pyth"
+version = "0.0.2"
+published-at = "0x7792c84e1f8683dac893126712f7cf3ba5fcc82450839f0a481215f60199769f"
+
+[dependencies.Iota]
+git = "https://github.com/iotaledger/iota.git"
+subdir = "crates/iota-framework/packages/iota-framework"
+rev = "751c23caf24efd071463b9ffd07eabcb15f44f31"
+
+[dependencies.Wormhole]
+local = "../vendor/wormhole_iota_mainnet/wormhole"
+
+[addresses]
+pyth = "0x7792c84e1f8683dac893126712f7cf3ba5fcc82450839f0a481215f60199769f"

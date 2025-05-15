@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { StatCard as StatCardComponent } from "./index.js";
-import cardMeta, { Card as CardStory } from "../Card/index.stories.js";
+import { StatCard as StatCardComponent } from "./index.jsx";
+import cardMeta, { Card as CardStory } from "../Card/index.stories.jsx";
 
 const cardMetaArgTypes = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -11,6 +11,9 @@ const cardMetaArgTypes = () => {
 
 const meta = {
   component: StatCardComponent,
+  parameters: {
+    layout: "padded",
+  },
   argTypes: {
     ...cardMetaArgTypes(),
     header: {

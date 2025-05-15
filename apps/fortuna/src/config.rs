@@ -110,9 +110,6 @@ pub struct EthereumConfig {
     /// TODO: Change type from String to Url
     pub geth_rpc_addr: String,
 
-    /// URL of a Geth RPC wss endpoint to use for subscribing to blockchain events.
-    pub geth_rpc_wss: Option<String>,
-
     /// Address of a Pyth Randomness contract to interact with.
     pub contract_addr: Address,
 

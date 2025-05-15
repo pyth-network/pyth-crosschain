@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity ^0.8.0;
-
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -31,8 +30,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     function createSubscription(
         SubscriptionParams memory subscriptionParams
     ) external payable override returns (uint256 subscriptionId) {
-        // Validate params and set default gas config
-        _validateAndPrepareSubscriptionParams(subscriptionParams);
+        _validateSubscriptionParams(subscriptionParams);
 
         // Calculate minimum balance required for this subscription
         uint256 minimumBalance = this.getMinimumBalance(
@@ -98,15 +96,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             emit SubscriptionUpdated(subscriptionId);
             return;
         }
+        _validateSubscriptionParams(newParams);
 
-        // Validate the new parameters, including setting default gas config
-        _validateAndPrepareSubscriptionParams(newParams);
-
-        // Check minimum balance if number of feeds increases and subscription remains active
-        if (
-            willBeActive &&
-            newParams.priceIds.length > currentParams.priceIds.length
-        ) {
+        // Check minimum balance if subscription remains active
+        if (willBeActive) {
             uint256 minimumBalance = this.getMinimumBalance(
                 uint8(newParams.priceIds.length)
             );
@@ -151,11 +144,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     }
 
     /**
-     * @notice Validates subscription parameters and sets default gas config if needed.
-     * @dev This function modifies the passed-in params struct in place for gas config defaults.
-     * @param params The subscription parameters to validate and prepare.
+     * @notice Validates subscription parameters.
+     * @param params The subscription parameters to validate.
      */
-    function _validateAndPrepareSubscriptionParams(
+    function _validateSubscriptionParams(
         SubscriptionParams memory params
     ) internal pure {
         // No zero‐feed subscriptions
@@ -247,9 +239,10 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
     function updatePriceFeeds(
         uint256 subscriptionId,
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds
+        bytes[] calldata updateData
     ) external override {
+        uint256 startGas = gasleft();
+
         SubscriptionStatus storage status = _state.subscriptionStatuses[
             subscriptionId
         ];
@@ -261,43 +254,33 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InactiveSubscription();
         }
 
-        // Verify price IDs match subscription
-        if (priceIds.length != params.priceIds.length) {
-            revert InvalidPriceIdsLength(priceIds[0], params.priceIds[0]);
-        }
-
-        // Keepers must provide priceIds in the exact same order as defined in the subscription
-        for (uint8 i = 0; i < priceIds.length; i++) {
-            if (priceIds[i] != params.priceIds[i]) {
-                revert InvalidPriceId(priceIds[i], params.priceIds[i]);
-            }
-        }
-
         // Get the Pyth contract and parse price updates
         IPyth pyth = IPyth(_state.pyth);
         uint256 pythFee = pyth.getUpdateFee(updateData);
 
-        // Check if subscription has enough balance
+        // If we don't have enough balance, revert
         if (status.balanceInWei < pythFee) {
             revert InsufficientBalance();
         }
 
-        // Parse the price feed updates with an acceptable timestamp range of [-1h, +10s] from now.
-        // We will validate the trigger conditions ourselves.
+        // Parse the price feed updates with an acceptable timestamp range of [0, now+10s].
+        // Note: We don't want to reject update data if it contains a price
+        // from a market that closed a few days ago, since it will contain a timestamp
+        // from the last trading period. Thus, we use a minimum timestamp of zero while parsing,
+        // and we enforce the past max validity ourselves in _validateShouldUpdatePrices using
+        // the highest timestamp in the update data.
         uint64 curTime = SafeCast.toUint64(block.timestamp);
-        uint64 maxPublishTime = curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD;
-        uint64 minPublishTime = curTime > PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
-            ? curTime - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD
-            : 0;
         (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
-        ) = pyth.parsePriceFeedUpdatesWithSlots{value: pythFee}(
+        ) = pyth.parsePriceFeedUpdatesWithSlotsStrict{value: pythFee}(
                 updateData,
-                priceIds,
-                minPublishTime,
-                maxPublishTime
+                params.priceIds,
+                0, // We enforce the past max validity ourselves in _validateShouldUpdatePrices
+                curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
             );
+        status.balanceInWei -= pythFee;
+        status.totalSpent += pythFee;
 
         // Verify all price feeds have the same Pythnet slot.
         // All feeds in a subscription must be updated at the same time.
@@ -310,38 +293,22 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
         // Verify that update conditions are met, and that the timestamp
         // is more recent than latest stored update's. Reverts if not.
-        _validateShouldUpdatePrices(subscriptionId, params, status, priceFeeds);
-
-        // Store the price updates, update status, and emit event
-        _storePriceUpdatesAndStatus(
+        uint256 latestPublishTime = _validateShouldUpdatePrices(
             subscriptionId,
+            params,
             status,
-            priceFeeds,
-            pythFee
+            priceFeeds
         );
-    }
 
-    /**
-     * @notice Stores the price updates, updates subscription status, and emits event.
-     */
-    function _storePriceUpdatesAndStatus(
-        uint256 subscriptionId,
-        SubscriptionStatus storage status,
-        PythStructs.PriceFeed[] memory priceFeeds,
-        uint256 pythFee
-    ) internal {
-        // Store the price updates
-        for (uint8 i = 0; i < priceFeeds.length; i++) {
-            _state.priceUpdates[subscriptionId][priceFeeds[i].id] = priceFeeds[
-                i
-            ];
-        }
-        status.priceLastUpdatedAt = priceFeeds[0].price.publishTime;
-        status.balanceInWei -= pythFee;
-        status.totalUpdates += 1;
-        status.totalSpent += pythFee;
+        // Update status and store the updates
+        status.priceLastUpdatedAt = latestPublishTime;
+        status.totalUpdates += priceFeeds.length;
 
-        emit PricesUpdated(subscriptionId, priceFeeds[0].price.publishTime);
+        _storePriceUpdates(subscriptionId, priceFeeds);
+
+        _processFeesAndPayKeeper(status, startGas, params.priceIds.length);
+
+        emit PricesUpdated(subscriptionId, latestPublishTime);
     }
 
     /**
@@ -350,13 +317,14 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      * @param params The subscription's parameters struct.
      * @param status The subscription's status struct.
      * @param priceFeeds The array of price feeds to validate.
+     * @return The timestamp of the update if the trigger criteria is met, reverts if not met.
      */
     function _validateShouldUpdatePrices(
         uint256 subscriptionId,
         SubscriptionParams storage params,
         SubscriptionStatus storage status,
         PythStructs.PriceFeed[] memory priceFeeds
-    ) internal view returns (bool) {
+    ) internal view returns (uint256) {
         // Use the most recent timestamp, as some asset markets may be closed.
         // Closed markets will have a publishTime from their last trading period.
         // Since we verify all updates share the same Pythnet slot, we still ensure
@@ -366,6 +334,18 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             if (priceFeeds[i].price.publishTime > updateTimestamp) {
                 updateTimestamp = priceFeeds[i].price.publishTime;
             }
+        }
+
+        // Calculate the minimum acceptable timestamp (clamped at 0)
+        // The maximum acceptable timestamp is enforced by the parsePriceFeedUpdatesWithSlots call
+        uint256 minAllowedTimestamp = (block.timestamp >
+            PAST_TIMESTAMP_MAX_VALIDITY_PERIOD)
+            ? (block.timestamp - PAST_TIMESTAMP_MAX_VALIDITY_PERIOD)
+            : 0;
+
+        // Validate that the update timestamp is not too old
+        if (updateTimestamp < minAllowedTimestamp) {
+            revert TimestampTooOld(updateTimestamp, block.timestamp);
         }
 
         // Reject updates if they're older than the latest stored ones
@@ -388,7 +368,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 updateTimestamp >=
                 lastUpdateTime + params.updateCriteria.heartbeatSeconds
             ) {
-                return true;
+                return updateTimestamp;
             }
         }
 
@@ -401,7 +381,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
 
                 // If there's no previous price, this is the first update
                 if (previousFeed.id == bytes32(0)) {
-                    return true;
+                    return updateTimestamp;
                 }
 
                 // Calculate the deviation percentage
@@ -428,7 +408,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 if (
                     deviationBps >= params.updateCriteria.deviationThresholdBps
                 ) {
-                    return true;
+                    return updateTimestamp;
                 }
             }
         }
@@ -463,7 +443,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                     params.priceIds.length
                 );
             for (uint8 i = 0; i < params.priceIds.length; i++) {
-                PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+                PythStructs.PriceFeed memory priceFeed = _state.priceUpdates[
                     subscriptionId
                 ][params.priceIds[i]];
                 // Check if the price feed exists (price ID is valid and has been updated)
@@ -481,7 +461,7 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 priceIds.length
             );
         for (uint8 i = 0; i < priceIds.length; i++) {
-            PythStructs.PriceFeed storage priceFeed = _state.priceUpdates[
+            PythStructs.PriceFeed memory priceFeed = _state.priceUpdates[
                 subscriptionId
             ][priceIds[i]];
 
@@ -735,6 +715,56 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             // Remove the last element
             _state.activeSubscriptionIds.pop();
             _state.activeSubscriptionIndex[subscriptionId] = 0;
+        }
+    }
+
+    /**
+     * @notice Internal function to store the parsed price feeds.
+     * @param subscriptionId The ID of the subscription.
+     * @param priceFeeds The array of price feeds to store.
+     */
+    function _storePriceUpdates(
+        uint256 subscriptionId,
+        PythStructs.PriceFeed[] memory priceFeeds
+    ) internal {
+        for (uint8 i = 0; i < priceFeeds.length; i++) {
+            _state.priceUpdates[subscriptionId][priceFeeds[i].id] = priceFeeds[
+                i
+            ];
+        }
+    }
+
+    /**
+     * @notice Internal function to calculate total fees, deduct from balance, and pay the keeper.
+     * @dev This function sends funds to `msg.sender`, so be sure that this is being called by a keeper.
+     * @dev Note that the Pyth fee is already paid in the parsePriceFeedUpdatesWithSlots call.
+     * @param status Storage reference to the subscription's status.
+     * @param startGas Gas remaining at the start of the parent function call.
+     * @param numPriceIds Number of price IDs being updated.
+     */
+    function _processFeesAndPayKeeper(
+        SubscriptionStatus storage status,
+        uint256 startGas,
+        uint256 numPriceIds
+    ) internal {
+        // Calculate fee components
+        uint256 gasCost = (startGas - gasleft() + GAS_OVERHEAD) * tx.gasprice;
+        uint256 keeperSpecificFee = uint256(_state.singleUpdateKeeperFeeInWei) *
+            numPriceIds;
+        uint256 totalKeeperFee = gasCost + keeperSpecificFee;
+
+        // Check balance
+        if (status.balanceInWei < totalKeeperFee) {
+            revert InsufficientBalance();
+        }
+
+        status.balanceInWei -= totalKeeperFee;
+        status.totalSpent += totalKeeperFee;
+
+        // Pay keeper and update status
+        (bool sent, ) = msg.sender.call{value: totalKeeperFee}("");
+        if (!sent) {
+            revert KeeperPaymentFailed();
         }
     }
 }

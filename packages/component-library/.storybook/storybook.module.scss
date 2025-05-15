@@ -1,20 +1,31 @@
 @use "../src/theme.scss";
 
-html,
-body {
-  height: 100%;
-  width: 100%;
+body,
+:global(#storybook-root) {
+  padding: 0 !important;
 }
 
-:root {
-  --primary-background: #{theme.color("background", "primary")};
-  --secondary-background: #{theme.color("background", "secondary")};
-}
+.contents {
+  height: 100vh;
+  width: 100vw;
+  color: theme.color("foreground");
+  background: theme.color("background", "primary");
+  display: grid;
+  place-content: center;
+  isolation: isolate;
 
-.light {
-  color-scheme: light;
-}
+  &[data-background="secondary"] {
+    background: theme.color("background", "secondary");
+  }
 
-.dark {
-  color-scheme: dark;
+  &[data-layout="padded"] {
+    padding: theme.spacing(10);
+    display: block;
+    place-content: unset;
+  }
+
+  &[data-layout="fullscreen"] {
+    display: block;
+    place-content: unset;
+  }
 }

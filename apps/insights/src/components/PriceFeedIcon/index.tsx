@@ -21,7 +21,7 @@ type Props = Omit<SVGProps, keyof OwnProps | "width" | "height" | "viewBox"> &
 
 export const PriceFeedIcon = ({ assetClass, symbol, ...props }: Props) => {
   if (assetClass === "Crypto") {
-    const firstPart = symbol.split("/")[0];
+    const firstPart = symbol.split(".")[1]?.split("/")[0];
     const Icon = firstPart ? (icons as SVGRecord)[firstPart] : undefined;
     return Icon ? (
       <Icon width="100%" height="100%" viewBox="0 0 32 32" {...props} />

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { TabList as TabListComponent } from "./index.js";
-import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.js";
+import { TabList as TabListComponent } from "./index.jsx";
+import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.jsx";
 
 const meta = {
   component: TabListComponent,
@@ -11,7 +11,7 @@ const meta = {
         disable: true,
       },
     },
-    pathname: {
+    currentTab: {
       table: {
         disable: true,
       },

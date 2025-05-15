@@ -1,0 +1,222 @@
+@use "../theme";
+
+.header {
+  height: theme.$header-height;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background-color: theme.color("background", "nav-blur");
+  backdrop-filter: blur(32px);
+
+  .content {
+    height: 100%;
+    justify-content: space-between;
+
+    @include theme.row;
+    @include theme.max-width;
+
+    .leftMenu {
+      @include theme.row;
+
+      flex: none;
+      gap: theme.spacing(3);
+
+      @include theme.breakpoint("sm") {
+        gap: theme.spacing(6);
+      }
+
+      .logoLink {
+        padding: theme.spacing(3);
+        margin: -#{theme.spacing(3)};
+        color: theme.color("foreground");
+
+        .logoWrapper {
+          width: theme.spacing(8);
+          height: theme.spacing(8);
+          position: relative;
+
+          @include theme.breakpoint("sm") {
+            width: theme.spacing(9);
+            height: theme.spacing(9);
+          }
+
+          .logo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+          }
+        }
+
+        .logoLabel {
+          @include theme.sr-only;
+        }
+      }
+
+      .appName {
+        font-size: theme.font-size("xl");
+        font-weight: theme.font-weight("semibold");
+        color: theme.color("heading");
+      }
+
+      .mainNavTabs {
+        display: none;
+
+        @include theme.breakpoint("sm") {
+          display: flex;
+        }
+      }
+    }
+
+    .rightMenu {
+      @include theme.row;
+
+      flex: none;
+      gap: theme.spacing(3);
+      margin-right: -#{theme.button-padding("sm", false)};
+
+      @include theme.breakpoint("lg") {
+        gap: theme.spacing(2);
+      }
+
+      .supportButton,
+      .themeSwitch,
+      .mainCta {
+        display: none;
+
+        @include theme.breakpoint("lg") {
+          display: inline-flex;
+        }
+      }
+
+      .mobileMenu {
+        @include theme.breakpoint("lg") {
+          display: none;
+        }
+      }
+
+      .themeSwitch {
+        margin-left: theme.spacing(1);
+      }
+    }
+
+    @media screen and (min-width: theme.$max-width + (2 * (theme.spacing(9) + theme.spacing(8) + theme.spacing(7)))) {
+      .leftMenu {
+        margin-left: -#{theme.spacing(9) + theme.spacing(7)};
+
+        .logoLink {
+          margin-right: -#{theme.spacing(2)};
+        }
+      }
+
+      .rightMenu {
+        margin-right: -#{theme.spacing(9) + theme.spacing(7)};
+
+        .themeSwitch {
+          margin-left: theme.spacing(5);
+        }
+      }
+    }
+  }
+}
+
+.mobileMenuContents {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;
+  gap: theme.spacing(6);
+  justify-content: space-between;
+
+  .buttons {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
+    gap: theme.spacing(6);
+  }
+
+  .theme {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: theme.spacing(2);
+
+    .themeLabel {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("muted");
+    }
+  }
+}
+
+.supportDrawer {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(8);
+
+  & > * {
+    flex: none;
+  }
+
+  .linkList {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(4);
+
+    .title {
+      @include theme.text("lg", "medium");
+
+      color: theme.color("heading");
+    }
+
+    .items {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-flow: column nowrap;
+      gap: theme.spacing(2);
+
+      .link {
+        padding: theme.spacing(3);
+        display: grid;
+        grid-template-columns: max-content 1fr max-content;
+        grid-template-rows: max-content max-content;
+        text-align: left;
+        gap: theme.spacing(2) theme.spacing(4);
+        align-items: center;
+        width: 100%;
+
+        .icon {
+          font-size: theme.spacing(8);
+          color: theme.color("states", "data", "normal");
+          grid-row: span 2 / span 2;
+          display: grid;
+          place-content: center;
+        }
+
+        .linkTitle {
+          @include theme.text("sm", "medium");
+
+          color: theme.color("heading");
+        }
+
+        .description {
+          @include theme.text("xs", "normal");
+
+          color: theme.color("muted");
+          grid-column: 2;
+          grid-row: 2;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+
+        .caret {
+          color: theme.color("states", "data", "normal");
+          font-size: theme.spacing(4);
+          grid-row: span 2 / span 2;
+        }
+      }
+    }
+  }
+}

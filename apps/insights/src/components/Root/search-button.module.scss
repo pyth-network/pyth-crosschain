@@ -1,0 +1,196 @@
+@use "@pythnetwork/component-library/theme";
+
+.searchButton {
+  .largeScreenSearchButton {
+    display: none;
+
+    @include theme.breakpoint("md") {
+      display: inline-flex;
+    }
+  }
+
+  .smallScreenSearchButton {
+    @include theme.breakpoint("md") {
+      display: none;
+    }
+  }
+}
+
+.searchDialogContents {
+  gap: theme.spacing(1);
+  display: flex;
+  flex-flow: column nowrap;
+  overflow: hidden;
+  max-height: theme.spacing(120);
+  min-height: 0;
+
+  .searchBar,
+  .left {
+    flex: none;
+    display: flex;
+    flex-flow: column nowrap;
+
+    @include theme.breakpoint("sm") {
+      flex-flow: row nowrap;
+      align-items: center;
+    }
+  }
+
+  .searchBar {
+    justify-content: space-between;
+    padding: theme.spacing(4);
+    flex: 1 0 0;
+
+    @include theme.breakpoint("sm") {
+      flex: unset;
+      padding: theme.spacing(1);
+    }
+
+    .searchInput {
+      @include theme.breakpoint("sm") {
+        width: theme.spacing(60);
+      }
+
+      @include theme.breakpoint("md") {
+        width: theme.spacing(70);
+      }
+
+      @include theme.breakpoint("lg") {
+        width: theme.spacing(90);
+      }
+    }
+  }
+
+  .left {
+    gap: theme.spacing(2);
+
+    @include theme.breakpoint("sm") {
+      gap: theme.spacing(4);
+    }
+
+    .typeFilter {
+      & > * {
+        flex: 1 0 0;
+
+        @include theme.breakpoint("sm") {
+          flex: unset;
+        }
+      }
+    }
+  }
+
+  .closeButton {
+    display: none;
+
+    @include theme.breakpoint("sm") {
+      display: inline-flex;
+    }
+  }
+
+  .body {
+    background: theme.color("background", "primary");
+    border-radius: theme.border-radius("xl");
+    flex-grow: 1;
+    overflow: auto;
+    display: flex;
+
+    .listbox {
+      outline: none;
+      overflow-y: scroll;
+      flex-grow: 1;
+
+      .item {
+        padding: theme.spacing(3) theme.spacing(4);
+        display: block;
+        cursor: pointer;
+        transition: background-color 100ms linear;
+        outline: none;
+        text-decoration: none;
+        border-top: 1px solid theme.color("background", "secondary");
+        -webkit-tap-highlight-color: transparent;
+
+        &[data-is-first] {
+          @include theme.breakpoint("sm") {
+            border-top: none;
+          }
+        }
+
+        & > *:last-child {
+          flex-shrink: 0;
+        }
+
+        &[data-focused] {
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "hover"
+          );
+        }
+
+        &[data-pressed] {
+          background-color: theme.color(
+            "button",
+            "outline",
+            "background",
+            "active"
+          );
+        }
+
+        .itemType {
+          flex-shrink: 0;
+          margin-right: theme.spacing(6);
+        }
+
+        .itemTag {
+          flex-grow: 1;
+        }
+
+        .smallScreen {
+          display: flex;
+          flex-flow: column nowrap;
+          gap: theme.spacing(2);
+
+          @include theme.breakpoint("sm") {
+            display: none;
+          }
+
+          .bottom {
+            flex-flow: column nowrap;
+            gap: theme.spacing(2);
+            display: flex;
+            margin: 0;
+
+            .field {
+              display: flex;
+              flex-flow: row nowrap;
+              justify-content: space-between;
+              gap: theme.spacing(4);
+              align-items: center;
+
+              dt {
+                color: theme.color("foreground");
+                font-weight: theme.font-weight("medium");
+                font-size: theme.font-size("sm");
+              }
+
+              dd {
+                margin: 0;
+              }
+            }
+          }
+        }
+
+        .largeScreen {
+          display: none;
+          flex-flow: row nowrap;
+          align-items: center;
+
+          @include theme.breakpoint("sm") {
+            display: flex;
+          }
+        }
+      }
+    }
+  }
+}

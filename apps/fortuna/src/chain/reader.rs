@@ -54,6 +54,7 @@ pub trait EntropyReader: Send + Sync {
         &self,
         from_block: BlockNumber,
         to_block: BlockNumber,
+        provider: Address,
     ) -> Result<Vec<RequestedWithCallbackEvent>>;
 
     /// Estimate the gas required to reveal a random number with a callback.
@@ -169,6 +170,7 @@ pub mod mock {
             &self,
             _from_block: BlockNumber,
             _to_block: BlockNumber,
+            _provider: Address,
         ) -> Result<Vec<super::RequestedWithCallbackEvent>> {
             Ok(vec![])
         }

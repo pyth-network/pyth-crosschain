@@ -7,3 +7,4 @@ export * from "./utils/clock.js";
 export * from "./utils/pool.js";
 export * from "./utils/position.js";
 export * from "./utils/vesting.js";
+export * from "./utils/wallet.js";

@@ -83,7 +83,7 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         {
             // Extract Log from TransactionReceipt.
             let l: RawLog = r.logs[0].clone().into();
-            if let PythRandomEvents::RequestedFilter(r) = PythRandomEvents::decode_log(&l)? {
+            if let PythRandomEvents::Requested1Filter(r) = PythRandomEvents::decode_log(&l)? {
                 Ok(r.request.sequence_number)
             } else {
                 Err(anyhow!("No log with sequence number"))
@@ -147,7 +147,7 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
             .await?
         {
-            if let PythRandomEvents::RevealedFilter(r) =
+            if let PythRandomEvents::Revealed1Filter(r) =
                 PythRandomEvents::decode_log(&r.logs[0].clone().into())?
             {
                 Ok(r.random_number)
@@ -268,9 +268,14 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
         &self,
         from_block: BlockNumber,
         to_block: BlockNumber,
+        provider: Address,
     ) -> Result<Vec<RequestedWithCallbackEvent>> {
         let mut event = self.requested_with_callback_filter();
-        event.filter = event.filter.from_block(from_block).to_block(to_block);
+        event.filter = event
+            .filter
+            .from_block(from_block)
+            .to_block(to_block)
+            .topic1(provider);
 
         let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
 
@@ -281,6 +286,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
                 user_random_number: r.user_random_number,
                 provider_address: r.request.provider,
             })
+            .filter(|r| r.provider_address == provider)
             .collect())
     }
 

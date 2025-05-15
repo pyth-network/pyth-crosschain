@@ -27,7 +27,6 @@
     "@next/third-parties": "catalog:",
     "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/known-publishers": "workspace:*",
-    "@pythnetwork/solana-utils": "workspace:*",
     "@pythnetwork/staking-sdk": "workspace:*",
     "@react-hookz/web": "catalog:",
     "@solana/wallet-adapter-base": "catalog:",

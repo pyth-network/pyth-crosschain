@@ -1,0 +1,161 @@
+@use "../theme";
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(from black r g b / 50%);
+  z-index: 1;
+
+  @include theme.breakpoint("sm") {
+    background: rgba(from black r g b / 30%);
+  }
+
+  .drawer {
+    position: fixed;
+    bottom: 0;
+    left: 1px;
+    right: 1px;
+    max-height: 90%;
+    outline: none;
+    background: theme.color("background", "primary");
+    border: 1px solid theme.color("border");
+    border-top-left-radius: theme.border-radius("3xl");
+    border-top-right-radius: theme.border-radius("3xl");
+    display: flex;
+    flex-flow: column nowrap;
+    overflow-y: hidden;
+
+    @include theme.breakpoint("sm") {
+      max-height: unset;
+
+      &[data-variant="dialog"] {
+        position: relative;
+        top: theme.spacing(32);
+        left: unset;
+        right: unset;
+        bottom: unset;
+        margin: 0 auto;
+        background: theme.color("background", "secondary");
+        border: unset;
+        border-radius: theme.border-radius("2xl");
+        padding: theme.spacing(1);
+        width: max-content;
+      }
+
+      &[data-variant="default"] {
+        top: theme.spacing(4);
+        bottom: theme.spacing(4);
+        left: unset;
+        right: theme.spacing(4);
+        width: 60%;
+        max-width: theme.spacing(180);
+        border-radius: theme.border-radius("3xl");
+        padding-bottom: theme.border-radius("3xl");
+      }
+    }
+
+    .handle {
+      padding: theme.spacing(3) 0;
+      touch-action: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+
+      @include theme.breakpoint("sm") {
+        display: none;
+      }
+
+      &::after {
+        display: block;
+        content: "";
+        border-radius: theme.border-radius("full");
+        background: theme.color("background", "secondary");
+        width: theme.spacing(18);
+        height: theme.spacing(1.5);
+        margin: 0 auto;
+        transition: background 40ms linear;
+      }
+
+      &[data-is-pressed]::after {
+        background: theme.color("muted");
+      }
+    }
+
+    .heading {
+      display: flex;
+      padding: theme.spacing(4);
+      flex-flow: column nowrap;
+      flex: none;
+      gap: theme.spacing(2);
+
+      .headingTop {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      @include theme.breakpoint("sm") {
+        padding-left: theme.spacing(6);
+      }
+
+      .title {
+        @include theme.h4;
+
+        color: theme.color("heading");
+        display: flex;
+        flex-flow: row nowrap;
+        gap: theme.spacing(3);
+      }
+
+      .headingEnd {
+        display: flex;
+        flex-flow: row nowrap;
+        gap: theme.spacing(3);
+        align-items: center;
+
+        .closeButton {
+          display: none;
+
+          @include theme.breakpoint("sm") {
+            display: inline-flex;
+          }
+        }
+      }
+    }
+
+    .body {
+      display: grid;
+      flex: 1;
+      overflow-y: auto;
+      grid-auto-rows: minmax(min-content, max-content);
+    }
+
+    &:not([data-fill]) {
+      .heading {
+        @include theme.breakpoint("sm") {
+          border-bottom: 1px solid theme.color("border");
+        }
+      }
+
+      .body {
+        padding: theme.spacing(4);
+
+        @include theme.breakpoint("sm") {
+          padding: theme.spacing(6);
+        }
+      }
+    }
+
+    &[data-has-footer] {
+      padding-bottom: 0;
+
+      .footer {
+        border-top: 1px solid theme.color("border");
+        padding: theme.spacing(4);
+      }
+    }
+
+    &[data-hide-heading] .heading {
+      @include theme.sr-only;
+    }
+  }
+}

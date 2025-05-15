@@ -3,7 +3,6 @@ chains:
     geth_rpc_addr: https://replicator.pegasus.lightlink.io/rpc/v1
     contract_addr: 0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a
 
-
     # Multiplier for the priority fee estimate, as a percentage (i.e., 100 = no change).
     # Defaults to 100 if the field is omitted.
     priority_fee_multiplier_pct: 100
@@ -23,31 +22,6 @@ chains:
       fee_multiplier_pct: 110
       fee_multiplier_cap_pct: 200
 
-    min_keeper_balance: 100000000000000000
-
-    # Provider configuration
-    # How much to charge in fees
-    fee: 1500000000000000
-
-    # Configuration for dynamic fees under high gas prices. The keeper will set
-    # on-chain fees to make between [min_profit_pct, max_profit_pct] of the max callback
-    # cost in profit per transaction.
-    min_profit_pct: 0
-    target_profit_pct: 20
-    max_profit_pct: 100
-provider:
-  # An ethereum wallet address and private key. Generate with `cast wallet new`
-  address: 0xADDRESS
-  private_key:
-    # For local development, you can hardcode the private key here
-    value: 0xabcd
-    # For production, you can store the private key in a file.
-    # file: provider-key.txt
-  # A 32 byte random value in hexadecimal
-
-  # Set this to the address of your keeper wallet if you would like the keeper wallet to
-  # be able to withdraw fees from the contract.
-  fee_manager: 0xADDRESS
 keeper:
   # An ethereum wallet address and private key for running the keeper service.
   # This does not have to be the same key as the provider's key above.
@@ -58,3 +32,16 @@ keeper:
     value: 0xabcd
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
+
+  # Service polling intervals (e.g. 1m, 1min, 1m30s, 1min 30sec). See format here: https://docs.rs/humantime/latest/humantime/
+  # These control how frequently different services poll for updates
+  subscription_poll_interval: 1m    # How often to check for new subscriptions
+  chain_price_poll_interval: 10s    # How often to check chain prices
+  pyth_price_poll_interval: 10s     # How often to check Pyth prices
+  controller_update_interval: 10s   # How often to update the controller
+
+  # Backoff policy configuration for retrying failed operations
+  backoff_initial_interval: 1s     # Initial wait time between retries
+  backoff_max_interval: 60s        # Maximum wait time between retries
+  backoff_multiplier: 2.0         # Multiply wait time by this factor on each retry
+  backoff_max_elapsed_time: 300s   # Maximum total time to keep retrying

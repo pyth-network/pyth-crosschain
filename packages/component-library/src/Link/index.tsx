@@ -2,13 +2,16 @@ import clsx from "clsx";
 import type { ComponentProps, ElementType } from "react";
 
 import styles from "./index.module.scss";
-import { Button } from "../unstyled/Button/index.js";
-import { Link as UnstyledLink } from "../unstyled/Link/index.js";
+import { Button } from "../unstyled/Button/index.jsx";
+import { Link as UnstyledLink } from "../unstyled/Link/index.jsx";
 
 type OwnProps = {
   invert?: boolean | undefined;
 };
-type Props<T extends ElementType> = Omit<ComponentProps<T>, keyof OwnProps> &
+export type Props<T extends ElementType> = Omit<
+  ComponentProps<T>,
+  keyof OwnProps
+> &
   OwnProps;
 
 export const Link = (

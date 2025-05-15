@@ -6,12 +6,12 @@ import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
 import styles from "./index.module.scss";
-import { Button } from "../Button/index.js";
-import { Link } from "../Link/index.js";
+import { Button } from "../Button/index.jsx";
+import { Link } from "../Link/index.jsx";
 import {
   Breadcrumbs as UnstyledBreadcrumbs,
   Breadcrumb,
-} from "../unstyled/Breadcrumbs/index.js";
+} from "../unstyled/Breadcrumbs/index.jsx";
 
 type OwnProps = {
   label: string;

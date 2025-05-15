@@ -1,7 +1,10 @@
 @use "../theme";
 
 .button {
-  display: inline flow-root;
+  display: inline-flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   white-space: nowrap;
   font-weight: theme.font-weight("medium");
@@ -13,14 +16,8 @@
   outline-offset: 0;
   outline: theme.spacing(1) solid transparent;
   text-align: center;
+  line-height: normal;
   -webkit-tap-highlight-color: transparent;
-
-  .iconWrapper {
-    display: inline-grid;
-    height: 100%;
-    place-content: center;
-    vertical-align: top;
-  }
 
   @each $size, $values in theme.$button-sizes {
     &[data-size="#{$size}"] {
@@ -36,7 +33,6 @@
 
       .text {
         padding: 0 theme.map-get-strict($values, "gap");
-        line-height: theme.map-get-strict($values, "height");
       }
     }
   }

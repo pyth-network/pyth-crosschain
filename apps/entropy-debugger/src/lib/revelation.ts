@@ -10,11 +10,13 @@ export async function requestCallback(
   chain: keyof typeof EntropyDeployments,
 ): Promise<string> {
   const deployment = EntropyDeployments[chain];
-  const { provider, sequenceNumber, userRandomNumber } = await fetchInfoFromTx(
-    txHash,
-    deployment,
+  const { provider, sequenceNumber, userRandomNumber, blockNumber } =
+    await fetchInfoFromTx(txHash, deployment);
+  const revelation = await getRevelation(
+    chain,
+    blockNumber,
+    Number(sequenceNumber),
   );
-  const revelation = await getRevelation(chain, Number(sequenceNumber));
 
   return `cast send ${deployment.address} 'revealWithCallback(address, uint64, bytes32, bytes32)' ${provider} ${sequenceNumber.toString()} ${userRandomNumber} ${revelation.value.data} -r ${deployment.rpc} --private-key <YOUR_PRIVATE_KEY>`;
 }
@@ -40,7 +42,12 @@ export async function fetchInfoFromTx(
   const firstLog = logs[0];
   if (firstLog) {
     const { provider, sequenceNumber, userRandomNumber } = firstLog.args;
-    return { provider, sequenceNumber, userRandomNumber };
+    return {
+      provider,
+      sequenceNumber,
+      userRandomNumber,
+      blockNumber: receipt.blockNumber,
+    };
   } else {
     throw new Error(
       `No logs found for ${txHash}. Are you sure you send the requestCallback Transaction?`,
@@ -50,11 +57,12 @@ export async function fetchInfoFromTx(
 
 export async function getRevelation(
   chain: keyof typeof EntropyDeployments,
+  blockNumber: bigint,
   sequenceNumber: number,
 ) {
   const deployment = EntropyDeployments[chain];
   const url = new URL(
-    `/v1/chains/${chain}/revelations/${sequenceNumber.toString()}`,
+    `/v1/chains/${chain}/revelations/${sequenceNumber.toString()}?block_number=${blockNumber.toString()}`,
     deployment.network === "mainnet"
       ? "https://fortuna.dourolabs.app"
       : "https://fortuna-staging.dourolabs.app",

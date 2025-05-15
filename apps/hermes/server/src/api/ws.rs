@@ -40,11 +40,15 @@ use {
         },
         time::Duration,
     },
-    tokio::sync::{broadcast::Receiver, watch},
+    tokio::{
+        sync::{broadcast::Receiver, watch},
+        time::Instant,
+    },
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
 const MAX_CLIENT_MESSAGE_SIZE: usize = 100 * 1024; // 100 KiB
+const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 
 /// The maximum number of bytes that can be sent per second per IP address.
 /// If the limit is exceeded, the connection is closed.
@@ -252,6 +256,7 @@ pub struct Subscriber<S> {
     sender: SplitSink<WebSocket, Message>,
     price_feeds_with_config: HashMap<PriceIdentifier, PriceFeedClientConfig>,
     ping_interval: tokio::time::Interval,
+    connection_deadline: Instant,
     exit: watch::Receiver<bool>,
     responded_to_ping: bool,
 }
@@ -280,6 +285,7 @@ where
             sender,
             price_feeds_with_config: HashMap::new(),
             ping_interval: tokio::time::interval(PING_INTERVAL_DURATION),
+            connection_deadline: Instant::now() + MAX_CONNECTION_DURATION,
             exit: crate::EXIT.subscribe(),
             responded_to_ping: true, // We start with true so we don't close the connection immediately
         }
@@ -323,6 +329,26 @@ where
                 }
                 self.responded_to_ping = false;
                 self.sender.send(Message::Ping(vec![])).await?;
+                Ok(())
+            },
+            _ = tokio::time::sleep_until(self.connection_deadline) => {
+                tracing::info!(
+                    id = self.id,
+                    ip = ?self.ip_addr,
+                    "Connection timeout reached (24h). Closing connection.",
+                );
+                self.sender
+                    .send(
+                        serde_json::to_string(&ServerMessage::Response(
+                            ServerResponseMessage::Err {
+                                error: "Connection timeout reached (24h)".to_string(),
+                            },
+                        ))?
+                        .into(),
+                    )
+                    .await?;
+                self.sender.close().await?;
+                self.closed = true;
                 Ok(())
             },
             _ = self.exit.changed() => {

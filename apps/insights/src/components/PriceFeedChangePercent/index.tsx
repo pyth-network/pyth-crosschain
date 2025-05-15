@@ -1,10 +1,10 @@
 "use client";
 
+import { StateType, useData } from "@pythnetwork/component-library/useData";
 import type { ComponentProps } from "react";
 import { createContext, use } from "react";
 import { z } from "zod";
 
-import { StateType, useData } from "../../hooks/use-data";
 import { useLivePriceData } from "../../hooks/use-live-price-data";
 import { Cluster } from "../../services/pyth";
 import { ChangePercent } from "../ChangePercent";

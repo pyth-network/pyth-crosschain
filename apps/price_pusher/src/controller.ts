@@ -53,12 +53,13 @@ export class Controller {
         const sourceLatestPrice =
           this.sourcePriceListener.getLatestPriceInfo(priceId);
 
-        // Update metrics for the last published time if available
-        if (this.metrics && targetLatestPrice) {
-          this.metrics.updateLastPublishedTime(
+        if (this.metrics && targetLatestPrice && sourceLatestPrice) {
+          this.metrics.updateTimestamps(
             priceId,
             alias,
-            targetLatestPrice,
+            targetLatestPrice.publishTime,
+            sourceLatestPrice.publishTime,
+            priceConfig.timeDifference,
           );
         }
 

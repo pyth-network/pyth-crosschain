@@ -16,14 +16,16 @@ import "./EntropyStructConverter.sol";
 // Entropy implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
 //
-// 1. Two parties A and B each draw a random number x_{A,B}
-// 2. A and B then share h_{A,B} = hash(x_{A,B})
-// 3. A and B reveal x_{A,B}
-// 4. Both parties verify that hash(x_{A, B}) == h_{A,B}
-// 5. The random number r = hash(x_A, x_B)
+// 1. Two parties A and B each randomly sample a contribution x_{A,B} to the random number
+// 2. A commits to their number by sharing h_A = hash(x_A)
+// 3. B reveals x_B
+// 4. A reveals x_A
+// 5. B verifies that hash(x_{A}) == h_A
+// 6. The random number r = hash(x_A, x_B)
 //
 // This protocol has the property that the result is random as long as either A or B are honest.
-// Thus, neither party needs to trust the other -- as long as they are themselves honest, they can
+// Honesty means that (1) they draw their value at random, and (2) for A, they keep x_A a secret until
+// step 4. Thus, neither party needs to trust the other -- as long as they are themselves honest, they can
 // ensure that the result r is random.
 //
 // Entropy implements a version of this protocol that is optimized for on-chain usage. The
@@ -37,26 +39,19 @@ import "./EntropyStructConverter.sol";
 // verified against the previous one in the sequence by hashing it, i.e., hash(x_i) == x_{i - 1}
 //
 // Request: To produce a random number, the following steps occur.
-// 1. The user draws a random number x_U, and submits h_U = hash(x_U) to this contract
-// 2. The contract remembers h_U and assigns it an incrementing sequence number i, representing which
+// 1. The user randomly samples their contribution x_U and submits it to the contract
+// 2. The contract remembers x_U and assigns it an incrementing sequence number i, representing which
 //    of the provider's random numbers the user will receive.
-// 3. The user submits an off-chain request (e.g. via HTTP) to the provider to reveal the i'th random number.
-// 4. The provider checks the on-chain sequence number and ensures it is > i. If it is not, the provider
-//    refuses to reveal the ith random number. The provider should wait for a sufficient number of block confirmations
-//    to ensure that the request does not get re-orged out of the blockchain.
-// 5. The provider reveals x_i to the user.
-// 6. The user submits both the provider's revealed number x_i and their own x_U to the contract.
-// 7. The contract verifies hash(x_i) == x_{i-1} to prove that x_i is the i'th random number. The contract also checks that hash(x_U) == h_U.
+// 3. The provider submits a transaction to the contract revealing their contribution x_i to the contract.
+// 4. The contract verifies hash(x_i) == x_{i-1} to prove that x_i is the i'th random number.
 //    The contract stores x_i as the i'th random number to reuse for future verifications.
-// 8. If both of the above conditions are satisfied, the random number r = hash(x_i, x_U).
-//    (Optional) as an added security mechanism, this step can further incorporate the blockhash of the block that the
-//    request transaction landed in: r = hash(x_i, x_U, blockhash).
+// 5. If the condition above is satisfied, the random number r = hash(x_i, x_U).
+// 6. The contract submits a callback to the calling contract with the random number `r`.
 //
 // This protocol has the same security properties as the 2-party randomness protocol above: as long as either
-// the provider or user is honest, the number r is random. Honesty here means that the participant keeps their
-// random number x a secret until the revelation phase (step 5) of the protocol. Note that providers need to
-// be careful to ensure their off-chain service isn't compromised to reveal the random numbers -- if this occurs,
-// then users will be able to influence the random number r.
+// the provider or user is honest, the number r is random. Note that this analysis assumes that
+// providers cannot frontrun user transactions -- a dishonest provider who frontruns user transaction can
+// manipulate the result.
 //
 // The Entropy implementation of the above protocol allows anyone to permissionlessly register to be a
 // randomness provider. Users then choose which provider to request randomness from. Each provider can set
@@ -71,13 +66,6 @@ import "./EntropyStructConverter.sol";
 // a compromised sequence. On rotation, any in-flight requests continue to use the pre-rotation commitment.
 // Providers can use the sequence number of the request along with the event log of their registrations to determine
 // which hash chain contains the requested random number.
-//
-// Warning to integrators:
-// An important caveat of this protocol is that the user can compute the random number r before
-// revealing their own number to the contract. This property means that the user can choose to halt the
-// protocol prior to the random number being revealed (i.e., prior to step (6) above). Integrators should ensure that
-// the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
-// cases where the user chooses not to reveal.
 abstract contract Entropy is IEntropy, EntropyState {
     using ExcessivelySafeCall for address;
 
@@ -150,7 +138,10 @@ abstract contract Entropy is IEntropy, EntropyState {
 
         provider.sequenceNumber += 1;
 
-        emit Registered(EntropyStructConverter.toV1ProviderInfo(provider));
+        emit EntropyEvents.Registered(
+            EntropyStructConverter.toV1ProviderInfo(provider)
+        );
+        emit EntropyEventsV2.Registered(msg.sender, bytes(""));
     }
 
     // Withdraw a portion of the accumulated fees for the provider msg.sender.
@@ -172,7 +163,13 @@ abstract contract Entropy is IEntropy, EntropyState {
         (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "withdrawal to msg.sender failed");
 
-        emit Withdrawal(msg.sender, msg.sender, amount);
+        emit EntropyEvents.Withdrawal(msg.sender, msg.sender, amount);
+        emit EntropyEventsV2.Withdrawal(
+            msg.sender,
+            msg.sender,
+            amount,
+            bytes("")
+        );
     }
 
     function withdrawAsFeeManager(
@@ -202,7 +199,13 @@ abstract contract Entropy is IEntropy, EntropyState {
         (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "withdrawal to msg.sender failed");
 
-        emit Withdrawal(provider, msg.sender, amount);
+        emit EntropyEvents.Withdrawal(provider, msg.sender, amount);
+        emit EntropyEventsV2.Withdrawal(
+            provider,
+            msg.sender,
+            amount,
+            bytes("")
+        );
     }
 
     // requestHelper allocates and returns a new request for the given provider.
@@ -228,7 +231,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
-        uint128 requiredFee = getFeeForGas(provider, callbackGasLimit);
+        uint128 requiredFee = getFeeV2(provider, callbackGasLimit);
         if (msg.value < requiredFee) revert EntropyErrors.InsufficientFee();
         uint128 providerFee = getProviderFee(provider, callbackGasLimit);
         providerInfo.accruedFeesInWei += providerFee;
@@ -280,6 +283,32 @@ abstract contract Entropy is IEntropy, EntropyState {
         }
     }
 
+    function requestV2()
+        external
+        payable
+        override
+        returns (uint64 assignedSequenceNumber)
+    {
+        assignedSequenceNumber = requestV2(getDefaultProvider(), random(), 0);
+    }
+
+    function requestV2(
+        uint32 gasLimit
+    ) external payable override returns (uint64 assignedSequenceNumber) {
+        assignedSequenceNumber = requestV2(
+            getDefaultProvider(),
+            random(),
+            gasLimit
+        );
+    }
+
+    function requestV2(
+        address provider,
+        uint32 gasLimit
+    ) external payable override returns (uint64 assignedSequenceNumber) {
+        assignedSequenceNumber = requestV2(provider, random(), gasLimit);
+    }
+
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
     // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
@@ -316,24 +345,24 @@ abstract contract Entropy is IEntropy, EntropyState {
     // Note that excess value is *not* refunded to the caller.
     function requestWithCallback(
         address provider,
-        bytes32 userRandomNumber
+        bytes32 userContribution
     ) public payable override returns (uint64) {
         return
-            requestWithCallbackAndGasLimit(
+            requestV2(
                 provider,
-                userRandomNumber,
+                userContribution,
                 0 // Passing 0 will assign the request the provider's default gas limit
             );
     }
 
-    function requestWithCallbackAndGasLimit(
+    function requestV2(
         address provider,
-        bytes32 userRandomNumber,
+        bytes32 userContribution,
         uint32 gasLimit
     ) public payable override returns (uint64) {
         EntropyStructsV2.Request storage req = requestHelper(
             provider,
-            constructUserCommitment(userRandomNumber),
+            constructUserCommitment(userContribution),
             // If useBlockHash is set to true, it allows a scenario in which the provider and miner can collude.
             // If we remove the blockHash from this, the provider would have no choice but to provide its committed
             // random number. Hence, useBlockHash is set to false.
@@ -346,8 +375,16 @@ abstract contract Entropy is IEntropy, EntropyState {
             provider,
             req.requester,
             req.sequenceNumber,
-            userRandomNumber,
+            userContribution,
             EntropyStructConverter.toV1Request(req)
+        );
+        emit EntropyEventsV2.Requested(
+            provider,
+            req.requester,
+            req.sequenceNumber,
+            userContribution,
+            uint32(req.gasLimit10k) * TEN_THOUSAND,
+            bytes("")
         );
         return req.sequenceNumber;
     }
@@ -357,14 +394,14 @@ abstract contract Entropy is IEntropy, EntropyState {
     // current commitment and returns the generated random number.
     function revealHelper(
         EntropyStructsV2.Request storage req,
-        bytes32 userRevelation,
-        bytes32 providerRevelation
+        bytes32 userContribution,
+        bytes32 providerContribution
     ) internal returns (bytes32 randomNumber, bytes32 blockHash) {
         bytes32 providerCommitment = constructProviderCommitment(
             req.numHashes,
-            providerRevelation
+            providerContribution
         );
-        bytes32 userCommitment = constructUserCommitment(userRevelation);
+        bytes32 userCommitment = constructUserCommitment(userContribution);
         if (
             keccak256(bytes.concat(userCommitment, providerCommitment)) !=
             req.commitment
@@ -387,8 +424,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         }
 
         randomNumber = combineRandomValues(
-            userRevelation,
-            providerRevelation,
+            userContribution,
+            providerContribution,
             blockHash
         );
 
@@ -397,7 +434,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         ];
         if (providerInfo.currentCommitmentSequenceNumber < req.sequenceNumber) {
             providerInfo.currentCommitmentSequenceNumber = req.sequenceNumber;
-            providerInfo.currentCommitment = providerRevelation;
+            providerInfo.currentCommitment = providerContribution;
         }
     }
 
@@ -406,7 +443,7 @@ abstract contract Entropy is IEntropy, EntropyState {
     function advanceProviderCommitment(
         address provider,
         uint64 advancedSequenceNumber,
-        bytes32 providerRevelation
+        bytes32 providerContribution
     ) public override {
         EntropyStructsV2.ProviderInfo storage providerInfo = _state.providers[
             provider
@@ -424,14 +461,14 @@ abstract contract Entropy is IEntropy, EntropyState {
         );
         bytes32 providerCommitment = constructProviderCommitment(
             numHashes,
-            providerRevelation
+            providerContribution
         );
 
         if (providerCommitment != providerInfo.currentCommitment)
             revert EntropyErrors.IncorrectRevelation();
 
         providerInfo.currentCommitmentSequenceNumber = advancedSequenceNumber;
-        providerInfo.currentCommitment = providerRevelation;
+        providerInfo.currentCommitment = providerContribution;
         if (
             providerInfo.currentCommitmentSequenceNumber >=
             providerInfo.sequenceNumber
@@ -459,8 +496,8 @@ abstract contract Entropy is IEntropy, EntropyState {
     function reveal(
         address provider,
         uint64 sequenceNumber,
-        bytes32 userRevelation,
-        bytes32 providerRevelation
+        bytes32 userContribution,
+        bytes32 providerContribution
     ) public override returns (bytes32 randomNumber) {
         EntropyStructsV2.Request storage req = findActiveRequest(
             provider,
@@ -479,13 +516,13 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes32 blockHash;
         (randomNumber, blockHash) = revealHelper(
             req,
-            userRevelation,
-            providerRevelation
+            userContribution,
+            providerContribution
         );
         emit Revealed(
             EntropyStructConverter.toV1Request(req),
-            userRevelation,
-            providerRevelation,
+            userContribution,
+            providerContribution,
             blockHash,
             randomNumber
         );
@@ -505,8 +542,8 @@ abstract contract Entropy is IEntropy, EntropyState {
     function revealWithCallback(
         address provider,
         uint64 sequenceNumber,
-        bytes32 userRandomNumber,
-        bytes32 providerRevelation
+        bytes32 userContribution,
+        bytes32 providerContribution
     ) public override {
         EntropyStructsV2.Request storage req = findActiveRequest(
             provider,
@@ -521,15 +558,12 @@ abstract contract Entropy is IEntropy, EntropyState {
             revert EntropyErrors.InvalidRevealCall();
         }
 
-        bytes32 blockHash;
         bytes32 randomNumber;
-        (randomNumber, blockHash) = revealHelper(
+        (randomNumber, ) = revealHelper(
             req,
-            userRandomNumber,
-            providerRevelation
+            userContribution,
+            providerContribution
         );
-
-        address callAddress = req.requester;
 
         // If the request has an explicit gas limit, then run the new callback failure state flow.
         //
@@ -545,7 +579,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             bool success;
             bytes memory ret;
             uint256 startingGas = gasleft();
-            (success, ret) = callAddress.excessivelySafeCall(
+            (success, ret) = req.requester.excessivelySafeCall(
                 // Warning: the provided gas limit below is only an *upper bound* on the gas provided to the call.
                 // At most 63/64ths of the current context's gas will be provided to a call, which may be less
                 // than the indicated gas limit. (See CALL opcode docs here https://www.evm.codes/?fork=cancun#f1)
@@ -560,15 +594,28 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 )
             );
+            uint32 gasUsed = SafeCast.toUint32(startingGas - gasleft());
             // Reset status to not started here in case the transaction reverts.
             req.callbackStatus = EntropyStatusConstants.CALLBACK_NOT_STARTED;
 
             if (success) {
                 emit RevealedWithCallback(
                     EntropyStructConverter.toV1Request(req),
-                    userRandomNumber,
-                    providerRevelation,
+                    userContribution,
+                    providerContribution,
                     randomNumber
+                );
+                emit EntropyEventsV2.Revealed(
+                    provider,
+                    req.requester,
+                    req.sequenceNumber,
+                    randomNumber,
+                    userContribution,
+                    providerContribution,
+                    false,
+                    ret,
+                    SafeCast.toUint32(gasUsed),
+                    bytes("")
                 );
                 clearRequest(provider, sequenceNumber);
             } else if (
@@ -585,10 +632,22 @@ abstract contract Entropy is IEntropy, EntropyState {
                     provider,
                     req.requester,
                     sequenceNumber,
-                    userRandomNumber,
-                    providerRevelation,
+                    userContribution,
+                    providerContribution,
                     randomNumber,
                     ret
+                );
+                emit EntropyEventsV2.Revealed(
+                    provider,
+                    req.requester,
+                    sequenceNumber,
+                    randomNumber,
+                    userContribution,
+                    providerContribution,
+                    true,
+                    ret,
+                    SafeCast.toUint32(gasUsed),
+                    bytes("")
                 );
                 req.callbackStatus = EntropyStatusConstants.CALLBACK_FAILED;
             } else {
@@ -602,20 +661,18 @@ abstract contract Entropy is IEntropy, EntropyState {
             }
         } else {
             // This case uses the checks-effects-interactions pattern to avoid reentry attacks
-            emit RevealedWithCallback(
-                EntropyStructConverter.toV1Request(req),
-                userRandomNumber,
-                providerRevelation,
-                randomNumber
-            );
-
+            address callAddress = req.requester;
+            EntropyStructs.Request memory reqV1 = EntropyStructConverter
+                .toV1Request(req);
             clearRequest(provider, sequenceNumber);
+            // WARNING: DO NOT USE req BELOW HERE AS ITS CONTENTS HAS BEEN CLEARED
 
-            // Check if the callAddress is a contract account.
+            // Check if the requester is a contract account.
             uint len;
             assembly {
                 len := extcodesize(callAddress)
             }
+            uint256 startingGas = gasleft();
             if (len != 0) {
                 IEntropyConsumer(callAddress)._entropyCallback(
                     sequenceNumber,
@@ -623,6 +680,26 @@ abstract contract Entropy is IEntropy, EntropyState {
                     randomNumber
                 );
             }
+            uint32 gasUsed = SafeCast.toUint32(startingGas - gasleft());
+
+            emit RevealedWithCallback(
+                reqV1,
+                userContribution,
+                providerContribution,
+                randomNumber
+            );
+            emit EntropyEventsV2.Revealed(
+                provider,
+                callAddress,
+                sequenceNumber,
+                randomNumber,
+                userContribution,
+                providerContribution,
+                false,
+                bytes(""),
+                gasUsed,
+                bytes("")
+            );
         }
     }
 
@@ -668,10 +745,20 @@ abstract contract Entropy is IEntropy, EntropyState {
     function getFee(
         address provider
     ) public view override returns (uint128 feeAmount) {
-        return getFeeForGas(provider, 0);
+        return getFeeV2(provider, 0);
     }
 
-    function getFeeForGas(
+    function getFeeV2() external view override returns (uint128 feeAmount) {
+        return getFeeV2(getDefaultProvider(), 0);
+    }
+
+    function getFeeV2(
+        uint32 gasLimit
+    ) external view override returns (uint128 feeAmount) {
+        return getFeeV2(getDefaultProvider(), gasLimit);
+    }
+
+    function getFeeV2(
         address provider,
         uint32 gasLimit
     ) public view override returns (uint128 feeAmount) {
@@ -732,6 +819,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         uint128 oldFeeInWei = provider.feeInWei;
         provider.feeInWei = newFeeInWei;
         emit ProviderFeeUpdated(msg.sender, oldFeeInWei, newFeeInWei);
+        emit EntropyEventsV2.ProviderFeeUpdated(
+            msg.sender,
+            oldFeeInWei,
+            newFeeInWei,
+            bytes("")
+        );
     }
 
     function setProviderFeeAsFeeManager(
@@ -754,6 +847,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         providerInfo.feeInWei = newFeeInWei;
 
         emit ProviderFeeUpdated(provider, oldFeeInWei, newFeeInWei);
+        emit EntropyEventsV2.ProviderFeeUpdated(
+            provider,
+            oldFeeInWei,
+            newFeeInWei,
+            bytes("")
+        );
     }
 
     // Set provider uri. It will revert if provider is not registered.
@@ -767,6 +866,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         bytes memory oldUri = provider.uri;
         provider.uri = newUri;
         emit ProviderUriUpdated(msg.sender, oldUri, newUri);
+        emit EntropyEventsV2.ProviderUriUpdated(
+            msg.sender,
+            oldUri,
+            newUri,
+            bytes("")
+        );
     }
 
     function setFeeManager(address manager) external override {
@@ -780,6 +885,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         address oldFeeManager = provider.feeManager;
         provider.feeManager = manager;
         emit ProviderFeeManagerUpdated(msg.sender, oldFeeManager, manager);
+        emit EntropyEventsV2.ProviderFeeManagerUpdated(
+            msg.sender,
+            oldFeeManager,
+            manager,
+            bytes("")
+        );
     }
 
     // Set the maximum number of hashes to record in a request. This should be set according to the maximum gas limit
@@ -799,6 +910,12 @@ abstract contract Entropy is IEntropy, EntropyState {
             oldMaxNumHashes,
             maxNumHashes
         );
+        emit EntropyEventsV2.ProviderMaxNumHashesAdvanced(
+            msg.sender,
+            oldMaxNumHashes,
+            maxNumHashes,
+            bytes("")
+        );
     }
 
     // Set the default gas limit for a request.
@@ -817,6 +934,12 @@ abstract contract Entropy is IEntropy, EntropyState {
         uint32 oldGasLimit = provider.defaultGasLimit;
         provider.defaultGasLimit = gasLimit;
         emit ProviderDefaultGasLimitUpdated(msg.sender, oldGasLimit, gasLimit);
+        emit EntropyEventsV2.ProviderDefaultGasLimitUpdated(
+            msg.sender,
+            oldGasLimit,
+            gasLimit,
+            bytes("")
+        );
     }
 
     function constructUserCommitment(
@@ -952,5 +1075,17 @@ abstract contract Entropy is IEntropy, EntropyState {
         // Note that a provider's initial registration occupies sequence number 0, so there is no way to construct
         // a randomness request with sequence number 0.
         return req.sequenceNumber != 0;
+    }
+
+    function random() internal returns (bytes32) {
+        _state.seed = keccak256(
+            abi.encodePacked(
+                block.timestamp,
+                block.prevrandao,
+                msg.sender,
+                _state.seed
+            )
+        );
+        return _state.seed;
     }
 }

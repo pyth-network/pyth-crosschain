@@ -1,0 +1,52 @@
+@use "../theme";
+
+.mobileNavTabs {
+  background: theme.color("background", "primary");
+  border-top: 1px solid theme.color("border");
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: theme.spacing(2);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: theme.spacing(2);
+
+  .mobileTab {
+    @include theme.text("xs", "medium");
+
+    text-align: center;
+    position: relative;
+    padding: theme.spacing(2);
+    color: theme.color("foreground");
+    text-decoration: none;
+    line-height: theme.spacing(5);
+    outline: none;
+    transition:
+      color 200ms linear,
+      background-color 100ms linear;
+    border-radius: theme.border-radius("full");
+    -webkit-tap-highlight-color: transparent;
+
+    .bubble {
+      position: absolute;
+      inset: 0;
+      border-radius: theme.border-radius("full");
+      background-color: theme.color("button", "solid", "background", "normal");
+      outline: 4px solid transparent;
+      outline-offset: 0;
+      z-index: -1;
+      transition-property: background-color, outline-color;
+      transition-duration: 100ms;
+      transition-timing-function: linear;
+    }
+
+    &[data-is-selected] {
+      color: theme.color("background", "primary");
+    }
+
+    &[data-pressed] {
+      background: theme.color("button", "outline", "background", "active");
+    }
+  }
+}

@@ -1,43 +1,32 @@
 "use client";
 
+import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { Table } from "@pythnetwork/component-library/Table";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
 
 import styles from "./coming-soon-list.module.scss";
-import { usePriceFeeds } from "../../hooks/use-price-feeds";
-import { AssetClassTag } from "../AssetClassTag";
-import { NoResults } from "../NoResults";
+import { AssetClassBadge } from "../AssetClassBadge";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
-  comingSoonSymbols: string[];
+  comingSoonFeeds: {
+    symbol: string;
+    assetClass: string;
+    displaySymbol: string;
+    description: string;
+    icon: ReactNode;
+  }[];
 };
 
-export const ComingSoonList = ({ comingSoonSymbols }: Props) => {
+export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
   const [search, setSearch] = useState("");
   const [assetClass, setAssetClass] = useState("");
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
-  const feeds = usePriceFeeds();
-  const comingSoonFeeds = useMemo(
-    () =>
-      comingSoonSymbols.map((symbol) => {
-        const feed = feeds.get(symbol);
-        if (feed) {
-          return {
-            symbol,
-            assetClass: feed.assetClass,
-            displaySymbol: feed.displaySymbol,
-          };
-        } else {
-          throw new NoSuchFeedError(symbol);
-        }
-      }),
-    [feeds, comingSoonSymbols],
-  );
   const assetClasses = useMemo(
     () =>
       [
@@ -70,16 +59,25 @@ export const ComingSoonList = ({ comingSoonSymbols }: Props) => {
   );
   const rows = useMemo(
     () =>
-      filteredFeeds.map(({ symbol }) => ({
-        id: symbol,
-        href: `/price-feeds/${encodeURIComponent(symbol)}`,
-        data: {
-          priceFeedName: <PriceFeedTag compact symbol={symbol} />,
-          assetClass: <AssetClassTag symbol={symbol} />,
-        },
-      })),
+      filteredFeeds.map(
+        ({ symbol, assetClass, description, displaySymbol, icon }) => ({
+          id: symbol,
+          href: `/price-feeds/${encodeURIComponent(symbol)}`,
+          data: {
+            priceFeedName: (
+              <PriceFeedTag
+                description={description}
+                displaySymbol={displaySymbol}
+                icon={icon}
+              />
+            ),
+            assetClass: <AssetClassBadge>{assetClass}</AssetClassBadge>,
+          },
+        }),
+      ),
     [filteredFeeds],
   );
+
   return (
     <div className={styles.comingSoonList}>
       <div className={styles.searchBar}>
@@ -92,11 +90,14 @@ export const ComingSoonList = ({ comingSoonSymbols }: Props) => {
         />
         <Select
           optionGroups={[
-            { name: "All", options: [""] },
-            { name: "Asset classes", options: assetClasses },
+            { name: "All", options: [{ id: "" }] },
+            {
+              name: "Asset classes",
+              options: assetClasses.map((id) => ({ id })),
+            },
           ]}
           hideGroupLabel
-          show={(value) => (value === "" ? "All" : value)}
+          show={({ id }) => (id === "" ? "All" : id)}
           placement="bottom end"
           selectedKey={assetClass}
           onSelectionChange={setAssetClass}
@@ -139,10 +140,3 @@ export const ComingSoonList = ({ comingSoonSymbols }: Props) => {
     </div>
   );
 };
-
-class NoSuchFeedError extends Error {
-  constructor(symbol: string) {
-    super(`No feed exists named ${symbol}`);
-    this.name = "NoSuchFeedError";
-  }
-}

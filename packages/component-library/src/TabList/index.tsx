@@ -6,21 +6,21 @@ import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
-import { Tab, TabList as UnstyledTabList } from "../unstyled/Tabs/index.js";
+import { Tab, TabList as UnstyledTabList } from "../unstyled/Tabs/index.jsx";
 
 type OwnProps = {
   label: string;
-  pathname?: string | undefined;
+  currentTab?: string | undefined;
   items: ComponentProps<typeof Tab>[];
 };
 type Props = Omit<ComponentProps<typeof UnstyledTabList>, keyof OwnProps> &
   OwnProps;
 
-export const TabList = ({ label, className, pathname, ...props }: Props) => (
+export const TabList = ({ label, className, currentTab, ...props }: Props) => (
   <div className={clsx(styles.tabs, className)}>
     <UnstyledTabList
       aria-label={label}
-      dependencies={[pathname]}
+      dependencies={[currentTab]}
       className={styles.tabList ?? ""}
       {...props}
     >
@@ -29,7 +29,7 @@ export const TabList = ({ label, className, pathname, ...props }: Props) => (
           className={clsx(styles.tab, buttonStyles.button, tabClassName)}
           data-size="sm"
           data-variant="ghost"
-          data-selectable={pathname === tab.href ? undefined : ""}
+          data-selectable={currentTab === tab.id ? undefined : ""}
           {...tab}
         >
           {(args) => (

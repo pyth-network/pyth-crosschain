@@ -1,6 +1,5 @@
 use {crate::config::ConfigOptions, clap::Args, std::net::SocketAddr};
 
-/// Run the webservice
 #[derive(Args, Clone, Debug)]
 pub struct RunOptions {
     #[command(flatten)]

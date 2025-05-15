@@ -1,260 +1,200 @@
+//! This module contains the main entrypoint for the Argus service.
+
 use {
     crate::{
-        api::{self, BlockchainState, ChainId},
+        adapters::{ethereum::InstrumentedSignablePythContract, hermes::HermesClient},
+        api,
         config::{Config, EthereumConfig, RunOptions},
-        keeper::{self, keeper_metrics::KeeperMetrics},
+        metrics::KeeperMetrics,
+        services::{
+            ChainPriceService, ControllerService, PricePusherService, PythPriceService, Service,
+            SubscriptionService,
+        },
+        state::ArgusState,
     },
     anyhow::{anyhow, Error, Result},
-    axum::Router,
-    ethers::{
-        middleware::Middleware,
-        types::{Address, BlockNumber},
-    },
-    fortuna::eth_utils::traced_client::{RpcMetrics, TracedClient},
-    futures::future::join_all,
-    prometheus_client::{
-        encoding::EncodeLabelSet,
-        metrics::{family::Family, gauge::Gauge},
-        registry::Registry,
-    },
-    std::{
-        collections::HashMap,
-        net::SocketAddr,
-        sync::Arc,
-        time::{Duration, SystemTime, UNIX_EPOCH},
-    },
+    backoff::ExponentialBackoff,
+    ethers::signers::Signer,
+    fortuna::eth_utils::traced_client::RpcMetrics,
+    prometheus_client::registry::Registry,
+    std::sync::Arc,
     tokio::{
         spawn,
         sync::{watch, RwLock},
-        time,
     },
-    tower_http::cors::CorsLayer,
+    tracing,
 };
 
-/// Track metrics in this interval
-const TRACK_INTERVAL: Duration = Duration::from_secs(10);
-
-pub async fn run_api(
-    socket_addr: SocketAddr,
-    metrics_registry: Arc<RwLock<Registry>>,
-    mut rx_exit: watch::Receiver<bool>,
-) -> Result<()> {
-    let api_state = api::ApiState::new(metrics_registry).await;
-
-    // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
-    // `with_state` method which replaces `Body` with `State` in the type signature.
-    let app = Router::new();
-    let app = app
-        .merge(api::routes(api_state))
-        // Permissive CORS layer to allow all origins
-        .layer(CorsLayer::permissive());
-
-    tracing::info!("Starting server on: {:?}", &socket_addr);
-    // Binds the axum's server to the configured address and port. This is a blocking call and will
-    // not return until the server is shutdown.
-    axum::Server::try_bind(&socket_addr)?
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(async {
-            // It can return an error or an Ok(()). In both cases, we would shut down.
-            // As Ok(()) means, exit signal (ctrl + c) was received.
-            // And Err(e) means, the sender was dropped which should not be the case.
-            let _ = rx_exit.changed().await;
-
-            tracing::info!("Shutting down RPC server...");
-        })
-        .await?;
-
-    Ok(())
-}
-
-pub async fn run_keeper(
-    chains: HashMap<String, api::BlockchainState>,
-    config: Config,
-    private_key: String,
-    metrics_registry: Arc<RwLock<Registry>>,
-    rpc_metrics: Arc<RpcMetrics>,
-) -> Result<()> {
-    let mut handles = Vec::new();
-    let keeper_metrics: Arc<KeeperMetrics> = Arc::new({
-        let chain_labels: Vec<(String, Address)> = chains
-            .iter()
-            .map(|(id, state)| (id.clone(), state.provider_address))
-            .collect();
-        KeeperMetrics::new(metrics_registry.clone(), chain_labels).await
-    });
-    for (chain_id, chain_config) in chains {
-        let chain_eth_config = config
-            .chains
-            .get(&chain_id)
-            .expect("All chains should be present in the config file")
-            .clone();
-        let private_key = private_key.clone();
-        handles.push(spawn(keeper::run_keeper_threads(
-            private_key,
-            chain_eth_config,
-            chain_config.clone(),
-            keeper_metrics.clone(),
-            rpc_metrics.clone(),
-        )));
-    }
-
-    Ok(())
-}
-
+/// Run Argus and the API server
 pub async fn run(opts: &RunOptions) -> Result<()> {
     let config = Config::load(&opts.config.config)?;
-    let (tx_exit, rx_exit) = watch::channel(false);
+    let (exit_tx, exit_rx) = watch::channel(false);
     let metrics_registry = Arc::new(RwLock::new(Registry::default()));
     let rpc_metrics = Arc::new(RpcMetrics::new(metrics_registry.clone()).await);
+    let keeper_private_key = config
+        .keeper
+        .private_key
+        .load()?
+        .expect("Keeper private key not found in config");
 
-    let mut tasks = Vec::new();
-    for (chain_id, chain_config) in config.chains.clone() {
-        tasks.push(spawn(async move {
-            let state = setup_chain_state(&config.provider.address, &chain_id, &chain_config).await;
+    let chain_labels: Vec<String> = config.chains.keys().cloned().collect();
+    let keeper_metrics = Arc::new(KeeperMetrics::new(metrics_registry.clone(), chain_labels).await);
 
-            (chain_id, state)
-        }));
-    }
-    let states = join_all(tasks).await;
-
-    let mut chains: HashMap<ChainId, BlockchainState> = HashMap::new();
-    for result in states {
-        let (chain_id, state) = result?;
-
-        match state {
-            Ok(state) => {
-                chains.insert(chain_id.clone(), state);
-            }
-            Err(e) => {
-                tracing::error!("Failed to setup {} {}", chain_id, e);
-            }
-        }
-    }
-    if chains.is_empty() {
-        return Err(anyhow!("No chains were successfully setup"));
+    if config.chains.is_empty() {
+        return Err(anyhow!("No chains were configured"));
     }
 
-    // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
+    // Spawn a task to listen for Ctrl+C so we can trigger a graceful shutdown
     spawn(async move {
-        tracing::info!("Registered shutdown signal handler...");
+        tracing::info!("Registered shutdown signal handler");
         tokio::signal::ctrl_c().await.unwrap();
-        tracing::info!("Shut down signal received, waiting for tasks...");
-        // no need to handle error here, as it will only occur when all the
-        // receiver has been dropped and that's what we want to do
-        tx_exit.send(true)?;
+        tracing::info!("Shutdown signal received, waiting for tasks to exit");
+        // No need to handle error here, as this can only error if all of the
+        // receivers have been dropped, which is what we want to do
+        exit_tx.send(true)?;
 
         Ok::<(), Error>(())
     });
 
-    if let Some(keeper_private_key) = config.keeper.private_key.load()? {
-        spawn(run_keeper(
-            chains.clone(),
-            config.clone(),
-            keeper_private_key,
-            metrics_registry.clone(),
+    // Run keeper services for all chains
+    let mut handles = Vec::new();
+    for (chain_name, chain_config) in &config.chains {
+        handles.push(spawn(run_keeper_for_chain(
+            keeper_private_key.clone(),
+            chain_config.clone(),
+            chain_name.clone(),
+            keeper_metrics.clone(),
             rpc_metrics.clone(),
-        ));
-    } else {
-        tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
+            exit_rx.clone(),
+            config.clone(),
+        )));
     }
 
-    // Spawn a thread to track latest block lag. This helps us know if the rpc is up and updated with the latest block.
-    spawn(track_block_timestamp_lag(
-        config,
-        metrics_registry.clone(),
-        rpc_metrics.clone(),
-    ));
-
-    run_api(opts.addr, metrics_registry, rx_exit).await?;
+    // Run API server for metrics and health checks
+    api::run_api_server(opts.addr, metrics_registry, exit_rx).await?;
 
     Ok(())
 }
 
-async fn setup_chain_state(
-    provider: &Address,
-    chain_id: &ChainId,
-    chain_config: &EthereumConfig,
-) -> Result<BlockchainState> {
-    let state = BlockchainState {
-        id: chain_id.clone(),
-        provider_address: *provider,
-        confirmed_block_status: chain_config.confirmed_block_status,
-    };
-    Ok(state)
-}
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
-pub struct ChainLabel {
-    pub chain_id: String,
-}
-
-#[tracing::instrument(name = "block_timestamp_lag", skip_all, fields(chain_id = chain_id))]
-pub async fn check_block_timestamp_lag(
-    chain_id: String,
-    chain_config: EthereumConfig,
-    metrics: Family<ChainLabel, Gauge>,
+/// Run keeper services for the given chain
+#[tracing::instrument(skip_all, fields(chain_name))]
+pub async fn run_keeper_for_chain(
+    private_key: String,
+    chain_eth_config: EthereumConfig,
+    chain_name: String,
+    _metrics: Arc<KeeperMetrics>, // TODO: add metrics
     rpc_metrics: Arc<RpcMetrics>,
-) {
-    let provider =
-        match TracedClient::new(chain_id.clone(), &chain_config.geth_rpc_addr, rpc_metrics) {
-            Ok(r) => r,
-            Err(e) => {
-                tracing::error!("Failed to create provider for chain id - {:?}", e);
-                return;
-            }
-        };
-
-    const INF_LAG: i64 = 1000000; // value that definitely triggers an alert
-    let lag = match provider.get_block(BlockNumber::Latest).await {
-        Ok(block) => match block {
-            Some(block) => {
-                let block_timestamp = block.timestamp;
-                let server_timestamp = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs();
-                let lag: i64 = (server_timestamp as i64) - (block_timestamp.as_u64() as i64);
-                lag
-            }
-            None => {
-                tracing::error!("Block is None");
-                INF_LAG
-            }
-        },
-        Err(e) => {
-            tracing::error!("Failed to get block - {:?}", e);
-            INF_LAG
-        }
-    };
-    metrics
-        .get_or_create(&ChainLabel {
-            chain_id: chain_id.clone(),
-        })
-        .set(lag);
-}
-
-/// Tracks the difference between the server timestamp and the latest block timestamp for each chain
-pub async fn track_block_timestamp_lag(
+    exit_rx: watch::Receiver<bool>,
     config: Config,
-    metrics_registry: Arc<RwLock<Registry>>,
-    rpc_metrics: Arc<RpcMetrics>,
-) {
-    let metrics = Family::<ChainLabel, Gauge>::default();
-    metrics_registry.write().await.register(
-        "block_timestamp_lag",
-        "The difference between server timestamp and latest block timestamp",
-        metrics.clone(),
-    );
-    loop {
-        for (chain_id, chain_config) in &config.chains {
-            spawn(check_block_timestamp_lag(
-                chain_id.clone(),
-                chain_config.clone(),
-                metrics.clone(),
-                rpc_metrics.clone(),
-            ));
-        }
+) -> Result<()> {
+    tracing::info!("Starting keeper for chain {}", chain_name);
 
-        time::sleep(TRACK_INTERVAL).await;
+    // TODO: create a contract with a WS provider if geth_rpc_wss was provided
+    let contract = Arc::new(
+        InstrumentedSignablePythContract::from_config(
+            &chain_eth_config,
+            &private_key,
+            chain_name.clone(),
+            rpc_metrics.clone(),
+        )
+        .await
+        .expect(&format!(
+            "Failed to create InstrumentedSignablePythContract from config for chain {}",
+            chain_name
+        )),
+    );
+
+    let keeper_address = contract.wallet().address();
+    tracing::info!(
+        keeper_address = %keeper_address,
+        "Keeper address"
+    );
+
+    let state = Arc::new(ArgusState::new());
+
+    let hermes_client = Arc::new(HermesClient);
+    let backoff_policy = ExponentialBackoff {
+        initial_interval: config.keeper.backoff_initial_interval,
+        max_interval: config.keeper.backoff_max_interval,
+        multiplier: config.keeper.backoff_multiplier,
+        max_elapsed_time: Some(config.keeper.backoff_max_elapsed_time),
+        ..ExponentialBackoff::default()
+    };
+
+    let subscription_service = SubscriptionService::new(
+        chain_name.clone(),
+        contract.clone(),
+        config.keeper.subscription_poll_interval,
+        state.subscription_state.clone(),
+        state.pyth_price_state.clone(),
+        state.chain_price_state.clone(),
+    );
+
+    let pyth_price_service = PythPriceService::new(
+        chain_name.clone(),
+        config.keeper.pyth_price_poll_interval,
+        hermes_client.clone(),
+        state.pyth_price_state.clone(),
+    );
+
+    let chain_price_service = ChainPriceService::new(
+        chain_name.clone(),
+        contract.clone(),
+        config.keeper.chain_price_poll_interval,
+        state.chain_price_state.clone(),
+    );
+
+    let price_pusher_service = PricePusherService::new(
+        chain_name.clone(),
+        contract.clone(),
+        hermes_client.clone(),
+        backoff_policy,
+    );
+
+    let controller_service = ControllerService::new(
+        chain_name.clone(),
+        config.keeper.controller_update_interval,
+        state.subscription_state.clone(),
+        state.pyth_price_state.clone(),
+        state.chain_price_state.clone(),
+    );
+
+    let services: Vec<Arc<dyn Service>> = vec![
+        Arc::new(subscription_service),
+        Arc::new(pyth_price_service),
+        Arc::new(chain_price_service),
+        Arc::new(price_pusher_service),
+        Arc::new(controller_service),
+    ];
+
+    let mut handles = Vec::new();
+    for service in services {
+        let service_stop_rx = exit_rx.clone();
+
+        let handle = tokio::spawn(async move {
+            let service_name = service.name().to_string();
+            match service.start(service_stop_rx).await {
+                Ok(_) => {
+                    tracing::info!(service = service_name, "Service stopped gracefully");
+                }
+                Err(e) => {
+                    tracing::error!(
+                        service = service_name,
+                        error = %e,
+                        "Service stopped with error"
+                    );
+                }
+            }
+        });
+
+        handles.push(handle);
     }
+
+    tracing::info!("Keeper services started");
+
+    for handle in handles {
+        let _ = handle.await;
+    }
+
+    Ok(())
 }

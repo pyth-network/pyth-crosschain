@@ -1,3 +1,4 @@
+use crate::keeper::track::track_block_timestamp_lag;
 use {
     crate::{
         api::{BlockchainState, ChainId},
@@ -59,10 +60,10 @@ pub async fn run_keeper_threads(
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
     rpc_metrics: Arc<RpcMetrics>,
-) {
-    tracing::info!("starting keeper");
+) -> anyhow::Result<()> {
+    tracing::info!("Starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
-    tracing::info!("latest safe block: {}", &latest_safe_block);
+    tracing::info!("Latest safe block: {}", &latest_safe_block);
 
     let contract = Arc::new(
         InstrumentedSignablePythContract::from_config(
@@ -71,8 +72,7 @@ pub async fn run_keeper_threads(
             chain_state.id.clone(),
             rpc_metrics.clone(),
         )
-        .await
-        .expect("Chain config should be valid"),
+        .await?,
     );
     let keeper_address = contract.wallet().address();
 
@@ -99,15 +99,7 @@ pub async fn run_keeper_threads(
 
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
-    spawn(
-        watch_blocks_wrapper(
-            chain_state.clone(),
-            latest_safe_block,
-            tx,
-            chain_eth_config.geth_rpc_wss.clone(),
-        )
-        .in_current_span(),
-    );
+    spawn(watch_blocks_wrapper(chain_state.clone(), latest_safe_block, tx).in_current_span());
 
     // Spawn a thread for block processing with configured delays
     spawn(
@@ -215,10 +207,19 @@ pub async fn run_keeper_threads(
                     )
                     .in_current_span(),
                 );
+                spawn(
+                    track_block_timestamp_lag(
+                        chain_id.clone(),
+                        contract.client(),
+                        keeper_metrics.clone(),
+                    )
+                    .in_current_span(),
+                );
 
                 time::sleep(TRACK_INTERVAL).await;
             }
         }
         .in_current_span(),
     );
+    Ok(())
 }
