@@ -3,11 +3,7 @@ use {
     crate::eth_utils::nonce_manager::NonceManaged,
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
-    ethers::{
-        contract::ContractCall,
-        middleware::Middleware,
-        types::TransactionReceipt,
-    },
+    ethers::{contract::ContractCall, middleware::Middleware, types::TransactionReceipt},
     std::sync::{atomic::AtomicU64, Arc},
     tokio::time::{timeout, Duration},
     tracing,
@@ -149,12 +145,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
             let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
 
             let fee_multiplier_pct = escalation_policy.get_fee_multiplier_pct(num_retries);
-            submit_tx(
-                middleware.clone(),
-                &call,
-                fee_multiplier_pct,
-            )
-            .await
+            submit_tx(middleware.clone(), &call, fee_multiplier_pct).await
         },
         |e, dur| {
             let retry_number = num_retries.load(std::sync::atomic::Ordering::Relaxed);
@@ -190,7 +181,6 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     // A value of 100 submits the tx with the same fee as the estimate.
     fee_estimate_multiplier_pct: u64,
 ) -> Result<TransactionReceipt, backoff::Error<anyhow::Error>> {
-
     let mut transaction = call.tx.clone();
 
     // manually fill the tx with the gas info, so we can log the details in case of error

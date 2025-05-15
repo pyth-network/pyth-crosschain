@@ -6,7 +6,6 @@ use {
         eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
     },
     anyhow::{anyhow, Result},
-    ethers::types::U256,
     std::sync::Arc,
     tracing,
 };
@@ -19,7 +18,6 @@ pub async fn process_event_with_backoff(
     event: RequestedWithCallbackEvent,
     chain_state: BlockchainState,
     contract: Arc<InstrumentedSignablePythContract>,
-    _gas_limit: U256,
     escalation_policy: EscalationPolicy,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
@@ -48,12 +46,7 @@ pub async fn process_event_with_backoff(
         provider_revelation,
     );
 
-    let success = submit_tx_with_backoff(
-        contract.client(),
-        contract_call,
-        escalation_policy,
-    )
-    .await;
+    let success = submit_tx_with_backoff(contract.client(), contract_call, escalation_policy).await;
 
     metrics
         .requests_processed
