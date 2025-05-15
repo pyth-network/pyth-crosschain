@@ -1,4 +1,17 @@
 #![allow(clippy::just_underscores_and_digits)]
+#![cfg_attr(
+    not(test),
+    warn(
+        clippy::expect_used,
+        clippy::indexing_slicing,
+        clippy::panic,
+        clippy::panic_in_result_fn,
+        clippy::todo,
+        clippy::unimplemented,
+        clippy::unreachable,
+        clippy::unwrap_used
+    )
+)]
 
 use {
     anyhow::Result,
