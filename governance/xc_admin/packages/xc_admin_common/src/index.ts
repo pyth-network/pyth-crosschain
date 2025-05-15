@@ -15,6 +15,27 @@ export * from "./deterministic_stake_accounts";
 export * from "./price_store";
 export { default as lazerIdl } from "./multisig_transaction/idl/lazer.json";
 
-// Export program-related modules - new functional approach
-export * from "./programs/types";
-export * from "./programs/program_registry";
+export {
+  ProgramType,
+  PROGRAM_TYPE_NAMES,
+  PriceRawConfig,
+  ProductRawConfig,
+  MappingRawConfig,
+  RawConfig,
+  GetConfigParams,
+  DownloadablePriceAccount,
+  DownloadableProduct,
+  DownloadableConfig,
+  ProgramConfig,
+  ProgramInstructionAccounts,
+  InstructionAccountsTypeMap,
+  ValidationResult,
+} from "./programs/types";
+export {
+  getProgramAddress,
+  isAvailableOnCluster,
+  getConfig,
+  getDownloadableConfig,
+  validateUploadedConfig,
+  generateInstructions,
+} from "./programs/program_registry";
