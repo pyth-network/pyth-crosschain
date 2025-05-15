@@ -102,7 +102,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             .map(|chain_id| (chain_id.clone(), ApiBlockChainState::Uninitialized))
             .collect(),
     ));
-    let history = Arc::new(History::new().await);
+    let history = Arc::new(History::new().await?);
     for (chain_id, chain_config) in config.chains.clone() {
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();

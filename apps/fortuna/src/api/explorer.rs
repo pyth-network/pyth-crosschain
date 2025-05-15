@@ -44,14 +44,21 @@ pub async fn explorer(
     }
     if let Some(query) = query_params.query {
         if let Ok(tx_hash) = TxHash::from_str(&query) {
-            return Ok(Json(state.history.get_requests_by_tx_hash(tx_hash).await));
+            return Ok(Json(
+                state
+                    .history
+                    .get_requests_by_tx_hash(tx_hash)
+                    .await
+                    .map_err(|_| RestError::TemporarilyUnavailable)?,
+            ));
         }
         if let Ok(sender) = Address::from_str(&query) {
             return Ok(Json(
                 state
                     .history
                     .get_requests_by_sender(sender, query_params.chain_id)
-                    .await,
+                    .await
+                    .map_err(|_| RestError::TemporarilyUnavailable)?,
             ));
         }
         if let Ok(sequence_number) = u64::from_str(&query) {
@@ -59,7 +66,8 @@ pub async fn explorer(
                 state
                     .history
                     .get_requests_by_sequence(sequence_number, query_params.chain_id)
-                    .await,
+                    .await
+                    .map_err(|_| RestError::TemporarilyUnavailable)?,
             ));
         }
         return Err(RestError::InvalidQueryString);
@@ -73,6 +81,7 @@ pub async fn explorer(
                 query_params.min_timestamp,
                 query_params.max_timestamp,
             )
-            .await,
+            .await
+            .map_err(|_| RestError::TemporarilyUnavailable)?,
     ))
 }
