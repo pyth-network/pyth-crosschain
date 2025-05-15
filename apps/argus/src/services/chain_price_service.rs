@@ -49,6 +49,7 @@ impl ChainPriceService {
         }
     }
 
+    #[tracing::instrument(skip_all, fields(task = self.name, chain_name = self.chain_name))]
     async fn poll_prices(&self) -> Result<()> {
         // Get all active subscriptions
         let subscriptions = self.subscription_state.get_subscriptions();
@@ -64,16 +65,40 @@ impl ChainPriceService {
                 .into_iter()
                 .map(|id| PriceId::new(id))
                 .collect::<Vec<PriceId>>();
-            let prices = self
+
+            match self
                 .contract
                 .get_prices_for_subscription(subscription_id, &price_ids)
-                .await?;
-            let prices_map: HashMap<PriceId, Price> =
-                price_ids.into_iter().zip(prices.into_iter()).collect();
+                .await
+            {
+                Ok(prices) => {
+                    let prices_map: HashMap<PriceId, Price> = price_ids
+                        .clone()
+                        .into_iter()
+                        .zip(prices.into_iter())
+                        .collect();
 
-            // Store the latest price feeds for the subscription
-            self.chain_price_state
-                .update_prices(subscription_id, prices_map);
+                    tracing::debug!(
+                        price_ids = ?price_ids,
+                        subscription_id = %subscription_id,
+                        "Got prices for subscription"
+                    );
+
+                    // Store the latest price feeds for the subscription
+                    self.chain_price_state
+                        .update_prices(subscription_id, prices_map);
+                }
+                Err(e) => {
+                    // If we failed to get prices for a subscription, we'll retry on the next poll interval.
+                    // Continue to the next subscription.
+                    tracing::error!(
+                        subscription_id = %subscription_id,
+                        error = %e,
+                        "Failed to get prices for subscription"
+                    );
+                    continue;
+                }
+            }
         }
         Ok(())
     }
@@ -90,7 +115,13 @@ impl Service for ChainPriceService {
         loop {
             tokio::select! {
                 _ = interval.tick() => {
-                    self.poll_prices().await;
+                    if let Err(e) = self.poll_prices().await {
+                        tracing::error!(
+                            service = self.name,
+                            error = %e,
+                            "Failed to poll chain prices"
+                        );
+                    }
                 }
                 _ = stop_rx.changed() => {
                     if *stop_rx.borrow() {

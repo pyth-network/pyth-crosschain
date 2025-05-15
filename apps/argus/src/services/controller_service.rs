@@ -64,37 +64,34 @@ impl ControllerService {
         for item in subscriptions.iter() {
             let sub_id = item.key().clone();
             let params = item.value().clone();
-            let mut feeds_to_update: Vec<PriceId> = Vec::new();
+            let price_ids: Vec<PriceId> = params
+                .price_ids
+                .iter()
+                .map(|id| PriceId::new(*id))
+                .collect();
 
-            for feed_id_bytes in &params.price_ids {
-                let feed_id = PriceId::new(*feed_id_bytes);
+            // Check each feed until we find one that needs updating
+            for feed_id in price_ids.iter() {
                 let pyth_price_opt = self.pyth_price_state.get_price(&feed_id);
                 let chain_price_opt = self.chain_price_state.get_price(&sub_id, &feed_id);
 
                 if pyth_price_opt.is_none() {
-                    tracing::warn!(
-                        subscription_id = sub_id.to_string(),
-                        feed_id = feed_id.to_string(),
-                        "No Pyth price found for feed, skipping"
-                    );
+                    tracing::warn!("No Pyth price found for feed, skipping");
                     continue;
                 }
 
                 let pyth_price = pyth_price_opt.as_ref().unwrap();
 
                 if needs_update(
-                    sub_id,
-                    feed_id,
                     pyth_price,
                     chain_price_opt.as_ref(),
                     &params.update_criteria,
                 ) {
-                    feeds_to_update.push(feed_id);
+                    // If any feed needs updating, trigger update for all feeds in this subscription
+                    // and move on to next subscription
+                    self.trigger_update(sub_id, price_ids.clone()).await?;
+                    break;
                 }
-            }
-
-            if !feeds_to_update.is_empty() {
-                self.trigger_update(sub_id, feeds_to_update).await?;
             }
         }
         Ok(())
@@ -169,89 +166,77 @@ impl Service for ControllerService {
 /// the current on-chain price (if available), and the subscription's update criteria.
 #[tracing::instrument()]
 fn needs_update(
-    subscription_id: SubscriptionId, // included for tracing
-    feed_id: PriceId,                // included for tracing
     pyth_price: &Price,
     chain_price_opt: Option<&Price>,
     update_criteria: &UpdateCriteria,
 ) -> bool {
-    match chain_price_opt {
+    // If there's no price currently on the chain for this feed, an update is always needed.
+    let chain_price = match chain_price_opt {
         None => {
             tracing::debug!("Update criteria met: No chain price available.");
-            true
+            return true;
         }
-        Some(chain_price) => {
-            let mut should_update = false;
+        Some(cp) => cp,
+    };
 
-            // Update if previous price was published more than `heartbeat_seconds` ago
-            if update_criteria.update_on_heartbeat {
-                if pyth_price.publish_time
-                    >= chain_price.publish_time + (update_criteria.heartbeat_seconds as i64)
-                {
-                    tracing::debug!(
-                        pyth_ts = pyth_price.publish_time,
-                        chain_ts = chain_price.publish_time,
-                        heartbeat_s = update_criteria.heartbeat_seconds,
-                        "Heartbeat criteria met: Pyth price is sufficiently newer."
-                    );
-                    should_update = true;
-                }
-            }
-
-            // Update if deviation exceeds threshold
-            if !should_update && update_criteria.update_on_deviation {
-                // Critical assumption: The `expo` fields of `pyth_price` and `chain_price` are identical,
-                // since we directly compare the `price` fields.
-
-                if chain_price.price == 0 {
-                    // Handle division by zero: if chain price is 0, any non-zero Pyth price is an infinite deviation.
-                    // If both are 0, there's no deviation.
-                    if pyth_price.price != 0 {
-                        tracing::debug!(
-                            pyth_price_val = pyth_price.price,
-                            "Deviation criteria met: Chain price is 0, Pyth price is non-zero.",
-                        );
-                        should_update = true;
-                    }
-                } else {
-                    // Calculate the deviation threshold value based on `deviation_threshold_bps` (basis points).
-                    //
-                    // Example: If chain_price is 100 and deviation_threshold_bps is 50 (0.5%),
-                    // then threshold_value = (100 * 50) / 10000 = 0.5
-                    // This means a price difference of more than 0.5 would trigger an update
-
-                    let price_diff = pyth_price.price.abs_diff(chain_price.price);
-                    let threshold_val = (chain_price.price.abs() as u64
-                        * update_criteria.deviation_threshold_bps as u64)
-                        / 10000;
-
-                    if price_diff > threshold_val {
-                        tracing::debug!(
-                            pyth_price_val = pyth_price.price,
-                            chain_price_val = chain_price.price,
-                            deviation_threshold_bps = update_criteria.deviation_threshold_bps,
-                            abs_price_diff = price_diff,
-                            allowed_diff_val = threshold_val,
-                            "Deviation criteria met: Price difference exceeds threshold."
-                        );
-                        should_update = true;
-                    }
-                }
-            }
-            // Return true if either heartbeat or deviation criteria (or both) were met.
-            should_update
+    // 1. Heartbeat Check:
+    // Updates if `update_on_heartbeat` is enabled and the Pyth price is newer than or equal to
+    // the chain price plus `heartbeat_seconds`.
+    if update_criteria.update_on_heartbeat {
+        if pyth_price.publish_time
+            >= chain_price.publish_time + (update_criteria.heartbeat_seconds as i64)
+        {
+            tracing::debug!(
+                "Heartbeat criteria met: Pyth price is sufficiently newer or same age with met delta."
+            );
+            return true;
         }
     }
+
+    // 2. Deviation Check:
+    // If `update_on_deviation` is enabled, checks if the Pyth price has deviated from the chain price
+    // by more than `deviation_threshold_bps`.
+    // Example: If chain_price is 100 and deviation_threshold_bps is 50 (0.5%),
+    // then threshold_value = (100 * 50) / 10000 = 0.5
+    // This means a price difference of more than 0.5 would trigger an update
+    if update_criteria.update_on_deviation {
+        // Critical assumption: The `expo` fields of `pyth_price` and `chain_price` are identical,
+        // since we directly compare the `price` fields.
+        if chain_price.price == 0 {
+            if pyth_price.price != 0 {
+                tracing::debug!(
+                    "Deviation criteria met: Chain price is 0, Pyth price is non-zero."
+                );
+                return true;
+            }
+        } else {
+            let price_diff = pyth_price.price.abs_diff(chain_price.price);
+            let threshold_val = (chain_price.price.abs() as u64
+                * update_criteria.deviation_threshold_bps as u64)
+                / 10000;
+
+            if price_diff > threshold_val {
+                tracing::debug!(
+                    abs_price_diff = price_diff,
+                    threshold = threshold_val,
+                    "Deviation criteria met: Price difference exceeds threshold."
+                );
+                return true;
+            }
+        }
+    }
+
+    // If neither heartbeat nor deviation criteria were met.
+    tracing::debug!("No update criteria met.");
+    false
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::adapters::ethereum::{SubscriptionParams, UpdateCriteria};
-    use crate::adapters::types::{PriceId, SubscriptionId};
     use crate::state::{ChainPriceState, PythPriceState, SubscriptionState};
     use ethers::types::U256;
-    use once_cell::sync::Lazy;
     use pyth_sdk::{Price, PriceIdentifier};
     use std::collections::HashMap;
     use std::time::Duration;
@@ -281,9 +266,6 @@ mod tests {
             deviation_threshold_bps,
         }
     }
-
-    static DUMMY_SUB_ID: Lazy<SubscriptionId> = Lazy::new(|| U256::zero());
-    static DUMMY_FEED_ID: Lazy<PriceId> = Lazy::new(|| PriceIdentifier::new([0u8; 32]));
 
     /// Helper function to create a default SubscriptionParams for tests
     fn mock_subscription_params(
@@ -535,10 +517,14 @@ mod tests {
             .await
             .expect("Should receive a PushRequest");
         assert_eq!(request.subscription_id, sub_id);
-        assert_eq!(request.price_ids.len(), 2, "Expected 2 feeds to be updated");
+        assert_eq!(
+            request.price_ids.len(),
+            3,
+            "Expected all 3 feeds to be in the request as one or more needed an update"
+        );
         assert!(request.price_ids.contains(&feed1_id));
         assert!(request.price_ids.contains(&feed2_id));
-        assert!(!request.price_ids.contains(&feed3_id)); // Ensure feed3 is not included
+        assert!(request.price_ids.contains(&feed3_id)); // Feed3 should now be included
         assert!(
             push_request_rx.try_recv().is_err(),
             "Should be no more requests"
@@ -584,10 +570,11 @@ mod tests {
         assert_eq!(request.subscription_id, sub_id);
         assert_eq!(
             request.price_ids.len(),
-            1,
-            "Expected only 1 feed to be updated"
+            2, // Expecting both feeds from the subscription
+            "Expected all feeds from the subscription to be in the request as one needed an update"
         );
-        assert_eq!(request.price_ids[0], feed2_id);
+        assert!(request.price_ids.contains(&feed1_id)); // The one with no pyth price initially
+        assert!(request.price_ids.contains(&feed2_id)); // The one that triggered the update
         assert!(
             push_request_rx.try_recv().is_err(),
             "Should be no more requests"
@@ -626,17 +613,15 @@ mod tests {
         // e.g., assert_matches!(result.unwrap_err().downcast_ref::<mpsc::error::SendError<PushRequest>>(), Some(_));
     }
 
+    // ================================
+    // UNIT TESTS FOR `needs_update`
+    // ================================
+
     #[test]
     fn test_needs_update_no_chain_price() {
         let pyth_price = mock_price(100, 10, -2, 1000);
         let criteria = mock_criteria(true, 60, true, 100);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            None,
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, None, &criteria));
     }
 
     #[test]
@@ -644,13 +629,7 @@ mod tests {
         let pyth_price = mock_price(100, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 900);
         let criteria = mock_criteria(true, 60, false, 0);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -658,13 +637,7 @@ mod tests {
         let pyth_price = mock_price(100, 10, -2, 950);
         let chain_price = mock_price(100, 10, -2, 900);
         let criteria = mock_criteria(true, 60, false, 0);
-        assert!(!needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(!needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -672,13 +645,7 @@ mod tests {
         let pyth_price = mock_price(100, 10, -2, 960);
         let chain_price = mock_price(100, 10, -2, 900);
         let criteria = mock_criteria(true, 60, false, 0);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -686,13 +653,7 @@ mod tests {
         let pyth_price = mock_price(100, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 900);
         let criteria = mock_criteria(false, 60, false, 0);
-        assert!(!needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(!needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -700,13 +661,7 @@ mod tests {
         let pyth_price = mock_price(105, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 1000);
         let criteria = mock_criteria(false, 0, true, 100);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -714,13 +669,7 @@ mod tests {
         let pyth_price = mock_price(95, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 1000);
         let criteria = mock_criteria(false, 0, true, 100);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -728,20 +677,12 @@ mod tests {
         let pyth_price = mock_price(100, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 1000);
         let criteria = mock_criteria(false, 0, true, 100);
-        assert!(!needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(!needs_update(&pyth_price, Some(&chain_price), &criteria));
 
         let pyth_price_slight_dev = mock_price(1005, 10, -3, 1000);
         let chain_price_slight_dev = mock_price(1000, 10, -3, 1000);
         let criteria_5_percent = mock_criteria(false, 0, true, 500);
         assert!(!needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
             &pyth_price_slight_dev,
             Some(&chain_price_slight_dev),
             &criteria_5_percent
@@ -753,13 +694,7 @@ mod tests {
         let pyth_price = mock_price(101, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 1000);
         let criteria = mock_criteria(false, 0, true, 100);
-        assert!(!needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(!needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -767,13 +702,7 @@ mod tests {
         let pyth_price = mock_price(150, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 1000);
         let criteria = mock_criteria(false, 0, false, 100);
-        assert!(!needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(!needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -781,13 +710,7 @@ mod tests {
         let pyth_price = mock_price(10, 10, -2, 1000);
         let chain_price = mock_price(0, 0, -2, 1000);
         let criteria = mock_criteria(false, 0, true, 1000);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -795,13 +718,7 @@ mod tests {
         let pyth_price = mock_price(0, 0, -2, 1000);
         let chain_price = mock_price(0, 0, -2, 1000);
         let criteria = mock_criteria(false, 0, true, 100);
-        assert!(!needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(!needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -809,13 +726,7 @@ mod tests {
         let pyth_price = mock_price(105, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 900);
         let criteria = mock_criteria(true, 60, true, 100);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -823,13 +734,7 @@ mod tests {
         let pyth_price = mock_price(100, 10, -2, 1000);
         let chain_price = mock_price(100, 10, -2, 900);
         let criteria = mock_criteria(true, 60, true, 100);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -837,13 +742,7 @@ mod tests {
         let pyth_price = mock_price(105, 10, -2, 950);
         let chain_price = mock_price(100, 10, -2, 900);
         let criteria = mock_criteria(true, 60, true, 100);
-        assert!(needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 
     #[test]
@@ -851,12 +750,6 @@ mod tests {
         let pyth_price = mock_price(100, 10, -2, 950);
         let chain_price = mock_price(100, 10, -2, 900);
         let criteria = mock_criteria(true, 60, true, 100);
-        assert!(!needs_update(
-            *DUMMY_SUB_ID,
-            *DUMMY_FEED_ID,
-            &pyth_price,
-            Some(&chain_price),
-            &criteria
-        ));
+        assert!(!needs_update(&pyth_price, Some(&chain_price), &criteria));
     }
 }
