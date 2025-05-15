@@ -4,9 +4,6 @@
 - chain: chiliz_spicy
   address: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134"
   type: EvmEntropyContract
-- chain: conflux_espace_testnet
-  address: "0xdF21D137Aadc95588205586636710ca2890538d5"
-  type: EvmEntropyContract
 - chain: mode_testnet
   address: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603"
   type: EvmEntropyContract
@@ -99,9 +96,6 @@
   type: EvmEntropyContract
 - chain: apechain_mainnet
   address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320"
-  type: EvmEntropyContract
-- chain: fantom_sonic_testnet
-  address: "0x5124FAE0890dE83B3bb2cc30Bb3EDAfFc07Da744"
   type: EvmEntropyContract
 - chain: sanko
   address: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb"

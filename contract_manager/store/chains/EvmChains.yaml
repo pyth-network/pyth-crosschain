@@ -491,11 +491,6 @@
   rpcUrl: https://evm-rpc-testnet.sei-apis.com
   networkId: 1328
   type: EvmChain
-- id: fantom_sonic_testnet
-  mainnet: false
-  rpcUrl: https://rpc.testnet.soniclabs.com
-  networkId: 64165
-  type: EvmChain
 - id: dela_deperp_testnet
   mainnet: false
   rpcUrl: https://sepolia-dela.deperp.com
