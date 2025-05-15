@@ -39,7 +39,6 @@ pub struct KeeperMetrics {
     pub reveals: Family<AccountLabel, Counter>,
     pub request_duration_ms: Family<AccountLabel, Histogram>,
     pub retry_count: Family<AccountLabel, Histogram>,
-    pub final_gas_multiplier: Family<AccountLabel, Histogram>,
     pub final_fee_multiplier: Family<AccountLabel, Histogram>,
     pub gas_price_estimate: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub accrued_pyth_fees: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
@@ -75,11 +74,6 @@ impl Default for KeeperMetrics {
             }),
             retry_count: Family::new_with_constructor(|| {
                 Histogram::new(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 15.0, 20.0].into_iter())
-            }),
-            final_gas_multiplier: Family::new_with_constructor(|| {
-                Histogram::new(
-                    vec![100.0, 125.0, 150.0, 200.0, 300.0, 400.0, 500.0, 600.0].into_iter(),
-                )
             }),
             final_fee_multiplier: Family::new_with_constructor(|| {
                 Histogram::new(vec![100.0, 110.0, 120.0, 140.0, 160.0, 180.0, 200.0].into_iter())
@@ -199,12 +193,6 @@ impl KeeperMetrics {
         );
 
         writable_registry.register(
-            "final_gas_multiplier",
-            "Final gas multiplier percentage for successful transactions",
-            keeper_metrics.final_gas_multiplier.clone(),
-        );
-
-        writable_registry.register(
             "final_fee_multiplier",
             "Final fee multiplier percentage for successful transactions",
             keeper_metrics.final_fee_multiplier.clone(),
@@ -270,7 +258,6 @@ impl KeeperMetrics {
         let _ = self.reveals.get_or_create(&account_label);
         let _ = self.request_duration_ms.get_or_create(&account_label);
         let _ = self.retry_count.get_or_create(&account_label);
-        let _ = self.final_gas_multiplier.get_or_create(&account_label);
         let _ = self.final_fee_multiplier.get_or_create(&account_label);
         let _ = self.gas_price_estimate.get_or_create(&account_label);
     }

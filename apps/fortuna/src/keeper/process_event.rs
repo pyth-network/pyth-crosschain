@@ -19,7 +19,7 @@ pub async fn process_event_with_backoff(
     event: RequestedWithCallbackEvent,
     chain_state: BlockchainState,
     contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
+    _gas_limit: U256,
     escalation_policy: EscalationPolicy,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
@@ -51,7 +51,6 @@ pub async fn process_event_with_backoff(
     let success = submit_tx_with_backoff(
         contract.client(),
         contract_call,
-        gas_limit,
         escalation_policy,
     )
     .await;
@@ -85,11 +84,6 @@ pub async fn process_event_with_backoff(
                 .retry_count
                 .get_or_create(&account_label)
                 .observe(result.num_retries as f64);
-
-            metrics
-                .final_gas_multiplier
-                .get_or_create(&account_label)
-                .observe(result.gas_multiplier as f64);
 
             metrics
                 .final_fee_multiplier
