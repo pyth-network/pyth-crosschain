@@ -307,9 +307,6 @@
 - chain: dela_mithreum_deperp_testnet
   address: "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7"
   type: EvmWormholeContract
-- chain: berachain_testnet_v2
-  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
-  type: EvmWormholeContract
 - chain: opbnb
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
@@ -379,9 +376,6 @@
 - chain: flow_mainnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
-- chain: fantom_sonic_testnet
-  address: "0xb700C2f6D14e2cfbD0845Bb102701dBDFf5d1bC4"
-  type: EvmWormholeContract
 - chain: abstract_testnet
   address: "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6"
   type: EvmWormholeContract
@@ -433,17 +427,11 @@
 - chain: abstract
   address: "0x056f829183Ec806A78c26C98961678c24faB71af"
   type: EvmWormholeContract
-- chain: happy_bird_song_ends_with_tio
-  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
-  type: EvmWormholeContract
 - chain: eventum_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
 - chain: sonic_blaze_testnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
-  type: EvmWormholeContract
-- chain: happy_bird_song_ends_with_tio
-  address: "0x0708325268dF9F66270F1401206434524814508b"
   type: EvmWormholeContract
 - chain: fantom_sonic_mainnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
@@ -458,9 +446,6 @@
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
 - chain: coredao_testnet_v2
-  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
-  type: EvmWormholeContract
-- chain: monad_devnet
   address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
   type: EvmWormholeContract
 - chain: monad_testnet
