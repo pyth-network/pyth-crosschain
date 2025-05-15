@@ -53,7 +53,6 @@ library PythUtils {
     /// @param expo2 The exponent of the second price
     /// @param targetExpo The target exponent of the cross-rate
     /// @return crossRate The cross-rate (a/c)
-    /// @return expo The exponent of the cross-rate
     /// @dev This function will revert if either price is negative or if the exponents are invalid.
     /// @dev This function will also revert if the cross-rate is greater than int64.max
     /// @notice This function doesn't return the combined confidence interval.
@@ -63,7 +62,7 @@ library PythUtils {
         int64 price2,
         int32 expo2,
         int32 targetExpo
-    ) public pure returns (int64 crossRate, int32 expo) {
+    ) public pure returns (int64 crossRate) {
         // Check if the input prices are negative
         if (price1 < 0 || price2 < 0) {
             revert PythErrors.NegativeInputPrice();
@@ -103,6 +102,6 @@ library PythUtils {
             revert();
         }
 
-        return (int64(uint64(combined)), targetExpo);
+        return int64(uint64(combined));
     }
 }

@@ -376,13 +376,10 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         int64 price2, 
         int32 expo2,
         int32 targetExpo, 
-        
-        int64 expectedPrice, 
-        int32 expectedExpo
-        ) internal {
-        (int64 price, int32 expo) = PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetExpo);
+        int64 expectedPrice
+    ) internal {
+        int64 price = PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetExpo);
         assertEq(price, expectedPrice);
-        assertEq(expo, expectedExpo);
     }
 
     function assertCrossRateReverts(
@@ -449,9 +446,9 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
     function testCombinePrices() public {
 
         // Basic Tests 
-        assertCrossRateEquals(500, -8, 500, -8, -5, 100000, -5); 
-        assertCrossRateEquals(10_000, -8, 100, -2, -5, 10, -5);
-        assertCrossRateEquals(10_000, -2, 100, -8, -4, 1_000_000_000_000, -4);
+        assertCrossRateEquals(500, -8, 500, -8, -5, 100000); 
+        assertCrossRateEquals(10_000, -8, 100, -2, -5, 10);
+        assertCrossRateEquals(10_000, -2, 100, -8, -4, 1_000_000_000_000);
 
         // Negative Price Tests
         assertCrossRateReverts(-100, -2, 100, -2, -5, PythErrors.NegativeInputPrice.selector);
@@ -467,13 +464,13 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         assertCrossRateReverts(100, -2, 100, -2, 1, PythErrors.InvalidTargetExpo.selector);
 
         // Different Exponent Tests
-        assertCrossRateEquals(10_000, -2, 100, -4, -4, 100_000_000, -4); 
-        assertCrossRateEquals(10_000, -2, 10_000, -1, -2, 10, -2);
-        assertCrossRateEquals(10_000, -10, 10_000, -2, 0, 0, 0); // It will truncate to 0
+        assertCrossRateEquals(10_000, -2, 100, -4, -4, 100_000_000); 
+        assertCrossRateEquals(10_000, -2, 10_000, -1, -2, 10);
+        assertCrossRateEquals(10_000, -10, 10_000, -2, 0, 0); // It will truncate to 0
 
         // Exponent Edge Tests
-        assertCrossRateEquals(10_000, 0, 100, 0, 0, 100, 0); 
-        assertCrossRateEquals(10_000, 0, 100, 0, -255, 100, -255); 
+        assertCrossRateEquals(10_000, 0, 100, 0, 0, 100); 
+        assertCrossRateEquals(10_000, 0, 100, 0, -255, 100); 
         // assertCrossRateEquals(10_000, 0, 100, -255, -255, 100, -255); 
         // assertCrossRateEquals(10_000, -255, 100, 0, 0, 100, 0); 
 
