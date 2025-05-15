@@ -19,14 +19,24 @@ message SignedLazerTransaction {
     optional bytes payload = 2;
 }
 
+// Signature for encoded payload along with the relevant public keys to verify against it
+// Public key should successfully verify payload
+// Pyth Lazer will maintain a list of valid public keys
+// Passed public key should be present in publisher's list of valid keys
 message SignatureWithPublicKey {
+    // [required] type of signature, which determines included data needed for verifying
     oneof signing_type {
         Ed25519 ed25519 = 1;
     };
 }
 
+// ED25519 style signature. Should include a single signature and a single public key
+// Signature will be verified using public key after determining public key is valid
 message Ed25519 {
+    // [required] 64 byte signature
     optional bytes signature = 1;
+
+    // [required] 32 byte public key
     optional bytes public_key = 2;
 }
 
