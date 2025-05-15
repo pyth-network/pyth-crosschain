@@ -82,7 +82,9 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
         {
             // Extract Log from TransactionReceipt.
-            let l: RawLog = r.logs.first()
+            let l: RawLog = r
+                .logs
+                .first()
                 .ok_or_else(|| anyhow!("No logs in receipt"))?
                 .clone()
                 .into();
@@ -115,7 +117,9 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
         {
             // Extract Log from TransactionReceipt.
-            let l: RawLog = r.logs.first()
+            let l: RawLog = r
+                .logs
+                .first()
                 .ok_or_else(|| anyhow!("No logs in receipt"))?
                 .clone()
                 .into();
@@ -153,12 +157,13 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
             .await?
         {
-            if let PythRandomEvents::Revealed1Filter(r) =
-                PythRandomEvents::decode_log(&r.logs.first()
+            if let PythRandomEvents::Revealed1Filter(r) = PythRandomEvents::decode_log(
+                &r.logs
+                    .first()
                     .ok_or_else(|| anyhow!("No logs in receipt"))?
                     .clone()
-                    .into())?
-            {
+                    .into(),
+            )? {
                 Ok(r.random_number)
             } else {
                 Err(anyhow!("No log with randomnumber"))
