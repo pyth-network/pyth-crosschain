@@ -1,3 +1,5 @@
+"use client";
+
 import { GoogleAnalytics } from "@next/third-parties/google";
 import clsx from "clsx";
 import dynamic from "next/dynamic";

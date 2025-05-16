@@ -105,7 +105,7 @@ export const ReferenceData = ({ feed }: Props) => {
     <Table
       label="Reference Data"
       fill
-      stickyHeader
+      stickyHeader="top"
       className={styles.referenceData ?? ""}
       columns={[
         {

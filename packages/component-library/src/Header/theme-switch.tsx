@@ -37,7 +37,7 @@ export const ThemeSwitch = <T extends ElementType>({
       size="sm"
       hideText
       onPress={toggleTheme}
-      beforeIcon={IconPath}
+      beforeIcon={<IconPath />}
       className={clsx(styles.themeSwitch, className)}
       rounded
       {...props}
@@ -51,13 +51,18 @@ const IconPath = ({ className, ...props }: Omit<IconProps, "offset">) => {
   const offsets = useOffsets();
   const isSSR = useIsSSR();
 
-  return isSSR ? (
-    <div className={className} />
-  ) : (
+  return (
     <div className={clsx(styles.iconPath, className)}>
-      <IconMovement icon={<Desktop {...props} />} offset={offsets.desktop} />
-      <IconMovement icon={<Sun {...props} />} offset={offsets.sun} />
-      <IconMovement icon={<Moon {...props} />} offset={offsets.moon} />
+      {!isSSR && (
+        <>
+          <IconMovement
+            icon={<Desktop {...props} />}
+            offset={offsets.desktop}
+          />
+          <IconMovement icon={<Sun {...props} />} offset={offsets.sun} />
+          <IconMovement icon={<Moon {...props} />} offset={offsets.moon} />
+        </>
+      )}
     </div>
   );
 };

@@ -105,8 +105,15 @@
 
         &[data-sticky-header] {
           position: sticky;
-          top: theme.$header-height;
           z-index: 1;
+        }
+
+        &[data-sticky-header="top"] {
+          top: 0;
+        }
+
+        &[data-sticky-header="appHeader"] {
+          top: theme.$header-height;
         }
 
         &[data-sticky] {

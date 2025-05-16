@@ -96,7 +96,7 @@ const useResolvedProps = () => {
     textValue: chainTextValue,
     buttonLabel: viemChain?.name ?? "Chain",
     ...(viemChain && {
-      icon: () => <ChainIcon id={viemChain.id} />,
+      icon: <ChainIcon id={viemChain.id} />,
     }),
   };
 };

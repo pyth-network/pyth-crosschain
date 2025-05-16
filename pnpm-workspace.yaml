@@ -48,6 +48,9 @@ catalog:
   "@amplitude/analytics-browser": ^2.13.0
   "@amplitude/plugin-autocapture-browser": ^1.0.0
   "@axe-core/react": ^4.10.1
+  "@babel/cli": ^7.27.2
+  "@babel/core": ^7.27.1
+  "@babel/preset-typescript": ^7.27.1
   "@bonfida/spl-name-service": ^3.0.10
   "@clickhouse/client": ^1.11.0
   "@coral-xyz/anchor": ^0.30.1
@@ -58,7 +61,7 @@ catalog:
   "@floating-ui/react": ^0.27.6
   "@headlessui/react": ^2.2.0
   "@heroicons/react": ^2.2.0
-  "@next/third-parties": ^15.3.1
+  "@next/third-parties": ^15.3.2
   "@phosphor-icons/react": ^2.1.7
   "@pythnetwork/client": ^2.22.1
   "@pythnetwork/pyth-sdk-solidity": ^4.0.0
@@ -86,6 +89,7 @@ catalog:
   "@types/react-dom": ^19.1.1
   "@vercel/functions": ^2.0.0
   autoprefixer: ^10.4.21
+  babel-plugin-react-compiler: 19.1.0-rc.1
   bcp-47: ^2.1.0
   bs58: ^6.0.0
   class-variance-authority: ^0.7.1
@@ -104,7 +108,7 @@ catalog:
   lucide-react: ^0.487.0
   modern-normalize: ^3.0.1
   motion: ^12.9.2
-  next: ^15.3.1
+  next: ^15.3.2
   next-themes: ^0.4.6
   nuqs: ^2.4.1
   pino: ^9.6.0

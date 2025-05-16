@@ -19,6 +19,10 @@
   line-height: normal;
   -webkit-tap-highlight-color: transparent;
 
+  .icon {
+    display: grid;
+  }
+
   @each $size, $values in theme.$button-sizes {
     &[data-size="#{$size}"] {
       height: theme.map-get-strict($values, "height");
@@ -27,8 +31,7 @@
       font-size: theme.map-get-strict($values, "font-size");
 
       .icon {
-        width: theme.map-get-strict($values, "icon-size");
-        height: theme.map-get-strict($values, "icon-size");
+        font-size: theme.map-get-strict($values, "icon-size");
       }
 
       .text {
