@@ -339,13 +339,13 @@ mod tests {
         let rewards = vec![
             vec![U256::from(10000)], // Higher than default priority fee (3000)
         ];
-        
+
         let (max_fee, max_priority_fee) = eip1559_default_estimator(base_fee, rewards);
-        
+
         assert_eq!(max_priority_fee, U256::from(10000));
-        
+
         let surged_base_fee = base_fee * 14 / 10;
-        
+
         assert_eq!(max_fee, surged_base_fee);
     }
 }
