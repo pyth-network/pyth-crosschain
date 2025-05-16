@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "9d7448c9bbad50d6242dfc0ba7d5ad4837201a1585bd56cc9a65fe75d0fa5952"
+}

@@ -44,23 +44,33 @@
         "type_info": "Text"
       },
       {
-        "name": "sender",
+        "name": "user_random_number",
         "ordinal": 8,
         "type_info": "Text"
       },
       {
-        "name": "reveal_block_number",
+        "name": "sender",
         "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "reveal_block_number",
+        "ordinal": 10,
         "type_info": "Integer"
       },
       {
         "name": "reveal_tx_hash",
-        "ordinal": 10,
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider_random_number",
+        "ordinal": 12,
         "type_info": "Text"
       },
       {
         "name": "info",
-        "ordinal": 11,
+        "ordinal": 13,
         "type_info": "Text"
       }
     ],
@@ -77,6 +87,8 @@
       false,
       false,
       false,
+      false,
+      true,
       true,
       true,
       true
