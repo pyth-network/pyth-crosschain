@@ -168,3 +168,168 @@ fn base_fee_surged(base_fee_per_gas: U256) -> U256 {
         base_fee_per_gas * 12 / 10
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_estimate_priority_fee_empty_rewards() {
+        let rewards: Vec<Vec<U256>> = vec![];
+        let result = estimate_priority_fee(rewards);
+        assert_eq!(result, U256::zero());
+    }
+
+    #[test]
+    fn test_estimate_priority_fee_single_reward() {
+        let reward = U256::from(100);
+        let rewards = vec![vec![reward]];
+        let result = estimate_priority_fee(rewards);
+        assert_eq!(result, reward);
+    }
+
+    #[test]
+    fn test_estimate_priority_fee_multiple_rewards() {
+        let rewards = vec![
+            vec![U256::from(100)],
+            vec![U256::from(120)],
+            vec![U256::from(130)],
+            vec![U256::from(110)],
+            vec![U256::from(150)],
+        ];
+        let result = estimate_priority_fee(rewards);
+        assert_eq!(result, U256::from(120));
+    }
+
+    #[test]
+    fn test_estimate_priority_fee_with_zero_rewards() {
+        let rewards = vec![
+            vec![U256::from(0)],
+            vec![U256::from(120)],
+            vec![U256::from(130)],
+        ];
+        let result = estimate_priority_fee(rewards);
+        assert_eq!(result, U256::from(130));
+    }
+
+    #[test]
+    fn test_estimate_priority_fee_with_large_percentage_change() {
+        // Test with rewards that have a large percentage change
+        let rewards = vec![
+            vec![U256::from(100)],
+            vec![U256::from(120)],
+            vec![U256::from(350)], // Large increase (191.67% change from 120)
+            vec![U256::from(400)],
+        ];
+
+        let result = estimate_priority_fee(rewards);
+        assert_eq!(result, U256::from(350));
+    }
+
+    #[test]
+    fn test_base_fee_surged_lowest_tier() {
+        let base_fee = U256::from(SURGE_THRESHOLD_1 - 1);
+        let result = base_fee_surged(base_fee);
+        assert_eq!(result, base_fee * 2);
+    }
+
+    #[test]
+    fn test_base_fee_surged_medium_tier() {
+        let base_fee = U256::from((SURGE_THRESHOLD_1 + SURGE_THRESHOLD_2) / 2);
+        let result = base_fee_surged(base_fee);
+        assert_eq!(result, base_fee * 16 / 10);
+    }
+
+    #[test]
+    fn test_base_fee_surged_high_tier() {
+        let base_fee = U256::from((SURGE_THRESHOLD_2 + SURGE_THRESHOLD_3) / 2);
+        let result = base_fee_surged(base_fee);
+        assert_eq!(result, base_fee * 14 / 10);
+    }
+
+    #[test]
+    fn test_base_fee_surged_highest_tier() {
+        let base_fee = U256::from(SURGE_THRESHOLD_3 + 1);
+        let result = base_fee_surged(base_fee);
+        assert_eq!(result, base_fee * 12 / 10);
+    }
+
+    #[test]
+    fn test_eip1559_default_estimator_below_threshold() {
+        let base_fee = U256::from(EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER - 1);
+        let rewards = vec![
+            vec![U256::from(100)],
+            vec![U256::from(120)],
+            vec![U256::from(130)],
+        ];
+
+        let (max_fee, max_priority_fee) = eip1559_default_estimator(base_fee, rewards);
+
+        assert_eq!(
+            max_priority_fee,
+            U256::from(EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE)
+        );
+
+        let surged_base_fee = base_fee * 16 / 10;
+        assert_eq!(max_fee, surged_base_fee);
+    }
+
+    #[test]
+    fn test_eip1559_default_estimator_above_threshold() {
+        let base_fee = U256::from(EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER + 1);
+        let rewards = vec![
+            vec![U256::from(100)],
+            vec![U256::from(120)],
+            vec![U256::from(130)],
+        ];
+
+        let (max_fee, max_priority_fee) = eip1559_default_estimator(base_fee, rewards);
+
+        assert_eq!(
+            max_priority_fee,
+            U256::from(EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE)
+        );
+
+        let surged_base_fee = base_fee * 14 / 10;
+
+        assert_eq!(max_fee, surged_base_fee);
+    }
+
+    #[test]
+    fn test_eip1559_default_estimator_estimated_priority_fee_lower_than_default() {
+        let base_fee = U256::from(EIP1559_FEE_ESTIMATION_PRIORITY_FEE_TRIGGER + 1);
+        let rewards = vec![
+            vec![U256::from(1)], // Very low rewards
+        ];
+
+        let (max_fee, max_priority_fee) = eip1559_default_estimator(base_fee, rewards);
+
+        assert_eq!(
+            max_priority_fee,
+            U256::from(EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE)
+        );
+
+        let surged_base_fee = base_fee * 14 / 10;
+
+        assert_eq!(max_fee, surged_base_fee);
+    }
+
+    #[test]
+    fn test_eip1559_default_estimator_priority_fee_greater_than_surged_fee() {
+        let base_fee = U256::from(10); // Very low base fee
+        let rewards = vec![
+            vec![U256::from(1000000)], // Very high reward
+        ];
+
+        let (max_fee, max_priority_fee) = eip1559_default_estimator(base_fee, rewards);
+
+        assert_eq!(
+            max_priority_fee,
+            U256::from(EIP1559_FEE_ESTIMATION_DEFAULT_PRIORITY_FEE)
+        );
+
+        let surged_base_fee = base_fee * 2;
+
+        assert_eq!(max_fee, max_priority_fee + surged_base_fee);
+    }
+}
