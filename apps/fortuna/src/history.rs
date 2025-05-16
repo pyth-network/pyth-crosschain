@@ -1,15 +1,14 @@
-use crate::api::ChainId;
-use anyhow::Result;
-use chrono::{DateTime, NaiveDateTime};
-use ethers::core::utils::hex::ToHex;
-use ethers::prelude::TxHash;
-use ethers::types::Address;
-use serde::Serialize;
-use sqlx::{migrate, Pool, Sqlite, SqlitePool};
-use std::sync::Arc;
-use tokio::spawn;
-use tokio::sync::mpsc;
-use utoipa::ToSchema;
+use {
+    crate::api::ChainId,
+    anyhow::Result,
+    chrono::{DateTime, NaiveDateTime},
+    ethers::{core::utils::hex::ToHex, prelude::TxHash, types::Address},
+    serde::Serialize,
+    sqlx::{migrate, Pool, Sqlite, SqlitePool},
+    std::sync::Arc,
+    tokio::{spawn, sync::mpsc},
+    utoipa::ToSchema,
+};
 
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 pub enum RequestEntryState {
@@ -340,9 +339,7 @@ impl History {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use chrono::Duration;
-    use tokio::time::sleep;
+    use {super::*, chrono::Duration, tokio::time::sleep};
 
     fn get_random_request_status() -> RequestStatus {
         RequestStatus {

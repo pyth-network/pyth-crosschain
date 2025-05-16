@@ -1,8 +1,10 @@
-use ethers::prelude::LogMeta;
 use {
     anyhow::Result,
     axum::async_trait,
-    ethers::types::{Address, BlockNumber as EthersBlockNumber, U256},
+    ethers::{
+        prelude::LogMeta,
+        types::{Address, BlockNumber as EthersBlockNumber, U256},
+    },
 };
 
 pub type BlockNumber = u64;

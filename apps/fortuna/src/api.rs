@@ -1,7 +1,7 @@
-use crate::history::History;
 use {
     crate::{
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},
+        history::History,
         state::HashChainState,
     },
     anyhow::Result,
@@ -200,12 +200,14 @@ pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
 
 #[cfg(test)]
 mod test {
-    use crate::api::ApiBlockChainState;
-    use crate::history::History;
     use {
         crate::{
-            api::{self, ApiState, BinaryEncoding, Blob, BlockchainState, GetRandomValueResponse},
+            api::{
+                self, ApiBlockChainState, ApiState, BinaryEncoding, Blob, BlockchainState,
+                GetRandomValueResponse,
+            },
             chain::reader::{mock::MockEntropyReader, BlockStatus},
+            history::History,
             state::{HashChainState, PebbleHashChain},
         },
         axum::http::StatusCode,

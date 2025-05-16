@@ -1,11 +1,10 @@
-use crate::history::History;
 use {
     crate::{
         api::BlockchainState,
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
         eth_utils::utils::EscalationPolicy,
-        keeper::keeper_metrics::KeeperMetrics,
-        keeper::process_event::process_event_with_backoff,
+        history::History,
+        keeper::{keeper_metrics::KeeperMetrics, process_event::process_event_with_backoff},
     },
     anyhow::{anyhow, Result},
     ethers::{

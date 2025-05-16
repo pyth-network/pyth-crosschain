@@ -5,8 +5,7 @@ use {
         metrics::{counter::Counter, family::Family, gauge::Gauge, histogram::Histogram},
         registry::Registry,
     },
-    std::sync::atomic::AtomicU64,
-    std::sync::Arc,
+    std::sync::{atomic::AtomicU64, Arc},
     tokio::sync::RwLock,
 };
 

@@ -1,10 +1,9 @@
-use crate::chain::reader::EntropyRequestInfo;
-use ethers::contract::LogMeta;
 use {
     crate::{
         api::ChainId,
         chain::reader::{
-            self, BlockNumber, BlockStatus, EntropyReader, RequestedWithCallbackEvent,
+            self, BlockNumber, BlockStatus, EntropyReader, EntropyRequestInfo,
+            RequestedWithCallbackEvent,
         },
         config::EthereumConfig,
         eth_utils::{
@@ -18,7 +17,7 @@ use {
     axum::async_trait,
     ethers::{
         abi::RawLog,
-        contract::{abigen, EthLogDecode},
+        contract::{abigen, EthLogDecode, LogMeta},
         core::types::Address,
         middleware::{gas_oracle::GasOracleMiddleware, SignerMiddleware},
         prelude::JsonRpcClient,

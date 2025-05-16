@@ -4,8 +4,7 @@ use {
         api::ChainId, chain::ethereum::InstrumentedPythContract,
         eth_utils::traced_client::TracedClient,
     },
-    ethers::middleware::Middleware,
-    ethers::{prelude::BlockNumber, providers::Provider, types::Address},
+    ethers::{middleware::Middleware, prelude::BlockNumber, providers::Provider, types::Address},
     std::{
         sync::Arc,
         time::{SystemTime, UNIX_EPOCH},

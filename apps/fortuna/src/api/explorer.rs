@@ -1,11 +1,17 @@
-use crate::api::{ChainId, RestError};
-use crate::history::RequestStatus;
-use axum::extract::{Query, State};
-use axum::Json;
-use chrono::{DateTime, Utc};
-use ethers::types::{Address, TxHash};
-use std::str::FromStr;
-use utoipa::IntoParams;
+use {
+    crate::{
+        api::{ChainId, RestError},
+        history::RequestStatus,
+    },
+    axum::{
+        extract::{Query, State},
+        Json,
+    },
+    chrono::{DateTime, Utc},
+    ethers::types::{Address, TxHash},
+    std::str::FromStr,
+    utoipa::IntoParams,
+};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]

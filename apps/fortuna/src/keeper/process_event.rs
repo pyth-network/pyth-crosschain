@@ -1,8 +1,9 @@
-use crate::history::{RequestEntryState, RequestStatus};
 use {
     super::keeper_metrics::AccountLabel,
     crate::{
-        chain::reader::RequestedWithCallbackEvent, eth_utils::utils::submit_tx_with_backoff,
+        chain::reader::RequestedWithCallbackEvent,
+        eth_utils::utils::submit_tx_with_backoff,
+        history::{RequestEntryState, RequestStatus},
         keeper::block::ProcessParams,
     },
     anyhow::{anyhow, Result},

@@ -1,4 +1,3 @@
-use crate::history::History;
 use {
     crate::{
         api::{self, ApiBlockChainState, BlockchainState, ChainId},
@@ -6,6 +5,7 @@ use {
         command::register_provider::CommitmentMetadata,
         config::{Commitment, Config, EthereumConfig, ProviderConfig, RunOptions},
         eth_utils::traced_client::RpcMetrics,
+        history::History,
         keeper::{self, keeper_metrics::KeeperMetrics},
         state::{HashChainState, PebbleHashChain},
     },
