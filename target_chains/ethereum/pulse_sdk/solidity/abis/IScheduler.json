@@ -1,0 +1,674 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "PricesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "SubscriptionActivated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "manager",
+        "type": "address"
+      }
+    ],
+    "name": "SubscriptionCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "SubscriptionDeactivated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "SubscriptionUpdated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "addFunds",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32[]",
+            "name": "priceIds",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "readerWhitelist",
+            "type": "address[]"
+          },
+          {
+            "internalType": "bool",
+            "name": "whitelistEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPermanent",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bool",
+                "name": "updateOnHeartbeat",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint32",
+                "name": "heartbeatSeconds",
+                "type": "uint32"
+              },
+              {
+                "internalType": "bool",
+                "name": "updateOnDeviation",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint32",
+                "name": "deviationThresholdBps",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct SchedulerStructs.UpdateCriteria",
+            "name": "updateCriteria",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct SchedulerStructs.SubscriptionParams",
+        "name": "subscriptionParams",
+        "type": "tuple"
+      }
+    ],
+    "name": "createSubscription",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "startIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxResults",
+        "type": "uint256"
+      }
+    ],
+    "name": "getActiveSubscriptions",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "subscriptionIds",
+        "type": "uint256[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32[]",
+            "name": "priceIds",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "readerWhitelist",
+            "type": "address[]"
+          },
+          {
+            "internalType": "bool",
+            "name": "whitelistEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPermanent",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bool",
+                "name": "updateOnHeartbeat",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint32",
+                "name": "heartbeatSeconds",
+                "type": "uint32"
+              },
+              {
+                "internalType": "bool",
+                "name": "updateOnDeviation",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint32",
+                "name": "deviationThresholdBps",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct SchedulerStructs.UpdateCriteria",
+            "name": "updateCriteria",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct SchedulerStructs.SubscriptionParams[]",
+        "name": "subscriptionParams",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalCount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "priceIds",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "age_seconds",
+        "type": "uint256"
+      }
+    ],
+    "name": "getEmaPricesNoOlderThan",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int64",
+            "name": "price",
+            "type": "int64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "conf",
+            "type": "uint64"
+          },
+          {
+            "internalType": "int32",
+            "name": "expo",
+            "type": "int32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "publishTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct PythStructs.Price[]",
+        "name": "prices",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "priceIds",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getEmaPricesUnsafe",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int64",
+            "name": "price",
+            "type": "int64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "conf",
+            "type": "uint64"
+          },
+          {
+            "internalType": "int32",
+            "name": "expo",
+            "type": "int32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "publishTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct PythStructs.Price[]",
+        "name": "prices",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "numPriceFeeds",
+        "type": "uint8"
+      }
+    ],
+    "name": "getMinimumBalance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "minimumBalanceInWei",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "priceIds",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "age",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPricesNoOlderThan",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int64",
+            "name": "price",
+            "type": "int64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "conf",
+            "type": "uint64"
+          },
+          {
+            "internalType": "int32",
+            "name": "expo",
+            "type": "int32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "publishTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct PythStructs.Price[]",
+        "name": "prices",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "priceIds",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "getPricesUnsafe",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int64",
+            "name": "price",
+            "type": "int64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "conf",
+            "type": "uint64"
+          },
+          {
+            "internalType": "int32",
+            "name": "expo",
+            "type": "int32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "publishTime",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct PythStructs.Price[]",
+        "name": "prices",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSubscription",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32[]",
+            "name": "priceIds",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "readerWhitelist",
+            "type": "address[]"
+          },
+          {
+            "internalType": "bool",
+            "name": "whitelistEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPermanent",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bool",
+                "name": "updateOnHeartbeat",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint32",
+                "name": "heartbeatSeconds",
+                "type": "uint32"
+              },
+              {
+                "internalType": "bool",
+                "name": "updateOnDeviation",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint32",
+                "name": "deviationThresholdBps",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct SchedulerStructs.UpdateCriteria",
+            "name": "updateCriteria",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct SchedulerStructs.SubscriptionParams",
+        "name": "params",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "priceLastUpdatedAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balanceInWei",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalUpdates",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalSpent",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SchedulerStructs.SubscriptionStatus",
+        "name": "status",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "updateData",
+        "type": "bytes[]"
+      }
+    ],
+    "name": "updatePriceFeeds",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32[]",
+            "name": "priceIds",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "readerWhitelist",
+            "type": "address[]"
+          },
+          {
+            "internalType": "bool",
+            "name": "whitelistEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isPermanent",
+            "type": "bool"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bool",
+                "name": "updateOnHeartbeat",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint32",
+                "name": "heartbeatSeconds",
+                "type": "uint32"
+              },
+              {
+                "internalType": "bool",
+                "name": "updateOnDeviation",
+                "type": "bool"
+              },
+              {
+                "internalType": "uint32",
+                "name": "deviationThresholdBps",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct SchedulerStructs.UpdateCriteria",
+            "name": "updateCriteria",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct SchedulerStructs.SubscriptionParams",
+        "name": "newSubscriptionParams",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateSubscription",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subscriptionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawFunds",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

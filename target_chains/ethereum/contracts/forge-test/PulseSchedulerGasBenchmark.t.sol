@@ -7,10 +7,10 @@ import "forge-std/console.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "../contracts/pulse/SchedulerUpgradeable.sol";
-import "../contracts/pulse/IScheduler.sol";
-import "../contracts/pulse/SchedulerState.sol";
-import "../contracts/pulse/SchedulerEvents.sol";
-import "../contracts/pulse/SchedulerErrors.sol";
+import "@pythnetwork/pulse-sdk-solidity/IScheduler.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerStructs.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerEvents.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerErrors.sol";
 import "./utils/PulseSchedulerTestUtils.t.sol";
 
 contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
@@ -54,7 +54,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         // Setup: Create subscription and perform initial update
         vm.prank(manager);
         uint256 subscriptionId = _setupSubscriptionWithInitialUpdate(numFeeds);
-        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+        (SchedulerStructs.SubscriptionParams memory params, ) = scheduler
             .getSubscription(subscriptionId);
 
         // Advance time to meet heartbeat criteria
@@ -161,8 +161,10 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         // Deactivate every other subscription
         for (uint256 i = 0; i < numSubscriptions; i++) {
             if (i % 2 == 1) {
-                (SchedulerState.SubscriptionParams memory params, ) = scheduler
-                    .getSubscription(subscriptionIds[i]);
+                (
+                    SchedulerStructs.SubscriptionParams memory params,
+
+                ) = scheduler.getSubscription(subscriptionIds[i]);
                 params.isActive = false;
                 scheduler.updateSubscription(subscriptionIds[i], params);
             }
