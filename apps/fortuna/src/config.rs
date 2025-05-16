@@ -87,10 +87,12 @@ impl Config {
 
         // Run correctness checks for the config and fail if there are any issues.
         for (chain_id, config) in config.chains.iter() {
-            if !(config.min_profit_pct.value() <= config.target_profit_pct.value()
-                && config.target_profit_pct.value() <= config.max_profit_pct.value())
+            if !(config.min_profit_multiplier_pct.value()
+                <= config.target_profit_multiplier_pct.value()
+                && config.target_profit_multiplier_pct.value()
+                    <= config.max_profit_multiplier_pct.value())
             {
-                return Err(anyhow!("chain id {:?} configuration is invalid. Config must satisfy min_profit_pct <= target_profit_pct <= max_profit_pct.", chain_id));
+                return Err(anyhow!("chain id {:?} configuration is invalid. Config must satisfy min_profit_multiplier_pct <= target_profit_multiplier_pct <= max_profit_multiplier_pct.", chain_id));
             }
         }
 
@@ -145,23 +147,26 @@ pub struct EthereumConfig {
     pub escalation_policy: EscalationPolicyConfig,
 
     /// The minimum percentage profit to earn as a function of the callback cost.
-    /// For example, 20 means a profit of 20% over the cost of a callback that uses the full gas limit.
+    /// A callback using the full gas limit has a cost of 100.
+    /// Thus, 120 means a profit of 20% over the cost of a callback that uses the full gas limit.
     /// The fee will be raised if the profit is less than this number.
-    /// The minimum value for this is -100. If set to < 0, it means the keeper may lose money on callbacks that use the full gas limit.
-    pub min_profit_pct: Percentage,
+    /// The minimum value for this is 0. If set to < 100, it means the keeper may lose money on callbacks that use the full gas limit.
+    pub min_profit_multiplier_pct: Percentage,
 
     /// The target percentage profit to earn as a function of the callback cost.
-    /// For example, 20 means a profit of 20% over the cost of a callback that uses the full gas limit.
+    /// A callback using the full gas limit has a cost of 100.
+    /// Thus, 120 means a profit of 20% over the cost of a callback that uses the full gas limit.
     /// The fee will be set to this target whenever it falls outside the min/max bounds.
-    /// The minimum value for this is -100. If set to < 0, it means the keeper may lose money on callbacks that use the full gas limit.
-    pub target_profit_pct: Percentage,
+    /// The minimum value for this is 0. If set to < 100, it means the keeper may lose money on callbacks that use the full gas limit.
+    pub target_profit_multiplier_pct: Percentage,
 
     /// The maximum percentage profit to earn as a function of the callback cost.
-    /// For example, 100 means a profit of 100% over the cost of a callback that uses the full gas limit.
+    /// A callback using the full gas limit has a cost of 100.
+    /// Thus, 200 means a profit of 100% over the cost of a callback that uses the full gas limit.
     /// The fee will be lowered if it is more profitable than specified here.
-    /// Must be larger than min_profit_pct.
-    /// The minimum value for this is -100. If set to < 0, it means the keeper may lose money on callbacks that use the full gas limit.
-    pub max_profit_pct: Percentage,
+    /// Must be larger than min_profit_multiplier_pct.
+    /// The minimum value for this is 0. If set to < 100, it means the keeper may lose money on callbacks that use the full gas limit.
+    pub max_profit_multiplier_pct: Percentage,
 
     /// Minimum wallet balance for the keeper. If the balance falls below this level, the keeper will
     /// withdraw fees from the contract to top up. This functionality requires the keeper to be the fee
@@ -192,7 +197,7 @@ fn default_block_delays() -> Vec<u64> {
 }
 
 fn default_priority_fee_multiplier_pct() -> Percentage {
-    Percentage::from_u32(100)
+    Percentage::new(100)
 }
 
 fn default_backlog_range() -> u64 {
@@ -228,27 +233,27 @@ pub struct EscalationPolicyConfig {
 }
 
 fn default_gas_limit_tolerance_pct() -> Percentage {
-    Percentage::from_u32(110)
+    Percentage::new(110)
 }
 
 fn default_initial_gas_multiplier_pct() -> Percentage {
-    Percentage::from_u32(125)
+    Percentage::new(125)
 }
 
 fn default_gas_multiplier_pct() -> Percentage {
-    Percentage::from_u32(110)
+    Percentage::new(110)
 }
 
 fn default_gas_multiplier_cap_pct() -> Percentage {
-    Percentage::from_u32(600)
+    Percentage::new(600)
 }
 
 fn default_fee_multiplier_pct() -> Percentage {
-    Percentage::from_u32(110)
+    Percentage::new(110)
 }
 
 fn default_fee_multiplier_cap_pct() -> Percentage {
-    Percentage::from_u32(200)
+    Percentage::new(200)
 }
 
 impl Default for EscalationPolicyConfig {
@@ -267,12 +272,12 @@ impl Default for EscalationPolicyConfig {
 impl EscalationPolicyConfig {
     pub fn to_policy(&self) -> EscalationPolicy {
         EscalationPolicy {
-            gas_limit_tolerance_pct: self.gas_limit_tolerance_pct.value() as u64,
-            initial_gas_multiplier_pct: self.initial_gas_multiplier_pct.value() as u64,
-            gas_multiplier_pct: self.gas_multiplier_pct.value() as u64,
-            gas_multiplier_cap_pct: self.gas_multiplier_cap_pct.value() as u64,
-            fee_multiplier_pct: self.fee_multiplier_pct.value() as u64,
-            fee_multiplier_cap_pct: self.fee_multiplier_cap_pct.value() as u64,
+            gas_limit_tolerance_pct: self.gas_limit_tolerance_pct.value(),
+            initial_gas_multiplier_pct: self.initial_gas_multiplier_pct.value(),
+            gas_multiplier_pct: self.gas_multiplier_pct.value(),
+            gas_multiplier_cap_pct: self.gas_multiplier_cap_pct.value(),
+            fee_multiplier_pct: self.fee_multiplier_pct.value(),
+            fee_multiplier_cap_pct: self.fee_multiplier_cap_pct.value(),
         }
     }
 }

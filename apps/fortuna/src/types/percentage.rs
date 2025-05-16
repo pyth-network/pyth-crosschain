@@ -1,27 +1,16 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
-/// A type representing a percentage value that must be >= -100
+/// A type representing a percentage value that must be >= 0
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Percentage(i64);
+pub struct Percentage(u64);
 
 impl Percentage {
-    pub fn new(value: i64) -> Result<Self> {
-        if value < -100 {
-            return Err(anyhow!("Percentage value must be >= -100"));
-        }
-        Ok(Self(value))
+    pub fn new(value: u64) -> Self {
+        Self(value)
     }
 
-    pub fn from_u32(value: u32) -> Self {
-        Self(value as i64)
-    }
-
-    pub fn value(&self) -> i64 {
+    pub fn value(&self) -> u64 {
         self.0
-    }
-
-    pub fn multiplier(&self) -> u64 {
-        u64::try_from(100 + self.0).unwrap_or(0)
     }
 }
 
@@ -30,7 +19,7 @@ impl serde::Serialize for Percentage {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_i64(self.0)
+        serializer.serialize_u64(self.0)
     }
 }
 
@@ -39,19 +28,13 @@ impl<'de> serde::Deserialize<'de> for Percentage {
     where
         D: serde::Deserializer<'de>,
     {
-        let value = i64::deserialize(deserializer)?;
-        Self::new(value).map_err(serde::de::Error::custom)
-    }
-}
-
-impl From<Percentage> for i64 {
-    fn from(p: Percentage) -> Self {
-        p.0
+        let value = u64::deserialize(deserializer)?;
+        Ok(Self(value))
     }
 }
 
 impl From<Percentage> for u64 {
     fn from(p: Percentage) -> Self {
-        p.0 as u64
+        p.0
     }
 }
