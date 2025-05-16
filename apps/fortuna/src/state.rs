@@ -203,3 +203,87 @@ mod test {
         run_hash_chain_test([0u8; 32], 100, 55);
     }
 }
+
+#[cfg(test)]
+mod hash_chain_state_test {
+    use {
+        crate::state::{HashChainState, PebbleHashChain},
+        anyhow::Result,
+    };
+
+    #[test]
+    fn test_from_chain_at_offset() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        assert_eq!(hash_chain_state.offsets.len(), 1);
+        assert_eq!(hash_chain_state.hash_chains.len(), 1);
+        assert_eq!(hash_chain_state.offsets[0], 5);
+    }
+
+    #[test]
+    fn test_reveal_valid_sequence() -> Result<()> {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let expected_hash = chain.reveal_ith(3)?;
+
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+        let result = hash_chain_state.reveal(8)?;
+
+        assert_eq!(result, expected_hash);
+        Ok(())
+    }
+
+    #[test]
+    fn test_reveal_sequence_too_small() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        let result = hash_chain_state.reveal(4);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_reveal_sequence_too_large() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        let result = hash_chain_state.reveal(15);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_multiple_hash_chains() -> Result<()> {
+        let chain1 = PebbleHashChain::new([0u8; 32], 10, 1);
+        let expected_hash1 = chain1.reveal_ith(3)?;
+
+        let chain2 = PebbleHashChain::new([1u8; 32], 10, 1);
+        let expected_hash2 = chain2.reveal_ith(3)?;
+
+        let mut hash_chain_state = HashChainState::from_chain_at_offset(5, chain1);
+        hash_chain_state.offsets.push(20);
+        hash_chain_state.hash_chains.push(chain2);
+
+        let result1 = hash_chain_state.reveal(8)?;
+        assert_eq!(result1, expected_hash1);
+
+        let result2 = hash_chain_state.reveal(23)?;
+        assert_eq!(result2, expected_hash2);
+
+        let result3 = hash_chain_state.reveal(15);
+        assert!(result3.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_reveal_at_offset() -> Result<()> {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let expected_hash = chain.reveal_ith(0)?;
+
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+        let result = hash_chain_state.reveal(5)?;
+
+        assert_eq!(result, expected_hash);
+        Ok(())
+    }
+}
