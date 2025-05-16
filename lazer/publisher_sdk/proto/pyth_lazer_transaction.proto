@@ -26,13 +26,13 @@ message SignedLazerTransaction {
 message SignatureData {
     // [required] type of signature, which determines included data needed for verifying
     oneof data {
-        Ed25519 ed25519 = 1;
+        Ed25519SignatureData ed25519 = 1;
     };
 }
 
 // ED25519 style signature. Should include a single signature and a single public key
 // Signature will be verified using public key after determining public key is valid
-message Ed25519 {
+message Ed25519SignatureData {
     // [required] 64 byte signature
     optional bytes signature = 1;
 
