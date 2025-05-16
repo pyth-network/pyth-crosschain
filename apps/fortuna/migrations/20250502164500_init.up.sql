@@ -1,15 +1,18 @@
+-- we use VARCHAR(40) for addresses and VARCHAR(64) for tx_hashes and 32 byte numbers
 CREATE TABLE request(
-                    chain_id VARCHAR(255) NOT NULL,
-                    provider VARCHAR(255) NOT NULL,
+                    chain_id VARCHAR(20) NOT NULL,
+                    provider VARCHAR(40) NOT NULL,
                     sequence INTEGER NOT NULL,
                     created_at DATETIME NOT NULL,
                     last_updated_at DATETIME NOT NULL,
-                    state VARCHAR(255) NOT NULL,
+                    state VARCHAR(10) NOT NULL,
                     request_block_number INT NOT NULL,
-                    request_tx_hash VARCHAR(255) NOT NULL,
-                    sender VARCHAR(255) NOT NULL,
+                    request_tx_hash VARCHAR(64) NOT NULL,
+                    user_random_number VARCHAR(64) NOT NULL,
+                    sender VARCHAR(40) NOT NULL,
                     reveal_block_number INT,
-                    reveal_tx_hash VARCHAR(255),
+                    reveal_tx_hash VARCHAR(64),
+                    provider_random_number VARCHAR(64),
                     info TEXT,
                     PRIMARY KEY (chain_id, sequence, provider, request_tx_hash)
 );

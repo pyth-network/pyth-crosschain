@@ -4,12 +4,14 @@ use {
     chrono::{DateTime, NaiveDateTime},
     ethers::{core::utils::hex::ToHex, prelude::TxHash, types::Address},
     serde::Serialize,
+    serde_with::serde_as,
     sqlx::{migrate, Pool, Sqlite, SqlitePool},
     std::sync::Arc,
     tokio::{spawn, sync::mpsc},
     utoipa::ToSchema,
 };
 
+#[serde_as]
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 #[serde(tag = "state", rename_all = "kebab-case")]
 pub enum RequestEntryState {
@@ -19,12 +21,17 @@ pub enum RequestEntryState {
         /// The transaction hash of the reveal transaction.
         #[schema(example = "0xfe5f880ac10c0aae43f910b5a17f98a93cdd2eb2dce3a5ae34e5827a3a071a32", value_type = String)]
         reveal_tx_hash: TxHash,
+        /// The provider contribution to the random number.
+        #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
+        #[serde_as(as = "serde_with::hex::Hex")]
+        provider_random_number: [u8; 32],
     },
     Failed {
         reason: String,
     },
 }
 
+#[serde_as]
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 pub struct RequestStatus {
     /// The chain ID of the request.
@@ -41,6 +48,10 @@ pub struct RequestStatus {
     /// The transaction hash of the request transaction.
     #[schema(example = "0x5a3a984f41bb5443f5efa6070ed59ccb25edd8dbe6ce7f9294cf5caa64ed00ae", value_type = String)]
     pub request_tx_hash: TxHash,
+    /// The user contribution to the random number.
+    #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
+    #[serde_as(as = "serde_with::hex::Hex")]
+    pub user_random_number: [u8; 32],
     /// This is the address that initiated the request.
     #[schema(example = "0x78357316239040e19fc823372cc179ca75e64b81", value_type = String)]
     pub sender: Address,
@@ -57,9 +68,11 @@ struct RequestRow {
     state: String,
     request_block_number: i64,
     request_tx_hash: String,
+    user_random_number: String,
     sender: String,
     reveal_block_number: Option<i64>,
     reveal_tx_hash: Option<String>,
+    provider_random_number: Option<String>,
     info: Option<String>,
 }
 
@@ -73,6 +86,7 @@ impl TryFrom<RequestRow> for RequestStatus {
         let created_at = row.created_at.and_utc();
         let last_updated_at = row.last_updated_at.and_utc();
         let request_block_number = row.request_block_number as u64;
+        let user_random_number = hex::FromHex::from_hex(row.user_random_number)?;
         let request_tx_hash = row.request_tx_hash.parse()?;
         let sender = row.sender.parse()?;
 
@@ -88,9 +102,15 @@ impl TryFrom<RequestRow> for RequestStatus {
                         "Reveal transaction hash is missing for completed request"
                     ))?
                     .parse()?;
+                let provider_random_number = row.provider_random_number.ok_or(anyhow::anyhow!(
+                    "Provider random number is missing for completed request"
+                ))?;
+                let provider_random_number: [u8; 32] =
+                    hex::FromHex::from_hex(provider_random_number)?;
                 RequestEntryState::Completed {
                     reveal_block_number,
                     reveal_tx_hash,
+                    provider_random_number,
                 }
             }
             "Failed" => RequestEntryState::Failed {
@@ -107,6 +127,7 @@ impl TryFrom<RequestRow> for RequestStatus {
             state,
             request_block_number,
             request_tx_hash,
+            user_random_number,
             sender,
         })
     }
@@ -170,7 +191,8 @@ impl History {
             RequestEntryState::Pending => {
                 let block_number = new_status.request_block_number as i64;
                 let sender: String = new_status.sender.encode_hex();
-                sqlx::query!("INSERT INTO request(chain_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, sender) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                let user_random_number: String = new_status.user_random_number.encode_hex();
+                sqlx::query!("INSERT INTO request(chain_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, user_random_number, sender) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     chain_id,
                     provider,
                     sequence,
@@ -179,6 +201,7 @@ impl History {
                     "Pending",
                     block_number,
                     request_tx_hash,
+                    user_random_number,
                     sender)
                     .execute(pool)
                     .await
@@ -186,14 +209,17 @@ impl History {
             RequestEntryState::Completed {
                 reveal_block_number,
                 reveal_tx_hash,
+                provider_random_number,
             } => {
                 let reveal_block_number = reveal_block_number as i64;
                 let reveal_tx_hash: String = reveal_tx_hash.encode_hex();
-                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
+                let provider_random_number: String = provider_random_number.encode_hex();
+                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
                     "Completed",
                     new_status.last_updated_at,
                     reveal_block_number,
                     reveal_tx_hash,
+                    provider_random_number,
                     chain_id,
                     sequence,
                     provider,
@@ -362,6 +388,7 @@ mod test {
             last_updated_at: chrono::Utc::now(),
             request_block_number: 1,
             request_tx_hash: TxHash::random(),
+            user_random_number: [20; 32],
             sender: Address::random(),
             state: RequestEntryState::Pending,
         }
@@ -376,6 +403,7 @@ mod test {
         status.state = RequestEntryState::Completed {
             reveal_block_number: 1,
             reveal_tx_hash,
+            provider_random_number: [40; 32],
         };
         History::update_request_status(&history.pool, status.clone()).await;
 

@@ -49,6 +49,7 @@ pub async fn process_event_with_backoff(
         request_block_number: event.log_meta.block_number.as_u64(),
         request_tx_hash: event.log_meta.transaction_hash,
         sender: event.requestor,
+        user_random_number: event.user_random_number,
         state: RequestEntryState::Pending,
     };
     history.add(&status);
@@ -89,6 +90,7 @@ pub async fn process_event_with_backoff(
             status.state = RequestEntryState::Completed {
                 reveal_block_number: result.receipt.block_number.unwrap_or_default().as_u64(),
                 reveal_tx_hash: result.receipt.transaction_hash,
+                provider_random_number: provider_revelation,
             };
             history.add(&status);
             tracing::info!(
