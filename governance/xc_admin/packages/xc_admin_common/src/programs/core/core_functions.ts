@@ -86,9 +86,7 @@ function checkSizeOfProductInstruction(
 /**
  * Sort object by keys
  */
-const sortObjectByKeys = <T extends Record<string, unknown>>(
-  obj: T,
-): Array<[string, unknown]> =>
+const sortObjectByKeys = <U>(obj: Record<string, U>): Array<[string, U]> =>
   Object.entries(obj).sort(([a], [b]) => a.localeCompare(b));
 
 /**
@@ -133,7 +131,6 @@ function sortData(data: DownloadableConfig): DownloadableConfig {
 export function getConfig(
   params: CoreConfigParams & { programType: ProgramType.PYTH_CORE },
 ): RawConfig {
-  // No need for runtime check since it's enforced by the type system
   const accounts = params.accounts;
 
   // Create a map of parsed base data for each account to avoid repeated parsing
@@ -145,72 +142,72 @@ export function getConfig(
   );
 
   // First pass: Extract price accounts
-  const priceAccounts = accounts.filter(
-    (account) =>
-      parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
-      AccountType.Price,
-  );
-
-  const priceRawConfigs = mapValues(
-    Object.fromEntries(
-      priceAccounts.map((account) => [account.pubkey.toBase58(), account]),
-    ),
-    (account) => {
-      const parsed = parsePriceData(account.account.data);
-      return {
-        next: parsed.nextPriceAccountKey,
-        address: account.pubkey,
-        publishers: parsed.priceComponents
-          .filter((x) => x.publisher !== null && x.publisher !== undefined)
-          .map((x) => x.publisher),
-        expo: parsed.exponent,
-        minPub: parsed.minPublishers,
-        maxLatency: parsed.maxLatency,
-      };
-    },
+  const priceRawConfigs = Object.fromEntries(
+    accounts
+      .filter(
+        ({ pubkey }) =>
+          parsedBaseDataMap.get(pubkey.toBase58())?.type === AccountType.Price,
+      )
+      .map(({ account, pubkey }) => {
+        const parsed = parsePriceData(account.data);
+        return [
+          pubkey.toBase58(),
+          {
+            next: parsed.nextPriceAccountKey,
+            address: pubkey,
+            publishers: parsed.priceComponents
+              .filter((x) => x.publisher !== null && x.publisher !== undefined)
+              .map((x) => x.publisher),
+            expo: parsed.exponent,
+            minPub: parsed.minPublishers,
+            maxLatency: parsed.maxLatency,
+          },
+        ];
+      }),
   );
 
   // Second pass: Extract product accounts and link to price accounts
-  const productAccounts = accounts.filter(
-    (account) =>
-      parsedBaseDataMap.get(account.pubkey.toBase58())?.type ===
-      AccountType.Product,
-  );
+  const productRawConfigs = Object.fromEntries(
+    accounts
+      .filter(
+        ({ pubkey }) =>
+          parsedBaseDataMap.get(pubkey.toBase58())?.type ===
+          AccountType.Product,
+      )
+      .map(({ account, pubkey }) => {
+        const parsed = parseProductData(account.data);
+        const priceAccounts: PriceRawConfig[] = [];
 
-  const productRawConfigs = mapValues(
-    Object.fromEntries(
-      productAccounts.map((account) => [account.pubkey.toBase58(), account]),
-    ),
-    (account) => {
-      const parsed = parseProductData(account.account.data);
-      const priceAccounts: PriceRawConfig[] = [];
+        // Follow the linked list of price accounts
+        if (parsed.priceAccountKey) {
+          let priceAccountKey: string | undefined =
+            parsed.priceAccountKey.toBase58();
+          const processedPriceKeys = new Set<string>();
 
-      // Follow the linked list of price accounts
-      if (parsed.priceAccountKey) {
-        let priceAccountKey: string | undefined =
-          parsed.priceAccountKey.toBase58();
-        const processedPriceKeys = new Set<string>();
-
-        while (
-          priceAccountKey &&
-          !processedPriceKeys.has(priceAccountKey) &&
-          priceRawConfigs[priceAccountKey]
-        ) {
-          processedPriceKeys.add(priceAccountKey);
-          const priceConfig: PriceRawConfig = priceRawConfigs[priceAccountKey];
-          priceAccounts.push(priceConfig);
-          priceAccountKey = priceConfig.next
-            ? priceConfig.next.toBase58()
-            : undefined;
+          while (
+            priceAccountKey &&
+            !processedPriceKeys.has(priceAccountKey) &&
+            priceRawConfigs[priceAccountKey]
+          ) {
+            processedPriceKeys.add(priceAccountKey);
+            const priceConfig: PriceRawConfig =
+              priceRawConfigs[priceAccountKey];
+            priceAccounts.push(priceConfig);
+            priceAccountKey = priceConfig.next
+              ? priceConfig.next.toBase58()
+              : undefined;
+          }
         }
-      }
 
-      return {
-        priceAccounts,
-        metadata: parsed.product,
-        address: account.pubkey,
-      };
-    },
+        return [
+          pubkey.toBase58(),
+          {
+            priceAccounts,
+            metadata: parsed.product,
+            address: pubkey,
+          },
+        ];
+      }),
   );
 
   // Third pass: Extract mapping accounts and permission data
@@ -282,9 +279,7 @@ export function getDownloadableConfig(
             product.metadata.symbol,
             {
               address: product.address.toBase58(),
-              metadata: {
-                ...metadataWithoutPriceAccount,
-              },
+              metadata: metadataWithoutPriceAccount,
               priceAccounts: product.priceAccounts.map((p: PriceRawConfig) => {
                 return {
                   address: p.address.toBase58(),
@@ -314,11 +309,6 @@ export function validateUploadedConfig(
   cluster: PythCluster,
 ): ValidationResult {
   try {
-    // Validate that the uploaded data is valid JSON
-    if (typeof uploadedConfig !== "object" || uploadedConfig === null) {
-      return { isValid: false, error: "Invalid JSON format" };
-    }
-
     const existingSymbols = new Set(Object.keys(existingConfig));
     const changes: Record<
       string,

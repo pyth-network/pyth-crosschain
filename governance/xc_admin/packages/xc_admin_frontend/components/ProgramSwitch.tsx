@@ -48,7 +48,7 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
           >
             <span className="mr-3">
               {programOptions.find((option) => option.value === programType)
-                ?.label || PROGRAM_TYPE_NAMES[programType]}
+                ?.label ?? PROGRAM_TYPE_NAMES[programType]}
             </span>
             <Arrow className={`${open ? 'rotate-180' : ''}`} />
           </Menu.Button>
