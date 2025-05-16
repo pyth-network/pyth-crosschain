@@ -128,30 +128,31 @@ fn estimate_priority_fee(rewards: Vec<Vec<U256>>) -> U256 {
     let mut percentage_change: Vec<I256> = rewards
         .iter()
         .zip(rewards_copy.iter())
-        .map(|(a, b)| {
-            let a = I256::try_from(*a).unwrap_or_default();
-            let b = I256::try_from(*b).unwrap_or_default();
-            ((b - a) * 100) / a
+        .filter_map(|(a, b)| {
+            let a = I256::try_from(*a);
+            let b = I256::try_from(*b);
+            match (a, b) {
+                (Ok(a), Ok(b)) if a > I256::zero() => Some(((b - a) * 100) / a),
+                _ => None,
+            }
         })
         .collect();
     percentage_change.pop();
 
     // Fetch the max of the percentage change, and that element's index.
-    let zero = I256::zero();
-    let max_change = percentage_change.iter().max().unwrap_or(&zero);
+    let max_change = percentage_change.iter().max();
     let max_change_index = percentage_change
         .iter()
-        .position(|&c| c == *max_change)
-        .unwrap_or(0);
+        .position(|&c| max_change.is_some_and(|m| c == *m));
 
-    // If we encountered a big change in fees at a certain position, then consider only
-    // the values >= it.
-    let values = if *max_change >= EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE.into()
-        && (max_change_index >= (rewards.len() / 2))
-    {
-        rewards.get(max_change_index..).unwrap_or(&rewards).to_vec()
-    } else {
-        rewards
+    let values = match (max_change, max_change_index) {
+        (Some(max_change), Some(max_change_index))
+            if *max_change >= EIP1559_FEE_ESTIMATION_THRESHOLD_MAX_CHANGE.into()
+                && (max_change_index >= (rewards.len() / 2)) =>
+        {
+            rewards.get(max_change_index..).unwrap_or(&rewards).to_vec()
+        }
+        _ => rewards,
     };
 
     // Return the median.

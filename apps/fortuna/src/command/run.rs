@@ -107,6 +107,9 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         let provider_config = config.provider.clone();
         spawn(async move {
             loop {
+                // Note that there are conditions that can cause the chain setup to fail indefinitely
+                // (e.g., if the on-chain commitment doesn't match our expectations). However, if those
+                // conditions trigger, then we will see alerts because FIXME WHY?
                 let setup_result = setup_chain_and_run_keeper(
                     provider_config.clone(),
                     &chain_id,
@@ -135,10 +138,8 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
     spawn(async move {
         tracing::info!("Registered shutdown signal handler...");
-        tokio::signal::ctrl_c().await.map_err(|e| {
-            tracing::error!("Failed to register ctrl-c handler: {}", e);
-            Error::msg(format!("Failed to register ctrl-c handler: {}", e))
-        })?;
+        // No need to care about the result here -- if it returns, we shut down the service
+        let _r = tokio::signal::ctrl_c().await;
         tracing::info!("Shut down signal received, waiting for tasks...");
         // no need to handle error here, as it will only occur when all the
         // receiver has been dropped and that's what we want to do

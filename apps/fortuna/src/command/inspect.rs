@@ -37,9 +37,7 @@ async fn inspect_chain(
     let multicall_exists = rpc_provider
         .get_code(ethers::contract::MULTICALL_ADDRESS, None)
         .await
-        .map_err(|e| anyhow::anyhow!("Failed to get code: {}", e))?
-        .len()
-        > 0;
+        .is_ok_and(|x| x.len() > 0);
 
     let contract = PythContract::from_config(chain_config)?;
     let entropy_provider = contract.get_default_provider().call().await?;

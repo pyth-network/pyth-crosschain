@@ -19,3 +19,4 @@ pub mod config;
 pub mod eth_utils;
 pub mod keeper;
 pub mod state;
+pub mod types;
