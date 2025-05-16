@@ -11,10 +11,13 @@ use {
 };
 
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
+#[serde(tag = "state", rename_all = "kebab-case")]
 pub enum RequestEntryState {
     Pending,
     Completed {
         reveal_block_number: u64,
+        /// The transaction hash of the reveal transaction.
+        #[schema(example = "0xfe5f880ac10c0aae43f910b5a17f98a93cdd2eb2dce3a5ae34e5827a3a071a32", value_type = String)]
         reveal_tx_hash: TxHash,
     },
     Failed {
@@ -24,13 +27,22 @@ pub enum RequestEntryState {
 
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 pub struct RequestStatus {
+    /// The chain ID of the request.
+    #[schema(example = "ethereum", value_type = String)]
     pub chain_id: ChainId,
+    #[schema(example = "0x6cc14824ea2918f5de5c2f75a9da968ad4bd6344", value_type = String)]
     pub provider: Address,
     pub sequence: u64,
+    #[schema(example = "2023-10-01T00:00:00Z", value_type = String)]
     pub created_at: DateTime<chrono::Utc>,
+    #[schema(example = "2023-10-01T00:00:05Z", value_type = String)]
     pub last_updated_at: DateTime<chrono::Utc>,
     pub request_block_number: u64,
+    /// The transaction hash of the request transaction.
+    #[schema(example = "0x5a3a984f41bb5443f5efa6070ed59ccb25edd8dbe6ce7f9294cf5caa64ed00ae", value_type = String)]
     pub request_tx_hash: TxHash,
+    /// This is the address that initiated the request.
+    #[schema(example = "0x78357316239040e19fc823372cc179ca75e64b81", value_type = String)]
     pub sender: Address,
     pub state: RequestEntryState,
 }

@@ -41,6 +41,7 @@ pub async fn run_api(
     schemas(
     crate::api::GetRandomValueResponse,
     crate::history::RequestStatus,
+    crate::history::RequestEntryState,
     crate::api::Blob,
     crate::api::BinaryEncoding,
     )
@@ -242,7 +243,6 @@ async fn setup_chain_state(
     {
         return Err(anyhow!("The current hash chain for chain id {} has configured commitments for sequence numbers greater than the current on-chain sequence number. Are the commitments configured correctly?", &chain_id));
     }
-    tracing::info!("latest metadata: {:?}", latest_metadata);
 
     provider_commitments.push(Commitment {
         seed: latest_metadata.seed,

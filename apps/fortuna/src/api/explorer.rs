@@ -20,7 +20,7 @@ pub struct ExplorerQueryParams {
     #[param(value_type = Option<String>, example = "2023-10-01T00:00:00Z")]
     pub min_timestamp: Option<DateTime<Utc>>,
     /// Only return logs that are older or equal to this timestamp.
-    #[param(value_type = Option<String>, example = "2023-10-01T00:00:00Z")]
+    #[param(value_type = Option<String>, example = "2033-10-01T00:00:00Z")]
     pub max_timestamp: Option<DateTime<Utc>>,
     /// The query string to search for. This can be a transaction hash, sender address, or sequence number.
     pub query: Option<String>,
@@ -31,12 +31,14 @@ pub struct ExplorerQueryParams {
 
 const LOG_RETURN_LIMIT: u64 = 1000;
 
+/// Returns the logs of all requests captured by the keeper.
+///
+/// This endpoint allows you to filter the logs by a specific chain ID, a query string (which can be a transaction hash, sender address, or sequence number), and a time range.
+/// This is useful for debugging and monitoring the requests made to the Entropy contracts on various chains.
 #[utoipa::path(
     get,
     path = "/v1/logs",
-    responses(
-    (status = 200, description = "Entropy request logs", body = Vec<RequestStatus>)
-    ),
+    responses((status = 200, description = "A list of Entropy request logs", body = Vec<RequestStatus>)),
     params(ExplorerQueryParams)
 )]
 pub async fn explorer(
