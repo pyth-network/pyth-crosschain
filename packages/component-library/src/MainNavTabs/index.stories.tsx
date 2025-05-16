@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { MainNavTabs as MainNavTabsComponent } from "./index.js";
-import { Tabs } from "../unstyled/Tabs/index.js";
+import { MainNavTabs as MainNavTabsComponent } from "./index.jsx";
+import { Tabs } from "../unstyled/Tabs/index.jsx";
 
 const meta = {
   component: MainNavTabsComponent,
   argTypes: {
-    items: {
-      table: {
-        disable: true,
-      },
-    },
-    pathname: {
+    tabs: {
       table: {
         disable: true,
       },
@@ -29,9 +24,10 @@ export const MainNavTabs = {
     ),
   ],
   args: {
-    items: [
-      { id: "foo", children: "Foo" },
-      { id: "bar", children: "Bar" },
+    tabs: [
+      { children: "Home", segment: "" },
+      { children: "Foo", segment: "foo" },
+      { children: "Bar", segment: "bar" },
     ],
   },
 } satisfies StoryObj<typeof MainNavTabsComponent>;

@@ -65,7 +65,9 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
       {props.isLoading ? (
         <Skeleton width={15} />
       ) : (
-        <AssetClassBadge>{props.feed.product.asset_type}</AssetClassBadge>
+        <AssetClassBadge className={styles.assetClassBadge}>
+          {props.feed.product.asset_type}
+        </AssetClassBadge>
       )}
     </div>
     <div className={styles.headerRow}>

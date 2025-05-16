@@ -9,8 +9,8 @@ import type {
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { Button } from "../Button/index.js";
-import { Skeleton } from "../Skeleton/index.js";
+import { Button } from "../Button/index.jsx";
+import { Skeleton } from "../Skeleton/index.jsx";
 import {
   Cell,
   Column,
@@ -18,14 +18,14 @@ import {
   Table as UnstyledTable,
   TableBody,
   TableHeader,
-} from "../unstyled/Table/index.js";
+} from "../unstyled/Table/index.jsx";
 
-export type { SortDescriptor } from "../unstyled/Table/index.js";
+export type { SortDescriptor } from "../unstyled/Table/index.jsx";
 
 type TableProps<T extends string> = ComponentProps<typeof UnstyledTable> & {
   className?: string | undefined;
   headerCellClassName?: string | undefined;
-  stickyHeader?: boolean | string | undefined;
+  stickyHeader?: boolean | undefined;
   fill?: boolean | undefined;
   rounded?: boolean | undefined;
   label: string;
@@ -112,10 +112,7 @@ export const Table = <T extends string>({
             <Column
               data-sticky-header={stickyHeader === undefined ? undefined : ""}
               {...columnConfig}
-              {...cellProps(columnConfig, headerCellClassName, {
-                "--sticky-header-top":
-                  typeof stickyHeader === "string" ? stickyHeader : 0,
-              } as CSSProperties)}
+              {...cellProps(columnConfig, headerCellClassName)}
             >
               {({ allowsSorting, sortDirection, ...column }) => (
                 <>

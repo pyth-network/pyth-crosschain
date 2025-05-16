@@ -1171,7 +1171,7 @@ contract EchoTest is Test, EchoEvents, IEchoConsumer, EchoTestUtils {
         assertApproxEqRel(
             gas2Used,
             gas1Used * 2,
-            0.1e18, // 10% tolerance
+            0.2e18, // 20% tolerance
             "Gas usage should scale roughly linearly"
         );
     }

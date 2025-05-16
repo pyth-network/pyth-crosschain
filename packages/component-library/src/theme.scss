@@ -422,6 +422,10 @@ $color: (
         pallette-color("white"),
         pallette-color("steel", 950)
       ),
+    "tooltip": light-dark(
+        pallette-color("steel", 700),
+        pallette-color("steel", 200)
+      ),
   ),
   "foreground": light-dark(
       pallette-color("steel", 900),
@@ -434,6 +438,10 @@ $color: (
   "paragraph": light-dark(
       pallette-color("steel", 700),
       pallette-color("steel", 300)
+    ),
+  "tooltip": light-dark(
+      pallette-color("steel", 200),
+      pallette-color("steel", 800)
     ),
   "link": (
     "primary": light-dark(
@@ -892,3 +900,5 @@ $breakpoints: (
     @content;
   }
 }
+
+$header-height: var(--header-height);

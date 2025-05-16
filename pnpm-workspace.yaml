@@ -91,6 +91,7 @@ catalog:
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
   connectkit: ^1.9.0
+  copyfiles: ^2.4.1
   cryptocurrency-icons: ^0.18.1
   css-loader: ^7.1.2
   dnum: ^2.14.0
@@ -117,6 +118,7 @@ catalog:
   react-aria-components: ^1.7.1
   react-dom: ^19.1.0
   react-markdown: ^10.1.0
+  react-timeago: ^8.2.0
   recharts: ^2.15.1
   sass: ^1.86.1
   sass-loader: ^16.0.5

@@ -1,11 +1,27 @@
 @use "@pythnetwork/component-library/theme";
 
+.searchButton {
+  .largeScreenSearchButton {
+    display: none;
+
+    @include theme.breakpoint("md") {
+      display: inline-flex;
+    }
+  }
+
+  .smallScreenSearchButton {
+    @include theme.breakpoint("md") {
+      display: none;
+    }
+  }
+}
+
 .searchDialogContents {
   gap: theme.spacing(1);
   display: flex;
   flex-flow: column nowrap;
   overflow: hidden;
-  max-height: 100%;
+  max-height: theme.spacing(120);
   min-height: 0;
 
   .searchBar,
@@ -67,7 +83,7 @@
     display: none;
 
     @include theme.breakpoint("sm") {
-      display: inline flow-root;
+      display: inline-flex;
     }
   }
 
@@ -178,9 +194,3 @@
     }
   }
 }
-
-// stylelint-disable property-no-unknown
-:export {
-  breakpoint-sm: theme.map-get-strict(theme.$breakpoints, "sm");
-}
-// stylelint-enable property-no-unknown

@@ -18,7 +18,13 @@ const config = {
   },
 
   addons: [
-    "@storybook/addon-essentials",
+    {
+      name: "@storybook/addon-essentials",
+      options: {
+        backgrounds: false,
+        measure: false,
+      },
+    },
     "@storybook/addon-themes",
     {
       name: "@storybook/addon-styling-webpack",
@@ -51,14 +57,39 @@ const config = {
     },
   ],
 
-  webpackFinal: (config) => ({
-    ...config,
-    resolve: {
+  webpackFinal: (config) => {
+    config.resolve = {
       ...config.resolve,
       extensionAlias: {
-        ".js": [".js", ".ts", ".tsx"],
+        ...config.resolve?.extensionAlias,
+        ".js": [".js", ".ts"],
+        ".jsx": [".jsx", ".tsx"],
       },
-    },
-  }),
+    };
+
+    for (const rule of config.module?.rules ?? []) {
+      if (
+        typeof rule === "object" &&
+        rule !== null &&
+        rule.test instanceof RegExp &&
+        rule.test.test(".svg")
+      ) {
+        rule.exclude = /\.svg$/i;
+      }
+    }
+
+    config.module = {
+      ...config.module,
+      rules: [
+        ...(config.module?.rules ?? []),
+        {
+          test: /\.svg$/i,
+          use: ["@svgr/webpack"],
+        },
+      ],
+    };
+
+    return config;
+  },
 } satisfies StorybookConfig;
 export default config;

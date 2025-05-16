@@ -1,9 +1,10 @@
 "use client";
 
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
+import { EntityList } from "@pythnetwork/component-library/EntityList";
+import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
@@ -14,6 +15,7 @@ import type {
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import clsx from "clsx";
 import { useQueryState, parseAsStringEnum, parseAsBoolean } from "nuqs";
 import type { ReactNode } from "react";
@@ -29,15 +31,12 @@ import {
   Status as StatusType,
   statusNameToStatus,
 } from "../../status";
-import { EntityList } from "../EntityList";
 import { Explain } from "../Explain";
 import { EvaluationTime } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
 import { LivePrice, LiveConfidence, LiveComponentValue } from "../LivePrices";
-import { NoResults } from "../NoResults";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceName } from "../PriceName";
-import rootStyles from "../Root/index.module.scss";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
 
@@ -386,21 +385,21 @@ export const PriceComponentsCardContents = <
             </div>
           )}
           <div data-section="search" className={styles.toolbarSection}>
-            <Select<StatusName | "">
+            <Select<{ id: StatusName | "" }>
               label="Status"
               size="sm"
               variant="outline"
               hideLabel
               options={[
-                "",
-                ...Object.values(STATUS_NAMES).toSorted((a, b) =>
-                  collator.compare(a, b),
-                ),
+                { id: "" },
+                ...Object.values(STATUS_NAMES)
+                  .toSorted((a, b) => collator.compare(a, b))
+                  .map((id) => ({ id })),
               ]}
               {...(props.isLoading
                 ? { isPending: true, buttonLabel: "Status" }
                 : {
-                    show: (value) => (value === "" ? "All" : value),
+                    show: ({ id }) => (id === "" ? "All" : id),
                     placement: "bottom end",
                     buttonLabel: props.status === "" ? "Status" : props.status,
                     selectedKey: props.status,
@@ -490,7 +489,7 @@ export const PriceComponentsCardContents = <
         label={label}
         fill
         rounded
-        stickyHeader={rootStyles.headerHeight}
+        stickyHeader
         className={styles.table ?? ""}
         columns={[
           {

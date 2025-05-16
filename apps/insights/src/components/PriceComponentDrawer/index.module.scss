@@ -33,7 +33,7 @@
     display: none;
 
     @include theme.breakpoint("md") {
-      display: inline flow-root;
+      display: inline-flex;
     }
   }
 

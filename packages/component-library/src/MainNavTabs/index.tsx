@@ -2,20 +2,27 @@
 
 import clsx from "clsx";
 import { motion } from "motion/react";
+import { usePathname } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useId } from "react";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
-import { Tab, TabList } from "../unstyled/Tabs/index.js";
+import { Tab, TabList } from "../unstyled/Tabs/index.jsx";
+
+type Tab = Omit<ComponentProps<typeof Tab>, "id" | "href"> & {
+  segment: string;
+};
 
 type OwnProps = {
-  pathname?: string | undefined;
-  items: ComponentProps<typeof Tab>[];
+  tabs: Tab[];
 };
-type Props = Omit<ComponentProps<typeof TabList>, keyof OwnProps> & OwnProps;
 
-export const MainNavTabs = ({ className, pathname, ...props }: Props) => {
+type Props = Omit<ComponentProps<typeof TabList>, keyof OwnProps | "items"> &
+  OwnProps;
+
+export const MainNavTabs = ({ className, tabs, ...props }: Props) => {
+  const pathname = usePathname();
   const id = useId();
   return (
     <TabList
@@ -23,8 +30,9 @@ export const MainNavTabs = ({ className, pathname, ...props }: Props) => {
       className={clsx(styles.mainNavTabs, className)}
       dependencies={[pathname]}
       data-selectable={
-        props.items.every((tab) => tab.href !== pathname) ? "" : undefined
+        tabs.every((tab) => pathname !== `/${tab.segment}`) ? "" : undefined
       }
+      items={tabs}
       {...props}
     >
       {({ className: tabClassName, children, ...tab }) => (
@@ -33,6 +41,8 @@ export const MainNavTabs = ({ className, pathname, ...props }: Props) => {
           data-size="sm"
           data-variant="ghost"
           data-rounded
+          id={tab.segment}
+          href={`/${tab.segment}`}
           {...tab}
         >
           {(args) => (

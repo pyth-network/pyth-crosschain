@@ -1,0 +1,76 @@
+@use "../theme";
+
+.copyButton {
+  display: inline-flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  background: transparent;
+  transition-property: background-color, color, border-color, outline-color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  border: 1px solid transparent;
+  outline-offset: 0;
+  outline: theme.spacing(1) solid transparent;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: theme.border-radius("base");
+  cursor: pointer;
+  line-height: 150%;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+  margin-left: -0.25em;
+  margin-right: -0.25em;
+
+  .iconContainer {
+    position: relative;
+    height: 1em;
+    width: 1em;
+
+    .copyIcon {
+      opacity: 0.5;
+      transition: opacity 100ms linear;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .checkIcon {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      color: theme.color("states", "success", "normal");
+      opacity: 0;
+      transition: opacity 100ms linear;
+    }
+  }
+
+  &[data-focus-visible] {
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
+  }
+
+  &[data-hovered] {
+    background-color: theme.color("button", "outline", "background", "hover");
+  }
+
+  &[data-is-copied] {
+    background-color: theme.color("states", "info", "background");
+
+    .iconContainer {
+      .copyIcon {
+        opacity: 0;
+      }
+
+      .checkIcon {
+        opacity: 1;
+      }
+    }
+  }
+
+  &[data-icon-only] .contents {
+    @include theme.sr-only;
+  }
+}

@@ -1,6 +1,5 @@
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { Flask } from "@phosphor-icons/react/dist/ssr/Flask";
-import { useLogger } from "@pythnetwork/app-logger";
 import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
@@ -10,7 +9,9 @@ import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { Table } from "@pythnetwork/component-library/Table";
 import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
+import { StateType, useData } from "@pythnetwork/component-library/useData";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useMountEffect } from "@react-hookz/web";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,6 @@ import type { CategoricalChartState } from "recharts/types/chart/types";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
-import { StateType, useData } from "../../hooks/use-data";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import type { Status } from "../../status";
 import { LiveConfidence, LivePrice, LiveComponentValue } from "../LivePrices";
@@ -353,7 +353,7 @@ const ScoreBreakdown = ({
               setSelectedPeriod(evaluationPeriod);
             }
           }}
-          options={evaluationPeriods.map(({ label }) => label)}
+          options={evaluationPeriods.map(({ label }) => ({ id: label }))}
           placement="bottom end"
         />
       }

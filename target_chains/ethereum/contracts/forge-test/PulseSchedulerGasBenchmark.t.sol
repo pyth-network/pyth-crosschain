@@ -24,21 +24,22 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         manager = address(1);
         admin = address(2);
         pyth = address(3);
-
-        SchedulerUpgradeable _scheduler = new SchedulerUpgradeable();
-        proxy = new ERC1967Proxy(address(_scheduler), "");
-        scheduler = SchedulerUpgradeable(address(proxy));
-
         uint128 minBalancePerFeed = 10 ** 16; // 0.01 ether
         uint128 keeperFee = 10 ** 15; // 0.001 ether
 
-        scheduler.initialize(
-            manager,
-            admin,
-            pyth,
-            minBalancePerFeed,
-            keeperFee
+        SchedulerUpgradeable _scheduler = new SchedulerUpgradeable();
+        proxy = new ERC1967Proxy(
+            address(_scheduler),
+            abi.encodeWithSelector(
+                SchedulerUpgradeable.initialize.selector,
+                manager,
+                admin,
+                pyth,
+                minBalancePerFeed,
+                keeperFee
+            )
         );
+        scheduler = SchedulerUpgradeable(address(proxy));
 
         // Start tests at a high timestamp to avoid underflow when we set
         // `minPublishTime = timestamp - 1 hour` in updatePriceFeeds
@@ -70,7 +71,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         );
 
         // Mock Pyth response for the benchmark
-        mockParsePriceFeedUpdatesWithSlots(pyth, newPriceFeeds, newSlots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, newPriceFeeds, newSlots);
 
         // Actual benchmark: Measure gas for updating price feeds
         uint256 startGas = gasleft();
@@ -123,7 +124,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
             numFeeds
         );
 
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Update the price feeds. We should have enough balance to cover the update

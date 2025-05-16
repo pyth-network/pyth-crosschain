@@ -588,18 +588,6 @@ where
                         )
                         .await?;
                     return Ok(());
-                } else if found_price_ids.is_empty() {
-                    self.sender
-                        .send(
-                            serde_json::to_string(&ServerMessage::Response(
-                                ServerResponseMessage::Err {
-                                    error: "No price feeds available".to_string(),
-                                },
-                            ))?
-                            .into(),
-                        )
-                        .await?;
-                    return Ok(());
                 } else {
                     for price_id in found_price_ids {
                         self.price_feeds_with_config.insert(

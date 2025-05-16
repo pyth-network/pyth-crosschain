@@ -325,9 +325,6 @@
 - chain: dela_mithreum_deperp_testnet
   address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
   type: EvmPriceFeedContract
-- chain: berachain_testnet_v2
-  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmPriceFeedContract
 - chain: opbnb
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
@@ -391,9 +388,6 @@
 - chain: flow_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
-- chain: fantom_sonic_testnet
-  address: "0x96124d1F6E44FfDf1fb5D6d74BB2DE1B7Fbe7376"
-  type: EvmPriceFeedContract
 - chain: abstract_testnet
   address: "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486"
   type: EvmPriceFeedContract
@@ -439,17 +433,11 @@
 - chain: abstract
   address: "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1"
   type: EvmPriceFeedContract
-- chain: happy_bird_song_ends_with_tio
-  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmPriceFeedContract
 - chain: eventum_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: sonic_blaze_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmPriceFeedContract
-- chain: happy_bird_song_ends_with_tio
-  address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
   type: EvmPriceFeedContract
 - chain: fantom_sonic_mainnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
@@ -464,9 +452,6 @@
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: coredao_testnet_v2
-  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
-  type: EvmPriceFeedContract
-- chain: monad_devnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: monad_testnet
@@ -494,5 +479,20 @@
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract
 - chain: megaeth_testnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: converge_testnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
+- chain: worldchain
+  address: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc"
+  type: EvmPriceFeedContract
+- chain: swellchain_testnet
+  address: "0x26DD80569a8B23768A1d80869Ed7339e07595E85"
+  type: EvmPriceFeedContract
+- chain: swellchain
+  address: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21"
+  type: EvmPriceFeedContract
+- chain: worldchain_testnet
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmPriceFeedContract

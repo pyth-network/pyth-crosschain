@@ -170,7 +170,7 @@ abstract contract MockPriceFeedTestUtils is Test {
     }
 
     // Helper function to mock Pyth response with slots
-    function mockParsePriceFeedUpdatesWithSlots(
+    function mockParsePriceFeedUpdatesWithSlotsStrict(
         address pyth,
         PythStructs.PriceFeed[] memory priceFeeds,
         uint64[] memory slots
@@ -187,7 +187,7 @@ abstract contract MockPriceFeedTestUtils is Test {
             pyth,
             expectedFee,
             abi.encodeWithSelector(
-                IPyth.parsePriceFeedUpdatesWithSlots.selector
+                IPyth.parsePriceFeedUpdatesWithSlotsStrict.selector
             ),
             abi.encode(priceFeeds, slots)
         );

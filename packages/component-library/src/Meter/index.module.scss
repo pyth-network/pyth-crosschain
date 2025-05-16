@@ -1,0 +1,45 @@
+@use "../theme";
+
+.meter {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(2);
+
+  .labels {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+
+    @include theme.text("base", "medium");
+  }
+
+  .score {
+    height: theme.spacing(3);
+    width: 100%;
+    border-radius: theme.border-radius("full");
+    position: relative;
+    display: inline-block;
+    background-color: theme.color("button", "outline", "background", "hover");
+
+    .fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      border-radius: theme.border-radius("full");
+    }
+  }
+
+  &[data-variant="default"] {
+    .score .fill {
+      background: theme.color("chart", "series", "primary");
+    }
+  }
+
+  &[data-variant="error"] {
+    .score .fill {
+      background: theme.color("states", "error", "color");
+    }
+  }
+}

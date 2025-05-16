@@ -1,9 +1,10 @@
 "use client";
 
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
-import { useLogger } from "@pythnetwork/app-logger";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
+import { EntityList } from "@pythnetwork/component-library/EntityList";
+import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
@@ -12,6 +13,7 @@ import type {
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryState, parseAsString } from "nuqs";
 import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
@@ -21,7 +23,6 @@ import styles from "./price-feeds-card.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
-import { EntityList } from "../EntityList";
 import { FeedKey } from "../FeedKey";
 import {
   SKELETON_WIDTH,
@@ -29,10 +30,8 @@ import {
   LiveConfidence,
   LiveValue,
 } from "../LivePrices";
-import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
-import rootStyles from "../Root/index.module.scss";
 
 type Props = {
   id: string;
@@ -250,7 +249,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
                 onChange: props.onSearchChange,
               })}
         />
-        <Select<string>
+        <Select
           label="Asset Class"
           size="sm"
           variant="outline"
@@ -259,11 +258,14 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
             ? { isPending: true, options: [], buttonLabel: "Asset Class" }
             : {
                 optionGroups: [
-                  { name: "All", options: [""] },
-                  { name: "Asset classes", options: props.assetClasses },
+                  { name: "All", options: [{ id: "" }] },
+                  {
+                    name: "Asset classes",
+                    options: props.assetClasses.map((id) => ({ id })),
+                  },
                 ],
                 hideGroupLabel: true,
-                show: (value) => (value === "" ? "All" : value),
+                show: ({ id }) => (id === "" ? "All" : id),
                 placement: "bottom end",
                 buttonLabel:
                   props.assetClass === "" ? "Asset Class" : props.assetClass,
@@ -317,7 +319,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       rounded
       fill
       label="Price Feeds"
-      stickyHeader={rootStyles.headerHeight}
+      stickyHeader
       className={styles.table ?? ""}
       columns={[
         {

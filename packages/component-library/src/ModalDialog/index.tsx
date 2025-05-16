@@ -1,6 +1,6 @@
 "use client";
 
-import type { PanInfo } from "motion/react";
+import type { MotionProps, PanInfo } from "motion/react";
 import { motion } from "motion/react";
 import type {
   ComponentProps,
@@ -26,10 +26,29 @@ import {
   Select,
 } from "react-aria-components";
 
-import { useSetOverlayVisible } from "../overlay-visible-context.js";
+import { useSetOverlayVisible } from "../overlay-visible-context.jsx";
 
-const MotionModalOverlay = motion.create(ModalOverlay);
-const MotionDialog = motion.create(Dialog);
+// These types are absurd, but the annotations have to be here or else we get a
+// TS2742 due to some issue in how framer-motion is packaged.  Eventually it
+// would be great to figure out what about framer-motion's packaging causes this
+// to be required, and to find a way to make it a nonissue, but for now these
+// annotations will allow us to move on...
+const MotionModalOverlay: ComponentType<
+  Omit<ComponentProps<typeof ModalOverlay>, keyof MotionProps> &
+    Omit<MotionProps, "children"> & {
+      children?:
+        | MotionProps["children"]
+        | ComponentProps<typeof ModalOverlay>["children"];
+    }
+> = motion.create(ModalOverlay);
+const MotionDialog: ComponentType<
+  Omit<ComponentProps<typeof Dialog>, keyof MotionProps> &
+    Omit<MotionProps, "children"> & {
+      children?:
+        | MotionProps["children"]
+        | ComponentProps<typeof Dialog>["children"];
+    }
+> = motion.create(Dialog);
 
 export const ModalDialogTrigger = (
   props: ComponentProps<typeof DialogTrigger>,

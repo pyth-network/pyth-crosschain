@@ -36,18 +36,12 @@ export class SuiBalanceTracker extends BaseBalanceTracker {
    */
   protected async updateBalance(): Promise<void> {
     try {
-      // Get all coins owned by the address
-      const { data: coins } = await this.client.getCoins({
+      const balance = await this.client.getBalance({
         owner: this.address,
       });
 
-      // Sum up all coin balances
-      const totalBalance = coins.reduce((acc, coin) => {
-        return acc + BigInt(coin.balance);
-      }, BigInt(0));
-
       // Convert to a normalized number for reporting (SUI has 9 decimals)
-      const normalizedBalance = Number(totalBalance) / 1e9;
+      const normalizedBalance = Number(balance.totalBalance) / 1e9;
 
       this.metrics.updateWalletBalance(
         this.address,

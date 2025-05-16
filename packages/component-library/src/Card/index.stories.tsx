@@ -1,10 +1,16 @@
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Card as CardComponent, VARIANTS } from "./index.js";
+import { Card as CardComponent, VARIANTS } from "./index.jsx";
 
 const meta = {
   component: CardComponent,
+  globals: {
+    background: "primary",
+  },
+  parameters: {
+    layout: "padded",
+  },
   argTypes: {
     href: {
       control: "text",

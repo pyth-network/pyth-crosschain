@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Paginator as PaginatorComponent } from "./index.js";
+import { Paginator as PaginatorComponent } from "./index.jsx";
 
 const meta = {
   component: PaginatorComponent,
+  parameters: {
+    layout: "padded",
+  },
   argTypes: {
     currentPage: {
       control: "number",

@@ -1,5 +1,4 @@
 @use "@pythnetwork/component-library/theme";
-@use "../Root/index.module.scss" as root;
 
 $gap: theme.spacing(4);
 
@@ -53,7 +52,7 @@ $gap: theme.spacing(4);
     .statCard {
       @include theme.breakpoint("2xl") {
         position: sticky;
-        top: root.$header-height;
+        top: theme.$header-height;
       }
     }
 
@@ -83,7 +82,7 @@ $gap: theme.spacing(4);
         $card-wrapper-p: (2 * theme.spacing(1));
         $card-height: $card-content + $card-pt + $card-pb + $card-wrapper-p;
 
-        top: calc(root.$header-height + $gap + $card-height);
+        top: calc(theme.$header-height + $gap + $card-height);
       }
 
       .oisPool {

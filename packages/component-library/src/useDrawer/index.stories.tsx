@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { useDrawer as useDrawerImpl } from "./index.js";
-import { Button } from "../Button/index.js";
+import { useDrawer as useDrawerImpl } from "./index.jsx";
+import { Button } from "../Button/index.jsx";
 
 const OpenButton = (
   props: Parameters<ReturnType<typeof useDrawerImpl>["open"]>[0],

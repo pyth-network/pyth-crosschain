@@ -45,11 +45,9 @@
     .chartArea {
       color: theme.color("button", "primary", "background", "normal");
 
-      :global {
-        // stylelint-disable-next-line selector-class-pattern
-        .recharts-area-area {
-          fill: theme.color("states", "data", "background");
-        }
+      // stylelint-disable-next-line selector-class-pattern
+      :global(.recharts-area-area) {
+        fill: theme.color("states", "data", "background");
       }
     }
   }

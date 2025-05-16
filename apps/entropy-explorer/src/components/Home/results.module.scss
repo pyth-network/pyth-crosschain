@@ -1,0 +1,41 @@
+@use "@pythnetwork/component-library/theme";
+
+.table {
+  display: none;
+
+  @include theme.breakpoint("xl") {
+    display: block;
+  }
+}
+
+.sequenceNumber {
+  @include theme.text("base", "bold");
+
+  color: theme.color("heading");
+}
+
+.entityList {
+  background: theme.color("background", "primary");
+  border-radius: theme.border-radius("xl");
+
+  @include theme.breakpoint("xl") {
+    display: none;
+  }
+}
+
+.chain {
+  @include theme.text("sm", "medium");
+
+  display: flex;
+  flex-flow: row nowrap;
+  gap: theme.spacing(2);
+  align-items: center;
+}
+
+.timestamp {
+  @include theme.text("sm", "medium");
+
+  @include theme.breakpoint("xl") {
+    @include theme.text("base", "medium");
+  }
+}

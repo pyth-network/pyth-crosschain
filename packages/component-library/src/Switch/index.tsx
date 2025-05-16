@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
-import { Switch as UnstyledSwitch } from "../unstyled/Switch/index.js";
+import { Switch as UnstyledSwitch } from "../unstyled/Switch/index.jsx";
 
 type OwnProps = {
   isPending?: boolean | undefined;

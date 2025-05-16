@@ -7,8 +7,8 @@ import type {
 } from "react";
 
 import styles from "./index.module.scss";
-import { Button as UnstyledButton } from "../unstyled/Button/index.js";
-import { Link } from "../unstyled/Link/index.js";
+import { Button as UnstyledButton } from "../unstyled/Button/index.jsx";
+import { Link } from "../unstyled/Link/index.jsx";
 
 export const VARIANTS = [
   "primary",
@@ -52,8 +52,8 @@ const buttonProps = ({
   rounded = false,
   className,
   children,
-  beforeIcon,
-  afterIcon,
+  beforeIcon: BeforeIcon,
+  afterIcon: AfterIcon,
   hideText = false,
   ...otherProps
 }: OwnProps & { className?: Parameters<typeof clsx>[0] }) => ({
@@ -65,17 +65,15 @@ const buttonProps = ({
   className: clsx(styles.button, className),
   children: (
     <>
-      {beforeIcon !== undefined && <Icon icon={beforeIcon} />}
+      {BeforeIcon !== undefined && <BeforeIcon className={styles.icon} />}
       <span className={styles.text}>{children}</span>
-      {afterIcon !== undefined && <Icon icon={afterIcon} />}
+      {AfterIcon !== undefined && <AfterIcon className={styles.icon} />}
     </>
   ),
 });
 
 const Icon = ({ icon: IconComponent }: { icon: Icon }) => (
-  <span className={styles.iconWrapper}>
-    <IconComponent className={styles.icon} />
-  </span>
+  <IconComponent className={styles.icon} />
 );
 
 type Icon = ComponentType<{ className?: string | undefined }>;

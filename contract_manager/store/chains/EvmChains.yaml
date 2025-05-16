@@ -491,11 +491,6 @@
   rpcUrl: https://evm-rpc-testnet.sei-apis.com
   networkId: 1328
   type: EvmChain
-- id: fantom_sonic_testnet
-  mainnet: false
-  rpcUrl: https://rpc.testnet.soniclabs.com
-  networkId: 64165
-  type: EvmChain
 - id: dela_deperp_testnet
   mainnet: false
   rpcUrl: https://sepolia-dela.deperp.com
@@ -597,11 +592,6 @@
   mainnet: false
   rpcUrl: https://rpc-kakarot-sepolia.karnot.xyz/
   networkId: 920637907288165
-  type: EvmChain
-- id: berachain_testnet_v2
-  mainnet: false
-  rpcUrl: https://evm-rpc-bera.rhino-apis.com/
-  networkId: 80084
   type: EvmChain
 - id: opbnb
   mainnet: true
@@ -784,11 +774,6 @@
   rpcUrl: https://api.hyperliquid-testnet.xyz/evm
   networkId: 998
   type: EvmChain
-- id: happy_bird_song_ends_with_tio
-  mainnet: false
-  rpcUrl: https://happy_bird_song_ends_with_tio.com
-  networkId: 80000
-  type: EvmChain
 - id: unichain
   mainnet: true
   rpcUrl: https://redacted.quiknode.pro/$ENV_UNICHAIN_API_KEY
@@ -839,11 +824,6 @@
   rpcUrl: $KRAKEN_INK_RPC_URL
   networkId: 57073
   type: EvmChain
-- id: monad_devnet
-  mainnet: false
-  rpcUrl: https://rpc-devnet.monadinfra.com/rpc/dT2y6zgpggQ20WuJZ3corhJwfh9NwJPM
-  networkId: 20143
-  type: EvmChain
 - id: coredao_testnet_v2
   mainnet: false
   rpcUrl: https://rpc.test2.btcs.network
@@ -883,4 +863,29 @@
   mainnet: false
   rpcUrl: https://carrot.megaeth.com/rpc
   networkId: 6342
+  type: EvmChain
+- id: converge_testnet
+  mainnet: false
+  rpcUrl: https://rpc-converge-testnet-0.t.conduit.xyz
+  networkId: 52085144
+  type: EvmChain
+- id: worldchain
+  mainnet: true
+  rpcUrl: https://worldchain-mainnet.g.alchemy.com/public
+  networkId: 480
+  type: EvmChain
+- id: worldchain_testnet
+  mainnet: false
+  rpcUrl: https://worldchain-sepolia.g.alchemy.com/public
+  networkId: 4801
+  type: EvmChain
+- id: swellchain_testnet
+  mainnet: false
+  rpcUrl: https://swell-testnet.alt.technology
+  networkId: 1924
+  type: EvmChain
+- id: swellchain
+  mainnet: true
+  rpcUrl: https://swell-mainnet.alt.technology
+  networkId: 1923
   type: EvmChain
