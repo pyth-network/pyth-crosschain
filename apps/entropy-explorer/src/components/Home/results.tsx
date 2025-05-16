@@ -207,6 +207,7 @@ const defaultProps = {
   label: "Requests",
   rounded: true,
   fill: true,
+  stickyHeader: "appHeader",
   columns: [
     {
       id: "chain" as const,

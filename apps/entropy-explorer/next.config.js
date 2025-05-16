@@ -1,4 +1,8 @@
 const config = {
+  experimental: {
+    reactCompiler: true,
+  },
+
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],

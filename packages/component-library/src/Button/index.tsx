@@ -1,10 +1,7 @@
+"use client";
+
 import clsx from "clsx";
-import type {
-  ComponentProps,
-  ElementType,
-  ComponentType,
-  ReactNode,
-} from "react";
+import type { ComponentProps, ElementType, ReactNode } from "react";
 
 import styles from "./index.module.scss";
 import { Button as UnstyledButton } from "../unstyled/Button/index.jsx";
@@ -27,8 +24,8 @@ type OwnProps = {
   rounded?: boolean | undefined;
   hideText?: boolean | undefined;
   children: ReactNode;
-  beforeIcon?: Icon | undefined;
-  afterIcon?: Icon | undefined;
+  beforeIcon?: ReactNode | undefined;
+  afterIcon?: ReactNode | undefined;
 };
 
 export type Props<T extends ElementType> = Omit<
@@ -52,8 +49,8 @@ const buttonProps = ({
   rounded = false,
   className,
   children,
-  beforeIcon: BeforeIcon,
-  afterIcon: AfterIcon,
+  beforeIcon,
+  afterIcon,
   hideText = false,
   ...otherProps
 }: OwnProps & { className?: Parameters<typeof clsx>[0] }) => ({
@@ -65,15 +62,13 @@ const buttonProps = ({
   className: clsx(styles.button, className),
   children: (
     <>
-      {BeforeIcon !== undefined && <BeforeIcon className={styles.icon} />}
+      {beforeIcon !== undefined && (
+        <div className={styles.icon}>{beforeIcon}</div>
+      )}
       <span className={styles.text}>{children}</span>
-      {AfterIcon !== undefined && <AfterIcon className={styles.icon} />}
+      {afterIcon !== undefined && (
+        <div className={styles.icon}>{afterIcon}</div>
+      )}
     </>
   ),
 });
-
-const Icon = ({ icon: IconComponent }: { icon: Icon }) => (
-  <IconComponent className={styles.icon} />
-);
-
-type Icon = ComponentType<{ className?: string | undefined }>;

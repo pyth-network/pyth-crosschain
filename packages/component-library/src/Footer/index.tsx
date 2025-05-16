@@ -7,7 +7,7 @@ import type { Props as ButtonProps } from "../Button/index.jsx";
 import { Button } from "../Button/index.jsx";
 import { SupportDrawer } from "../Header/index.jsx";
 import { Link } from "../Link/index.jsx";
-import { socialLinks } from "../social-links.js";
+import { socialLinks } from "../social-links.jsx";
 
 export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
   <footer className={clsx(styles.footer, className)} {...props}>

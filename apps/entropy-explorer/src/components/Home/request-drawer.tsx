@@ -65,7 +65,6 @@ const RequestDrawerBody = ({ request }: { request: Request }) => {
         label="Details"
         fill
         className={styles.details ?? ""}
-        stickyHeader
         columns={[
           {
             id: "field",
@@ -254,7 +253,7 @@ const CallbackFailedInfo = ({ request }: { request: CallbackErrorRequest }) => {
           <Button
             size="sm"
             variant="ghost"
-            beforeIcon={Question}
+            beforeIcon={<Question />}
             rounded
             hideText
             href="https://docs.pyth.network/entropy/debug-callback-failures"

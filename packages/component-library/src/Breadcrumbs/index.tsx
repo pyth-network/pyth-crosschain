@@ -41,7 +41,7 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
                 <Button
                   size="xs"
                   variant="outline"
-                  beforeIcon={House}
+                  beforeIcon={<House />}
                   hideText
                   href="/"
                 >

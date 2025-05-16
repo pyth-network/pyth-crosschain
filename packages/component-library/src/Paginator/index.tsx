@@ -107,7 +107,7 @@ const PaginatorToolbar = ({
     <Toolbar aria-label="Page" className={styles.paginatorToolbar ?? ""}>
       <PageSelector
         hideText
-        beforeIcon={CaretLeft}
+        beforeIcon={<CaretLeft />}
         isDisabled={currentPage === 1}
         page={1}
         onPageChange={onPageChange}
@@ -132,7 +132,7 @@ const PaginatorToolbar = ({
       })}
       <PageSelector
         hideText
-        beforeIcon={CaretRight}
+        beforeIcon={<CaretRight />}
         isDisabled={currentPage === numPages}
         page={numPages}
         onPageChange={onPageChange}
