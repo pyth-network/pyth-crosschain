@@ -1,0 +1,7 @@
+{
+  "root": true,
+  "title": "Pyth Core",
+  "description": "Real-time data from financial institutions",
+  "icon": "ChartLine",
+  "pages": ["index", "---Guides---", "how-to-guides"]
+}

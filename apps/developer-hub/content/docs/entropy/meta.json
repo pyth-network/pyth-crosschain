@@ -1,0 +1,7 @@
+{
+  "root": true,
+  "title": "Entropy",
+  "description": "Random numbers for smart contracts",
+  "icon": "Shuffle",
+  "pages": ["index", "---Guides---", "how-to-guides"]
+}

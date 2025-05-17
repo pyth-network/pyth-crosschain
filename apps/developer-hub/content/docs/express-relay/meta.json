@@ -1,0 +1,7 @@
+{
+  "root": true,
+  "title": "Express Relay",
+  "description": "Eliminate MEV",
+  "icon": "Gavel",
+  "pages": ["index", "---Guides---", "how-to-guides"]
+}
