@@ -77,7 +77,7 @@ const SearchButtonImpl = (
     <Button
       className={styles.largeScreenSearchButton ?? ""}
       variant="outline"
-      beforeIcon={MagnifyingGlass}
+      beforeIcon={<MagnifyingGlass />}
       size="sm"
       rounded
       {...props}
@@ -88,7 +88,7 @@ const SearchButtonImpl = (
       className={styles.smallScreenSearchButton ?? ""}
       hideText
       variant="ghost"
-      beforeIcon={MagnifyingGlass}
+      beforeIcon={<MagnifyingGlass />}
       size="sm"
       rounded
       {...props}
@@ -249,7 +249,7 @@ const SearchDialogContents = ({
         </div>
         <Button
           className={styles.closeButton ?? ""}
-          beforeIcon={(props) => <XCircle weight="fill" {...props} />}
+          beforeIcon={<XCircle weight="fill" />}
           slot="close"
           hideText
           rounded

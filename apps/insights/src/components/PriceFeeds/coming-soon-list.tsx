@@ -110,7 +110,7 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
       </div>
       <Table
         fill
-        stickyHeader
+        stickyHeader="top"
         label="Coming Soon"
         className={styles.priceFeeds ?? ""}
         emptyState={

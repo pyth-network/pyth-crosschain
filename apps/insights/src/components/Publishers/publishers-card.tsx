@@ -270,7 +270,7 @@ const PublishersCardContents = ({
           variant="outline"
           hideLabel
           options={CLUSTER_NAMES.map((id) => ({ id }))}
-          icon={Database}
+          icon={<Database />}
           {...(props.isLoading
             ? { isPending: true, buttonLabel: "Cluster" }
             : {
@@ -323,7 +323,7 @@ const PublishersCardContents = ({
       rounded
       fill
       label="Publishers"
-      stickyHeader
+      stickyHeader="appHeader"
       className={styles.table ?? ""}
       columns={[
         {

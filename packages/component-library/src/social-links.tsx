@@ -7,27 +7,27 @@ import { YoutubeLogo } from "@phosphor-icons/react/dist/ssr/YoutubeLogo";
 export const socialLinks = [
   {
     name: "Discord",
-    icon: DiscordLogo,
+    icon: <DiscordLogo />,
     href: "https://discord.gg/invite/PythNetwork",
   },
   {
     name: "X",
-    icon: XLogo,
+    icon: <XLogo />,
     href: "https://x.com/PythNetwork",
   },
   {
     name: "Telegram",
-    icon: TelegramLogo,
+    icon: <TelegramLogo />,
     href: "https://t.me/Pyth_Network",
   },
   {
     name: "GitHub",
-    icon: GithubLogo,
+    icon: <GithubLogo />,
     href: "https://github.com/pyth-network",
   },
   {
     name: "Youtube",
-    icon: YoutubeLogo,
+    icon: <YoutubeLogo />,
     href: "https://www.youtube.com/channel/UCjCkvPN9ohl0UDvldfn1neg",
   },
 ];
