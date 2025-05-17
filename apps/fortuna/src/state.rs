@@ -155,7 +155,8 @@ impl HashChainState {
 #[cfg(test)]
 mod test {
     use {
-        crate::state::PebbleHashChain,
+        crate::state::{HashChainState, PebbleHashChain},
+        anyhow::Result,
         sha3::{Digest, Keccak256},
     };
 
@@ -201,5 +202,96 @@ mod test {
         run_hash_chain_test([0u8; 32], 100, 7);
         run_hash_chain_test([0u8; 32], 100, 50);
         run_hash_chain_test([0u8; 32], 100, 55);
+    }
+
+    #[test]
+    fn test_hash_chain_state_from_chain_at_offset() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        assert_eq!(hash_chain_state.offsets.len(), 1);
+        assert_eq!(hash_chain_state.hash_chains.len(), 1);
+        assert_eq!(hash_chain_state.offsets[0], 5);
+    }
+
+    #[test]
+    fn test_hash_chain_state_reveal_valid_sequence() -> Result<()> {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let expected_hash = chain.reveal_ith(3)?;
+
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+        let result = hash_chain_state.reveal(8)?;
+
+        assert_eq!(result, expected_hash);
+        Ok(())
+    }
+
+    #[test]
+    fn test_hash_chain_state_reveal_sequence_too_small() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        let result = hash_chain_state.reveal(4);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hash_chain_state_reveal_sequence_too_large() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        let result = hash_chain_state.reveal(15);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hash_chain_state_multiple_chains() -> Result<()> {
+        let chain1 = PebbleHashChain::new([0u8; 32], 10, 1);
+        let expected_hash1 = chain1.reveal_ith(3)?;
+
+        let chain2 = PebbleHashChain::new([1u8; 32], 10, 1);
+        let expected_hash2 = chain2.reveal_ith(3)?;
+
+        let hash_chain_state = HashChainState {
+            offsets: vec![5, 20],
+            hash_chains: vec![chain1, chain2],
+        };
+
+        let result1 = hash_chain_state.reveal(8)?;
+        assert_eq!(result1, expected_hash1);
+
+        let result2 = hash_chain_state.reveal(23)?;
+        assert_eq!(result2, expected_hash2);
+
+        let result_boundary = hash_chain_state.reveal(20)?;
+        let expected_boundary = hash_chain_state.hash_chains[1].reveal_ith(0)?;
+        assert_eq!(result_boundary, expected_boundary);
+
+        let result3 = hash_chain_state.reveal(15);
+        assert!(result3.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_hash_chain_state_overlapping_chains() -> Result<()> {
+        let chain1 = PebbleHashChain::new([0u8; 32], 10, 1);
+        let chain2 = PebbleHashChain::new([1u8; 32], 10, 1);
+
+        let hash_chain_state = HashChainState {
+            offsets: vec![5, 10],
+            hash_chains: vec![chain1, chain2],
+        };
+
+        let result1 = hash_chain_state.reveal(8)?;
+        let expected1 = hash_chain_state.hash_chains[0].reveal_ith(3)?;
+        assert_eq!(result1, expected1);
+
+        // returns the first offset that is > sequence_number)
+        let result2 = hash_chain_state.reveal(12)?;
+        let expected2 = hash_chain_state.hash_chains[1].reveal_ith(2)?;
+        assert_eq!(result2, expected2);
+
+        Ok(())
     }
 }
