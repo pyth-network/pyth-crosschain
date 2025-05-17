@@ -82,7 +82,12 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
         {
             // Extract Log from TransactionReceipt.
-            let l: RawLog = r.logs[0].clone().into();
+            let l: RawLog = r
+                .logs
+                .first()
+                .ok_or_else(|| anyhow!("No logs in receipt"))?
+                .clone()
+                .into();
             if let PythRandomEvents::Requested1Filter(r) = PythRandomEvents::decode_log(&l)? {
                 Ok(r.request.sequence_number)
             } else {
@@ -112,7 +117,12 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
         {
             // Extract Log from TransactionReceipt.
-            let l: RawLog = r.logs[0].clone().into();
+            let l: RawLog = r
+                .logs
+                .first()
+                .ok_or_else(|| anyhow!("No logs in receipt"))?
+                .clone()
+                .into();
             if let PythRandomEvents::RequestedWithCallbackFilter(r) =
                 PythRandomEvents::decode_log(&l)?
             {
@@ -147,9 +157,13 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             .await?
             .await?
         {
-            if let PythRandomEvents::Revealed1Filter(r) =
-                PythRandomEvents::decode_log(&r.logs[0].clone().into())?
-            {
+            if let PythRandomEvents::Revealed1Filter(r) = PythRandomEvents::decode_log(
+                &r.logs
+                    .first()
+                    .ok_or_else(|| anyhow!("No logs in receipt"))?
+                    .clone()
+                    .into(),
+            )? {
                 Ok(r.random_number)
             } else {
                 Err(anyhow!("No log with randomnumber"))
@@ -165,8 +179,10 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         provider: Provider<T>,
     ) -> Result<SignablePythContractInner<T>> {
         let chain_id = provider.get_chainid().await?;
-        let gas_oracle =
-            EthProviderOracle::new(provider.clone(), chain_config.priority_fee_multiplier_pct);
+        let gas_oracle = EthProviderOracle::new(
+            provider.clone(),
+            chain_config.priority_fee_multiplier_pct.value(),
+        );
         let wallet__ = private_key
             .parse::<LocalWallet>()?
             .with_chain_id(chain_id.as_u64());
