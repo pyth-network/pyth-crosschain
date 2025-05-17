@@ -1,13 +1,12 @@
 use {
-    super::keeper_metrics::{AccountLabel, KeeperMetrics},
+    super::keeper_metrics::AccountLabel,
     crate::{
-        api::BlockchainState,
-        chain::{ethereum::InstrumentedSignablePythContract, reader::RequestedWithCallbackEvent},
-        eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
+        chain::reader::RequestedWithCallbackEvent,
+        eth_utils::utils::submit_tx_with_backoff,
+        history::{RequestEntryState, RequestStatus},
+        keeper::block::ProcessParams,
     },
     anyhow::{anyhow, Result},
-    ethers::types::U256,
-    std::sync::Arc,
     tracing,
 };
 
@@ -17,12 +16,18 @@ use {
 ))]
 pub async fn process_event_with_backoff(
     event: RequestedWithCallbackEvent,
-    chain_state: BlockchainState,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
-    escalation_policy: EscalationPolicy,
-    metrics: Arc<KeeperMetrics>,
+    process_param: ProcessParams,
 ) -> Result<()> {
+    let ProcessParams {
+        chain_state,
+        contract,
+        gas_limit,
+        escalation_policy,
+        metrics,
+        history,
+        ..
+    } = process_param;
+
     // ignore requests that are not for the configured provider
     if chain_state.provider_address != event.provider_address {
         return Ok(());
@@ -35,11 +40,30 @@ pub async fn process_event_with_backoff(
 
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing event");
+    let mut status = RequestStatus {
+        chain_id: chain_state.id.clone(),
+        provider: event.provider_address,
+        sequence: event.sequence_number,
+        created_at: chrono::Utc::now(),
+        last_updated_at: chrono::Utc::now(),
+        request_block_number: event.log_meta.block_number.as_u64(),
+        request_tx_hash: event.log_meta.transaction_hash,
+        sender: event.requestor,
+        user_random_number: event.user_random_number,
+        state: RequestEntryState::Pending,
+    };
+    history.add(&status);
 
     let provider_revelation = chain_state
         .state
         .reveal(event.sequence_number)
-        .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
+        .map_err(|e| {
+            status.state = RequestEntryState::Failed {
+                reason: format!("Error revealing: {:?}", e),
+            };
+            history.add(&status);
+            anyhow!("Error revealing: {:?}", e)
+        })?;
 
     let contract_call = contract.reveal_with_callback(
         event.provider_address,
@@ -63,6 +87,12 @@ pub async fn process_event_with_backoff(
 
     match success {
         Ok(result) => {
+            status.state = RequestEntryState::Completed {
+                reveal_block_number: result.receipt.block_number.unwrap_or_default().as_u64(),
+                reveal_tx_hash: result.receipt.transaction_hash,
+                provider_random_number: provider_revelation,
+            };
+            history.add(&status);
             tracing::info!(
                 "Processed event successfully in {:?} after {} retries. Receipt: {:?}",
                 result.duration,

@@ -1,7 +1,8 @@
-use crate::api::ApiBlockChainState;
-use crate::chain::reader::BlockNumber;
 use {
-    crate::api::{ChainId, RequestLabel, RestError},
+    crate::{
+        api::{ApiBlockChainState, ChainId, RequestLabel, RestError},
+        chain::reader::BlockNumber,
+    },
     anyhow::Result,
     axum::{
         extract::{Path, Query, State},

@@ -1,8 +1,8 @@
-use ethabi::ethereum_types::U64;
 use {
     crate::eth_utils::nonce_manager::NonceManaged,
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
+    ethabi::ethereum_types::U64,
     ethers::{
         contract::ContractCall,
         middleware::Middleware,

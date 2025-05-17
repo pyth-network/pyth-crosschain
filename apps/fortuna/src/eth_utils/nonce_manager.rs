@@ -4,9 +4,9 @@
 use {
     super::legacy_tx_middleware::LegacyTxMiddleware,
     axum::async_trait,
-    ethers::prelude::GasOracle,
     ethers::{
         middleware::gas_oracle::GasOracleMiddleware,
+        prelude::GasOracle,
         providers::{Middleware, MiddlewareError, PendingTransaction},
         types::{transaction::eip2718::TypedTransaction, *},
     },

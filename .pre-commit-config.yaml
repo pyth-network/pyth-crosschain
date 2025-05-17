@@ -76,6 +76,12 @@ repos:
         entry: cargo +1.82.0 fmt --manifest-path ./apps/fortuna/Cargo.toml --all
         pass_filenames: false
         files: apps/fortuna
+      - id: cargo-sqlx-fortuna
+        name: Cargo sqlx prepare check for Fortuna
+        language: "script"
+        entry: ./apps/fortuna/check-sqlx.sh
+        pass_filenames: false
+        files: apps/fortuna
       - id: cargo-clippy-fortuna
         name: Cargo clippy for Fortuna
         language: "rust"
