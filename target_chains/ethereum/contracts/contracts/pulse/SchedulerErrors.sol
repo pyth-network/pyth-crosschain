@@ -36,3 +36,4 @@ error DuplicateWhitelistAddress(address addr);
 
 // Payment errors
 error KeeperPaymentFailed();
+error MaxDepositLimitExceeded();
