@@ -133,7 +133,7 @@ export const useMultisig = (): MultisigHookData => {
     }
 
     return { cancel, fetchData }
-  }, [multisigCluster, urlsIndex, connection])
+  }, [readOnlySquads, multisigCluster, urlsIndex])
 
   useEffect(() => {
     const { cancel, fetchData } = refreshData()

@@ -8,6 +8,10 @@ import React, {
 import { usePyth } from '../hooks/usePyth'
 import { RawConfig } from '../hooks/usePyth'
 import { Connection } from '@solana/web3.js'
+import {
+  MappingRawConfig,
+  ProductRawConfig,
+} from '@pythnetwork/xc-admin-common'
 
 type AccountKeyToSymbol = { [key: string]: string }
 interface PythContextProps {
@@ -53,8 +57,8 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
     if (!isLoading) {
       const productAccountMapping: AccountKeyToSymbol = {}
       const priceAccountMapping: AccountKeyToSymbol = {}
-      rawConfig.mappingAccounts.map((acc) =>
-        acc.products.map((prod) => {
+      rawConfig.mappingAccounts.map((acc: MappingRawConfig) =>
+        acc.products.map((prod: ProductRawConfig) => {
           productAccountMapping[prod.address.toBase58()] = prod.metadata.symbol
           priceAccountMapping[prod.priceAccounts[0].address.toBase58()] =
             prod.metadata.symbol

@@ -1,6 +1,6 @@
 import { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
-import { useCallback, useContext, useEffect, useState, useMemo } from 'react'
+import { useContext, useEffect, useState, useMemo, Fragment } from 'react'
 import { ClusterContext } from '../../../contexts/ClusterContext'
 import { useMultisigContext } from '../../../contexts/MultisigContext'
 import { PROPOSAL_STATUSES } from './utils'
@@ -8,13 +8,20 @@ import ClusterSwitch from '../../ClusterSwitch'
 import Loadbar from '../../loaders/Loadbar'
 import { Select } from '../../Select'
 import { useQueryState, parseAsStringLiteral } from 'nuqs'
+import { Menu, Transition } from '@headlessui/react'
 
 import { ProposalRow } from './ProposalRow'
 import { getProposalStatus } from './utils'
 import { Proposal } from './Proposal'
 import { useWallet } from '@solana/wallet-adapter-react'
 
-type ProposalType = 'priceFeed' | 'governance'
+type ProposalType = 'priceFeed' | 'governance' | 'lazer'
+
+const PROPOSAL_TYPE_NAMES: Record<ProposalType, string> = {
+  priceFeed: 'Price Feed',
+  governance: 'Governance',
+  lazer: 'Lazer',
+}
 
 const VOTE_STATUSES = [
   'any',
@@ -28,6 +35,25 @@ const DEFAULT_VOTE_STATUS = 'any'
 
 const PROPOSAL_STATUS_FILTERS = ['all', ...PROPOSAL_STATUSES] as const
 const DEFAULT_PROPOSAL_STATUS_FILTER = 'all'
+
+const Arrow = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    width="10"
+    height="6"
+    viewBox="0 0 10 6"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M1 1L5 5L9 1"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
 
 const Proposals = () => {
   const router = useRouter()
@@ -57,14 +83,29 @@ const Proposals = () => {
 
   const [proposalType, setProposalType] = useState<ProposalType>('priceFeed')
 
-  const multisigAccount =
-    proposalType === 'priceFeed'
-      ? priceFeedMultisigAccount
-      : upgradeMultisigAccount
-  const multisigProposals =
-    proposalType === 'priceFeed'
-      ? priceFeedMultisigProposals
-      : upgradeMultisigProposals
+  const multisigAccount = useMemo(() => {
+    switch (proposalType) {
+      case 'priceFeed':
+        return priceFeedMultisigAccount
+      case 'governance':
+        return upgradeMultisigAccount
+      default:
+        return priceFeedMultisigAccount
+    }
+  }, [proposalType, priceFeedMultisigAccount, upgradeMultisigAccount])
+
+  const multisigProposals = useMemo(() => {
+    switch (proposalType) {
+      case 'priceFeed':
+        return priceFeedMultisigProposals
+      case 'governance':
+        return upgradeMultisigProposals
+      case 'lazer':
+        return []
+      default:
+        return priceFeedMultisigProposals
+    }
+  }, [proposalType, priceFeedMultisigProposals, upgradeMultisigProposals])
 
   const handleClickBackToProposals = () => {
     delete router.query.proposal
@@ -86,14 +127,6 @@ const Proposals = () => {
     }
   }, [router.query.proposal])
 
-  const switchProposalType = useCallback(() => {
-    if (proposalType === 'priceFeed') {
-      setProposalType('governance')
-    } else {
-      setProposalType('priceFeed')
-    }
-  }, [proposalType])
-
   useEffect(() => {
     if (currentProposalPubkey) {
       const currProposal = multisigProposals.find(
@@ -101,22 +134,34 @@ const Proposals = () => {
       )
       setCurrentProposal(currProposal)
       if (currProposal === undefined) {
-        const otherProposals =
-          proposalType !== 'priceFeed'
-            ? priceFeedMultisigProposals
-            : upgradeMultisigProposals
-        if (
-          otherProposals.findIndex(
-            (proposal) =>
-              proposal.publicKey.toBase58() === currentProposalPubkey
-          ) !== -1
-        ) {
-          switchProposalType()
+        // Check if the proposal exists in other proposal types
+        const allProposalTypes: ProposalType[] = ['priceFeed', 'governance']
+        for (const type of allProposalTypes) {
+          if (type === proposalType) continue
+
+          let otherProposals: TransactionAccount[] = []
+          switch (type) {
+            case 'priceFeed':
+              otherProposals = priceFeedMultisigProposals
+              break
+            case 'governance':
+              otherProposals = upgradeMultisigProposals
+              break
+          }
+
+          if (
+            otherProposals.findIndex(
+              (proposal) =>
+                proposal.publicKey.toBase58() === currentProposalPubkey
+            ) !== -1
+          ) {
+            setProposalType(type)
+            break
+          }
         }
       }
     }
   }, [
-    switchProposalType,
     priceFeedMultisigProposals,
     proposalType,
     upgradeMultisigProposals,
@@ -180,12 +225,19 @@ const Proposals = () => {
     }
   }, [proposalsFilteredByStatus, walletPublicKey, voteStatus])
 
+  // Convert proposal types to array of options
+  const proposalTypeOptions: ProposalType[] = [
+    'priceFeed',
+    'governance',
+    'lazer',
+  ]
+
   return (
     <div className="relative">
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
           <h1 className="h1 mb-4">
-            {proposalType === 'priceFeed' ? 'Price Feed ' : 'Governance '}{' '}
+            {PROPOSAL_TYPE_NAMES[proposalType]}{' '}
             {router.query.proposal === undefined ? 'Proposals' : 'Proposal'}
           </h1>
         </div>
@@ -210,23 +262,60 @@ const Proposals = () => {
                     Refresh
                   </button>
                 )}
-                <button
-                  disabled={isMultisigLoading}
-                  className="action-btn text-base"
-                  onClick={switchProposalType}
+                <Menu
+                  as="div"
+                  className="relative z-[5] block w-[180px] text-left"
                 >
-                  Show
-                  {proposalType !== 'priceFeed'
-                    ? ' Price Feed '
-                    : ' Governance '}
-                  Proposals
-                </button>
+                  {({ open }) => (
+                    <>
+                      <Menu.Button
+                        className="inline-flex w-full items-center justify-between py-3 px-6 text-sm outline-0 bg-darkGray2 action-btn"
+                        disabled={isMultisigLoading}
+                      >
+                        <span className="mr-3">
+                          {PROPOSAL_TYPE_NAMES[proposalType]} Proposals
+                        </span>
+                        <Arrow className={`${open ? 'rotate-180' : ''}`} />
+                      </Menu.Button>
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right">
+                          {proposalTypeOptions.map((type) => (
+                            <Menu.Item key={type}>
+                              {({ active }) => (
+                                <button
+                                  className={`block w-full py-3 px-6 text-left text-sm ${
+                                    active ? 'bg-darkGray2' : 'bg-darkGray'
+                                  }`}
+                                  onClick={() => setProposalType(type)}
+                                >
+                                  {PROPOSAL_TYPE_NAMES[type]} Proposals
+                                </button>
+                              )}
+                            </Menu.Item>
+                          ))}
+                        </Menu.Items>
+                      </Transition>
+                    </>
+                  )}
+                </Menu>
               </div>
             </div>
             <div className="relative mt-6">
               {isMultisigLoading ? (
                 <div className="mt-3">
                   <Loadbar theme="light" />
+                </div>
+              ) : proposalType === 'lazer' ? (
+                <div className="mt-4">
+                  Lazer proposals are not supported yet.
                 </div>
               ) : (
                 <>
