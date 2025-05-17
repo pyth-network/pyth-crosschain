@@ -38,7 +38,7 @@ pub async fn update_commitments_if_necessary(
     let latest_safe_block = get_latest_safe_block(chain_state).in_current_span().await;
     let provider_address = chain_state.provider_address;
     let provider_info = contract
-        .get_provider_info(provider_address)
+        .get_provider_info_v2(provider_address)
         .block(latest_safe_block) // To ensure we are not revealing sooner than we should
         .call()
         .await
