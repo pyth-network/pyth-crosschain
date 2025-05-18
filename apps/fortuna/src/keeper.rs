@@ -178,45 +178,56 @@ pub async fn run_keeper_threads(
             };
 
             loop {
-                // There isn't a loop for indefinite trials. There is a new thread being spawned every `TRACK_INTERVAL` seconds.
-                // If rpc start fails all of these threads will just exit, instead of retrying.
-                // We are tracking rpc failures elsewhere, so it's fine.
-                spawn(
-                    track_provider(
-                        chain_id.clone(),
-                        contract.clone(),
-                        provider_address,
-                        keeper_metrics.clone(),
-                    )
-                    .in_current_span(),
-                );
-                spawn(
-                    track_balance(
-                        chain_id.clone(),
-                        contract.client(),
-                        keeper_address,
-                        keeper_metrics.clone(),
-                    )
-                    .in_current_span(),
-                );
-                spawn(
-                    track_accrued_pyth_fees(
-                        chain_id.clone(),
-                        contract.clone(),
-                        keeper_metrics.clone(),
-                    )
-                    .in_current_span(),
-                );
-                spawn(
-                    track_block_timestamp_lag(
-                        chain_id.clone(),
-                        contract.client(),
-                        keeper_metrics.clone(),
-                    )
-                    .in_current_span(),
-                );
-
                 time::sleep(TRACK_INTERVAL).await;
+
+                // Track provider info and balance sequentially. Note that the tracking is done sequentially with the
+                // timestamp last. If there is a persistent error in any of these methods, the timestamp will lag behind
+                // current time and trigger an alert.
+                if let Err(e) = track_provider(
+                    chain_id.clone(),
+                    contract.clone(),
+                    provider_address,
+                    keeper_metrics.clone(),
+                )
+                .await
+                {
+                    tracing::error!("Error tracking provider: {:?}", e);
+                    continue;
+                }
+
+                if let Err(e) = track_balance(
+                    chain_id.clone(),
+                    contract.client(),
+                    keeper_address,
+                    keeper_metrics.clone(),
+                )
+                .await
+                {
+                    tracing::error!("Error tracking balance: {:?}", e);
+                    continue;
+                }
+
+                if let Err(e) = track_accrued_pyth_fees(
+                    chain_id.clone(),
+                    contract.clone(),
+                    keeper_metrics.clone(),
+                )
+                .await
+                {
+                    tracing::error!("Error tracking accrued pyth fees: {:?}", e);
+                    continue;
+                }
+
+                if let Err(e) = track_block_timestamp_lag(
+                    chain_id.clone(),
+                    contract.client(),
+                    keeper_metrics.clone(),
+                )
+                .await
+                {
+                    tracing::error!("Error tracking block timestamp lag: {:?}", e);
+                    continue;
+                }
             }
         }
         .in_current_span(),

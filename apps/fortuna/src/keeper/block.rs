@@ -3,12 +3,16 @@ use {
         api::{self, BlockchainState},
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
         eth_utils::utils::EscalationPolicy,
-        keeper::keeper_metrics::KeeperMetrics,
+        keeper::keeper_metrics::{ChainIdLabel, KeeperMetrics},
         keeper::process_event::process_event_with_backoff,
     },
     anyhow::Result,
     ethers::types::U256,
-    std::{collections::HashSet, sync::Arc},
+    std::{
+        collections::HashSet,
+        sync::Arc,
+        time::{SystemTime, UNIX_EPOCH},
+    },
     tokio::{
         spawn,
         sync::{mpsc, RwLock},
@@ -258,8 +262,22 @@ pub async fn process_new_blocks(
     block_delays: Vec<u64>,
 ) {
     tracing::info!("Waiting for new block ranges to process");
+    let label = ChainIdLabel {
+        chain_id: chain_state.id.clone(),
+    };
     loop {
         if let Some(block_range) = rx.recv().await {
+            // Track the last time blocks were processed. If anything happens to the processing thread, the
+            // timestamp will lag, which will trigger an alert.
+            let server_timestamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|duration| duration.as_secs() as i64)
+                .unwrap_or(0);
+            metrics
+                .process_event_timestamp
+                .get_or_create(&label)
+                .set(server_timestamp);
+
             // Process blocks immediately first
             process_block_range(
                 block_range.clone(),
