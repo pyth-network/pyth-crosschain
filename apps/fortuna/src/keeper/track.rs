@@ -62,12 +62,12 @@ pub async fn track_block_timestamp_lag(
         .as_u64();
 
     metrics
-        .block_timestamp
+        .latest_block_timestamp
         .get_or_create(&label)
         .set(block_timestamp);
 
     metrics
-        .block_number
+        .latest_block_number
         .get_or_create(&label)
         .set(block_number as i64);
 

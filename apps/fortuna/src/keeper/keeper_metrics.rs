@@ -44,9 +44,9 @@ pub struct KeeperMetrics {
     pub gas_price_estimate: Family<AccountLabel, Gauge<f64, AtomicU64>>,
     pub accrued_pyth_fees: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
     pub block_timestamp_lag: Family<ChainIdLabel, Gauge>,
-    pub block_timestamp: Family<ChainIdLabel, Gauge>,
+    pub latest_block_timestamp: Family<ChainIdLabel, Gauge>,
     pub process_event_timestamp: Family<ChainIdLabel, Gauge>,
-    pub block_number: Family<ChainIdLabel, Gauge>,
+    pub latest_block_number: Family<ChainIdLabel, Gauge>,
     pub process_event_block_number: Family<ChainIdLabel, Gauge>,
 }
 
@@ -91,9 +91,9 @@ impl Default for KeeperMetrics {
             gas_price_estimate: Family::default(),
             accrued_pyth_fees: Family::default(),
             block_timestamp_lag: Family::default(),
-            block_timestamp: Family::default(),
+            latest_block_timestamp: Family::default(),
             process_event_timestamp: Family::default(),
-            block_number: Family::default(),
+            latest_block_number: Family::default(),
             process_event_block_number: Family::default(),
         }
     }
@@ -237,9 +237,9 @@ impl KeeperMetrics {
         );
 
         writable_registry.register(
-            "block_timestamp",
+            "latest_block_timestamp",
             "The current block timestamp",
-            keeper_metrics.block_timestamp.clone(),
+            keeper_metrics.latest_block_timestamp.clone(),
         );
 
         writable_registry.register(
@@ -249,9 +249,9 @@ impl KeeperMetrics {
         );
 
         writable_registry.register(
-            "block_number",
+            "latest_block_number",
             "The current block number",
-            keeper_metrics.block_number.clone(),
+            keeper_metrics.latest_block_number.clone(),
         );
 
         writable_registry.register(
@@ -273,9 +273,9 @@ impl KeeperMetrics {
         };
         let _ = self.accrued_pyth_fees.get_or_create(&chain_id_label);
         let _ = self.block_timestamp_lag.get_or_create(&chain_id_label);
-        let _ = self.block_timestamp.get_or_create(&chain_id_label);
+        let _ = self.latest_block_timestamp.get_or_create(&chain_id_label);
         let _ = self.process_event_timestamp.get_or_create(&chain_id_label);
-        let _ = self.block_number.get_or_create(&chain_id_label);
+        let _ = self.latest_block_number.get_or_create(&chain_id_label);
         let _ = self
             .process_event_block_number
             .get_or_create(&chain_id_label);
