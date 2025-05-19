@@ -46,6 +46,8 @@ pub struct KeeperMetrics {
     pub block_timestamp_lag: Family<ChainIdLabel, Gauge>,
     pub block_timestamp: Family<ChainIdLabel, Gauge>,
     pub process_event_timestamp: Family<ChainIdLabel, Gauge>,
+    pub block_number: Family<ChainIdLabel, Gauge>,
+    pub process_event_block_number: Family<ChainIdLabel, Gauge>,
 }
 
 impl Default for KeeperMetrics {
@@ -91,6 +93,8 @@ impl Default for KeeperMetrics {
             block_timestamp_lag: Family::default(),
             block_timestamp: Family::default(),
             process_event_timestamp: Family::default(),
+            block_number: Family::default(),
+            process_event_block_number: Family::default(),
         }
     }
 }
@@ -244,6 +248,18 @@ impl KeeperMetrics {
             keeper_metrics.process_event_timestamp.clone(),
         );
 
+        writable_registry.register(
+            "block_number",
+            "The current block number",
+            keeper_metrics.block_number.clone(),
+        );
+
+        writable_registry.register(
+            "process_event_block_number",
+            "The highest block number for which events have been successfully retrieved and processed",
+            keeper_metrics.process_event_block_number.clone(),
+        );
+
         // *Important*: When adding a new metric:
         // 1. Register it above using `writable_registry.register(...)`
         // 2. Add a get_or_create call in the add_chain function below to initialize it for each chain/provider pair
@@ -259,6 +275,10 @@ impl KeeperMetrics {
         let _ = self.block_timestamp_lag.get_or_create(&chain_id_label);
         let _ = self.block_timestamp.get_or_create(&chain_id_label);
         let _ = self.process_event_timestamp.get_or_create(&chain_id_label);
+        let _ = self.block_number.get_or_create(&chain_id_label);
+        let _ = self
+            .process_event_block_number
+            .get_or_create(&chain_id_label);
 
         let account_label = AccountLabel {
             chain_id,

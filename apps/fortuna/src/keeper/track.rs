@@ -53,13 +53,23 @@ pub async fn track_block_timestamp_lag(
     };
 
     let block = provider.get_block(BlockNumber::Latest).await?;
-    let block_timestamp = block.ok_or(anyhow!("block was none"))?.timestamp.as_u64();
+    let block = block.ok_or(anyhow!("block was none"))?;
+    let block_timestamp = block.timestamp.as_u64();
     let block_timestamp = i64::try_from(block_timestamp)?;
+    let block_number = block
+        .number
+        .ok_or(anyhow!("block number was none"))?
+        .as_u64();
 
     metrics
         .block_timestamp
         .get_or_create(&label)
         .set(block_timestamp);
+
+    metrics
+        .block_number
+        .get_or_create(&label)
+        .set(block_number as i64);
 
     let server_timestamp = i64::try_from(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs())?;
 
