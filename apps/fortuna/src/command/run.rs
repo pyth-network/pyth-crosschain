@@ -99,6 +99,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             .collect(),
     ));
     for (chain_id, chain_config) in config.chains.clone() {
+        keeper_metrics.add_chain(chain_id.clone(), config.provider.address);
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();
         let chains = chains.clone();
@@ -168,7 +169,6 @@ async fn setup_chain_and_run_keeper(
         rpc_metrics.clone(),
     )
     .await?;
-    keeper_metrics.add_chain(chain_id.clone(), state.provider_address);
     chains.write().await.insert(
         chain_id.clone(),
         ApiBlockChainState::Initialized(state.clone()),
