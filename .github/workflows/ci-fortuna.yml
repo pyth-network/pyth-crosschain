@@ -24,6 +24,7 @@ jobs:
           profile: minimal
           toolchain: 1.82.0
           override: true
+          components: rustfmt, clippy
       - name: Format check
         run: cargo fmt --all -- --check
         if: success() || failure()

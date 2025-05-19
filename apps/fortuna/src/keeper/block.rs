@@ -1,10 +1,13 @@
 use {
     crate::{
-        api::{self, BlockchainState},
+        api::BlockchainState,
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
         eth_utils::utils::EscalationPolicy,
-        keeper::keeper_metrics::{ChainIdLabel, KeeperMetrics},
-        keeper::process_event::process_event_with_backoff,
+        history::History,
+        keeper::{
+            keeper_metrics::{ChainIdLabel, KeeperMetrics},
+            process_event::process_event_with_backoff,
+        },
     },
     anyhow::Result,
     ethers::types::U256,
@@ -36,6 +39,17 @@ pub struct BlockRange {
     pub to: BlockNumber,
 }
 
+#[derive(Clone)]
+pub struct ProcessParams {
+    pub contract: Arc<InstrumentedSignablePythContract>,
+    pub gas_limit: U256,
+    pub escalation_policy: EscalationPolicy,
+    pub chain_state: BlockchainState,
+    pub metrics: Arc<KeeperMetrics>,
+    pub history: Arc<History>,
+    pub fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+}
+
 /// Get the latest safe block number for the chain. Retry internally if there is an error.
 pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber {
     loop {
@@ -63,15 +77,7 @@ pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber
 #[tracing::instrument(skip_all, fields(
     range_from_block = block_range.from, range_to_block = block_range.to
 ))]
-pub async fn process_block_range(
-    block_range: BlockRange,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
-    escalation_policy: EscalationPolicy,
-    chain_state: api::BlockchainState,
-    metrics: Arc<KeeperMetrics>,
-    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
-) {
+pub async fn process_block_range(block_range: BlockRange, process_params: ProcessParams) {
     let BlockRange {
         from: first_block,
         to: last_block,
@@ -89,12 +95,7 @@ pub async fn process_block_range(
                 from: current_block,
                 to: to_block,
             },
-            contract.clone(),
-            gas_limit,
-            escalation_policy.clone(),
-            chain_state.clone(),
-            metrics.clone(),
-            fulfilled_requests_cache.clone(),
+            process_params.clone(),
         )
         .in_current_span()
         .await;
@@ -110,26 +111,19 @@ pub async fn process_block_range(
 #[tracing::instrument(name = "batch", skip_all, fields(
     batch_from_block = block_range.from, batch_to_block = block_range.to
 ))]
-pub async fn process_single_block_batch(
-    block_range: BlockRange,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
-    escalation_policy: EscalationPolicy,
-    chain_state: api::BlockchainState,
-    metrics: Arc<KeeperMetrics>,
-    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
-) {
-    let label = ChainIdLabel {
-        chain_id: chain_state.id.clone(),
-    };
 
+pub async fn process_single_block_batch(block_range: BlockRange, process_params: ProcessParams) {
+    let label = ChainIdLabel {
+        chain_id: process_params.chain_state.id.clone(),
+    };
     loop {
-        let events_res = chain_state
+        let events_res = process_params
+            .chain_state
             .contract
             .get_request_with_callback_events(
                 block_range.from,
                 block_range.to,
-                chain_state.provider_address,
+                process_params.chain_state.provider_address,
             )
             .await;
 
@@ -141,17 +135,20 @@ pub async fn process_single_block_batch(
                 .duration_since(UNIX_EPOCH)
                 .map(|duration| duration.as_secs() as i64)
                 .unwrap_or(0);
-            metrics
+            process_params
+                .metrics
                 .process_event_timestamp
                 .get_or_create(&label)
                 .set(server_timestamp);
 
-            let current_block = metrics
+            let current_block = process_params
+                .metrics
                 .process_event_block_number
                 .get_or_create(&label)
                 .get();
             if block_range.to > current_block as u64 {
-                metrics
+                process_params
+                    .metrics
                     .process_event_block_number
                     .get_or_create(&label)
                     .set(block_range.to as i64);
@@ -163,21 +160,15 @@ pub async fn process_single_block_batch(
                 tracing::info!(num_of_events = &events.len(), "Processing",);
                 for event in &events {
                     // the write lock guarantees we spawn only one task per sequence number
-                    let newly_inserted = fulfilled_requests_cache
+                    let newly_inserted = process_params
+                        .fulfilled_requests_cache
                         .write()
                         .await
                         .insert(event.sequence_number);
                     if newly_inserted {
                         spawn(
-                            process_event_with_backoff(
-                                event.clone(),
-                                chain_state.clone(),
-                                contract.clone(),
-                                gas_limit,
-                                escalation_policy.clone(),
-                                metrics.clone(),
-                            )
-                            .in_current_span(),
+                            process_event_with_backoff(event.clone(), process_params.clone())
+                                .in_current_span(),
                         );
                     }
                 }
@@ -279,32 +270,18 @@ pub async fn watch_blocks(
 /// It waits on rx channel to receive block ranges and then calls process_block_range to process them
 /// for each configured block delay.
 #[tracing::instrument(skip_all)]
-#[allow(clippy::too_many_arguments)]
 pub async fn process_new_blocks(
-    chain_state: BlockchainState,
+    process_params: ProcessParams,
     mut rx: mpsc::Receiver<BlockRange>,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
-    escalation_policy: EscalationPolicy,
-    metrics: Arc<KeeperMetrics>,
-    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
     block_delays: Vec<u64>,
 ) {
     tracing::info!("Waiting for new block ranges to process");
     loop {
         if let Some(block_range) = rx.recv().await {
             // Process blocks immediately first
-            process_block_range(
-                block_range.clone(),
-                Arc::clone(&contract),
-                gas_limit,
-                escalation_policy.clone(),
-                chain_state.clone(),
-                metrics.clone(),
-                fulfilled_requests_cache.clone(),
-            )
-            .in_current_span()
-            .await;
+            process_block_range(block_range.clone(), process_params.clone())
+                .in_current_span()
+                .await;
 
             // Then process with each configured delay
             for delay in &block_delays {
@@ -312,17 +289,9 @@ pub async fn process_new_blocks(
                     from: block_range.from.saturating_sub(*delay),
                     to: block_range.to.saturating_sub(*delay),
                 };
-                process_block_range(
-                    adjusted_range,
-                    Arc::clone(&contract),
-                    gas_limit,
-                    escalation_policy.clone(),
-                    chain_state.clone(),
-                    metrics.clone(),
-                    fulfilled_requests_cache.clone(),
-                )
-                .in_current_span()
-                .await;
+                process_block_range(adjusted_range, process_params.clone())
+                    .in_current_span()
+                    .await;
             }
         }
     }
@@ -330,31 +299,17 @@ pub async fn process_new_blocks(
 
 /// Processes the backlog_range for a chain.
 /// It processes the backlog range for each configured block delay.
-#[allow(clippy::too_many_arguments)]
 #[tracing::instrument(skip_all)]
 pub async fn process_backlog(
+    process_params: ProcessParams,
     backlog_range: BlockRange,
-    contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
-    escalation_policy: EscalationPolicy,
-    chain_state: BlockchainState,
-    metrics: Arc<KeeperMetrics>,
-    fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
     block_delays: Vec<u64>,
 ) {
     tracing::info!("Processing backlog");
     // Process blocks immediately first
-    process_block_range(
-        backlog_range.clone(),
-        Arc::clone(&contract),
-        gas_limit,
-        escalation_policy.clone(),
-        chain_state.clone(),
-        metrics.clone(),
-        fulfilled_requests_cache.clone(),
-    )
-    .in_current_span()
-    .await;
+    process_block_range(backlog_range.clone(), process_params.clone())
+        .in_current_span()
+        .await;
 
     // Then process with each configured delay
     for delay in &block_delays {
@@ -362,17 +317,9 @@ pub async fn process_backlog(
             from: backlog_range.from.saturating_sub(*delay),
             to: backlog_range.to.saturating_sub(*delay),
         };
-        process_block_range(
-            adjusted_range,
-            Arc::clone(&contract),
-            gas_limit,
-            escalation_policy.clone(),
-            chain_state.clone(),
-            metrics.clone(),
-            fulfilled_requests_cache.clone(),
-        )
-        .in_current_span()
-        .await;
+        process_block_range(adjusted_range, process_params.clone())
+            .in_current_span()
+            .await;
     }
     tracing::info!("Backlog processed");
 }

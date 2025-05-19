@@ -5,8 +5,7 @@ use {
         eth_utils::traced_client::TracedClient,
     },
     anyhow::{anyhow, Result},
-    ethers::middleware::Middleware,
-    ethers::{prelude::BlockNumber, providers::Provider, types::Address},
+    ethers::{middleware::Middleware, prelude::BlockNumber, providers::Provider, types::Address},
     std::{
         sync::Arc,
         time::{SystemTime, UNIX_EPOCH},

@@ -1,6 +1,7 @@
 use {
     crate::{
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},
+        history::History,
         state::HashChainState,
     },
     anyhow::Result,
@@ -21,9 +22,10 @@ use {
     tokio::sync::RwLock,
     url::Url,
 };
-pub use {chain_ids::*, index::*, live::*, metrics::*, ready::*, revelation::*};
+pub use {chain_ids::*, explorer::*, index::*, live::*, metrics::*, ready::*, revelation::*};
 
 mod chain_ids;
+mod explorer;
 mod index;
 mod live;
 mod metrics;
@@ -45,6 +47,8 @@ pub struct ApiMetrics {
 pub struct ApiState {
     pub chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
 
+    pub history: Arc<History>,
+
     pub metrics_registry: Arc<RwLock<Registry>>,
 
     /// Prometheus metrics
@@ -55,6 +59,7 @@ impl ApiState {
     pub async fn new(
         chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
         metrics_registry: Arc<RwLock<Registry>>,
+        history: Arc<History>,
     ) -> ApiState {
         let metrics = ApiMetrics {
             http_requests: Family::default(),
@@ -70,6 +75,7 @@ impl ApiState {
         ApiState {
             chains,
             metrics: Arc::new(metrics),
+            history,
             metrics_registry,
         }
     }
@@ -105,6 +111,8 @@ pub enum RestError {
     InvalidSequenceNumber,
     /// The caller passed an unsupported chain id
     InvalidChainId,
+    /// The query is not parsable to a transaction hash, address, or sequence number
+    InvalidQueryString,
     /// The caller requested a random value that can't currently be revealed (because it
     /// hasn't been committed to on-chain)
     NoPendingRequest,
@@ -132,6 +140,11 @@ impl IntoResponse for RestError {
             RestError::InvalidChainId => {
                 (StatusCode::BAD_REQUEST, "The chain id is not supported").into_response()
             }
+            RestError::InvalidQueryString => (
+                StatusCode::BAD_REQUEST,
+                "The query string is not parsable to a transaction hash, address, or sequence number",
+            )
+                .into_response(),
             RestError::NoPendingRequest => (
                 StatusCode::FORBIDDEN,
                 "The request with the given sequence number has not been made yet, or the random value has already been revealed on chain.",
@@ -167,6 +180,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
         .route("/metrics", get(metrics))
         .route("/ready", get(ready))
         .route("/v1/chains", get(chain_ids))
+        .route("/v1/logs", get(explorer))
         .route(
             "/v1/chains/:chain_id/revelations/:sequence",
             get(revelation),
@@ -186,11 +200,14 @@ pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
 
 #[cfg(test)]
 mod test {
-    use crate::api::ApiBlockChainState;
     use {
         crate::{
-            api::{self, ApiState, BinaryEncoding, Blob, BlockchainState, GetRandomValueResponse},
+            api::{
+                self, ApiBlockChainState, ApiState, BinaryEncoding, Blob, BlockchainState,
+                GetRandomValueResponse,
+            },
             chain::reader::{mock::MockEntropyReader, BlockStatus},
+            history::History,
             state::{HashChainState, PebbleHashChain},
         },
         axum::http::StatusCode,
@@ -252,7 +269,12 @@ mod test {
             ApiBlockChainState::Initialized(avax_state),
         );
 
-        let api_state = ApiState::new(Arc::new(RwLock::new(chains)), metrics_registry).await;
+        let api_state = ApiState::new(
+            Arc::new(RwLock::new(chains)),
+            metrics_registry,
+            Arc::new(History::new().await.unwrap()),
+        )
+        .await;
 
         let app = api::routes(api_state);
         (TestServer::new(app).unwrap(), eth_read, avax_read)

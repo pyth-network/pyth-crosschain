@@ -2,7 +2,8 @@ use {
     crate::{
         api::ChainId,
         chain::reader::{
-            self, BlockNumber, BlockStatus, EntropyReader, RequestedWithCallbackEvent,
+            self, BlockNumber, BlockStatus, EntropyReader, EntropyRequestInfo,
+            RequestedWithCallbackEvent,
         },
         config::EthereumConfig,
         eth_utils::{
@@ -16,7 +17,7 @@ use {
     axum::async_trait,
     ethers::{
         abi::RawLog,
-        contract::{abigen, EthLogDecode},
+        contract::{abigen, EthLogDecode, LogMeta},
         core::types::Address,
         middleware::{gas_oracle::GasOracleMiddleware, SignerMiddleware},
         prelude::JsonRpcClient,
@@ -285,14 +286,25 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             .to_block(to_block)
             .topic1(provider);
 
-        let res: Vec<RequestedWithCallbackFilter> = event.query().await?;
-
+        let res: Vec<(RequestedWithCallbackFilter, LogMeta)> = event.query_with_meta().await?;
         Ok(res
-            .iter()
-            .map(|r| RequestedWithCallbackEvent {
+            .into_iter()
+            .map(|(r, meta)| RequestedWithCallbackEvent {
                 sequence_number: r.sequence_number,
                 user_random_number: r.user_random_number,
                 provider_address: r.request.provider,
+                requestor: r.requestor,
+                request: EntropyRequestInfo {
+                    provider: r.request.provider,
+                    sequence_number: r.request.sequence_number,
+                    num_hashes: r.request.num_hashes,
+                    commitment: r.request.commitment,
+                    block_number: r.request.block_number,
+                    requester: r.request.requester,
+                    use_blockhash: r.request.use_blockhash,
+                    is_request_with_callback: r.request.is_request_with_callback,
+                },
+                log_meta: meta,
             })
             .filter(|r| r.provider_address == provider)
             .collect())

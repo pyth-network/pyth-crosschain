@@ -1,0 +1,98 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM request WHERE sequence = ? AND chain_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "chain_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "sequence",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 3,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "last_updated_at",
+        "ordinal": 4,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "state",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "request_block_number",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "request_tx_hash",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_random_number",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "sender",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "reveal_block_number",
+        "ordinal": 10,
+        "type_info": "Integer"
+      },
+      {
+        "name": "reveal_tx_hash",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "provider_random_number",
+        "ordinal": 12,
+        "type_info": "Text"
+      },
+      {
+        "name": "info",
+        "ordinal": 13,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "7d4365a9cb7c9ec16fd4ca60e1d558419954a0326b29180fa9943605813f04e6"
+}
