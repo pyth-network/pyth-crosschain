@@ -1,4 +1,5 @@
-import { DocumentationPage } from "@/src/components/Pages/DocumentationPage";
+export { DocumentationPage as default } from "@/src/components/Pages/DocumentationPage";
+
 import { source } from "@/src/source";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -21,5 +22,3 @@ export async function generateMetadata(props: {
     description: page.data.description,
   } satisfies Metadata;
 }
-
-export default DocumentationPage;

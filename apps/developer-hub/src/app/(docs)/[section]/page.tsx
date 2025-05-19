@@ -1,4 +1,5 @@
-import { LandingPage } from "@/src/components/Pages/LandingPage";
+export { LandingPage as default } from "@/src/components/Pages/LandingPage";
+
 import { source } from "@/src/source";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -20,5 +21,3 @@ export async function generateMetadata(props: {
     description: page.data.description,
   } satisfies Metadata;
 }
-
-export default LandingPage;
