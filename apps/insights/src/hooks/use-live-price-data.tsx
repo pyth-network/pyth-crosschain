@@ -2,7 +2,6 @@
 
 import type { PriceData } from "@pythnetwork/client";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useMap } from "@react-hookz/web";
 import { PublicKey } from "@solana/web3.js";
 import type { ComponentProps } from "react";
 import {
@@ -12,6 +11,7 @@ import {
   useCallback,
   useState,
   useMemo,
+  useRef,
 } from "react";
 
 import {
@@ -19,8 +19,6 @@ import {
   subscribe,
   getAssetPricesFromAccounts,
 } from "../services/pyth";
-
-export const SKELETON_WIDTH = 20;
 
 const LivePriceDataContext = createContext<
   ReturnType<typeof usePriceData> | undefined
@@ -38,20 +36,22 @@ export const LivePriceDataProvider = (props: LivePriceDataProviderProps) => {
 };
 
 export const useLivePriceData = (cluster: Cluster, feedKey: string) => {
-  const { priceData, prevPriceData, addSubscription, removeSubscription } =
+  const { addSubscription, removeSubscription } =
     useLivePriceDataContext()[cluster];
 
+  const [data, setData] = useState<{
+    current: PriceData | undefined;
+    prev: PriceData | undefined;
+  }>({ current: undefined, prev: undefined });
+
   useEffect(() => {
-    addSubscription(feedKey);
+    addSubscription(feedKey, setData);
     return () => {
-      removeSubscription(feedKey);
+      removeSubscription(feedKey, setData);
     };
   }, [addSubscription, removeSubscription, feedKey]);
 
-  const current = priceData.get(feedKey);
-  const prev = prevPriceData.get(feedKey);
-
-  return { current, prev };
+  return data;
 };
 
 export const useLivePriceComponent = (
@@ -85,11 +85,16 @@ const usePriceData = () => {
   };
 };
 
+type Subscription = (value: {
+  current: PriceData;
+  prev: PriceData | undefined;
+}) => void;
+
 const usePriceDataForCluster = (cluster: Cluster) => {
-  const feedSubscriptions = useMap<string, number>([]);
   const [feedKeys, setFeedKeys] = useState<string[]>([]);
-  const prevPriceData = useMap<string, PriceData>([]);
-  const priceData = useMap<string, PriceData>([]);
+  const feedSubscriptions = useRef<Map<string, Set<Subscription>>>(new Map());
+  const priceData = useRef<Map<string, PriceData>>(new Map());
+  const prevPriceData = useRef<Map<string, PriceData>>(new Map());
   const logger = useLogger();
 
   useEffect(() => {
@@ -97,7 +102,9 @@ const usePriceDataForCluster = (cluster: Cluster) => {
     // there's any symbol that isn't currently publishing prices (e.g. the
     // markets are closed), we will still display the last published price for
     // that symbol.
-    const uninitializedFeedKeys = feedKeys.filter((key) => !priceData.has(key));
+    const uninitializedFeedKeys = feedKeys.filter(
+      (key) => !priceData.current.has(key),
+    );
     if (uninitializedFeedKeys.length > 0) {
       getAssetPricesFromAccounts(
         cluster,
@@ -106,8 +113,8 @@ const usePriceDataForCluster = (cluster: Cluster) => {
         .then((initialPrices) => {
           for (const [i, price] of initialPrices.entries()) {
             const key = uninitializedFeedKeys[i];
-            if (key && !priceData.has(key)) {
-              priceData.set(key, price);
+            if (key && !priceData.current.has(key)) {
+              priceData.current.set(key, price);
             }
           }
         })
@@ -122,11 +129,16 @@ const usePriceDataForCluster = (cluster: Cluster) => {
       feedKeys.map((key) => new PublicKey(key)),
       ({ price_account }, data) => {
         if (price_account) {
-          const prevData = priceData.get(price_account);
+          const prevData = priceData.current.get(price_account);
           if (prevData) {
-            prevPriceData.set(price_account, prevData);
+            prevPriceData.current.set(price_account, prevData);
           }
-          priceData.set(price_account, data);
+          priceData.current.set(price_account, data);
+          for (const subscription of feedSubscriptions.current.get(
+            price_account,
+          ) ?? []) {
+            subscription({ current: data, prev: prevData });
+          }
         }
       },
     );
@@ -139,26 +151,30 @@ const usePriceDataForCluster = (cluster: Cluster) => {
         logger.error("Failed to unsubscribe from price updates", error);
       });
     };
-  }, [feedKeys, logger, priceData, prevPriceData, cluster]);
+  }, [feedKeys, logger, cluster]);
 
   const addSubscription = useCallback(
-    (key: string) => {
-      const current = feedSubscriptions.get(key) ?? 0;
-      feedSubscriptions.set(key, current + 1);
-      if (current === 0) {
+    (key: string, subscription: Subscription) => {
+      const current = feedSubscriptions.current.get(key);
+      if (current === undefined) {
+        feedSubscriptions.current.set(key, new Set([subscription]));
         setFeedKeys((prev) => [...new Set([...prev, key])]);
+      } else {
+        current.add(subscription);
       }
     },
     [feedSubscriptions],
   );
 
   const removeSubscription = useCallback(
-    (key: string) => {
-      const current = feedSubscriptions.get(key);
+    (key: string, subscription: Subscription) => {
+      const current = feedSubscriptions.current.get(key);
       if (current) {
-        feedSubscriptions.set(key, current - 1);
-        if (current === 1) {
+        if (current.size === 0) {
+          feedSubscriptions.current.delete(key);
           setFeedKeys((prev) => prev.filter((elem) => elem !== key));
+        } else {
+          current.delete(subscription);
         }
       }
     },
@@ -166,8 +182,6 @@ const usePriceDataForCluster = (cluster: Cluster) => {
   );
 
   return {
-    priceData: new Map(priceData),
-    prevPriceData: new Map(prevPriceData),
     addSubscription,
     removeSubscription,
   };

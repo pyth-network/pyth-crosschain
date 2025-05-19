@@ -16,6 +16,8 @@ import {
   useState,
   useEffect,
   useRef,
+  useMemo,
+  useReducer,
 } from "react";
 import type { ModalRenderProps } from "react-aria-components";
 import {
@@ -106,6 +108,7 @@ type OwnProps = Pick<ComponentProps<typeof Modal>, "children"> &
       | undefined;
     onClose?: (() => void) | undefined;
     onCloseFinish?: (() => void) | undefined;
+    onOpenFinish?: (() => void) | undefined;
     onDragEnd?: (
       e: MouseEvent | TouchEvent | PointerEvent,
       panInfo: PanInfo,
@@ -121,6 +124,7 @@ export const ModalDialog = ({
   onOpenChange,
   onClose,
   onCloseFinish,
+  onOpenFinish,
   overlayClassName,
   overlayVariants,
   children,
@@ -145,6 +149,8 @@ export const ModalDialog = ({
     if (animation === "hidden") {
       hideOverlay();
       onCloseFinish?.();
+    } else if (animation === "visible") {
+      onOpenFinish?.();
     }
     setAnimation((a) => {
       return animation === "hidden" && a === "hidden" ? "unmounted" : a;
@@ -204,77 +210,196 @@ export const createModalDialogContext = <
 ) => {
   type ContextType = {
     close: () => Promise<void>;
-    open: (modalDialogProps: OpenArgs<T, U>) => void;
+    open: (modalDialogProps: ModalDialogProps<T, U>) => void;
   };
 
   const Context = createContext<ContextType | undefined>(undefined);
 
+  enum StateType {
+    Closed,
+    Opening,
+    Open,
+    Closing,
+    Replacing,
+  }
+  const State = {
+    Closed: () => ({ type: StateType.Closed as const }),
+    Opening: (props: ModalDialogProps<T, U>) => ({
+      type: StateType.Opening as const,
+      props,
+    }),
+    Open: (props: ModalDialogProps<T, U>) => ({
+      type: StateType.Open as const,
+      props,
+    }),
+    Closing: (props: ModalDialogProps<T, U>) => ({
+      type: StateType.Closing as const,
+      props,
+    }),
+    Replacing: (
+      oldProps: ModalDialogProps<T, U>,
+      newProps: ModalDialogProps<T, U>,
+    ) => ({ type: StateType.Replacing as const, oldProps, newProps }),
+  };
+  type State = ReturnType<(typeof State)[keyof typeof State]>;
+
+  enum ActionType {
+    Open,
+    OpenFinish,
+    Close,
+    CloseFinish,
+  }
+  const Action = {
+    Open: (props: ModalDialogProps<T, U>) => ({
+      type: ActionType.Open as const,
+      props,
+    }),
+    OpenFinish: () => ({ type: ActionType.OpenFinish as const }),
+    Close: () => ({ type: ActionType.Close as const }),
+    CloseFinish: () => ({ type: ActionType.CloseFinish as const }),
+  };
+  type Action = ReturnType<(typeof Action)[keyof typeof Action]>;
+
+  const reducer = (state: State, action: Action) => {
+    switch (action.type) {
+      case ActionType.Open: {
+        switch (state.type) {
+          case StateType.Closed: {
+            return State.Opening(action.props);
+          }
+          case StateType.Closing:
+          case StateType.Open:
+          case StateType.Opening: {
+            return State.Replacing(state.props, action.props);
+          }
+          case StateType.Replacing: {
+            return State.Replacing(state.oldProps, action.props);
+          }
+        }
+      }
+      // This rule is a false positive because typescript ensures we never
+      // fallthough, and adding a `break` above triggers an unreachable code
+      // error
+      // eslint-disable-next-line no-fallthrough
+      case ActionType.OpenFinish: {
+        switch (state.type) {
+          case StateType.Opening: {
+            return State.Open(state.props);
+          }
+          case StateType.Closed:
+          case StateType.Closing:
+          case StateType.Replacing:
+          case StateType.Open: {
+            return state;
+          }
+        }
+      }
+      // This rule is a false positive because typescript ensures we never
+      // fallthough, and adding a `break` above triggers an unreachable code
+      // error
+      // eslint-disable-next-line no-fallthrough
+      case ActionType.Close: {
+        switch (state.type) {
+          case StateType.Open:
+          case StateType.Opening: {
+            return State.Closing(state.props);
+          }
+          case StateType.Replacing: {
+            return State.Closing(state.oldProps);
+          }
+          case StateType.Closed:
+          case StateType.Closing: {
+            return state;
+          }
+        }
+      }
+      // This rule is a false positive because typescript ensures we never
+      // fallthough, and adding a `break` above triggers an unreachable code
+      // error
+      // eslint-disable-next-line no-fallthrough
+      case ActionType.CloseFinish: {
+        switch (state.type) {
+          case StateType.Closing: {
+            return State.Closed();
+          }
+          case StateType.Replacing: {
+            return State.Opening(state.newProps);
+          }
+          case StateType.Closed:
+          case StateType.Open:
+          case StateType.Opening: {
+            return state;
+          }
+        }
+      }
+    }
+  };
+
   return {
     Provider: ({ children, ...ctxProps }: U & { children: ReactNode }) => {
-      const promiseCloseResolvers = useRef<(() => void)[]>([]);
-      const [isOpen, setIsOpen] = useState(false);
-      const [currentModalDialog, setModalDialog] = useState<
-        OpenArgs<T, U> | undefined
-      >(undefined);
-      const close = useCallback(() => {
-        setIsOpen(false);
-        return new Promise<void>((resolve) => {
-          promiseCloseResolvers.current.push(resolve);
-        });
-      }, []);
+      const closeResolvers = useRef<(() => void)[]>([]);
+      const [state, dispatch] = useReducer<State, [Action]>(
+        reducer,
+        State.Closed(),
+      );
       const open = useCallback(
-        (props: OpenArgs<T, U>) => {
-          if (currentModalDialog && currentModalDialog !== props) {
-            close()
-              .then(() => {
-                setTimeout(() => {
-                  setModalDialog(props);
-                  setIsOpen(true);
-                });
-              })
-              .catch((error: unknown) => {
-                throw error;
-              });
-          } else if (!currentModalDialog) {
-            setModalDialog(props);
-            setIsOpen(true);
-          }
+        (props: ModalDialogProps<T, U>) => {
+          dispatch(Action.Open(props));
         },
-        [currentModalDialog, setModalDialog, close],
+        [dispatch],
       );
-      const handleOpenChange = useCallback(
-        (newValue: boolean) => {
-          if (!newValue) {
-            setIsOpen(false);
-          }
-        },
-        [setIsOpen],
-      );
+      const close = useCallback(() => {
+        dispatch(Action.Close());
+        return new Promise<void>((resolve) =>
+          closeResolvers.current.push(resolve),
+        );
+      }, [dispatch]);
+      const value = useMemo(() => ({ open, close }), [open, close]);
+      const handleOpenFinish = useCallback(() => {
+        dispatch(Action.OpenFinish());
+      }, [dispatch]);
       const handleCloseFinish = useCallback(() => {
-        const onCloseFinished = currentModalDialog?.onCloseFinished;
-        setModalDialog(undefined);
+        let onCloseFinished;
+        if (state.type === StateType.Closing) {
+          onCloseFinished = state.props.onCloseFinished;
+        }
+        dispatch(Action.CloseFinish());
         onCloseFinished?.();
-        for (const resolver of promiseCloseResolvers.current) {
+        for (const resolver of closeResolvers.current) {
           resolver();
         }
-        promiseCloseResolvers.current = [];
-      }, [setModalDialog, currentModalDialog]);
+        closeResolvers.current = [];
+      }, [dispatch, state]);
+      const handleOpenChange = useCallback(
+        (isOpen: boolean) => {
+          if (!isOpen) {
+            dispatch(Action.Close());
+          }
+        },
+        [dispatch],
+      );
 
       return (
-        <Context value={{ open, close }}>
+        <Context value={value}>
           {children}
-          {currentModalDialog !== undefined && (
+          {state.type !== StateType.Closed && (
             // @ts-expect-error TODO typescript isn't validating this type
             // properly.  To be honest, I'm not sure why, but the code for
             // `createModalDialogContext` is pretty messy and I think
             // simplifying this would probably resolve the issue.  I'll come
             // back and refactor this eventually and see if this goes away...
             <Component
-              isOpen={isOpen}
+              isOpen={
+                state.type === StateType.Open ||
+                state.type === StateType.Opening
+              }
               onOpenChange={handleOpenChange}
+              onOpenFinish={handleOpenFinish}
               onCloseFinish={handleCloseFinish}
               {...ctxProps}
-              {...currentModalDialog}
+              {...(state.type === StateType.Replacing
+                ? state.oldProps
+                : state.props)}
             />
           )}
         </Context>
@@ -292,7 +417,7 @@ export const createModalDialogContext = <
   };
 };
 
-export type OpenArgs<T, U = undefined> = Omit<
+export type ModalDialogProps<T, U = undefined> = Omit<
   T,
   "isOpen" | "onOpenChange" | "onCloseFinish" | keyof U
 > & {

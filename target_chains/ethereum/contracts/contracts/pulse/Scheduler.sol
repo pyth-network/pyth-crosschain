@@ -269,6 +269,8 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // from the last trading period. Thus, we use a minimum timestamp of zero while parsing,
         // and we enforce the past max validity ourselves in _validateShouldUpdatePrices using
         // the highest timestamp in the update data.
+        status.balanceInWei -= pythFee;
+        status.totalSpent += pythFee;
         uint64 curTime = SafeCast.toUint64(block.timestamp);
         (
             PythStructs.PriceFeed[] memory priceFeeds,
@@ -279,8 +281,6 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 0, // We enforce the past max validity ourselves in _validateShouldUpdatePrices
                 curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
             );
-        status.balanceInWei -= pythFee;
-        status.totalSpent += pythFee;
 
         // Verify all price feeds have the same Pythnet slot.
         // All feeds in a subscription must be updated at the same time.

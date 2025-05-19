@@ -4,11 +4,18 @@ use {
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
         eth_utils::utils::EscalationPolicy,
         history::History,
-        keeper::{keeper_metrics::KeeperMetrics, process_event::process_event_with_backoff},
+        keeper::{
+            keeper_metrics::{ChainIdLabel, KeeperMetrics},
+            process_event::process_event_with_backoff,
+        },
     },
     anyhow::Result,
     ethers::types::U256,
-    std::{collections::HashSet, sync::Arc},
+    std::{
+        collections::HashSet,
+        sync::Arc,
+        time::{SystemTime, UNIX_EPOCH},
+    },
     tokio::{
         spawn,
         sync::{mpsc, RwLock},
@@ -104,7 +111,11 @@ pub async fn process_block_range(block_range: BlockRange, process_params: Proces
 #[tracing::instrument(name = "batch", skip_all, fields(
     batch_from_block = block_range.from, batch_to_block = block_range.to
 ))]
+
 pub async fn process_single_block_batch(block_range: BlockRange, process_params: ProcessParams) {
+    let label = ChainIdLabel {
+        chain_id: process_params.chain_state.id.clone(),
+    };
     loop {
         let events_res = process_params
             .chain_state
@@ -115,6 +126,34 @@ pub async fn process_single_block_batch(block_range: BlockRange, process_params:
                 process_params.chain_state.provider_address,
             )
             .await;
+
+        // Only update metrics if we successfully retrieved events.
+        if events_res.is_ok() {
+            // Track the last time blocks were processed. If anything happens to the processing thread, the
+            // timestamp will lag, which will trigger an alert.
+            let server_timestamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|duration| duration.as_secs() as i64)
+                .unwrap_or(0);
+            process_params
+                .metrics
+                .process_event_timestamp
+                .get_or_create(&label)
+                .set(server_timestamp);
+
+            let current_block = process_params
+                .metrics
+                .process_event_block_number
+                .get_or_create(&label)
+                .get();
+            if block_range.to > current_block as u64 {
+                process_params
+                    .metrics
+                    .process_event_block_number
+                    .get_or_create(&label)
+                    .set(block_range.to as i64);
+            }
+        }
 
         match events_res {
             Ok(events) => {

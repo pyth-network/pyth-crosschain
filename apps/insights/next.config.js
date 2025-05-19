@@ -1,11 +1,12 @@
 const config = {
+  experimental: {
+    useCache: true,
+    reactCompiler: true,
+  },
+
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],
-
-  experimental: {
-    useCache: true,
-  },
 
   logging: {
     fetches: {

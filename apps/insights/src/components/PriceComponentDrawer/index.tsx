@@ -270,7 +270,7 @@ const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
       <OpenButton
         variant="ghost"
         hideText
-        beforeIcon={ArrowSquareOut}
+        beforeIcon={<ArrowSquareOut />}
         rounded
         className={styles.ghostOpenButton ?? ""}
         {...props}
