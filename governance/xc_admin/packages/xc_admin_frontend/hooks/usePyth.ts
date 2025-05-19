@@ -58,7 +58,6 @@ export const usePyth = (): PythHookData => {
 
         // Use the functional approach to parse the accounts
         const parsedConfig = getConfig[ProgramType.PYTH_CORE]({
-          programType: ProgramType.PYTH_CORE,
           accounts: allPythAccounts,
           cluster: cluster as PythCluster,
         })
