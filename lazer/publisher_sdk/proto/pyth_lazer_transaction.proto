@@ -12,22 +12,32 @@ import "governance_instruction.proto";
 // Resulting bytes should then be signed with the signature scheme specified.
 // The signed lazer transaction is encoded as bytes and sent to Pyth Lazer Relayer.
 message SignedLazerTransaction {
-    // [required] specifies the type of signature used to sign the payload
-    optional TransactionSignatureType signature_type = 1;
-
-    // [required] signature derived from signing payload bytes
-    optional bytes signature = 2;
+    // [required] signature with public key
+    optional SignatureData signature_data = 1;
 
     // [required] lazer transaction encoded as bytes through protobuf
-    optional bytes payload = 3;
-
-    // TODO: Add public key
+    optional bytes payload = 2;
 }
 
-// Types of signatures supported by Pyth Lazer
-enum TransactionSignatureType {
-    // signature is 64 bytes long
-    ed25519 = 0;
+// Signature for encoded payload along with the relevant public keys to verify against it
+// Public key should successfully verify payload
+// Pyth Lazer will maintain a list of valid public keys
+// Passed public key should be present in publisher's list of valid keys
+message SignatureData {
+    // [required] type of signature, which determines included data needed for verifying
+    oneof data {
+        Ed25519SignatureData ed25519 = 1;
+    };
+}
+
+// ED25519 style signature. Should include a single signature and a single public key
+// Signature will be verified using public key after determining public key is valid
+message Ed25519SignatureData {
+    // [required] 64 byte signature
+    optional bytes signature = 1;
+
+    // [required] 32 byte public key
+    optional bytes public_key = 2;
 }
 
 // Transaction contianing one of the valid Lazer Transactions
