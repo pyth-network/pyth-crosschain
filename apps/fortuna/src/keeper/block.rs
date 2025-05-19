@@ -7,7 +7,6 @@ use {
         keeper::process_event::process_event_with_backoff,
     },
     anyhow::Result,
-    ethers::types::U256,
     std::{collections::HashSet, sync::Arc},
     tokio::{
         spawn,
@@ -62,7 +61,6 @@ pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber
 pub async fn process_block_range(
     block_range: BlockRange,
     contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
     escalation_policy: EscalationPolicy,
     chain_state: api::BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -86,7 +84,6 @@ pub async fn process_block_range(
                 to: to_block,
             },
             contract.clone(),
-            gas_limit,
             escalation_policy.clone(),
             chain_state.clone(),
             metrics.clone(),
@@ -109,7 +106,6 @@ pub async fn process_block_range(
 pub async fn process_single_block_batch(
     block_range: BlockRange,
     contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
     escalation_policy: EscalationPolicy,
     chain_state: api::BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -140,7 +136,6 @@ pub async fn process_single_block_batch(
                                 event.clone(),
                                 chain_state.clone(),
                                 contract.clone(),
-                                gas_limit,
                                 escalation_policy.clone(),
                                 metrics.clone(),
                             )
@@ -251,7 +246,6 @@ pub async fn process_new_blocks(
     chain_state: BlockchainState,
     mut rx: mpsc::Receiver<BlockRange>,
     contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
     escalation_policy: EscalationPolicy,
     metrics: Arc<KeeperMetrics>,
     fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
@@ -264,7 +258,6 @@ pub async fn process_new_blocks(
             process_block_range(
                 block_range.clone(),
                 Arc::clone(&contract),
-                gas_limit,
                 escalation_policy.clone(),
                 chain_state.clone(),
                 metrics.clone(),
@@ -282,7 +275,6 @@ pub async fn process_new_blocks(
                 process_block_range(
                     adjusted_range,
                     Arc::clone(&contract),
-                    gas_limit,
                     escalation_policy.clone(),
                     chain_state.clone(),
                     metrics.clone(),
@@ -302,7 +294,6 @@ pub async fn process_new_blocks(
 pub async fn process_backlog(
     backlog_range: BlockRange,
     contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
     escalation_policy: EscalationPolicy,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -314,7 +305,6 @@ pub async fn process_backlog(
     process_block_range(
         backlog_range.clone(),
         Arc::clone(&contract),
-        gas_limit,
         escalation_policy.clone(),
         chain_state.clone(),
         metrics.clone(),
@@ -332,7 +322,6 @@ pub async fn process_backlog(
         process_block_range(
             adjusted_range,
             Arc::clone(&contract),
-            gas_limit,
             escalation_policy.clone(),
             chain_state.clone(),
             metrics.clone(),

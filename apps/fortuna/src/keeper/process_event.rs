@@ -6,7 +6,6 @@ use {
         eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
     },
     anyhow::{anyhow, Result},
-    ethers::types::U256,
     std::sync::Arc,
     tracing,
 };
@@ -19,7 +18,6 @@ pub async fn process_event_with_backoff(
     event: RequestedWithCallbackEvent,
     chain_state: BlockchainState,
     contract: Arc<InstrumentedSignablePythContract>,
-    gas_limit: U256,
     escalation_policy: EscalationPolicy,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
@@ -48,13 +46,7 @@ pub async fn process_event_with_backoff(
         provider_revelation,
     );
 
-    let success = submit_tx_with_backoff(
-        contract.client(),
-        contract_call,
-        gas_limit,
-        escalation_policy,
-    )
-    .await;
+    let success = submit_tx_with_backoff(contract.client(), contract_call, escalation_policy).await;
 
     metrics
         .requests_processed
@@ -87,11 +79,6 @@ pub async fn process_event_with_backoff(
                 .observe(result.num_retries as f64);
 
             metrics
-                .final_gas_multiplier
-                .get_or_create(&account_label)
-                .observe(result.gas_multiplier as f64);
-
-            metrics
                 .final_fee_multiplier
                 .get_or_create(&account_label)
                 .observe(result.fee_multiplier as f64);
@@ -119,7 +106,7 @@ pub async fn process_event_with_backoff(
             // the RPC gave us an error anyway.
             let req = chain_state
                 .contract
-                .get_request(event.provider_address, event.sequence_number)
+                .get_request_v2(event.provider_address, event.sequence_number)
                 .await;
 
             tracing::error!("Failed to process event: {:?}. Request: {:?}", e, req);
