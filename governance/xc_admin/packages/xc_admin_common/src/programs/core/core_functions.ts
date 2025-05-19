@@ -224,8 +224,12 @@ export function getConfig(params: CoreConfigParams): RawConfig {
         products: parsed.productAccountKeys
           .filter((key) => {
             const keyStr = key.toBase58();
-            // Only include products that exist and haven't been processed yet
-            return productRawConfigs[keyStr] && !processedProducts.has(keyStr);
+            // Only include products that exist, have price accounts, and haven't been processed yet
+            return (
+              productRawConfigs[keyStr] &&
+              productRawConfigs[keyStr].priceAccounts.length > 0 &&
+              !processedProducts.has(keyStr)
+            );
           })
           .map((key) => {
             const keyStr = key.toBase58();

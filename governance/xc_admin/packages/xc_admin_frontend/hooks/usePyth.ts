@@ -62,15 +62,36 @@ export const usePyth = (): PythHookData => {
           cluster: cluster as PythCluster,
         })
 
-        // Verify all accounts were processed
-        const remainingAccounts = allPythAccounts.filter((account) => {
+        // Get all account pubkeys from the parsed config
+        const processedPubkeys = new Set<string>([
+          ...parsedConfig.mappingAccounts.map((acc) => acc.address.toBase58()),
+          ...parsedConfig.mappingAccounts.flatMap((mapping) =>
+            mapping.products.map((prod) => prod.address.toBase58())
+          ),
+          ...parsedConfig.mappingAccounts.flatMap((mapping) =>
+            mapping.products.flatMap((prod) =>
+              prod.priceAccounts.map((price) => price.address.toBase58())
+            )
+          ),
+        ])
+
+        // Find accounts that weren't included in the parsed config
+        const unprocessedAccounts = allPythAccounts.filter((account) => {
           const base = parseBaseData(account.account.data)
-          return base && base.type !== AccountType.Test
+          // Skip permission accounts entirely
+          if (!base || base.type === AccountType.Permission) {
+            return false
+          }
+          return !processedPubkeys.has(account.pubkey.toBase58())
         })
 
-        if (remainingAccounts.length > 0) {
+        if (unprocessedAccounts.length > 0) {
           console.warn(
-            `${remainingAccounts.length} accounts were not processed`
+            `${unprocessedAccounts.length} accounts were not processed:`,
+            unprocessedAccounts.map((acc) => ({
+              pubkey: acc.pubkey.toBase58(),
+              type: parseBaseData(acc.account.data)?.type,
+            }))
           )
         }
 
