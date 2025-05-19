@@ -10,7 +10,7 @@ import { notFound } from "next/navigation";
 
 export function BasePage(props: { params: { slug: string[] } }) {
   const page = source.getPage(props.params.slug);
-  if (!page) return notFound();
+  if (!page) notFound();
 
   const MDX = page.data.body;
 
