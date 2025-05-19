@@ -1,14 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { PermissionData, Product } from "@pythnetwork/client";
-import {
-  LazerConfig,
-  LazerConfigParams,
-  LazerInstructionAccounts,
-} from "./lazer/lazer_functions";
-import {
-  CoreConfigParams,
-  CoreInstructionAccounts,
-} from "./core/core_functions";
+import { LazerConfig, LazerInstructionAccounts } from "./lazer/lazer_functions";
+import { CoreInstructionAccounts } from "./core/core_functions";
 /**
  * Represents the different Pyth programs supported by the application.
  */
@@ -69,14 +62,6 @@ export type RawConfig = {
   mappingAccounts: MappingRawConfig[];
   permissionAccount?: PermissionData;
 };
-
-/**
- * Union type for configuration parameters that can vary by program type
- * This is a discriminated union type that enforces program type at compile time
- */
-export type GetConfigParams =
-  | (CoreConfigParams & { programType: ProgramType.PYTH_CORE })
-  | (LazerConfigParams & { programType: ProgramType.PYTH_LAZER });
 
 /**
  * Type for downloadable price account configuration

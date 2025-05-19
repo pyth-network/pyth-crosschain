@@ -6,13 +6,17 @@ import {
   ProgramConfig,
   ValidationResult,
   RawConfig,
-  GetConfigParams,
 } from "./types";
 
 // Import functions from each program implementation
 import * as pythCore from "./core/core_functions";
 import * as pythLazer from "./lazer/lazer_functions";
-import { LazerConfig, LAZER_PROGRAM_ID } from "./lazer/lazer_functions";
+import {
+  LazerConfig,
+  LAZER_PROGRAM_ID,
+  LazerConfigParams,
+} from "./lazer/lazer_functions";
+import { CoreConfigParams } from "./core/core_functions";
 
 /**
  * Function to get the program address for each program type
@@ -39,18 +43,13 @@ export const isAvailableOnCluster: Record<
 
 /**
  * Function to get configuration for each program type
- * Uses discriminated union to ensure type safety
  */
 export const getConfig: {
-  [ProgramType.PYTH_CORE]: (
-    params: Extract<GetConfigParams, { programType: ProgramType.PYTH_CORE }>,
-  ) => RawConfig;
-  [ProgramType.PYTH_LAZER]: (
-    params: Extract<GetConfigParams, { programType: ProgramType.PYTH_LAZER }>,
-  ) => LazerConfig;
+  [ProgramType.PYTH_CORE]: (params: CoreConfigParams) => RawConfig;
+  [ProgramType.PYTH_LAZER]: (params: LazerConfigParams) => LazerConfig;
 } = {
-  [ProgramType.PYTH_CORE]: (params) => pythCore.getConfig(params),
-  [ProgramType.PYTH_LAZER]: (params) => pythLazer.getConfig(params),
+  [ProgramType.PYTH_CORE]: pythCore.getConfig,
+  [ProgramType.PYTH_LAZER]: pythLazer.getConfig,
 };
 
 /**

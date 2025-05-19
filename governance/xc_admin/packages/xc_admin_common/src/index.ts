@@ -22,7 +22,6 @@ export {
   ProductRawConfig,
   MappingRawConfig,
   RawConfig,
-  GetConfigParams,
   DownloadablePriceAccount,
   DownloadableProduct,
   DownloadableConfig,

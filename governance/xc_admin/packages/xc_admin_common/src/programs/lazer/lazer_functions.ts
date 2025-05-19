@@ -4,9 +4,8 @@ import {
   ValidationResult,
   DownloadableProduct,
   DownloadableConfig,
-  GetConfigParams,
+  ProgramType,
 } from "../types";
-import { ProgramType } from "../types";
 
 /**
  * Program ID for the Pyth Lazer program
@@ -81,11 +80,7 @@ export function isAvailableOnCluster(cluster: PythCluster): boolean {
  * @param params Parameters to fetch Lazer configuration
  * @returns Promise resolving to Lazer-specific configuration object
  */
-export function getConfig(
-  params: LazerConfigParams & { programType: ProgramType.PYTH_LAZER },
-): LazerConfig {
-  // No need for runtime check since it's enforced by the type system
-
+export function getConfig(params: LazerConfigParams): LazerConfig {
   // Extract the properties
   const { endpoint, network, options } = params;
 

@@ -128,9 +128,7 @@ function sortData(data: DownloadableConfig): DownloadableConfig {
 /**
  * Parse raw on-chain accounts into the Pyth Core configuration format
  */
-export function getConfig(
-  params: CoreConfigParams & { programType: ProgramType.PYTH_CORE },
-): RawConfig {
+export function getConfig(params: CoreConfigParams): RawConfig {
   const accounts = params.accounts;
 
   // Create a map of parsed base data for each account to avoid repeated parsing
