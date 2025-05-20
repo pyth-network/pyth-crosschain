@@ -113,6 +113,7 @@ module.exports = {
   },
   solidity: {
     version: "0.8.29",
+    evmVersion: "paris",
     settings: {
       optimizer: {
         enabled: true,
