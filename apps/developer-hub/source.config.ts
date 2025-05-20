@@ -1,20 +1,24 @@
-import {
-  defineConfig,
-  defineDocs,
-  frontmatterSchema,
-  metaSchema,
-} from "fumadocs-mdx/config";
+import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import { z } from "zod";
 
 export const docs = defineDocs({
   docs: {
-    schema: frontmatterSchema.extend({
+    schema: z.object({
+      title: z.string(),
+      description: z.string(),
+      icon: z.string().optional(),
+      full: z.boolean().default(false),
       index: z.boolean().default(false),
     }),
   },
   meta: {
-    schema: metaSchema.extend({
+    schema: z.object({
+      title: z.string().optional(),
+      pages: z.array(z.string()).optional(),
       description: z.string().optional(),
+      root: z.boolean().optional(),
+      defaultOpen: z.boolean().optional(),
+      icon: z.string().optional(),
     }),
   },
 });
