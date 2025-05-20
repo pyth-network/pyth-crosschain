@@ -149,7 +149,7 @@ async fn setup_chain_provider(
 
     let provider_info = contract.get_provider_info(provider_address).call().await?;
 
-    if register || !chain_config.sync_only_on_register {
+    if register || !chain_config.sync_fee_only_on_register {
         sync_fee(&contract, &provider_info, chain_config.fee)
             .in_current_span()
             .await?;

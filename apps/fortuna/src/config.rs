@@ -174,8 +174,8 @@ pub struct EthereumConfig {
 
     /// Only set the provider's fee when the provider is registered for the first time. Default is true.
     /// This is useful to avoid resetting the fees on service restarts.
-    #[serde(default = "default_sync_only_on_register")]
-    pub sync_only_on_register: bool,
+    #[serde(default = "default_sync_fee_only_on_register")]
+    pub sync_fee_only_on_register: bool,
 
     /// Historical commitments made by the provider.
     pub commitments: Option<Vec<Commitment>>,
@@ -191,7 +191,7 @@ pub struct EthereumConfig {
     pub block_delays: Vec<u64>,
 }
 
-fn default_sync_only_on_register() -> bool {
+fn default_sync_fee_only_on_register() -> bool {
     true
 }
 
