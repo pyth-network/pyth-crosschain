@@ -172,6 +172,11 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub fee: u128,
 
+    /// Only set the provider's fee when the provider is registered for the first time. Default is true.
+    /// This is useful to avoid resetting the fees on service restarts.
+    #[serde(default = "default_sync_only_on_register")]
+    pub sync_only_on_register: bool,
+
     /// Historical commitments made by the provider.
     pub commitments: Option<Vec<Commitment>>,
 
@@ -184,6 +189,10 @@ pub struct EthereumConfig {
     /// at each specified delay. For example: [5, 10, 20].
     #[serde(default = "default_block_delays")]
     pub block_delays: Vec<u64>,
+}
+
+fn default_sync_only_on_register() -> bool {
+    true
 }
 
 fn default_block_delays() -> Vec<u64> {
