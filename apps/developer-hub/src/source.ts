@@ -9,6 +9,7 @@ import {
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
 import { createElement } from "react";
+//@ts-ignore: .source is generated at build time
 import { docs } from "../.source";
 
 const icons: Record<string, React.ComponentType> = {
