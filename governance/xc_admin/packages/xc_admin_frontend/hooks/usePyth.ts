@@ -66,12 +66,10 @@ export const usePyth = (): PythHookData => {
         const processedPubkeys = new Set<string>([
           ...parsedConfig.mappingAccounts.map((acc) => acc.address.toBase58()),
           ...parsedConfig.mappingAccounts.flatMap((mapping) =>
-            mapping.products.map((prod) => prod.address.toBase58())
-          ),
-          ...parsedConfig.mappingAccounts.flatMap((mapping) =>
-            mapping.products.flatMap((prod) =>
-              prod.priceAccounts.map((price) => price.address.toBase58())
-            )
+            mapping.products.flatMap((prod) => [
+              prod.address.toBase58(),
+              ...prod.priceAccounts.map((price) => price.address.toBase58()),
+            ])
           ),
         ])
 
