@@ -1,8 +1,7 @@
-export { LandingPage as default } from "@/src/components/Pages/LandingPage";
-
-import { source } from "@/src/source";
+export { LandingPage as default } from "../../../components/Pages/LandingPage";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { source } from "../../../source";
 
 export async function generateStaticParams() {
   return source.generateParams();

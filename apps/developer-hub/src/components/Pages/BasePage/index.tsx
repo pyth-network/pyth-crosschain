@@ -1,5 +1,3 @@
-import { getMDXComponents } from "@/src/mdx-components";
-import { source } from "@/src/source";
 import {
   DocsBody,
   DocsDescription,
@@ -7,6 +5,8 @@ import {
   DocsTitle,
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
+import { getMDXComponents } from "../../../mdx-components";
+import { source } from "../../../source";
 
 export function BasePage(props: { params: { slug: string[] } }) {
   const page = source.getPage(props.params.slug);

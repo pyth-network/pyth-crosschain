@@ -1,4 +1,3 @@
-import { docs } from "@/.source";
 import {
   CardsThree,
   ChartLine,
@@ -10,6 +9,7 @@ import {
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
 import { createElement } from "react";
+import { docs } from "../.source";
 
 const icons: Record<string, React.ComponentType> = {
   CardsThree,
