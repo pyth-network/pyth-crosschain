@@ -36,6 +36,9 @@
     },
     "test:lint:stylelint": {
       "dependsOn": ["//#install:modules"]
+    },
+    "test:types": {
+      "dependsOn": ["//#install:modules", "^build", "build"]
     }
   }
 }
