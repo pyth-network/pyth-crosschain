@@ -1,0 +1,23 @@
+[
+  {
+    "id": "sui_testnet",
+    "wormholeChainName": "sui",
+    "mainnet": false,
+    "rpcUrl": "https://fullnode.testnet.sui.io:443",
+    "type": "SuiChain"
+  },
+  {
+    "id": "sui_mainnet",
+    "wormholeChainName": "sui",
+    "mainnet": true,
+    "rpcUrl": "https://fullnode.mainnet.sui.io:443",
+    "type": "SuiChain"
+  },
+  {
+    "id": "movement_m2_devnet",
+    "wormholeChainName": "movement_m2_devnet",
+    "mainnet": false,
+    "rpcUrl": "https://sui.devnet.m2.movementlabs.xyz:443",
+    "type": "SuiChain"
+  }
+]

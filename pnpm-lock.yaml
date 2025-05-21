@@ -1395,9 +1395,6 @@ importers:
       web3-eth-contract:
         specifier: ^1.8.2
         version: 1.10.4(encoding@0.1.13)
-      yaml:
-        specifier: ^2.1.1
-        version: 2.7.1
     devDependencies:
       '@types/web3':
         specifier: ^1.2.2

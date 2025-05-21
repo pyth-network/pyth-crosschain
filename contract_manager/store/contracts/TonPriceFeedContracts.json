@@ -1,0 +1,12 @@
+[
+  {
+    "chain": "ton_testnet",
+    "address": "EQB4ZnrI5qsP_IUJgVJNwEGKLzZWsQOFhiaqDbD7pTt_f9oU",
+    "type": "TonPriceFeedContract"
+  },
+  {
+    "chain": "ton_mainnet",
+    "address": "EQBU6k8HH6yX4Jf3d18swWbnYr31D3PJI7PgjXT-flsKHqql",
+    "type": "TonPriceFeedContract"
+  }
+]

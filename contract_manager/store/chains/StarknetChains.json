@@ -1,0 +1,16 @@
+[
+  {
+    "id": "starknet_sepolia",
+    "wormholeChainName": "starknet_sepolia",
+    "mainnet": false,
+    "rpcUrl": "https://starknet-sepolia.public.blastapi.io/",
+    "type": "StarknetChain"
+  },
+  {
+    "id": "starknet_mainnet",
+    "wormholeChainName": "starknet",
+    "mainnet": true,
+    "rpcUrl": "https://starknet-mainnet.public.blastapi.io/",
+    "type": "StarknetChain"
+  }
+]

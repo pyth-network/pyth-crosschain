@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ton_testnet",
+    "wormholeChainName": "ton_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://testnet.toncenter.com/api/v2/jsonRPC#$ENV_TON_TESTNET_API_KEY",
+    "type": "TonChain"
+  },
+  {
+    "id": "ton_mainnet",
+    "wormholeChainName": "ton_mainnet",
+    "mainnet": true,
+    "rpcUrl": "https://toncenter.com/api/v2/jsonRPC#$ENV_TON_MAINNET_API_KEY",
+    "type": "TonChain"
+  }
+]
