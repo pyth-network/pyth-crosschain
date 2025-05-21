@@ -33,7 +33,6 @@ import {
 } from "../../core/contracts";
 import { Token } from "../../core/token";
 import { PriceFeedContract, Storable } from "../../core/base";
-import { parse, stringify } from "yaml";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import { Vault } from "./governance";
 import {
@@ -63,10 +62,10 @@ export class Store {
   }
 
   static serialize(obj: Storable) {
-    return stringify([obj.toJson()]);
+    return JSON.stringify([obj.toJson()], null, 2);
   }
 
-  getYamlFiles(path: string) {
+  getJsonFiles(path: string) {
     const walk = function (dir: string) {
       let results: string[] = [];
       const list = readdirSync(dir);
@@ -83,7 +82,7 @@ export class Store {
       });
       return results;
     };
-    return walk(path).filter((file) => file.endsWith(".yaml"));
+    return walk(path).filter((file) => file.endsWith(".json"));
   }
 
   loadAllChains() {
@@ -100,8 +99,8 @@ export class Store {
       [IotaChain.type]: IotaChain,
     };
 
-    this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
-      const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+    this.getJsonFiles(`${this.path}/chains/`).forEach((jsonFile) => {
+      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
       for (const parsed of parsedArray) {
         if (allChainClasses[parsed.type] === undefined) {
           throw new Error(
@@ -129,8 +128,12 @@ export class Store {
     }
     for (const [type, contracts] of Object.entries(contractsByType)) {
       writeFileSync(
-        `${this.path}/contracts/${type}s.yaml`,
-        stringify(contracts.map((c) => c.toJson())),
+        `${this.path}/contracts/${type}s.json`,
+        JSON.stringify(
+          contracts.map((c) => c.toJson()),
+          null,
+          2,
+        ),
       );
     }
   }
@@ -145,8 +148,12 @@ export class Store {
     }
     for (const [type, chains] of Object.entries(chainsByType)) {
       writeFileSync(
-        `${this.path}/chains/${type}s.yaml`,
-        stringify(chains.map((c) => c.toJson())),
+        `${this.path}/chains/${type}s.json`,
+        JSON.stringify(
+          chains.map((c) => c.toJson()),
+          null,
+          2,
+        ),
       );
     }
   }
@@ -174,8 +181,8 @@ export class Store {
       [IotaPriceFeedContract.type]: IotaPriceFeedContract,
       [IotaWormholeContract.type]: IotaWormholeContract,
     };
-    this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
-      const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+    this.getJsonFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
+      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
       for (const parsed of parsedArray) {
         if (allContractClasses[parsed.type] === undefined) return;
         if (!this.chains[parsed.chain])
@@ -207,8 +214,8 @@ export class Store {
   }
 
   loadAllTokens() {
-    this.getYamlFiles(`${this.path}/tokens/`).forEach((yamlFile) => {
-      const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+    this.getJsonFiles(`${this.path}/tokens/`).forEach((jsonFile) => {
+      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
       for (const parsed of parsedArray) {
         if (parsed.type !== Token.type) return;
 
@@ -221,8 +228,8 @@ export class Store {
   }
 
   loadAllVaults() {
-    this.getYamlFiles(`${this.path}/vaults/`).forEach((yamlFile) => {
-      const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+    this.getJsonFiles(`${this.path}/vaults/`).forEach((jsonFile) => {
+      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
       for (const parsed of parsedArray) {
         if (parsed.type !== Vault.type) return;
 
