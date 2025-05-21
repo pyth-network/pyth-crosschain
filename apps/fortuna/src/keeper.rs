@@ -81,15 +81,13 @@ pub async fn run_keeper_threads(
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashSet::<u64>::new()));
 
     // Spawn a thread to handle the events from last backlog_range blocks.
-    let gas_limit: U256 = chain_eth_config.gas_limit.into();
     let process_params = ProcessParams {
         chain_state: chain_state.clone(),
         contract: contract.clone(),
-        gas_limit,
-        escalation_policy: chain_eth_config.escalation_policy.to_policy(),
         metrics: metrics.clone(),
         fulfilled_requests_cache,
         history,
+        chain_config: chain_eth_config.clone(),
     };
     spawn(
         process_backlog(

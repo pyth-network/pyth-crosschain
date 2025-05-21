@@ -5,6 +5,13 @@ chains:
 
     # Keeper configuration for the chain
     reveal_delay_blocks: 0
+
+    # The number of blocks to look back for events that might be missed when starting the keeper
+    backlog_range: 1000
+    # How many blocks to fetch events for in a single rpc call. Some chains or RPCs may have stricter limits.
+    block_batch_size: 100
+
+    # The gas limit to use for entropy callback transactions.
     gas_limit: 500000
 
     # Multiplier for the priority fee estimate, as a percentage (i.e., 100 = no change).

@@ -2,7 +2,7 @@ use {
     crate::{
         api::BlockchainState,
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
-        eth_utils::utils::EscalationPolicy,
+        config::EthereumConfig,
         history::History,
         keeper::{
             keeper_metrics::{ChainIdLabel, KeeperMetrics},
@@ -10,7 +10,6 @@ use {
         },
     },
     anyhow::Result,
-    ethers::types::U256,
     std::{
         collections::HashSet,
         sync::Arc,
@@ -26,8 +25,6 @@ use {
 
 /// How much to wait before retrying in case of an RPC error
 const RETRY_INTERVAL: Duration = Duration::from_secs(5);
-/// How many blocks to fetch events for in a single rpc call
-const BLOCK_BATCH_SIZE: u64 = 100;
 /// How much to wait before polling the next latest block
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
 /// Retry last N blocks
@@ -42,12 +39,11 @@ pub struct BlockRange {
 #[derive(Clone)]
 pub struct ProcessParams {
     pub contract: Arc<InstrumentedSignablePythContract>,
-    pub gas_limit: U256,
-    pub escalation_policy: EscalationPolicy,
     pub chain_state: BlockchainState,
     pub metrics: Arc<KeeperMetrics>,
     pub history: Arc<History>,
     pub fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,
+    pub chain_config: EthereumConfig,
 }
 
 /// Get the latest safe block number for the chain. Retry internally if there is an error.
@@ -84,7 +80,7 @@ pub async fn process_block_range(block_range: BlockRange, process_params: Proces
     } = block_range;
     let mut current_block = first_block;
     while current_block <= last_block {
-        let mut to_block = current_block + BLOCK_BATCH_SIZE;
+        let mut to_block = current_block + process_params.chain_config.block_batch_size;
         if to_block > last_block {
             to_block = last_block;
         }

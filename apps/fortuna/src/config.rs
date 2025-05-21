@@ -128,6 +128,11 @@ pub struct EthereumConfig {
     #[serde(default = "default_backlog_range")]
     pub backlog_range: u64,
 
+    /// How many blocks to fetch events for in a single rpc call. Some chains or RPCs may have stricter limits.
+    /// Default value is 100.
+    #[serde(default = "default_block_batch_size")]
+    pub block_batch_size: u64,
+
     /// Use the legacy transaction format (for networks without EIP 1559)
     #[serde(default)]
     pub legacy_tx: bool,
@@ -205,6 +210,10 @@ fn default_priority_fee_multiplier_pct() -> u64 {
 
 fn default_backlog_range() -> u64 {
     1000
+}
+
+fn default_block_batch_size() -> u64 {
+    100
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]

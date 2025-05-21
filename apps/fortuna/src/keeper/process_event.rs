@@ -7,6 +7,7 @@ use {
         keeper::block::ProcessParams,
     },
     anyhow::{anyhow, Result},
+    ethers::types::U256,
     tracing,
 };
 
@@ -21,8 +22,7 @@ pub async fn process_event_with_backoff(
     let ProcessParams {
         chain_state,
         contract,
-        gas_limit,
-        escalation_policy,
+        chain_config,
         metrics,
         history,
         ..
@@ -71,6 +71,9 @@ pub async fn process_event_with_backoff(
         event.user_random_number,
         provider_revelation,
     );
+
+    let gas_limit: U256 = chain_config.gas_limit.into();
+    let escalation_policy = chain_config.escalation_policy.to_policy();
 
     let success = submit_tx_with_backoff(
         contract.client(),
