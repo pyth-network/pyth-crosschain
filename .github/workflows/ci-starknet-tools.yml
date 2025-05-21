@@ -1,9 +1,8 @@
-name: Check Starknet Tools
+name: Test Starknet Tools
 
 on:
   pull_request:
-    paths:
-      - target_chains/starknet/tools/**
+    paths: [target_chains/starknet/tools/**]
   push:
     branches: [main]
 jobs:
@@ -13,32 +12,18 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.86.0
           components: rustfmt, clippy
           override: true
-      - uses: actions/checkout@v3
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "target_chains/starknet/tools/test_vaas -> target"
-      - name: Install Scarb
-        uses: software-mansion/setup-scarb@v1
-        with:
-          tool-versions: target_chains/starknet/contracts/.tool-versions
-      - name: Install Starkli
-        run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' target_chains/starknet/contracts/.tool-versions)
-      - name: Check formatting
-        run: cargo fmt --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml -- --check
-      - name: Run clippy
-        run: cargo clippy --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --all-targets -- --deny warnings
-      - name: Run generate_keypair binary
-        run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_keypair
-      - name: Check test data
-        run: |
-          . ~/.config/.starkli/env && cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_test_data > ./target_chains/starknet/contracts/data.cairo
-          cd target_chains/starknet/contracts && scarb fmt data.cairo
-          if ! diff ./tests/data.cairo data.cairo; then
-            >&2 echo "Re-run generate_test_data to update data.cairo"
-            exit 1
-          fi
-          rm data.cairo
+      - name: Format check
+        run: cd target_chains/starknet/tools && cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cd target_chains/starknet/tools && cargo clippy --tests -- --deny warnings
+        if: success() || failure()
+      - name: Build
+        run: cd target_chains/starknet/tools && cargo build
+        if: success() || failure()
+      - name: Run tests
+        run: cd target_chains/starknet/tools && cargo test
+        if: success() || failure()

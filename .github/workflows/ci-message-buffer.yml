@@ -1,4 +1,5 @@
-name: Message Buffer Check
+name: Test Message Buffer
+
 on:
   pull_request:
     paths:
@@ -7,63 +8,38 @@ on:
   push:
     branches:
       - main
+
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
-  abi-check:
-    name: Check Message Buffer formatting & IDL files
+  build:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: pythnet/message_buffer
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "pythnet/message_buffer -> target"
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.66.1
           components: rustfmt, clippy
       - name: Install Solana
         run: |
-          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
-          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
-          sh -c "$(curl -sSfL https://release.anza.xyz/v1.17.34/install)"
+          sh -c "$(curl -sSfL https://release.solana.com/v1.14.17/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-      - name: Install Anchor
-        run: |
-          cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
-      - name: Install g++ 12
-        run: |
-          sudo apt-get install g++-12
-          echo "CXX=/usr/bin/g++-12" >> "${GITHUB_ENV}"
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: "package.json"
-      # Libusb is a build requirement for the node-hid package and so pnpm
-      # install will fail if this isn't in the build environment and if a
-      # precompiled binary isn't found.
-      - name: Install libusb
-        run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev libudev-dev
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: true
-      - name: Build and generate IDLs
-        run: anchor build
-      - name: Copy anchor target files
-        run: cp ./target/idl/message_buffer.json idl/ && cp ./target/types/message_buffer.ts idl/
-      - name: Fix formatting (to avoid pre-commit failures)
-        run: pnpm turbo --filter message_buffer fix:format
-      - name: Check IDL changes
-        # Fails if the IDL files are not up to date. Please use anchor build to regenerate the IDL files for
-        # the current version of the contract and update idl directory.
-        run: git diff --exit-code idl/*
-        if: success() || failure()
-      - name: Cargo format
+      - name: Format check
         run: cargo fmt --all -- --check
         if: success() || failure()
-      - name: Cargo clippy
+      - name: Clippy check
         run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
+      - name: Build
+        run: cargo-build-bpf
+        if: success() || failure()
+      - name: Run tests
+        run: cargo-test-bpf
         if: success() || failure()

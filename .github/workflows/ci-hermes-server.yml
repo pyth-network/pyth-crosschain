@@ -1,4 +1,4 @@
-name: Check Hermes Server
+name: Test Hermes Server
 
 on:
   pull_request:
@@ -6,9 +6,14 @@ on:
       - .github/workflows/ci-hermes-server.yml
       - apps/hermes/server/**
   push:
-    branches: [main]
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -20,20 +25,18 @@ jobs:
           workspaces: "apps/hermes/server -> target"
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.82.0
           components: rustfmt, clippy
           override: true
-      - name: Install protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Format check
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
         run: cargo clippy --tests -- --deny warnings
         if: success() || failure()
-      - name: Run executor tests
+      - name: Build
+        run: cargo build
+        if: success() || failure()
+      - name: Run tests
         run: cargo test
         if: success() || failure()

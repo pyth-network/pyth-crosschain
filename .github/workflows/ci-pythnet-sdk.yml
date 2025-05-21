@@ -20,7 +20,6 @@ jobs:
           workspaces: "pythnet/pythnet_sdk -> target"
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.82.0
           override: true
       - name: Format check

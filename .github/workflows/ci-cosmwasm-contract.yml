@@ -1,11 +1,10 @@
-name: Test CosmWasm Contract
+name: Test Cosmwasm Contract
 
 on:
   pull_request:
     paths:
       - .github/workflows/ci-cosmwasm-contract.yml
       - target_chains/cosmwasm/**
-      - wormhole_attester/sdk/rust/**
   push:
     branches:
       - main
@@ -18,12 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target_chains/cosmwasm/contracts/pyth
+        working-directory: target_chains/cosmwasm
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.82.0
           components: rustfmt, clippy
           override: true
@@ -34,8 +32,8 @@ jobs:
         run: cargo clippy --tests -- --deny warnings
         if: success() || failure()
       - name: Build
-        run: cargo build --verbose
+        run: cargo build
         if: success() || failure()
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test
         if: success() || failure()
