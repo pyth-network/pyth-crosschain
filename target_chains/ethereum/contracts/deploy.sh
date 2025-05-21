@@ -12,23 +12,38 @@
 set -euo pipefail
 
 echo "=========== Building dependencies ==========="
-pushd ../../../
+
+# This command also compiles the contracts if latest version is used
 pnpm turbo build --filter @pythnetwork/pyth-evm-contract
-popd
 
-echo "=========== Compiling ==========="
+echo "=========== Deploying the contracts ==========="
 
-if [[ -e contracts/pyth/PythUpgradable_merged.sol ]]; then
-    echo "Flattened contract PythUpgradable_merged.sol exists. Removing before compiling."
-    rm contracts/pyth/PythUpgradable_merged.sol
+version="$1"
+shift
+
+if [ "$version" = "latest" ]; then
+  echo "Deploying latest version"
+  stdoutputdir="../target_chains/ethereum/contracts/build/contracts"
+else
+  # make sure version has format of vX.Y.Z
+  if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Version must be in format vX.Y.Z"
+    echo "Usage: $0 <version> <network_a> <network_b> ..."
+    exit 1
+  fi
+
+  echo "Deploying version $version"
+  tmpdir=$(mktemp -d)
+  wget https://github.com/pyth-network/pyth-crosschain/releases/download/pyth-evm-contract-$version/contracts-stdoutput.zip -O $tmpdir/contracts-stdoutput.zip
+  unzip -q -o $tmpdir/contracts-stdoutput.zip -d $tmpdir
+  stdoutputdir="$tmpdir"
 fi
 
-echo "Building the contracts..."
-# Ensure that we deploy a fresh build with up-to-date dependencies.
-rm -rf build && pnpm exec truffle compile --all
+pnpm --filter=@pythnetwork/contract-manager exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir $stdoutputdir --private-key $PK --chain "$@"
 
-echo "Deploying the contracts..."
+echo "=========== Cleaning up ==========="
+rm -rf $tmpdir
 
-pushd ../../../contract_manager/
-
-pnpm exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir ../target_chains/ethereum/contracts/build/contracts --private-key $PK --chain "$@"
+if [ "$version" != "latest" ]; then
+    echo "Verify the contracts by using the std-input artifacts of the contracts in https://github.com/pyth-network/pyth-crosschain/releases/tag/pyth-evm-contract-$version"
+fi
