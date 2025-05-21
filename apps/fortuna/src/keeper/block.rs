@@ -30,9 +30,6 @@ const RETRY_INTERVAL: Duration = Duration::from_secs(5);
 const BLOCK_BATCH_SIZE: u64 = 100;
 /// How much to wait before polling the next latest block
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
-/// Retry last N blocks
-#[allow(dead_code)]
-const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 
 #[derive(Debug, Clone)]
 pub struct BlockRange {
