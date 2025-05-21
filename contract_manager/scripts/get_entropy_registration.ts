@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src";
+import { DefaultStore } from "../src/node/utils/store";
 
 function deserializeCommitmentMetadata(data: Buffer) {
   const seed = Uint8Array.from(data.subarray(0, 32));

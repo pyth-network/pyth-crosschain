@@ -1,6 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, EvmChain, loadHotWallet } from "../src";
+import { EvmChain } from "../src/core/chains";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(

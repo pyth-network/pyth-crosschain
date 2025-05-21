@@ -1,7 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, loadHotWallet } from "../src";
-import { TonChain } from "../src/chains";
+import { DefaultStore } from "../src/node/utils/store";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { TonChain } from "../src/core/chains";
 import { CHAINS, toChainName } from "@pythnetwork/xc-admin-common";
 import fs from "fs";
 import path from "path";

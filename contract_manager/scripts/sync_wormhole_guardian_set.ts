@@ -3,12 +3,12 @@ import { hideBin } from "yargs/helpers";
 import {
   AptosWormholeContract,
   CosmWasmPriceFeedContract,
-  DefaultStore,
   EvmPriceFeedContract,
   IotaWormholeContract,
   SuiWormholeContract,
-  toPrivateKey,
-} from "../src";
+} from "../src/core/contracts";
+import { DefaultStore } from "../src/node/utils/store";
+import { toPrivateKey } from "../src/core/base";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Update the guardian set in stable networks. Usage: $0")

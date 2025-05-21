@@ -1,13 +1,13 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/store";
-import { SubmittedWormholeMessage, Vault } from "../src/governance";
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
-import { executeVaa } from "../src/executor";
-import { toPrivateKey } from "../src";
-
 import { COMMON_DEPLOY_OPTIONS } from "./common";
+import { Vault } from "../src/node/utils/governance";
+import { toPrivateKey } from "../src/core/base";
+import { SubmittedWormholeMessage } from "../src/node/utils/governance";
+import { executeVaa } from "../src/node/utils/executor";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(

@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { WormholeEmitter, loadHotWallet } from "../src/governance";
+import { WormholeEmitter, loadHotWallet } from "../src/node/utils/governance";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
