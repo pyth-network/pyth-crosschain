@@ -25,6 +25,10 @@ pub enum RequestEntryState {
         #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
         #[serde_as(as = "serde_with::hex::Hex")]
         provider_random_number: [u8; 32],
+        /// The gas used for the reveal transaction in the smallest unit of the chain.
+        /// For example, if the native currency is ETH, this will be in wei.
+        #[schema(example = "567890", value_type = String)]
+        gas_used: U256,
     },
     Failed {
         reason: String,
@@ -77,6 +81,7 @@ struct RequestRow {
     reveal_block_number: Option<i64>,
     reveal_tx_hash: Option<String>,
     provider_random_number: Option<String>,
+    gas_used: Option<String>,
     info: Option<String>,
 }
 
@@ -111,10 +116,16 @@ impl TryFrom<RequestRow> for RequestStatus {
                 ))?;
                 let provider_random_number: [u8; 32] =
                     hex::FromHex::from_hex(provider_random_number)?;
+                let gas_used = row.gas_used.ok_or(anyhow::anyhow!(
+                    "Gas used is missing for completed request"
+                ))?;
+                let gas_used = U256::from_dec_str(&gas_used)
+                    .map_err(|_| anyhow::anyhow!("Failed to parse gas used"))?;
                 RequestEntryState::Completed {
                     reveal_block_number,
                     reveal_tx_hash,
                     provider_random_number,
+                    gas_used,
                 }
             }
             "Failed" => RequestEntryState::Failed {
@@ -220,22 +231,31 @@ impl History {
                 reveal_block_number,
                 reveal_tx_hash,
                 provider_random_number,
+                gas_used
             } => {
                 let reveal_block_number = reveal_block_number as i64;
                 let reveal_tx_hash: String = reveal_tx_hash.encode_hex();
                 let provider_random_number: String = provider_random_number.encode_hex();
-                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
+                let gas_used: String = gas_used.to_string();
+                let result = sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number =?, gas_used = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
                     "Completed",
                     new_status.last_updated_at,
                     reveal_block_number,
                     reveal_tx_hash,
                     provider_random_number,
+                    gas_used,
                     chain_id,
                     sequence,
                     provider,
                     request_tx_hash)
                     .execute(pool)
-                    .await
+                    .await;
+                if let Ok(query_result) = &result {
+                    if query_result.rows_affected() == 0 {
+                        tracing::error!("Failed to update request status to complete: No rows affected. Chain ID: {}, Sequence: {}, Request TX Hash: {}", chain_id, sequence, request_tx_hash);
+                    }
+                }
+                result
             }
             RequestEntryState::Failed {
                 reason,
@@ -422,6 +442,7 @@ mod test {
             reveal_block_number: 1,
             reveal_tx_hash,
             provider_random_number: [40; 32],
+            gas_used: U256::from(567890),
         };
         History::update_request_status(&history.pool, status.clone()).await;
 
@@ -472,6 +493,7 @@ mod test {
             reveal_block_number: 1,
             reveal_tx_hash,
             provider_random_number: [40; 32],
+            gas_used: U256::from(567890),
         };
         History::update_request_status(&history.pool, status.clone()).await;
         let mut failed_status = status.clone();

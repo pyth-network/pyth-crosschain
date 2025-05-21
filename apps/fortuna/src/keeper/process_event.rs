@@ -92,6 +92,7 @@ pub async fn process_event_with_backoff(
                 reveal_block_number: result.receipt.block_number.unwrap_or_default().as_u64(),
                 reveal_tx_hash: result.receipt.transaction_hash,
                 provider_random_number: provider_revelation,
+                gas_used: result.receipt.gas_used.unwrap_or_default(),
             };
             history.add(&status);
             tracing::info!(
