@@ -499,3 +499,6 @@
 - chain: converge_testnet
   address: "0x87047526937246727E4869C5f76A347160e08672"
   type: EvmPriceFeedContract
+- chain: mezo_testnet
+  address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
+  type: EvmPriceFeedContract
