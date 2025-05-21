@@ -7,7 +7,7 @@
     "node": "22"
   },
   "scripts": {
-    "build:vercel": "next build",
+    "build": "next build",
     "build:analyze": "ANALYZE=true next build",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
@@ -41,7 +41,6 @@
     "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
-    "@next/bundle-analyzer": "catalog:",
     "@svgr/webpack": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@types/jest": "catalog:",

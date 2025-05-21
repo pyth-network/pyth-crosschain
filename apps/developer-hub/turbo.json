@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
-    "build:vercel": {
+    "build": {
       "env": [
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
@@ -26,7 +26,7 @@
       "cache": false
     },
     "start:prod": {
-      "dependsOn": ["//#install:modules", "build:vercel"]
+      "dependsOn": ["//#install:modules", "build"]
     },
     "test:lint": {
       "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]

@@ -1,9 +1,10 @@
 export { DocumentationPage as default } from "../../../../components/Pages/DocumentationPage";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
 import { source } from "../../../../source";
 
-export async function generateStaticParams() {
+export function generateStaticParams() {
   return source.generateParams();
 }
 

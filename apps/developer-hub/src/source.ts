@@ -9,6 +9,7 @@ import {
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
 import { createElement } from "react";
+
 import { docs } from "../.source";
 
 const icons: Record<string, React.ComponentType> = {
@@ -22,9 +23,7 @@ const icons: Record<string, React.ComponentType> = {
 export const source = loader({
   baseUrl: "/",
   icon(icon) {
-    return icon
-      ? createElement(icons[icon as keyof typeof icons] ?? FolderSimpleDashed)
-      : undefined;
+    return icon ? createElement(icons[icon] ?? FolderSimpleDashed) : undefined;
   },
   source: docs.toFumadocsSource(),
 });
