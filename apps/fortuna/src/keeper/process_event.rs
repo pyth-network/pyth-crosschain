@@ -51,6 +51,7 @@ pub async fn process_event_with_backoff(
         sender: event.requestor,
         user_random_number: event.user_random_number,
         state: RequestEntryState::Pending,
+        gas_limit,
     };
     history.add(&status);
 
@@ -93,6 +94,10 @@ pub async fn process_event_with_backoff(
                 reveal_tx_hash: result.receipt.transaction_hash,
                 provider_random_number: provider_revelation,
                 gas_used: result.receipt.gas_used.unwrap_or_default(),
+                combined_random_number: RequestStatus::generate_combined_random_number(
+                    &event.user_random_number,
+                    &provider_revelation,
+                ),
             };
             history.add(&status);
             tracing::info!(

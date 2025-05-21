@@ -2,7 +2,12 @@ use {
     crate::api::ChainId,
     anyhow::Result,
     chrono::{DateTime, NaiveDateTime},
-    ethers::{core::utils::hex::ToHex, prelude::TxHash, types::{Address, U256}},
+    ethers::{
+        core::utils::hex::ToHex,
+        prelude::TxHash,
+        types::{Address, U256},
+        utils::keccak256,
+    },
     serde::Serialize,
     serde_with::serde_as,
     sqlx::{migrate, Pool, Sqlite, SqlitePool},
@@ -17,6 +22,7 @@ use {
 pub enum RequestEntryState {
     Pending,
     Completed {
+        /// The block number of the reveal transaction.
         reveal_block_number: u64,
         /// The transaction hash of the reveal transaction.
         #[schema(example = "0xfe5f880ac10c0aae43f910b5a17f98a93cdd2eb2dce3a5ae34e5827a3a071a32", value_type = String)]
@@ -28,7 +34,12 @@ pub enum RequestEntryState {
         /// The gas used for the reveal transaction in the smallest unit of the chain.
         /// For example, if the native currency is ETH, this will be in wei.
         #[schema(example = "567890", value_type = String)]
+        #[serde(with = "crate::serde::u256")]
         gas_used: U256,
+        /// The combined random number generated from the user and provider contributions.
+        #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
+        #[serde_as(as = "serde_with::hex::Hex")]
+        combined_random_number: [u8; 32],
     },
     Failed {
         reason: String,
@@ -56,6 +67,11 @@ pub struct RequestStatus {
     /// The transaction hash of the request transaction.
     #[schema(example = "0x5a3a984f41bb5443f5efa6070ed59ccb25edd8dbe6ce7f9294cf5caa64ed00ae", value_type = String)]
     pub request_tx_hash: TxHash,
+    /// Gas limit for the callback in the smallest unit of the chain.
+    /// For example, if the native currency is ETH, this will be in wei.
+    #[schema(example = "500000", value_type = String)]
+    #[serde(with = "crate::serde::u256")]
+    pub gas_limit: U256,
     /// The user contribution to the random number.
     #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
     #[serde_as(as = "serde_with::hex::Hex")]
@@ -64,6 +80,18 @@ pub struct RequestStatus {
     #[schema(example = "0x78357316239040e19fc823372cc179ca75e64b81", value_type = String)]
     pub sender: Address,
     pub state: RequestEntryState,
+}
+
+impl RequestStatus {
+    pub fn generate_combined_random_number(
+        user_random_number: &[u8; 32],
+        provider_random_number: &[u8; 32],
+    ) -> [u8; 32] {
+        let mut concat: [u8; 96] = [0; 96]; // last 32 bytes are for the block hash which is not used here
+        concat[0..32].copy_from_slice(user_random_number);
+        concat[32..64].copy_from_slice(provider_random_number);
+        keccak256(&concat)
+    }
 }
 
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
@@ -78,6 +106,7 @@ struct RequestRow {
     request_tx_hash: String,
     user_random_number: String,
     sender: String,
+    gas_limit: String,
     reveal_block_number: Option<i64>,
     reveal_tx_hash: Option<String>,
     provider_random_number: Option<String>,
@@ -98,6 +127,8 @@ impl TryFrom<RequestRow> for RequestStatus {
         let user_random_number = hex::FromHex::from_hex(row.user_random_number)?;
         let request_tx_hash = row.request_tx_hash.parse()?;
         let sender = row.sender.parse()?;
+        let gas_limit = U256::from_dec_str(&row.gas_limit)
+            .map_err(|_| anyhow::anyhow!("Failed to parse gas limit"))?;
 
         let state = match row.state.as_str() {
             "Pending" => RequestEntryState::Pending,
@@ -116,9 +147,9 @@ impl TryFrom<RequestRow> for RequestStatus {
                 ))?;
                 let provider_random_number: [u8; 32] =
                     hex::FromHex::from_hex(provider_random_number)?;
-                let gas_used = row.gas_used.ok_or(anyhow::anyhow!(
-                    "Gas used is missing for completed request"
-                ))?;
+                let gas_used = row
+                    .gas_used
+                    .ok_or(anyhow::anyhow!("Gas used is missing for completed request"))?;
                 let gas_used = U256::from_dec_str(&gas_used)
                     .map_err(|_| anyhow::anyhow!("Failed to parse gas used"))?;
                 RequestEntryState::Completed {
@@ -126,6 +157,10 @@ impl TryFrom<RequestRow> for RequestStatus {
                     reveal_tx_hash,
                     provider_random_number,
                     gas_used,
+                    combined_random_number: Self::generate_combined_random_number(
+                        &user_random_number,
+                        &provider_random_number,
+                    ),
                 }
             }
             "Failed" => RequestEntryState::Failed {
@@ -150,6 +185,7 @@ impl TryFrom<RequestRow> for RequestStatus {
             request_tx_hash,
             user_random_number,
             sender,
+            gas_limit,
         })
     }
 }
@@ -208,12 +244,13 @@ impl History {
         let chain_id = new_status.chain_id;
         let request_tx_hash: String = new_status.request_tx_hash.encode_hex();
         let provider: String = new_status.provider.encode_hex();
+        let gas_limit = new_status.gas_limit.to_string();
         let result = match new_status.state {
             RequestEntryState::Pending => {
                 let block_number = new_status.request_block_number as i64;
                 let sender: String = new_status.sender.encode_hex();
                 let user_random_number: String = new_status.user_random_number.encode_hex();
-                sqlx::query!("INSERT INTO request(chain_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, user_random_number, sender) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                sqlx::query!("INSERT INTO request(chain_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, user_random_number, sender, gas_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     chain_id,
                     provider,
                     sequence,
@@ -223,7 +260,9 @@ impl History {
                     block_number,
                     request_tx_hash,
                     user_random_number,
-                    sender)
+                    sender,
+                    gas_limit
+            )
                     .execute(pool)
                     .await
             }
@@ -231,7 +270,8 @@ impl History {
                 reveal_block_number,
                 reveal_tx_hash,
                 provider_random_number,
-                gas_used
+                gas_used,
+                combined_random_number: _,
             } => {
                 let reveal_block_number = reveal_block_number as i64;
                 let reveal_tx_hash: String = reveal_tx_hash.encode_hex();
@@ -429,6 +469,7 @@ mod test {
             user_random_number: [20; 32],
             sender: Address::random(),
             state: RequestEntryState::Pending,
+            gas_limit: U256::from(500_000),
         }
     }
 
@@ -443,6 +484,10 @@ mod test {
             reveal_tx_hash,
             provider_random_number: [40; 32],
             gas_used: U256::from(567890),
+            combined_random_number: RequestStatus::generate_combined_random_number(
+                &status.user_random_number,
+                &[40; 32],
+            ),
         };
         History::update_request_status(&history.pool, status.clone()).await;
 
@@ -494,6 +539,10 @@ mod test {
             reveal_tx_hash,
             provider_random_number: [40; 32],
             gas_used: U256::from(567890),
+            combined_random_number: RequestStatus::generate_combined_random_number(
+                &status.user_random_number,
+                &[40; 32],
+            ),
         };
         History::update_request_status(&history.pool, status.clone()).await;
         let mut failed_status = status.clone();
@@ -527,6 +576,26 @@ mod test {
         assert_eq!(logs, vec![status.clone()]);
     }
 
+    #[tokio::test]
+    async fn test_generate_combined_random_number() {
+        let user_random_number = hex::FromHex::from_hex(
+            "0000000000000000000000006c8ac03d388d5572f77aca84573628ee87a7a4da",
+        )
+        .unwrap();
+        let provider_random_number = hex::FromHex::from_hex(
+            "deeb67cb894c33f7b20ae484228a9096b51e8db11461fcb0975c681cf0875d37",
+        )
+        .unwrap();
+        let combined_random_number = RequestStatus::generate_combined_random_number(
+            &user_random_number,
+            &provider_random_number,
+        );
+        let expected_combined_random_number: [u8; 32] = hex::FromHex::from_hex(
+            "1c26ffa1f8430dc91cb755a98bf37ce82ac0e2cfd961e10111935917694609d5",
+        )
+        .unwrap();
+        assert_eq!(combined_random_number, expected_combined_random_number,);
+    }
 
     #[tokio::test]
     async fn test_history_filter_irrelevant_logs() {

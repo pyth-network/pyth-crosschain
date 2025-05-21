@@ -16,10 +16,10 @@ use {
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct ExplorerQueryParams {
-    /// Only return logs that are newer or equal to this timestamp.
+    /// Only return logs that are newer or equal to this timestamp. Timestamp is in ISO 8601 format with UTC timezone.
     #[param(value_type = Option<String>, example = "2023-10-01T00:00:00Z")]
     pub min_timestamp: Option<DateTime<Utc>>,
-    /// Only return logs that are older or equal to this timestamp.
+    /// Only return logs that are older or equal to this timestamp. Timestamp is in ISO 8601 format with UTC timezone.
     #[param(value_type = Option<String>, example = "2033-10-01T00:00:00Z")]
     pub max_timestamp: Option<DateTime<Utc>>,
     /// The query string to search for. This can be a transaction hash, sender address, or sequence number.
