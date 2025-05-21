@@ -189,9 +189,6 @@ pub struct EthereumConfig {
     /// at each specified delay. For example: [5, 10, 20].
     #[serde(default = "default_block_delays")]
     pub block_delays: Vec<u64>,
-
-    #[serde(default = "default_retry_previous_blocks")]
-    pub retry_previous_blocks: u64,
 }
 
 fn default_sync_fee_only_on_register() -> bool {
@@ -200,10 +197,6 @@ fn default_sync_fee_only_on_register() -> bool {
 
 fn default_block_delays() -> Vec<u64> {
     vec![5]
-}
-
-fn default_retry_previous_blocks() -> u64 {
-    100
 }
 
 fn default_priority_fee_multiplier_pct() -> u64 {
