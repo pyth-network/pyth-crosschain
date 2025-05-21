@@ -4,11 +4,9 @@ import { AptosAccount, AptosClient, BCS, TxnBuilderTypes } from "aptos";
 import fs from "fs";
 import sha3 from "js-sha3";
 import { ethers } from "ethers";
-import {
-  AptosChain,
-  DefaultStore,
-  getDefaultDeploymentConfig,
-} from "@pythnetwork/contract-manager";
+import { AptosChain } from "../../../../../contract_manager/lib/core/chains";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
+import { getDefaultDeploymentConfig } from "../../../../../contract_manager/lib/core/base";
 
 const NETWORK_CHOICES = Object.entries(DefaultStore.chains)
   .filter(([chain, config]) => {
