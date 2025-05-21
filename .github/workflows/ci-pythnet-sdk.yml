@@ -20,8 +20,8 @@ jobs:
           workspaces: "pythnet/pythnet_sdk -> target"
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.82.0
+          components: rustfmt, clippy
           override: true
       - name: Format check
         run: cargo fmt --all -- --check

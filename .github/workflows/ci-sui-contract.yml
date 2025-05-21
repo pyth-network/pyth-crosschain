@@ -1,32 +1,41 @@
+name: Test Sui Contract
+
 on:
   pull_request:
     paths:
-      - target_chains/sui/contracts/**
+      - .github/workflows/ci-sui-contract.yml
+      - target_chains/sui/**
   push:
     branches:
       - main
 
-name: Sui Contracts
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  sui-tests:
-    name: Sui tests
+  build:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target_chains/sui/contracts/
+        working-directory: target_chains/sui
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.77.0
           override: true
       - uses: taiki-e/cache-cargo-install-action@v2
         with:
           tool: sui
-          git: https://github.com/MystenLabs/sui.git
-          rev: 041c5f2bae2fe52079e44b70514333532d69f4e6
-
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
+      - name: Build
+        run: cargo build
+        if: success() || failure()
       - name: Run tests
-        run: sui move test
+        run: cargo test
+        if: success() || failure()
