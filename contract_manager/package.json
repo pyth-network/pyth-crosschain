@@ -11,10 +11,23 @@
     "./core/*": {
       "types": "./lib/core/*.d.ts",
       "default": "./lib/core/*.js"
+    },
+    "./data/chains/*.json": {
+      "default": "./store/chains/*.json"
+    },
+    "./data/contracts/*.json": {
+      "default": "./store/contracts/*.json"
+    },
+    "./data/tokens/*.json": {
+      "default": "./store/tokens/*.json"
+    },
+    "./data/vaults/*.json": {
+      "default": "./store/vaults/*.json"
     }
   },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "store/**/*.json"
   ],
   "scripts": {
     "build": "tsc",
