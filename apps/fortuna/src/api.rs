@@ -33,6 +33,7 @@ mod ready;
 mod revelation;
 
 pub type ChainId = String;
+pub type NetworkId = u64;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct RequestLabel {
@@ -86,6 +87,9 @@ impl ApiState {
 pub struct BlockchainState {
     /// The chain id for this blockchain, useful for logging
     pub id: ChainId,
+    /// The network id for this blockchain
+    /// Obtained from the response of eth_chainId rpc call
+    pub network_id: u64,
     /// The hash chain(s) required to serve random numbers for this blockchain
     pub state: Arc<HashChainState>,
     /// The contract that the server is fulfilling requests for.
@@ -239,6 +243,7 @@ mod test {
 
         let eth_state = BlockchainState {
             id: "ethereum".into(),
+            network_id: 1,
             state: ETH_CHAIN.clone(),
             contract: eth_read.clone(),
             provider_address: PROVIDER,
@@ -252,6 +257,7 @@ mod test {
 
         let avax_state = BlockchainState {
             id: "avalanche".into(),
+            network_id: 43114,
             state: AVAX_CHAIN.clone(),
             contract: avax_read.clone(),
             provider_address: PROVIDER,

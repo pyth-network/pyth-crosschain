@@ -1,5 +1,5 @@
 use {
-    crate::api::ChainId,
+    crate::api::{ChainId, NetworkId},
     anyhow::Result,
     chrono::{DateTime, NaiveDateTime},
     ethers::{
@@ -56,6 +56,9 @@ pub struct RequestStatus {
     /// The chain ID of the request.
     #[schema(example = "ethereum", value_type = String)]
     pub chain_id: ChainId,
+    /// The network ID of the request. This is the response of eth_chainId rpc call.
+    #[schema(example = "1", value_type = u64)]
+    pub network_id: NetworkId,
     #[schema(example = "0x6cc14824ea2918f5de5c2f75a9da968ad4bd6344", value_type = String)]
     pub provider: Address,
     pub sequence: u64,
@@ -90,13 +93,14 @@ impl RequestStatus {
         let mut concat: [u8; 96] = [0; 96]; // last 32 bytes are for the block hash which is not used here
         concat[0..32].copy_from_slice(user_random_number);
         concat[32..64].copy_from_slice(provider_random_number);
-        keccak256(&concat)
+        keccak256(concat)
     }
 }
 
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
 struct RequestRow {
     chain_id: String,
+    network_id: i64,
     provider: String,
     sequence: i64,
     created_at: NaiveDateTime,
@@ -119,6 +123,7 @@ impl TryFrom<RequestRow> for RequestStatus {
 
     fn try_from(row: RequestRow) -> Result<Self, Self::Error> {
         let chain_id = row.chain_id;
+        let network_id = row.network_id as u64;
         let provider = row.provider.parse()?;
         let sequence = row.sequence as u64;
         let created_at = row.created_at.and_utc();
@@ -176,6 +181,7 @@ impl TryFrom<RequestRow> for RequestStatus {
         };
         Ok(Self {
             chain_id,
+            network_id,
             provider,
             sequence,
             created_at,
@@ -242,6 +248,7 @@ impl History {
     async fn update_request_status(pool: &Pool<Sqlite>, new_status: RequestStatus) {
         let sequence = new_status.sequence as i64;
         let chain_id = new_status.chain_id;
+        let network_id = new_status.network_id as i64;
         let request_tx_hash: String = new_status.request_tx_hash.encode_hex();
         let provider: String = new_status.provider.encode_hex();
         let gas_limit = new_status.gas_limit.to_string();
@@ -250,8 +257,9 @@ impl History {
                 let block_number = new_status.request_block_number as i64;
                 let sender: String = new_status.sender.encode_hex();
                 let user_random_number: String = new_status.user_random_number.encode_hex();
-                sqlx::query!("INSERT INTO request(chain_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, user_random_number, sender, gas_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                sqlx::query!("INSERT INTO request(chain_id, network_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, user_random_number, sender, gas_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     chain_id,
+                    network_id,
                     provider,
                     sequence,
                     new_status.created_at,
@@ -277,14 +285,14 @@ impl History {
                 let reveal_tx_hash: String = reveal_tx_hash.encode_hex();
                 let provider_random_number: String = provider_random_number.encode_hex();
                 let gas_used: String = gas_used.to_string();
-                let result = sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number =?, gas_used = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
+                let result = sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number =?, gas_used = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
                     "Completed",
                     new_status.last_updated_at,
                     reveal_block_number,
                     reveal_tx_hash,
                     provider_random_number,
                     gas_used,
-                    chain_id,
+                    network_id,
                     sequence,
                     provider,
                     request_tx_hash)
@@ -292,7 +300,7 @@ impl History {
                     .await;
                 if let Ok(query_result) = &result {
                     if query_result.rows_affected() == 0 {
-                        tracing::error!("Failed to update request status to complete: No rows affected. Chain ID: {}, Sequence: {}, Request TX Hash: {}", chain_id, sequence, request_tx_hash);
+                        tracing::error!("Failed to update request status to complete: No rows affected. Chain ID: {}, Sequence: {}, Request TX Hash: {}", network_id, sequence, request_tx_hash);
                     }
                 }
                 result
@@ -301,16 +309,14 @@ impl History {
                 reason,
                 provider_random_number,
             } => {
-                let provider_random_number: Option<String> = match provider_random_number {
-                    Some(provider_random_number) => Some(provider_random_number.encode_hex()),
-                    None => None,
-                };
-                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ?, provider_random_number = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'",
+                let provider_random_number: Option<String> = provider_random_number
+                    .map(|provider_random_number| provider_random_number.encode_hex());
+                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ?, provider_random_number = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'",
                     "Failed",
                     new_status.last_updated_at,
                     reason,
                     provider_random_number,
-                    chain_id,
+                    network_id,
                     sequence,
                     provider,
                     request_tx_hash)
@@ -349,16 +355,17 @@ impl History {
     pub async fn get_requests_by_sender(
         &self,
         sender: Address,
-        chain_id: Option<ChainId>,
+        network_id: Option<NetworkId>,
     ) -> Result<Vec<RequestStatus>> {
         let sender: String = sender.encode_hex();
-        let rows = match chain_id {
-            Some(chain_id) => {
+        let rows = match network_id {
+            Some(network_id) => {
+                let network_id = network_id as i64;
                 sqlx::query_as!(
                     RequestRow,
-                    "SELECT * FROM request WHERE sender = ? AND chain_id = ?",
+                    "SELECT * FROM request WHERE sender = ? AND network_id = ?",
                     sender,
-                    chain_id,
+                    network_id,
                 )
                 .fetch_all(&self.pool)
                 .await
@@ -379,16 +386,17 @@ impl History {
     pub async fn get_requests_by_sequence(
         &self,
         sequence: u64,
-        chain_id: Option<ChainId>,
+        network_id: Option<NetworkId>,
     ) -> Result<Vec<RequestStatus>> {
         let sequence = sequence as i64;
-        let rows = match chain_id {
-            Some(chain_id) => {
+        let rows = match network_id {
+            Some(network_id) => {
+                let network_id = network_id as i64;
                 sqlx::query_as!(
                     RequestRow,
-                    "SELECT * FROM request WHERE sequence = ? AND chain_id = ?",
+                    "SELECT * FROM request WHERE sequence = ? AND network_id = ?",
                     sequence,
-                    chain_id,
+                    network_id,
                 )
                 .fetch_all(&self.pool)
                 .await
@@ -412,7 +420,7 @@ impl History {
 
     pub async fn get_requests_by_time(
         &self,
-        chain_id: Option<ChainId>,
+        network_id: Option<NetworkId>,
         limit: u64,
         offset: u64,
         min_timestamp: Option<DateTime<chrono::Utc>>,
@@ -432,11 +440,11 @@ impl History {
         );
         let limit = limit as i64;
         let offset = offset as i64;
-        let rows = match chain_id {
-            Some(chain_id) => {
-                let chain_id = chain_id.to_string();
-                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE chain_id = ? AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
-                    chain_id,
+        let rows = match network_id {
+            Some(network_id) => {
+                let network_id = network_id as i64;
+                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE network_id = ? AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+                    network_id,
                     min_timestamp,
                     max_timestamp,
                     limit,
@@ -464,6 +472,7 @@ mod test {
     fn get_random_request_status() -> RequestStatus {
         RequestStatus {
             chain_id: "ethereum".to_string(),
+            network_id: 121,
             provider: Address::random(),
             sequence: 1,
             created_at: chrono::Utc::now(),
@@ -496,7 +505,7 @@ mod test {
         History::update_request_status(&history.pool, status.clone()).await;
 
         let logs = history
-            .get_requests_by_sequence(status.sequence, Some(status.chain_id.clone()))
+            .get_requests_by_sequence(status.sequence, Some(status.network_id))
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
@@ -520,7 +529,7 @@ mod test {
         assert_eq!(logs, vec![status.clone()]);
 
         let logs = history
-            .get_requests_by_sender(status.sender, Some(status.chain_id.clone()))
+            .get_requests_by_sender(status.sender, Some(status.network_id))
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
@@ -608,7 +617,7 @@ mod test {
         History::update_request_status(&history.pool, status.clone()).await;
 
         let logs = history
-            .get_requests_by_sequence(status.sequence, Some("not-ethereum".to_string()))
+            .get_requests_by_sequence(status.sequence, Some(123))
             .await
             .unwrap();
         assert_eq!(logs, vec![]);
@@ -626,7 +635,7 @@ mod test {
         assert_eq!(logs, vec![]);
 
         let logs = history
-            .get_requests_by_sender(Address::zero(), Some(status.chain_id.clone()))
+            .get_requests_by_sender(Address::zero(), Some(status.network_id))
             .await
             .unwrap();
         assert_eq!(logs, vec![]);
@@ -643,11 +652,11 @@ mod test {
         let history = History::new_in_memory().await.unwrap();
         let status = get_random_request_status();
         History::update_request_status(&history.pool, status.clone()).await;
-        for chain_id in [None, Some("ethereum".to_string())] {
+        for network_id in [None, Some(121)] {
             // min = created_at = max
             let logs = history
                 .get_requests_by_time(
-                    chain_id.clone(),
+                    network_id,
                     10,
                     0,
                     Some(status.created_at),
@@ -660,7 +669,7 @@ mod test {
             // min = created_at + 1
             let logs = history
                 .get_requests_by_time(
-                    chain_id.clone(),
+                    network_id,
                     10,
                     0,
                     Some(status.created_at + Duration::seconds(1)),
@@ -673,7 +682,7 @@ mod test {
             // max = created_at - 1
             let logs = history
                 .get_requests_by_time(
-                    chain_id.clone(),
+                    network_id,
                     10,
                     0,
                     None,
@@ -685,7 +694,7 @@ mod test {
 
             // no min or max
             let logs = history
-                .get_requests_by_time(chain_id.clone(), 10, 0, None, None)
+                .get_requests_by_time(network_id, 10, 0, None, None)
                 .await
                 .unwrap();
             assert_eq!(logs, vec![status.clone()]);
@@ -700,7 +709,7 @@ mod test {
         // wait for the writer thread to write to the db
         sleep(std::time::Duration::from_secs(1)).await;
         let logs = history
-            .get_requests_by_sequence(1, Some("ethereum".to_string()))
+            .get_requests_by_sequence(1, Some(121))
             .await
             .unwrap();
         assert_eq!(logs, vec![status]);

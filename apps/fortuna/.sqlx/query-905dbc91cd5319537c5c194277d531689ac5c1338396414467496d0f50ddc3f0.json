@@ -9,68 +9,83 @@
         "type_info": "Text"
       },
       {
-        "name": "provider",
+        "name": "network_id",
         "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "provider",
+        "ordinal": 2,
         "type_info": "Text"
       },
       {
         "name": "sequence",
-        "ordinal": 2,
+        "ordinal": 3,
         "type_info": "Integer"
       },
       {
         "name": "created_at",
-        "ordinal": 3,
-        "type_info": "Datetime"
-      },
-      {
-        "name": "last_updated_at",
         "ordinal": 4,
         "type_info": "Datetime"
       },
       {
-        "name": "state",
+        "name": "last_updated_at",
         "ordinal": 5,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "state",
+        "ordinal": 6,
         "type_info": "Text"
       },
       {
         "name": "request_block_number",
-        "ordinal": 6,
+        "ordinal": 7,
         "type_info": "Integer"
       },
       {
         "name": "request_tx_hash",
-        "ordinal": 7,
-        "type_info": "Text"
-      },
-      {
-        "name": "user_random_number",
         "ordinal": 8,
         "type_info": "Text"
       },
       {
-        "name": "sender",
+        "name": "user_random_number",
         "ordinal": 9,
         "type_info": "Text"
       },
       {
-        "name": "reveal_block_number",
+        "name": "sender",
         "ordinal": 10,
+        "type_info": "Text"
+      },
+      {
+        "name": "reveal_block_number",
+        "ordinal": 11,
         "type_info": "Integer"
       },
       {
         "name": "reveal_tx_hash",
-        "ordinal": 11,
-        "type_info": "Text"
-      },
-      {
-        "name": "provider_random_number",
         "ordinal": 12,
         "type_info": "Text"
       },
       {
-        "name": "info",
+        "name": "provider_random_number",
         "ordinal": 13,
+        "type_info": "Text"
+      },
+      {
+        "name": "info",
+        "ordinal": 14,
+        "type_info": "Text"
+      },
+      {
+        "name": "gas_used",
+        "ordinal": 15,
+        "type_info": "Text"
+      },
+      {
+        "name": "gas_limit",
+        "ordinal": 16,
         "type_info": "Text"
       }
     ],
@@ -88,10 +103,13 @@
       false,
       false,
       false,
+      false,
       true,
       true,
       true,
-      true
+      true,
+      true,
+      false
     ]
   },
   "hash": "905dbc91cd5319537c5c194277d531689ac5c1338396414467496d0f50ddc3f0"

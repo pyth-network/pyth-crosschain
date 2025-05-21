@@ -1,6 +1,6 @@
 use {
     crate::{
-        api::{ChainId, RestError},
+        api::{ApiBlockChainState, NetworkId, RestError},
         history::RequestStatus,
     },
     axum::{
@@ -24,9 +24,9 @@ pub struct ExplorerQueryParams {
     pub max_timestamp: Option<DateTime<Utc>>,
     /// The query string to search for. This can be a transaction hash, sender address, or sequence number.
     pub query: Option<String>,
-    #[param(value_type = Option<String>)]
-    /// The chain ID to filter the results by.
-    pub chain_id: Option<ChainId>,
+    /// The network ID to filter the results by.
+    #[param(value_type = Option<u64>)]
+    pub network_id: Option<NetworkId>,
     /// The maximum number of logs to return. Max value is 1000.
     #[param(default = 1000)]
     pub limit: Option<u64>,
@@ -39,7 +39,7 @@ const LOG_RETURN_LIMIT: u64 = 1000;
 
 /// Returns the logs of all requests captured by the keeper.
 ///
-/// This endpoint allows you to filter the logs by a specific chain ID, a query string (which can be a transaction hash, sender address, or sequence number), and a time range.
+/// This endpoint allows you to filter the logs by a specific network ID, a query string (which can be a transaction hash, sender address, or sequence number), and a time range.
 /// This is useful for debugging and monitoring the requests made to the Entropy contracts on various chains.
 #[utoipa::path(
     get,
@@ -51,8 +51,17 @@ pub async fn explorer(
     State(state): State<crate::api::ApiState>,
     Query(query_params): Query<ExplorerQueryParams>,
 ) -> anyhow::Result<Json<Vec<RequestStatus>>, RestError> {
-    if let Some(chain_id) = &query_params.chain_id {
-        if !state.chains.read().await.contains_key(chain_id) {
+    if let Some(network_id) = &query_params.network_id {
+        if !state
+            .chains
+            .read()
+            .await
+            .iter()
+            .any(|(_, state)| match state {
+                ApiBlockChainState::Uninitialized => false,
+                ApiBlockChainState::Initialized(state) => state.network_id == *network_id,
+            })
+        {
             return Err(RestError::InvalidChainId);
         }
     }
@@ -75,7 +84,7 @@ pub async fn explorer(
             return Ok(Json(
                 state
                     .history
-                    .get_requests_by_sender(sender, query_params.chain_id)
+                    .get_requests_by_sender(sender, query_params.network_id)
                     .await
                     .map_err(|_| RestError::TemporarilyUnavailable)?,
             ));
@@ -84,7 +93,7 @@ pub async fn explorer(
             return Ok(Json(
                 state
                     .history
-                    .get_requests_by_sequence(sequence_number, query_params.chain_id)
+                    .get_requests_by_sequence(sequence_number, query_params.network_id)
                     .await
                     .map_err(|_| RestError::TemporarilyUnavailable)?,
             ));
@@ -95,7 +104,7 @@ pub async fn explorer(
         state
             .history
             .get_requests_by_time(
-                query_params.chain_id,
+                query_params.network_id,
                 query_params.limit.unwrap_or(LOG_RETURN_LIMIT),
                 query_params.offset.unwrap_or(0),
                 query_params.min_timestamp,
