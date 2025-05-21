@@ -414,6 +414,7 @@ impl History {
         &self,
         chain_id: Option<ChainId>,
         limit: u64,
+        offset: u64,
         min_timestamp: Option<DateTime<chrono::Utc>>,
         max_timestamp: Option<DateTime<chrono::Utc>>,
     ) -> Result<Vec<RequestStatus>> {
@@ -430,20 +431,23 @@ impl History {
                 .unwrap(),
         );
         let limit = limit as i64;
+        let offset = offset as i64;
         let rows = match chain_id {
             Some(chain_id) => {
                 let chain_id = chain_id.to_string();
-                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE chain_id = ? AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ?",
+                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE chain_id = ? AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                     chain_id,
                     min_timestamp,
                     max_timestamp,
-                    limit).fetch_all(&self.pool).await
+                    limit,
+                offset).fetch_all(&self.pool).await
             }
             None => {
-                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ?",
+                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                     min_timestamp,
                     max_timestamp,
-                    limit).fetch_all(&self.pool).await
+                    limit,
+                offset).fetch_all(&self.pool).await
             }
         }.map_err(|e| {
             tracing::error!("Failed to fetch request by time: {}", e);
@@ -645,6 +649,7 @@ mod test {
                 .get_requests_by_time(
                     chain_id.clone(),
                     10,
+                    0,
                     Some(status.created_at),
                     Some(status.created_at),
                 )
@@ -657,6 +662,7 @@ mod test {
                 .get_requests_by_time(
                     chain_id.clone(),
                     10,
+                    0,
                     Some(status.created_at + Duration::seconds(1)),
                     None,
                 )
@@ -669,6 +675,7 @@ mod test {
                 .get_requests_by_time(
                     chain_id.clone(),
                     10,
+                    0,
                     None,
                     Some(status.created_at - Duration::seconds(1)),
                 )
@@ -678,7 +685,7 @@ mod test {
 
             // no min or max
             let logs = history
-                .get_requests_by_time(chain_id.clone(), 10, None, None)
+                .get_requests_by_time(chain_id.clone(), 10, 0, None, None)
                 .await
                 .unwrap();
             assert_eq!(logs, vec![status.clone()]);

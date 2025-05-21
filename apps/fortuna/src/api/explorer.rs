@@ -27,6 +27,12 @@ pub struct ExplorerQueryParams {
     #[param(value_type = Option<String>)]
     /// The chain ID to filter the results by.
     pub chain_id: Option<ChainId>,
+    /// The maximum number of logs to return. Max value is 1000.
+    #[param(default = 1000)]
+    pub limit: Option<u64>,
+    /// The offset to start returning logs from.
+    #[param(default = 0)]
+    pub offset: Option<u64>,
 }
 
 const LOG_RETURN_LIMIT: u64 = 1000;
@@ -48,6 +54,11 @@ pub async fn explorer(
     if let Some(chain_id) = &query_params.chain_id {
         if !state.chains.read().await.contains_key(chain_id) {
             return Err(RestError::InvalidChainId);
+        }
+    }
+    if let Some(limit) = query_params.limit {
+        if limit > LOG_RETURN_LIMIT || limit == 0 {
+            return Err(RestError::InvalidQueryString);
         }
     }
     if let Some(query) = query_params.query {
@@ -85,7 +96,8 @@ pub async fn explorer(
             .history
             .get_requests_by_time(
                 query_params.chain_id,
-                LOG_RETURN_LIMIT,
+                query_params.limit.unwrap_or(LOG_RETURN_LIMIT),
+                query_params.offset.unwrap_or(0),
                 query_params.min_timestamp,
                 query_params.max_timestamp,
             )
