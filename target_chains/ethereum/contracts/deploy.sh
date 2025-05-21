@@ -1,22 +1,20 @@
 #!/bin/bash
 #
 # This script deploys changes to given networks. Usage:
-# $ ./deploy.sh <network_a> <network_a> <...>
-# Network names are defined in `truffle-config.js`.
+# $ ./deploy.sh <version:vX.Y.Z|latest> <network_a> <network_a> <...>
+#
+# You need to set the PK environment variable to your private key.
 #
 # Example: Deploying to some testnet networks
-# $ ./deploy.sh bnb_testnet fantom_testnet mumbai
+# $ ./deploy.sh latest bnb_testnet fantom_testnet mumbai
 #
 # Example: Deploying to some mainnet networks
-# $ ./deploy.sh ethereum bnb avalanche
+# $ ./deploy.sh v1.4.5 ethereum bnb avalanche
 set -euo pipefail
 
-echo "=========== Building dependencies ==========="
+echo "=========== Preparing contracts ==========="
 
-# This command also compiles the contracts if latest version is used
-pnpm turbo build --filter @pythnetwork/pyth-evm-contract
-
-echo "=========== Deploying the contracts ==========="
+PK=$PK
 
 version="$1"
 shift
@@ -38,6 +36,13 @@ else
   unzip -q -o $tmpdir/contracts-stdoutput.zip -d $tmpdir
   stdoutputdir="$tmpdir"
 fi
+
+echo "=========== Building dependencies ==========="
+
+# This command also compiles the contracts if latest version is used
+pnpm turbo build --filter @pythnetwork/pyth-evm-contract
+
+echo "=========== Deploying the contracts ==========="
 
 pnpm --filter=@pythnetwork/contract-manager exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir $stdoutputdir --private-key $PK --chain "$@"
 
