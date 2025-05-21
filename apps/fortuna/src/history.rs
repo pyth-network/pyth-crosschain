@@ -2,7 +2,7 @@ use {
     crate::api::ChainId,
     anyhow::Result,
     chrono::{DateTime, NaiveDateTime},
-    ethers::{core::utils::hex::ToHex, prelude::TxHash, types::Address},
+    ethers::{core::utils::hex::ToHex, prelude::TxHash, types::{Address, U256}},
     serde::Serialize,
     serde_with::serde_as,
     sqlx::{migrate, Pool, Sqlite, SqlitePool},
@@ -28,6 +28,10 @@ pub enum RequestEntryState {
     },
     Failed {
         reason: String,
+        /// The provider contribution to the random number.
+        #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
+        #[serde_as(as = "Option<serde_with::hex::Hex>")]
+        provider_random_number: Option<[u8; 32]>,
     },
 }
 
@@ -115,6 +119,12 @@ impl TryFrom<RequestRow> for RequestStatus {
             }
             "Failed" => RequestEntryState::Failed {
                 reason: row.info.unwrap_or_default(),
+                provider_random_number: match row.provider_random_number {
+                    Some(provider_random_number) => {
+                        Some(hex::FromHex::from_hex(provider_random_number)?)
+                    }
+                    None => None,
+                },
             },
             _ => return Err(anyhow::anyhow!("Unknown request state: {}", row.state)),
         };
@@ -227,11 +237,19 @@ impl History {
                     .execute(pool)
                     .await
             }
-            RequestEntryState::Failed { reason } => {
-                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'",
+            RequestEntryState::Failed {
+                reason,
+                provider_random_number,
+            } => {
+                let provider_random_number: Option<String> = match provider_random_number {
+                    Some(provider_random_number) => Some(provider_random_number.encode_hex()),
+                    None => None,
+                };
+                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ?, provider_random_number = ? WHERE chain_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'",
                     "Failed",
                     new_status.last_updated_at,
                     reason,
+                    provider_random_number,
                     chain_id,
                     sequence,
                     provider,
@@ -445,7 +463,50 @@ mod test {
     }
 
     #[tokio::test]
+    async fn test_no_transition_from_completed_to_failed() {
+        let history = History::new_in_memory().await.unwrap();
+        let reveal_tx_hash = TxHash::random();
+        let mut status = get_random_request_status();
+        History::update_request_status(&history.pool, status.clone()).await;
+        status.state = RequestEntryState::Completed {
+            reveal_block_number: 1,
+            reveal_tx_hash,
+            provider_random_number: [40; 32],
+        };
+        History::update_request_status(&history.pool, status.clone()).await;
+        let mut failed_status = status.clone();
+        failed_status.state = RequestEntryState::Failed {
+            reason: "Failed".to_string(),
+            provider_random_number: None,
+        };
+        History::update_request_status(&history.pool, failed_status).await;
 
+        let logs = history
+            .get_requests_by_tx_hash(reveal_tx_hash)
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+    }
+
+    #[tokio::test]
+    async fn test_failed_state() {
+        let history = History::new_in_memory().await.unwrap();
+        let mut status = get_random_request_status();
+        History::update_request_status(&history.pool, status.clone()).await;
+        status.state = RequestEntryState::Failed {
+            reason: "Failed".to_string(),
+            provider_random_number: Some([40; 32]),
+        };
+        History::update_request_status(&history.pool, status.clone()).await;
+        let logs = history
+            .get_requests_by_tx_hash(status.request_tx_hash)
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+    }
+
+
+    #[tokio::test]
     async fn test_history_filter_irrelevant_logs() {
         let history = History::new_in_memory().await.unwrap();
         let status = get_random_request_status();

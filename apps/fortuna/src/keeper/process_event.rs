@@ -60,6 +60,7 @@ pub async fn process_event_with_backoff(
         .map_err(|e| {
             status.state = RequestEntryState::Failed {
                 reason: format!("Error revealing: {:?}", e),
+                provider_random_number: None,
             };
             history.add(&status);
             anyhow!("Error revealing: {:?}", e)
@@ -160,6 +161,11 @@ pub async fn process_event_with_backoff(
                     .requests_processed_failure
                     .get_or_create(&account_label)
                     .inc();
+                status.state = RequestEntryState::Failed {
+                    reason: format!("Error revealing: {:?}", e),
+                    provider_random_number: Some(provider_revelation),
+                };
+                history.add(&status);
             }
         }
     }
