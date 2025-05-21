@@ -3,8 +3,16 @@
   "version": "1.0.0",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "exports": {
+    "./node/*": {
+      "types": "./lib/node/utils/*.d.ts",
+      "default": "./lib/node/utils/*.js"
+    },
+    "./core/*": {
+      "types": "./lib/core/*.d.ts",
+      "default": "./lib/core/*.js"
+    }
+  },
   "files": [
     "lib/**/*"
   ],

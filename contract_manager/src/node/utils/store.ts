@@ -10,7 +10,7 @@ import {
   TonChain,
   NearChain,
   IotaChain,
-} from "./chains";
+} from "../../core/chains";
 import {
   AptosPriceFeedContract,
   AptosWormholeContract,
@@ -30,17 +30,20 @@ import {
   IotaWormholeContract,
   IotaPriceFeedContract,
   EvmPulseContract,
-} from "./contracts";
-import { Token } from "./token";
-import { PriceFeedContract, Storable } from "./base";
+} from "../../core/contracts";
+import { Token } from "../../core/token";
+import { PriceFeedContract, Storable } from "../../core/base";
 import { parse, stringify } from "yaml";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import { Vault } from "./governance";
 import {
   StarknetPriceFeedContract,
   StarknetWormholeContract,
-} from "./contracts/starknet";
-import { NearPriceFeedContract, NearWormholeContract } from "./contracts/near";
+} from "../../core/contracts/starknet";
+import {
+  NearPriceFeedContract,
+  NearWormholeContract,
+} from "../../core/contracts/near";
 
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };

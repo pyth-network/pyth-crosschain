@@ -1,11 +1,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  DefaultStore,
-  getDefaultDeploymentConfig,
-  IotaChain,
-  IotaPriceFeedContract,
-} from "@pythnetwork/contract-manager";
+import { IotaChain } from "../../../../contract_manager/lib/core/chains";
+import { IotaPriceFeedContract } from "../../../../contract_manager/lib/core/contracts/iota";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
+import { getDefaultDeploymentConfig } from "../../../../contract_manager/lib/core/base";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
 import { initPyth, publishPackage } from "./pyth_deploy";

@@ -32,7 +32,7 @@ import {
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { KeyValueConfig, Storable } from "./base";
+import { KeyValueConfig, Storable } from "../../core/base";
 import { PriorityFeeConfig } from "@pythnetwork/solana-utils";
 
 class InvalidTransactionError extends Error {

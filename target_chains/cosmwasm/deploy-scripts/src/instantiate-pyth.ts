@@ -2,13 +2,10 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { sha256 } from "@cosmjs/crypto";
 import { getPythConfig } from "./configs";
-import {
-  CosmWasmChain,
-  CosmWasmPriceFeedContract,
-  DefaultStore,
-  Store,
-  toPrivateKey,
-} from "@pythnetwork/contract-manager";
+import { DefaultStore, Store } from "@pythnetwork/contract-manager/node/store";
+import { CosmWasmChain } from "../../../../contract_manager/lib/core/chains";
+import { toPrivateKey } from "../../../../contract_manager/lib/core/base";
+import { CosmWasmPriceFeedContract } from "../../../../contract_manager/lib/core/contracts/cosmwasm";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { DeploymentType, getContractBytesDict } from "./helper";
 

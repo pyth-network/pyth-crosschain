@@ -5,9 +5,9 @@ import {
   decodeGovernancePayload,
 } from "@pythnetwork/xc-admin-common";
 import { DefaultStore } from "./store";
-import { PrivateKey, TxResult } from "./base";
-import { EvmExecutorContract } from "./contracts";
-import { EvmChain } from "./chains";
+import { PrivateKey, TxResult } from "../../core/base";
+import { EvmExecutorContract } from "../../core/contracts";
+import { EvmChain } from "../../core/chains";
 
 // TODO: A better place for this would be `base.ts`. That will require
 // significant refactor. Todo in separate PR.
