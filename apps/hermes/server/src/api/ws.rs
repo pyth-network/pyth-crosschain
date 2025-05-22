@@ -47,7 +47,7 @@ use {
 };
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
-const MAX_CLIENT_MESSAGE_SIZE: usize = 100 * 1024; // 100 KiB
+const MAX_CLIENT_MESSAGE_SIZE: usize = 1025 * 1024; // 1 MiB
 const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
 
 /// The maximum number of bytes that can be sent per second per IP address.
