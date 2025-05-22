@@ -1,3 +1,17 @@
+---
+title: UpdatePriceFeeds
+description: >-
+  Update the on-chain price feeds using the provided `data`, which contains
+  serialized and signed price update data from Pyth Network. You can retrieve
+  the latest price `data` for a given set of price feeds from the [Hermes
+  API](https://hermes.pyth.network/docs). Executing this message updates the
+  on-chain price if the provided update is more recent than the current on-chain
+  price. Otherwise, the provided update will be ignored. Execution will succeed
+  even if the update is ignored. This operation requires the caller to pay a fee
+  to perform the update. The required fee for a given set of updates can be
+  computed using the [GetUpdateFee](query-get-update-fee) query. Reverts if the
+  required fee is not paid, or the `data` is incorrectly signed or formatted.
+---
 import Input from "../../../../components/Input";
 import Arg from "../../../../components/Arg";
 import Example from "../../../../components/Example";
