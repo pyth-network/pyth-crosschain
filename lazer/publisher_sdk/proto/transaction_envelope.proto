@@ -3,6 +3,7 @@ package pyth_lazer_transaction;
 
 import "google/protobuf/timestamp.proto";
 import "pyth_lazer_transaction.proto";
+import "governance_instruction.proto";
 
 // Envelope containing signed transaction and context attached by Pyth Lazer.
 // Created by Pyth Lazer Relayers, which also generate and attach the context.
@@ -24,7 +25,17 @@ message PayloadContext {
     // [required] context set based on type of transaction
     oneof context {
         PublisherUpdateContext publisher_update_context = 2;
+        GovernanceInstructionContext governance_instruction_context = 3;
     }
+}
+
+// Context contains status of each governance instruction found in transaction
+message GovernanceInstructionContext {
+    // [required] ID of publisher based on the access token used to connect
+    optional uint32 publisher_id = 1;
+
+    // [required] the governance instruction
+    GovernanceInstruction governance_instruction = 2;
 }
 
 // Context contains status of each feed update found in transaction
