@@ -1,0 +1,5 @@
+relayer_urls = ["ws://localhost:1235/v1/transaction", "ws://localhost:1335/v1/transaction"]
+authorization_token = "token1"
+publish_keypair_path = "/path/to/solana/id.json"
+listen_address = "0.0.0.0:1234"
+publish_interval_duration = "50ms"
