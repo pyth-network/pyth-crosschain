@@ -8,7 +8,7 @@ export type Staking = {
   address: "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ";
   metadata: {
     name: "staking";
-    version: "2.0.0";
+    version: "2.1.0";
     spec: "0.1.0";
     description: "Created with Anchor";
   };
@@ -1295,6 +1295,102 @@ export type Staking = {
           type: "u64";
         },
       ];
+    },
+    {
+      name: "transferAccount";
+      docs: [
+        "Transfers a user's stake account to a new owner provided by the `governance_authority`.\n     *\n     * This functionality addresses the scenario where a user doesn't have access to their owner\n     * key. Only accounts without any staked tokens can be transferred.",
+      ];
+      discriminator: [219, 120, 55, 105, 3, 139, 205, 6];
+      accounts: [
+        {
+          name: "governanceAuthority";
+          signer: true;
+          relations: ["config"];
+        },
+        {
+          name: "newOwner";
+          docs: [
+            "CHECK : A new arbitrary owner provided by the governance_authority",
+          ];
+        },
+        {
+          name: "stakeAccountPositions";
+          writable: true;
+        },
+        {
+          name: "stakeAccountMetadata";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97,
+                ];
+              },
+              {
+                kind: "account";
+                path: "stakeAccountPositions";
+              },
+            ];
+          };
+        },
+        {
+          name: "voterRecord";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  118,
+                  111,
+                  116,
+                  101,
+                  114,
+                  95,
+                  119,
+                  101,
+                  105,
+                  103,
+                  104,
+                  116,
+                ];
+              },
+              {
+                kind: "account";
+                path: "stakeAccountPositions";
+              },
+            ];
+          };
+        },
+        {
+          name: "config";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [99, 111, 110, 102, 105, 103];
+              },
+            ];
+          };
+        },
+      ];
+      args: [];
     },
     {
       name: "updateAgreementHash";
