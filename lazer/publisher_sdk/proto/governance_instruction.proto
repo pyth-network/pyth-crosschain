@@ -12,10 +12,9 @@ import "dynamic_value.proto";
 package pyth_lazer_transaction;
 
 // Representation of a complete governance instruction. This value will be signed
-// by a governance source.
+// by a governance source. If the governance source is Wormhole emitter, the VAA payload will
+// be the encoded `GovernanceInstruction` message.
 message GovernanceInstruction {
-    // [required] Governance source that signed this instruction.
-    optional GovernanceSource source = 1;
     // Action requested by this instruction. For the instruction to be accepted, all directives
     // must be successfully applied. In case of any failure, the whole instruction is reverted.
     // However, note that if the instruction targets multiple (or all) shards, each shard will
@@ -29,14 +28,15 @@ message GovernanceInstruction {
     // is greater than the specified value. After `max_execution_timestamp` is in the past,
     // it will no longer be possible to execute this instruction.
     optional google.protobuf.Timestamp max_execution_timestamp = 4;
-    // [required] Sequence number of this instruction. It must be greater than 0.
-    // It must always be increasing, but not required to be
-    // strictly sequential (i.e. gaps are allowed). Each shard separately keeps track of the last executed
-    // governance instruction and will reject instructions with the same or smaller sequence no.
-    // Note that if instructions are received out of order, some of them may become permanently
-    // rejected (e.g. if instruction #3 has been successfully processed before instruction #2 was observed,
-    // #2 will always be rejected).
-    // Sequence numbers are assigned and tracked separately for each governance source.
+    // [optional] Sequence number of this instruction. Required for SingleEd25519 governance source
+    // and optional for WomrholeEmitter governance source (because Wormhole has its own sequence
+    // numbers). If set, it must be greater than 0, and always be increasing, but not required to be
+    // strictly sequential (i.e. gaps are allowed). Each shard separately keeps track of the last
+    // executed governance instruction and will reject instructions with the same or smaller
+    // sequence no. Note that if instructions are received out of order, some of them may become
+    // permanently rejected (e.g. if instruction #3 has been successfully processed before
+    // instruction #2 was observed, #2 will always be rejected). Sequence numbers are assigned and
+    // tracked separately for each governance source.
     optional uint32 governance_sequence_no = 5;
 }
 
@@ -155,10 +155,17 @@ message GovernanceSource {
         optional bytes public_key = 1;
     }
 
+    message WormholeEmitter {
+        // [required] Wormhole emitter address.
+        optional bytes address = 1;
+        // [required] Wormhole emitter chain ID. Restricted to uint16.
+        optional uint32 chain_id = 2;
+    }
+
     // [required]
     oneof source {
         SingleEd25519 single_ed25519 = 1;
-        // TODO: wormhole source goes here.
+        WormholeEmitter wormhole_emitter = 2;
     }
 }
 
@@ -347,4 +354,3 @@ message DeactivateFeed {
     // governance instruction is processed.
     optional google.protobuf.Timestamp deactivation_timestamp = 1;
 }
-
