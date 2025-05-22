@@ -42,6 +42,7 @@ pub async fn process_event_with_backoff(
     tracing::info!("Started processing event");
     let mut status = RequestStatus {
         chain_id: chain_state.id.clone(),
+        network_id: chain_state.network_id,
         provider: event.provider_address,
         sequence: event.sequence_number,
         created_at: chrono::Utc::now(),
@@ -51,6 +52,7 @@ pub async fn process_event_with_backoff(
         sender: event.requestor,
         user_random_number: event.user_random_number,
         state: RequestEntryState::Pending,
+        gas_limit,
     };
     history.add(&status);
 
@@ -60,6 +62,7 @@ pub async fn process_event_with_backoff(
         .map_err(|e| {
             status.state = RequestEntryState::Failed {
                 reason: format!("Error revealing: {:?}", e),
+                provider_random_number: None,
             };
             history.add(&status);
             anyhow!("Error revealing: {:?}", e)
@@ -91,6 +94,11 @@ pub async fn process_event_with_backoff(
                 reveal_block_number: result.receipt.block_number.unwrap_or_default().as_u64(),
                 reveal_tx_hash: result.receipt.transaction_hash,
                 provider_random_number: provider_revelation,
+                gas_used: result.receipt.gas_used.unwrap_or_default(),
+                combined_random_number: RequestStatus::generate_combined_random_number(
+                    &event.user_random_number,
+                    &provider_revelation,
+                ),
             };
             history.add(&status);
             tracing::info!(
@@ -160,6 +168,11 @@ pub async fn process_event_with_backoff(
                     .requests_processed_failure
                     .get_or_create(&account_label)
                     .inc();
+                status.state = RequestEntryState::Failed {
+                    reason: format!("Error revealing: {:?}", e),
+                    provider_random_number: Some(provider_revelation),
+                };
+                history.add(&status);
             }
         }
     }

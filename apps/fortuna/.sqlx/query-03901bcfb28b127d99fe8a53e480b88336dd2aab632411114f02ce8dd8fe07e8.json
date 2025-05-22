@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE request SET state = ?, last_updated_at = ?, info = ?, provider_random_number = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "03901bcfb28b127d99fe8a53e480b88336dd2aab632411114f02ce8dd8fe07e8"
+}

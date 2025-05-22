@@ -216,6 +216,11 @@ async fn setup_chain_state(
         chain_id.clone(),
         rpc_metrics,
     )?);
+    let network_id: u64 = contract
+        .get_network_id()
+        .await
+        .map_err(|e| anyhow!("Failed to get network id: {}. Chain id: {}", &chain_id, e))?
+        .as_u64();
     let mut provider_commitments = chain_config.commitments.clone().unwrap_or_default();
     provider_commitments.sort_by(|c1, c2| {
         c1.original_commitment_sequence_number
@@ -295,6 +300,7 @@ async fn setup_chain_state(
     let state = BlockchainState {
         id: chain_id.clone(),
         state: Arc::new(chain_state),
+        network_id,
         contract,
         provider_address: *provider,
         reveal_delay_blocks: chain_config.reveal_delay_blocks,
