@@ -397,7 +397,7 @@ abstract contract Pyth is
             maxPublishTime,
             false,
             false,
-            true // TODO: Figure out when to use the flag
+            true
         );
     }
 
@@ -423,7 +423,7 @@ abstract contract Pyth is
                 maxPublishTime,
                 false,
                 true,
-                true // TODO: Figure out when to use the flag
+                true
             );
     }
 
@@ -634,7 +634,7 @@ abstract contract Pyth is
             maxPublishTime,
             true,
             false,
-            true // TODO: Figure out when to use flag
+            true
         );
     }
 
