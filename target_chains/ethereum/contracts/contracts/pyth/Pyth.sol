@@ -317,15 +317,16 @@ abstract contract Pyth is
         return merkleData.numUpdates;
     }
 
-    function parsePriceFeedUpdatesInternal(
+    function parsePriceFeedUpdatesWithConfig(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
         uint64 minAllowedPublishTime,
         uint64 maxAllowedPublishTime,
         bool checkUniqueness,
-        bool checkUpdateDataIsMinimal
+        bool checkUpdateDataIsMinimal,
+        bool storeUpdatesIfFresh
     )
-        internal
+        public
         returns (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
@@ -389,13 +390,14 @@ abstract contract Pyth is
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
-        (priceFeeds, ) = parsePriceFeedUpdatesInternal(
+        (priceFeeds, ) = parsePriceFeedUpdatesWithConfig(
             updateData,
             priceIds,
             minPublishTime,
             maxPublishTime,
             false,
-            false
+            false,
+            true // TODO: Figure out when to use the flag
         );
     }
 
@@ -414,13 +416,14 @@ abstract contract Pyth is
         )
     {
         return
-            parsePriceFeedUpdatesInternal(
+            parsePriceFeedUpdatesWithConfig(
                 updateData,
                 priceIds,
                 minPublishTime,
                 maxPublishTime,
                 false,
-                true
+                true,
+                true // TODO: Figure out when to use the flag
             );
     }
 
@@ -624,13 +627,14 @@ abstract contract Pyth is
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
-        (priceFeeds, ) = parsePriceFeedUpdatesInternal(
+        (priceFeeds, ) = parsePriceFeedUpdatesWithConfig(
             updateData,
             priceIds,
             minPublishTime,
             maxPublishTime,
             true,
-            false
+            false,
+            true // TODO: Figure out when to use flag
         );
     }
 
