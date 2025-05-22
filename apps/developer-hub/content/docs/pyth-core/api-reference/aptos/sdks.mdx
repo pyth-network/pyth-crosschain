@@ -1,0 +1,41 @@
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# SDKs
+
+Aptos contracts can program against the Pyth contract's interface by including it as a project dependency.
+
+## Installation Instructions
+
+<Tabs items={['Move']}>
+    <Tab>
+        First, add the Pyth contract to your project dependencies by adding the following line to the `[dependencies]` section of `Move.toml`:
+
+        ```toml
+        [dependencies]
+        Pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "target_chains/aptos/contracts", rev = "main" }
+        ```
+
+        Note that this dependency references the latest version of the Pyth contract code.
+        You can also choose the most recent git sha in order to have a repeatable build.
+        This contract was compiled with [aptos-cli v1.0.4](https://github.com/aptos-labs/aptos-core/releases/tag/aptos-cli-v1.0.4).
+
+        Next, add the following named addresses to the `[addresses]` section of `Move.toml`:
+
+        ```toml
+        [addresses]
+        pyth = "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387"
+        deployer = "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434"
+        wormhole = "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625"
+        ```
+
+        These lines allow you to reference Pyth resources as `pyth` instead of manually writing the contract address.
+        The contract addresses provided above are for both Aptos mainnet and testnet -- the Pyth contract has the same address in both cases.
+
+        You can now import the Pyth interfaces in Move code as follows:
+
+        ```rust copy
+        use pyth::pyth;
+        ```
+    </Tab>
+
+</Tabs>

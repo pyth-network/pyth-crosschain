@@ -1,0 +1,15 @@
+# Pyth Price Feeds Aptos Contract Reference
+
+The Pyth Network Aptos contract allows users to submit price updates for verification and store them for later use.
+Please see the documentation section on [Pull Updates](../pythnet-price-feeds/pull-updates) if you haven't already;
+this section will explain the differences between Pyth Network and other oracles, and help you understand the expected usage patterns.
+
+Users of the Pyth contract will typically need to perform two operations:
+
+- Update the on-chain price -- In off-chain code, retrieve a price update from
+  [Hermes](../pythnet-price-feeds/hermes) and submit it to the contract
+  for verification. This operation makes the price available for on-chain use.
+  You will typically call [update_price_feeds](aptos/update-price-feeds) to do this.
+- Read the on-chain price -- After updating the price, your on-chain contract can call one of the
+  many getter functions on the contract to get the price. See [get_price](aptos/get-price) and its variants
+  for more information.

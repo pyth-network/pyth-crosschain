@@ -1,0 +1,79 @@
+import Input from "../../../../components/Input";
+import Arg from "../../../../components/Arg";
+import { InputFormats } from "../../../../utils/InputFormat";
+import Example from "../../../../components/Example";
+import Examples from "../../../../components/Examples";
+import DynamicCode from "../../../../components/DynamicCode";
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# Update Price Feeds
+
+Update the on-chain price feeds using the provided `update_data`, which contains serialized and signed price update data from Pyth Network.
+This function updates the on-chain price if the provided update is more recent than the current on-chain price.
+Otherwise, the provided update will be ignored.
+The function call will succeed even if the update is ignored.
+
+You can retrieve the latest price `update_data` for a given set of price feeds from the [Hermes API](https://hermes.pyth.network/docs).
+By default, the data is returned as a base64-encoded string that you must deserialize into a vector of bytes before calling this method.
+
+This function requires the caller to pay a fee to perform the update.
+The required fee for a given set of updates can be computed by passing them to [get_update_fee](get-update-fee).
+
+Reverts if the required fee is not paid, or the `update_data` is incorrectly signed or formatted.
+
+<div className="mt-6 overflow-x-auto">
+
+| Argument                                                         | Input                                                      | Description                                                                                           |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| <Arg required={true} type="vector<vector<u8>>">update_data</Arg> | <Input id="update_data" format={InputFormats.ByteArray} /> | The price update data for the contract to verify.                                                     |
+| <Arg required={true} type="Coin<AptosCoin>">fee</Arg>            | <Input id="fee" format={InputFormats.BigInt}/>             | The update fee in octa. This fee is transferred to the Pyth contract as an effect of the transaction. |
+
+</div>
+
+<Examples>
+  <Example
+    keyValues={{
+      update_data: async (ctx) =>
+        JSON.stringify(
+          Array.from(
+            Buffer.from(
+              (await ctx.getLatestPriceFeed("Crypto.BTC/USD", "aptos")).vaa,
+              "base64"
+            )
+          )
+        ),
+      fee: async (ctx) => {
+        // NOTE: this technically could get the update fee for a different VAA than the one above.
+        // This shouldn't affect the update fee as long as the fee is only dependent on the price feed ids
+        // and not the specific content of the price update.
+        // FIXME: this gets the ETH update fee, not the cosmos fee. They're currently the same though.
+        let vaa = (await ctx.getLatestPriceFeed("Crypto.BTC/USD", "evm")).vaa;
+        return await ctx.getEthUpdateFee([vaa]);
+      },
+    }}
+    value="Latest BTC/USD update data"
+  />
+</Examples>
+
+## Example Code
+
+<Tabs items={['Move']}>
+    <Tab>
+        <DynamicCode targets={{
+            "1": (ctx) => ctx.get("update_data", "<update_data>"),
+            "2": (ctx) => ctx.get("fee", "<fee>"),
+        }}>
+            ```rust copy
+            use pyth::pyth;
+            use pyth::price_identifier;
+
+            let coins = coin::withdraw<AptosCoin>(payer, 2)
+            pyth::update_price_feeds(
+              vec![1],
+              coins
+            );
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>

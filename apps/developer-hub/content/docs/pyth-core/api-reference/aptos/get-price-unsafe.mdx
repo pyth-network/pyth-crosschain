@@ -1,0 +1,62 @@
+import Input from "../../../../components/Input";
+import Arg from "../../../../components/Arg";
+import Example from "../../../../components/Example";
+import Examples from "../../../../components/Examples";
+import DynamicCode from "../../../../components/DynamicCode";
+import { InputFormats } from "../../../../utils/InputFormat";
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# Get Price Unsafe
+
+Get the latest price and confidence interval for the requested price feed id.
+The price feed id is a 32-byte id written as a hexadecimal string; see the [price feed ids](https://pyth.network/developers/price-feed-ids) page to look up the id for a given symbol.
+The returned price and confidence are decimal numbers written in the form `a * 10^e`, where `e` is an exponent included in the result.
+For example, a price of 1234 with an exponent of -2 represents the number 12.34.
+The result also includes a `timestamp` which is the unix timestamp for the price update.
+
+**This function may return a price from arbitrarily far in the past.**
+It is the caller's responsibility to check the returned `timestamp` to ensure that the update is recent enough for their use case.
+
+Users of this method will typically invoke [update_price_feeds](update-price-feeds) to update the on-chain price before
+reading it. This step ensures that the on-chain price is fresh.
+
+<div className="mt-6 overflow-x-auto">
+
+| Argument                                               | Input                                                     | Description                               |
+| ------------------------------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
+| <Arg required={true} type="hex">price_identifier</Arg> | <Input id="price_identifier" format={InputFormats.Hex} /> | The ID of the price feed you want to read |
+
+</div>
+
+<Examples>
+  <Example
+    keyValues={{
+      price_identifier: (ctx) => ctx.getFeedId("Crypto.BTC/USD"),
+    }}
+    value="BTC/USD"
+  />
+  <Example
+    keyValues={{
+      price_identifier: (ctx) => ctx.getFeedId("Crypto.ETH/USD"),
+    }}
+    value="ETH/USD"
+  />
+</Examples>
+
+## Example Code
+
+<Tabs items={['Move']}>
+    <Tab>
+        <DynamicCode targets={{
+            "\"1111\"": (ctx) => `"${ctx.get("price_identifier", "<price_identifier>")}"`,
+        }}>
+            ```rust copy
+            use pyth::pyth;
+            use pyth::price_identifier;
+
+            pyth::get_price_unsafe(price_identifier::from_byte_vec(x"1111"));
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>

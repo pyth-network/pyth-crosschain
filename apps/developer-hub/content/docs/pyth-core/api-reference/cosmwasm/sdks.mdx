@@ -1,0 +1,29 @@
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# SDKs
+
+The [pyth-sdk-cw](https://crates.io/crates/pyth-sdk-cw) ([github](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/cosmwasm/sdk))
+crate provides Rust interfaces for the Pyth CosmWasm contract for use in on-chain applications.
+
+Off-chain users can use any cosmwasm SDK.
+The Typescript examples in the documentation use [@cosmjs/cosmwasm-stargate](https://www.npmjs.com/package/@cosmjs/cosmwasm-stargate).
+
+## Installation Instructions
+
+<Tabs items={['Rust', 'Typescript']}>
+    <Tab>
+        Add the SDK to your project by adding the following dependency to your `Cargo.toml` file:
+
+        ```toml copy
+        [dependencies]
+        pyth-sdk-cw = "1.0.0"
+        ```
+    </Tab>
+    <Tab>
+        Simply install the SDK in your project by running:
+        ```
+        npm install @cosmjs/cosmwasm-stargate
+        ```
+    </Tab>
+
+</Tabs>

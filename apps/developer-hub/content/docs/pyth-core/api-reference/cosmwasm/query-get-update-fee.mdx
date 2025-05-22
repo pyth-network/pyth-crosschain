@@ -1,0 +1,111 @@
+import Input from "../../../../components/Input";
+import Arg from "../../../../components/Arg";
+import Example from "../../../../components/Example";
+import Examples from "../../../../components/Examples";
+import DynamicCode from "../../../../components/DynamicCode";
+import { InputFormats } from "../../../../utils/InputFormat";
+import CosmWasmQuery from "../../../../components/CosmWasmQuery";
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# Get Update Fee
+
+Get the fee required to update the on-chain price feeds with the provided `vaas`.
+Returns both a quantity of tokens and denomination.
+The returned number of the specified token should be sent as the transaction value when executing [UpdatePriceFeeds](execute-update-price-feeds).
+
+The `vaas` can be retrieved from the [Hermes API](https://hermes.pyth.network/docs).
+By default, Hermes returns these as base64-encoded strings; these can be directly included in a CosmWasm query, as CosmWasm uses a base64 string encoding for the `Binary` type.
+
+<div className="mt-6 overflow-x-auto">
+
+| Argument                                           | Input                                           | Description                                                                                       |
+| -------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| <Arg required={true} type="vec<Binary>">vaas</Arg> | <Input id="vaas" format={InputFormats.Base64}/> | The price updates that you would like to submit to [UpdatePriceFeeds](execute-update-price-feeds) |
+
+</div>
+
+<Examples>
+  <Example
+    keyValues={{
+      vaas: async (ctx) =>
+        (await ctx.getLatestPriceFeed("Crypto.BTC/USD", "default")).vaa,
+    }}
+    value="Latest BTC/USD update data"
+  />
+</Examples>
+
+<CosmWasmQuery
+  buildQuery={(kvs) => ({ get_update_fee: { vaas: [kvs["vaas"]] } })}
+/>
+
+## Example Code
+
+<Tabs items={['Rust', 'Typescript', 'Query JSON']}>
+    <Tab>
+        <DynamicCode targets={{
+            '"0x00"': (ctx) => `"${ctx.cosmosChainConfig.pythAddress}"`,
+            '"0x11"': (ctx) => `"${ctx.get("vaas", "<vaa>")}"`,
+        }}>
+            ```rust copy
+            use pyth_sdk_cw::{
+              get_update_fee,
+            };
+            use cosmwasm_std::{
+              Addr,
+              Binary,
+              Coin,
+              Deps,
+            };
+
+            fn example_function(deps: &Deps) -> () {
+              let fee_coin: Coin = get_update_fee(
+                &deps.querier,
+                Addr::unchecked("0x00"),
+                &vec![Binary::from_base64("0x11").unwrap()]
+              ).unwrap();
+            }
+            ```
+        </DynamicCode>
+    </Tab>
+
+    <Tab>
+        <DynamicCode targets={{
+            "'0x0000'": (ctx) => `'${ctx.cosmosChainConfig.pythAddress}'`,
+            "'0x1111'": (ctx) => `'${ctx.get("vaas", "<vaa>")}'`,
+            "// NETWORK_NAME": (ctx) => `// ${ctx.currentCosmosChain}`,
+            "'RPC_URL'": (ctx) => ctx.cosmosNetworkDetails?.rpc !== undefined ? `'${ctx.cosmosNetworkDetails.rpc}'` : 'RPC_URL',
+        }}>
+            ```typescript copy
+            import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+
+            // NETWORK_NAME
+            const client = await CosmWasmClient.connect('RPC_URL');
+            const contractAddress = '0x0000';
+
+            let result = await client.queryContractSmart(
+              contractAddress,
+              {
+                "get_update_fee": {
+                  "vaas": ['0x1111']
+                }
+              }
+            );
+            ```
+        </DynamicCode>
+    </Tab>
+
+    <Tab>
+        <DynamicCode targets={{
+            '"0x1111"': (ctx) => `"${ctx.get("vaas", "<vaa>")}"`,
+        }}>
+            ```json copy
+            {
+              "get_update_fee": {
+                "vaas": ["0x1111"]
+              }
+            }
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>

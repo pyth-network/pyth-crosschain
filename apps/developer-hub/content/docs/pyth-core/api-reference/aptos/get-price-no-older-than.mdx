@@ -1,0 +1,69 @@
+import Input from "../../../../components/Input";
+import Arg from "../../../../components/Arg";
+import Example from "../../../../components/Example";
+import DynamicCode from "../../../../components/DynamicCode";
+import { InputFormats } from "../../../../utils/InputFormat";
+import { Tab, Tabs } from "nextra-theme-docs";
+import Examples from "../../../../components/Examples";
+
+# Get Price No Older Than
+
+Get the latest price and confidence interval for the requested price feed id, if it has been updated sufficiently recently.
+The price feed id is a 32-byte id written as a hexadecimal string; see the [price feed ids](https://pyth.network/developers/price-feed-ids) page to look up the id for a given symbol.
+The returned price and confidence are decimal numbers written in the form `a * 10^e`, where `e` is an exponent included in the result.
+For example, a price of 1234 with an exponent of -2 represents the number 12.34.
+The result also includes a `timestamp` which is the unix timestamp for the price update.
+
+The caller provides a `max_age_secs` argument that specifies how old the price can be.
+The call reverts if the on-chain price is from more than `max_age_secs` seconds in the past (with respect to the current on-chain timestamp).
+
+Users of this method will typically invoke [update_price_feeds](update-price-feeds) to update the on-chain price before
+reading it. This step ensures that the on-chain price is fresh and the call does not revert.
+
+<div className="mt-6 overflow-x-auto">
+
+| Argument                                               | Input                                                     | Description                                   |
+| ------------------------------------------------------ | --------------------------------------------------------- | --------------------------------------------- |
+| <Arg required={true} type="hex">price_identifier</Arg> | <Input id="price_identifier" format={InputFormats.Hex} /> | The ID of the price feed you want to read     |
+| <Arg required={true} type="int">max_age_secs</Arg>     | <Input id="max_age_secs" />                               | Maximum age of the on-chain price in seconds. |
+
+</div>
+
+<Examples>
+  <Example
+    keyValues={{
+      price_identifier: (ctx) => ctx.getFeedId("Crypto.BTC/USD"),
+      max_age_secs: () => 60,
+    }}
+    value="BTC/USD"
+  />
+  <Example
+    keyValues={{
+      price_identifier: (ctx) => ctx.getFeedId("Crypto.ETH/USD"),
+      max_age_secs: () => 60,
+    }}
+    value="ETH/USD"
+  />
+</Examples>
+
+## Example Code
+
+<Tabs items={['Move']}>
+    <Tab>
+        <DynamicCode targets={{
+            "\"1111\"": (ctx) => `"${ctx.get("price_identifier", "<price_identifier>")}"`,
+            "2222": (ctx) => ctx.get("max_age_secs", "<max_age_secs>")
+        }}>
+            ```rust copy
+            use pyth::pyth;
+            use pyth::price_identifier;
+
+            pyth::get_price_no_older_than(
+              price_identifier::from_byte_vec(x"1111"),
+              2222
+            );
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>

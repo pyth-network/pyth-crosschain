@@ -1,0 +1,15 @@
+# Pyth Price Feeds CosmWasm Contract Reference
+
+The Pyth Network CosmWasm contract allows users to submit price updates for verification and can store them for later use.
+Please see the documentation section on [Pull Updates](../pythnet-price-feeds/pull-updates) if you haven't already;
+this section will explain the differences between Pyth Network and other oracles, and help you understand the expected usage patterns.
+
+Users of the Pyth contract will typically need to perform two operations:
+
+- Update the on-chain price -- In off-chain code, retrieve a price update from the
+  [Hermes](../pythnet-price-feeds/hermes) and execute [UpdatePriceFeeds](cosmwasm/execute-update-price-feeds).
+  This operation makes the price available for on-chain use.
+  You will typically put this message at the beginning of a transaction, and subsequent messages in the transaction
+  can consume the new price.
+- Read the on-chain price -- After updating the price, your on-chain contract can send the [PriceFeed](cosmwasm/query-price-feed) query
+  to the Pyth contract to get the current price.

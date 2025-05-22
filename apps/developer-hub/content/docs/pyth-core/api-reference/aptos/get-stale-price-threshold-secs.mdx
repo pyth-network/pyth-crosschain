@@ -1,0 +1,24 @@
+import DynamicCode from "../../../../components/DynamicCode";
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# Get Stale Price Threshold Secs
+
+Get the default stale price threshold in seconds.
+This quantity is the maximum age of price updates returned by functions like [get_price](get-price) and [get_ema_price](get-ema-price);
+these functions revert if the current on-chain price is older than this threshold.
+
+## Example Code
+
+<Tabs items={['Move']}>
+    <Tab>
+        <DynamicCode targets={{}}>
+            ```rust copy
+            use pyth::pyth;
+            use pyth::price_identifier;
+
+            pyth::get_stale_price_threshold_secs();
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>

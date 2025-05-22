@@ -1,0 +1,60 @@
+import Input from "../../../../components/Input";
+import Arg from "../../../../components/Arg";
+import { InputFormats } from "../../../../utils/InputFormat";
+import Example from "../../../../components/Example";
+import Examples from "../../../../components/Examples";
+import DynamicCode from "../../../../components/DynamicCode";
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# Get Update Fee
+
+Get the fee required to update the on-chain price feeds with the provided `update_data`.
+The returned number of Octa should be sent as the transaction value when calling [update_price_feeds](update-price-feeds).
+
+The `update_data` can be retrieved from the [Hermes API](https://hermes.pyth.network/docs).
+By default, the data is returned as a base64-encoded string that you must deserialize into a vector of bytes before calling this method.
+
+<div className="mt-6 overflow-x-auto">
+
+| Argument                                                         | Input                                                     | Description                                                                                 |
+| ---------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| <Arg required={true} type="vector<vector<u8>>">update_data</Arg> | <Input id="update_data" format={InputFormats.ByteArray}/> | The price updates that you would like to submit to [update_price_feeds](update-price-feeds) |
+
+</div>
+
+<Examples>
+  <Example
+    keyValues={{
+      update_data: async (ctx) =>
+        JSON.stringify(
+          Array.from(
+            Buffer.from(
+              (await ctx.getLatestPriceFeed("Crypto.BTC/USD", "aptos")).vaa,
+              "base64"
+            )
+          )
+        ),
+    }}
+    value="Latest BTC/USD update data"
+  />
+</Examples>
+
+## Example Code
+
+<Tabs items={['Move']}>
+    <Tab>
+        <DynamicCode targets={{
+            "1": (ctx) => ctx.get("update_data", "<update_data>"),
+        }}>
+            ```rust copy
+            use pyth::pyth;
+            use pyth::price_identifier;
+
+            pyth::get_update_fee(
+              vec![1]
+            );
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>

@@ -1,0 +1,23 @@
+{
+  "--- Aptos Contract": {
+    "title": "Aptos Contract",
+    "type": "separator"
+  },
+  "sdks": "SDKs",
+  "--- Methods": {
+    "title": "Methods",
+    "type": "separator"
+  },
+
+  "get-price": "get_price",
+  "get-price-unsafe": "get_price_unsafe",
+  "get-price-no-older-than": "get_price_no_older_than",
+  "get-ema-price": "get_ema_price",
+  "get-ema-price-unsafe": "get_ema_price_unsafe",
+  "get-ema-price-no-older-than": "get_ema_price_no_older_than",
+  "get-update-fee": "get_update_fee",
+  "get-stale-price-threshold-secs": "get_stale_price_threshold_secs",
+  "price-feed-exists": "price_feed_exists",
+  "update-price-feeds": "update_price_feeds",
+  "update-price-feeds-with-funder": "update_price_feeds_with_funder"
+}

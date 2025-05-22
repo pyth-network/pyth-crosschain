@@ -1,0 +1,55 @@
+import Input from "../../../../components/Input";
+import Arg from "../../../../components/Arg";
+import Example from "../../../../components/Example";
+import DynamicCode from "../../../../components/DynamicCode";
+import { InputFormats } from "../../../../utils/InputFormat";
+import { Tab, Tabs } from "nextra-theme-docs";
+import Examples from "../../../../components/Examples";
+
+# Price Feed Exists
+
+Determine if a price feed for the given `price_identifier` exists.
+Returns `true` if there has been at least one on-chain update of this feed in the past.
+Note that a `false` answer may mean that the feed exists, but simply has never been updated on Aptos.
+In this case, you can invoke [update_price_feeds](update-price-feeds) to pull an update on-chain.
+
+<div className="mt-6 overflow-x-auto">
+
+| Argument                                               | Input                                                     | Description                       |
+| ------------------------------------------------------ | --------------------------------------------------------- | --------------------------------- |
+| <Arg required={true} type="hex">price_identifier</Arg> | <Input id="price_identifier" format={InputFormats.Hex} /> | The ID of the price feed to check |
+
+</div>
+
+<Examples>
+  <Example
+    keyValues={{
+      price_identifier: (ctx) => ctx.getFeedId("Crypto.BTC/USD"),
+    }}
+    value="BTC/USD"
+  />
+  <Example
+    keyValues={{
+      price_identifier: (ctx) => ctx.getFeedId("Crypto.ETH/USD"),
+    }}
+    value="ETH/USD"
+  />
+</Examples>
+
+## Example Code
+
+<Tabs items={['Move']}>
+    <Tab>
+        <DynamicCode targets={{
+            "\"1111\"": (ctx) => `"${ctx.get("price_identifier", "<price_identifier>")}"`,
+        }}>
+            ```rust copy
+            use pyth::pyth;
+            use pyth::price_identifier;
+
+            pyth::price_feed_exists(price_identifier::from_byte_vec(x"1111"));
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>

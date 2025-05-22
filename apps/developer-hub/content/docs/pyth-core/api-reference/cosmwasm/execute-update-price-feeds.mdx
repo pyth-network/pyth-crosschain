@@ -1,0 +1,117 @@
+import Input from "../../../../components/Input";
+import Arg from "../../../../components/Arg";
+import Example from "../../../../components/Example";
+import Examples from "../../../../components/Examples";
+import DynamicCode from "../../../../components/DynamicCode";
+import { InputFormats } from "../../../../utils/InputFormat";
+import CosmWasmExecute from "../../../../components/CosmWasmExecute";
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# Update Price Feeds
+
+Update the on-chain price feeds using the provided `data`, which contains serialized and signed price update data from Pyth Network.
+You can retrieve the latest price `data` for a given set of price feeds from the [Hermes API](https://hermes.pyth.network/docs).
+Executing this message updates the on-chain price if the provided update is more recent than the current on-chain price.
+Otherwise, the provided update will be ignored.
+Execution will succeed even if the update is ignored.
+
+This operation requires the caller to pay a fee to perform the update.
+The required fee for a given set of updates can be computed using the [GetUpdateFee](query-get-update-fee) query.
+
+Reverts if the required fee is not paid, or the `data` is incorrectly signed or formatted.
+
+<div className="mt-6 overflow-x-auto">
+
+| Argument                                           | Input                                           | Description                                                       |
+| -------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
+| <Arg required={true} type="vec<Binary>">data</Arg> | <Input id="data" format={InputFormats.Base64}/> | The price update data for the contract to verify.                 |
+| <Arg required={true} type="Coin">fee</Arg>         | <Input id="fee" format={InputFormats.BigInt}/>  | The update fee expressed in the minimal native coin denomination. |
+
+</div>
+
+<Examples>
+  <Example
+    keyValues={{
+      data: async (ctx) =>
+        (await ctx.getLatestPriceFeed("Crypto.BTC/USD", "default")).vaa,
+      fee: async (ctx) => {
+        // FIXME: this gets the ETH update fee, not the cosmos fee. They're currently the same though.
+        let vaa = (await ctx.getLatestPriceFeed("Crypto.BTC/USD", "evm")).vaa;
+        return await ctx.getEthUpdateFee([vaa]);
+      },
+    }}
+    value="Latest BTC/USD update data"
+  />
+</Examples>
+
+<CosmWasmExecute
+  buildMsg={(kvs) =>
+    kvs["data"] !== undefined
+      ? { update_price_feeds: { data: [kvs["data"]] } }
+      : undefined
+  }
+  feeKey={"fee"}
+/>
+
+## Example Code
+
+<Tabs items={['Typescript', 'Message JSON']}>
+    <Tab>
+        <DynamicCode targets={{
+            "'0x0000'": (ctx) => `'${ctx.cosmosChainConfig.pythAddress}'`,
+            "'0x1111'": (ctx) => `'${ctx.get("data", "<data>")}'`,
+            "// NETWORK_NAME": (ctx) => `// ${ctx.currentCosmosChain}`,
+            "'RPC_URL'": (ctx) => ctx.cosmosNetworkDetails?.rpc !== undefined ? `'${ctx.cosmosNetworkDetails.rpc}'` : 'RPC_URL',
+            "'GAS_PRICE'": (ctx) => `'0.1${ctx.cosmosNetworkDetails?.feeCurrencies[0].coinMinimalDenom}'`,
+            "'FEE_CURRENCY'": (ctx) => `'${ctx.cosmosNetworkDetails?.feeCurrencies[0].coinMinimalDenom}'`,
+            "1234": (ctx) => `${ctx.get("fee", "<fee>")}`
+        }}>
+            ```typescript copy
+            import { DirectSecp256k1HdWallet, coin } from '@cosmjs/proto-signing';
+            import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+            import { GasPrice } from '@cosmjs/stargate';
+
+            const wallet = await DirectSecp256k1HdWallet.fromMnemonic('your mnemonic here');
+
+            // NETWORK_NAME
+            const cosmwasmClient = await SigningCosmWasmClient.connectWithSigner(
+              'RPC_URL',
+              wallet,
+              {
+                gasPrice: GasPrice.fromString('GAS_PRICE'),
+              }
+            );
+
+            const address = (await wallet.getAccounts())[0].address;
+            const txResponse = await cosmwasmClient.execute(
+              address,
+              '0x0000',
+              {
+                'update_price_feeds': {
+                  'data': ['0x1111']
+                }
+              },
+              'auto',
+              '',
+              [coin(1234, 'FEE_CURRENCY')]
+            );
+
+            ```
+        </DynamicCode>
+    </Tab>
+
+    <Tab>
+        <DynamicCode targets={{
+            '"0x1111"': (ctx) => `"${ctx.get("data", "<vaa>")}"`,
+        }}>
+            ```json copy
+            {
+              "update_price_feeds": {
+                "data": ["0x1111"]
+              }
+            }
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>

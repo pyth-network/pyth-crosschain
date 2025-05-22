@@ -1,0 +1,69 @@
+import Input from "../../../../components/Input";
+import Arg from "../../../../components/Arg";
+import { InputFormats } from "../../../../utils/InputFormat";
+import Example from "../../../../components/Example";
+import Examples from "../../../../components/Examples";
+import DynamicCode from "../../../../components/DynamicCode";
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# Update Price Feeds with Funder
+
+Update the on-chain price feeds using the provided `update_data`, which contains serialized and signed price update data from Pyth Network.
+This function updates the on-chain price if the provided update is more recent than the current on-chain price.
+Otherwise, the provided update will be ignored.
+The function call will succeed even if the update is ignored.
+
+You can retrieve the latest price `update_data` for a given set of price feeds from the [Hermes API](https://hermes.pyth.network/docs).
+By default, the data is returned as a base64-encoded string that you must deserialize into a vector of bytes before calling this method.
+
+This function requires the caller to pay a fee to perform the update.
+The required fee for the provided updates will automatically be transferred from the provided `account`.
+
+Reverts if the `account` does not have a sufficient balance or `update_data` is incorrectly signed or formatted.
+
+<div className="mt-6 overflow-x-auto">
+
+| Argument                                                         | Input                                                      | Description                                       |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
+| <Arg required={true} type="signer">account</Arg>                 | <Input id="account" />                                     | The account paying the fee.                       |
+| <Arg required={true} type="vector<vector<u8>>">update_data</Arg> | <Input id="update_data" format={InputFormats.ByteArray} /> | The price update data for the contract to verify. |
+
+</div>
+
+<Examples>
+  <Example
+    keyValues={{
+      update_data: async (ctx) =>
+        JSON.stringify(
+          Array.from(
+            Buffer.from(
+              (await ctx.getLatestPriceFeed("Crypto.BTC/USD", "aptos")).vaa,
+              "base64"
+            )
+          )
+        ),
+    }}
+    value="Latest BTC/USD update data"
+  />
+</Examples>
+
+## Example Code
+
+<Tabs items={['Move']}>
+    <Tab>
+        <DynamicCode targets={{
+            "1": (ctx) => ctx.get("update_data", "<update_data>"),
+        }}>
+            ```rust copy
+            use pyth::pyth;
+            use pyth::price_identifier;
+
+            pyth::update_price_feeds_with_funder(
+              funder,
+              vec![1]
+            );
+            ```
+        </DynamicCode>
+    </Tab>
+
+</Tabs>
