@@ -155,7 +155,7 @@ interface IPyth is IPythEvents {
         bool checkUniqueness,
         bool checkUpdateDataIsMinimal,
         bool storeUpdatesIfFresh
-    ) external returns ( PythStructs.PriceFeed[] memory priceFeeds, uint64[] memory slots);
+    ) external payable returns ( PythStructs.PriceFeed[] memory priceFeeds, uint64[] memory slots);
 
     /// @notice Parse time-weighted average price (TWAP) from two consecutive price updates for the given `priceIds`.
     ///

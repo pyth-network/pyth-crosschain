@@ -327,6 +327,7 @@ abstract contract Pyth is
         bool storeUpdatesIfFresh
     )
         public
+        payable
         returns (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
