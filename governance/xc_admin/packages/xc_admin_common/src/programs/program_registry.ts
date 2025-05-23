@@ -1,22 +1,16 @@
-import { AccountInfo, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { getPythProgramKeyForCluster, PythCluster } from "@pythnetwork/client";
 import {
   DownloadableConfig,
   ProgramType,
   ProgramConfig,
-  ValidationResult,
   RawConfig,
+  LazerConfig,
 } from "./types";
 
 // Import functions from each program implementation
 import * as pythCore from "./core/core_functions";
 import * as pythLazer from "./lazer/lazer_functions";
-import {
-  LazerConfig,
-  LAZER_PROGRAM_ID,
-  LazerConfigParams,
-} from "./lazer/lazer_functions";
-import { CoreConfigParams } from "./core/core_functions";
 
 /**
  * Function to get the program address for each program type
@@ -27,7 +21,7 @@ export const getProgramAddress: Record<
 > = {
   [ProgramType.PYTH_CORE]: (cluster: PythCluster) =>
     getPythProgramKeyForCluster(cluster),
-  [ProgramType.PYTH_LAZER]: () => LAZER_PROGRAM_ID,
+  [ProgramType.PYTH_LAZER]: () => pythLazer.LAZER_PROGRAM_ID,
 };
 
 /**
@@ -45,8 +39,8 @@ export const isAvailableOnCluster: Record<
  * Function to get configuration for each program type
  */
 export const getConfig: {
-  [ProgramType.PYTH_CORE]: (params: CoreConfigParams) => RawConfig;
-  [ProgramType.PYTH_LAZER]: (params: LazerConfigParams) => LazerConfig;
+  [ProgramType.PYTH_CORE]: (params: pythCore.CoreConfigParams) => RawConfig;
+  [ProgramType.PYTH_LAZER]: (params: pythLazer.LazerConfigParams) => LazerConfig;
 } = {
   [ProgramType.PYTH_CORE]: pythCore.getConfig,
   [ProgramType.PYTH_LAZER]: pythLazer.getConfig,
@@ -62,7 +56,7 @@ export const getDownloadableConfig = (
   if ("mappingAccounts" in config) {
     return pythCore.getDownloadableConfig(config);
   } else if (
-    "feeds" in config &&
+    "state" in config &&
     config.programType === ProgramType.PYTH_LAZER
   ) {
     return pythLazer.getDownloadableConfig(config);
@@ -75,14 +69,7 @@ export const getDownloadableConfig = (
 /**
  * Function to validate an uploaded configuration against the current configuration
  */
-export const validateUploadedConfig: Record<
-  ProgramType,
-  (
-    existingConfig: DownloadableConfig,
-    uploadedConfig: DownloadableConfig,
-    cluster: PythCluster,
-  ) => ValidationResult
-> = {
+export const validateUploadedConfig = {
   [ProgramType.PYTH_CORE]: pythCore.validateUploadedConfig,
   [ProgramType.PYTH_LAZER]: pythLazer.validateUploadedConfig,
 };
