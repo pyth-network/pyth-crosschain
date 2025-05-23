@@ -143,8 +143,8 @@ interface IPyth is IPythEvents {
     /// no update for any of the given `priceIds` within the given time range.
     /// @param updateData Array of price update data.
     /// @param priceIds Array of price ids.
-    /// @param minPublishTime minimum acceptable publishTime for the given `priceIds`.
-    /// @param maxPublishTime maximum acceptable publishTime for the given `priceIds`.
+    /// @param minAllowedPublishTime minimum acceptable publishTime for the given `priceIds`.
+    /// @param maxAllowedPublishTime maximum acceptable publishTime for the given `priceIds`.
     /// @param storeUpdatesIfFresh flag for the parse function to 
     /// @return priceFeeds Array of the price feeds corresponding to the given `priceIds` (with the same order).
     function parsePriceFeedUpdatesWithConfig(
@@ -155,7 +155,7 @@ interface IPyth is IPythEvents {
         bool checkUniqueness,
         bool checkUpdateDataIsMinimal,
         bool storeUpdatesIfFresh
-    ) public returns ( PythStructs.PriceFeed[] memory priceFeeds, uint64[] memory slots);
+    ) external returns ( PythStructs.PriceFeed[] memory priceFeeds, uint64[] memory slots);
 
     /// @notice Parse time-weighted average price (TWAP) from two consecutive price updates for the given `priceIds`.
     ///
