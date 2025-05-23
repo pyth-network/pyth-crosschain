@@ -15,18 +15,21 @@ interface PythLazerProps {
 }
 
 interface ModalContentProps {
-  changes: Record<string, {
-    prev?: Partial<LazerState>;
-    new?: Partial<LazerState>;
-  }>,
-  onSendProposal: () => void,
+  changes: Record<
+    string,
+    {
+      prev?: Partial<LazerState>
+      new?: Partial<LazerState>
+    }
+  >
+  onSendProposal: () => void
   isSendProposalButtonLoading: boolean
 }
 
 const ModalContent: React.FC<ModalContentProps> = ({
   changes,
   onSendProposal,
-  isSendProposalButtonLoading
+  isSendProposalButtonLoading,
 }) => {
   return (
     <>
@@ -35,7 +38,10 @@ const ModalContent: React.FC<ModalContentProps> = ({
           <tbody>
             {Object.entries(changes).map(([key, change]) => (
               <tr key={key}>
-                <td className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6" colSpan={2}>
+                <td
+                  className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
+                  colSpan={2}
+                >
                   {key}
                 </td>
                 <td className="py-3 pl-6 pr-1 lg:pl-6">
@@ -64,14 +70,18 @@ const ModalContent: React.FC<ModalContentProps> = ({
 }
 
 const PythLazer = ({
-  proposerServerUrl: _proposerServerUrl
+  proposerServerUrl: _proposerServerUrl,
 }: PythLazerProps) => {
   const { dataIsLoading, lazerState } = usePythContext()
   const { cluster } = useContext(ClusterContext)
 
-  const [dataChanges, setDataChanges] = useState<Record<string, { prev?: Partial<LazerState>; new?: Partial<LazerState> }>>()
+  const [dataChanges, setDataChanges] =
+    useState<
+      Record<string, { prev?: Partial<LazerState>; new?: Partial<LazerState> }>
+    >()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] = useState(false)
+  const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
+    useState(false)
 
   const openModal = () => {
     setIsModalOpen(true)
@@ -84,7 +94,9 @@ const PythLazer = ({
   const handleDownloadJsonButtonClick = () => {
     if (!lazerState) return
 
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(lazerState, null, 2))
+    const dataStr =
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(lazerState, null, 2))
     const downloadAnchor = document.createElement('a')
     downloadAnchor.setAttribute('href', dataStr)
     downloadAnchor.setAttribute('download', `lazer_config_${cluster}.json`)
@@ -142,7 +154,7 @@ const PythLazer = ({
     setIsSendProposalButtonLoading(true)
     try {
       // In a real implementation, this would send the proposal to the server
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Mock delay
+      await new Promise((resolve) => setTimeout(resolve, 2000)) // Mock delay
 
       // Close the modal and show success notification
       setIsModalOpen(false)

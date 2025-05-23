@@ -64,11 +64,11 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
     const fetchLazerState = async () => {
       try {
         // Get the Lazer config and transform it to downloadable format
-        const lazerConfig = getConfig[ProgramType.PYTH_LAZER]({});
+        const lazerConfig = getConfig[ProgramType.PYTH_LAZER]({})
         // Since we know this is a LazerState object, we can cast it
-        setLazerState(lazerConfig.state);
+        setLazerState(lazerConfig.state)
       } catch (error) {
-        console.error("Error fetching Lazer state:", error)
+        console.error('Error fetching Lazer state:', error)
       }
     }
 
