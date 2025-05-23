@@ -8,6 +8,7 @@ import {
   toPrivateKey,
 } from "../src";
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
+import { demandOption } from "yargs";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -16,6 +17,11 @@ const parser = yargs(hideBin(process.argv))
       "Usage: $0 --private-key <private-key> --chain <chain-id> | --all-chains <testnet|mainnet>",
   )
   .options({
+    provider: {
+      type: "string",
+      desc: "Provider address to use for the request. Will use the default provider if not specified",
+      demandOption: false,
+    },
     chain: {
       type: "string",
       desc: "test latency for the contract on this chain",
@@ -33,8 +39,9 @@ const parser = yargs(hideBin(process.argv))
 async function testLatency(
   contract: EvmEntropyContract,
   privateKey: PrivateKey,
+  provider?: string,
 ) {
-  const provider = await contract.getDefaultProvider();
+  provider = provider || await contract.getDefaultProvider();
   const userRandomNumber = contract.generateUserRandomNumber();
   const requestResponse = await contract.requestRandomness(
     userRandomNumber,
@@ -109,7 +116,7 @@ async function main() {
   } else if (argv.chain) {
     const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
     const contract = findEntropyContract(chain);
-    await testLatency(contract, privateKey);
+    await testLatency(contract, privateKey, argv.provider);
   }
 }
 
