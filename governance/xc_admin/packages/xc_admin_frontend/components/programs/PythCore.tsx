@@ -18,7 +18,6 @@ import {
   ProgramType,
   validateUploadedConfig,
   generateInstructions,
-  DownloadableConfig,
   DownloadableProduct,
   DownloadablePriceAccount,
 } from '@pythnetwork/xc-admin-common'
@@ -375,7 +374,7 @@ interface PythCoreProps {
 }
 
 const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
-  const [data, setData] = useState<DownloadableConfig>({})
+  const [data, setData] = useState<Record<string, DownloadableProduct>>({})
   const [dataChanges, setDataChanges] =
     useState<Record<string, ProductChanges>>()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -400,7 +399,7 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig) {
-      const downloadableConfig = getDownloadableConfig(rawConfig)
+      const downloadableConfig = getDownloadableConfig(rawConfig) as Record<string, DownloadableProduct>
       setData(downloadableConfig)
     }
   }, [rawConfig, dataIsLoading, cluster])

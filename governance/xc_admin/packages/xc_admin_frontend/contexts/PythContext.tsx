@@ -11,11 +11,15 @@ import { Connection } from '@solana/web3.js'
 import {
   MappingRawConfig,
   ProductRawConfig,
+  getConfig,
+  LazerState,
+  ProgramType,
 } from '@pythnetwork/xc-admin-common'
 
 type AccountKeyToSymbol = { [key: string]: string }
 interface PythContextProps {
   rawConfig: RawConfig
+  lazerState: LazerState | null
   dataIsLoading: boolean
   connection?: Connection
   priceAccountKeyToSymbolMapping: AccountKeyToSymbol
@@ -26,6 +30,7 @@ interface PythContextProps {
 
 const PythContext = createContext<PythContextProps>({
   rawConfig: { mappingAccounts: [] },
+  lazerState: null,
   dataIsLoading: true,
   priceAccountKeyToSymbolMapping: {},
   productAccountKeyToSymbolMapping: {},
@@ -46,6 +51,7 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
   multisigSignerKeyToNameMapping,
 }) => {
   const { isLoading, connection, rawConfig } = usePyth()
+  const [lazerState, setLazerState] = useState<LazerState | null>(null)
   const [
     productAccountKeyToSymbolMapping,
     setProductAccountKeyToSymbolMapping,
@@ -53,8 +59,24 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
   const [priceAccountKeyToSymbolMapping, setPriceAccountKeyToSymbolMapping] =
     useState<AccountKeyToSymbol>({})
 
+  // Fetch Lazer state
   useEffect(() => {
-    if (!isLoading) {
+    const fetchLazerState = async () => {
+      try {
+        // Get the Lazer config and transform it to downloadable format
+        const lazerConfig = getConfig[ProgramType.PYTH_LAZER]({});
+        // Since we know this is a LazerState object, we can cast it
+        setLazerState(lazerConfig.state);
+      } catch (error) {
+        console.error("Error fetching Lazer state:", error)
+      }
+    }
+
+    fetchLazerState()
+  }, [])
+
+  useEffect(() => {
+    if (!isLoading && rawConfig.mappingAccounts) {
       const productAccountMapping: AccountKeyToSymbol = {}
       const priceAccountMapping: AccountKeyToSymbol = {}
       rawConfig.mappingAccounts.map((acc: MappingRawConfig) =>
@@ -72,6 +94,7 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
   const value = useMemo(
     () => ({
       rawConfig,
+      lazerState,
       dataIsLoading: isLoading,
       connection,
       priceAccountKeyToSymbolMapping,
@@ -81,6 +104,7 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
     }),
     [
       rawConfig,
+      lazerState,
       isLoading,
       connection,
       publisherKeyToNameMapping,

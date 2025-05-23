@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { PermissionData, Product } from "@pythnetwork/client";
-import { LazerConfig, LazerInstructionAccounts } from "./lazer/lazer_functions";
+import { LazerInstructionAccounts } from "./lazer/lazer_functions";
 import { CoreInstructionAccounts } from "./core/core_functions";
 /**
  * Represents the different Pyth programs supported by the application.
@@ -85,8 +85,9 @@ export type DownloadableProduct = {
 
 /**
  * Type for downloadable configuration
+ * Can be either a mapping of symbols to products (Core) or a LazerState (Lazer)
  */
-export type DownloadableConfig = Record<string, DownloadableProduct>;
+export type DownloadableConfig = Record<string, DownloadableProduct> | LazerState;
 
 /**
  * Type for configuration that can be either RawConfig for Pyth Core or LazerConfig for Lazer
@@ -116,3 +117,65 @@ export interface ValidationResult {
   error?: string;
   changes?: any;
 }
+
+/**
+ * Lazer feed metadata type
+ */
+export type LazerFeedMetadata = {
+  priceFeedId: number;
+  name: string;
+  symbol: string;
+  description: string;
+  assetType: string;
+  exponent: number;
+  minPublishers: number;
+  minRate: string;
+  expiryTime: string;
+  isActivated: boolean;
+  hermesId?: string;
+  cmcId?: number;
+  fundingRateInterval?: string;
+  quoteCurrency?: string;
+  marketSchedule: string;
+};
+
+/**
+ * Lazer feed type
+ */
+export type LazerFeed = {
+  metadata: LazerFeedMetadata;
+  pendingActivation?: string;
+};
+
+/**
+ * Lazer publisher type
+ */
+export type LazerPublisher = {
+  publisherId: number;
+  name: string;
+  publicKeys: string[];
+  isActive: boolean;
+};
+
+/**
+ * Full Lazer state type
+ */
+export type LazerState = {
+  shardId: number;
+  lastSequenceNo: string;
+  lastTimestamp: string;
+  shardName: string;
+  minRate: string;
+  feeds: LazerFeed[];
+  publishers: LazerPublisher[];
+};
+
+/**
+ * Lazer-specific configuration type
+ */
+export type LazerConfig = {
+  programType: ProgramType.PYTH_LAZER;
+  // The Lazer state data
+  state: LazerState;
+
+};
