@@ -781,7 +781,7 @@
   type: EvmChain
 - id: abstract
   mainnet: true
-  rpcUrl: https://api-efe16d37.ml.eeffc03e557f4daf.com/
+  rpcUrl: https://api.mainnet.abs.xyz
   networkId: 2741
   type: EvmChain
 - id: eventum_testnet
@@ -831,13 +831,13 @@
   type: EvmChain
 - id: monad_testnet
   mainnet: false
-  rpcUrl: https://rpc.monad-testnet.category.xyz/rpc/nSyzM1wlIgaALWzbh3oIg5rW65AC6yjqrslOE8wb
+  rpcUrl: https://testnet-rpc.monad.xyz
   networkId: 10143
   type: EvmChain
 - id: berachain_mainnet
   mainnet: true
   networkId: 80094
-  rpcUrl: https://fluent-thrilling-scion.furtim-network.quiknode.pro/$ENV_RABECHAIN_API_KEY
+  rpcUrl: https://rpc.berachain.com
   type: EvmChain
 - id: story
   mainnet: true
