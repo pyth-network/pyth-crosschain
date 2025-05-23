@@ -31,9 +31,6 @@ message PayloadContext {
 
 // Context contains status of each governance instruction found in transaction
 message GovernanceInstructionContext {
-    // [required] ID of publisher based on the access token used to connect
-    optional uint32 publisher_id = 1;
-
     // [required] the governance instruction
     GovernanceInstruction governance_instruction = 2;
 }
