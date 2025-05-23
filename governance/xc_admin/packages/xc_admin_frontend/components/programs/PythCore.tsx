@@ -399,7 +399,10 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig) {
-      const downloadableConfig = getDownloadableConfig(rawConfig) as Record<string, DownloadableProduct>
+      const downloadableConfig = getDownloadableConfig(rawConfig) as Record<
+        string,
+        DownloadableProduct
+      >
       setData(downloadableConfig)
     }
   }, [rawConfig, dataIsLoading, cluster])
