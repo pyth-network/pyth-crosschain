@@ -9,7 +9,11 @@ import {
 import toast from 'react-hot-toast'
 import Loadbar from '../loaders/Loadbar'
 import Spinner from '../common/Spinner'
-import { LazerState, LazerFeed, LazerPublisher } from '@pythnetwork/xc-admin-common/src/programs/types'
+import {
+  LazerState,
+  LazerFeed,
+  LazerPublisher,
+} from '@pythnetwork/xc-admin-common/src/programs/types'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 
 interface PythLazerProps {
@@ -70,34 +74,42 @@ const ShardChangesRows: React.FC<ShardChangesRowsProps> = ({ changes }) => {
 
   return (
     <>
-      {Object.entries(changes.new).map(([key, newValue]) =>
-        (isNewShard || (changes.prev && changes.prev[key as keyof typeof changes.prev] !== newValue)) && (
-          <tr key={key}>
-            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
-              {key
-                .split(/(?=[A-Z])/)
-                .join(' ')
-                .split('_')
-                .map((word) => capitalizeFirstLetter(word))
-                .join(' ')}
-            </td>
-            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-              {!isNewShard && changes.prev ? (
-                <>
-                  <s>{String(changes.prev[key as keyof typeof changes.prev])}</s>
-                  <br />
-                </>
-              ) : null}
-              {String(newValue)}
-            </td>
-          </tr>
-        )
+      {Object.entries(changes.new).map(
+        ([key, newValue]) =>
+          (isNewShard ||
+            (changes.prev &&
+              changes.prev[key as keyof typeof changes.prev] !== newValue)) && (
+            <tr key={key}>
+              <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+                {key
+                  .split(/(?=[A-Z])/)
+                  .join(' ')
+                  .split('_')
+                  .map((word) => capitalizeFirstLetter(word))
+                  .join(' ')}
+              </td>
+              <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+                {!isNewShard && changes.prev ? (
+                  <>
+                    <s>
+                      {String(changes.prev[key as keyof typeof changes.prev])}
+                    </s>
+                    <br />
+                  </>
+                ) : null}
+                {String(newValue)}
+              </td>
+            </tr>
+          )
       )}
     </>
   )
 }
 
-const FeedChangesRows: React.FC<FeedChangesRowsProps> = ({ changes, feedId }) => {
+const FeedChangesRows: React.FC<FeedChangesRowsProps> = ({
+  changes,
+  feedId,
+}) => {
   const isNewFeed = !changes.prev && changes.new
   const isDeletedFeed = changes.prev && !changes.new
 
@@ -105,7 +117,9 @@ const FeedChangesRows: React.FC<FeedChangesRowsProps> = ({ changes, feedId }) =>
     return (
       <tr>
         <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Feed ID</td>
-        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">{feedId.replace('feed_', '')}</td>
+        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+          {feedId.replace('feed_', '')}
+        </td>
       </tr>
     )
   }
@@ -116,7 +130,8 @@ const FeedChangesRows: React.FC<FeedChangesRowsProps> = ({ changes, feedId }) =>
     if (!changes.new?.metadata) return null
 
     return Object.entries(changes.new.metadata).map(([key, newValue]) => {
-      const prevValue = changes.prev?.metadata?.[key as keyof typeof changes.prev.metadata]
+      const prevValue =
+        changes.prev?.metadata?.[key as keyof typeof changes.prev.metadata]
       const hasChanged = isNewFeed || prevValue !== newValue
 
       if (!hasChanged) return null
@@ -146,13 +161,20 @@ const FeedChangesRows: React.FC<FeedChangesRowsProps> = ({ changes, feedId }) =>
   }
 
   const renderPendingActivationChanges = () => {
-    if (changes.new?.pendingActivation !== undefined || changes.prev?.pendingActivation !== undefined) {
-      const hasChanged = isNewFeed || changes.prev?.pendingActivation !== changes.new?.pendingActivation
+    if (
+      changes.new?.pendingActivation !== undefined ||
+      changes.prev?.pendingActivation !== undefined
+    ) {
+      const hasChanged =
+        isNewFeed ||
+        changes.prev?.pendingActivation !== changes.new?.pendingActivation
 
       if (hasChanged) {
         return (
           <tr key="pendingActivation">
-            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Pending Activation</td>
+            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+              Pending Activation
+            </td>
             <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
               {!isNewFeed && changes.prev?.pendingActivation ? (
                 <>
@@ -177,7 +199,10 @@ const FeedChangesRows: React.FC<FeedChangesRowsProps> = ({ changes, feedId }) =>
   )
 }
 
-const PublisherChangesRows: React.FC<PublisherChangesRowsProps> = ({ changes, publisherId }) => {
+const PublisherChangesRows: React.FC<PublisherChangesRowsProps> = ({
+  changes,
+  publisherId,
+}) => {
   const isNewPublisher = !changes.prev && changes.new
   const isDeletedPublisher = changes.prev && !changes.new
 
@@ -185,7 +210,9 @@ const PublisherChangesRows: React.FC<PublisherChangesRowsProps> = ({ changes, pu
     return (
       <tr>
         <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Publisher ID</td>
-        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">{publisherId.replace('publisher_', '')}</td>
+        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+          {publisherId.replace('publisher_', '')}
+        </td>
       </tr>
     )
   }
@@ -196,7 +223,9 @@ const PublisherChangesRows: React.FC<PublisherChangesRowsProps> = ({ changes, pu
     <>
       {Object.entries(changes.new).map(([key, newValue]) => {
         const prevValue = changes.prev?.[key as keyof LazerPublisher]
-        const hasChanged = isNewPublisher || JSON.stringify(prevValue) !== JSON.stringify(newValue)
+        const hasChanged =
+          isNewPublisher ||
+          JSON.stringify(prevValue) !== JSON.stringify(newValue)
 
         if (!hasChanged) return null
 
@@ -213,7 +242,11 @@ const PublisherChangesRows: React.FC<PublisherChangesRowsProps> = ({ changes, pu
             <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
               {!isNewPublisher && prevValue !== undefined ? (
                 <>
-                  <s>{Array.isArray(prevValue) ? prevValue.join(', ') : String(prevValue)}</s>
+                  <s>
+                    {Array.isArray(prevValue)
+                      ? prevValue.join(', ')
+                      : String(prevValue)}
+                  </s>
                   <br />
                 </>
               ) : null}
@@ -242,13 +275,25 @@ const ModalContent: React.FC<ModalContentProps> = ({
 
             let title = key
             if (key === 'shard') {
-              title = isAddition ? 'Add New Shard' : isDeletion ? 'Delete Shard' : 'Shard Configuration'
+              title = isAddition
+                ? 'Add New Shard'
+                : isDeletion
+                  ? 'Delete Shard'
+                  : 'Shard Configuration'
             } else if (key.startsWith('feed_')) {
               const feedId = key.replace('feed_', '')
-              title = isAddition ? `Add New Feed (ID: ${feedId})` : isDeletion ? `Delete Feed (ID: ${feedId})` : `Feed ${feedId}`
+              title = isAddition
+                ? `Add New Feed (ID: ${feedId})`
+                : isDeletion
+                  ? `Delete Feed (ID: ${feedId})`
+                  : `Feed ${feedId}`
             } else if (key.startsWith('publisher_')) {
               const publisherId = key.replace('publisher_', '')
-              title = isAddition ? `Add New Publisher (ID: ${publisherId})` : isDeletion ? `Delete Publisher (ID: ${publisherId})` : `Publisher ${publisherId}`
+              title = isAddition
+                ? `Add New Publisher (ID: ${publisherId})`
+                : isDeletion
+                  ? `Delete Publisher (ID: ${publisherId})`
+                  : `Publisher ${publisherId}`
             }
 
             return (
@@ -287,7 +332,8 @@ const ModalContent: React.FC<ModalContentProps> = ({
                   />
                 ) : null}
 
-                {Object.keys(changes).indexOf(key) !== Object.keys(changes).length - 1 ? (
+                {Object.keys(changes).indexOf(key) !==
+                Object.keys(changes).length - 1 ? (
                   <tr>
                     <td className="base16 py-4 pl-6 pr-6" colSpan={2}>
                       <hr className="border-gray-700" />
