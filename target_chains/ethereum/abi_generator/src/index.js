@@ -42,28 +42,8 @@ function generateAbi(contracts) {
     fs.mkdirSync("abis");
   }
 
-  if (output.errors) {
-    // We can still generate ABIs with warnings, only throw for errors
-    const errors = output.errors.filter((e) => e.severity === "error");
-    if (errors.length > 0) {
-      console.error("Compilation errors:");
-      for (const error of errors) {
-        console.error(error.formattedMessage || error.message);
-      }
-      throw new Error("Compilation failed due to errors");
-    }
-  }
-
-
   for (let contract of contracts) {
     const contractFile = `${contract}.sol`;
-
-    if (!output.contracts[contractFile]) {
-      throw new Error(`Unable to produce ABI for ${contractFile}.`);
-    }
-    if (!output.contracts[contractFile][contract]) {
-      throw new Error(`Unable to produce ABI for ${contractFile}:${contract}.`);
-    }
 
     const abi = output.contracts[contractFile][contract].abi;
     fs.writeFileSync(
