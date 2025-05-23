@@ -40,7 +40,9 @@ export const isAvailableOnCluster: Record<
  */
 export const getConfig: {
   [ProgramType.PYTH_CORE]: (params: pythCore.CoreConfigParams) => RawConfig;
-  [ProgramType.PYTH_LAZER]: (params: pythLazer.LazerConfigParams) => LazerConfig;
+  [ProgramType.PYTH_LAZER]: (
+    params: pythLazer.LazerConfigParams,
+  ) => LazerConfig;
 } = {
   [ProgramType.PYTH_CORE]: pythCore.getConfig,
   [ProgramType.PYTH_LAZER]: pythLazer.getConfig,

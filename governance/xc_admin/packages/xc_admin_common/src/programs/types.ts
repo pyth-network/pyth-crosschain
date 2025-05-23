@@ -87,7 +87,9 @@ export type DownloadableProduct = {
  * Type for downloadable configuration
  * Can be either a mapping of symbols to products (Core) or a LazerState (Lazer)
  */
-export type DownloadableConfig = Record<string, DownloadableProduct> | LazerState;
+export type DownloadableConfig =
+  | Record<string, DownloadableProduct>
+  | LazerState;
 
 /**
  * Type for configuration that can be either RawConfig for Pyth Core or LazerConfig for Lazer
@@ -177,5 +179,4 @@ export type LazerConfig = {
   programType: ProgramType.PYTH_LAZER;
   // The Lazer state data
   state: LazerState;
-
 };
