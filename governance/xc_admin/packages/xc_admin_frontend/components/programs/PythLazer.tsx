@@ -8,10 +8,49 @@ import {
 } from '@pythnetwork/xc-admin-common'
 import toast from 'react-hot-toast'
 import Loadbar from '../loaders/Loadbar'
-import { LazerState } from '@pythnetwork/xc-admin-common/src/programs/types'
+import Spinner from '../common/Spinner'
+import { LazerState, LazerFeed, LazerPublisher } from '@pythnetwork/xc-admin-common/src/programs/types'
+import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 
 interface PythLazerProps {
   proposerServerUrl: string
+}
+
+interface ShardChanges {
+  prev?: {
+    shardId: number
+    shardName: string
+    minRate: string
+  }
+  new: {
+    shardId: number
+    shardName: string
+    minRate: string
+  }
+}
+
+interface FeedChanges {
+  prev?: LazerFeed
+  new?: LazerFeed
+}
+
+interface PublisherChanges {
+  prev?: LazerPublisher
+  new?: LazerPublisher
+}
+
+interface ShardChangesRowsProps {
+  changes: ShardChanges
+}
+
+interface FeedChangesRowsProps {
+  changes: FeedChanges
+  feedId: string
+}
+
+interface PublisherChangesRowsProps {
+  changes: PublisherChanges
+  publisherId: string
 }
 
 interface ModalContentProps {
@@ -26,6 +65,167 @@ interface ModalContentProps {
   isSendProposalButtonLoading: boolean
 }
 
+const ShardChangesRows: React.FC<ShardChangesRowsProps> = ({ changes }) => {
+  const isNewShard = !changes.prev && changes.new
+
+  return (
+    <>
+      {Object.entries(changes.new).map(([key, newValue]) =>
+        (isNewShard || (changes.prev && changes.prev[key as keyof typeof changes.prev] !== newValue)) && (
+          <tr key={key}>
+            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+              {key
+                .split(/(?=[A-Z])/)
+                .join(' ')
+                .split('_')
+                .map((word) => capitalizeFirstLetter(word))
+                .join(' ')}
+            </td>
+            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+              {!isNewShard && changes.prev ? (
+                <>
+                  <s>{String(changes.prev[key as keyof typeof changes.prev])}</s>
+                  <br />
+                </>
+              ) : null}
+              {String(newValue)}
+            </td>
+          </tr>
+        )
+      )}
+    </>
+  )
+}
+
+const FeedChangesRows: React.FC<FeedChangesRowsProps> = ({ changes, feedId }) => {
+  const isNewFeed = !changes.prev && changes.new
+  const isDeletedFeed = changes.prev && !changes.new
+
+  if (isDeletedFeed) {
+    return (
+      <tr>
+        <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Feed ID</td>
+        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">{feedId.replace('feed_', '')}</td>
+      </tr>
+    )
+  }
+
+  if (!changes.new) return null
+
+  const renderMetadataChanges = () => {
+    if (!changes.new?.metadata) return null
+
+    return Object.entries(changes.new.metadata).map(([key, newValue]) => {
+      const prevValue = changes.prev?.metadata?.[key as keyof typeof changes.prev.metadata]
+      const hasChanged = isNewFeed || prevValue !== newValue
+
+      if (!hasChanged) return null
+
+      return (
+        <tr key={key}>
+          <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+            {key
+              .split(/(?=[A-Z])/)
+              .join(' ')
+              .split('_')
+              .map((word) => capitalizeFirstLetter(word))
+              .join(' ')}
+          </td>
+          <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+            {!isNewFeed && prevValue !== undefined ? (
+              <>
+                <s>{String(prevValue)}</s>
+                <br />
+              </>
+            ) : null}
+            {String(newValue)}
+          </td>
+        </tr>
+      )
+    })
+  }
+
+  const renderPendingActivationChanges = () => {
+    if (changes.new?.pendingActivation !== undefined || changes.prev?.pendingActivation !== undefined) {
+      const hasChanged = isNewFeed || changes.prev?.pendingActivation !== changes.new?.pendingActivation
+
+      if (hasChanged) {
+        return (
+          <tr key="pendingActivation">
+            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Pending Activation</td>
+            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+              {!isNewFeed && changes.prev?.pendingActivation ? (
+                <>
+                  <s>{changes.prev.pendingActivation}</s>
+                  <br />
+                </>
+              ) : null}
+              {changes.new?.pendingActivation || 'None'}
+            </td>
+          </tr>
+        )
+      }
+    }
+    return null
+  }
+
+  return (
+    <>
+      {renderMetadataChanges()}
+      {renderPendingActivationChanges()}
+    </>
+  )
+}
+
+const PublisherChangesRows: React.FC<PublisherChangesRowsProps> = ({ changes, publisherId }) => {
+  const isNewPublisher = !changes.prev && changes.new
+  const isDeletedPublisher = changes.prev && !changes.new
+
+  if (isDeletedPublisher) {
+    return (
+      <tr>
+        <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Publisher ID</td>
+        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">{publisherId.replace('publisher_', '')}</td>
+      </tr>
+    )
+  }
+
+  if (!changes.new) return null
+
+  return (
+    <>
+      {Object.entries(changes.new).map(([key, newValue]) => {
+        const prevValue = changes.prev?.[key as keyof LazerPublisher]
+        const hasChanged = isNewPublisher || JSON.stringify(prevValue) !== JSON.stringify(newValue)
+
+        if (!hasChanged) return null
+
+        return (
+          <tr key={key}>
+            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+              {key
+                .split(/(?=[A-Z])/)
+                .join(' ')
+                .split('_')
+                .map((word) => capitalizeFirstLetter(word))
+                .join(' ')}
+            </td>
+            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+              {!isNewPublisher && prevValue !== undefined ? (
+                <>
+                  <s>{Array.isArray(prevValue) ? prevValue.join(', ') : String(prevValue)}</s>
+                  <br />
+                </>
+              ) : null}
+              {Array.isArray(newValue) ? newValue.join(', ') : String(newValue)}
+            </td>
+          </tr>
+        )
+      })}
+    </>
+  )
+}
+
 const ModalContent: React.FC<ModalContentProps> = ({
   changes,
   onSendProposal,
@@ -35,23 +235,68 @@ const ModalContent: React.FC<ModalContentProps> = ({
     <>
       {Object.keys(changes).length > 0 ? (
         <table className="mb-10 w-full table-auto bg-darkGray text-left">
-          <tbody>
-            {Object.entries(changes).map(([key, change]) => (
-              <tr key={key}>
-                <td
-                  className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
-                  colSpan={2}
-                >
-                  {key}
-                </td>
-                <td className="py-3 pl-6 pr-1 lg:pl-6">
-                  <pre className="whitespace-pre-wrap rounded bg-gray-100 p-2 text-xs dark:bg-gray-700 dark:text-gray-300">
-                    {JSON.stringify(change, null, 2)}
-                  </pre>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+          {Object.entries(changes).map(([key, change]) => {
+            const { prev, new: newChanges } = change
+            const isAddition = !prev && newChanges
+            const isDeletion = prev && !newChanges
+
+            let title = key
+            if (key === 'shard') {
+              title = isAddition ? 'Add New Shard' : isDeletion ? 'Delete Shard' : 'Shard Configuration'
+            } else if (key.startsWith('feed_')) {
+              const feedId = key.replace('feed_', '')
+              title = isAddition ? `Add New Feed (ID: ${feedId})` : isDeletion ? `Delete Feed (ID: ${feedId})` : `Feed ${feedId}`
+            } else if (key.startsWith('publisher_')) {
+              const publisherId = key.replace('publisher_', '')
+              title = isAddition ? `Add New Publisher (ID: ${publisherId})` : isDeletion ? `Delete Publisher (ID: ${publisherId})` : `Publisher ${publisherId}`
+            }
+
+            return (
+              <tbody key={key}>
+                <tr>
+                  <td
+                    className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
+                    colSpan={2}
+                  >
+                    {title}
+                  </td>
+                </tr>
+
+                {key === 'shard' && newChanges ? (
+                  <ShardChangesRows
+                    changes={{
+                      prev: prev as ShardChanges['prev'],
+                      new: newChanges as ShardChanges['new'],
+                    }}
+                  />
+                ) : key.startsWith('feed_') ? (
+                  <FeedChangesRows
+                    feedId={key}
+                    changes={{
+                      prev: prev as LazerFeed,
+                      new: newChanges as LazerFeed,
+                    }}
+                  />
+                ) : key.startsWith('publisher_') ? (
+                  <PublisherChangesRows
+                    publisherId={key}
+                    changes={{
+                      prev: prev as LazerPublisher,
+                      new: newChanges as LazerPublisher,
+                    }}
+                  />
+                ) : null}
+
+                {Object.keys(changes).indexOf(key) !== Object.keys(changes).length - 1 ? (
+                  <tr>
+                    <td className="base16 py-4 pl-6 pr-6" colSpan={2}>
+                      <hr className="border-gray-700" />
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            )
+          })}
         </table>
       ) : (
         <p className="mb-8 leading-6">No proposed changes.</p>
@@ -62,7 +307,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
           onClick={onSendProposal}
           disabled={isSendProposalButtonLoading}
         >
-          {isSendProposalButtonLoading ? 'Sending...' : 'Send Proposal'}
+          {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
         </button>
       )}
     </>
@@ -138,7 +383,7 @@ const PythLazer = ({
             openModal()
           } catch (error) {
             if (error instanceof Error) {
-              toast.error(error.message)
+              toast.error(capitalizeFirstLetter(error.message))
             }
           }
         }
@@ -161,7 +406,7 @@ const PythLazer = ({
       toast.success('Proposal sent successfully!')
     } catch (error) {
       if (error instanceof Error) {
-        toast.error(error.message)
+        toast.error(capitalizeFirstLetter(error.message))
       }
     } finally {
       setIsSendProposalButtonLoading(false)
