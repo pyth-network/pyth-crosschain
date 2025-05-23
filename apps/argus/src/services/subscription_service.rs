@@ -60,7 +60,6 @@ impl SubscriptionService {
 
                 let feed_ids = self.subscription_state.get_feed_ids();
                 self.pyth_price_state.update_feed_ids(feed_ids.clone());
-                self.chain_price_state.update_feed_ids(feed_ids);
 
                 Ok(())
             }

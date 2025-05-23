@@ -56,12 +56,12 @@ impl PricePusherService {
     #[tracing::instrument(
         skip(self),
         fields(
-            name = "handle_request",
             task = self.name,
+            chain_name = self.chain_name,
             subscription_id = request.subscription_id.to_string()
         )
     )]
-    async fn handle_request(&self, request: PushRequest) {
+    async fn handle_push_request(&self, request: PushRequest) {
         let price_ids = request.price_ids.clone();
 
         match self.pyth_price_client.get_latest_prices(&price_ids).await {
@@ -73,16 +73,12 @@ impl PricePusherService {
                 {
                     Ok(tx_hash) => {
                         tracing::info!(
-                            service = self.name,
-                            subscription_id = request.subscription_id.to_string(),
                             tx_hash = tx_hash.to_string(),
                             "Successfully pushed price updates"
                         );
                     }
                     Err(e) => {
                         tracing::error!(
-                            service = self.name,
-                            subscription_id = request.subscription_id.to_string(),
                             error = %e,
                             "Failed to push price updates"
                         );
@@ -91,8 +87,6 @@ impl PricePusherService {
             }
             Err(e) => {
                 tracing::error!(
-                    service = self.name,
-                    subscription_id = request.subscription_id.to_string(),
                     error = %e,
                     "Failed to get Pyth price update data"
                 );
@@ -118,7 +112,7 @@ impl Service for PricePusherService {
         loop {
             tokio::select! {
                 Some(request) = receiver.recv() => {
-                    self.handle_request(request).await;
+                    self.handle_push_request(request).await;
                 }
                 _ = exit_rx.changed() => {
                     if *exit_rx.borrow() {
