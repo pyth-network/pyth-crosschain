@@ -320,34 +320,13 @@ export async function generateInstructions(
   cluster: PythCluster,
   accounts: LazerInstructionAccounts,
 ): Promise<TransactionInstruction[]> {
-  // This is a placeholder implementation that would be replaced with real logic
-  // In a real implementation, we would:
-  // 1. Group changes by type (shard metadata, feeds, publishers)
-  // 2. Generate appropriate instructions for each change type
-  // 3. If needed, convert to/from Protobuf format
+  // Simple placeholder implementation that returns an empty array of instructions
+  // In a real implementation, this would transform the changes into Lazer-specific instructions
 
-  // For the demo, just log the changes and return an empty array
-  console.log("Changes to apply:", changes);
-  console.log("Target cluster:", cluster);
-  console.log("Instruction accounts:", accounts);
+  // Example of how this might be implemented:
+  // 1. For each change, determine if it's an add, update, or delete operation
+  // 2. Map the DownloadableProduct format to Lazer-specific data structure
+  // 3. Generate appropriate Lazer instructions based on the operation type
 
-  // Mock instruction to show in UI
-  const mockInstruction = new TransactionInstruction({
-    keys: [
-      {
-        pubkey: accounts.fundingAccount,
-        isSigner: true,
-        isWritable: true,
-      },
-      {
-        pubkey: LAZER_PROGRAM_ID,
-        isSigner: false,
-        isWritable: false,
-      },
-    ],
-    programId: LAZER_PROGRAM_ID,
-    data: Buffer.from("Lazer update instruction placeholder"),
-  });
-
-  return [mockInstruction];
+  return [];
 }
