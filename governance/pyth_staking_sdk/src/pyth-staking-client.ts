@@ -894,6 +894,21 @@ export class PythStakingClient {
       .instruction();
   }
 
+  public async getTransferAccountInstruction(
+    stakeAccountPositions: PublicKey,
+    governanceAuthority: PublicKey,
+    newOwner: PublicKey,
+  ): Promise<TransactionInstruction> {
+    return this.stakingProgram.methods
+      .transferAccount()
+      .accountsPartial({
+        stakeAccountPositions,
+        governanceAuthority,
+        newOwner,
+      })
+      .instruction();
+  }
+
   public async getUpdatePoolAuthorityInstruction(
     governanceAuthority: PublicKey,
     poolAuthority: PublicKey,
