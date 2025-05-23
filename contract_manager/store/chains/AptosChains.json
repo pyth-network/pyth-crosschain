@@ -1,0 +1,52 @@
+[
+  {
+    "id": "aptos_testnet",
+    "wormholeChainName": "aptos",
+    "mainnet": false,
+    "rpcUrl": "https://fullnode.testnet.aptoslabs.com/v1",
+    "type": "AptosChain"
+  },
+  {
+    "id": "aptos_mainnet",
+    "wormholeChainName": "aptos",
+    "mainnet": true,
+    "rpcUrl": "https://fullnode.mainnet.aptoslabs.com/v1",
+    "type": "AptosChain",
+    "nativeToken": "APT"
+  },
+  {
+    "id": "movement_m1_devnet",
+    "wormholeChainName": "movement_m1_devnet",
+    "mainnet": false,
+    "rpcUrl": "https://devnet.m1.movementlabs.xyz/v1",
+    "type": "AptosChain"
+  },
+  {
+    "id": "movement_suzuka_testnet",
+    "wormholeChainName": "movement_suzuka_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://aptos.testnet.suzuka.movementlabs.xyz/v1",
+    "type": "AptosChain"
+  },
+  {
+    "id": "movement_porto_testnet",
+    "wormholeChainName": "movement_porto_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://aptos.testnet.porto.movementlabs.xyz/v1",
+    "type": "AptosChain"
+  },
+  {
+    "id": "movement_bardock_testnet",
+    "wormholeChainName": "movement_bardock_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://aptos.testnet.bardock.movementlabs.xyz/v1",
+    "type": "AptosChain"
+  },
+  {
+    "id": "movement_mainnet",
+    "wormholeChainName": "movement_mainnet",
+    "mainnet": true,
+    "rpcUrl": "https://mainnet.movementnetwork.xyz/v1",
+    "type": "AptosChain"
+  }
+]

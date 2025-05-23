@@ -1,6 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, TonPriceFeedContract, toPrivateKey } from "../src";
+import { DefaultStore } from "../src/node/utils/store";
+import { TonPriceFeedContract } from "../src/core/contracts";
+import { toPrivateKey } from "../src/core/base";
 import fs from "fs";
 import path from "path";
 import { Cell } from "@ton/ton";

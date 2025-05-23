@@ -1,6 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, ENTROPY_DEFAULT_KEEPER } from "../src";
+import { DefaultStore } from "../src/node/utils/store";
+import { ENTROPY_DEFAULT_KEEPER } from "../src/core/contracts";
 import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))

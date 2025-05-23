@@ -1,8 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { CosmWasmChain, EvmChain } from "../src/chains";
+import { CosmWasmChain, EvmChain } from "../src/core/chains";
 import { createHash } from "crypto";
-import { DefaultStore } from "../src/store";
+import { DefaultStore } from "../src/node/utils/store";
 import {
   CosmosUpgradeContract,
   EvmExecute,
@@ -24,7 +24,7 @@ import {
   EvmPriceFeedContract,
   getCodeDigestWithoutAddress,
   EvmWormholeContract,
-} from "../src/contracts/evm";
+} from "../src/core/contracts/evm";
 import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))

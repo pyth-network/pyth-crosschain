@@ -1,0 +1,87 @@
+[
+  {
+    "chain": "rol_testnet",
+    "address": "rol17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgss2u902",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "osmosis",
+    "address": "osmo1t7qham5kle36rs28se2xd7cckm9mpwzgt65t40lrdf8fcq3837qqjvw80s",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "sei_testnet_atlantic_2",
+    "address": "sei14utt2wp7hamd2qmuz0e5yj728y4u08cm7etujxkc6qprnrla3uwq95jz86",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "juno_testnet",
+    "address": "juno1h7m0xwgu4qh0nrthahpydxzw7klvyd5w8d7jjl675p944ds7jr4sf3ta4l",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "sei_testnet_atlantic_2",
+    "address": "sei1cn8ygrvqk03p5zce3c6rrst7j97qarm33d23rxgme7rzmasddfusw7cpxw",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "neutron_testnet_pion_1",
+    "address": "neutron1nxs2ajn4ejrggfuvqczfx4txghrendcpy3526avg2tsngjktedtspgla8t",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "neutron_testnet_pion_1",
+    "address": "neutron1wtuuak4yt4vyhtv7gt4xnv0m8zfakad5lnz6r7dx8alyydu0sgns67kmvy",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "juno_testnet",
+    "address": "juno1g9xhl5jzhlm6lqc2earxkzyazwl2cshr5cnemxtjy0le64s4w22skukkxj",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "osmosis_testnet_5",
+    "address": "osmo19ah8ak7rgmds40te22xnz7zsdmx5twjulv3sypqm79skkl2ajm4skuhwmf",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "sei_pacific_1",
+    "address": "sei12qq3cufehhsaprjfjrwpx5ltyr43lcrxvf6eaqf0p4jsjpc7semq8p6ewa",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "injective_testnet",
+    "address": "inj1hglkee95shfsl5xxky26hdqxj0mqp54lh7xm59",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "neutron",
+    "address": "neutron178ruq7gf6gk3uus5n8xztj5tsrt5xwxfelw88mc9egfw5d99ktksnk5rsh",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "osmosis_testnet_5",
+    "address": "osmo1llum0y8zc4h2f0rhcdn63xje4mrkdljrve9l40lun9lpeyu2l7cq4phaw6",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "injective_testnet",
+    "address": "inj17sy3vx5dfeva9wx33d09yqdwruntpccnjyw0hj",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "injective",
+    "address": "inj17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9l2q74d",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "xion_testnet_2",
+    "address": "xion1qlrdccrcw4rew9ervlazeyt9qmcx84r87vrq74sfd48f4q8y3qrqf59syp",
+    "type": "CosmWasmWormholeContract"
+  },
+  {
+    "chain": "xion",
+    "address": "xion1zfdqgkd9lcqwc4ywkeg2pr2v2p5xxa7n2s9layq2623pvhp4xv0sr4659c",
+    "type": "CosmWasmWormholeContract"
+  }
+]

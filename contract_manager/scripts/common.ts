@@ -1,16 +1,12 @@
-import {
-  DefaultStore,
-  EvmChain,
-  EvmEntropyContract,
-  EvmWormholeContract,
-  getDefaultDeploymentConfig,
-  PrivateKey,
-} from "../src";
+import { DefaultStore } from "../src/node/utils/store";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
 import { InferredOptionType } from "yargs";
+import { PrivateKey, getDefaultDeploymentConfig } from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import { EvmEntropyContract, EvmWormholeContract } from "../src/core/contracts";
 
 export interface BaseDeployConfig {
   gasMultiplier: number;

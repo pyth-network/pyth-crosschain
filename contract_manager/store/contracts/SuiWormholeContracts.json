@@ -1,0 +1,17 @@
+[
+  {
+    "chain": "sui_mainnet",
+    "stateId": "0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c",
+    "type": "SuiWormholeContract"
+  },
+  {
+    "chain": "sui_testnet",
+    "stateId": "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790",
+    "type": "SuiWormholeContract"
+  },
+  {
+    "chain": "movement_m2_devnet",
+    "stateId": "0xcf185fbc1af3a437a600587e0b39e5fede163336ffbb7ff24dca9b6eb19d2656",
+    "type": "SuiWormholeContract"
+  }
+]

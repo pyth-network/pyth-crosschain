@@ -1,15 +1,5 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { EvmChain } from "../src/chains";
-import { DefaultStore } from "../src/store";
-import {
-  DeploymentType,
-  toDeploymentType,
-  toPrivateKey,
-  EvmPulseContract,
-  PULSE_DEFAULT_PROVIDER,
-  PULSE_DEFAULT_KEEPER,
-} from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
@@ -21,6 +11,18 @@ import {
 } from "./common";
 import fs from "fs";
 import path from "path";
+import {
+  DeploymentType,
+  toDeploymentType,
+  toPrivateKey,
+} from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import {
+  PULSE_DEFAULT_PROVIDER,
+  PULSE_DEFAULT_KEEPER,
+  EvmPulseContract,
+} from "../src/core/contracts";
+import { DefaultStore } from "../src/node/utils/store";
 
 interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;
