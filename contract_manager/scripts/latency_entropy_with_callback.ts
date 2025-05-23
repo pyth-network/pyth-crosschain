@@ -8,7 +8,6 @@ import {
   toPrivateKey,
 } from "../src";
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
-import { demandOption } from "yargs";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
