@@ -2,7 +2,7 @@ use {
     crate::{
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},
         history::History,
-        state::HashChainState,
+        state::MonitoredHashChainState,
     },
     anyhow::Result,
     axum::{
@@ -91,7 +91,7 @@ pub struct BlockchainState {
     /// Obtained from the response of eth_chainId rpc call
     pub network_id: u64,
     /// The hash chain(s) required to serve random numbers for this blockchain
-    pub state: Arc<HashChainState>,
+    pub state: Arc<MonitoredHashChainState>,
     /// The contract that the server is fulfilling requests for.
     pub contract: Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.
@@ -212,7 +212,7 @@ mod test {
             },
             chain::reader::{mock::MockEntropyReader, BlockStatus},
             history::History,
-            state::{HashChainState, PebbleHashChain},
+            state::{HashChainState, MonitoredHashChainState, PebbleHashChain},
         },
         axum::http::StatusCode,
         axum_test::{TestResponse, TestServer},
@@ -241,10 +241,17 @@ mod test {
     async fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
         let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
+        let eth_state = MonitoredHashChainState::new(
+            ETH_CHAIN.clone(),
+            Default::default(),
+            "ethereum".into(),
+            PROVIDER,
+        );
+
         let eth_state = BlockchainState {
             id: "ethereum".into(),
             network_id: 1,
-            state: ETH_CHAIN.clone(),
+            state: Arc::new(eth_state),
             contract: eth_read.clone(),
             provider_address: PROVIDER,
             reveal_delay_blocks: 1,
@@ -255,10 +262,17 @@ mod test {
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
+        let avax_state = MonitoredHashChainState::new(
+            AVAX_CHAIN.clone(),
+            Default::default(),
+            "avalanche".into(),
+            PROVIDER,
+        );
+
         let avax_state = BlockchainState {
             id: "avalanche".into(),
             network_id: 43114,
-            state: AVAX_CHAIN.clone(),
+            state: Arc::new(avax_state),
             contract: avax_read.clone(),
             provider_address: PROVIDER,
             reveal_delay_blocks: 2,

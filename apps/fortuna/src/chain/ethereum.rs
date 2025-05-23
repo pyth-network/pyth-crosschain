@@ -309,6 +309,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
         let mut event = self.requested_with_callback_filter();
         event.filter = event
             .filter
+            .address(self.address())
             .from_block(from_block)
             .to_block(to_block)
             .topic1(provider);
