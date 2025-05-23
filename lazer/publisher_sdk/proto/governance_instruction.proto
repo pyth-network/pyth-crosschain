@@ -12,8 +12,15 @@ import "dynamic_value.proto";
 package pyth_lazer_transaction;
 
 // Representation of a complete governance instruction. This value will be signed
-// by a governance source. If the governance source is Wormhole emitter, the VAA payload will
-// be the encoded `GovernanceInstruction` message.
+// by a governance source.
+//
+// If the governance source is SingleEd25519, this message will be the payload of LazerTransaction.
+//
+// If the governance source is Wormhole emitter, this message will be the body of the GovernancePayload which
+// is the VAA message Pyth governance sends to Wormhole. The GovernancePayload follows xc-admin spec
+// and looks like so:
+// <magic:u32><module:u8><action:u8><chain:u16><GovernanceInstruction:bytes>
+// You can find the xc-admin spec in: ../../../governance/xc_admin/packages/xc_admin_common/src/governance_payload
 message GovernanceInstruction {
     // Action requested by this instruction. For the instruction to be accepted, all directives
     // must be successfully applied. In case of any failure, the whole instruction is reverted.
@@ -297,8 +304,8 @@ message SetPublisherActive {
 
 // Feed is inactive when added, meaning that it will be available to publishers but not to consumers.
 message AddFeed {
-    // [required] ID of the price feed. Must be unique (within the shard).
-    optional uint32 price_feed_id = 1;
+    // [required] ID of the feed. Must be unique (within the shard).
+    optional uint32 feed_id = 1;
     // [required] Feed metadata. Some properties are required (name, exponent, etc.).
     // Known properties must have the expected type.
     // Additional arbitrary properties are allowed.
@@ -310,7 +317,7 @@ message AddFeed {
 
 message UpdateFeed {
     // [required] ID of the feed that is being updated. Rejects if there is no such feed.
-    optional uint32 price_feed_id = 1;
+    optional uint32 feed_id = 1;
     // [required]
     // Note: when adding a new variant here, update `Permissions` as well.
     oneof action {

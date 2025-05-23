@@ -16,10 +16,17 @@ message SignedLazerTransaction {
     optional SignatureData signature_data = 1;
 
     // [required] lazer transaction payload encoded as bytes.
+    //
     // If the signature data is a Ed25519SignatureData, the payload is the encoded
     // LazerTransaction protobuf message.
+    //
     // If the signature data is a WormholeMultiSigData, the payload is the encoded
-    // Wormhole VAA body.
+    // Wormhole VAA body. The Wormhole VAA can be any of the following:
+    // 1. A governance message from Pyth that updates Lazer state (e.g. a new feed) which
+    // is an ecoded GovernancePayload according to xc-admin spec which contains the
+    // encoded GovernanceInstruction protobuf message.
+    // 2. A governance message from Wormhole that updates Wormhole guardian set which follows
+    // the Wormhole specification.
     optional bytes payload = 2;
 }
 
