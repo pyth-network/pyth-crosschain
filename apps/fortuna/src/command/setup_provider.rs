@@ -122,12 +122,12 @@ async fn setup_chain_provider(
                 provider_config.chain_sample_interval,
             )
             .await?;
-            let chain_state = HashChainState {
-                offsets: vec![provider_info
+            let chain_state = HashChainState::new(
+                vec![provider_info
                     .original_commitment_sequence_number
                     .try_into()?],
-                hash_chains: vec![hash_chain],
-            };
+                vec![hash_chain],
+            )?;
 
             if chain_state.reveal(provider_info.original_commitment_sequence_number)?
                 != provider_info.original_commitment
