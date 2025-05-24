@@ -109,6 +109,7 @@ export class AptosPricePusher implements IPricePusher {
   async getPriceFeedsUpdateData(priceIds: string[]): Promise<number[][]> {
     const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
       encoding: "base64",
+      ignoreInvalidPriceIds: true,
     });
     return response.binary.data.map((data) =>
       Array.from(Buffer.from(data, "base64")),
