@@ -5,6 +5,7 @@ import {
 } from "@pythnetwork/hermes-client";
 import { PriceInfo, IPriceListener, PriceItem } from "./interface";
 import { Logger } from "pino";
+import { sleep } from "./utils";
 
 type TimestampInMs = number & { readonly _: unique symbol };
 
@@ -34,6 +35,24 @@ export class PythPriceListener implements IPriceListener {
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
   async start() {
+    this.startListening();
+
+    // Store health check interval reference
+    this.healthCheckInterval = setInterval(() => {
+      if (
+        this.lastUpdated === undefined ||
+        this.lastUpdated < Date.now() - 30 * 1000
+      ) {
+        throw new Error("Hermes Price feeds are not updating.");
+      }
+    }, 5000);
+  }
+
+  async startListening() {
+    this.logger.info(
+      `Starting to listen for price updates from Hermes for ${this.priceIds.length} price feeds.`,
+    );
+
     const eventSource = await this.hermesClient.getPriceUpdatesStream(
       this.priceIds,
       {
@@ -71,20 +90,12 @@ export class PythPriceListener implements IPriceListener {
       });
     };
 
-    eventSource.onerror = (error: Event) => {
+    eventSource.onerror = async (error: Event) => {
       console.error("Error receiving updates from Hermes:", error);
       eventSource.close();
+      await sleep(5000); // Wait a bit before trying to reconnect
+      this.startListening(); // Attempt to restart the listener
     };
-
-    // Store health check interval reference
-    this.healthCheckInterval = setInterval(() => {
-      if (
-        this.lastUpdated === undefined ||
-        this.lastUpdated < Date.now() - 30 * 1000
-      ) {
-        throw new Error("Hermes Price feeds are not updating.");
-      }
-    }, 5000);
   }
 
   getLatestPriceInfo(priceId: HexString): PriceInfo | undefined {
