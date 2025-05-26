@@ -896,7 +896,7 @@
   type: EvmChain
 - id: mezo
   mainnet: true
-  rpcUrl: https://rpc.mezo.org
+  rpcUrl: https://jsonrpc-mezo.boar.network
   networkId: 31612
   type: EvmChain
 - id: hemi_testnet

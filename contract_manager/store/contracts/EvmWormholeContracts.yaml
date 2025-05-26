@@ -496,3 +496,6 @@
 - chain: converge_testnet
   address: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a"
   type: EvmWormholeContract
+- chain: mezo
+  address: "0xb27e5ca259702f209a29225d0eDdC131039C9933"
+  type: EvmWormholeContract
