@@ -6,6 +6,7 @@ import {
   LazerConfig,
   LazerState,
 } from "../types";
+import { createAddFeed, createUpdateFeed, createAddPublisher, createUpdatePublisher } from "./governance_payload";
 
 /**
  * Parameters for getting Lazer configuration
@@ -320,13 +321,85 @@ export async function generateInstructions(
   cluster: PythCluster,
   accounts: LazerInstructionAccounts,
 ): Promise<TransactionInstruction[]> {
-  // Simple placeholder implementation that returns an empty array of instructions
-  // In a real implementation, this would transform the changes into Lazer-specific instructions
+  // This function converts configuration changes into Lazer governance instructions
+  // using the new governance payload functions that properly encode protobuf messages.
 
-  // Example of how this might be implemented:
-  // 1. For each change, determine if it's an add, update, or delete operation
-  // 2. Map the DownloadableProduct format to Lazer-specific data structure
-  // 3. Generate appropriate Lazer instructions based on the operation type
+  const instructions: TransactionInstruction[] = [];
+  console.log("changes", changes);
 
-  return [];
+  // Process each change and create corresponding governance instructions
+  for (const [changeKey, change] of Object.entries(changes)) {
+    let governanceBuffer: Buffer | null = null;
+
+    if (changeKey.startsWith("feed_")) {
+      const feedId = parseInt(changeKey.replace("feed_", ""));
+
+      if (!change.prev && change.new) {
+        // Add new feed
+        const feed = change.new as any;
+        governanceBuffer = await createAddFeed({
+          priceFeedId: feedId,
+          metadata: feed.metadata,
+          permissionedPublishers: [],
+          governanceSource: accounts.fundingAccount,
+        });
+      } else if (change.prev && change.new) {
+        // Update existing feed
+        const feed = change.new as any;
+        governanceBuffer = await createUpdateFeed({
+          priceFeedId: feedId,
+          action: {
+            type: "updateFeedMetadata",
+            name: "metadata",
+            value: feed.metadata
+          },
+          governanceSource: accounts.fundingAccount,
+        });
+      }
+    } else if (changeKey.startsWith("publisher_")) {
+      const publisherId = parseInt(changeKey.replace("publisher_", ""));
+
+      if (!change.prev && change.new) {
+        // Add new publisher
+        const publisher = change.new as any;
+        governanceBuffer = await createAddPublisher({
+          publisherId: publisherId,
+          name: publisher.name,
+          publicKeys: publisher.publicKeys || [],
+          isActive: publisher.isActive || false,
+          governanceSource: accounts.fundingAccount,
+        });
+      } else if (change.prev && change.new) {
+        // Update existing publisher
+        const publisher = change.new as any;
+        governanceBuffer = await createUpdatePublisher({
+          publisherId: publisherId,
+          action: {
+            type: "setPublisherActive",
+            isActive: publisher.isActive
+          },
+          governanceSource: accounts.fundingAccount,
+        });
+      }
+    }
+
+    // Create Solana transaction instruction if we have a governance buffer
+    if (governanceBuffer) {
+      const instruction = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: accounts.fundingAccount,
+            isSigner: true,
+            isWritable: true,
+          },
+        ],
+        programId: LAZER_PROGRAM_ID,
+        data: governanceBuffer,
+      });
+
+      instructions.push(instruction);
+    }
+  }
+
+  return instructions;
 }
