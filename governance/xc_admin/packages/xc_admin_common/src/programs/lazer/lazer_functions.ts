@@ -6,7 +6,7 @@ import {
   LazerConfig,
   LazerState,
 } from "../types";
-import { createAddFeed, createUpdateFeed, createAddPublisher, createUpdatePublisher } from "./governance_payload";
+import { pyth_lazer_transaction } from "./generated/governance_instruction";
 
 /**
  * Parameters for getting Lazer configuration
@@ -334,53 +334,57 @@ export async function generateInstructions(
     if (changeKey.startsWith("feed_")) {
       const feedId = parseInt(changeKey.replace("feed_", ""));
 
-      if (!change.prev && change.new) {
-        // Add new feed
-        const feed = change.new as any;
-        governanceBuffer = await createAddFeed({
-          priceFeedId: feedId,
-          metadata: feed.metadata,
-          permissionedPublishers: [],
-          governanceSource: accounts.fundingAccount,
-        });
-      } else if (change.prev && change.new) {
-        // Update existing feed
-        const feed = change.new as any;
-        governanceBuffer = await createUpdateFeed({
-          priceFeedId: feedId,
-          action: {
-            type: "updateFeedMetadata",
-            name: "metadata",
-            value: feed.metadata
-          },
-          governanceSource: accounts.fundingAccount,
-        });
-      }
+
+      // if (!change.prev && change.new) {
+      //   const feedMetadata = change.new.feeds?.[0]?.metadata;
+      //   // Add new feed
+      //   const feed = change.new;
+      //   const addFeedMessage: AddFeed =
+      //   {
+      //     price_feed_id: feedId,
+      //     metadata: feed.metadata,
+      //     permissioned_publishers: [],
+      //   };
+      //   const encoded = encodeAddFeed(addFeedMessage);
+      //   governanceBuffer = Buffer.from(encoded);
+      // } else if (change.prev && change.new) {
+      //   // Update existing feed
+      //   const feed = change.new as any;
+      //   governanceBuffer = encodeUpdateFeed({
+      //     priceFeedId: feedId,
+      //     action: {
+      //       type: "updateFeedMetadata",
+      //       name: "metadata",
+      //       value: feed.metadata
+      //     },
+      //     governanceSource: accounts.fundingAccount,
+      //   });
+      // }
     } else if (changeKey.startsWith("publisher_")) {
       const publisherId = parseInt(changeKey.replace("publisher_", ""));
 
-      if (!change.prev && change.new) {
-        // Add new publisher
-        const publisher = change.new as any;
-        governanceBuffer = await createAddPublisher({
-          publisherId: publisherId,
-          name: publisher.name,
-          publicKeys: publisher.publicKeys || [],
-          isActive: publisher.isActive || false,
-          governanceSource: accounts.fundingAccount,
-        });
-      } else if (change.prev && change.new) {
-        // Update existing publisher
-        const publisher = change.new as any;
-        governanceBuffer = await createUpdatePublisher({
-          publisherId: publisherId,
-          action: {
-            type: "setPublisherActive",
-            isActive: publisher.isActive
-          },
-          governanceSource: accounts.fundingAccount,
-        });
-      }
+      // if (!change.prev && change.new) {
+      //   // Add new publisher
+      //   const publisher = change.new as any;
+      //   governanceBuffer = encodeAddPublisher({
+      //     publisherId: publisherId,
+      //     name: publisher.name,
+      //     publicKeys: publisher.publicKeys || [],
+      //     isActive: publisher.isActive || false,
+      //     governanceSource: accounts.fundingAccount,
+      //   });
+      // } else if (change.prev && change.new) {
+      //   // Update existing publisher
+      //   const publisher = change.new as any;
+      //   governanceBuffer = encodeUpdatePublisher({
+      //     publisherId: publisherId,
+      //     action: {
+      //       type: "setPublisherActive",
+      //       isActive: publisher.isActive
+      //     },
+      //     governanceSource: accounts.fundingAccount,
+      //   });
+      // }
     }
 
     // Create Solana transaction instruction if we have a governance buffer
