@@ -2,7 +2,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { DefaultStore } from "../src/node/utils/store";
 import { loadHotWallet } from "../src/node/utils/governance";
-import { readFileSync } from "fs";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --config <path/to/config.json>")
@@ -31,7 +30,7 @@ async function main() {
     vault: vaultId,
   } = await parser.argv;
 
-  const config = JSON.parse(readFileSync(configPath, "utf8"));
+  const config = await import(configPath, { assert: { type: "json" } });
 
   const updatePayloads: Buffer[] = [];
   for (const setFeeEntry of config) {

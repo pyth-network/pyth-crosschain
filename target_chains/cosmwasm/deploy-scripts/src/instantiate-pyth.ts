@@ -3,9 +3,9 @@ import { hideBin } from "yargs/helpers";
 import { sha256 } from "@cosmjs/crypto";
 import { getPythConfig } from "./configs";
 import { DefaultStore, Store } from "@pythnetwork/contract-manager/node/store";
-import { CosmWasmChain } from "../../../../contract_manager/lib/core/chains";
-import { toPrivateKey } from "../../../../contract_manager/lib/core/base";
-import { CosmWasmPriceFeedContract } from "../../../../contract_manager/lib/core/contracts/cosmwasm";
+import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
+import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
+import { CosmWasmPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { DeploymentType, getContractBytesDict } from "./helper";
 
