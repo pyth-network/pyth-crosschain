@@ -359,6 +359,10 @@ abstract contract Pyth is
                     updateData[i],
                     context
                 );
+                if (storeUpdatesIfFresh) {
+                    bytes32 curPriceId = context.priceIds[i];
+                    updateLatestPriceIfNecessary(curPriceId, _state.latestPriceInfo[curPriceId]);
+                }
             }
         }
 
