@@ -334,7 +334,6 @@ export async function generateInstructions(
     if (changeKey.startsWith("feed_")) {
       const feedId = parseInt(changeKey.replace("feed_", ""));
 
-
       // if (!change.prev && change.new) {
       //   const feedMetadata = change.new.feeds?.[0]?.metadata;
       //   // Add new feed
