@@ -57,7 +57,8 @@
         "pull:env",
         "^build",
         "build:cjs",
-        "build:esm"
+        "build:esm",
+        "build:pbts"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -114,6 +115,22 @@
         "!vercel.json"
       ],
       "outputs": ["lib/**", "dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "build:pbjs": {
+      "dependsOn": ["//#install:modules"],
+      "inputs": [
+        "../../../../lazer/publisher_sdk/proto/governance_instruction.proto",
+        "../../../../lazer/publisher_sdk/proto/dynamic_value.proto"
+      ],
+      "outputs": ["src/programs/lazer/generated/governance_instruction.js"]
+    },
+    "build:pbts": {
+      "dependsOn": ["//#install:modules", "build:pbjs"],
+      "inputs": [
+        "../../../../lazer/publisher_sdk/proto/governance_instruction.proto",
+        "../../../../lazer/publisher_sdk/proto/dynamic_value.proto"
+      ],
+      "outputs": ["src/programs/lazer/generated/governance_instruction.d.ts"]
     },
     "fix": {
       "dependsOn": ["fix:lint", "fix:format"],

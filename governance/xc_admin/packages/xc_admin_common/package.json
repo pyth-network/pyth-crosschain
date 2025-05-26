@@ -15,8 +15,9 @@
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
   "scripts": {
-    "build": "npm run build:proto && tsc",
-    "build:proto": "pbjs -t static-module -w es6 -o src/programs/lazer/generated/governance_instruction.js ../../../../lazer/publisher_sdk/proto/governance_instruction.proto ../../../../lazer/publisher_sdk/proto/dynamic_value.proto && pbts -o src/programs/lazer/generated/governance_instruction.d.ts src/programs/lazer/generated/governance_instruction.js",
+    "build": "tsc",
+    "build:pbjs": "npx pbjs -t static-module -w es6 -o src/programs/lazer/generated/governance_instruction.js ../../../../lazer/publisher_sdk/proto/governance_instruction.proto ../../../../lazer/publisher_sdk/proto/dynamic_value.proto",
+    "build:pbts": "npx pbts -o src/programs/lazer/generated/governance_instruction.d.ts src/programs/lazer/generated/governance_instruction.js",
     "test:unit": "jest",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "test:format": "prettier --check \"src/**/*.ts\""
