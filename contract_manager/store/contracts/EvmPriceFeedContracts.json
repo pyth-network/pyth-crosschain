@@ -1,0 +1,847 @@
+[
+  {
+    "chain": "evmos",
+    "address": "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "ethereum",
+    "address": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "polygon",
+    "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "aurora",
+    "address": "0xF89C7b475821EC3fDC2dC8099032c05c6c0c9AB9",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "fantom",
+    "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "optimism",
+    "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "arbitrum",
+    "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "gnosis",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "polygon_zkevm",
+    "address": "0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "conflux_espace",
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "bsc",
+    "address": "0x4D7E825f80bDf85e913E0DD2A2D54927e9dE1594",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kava",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "avalanche",
+    "address": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "canto",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "linea",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "neon",
+    "address": "0x7f2dB085eFC3560AFF33865dD727225d91B4f9A5",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mantle",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "meter",
+    "address": "0xbFe3f445653f2136b2FD1e6DdDb5676392E3AF16",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kcc",
+    "address": "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "eos",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "celo",
+    "address": "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "wemix",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "base",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "cronos",
+    "address": "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "zksync",
+    "address": "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "ronin",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "horizen_eon",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "shimmer",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "boba",
+    "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "manta",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "scroll",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "chiliz",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "coredao",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "viction",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "arbitrum_sepolia",
+    "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "fuji",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "canto_testnet",
+    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "polygon_zkevm_testnet",
+    "address": "0xFf255f800044225f54Af4510332Aa3D67CC77635",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "aurora_testnet",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "chiado",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kava_testnet",
+    "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "conflux_espace_testnet",
+    "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "celo_alfajores_testnet",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "bsc_testnet",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "syndr_nitro_testnet",
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kcc_testnet",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "eos_testnet",
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "meter_testnet",
+    "address": "0x5a71C07a0588074443545eE0c08fb0375564c3E4",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "shimmer_testnet",
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "scroll_sepolia",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "saigon",
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "boba_goerli",
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "manta_testnet",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "chiliz_spicy",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "astar_zkevm_testnet",
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "coredao_testnet",
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "cronos_testnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "wemix_testnet",
+    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mumbai",
+    "address": "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "fantom_testnet",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "sepolia",
+    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "sepolia",
+    "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "linea_goerli",
+    "address": "0xdF21D137Aadc95588205586636710ca2890538d5",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "evmos_testnet",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "zetachain_testnet",
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "neon_devnet",
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "optimism_sepolia",
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mode",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mode_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "bttc_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "bttc",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "zksync_sepolia",
+    "address": "0x056f829183Ec806A78c26C98961678c24faB71af",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "base_sepolia",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "movement_evm_devnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "zkfair_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "blast_s2_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "zkfair",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "filecoin_calibration",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "filecoin",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "zetachain",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "lightlink_pegasus_testnet",
+    "address": "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "dela_deperp_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "lightlink_phoenix",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "idex_xchain_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "injective_inevm_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "injective_inevm",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "hedera_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "hedera",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "blast",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "astar_zkevm",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "merlin_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mantle_sepolia",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "merlin",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "manta_sepolia",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "polygon_blackberry",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "arbitrum_blueberry",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "optimism_celestia_raspberry",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "polynomial_testnet",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "parallel_testnet",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "parallel",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "linea_sepolia",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "morph_testnet",
+    "address": "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "taiko_hekla",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "olive_testnet",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "orange_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "polygon_amoy",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "taiko_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "sei_evm_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "dela_mithreum_deperp_testnet",
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "opbnb",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "gravity",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "opbnb_testnet",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "etherlink_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "polynomial",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "etherlink",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "sei_evm_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kaia_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kaia",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "morph_holesky_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kinto",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "reya_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "cronos_zkevm_mainnet",
+    "address": "0x056f829183Ec806A78c26C98961678c24faB71af",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "cronos_zkevm_testnet",
+    "address": "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "movement_evm_devnet_imola",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "flow_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "idex_xchain_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "apechain_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "soneium_minato_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "apechain_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "flow_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "abstract_testnet",
+    "address": "0x47F2A9BDAd52d65b66287253cf5ca0D2b763b486",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "unichain_sepolia",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kakarot_sepolia",
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "skate",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "skate_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "morph",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kraken_ink_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "ethena_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "superseed_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "superseed_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "hemi_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "tabi_testnet",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "hyperevm_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "unichain",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "abstract",
+    "address": "0x8739d5024B5143278E2b15Bd9e7C26f6CEc658F1",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "eventum_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "sonic_blaze_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "fantom_sonic_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "eventum_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "soneium",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "kraken_ink_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "coredao_testnet_v2",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "monad_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "berachain_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "story",
+    "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "bittensor_testnet",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "hyperevm",
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "bittensor_mainnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "story_testnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "berachain_bepolia",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "megaeth_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "worldchain",
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "swellchain_testnet",
+    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "swellchain",
+    "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "worldchain_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "hemi_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "converge_testnet",
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mezo_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mezo",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  }
+]

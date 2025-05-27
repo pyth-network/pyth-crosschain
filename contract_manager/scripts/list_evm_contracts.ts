@@ -1,6 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, EvmPriceFeedContract } from "../src";
+import { DefaultStore } from "../src/node/utils/store";
+import { EvmPriceFeedContract } from "../src/core/contracts";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
