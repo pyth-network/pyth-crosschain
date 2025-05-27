@@ -546,6 +546,120 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
     }
 
+    function testAddFundsWithInactiveSubscriptionReverts() public {
+        // Create a subscription with minimum balance
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+
+        // Get subscription parameters and calculate minimum balance
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        uint256 minimumBalance = scheduler.getMinimumBalance(
+            uint8(params.priceIds.length)
+        );
+
+        // Deactivate the subscription
+        SchedulerState.SubscriptionParams memory testParams = params;
+        testParams.isActive = false;
+        scheduler.updateSubscription(subscriptionId, testParams);
+
+        // Withdraw funds to get below minimum
+        uint256 withdrawAmount = minimumBalance - 1 wei;
+        scheduler.withdrawFunds(subscriptionId, withdrawAmount);
+
+        // Verify balance is now below minimum
+        (
+            SchedulerState.SubscriptionParams memory testUpdatedParams,
+            SchedulerState.SubscriptionStatus memory testUpdatedStatus
+        ) = scheduler.getSubscription(subscriptionId);
+        assertEq(
+            testUpdatedStatus.balanceInWei,
+            1 wei,
+            "Balance should be 1 wei after withdrawal"
+        );
+
+        // Try to add funds to inactive subscription (should fail with InactiveSubscription)
+        vm.expectRevert(abi.encodeWithSelector(InactiveSubscription.selector));
+        scheduler.addFunds{value: 1 wei}(subscriptionId);
+
+        // Try to reactivate with insufficient balance (should fail)
+        testUpdatedParams.isActive = true;
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        scheduler.updateSubscription(subscriptionId, testUpdatedParams);
+    }
+
+    function testAddFundsEnforcesMinimumBalance() public {
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(
+            scheduler,
+            2,
+            address(reader)
+        );
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        uint256 minimumBalance = scheduler.getMinimumBalance(
+            uint8(params.priceIds.length)
+        );
+
+        // Send multiple price updates to drain the balance below minimum
+        for (uint i = 0; i < 5; i++) {
+            // Advance time to satisfy heartbeat criteria
+            vm.warp(block.timestamp + 60);
+
+            // Create price feeds with current timestamp
+            uint64 publishTime = SafeCast.toUint64(block.timestamp);
+            PythStructs.PriceFeed[] memory priceFeeds;
+            uint64[] memory slots;
+            (priceFeeds, slots) = createMockPriceFeedsWithSlots(
+                publishTime,
+                params.priceIds.length
+            );
+
+            // Mock Pyth response
+            mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
+            bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+            // Perform update
+            vm.prank(pusher);
+            scheduler.updatePriceFeeds(subscriptionId, updateData);
+        }
+
+        // Verify balance is now below minimum
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory statusAfterUpdates
+        ) = scheduler.getSubscription(subscriptionId);
+        assertTrue(
+            statusAfterUpdates.balanceInWei < minimumBalance,
+            "Balance should be below minimum after updates"
+        );
+
+        // Try to add funds that would still leave balance below minimum
+        // Expect a revert with InsufficientBalance
+        uint256 insufficientFunds = minimumBalance -
+            statusAfterUpdates.balanceInWei -
+            1;
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        scheduler.addFunds{value: insufficientFunds}(subscriptionId);
+
+        // Add sufficient funds to get back above minimum
+        uint256 sufficientFunds = minimumBalance -
+            statusAfterUpdates.balanceInWei +
+            1;
+        scheduler.addFunds{value: sufficientFunds}(subscriptionId);
+
+        // Verify balance is now above minimum
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory statusAfterAddingFunds
+        ) = scheduler.getSubscription(subscriptionId);
+        assertTrue(
+            statusAfterAddingFunds.balanceInWei >= minimumBalance,
+            "Balance should be at or above minimum after adding sufficient funds"
+        );
+    }
+
     function testWithdrawFunds() public {
         // Add a subscription and get the parameters
         uint256 subscriptionId = addTestSubscription(
