@@ -80,13 +80,30 @@ impl From<PriceFeedDataV1> for PriceFeedDataV2 {
 #[serde(rename_all = "camelCase")]
 pub enum ServerResponse {
     UpdateDeserializationError(UpdateDeserializationErrorResponse),
+    GovernanceTransactionAccepted(GovernanceTransactionAcceptedResponse),
+    TransactionRejected(TransactionRejectedResponse),
 }
+
 /// Sent to the publisher if the binary data could not be parsed
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateDeserializationErrorResponse {
     pub error: String,
 }
+
+/// Sent to the publisher if the governance transaction was accepted
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GovernanceTransactionAcceptedResponse {
+}
+
+/// Sent to the publisher if the transaction was rejected
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TransactionRejectedResponse {
+    pub error: String,
+}
+
 
 #[test]
 fn price_feed_data_v1_serde() {
