@@ -102,11 +102,11 @@ enum ContentType {
 impl From<&str> for ContentType {
     fn from(content_type: &str) -> Self {
         if content_type.starts_with("application") && content_type.contains("json") {
-            return Self::Json;
+            Self::Json
         } else if content_type.starts_with("text/plain") {
-            return Self::Text;
+            Self::Text
         } else {
-            return Self::Unsupported(content_type.to_string());
+            Self::Unsupported(content_type.to_string())
         }
     }
 }

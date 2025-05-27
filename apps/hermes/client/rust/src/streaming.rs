@@ -72,7 +72,7 @@ pub async fn create_price_update_stream(
                         Ok(sse_event) => {
                             if let Some(parsed_updates) = sse_event.parsed {
                                 let stream = parsed_updates.into_iter()
-                                    .map(|update| Ok(update))
+                                    .map(Ok)
                                     .collect::<Vec<Result<ParsedPriceUpdate, Box<dyn Error + Send + Sync>>>>();
                                 Ok(futures_util::stream::iter(stream))
                             } else {
@@ -88,10 +88,7 @@ pub async fn create_price_update_stream(
         .flat_map(|result| {
             match result {
                 Ok(stream) => stream,
-                Err(e) => {
-                    let err = e;
-                    futures_util::stream::iter(vec![Err(err)])
-                }
+                Err(e) => futures_util::stream::iter(vec![Err(e)])
             }
         });
 

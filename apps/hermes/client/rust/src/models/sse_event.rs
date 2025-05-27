@@ -35,3 +35,9 @@ impl SseEvent {
         }
     }
 }
+
+impl Default for SseEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
