@@ -138,7 +138,10 @@
         "src/programs/lazer/generated/governance_instruction.d.ts",
         "src/programs/lazer/generated/governance_instruction.js"
       ],
-      "outputs": ["lib/programs/lazer/generated/governance_instruction.d.ts", "lib/programs/lazer/generated/governance_instruction.js"]
+      "outputs": [
+        "lib/programs/lazer/generated/governance_instruction.d.ts",
+        "lib/programs/lazer/generated/governance_instruction.js"
+      ]
     },
     "fix": {
       "dependsOn": ["fix:lint", "fix:format"],
