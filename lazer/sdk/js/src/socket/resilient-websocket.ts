@@ -66,9 +66,6 @@ export class ResilientWebSocket {
     this.wsFailedAttempts = 0;
     this.onError = (error: ErrorEvent) => {
       void error;
-      // if (this.wsFailedAttempts > LOG_AFTER_RETRY_COUNT) {
-      //   this.logger.error(error.error);
-      // }
     };
     this.onMessage = (data: WebSocket.Data): void => {
       void data;

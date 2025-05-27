@@ -1,4 +1,5 @@
 import TTLCache from "@isaacs/ttlcache";
+import type { ErrorEvent } from "isomorphic-ws";
 import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
@@ -15,6 +16,7 @@ export type WebSocketPoolConfig = {
   numConnections?: number;
   logger?: Logger;
   rwsConfig?: Omit<ResilientWebSocketConfig, 'logger' | 'endpoint'>;
+  onError?: (error: ErrorEvent) => void;
 };
 
 export class WebSocketPool {
@@ -94,6 +96,9 @@ export class WebSocketPool {
         }
       };
 
+      if (config.onError) {
+        rws.onError = config.onError;
+      }
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
       rws.onMessage = pool.dedupeHandler;
       pool.rwsPool.push(rws);
