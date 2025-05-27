@@ -7,13 +7,14 @@ import type { ComponentProps } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import styles from "./index.module.scss";
-import { Button } from "../unstyled/Button/index.js";
-import { useLogger } from "../useLogger/index.js";
+import { Button } from "../unstyled/Button/index.jsx";
+import { useLogger } from "../useLogger/index.jsx";
 
 const COPY_INDICATOR_TIME = 1000;
 
 type OwnProps = {
   text: string;
+  iconOnly?: boolean | undefined;
 };
 
 type Props = Omit<
@@ -22,7 +23,13 @@ type Props = Omit<
 > &
   OwnProps;
 
-export const CopyButton = ({ text, children, className, ...props }: Props) => {
+export const CopyButton = ({
+  text,
+  iconOnly,
+  children,
+  className,
+  ...props
+}: Props) => {
   const [isCopied, setIsCopied] = useState(false);
   const logger = useLogger();
   const copy = useCallback(() => {
@@ -58,12 +65,17 @@ export const CopyButton = ({ text, children, className, ...props }: Props) => {
     <Button
       onPress={copy}
       className={clsx(styles.copyButton, className)}
-      {...(isCopied && { "data-is-copied": true })}
+      data-is-copied={isCopied ? "" : undefined}
+      data-icon-only={iconOnly ? "" : undefined}
       {...props}
     >
       {(...args) => (
         <>
-          {typeof children === "function" ? children(...args) : children}
+          <span className={styles.contents}>
+            {typeof children === "function"
+              ? children(...args)
+              : (children ?? "Copy")}
+          </span>
           <div className={styles.iconContainer}>
             <Copy className={styles.copyIcon} />
             <Check className={styles.checkIcon} />

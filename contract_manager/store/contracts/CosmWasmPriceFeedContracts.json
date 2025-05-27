@@ -1,0 +1,87 @@
+[
+  {
+    "chain": "injective_testnet",
+    "address": "inj18rlflp3735h25jmjx97d22c72sxk260amdjxlu",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "juno_testnet",
+    "address": "juno1eacsrua27njc35pxz37y97gmcjs899t59f8pf0rkejjyvtmhws5q6lxsdd",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "sei_testnet_atlantic_2",
+    "address": "sei1kpntez76v38yuxhhaaahdmvjxnr5tkr8tq077smefs7uw70rj5yqw2aewy",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "neutron_testnet_pion_1",
+    "address": "neutron15ldst8t80982akgr8w8ekcytejzkmfpgdkeq4xgtge48qs7435jqp87u3t",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "osmosis",
+    "address": "osmo13ge29x4e2s63a8ytz2px8gurtyznmue4a69n5275692v3qn3ks8q7cwck7",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "injective",
+    "address": "inj12j43nf2f0qumnt2zrrmpvnsqgzndxefujlvr08",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "sei_testnet_atlantic_2",
+    "address": "sei1w2rxq6eckak47s25crxlhmq96fzjwdtjgdwavn56ggc0qvxvw7rqczxyfy",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "sei_pacific_1",
+    "address": "sei15d2tyq2jzxmpg32y3am3w62dts32qgzmds9qnr6c87r0gwwr7ynqal0x38",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "osmosis_testnet_5",
+    "address": "osmo1lltupx02sj99suakmuk4sr4ppqf34ajedaxut3ukjwkv6469erwqtpg9t3",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "osmosis_testnet_5",
+    "address": "osmo1hpdzqku55lmfmptpyj6wdlugqs5etr6teqf7r4yqjjrxjznjhtuqqu5kdh",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "neutron",
+    "address": "neutron1m2emc93m9gpwgsrsf2vylv9xvgqh654630v7dfrhrkmr5slly53spg85wv",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "injective_testnet",
+    "address": "inj18hckkzqf47mdhd734g6papk6wj20y24rm43sk9",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "juno_testnet",
+    "address": "juno1h93q9kwlnfml2gum4zj54al9w4jdmuhtzrh6vhycnemsqlqv9l9snnznxs",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "neutron_testnet_pion_1",
+    "address": "neutron16zwrmx3zgggmxhzau86xfycm42cr4sj888hdvzsxya3qarp6zhhqzhlkvz",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "rol_testnet",
+    "address": "rol1pvrwmjuusn9wh34j7y520g8gumuy9xtl3gvprlljfdpwju3x7ucszdyfs8",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "xion_testnet_2",
+    "address": "xion1wptw89weav8tnpgxg4fyhcahgk8yy99lka3w308536ktadkvjwxqe463hl",
+    "type": "CosmWasmPriceFeedContract"
+  },
+  {
+    "chain": "xion",
+    "address": "xion18nsqwhfwnqzs4vkxdr02x40awm0gz9pl0wn4ecsl8qqra2vxqppq57qx5a",
+    "type": "CosmWasmPriceFeedContract"
+  }
+]

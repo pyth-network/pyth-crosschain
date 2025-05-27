@@ -1,7 +1,8 @@
 use {
     crate::{
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},
-        state::HashChainState,
+        history::History,
+        state::MonitoredHashChainState,
     },
     anyhow::Result,
     axum::{
@@ -21,9 +22,10 @@ use {
     tokio::sync::RwLock,
     url::Url,
 };
-pub use {chain_ids::*, index::*, live::*, metrics::*, ready::*, revelation::*};
+pub use {chain_ids::*, explorer::*, index::*, live::*, metrics::*, ready::*, revelation::*};
 
 mod chain_ids;
+mod explorer;
 mod index;
 mod live;
 mod metrics;
@@ -31,6 +33,7 @@ mod ready;
 mod revelation;
 
 pub type ChainId = String;
+pub type NetworkId = u64;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct RequestLabel {
@@ -45,6 +48,8 @@ pub struct ApiMetrics {
 pub struct ApiState {
     pub chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
 
+    pub history: Arc<History>,
+
     pub metrics_registry: Arc<RwLock<Registry>>,
 
     /// Prometheus metrics
@@ -55,6 +60,7 @@ impl ApiState {
     pub async fn new(
         chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
         metrics_registry: Arc<RwLock<Registry>>,
+        history: Arc<History>,
     ) -> ApiState {
         let metrics = ApiMetrics {
             http_requests: Family::default(),
@@ -70,6 +76,7 @@ impl ApiState {
         ApiState {
             chains,
             metrics: Arc::new(metrics),
+            history,
             metrics_registry,
         }
     }
@@ -80,8 +87,11 @@ impl ApiState {
 pub struct BlockchainState {
     /// The chain id for this blockchain, useful for logging
     pub id: ChainId,
+    /// The network id for this blockchain
+    /// Obtained from the response of eth_chainId rpc call
+    pub network_id: u64,
     /// The hash chain(s) required to serve random numbers for this blockchain
-    pub state: Arc<HashChainState>,
+    pub state: Arc<MonitoredHashChainState>,
     /// The contract that the server is fulfilling requests for.
     pub contract: Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.
@@ -105,6 +115,8 @@ pub enum RestError {
     InvalidSequenceNumber,
     /// The caller passed an unsupported chain id
     InvalidChainId,
+    /// The query is not parsable to a transaction hash, address, or sequence number
+    InvalidQueryString,
     /// The caller requested a random value that can't currently be revealed (because it
     /// hasn't been committed to on-chain)
     NoPendingRequest,
@@ -132,6 +144,11 @@ impl IntoResponse for RestError {
             RestError::InvalidChainId => {
                 (StatusCode::BAD_REQUEST, "The chain id is not supported").into_response()
             }
+            RestError::InvalidQueryString => (
+                StatusCode::BAD_REQUEST,
+                "The query string is not parsable to a transaction hash, address, or sequence number",
+            )
+                .into_response(),
             RestError::NoPendingRequest => (
                 StatusCode::FORBIDDEN,
                 "The request with the given sequence number has not been made yet, or the random value has already been revealed on chain.",
@@ -167,6 +184,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
         .route("/metrics", get(metrics))
         .route("/ready", get(ready))
         .route("/v1/chains", get(chain_ids))
+        .route("/v1/logs", get(explorer))
         .route(
             "/v1/chains/:chain_id/revelations/:sequence",
             get(revelation),
@@ -186,12 +204,15 @@ pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
 
 #[cfg(test)]
 mod test {
-    use crate::api::ApiBlockChainState;
     use {
         crate::{
-            api::{self, ApiState, BinaryEncoding, Blob, BlockchainState, GetRandomValueResponse},
+            api::{
+                self, ApiBlockChainState, ApiState, BinaryEncoding, Blob, BlockchainState,
+                GetRandomValueResponse,
+            },
             chain::reader::{mock::MockEntropyReader, BlockStatus},
-            state::{HashChainState, PebbleHashChain},
+            history::History,
+            state::{HashChainState, MonitoredHashChainState, PebbleHashChain},
         },
         axum::http::StatusCode,
         axum_test::{TestResponse, TestServer},
@@ -220,9 +241,17 @@ mod test {
     async fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
         let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
+        let eth_state = MonitoredHashChainState::new(
+            ETH_CHAIN.clone(),
+            Default::default(),
+            "ethereum".into(),
+            PROVIDER,
+        );
+
         let eth_state = BlockchainState {
             id: "ethereum".into(),
-            state: ETH_CHAIN.clone(),
+            network_id: 1,
+            state: Arc::new(eth_state),
             contract: eth_read.clone(),
             provider_address: PROVIDER,
             reveal_delay_blocks: 1,
@@ -233,9 +262,17 @@ mod test {
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
+        let avax_state = MonitoredHashChainState::new(
+            AVAX_CHAIN.clone(),
+            Default::default(),
+            "avalanche".into(),
+            PROVIDER,
+        );
+
         let avax_state = BlockchainState {
             id: "avalanche".into(),
-            state: AVAX_CHAIN.clone(),
+            network_id: 43114,
+            state: Arc::new(avax_state),
             contract: avax_read.clone(),
             provider_address: PROVIDER,
             reveal_delay_blocks: 2,
@@ -252,7 +289,12 @@ mod test {
             ApiBlockChainState::Initialized(avax_state),
         );
 
-        let api_state = ApiState::new(Arc::new(RwLock::new(chains)), metrics_registry).await;
+        let api_state = ApiState::new(
+            Arc::new(RwLock::new(chains)),
+            metrics_registry,
+            Arc::new(History::new().await.unwrap()),
+        )
+        .await;
 
         let app = api::routes(api_state);
         (TestServer::new(app).unwrap(), eth_read, avax_read)

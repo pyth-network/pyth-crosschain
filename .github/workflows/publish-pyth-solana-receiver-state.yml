@@ -16,7 +16,7 @@ jobs:
         with:
           toolchain: stable
           default: true
-          profile: minimal
+          components: rustfmt, clippy
 
       - run: cargo +stable-x86_64-unknown-linux-gnu publish --token ${CARGO_REGISTRY_TOKEN}
         env:

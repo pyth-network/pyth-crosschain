@@ -5,6 +5,7 @@ import { ChainSelect } from "./chain-select";
 import styles from "./index.module.scss";
 import { Results } from "./results";
 import { SearchBar } from "./search-bar";
+import { StatusSelect } from "./status-select";
 
 export const Home = () => (
   <div className={styles.home}>
@@ -16,6 +17,11 @@ export const Home = () => (
         toolbar={
           <>
             <ChainSelect variant="outline" size="sm" placement="bottom right" />
+            <StatusSelect
+              variant="outline"
+              size="sm"
+              placement="bottom right"
+            />
             <SearchBar className={styles.searchBar ?? ""} />
           </>
         }

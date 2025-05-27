@@ -1,11 +1,14 @@
+//! Configuration options for the Argus keeper service
+
 pub use run::RunOptions;
 use {
-    crate::{api::ChainId, chain::reader::BlockStatus},
+    crate::{adapters::ethereum::BlockStatus, state::ChainName},
     anyhow::{anyhow, Result},
     clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser},
     ethers::types::Address,
     fortuna::eth_utils::utils::EscalationPolicy,
-    std::{collections::HashMap, fs},
+    serde::{Deserialize, Serialize},
+    std::{collections::HashMap, fs, time::Duration},
 };
 
 mod run;
@@ -36,7 +39,7 @@ pub struct ConfigOptions {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
-    pub chains: HashMap<ChainId, EthereumConfig>,
+    pub chains: HashMap<ChainName, EthereumConfig>,
     pub keeper: KeeperConfig,
 }
 
@@ -44,13 +47,15 @@ impl Config {
     pub fn load(path: &str) -> Result<Config> {
         // Open and read the YAML file
         // TODO: the default serde deserialization doesn't enforce unique keys
-        let yaml_content = fs::read_to_string(path)?;
-        let config: Config = serde_yaml::from_str(&yaml_content)?;
+        let yaml_content = fs::read_to_string(path)
+            .map_err(|e| anyhow!("Failed to read config file '{}': {}", path, e))?;
+        let config: Config = serde_yaml::from_str(&yaml_content)
+            .map_err(|e| anyhow!("Failed to parse config file '{}': {}", path, e))?;
 
         Ok(config)
     }
 
-    pub fn get_chain_config(&self, chain_id: &ChainId) -> Result<EthereumConfig> {
+    pub fn get_chain_config(&self, chain_id: &ChainName) -> Result<EthereumConfig> {
         self.chains.get(chain_id).cloned().ok_or(anyhow!(
             "Could not find chain id {} in the configuration",
             &chain_id
@@ -79,19 +84,12 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub legacy_tx: bool,
 
-    /// The gas limit to use for entropy callback transactions.
-    pub gas_limit: u64,
-
     /// The percentage multiplier to apply to priority fee estimates (100 = no change, e.g. 150 = 150% of base fee)
     pub priority_fee_multiplier_pct: u64,
 
     /// The escalation policy governs how the gas limit and fee are increased during backoff retries.
     #[serde(default)]
     pub escalation_policy: EscalationPolicyConfig,
-
-    /// How much the provider charges for a request on this chain.
-    #[serde(default)]
-    pub fee: u128,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -173,11 +171,52 @@ impl EscalationPolicyConfig {
 }
 
 /// Configuration values for the keeper service that are shared across chains.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct KeeperConfig {
     /// This key is used by the keeper to submit transactions for feed update requests.
     /// Must be a 20-byte (40 char) hex encoded Ethereum private key.
     pub private_key: SecretString,
+
+    /// Interval for polling subscriptions
+    #[serde(
+        default = "default_subscription_poll_interval",
+        with = "humantime_serde"
+    )]
+    pub subscription_poll_interval: Duration,
+
+    /// Interval for polling chain prices
+    #[serde(
+        default = "default_chain_price_poll_interval",
+        with = "humantime_serde"
+    )]
+    pub chain_price_poll_interval: Duration,
+
+    /// Interval for polling Pyth prices
+    #[serde(default = "default_pyth_price_poll_interval", with = "humantime_serde")]
+    pub pyth_price_poll_interval: Duration,
+
+    /// Interval for controller updates
+    #[serde(
+        default = "default_controller_update_interval",
+        with = "humantime_serde"
+    )]
+    pub controller_update_interval: Duration,
+
+    /// Initial interval for backoff
+    #[serde(default = "default_backoff_initial_interval", with = "humantime_serde")]
+    pub backoff_initial_interval: Duration,
+
+    /// Maximum interval for backoff
+    #[serde(default = "default_backoff_max_interval", with = "humantime_serde")]
+    pub backoff_max_interval: Duration,
+
+    /// Multiplier for backoff intervals
+    #[serde(default = "default_backoff_multiplier")]
+    pub backoff_multiplier: f64,
+
+    /// Maximum elapsed time for backoff
+    #[serde(default = "default_backoff_max_elapsed_time", with = "humantime_serde")]
+    pub backoff_max_elapsed_time: Duration,
 }
 
 // A secret is a string that can be provided either as a literal in the config,
@@ -202,5 +241,56 @@ impl SecretString {
         }
 
         Ok(None)
+    }
+}
+
+fn default_subscription_poll_interval() -> Duration {
+    Duration::from_secs(60)
+}
+
+fn default_chain_price_poll_interval() -> Duration {
+    Duration::from_secs(10)
+}
+
+fn default_pyth_price_poll_interval() -> Duration {
+    Duration::from_secs(10)
+}
+
+fn default_controller_update_interval() -> Duration {
+    Duration::from_secs(10)
+}
+
+fn default_backoff_initial_interval() -> Duration {
+    Duration::from_secs(1)
+}
+
+fn default_backoff_max_interval() -> Duration {
+    Duration::from_secs(60)
+}
+
+fn default_backoff_multiplier() -> f64 {
+    2.0
+}
+
+fn default_backoff_max_elapsed_time() -> Duration {
+    Duration::from_secs(300)
+}
+
+impl Default for KeeperConfig {
+    fn default() -> Self {
+        Self {
+            private_key: SecretString {
+                value: None,
+                file: None,
+            },
+            subscription_poll_interval: default_subscription_poll_interval(),
+            chain_price_poll_interval: default_chain_price_poll_interval(),
+            pyth_price_poll_interval: default_pyth_price_poll_interval(),
+            controller_update_interval: default_controller_update_interval(),
+            backoff_initial_interval: default_backoff_initial_interval(),
+            backoff_max_interval: default_backoff_max_interval(),
+            backoff_multiplier: default_backoff_multiplier(),
+            backoff_max_elapsed_time: default_backoff_max_elapsed_time(),
+        }
     }
 }

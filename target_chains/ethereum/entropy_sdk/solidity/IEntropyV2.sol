@@ -20,8 +20,10 @@ interface IEntropyV2 is EntropyEventsV2 {
     /// Note that the fee can change over time. Callers of this method should explicitly compute `getFeeV2()`
     /// prior to each invocation (as opposed to hardcoding a value). Further note that excess value is *not* refunded to the caller.
     ///
-    /// Note that this method uses an in-contract PRNG to generate the user's portion of the random number.
-    /// Users must trust this PRNG in order to prove the result is random. If you wish to avoid this trust assumption,
+    /// Note that this method uses an in-contract PRNG to generate the user's contribution to the random number.
+    /// This approach modifies the security guarantees such that a dishonest validator and provider can
+    /// collude to manipulate the result (as opposed to a malicious user and provider). That is, the user
+    /// now trusts the validator honestly draw a random number. If you wish to avoid this trust assumption,
     /// call a variant of `requestV2` that accepts a `userRandomNumber` parameter.
     function requestV2()
         external
@@ -43,8 +45,10 @@ interface IEntropyV2 is EntropyEventsV2 {
     /// Note that the fee can change over time. Callers of this method should explicitly compute `getFeeV2(gasLimit)`
     /// prior to each invocation (as opposed to hardcoding a value). Further note that excess value is *not* refunded to the caller.
     ///
-    /// Note that this method uses an in-contract PRNG to generate the user's portion of the random number.
-    /// Users must trust this PRNG in order to prove the result is random. If you wish to avoid this trust assumption,
+    /// Note that this method uses an in-contract PRNG to generate the user's contribution to the random number.
+    /// This approach modifies the security guarantees such that a dishonest validator and provider can
+    /// collude to manipulate the result (as opposed to a malicious user and provider). That is, the user
+    /// now trusts the validator honestly draw a random number. If you wish to avoid this trust assumption,
     /// call a variant of `requestV2` that accepts a `userRandomNumber` parameter.
     function requestV2(
         uint32 gasLimit
@@ -66,8 +70,10 @@ interface IEntropyV2 is EntropyEventsV2 {
     /// Note that provider fees can change over time. Callers of this method should explicitly compute `getFeeV2(provider, gasLimit)`
     /// prior to each invocation (as opposed to hardcoding a value). Further note that excess value is *not* refunded to the caller.
     ///
-    /// Note that this method uses an in-contract PRNG to generate the user's portion of the random number.
-    /// Users must trust this PRNG in order to prove the result is random. If you wish to avoid this trust assumption,
+    /// Note that this method uses an in-contract PRNG to generate the user's contribution to the random number.
+    /// This approach modifies the security guarantees such that a dishonest validator and provider can
+    /// collude to manipulate the result (as opposed to a malicious user and provider). That is, the user
+    /// now trusts the validator honestly draw a random number. If you wish to avoid this trust assumption,
     /// call a variant of `requestV2` that accepts a `userRandomNumber` parameter.
     function requestV2(
         address provider,

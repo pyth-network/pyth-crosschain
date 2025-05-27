@@ -501,7 +501,7 @@
       {
         "indexed": false,
         "internalType": "bytes32",
-        "name": "userRandomNumber",
+        "name": "userContribution",
         "type": "bytes32"
       },
       {
@@ -703,6 +703,18 @@
         "indexed": false,
         "internalType": "bytes32",
         "name": "randomNumber",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "userContribution",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "providerContribution",
         "type": "bytes32"
       },
       {

@@ -25,3 +25,4 @@ __pycache__
 .turbo/
 .cursorrules
 .corepack
+justfile

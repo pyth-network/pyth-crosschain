@@ -1,15 +1,25 @@
 const config = {
+  experimental: {
+    useCache: true,
+    reactCompiler: true,
+  },
+
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],
 
-  experimental: {
-    useCache: true,
-  },
-
   logging: {
     fetches: {
       fullUrl: true,
+    },
+  },
+
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
+      },
     },
   },
 
@@ -18,10 +28,6 @@ const config = {
       test: /\.svg$/i,
       use: ["@svgr/webpack"],
     });
-
-    config.resolve.extensionAlias = {
-      ".js": [".js", ".ts", ".tsx"],
-    };
 
     return config;
   },

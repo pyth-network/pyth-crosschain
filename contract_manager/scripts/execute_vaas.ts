@@ -1,19 +1,19 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/store";
-import { SubmittedWormholeMessage, Vault } from "../src/governance";
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
-import { executeVaa } from "../src/executor";
-import { toPrivateKey } from "../src";
-
 import { COMMON_DEPLOY_OPTIONS } from "./common";
+import { Vault } from "../src/node/utils/governance";
+import { toPrivateKey } from "../src/core/base";
+import { SubmittedWormholeMessage } from "../src/node/utils/governance";
+import { executeVaa } from "../src/node/utils/executor";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Tries to execute all vaas on a vault.\n" +
       "Useful for batch upgrades.\n" +
-      "Usage: $0 --vault <mainnet|devnet> --private-key <private-key> --offset <offset> [--dryrun]",
+      "Usage: $0 --vault <mainnet|devnet> --private-key <private-key> (--offset <offset> | --sequence <sequence>) [--dryrun]",
   )
   .options({
     vault: {
@@ -25,14 +25,25 @@ const parser = yargs(hideBin(process.argv))
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
     offset: {
       type: "number",
-      demandOption: true,
       desc: "Offset to use from the last executed sequence number",
+      conflicts: ["sequence"],
+    },
+    sequence: {
+      type: "number",
+      desc: "Specific sequence number to execute",
+      conflicts: ["offset"],
     },
     dryrun: {
       type: "boolean",
       default: false,
       desc: "Whether to execute the VAAs or just print them",
     },
+  })
+  .check((argv) => {
+    if (!argv.offset && !argv.sequence) {
+      throw new Error("Either --offset or --sequence must be provided");
+    }
+    return true;
   });
 
 async function main() {
@@ -54,14 +65,29 @@ async function main() {
     "Executing VAAs for emitter",
     (await vault.getEmitter()).toBase58(),
   );
-  const lastSequenceNumber = await vault.getLastSequenceNumber();
-  const startSequenceNumber = lastSequenceNumber - argv.offset;
+
+  let startSequenceNumber: number;
+  let endSequenceNumber: number;
+
+  if (argv.sequence !== undefined) {
+    startSequenceNumber = argv.sequence;
+    endSequenceNumber = argv.sequence;
+  } else if (argv.offset !== undefined) {
+    const lastSequenceNumber = await vault.getLastSequenceNumber();
+    startSequenceNumber = lastSequenceNumber - argv.offset;
+    endSequenceNumber = lastSequenceNumber;
+  } else {
+    // this is unreachable but it makes the typescript linter happy.
+    throw new Error("Either --offset or --sequence must be provided");
+  }
+
   console.log(
-    `Going from sequence number ${startSequenceNumber} to ${lastSequenceNumber}`,
+    `Going from sequence number ${startSequenceNumber} to ${endSequenceNumber}`,
   );
+
   for (
     let seqNumber = startSequenceNumber;
-    seqNumber <= lastSequenceNumber;
+    seqNumber <= endSequenceNumber;
     seqNumber++
   ) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(

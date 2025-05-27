@@ -319,7 +319,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       rounded
       fill
       label="Price Feeds"
-      stickyHeader={styles.headerHeight}
+      stickyHeader="appHeader"
       className={styles.table ?? ""}
       columns={[
         {
