@@ -278,6 +278,86 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         }
     }
 
+    function testParsePriceFeedUpdatesWithConfigIfStorageTrue(uint seed) public {
+        setRandSeed(seed);
+        uint numMessages = 1 + (getRandUint() % 10);
+        (
+            bytes32[] memory priceIds,
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromMessages(messages);
+
+        (PythStructs.PriceFeed[] memory priceFeeds,) = pyth.parsePriceFeedUpdatesWithConfig{
+            value: updateFee
+        }(updateData, priceIds, 0, MAX_UINT64, false, true, true);
+
+        for (uint i = 0; i < numMessages; i++) {
+            // Validating that returned priceIds are equal
+            assertEq(priceFeeds[i].id, priceIds[i]);
+            assertEq(priceFeeds[i].price.price, messages[i].price);
+            assertEq(priceFeeds[i].price.conf, messages[i].conf);
+            assertEq(priceFeeds[i].price.expo, messages[i].expo);
+            assertEq(priceFeeds[i].price.publishTime, messages[i].publishTime);
+            assertEq(priceFeeds[i].emaPrice.price, messages[i].emaPrice);
+            assertEq(priceFeeds[i].emaPrice.conf, messages[i].emaConf);
+            assertEq(priceFeeds[i].emaPrice.expo, messages[i].expo);
+            assertEq(
+                priceFeeds[i].emaPrice.publishTime,
+                messages[i].publishTime
+            );
+
+            // Validating that prices are stored on chain
+            PythStructs.Price memory curPrice = pyth.getPriceUnsafe(
+                messages[i].priceId
+            );
+
+            assertEq(priceFeeds[i].price.price, curPrice.price);
+            assertEq(priceFeeds[i].price.conf, curPrice.conf);
+            assertEq(priceFeeds[i].price.expo, curPrice.expo);
+            assertEq(priceFeeds[i].price.publishTime, curPrice.publishTime);
+        }
+    }
+
+    function testParsePriceFeedUpdatesWithConfigIfStorageFalse(uint seed) public {
+        setRandSeed(seed);
+        uint numMessages = 1 + (getRandUint() % 10);
+        (
+            bytes32[] memory priceIds,
+            PriceFeedMessage[] memory messages
+        ) = generateRandomPriceMessages(numMessages);
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromMessages(messages);
+
+        // Store prices before update
+        PythStructs.Price[] memory originalPrices = new PythStructs.Price[](priceIds.length);
+        for (uint i = 0; i < priceIds.length; i++) {
+            originalPrices[i] = pyth.getPriceUnsafe(priceIds[i]);
+        }
+
+        pyth.parsePriceFeedUpdatesWithConfig{
+            value: updateFee
+        }(updateData, priceIds, 0, MAX_UINT64, false, true, true);
+
+        // validate that stored prices of each priceId are same as before update
+        for (uint i = 0; i < priceIds.length; i++) {
+            PythStructs.Price memory curPrice = pyth.getPriceUnsafe(
+                priceIds[i]
+            );
+
+            assertEq(curPrice.price, originalPrices[i].price);
+            assertEq(curPrice.conf, originalPrices[i].conf);
+            assertEq(curPrice.expo, originalPrices[i].expo);
+            assertEq(curPrice.publishTime, originalPrices[i].publishTime);
+        }
+    }
+
     function testParsePriceFeedUpdatesWithSlotsStrictWorks(uint seed) public {
         setRandSeed(seed);
         uint numMessages = 1 + (getRandUint() % 10);
