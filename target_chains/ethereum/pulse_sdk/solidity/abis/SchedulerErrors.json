@@ -85,6 +85,11 @@
   },
   {
     "inputs": [],
+    "name": "MaxDepositLimitExceeded",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "PriceSlotMismatch",
     "type": "error"
   },

@@ -4,12 +4,10 @@ pragma solidity ^0.8.0;
 
 library SchedulerErrors {
     // Authorization errors
-
     /// 0x82b42900
     error Unauthorized();
 
     // Subscription state errors
-
     /// 0xe7262b66
     error InactiveSubscription();
     /// 0xf4d678b8
@@ -56,4 +54,6 @@ library SchedulerErrors {
     // Payment errors
     /// 0xec58cd53
     error KeeperPaymentFailed();
+    /// 0x82fcf1e2
+    error MaxDepositLimitExceeded();
 }
