@@ -561,51 +561,98 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         console.log("Minimum balance required:", minimumBalance);
         console.log("Initial balance:", status.balanceInWei);
         
-        // Verify subscription is active
+        // Verify subscription is active and has exactly minimum balance
         assertTrue(params.isActive, "Subscription should be active");
-        
-        // Test 1: Create an active subscription with exactly minimum balance
-        uint256 exactMinSubscriptionId = scheduler.createSubscription{value: minimumBalance}(
-            SchedulerState.SubscriptionParams({
-                priceIds: params.priceIds,
-                readerWhitelist: params.readerWhitelist,
-                whitelistEnabled: params.whitelistEnabled,
-                isActive: true,
-                isPermanent: false,
-                updateCriteria: params.updateCriteria
-            })
-        );
-        
-        // Verify the subscription has exactly minimum balance
-        (
-            ,  // Ignore params
-            SchedulerState.SubscriptionStatus memory exactMinStatus
-        ) = scheduler.getSubscription(exactMinSubscriptionId);
-        assertEq(exactMinStatus.balanceInWei, minimumBalance, "Balance should be exactly minimum");
+        assertEq(status.balanceInWei, minimumBalance, "Initial balance should equal minimum balance");
         
         // Adding 0 funds should succeed (since balance = minimum, not < minimum)
-        scheduler.addFunds{value: 0}(exactMinSubscriptionId);
+        scheduler.addFunds{value: 0}(subscriptionId);
         
-        // Verify balance is still at minimum
-        (, exactMinStatus) = scheduler.getSubscription(exactMinSubscriptionId);
+        // Verify balance is unchanged
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory updatedStatus
+        ) = scheduler.getSubscription(subscriptionId);
         assertEq(
-            exactMinStatus.balanceInWei,
+            updatedStatus.balanceInWei,
             minimumBalance,
             "Balance should still be at minimum after adding 0 funds"
         );
         
         // Add more funds (should succeed)
-        scheduler.addFunds{value: 1 wei}(exactMinSubscriptionId);
+        scheduler.addFunds{value: 1 wei}(subscriptionId);
         
         // Verify balance increased
-        (, exactMinStatus) = scheduler.getSubscription(exactMinSubscriptionId);
+        (
+            ,
+            updatedStatus
+        ) = scheduler.getSubscription(subscriptionId);
         assertEq(
-            exactMinStatus.balanceInWei,
+            updatedStatus.balanceInWei,
             minimumBalance + 1 wei,
             "Balance should be minimum + 1 wei after adding funds"
         );
+    }
+    
+    function testAddFundsWithInactiveSubscription() public {
+        // Create a subscription with minimum balance
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+
+        // Get subscription parameters and calculate minimum balance
+        (
+            SchedulerState.SubscriptionParams memory params,
+            // Status not needed for this test
+        ) = scheduler.getSubscription(subscriptionId);
+        uint256 minimumBalance = scheduler.getMinimumBalance(
+            uint8(params.priceIds.length)
+        );
         
-        // Test 2: Test with a permanent subscription
+        // Deactivate the subscription
+        SchedulerState.SubscriptionParams memory testParams = params;
+        testParams.isActive = false;
+        scheduler.updateSubscription(subscriptionId, testParams);
+        
+        // Withdraw funds to get below minimum
+        uint256 withdrawAmount = minimumBalance - 1 wei;
+        scheduler.withdrawFunds(subscriptionId, withdrawAmount);
+        
+        // Verify balance is now below minimum
+        (
+            SchedulerState.SubscriptionParams memory testUpdatedParams,
+            SchedulerState.SubscriptionStatus memory testUpdatedStatus
+        ) = scheduler.getSubscription(subscriptionId);
+        assertEq(testUpdatedStatus.balanceInWei, 1 wei, "Balance should be 1 wei after withdrawal");
+        
+        // Try to add funds to inactive subscription (should fail with InactiveSubscription)
+        vm.expectRevert(abi.encodeWithSelector(InactiveSubscription.selector));
+        scheduler.addFunds{value: 1 wei}(subscriptionId);
+        
+        // Try to reactivate with insufficient balance (should fail)
+        testUpdatedParams.isActive = true;
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        scheduler.updateSubscription(subscriptionId, testUpdatedParams);
+    }
+    
+    function testAddFundsEnforcesMinimumBalanceForPermanentSubscription() public {
+        // Create a subscription with minimum balance
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+
+        // Get subscription parameters and calculate minimum balance
+        (
+            SchedulerState.SubscriptionParams memory params,
+            // Status not needed for this test
+        ) = scheduler.getSubscription(subscriptionId);
+        uint256 minimumBalance = scheduler.getMinimumBalance(
+            uint8(params.priceIds.length)
+        );
+        
+        // Create a permanent subscription with minimum balance
         uint256 permanentSubscriptionId = scheduler.createSubscription{value: minimumBalance}(
             SchedulerState.SubscriptionParams({
                 priceIds: params.priceIds,
@@ -617,13 +664,6 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             })
         );
         
-        // Verify the permanent subscription has exactly minimum balance
-        (
-            ,  // Ignore params
-            SchedulerState.SubscriptionStatus memory permanentStatus
-        ) = scheduler.getSubscription(permanentSubscriptionId);
-        assertEq(permanentStatus.balanceInWei, minimumBalance, "Permanent subscription balance should be exactly minimum");
-        
         // Adding 0 funds should succeed (since balance = minimum, not < minimum)
         scheduler.addFunds{value: 0}(permanentSubscriptionId);
         
@@ -631,7 +671,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         scheduler.addFunds{value: 1 wei}(permanentSubscriptionId);
         
         // Verify balance increased
-        (, permanentStatus) = scheduler.getSubscription(permanentSubscriptionId);
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory permanentStatus
+        ) = scheduler.getSubscription(permanentSubscriptionId);
         assertEq(
             permanentStatus.balanceInWei,
             minimumBalance + 1 wei,
