@@ -1206,7 +1206,7 @@
   {
     "id": "converge_testnet",
     "mainnet": false,
-    "rpcUrl": "https://rpc-converge-testnet-0.t.conduit.xyz",
+    "rpcUrl": "https://rpc-converge-testnet-1.t.conduit.xyz",
     "networkId": 52085144,
     "type": "EvmChain"
   },
@@ -1236,6 +1236,27 @@
     "mainnet": true,
     "rpcUrl": "https://swell-mainnet.alt.technology",
     "networkId": 1923,
+    "type": "EvmChain"
+  },
+  {
+    "id": "mezo_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc.test.mezo.org",
+    "networkId": 31611,
+    "type": "EvmChain"
+  },
+  {
+    "id": "mezo",
+    "mainnet": true,
+    "rpcUrl": "https://jsonrpc-mezo.boar.network",
+    "networkId": 31612,
+    "type": "EvmChain"
+  },
+  {
+    "id": "hemi_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://testnet.rpc.hemi.network/rpc",
+    "networkId": 743111,
     "type": "EvmChain"
   }
 ]

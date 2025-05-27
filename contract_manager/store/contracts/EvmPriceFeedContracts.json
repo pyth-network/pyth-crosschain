@@ -805,11 +805,6 @@
     "type": "EvmPriceFeedContract"
   },
   {
-    "chain": "converge_testnet",
-    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
-    "type": "EvmPriceFeedContract"
-  },
-  {
     "chain": "worldchain",
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
     "type": "EvmPriceFeedContract"
@@ -826,6 +821,26 @@
   },
   {
     "chain": "worldchain_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "hemi_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "converge_testnet",
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mezo_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "mezo",
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "type": "EvmPriceFeedContract"
   }
