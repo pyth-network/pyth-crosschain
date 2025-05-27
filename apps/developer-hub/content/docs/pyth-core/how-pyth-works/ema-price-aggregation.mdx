@@ -1,5 +1,5 @@
 ---
-title: 'EMA Price Aggregation in Pyth Network: How It Works & Confidence Metrics'
+title: "EMA Price Aggregation in Pyth Network: How It Works & Confidence Metrics"
 description: >-
   Ensure real-time price accuracy with Pyth’s EMA Price Aggregation, blending
   slot-weighted and inverse confidence-weighted exponential moving averages for
@@ -7,6 +7,7 @@ description: >-
 full: false
 index: false
 ---
+
 # EMA Price Aggregation
 
 Pyth network also offers an exponentially-weighted moving average (EMA) price and confidence. These values are time-weighted averages of the aggregate price and confidence. For more details, please read out [Medium Blog](https://pythnetwork.medium.com/whats-in-a-name-302a03e6c3e1) on the topic.
@@ -32,7 +33,7 @@ price_account .. CqFJLrT4rSpA46RQkVYWn8tdBDuQ7p7RXcp6Um76oaph
 
 In an EMA the most recent samples receive the most weight, and samples further back in time get exponentially less weight the farther in the past they are. For a 1 hour EMA, the samples 1 hour in the past get 50% of the weighting, samples 2 hours in the past get 25% of the weighting, 3 hours in the past get 12.5% of the weighting, etc.
 
-![](../../../images/EMA_Price_Aggregation_1.png)
+![](./assets/EMA_Price_Aggregation_1.png)
 
 While conceptually not as simple as an SMA (Simple Moving Average), the EMA has a particularly simple implementation for streaming applications such as Pyth. The exponential weighting method allows the entire history of prices and weights to be represented by a single number.
 
@@ -47,6 +48,6 @@ The current Pyth averaging method is a slot-weighted, inverse confidence-weighte
 - **Slot weighted** — The Pyth EMA uses the Pythnet slot number to measure the passage of time. The averaging period is 5921 slots, which corresponds to approximately 1 hour on Pythnet.
 - **Inverse confidence weighted** — Weighting each sample by 1/Confidence lets the EMA give more weight to samples with tight confidence and ignore samples with very wide confidence. Below is an example of an outlier aggregate price with a wide confidence interval. Notice how the average using inverse confidence weighting does not get pulled up by the outlier sample while the uniform weighted average does.
 
-![](../../../images/EMA_Price_Aggregation_2.png)
+![](./assets/EMA_Price_Aggregation_2.png)
 
 For more details and explanations, be sure to read the dedicated blog post on this topic [here](https://pythnetwork.medium.com/whats-in-a-name-302a03e6c3e1).

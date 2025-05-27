@@ -1,5 +1,5 @@
 ---
-title: 'Fuel Contracts: Integrate Real-Time Pyth Data'
+title: "Fuel Contracts: Integrate Real-Time Pyth Data"
 description: >-
   Use Fuel SDKs, code samples, and documentation to integrate Pyth Network
   real-time price feeds into your contracts and retrieve accurate, up-to-date
@@ -7,8 +7,6 @@ description: >-
 full: false
 index: false
 ---
-
-import { Callout, Tabs } from "nextra/components";
 
 # How to Use Real-Time Data in Fuel Contracts
 
@@ -25,16 +23,24 @@ pyth_interface = { git = "https://github.com/pyth-network/pyth-crosschain", tag 
 
 Pyth also provides a javascript SDK to interact with the Pyth contract on Fuel. You can install it using the following command:
 
-<Tabs items={["npm", "yarn"]}>
-  <Tabs.Tab>```npm install --save @pythnetwork/pyth-fuel-js ```</Tabs.Tab>
-  <Tabs.Tab>```yarn add @pythnetwork/pyth-fuel-js ```</Tabs.Tab>
+<Tabs groupId="node-package-manager" items={["npm", "yarn"]} persist>
+  <Tab>
+    ```
+    npm install --save @pythnetwork/pyth-fuel-js
+    ```
+  </Tab>
+  <Tab>
+    ```
+    yarn add @pythnetwork/pyth-fuel-js
+    ```
+  </Tab>
 </Tabs>
 
 ## Write Contract Code
 
 The code snippet below provides an example module fetching the ETH/USD price from Pyth price feeds:
 
-```sway copy
+```rust copy
 contract;
 
 use pyth_interface::{data_structures::price::{Price, PriceFeedId}, PythCore};
@@ -91,7 +97,7 @@ The `update_data` argument contains verified prices from Pyth.
 Calling `pyth_contract.update_price_feeds` with this value updates the on-chain Pyth price and ensures your application has recent price data.
 The `update_data` can be fetched from Hermes; Consult [Fetch Price Updates](https://docs.pyth.network/price-feeds/fetch-price-updates) for more information on how to fetch the `update_data`.
 
-<Callout type="info" emoji="ℹ️">
+<Callout variant="info" icon="ℹ️">
   Regarding the Pyth contract on Fuel, the caller must pay the fee in the base
   asset for functions like `update_price_feeds`. The fee is currently set to the
   minimum possible value (1 wei).

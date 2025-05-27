@@ -7,8 +7,6 @@ full: false
 index: false
 ---
 
-import { Callout, Tabs } from "nextra/components";
-
 # How to Use Real-Time Data in Starknet Contracts
 
 This guide explains how to use real-time Pyth data in Starknet contracts.
@@ -24,17 +22,9 @@ pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", tag = "pyt
 
 Pyth also provides a javascript SDK to interact with the Pyth contract on Starknet. You can install it using the following command:
 
-<Tabs items={["npm", "yarn"]}>
-  <Tabs.Tab>
-    ```sh copy
-    npm install --save @pythnetwork/pyth-starknet-js
-    ```
-  </Tabs.Tab>
-  <Tabs.Tab>
-  ```sh copy
-  yarn add @pythnetwork/pyth-starknet-js
-  ```
-  </Tabs.Tab>
+<Tabs groupId="node-package-manager" items={["npm", "yarn"]} persist>
+  <Tab>```sh copy npm install --save @pythnetwork/pyth-starknet-js ```</Tab>
+  <Tab>```sh copy yarn add @pythnetwork/pyth-starknet-js ```</Tab>
 </Tabs>
 
 ## Write Contract Code
@@ -125,7 +115,7 @@ The pyth_price_update argument contains verified prices from Pyth.
 Calling pyth.update_price_feeds with this value updates the on-chain Pyth price and ensures your application has recent price data.
 The pyth_price_update can be fetched from Hermes; Consult [Fetch Price Updates](https://docs.pyth.network/price-feeds/fetch-price-updates) for more information on how to fetch the pyth_price_update.
 
-<Callout type="info" emoji="ℹ️">
+<Callout variant="info" icon="ℹ️">
   Unlike Ethereum, there is no native token on Starknet. You cannot pass tokens
   implicitly when calling functions. Moreover, there is no concept of a
   designated payer account, unlike Solana. In Starknet, all token transfers must
@@ -168,7 +158,7 @@ const currentPrices = await connection.getLatestPriceFeeds([priceId]);
 const pythUpdate = ByteBuffer.fromBase64(currentPrices[0].vaa);
 ```
 
-<Callout type="info" emoji="ℹ️">
+<Callout variant="info" icon="ℹ️">
   Price updates must be converted to `ByteBuffer` before being passed on to the
   Pyth contract on Starknet. Use the `ByteBuffer` type from
   `@pythnetwork/pyth-starknet-js` package as shown above.

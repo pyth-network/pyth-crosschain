@@ -1,5 +1,5 @@
 ---
-title: 'Automate Pyth Price Updates with Gelato: Step-by-Step Guide'
+title: "Automate Pyth Price Updates with Gelato: Step-by-Step Guide"
 description: >-
   Gelato automates Pyth price feeds on EVM chains by scheduling off-chain
   updates. Configure, deploy, and monitor these updates to keep price data
@@ -7,6 +7,7 @@ description: >-
 full: false
 index: false
 ---
+
 # How to Schedule Price Updates with Gelato
 
 This guide explains how to create an automated Gelato task that updates Pyth price feeds on a schedule. The task will
@@ -54,7 +55,7 @@ The pyth web3 function code is deployed to IPFS, so you can use it via the cid/l
 You can find a copy of the web3 function code [here](https://github.com/pyth-network/w3f-pyth-poc-v2/tree/master/web3-functions/pyth-oracle-w3f-priceIds)
 
 Choose network, and then in the "Task secrets" section, set `GIST_ID` to the gistId of the gist you created in step 2.
-![](../../../images/guides/gelato/task-creation-gist-id.png)
+![](./assets/guides/gelato/task-creation-gist-id.png)
 
 **Note that the free tier have certain limits, Checkout all subscription plans and choose the one that best fits your needs [here](https://app.gelato.network/1balance/subscriptions/functions?networkGroup=mainnets&type=monthly)**.
 
@@ -71,7 +72,7 @@ and transaction gas fees. Testnet executions are subsidized by Gelato and free.
 Note : You can deposit USDC from any chain supported by Circle CCTP.
 
 Deposit USDC
-![](../../../images/guides/gelato/deposit-usdc.png)
+![](./assets/guides/gelato/deposit-usdc.png)
 
 **Pyth Fees**
 
@@ -87,7 +88,7 @@ Pyth fees are paid by the `dedicatedMsgSender` and transaction fees as well as c
 You will need to transfer over the native tokens to `dedicatedMsgSender` on every chain where you want to run
 the task using a standard transfer. The `dedicatedMsgSender` address can be found in the Gelato App settings and on the Task dashboard as well.
 
-![](../../../images/guides/gelato/dedicated-msg-sender.png)
+![](./assets/guides/gelato/dedicated-msg-sender.png)
 
 You can simply open your wallet and send native tokens to `dedicatedMsgSender` on the chain(s) where you want to run the
 task.
@@ -96,7 +97,7 @@ task.
 
 Once your task has been successfully created, you can check the task execution details on the Task dashboard in the Gelato app.
 
-![](../../../images/guides/gelato/task-execution.png)
+![](./assets/guides/gelato/task-execution.png)
 
 ## Managing your Gelato Task
 
@@ -121,7 +122,7 @@ fetch the latest configuration from the gist vs reading a locally cached version
 rate-limited by GitHub. To verify that your most recent task execution used the latest configuration, you can check the
 "Storage" tab on the task details page and look at the configuration stored under the `pythConfig` key.
 
-![](../../../images/guides/gelato/storage-pyth-config.png)
+![](./assets/guides/gelato/storage-pyth-config.png)
 
 ## Notes
 

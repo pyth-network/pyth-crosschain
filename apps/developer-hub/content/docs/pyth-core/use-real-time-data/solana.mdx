@@ -8,8 +8,6 @@ full: false
 index: false
 ---
 
-import { Callout } from "nextra/components";
-
 # How to Use Real-Time Data in Solana Programs
 
 This guide explains how to use real-time Pyth data in Solana applications.
@@ -28,7 +26,7 @@ Add this crate to the dependencies section of your `Cargo.toml` file:
 pyth-solana-receiver-sdk ="x.y.z" # get the latest version from https://crates.io/crates/pyth-solana-receiver-sdk
 ```
 
-<Callout type="warning" emoji="⚓">
+<Callout variant="warning" icon="⚓">
 At the time of writing, [pyth-solana-receiver-sdk](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/pyth_solana_receiver_sdk) is compatible with Anchor `v0.28.0{:js}`, `v0.29.0{:js}`, and `v0.30.1{:js}`.
 If you are on `v0.30.0{:js}` or any other version, please move to `v0.30.1{:js}`.
 </Callout>
@@ -61,7 +59,7 @@ pub struct Sample<'info> {
 }
 ```
 
-<Callout type="info" emoji="ℹ️">
+<Callout variant="info" icon="ℹ️">
 Users must ensure that the account passed to their instruction is owned by the Pyth Pull Oracle program.
 Using Anchor with the `Account<'info, PriceUpdateV2>` type will automatically perform this check.
 However, it is the developer's responsibility to perform this check if they are not using Anchor.
@@ -86,15 +84,15 @@ pub fn sample(ctx: Context<Sample>) -> Result<()> {
 }
 ```
 
-<Callout type="warning" emoji="⚠️">
+<Callout variant="warning" icon="⚠️">
   Users must validate the price update for the appropriate **price
   feed** and **timestamp**. `PriceUpdateV2` guarantees that the account contains
   a verified price for _some_ price feed at _some_ point in time. There are
   various methods on this struct (such as `get_price_no_older_than`) that users
   can use to implement the necessary checks.
 
-If you choose the price feed account integration (see below), you
-can use an account address check to validate the price feed ID.
+  If you choose the price feed account integration (see below), you
+  can use an account address check to validate the price feed ID.
 
 </Callout>
 
@@ -137,7 +135,7 @@ const solUsdPriceFeedAccount = pythSolanaReceiver
   .toBase58();
 ```
 
-<Callout type="info" emoji="ℹ️">
+<Callout variant="info" icon="ℹ️">
   The Price Feed Accounts integration assumes that an off-chain process is
   continuously updating each price feed. The Pyth Data Association sponsors
   price updates for a subset of commonly used price feeds on shard 0. Please see
@@ -171,7 +169,7 @@ import { HermesClient } from "@pythnetwork/hermes-client";
 // https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes
 const priceServiceConnection = new HermesClient(
   "https://hermes.pyth.network/",
-  {}
+  {},
 );
 
 // Hermes provides other methods for retrieving price updates. See
@@ -179,7 +177,7 @@ const priceServiceConnection = new HermesClient(
 const priceUpdateData = (
   await priceServiceConnection.getLatestPriceUpdates(
     ["0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"],
-    { encoding: "base64" }
+    { encoding: "base64" },
   )
 ).binary.data;
 
@@ -216,12 +214,12 @@ await transactionBuilder.addPostPriceUpdates(priceUpdateData);
 // Use this function to add your application-specific instructions to the builder
 await transactionBuilder.addPriceConsumerInstructions(
   async (
-    getPriceUpdateAccount: (priceFeedId: string) => PublicKey
+    getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
   ): Promise<InstructionWithEphemeralSigners[]> => {
     // Generate instructions here that use the price updates posted above.
     // getPriceUpdateAccount(<price feed id>) will give you the account for each price update.
     return [];
-  }
+  },
 );
 
 // Send the instructions in the builder in 1 or more transactions.
@@ -230,13 +228,13 @@ await pythSolanaReceiver.provider.sendAll(
   await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 50000,
   }),
-  { skipPreflight: true }
+  { skipPreflight: true },
 );
 ```
 
 The [SDK documentation](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver) contains more information about interacting with the Pyth solana receiver contract, including working examples.
 
-<Callout type="info" emoji="ℹ️">
+<Callout variant="info" icon="ℹ️">
   Posting and verifying price updates currently requires multiple transactions
   on Solana. If your usecase requires a single transaction, you can reduce the
   verification level of the posted price updates by replacing
@@ -316,7 +314,7 @@ const twapWindowSeconds = 300; // 5 minutes
 const twapUpdateData = await hermesClient.getLatestTwaps(
   ["0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"], // BTC/USD feed ID
   twapWindowSeconds,
-  { encoding: "base64" }
+  { encoding: "base64" },
 );
 
 // TWAP updates are strings of base64-encoded binary data
@@ -348,12 +346,12 @@ await transactionBuilder.addPostTwapUpdates(twapUpdateData.binary.data);
 // Add your application's instructions that use the TWAP update
 await transactionBuilder.addTwapConsumerInstructions(
   async (
-    getTwapUpdateAccount: (priceFeedId: string) => PublicKey
+    getTwapUpdateAccount: (priceFeedId: string) => PublicKey,
   ): Promise<InstructionWithEphemeralSigners[]> => {
     // Generate instructions here that use the TWAP updates posted above
     // getTwapUpdateAccount(<price feed id>) will give you the account for each TWAP update
     return []; // Replace with your actual instructions
-  }
+  },
 );
 
 // Send the instructions
@@ -361,7 +359,7 @@ await pythSolanaReceiver.provider.sendAll(
   await transactionBuilder.buildVersionedTransactions({
     computeUnitPriceMicroLamports: 50000,
   }),
-  { skipPreflight: true }
+  { skipPreflight: true },
 );
 ```
 

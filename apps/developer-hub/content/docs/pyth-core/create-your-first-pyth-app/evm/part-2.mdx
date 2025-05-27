@@ -1,5 +1,5 @@
 ---
-title: 'Part 2: Deploy & Interact with Pyth App on EVM Testnets'
+title: "Part 2: Deploy & Interact with Pyth App on EVM Testnets"
 description: >-
   A step-by-step guide to deploying Pyth applications on the EVM, retrieving
   real-time price feeds via Hermes, and integrating them into a TypeScript
@@ -7,7 +7,6 @@ description: >-
 full: false
 index: false
 ---
-import { Callout } from "nextra/components";
 
 # Deploy your Pyth App
 
@@ -19,7 +18,7 @@ This part of the tutorial will conver the following:
 - Interact with the contract from the command line.
 - Update and fetch the price from the contract using [hermes-client](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js).
 
-<Callout type="info" emoji="ℹ️">
+<Callout variant="info" icon="ℹ️">
   This tutorial is continuation of the [Part 1: Create a Contract](./part-1). If
   you haven't completed that part yet, please do so before continuing.
 </Callout>
@@ -253,7 +252,7 @@ async function run() {
 
   const hash = await contract.write.updateAndMint(
     [priceFeedUpdateData as any],
-    { value: parseEther("0.0005") }
+    { value: parseEther("0.0005") },
   );
   console.log("Transaction hash:");
   console.log(hash);
