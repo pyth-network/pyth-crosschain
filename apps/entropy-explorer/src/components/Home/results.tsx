@@ -1,28 +1,26 @@
 "use client";
 
-import { Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning";
-import { Badge } from "@pythnetwork/component-library/Badge";
-import { CopyButton } from "@pythnetwork/component-library/CopyButton";
 import { EntityList } from "@pythnetwork/component-library/EntityList";
-import { Link } from "@pythnetwork/component-library/Link";
-import { Meter } from "@pythnetwork/component-library/Meter";
 import { NoResults } from "@pythnetwork/component-library/NoResults";
-import { StatCard } from "@pythnetwork/component-library/StatCard";
-import { Status as StatusImpl } from "@pythnetwork/component-library/Status";
 import type { RowConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { StateType, useData } from "@pythnetwork/component-library/useData";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
+import { ChainIcon } from "connectkit";
 import type { ComponentProps } from "react";
-import { Suspense, useMemo, useCallback } from "react";
-import { useDateFormatter, useFilter, useNumberFormatter } from "react-aria";
+import { Suspense, useMemo } from "react";
+import { useFilter } from "react-aria";
+import * as viemChains from "viem/chains";
 
-import { ChainSelect } from "./chain-select";
+import { mkRequestDrawer } from "./request-drawer";
 import styles from "./results.module.scss";
 import { useQuery } from "./use-query";
 import { EntropyDeployments } from "../../entropy-deployments";
-import { getRequestsForChain } from "../../get-requests-for-chain";
+import { Status, getRequests } from "../../requests";
+import { Address } from "../Address";
+import { Status as StatusComponent } from "../Status";
+import { Timestamp } from "../Timestamp";
 
 export const Results = () => (
   <Suspense fallback={<ResultsImpl isLoading />}>
@@ -31,27 +29,7 @@ export const Results = () => (
 );
 
 const MountedResults = () => {
-  const { chain } = useQuery();
-
-  return chain ? (
-    <ResultsForChain chain={chain} />
-  ) : (
-    <Empty
-      icon={<Sparkle />}
-      header={<ChainSelect variant="primary" size="sm" placement="bottom" />}
-      body="Select a chain to list and search for Entropy requests"
-      variant="info"
-    />
-  );
-};
-
-const ResultsForChain = ({
-  chain,
-}: {
-  chain: keyof typeof EntropyDeployments;
-}) => {
-  const getTxData = useCallback(() => getRequestsForChain(chain), [chain]);
-  const results = useData(["requests", chain], getTxData, {
+  const results = useData(["requests"], getRequests, {
     refreshInterval: 0,
     revalidateIfStale: false,
     revalidateOnFocus: false,
@@ -75,7 +53,6 @@ const ResultsForChain = ({
     case StateType.Loaded: {
       return (
         <ResolvedResults
-          chain={chain}
           data={results.data}
           isUpdating={results.isValidating}
         />
@@ -85,178 +62,70 @@ const ResultsForChain = ({
 };
 
 type ResolvedResultsProps = {
-  chain: keyof typeof EntropyDeployments;
-  data: Awaited<ReturnType<typeof getRequestsForChain>>;
+  data: Awaited<ReturnType<typeof getRequests>>;
   isUpdating?: boolean | undefined;
 };
 
-const ResolvedResults = ({ chain, data, isUpdating }: ResolvedResultsProps) => {
+const ResolvedResults = ({ data, isUpdating }: ResolvedResultsProps) => {
   const drawer = useDrawer();
-  const { search } = useQuery();
-  const gasFormatter = useNumberFormatter({ maximumFractionDigits: 3 });
-  const dateFormatter = useDateFormatter({
-    dateStyle: "long",
-    timeStyle: "long",
-  });
+  const { search, chain, status } = useQuery();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
   const rows = useMemo(
     () =>
       data
         .filter(
           (request) =>
-            filter.contains(request.txHash, search) ||
-            filter.contains(request.provider, search) ||
-            filter.contains(request.caller, search) ||
-            filter.contains(request.sequenceNumber.toString(), search),
+            (status === null || status === request.status) &&
+            (chain === null || chain === request.chain) &&
+            (filter.contains(request.requestTxHash, search) ||
+              (request.status !== Status.Pending &&
+                filter.contains(request.callbackTxHash, search)) ||
+              filter.contains(request.sender, search) ||
+              filter.contains(request.sequenceNumber.toString(), search)),
         )
         .map((request) => ({
           id: request.sequenceNumber.toString(),
-          textValue: request.txHash,
+          textValue: request.requestTxHash,
           onAction: () => {
-            drawer.open({
-              title: `Request ${truncate(request.txHash)}`,
-              headingExtra: <Status request={request} />,
-              className: styles.requestDrawer ?? "",
-              fill: true,
-              contents: (
-                <>
-                  <div className={styles.cards}>
-                    <StatCard
-                      nonInteractive
-                      header="Result"
-                      small
-                      variant="primary"
-                      stat={
-                        request.hasCallbackCompleted ? (
-                          <code>{request.callbackResult.randomNumber}</code>
-                        ) : (
-                          <Status request={request} />
-                        )
-                      }
-                    />
-                    <StatCard
-                      nonInteractive
-                      header="Sequence Number"
-                      small
-                      stat={request.sequenceNumber}
-                    />
-                  </div>
-                  <Table
-                    label="Details"
-                    fill
-                    className={styles.details ?? ""}
-                    stickyHeader
-                    columns={[
-                      {
-                        id: "field",
-                        name: "Field",
-                        alignment: "left",
-                        isRowHeader: true,
-                        sticky: true,
-                      },
-                      {
-                        id: "value",
-                        name: "Value",
-                        fill: true,
-                        alignment: "left",
-                      },
-                    ]}
-                    rows={[
-                      {
-                        field: "Request Timestamp",
-                        value: dateFormatter.format(request.timestamp),
-                      },
-                      ...(request.hasCallbackCompleted
-                        ? [
-                            {
-                              field: "Result Timestamp",
-                              value: dateFormatter.format(
-                                request.callbackResult.timestamp,
-                              ),
-                            },
-                          ]
-                        : []),
-                      {
-                        field: "Transaction Hash",
-                        value: <Address chain={chain} value={request.txHash} />,
-                      },
-                      {
-                        field: "Caller",
-                        value: <Address chain={chain} value={request.caller} />,
-                      },
-                      {
-                        field: "Provider",
-                        value: (
-                          <Address chain={chain} value={request.provider} />
-                        ),
-                      },
-                      {
-                        field: "Gas",
-                        value: request.hasCallbackCompleted ? (
-                          <Meter
-                            label="Gas"
-                            value={request.callbackResult.gasUsed}
-                            maxValue={request.gasLimit}
-                            startLabel={
-                              <>
-                                {gasFormatter.format(
-                                  request.callbackResult.gasUsed,
-                                )}{" "}
-                                used
-                              </>
-                            }
-                            endLabel={
-                              <>{gasFormatter.format(request.gasLimit)} max</>
-                            }
-                            labelClassName={styles.gasMeterLabel ?? ""}
-                            variant={
-                              request.callbackResult.gasUsed > request.gasLimit
-                                ? "error"
-                                : "default"
-                            }
-                          />
-                        ) : (
-                          <>{gasFormatter.format(request.gasLimit)} max</>
-                        ),
-                      },
-                    ].map((data) => ({
-                      id: data.field,
-                      data: {
-                        field: (
-                          <span className={styles.field}>{data.field}</span>
-                        ),
-                        value: data.value,
-                      },
-                    }))}
-                  />
-                </>
-              ),
-            });
+            drawer.open(mkRequestDrawer(request));
           },
           data: {
+            chain: <Chain chain={request.chain} />,
             timestamp: (
               <div className={styles.timestamp}>
-                {dateFormatter.format(request.timestamp)}
+                <Timestamp timestamp={request.requestTimestamp} />
               </div>
             ),
             sequenceNumber: (
-              <Badge size="md" variant="info" style="outline">
+              <div className={styles.sequenceNumber}>
                 {request.sequenceNumber}
-              </Badge>
+              </div>
             ),
-            caller: (
-              <Address alwaysTruncate chain={chain} value={request.caller} />
+            sender: (
+              <Address
+                alwaysTruncate
+                chain={request.chain}
+                value={request.sender}
+              />
             ),
-            provider: (
-              <Address alwaysTruncate chain={chain} value={request.provider} />
+            requestTxHash: (
+              <Address
+                alwaysTruncate
+                chain={request.chain}
+                value={request.requestTxHash}
+              />
             ),
-            txHash: (
-              <Address alwaysTruncate chain={chain} value={request.txHash} />
+            callbackTxHash: request.status !== Status.Pending && (
+              <Address
+                alwaysTruncate
+                chain={request.chain}
+                value={request.callbackTxHash}
+              />
             ),
-            status: <Status request={request} />,
+            status: <StatusComponent status={request.status} />,
           },
         })),
-    [data, search, chain, dateFormatter, drawer, filter, gasFormatter],
+    [data, search, drawer, filter, chain, status],
   );
 
   return <ResultsImpl rows={rows} isUpdating={isUpdating} search={search} />;
@@ -277,19 +146,25 @@ type ResultsImplProps =
 
 const ResultsImpl = (props: ResultsImplProps) => (
   <>
-    <EntityList
-      label={defaultProps.label}
-      className={styles.entityList ?? ""}
-      fields={[
-        { id: "sequenceNumber", name: "Sequence Number" },
-        { id: "timestamp", name: "Timestamp" },
-        { id: "txHash", name: "Transaction Hash" },
-        { id: "provider", name: "Provider" },
-        { id: "caller", name: "Caller" },
-        { id: "status", name: "Status" },
-      ]}
-      {...(props.isLoading ? { isLoading: true } : { rows: props.rows })}
-    />
+    <div className={styles.entityList}>
+      {!props.isLoading && props.rows.length === 0 ? (
+        <NoResults query={props.search} />
+      ) : (
+        <EntityList
+          label={defaultProps.label}
+          fields={[
+            { id: "chain", name: "Chain" },
+            { id: "sequenceNumber", name: "Sequence Number" },
+            { id: "timestamp", name: "Timestamp" },
+            { id: "sender", name: "Sender" },
+            { id: "requestTxHash", name: "Request Transaction" },
+            { id: "callbackTxHash", name: "Callback Transaction" },
+            { id: "status", name: "Status" },
+          ]}
+          {...(props.isLoading ? { isLoading: true } : { rows: props.rows })}
+        />
+      )}
+    </div>
     <Table
       className={styles.table ?? ""}
       {...defaultProps}
@@ -317,62 +192,28 @@ const Empty = (props: ComponentProps<typeof NoResults>) => (
   </>
 );
 
-const Address = ({
-  value,
-  chain,
-  alwaysTruncate,
-}: {
-  value: string;
-  chain: keyof typeof EntropyDeployments;
-  alwaysTruncate?: boolean | undefined;
-}) => {
-  const { explorer } = EntropyDeployments[chain];
-  const truncatedValue = useMemo(() => truncate(value), [value]);
+const Chain = ({ chain }: { chain: keyof typeof EntropyDeployments }) => {
+  // eslint-disable-next-line import/namespace
+  const viemChain = viemChains[chain];
   return (
-    <div
-      data-always-truncate={alwaysTruncate ? "" : undefined}
-      className={styles.address}
-    >
-      <Link
-        href={explorer.replace("$ADDRESS", value)}
-        target="_blank"
-        rel="noreferrer"
-      >
-        <code className={styles.truncated}>{truncatedValue}</code>
-        <code className={styles.full}>{value}</code>
-      </Link>
-      <CopyButton text={value} />
+    <div className={styles.chain}>
+      <ChainIcon id={viemChain.id} />
+      {viemChain.name}
     </div>
   );
-};
-
-const Status = ({
-  request,
-}: {
-  request: Awaited<ReturnType<typeof getRequestsForChain>>[number];
-}) => {
-  switch (getStatus(request)) {
-    case "error": {
-      return <StatusImpl variant="error">FAILED</StatusImpl>;
-    }
-    case "success": {
-      return <StatusImpl variant="success">SUCCESS</StatusImpl>;
-    }
-    case "pending": {
-      return (
-        <StatusImpl variant="disabled" style="outline">
-          PENDING
-        </StatusImpl>
-      );
-    }
-  }
 };
 
 const defaultProps = {
   label: "Requests",
   rounded: true,
   fill: true,
+  stickyHeader: "appHeader",
   columns: [
+    {
+      id: "chain" as const,
+      name: "CHAIN",
+      width: 32,
+    },
     {
       id: "sequenceNumber" as const,
       name: "SEQUENCE NUMBER",
@@ -384,37 +225,25 @@ const defaultProps = {
       name: "TIMESTAMP",
     },
     {
-      id: "txHash" as const,
-      name: "TRANSACTION HASH",
-      width: 30,
+      id: "sender" as const,
+      name: "SENDER",
+      width: 35,
     },
     {
-      id: "provider" as const,
-      name: "PROVIDER",
-      width: 30,
+      id: "requestTxHash" as const,
+      name: "REQUEST TX",
+      width: 35,
     },
     {
-      id: "caller" as const,
-      name: "CALLER",
-      width: 30,
+      id: "callbackTxHash" as const,
+      name: "CALLBACK TX",
+      width: 35,
     },
     {
       id: "status" as const,
-      name: "STATUS",
+      name: "CALLBACK STATUS",
       alignment: "center",
       width: 25,
     },
   ],
 } satisfies Partial<ComponentProps<typeof Table<string>>>;
-
-const truncate = (value: string) => `${value.slice(0, 6)}...${value.slice(-4)}`;
-
-const getStatus = (
-  request: Awaited<ReturnType<typeof getRequestsForChain>>[number],
-) => {
-  if (request.hasCallbackCompleted) {
-    return request.callbackResult.failed ? "error" : "success";
-  } else {
-    return "pending";
-  }
-};

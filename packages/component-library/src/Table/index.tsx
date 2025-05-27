@@ -9,8 +9,8 @@ import type {
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { Button } from "../Button/index.js";
-import { Skeleton } from "../Skeleton/index.js";
+import { Button } from "../Button/index.jsx";
+import { Skeleton } from "../Skeleton/index.jsx";
 import {
   Cell,
   Column,
@@ -18,14 +18,14 @@ import {
   Table as UnstyledTable,
   TableBody,
   TableHeader,
-} from "../unstyled/Table/index.js";
+} from "../unstyled/Table/index.jsx";
 
-export type { SortDescriptor } from "../unstyled/Table/index.js";
+export type { SortDescriptor } from "../unstyled/Table/index.jsx";
 
 type TableProps<T extends string> = ComponentProps<typeof UnstyledTable> & {
   className?: string | undefined;
   headerCellClassName?: string | undefined;
-  stickyHeader?: boolean | string | undefined;
+  stickyHeader?: "top" | "appHeader" | undefined;
   fill?: boolean | undefined;
   rounded?: boolean | undefined;
   label: string;
@@ -110,12 +110,9 @@ export const Table = <T extends string>({
         <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
           {(columnConfig: ColumnConfig<T>) => (
             <Column
-              data-sticky-header={stickyHeader === undefined ? undefined : ""}
+              data-sticky-header={stickyHeader}
               {...columnConfig}
-              {...cellProps(columnConfig, headerCellClassName, {
-                "--sticky-header-top":
-                  typeof stickyHeader === "string" ? stickyHeader : 0,
-              } as CSSProperties)}
+              {...cellProps(columnConfig, headerCellClassName)}
             >
               {({ allowsSorting, sortDirection, ...column }) => (
                 <>
@@ -132,12 +129,11 @@ export const Table = <T extends string>({
                             : "ascending",
                         );
                       }}
-                      beforeIcon={(props) => (
+                      beforeIcon={
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 16 16"
                           fill="currentColor"
-                          {...props}
                         >
                           <path
                             className={styles.ascending}
@@ -148,7 +144,7 @@ export const Table = <T extends string>({
                             d="m10.677 9.927-2.5 2.5a.25.25 0 0 1-.354 0l-2.5-2.5A.25.25 0 0 1 5.5 9.5h5a.25.25 0 0 1 .177.427Z"
                           />
                         </svg>
-                      )}
+                      }
                       hideText
                     >
                       Sort

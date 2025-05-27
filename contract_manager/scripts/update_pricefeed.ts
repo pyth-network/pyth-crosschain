@@ -1,6 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, toPrivateKey } from "../src";
+import { DefaultStore } from "../src/node/utils/store";
+import { toPrivateKey } from "../src/core/base";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 
 const parser = yargs(hideBin(process.argv))

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ThemeProvider } from "next-themes";
 
-import { Header as HeaderComponent } from "./index.js";
+import { Header as HeaderComponent } from "./index.jsx";
 
 const meta = {
   component: HeaderComponent,

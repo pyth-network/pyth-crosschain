@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { useId, useMemo } from "react";
 
 import styles from "./index.module.scss";
-import { Link } from "../unstyled/Link/index.js";
+import { Link } from "../unstyled/Link/index.jsx";
 
 type Props = {
   className?: string | undefined;

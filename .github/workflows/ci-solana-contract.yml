@@ -26,8 +26,8 @@ jobs:
           workspaces: "target_chains/solana -> target"
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.73.0
+          components: rustfmt, clippy
           override: true
       - name: Install Solana
         run: |

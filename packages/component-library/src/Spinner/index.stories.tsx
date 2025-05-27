@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Spinner as SpinnerComponent } from "./index.js";
+import { Spinner as SpinnerComponent } from "./index.jsx";
 
 const meta = {
   component: SpinnerComponent,

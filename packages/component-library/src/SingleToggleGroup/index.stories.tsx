@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { SingleToggleGroup as SingleToggleGroupComponent } from "./index.js";
+import { SingleToggleGroup as SingleToggleGroupComponent } from "./index.jsx";
 
 const meta = {
   component: SingleToggleGroupComponent,

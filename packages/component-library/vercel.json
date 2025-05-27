@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "turbo --filter @pythnetwork/component-library build:storybook",
-  "ignoreCommand": "../../vercel-ignore.sh",
   "framework": null,
   "outputDirectory": "storybook-static"
 }

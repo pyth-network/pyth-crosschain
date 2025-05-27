@@ -489,7 +489,7 @@ export const PriceComponentsCardContents = <
         label={label}
         fill
         rounded
-        stickyHeader={styles.headerHeight}
+        stickyHeader="appHeader"
         className={styles.table ?? ""}
         columns={[
           {

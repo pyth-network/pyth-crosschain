@@ -1,0 +1,12 @@
+[
+  {
+    "chain": "iota_testnet",
+    "stateId": "0x8bc490f69520a97ca1b3de864c96aa2265a0cf5d90f5f3f016b2eddf0cf2af2b",
+    "type": "IotaWormholeContract"
+  },
+  {
+    "chain": "iota_mainnet",
+    "stateId": "0xd43b448afc9dd01deb18273ec39d8f27ddd4dd46b0922383874331771b70df73",
+    "type": "IotaWormholeContract"
+  }
+]

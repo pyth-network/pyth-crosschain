@@ -1,3 +1,5 @@
+"use client";
+
 import clsx from "clsx";
 import type { ComponentProps, CSSProperties } from "react";
 

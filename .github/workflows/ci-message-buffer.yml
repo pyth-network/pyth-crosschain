@@ -22,7 +22,6 @@ jobs:
           workspaces: "pythnet/message_buffer -> target"
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.66.1
           components: rustfmt, clippy
       - name: Install Solana

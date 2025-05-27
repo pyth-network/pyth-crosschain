@@ -1,0 +1,12 @@
+@use "@pythnetwork/component-library/theme";
+
+.chart {
+  --border-light: #{theme.pallette-color("stone", 300)};
+  --border-dark: #{theme.pallette-color("steel", 600)};
+  --muted-light: #{theme.pallette-color("stone", 700)};
+  --muted-dark: #{theme.pallette-color("steel", 300)};
+  --chart-series-primary-light: #{theme.pallette-color("violet", 500)};
+  --chart-series-primary-dark: #{theme.pallette-color("violet", 400)};
+  --chart-series-neutral-light: #{theme.pallette-color("stone", 500)};
+  --chart-series-neutral-dark: #{theme.pallette-color("steel", 300)};
+}

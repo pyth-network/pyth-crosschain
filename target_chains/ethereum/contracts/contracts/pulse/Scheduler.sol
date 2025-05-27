@@ -42,6 +42,11 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InsufficientBalance();
         }
 
+        // Check deposit limit for permanent subscriptions
+        if (subscriptionParams.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
+            revert MaxDepositLimitExceeded();
+        }
+
         // Set subscription to active
         subscriptionParams.isActive = true;
 
@@ -297,18 +302,18 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         // from the last trading period. Thus, we use a minimum timestamp of zero while parsing,
         // and we enforce the past max validity ourselves in _validateShouldUpdatePrices using
         // the highest timestamp in the update data.
+        status.balanceInWei -= pythFee;
+        status.totalSpent += pythFee;
         uint64 curTime = SafeCast.toUint64(block.timestamp);
         (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
-        ) = pyth.parsePriceFeedUpdatesWithSlots{value: pythFee}(
+        ) = pyth.parsePriceFeedUpdatesWithSlotsStrict{value: pythFee}(
                 updateData,
                 params.priceIds,
                 0, // We enforce the past max validity ourselves in _validateShouldUpdatePrices
                 curTime + FUTURE_TIMESTAMP_MAX_VALIDITY_PERIOD
             );
-        status.balanceInWei -= pythFee;
-        status.totalSpent += pythFee;
 
         // Verify all price feeds have the same Pythnet slot.
         // All feeds in a subscription must be updated at the same time.
@@ -547,11 +552,23 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     /// BALANCE MANAGEMENT
 
     function addFunds(uint256 subscriptionId) external payable override {
-        if (!_state.subscriptionParams[subscriptionId].isActive) {
+        SubscriptionParams storage params = _state.subscriptionParams[
+            subscriptionId
+        ];
+        SubscriptionStatus storage status = _state.subscriptionStatuses[
+            subscriptionId
+        ];
+
+        if (!params.isActive) {
             revert InactiveSubscription();
         }
 
-        _state.subscriptionStatuses[subscriptionId].balanceInWei += msg.value;
+        // Check deposit limit for permanent subscriptions
+        if (params.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
+            revert MaxDepositLimitExceeded();
+        }
+
+        status.balanceInWei += msg.value;
     }
 
     function withdrawFunds(
