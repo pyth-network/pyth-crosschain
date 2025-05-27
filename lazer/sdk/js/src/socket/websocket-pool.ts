@@ -4,9 +4,18 @@ import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
 import type { Request, Response } from "../protocol.js";
-import { ResilientWebSocket } from "./resilient-websocket.js";
+import type {ResilientWebSocketConfig} from "./resilient-websocket.js";
+import { ResilientWebSocket  } from "./resilient-websocket.js";
 
 const DEFAULT_NUM_CONNECTIONS = 3;
+
+export type WebSocketPoolConfig = {
+  urls: string[];
+  token: string;
+  numConnections?: number;
+  logger?: Logger;
+  rwsConfig?: Omit<ResilientWebSocketConfig, 'logger' | 'endpoint'>;
+};
 
 export class WebSocketPool {
   rwsPool: ResilientWebSocket[];
@@ -17,7 +26,7 @@ export class WebSocketPool {
   private wasAllDown = true;
   private checkConnectionStatesInterval: NodeJS.Timeout;
 
-  private constructor(private readonly logger: Logger = dummyLogger) {
+  private constructor(private readonly logger: Logger) {
     this.rwsPool = [];
     this.cache = new TTLCache({ ttl: 1000 * 10 }); // TTL of 10 seconds
     this.subscriptions = new Map();
@@ -39,28 +48,33 @@ export class WebSocketPool {
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
   static async create(
-    urls: string[],
-    token: string,
-    numConnections: number = DEFAULT_NUM_CONNECTIONS,
-    logger: Logger = dummyLogger,
+    config: WebSocketPoolConfig,
   ): Promise<WebSocketPool> {
-    if (urls.length === 0) {
+    if (config.urls.length === 0) {
       throw new Error("No URLs provided");
     }
 
+    const logger = config.logger ?? dummyLogger;
     const pool = new WebSocketPool(logger);
+    const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;
 
     for (let i = 0; i < numConnections; i++) {
-      const url = urls[i % urls.length];
+      const url = config.urls[i % config.urls.length];
       if (!url) {
         throw new Error(`URLs must not be null or empty`);
       }
       const wsOptions = {
+        ...config.rwsConfig?.wsOptions,
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${config.token}`,
         },
       };
-      const rws = new ResilientWebSocket({endpoint: url, wsOptions, logger});
+      const rws = new ResilientWebSocket({
+        ...config.rwsConfig,
+        endpoint: url,
+        wsOptions,
+        logger
+      });
 
       // If a websocket client unexpectedly disconnects, ResilientWebSocket will reestablish
       // the connection and call the onReconnect callback.

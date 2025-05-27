@@ -1,10 +1,9 @@
 import WebSocket from "isomorphic-ws";
-import type { Logger } from "ts-log";
-import { dummyLogger } from "ts-log";
 
 import type { ParsedPayload, Request, Response } from "./protocol.js";
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
-import { WebSocketPool } from "./socket/websocket-pool.js";
+import type {WebSocketPoolConfig} from "./socket/websocket-pool.js";
+import { WebSocketPool  } from "./socket/websocket-pool.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -36,12 +35,9 @@ export class PythLazerClient {
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
   static async create(
-    urls: string[],
-    token: string,
-    numConnections = 3,
-    logger: Logger = dummyLogger,
+    config: WebSocketPoolConfig
   ): Promise<PythLazerClient> {
-    const wsp = await WebSocketPool.create(urls, token, numConnections, logger);
+    const wsp = await WebSocketPool.create(config);
     return new PythLazerClient(wsp);
   }
 
