@@ -1,0 +1,41 @@
+name: Check Hermes Rust Client
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/ci-hermes-client-rust.yml
+      - apps/hermes/client/rust/**
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/hermes/client/rust
+    steps:
+      - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "apps/hermes/client/rust -> target"
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.82.0
+          components: rustfmt, clippy
+          override: true
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
+      - name: Build check
+        run: cargo build
+        if: success() || failure()
+      - name: Run tests
+        run: cargo test
+        if: success() || failure()
+      - name: Build examples
+        run: cargo build --examples
+        if: success() || failure()
