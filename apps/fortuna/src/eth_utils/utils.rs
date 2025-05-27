@@ -187,7 +187,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
         },
         |e, dur| {
             let retry_number = num_retries.load(std::sync::atomic::Ordering::Relaxed);
-            tracing::error!(
+            tracing::warn!(
                 "Error on retry {} at duration {:?}: {}",
                 retry_number,
                 dur,

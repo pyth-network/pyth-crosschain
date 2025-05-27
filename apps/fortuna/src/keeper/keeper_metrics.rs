@@ -41,6 +41,7 @@ pub struct KeeperMetrics {
     pub final_gas_multiplier: Family<AccountLabel, Histogram>,
     pub final_fee_multiplier: Family<AccountLabel, Histogram>,
     pub gas_price_estimate: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub highest_revealed_sequence_number: Family<AccountLabel, Gauge>,
     pub accrued_pyth_fees: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
     pub block_timestamp_lag: Family<ChainIdLabel, Gauge>,
     pub latest_block_timestamp: Family<ChainIdLabel, Gauge>,
@@ -88,6 +89,7 @@ impl Default for KeeperMetrics {
                 Histogram::new(vec![100.0, 110.0, 120.0, 140.0, 160.0, 180.0, 200.0].into_iter())
             }),
             gas_price_estimate: Family::default(),
+            highest_revealed_sequence_number: Family::default(),
             accrued_pyth_fees: Family::default(),
             block_timestamp_lag: Family::default(),
             latest_block_timestamp: Family::default(),
@@ -221,6 +223,12 @@ impl KeeperMetrics {
             "gas_price_estimate",
             "Gas price estimate for the blockchain (in gwei)",
             keeper_metrics.gas_price_estimate.clone(),
+        );
+
+        writable_registry.register(
+            "highest_revealed_sequence_number",
+            "The highest sequence number revealed by the keeper either via callbacks or manual reveal",
+            keeper_metrics.highest_revealed_sequence_number.clone(),
         );
 
         writable_registry.register(

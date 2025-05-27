@@ -7,7 +7,7 @@ use {
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{self, keeper_metrics::KeeperMetrics},
-        state::{HashChainState, PebbleHashChain},
+        state::{HashChainState, MonitoredHashChainState, PebbleHashChain},
     },
     anyhow::{anyhow, Error, Result},
     axum::Router,
@@ -183,6 +183,7 @@ async fn setup_chain_and_run_keeper(
         chain_id,
         &chain_config,
         rpc_metrics.clone(),
+        keeper_metrics.clone(),
     )
     .await?;
     chains.write().await.insert(
@@ -210,19 +211,29 @@ async fn setup_chain_state(
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
     rpc_metrics: Arc<RpcMetrics>,
+    keeper_metrics: Arc<KeeperMetrics>,
 ) -> Result<BlockchainState> {
     let contract = Arc::new(InstrumentedPythContract::from_config(
         chain_config,
         chain_id.clone(),
         rpc_metrics,
     )?);
+    let network_id: u64 = contract
+        .get_network_id()
+        .await
+        .map_err(|e| anyhow!("Failed to get network id: {}. Chain id: {}", &chain_id, e))?
+        .as_u64();
     let mut provider_commitments = chain_config.commitments.clone().unwrap_or_default();
     provider_commitments.sort_by(|c1, c2| {
         c1.original_commitment_sequence_number
             .cmp(&c2.original_commitment_sequence_number)
     });
 
-    let provider_info = contract.get_provider_info(*provider).call().await?;
+    let provider_info = contract
+        .get_provider_info(*provider)
+        .call()
+        .await
+        .map_err(|e| anyhow!("Failed to get provider info: {}", e))?;
     let latest_metadata = bincode::deserialize::<CommitmentMetadata>(
         &provider_info.commitment_metadata,
     )
@@ -275,10 +286,7 @@ async fn setup_chain_state(
         hash_chains.push(pebble_hash_chain);
     }
 
-    let chain_state = HashChainState {
-        offsets,
-        hash_chains,
-    };
+    let chain_state = HashChainState::new(offsets, hash_chains)?;
 
     if chain_state.reveal(provider_info.original_commitment_sequence_number)?
         != provider_info.original_commitment
@@ -288,9 +296,17 @@ async fn setup_chain_state(
         tracing::info!("Root of chain id {} matches commitment", &chain_id);
     }
 
+    let monitored_chain_state = MonitoredHashChainState::new(
+        Arc::new(chain_state),
+        keeper_metrics.clone(),
+        chain_id.clone(),
+        *provider,
+    );
+
     let state = BlockchainState {
         id: chain_id.clone(),
-        state: Arc::new(chain_state),
+        state: Arc::new(monitored_chain_state),
+        network_id,
         contract,
         provider_address: *provider,
         reveal_delay_blocks: chain_config.reveal_delay_blocks,

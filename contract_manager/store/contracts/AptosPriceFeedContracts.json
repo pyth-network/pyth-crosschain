@@ -1,0 +1,44 @@
+[
+  {
+    "chain": "aptos_mainnet",
+    "stateId": "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387",
+    "wormholeStateId": "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
+    "type": "AptosPriceFeedContract"
+  },
+  {
+    "chain": "aptos_testnet",
+    "stateId": "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387",
+    "wormholeStateId": "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
+    "type": "AptosPriceFeedContract"
+  },
+  {
+    "chain": "movement_m1_devnet",
+    "stateId": "0x9357e76fe965c9956a76181ee49f66d51b7f9c3800182a944ed96be86301e49f",
+    "wormholeStateId": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosPriceFeedContract"
+  },
+  {
+    "chain": "movement_suzuka_testnet",
+    "stateId": "0x9357e76fe965c9956a76181ee49f66d51b7f9c3800182a944ed96be86301e49f",
+    "wormholeStateId": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosPriceFeedContract"
+  },
+  {
+    "chain": "movement_porto_testnet",
+    "stateId": "0x9357e76fe965c9956a76181ee49f66d51b7f9c3800182a944ed96be86301e49f",
+    "wormholeStateId": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosPriceFeedContract"
+  },
+  {
+    "chain": "movement_bardock_testnet",
+    "stateId": "0x9357e76fe965c9956a76181ee49f66d51b7f9c3800182a944ed96be86301e49f",
+    "wormholeStateId": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosPriceFeedContract"
+  },
+  {
+    "chain": "movement_mainnet",
+    "stateId": "0x9357e76fe965c9956a76181ee49f66d51b7f9c3800182a944ed96be86301e49f",
+    "wormholeStateId": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosPriceFeedContract"
+  }
+]

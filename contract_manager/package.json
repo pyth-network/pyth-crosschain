@@ -3,10 +3,31 @@
   "version": "1.0.0",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "exports": {
+    "./node/*": {
+      "types": "./lib/node/utils/*.d.ts",
+      "default": "./lib/node/utils/*.js"
+    },
+    "./core/*": {
+      "types": "./lib/core/*.d.ts",
+      "default": "./lib/core/*.js"
+    },
+    "./data/chains/*.json": {
+      "default": "./store/chains/*.json"
+    },
+    "./data/contracts/*.json": {
+      "default": "./store/contracts/*.json"
+    },
+    "./data/tokens/*.json": {
+      "default": "./store/tokens/*.json"
+    },
+    "./data/vaults/*.json": {
+      "default": "./store/vaults/*.json"
+    }
+  },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "store/**/*.json"
   ],
   "scripts": {
     "build": "tsc",
@@ -63,11 +84,11 @@
     "typescript": "catalog:",
     "viem": "^2.23.5",
     "web3": "^1.8.2",
-    "web3-eth-contract": "^1.8.2",
-    "yaml": "^2.1.1"
+    "web3-eth-contract": "^1.8.2"
   },
   "devDependencies": {
     "@types/web3": "^1.2.2",
+    "@types/node": "catalog:",
     "eslint": "^8.0.0",
     "prettier": "catalog:",
     "typedoc": "^0.25.7"

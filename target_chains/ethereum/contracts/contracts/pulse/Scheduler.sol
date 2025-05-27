@@ -42,6 +42,11 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             revert InsufficientBalance();
         }
 
+        // Check deposit limit for permanent subscriptions
+        if (subscriptionParams.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
+            revert MaxDepositLimitExceeded();
+        }
+
         // Set subscription to active
         subscriptionParams.isActive = true;
 
@@ -131,11 +136,16 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         // Clear price updates for removed price IDs before updating params
-        _clearRemovedPriceUpdates(
+        bool newPriceIdsAdded = _clearRemovedPriceUpdates(
             subscriptionId,
             currentParams.priceIds,
             newParams.priceIds
         );
+
+        // Reset priceLastUpdatedAt to 0 if new price IDs were added
+        if (newPriceIdsAdded) {
+            _state.subscriptionStatuses[subscriptionId].priceLastUpdatedAt = 0;
+        }
 
         // Update subscription parameters
         _state.subscriptionParams[subscriptionId] = newParams;
@@ -211,12 +221,13 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      * @param subscriptionId The ID of the subscription being updated.
      * @param currentPriceIds The array of price IDs currently associated with the subscription.
      * @param newPriceIds The new array of price IDs for the subscription.
+     * @return newPriceIdsAdded True if any new price IDs were added, false otherwise.
      */
     function _clearRemovedPriceUpdates(
         uint256 subscriptionId,
         bytes32[] storage currentPriceIds,
         bytes32[] memory newPriceIds
-    ) internal {
+    ) internal returns (bool newPriceIdsAdded) {
         // Iterate through old price IDs
         for (uint i = 0; i < currentPriceIds.length; i++) {
             bytes32 oldPriceId = currentPriceIds[i];
@@ -235,6 +246,28 @@ abstract contract Scheduler is IScheduler, SchedulerState {
                 delete _state.priceUpdates[subscriptionId][oldPriceId];
             }
         }
+
+        // Check if any new price IDs were added
+        for (uint i = 0; i < newPriceIds.length; i++) {
+            bytes32 newPriceId = newPriceIds[i];
+            bool found = false;
+
+            // Check if the new price ID exists in the current list
+            for (uint j = 0; j < currentPriceIds.length; j++) {
+                if (currentPriceIds[j] == newPriceId) {
+                    found = true;
+                    break;
+                }
+            }
+
+            // If a new price ID was added, mark as changed
+            if (!found) {
+                newPriceIdsAdded = true;
+                break;
+            }
+        }
+
+        return newPriceIdsAdded;
     }
 
     function updatePriceFeeds(
@@ -519,11 +552,33 @@ abstract contract Scheduler is IScheduler, SchedulerState {
     /// BALANCE MANAGEMENT
 
     function addFunds(uint256 subscriptionId) external payable override {
-        if (!_state.subscriptionParams[subscriptionId].isActive) {
+        SubscriptionParams storage params = _state.subscriptionParams[
+            subscriptionId
+        ];
+        SubscriptionStatus storage status = _state.subscriptionStatuses[
+            subscriptionId
+        ];
+
+        if (!params.isActive) {
             revert InactiveSubscription();
         }
 
-        _state.subscriptionStatuses[subscriptionId].balanceInWei += msg.value;
+        // Check deposit limit for permanent subscriptions
+        if (params.isPermanent && msg.value > MAX_DEPOSIT_LIMIT) {
+            revert MaxDepositLimitExceeded();
+        }
+
+        status.balanceInWei += msg.value;
+
+        // If subscription is active, ensure minimum balance is maintained
+        if (params.isActive) {
+            uint256 minimumBalance = this.getMinimumBalance(
+                uint8(params.priceIds.length)
+            );
+            if (status.balanceInWei < minimumBalance) {
+                revert InsufficientBalance();
+            }
+        }
     }
 
     function withdrawFunds(

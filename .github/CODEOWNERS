@@ -16,6 +16,13 @@ turbo.json @pyth-network/web-team
 .github/workflows/ci-turbo-build.yml @pyth-network/web-team
 .github/workflows/ci-turbo-test.yml @pyth-network/web-team
 
+/lazer/contracts/aptos @Riateche @ali-bahjati
+/lazer/contracts/evm @Riateche @ali-bahjati
+/lazer/contracts/solana @Riateche @ali-bahjati
+/lazer/publisher_sdk @darunrs @Riateche
+/lazer/sdk/js @ali-bahjati @keyvankhademi
+/lazer/sdk/rust @darunrs @Riateche
+
 flake.lock @cprussin
 *.nix @cprussin
 .envrc @cprussin

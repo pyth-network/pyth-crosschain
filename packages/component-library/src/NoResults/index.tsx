@@ -1,3 +1,5 @@
+"use client";
+
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import clsx from "clsx";
 import type { ReactNode } from "react";

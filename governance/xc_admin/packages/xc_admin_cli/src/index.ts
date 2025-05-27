@@ -414,6 +414,7 @@ multisigCommand(
         voteAccounts.map((voteAccount: PublicKey) =>
           fetchStakeAccounts(
             new Connection(getPythClusterApiUrl(cluster)),
+            authorizedPubkey,
             voteAccount,
           ),
         ),

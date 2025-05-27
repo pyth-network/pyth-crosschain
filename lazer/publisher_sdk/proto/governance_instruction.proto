@@ -13,9 +13,15 @@ package pyth_lazer_transaction;
 
 // Representation of a complete governance instruction. This value will be signed
 // by a governance source.
+//
+// If the governance source is SingleEd25519, this message will be the payload of LazerTransaction.
+//
+// If the governance source is Wormhole emitter, this message will be the body of the GovernancePayload which
+// is the VAA message Pyth governance sends to Wormhole. The GovernancePayload follows xc-admin spec
+// and looks like so:
+// <magic:u32><module:u8><action:u8><chain:u16><GovernanceInstruction:bytes>
+// You can find the xc-admin spec in: ../../../governance/xc_admin/packages/xc_admin_common/src/governance_payload
 message GovernanceInstruction {
-    // [required] Governance source that signed this instruction.
-    optional GovernanceSource source = 1;
     // Action requested by this instruction. For the instruction to be accepted, all directives
     // must be successfully applied. In case of any failure, the whole instruction is reverted.
     // However, note that if the instruction targets multiple (or all) shards, each shard will
@@ -29,14 +35,15 @@ message GovernanceInstruction {
     // is greater than the specified value. After `max_execution_timestamp` is in the past,
     // it will no longer be possible to execute this instruction.
     optional google.protobuf.Timestamp max_execution_timestamp = 4;
-    // [required] Sequence number of this instruction. It must be greater than 0.
-    // It must always be increasing, but not required to be
-    // strictly sequential (i.e. gaps are allowed). Each shard separately keeps track of the last executed
-    // governance instruction and will reject instructions with the same or smaller sequence no.
-    // Note that if instructions are received out of order, some of them may become permanently
-    // rejected (e.g. if instruction #3 has been successfully processed before instruction #2 was observed,
-    // #2 will always be rejected).
-    // Sequence numbers are assigned and tracked separately for each governance source.
+    // [optional] Sequence number of this instruction. Required for SingleEd25519 governance source
+    // and optional for WomrholeEmitter governance source (because Wormhole has its own sequence
+    // numbers). If set, it must be greater than 0, and always be increasing, but not required to be
+    // strictly sequential (i.e. gaps are allowed). Each shard separately keeps track of the last
+    // executed governance instruction and will reject instructions with the same or smaller
+    // sequence no. Note that if instructions are received out of order, some of them may become
+    // permanently rejected (e.g. if instruction #3 has been successfully processed before
+    // instruction #2 was observed, #2 will always be rejected). Sequence numbers are assigned and
+    // tracked separately for each governance source.
     optional uint32 governance_sequence_no = 5;
 }
 
@@ -155,10 +162,17 @@ message GovernanceSource {
         optional bytes public_key = 1;
     }
 
+    message WormholeEmitter {
+        // [required] Wormhole emitter address.
+        optional bytes address = 1;
+        // [required] Wormhole emitter chain ID. Restricted to uint16.
+        optional uint32 chain_id = 2;
+    }
+
     // [required]
     oneof source {
         SingleEd25519 single_ed25519 = 1;
-        // TODO: wormhole source goes here.
+        WormholeEmitter wormhole_emitter = 2;
     }
 }
 
@@ -290,8 +304,8 @@ message SetPublisherActive {
 
 // Feed is inactive when added, meaning that it will be available to publishers but not to consumers.
 message AddFeed {
-    // [required] ID of the price feed. Must be unique (within the shard).
-    optional uint32 price_feed_id = 1;
+    // [required] ID of the feed. Must be unique (within the shard).
+    optional uint32 feed_id = 1;
     // [required] Feed metadata. Some properties are required (name, exponent, etc.).
     // Known properties must have the expected type.
     // Additional arbitrary properties are allowed.
@@ -303,7 +317,7 @@ message AddFeed {
 
 message UpdateFeed {
     // [required] ID of the feed that is being updated. Rejects if there is no such feed.
-    optional uint32 price_feed_id = 1;
+    optional uint32 feed_id = 1;
     // [required]
     // Note: when adding a new variant here, update `Permissions` as well.
     oneof action {
@@ -347,4 +361,3 @@ message DeactivateFeed {
     // governance instruction is processed.
     optional google.protobuf.Timestamp deactivation_timestamp = 1;
 }
-

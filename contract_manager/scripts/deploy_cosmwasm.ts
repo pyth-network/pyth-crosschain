@@ -1,8 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { CosmWasmChain } from "../src/chains";
-import { CosmWasmPriceFeedContract } from "../src/contracts/cosmwasm";
-import { DefaultStore } from "../src/store";
+import { CosmWasmChain } from "../src/core/chains";
+import { CosmWasmPriceFeedContract } from "../src/core/contracts/cosmwasm";
+import { DefaultStore } from "../src/node/utils/store";
 
 import { COMMON_DEPLOY_OPTIONS } from "./common";
 

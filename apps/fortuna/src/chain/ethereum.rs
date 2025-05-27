@@ -160,17 +160,17 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         }
     }
 
-    pub async fn from_config_and_provider(
+    pub fn from_config_and_provider_and_network_id(
         chain_config: &EthereumConfig,
         private_key: &str,
         provider: Provider<T>,
+        network_id: u64,
     ) -> Result<SignablePythContractInner<T>> {
-        let chain_id = provider.get_chainid().await?;
         let gas_oracle =
             EthProviderOracle::new(provider.clone(), chain_config.priority_fee_multiplier_pct);
         let wallet__ = private_key
             .parse::<LocalWallet>()?
-            .with_chain_id(chain_id.as_u64());
+            .with_chain_id(network_id);
 
         let address = wallet__.address();
 
@@ -185,6 +185,20 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
             )),
         ))
     }
+
+    pub async fn from_config_and_provider(
+        chain_config: &EthereumConfig,
+        private_key: &str,
+        provider: Provider<T>,
+    ) -> Result<SignablePythContractInner<T>> {
+        let network_id = provider.get_chainid().await?.as_u64();
+        Self::from_config_and_provider_and_network_id(
+            chain_config,
+            private_key,
+            provider,
+            network_id,
+        )
+    }
 }
 
 impl SignablePythContract {
@@ -195,14 +209,20 @@ impl SignablePythContract {
 }
 
 impl InstrumentedSignablePythContract {
-    pub async fn from_config(
+    pub fn from_config(
         chain_config: &EthereumConfig,
         private_key: &str,
         chain_id: ChainId,
         metrics: Arc<RpcMetrics>,
+        network_id: u64,
     ) -> Result<Self> {
         let provider = TracedClient::new(chain_id, &chain_config.geth_rpc_addr, metrics)?;
-        Self::from_config_and_provider(chain_config, private_key, provider).await
+        Self::from_config_and_provider_and_network_id(
+            chain_config,
+            private_key,
+            provider,
+            network_id,
+        )
     }
 }
 
@@ -229,6 +249,13 @@ impl InstrumentedPythContract {
             chain_config.contract_addr,
             Arc::new(provider),
         ))
+    }
+}
+
+impl<T: JsonRpcClient + 'static> PythRandom<Provider<T>> {
+    pub async fn get_network_id(&self) -> Result<U256> {
+        let chain_id = self.client().get_chainid().await?;
+        Ok(chain_id)
     }
 }
 
@@ -282,6 +309,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
         let mut event = self.requested_with_callback_filter();
         event.filter = event
             .filter
+            .address(self.address())
             .from_block(from_block)
             .to_block(to_block)
             .topic1(provider);
