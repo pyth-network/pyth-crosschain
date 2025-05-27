@@ -398,7 +398,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         assertEq(
             status.priceLastUpdatedAt,
             0,
-            "priceLastUpdatedAt should be reset to 0 after changing price IDs"
+            "priceLastUpdatedAt should be reset to 0 after adding new price IDs"
         );
 
         // 4. Verify immediate update is possible

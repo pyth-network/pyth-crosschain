@@ -131,14 +131,14 @@ abstract contract Scheduler is IScheduler, SchedulerState {
         }
 
         // Clear price updates for removed price IDs before updating params
-        bool priceIdsChanged = _clearRemovedPriceUpdates(
+        bool newPriceIdsAdded = _clearRemovedPriceUpdates(
             subscriptionId,
             currentParams.priceIds,
             newParams.priceIds
         );
 
-        // Reset priceLastUpdatedAt to 0 if price IDs have changed
-        if (priceIdsChanged) {
+        // Reset priceLastUpdatedAt to 0 if new price IDs were added
+        if (newPriceIdsAdded) {
             _state.subscriptionStatuses[subscriptionId].priceLastUpdatedAt = 0;
         }
 
@@ -216,18 +216,13 @@ abstract contract Scheduler is IScheduler, SchedulerState {
      * @param subscriptionId The ID of the subscription being updated.
      * @param currentPriceIds The array of price IDs currently associated with the subscription.
      * @param newPriceIds The new array of price IDs for the subscription.
-     * @return priceIdsChanged True if the price IDs list has changed (additions or removals), false otherwise.
+     * @return newPriceIdsAdded True if any new price IDs were added, false otherwise.
      */
     function _clearRemovedPriceUpdates(
         uint256 subscriptionId,
         bytes32[] storage currentPriceIds,
         bytes32[] memory newPriceIds
-    ) internal returns (bool priceIdsChanged) {
-        // Check if the arrays have different lengths, which means the price IDs have changed
-        if (currentPriceIds.length != newPriceIds.length) {
-            priceIdsChanged = true;
-        }
-
+    ) internal returns (bool newPriceIdsAdded) {
         // Iterate through old price IDs
         for (uint i = 0; i < currentPriceIds.length; i++) {
             bytes32 oldPriceId = currentPriceIds[i];
@@ -244,33 +239,30 @@ abstract contract Scheduler is IScheduler, SchedulerState {
             // If not found in the new list, delete its stored update data
             if (!found) {
                 delete _state.priceUpdates[subscriptionId][oldPriceId];
-                priceIdsChanged = true;
             }
         }
 
         // Check if any new price IDs were added
-        if (!priceIdsChanged) {
-            for (uint i = 0; i < newPriceIds.length; i++) {
-                bytes32 newPriceId = newPriceIds[i];
-                bool found = false;
+        for (uint i = 0; i < newPriceIds.length; i++) {
+            bytes32 newPriceId = newPriceIds[i];
+            bool found = false;
 
-                // Check if the new price ID exists in the current list
-                for (uint j = 0; j < currentPriceIds.length; j++) {
-                    if (currentPriceIds[j] == newPriceId) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                // If a new price ID was added, mark as changed
-                if (!found) {
-                    priceIdsChanged = true;
+            // Check if the new price ID exists in the current list
+            for (uint j = 0; j < currentPriceIds.length; j++) {
+                if (currentPriceIds[j] == newPriceId) {
+                    found = true;
                     break;
                 }
             }
+
+            // If a new price ID was added, mark as changed
+            if (!found) {
+                newPriceIdsAdded = true;
+                break;
+            }
         }
 
-        return priceIdsChanged;
+        return newPriceIdsAdded;
     }
 
     function updatePriceFeeds(
