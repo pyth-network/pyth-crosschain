@@ -102,19 +102,19 @@ export class PythLazerClient {
     });
   }
 
-  async subscribe(request: Request): Promise<void> {
+  subscribe(request: Request) {
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
-    await this.wsp.addSubscription(request);
+    this.wsp.addSubscription(request);
   }
 
-  async unsubscribe(subscriptionId: number): Promise<void> {
-    await this.wsp.removeSubscription(subscriptionId);
+  unsubscribe(subscriptionId: number) {
+    this.wsp.removeSubscription(subscriptionId);
   }
 
-  async send(request: Request): Promise<void> {
-    await this.wsp.sendRequest(request);
+  send(request: Request) {
+    this.wsp.sendRequest(request);
   }
 
   /**

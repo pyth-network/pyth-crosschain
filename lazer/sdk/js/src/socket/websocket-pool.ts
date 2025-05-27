@@ -50,9 +50,6 @@ export class WebSocketPool {
 
     const pool = new WebSocketPool(logger);
 
-    // Create all websocket instances
-    const connectionPromises: Promise<void>[] = [];
-
     for (let i = 0; i < numConnections; i++) {
       const url = urls[i % urls.length];
       if (!url) {
@@ -73,7 +70,7 @@ export class WebSocketPool {
         }
         for (const [, request] of pool.subscriptions) {
           try {
-            void rws.send(JSON.stringify(request));
+            rws.send(JSON.stringify(request));
           } catch (error) {
             pool.logger.error(
               "Failed to resend subscription on reconnect:",
@@ -86,23 +83,20 @@ export class WebSocketPool {
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
       rws.onMessage = pool.dedupeHandler;
       pool.rwsPool.push(rws);
-
-      // Start the websocket and collect the promise
-      connectionPromises.push(rws.startWebSocket());
-    }
-
-    // Wait for all connections to be established
-    try {
-      await Promise.all(connectionPromises);
-    } catch (error) {
-      // If any connection fails, clean up and throw
-      pool.shutdown();
-      throw error;
+      rws.startWebSocket();
     }
 
     pool.logger.info(
-      `Successfully established ${numConnections.toString()} redundant WebSocket connections`,
+      `Started WebSocketPool with ${numConnections.toString()} connections. Waiting for at least one to connect...`,
     );
+
+    while (!pool.isAnyConnectionEstablished()) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    pool.logger.info(
+      `At least one WebSocket connection is established. WebSocketPool is ready.`,
+    )
 
     return pool;
   }
@@ -149,33 +143,27 @@ export class WebSocketPool {
     }
   };
 
-  async sendRequest(request: Request): Promise<void> {
-    const sendPromises = this.rwsPool.map(async (rws) => {
-      try {
-        await rws.send(JSON.stringify(request));
-      } catch (error) {
-        this.logger.error("Failed to send request:", error);
-        throw error;
-      }
-    });
-    await Promise.all(sendPromises);
+  sendRequest(request: Request) {
+    for (const rws of this.rwsPool) {
+      rws.send(JSON.stringify(request));
+    }
   }
 
-  async addSubscription(request: Request): Promise<void> {
+  addSubscription(request: Request) {
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
     this.subscriptions.set(request.subscriptionId, request);
-    await this.sendRequest(request);
+    this.sendRequest(request);
   }
 
-  async removeSubscription(subscriptionId: number): Promise<void> {
+  removeSubscription(subscriptionId: number) {
     this.subscriptions.delete(subscriptionId);
     const request: Request = {
       type: "unsubscribe",
       subscriptionId,
     };
-    await this.sendRequest(request);
+    this.sendRequest(request);
   }
 
   addMessageListener(handler: (data: WebSocket.Data) => void): void {
@@ -191,7 +179,11 @@ export class WebSocketPool {
   }
 
   private areAllConnectionsDown(): boolean {
-    return this.rwsPool.every((ws) => !ws.isConnected || ws.isReconnecting);
+    return this.rwsPool.every((ws) => !ws.isConnected() || ws.isReconnecting);
+  }
+
+  private isAnyConnectionEstablished(): boolean {
+    return this.rwsPool.some((ws) => ws.isConnected());
   }
 
   private checkConnectionStates(): void {
