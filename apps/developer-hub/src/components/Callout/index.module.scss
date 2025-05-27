@@ -1,137 +1,136 @@
 @use "@pythnetwork/component-library/theme";
 
 .callout {
-    display: flex;
-    flex-direction: column;
-    gap: theme.spacing(1);
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+  border-radius: theme.border-radius("2xl");
+  text-decoration: none;
+  color: unset;
+  outline-offset: 0;
+  outline: theme.spacing(1) solid transparent;
+  transition-property: outline-color, border-color, box-shadow, background;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  border: 1px solid transparent;
+  position: relative;
+  padding: theme.spacing(1);
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+
+  .hover {
     border-radius: theme.border-radius("2xl");
-    text-decoration: none;
-    color: unset;
-    outline-offset: 0;
-    outline: theme.spacing(1) solid transparent;
-    transition-property: outline-color, border-color, box-shadow, background;
-    transition-duration: 100ms;
-    transition-timing-function: linear;
-    border: 1px solid transparent;
+    position: absolute;
+    inset: -1px;
+    opacity: 0;
+    transition: opacity 100ms linear;
+    background: theme.color("button", "outline", "background", "hover");
+    z-index: -1;
+  }
+
+  .body {
     position: relative;
-    padding: theme.spacing(1);
-    isolation: isolate;
-    -webkit-tap-highlight-color: transparent;
+    display: inline-flex;
+    flex-flow: row nowrap;
+    gap: theme.spacing(3);
+    align-items: center;
+    padding: theme.spacing(3);
 
-    .hover {
-        border-radius: theme.border-radius("2xl");
-        position: absolute;
-        inset: -1px;
-        opacity: 0;
-        transition: opacity 100ms linear;
-        background: theme.color("button", "outline", "background", "hover");
-        z-index: -1;
+    @include theme.text("lg", "medium");
+
+    .icon {
+      font-size: theme.spacing(6);
+      height: theme.spacing(6);
     }
+  }
 
-    .body {
-        position: relative;
-        display: inline-flex;
-        flex-flow: row nowrap;
-        gap: theme.spacing(3);
-        align-items: center;
-        padding: theme.spacing(3);
+  &[data-variant="default"] {
+    background: theme.color("states", "neutral", "background");
+    color: theme.color("states", "neutral", "normal");
 
-        @include theme.text("lg", "medium");
-
-        .icon {
-            font-size: theme.spacing(6);
-            height: theme.spacing(6);
-        }
-        
+    &[data-hovered] {
+      @include theme.elevation("primary", 2);
     }
+  }
 
-    &[data-variant="default"] {
-        background: theme.color("states", "neutral", "background");
-        color: theme.color("states", "neutral", "normal");
+  &[data-variant="primary"] {
+    background: theme.color("background", "primary");
+    color: theme.color("foreground");
 
-        &[data-hovered] {
-            @include theme.elevation("primary", 2);
-        }
+    &[data-hovered] {
+      @include theme.elevation("primary", 2);
     }
+  }
 
-    &[data-variant="primary"] {
-        background: theme.color("background", "primary");
-        color: theme.color("foreground");
+  &[data-variant="secondary"] {
+    background: theme.color("background", "secondary");
+    color: theme.color("foreground");
 
-        &[data-hovered] {
-            @include theme.elevation("primary", 2);
-        }
+    &[data-hovered] {
+      @include theme.elevation("default", 2);
     }
+  }
 
-    &[data-variant="secondary"] {
-        background: theme.color("background", "secondary");
-        color: theme.color("foreground");
+  &[data-variant="tertiary"] {
+    background: theme.color("background", "card-highlight");
+    color: theme.color("foreground");
 
-        &[data-hovered] {
-            @include theme.elevation("default", 2);
-        }
+    &[data-hovered] {
+      @include theme.elevation("default", 2);
     }
+  }
 
-    &[data-variant="tertiary"] {
-        background: theme.color("background", "card-highlight");
-        color: theme.color("foreground");
+  &[data-variant="error"] {
+    background: theme.color("states", "error", "background");
+    color: theme.color("states", "error", "color");
 
-        &[data-hovered] {
-            @include theme.elevation("default", 2);
-        }
+    &[data-hovered] {
+      @include theme.elevation("default", 2);
     }
+  }
 
-    &[data-variant="error"] {
-        background: theme.color("states", "error", "background");
-        color: theme.color("states", "error", "color");
+  &[data-variant="info"] {
+    background: theme.color("states", "info", "background");
+    color: theme.color("states", "info", "normal");
 
-        &[data-hovered] {
-            @include theme.elevation("default", 2);
-        }
+    &[data-hovered] {
+      @include theme.elevation("default", 2);
     }
+  }
 
-    &[data-variant="info"] {
-        background: theme.color("states", "info", "background");
-        color: theme.color("states", "info", "normal");
+  &[data-variant="warning"] {
+    background: theme.color("states", "warning", "background");
+    color: theme.color("states", "warning", "normal");
 
-        &[data-hovered] {
-            @include theme.elevation("default", 2);
-        }
+    &[data-hovered] {
+      @include theme.elevation("default", 2);
     }
+  }
 
-    &[data-variant="warning"] {
-        background: theme.color("states", "warning", "background");
-        color: theme.color("states", "warning", "normal");
+  &[data-variant="important"] {
+    background: theme.color("states", "data", "background");
+    color: theme.color("states", "data", "normal");
 
-        &[data-hovered] {
-            @include theme.elevation("default", 2);
-        }
+    &[data-hovered] {
+      @include theme.elevation("default", 2);
     }
+  }
 
-    &[data-variant="important"] {
-        background: theme.color("states", "data", "background");
-        color: theme.color("states", "data", "normal");
+  &[data-variant="success"] {
+    background: theme.color("states", "success", "background");
+    color: theme.color("states", "success", "base");
 
-        &[data-hovered] {
-            @include theme.elevation("default", 2);
-        }
+    &[data-hovered] {
+      @include theme.elevation("default", 2);
     }
+  }
 
-    &[data-variant="success"] {
-        background: theme.color("states", "success", "background");
-        color: theme.color("states", "success", "base");
+  &[data-hovered] .hover {
+    opacity: 1;
+  }
 
-        &[data-hovered] {
-            @include theme.elevation("default", 2);
-        }
-    }
-
-    &[data-hovered] .hover {
-        opacity: 1;
-    }
-
-    &[data-focus-visible] {
-        border-color: theme.color("focus");
-        outline-color: theme.color("focus-dim");
-    }
+  &[data-focus-visible] {
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
+  }
 }

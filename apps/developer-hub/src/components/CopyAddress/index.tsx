@@ -1,14 +1,12 @@
-"use client"
+"use client";
 
 import { CheckSquare, Copy } from "@phosphor-icons/react";
 import { Link } from "@pythnetwork/component-library/unstyled/Link";
 import { useRef, useState } from "react";
-import { useClipboard, useKeyboard, usePress } from 'react-aria';
+import { useClipboard, useKeyboard, usePress } from "react-aria";
 
 import TruncateToMiddle from "../TruncateToMiddle";
 import styles from "./index.module.scss";
-
-
 
 const CopyAddress = ({ address, url }: { address: string; url?: string }) => {
   const [copied, setCopied] = useState<boolean>(false);
@@ -16,34 +14,36 @@ const CopyAddress = ({ address, url }: { address: string; url?: string }) => {
 
   const showCopied = () => {
     setCopied(true);
-      if(timeout.current) clearTimeout(timeout.current);
-      timeout.current = setTimeout(() => {
-       setCopied(false);
-        timeout.current = undefined;
-      }, 2000);
-  }
+    if (timeout.current) clearTimeout(timeout.current);
+    timeout.current = setTimeout(() => {
+      setCopied(false);
+      timeout.current = undefined;
+    }, 2000);
+  };
 
   const { clipboardProps } = useClipboard({
     getItems() {
       showCopied();
-      return [{
-        'text/plain': address
-      }];
-    }
+      return [
+        {
+          "text/plain": address,
+        },
+      ];
+    },
   });
 
   const { pressProps } = usePress({
     onPress: () => {
       void writeClipboardText(address);
-    }
+    },
   });
 
   const { keyboardProps } = useKeyboard({
     onKeyUp: (e) => {
-      if(e.key === "Enter") {
+      if (e.key === "Enter") {
         void writeClipboardText(address);
       }
-    }
+    },
   });
 
   async function writeClipboardText(text: string) {
@@ -56,10 +56,10 @@ const CopyAddress = ({ address, url }: { address: string; url?: string }) => {
   }
 
   return (
-    <div 
-      tabIndex={0} 
+    <div
+      tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           void writeClipboardText(address);
         }
@@ -67,11 +67,11 @@ const CopyAddress = ({ address, url }: { address: string; url?: string }) => {
       onClick={(e) => {
         e.preventDefault();
         void writeClipboardText(address);
-      }} 
-      {...clipboardProps} 
-      {...pressProps} 
-      {...keyboardProps} 
-      className={styles.copyAddress} 
+      }}
+      {...clipboardProps}
+      {...pressProps}
+      {...keyboardProps}
+      className={styles.copyAddress}
       role="button"
       aria-label="Copy address to clipboard"
     >
@@ -80,10 +80,14 @@ const CopyAddress = ({ address, url }: { address: string; url?: string }) => {
           <TruncateToMiddle text={address} />
         </Link>
       ) : (
-       <TruncateToMiddle text={address} />
+        <TruncateToMiddle text={address} />
       )}
       <div className={styles.icon}>
-      {copied ? <CheckSquare size={24} className={styles.copied} /> : <Copy size={24} /> }
+        {copied ? (
+          <CheckSquare size={24} className={styles.copied} />
+        ) : (
+          <Copy size={24} />
+        )}
       </div>
     </div>
   );

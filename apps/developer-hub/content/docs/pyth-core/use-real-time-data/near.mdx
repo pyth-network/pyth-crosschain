@@ -1,11 +1,12 @@
 ---
-title: 'Pyth on NEAR: Integrating Price Feeds & Real-Time Data'
+title: "Pyth on NEAR: Integrating Price Feeds & Real-Time Data"
 description: >-
   Integrate Pyth price feeds on NEAR with our step-by-step guide. Learn to use
   the Pyth API, fetch off-chain data, and update on-chain seamlessly.
 full: false
 index: false
 ---
+
 # Pyth on NEAR
 
 Pyth price feeds on NEAR are managed through the main NEAR Pyth smart
@@ -92,14 +93,14 @@ async function getHermesPriceData(priceId, network) {
 
     // Fetch the price data from the Hermes API
     const response = await axios.get(
-      `${url}/v2/updates/price/latest?ids[]=${priceId}`
+      `${url}/v2/updates/price/latest?ids[]=${priceId}`,
     );
 
     return response.data.binary.data[0];
   } catch (error) {
     console.error(
       "Error:",
-      error.response ? error.response.data : error.message
+      error.response ? error.response.data : error.message,
     );
   }
 }
@@ -200,7 +201,7 @@ const nearConnect = (sender, network) => ({
   signer: getSignerFromKeystore(
     sender,
     network,
-    new UnencryptedFileSystemKeyStore(join(homedir(), ".near-credentials"))
+    new UnencryptedFileSystemKeyStore(join(homedir(), ".near-credentials")),
   ),
 });
 
@@ -243,7 +244,7 @@ async function updatePythContractPriceFeeds(network) {
   });
 
   console.log(
-    `Transaction 👉 https://testnet.nearblocks.io/txns/${result.outcome.transaction.hash}`
+    `Transaction 👉 https://testnet.nearblocks.io/txns/${result.outcome.transaction.hash}`,
   );
   return result;
 }

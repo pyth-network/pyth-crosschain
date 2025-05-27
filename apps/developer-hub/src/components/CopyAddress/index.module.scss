@@ -1,22 +1,22 @@
 @use "@pythnetwork/component-library/theme";
 
 .copyAddress {
-    position: relative;
+  position: relative;
 
+  .icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: none;
+
+    &:has(.copied) {
+      display: block;
+    }
+  }
+
+  &:hover {
     .icon {
-        position: absolute;
-        right: 0;
-        top: 0;
-        display: none;
-
-        &:has(.copied) {
-            display: block;
-        }
+      display: block;
     }
-
-    &:hover {
-        .icon {
-            display: block;
-        }
-    }
+  }
 }

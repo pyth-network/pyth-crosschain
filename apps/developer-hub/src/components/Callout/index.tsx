@@ -59,9 +59,7 @@ const calloutProps = <T extends ElementType>({
       <div className={styles.hover} />
       <div className={styles.body}>
         {Boolean(icon) && <div className={styles.icon}>{icon}</div>}
-        <div>
-          {children}
-        </div>
+        <div>{children}</div>
       </div>
     </>
   ),

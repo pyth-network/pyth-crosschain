@@ -1,21 +1,22 @@
 @use "@pythnetwork/component-library/theme";
 
 .truncateToMiddle {
-    &::before, &::after {
-        display: inline-block;
-        overflow: hidden;
-        white-space: pre;
-        max-width: 50%;
-    }
+  &::before,
+  &::after {
+    display: inline-block;
+    overflow: hidden;
+    white-space: pre;
+    max-width: 50%;
+  }
 
-    &::before {
-        content: attr(data-text-start);
-        text-overflow: ellipsis;
-    }
+  &::before {
+    content: attr(data-text-start);
+    text-overflow: ellipsis;
+  }
 
-    &::after {
-        content: attr(data-text-end);
-        text-overflow: clip;
-        direction: rtl;
-    }
+  &::after {
+    content: attr(data-text-end);
+    text-overflow: clip;
+    direction: rtl;
+  }
 }
