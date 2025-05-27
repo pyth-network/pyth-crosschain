@@ -1,4 +1,3 @@
-
 use crate::apis::configuration::Configuration;
 use crate::models::{EncodingType, ParsedPriceUpdate, PriceUpdate};
 use futures_util::stream::{Stream, StreamExt};
@@ -11,7 +10,10 @@ pub async fn create_price_update_stream(
     allow_unordered: Option<bool>,
     benchmarks_only: Option<bool>,
     ignore_invalid_price_ids: Option<bool>,
-) -> Result<impl Stream<Item = Result<ParsedPriceUpdate, Box<dyn Error + Send + Sync>>>, Box<dyn Error>> {
+) -> Result<
+    impl Stream<Item = Result<ParsedPriceUpdate, Box<dyn Error + Send + Sync>>>,
+    Box<dyn Error>,
+> {
     let base_url = format!("{}/v2/updates/price/stream", config.base_path);
     let mut url = reqwest::Url::parse(&base_url)?;
 
@@ -42,10 +44,10 @@ pub async fn create_price_update_stream(
 
     drop(query_pairs);
 
-    let client = reqwest::Client::builder()
-        .build()?;
+    let client = reqwest::Client::builder().build()?;
 
-    let response = client.get(url)
+    let response = client
+        .get(url)
         .header("Accept", "text/event-stream")
         .send()
         .await?;
@@ -56,9 +58,9 @@ pub async fn create_price_update_stream(
 
     let stream = response.bytes_stream();
 
-    let sse_stream = eventsource_stream::EventStream::new(stream)
-        .map(move |event_result| {
-            match event_result {
+    let sse_stream =
+        eventsource_stream::EventStream::new(stream)
+            .map(move |event_result| match event_result {
                 Ok(event) => {
                     if event.event != "message" {
                         return Err(format!("Unexpected event type: {}", event.event).into());
@@ -71,26 +73,27 @@ pub async fn create_price_update_stream(
                     match serde_json::from_str::<crate::models::SseEvent>(data) {
                         Ok(sse_event) => {
                             if let Some(parsed_updates) = sse_event.parsed {
-                                let stream = parsed_updates.into_iter()
-                                    .map(Ok)
-                                    .collect::<Vec<Result<ParsedPriceUpdate, Box<dyn Error + Send + Sync>>>>();
+                                let stream =
+                                    parsed_updates
+                                        .into_iter()
+                                        .map(Ok)
+                                        .collect::<Vec<
+                                            Result<ParsedPriceUpdate, Box<dyn Error + Send + Sync>>,
+                                        >>();
                                 Ok(futures_util::stream::iter(stream))
                             } else {
                                 Err("No parsed price updates in the response".into())
                             }
-                        },
+                        }
                         Err(e) => Err(format!("Failed to parse price update: {}", e).into()),
                     }
-                },
+                }
                 Err(e) => Err(format!("Error in SSE stream: {}", e).into()),
-            }
-        })
-        .flat_map(|result| {
-            match result {
+            })
+            .flat_map(|result| match result {
                 Ok(stream) => stream,
-                Err(e) => futures_util::stream::iter(vec![Err(e)])
-            }
-        });
+                Err(e) => futures_util::stream::iter(vec![Err(e)]),
+            });
 
     Ok(sse_stream)
 }
