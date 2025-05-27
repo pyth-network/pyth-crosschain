@@ -1,8 +1,8 @@
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { useAlert as useAlertImpl } from "./index.js";
-import { Button } from "../Button/index.js";
+import { useAlert as useAlertImpl } from "./index.jsx";
+import { Button } from "../Button/index.jsx";
 
 const ShowButton = (
   props: Parameters<ReturnType<typeof useAlertImpl>["open"]>[0],

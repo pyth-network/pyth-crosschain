@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@pythnetwork/component-library/Breadcrumbs";
 import { Button } from "@pythnetwork/component-library/Button";
 import { InfoBox } from "@pythnetwork/component-library/InfoBox";
 import { Link } from "@pythnetwork/component-library/Link";
+import { Meter } from "@pythnetwork/component-library/Meter";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup } from "@pythnetwork/known-publishers";
@@ -40,7 +41,6 @@ import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./layout.module.scss";
 import { FormattedDate } from "../FormattedDate";
 import { FormattedTokens } from "../FormattedTokens";
-import { Meter } from "../Meter";
 import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
@@ -494,7 +494,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
             size="sm"
             href="https://staking.pyth.network"
             target="_blank"
-            beforeIcon={Browsers}
+            beforeIcon={<Browsers />}
           >
             Open Staking App
           </Button>
@@ -503,7 +503,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
             size="sm"
             href="https://docs.pyth.network/home/oracle-integrity-staking"
             target="_blank"
-            beforeIcon={BookOpenText}
+            beforeIcon={<BookOpenText />}
           >
             Documentation
           </Button>

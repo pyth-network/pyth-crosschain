@@ -5,8 +5,7 @@ use {
         metrics::{counter::Counter, family::Family, gauge::Gauge, histogram::Histogram},
         registry::Registry,
     },
-    std::sync::atomic::AtomicU64,
-    std::sync::Arc,
+    std::sync::{atomic::AtomicU64, Arc},
     tokio::sync::RwLock,
 };
 
@@ -42,8 +41,13 @@ pub struct KeeperMetrics {
     pub final_gas_multiplier: Family<AccountLabel, Histogram>,
     pub final_fee_multiplier: Family<AccountLabel, Histogram>,
     pub gas_price_estimate: Family<AccountLabel, Gauge<f64, AtomicU64>>,
+    pub highest_revealed_sequence_number: Family<AccountLabel, Gauge>,
     pub accrued_pyth_fees: Family<ChainIdLabel, Gauge<f64, AtomicU64>>,
     pub block_timestamp_lag: Family<ChainIdLabel, Gauge>,
+    pub latest_block_timestamp: Family<ChainIdLabel, Gauge>,
+    pub process_event_timestamp: Family<ChainIdLabel, Gauge>,
+    pub latest_block_number: Family<ChainIdLabel, Gauge>,
+    pub process_event_block_number: Family<ChainIdLabel, Gauge>,
 }
 
 impl Default for KeeperMetrics {
@@ -85,8 +89,13 @@ impl Default for KeeperMetrics {
                 Histogram::new(vec![100.0, 110.0, 120.0, 140.0, 160.0, 180.0, 200.0].into_iter())
             }),
             gas_price_estimate: Family::default(),
+            highest_revealed_sequence_number: Family::default(),
             accrued_pyth_fees: Family::default(),
             block_timestamp_lag: Family::default(),
+            latest_block_timestamp: Family::default(),
+            process_event_timestamp: Family::default(),
+            latest_block_number: Family::default(),
+            process_event_block_number: Family::default(),
         }
     }
 }
@@ -217,6 +226,12 @@ impl KeeperMetrics {
         );
 
         writable_registry.register(
+            "highest_revealed_sequence_number",
+            "The highest sequence number revealed by the keeper either via callbacks or manual reveal",
+            keeper_metrics.highest_revealed_sequence_number.clone(),
+        );
+
+        writable_registry.register(
             "accrued_pyth_fees",
             "Accrued Pyth fees on the contract",
             keeper_metrics.accrued_pyth_fees.clone(),
@@ -226,6 +241,30 @@ impl KeeperMetrics {
             "block_timestamp_lag",
             "The difference between server timestamp and latest block timestamp",
             keeper_metrics.block_timestamp_lag.clone(),
+        );
+
+        writable_registry.register(
+            "latest_block_timestamp",
+            "The current block timestamp",
+            keeper_metrics.latest_block_timestamp.clone(),
+        );
+
+        writable_registry.register(
+            "process_event_timestamp",
+            "Timestamp of the last time the keeper updated the events",
+            keeper_metrics.process_event_timestamp.clone(),
+        );
+
+        writable_registry.register(
+            "latest_block_number",
+            "The current block number",
+            keeper_metrics.latest_block_number.clone(),
+        );
+
+        writable_registry.register(
+            "process_event_block_number",
+            "The highest block number for which events have been successfully retrieved and processed",
+            keeper_metrics.process_event_block_number.clone(),
         );
 
         // *Important*: When adding a new metric:
@@ -241,6 +280,12 @@ impl KeeperMetrics {
         };
         let _ = self.accrued_pyth_fees.get_or_create(&chain_id_label);
         let _ = self.block_timestamp_lag.get_or_create(&chain_id_label);
+        let _ = self.latest_block_timestamp.get_or_create(&chain_id_label);
+        let _ = self.process_event_timestamp.get_or_create(&chain_id_label);
+        let _ = self.latest_block_number.get_or_create(&chain_id_label);
+        let _ = self
+            .process_event_block_number
+            .get_or_create(&chain_id_label);
 
         let account_label = AccountLabel {
             chain_id,

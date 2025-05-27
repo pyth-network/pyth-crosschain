@@ -1,5 +1,6 @@
 "use client";
 
+import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { Table } from "@pythnetwork/component-library/Table";
@@ -9,7 +10,6 @@ import { useCollator, useFilter } from "react-aria";
 
 import styles from "./coming-soon-list.module.scss";
 import { AssetClassBadge } from "../AssetClassBadge";
-import { NoResults } from "../NoResults";
 import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
@@ -90,11 +90,14 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
         />
         <Select
           optionGroups={[
-            { name: "All", options: [""] },
-            { name: "Asset classes", options: assetClasses },
+            { name: "All", options: [{ id: "" }] },
+            {
+              name: "Asset classes",
+              options: assetClasses.map((id) => ({ id })),
+            },
           ]}
           hideGroupLabel
-          show={(value) => (value === "" ? "All" : value)}
+          show={({ id }) => (id === "" ? "All" : id)}
           placement="bottom end"
           selectedKey={assetClass}
           onSelectionChange={setAssetClass}
@@ -107,7 +110,7 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
       </div>
       <Table
         fill
-        stickyHeader
+        stickyHeader="top"
         label="Coming Soon"
         className={styles.priceFeeds ?? ""}
         emptyState={

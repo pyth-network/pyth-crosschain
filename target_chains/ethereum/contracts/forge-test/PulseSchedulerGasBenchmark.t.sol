@@ -71,7 +71,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
         );
 
         // Mock Pyth response for the benchmark
-        mockParsePriceFeedUpdatesWithSlots(pyth, newPriceFeeds, newSlots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, newPriceFeeds, newSlots);
 
         // Actual benchmark: Measure gas for updating price feeds
         uint256 startGas = gasleft();
@@ -124,7 +124,7 @@ contract PulseSchedulerGasBenchmark is Test, PulseSchedulerTestUtils {
             numFeeds
         );
 
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Update the price feeds. We should have enough balance to cover the update

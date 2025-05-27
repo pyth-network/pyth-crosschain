@@ -1,8 +1,8 @@
-use ethabi::ethereum_types::U64;
 use {
     crate::eth_utils::nonce_manager::NonceManaged,
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
+    ethabi::ethereum_types::U64,
     ethers::{
         contract::ContractCall,
         middleware::Middleware,
@@ -187,7 +187,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
         },
         |e, dur| {
             let retry_number = num_retries.load(std::sync::atomic::Ordering::Relaxed);
-            tracing::error!(
+            tracing::warn!(
                 "Error on retry {} at duration {:?}: {}",
                 retry_number,
                 dur,

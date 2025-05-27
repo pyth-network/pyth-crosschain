@@ -1,7 +1,18 @@
-import * as Icon from "@phosphor-icons/react/dist/ssr";
+import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Button as ButtonComponent, VARIANTS, SIZES } from "./index.js";
+import { Button as ButtonComponent, VARIANTS, SIZES } from "./index.jsx";
+
+const iconControl = {
+  control: "select",
+  options: Object.keys(icons),
+  mapping: Object.fromEntries(
+    Object.entries(icons).map(([iconName, Icon]) => [
+      iconName,
+      <Icon key={iconName} weights={new Map()} />,
+    ]),
+  ),
+} as const;
 
 const meta = {
   component: ButtonComponent,
@@ -45,17 +56,13 @@ const meta = {
       },
     },
     beforeIcon: {
-      control: "select",
-      options: Object.keys(Icon),
-      mapping: Icon,
+      ...iconControl,
       table: {
         category: "Contents",
       },
     },
     afterIcon: {
-      control: "select",
-      options: Object.keys(Icon),
-      mapping: Icon,
+      ...iconControl,
       table: {
         category: "Contents",
       },

@@ -1,0 +1,837 @@
+[
+  {
+    "chain": "polygon",
+    "address": "0x35a58BeeE77a2Ad547FcDed7e8CB1c6e19746b13",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "aurora",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "fantom",
+    "address": "0x35a58BeeE77a2Ad547FcDed7e8CB1c6e19746b13",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "optimism",
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "arbitrum",
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "gnosis",
+    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "polygon_zkevm",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "conflux_espace",
+    "address": "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "bsc",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kava",
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "avalanche",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "canto",
+    "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "linea",
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "neon",
+    "address": "0xCd76c50c3210C5AaA9c39D53A4f95BFd8b1a3a19",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "mantle",
+    "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "meter",
+    "address": "0xfA133831D350A2A5997d6db182B6Ca9e8ad4191B",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kcc",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "eos",
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "celo",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "wemix",
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "base",
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "zksync",
+    "address": "0x53cD6960888cA09361506678adfE267b4CE81A08",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "horizen_eon",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "shimmer",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "boba",
+    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "manta",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "scroll",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "chiliz",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "coredao",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "viction",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "arbitrum_sepolia",
+    "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "fuji",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "canto_testnet",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "aurora_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "chiado",
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kava_testnet",
+    "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "conflux_espace_testnet",
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "celo_alfajores_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "bsc_testnet",
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kcc_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "eos_testnet",
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "meter_testnet",
+    "address": "0x257c3B61102442C1c3286Efbd24242322d002920",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "shimmer_testnet",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "scroll_sepolia",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "boba_goerli",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "manta_testnet",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "chiliz_spicy",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "coredao_testnet",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "cronos_testnet",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "wemix_testnet",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "evmos_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "zetachain_testnet",
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "neon_devnet",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "optimism_sepolia",
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "mode",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "mode_testnet",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "bttc_testnet",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "bttc",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "zksync_sepolia",
+    "address": "0xc10F5BE78E464BB0E1f534D66E5A6ecaB150aEFa",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "base_sepolia",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "movement_evm_devnet",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "zkfair_testnet",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "blast_s2_testnet",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "zkfair",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "filecoin_calibration",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "filecoin",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "zetachain",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "lightlink_pegasus_testnet",
+    "address": "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "dela_deperp_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "lightlink_phoenix",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "injective_inevm_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "injective_inevm",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "hedera_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "hedera",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "blast",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "astar_zkevm",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "merlin_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "mantle_sepolia",
+    "address": "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "merlin",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "manta_sepolia",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "polygon_blackberry",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "arbitrum_blueberry",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "optimism_celestia_raspberry",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "polynomial_testnet",
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "parallel_testnet",
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "parallel",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "linea_sepolia",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "morph_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "cronos",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "ronin",
+    "address": "0x41955476936DdA8d0fA98b8d1778172F7E4fCcA1",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "saigon",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "ethereum",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "mumbai",
+    "address": "0x876A4e56A51386aBb1a5ab5d62f77E814372f0C7",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "fantom_testnet",
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "sepolia",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "linea_goerli",
+    "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "taiko_hekla",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "olive_testnet",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "orange_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "polygon_amoy",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "taiko_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "sei_evm_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "dela_mithreum_deperp_testnet",
+    "address": "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "opbnb",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "gravity",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "opbnb_testnet",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "etherlink_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "polynomial",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "etherlink",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "sei_evm_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kaia_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kaia",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "morph_holesky_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "b3_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kinto",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "reya_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "b3_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "cronos_zkevm_mainnet",
+    "address": "0xc10F5BE78E464BB0E1f534D66E5A6ecaB150aEFa",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "cronos_zkevm_testnet",
+    "address": "0x470d1c91b1b1d9295815A2357FB0D20E7350ab71",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "movement_evm_devnet_imola",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "flow_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "idex_xchain_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "apechain_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "soneium_minato_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "apechain_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "flow_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "abstract_testnet",
+    "address": "0xB1DB1498902F08E16E11F1a423ec9CCB9537E1D6",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "sanko",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "sanko_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "unichain_sepolia",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kakarot_sepolia",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "skate",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "skate_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "morph",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kraken_ink_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "ethena_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "superseed_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "superseed_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "hemi_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "tabi_testnet",
+    "address": "0x35a58BeeE77a2Ad547FcDed7e8CB1c6e19746b13",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "hyperevm_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "unichain",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "abstract",
+    "address": "0x056f829183Ec806A78c26C98961678c24faB71af",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "eventum_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "sonic_blaze_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "fantom_sonic_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "eventum_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "soneium",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "kraken_ink_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "coredao_testnet_v2",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "monad_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "berachain_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "story",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "bittensor_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "hyperevm",
+    "address": "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "bittensor_mainnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "story_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "berachain_bepolia",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "megaeth_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "worldchain",
+    "address": "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "swellchain",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "swellchain_testnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "worldchain_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "mezo_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "hemi_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "converge_testnet",
+    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "mezo",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  }
+]

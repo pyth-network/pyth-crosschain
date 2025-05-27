@@ -31,7 +31,10 @@ contract PythAggregatorV3 {
         pyth.updatePriceFeeds{value: fee}(priceUpdateData);
 
         // refund remaining eth
-        payable(msg.sender).call{value: address(this).balance}("");
+        // solhint-disable-next-line no-unused-vars
+        (bool success, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
     }
 
     function decimals() public view virtual returns (uint8) {

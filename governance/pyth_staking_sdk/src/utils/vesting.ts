@@ -57,7 +57,9 @@ export const getPeriodicUnlockSchedule = (options: {
     if (currentTimeStamp < unlockTimeStamp || includePastPeriods) {
       unlockSchedule.push({
         date: new Date(unlockTimeStamp * 1000),
-        amount: balance / numPeriods,
+        amount:
+          ((numPeriods - BigInt(i)) * balance) / numPeriods -
+          ((numPeriods - BigInt(i + 1)) * balance) / numPeriods,
       });
     }
   }

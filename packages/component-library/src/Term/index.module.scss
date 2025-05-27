@@ -1,0 +1,54 @@
+@use "../theme";
+
+.term {
+  border: none;
+  background: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 2px dotted theme.color("link", "primary");
+  cursor: help;
+  outline: none;
+
+  .question {
+    font-size: theme.font-size("xs");
+    vertical-align: super;
+    margin-left: 0.25em;
+    color: theme.color("link", "primary");
+  }
+}
+
+.popover {
+  cursor: help;
+
+  .dialog {
+    @include theme.text("xs", "normal");
+    @include theme.elevation("default", 2);
+
+    background: theme.color("background", "tooltip");
+    border-radius: theme.border-radius("lg");
+    padding: theme.spacing(2) theme.spacing(3);
+    max-width: theme.spacing(45);
+    color: theme.color("tooltip");
+    outline: none;
+  }
+
+  .arrow svg {
+    display: block;
+    fill: theme.color("background", "tooltip");
+    stroke: theme.color("background", "tooltip");
+    stroke-width: 1px;
+    position: relative;
+  }
+
+  &[data-placement="bottom"] .arrow svg {
+    transform: rotate(180deg);
+  }
+
+  &[data-placement="right"] .arrow svg {
+    transform: rotate(90deg);
+  }
+
+  &[data-placement="left"] .arrow svg {
+    transform: rotate(-90deg);
+  }
+}

@@ -9,7 +9,7 @@ import type { RefObject } from "react";
 import { useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 
-import theme from "./theme.module.scss";
+import styles from "./chart.module.scss";
 import { useLivePriceData } from "../../hooks/use-live-price-data";
 import { Cluster } from "../../services/pyth";
 
@@ -22,14 +22,18 @@ export const Chart = ({ symbol, feedId }: Props) => {
   const chartContainerRef = useChart(symbol, feedId);
 
   return (
-    <div style={{ width: "100%", height: "100%" }} ref={chartContainerRef} />
+    <div
+      style={{ width: "100%", height: "100%" }}
+      className={styles.chart}
+      ref={chartContainerRef}
+    />
   );
 };
 
 const useChart = (symbol: string, feedId: string) => {
   const { chartContainerRef, chartRef } = useChartElem(symbol, feedId);
   useChartResize(chartContainerRef, chartRef);
-  useChartColors(chartRef);
+  useChartColors(chartContainerRef, chartRef);
   return chartContainerRef;
 };
 
@@ -217,17 +221,24 @@ const useChartResize = (
   });
 };
 
-const useChartColors = (chartRef: RefObject<ChartRefContents | undefined>) => {
+const useChartColors = (
+  chartContainerRef: RefObject<HTMLDivElement | null>,
+  chartRef: RefObject<ChartRefContents | undefined>,
+) => {
   const { resolvedTheme } = useTheme();
   useEffect(() => {
-    if (chartRef.current && resolvedTheme) {
-      applyColors(chartRef.current, resolvedTheme);
+    if (chartRef.current && chartContainerRef.current && resolvedTheme) {
+      applyColors(chartRef.current, chartContainerRef.current, resolvedTheme);
     }
-  }, [resolvedTheme, chartRef]);
+  }, [resolvedTheme, chartRef, chartContainerRef]);
 };
 
-const applyColors = ({ chart, ...series }: ChartRefContents, theme: string) => {
-  const colors = getColors(theme);
+const applyColors = (
+  { chart, ...series }: ChartRefContents,
+  container: HTMLDivElement,
+  theme: string,
+) => {
+  const colors = getColors(container, theme);
   chart.applyOptions({
     grid: {
       horzLines: {
@@ -260,12 +271,20 @@ const applyColors = ({ chart, ...series }: ChartRefContents, theme: string) => {
   }
 };
 
-const getColors = (resolvedTheme: string) => ({
-  border: theme[`border-${resolvedTheme}`] ?? "red",
-  muted: theme[`muted-${resolvedTheme}`] ?? "",
-  chartNeutral: theme[`chart-series-neutral-${resolvedTheme}`] ?? "",
-  chartPrimary: theme[`chart-series-primary-${resolvedTheme}`] ?? "",
-});
+const getColors = (container: HTMLDivElement, resolvedTheme: string) => {
+  const style = getComputedStyle(container);
+
+  return {
+    border: style.getPropertyValue(`--border-${resolvedTheme}`),
+    muted: style.getPropertyValue(`--muted-${resolvedTheme}`),
+    chartNeutral: style.getPropertyValue(
+      `--chart-series-neutral-${resolvedTheme}`,
+    ),
+    chartPrimary: style.getPropertyValue(
+      `--chart-series-primary-${resolvedTheme}`,
+    ),
+  };
+};
 
 const getLocalTimestamp = (date: Date): UTCTimestamp =>
   (Date.UTC(

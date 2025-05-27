@@ -1,0 +1,5 @@
+@use "@pythnetwork/component-library/theme";
+
+.landing {
+  @include theme.max-width;
+}

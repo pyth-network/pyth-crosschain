@@ -195,7 +195,7 @@ const FeaturedFeeds = ({
           variant="outline"
           drawer={{
             fill: true,
-            className: styles.comingSoonCard ?? "",
+            bodyClassName: styles.comingSoonCard ?? "",
             title: (
               <>
                 <span>Coming Soon</span>

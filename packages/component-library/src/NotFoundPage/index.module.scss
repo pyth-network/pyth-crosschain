@@ -1,0 +1,57 @@
+@use "../theme";
+
+.notFoundPage {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(12);
+  align-items: center;
+  text-align: center;
+  padding-top: theme.spacing(8);
+  padding-bottom: theme.spacing(8);
+
+  @include theme.max-width;
+
+  @include theme.breakpoint("sm") {
+    padding-top: theme.spacing(18);
+    padding-bottom: theme.spacing(18);
+  }
+
+  @include theme.breakpoint("lg") {
+    padding-top: theme.spacing(36);
+    padding-bottom: theme.spacing(36);
+  }
+
+  .searchIcon {
+    display: grid;
+    place-content: center;
+    padding: theme.spacing(4);
+    background: theme.color("button", "disabled", "background");
+    font-size: theme.spacing(8);
+    color: theme.color("button", "disabled", "foreground");
+    border-radius: theme.border-radius("full");
+
+    @include theme.breakpoint("sm") {
+      padding: theme.spacing(8);
+      font-size: theme.spacing(12);
+    }
+  }
+
+  .text {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(4);
+    align-items: center;
+
+    .header {
+      @include theme.text("5xl", "semibold");
+
+      color: theme.color("heading");
+    }
+
+    .subheader {
+      @include theme.text("xl", "light");
+
+      color: theme.color("heading");
+    }
+  }
+}

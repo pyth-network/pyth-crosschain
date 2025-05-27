@@ -414,6 +414,7 @@ multisigCommand(
         voteAccounts.map((voteAccount: PublicKey) =>
           fetchStakeAccounts(
             new Connection(getPythClusterApiUrl(cluster)),
+            authorizedPubkey,
             voteAccount,
           ),
         ),
@@ -483,6 +484,11 @@ multisigCommand(
     "-d, --vote-pubkeys <comma_separated_voter_pubkeys>",
     "vote account to delegate to",
   )
+  .option(
+    "-a, --amount <number>",
+    "Amount of stake to assign (in SOL)",
+    "100000",
+  )
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
     const cluster: PythCluster = options.cluster;
@@ -492,6 +498,8 @@ multisigCommand(
     const votePubkeys: PublicKey[] = options.votePubkeys
       ? options.votePubkeys.split(",").map((m: string) => new PublicKey(m))
       : [];
+
+    const amount = Number(options.amount);
 
     const instructions: TransactionInstruction[] = [];
 
@@ -515,7 +523,7 @@ multisigCommand(
           seed: seed,
           fromPubkey: authorizedPubkey,
           newAccountPubkey: stakePubkey,
-          lamports: 100000 * LAMPORTS_PER_SOL,
+          lamports: amount * LAMPORTS_PER_SOL,
           space: StakeProgram.space,
           programId: StakeProgram.programId,
         }),

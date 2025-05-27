@@ -3,10 +3,10 @@ import { hideBin } from "yargs/helpers";
 import {
   AptosPriceFeedContract,
   CosmWasmPriceFeedContract,
-  DefaultStore,
   EvmPriceFeedContract,
   TonPriceFeedContract,
-} from "../src";
+} from "../src/core/contracts";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")

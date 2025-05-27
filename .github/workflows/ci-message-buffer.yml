@@ -22,14 +22,13 @@ jobs:
           workspaces: "pythnet/message_buffer -> target"
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.66.1
           components: rustfmt, clippy
       - name: Install Solana
         run: |
           wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
           sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
-          sh -c "$(curl -sSfL https://release.solana.com/v1.14.18/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v1.17.34/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Install Anchor
         run: |

@@ -256,7 +256,11 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             numInitialFeeds
         );
 
-        mockParsePriceFeedUpdatesWithSlots(pyth, initialPriceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(
+            pyth,
+            initialPriceFeeds,
+            slots
+        );
         bytes[] memory updateData = createMockUpdateData(initialPriceFeeds);
 
         vm.prank(pusher);
@@ -326,6 +330,118 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             newPriceIds.length,
             "Querying all should only return remaining feeds"
         );
+    }
+
+    // Helper function to reduce stack depth in testUpdateSubscriptionResetsPriceLastUpdatedAt
+    function _setupSubscriptionAndFirstUpdate()
+        private
+        returns (uint256 subscriptionId, uint64 publishTime)
+    {
+        // Setup subscription with heartbeat criteria
+        uint32 heartbeatSeconds = 60; // 60 second heartbeat
+        SchedulerState.UpdateCriteria memory criteria = SchedulerState
+            .UpdateCriteria({
+                updateOnHeartbeat: true,
+                heartbeatSeconds: heartbeatSeconds,
+                updateOnDeviation: false,
+                deviationThresholdBps: 0
+            });
+
+        subscriptionId = addTestSubscriptionWithUpdateCriteria(
+            scheduler,
+            criteria,
+            address(reader)
+        );
+        scheduler.addFunds{value: 1 ether}(subscriptionId);
+
+        // Update prices to set priceLastUpdatedAt to a non-zero value
+        publishTime = SafeCast.toUint64(block.timestamp);
+        PythStructs.PriceFeed[] memory priceFeeds;
+        uint64[] memory slots;
+        (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime, 2);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
+
+        return (subscriptionId, publishTime);
+    }
+
+    function testUpdateSubscriptionResetsPriceLastUpdatedAt() public {
+        // 1. Setup subscription and perform first update
+        (
+            uint256 subscriptionId,
+            uint64 publishTime1
+        ) = _setupSubscriptionAndFirstUpdate();
+
+        // Verify priceLastUpdatedAt is set
+        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+            .getSubscription(subscriptionId);
+        assertEq(
+            status.priceLastUpdatedAt,
+            publishTime1,
+            "priceLastUpdatedAt should be set to the first update timestamp"
+        );
+
+        // 2. Update subscription to add price IDs
+        (SchedulerState.SubscriptionParams memory currentParams, ) = scheduler
+            .getSubscription(subscriptionId);
+        bytes32[] memory newPriceIds = createPriceIds(3);
+
+        SchedulerState.SubscriptionParams memory newParams = currentParams;
+        newParams.priceIds = newPriceIds;
+
+        // Update the subscription
+        scheduler.updateSubscription(subscriptionId, newParams);
+
+        // 3. Verify priceLastUpdatedAt is reset to 0
+        (, status) = scheduler.getSubscription(subscriptionId);
+        assertEq(
+            status.priceLastUpdatedAt,
+            0,
+            "priceLastUpdatedAt should be reset to 0 after adding new price IDs"
+        );
+
+        // 4. Verify immediate update is possible
+        _verifyImmediateUpdatePossible(subscriptionId);
+    }
+
+    function _verifyImmediateUpdatePossible(uint256 subscriptionId) private {
+        // Create new price feeds for the new price IDs
+        uint64 publishTime2 = SafeCast.toUint64(block.timestamp + 1); // Just 1 second later
+        PythStructs.PriceFeed[] memory priceFeeds;
+        uint64[] memory slots;
+        (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime2, 3); // 3 feeds for new price IDs
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
+        bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+        // This should succeed even though we haven't waited for heartbeatSeconds
+        // because priceLastUpdatedAt was reset to 0
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
+
+        // Verify the update was processed
+        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+            .getSubscription(subscriptionId);
+        assertEq(
+            status.priceLastUpdatedAt,
+            publishTime2,
+            "Second update should be processed with new timestamp"
+        );
+
+        // Verify that normal heartbeat criteria apply again for subsequent updates
+        uint64 publishTime3 = SafeCast.toUint64(block.timestamp + 10); // Only 10 seconds later
+        (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime3, 3);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
+        updateData = createMockUpdateData(priceFeeds);
+
+        // This should fail because we haven't waited for heartbeatSeconds since the last update
+        vm.expectRevert(
+            abi.encodeWithSelector(UpdateConditionsNotMet.selector)
+        );
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(subscriptionId, updateData);
     }
 
     function testcreateSubscriptionWithInsufficientFundsReverts() public {
@@ -541,6 +657,120 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             status.balanceInWei,
             initialBalance + fundAmount,
             "Balance should match initial balance plus added funds"
+        );
+    }
+
+    function testAddFundsWithInactiveSubscriptionReverts() public {
+        // Create a subscription with minimum balance
+        uint256 subscriptionId = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+
+        // Get subscription parameters and calculate minimum balance
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        uint256 minimumBalance = scheduler.getMinimumBalance(
+            uint8(params.priceIds.length)
+        );
+
+        // Deactivate the subscription
+        SchedulerState.SubscriptionParams memory testParams = params;
+        testParams.isActive = false;
+        scheduler.updateSubscription(subscriptionId, testParams);
+
+        // Withdraw funds to get below minimum
+        uint256 withdrawAmount = minimumBalance - 1 wei;
+        scheduler.withdrawFunds(subscriptionId, withdrawAmount);
+
+        // Verify balance is now below minimum
+        (
+            SchedulerState.SubscriptionParams memory testUpdatedParams,
+            SchedulerState.SubscriptionStatus memory testUpdatedStatus
+        ) = scheduler.getSubscription(subscriptionId);
+        assertEq(
+            testUpdatedStatus.balanceInWei,
+            1 wei,
+            "Balance should be 1 wei after withdrawal"
+        );
+
+        // Try to add funds to inactive subscription (should fail with InactiveSubscription)
+        vm.expectRevert(abi.encodeWithSelector(InactiveSubscription.selector));
+        scheduler.addFunds{value: 1 wei}(subscriptionId);
+
+        // Try to reactivate with insufficient balance (should fail)
+        testUpdatedParams.isActive = true;
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        scheduler.updateSubscription(subscriptionId, testUpdatedParams);
+    }
+
+    function testAddFundsEnforcesMinimumBalance() public {
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(
+            scheduler,
+            2,
+            address(reader)
+        );
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+        uint256 minimumBalance = scheduler.getMinimumBalance(
+            uint8(params.priceIds.length)
+        );
+
+        // Send multiple price updates to drain the balance below minimum
+        for (uint i = 0; i < 5; i++) {
+            // Advance time to satisfy heartbeat criteria
+            vm.warp(block.timestamp + 60);
+
+            // Create price feeds with current timestamp
+            uint64 publishTime = SafeCast.toUint64(block.timestamp);
+            PythStructs.PriceFeed[] memory priceFeeds;
+            uint64[] memory slots;
+            (priceFeeds, slots) = createMockPriceFeedsWithSlots(
+                publishTime,
+                params.priceIds.length
+            );
+
+            // Mock Pyth response
+            mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
+            bytes[] memory updateData = createMockUpdateData(priceFeeds);
+
+            // Perform update
+            vm.prank(pusher);
+            scheduler.updatePriceFeeds(subscriptionId, updateData);
+        }
+
+        // Verify balance is now below minimum
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory statusAfterUpdates
+        ) = scheduler.getSubscription(subscriptionId);
+        assertTrue(
+            statusAfterUpdates.balanceInWei < minimumBalance,
+            "Balance should be below minimum after updates"
+        );
+
+        // Try to add funds that would still leave balance below minimum
+        // Expect a revert with InsufficientBalance
+        uint256 insufficientFunds = minimumBalance -
+            statusAfterUpdates.balanceInWei -
+            1;
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        scheduler.addFunds{value: insufficientFunds}(subscriptionId);
+
+        // Add sufficient funds to get back above minimum
+        uint256 sufficientFunds = minimumBalance -
+            statusAfterUpdates.balanceInWei +
+            1;
+        scheduler.addFunds{value: sufficientFunds}(subscriptionId);
+
+        // Verify balance is now above minimum
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory statusAfterAddingFunds
+        ) = scheduler.getSubscription(subscriptionId);
+        assertTrue(
+            statusAfterAddingFunds.balanceInWei >= minimumBalance,
+            "Balance should be at or above minimum after adding sufficient funds"
         );
     }
 
@@ -801,6 +1031,112 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         scheduler.updateSubscription(subscriptionId, params);
     }
 
+    function testPermanentSubscriptionDepositLimit() public {
+        // Test 1: Creating a permanent subscription with deposit exceeding MAX_DEPOSIT_LIMIT should fail
+        SchedulerState.SubscriptionParams
+            memory params = createDefaultSubscriptionParams(2, address(reader));
+        params.isPermanent = true;
+
+        uint256 maxDepositLimit = 100 ether; // Same as MAX_DEPOSIT_LIMIT in SchedulerState
+        uint256 excessiveDeposit = maxDepositLimit + 1 ether;
+        vm.deal(address(this), excessiveDeposit);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(MaxDepositLimitExceeded.selector)
+        );
+        scheduler.createSubscription{value: excessiveDeposit}(params);
+
+        // Test 2: Creating a permanent subscription with deposit within MAX_DEPOSIT_LIMIT should succeed
+        uint256 validDeposit = maxDepositLimit;
+        vm.deal(address(this), validDeposit);
+
+        uint256 subscriptionId = scheduler.createSubscription{
+            value: validDeposit
+        }(params);
+
+        // Verify subscription was created correctly
+        (
+            SchedulerState.SubscriptionParams memory storedParams,
+            SchedulerState.SubscriptionStatus memory status
+        ) = scheduler.getSubscription(subscriptionId);
+
+        assertTrue(
+            storedParams.isPermanent,
+            "Subscription should be permanent"
+        );
+        assertEq(
+            status.balanceInWei,
+            validDeposit,
+            "Balance should match deposit amount"
+        );
+
+        // Test 3: Adding funds to a permanent subscription with deposit exceeding MAX_DEPOSIT_LIMIT should fail
+        uint256 largeAdditionalFunds = maxDepositLimit + 1;
+        vm.deal(address(this), largeAdditionalFunds);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(MaxDepositLimitExceeded.selector)
+        );
+        scheduler.addFunds{value: largeAdditionalFunds}(subscriptionId);
+
+        // Test 4: Adding funds to a permanent subscription within MAX_DEPOSIT_LIMIT should succeed
+        // Create a non-permanent subscription to test partial funding
+        SchedulerState.SubscriptionParams
+            memory nonPermanentParams = createDefaultSubscriptionParams(
+                2,
+                address(reader)
+            );
+        uint256 minimumBalance = scheduler.getMinimumBalance(
+            uint8(nonPermanentParams.priceIds.length)
+        );
+        vm.deal(address(this), minimumBalance);
+
+        uint256 nonPermanentSubId = scheduler.createSubscription{
+            value: minimumBalance
+        }(nonPermanentParams);
+
+        // Add funds to the non-permanent subscription (should be within limit)
+        uint256 validAdditionalFunds = 5 ether;
+        vm.deal(address(this), validAdditionalFunds);
+
+        scheduler.addFunds{value: validAdditionalFunds}(nonPermanentSubId);
+
+        // Verify funds were added correctly
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory nonPermanentStatus
+        ) = scheduler.getSubscription(nonPermanentSubId);
+
+        assertEq(
+            nonPermanentStatus.balanceInWei,
+            minimumBalance + validAdditionalFunds,
+            "Balance should be increased by the funded amount"
+        );
+
+        // Test 5: Non-permanent subscriptions should not be subject to the deposit limit
+        uint256 largeDeposit = maxDepositLimit * 2;
+        vm.deal(address(this), largeDeposit);
+
+        SchedulerState.SubscriptionParams
+            memory unlimitedParams = createDefaultSubscriptionParams(
+                2,
+                address(reader)
+            );
+        uint256 unlimitedSubId = scheduler.createSubscription{
+            value: largeDeposit
+        }(unlimitedParams);
+
+        // Verify subscription was created with the large deposit
+        (, SchedulerState.SubscriptionStatus memory unlimitedStatus) = scheduler
+            .getSubscription(unlimitedSubId);
+
+        assertEq(
+            unlimitedStatus.balanceInWei,
+            largeDeposit,
+            "Non-permanent subscription should accept large deposits"
+        );
+    }
+
     function testAnyoneCanAddFunds() public {
         // Create a subscription
         uint256 subscriptionId = addTestSubscription(
@@ -852,7 +1188,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             priceIds.length
         );
 
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds1, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds1, slots);
         bytes[] memory updateData1 = createMockUpdateData(priceFeeds1);
 
         // Perform first update
@@ -903,7 +1239,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             priceFeeds2[i].emaPrice.publishTime = publishTime2;
         }
 
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds2, slots); // Mock for the second call
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds2, slots); // Mock for the second call
         bytes[] memory updateData2 = createMockUpdateData(priceFeeds2);
 
         // Perform second update
@@ -964,7 +1300,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             );
 
         uint256 mockPythFee = MOCK_PYTH_FEE_PER_FEED * params.priceIds.length;
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Get state before
@@ -1049,7 +1385,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             priceIds.length
         );
         uint256 mockPythFee = MOCK_PYTH_FEE_PER_FEED * priceIds.length;
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Calculate minimum keeper fee (overhead + feed-specific fee)
@@ -1109,7 +1445,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds1;
         uint64[] memory slots1;
         (priceFeeds1, slots1) = createMockPriceFeedsWithSlots(publishTime1, 2);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds1, slots1);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds1, slots1);
         bytes[] memory updateData1 = createMockUpdateData(priceFeeds1);
         vm.prank(pusher);
         scheduler.updatePriceFeeds(subscriptionId, updateData1);
@@ -1120,7 +1456,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds2;
         uint64[] memory slots2;
         (priceFeeds2, slots2) = createMockPriceFeedsWithSlots(publishTime2, 2);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds2, slots2);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds2, slots2);
         bytes[] memory updateData2 = createMockUpdateData(priceFeeds2);
 
         // Expect revert because heartbeat condition is not met
@@ -1158,7 +1494,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds1;
         uint64[] memory slots;
         (priceFeeds1, slots) = createMockPriceFeedsWithSlots(publishTime1, 2);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds1, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds1, slots);
         bytes[] memory updateData1 = createMockUpdateData(priceFeeds1);
         vm.prank(pusher);
         scheduler.updatePriceFeeds(subscriptionId, updateData1);
@@ -1184,7 +1520,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             priceFeeds2[i].price.publishTime = publishTime2;
         }
 
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds2, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds2, slots);
         bytes[] memory updateData2 = createMockUpdateData(priceFeeds2);
 
         // Expect revert because deviation condition is not met
@@ -1211,7 +1547,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds1;
         uint64[] memory slots1;
         (priceFeeds1, slots1) = createMockPriceFeedsWithSlots(publishTime1, 2);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds1, slots1);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds1, slots1);
         bytes[] memory updateData1 = createMockUpdateData(priceFeeds1);
 
         vm.prank(pusher);
@@ -1223,7 +1559,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         uint64[] memory slots2;
         (priceFeeds2, slots2) = createMockPriceFeedsWithSlots(publishTime2, 2);
         // Mock Pyth response to return feeds with the older timestamp
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds2, slots2);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds2, slots2);
         bytes[] memory updateData2 = createMockUpdateData(priceFeeds2);
 
         // Expect revert with TimestampOlderThanLastUpdate (checked in _validateShouldUpdatePrices)
@@ -1263,7 +1599,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         slots[1] = 200; // Different slot
 
         // Mock Pyth response to return these feeds with mismatched slots
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Expect revert with PriceSlotMismatch error
@@ -1382,7 +1718,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
                 PythStructs.PriceFeed[] memory priceFeeds_reduce,
                 uint64[] memory slots_reduce
             ) = createMockPriceFeedsWithSlots(publishTime + (i * 60), 2);
-            mockParsePriceFeedUpdatesWithSlots(
+            mockParsePriceFeedUpdatesWithSlotsStrict(
                 pyth,
                 priceFeeds_reduce,
                 slots_reduce
@@ -1456,7 +1792,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds;
         uint64[] memory slots;
         (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime, 2);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(pusher);
@@ -1498,7 +1834,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds;
         uint64[] memory slots;
         (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime, 3);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(pusher);
@@ -1553,7 +1889,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds;
         uint64[] memory slots;
         (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime, 2);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(pusher);
@@ -1597,7 +1933,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             publishTime,
             priceIds.length
         );
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(pusher);
@@ -1666,7 +2002,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             priceFeeds[i].emaPrice.expo = priceFeeds[i].price.expo;
         }
 
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(pusher);
@@ -1997,7 +2333,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         slots[1] = 100; // Same slot
 
         // Mock Pyth response (should succeed in the real world as minValidTime is 0)
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Expect PricesUpdated event with the latest valid timestamp
@@ -2050,7 +2386,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         slots[1] = 100; // Same slot
 
         // Mock Pyth response (should succeed in the real world as minValidTime is 0)
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // Expect revert with TimestampTooOld (checked in _validateShouldUpdatePrices)
@@ -2069,4 +2405,128 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
     // Required to receive ETH when withdrawing funds
     receive() external payable {}
+
+    function testUpdateSubscriptionRemovesPriceUpdatesForRemovedPriceIds()
+        public
+    {
+        // 1. Setup: Add subscription with 3 price feeds, update prices
+        uint8 numInitialFeeds = 3;
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(
+            scheduler,
+            numInitialFeeds,
+            address(reader)
+        );
+        scheduler.addFunds{value: 1 ether}(subscriptionId);
+
+        // Get initial price IDs and create mock price feeds
+        bytes32[] memory initialPriceIds = createPriceIds(numInitialFeeds);
+        uint64 publishTime = SafeCast.toUint64(block.timestamp);
+
+        // Setup and perform initial price update
+        (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        ) = createMockPriceFeedsWithSlots(publishTime, numInitialFeeds);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
+
+        vm.prank(pusher);
+        scheduler.updatePriceFeeds(
+            subscriptionId,
+            createMockUpdateData(priceFeeds)
+        );
+
+        // Store the removed price ID for later use
+        bytes32 removedPriceId = initialPriceIds[numInitialFeeds - 1];
+
+        // 2. Action: Update subscription to remove the last price feed
+        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+            .getSubscription(subscriptionId);
+
+        // Create new price IDs array without the last ID
+        bytes32[] memory newPriceIds = new bytes32[](numInitialFeeds - 1);
+        for (uint i = 0; i < newPriceIds.length; i++) {
+            newPriceIds[i] = initialPriceIds[i];
+        }
+
+        params.priceIds = newPriceIds;
+
+        vm.expectEmit();
+        emit SubscriptionUpdated(subscriptionId);
+        scheduler.updateSubscription(subscriptionId, params);
+
+        // 3. Verification:
+        // - Verify that the removed price ID is no longer part of the subscription's price IDs
+        (SchedulerState.SubscriptionParams memory updatedParams, ) = scheduler
+            .getSubscription(subscriptionId);
+        assertEq(
+            updatedParams.priceIds.length,
+            numInitialFeeds - 1,
+            "Subscription should have one less price ID"
+        );
+
+        bool removedPriceIdFound = false;
+        for (uint i = 0; i < updatedParams.priceIds.length; i++) {
+            if (updatedParams.priceIds[i] == removedPriceId) {
+                removedPriceIdFound = true;
+                break;
+            }
+        }
+        assertFalse(
+            removedPriceIdFound,
+            "Removed price ID should not be in the subscription's price IDs"
+        );
+
+        // - Querying all feeds should return only the remaining feeds
+        PythStructs.Price[] memory allPricesAfterUpdate = scheduler
+            .getPricesUnsafe(subscriptionId, new bytes32[](0));
+        assertEq(
+            allPricesAfterUpdate.length,
+            newPriceIds.length,
+            "Querying all should only return remaining feeds"
+        );
+
+        // - Verify that trying to get the price of the removed feed directly reverts
+        bytes32[] memory removedIdArray = new bytes32[](1);
+        removedIdArray[0] = removedPriceId;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InvalidPriceId.selector,
+                removedPriceId,
+                bytes32(0)
+            )
+        );
+        scheduler.getPricesUnsafe(subscriptionId, removedIdArray);
+    }
+
+    function testUpdateSubscriptionRevertsWithTooManyPriceIds() public {
+        // 1. Setup: Create a subscription with a valid number of price IDs
+        uint8 initialNumFeeds = 2;
+        uint256 subscriptionId = addTestSubscriptionWithFeeds(
+            scheduler,
+            initialNumFeeds,
+            address(reader)
+        );
+
+        // 2. Prepare params with too many price IDs (MAX_PRICE_IDS_PER_SUBSCRIPTION + 1)
+        (SchedulerState.SubscriptionParams memory currentParams, ) = scheduler
+            .getSubscription(subscriptionId);
+
+        uint16 tooManyFeeds = uint16(
+            scheduler.MAX_PRICE_IDS_PER_SUBSCRIPTION()
+        ) + 1;
+        bytes32[] memory tooManyPriceIds = createPriceIds(tooManyFeeds);
+
+        SchedulerState.SubscriptionParams memory newParams = currentParams;
+        newParams.priceIds = tooManyPriceIds;
+
+        // 3. Expect revert when trying to update with too many price IDs
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TooManyPriceIds.selector,
+                tooManyFeeds,
+                scheduler.MAX_PRICE_IDS_PER_SUBSCRIPTION()
+            )
+        );
+        scheduler.updateSubscription(subscriptionId, newParams);
+    }
 }

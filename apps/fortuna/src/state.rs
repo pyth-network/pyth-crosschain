@@ -1,8 +1,12 @@
 use {
-    crate::api::ChainId,
+    crate::{
+        api::ChainId,
+        keeper::keeper_metrics::{AccountLabel, KeeperMetrics},
+    },
     anyhow::{ensure, Result},
     ethers::types::Address,
     sha3::{Digest, Keccak256},
+    std::sync::Arc,
     tokio::task::spawn_blocking,
 };
 
@@ -127,11 +131,22 @@ impl PebbleHashChain {
 /// which requires tracking multiple hash chains here.
 pub struct HashChainState {
     // The sequence number where the hash chain starts. Must be stored in sorted order.
-    pub offsets: Vec<usize>,
-    pub hash_chains: Vec<PebbleHashChain>,
+    offsets: Vec<usize>,
+    hash_chains: Vec<PebbleHashChain>,
 }
 
 impl HashChainState {
+    pub fn new(offsets: Vec<usize>, hash_chains: Vec<PebbleHashChain>) -> Result<HashChainState> {
+        if offsets.len() != hash_chains.len() {
+            return Err(anyhow::anyhow!(
+                "Offsets and hash chains must have the same length."
+            ));
+        }
+        Ok(HashChainState {
+            offsets,
+            hash_chains,
+        })
+    }
     pub fn from_chain_at_offset(offset: usize, chain: PebbleHashChain) -> HashChainState {
         HashChainState {
             offsets: vec![offset],
@@ -152,11 +167,54 @@ impl HashChainState {
     }
 }
 
+pub struct MonitoredHashChainState {
+    hash_chain_state: Arc<HashChainState>,
+    metrics: Arc<KeeperMetrics>,
+    account_label: AccountLabel,
+}
+impl MonitoredHashChainState {
+    pub fn new(
+        hash_chain_state: Arc<HashChainState>,
+        metrics: Arc<KeeperMetrics>,
+        chain_id: ChainId,
+        provider_address: Address,
+    ) -> Self {
+        Self {
+            hash_chain_state,
+            metrics,
+            account_label: AccountLabel {
+                chain_id,
+                address: provider_address.to_string(),
+            },
+        }
+    }
+
+    pub fn reveal(&self, sequence_number: u64) -> Result<[u8; 32]> {
+        let res = self.hash_chain_state.reveal(sequence_number);
+        if res.is_ok() {
+            let metric = self
+                .metrics
+                .highest_revealed_sequence_number
+                .get_or_create(&self.account_label);
+            if metric.get() < sequence_number as i64 {
+                metric.set(sequence_number as i64);
+            }
+        }
+        res
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
-        crate::state::PebbleHashChain,
+        crate::{
+            keeper::keeper_metrics::{AccountLabel, KeeperMetrics},
+            state::{HashChainState, MonitoredHashChainState, PebbleHashChain},
+        },
+        anyhow::Result,
+        ethers::types::Address,
         sha3::{Digest, Keccak256},
+        std::{sync::Arc, vec},
     };
 
     fn run_hash_chain_test(secret: [u8; 32], length: usize, sample_interval: usize) {
@@ -201,5 +259,157 @@ mod test {
         run_hash_chain_test([0u8; 32], 100, 7);
         run_hash_chain_test([0u8; 32], 100, 50);
         run_hash_chain_test([0u8; 32], 100, 55);
+    }
+
+    #[test]
+    fn test_hash_chain_state_from_chain_at_offset() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        assert_eq!(hash_chain_state.offsets.len(), 1);
+        assert_eq!(hash_chain_state.hash_chains.len(), 1);
+        assert_eq!(hash_chain_state.offsets[0], 5);
+    }
+
+    #[test]
+    fn test_hash_chain_state_reveal_valid_sequence() -> Result<()> {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let expected_hash = chain.reveal_ith(3)?;
+
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+        let result = hash_chain_state.reveal(8)?;
+
+        assert_eq!(result, expected_hash);
+        Ok(())
+    }
+
+    #[test]
+    fn test_hash_chain_state_reveal_sequence_too_small() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        let result = hash_chain_state.reveal(4);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hash_chain_state_reveal_sequence_too_large() {
+        let chain = PebbleHashChain::new([0u8; 32], 10, 1);
+        let hash_chain_state = HashChainState::from_chain_at_offset(5, chain);
+
+        let result = hash_chain_state.reveal(15);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hash_chain_state_multiple_chains() -> Result<()> {
+        let chain1 = PebbleHashChain::new([0u8; 32], 10, 1);
+        let expected_hash1 = chain1.reveal_ith(3)?;
+
+        let chain2 = PebbleHashChain::new([1u8; 32], 10, 1);
+        let expected_hash2 = chain2.reveal_ith(3)?;
+
+        let hash_chain_state = HashChainState {
+            offsets: vec![5, 20],
+            hash_chains: vec![chain1, chain2],
+        };
+
+        let result1 = hash_chain_state.reveal(8)?;
+        assert_eq!(result1, expected_hash1);
+
+        let result2 = hash_chain_state.reveal(23)?;
+        assert_eq!(result2, expected_hash2);
+
+        let result_boundary = hash_chain_state.reveal(20)?;
+        let expected_boundary = hash_chain_state.hash_chains[1].reveal_ith(0)?;
+        assert_eq!(result_boundary, expected_boundary);
+
+        let result3 = hash_chain_state.reveal(15);
+        assert!(result3.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_hash_chain_state_overlapping_chains() -> Result<()> {
+        let chain1 = PebbleHashChain::new([0u8; 32], 10, 1);
+        let chain2 = PebbleHashChain::new([1u8; 32], 10, 1);
+
+        let hash_chain_state = HashChainState {
+            offsets: vec![5, 10],
+            hash_chains: vec![chain1, chain2],
+        };
+
+        let result1 = hash_chain_state.reveal(8)?;
+        let expected1 = hash_chain_state.hash_chains[0].reveal_ith(3)?;
+        assert_eq!(result1, expected1);
+
+        // returns the first offset that is > sequence_number)
+        let result2 = hash_chain_state.reveal(12)?;
+        let expected2 = hash_chain_state.hash_chains[1].reveal_ith(2)?;
+        assert_eq!(result2, expected2);
+
+        Ok(())
+    }
+    #[test]
+    fn test_inconsistent_lengths() -> Result<()> {
+        let chain1 = PebbleHashChain::new([0u8; 32], 10, 1);
+        let chain2 = PebbleHashChain::new([1u8; 32], 10, 1);
+
+        let hash_chain_state = HashChainState::new(vec![5], vec![chain1.clone(), chain2.clone()]);
+        assert!(hash_chain_state.is_err());
+        let hash_chain_state = HashChainState::new(vec![5, 10], vec![chain1.clone()]);
+        assert!(hash_chain_state.is_err());
+        let hash_chain_state =
+            HashChainState::new(vec![5, 10], vec![chain1.clone(), chain2.clone()]);
+        assert!(hash_chain_state.is_ok());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_highest_revealed_sequence_number() {
+        let chain = PebbleHashChain::new([0u8; 32], 100, 1);
+        let hash_chain_state = HashChainState::new(vec![0], vec![chain]).unwrap();
+        let metrics = Arc::new(KeeperMetrics::default());
+        let provider = Address::random();
+        let monitored = MonitoredHashChainState::new(
+            Arc::new(hash_chain_state),
+            metrics.clone(),
+            "ethereum".to_string(),
+            provider,
+        );
+        let label = AccountLabel {
+            chain_id: "ethereum".to_string(),
+            address: provider.to_string(),
+        };
+
+        assert!(monitored.reveal(5).is_ok());
+        let current = metrics
+            .highest_revealed_sequence_number
+            .get_or_create(&label)
+            .get();
+        assert_eq!(current, 5);
+
+        assert!(monitored.reveal(15).is_ok());
+        let current = metrics
+            .highest_revealed_sequence_number
+            .get_or_create(&label)
+            .get();
+        assert_eq!(current, 15);
+
+        assert!(monitored.reveal(10).is_ok());
+        let current = metrics
+            .highest_revealed_sequence_number
+            .get_or_create(&label)
+            .get();
+        assert_eq!(current, 15);
+
+        assert!(monitored.reveal(1000).is_err());
+        let current = metrics
+            .highest_revealed_sequence_number
+            .get_or_create(&label)
+            .get();
+        assert_eq!(current, 15);
     }
 }
