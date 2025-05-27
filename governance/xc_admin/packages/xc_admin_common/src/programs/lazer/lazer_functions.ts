@@ -17,7 +17,7 @@ import { pyth_lazer_transaction } from "./generated/governance_instruction";
  * @returns IMap compatible object for protobuf
  */
 export function convertLazerFeedMetadataToMap(
-  metadata: LazerFeedMetadata
+  metadata: LazerFeedMetadata,
 ): pyth_lazer_transaction.DynamicValue.IMap {
   // Use protobufjs fromObject to handle the conversion automatically
   const mapData = {
@@ -25,8 +25,8 @@ export function convertLazerFeedMetadataToMap(
       .filter(([_, value]) => value !== undefined)
       .map(([key, value]) => ({
         key,
-        value
-      }))
+        value,
+      })),
   };
 
   return pyth_lazer_transaction.DynamicValue.Map.fromObject(mapData);
@@ -367,7 +367,8 @@ export async function generateInstructions(
             metadata: convertLazerFeedMetadataToMap(feedMetadata),
             permissionedPublishers: [],
           });
-          const encoded = pyth_lazer_transaction.AddFeed.encode(addFeedMessage).finish();
+          const encoded =
+            pyth_lazer_transaction.AddFeed.encode(addFeedMessage).finish();
           governanceBuffer = Buffer.from(encoded);
         }
       }
