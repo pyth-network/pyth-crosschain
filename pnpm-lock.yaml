@@ -1396,6 +1396,9 @@ importers:
         specifier: ^1.8.2
         version: 1.10.4(encoding@0.1.13)
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.14.0
       '@types/web3':
         specifier: ^1.2.2
         version: 1.2.2(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -2712,6 +2715,9 @@ importers:
       '@pythnetwork/hermes-client':
         specifier: workspace:*
         version: link:../../../../apps/hermes/client/js
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.14.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.7.0
         version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.56.0)(typescript@5.8.2))(eslint@8.56.0)(typescript@5.8.2)
@@ -2758,6 +2764,9 @@ importers:
       '@types/jest':
         specifier: ^29.4.0
         version: 29.5.14
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.14.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^5.20.0
         version: 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.56.0)(typescript@5.8.2))(eslint@8.56.0)(typescript@5.8.2)
