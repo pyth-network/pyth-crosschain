@@ -1,0 +1,63 @@
+{
+  "name": "@pythnetwork/developer-hub",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
+    "fix:format": "prettier --write .",
+    "fix:lint:eslint": "eslint --fix .",
+    "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
+    "start:dev": "next dev --port 3627",
+    "start:prod": "next start --port 3627",
+    "test:format": "prettier --check .",
+    "test:lint:eslint": "eslint . --max-warnings 0",
+    "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
+    "test:types": "tsc"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "catalog:",
+    "@pythnetwork/component-library": "workspace:*",
+    "@react-hookz/web": "catalog:",
+    "clsx": "catalog:",
+    "fumadocs-core": "catalog:",
+    "fumadocs-mdx": "catalog:",
+    "fumadocs-ui": "catalog:",
+    "next": "catalog:",
+    "next-themes": "catalog:",
+    "nuqs": "catalog:",
+    "react": "catalog:",
+    "react-aria": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "catalog:",
+    "zod-validation-error": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/jest-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@svgr/webpack": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/jest": "catalog:",
+    "@types/mdx": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "autoprefixer": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "postcss": "catalog:",
+    "prettier": "catalog:",
+    "sass": "catalog:",
+    "stylelint": "catalog:",
+    "stylelint-config-standard-scss": "catalog:",
+    "tailwindcss": "^4.1.6",
+    "typescript": "catalog:",
+    "vercel": "catalog:"
+  }
+}

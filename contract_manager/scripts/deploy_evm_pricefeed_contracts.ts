@@ -1,14 +1,5 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { EvmChain } from "../src/chains";
-import { DefaultStore } from "../src/store";
-import {
-  DeploymentType,
-  EvmPriceFeedContract,
-  getDefaultDeploymentConfig,
-  toDeploymentType,
-  toPrivateKey,
-} from "../src";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
@@ -17,6 +8,15 @@ import {
   BaseDeployConfig,
 } from "./common";
 import { HermesClient } from "@pythnetwork/hermes-client";
+import {
+  DeploymentType,
+  getDefaultDeploymentConfig,
+  toDeploymentType,
+  toPrivateKey,
+} from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import { EvmPriceFeedContract } from "../src/core/contracts";
+import { DefaultStore } from "../src/node/utils/store";
 
 interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;

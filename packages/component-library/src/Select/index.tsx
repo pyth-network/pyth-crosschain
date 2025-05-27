@@ -14,14 +14,14 @@ import {
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import type { Props as ButtonProps } from "../Button/index.js";
-import { Button } from "../Button/index.js";
-import { DropdownCaretDown } from "../DropdownCaretDown/index.js";
+import type { Props as ButtonProps } from "../Button/index.jsx";
+import { Button } from "../Button/index.jsx";
+import { DropdownCaretDown } from "../DropdownCaretDown/index.jsx";
 import {
   ListBox,
   ListBoxItem,
   ListBoxSection,
-} from "../unstyled/ListBox/index.js";
+} from "../unstyled/ListBox/index.jsx";
 
 export type Props<T extends { id: string | number }> = Omit<
   ComponentProps<typeof BaseSelect>,
@@ -54,7 +54,11 @@ export type Props<T extends { id: string | number }> = Omit<
       }
     | {
         hideGroupLabel?: boolean | undefined;
-        optionGroups: { name: string; options: readonly T[] }[];
+        optionGroups: {
+          name: string;
+          options: readonly T[];
+          hideLabel?: boolean | undefined;
+        }[];
       }
   );
 
@@ -84,9 +88,7 @@ export const Select = <T extends { id: string | number }>({
   >
     <Label className={styles.label}>{label}</Label>
     <Button
-      afterIcon={({ className }) => (
-        <DropdownCaretDown className={clsx(styles.caret, className)} />
-      )}
+      afterIcon={<DropdownCaretDown className={styles.caret} />}
       variant={variant}
       size={size}
       rounded={rounded}
@@ -119,8 +121,12 @@ export const Select = <T extends { id: string | number }>({
         </ListBox>
       ) : (
         <ListBox className={styles.listbox ?? ""} items={props.optionGroups}>
-          {({ name, options }) => (
-            <ListBoxSection className={styles.section ?? ""} id={name}>
+          {({ name, options, hideLabel }) => (
+            <ListBoxSection
+              data-label-hidden={hideLabel ? "" : undefined}
+              className={styles.section ?? ""}
+              id={name}
+            >
               <Header className={styles.groupLabel ?? ""}>{name}</Header>
               <Collection items={options}>
                 {(item) => (

@@ -747,7 +747,7 @@
         "type": "uint64"
       }
     ],
-    "name": "parsePriceFeedUpdatesWithSlots",
+    "name": "parsePriceFeedUpdatesWithSlotsStrict",
     "outputs": [
       {
         "components": [

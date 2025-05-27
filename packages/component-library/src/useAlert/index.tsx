@@ -6,9 +6,12 @@ import type { ComponentProps, ReactNode } from "react";
 import { Heading } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { Button } from "../Button/index.js";
-import type { OpenArgs } from "../ModalDialog/index.js";
-import { ModalDialog, createModalDialogContext } from "../ModalDialog/index.js";
+import { Button } from "../Button/index.jsx";
+import type { ModalDialogProps } from "../ModalDialog/index.jsx";
+import {
+  ModalDialog,
+  createModalDialogContext,
+} from "../ModalDialog/index.jsx";
 
 const CLOSE_DURATION_IN_S = 0.1;
 
@@ -51,7 +54,7 @@ const Alert = ({
   >
     <Button
       className={styles.closeButton ?? ""}
-      beforeIcon={(props) => <XCircle weight="fill" {...props} />}
+      beforeIcon={<XCircle weight="fill" />}
       slot="close"
       hideText
       rounded
@@ -72,4 +75,4 @@ const { Provider, useValue } = createModalDialogContext<Props>(Alert);
 
 export const AlertProvider = Provider;
 export const useAlert = useValue;
-export type OpenAlertArgs = OpenArgs<Props>;
+export type OpenAlertArgs = ModalDialogProps<Props>;

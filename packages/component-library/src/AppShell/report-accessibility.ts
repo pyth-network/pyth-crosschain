@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import * as React from "react";
-import * as ReactDOM from "react-dom";
+import React, { useEffect } from "react";
+import ReactDOM from "react-dom";
 
-import { useLogger } from "../useLogger/index.js";
+import { useLogger } from "../useLogger/index.jsx";
 
 const AXE_TIMEOUT = 1000;
 

@@ -494,7 +494,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
             size="sm"
             href="https://staking.pyth.network"
             target="_blank"
-            beforeIcon={Browsers}
+            beforeIcon={<Browsers />}
           >
             Open Staking App
           </Button>
@@ -503,7 +503,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
             size="sm"
             href="https://docs.pyth.network/home/oracle-integrity-staking"
             target="_blank"
-            beforeIcon={BookOpenText}
+            beforeIcon={<BookOpenText />}
           >
             Documentation
           </Button>

@@ -1,0 +1,67 @@
+syntax = "proto3";
+package pyth_lazer_transaction;
+
+import "google/protobuf/timestamp.proto";
+import "pyth_lazer_transaction.proto";
+
+// Envelope containing signed transaction and context attached by Pyth Lazer.
+// Created by Pyth Lazer Relayers, which also generate and attach the context.
+message TransactionEnvelope {
+    // [required] signed transaction encoded with protobuf
+    optional SignedLazerTransaction signed_transaction = 1;
+
+    // [required] context attached by pyth lazer relayer
+    optional PayloadContext payload_context = 2;
+}
+
+// Context attached by Pyth Lazer Relayer containing information necessary for processing transaction.
+// Has different context data depending on the type of transaction.
+// Submitted over Message Queue to be read by rest of Pyth Lazer service.
+message PayloadContext {
+    // [required] timestamp wwhen relayer received the signed transaction
+    optional google.protobuf.Timestamp relayer_receive_timestamp = 1;
+
+    // [required] context set based on type of transaction
+    oneof context {
+        PublisherUpdateContext publisher_update_context = 2;
+    }
+}
+
+// Context contains status of each feed update found in transaction
+message PublisherUpdateContext {
+    // [required] ID of publisher based on the access token used to connect
+    optional uint32 publisher_id = 1;
+
+    // [required] context for each feed update
+    // must exactly match length and order of feed updates
+    // order of updates are preserved between encoding/decoding
+    repeated FeedUpdateContext feed_update_context = 2;
+}
+
+// State for each feed update.
+// Each feed update is validated and may be marked as rejected by Relayer.
+message FeedUpdateContext {
+    // [required] status of feed update
+    oneof status {
+        Accepted accepted = 1;
+        Rejected rejected = 2;
+    }
+}
+
+// Accepted publisher update
+message Accepted {}
+
+// Rejected publisher update and its reason for being rejected
+message Rejected {
+    // [required] reason for rejection
+    RejectReason reject_reason = 1;
+}
+
+// The reasons that a publisher update might be rejected for
+enum RejectReason {
+    InvalidTimestamp = 0;
+    PriceDeviation = 1;
+    PriceOverflow = 2;
+    InvalidFeedId = 3;
+    MissingFields = 4;
+}

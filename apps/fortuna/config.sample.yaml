@@ -32,6 +32,9 @@ chains:
     # How much to charge in fees
     fee: 1500000000000000
 
+    # Set this temporarily to false if you have changed the fees and want to apply a new baseline fee.
+    sync_fee_only_on_register: true
+
     # Configuration for dynamic fees under high gas prices. The keeper will set
     # on-chain fees to make between [min_profit_pct, max_profit_pct] of the max callback
     # cost in profit per transaction.
