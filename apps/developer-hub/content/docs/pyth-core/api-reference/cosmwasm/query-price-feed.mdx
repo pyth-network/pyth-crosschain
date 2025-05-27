@@ -1,22 +1,10 @@
 ---
-title: Price Feed
+title: 'Pyth Core: Query Price Feed API for Crypto Data'
 description: >-
-  Get the latest value for the requested price feed id, including the current
-  price, confidence interval and EMA. The price feed id is a 32-byte id written
-  as a hexadecimal string; see the price feed ids page to look up the id for a
-  given symbol. The returned prices and confidence intervals are decimal numbers
-  written in the form a * 10^e, where e is an exponent included in the result.
-  For example, a price of 1234 with an exponent of -2 represents the number
-  12.34. The result also includes a publish_time which is the unix timestamp for
-  the price update. This query may return a price from arbitrarily far in the
-  past. It is the caller's responsibility to check the returned publish_time to
-  ensure that the update is recent enough for their use case. The pyth_sdk_cw
-  crate includes some convenience methods for performing these checks. This
-  function reverts with a PriceFeedNotFound error if the requested feed id has
-  never received a price update. This error could either mean that the provided
-  price feed id is incorrect, or (more typically) that this is the first
-  attempted use of that feed on-chain. In the second case, executing
-  UpdatePriceFeeds will solve this problem.
+  Retrieve real-time crypto prices, confidence intervals, and EMAs from CosmWasm
+  feeds. Query hex feed IDs with timestamps for accurate, up-to-date data.
+full: false
+index: false
 ---
 import Input from "../../../../components/Input";
 import Arg from "../../../../components/Arg";

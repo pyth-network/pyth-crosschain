@@ -1,10 +1,10 @@
 ---
-title: get_stale_price_threshold_secs
+title: Aptos Stale Price Threshold (Seconds)
 description: >-
-  Get the default stale price threshold in seconds. This quantity is the maximum
-  age of price updates returned by functions like get_price and get_ema_price;
-  these functions revert if the current on-chain price is older than this
-  threshold.
+  Default staleness limit (in seconds) for get_price and get_ema_price
+  functions, ensuring reliable on-chain pricing.
+full: false
+index: false
 ---
 import DynamicCode from "../../../../components/DynamicCode";
 import { Tab, Tabs } from "nextra-theme-docs";

@@ -1,23 +1,11 @@
 ---
-title: get_ema_price_no_older_than
+title: Get EMA Price & Confidence Interval by Price Feed ID
 description: >-
-  Get the latest exponentially-weighted moving average (EMA) price and
-  confidence interval for the requested price feed id. The price feed id is a
-  32-byte id written as a hexadecimal string; see the [price feed
-  ids](https://pyth.network/developers/price-feed-ids) page to look up the id
-  for a given symbol. The returned price and confidence are decimal numbers
-  written in the form `a * 10^e`, where `e` is an exponent included in the
-  result. For example, a price of 1234 with an exponent of -2 represents the
-  number 12.34. The result also includes a `timestamp` which is the unix
-  timestamp for the price update. The EMA methodology is described in more
-  detail in this [blog
-  post](https://pythnetwork.medium.com/whats-in-a-name-302a03e6c3e1). The caller
-  provides a `max_age_secs` argument that specifies how old the price can be.
-  The call reverts if the on-chain price is from more than `max_age_secs`
-  seconds in the past (with respect to the current on-chain timestamp). Users of
-  this method will typically invoke [update_price_feeds](update-price-feeds) to
-  update the on-chain price before reading it. This step ensures that the
-  on-chain price is fresh and the call does not revert.
+  Get real-time EMA prices and confidence intervals for any feed ID. Update
+  feeds instantly to ensure data freshness, and explore our detailed EMA
+  methodology guide.
+full: false
+index: false
 ---
 import Input from "../../../../components/Input";
 import Arg from "../../../../components/Arg";

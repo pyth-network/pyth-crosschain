@@ -1,3 +1,11 @@
+---
+title: 'Migrating from Chainlink to Pyth: A Step-by-Step Guide'
+description: >-
+  Migrate your EVM app from Chainlink to Pyth with our step-by-step guide. Set
+  up Pyth price feeds, automate updates, and access reliable price data.
+full: false
+index: false
+---
 # Migrate from Chainlink to Pyth
 
 This guide explains how to migrate an EVM application that uses Chainlink price feeds to Pyth price feeds.

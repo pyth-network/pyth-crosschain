@@ -1,12 +1,10 @@
 ---
-title: get_update_fee
+title: 'Aptos Octa: Check Price Feed Update Fee'
 description: >-
-  Get the fee required to update the on-chain price feeds with the provided
-  `update_data`. The returned number of Octa should be sent as the transaction
-  value when calling [update_price_feeds](update-price-feeds). The `update_data`
-  can be retrieved from the [Hermes API](https://hermes.pyth.network/docs). By
-  default, the data is returned as a base64-encoded string that you must
-  deserialize into a vector of bytes before calling this method.
+  Retrieve Aptos price feed update fees via the Hermes API and use them in your
+  update_price_feeds transactions to ensure accurate on-chain data.
+full: false
+index: false
 ---
 import Input from "../../../../components/Input";
 import Arg from "../../../../components/Arg";
