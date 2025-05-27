@@ -98,6 +98,22 @@ To regenerate the client after updates to the Hermes API:
 
 3. Manually update dependencies in Cargo.toml and version number if necessary.
 
+4. Create a `.openapi-generator-ignore` file to preserve custom implementations:
+   ```bash
+   echo "src/streaming.rs" > .openapi-generator-ignore
+   echo "examples/" >> .openapi-generator-ignore
+   ```
+
+5. Implement custom streaming functionality in `src/streaming.rs` using the `eventsource-stream` crate for proper SSE handling.
+
+6. Rename parameter names in the generated code to be more intuitive (e.g., in `rest_api.rs`).
+
+7. Fix formatting and clippy linting issues:
+   ```bash
+   cargo fmt
+   cargo clippy --fix
+   ```
+
 ## Publishing
 
 This package is published to crates.io when a new tag matching `hermes-client-rust-v*` is pushed.
@@ -125,6 +141,3 @@ The client defaults to using the Hermes public endpoint at https://hermes.pyth.n
  - [RpcPriceFeedMetadata](docs/RpcPriceFeedMetadata.md)
  - [RpcPriceFeedMetadataV2](docs/RpcPriceFeedMetadataV2.md)
  - [TwapsResponse](docs/TwapsResponse.md)
-
-
-
