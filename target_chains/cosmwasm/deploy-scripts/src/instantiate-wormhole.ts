@@ -4,9 +4,9 @@ import { getWormholeConfig } from "./configs";
 import {
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
-} from "../../../../contract_manager/lib/core/contracts/cosmwasm";
-import { toPrivateKey } from "../../../../contract_manager/lib/core/base";
-import { CosmWasmChain } from "../../../../contract_manager/lib/core/chains";
+} from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
+import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
+import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
 import { DefaultStore, Store } from "@pythnetwork/contract-manager/node/store";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { DeploymentType } from "./helper";

@@ -1,9 +1,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { SuiChain } from "../../../../contract_manager/lib/core/chains";
-import { SuiPriceFeedContract } from "../../../../contract_manager/lib/core/contracts/sui";
+import { SuiChain } from "@pythnetwork/contract-manager/core/chains";
+import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
-import { getDefaultDeploymentConfig } from "../../../../contract_manager/lib/core/base";
+import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
 import { initPyth, publishPackage } from "./pyth_deploy";
