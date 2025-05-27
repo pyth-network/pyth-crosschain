@@ -86,7 +86,7 @@ export class ResilientWebSocket {
 
   startWebSocket() {
     if (this.wsUserClosed) {
-      this.logger.error("Connection was explicitly close. Won't reconnect.");
+      this.logger.error("Connection was explicitly closed by user. Will not reconnect.");
       return;
     }
 
