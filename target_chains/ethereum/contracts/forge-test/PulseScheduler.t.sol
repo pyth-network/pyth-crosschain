@@ -339,7 +339,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
     {
         // Setup subscription with heartbeat criteria
         uint32 heartbeatSeconds = 60; // 60 second heartbeat
-        SchedulerState.UpdateCriteria memory criteria = SchedulerState
+        SchedulerStructs.UpdateCriteria memory criteria = SchedulerStructs
             .UpdateCriteria({
                 updateOnHeartbeat: true,
                 heartbeatSeconds: heartbeatSeconds,
@@ -376,7 +376,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         ) = _setupSubscriptionAndFirstUpdate();
 
         // Verify priceLastUpdatedAt is set
-        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+        (, SchedulerStructs.SubscriptionStatus memory status) = scheduler
             .getSubscription(subscriptionId);
         assertEq(
             status.priceLastUpdatedAt,
@@ -385,11 +385,11 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
 
         // 2. Update subscription to add price IDs
-        (SchedulerState.SubscriptionParams memory currentParams, ) = scheduler
+        (SchedulerStructs.SubscriptionParams memory currentParams, ) = scheduler
             .getSubscription(subscriptionId);
         bytes32[] memory newPriceIds = createPriceIds(3);
 
-        SchedulerState.SubscriptionParams memory newParams = currentParams;
+        SchedulerStructs.SubscriptionParams memory newParams = currentParams;
         newParams.priceIds = newPriceIds;
 
         // Update the subscription
@@ -422,7 +422,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         scheduler.updatePriceFeeds(subscriptionId, updateData);
 
         // Verify the update was processed
-        (, SchedulerState.SubscriptionStatus memory status) = scheduler
+        (, SchedulerStructs.SubscriptionStatus memory status) = scheduler
             .getSubscription(subscriptionId);
         assertEq(
             status.priceLastUpdatedAt,
@@ -438,7 +438,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
         // This should fail because we haven't waited for heartbeatSeconds since the last update
         vm.expectRevert(
-            abi.encodeWithSelector(UpdateConditionsNotMet.selector)
+            abi.encodeWithSelector(
+                SchedulerErrors.UpdateConditionsNotMet.selector
+            )
         );
         vm.prank(pusher);
         scheduler.updatePriceFeeds(subscriptionId, updateData);
@@ -668,14 +670,14 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
 
         // Get subscription parameters and calculate minimum balance
-        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+        (SchedulerStructs.SubscriptionParams memory params, ) = scheduler
             .getSubscription(subscriptionId);
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(params.priceIds.length)
         );
 
         // Deactivate the subscription
-        SchedulerState.SubscriptionParams memory testParams = params;
+        SchedulerStructs.SubscriptionParams memory testParams = params;
         testParams.isActive = false;
         scheduler.updateSubscription(subscriptionId, testParams);
 
@@ -685,8 +687,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
         // Verify balance is now below minimum
         (
-            SchedulerState.SubscriptionParams memory testUpdatedParams,
-            SchedulerState.SubscriptionStatus memory testUpdatedStatus
+            SchedulerStructs.SubscriptionParams memory testUpdatedParams,
+            SchedulerStructs.SubscriptionStatus memory testUpdatedStatus
         ) = scheduler.getSubscription(subscriptionId);
         assertEq(
             testUpdatedStatus.balanceInWei,
@@ -695,12 +697,18 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
 
         // Try to add funds to inactive subscription (should fail with InactiveSubscription)
-        vm.expectRevert(abi.encodeWithSelector(InactiveSubscription.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SchedulerErrors.InactiveSubscription.selector
+            )
+        );
         scheduler.addFunds{value: 1 wei}(subscriptionId);
 
         // Try to reactivate with insufficient balance (should fail)
         testUpdatedParams.isActive = true;
-        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(SchedulerErrors.InsufficientBalance.selector)
+        );
         scheduler.updateSubscription(subscriptionId, testUpdatedParams);
     }
 
@@ -710,7 +718,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             2,
             address(reader)
         );
-        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+        (SchedulerStructs.SubscriptionParams memory params, ) = scheduler
             .getSubscription(subscriptionId);
         uint256 minimumBalance = scheduler.getMinimumBalance(
             uint8(params.priceIds.length)
@@ -742,7 +750,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         // Verify balance is now below minimum
         (
             ,
-            SchedulerState.SubscriptionStatus memory statusAfterUpdates
+            SchedulerStructs.SubscriptionStatus memory statusAfterUpdates
         ) = scheduler.getSubscription(subscriptionId);
         assertTrue(
             statusAfterUpdates.balanceInWei < minimumBalance,
@@ -754,7 +762,9 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         uint256 insufficientFunds = minimumBalance -
             statusAfterUpdates.balanceInWei -
             1;
-        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(SchedulerErrors.InsufficientBalance.selector)
+        );
         scheduler.addFunds{value: insufficientFunds}(subscriptionId);
 
         // Add sufficient funds to get back above minimum
@@ -766,7 +776,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         // Verify balance is now above minimum
         (
             ,
-            SchedulerState.SubscriptionStatus memory statusAfterAddingFunds
+            SchedulerStructs.SubscriptionStatus memory statusAfterAddingFunds
         ) = scheduler.getSubscription(subscriptionId);
         assertTrue(
             statusAfterAddingFunds.balanceInWei >= minimumBalance,
@@ -1033,16 +1043,18 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
     function testPermanentSubscriptionDepositLimit() public {
         // Test 1: Creating a permanent subscription with deposit exceeding MAX_DEPOSIT_LIMIT should fail
-        SchedulerState.SubscriptionParams
+        SchedulerStructs.SubscriptionParams
             memory params = createDefaultSubscriptionParams(2, address(reader));
         params.isPermanent = true;
 
-        uint256 maxDepositLimit = 100 ether; // Same as MAX_DEPOSIT_LIMIT in SchedulerState
+        uint256 maxDepositLimit = scheduler.MAX_DEPOSIT_LIMIT();
         uint256 excessiveDeposit = maxDepositLimit + 1 ether;
         vm.deal(address(this), excessiveDeposit);
 
         vm.expectRevert(
-            abi.encodeWithSelector(MaxDepositLimitExceeded.selector)
+            abi.encodeWithSelector(
+                SchedulerErrors.MaxDepositLimitExceeded.selector
+            )
         );
         scheduler.createSubscription{value: excessiveDeposit}(params);
 
@@ -1056,8 +1068,8 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
         // Verify subscription was created correctly
         (
-            SchedulerState.SubscriptionParams memory storedParams,
-            SchedulerState.SubscriptionStatus memory status
+            SchedulerStructs.SubscriptionParams memory storedParams,
+            SchedulerStructs.SubscriptionStatus memory status
         ) = scheduler.getSubscription(subscriptionId);
 
         assertTrue(
@@ -1075,13 +1087,15 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         vm.deal(address(this), largeAdditionalFunds);
 
         vm.expectRevert(
-            abi.encodeWithSelector(MaxDepositLimitExceeded.selector)
+            abi.encodeWithSelector(
+                SchedulerErrors.MaxDepositLimitExceeded.selector
+            )
         );
         scheduler.addFunds{value: largeAdditionalFunds}(subscriptionId);
 
         // Test 4: Adding funds to a permanent subscription within MAX_DEPOSIT_LIMIT should succeed
         // Create a non-permanent subscription to test partial funding
-        SchedulerState.SubscriptionParams
+        SchedulerStructs.SubscriptionParams
             memory nonPermanentParams = createDefaultSubscriptionParams(
                 2,
                 address(reader)
@@ -1104,7 +1118,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         // Verify funds were added correctly
         (
             ,
-            SchedulerState.SubscriptionStatus memory nonPermanentStatus
+            SchedulerStructs.SubscriptionStatus memory nonPermanentStatus
         ) = scheduler.getSubscription(nonPermanentSubId);
 
         assertEq(
@@ -1117,7 +1131,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         uint256 largeDeposit = maxDepositLimit * 2;
         vm.deal(address(this), largeDeposit);
 
-        SchedulerState.SubscriptionParams
+        SchedulerStructs.SubscriptionParams
             memory unlimitedParams = createDefaultSubscriptionParams(
                 2,
                 address(reader)
@@ -1127,8 +1141,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         }(unlimitedParams);
 
         // Verify subscription was created with the large deposit
-        (, SchedulerState.SubscriptionStatus memory unlimitedStatus) = scheduler
-            .getSubscription(unlimitedSubId);
+        (
+            ,
+            SchedulerStructs.SubscriptionStatus memory unlimitedStatus
+        ) = scheduler.getSubscription(unlimitedSubId);
 
         assertEq(
             unlimitedStatus.balanceInWei,
@@ -2439,7 +2455,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         bytes32 removedPriceId = initialPriceIds[numInitialFeeds - 1];
 
         // 2. Action: Update subscription to remove the last price feed
-        (SchedulerState.SubscriptionParams memory params, ) = scheduler
+        (SchedulerStructs.SubscriptionParams memory params, ) = scheduler
             .getSubscription(subscriptionId);
 
         // Create new price IDs array without the last ID
@@ -2456,7 +2472,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
 
         // 3. Verification:
         // - Verify that the removed price ID is no longer part of the subscription's price IDs
-        (SchedulerState.SubscriptionParams memory updatedParams, ) = scheduler
+        (SchedulerStructs.SubscriptionParams memory updatedParams, ) = scheduler
             .getSubscription(subscriptionId);
         assertEq(
             updatedParams.priceIds.length,
@@ -2490,7 +2506,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         removedIdArray[0] = removedPriceId;
         vm.expectRevert(
             abi.encodeWithSelector(
-                InvalidPriceId.selector,
+                SchedulerErrors.InvalidPriceId.selector,
                 removedPriceId,
                 bytes32(0)
             )
@@ -2508,7 +2524,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         );
 
         // 2. Prepare params with too many price IDs (MAX_PRICE_IDS_PER_SUBSCRIPTION + 1)
-        (SchedulerState.SubscriptionParams memory currentParams, ) = scheduler
+        (SchedulerStructs.SubscriptionParams memory currentParams, ) = scheduler
             .getSubscription(subscriptionId);
 
         uint16 tooManyFeeds = uint16(
@@ -2516,13 +2532,13 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         ) + 1;
         bytes32[] memory tooManyPriceIds = createPriceIds(tooManyFeeds);
 
-        SchedulerState.SubscriptionParams memory newParams = currentParams;
+        SchedulerStructs.SubscriptionParams memory newParams = currentParams;
         newParams.priceIds = tooManyPriceIds;
 
         // 3. Expect revert when trying to update with too many price IDs
         vm.expectRevert(
             abi.encodeWithSelector(
-                TooManyPriceIds.selector,
+                SchedulerErrors.TooManyPriceIds.selector,
                 tooManyFeeds,
                 scheduler.MAX_PRICE_IDS_PER_SUBSCRIPTION()
             )
