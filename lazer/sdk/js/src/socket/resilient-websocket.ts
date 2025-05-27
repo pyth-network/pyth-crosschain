@@ -5,18 +5,31 @@ import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
-const HEARTBEAT_TIMEOUT_DURATION_MS = 5000; // 5 seconds
-const MAX_RETRY_DELAY_MS = 1000; // 1 second'
-const LOG_AFTER_RETRY_COUNT = 10;
+const DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS = 5000; // 5 seconds
+const DEFAULT_MAX_RETRY_DELAY_MS = 1000; // 1 second'
+const DEFAULT_LOG_AFTER_RETRY_COUNT = 10;
+
+export type ResilientWebSocketConfig = {
+  endpoint: string;
+  wsOptions?: ClientOptions | ClientRequestArgs | undefined;
+  logger?: Logger;
+  heartbeatTimeoutDurationMs?: number;
+  maxRetryDelayMs?: number;
+  logAfterRetryCount?: number;
+}
 
 export class ResilientWebSocket {
-  endpoint: string;
+  private endpoint: string;
+  private wsOptions?: ClientOptions | ClientRequestArgs | undefined;
+  private logger: Logger;
+  private heartbeatTimeoutDurationMs: number;
+  private maxRetryDelayMs: number;
+  private logAfterRetryCount: number;
+
   wsClient: undefined | WebSocket;
   wsUserClosed = false;
-  private wsOptions: ClientOptions | ClientRequestArgs | undefined;
   private wsFailedAttempts: number;
   private heartbeatTimeout?: NodeJS.Timeout | undefined;
-  private logger: Logger;
   private retryTimeout?: NodeJS.Timeout | undefined;
   private _isReconnecting = false;
 
@@ -29,7 +42,7 @@ export class ResilientWebSocket {
   }
 
   private shouldLogRetry() {
-    return this.wsFailedAttempts % LOG_AFTER_RETRY_COUNT === 0;
+    return this.wsFailedAttempts % this.logAfterRetryCount === 0;
   }
 
   onError: (error: ErrorEvent) => void;
@@ -37,19 +50,25 @@ export class ResilientWebSocket {
   onReconnect: () => void;
 
   constructor(
-    endpoint: string,
-    wsOptions?: ClientOptions | ClientRequestArgs,
-    logger: Logger = dummyLogger,
+    config: ResilientWebSocketConfig,
   ) {
-    this.endpoint = endpoint;
-    this.wsOptions = wsOptions;
-    this.logger = logger;
+    this.endpoint = config.endpoint;
+    this.wsOptions = config.wsOptions;
+    this.logger = config.logger ?? dummyLogger;
+    this.heartbeatTimeoutDurationMs =
+      config.heartbeatTimeoutDurationMs ??
+      DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS;
+    this.maxRetryDelayMs =
+      config.maxRetryDelayMs ?? DEFAULT_MAX_RETRY_DELAY_MS;
+    this.logAfterRetryCount =
+      config.logAfterRetryCount ?? DEFAULT_LOG_AFTER_RETRY_COUNT;
 
     this.wsFailedAttempts = 0;
     this.onError = (error: ErrorEvent) => {
-      if (this.wsFailedAttempts > LOG_AFTER_RETRY_COUNT) {
-        this.logger.error(error.error);
-      }
+      void error;
+      // if (this.wsFailedAttempts > LOG_AFTER_RETRY_COUNT) {
+      //   this.logger.error(error.error);
+      // }
     };
     this.onMessage = (data: WebSocket.Data): void => {
       void data;
@@ -107,7 +126,7 @@ export class ResilientWebSocket {
       } else {
         if (this.shouldLogRetry()) {
           this.logger.warn(
-            `WebSocket connection to ${this.endpoint} closed unexpectedly: Code: ${e.code.toString()}, Reason: ${e.reason}`,
+            `WebSocket connection to ${this.endpoint} closed unexpectedly: Code: ${e.code.toString()}`,
           );
         }
         this.handleReconnect();
@@ -140,7 +159,7 @@ export class ResilientWebSocket {
       this.logger.warn("Connection timed out. Reconnecting...");
       this.wsClient?.terminate();
       this.handleReconnect();
-    }, HEARTBEAT_TIMEOUT_DURATION_MS);
+    }, this.heartbeatTimeoutDurationMs);
   }
 
   private handleReconnect() {
@@ -161,20 +180,19 @@ export class ResilientWebSocket {
     this.wsFailedAttempts += 1;
     this.wsClient = undefined;
 
-    const waitTime = expoBackoff(this.wsFailedAttempts);
     this._isReconnecting = true;
 
     if (this.shouldLogRetry()) {
       this.logger.error(
         "Connection closed unexpectedly or because of timeout. Reconnecting after " +
-          String(waitTime) +
+          String(this.retryDelayMs()) +
           "ms.",
       );
     }
 
     this.retryTimeout = setTimeout(() => {
       this.startWebSocket();
-    }, waitTime);    
+    }, this.retryDelayMs());    
   }
 
   closeWebSocket(): void {
@@ -184,20 +202,20 @@ export class ResilientWebSocket {
     }
     this.wsUserClosed = true;
   }
-}
 
-/**
- * Calculates the delay in milliseconds for exponential backoff based on the number of attempts.
- *
- * The delay increases exponentially with each attempt, starting at 200ms for the first attempt,
- * and is capped at 60,000ms (60 seconds) for attempts greater than 10.
- *
- * @param attempts - The number of retry attempts made so far.
- * @returns The calculated delay in milliseconds before the next retry.
- */
-function expoBackoff(attempts: number): number {
-  if (attempts >= 10) {
-    return MAX_RETRY_DELAY_MS;
+  /**
+   * Calculates the delay in milliseconds for exponential backoff based on the number of attempts.
+   *
+   * The delay increases exponentially with each attempt, starting at 200ms for the first attempt,
+   * and is capped at 60,000ms (60 seconds) for attempts greater than 10.
+   *
+   * @param attempts - The number of retry attempts made so far.
+   * @returns The calculated delay in milliseconds before the next retry.
+   */
+  private retryDelayMs(): number {
+    if (this.wsFailedAttempts >= 10) {
+      return this.maxRetryDelayMs;
+    }
+    return 2 ** this.wsFailedAttempts * 10;
   }
-  return 2 ** attempts * 10;
 }

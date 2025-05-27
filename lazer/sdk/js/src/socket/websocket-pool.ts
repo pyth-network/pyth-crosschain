@@ -60,7 +60,7 @@ export class WebSocketPool {
           Authorization: `Bearer ${token}`,
         },
       };
-      const rws = new ResilientWebSocket(url, wsOptions, logger);
+      const rws = new ResilientWebSocket({endpoint: url, wsOptions, logger});
 
       // If a websocket client unexpectedly disconnects, ResilientWebSocket will reestablish
       // the connection and call the onReconnect callback.
