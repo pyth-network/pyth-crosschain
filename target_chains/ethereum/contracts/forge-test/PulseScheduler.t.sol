@@ -380,12 +380,10 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             "priceLastUpdatedAt should be set to the first update timestamp"
         );
 
-        // 2. Update subscription to change price IDs
+        // 2. Update subscription to add price IDs
         (SchedulerState.SubscriptionParams memory currentParams, ) = scheduler
             .getSubscription(subscriptionId);
-
-        // Create new price IDs (different from the original ones)
-        bytes32[] memory newPriceIds = createPriceIds(3); // Different number of price IDs
+        bytes32[] memory newPriceIds = createPriceIds(3);
 
         SchedulerState.SubscriptionParams memory newParams = currentParams;
         newParams.priceIds = newPriceIds;
