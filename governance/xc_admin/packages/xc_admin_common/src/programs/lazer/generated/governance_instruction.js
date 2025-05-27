@@ -22,7 +22,6 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
          * Properties of a GovernanceInstruction.
          * @memberof pyth_lazer_transaction
          * @interface IGovernanceInstruction
-         * @property {pyth_lazer_transaction.IGovernanceSource|null} [source] GovernanceInstruction source
          * @property {Array.<pyth_lazer_transaction.IGovernanceDirective>|null} [directives] GovernanceInstruction directives
          * @property {google.protobuf.ITimestamp|null} [minExecutionTimestamp] GovernanceInstruction minExecutionTimestamp
          * @property {google.protobuf.ITimestamp|null} [maxExecutionTimestamp] GovernanceInstruction maxExecutionTimestamp
@@ -44,14 +43,6 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                     if (properties[keys[i]] != null)
                         this[keys[i]] = properties[keys[i]];
         }
-
-        /**
-         * GovernanceInstruction source.
-         * @member {pyth_lazer_transaction.IGovernanceSource|null|undefined} source
-         * @memberof pyth_lazer_transaction.GovernanceInstruction
-         * @instance
-         */
-        GovernanceInstruction.prototype.source = null;
 
         /**
          * GovernanceInstruction directives.
@@ -87,17 +78,6 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
 
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
-
-        /**
-         * GovernanceInstruction _source.
-         * @member {"source"|undefined} _source
-         * @memberof pyth_lazer_transaction.GovernanceInstruction
-         * @instance
-         */
-        Object.defineProperty(GovernanceInstruction.prototype, "_source", {
-            get: $util.oneOfGetter($oneOfFields = ["source"]),
-            set: $util.oneOfSetter($oneOfFields)
-        });
 
         /**
          * GovernanceInstruction _minExecutionTimestamp.
@@ -156,8 +136,6 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         GovernanceInstruction.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.source != null && Object.hasOwnProperty.call(message, "source"))
-                $root.pyth_lazer_transaction.GovernanceSource.encode(message.source, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             if (message.directives != null && message.directives.length)
                 for (let i = 0; i < message.directives.length; ++i)
                     $root.pyth_lazer_transaction.GovernanceDirective.encode(message.directives[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
@@ -203,10 +181,6 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 if (tag === error)
                     break;
                 switch (tag >>> 3) {
-                case 1: {
-                        message.source = $root.pyth_lazer_transaction.GovernanceSource.decode(reader, reader.uint32());
-                        break;
-                    }
                 case 2: {
                         if (!(message.directives && message.directives.length))
                             message.directives = [];
@@ -261,14 +235,6 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             let properties = {};
-            if (message.source != null && message.hasOwnProperty("source")) {
-                properties._source = 1;
-                {
-                    let error = $root.pyth_lazer_transaction.GovernanceSource.verify(message.source);
-                    if (error)
-                        return "source." + error;
-                }
-            }
             if (message.directives != null && message.hasOwnProperty("directives")) {
                 if (!Array.isArray(message.directives))
                     return "directives: array expected";
@@ -314,11 +280,6 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (object instanceof $root.pyth_lazer_transaction.GovernanceInstruction)
                 return object;
             let message = new $root.pyth_lazer_transaction.GovernanceInstruction();
-            if (object.source != null) {
-                if (typeof object.source !== "object")
-                    throw TypeError(".pyth_lazer_transaction.GovernanceInstruction.source: object expected");
-                message.source = $root.pyth_lazer_transaction.GovernanceSource.fromObject(object.source);
-            }
             if (object.directives) {
                 if (!Array.isArray(object.directives))
                     throw TypeError(".pyth_lazer_transaction.GovernanceInstruction.directives: array expected");
@@ -359,11 +320,6 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             let object = {};
             if (options.arrays || options.defaults)
                 object.directives = [];
-            if (message.source != null && message.hasOwnProperty("source")) {
-                object.source = $root.pyth_lazer_transaction.GovernanceSource.toObject(message.source, options);
-                if (options.oneofs)
-                    object._source = "source";
-            }
             if (message.directives && message.directives.length) {
                 object.directives = [];
                 for (let j = 0; j < message.directives.length; ++j)
@@ -2523,6 +2479,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
          * @memberof pyth_lazer_transaction
          * @interface IGovernanceSource
          * @property {pyth_lazer_transaction.GovernanceSource.ISingleEd25519|null} [singleEd25519] GovernanceSource singleEd25519
+         * @property {pyth_lazer_transaction.GovernanceSource.IWormholeEmitter|null} [wormholeEmitter] GovernanceSource wormholeEmitter
          */
 
         /**
@@ -2548,17 +2505,25 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
          */
         GovernanceSource.prototype.singleEd25519 = null;
 
+        /**
+         * GovernanceSource wormholeEmitter.
+         * @member {pyth_lazer_transaction.GovernanceSource.IWormholeEmitter|null|undefined} wormholeEmitter
+         * @memberof pyth_lazer_transaction.GovernanceSource
+         * @instance
+         */
+        GovernanceSource.prototype.wormholeEmitter = null;
+
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
         /**
          * GovernanceSource source.
-         * @member {"singleEd25519"|undefined} source
+         * @member {"singleEd25519"|"wormholeEmitter"|undefined} source
          * @memberof pyth_lazer_transaction.GovernanceSource
          * @instance
          */
         Object.defineProperty(GovernanceSource.prototype, "source", {
-            get: $util.oneOfGetter($oneOfFields = ["singleEd25519"]),
+            get: $util.oneOfGetter($oneOfFields = ["singleEd25519", "wormholeEmitter"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -2588,6 +2553,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 writer = $Writer.create();
             if (message.singleEd25519 != null && Object.hasOwnProperty.call(message, "singleEd25519"))
                 $root.pyth_lazer_transaction.GovernanceSource.SingleEd25519.encode(message.singleEd25519, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.wormholeEmitter != null && Object.hasOwnProperty.call(message, "wormholeEmitter"))
+                $root.pyth_lazer_transaction.GovernanceSource.WormholeEmitter.encode(message.wormholeEmitter, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -2626,6 +2593,10 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 switch (tag >>> 3) {
                 case 1: {
                         message.singleEd25519 = $root.pyth_lazer_transaction.GovernanceSource.SingleEd25519.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.wormholeEmitter = $root.pyth_lazer_transaction.GovernanceSource.WormholeEmitter.decode(reader, reader.uint32());
                         break;
                     }
                 default:
@@ -2672,6 +2643,16 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                         return "singleEd25519." + error;
                 }
             }
+            if (message.wormholeEmitter != null && message.hasOwnProperty("wormholeEmitter")) {
+                if (properties.source === 1)
+                    return "source: multiple values";
+                properties.source = 1;
+                {
+                    let error = $root.pyth_lazer_transaction.GovernanceSource.WormholeEmitter.verify(message.wormholeEmitter);
+                    if (error)
+                        return "wormholeEmitter." + error;
+                }
+            }
             return null;
         };
 
@@ -2691,6 +2672,11 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 if (typeof object.singleEd25519 !== "object")
                     throw TypeError(".pyth_lazer_transaction.GovernanceSource.singleEd25519: object expected");
                 message.singleEd25519 = $root.pyth_lazer_transaction.GovernanceSource.SingleEd25519.fromObject(object.singleEd25519);
+            }
+            if (object.wormholeEmitter != null) {
+                if (typeof object.wormholeEmitter !== "object")
+                    throw TypeError(".pyth_lazer_transaction.GovernanceSource.wormholeEmitter: object expected");
+                message.wormholeEmitter = $root.pyth_lazer_transaction.GovernanceSource.WormholeEmitter.fromObject(object.wormholeEmitter);
             }
             return message;
         };
@@ -2712,6 +2698,11 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                 object.singleEd25519 = $root.pyth_lazer_transaction.GovernanceSource.SingleEd25519.toObject(message.singleEd25519, options);
                 if (options.oneofs)
                     object.source = "singleEd25519";
+            }
+            if (message.wormholeEmitter != null && message.hasOwnProperty("wormholeEmitter")) {
+                object.wormholeEmitter = $root.pyth_lazer_transaction.GovernanceSource.WormholeEmitter.toObject(message.wormholeEmitter, options);
+                if (options.oneofs)
+                    object.source = "wormholeEmitter";
             }
             return object;
         };
@@ -2966,6 +2957,270 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             };
 
             return SingleEd25519;
+        })();
+
+        GovernanceSource.WormholeEmitter = (function() {
+
+            /**
+             * Properties of a WormholeEmitter.
+             * @memberof pyth_lazer_transaction.GovernanceSource
+             * @interface IWormholeEmitter
+             * @property {Uint8Array|null} [address] WormholeEmitter address
+             * @property {number|null} [chainId] WormholeEmitter chainId
+             */
+
+            /**
+             * Constructs a new WormholeEmitter.
+             * @memberof pyth_lazer_transaction.GovernanceSource
+             * @classdesc Represents a WormholeEmitter.
+             * @implements IWormholeEmitter
+             * @constructor
+             * @param {pyth_lazer_transaction.GovernanceSource.IWormholeEmitter=} [properties] Properties to set
+             */
+            function WormholeEmitter(properties) {
+                if (properties)
+                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * WormholeEmitter address.
+             * @member {Uint8Array|null|undefined} address
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @instance
+             */
+            WormholeEmitter.prototype.address = null;
+
+            /**
+             * WormholeEmitter chainId.
+             * @member {number|null|undefined} chainId
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @instance
+             */
+            WormholeEmitter.prototype.chainId = null;
+
+            // OneOf field names bound to virtual getters and setters
+            let $oneOfFields;
+
+            /**
+             * WormholeEmitter _address.
+             * @member {"address"|undefined} _address
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @instance
+             */
+            Object.defineProperty(WormholeEmitter.prototype, "_address", {
+                get: $util.oneOfGetter($oneOfFields = ["address"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            /**
+             * WormholeEmitter _chainId.
+             * @member {"chainId"|undefined} _chainId
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @instance
+             */
+            Object.defineProperty(WormholeEmitter.prototype, "_chainId", {
+                get: $util.oneOfGetter($oneOfFields = ["chainId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            /**
+             * Creates a new WormholeEmitter instance using the specified properties.
+             * @function create
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {pyth_lazer_transaction.GovernanceSource.IWormholeEmitter=} [properties] Properties to set
+             * @returns {pyth_lazer_transaction.GovernanceSource.WormholeEmitter} WormholeEmitter instance
+             */
+            WormholeEmitter.create = function create(properties) {
+                return new WormholeEmitter(properties);
+            };
+
+            /**
+             * Encodes the specified WormholeEmitter message. Does not implicitly {@link pyth_lazer_transaction.GovernanceSource.WormholeEmitter.verify|verify} messages.
+             * @function encode
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {pyth_lazer_transaction.GovernanceSource.IWormholeEmitter} message WormholeEmitter message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            WormholeEmitter.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.address != null && Object.hasOwnProperty.call(message, "address"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.address);
+                if (message.chainId != null && Object.hasOwnProperty.call(message, "chainId"))
+                    writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.chainId);
+                return writer;
+            };
+
+            /**
+             * Encodes the specified WormholeEmitter message, length delimited. Does not implicitly {@link pyth_lazer_transaction.GovernanceSource.WormholeEmitter.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {pyth_lazer_transaction.GovernanceSource.IWormholeEmitter} message WormholeEmitter message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            WormholeEmitter.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a WormholeEmitter message from the specified reader or buffer.
+             * @function decode
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {pyth_lazer_transaction.GovernanceSource.WormholeEmitter} WormholeEmitter
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            WormholeEmitter.decode = function decode(reader, length, error) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                let end = length === undefined ? reader.len : reader.pos + length, message = new $root.pyth_lazer_transaction.GovernanceSource.WormholeEmitter();
+                while (reader.pos < end) {
+                    let tag = reader.uint32();
+                    if (tag === error)
+                        break;
+                    switch (tag >>> 3) {
+                    case 1: {
+                            message.address = reader.bytes();
+                            break;
+                        }
+                    case 2: {
+                            message.chainId = reader.uint32();
+                            break;
+                        }
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a WormholeEmitter message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {pyth_lazer_transaction.GovernanceSource.WormholeEmitter} WormholeEmitter
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            WormholeEmitter.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a WormholeEmitter message.
+             * @function verify
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            WormholeEmitter.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                let properties = {};
+                if (message.address != null && message.hasOwnProperty("address")) {
+                    properties._address = 1;
+                    if (!(message.address && typeof message.address.length === "number" || $util.isString(message.address)))
+                        return "address: buffer expected";
+                }
+                if (message.chainId != null && message.hasOwnProperty("chainId")) {
+                    properties._chainId = 1;
+                    if (!$util.isInteger(message.chainId))
+                        return "chainId: integer expected";
+                }
+                return null;
+            };
+
+            /**
+             * Creates a WormholeEmitter message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {pyth_lazer_transaction.GovernanceSource.WormholeEmitter} WormholeEmitter
+             */
+            WormholeEmitter.fromObject = function fromObject(object) {
+                if (object instanceof $root.pyth_lazer_transaction.GovernanceSource.WormholeEmitter)
+                    return object;
+                let message = new $root.pyth_lazer_transaction.GovernanceSource.WormholeEmitter();
+                if (object.address != null)
+                    if (typeof object.address === "string")
+                        $util.base64.decode(object.address, message.address = $util.newBuffer($util.base64.length(object.address)), 0);
+                    else if (object.address.length >= 0)
+                        message.address = object.address;
+                if (object.chainId != null)
+                    message.chainId = object.chainId >>> 0;
+                return message;
+            };
+
+            /**
+             * Creates a plain object from a WormholeEmitter message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {pyth_lazer_transaction.GovernanceSource.WormholeEmitter} message WormholeEmitter
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            WormholeEmitter.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                let object = {};
+                if (message.address != null && message.hasOwnProperty("address")) {
+                    object.address = options.bytes === String ? $util.base64.encode(message.address, 0, message.address.length) : options.bytes === Array ? Array.prototype.slice.call(message.address) : message.address;
+                    if (options.oneofs)
+                        object._address = "address";
+                }
+                if (message.chainId != null && message.hasOwnProperty("chainId")) {
+                    object.chainId = message.chainId;
+                    if (options.oneofs)
+                        object._chainId = "chainId";
+                }
+                return object;
+            };
+
+            /**
+             * Converts this WormholeEmitter to JSON.
+             * @function toJSON
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            WormholeEmitter.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            /**
+             * Gets the default type url for WormholeEmitter
+             * @function getTypeUrl
+             * @memberof pyth_lazer_transaction.GovernanceSource.WormholeEmitter
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            WormholeEmitter.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/pyth_lazer_transaction.GovernanceSource.WormholeEmitter";
+            };
+
+            return WormholeEmitter;
         })();
 
         return GovernanceSource;
@@ -6673,7 +6928,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
          * Properties of an AddFeed.
          * @memberof pyth_lazer_transaction
          * @interface IAddFeed
-         * @property {number|null} [priceFeedId] AddFeed priceFeedId
+         * @property {number|null} [feedId] AddFeed feedId
          * @property {pyth_lazer_transaction.DynamicValue.IMap|null} [metadata] AddFeed metadata
          * @property {Array.<number>|null} [permissionedPublishers] AddFeed permissionedPublishers
          */
@@ -6695,12 +6950,12 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         }
 
         /**
-         * AddFeed priceFeedId.
-         * @member {number|null|undefined} priceFeedId
+         * AddFeed feedId.
+         * @member {number|null|undefined} feedId
          * @memberof pyth_lazer_transaction.AddFeed
          * @instance
          */
-        AddFeed.prototype.priceFeedId = null;
+        AddFeed.prototype.feedId = null;
 
         /**
          * AddFeed metadata.
@@ -6722,13 +6977,13 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         let $oneOfFields;
 
         /**
-         * AddFeed _priceFeedId.
-         * @member {"priceFeedId"|undefined} _priceFeedId
+         * AddFeed _feedId.
+         * @member {"feedId"|undefined} _feedId
          * @memberof pyth_lazer_transaction.AddFeed
          * @instance
          */
-        Object.defineProperty(AddFeed.prototype, "_priceFeedId", {
-            get: $util.oneOfGetter($oneOfFields = ["priceFeedId"]),
+        Object.defineProperty(AddFeed.prototype, "_feedId", {
+            get: $util.oneOfGetter($oneOfFields = ["feedId"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -6767,8 +7022,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         AddFeed.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.priceFeedId != null && Object.hasOwnProperty.call(message, "priceFeedId"))
-                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.priceFeedId);
+            if (message.feedId != null && Object.hasOwnProperty.call(message, "feedId"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.feedId);
             if (message.metadata != null && Object.hasOwnProperty.call(message, "metadata"))
                 $root.pyth_lazer_transaction.DynamicValue.Map.encode(message.metadata, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             if (message.permissionedPublishers != null && message.permissionedPublishers.length) {
@@ -6814,7 +7069,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.priceFeedId = reader.uint32();
+                        message.feedId = reader.uint32();
                         break;
                     }
                 case 2: {
@@ -6868,10 +7123,10 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             let properties = {};
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId")) {
-                properties._priceFeedId = 1;
-                if (!$util.isInteger(message.priceFeedId))
-                    return "priceFeedId: integer expected";
+            if (message.feedId != null && message.hasOwnProperty("feedId")) {
+                properties._feedId = 1;
+                if (!$util.isInteger(message.feedId))
+                    return "feedId: integer expected";
             }
             if (message.metadata != null && message.hasOwnProperty("metadata")) {
                 properties._metadata = 1;
@@ -6903,8 +7158,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (object instanceof $root.pyth_lazer_transaction.AddFeed)
                 return object;
             let message = new $root.pyth_lazer_transaction.AddFeed();
-            if (object.priceFeedId != null)
-                message.priceFeedId = object.priceFeedId >>> 0;
+            if (object.feedId != null)
+                message.feedId = object.feedId >>> 0;
             if (object.metadata != null) {
                 if (typeof object.metadata !== "object")
                     throw TypeError(".pyth_lazer_transaction.AddFeed.metadata: object expected");
@@ -6935,10 +7190,10 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             let object = {};
             if (options.arrays || options.defaults)
                 object.permissionedPublishers = [];
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId")) {
-                object.priceFeedId = message.priceFeedId;
+            if (message.feedId != null && message.hasOwnProperty("feedId")) {
+                object.feedId = message.feedId;
                 if (options.oneofs)
-                    object._priceFeedId = "priceFeedId";
+                    object._feedId = "feedId";
             }
             if (message.metadata != null && message.hasOwnProperty("metadata")) {
                 object.metadata = $root.pyth_lazer_transaction.DynamicValue.Map.toObject(message.metadata, options);
@@ -6988,7 +7243,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
          * Properties of an UpdateFeed.
          * @memberof pyth_lazer_transaction
          * @interface IUpdateFeed
-         * @property {number|null} [priceFeedId] UpdateFeed priceFeedId
+         * @property {number|null} [feedId] UpdateFeed feedId
          * @property {pyth_lazer_transaction.IUpdateFeedMetadata|null} [updateFeedMetadata] UpdateFeed updateFeedMetadata
          * @property {pyth_lazer_transaction.IActivateFeed|null} [activateFeed] UpdateFeed activateFeed
          * @property {pyth_lazer_transaction.IDeactivateFeed|null} [deactivateFeed] UpdateFeed deactivateFeed
@@ -7011,12 +7266,12 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         }
 
         /**
-         * UpdateFeed priceFeedId.
-         * @member {number|null|undefined} priceFeedId
+         * UpdateFeed feedId.
+         * @member {number|null|undefined} feedId
          * @memberof pyth_lazer_transaction.UpdateFeed
          * @instance
          */
-        UpdateFeed.prototype.priceFeedId = null;
+        UpdateFeed.prototype.feedId = null;
 
         /**
          * UpdateFeed updateFeedMetadata.
@@ -7054,13 +7309,13 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         let $oneOfFields;
 
         /**
-         * UpdateFeed _priceFeedId.
-         * @member {"priceFeedId"|undefined} _priceFeedId
+         * UpdateFeed _feedId.
+         * @member {"feedId"|undefined} _feedId
          * @memberof pyth_lazer_transaction.UpdateFeed
          * @instance
          */
-        Object.defineProperty(UpdateFeed.prototype, "_priceFeedId", {
-            get: $util.oneOfGetter($oneOfFields = ["priceFeedId"]),
+        Object.defineProperty(UpdateFeed.prototype, "_feedId", {
+            get: $util.oneOfGetter($oneOfFields = ["feedId"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -7099,8 +7354,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
         UpdateFeed.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.priceFeedId != null && Object.hasOwnProperty.call(message, "priceFeedId"))
-                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.priceFeedId);
+            if (message.feedId != null && Object.hasOwnProperty.call(message, "feedId"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.feedId);
             if (message.updateFeedMetadata != null && Object.hasOwnProperty.call(message, "updateFeedMetadata"))
                 $root.pyth_lazer_transaction.UpdateFeedMetadata.encode(message.updateFeedMetadata, writer.uint32(/* id 101, wireType 2 =*/810).fork()).ldelim();
             if (message.activateFeed != null && Object.hasOwnProperty.call(message, "activateFeed"))
@@ -7146,7 +7401,7 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
                     break;
                 switch (tag >>> 3) {
                 case 1: {
-                        message.priceFeedId = reader.uint32();
+                        message.feedId = reader.uint32();
                         break;
                     }
                 case 101: {
@@ -7201,10 +7456,10 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (typeof message !== "object" || message === null)
                 return "object expected";
             let properties = {};
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId")) {
-                properties._priceFeedId = 1;
-                if (!$util.isInteger(message.priceFeedId))
-                    return "priceFeedId: integer expected";
+            if (message.feedId != null && message.hasOwnProperty("feedId")) {
+                properties._feedId = 1;
+                if (!$util.isInteger(message.feedId))
+                    return "feedId: integer expected";
             }
             if (message.updateFeedMetadata != null && message.hasOwnProperty("updateFeedMetadata")) {
                 properties.action = 1;
@@ -7259,8 +7514,8 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (object instanceof $root.pyth_lazer_transaction.UpdateFeed)
                 return object;
             let message = new $root.pyth_lazer_transaction.UpdateFeed();
-            if (object.priceFeedId != null)
-                message.priceFeedId = object.priceFeedId >>> 0;
+            if (object.feedId != null)
+                message.feedId = object.feedId >>> 0;
             if (object.updateFeedMetadata != null) {
                 if (typeof object.updateFeedMetadata !== "object")
                     throw TypeError(".pyth_lazer_transaction.UpdateFeed.updateFeedMetadata: object expected");
@@ -7297,10 +7552,10 @@ export const pyth_lazer_transaction = $root.pyth_lazer_transaction = (() => {
             if (!options)
                 options = {};
             let object = {};
-            if (message.priceFeedId != null && message.hasOwnProperty("priceFeedId")) {
-                object.priceFeedId = message.priceFeedId;
+            if (message.feedId != null && message.hasOwnProperty("feedId")) {
+                object.feedId = message.feedId;
                 if (options.oneofs)
-                    object._priceFeedId = "priceFeedId";
+                    object._feedId = "feedId";
             }
             if (message.updateFeedMetadata != null && message.hasOwnProperty("updateFeedMetadata")) {
                 object.updateFeedMetadata = $root.pyth_lazer_transaction.UpdateFeedMetadata.toObject(message.updateFeedMetadata, options);

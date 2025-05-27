@@ -5,8 +5,32 @@ import {
   ProgramType,
   LazerConfig,
   LazerState,
+  LazerFeedMetadata,
 } from "../types";
 import { pyth_lazer_transaction } from "./generated/governance_instruction";
+
+/**
+ * Converts LazerFeedMetadata to protobuf IMap format using protobufjs fromObject
+ * This leverages the built-in protobufjs conversion capabilities
+ *
+ * @param metadata The LazerFeedMetadata to convert
+ * @returns IMap compatible object for protobuf
+ */
+export function convertLazerFeedMetadataToMap(
+  metadata: LazerFeedMetadata
+): pyth_lazer_transaction.DynamicValue.IMap {
+  // Use protobufjs fromObject to handle the conversion automatically
+  const mapData = {
+    items: Object.entries(metadata)
+      .filter(([_, value]) => value !== undefined)
+      .map(([key, value]) => ({
+        key,
+        value
+      }))
+  };
+
+  return pyth_lazer_transaction.DynamicValue.Map.fromObject(mapData);
+}
 
 /**
  * Parameters for getting Lazer configuration
@@ -40,7 +64,7 @@ const sampleLazerState: LazerState = {
   feeds: [
     {
       metadata: {
-        priceFeedId: 1,
+        feedId: 1,
         name: "CATCOIN",
         symbol: "CAT",
         description: "desc1",
@@ -56,7 +80,7 @@ const sampleLazerState: LazerState = {
     },
     {
       metadata: {
-        priceFeedId: 2,
+        feedId: 2,
         name: "DUCKCOIN",
         symbol: "DUCKY",
         description: "desc2",
@@ -208,10 +232,10 @@ export function validateUploadedConfig(
 
     // Compare feeds
     const existingFeeds = new Map(
-      existingConfig.feeds.map((feed) => [feed.metadata.priceFeedId, feed]),
+      existingConfig.feeds.map((feed) => [feed.metadata.feedId, feed]),
     );
     const uploadedFeeds = new Map(
-      uploadedLazerState.feeds.map((feed) => [feed.metadata.priceFeedId, feed]),
+      uploadedLazerState.feeds.map((feed) => [feed.metadata.feedId, feed]),
     );
 
     // Find added, removed, and modified feeds
@@ -333,6 +357,20 @@ export async function generateInstructions(
 
     if (changeKey.startsWith("feed_")) {
       const feedId = parseInt(changeKey.replace("feed_", ""));
+
+      if (!change.prev && change.new) {
+        const feedMetadata = change.new.feeds?.[0]?.metadata;
+        console.log("feedMetadata", feedMetadata);
+        if (feedMetadata) {
+          const addFeedMessage = pyth_lazer_transaction.AddFeed.create({
+            feedId: feedId,
+            metadata: convertLazerFeedMetadataToMap(feedMetadata),
+            permissionedPublishers: [],
+          });
+          const encoded = pyth_lazer_transaction.AddFeed.encode(addFeedMessage).finish();
+          governanceBuffer = Buffer.from(encoded);
+        }
+      }
 
       // if (!change.prev && change.new) {
       //   const feedMetadata = change.new.feeds?.[0]?.metadata;
