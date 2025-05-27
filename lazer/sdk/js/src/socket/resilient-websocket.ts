@@ -33,7 +33,7 @@ export class ResilientWebSocket {
   private retryTimeout?: NodeJS.Timeout | undefined;
   private _isReconnecting = false;
 
-  get isReconnecting(): boolean {
+  isReconnecting(): boolean {
     return this._isReconnecting;
   }
 

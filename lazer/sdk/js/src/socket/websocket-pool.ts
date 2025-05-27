@@ -198,7 +198,7 @@ export class WebSocketPool {
   }
 
   private areAllConnectionsDown(): boolean {
-    return this.rwsPool.every((ws) => !ws.isConnected() || ws.isReconnecting);
+    return this.rwsPool.every((ws) => !ws.isConnected() || ws.isReconnecting());
   }
 
   private isAnyConnectionEstablished(): boolean {
