@@ -359,7 +359,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds;
         uint64[] memory slots;
         (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime, 2);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         vm.prank(pusher);
@@ -413,7 +413,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         PythStructs.PriceFeed[] memory priceFeeds;
         uint64[] memory slots;
         (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime2, 3); // 3 feeds for new price IDs
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         bytes[] memory updateData = createMockUpdateData(priceFeeds);
 
         // This should succeed even though we haven't waited for heartbeatSeconds
@@ -433,7 +433,7 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         // Verify that normal heartbeat criteria apply again for subsequent updates
         uint64 publishTime3 = SafeCast.toUint64(block.timestamp + 10); // Only 10 seconds later
         (priceFeeds, slots) = createMockPriceFeedsWithSlots(publishTime3, 3);
-        mockParsePriceFeedUpdatesWithSlots(pyth, priceFeeds, slots);
+        mockParsePriceFeedUpdatesWithSlotsStrict(pyth, priceFeeds, slots);
         updateData = createMockUpdateData(priceFeeds);
 
         // This should fail because we haven't waited for heartbeatSeconds since the last update
