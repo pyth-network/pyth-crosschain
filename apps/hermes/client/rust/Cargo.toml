@@ -34,7 +34,3 @@ path = "examples/latest_prices.rs"
 [[example]]
 name = "price_stream"
 path = "examples/price_stream.rs"
-
-[[example]]
-name = "sse_price_stream"
-path = "examples/sse_price_stream.rs"
