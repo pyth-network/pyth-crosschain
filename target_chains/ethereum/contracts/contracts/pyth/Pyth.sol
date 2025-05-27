@@ -359,9 +359,24 @@ abstract contract Pyth is
                     updateData[i],
                     context
                 );
-                if (storeUpdatesIfFresh) {
-                    bytes32 curPriceId = context.priceIds[i];
-                    updateLatestPriceIfNecessary(curPriceId, _state.latestPriceInfo[curPriceId]);
+            }
+            
+            if (storeUpdatesIfFresh) {
+                for (uint j = 0; j < priceIds.length; j++) {
+                    bytes32 curPriceId = priceIds[j];
+                    if (context.priceFeeds[j].id != 0) {
+                        // Create a new PriceInfo memory object from the context.priceFeeds data
+                        PythInternalStructs.PriceInfo memory newInfo;
+                        newInfo.publishTime = uint64(context.priceFeeds[j].price.publishTime);
+                        newInfo.expo = context.priceFeeds[j].price.expo;
+                        newInfo.price = context.priceFeeds[j].price.price;
+                        newInfo.conf = context.priceFeeds[j].price.conf;
+                        newInfo.emaPrice = context.priceFeeds[j].emaPrice.price;
+                        newInfo.emaConf = context.priceFeeds[j].emaPrice.conf;
+                        
+                        // Pass the new memory object to update storage
+                        updateLatestPriceIfNecessary(curPriceId, newInfo);
+                    }
                 }
             }
         }

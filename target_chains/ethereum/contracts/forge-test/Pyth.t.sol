@@ -335,26 +335,14 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             uint updateFee
         ) = createBatchedUpdateDataFromMessages(messages);
 
-        // Store prices before update
-        PythStructs.Price[] memory originalPrices = new PythStructs.Price[](priceIds.length);
-        for (uint i = 0; i < priceIds.length; i++) {
-            originalPrices[i] = pyth.getPriceUnsafe(priceIds[i]);
-        }
-
         pyth.parsePriceFeedUpdatesWithConfig{
             value: updateFee
-        }(updateData, priceIds, 0, MAX_UINT64, false, true, true);
+        }(updateData, priceIds, 0, MAX_UINT64, false, true, false);
 
-        // validate that stored prices of each priceId are same as before update
-        for (uint i = 0; i < priceIds.length; i++) {
-            PythStructs.Price memory curPrice = pyth.getPriceUnsafe(
-                priceIds[i]
-            );
-
-            assertEq(curPrice.price, originalPrices[i].price);
-            assertEq(curPrice.conf, originalPrices[i].conf);
-            assertEq(curPrice.expo, originalPrices[i].expo);
-            assertEq(curPrice.publishTime, originalPrices[i].publishTime);
+        // validate that stored prices of each priceId are still unpopulated
+        for (uint i = 0; i < numMessages; i++) {
+            vm.expectRevert(PythErrors.PriceFeedNotFound.selector);
+            pyth.getPriceUnsafe(priceIds[i]);
         }
     }
 
