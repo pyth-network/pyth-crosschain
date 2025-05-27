@@ -8,7 +8,7 @@ import type { Request, Response } from "../protocol.js";
 import type {ResilientWebSocketConfig} from "./resilient-websocket.js";
 import { ResilientWebSocket  } from "./resilient-websocket.js";
 
-const DEFAULT_NUM_CONNECTIONS = 3;
+const DEFAULT_NUM_CONNECTIONS = 4;
 
 export type WebSocketPoolConfig = {
   urls: string[];

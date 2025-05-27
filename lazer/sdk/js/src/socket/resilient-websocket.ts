@@ -201,18 +201,17 @@ export class ResilientWebSocket {
   }
 
   /**
-   * Calculates the delay in milliseconds for exponential backoff based on the number of attempts.
+   * Calculates the delay in milliseconds for exponential backoff based on the number of failed attempts.
    *
-   * The delay increases exponentially with each attempt, starting at 200ms for the first attempt,
-   * and is capped at 60,000ms (60 seconds) for attempts greater than 10.
+   * The delay increases exponentially with each attempt, starting at 20ms for the first attempt,
+   * and is capped at maxRetryDelayMs for attempts greater than or equal to 10.
    *
-   * @param attempts - The number of retry attempts made so far.
    * @returns The calculated delay in milliseconds before the next retry.
    */
   private retryDelayMs(): number {
     if (this.wsFailedAttempts >= 10) {
       return this.maxRetryDelayMs;
     }
-    return 2 ** this.wsFailedAttempts * 10;
+    return Math.min(2 ** this.wsFailedAttempts * 10, this.maxRetryDelayMs);
   }
 }
