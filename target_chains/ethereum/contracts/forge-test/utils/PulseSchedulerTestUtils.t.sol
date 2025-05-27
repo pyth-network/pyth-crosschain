@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "../../contracts/pulse/SchedulerUpgradeable.sol";
 import "../../contracts/pulse/SchedulerState.sol";
+import "@pythnetwork/pulse-sdk-solidity/SchedulerStructs.sol";
 import "./MockPriceFeedTestUtils.sol";
 
 abstract contract PulseSchedulerTestUtils is Test, MockPriceFeedTestUtils {
@@ -14,7 +15,7 @@ abstract contract PulseSchedulerTestUtils is Test, MockPriceFeedTestUtils {
         SchedulerUpgradeable scheduler,
         address whitelistedReader
     ) internal returns (uint256) {
-        SchedulerState.SubscriptionParams
+        SchedulerStructs.SubscriptionParams
             memory params = createDefaultSubscriptionParams(
                 2,
                 whitelistedReader
@@ -31,7 +32,7 @@ abstract contract PulseSchedulerTestUtils is Test, MockPriceFeedTestUtils {
         uint8 numFeeds,
         address whitelistedReader
     ) internal returns (uint256) {
-        SchedulerState.SubscriptionParams
+        SchedulerStructs.SubscriptionParams
             memory params = createDefaultSubscriptionParams(
                 numFeeds,
                 whitelistedReader
@@ -45,14 +46,14 @@ abstract contract PulseSchedulerTestUtils is Test, MockPriceFeedTestUtils {
     /// Helper function to add a test subscription with specific update criteria
     function addTestSubscriptionWithUpdateCriteria(
         SchedulerUpgradeable scheduler,
-        SchedulerState.UpdateCriteria memory updateCriteria,
+        SchedulerStructs.UpdateCriteria memory updateCriteria,
         address whitelistedReader
     ) internal returns (uint256) {
         bytes32[] memory priceIds = createPriceIds();
         address[] memory readerWhitelist = new address[](1);
         readerWhitelist[0] = whitelistedReader;
 
-        SchedulerState.SubscriptionParams memory params = SchedulerState
+        SchedulerStructs.SubscriptionParams memory params = SchedulerStructs
             .SubscriptionParams({
                 priceIds: priceIds,
                 readerWhitelist: readerWhitelist,
@@ -72,12 +73,12 @@ abstract contract PulseSchedulerTestUtils is Test, MockPriceFeedTestUtils {
     function createDefaultSubscriptionParams(
         uint8 numFeeds,
         address whitelistedReader
-    ) internal pure returns (SchedulerState.SubscriptionParams memory) {
+    ) internal pure returns (SchedulerStructs.SubscriptionParams memory) {
         bytes32[] memory priceIds = createPriceIds(numFeeds);
         address[] memory readerWhitelist = new address[](1);
         readerWhitelist[0] = whitelistedReader;
 
-        SchedulerState.UpdateCriteria memory updateCriteria = SchedulerState
+        SchedulerStructs.UpdateCriteria memory updateCriteria = SchedulerStructs
             .UpdateCriteria({
                 updateOnHeartbeat: true,
                 heartbeatSeconds: 60,
@@ -86,7 +87,7 @@ abstract contract PulseSchedulerTestUtils is Test, MockPriceFeedTestUtils {
             });
 
         return
-            SchedulerState.SubscriptionParams({
+            SchedulerStructs.SubscriptionParams({
                 priceIds: priceIds,
                 readerWhitelist: readerWhitelist,
                 whitelistEnabled: true,
