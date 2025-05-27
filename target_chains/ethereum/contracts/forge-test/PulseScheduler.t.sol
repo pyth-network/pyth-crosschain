@@ -2087,17 +2087,17 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
             "Querying all should only return remaining feeds"
         );
 
-        // - Verify that the removed price ID is not included in the returned prices
-        for (uint i = 0; i < allPricesAfterUpdate.length; i++) {
-            // We can't directly check the price ID from the Price struct
-            // But we can verify that the number of returned prices matches the number of price IDs
-            // in the updated subscription, which indirectly confirms that removed price IDs are not included
-            assertEq(
-                allPricesAfterUpdate.length,
-                updatedParams.priceIds.length,
-                "Number of returned prices should match number of price IDs in subscription"
-            );
-        }
+        // - Verify that trying to get the price of the removed feed directly reverts
+        bytes32[] memory removedIdArray = new bytes32[](1);
+        removedIdArray[0] = removedPriceId;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InvalidPriceId.selector,
+                removedPriceId,
+                bytes32(0)
+            )
+        );
+        scheduler.getPricesUnsafe(subscriptionId, removedIdArray);
     }
 
     function testUpdateSubscriptionRevertsWithTooManyPriceIds() public {
