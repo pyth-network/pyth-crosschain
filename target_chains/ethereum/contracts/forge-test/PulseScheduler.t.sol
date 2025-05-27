@@ -565,32 +565,90 @@ contract SchedulerTest is Test, SchedulerEvents, PulseSchedulerTestUtils {
         assertTrue(params.isActive, "Subscription should be active");
         assertEq(status.balanceInWei, minimumBalance, "Initial balance should equal minimum balance");
         
-        // Adding 0 funds should succeed (since balance = minimum, not < minimum)
+        // Step 1: Try to add 0 funds to active subscription at minimum balance (should succeed)
         scheduler.addFunds{value: 0}(subscriptionId);
         
-        // Verify balance is unchanged
+        // Verify balance is still at minimum
         (
             ,
-            SchedulerState.SubscriptionStatus memory updatedStatus
+            SchedulerState.SubscriptionStatus memory statusAfterAddingZero
         ) = scheduler.getSubscription(subscriptionId);
         assertEq(
-            updatedStatus.balanceInWei,
+            statusAfterAddingZero.balanceInWei,
             minimumBalance,
             "Balance should still be at minimum after adding 0 funds"
         );
         
-        // Add more funds (should succeed)
+        // Step 2: Add more funds to active subscription (should succeed)
         scheduler.addFunds{value: 1 wei}(subscriptionId);
         
         // Verify balance increased
         (
             ,
-            updatedStatus
+            SchedulerState.SubscriptionStatus memory statusAfterAddingMore
         ) = scheduler.getSubscription(subscriptionId);
         assertEq(
-            updatedStatus.balanceInWei,
+            statusAfterAddingMore.balanceInWei,
             minimumBalance + 1 wei,
-            "Balance should be minimum + 1 wei after adding funds"
+            "Balance should be minimum + 1 wei after adding more funds"
+        );
+        
+        // Step 3: Create a new subscription with minimum balance
+        uint256 subscriptionId2 = addTestSubscription(
+            scheduler,
+            address(reader)
+        );
+        
+        // Get subscription parameters
+        (
+            SchedulerState.SubscriptionParams memory params2,
+            // Status not needed for this test
+        ) = scheduler.getSubscription(subscriptionId2);
+        
+        // Step 4: Deactivate the subscription so we can withdraw below minimum
+        SchedulerState.SubscriptionParams memory deactivatedParams = params2;
+        deactivatedParams.isActive = false;
+        scheduler.updateSubscription(subscriptionId2, deactivatedParams);
+        
+        // Step 5: Withdraw funds to get below minimum balance
+        scheduler.withdrawFunds(subscriptionId2, minimumBalance - 1 wei);
+        
+        // Verify balance is now below minimum
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory statusAfterWithdraw
+        ) = scheduler.getSubscription(subscriptionId2);
+        assertEq(
+            statusAfterWithdraw.balanceInWei,
+            1 wei,
+            "Balance should be 1 wei after withdrawal"
+        );
+        
+        // Step 6: Try to add funds to inactive subscription (should revert with InactiveSubscription)
+        vm.expectRevert(abi.encodeWithSelector(InactiveSubscription.selector));
+        scheduler.addFunds{value: 1 wei}(subscriptionId2);
+        
+        // Step 7: Try to reactivate with insufficient balance (should revert with InsufficientBalance)
+        SchedulerState.SubscriptionParams memory reactivatedParams = deactivatedParams;
+        reactivatedParams.isActive = true;
+        vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector));
+        scheduler.updateSubscription(subscriptionId2, reactivatedParams);
+        
+        // Step 8: Add funds to reach minimum balance while still inactive
+        scheduler.addFunds{value: minimumBalance}(subscriptionId);
+        
+        // Step 9: Try to add 0 funds to active subscription at minimum balance (should succeed)
+        scheduler.addFunds{value: 0}(subscriptionId);
+        
+        // Verify balance is still at minimum + 1 wei + minimumBalance
+        (
+            ,
+            SchedulerState.SubscriptionStatus memory statusAfterMoreFunds
+        ) = scheduler.getSubscription(subscriptionId);
+        assertEq(
+            statusAfterMoreFunds.balanceInWei,
+            minimumBalance + 1 wei + minimumBalance,
+            "Balance should be minimum + 1 wei + minimumBalance after adding more funds"
         );
     }
     
