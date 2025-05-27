@@ -232,9 +232,9 @@ pub async fn get_vaa_ccip(configuration: &configuration::Configuration, data: st
 }
 
 /// **Deprecated: use /v2/updates/price/latest instead**  Get the latest price updates by price feed id.  Given a collection of price feed ids, retrieve the latest Pyth price for each price feed.
-pub async fn latest_price_feeds(configuration: &configuration::Configuration, ids_left_square_bracket_right_square_bracket: Vec<String>, verbose: Option<bool>, binary: Option<bool>) -> Result<Vec<models::RpcPriceFeed>, Error<LatestPriceFeedsError>> {
+pub async fn latest_price_feeds(configuration: &configuration::Configuration, ids: Vec<String>, verbose: Option<bool>, binary: Option<bool>) -> Result<Vec<models::RpcPriceFeed>, Error<LatestPriceFeedsError>> {
     // add a prefix to parameters to efficiently prevent name collisions
-    let p_ids_left_square_bracket_right_square_bracket = ids_left_square_bracket_right_square_bracket;
+    let p_ids = ids;
     let p_verbose = verbose;
     let p_binary = binary;
 
@@ -242,8 +242,8 @@ pub async fn latest_price_feeds(configuration: &configuration::Configuration, id
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     req_builder = match "multi" {
-        "multi" => req_builder.query(&p_ids_left_square_bracket_right_square_bracket.into_iter().map(|p| ("ids[]".to_owned(), p.to_string())).collect::<Vec<(std::string::String, std::string::String)>>()),
-        _ => req_builder.query(&[("ids[]", &p_ids_left_square_bracket_right_square_bracket.into_iter().map(|p| p.to_string()).collect::<Vec<String>>().join(",").to_string())]),
+        "multi" => req_builder.query(&p_ids.into_iter().map(|p| ("ids[]".to_owned(), p.to_string())).collect::<Vec<(std::string::String, std::string::String)>>()),
+        _ => req_builder.query(&[("ids[]", &p_ids.into_iter().map(|p| p.to_string()).collect::<Vec<String>>().join(",").to_string())]),
     };
     if let Some(ref param_value) = p_verbose {
         req_builder = req_builder.query(&[("verbose", &param_value.to_string())]);
@@ -281,9 +281,9 @@ pub async fn latest_price_feeds(configuration: &configuration::Configuration, id
 }
 
 /// Get the latest price updates by price feed id.  Given a collection of price feed ids, retrieve the latest Pyth price for each price feed.
-pub async fn latest_price_updates(configuration: &configuration::Configuration, ids_left_square_bracket_right_square_bracket: Vec<String>, encoding: Option<models::EncodingType>, parsed: Option<bool>, ignore_invalid_price_ids: Option<bool>) -> Result<models::PriceUpdate, Error<LatestPriceUpdatesError>> {
+pub async fn latest_price_updates(configuration: &configuration::Configuration, ids: Vec<String>, encoding: Option<models::EncodingType>, parsed: Option<bool>, ignore_invalid_price_ids: Option<bool>) -> Result<models::PriceUpdate, Error<LatestPriceUpdatesError>> {
     // add a prefix to parameters to efficiently prevent name collisions
-    let p_ids_left_square_bracket_right_square_bracket = ids_left_square_bracket_right_square_bracket;
+    let p_ids = ids;
     let p_encoding = encoding;
     let p_parsed = parsed;
     let p_ignore_invalid_price_ids = ignore_invalid_price_ids;
@@ -292,8 +292,8 @@ pub async fn latest_price_updates(configuration: &configuration::Configuration, 
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     req_builder = match "multi" {
-        "multi" => req_builder.query(&p_ids_left_square_bracket_right_square_bracket.into_iter().map(|p| ("ids[]".to_owned(), p.to_string())).collect::<Vec<(std::string::String, std::string::String)>>()),
-        _ => req_builder.query(&[("ids[]", &p_ids_left_square_bracket_right_square_bracket.into_iter().map(|p| p.to_string()).collect::<Vec<String>>().join(",").to_string())]),
+        "multi" => req_builder.query(&p_ids.into_iter().map(|p| ("ids[]".to_owned(), p.to_string())).collect::<Vec<(std::string::String, std::string::String)>>()),
+        _ => req_builder.query(&[("ids[]", &p_ids.into_iter().map(|p| p.to_string()).collect::<Vec<String>>().join(",").to_string())]),
     };
     if let Some(ref param_value) = p_encoding {
         req_builder = req_builder.query(&[("encoding", &param_value.to_string())]);
@@ -552,9 +552,9 @@ pub async fn price_feeds_metadata(configuration: &configuration::Configuration, 
 }
 
 /// SSE route handler for streaming price updates.  The connection will automatically close after 24 hours to prevent resource leaks. Clients should implement reconnection logic to maintain continuous price updates.
-pub async fn price_stream_sse_handler(configuration: &configuration::Configuration, ids_left_square_bracket_right_square_bracket: Vec<String>, encoding: Option<models::EncodingType>, parsed: Option<bool>, allow_unordered: Option<bool>, benchmarks_only: Option<bool>, ignore_invalid_price_ids: Option<bool>) -> Result<models::PriceUpdate, Error<PriceStreamSseHandlerError>> {
+pub async fn price_stream_sse_handler(configuration: &configuration::Configuration, ids: Vec<String>, encoding: Option<models::EncodingType>, parsed: Option<bool>, allow_unordered: Option<bool>, benchmarks_only: Option<bool>, ignore_invalid_price_ids: Option<bool>) -> Result<models::PriceUpdate, Error<PriceStreamSseHandlerError>> {
     // add a prefix to parameters to efficiently prevent name collisions
-    let p_ids_left_square_bracket_right_square_bracket = ids_left_square_bracket_right_square_bracket;
+    let p_ids = ids;
     let p_encoding = encoding;
     let p_parsed = parsed;
     let p_allow_unordered = allow_unordered;
@@ -565,8 +565,8 @@ pub async fn price_stream_sse_handler(configuration: &configuration::Configurati
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     req_builder = match "multi" {
-        "multi" => req_builder.query(&p_ids_left_square_bracket_right_square_bracket.into_iter().map(|p| ("ids[]".to_owned(), p.to_string())).collect::<Vec<(std::string::String, std::string::String)>>()),
-        _ => req_builder.query(&[("ids[]", &p_ids_left_square_bracket_right_square_bracket.into_iter().map(|p| p.to_string()).collect::<Vec<String>>().join(",").to_string())]),
+        "multi" => req_builder.query(&p_ids.into_iter().map(|p| ("ids[]".to_owned(), p.to_string())).collect::<Vec<(std::string::String, std::string::String)>>()),
+        _ => req_builder.query(&[("ids[]", &p_ids.into_iter().map(|p| p.to_string()).collect::<Vec<String>>().join(",").to_string())]),
     };
     if let Some(ref param_value) = p_encoding {
         req_builder = req_builder.query(&[("encoding", &param_value.to_string())]);
@@ -613,10 +613,10 @@ pub async fn price_stream_sse_handler(configuration: &configuration::Configurati
 }
 
 /// Get the latest price updates by price feed id.  Given a collection of price feed ids, retrieve the latest Pyth price for each price feed.
-pub async fn timestamp_price_updates(configuration: &configuration::Configuration, publish_time: i64, ids_left_square_bracket_right_square_bracket: Vec<String>, encoding: Option<models::EncodingType>, parsed: Option<bool>, ignore_invalid_price_ids: Option<bool>) -> Result<models::PriceUpdate, Error<TimestampPriceUpdatesError>> {
+pub async fn timestamp_price_updates(configuration: &configuration::Configuration, publish_time: i64, ids: Vec<String>, encoding: Option<models::EncodingType>, parsed: Option<bool>, ignore_invalid_price_ids: Option<bool>) -> Result<models::PriceUpdate, Error<TimestampPriceUpdatesError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_publish_time = publish_time;
-    let p_ids_left_square_bracket_right_square_bracket = ids_left_square_bracket_right_square_bracket;
+    let p_ids = ids;
     let p_encoding = encoding;
     let p_parsed = parsed;
     let p_ignore_invalid_price_ids = ignore_invalid_price_ids;
@@ -625,8 +625,8 @@ pub async fn timestamp_price_updates(configuration: &configuration::Configuratio
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     req_builder = match "multi" {
-        "multi" => req_builder.query(&p_ids_left_square_bracket_right_square_bracket.into_iter().map(|p| ("ids[]".to_owned(), p.to_string())).collect::<Vec<(std::string::String, std::string::String)>>()),
-        _ => req_builder.query(&[("ids[]", &p_ids_left_square_bracket_right_square_bracket.into_iter().map(|p| p.to_string()).collect::<Vec<String>>().join(",").to_string())]),
+        "multi" => req_builder.query(&p_ids.into_iter().map(|p| ("ids[]".to_owned(), p.to_string())).collect::<Vec<(std::string::String, std::string::String)>>()),
+        _ => req_builder.query(&[("ids[]", &p_ids.into_iter().map(|p| p.to_string()).collect::<Vec<String>>().join(",").to_string())]),
     };
     if let Some(ref param_value) = p_encoding {
         req_builder = req_builder.query(&[("encoding", &param_value.to_string())]);
@@ -665,4 +665,3 @@ pub async fn timestamp_price_updates(configuration: &configuration::Configuratio
         Err(Error::ResponseError(ResponseContent { status, content, entity }))
     }
 }
-
