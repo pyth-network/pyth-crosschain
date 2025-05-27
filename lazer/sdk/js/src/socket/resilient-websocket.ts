@@ -16,7 +16,7 @@ export type ResilientWebSocketConfig = {
   heartbeatTimeoutDurationMs?: number;
   maxRetryDelayMs?: number;
   logAfterRetryCount?: number;
-}
+};
 
 export class ResilientWebSocket {
   private endpoint: string;
@@ -49,17 +49,14 @@ export class ResilientWebSocket {
   onMessage: (data: WebSocket.Data) => void;
   onReconnect: () => void;
 
-  constructor(
-    config: ResilientWebSocketConfig,
-  ) {
+  constructor(config: ResilientWebSocketConfig) {
     this.endpoint = config.endpoint;
     this.wsOptions = config.wsOptions;
     this.logger = config.logger ?? dummyLogger;
     this.heartbeatTimeoutDurationMs =
       config.heartbeatTimeoutDurationMs ??
       DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS;
-    this.maxRetryDelayMs =
-      config.maxRetryDelayMs ?? DEFAULT_MAX_RETRY_DELAY_MS;
+    this.maxRetryDelayMs = config.maxRetryDelayMs ?? DEFAULT_MAX_RETRY_DELAY_MS;
     this.logAfterRetryCount =
       config.logAfterRetryCount ?? DEFAULT_LOG_AFTER_RETRY_COUNT;
 
@@ -90,7 +87,7 @@ export class ResilientWebSocket {
   startWebSocket() {
     if (this.wsUserClosed) {
       this.logger.error("Connection was explicitly close. Won't reconnect.");
-      return
+      return;
     }
 
     if (this.wsClient !== undefined) {
@@ -119,7 +116,9 @@ export class ResilientWebSocket {
 
     this.wsClient.addEventListener("close", (e) => {
       if (this.wsUserClosed) {
-        this.logger.info(`WebSocket connection to ${this.endpoint} closed by user`);
+        this.logger.info(
+          `WebSocket connection to ${this.endpoint} closed by user`,
+        );
       } else {
         if (this.shouldLogRetry()) {
           this.logger.warn(
@@ -161,7 +160,9 @@ export class ResilientWebSocket {
 
   private handleReconnect() {
     if (this.wsUserClosed) {
-      this.logger.info("WebSocket connection closed by user, not reconnecting.");
+      this.logger.info(
+        "WebSocket connection closed by user, not reconnecting.",
+      );
       return;
     }
 
@@ -173,7 +174,6 @@ export class ResilientWebSocket {
       clearTimeout(this.retryTimeout);
     }
 
-   
     this.wsFailedAttempts += 1;
     this.wsClient = undefined;
 
@@ -189,7 +189,7 @@ export class ResilientWebSocket {
 
     this.retryTimeout = setTimeout(() => {
       this.startWebSocket();
-    }, this.retryDelayMs());    
+    }, this.retryDelayMs());
   }
 
   closeWebSocket(): void {

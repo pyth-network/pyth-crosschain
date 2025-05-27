@@ -2,8 +2,8 @@ import WebSocket from "isomorphic-ws";
 
 import type { ParsedPayload, Request, Response } from "./protocol.js";
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
-import type {WebSocketPoolConfig} from "./socket/websocket-pool.js";
-import { WebSocketPool  } from "./socket/websocket-pool.js";
+import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
+import { WebSocketPool } from "./socket/websocket-pool.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -34,9 +34,7 @@ export class PythLazerClient {
    * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream. The connections will round-robin across the provided URLs.
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
-  static async create(
-    config: WebSocketPoolConfig
-  ): Promise<PythLazerClient> {
+  static async create(config: WebSocketPoolConfig): Promise<PythLazerClient> {
     const wsp = await WebSocketPool.create(config);
     return new PythLazerClient(wsp);
   }

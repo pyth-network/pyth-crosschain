@@ -5,8 +5,8 @@ import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
 import type { Request, Response } from "../protocol.js";
-import type {ResilientWebSocketConfig} from "./resilient-websocket.js";
-import { ResilientWebSocket  } from "./resilient-websocket.js";
+import type { ResilientWebSocketConfig } from "./resilient-websocket.js";
+import { ResilientWebSocket } from "./resilient-websocket.js";
 
 const DEFAULT_NUM_CONNECTIONS = 4;
 
@@ -15,7 +15,7 @@ export type WebSocketPoolConfig = {
   token: string;
   numConnections?: number;
   logger?: Logger;
-  rwsConfig?: Omit<ResilientWebSocketConfig, 'logger' | 'endpoint'>;
+  rwsConfig?: Omit<ResilientWebSocketConfig, "logger" | "endpoint">;
   onError?: (error: ErrorEvent) => void;
 };
 
@@ -49,9 +49,7 @@ export class WebSocketPool {
    * @param numConnections - Number of parallel WebSocket connections to maintain (default: 3)
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
-  static async create(
-    config: WebSocketPoolConfig,
-  ): Promise<WebSocketPool> {
+  static async create(config: WebSocketPoolConfig): Promise<WebSocketPool> {
     if (config.urls.length === 0) {
       throw new Error("No URLs provided");
     }
@@ -75,7 +73,7 @@ export class WebSocketPool {
         ...config.rwsConfig,
         endpoint: url,
         wsOptions,
-        logger
+        logger,
       });
 
       // If a websocket client unexpectedly disconnects, ResilientWebSocket will reestablish
@@ -115,7 +113,7 @@ export class WebSocketPool {
 
     pool.logger.info(
       `At least one WebSocket connection is established. WebSocketPool is ready.`,
-    )
+    );
 
     return pool;
   }
