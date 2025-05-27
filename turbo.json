@@ -58,7 +58,7 @@
         "^build",
         "build:cjs",
         "build:esm",
-        "build:pbts"
+        "build:copy-generated"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -131,6 +131,14 @@
         "../../../../lazer/publisher_sdk/proto/dynamic_value.proto"
       ],
       "outputs": ["src/programs/lazer/generated/governance_instruction.d.ts"]
+    },
+    "build:copy-generated": {
+      "dependsOn": ["//#install:modules", "build:pbts"],
+      "inputs": [
+        "src/programs/lazer/generated/governance_instruction.d.ts",
+        "src/programs/lazer/generated/governance_instruction.js"
+      ],
+      "outputs": ["lib/programs/lazer/generated/governance_instruction.d.ts", "lib/programs/lazer/generated/governance_instruction.js"]
     },
     "fix": {
       "dependsOn": ["fix:lint", "fix:format"],
