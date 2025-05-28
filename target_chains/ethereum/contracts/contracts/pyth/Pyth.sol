@@ -333,20 +333,18 @@ abstract contract Pyth is
             uint64[] memory slots
         )
     {
-        {
-            uint requiredFee = getUpdateFee(updateData);
-            if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
-        }
+        if (msg.value < getUpdateFee(updateData)) revert PythErrors.InsufficientFee();
 
         // Create the context struct that holds all shared parameters
-        PythInternalStructs.UpdateParseContext memory context;
-        context.priceIds = priceIds;
-        context.minAllowedPublishTime = minAllowedPublishTime;
-        context.maxAllowedPublishTime = maxAllowedPublishTime;
-        context.checkUniqueness = checkUniqueness;
-        context.checkUpdateDataIsMinimal = checkUpdateDataIsMinimal;
-        context.priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
-        context.slots = new uint64[](priceIds.length);
+        PythInternalStructs.UpdateParseContext memory context = PythInternalStructs.UpdateParseContext({
+            priceIds: priceIds,
+            minAllowedPublishTime: minAllowedPublishTime,
+            maxAllowedPublishTime: maxAllowedPublishTime,
+            checkUniqueness: checkUniqueness,
+            checkUpdateDataIsMinimal: checkUpdateDataIsMinimal,
+            priceFeeds: new PythStructs.PriceFeed[](priceIds.length),
+            slots: new uint64[](priceIds.length)
+        });
 
         // Track total updates for minimal update data check
         uint64 totalUpdatesAcrossBlobs = 0;
@@ -354,29 +352,24 @@ abstract contract Pyth is
         unchecked {
             // Process each update, passing the context struct
             // Parsed results will be filled in context.priceFeeds and context.slots
-            for (uint i = 0; i < updateData.length; i++) {
+            for (uint i = 0; i < updateData.length; ++i) {
                 totalUpdatesAcrossBlobs += _processSingleUpdateDataBlob(
                     updateData[i],
                     context
                 );
             }
             
-            if (storeUpdatesIfFresh) {
-                for (uint j = 0; j < priceIds.length; j++) {
-                    bytes32 curPriceId = priceIds[j];
-                    if (context.priceFeeds[j].id != 0) {
-                        // Create a new PriceInfo memory object from the context.priceFeeds data
-                        PythInternalStructs.PriceInfo memory newInfo;
-                        newInfo.publishTime = uint64(context.priceFeeds[j].price.publishTime);
-                        newInfo.expo = context.priceFeeds[j].price.expo;
-                        newInfo.price = context.priceFeeds[j].price.price;
-                        newInfo.conf = context.priceFeeds[j].price.conf;
-                        newInfo.emaPrice = context.priceFeeds[j].emaPrice.price;
-                        newInfo.emaConf = context.priceFeeds[j].emaPrice.conf;
-                        
-                        // Pass the new memory object to update storage
-                        updateLatestPriceIfNecessary(curPriceId, newInfo);
-                    }
+            for (uint j = 0; j < priceIds.length; ++j) {
+                PythStructs.PriceFeed memory pf = context.priceFeeds[j];
+                if (storeUpdatesIfFresh && pf.id != 0) {
+                    updateLatestPriceIfNecessary(priceIds[j], PythInternalStructs.PriceInfo({
+                        publishTime: uint64(pf.price.publishTime),
+                        expo: pf.price.expo,
+                        price: pf.price.price,
+                        conf: pf.price.conf,
+                        emaPrice: pf.emaPrice.price,
+                        emaConf: pf.emaPrice.conf
+                    }));
                 }
             }
         }
@@ -390,7 +383,7 @@ abstract contract Pyth is
         }
 
         // Check all price feeds were found
-        for (uint k = 0; k < priceIds.length; k++) {
+        for (uint k = 0; k < priceIds.length; ++k) {
             if (context.priceFeeds[k].id == 0) {
                 revert PythErrors.PriceFeedNotFoundWithinRange();
             }
@@ -399,6 +392,7 @@ abstract contract Pyth is
         // Return results
         return (context.priceFeeds, context.slots);
     }
+
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
