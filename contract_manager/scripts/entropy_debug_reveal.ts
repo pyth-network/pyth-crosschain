@@ -1,7 +1,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, EvmChain, toPrivateKey } from "../src";
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
+import { toPrivateKey } from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(

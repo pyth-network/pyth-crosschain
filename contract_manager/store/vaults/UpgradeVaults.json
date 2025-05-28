@@ -1,0 +1,12 @@
+[
+  {
+    "key": "FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj",
+    "cluster": "mainnet-beta",
+    "type": "vault"
+  },
+  {
+    "key": "6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3",
+    "cluster": "devnet",
+    "type": "vault"
+  }
+]
