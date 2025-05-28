@@ -32,7 +32,7 @@ const TruncateToMiddle = ({
         data-text-end={text.slice(Math.floor(text.length / 2) * -1)}
         aria-hidden="true"
       />
-      <span className={styles["sr-only"]}>{text}</span>
+      <span className={styles.srOnly}>{text}</span>
     </>
   );
 };
