@@ -60,11 +60,6 @@
     "type": "EvmEntropyContract"
   },
   {
-    "chain": "coredao_testnet",
-    "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
-    "type": "EvmEntropyContract"
-  },
-  {
     "chain": "blast",
     "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmEntropyContract"
@@ -86,11 +81,6 @@
   },
   {
     "chain": "taiko_hekla",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "orange_testnet",
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "type": "EvmEntropyContract"
   },
