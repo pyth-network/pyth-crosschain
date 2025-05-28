@@ -13,12 +13,14 @@
     "fix:lint": {
       "dependsOn": [
         "//#install:modules",
+        "^build",
+        "build",
         "fix:lint:eslint",
         "fix:lint:stylelint"
       ]
     },
     "fix:lint:eslint": {
-      "dependsOn": ["//#install:modules", "^build"],
+      "dependsOn": ["//#install:modules", "^build", "build"],
       "cache": false
     },
     "fix:lint:stylelint": {
@@ -32,7 +34,7 @@
       "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
     },
     "test:lint:eslint": {
-      "dependsOn": ["//#install:modules", "^build"]
+      "dependsOn": ["//#install:modules", "^build", "build"]
     },
     "test:lint:stylelint": {
       "dependsOn": ["//#install:modules"]
