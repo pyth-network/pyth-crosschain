@@ -53,8 +53,8 @@ library PythErrors {
     error NegativeInputPrice();
     // The Input Exponent is invalid.
     error InvalidInputExpo();
-    // The target exponent is invalid.
-    error InvalidTargetExpo();
     // The combined price is greater than int64.max.
     error CombinedPriceOverflow();
+    // The exponent is greater than 77 or less than -77.
+    error ExponentOverflow();
 }

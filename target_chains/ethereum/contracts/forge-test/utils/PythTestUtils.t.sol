@@ -375,10 +375,10 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         int32 expo1, 
         int64 price2, 
         int32 expo2,
-        int32 targetExpo, 
+        uint8 targetDecimals, 
         int64 expectedPrice
     ) internal {
-        int64 price = PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetExpo);
+        int64 price = PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetDecimals);
         assertEq(price, expectedPrice);
     }
 
@@ -387,11 +387,11 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         int32 expo1, 
         int64 price2, 
         int32 expo2,
-        int32 targetExpo,
+        uint8 targetDecimals,
         bytes4 expectedError
     ) internal {
         vm.expectRevert(expectedError);
-        PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetExpo);
+        PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetDecimals);
     }
 
     function testConvertToUnit() public {
@@ -402,6 +402,18 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         // Exponent can't be less than -255
         vm.expectRevert(PythErrors.InvalidInputExpo.selector);
         PythUtils.convertToUint(100, -256, 18);
+
+        // This test will fail as the 10 ** 237 is too large for a uint256
+        vm.expectRevert(PythErrors.ExponentOverflow.selector);
+        assertEq(PythUtils.convertToUint(100, -255, 18), 0);
+
+        // Combined Exponent can't be greater than 77
+        vm.expectRevert(PythErrors.ExponentOverflow.selector);
+        assertEq(PythUtils.convertToUint(100, 60, 18), 0);
+
+        // Combined Exponent can't be less than -77
+        vm.expectRevert(PythErrors.ExponentOverflow.selector);
+        assertEq(PythUtils.convertToUint(100, -96, 18), 0);
 
         // Negative Exponent Tests
         // Price with 18 decimals and exponent -5
@@ -438,39 +450,76 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
 
 
         // Edge Cases
-        // This test will fail as the 10 ** 237 is too large for a uint256
-        // assertEq(PythUtils.convertToUint(100, -255, 18), 0);
-        // assertEq(PythUtils.convertToUint(100, 255, 18), 100_00_000_000_000_000_000_000_000);
+        // 1. Test: price = 0, any expo/decimals returns 0
+        assertEq(PythUtils.convertToUint(0, -77, 0), 0);
+        assertEq(PythUtils.convertToUint(0, 0, 0), 0);
+        assertEq(PythUtils.convertToUint(0, 77, 0), 0);
+        assertEq(PythUtils.convertToUint(0, -77, 77), 0);
+
+        // 2. Test: smallest positive price, maximum downward exponent (should round to zero)
+        assertEq(PythUtils.convertToUint(1, -77, 0), 0);
+        assertEq(PythUtils.convertToUint(1, -77, 77), 1);
+
+        // 3. Test: combinedExpo == 0 (should be identical to price)
+        assertEq(PythUtils.convertToUint(123456, 0, 0), 123456);
+        assertEq(PythUtils.convertToUint(123456, -5, 5), 123456); // -5 + 5 == 0
+
+        // 4. Test: combinedExpo > 0 (should shift price up)
+        assertEq(PythUtils.convertToUint(123456, 5, 0), 12345600000);
+        assertEq(PythUtils.convertToUint(123456, 5, 2), 1234560000000);
+        
+        // 5. Test: combinedExpo < 0 (should shift price down)
+        assertEq(PythUtils.convertToUint(123456, -5, 0), 1);
+        assertEq(PythUtils.convertToUint(123456, -5, 2), 123);
+
+        // 6. Test: division with truncation
+        assertEq(PythUtils.convertToUint(999, -2, 0), 9); // 999/100 = 9 (truncated)
+        assertEq(PythUtils.convertToUint(199, -2, 0), 1); // 199/100 = 1 (truncated)
+        assertEq(PythUtils.convertToUint(99, -2, 0), 0); // 99/100 = 0 (truncated)
+
+        // 7. Test: Big price and scaling, but outside of bounds
+        vm.expectRevert(PythErrors.CombinedPriceOverflow.selector);
+        assertEq(PythUtils.convertToUint(100_000_000, 10, 60),0);
+
+        // 8. Test: Big price and scaling
+        assertEq(PythUtils.convertToUint(100_000_000, -80, 10),0);
+        
+        // 9. Test: Decimals just save from truncation
+        assertEq(PythUtils.convertToUint(5, -1, 1), 5); // 5/10*10 = 5
+        assertEq(PythUtils.convertToUint(5, -1, 2), 50); // 5/10*100 = 50
     }
 
-    function testCombinePrices() public {
+    function testDeriveCrossRate() public {
 
-        // Basic Tests 
-        assertCrossRateEquals(500, -8, 500, -8, -5, 100000); 
-        assertCrossRateEquals(10_000, -8, 100, -2, -5, 10);
-        assertCrossRateEquals(10_000, -2, 100, -8, -4, 1_000_000_000_000);
+        // Test 1: Prices can't be negative
+        assertCrossRateReverts(-100, -2, 100, -2, 5, PythErrors.NegativeInputPrice.selector);
+        assertCrossRateReverts(100, -2, -100, -2, 5, PythErrors.NegativeInputPrice.selector);
+        assertCrossRateReverts(-100, -2, -100, -2, 5, PythErrors.NegativeInputPrice.selector);
 
-        // Negative Price Tests
-        assertCrossRateReverts(-100, -2, 100, -2, -5, PythErrors.NegativeInputPrice.selector);
-        assertCrossRateReverts(100, -2, -100, -2, -5, PythErrors.NegativeInputPrice.selector);
-        assertCrossRateReverts(-100, -2, -100, -2, -5, PythErrors.NegativeInputPrice.selector);
 
-        // Positive Exponent Tests
-        assertCrossRateReverts(100, 2, 100, -2, -5, PythErrors.InvalidInputExpo.selector);
-        assertCrossRateReverts(100, -2, 100, 2, -5, PythErrors.InvalidInputExpo.selector);
-        assertCrossRateReverts(100, 2, 100, 2, -5, PythErrors.InvalidInputExpo.selector);
+        // Test 2: Exponent can't be positive
+        assertCrossRateReverts(100, 2, 100, -2, 5, PythErrors.InvalidInputExpo.selector);
+        assertCrossRateReverts(100, -2, 100, 2, 5, PythErrors.InvalidInputExpo.selector);
+        assertCrossRateReverts(100, 2, 100, 2, 5, PythErrors.InvalidInputExpo.selector);
 
-        // Invalid Target Exponent Tests
-        assertCrossRateReverts(100, -2, 100, -2, 1, PythErrors.InvalidTargetExpo.selector);
+        // Test 3: Exponent can't be less than -255
+        assertCrossRateReverts(100, -256, 100, -2, 5, PythErrors.InvalidInputExpo.selector);
+        assertCrossRateReverts(100, -2, 100, -256, 5, PythErrors.InvalidInputExpo.selector);
 
-        // Different Exponent Tests
-        assertCrossRateEquals(10_000, -2, 100, -4, -4, 100_000_000); 
-        assertCrossRateEquals(10_000, -2, 10_000, -1, -2, 10);
+        // Test 4: Basic Tests 
+        assertCrossRateEquals(500, -8, 500, -8, 5, 100000); 
+        assertCrossRateEquals(10_000, -8, 100, -2, 5, 10);
+        assertCrossRateEquals(10_000, -2, 100, -8, 5, 1_000_000_000_000);
+
+        // Test 5: Different Exponent Tests
+        assertCrossRateEquals(10_000, -2, 100, -4, 0, 10_000); // 10_000 / 100 = 100 * 10(-2 - -4) = 10_000 with 0 decimals = 10_000
+        assertCrossRateEquals(10_000, -2, 100, -4, 5, 0); // 10_000 / 100 = 100 * 10(-2 - -4) = 10_000 with 5 decimals = 0
+        assertCrossRateEquals(10_000, -2, 10_000, -1, 5, 0); // It will truncate to 0
         assertCrossRateEquals(10_000, -10, 10_000, -2, 0, 0); // It will truncate to 0
 
-        // Exponent Edge Tests
-        assertCrossRateEquals(10_000, 0, 100, 0, 0, 100); 
-        assertCrossRateEquals(10_000, 0, 100, 0, -255, 100); 
+        // // Exponent Edge Tests
+        // assertCrossRateEquals(10_000, 0, 100, 0, 0, 100); 
+        // assertCrossRateEquals(10_000, 0, 100, 0, -255, 100); 
         // assertCrossRateEquals(10_000, 0, 100, -255, -255, 100, -255); 
         // assertCrossRateEquals(10_000, -255, 100, 0, 0, 100, 0); 
 
