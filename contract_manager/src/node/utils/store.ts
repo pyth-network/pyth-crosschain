@@ -269,4 +269,4 @@ export class Store {
 /**
  * DefaultStore loads all the contracts and chains from the store directory and provides a single point of access to them.
  */
-export const DefaultStore = new Store(`${__dirname}/../store`);
+export const DefaultStore = new Store(`${__dirname}/../../../store`);

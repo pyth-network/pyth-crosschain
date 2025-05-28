@@ -315,7 +315,7 @@
   {
     "id": "optimism",
     "mainnet": true,
-    "rpcUrl": "https://rpc.ankr.com/optimism",
+    "rpcUrl": "https://mainnet.optimism.io/",
     "networkId": 10,
     "type": "EvmChain",
     "nativeToken": "ETH"
@@ -1080,14 +1080,14 @@
   {
     "id": "unichain",
     "mainnet": true,
-    "rpcUrl": "https://redacted.quiknode.pro/$ENV_UNICHAIN_API_KEY",
+    "rpcUrl": "https://mainnet.unichain.org",
     "networkId": 130,
     "type": "EvmChain"
   },
   {
     "id": "abstract",
     "mainnet": true,
-    "rpcUrl": "https://api-efe16d37.ml.eeffc03e557f4daf.com/",
+    "rpcUrl": "https://api.mainnet.abs.xyz",
     "networkId": 2741,
     "type": "EvmChain"
   },
@@ -1157,7 +1157,7 @@
   {
     "id": "monad_testnet",
     "mainnet": false,
-    "rpcUrl": "https://rpc.monad-testnet.category.xyz/rpc/nSyzM1wlIgaALWzbh3oIg5rW65AC6yjqrslOE8wb",
+    "rpcUrl": "https://monad-testnet.drpc.org",
     "networkId": 10143,
     "type": "EvmChain"
   },
@@ -1165,13 +1165,13 @@
     "id": "berachain_mainnet",
     "mainnet": true,
     "networkId": 80094,
-    "rpcUrl": "https://fluent-thrilling-scion.furtim-network.quiknode.pro/$ENV_RABECHAIN_API_KEY",
+    "rpcUrl": "https://rpc.berachain.com/",
     "type": "EvmChain"
   },
   {
     "id": "story",
     "mainnet": true,
-    "rpcUrl": "https://homer.storyrpc.io",
+    "rpcUrl": "https://mainnet.storyrpc.io",
     "networkId": 1514,
     "type": "EvmChain"
   },
