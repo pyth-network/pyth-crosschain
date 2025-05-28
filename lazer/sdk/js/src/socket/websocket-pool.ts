@@ -1,12 +1,23 @@
 import TTLCache from "@isaacs/ttlcache";
+import type { ErrorEvent } from "isomorphic-ws";
 import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
 import type { Request, Response } from "../protocol.js";
+import type { ResilientWebSocketConfig } from "./resilient-websocket.js";
 import { ResilientWebSocket } from "./resilient-websocket.js";
 
-const DEFAULT_NUM_CONNECTIONS = 3;
+const DEFAULT_NUM_CONNECTIONS = 4;
+
+export type WebSocketPoolConfig = {
+  urls: string[];
+  token: string;
+  numConnections?: number;
+  logger?: Logger;
+  rwsConfig?: Omit<ResilientWebSocketConfig, "logger" | "endpoint">;
+  onError?: (error: ErrorEvent) => void;
+};
 
 export class WebSocketPool {
   rwsPool: ResilientWebSocket[];
@@ -17,7 +28,7 @@ export class WebSocketPool {
   private wasAllDown = true;
   private checkConnectionStatesInterval: NodeJS.Timeout;
 
-  private constructor(private readonly logger: Logger = dummyLogger) {
+  private constructor(private readonly logger: Logger) {
     this.rwsPool = [];
     this.cache = new TTLCache({ ttl: 1000 * 10 }); // TTL of 10 seconds
     this.subscriptions = new Map();
@@ -38,32 +49,32 @@ export class WebSocketPool {
    * @param numConnections - Number of parallel WebSocket connections to maintain (default: 3)
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
-  static async create(
-    urls: string[],
-    token: string,
-    numConnections: number = DEFAULT_NUM_CONNECTIONS,
-    logger: Logger = dummyLogger,
-  ): Promise<WebSocketPool> {
-    if (urls.length === 0) {
+  static async create(config: WebSocketPoolConfig): Promise<WebSocketPool> {
+    if (config.urls.length === 0) {
       throw new Error("No URLs provided");
     }
 
+    const logger = config.logger ?? dummyLogger;
     const pool = new WebSocketPool(logger);
-
-    // Create all websocket instances
-    const connectionPromises: Promise<void>[] = [];
+    const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;
 
     for (let i = 0; i < numConnections; i++) {
-      const url = urls[i % urls.length];
+      const url = config.urls[i % config.urls.length];
       if (!url) {
         throw new Error(`URLs must not be null or empty`);
       }
       const wsOptions = {
+        ...config.rwsConfig?.wsOptions,
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${config.token}`,
         },
       };
-      const rws = new ResilientWebSocket(url, wsOptions, logger);
+      const rws = new ResilientWebSocket({
+        ...config.rwsConfig,
+        endpoint: url,
+        wsOptions,
+        logger,
+      });
 
       // If a websocket client unexpectedly disconnects, ResilientWebSocket will reestablish
       // the connection and call the onReconnect callback.
@@ -73,7 +84,7 @@ export class WebSocketPool {
         }
         for (const [, request] of pool.subscriptions) {
           try {
-            void rws.send(JSON.stringify(request));
+            rws.send(JSON.stringify(request));
           } catch (error) {
             pool.logger.error(
               "Failed to resend subscription on reconnect:",
@@ -83,25 +94,25 @@ export class WebSocketPool {
         }
       };
 
+      if (config.onError) {
+        rws.onError = config.onError;
+      }
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
       rws.onMessage = pool.dedupeHandler;
       pool.rwsPool.push(rws);
-
-      // Start the websocket and collect the promise
-      connectionPromises.push(rws.startWebSocket());
-    }
-
-    // Wait for all connections to be established
-    try {
-      await Promise.all(connectionPromises);
-    } catch (error) {
-      // If any connection fails, clean up and throw
-      pool.shutdown();
-      throw error;
+      rws.startWebSocket();
     }
 
     pool.logger.info(
-      `Successfully established ${numConnections.toString()} redundant WebSocket connections`,
+      `Started WebSocketPool with ${numConnections.toString()} connections. Waiting for at least one to connect...`,
+    );
+
+    while (!pool.isAnyConnectionEstablished()) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    pool.logger.info(
+      `At least one WebSocket connection is established. WebSocketPool is ready.`,
     );
 
     return pool;
@@ -149,33 +160,27 @@ export class WebSocketPool {
     }
   };
 
-  async sendRequest(request: Request): Promise<void> {
-    const sendPromises = this.rwsPool.map(async (rws) => {
-      try {
-        await rws.send(JSON.stringify(request));
-      } catch (error) {
-        this.logger.error("Failed to send request:", error);
-        throw error;
-      }
-    });
-    await Promise.all(sendPromises);
+  sendRequest(request: Request) {
+    for (const rws of this.rwsPool) {
+      rws.send(JSON.stringify(request));
+    }
   }
 
-  async addSubscription(request: Request): Promise<void> {
+  addSubscription(request: Request) {
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
     this.subscriptions.set(request.subscriptionId, request);
-    await this.sendRequest(request);
+    this.sendRequest(request);
   }
 
-  async removeSubscription(subscriptionId: number): Promise<void> {
+  removeSubscription(subscriptionId: number) {
     this.subscriptions.delete(subscriptionId);
     const request: Request = {
       type: "unsubscribe",
       subscriptionId,
     };
-    await this.sendRequest(request);
+    this.sendRequest(request);
   }
 
   addMessageListener(handler: (data: WebSocket.Data) => void): void {
@@ -191,7 +196,11 @@ export class WebSocketPool {
   }
 
   private areAllConnectionsDown(): boolean {
-    return this.rwsPool.every((ws) => !ws.isConnected || ws.isReconnecting);
+    return this.rwsPool.every((ws) => !ws.isConnected() || ws.isReconnecting());
+  }
+
+  private isAnyConnectionEstablished(): boolean {
+    return this.rwsPool.some((ws) => ws.isConnected());
   }
 
   private checkConnectionStates(): void {
