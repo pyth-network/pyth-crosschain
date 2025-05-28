@@ -261,7 +261,7 @@ export const NETWORK_INFO = {
     name: "story_testnet",
     rpcUrl: "https://aeneid.storyrpc.io",
     isMainnet: false,
-    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    contractAddress: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
   },
   [1328]: {
     name: "sei_evm_testnet",
