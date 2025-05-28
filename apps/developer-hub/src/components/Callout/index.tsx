@@ -1,66 +1,37 @@
-"use client";
+import { InfoBox, VARIANTS } from "@pythnetwork/component-library/InfoBox";
+import type { ComponentProps, ReactNode } from "react";
+import { Case } from "../Case";
 
-import { Link } from "@pythnetwork/component-library/unstyled/Link";
-import clsx from "clsx";
-import type { ComponentProps, ElementType, ReactNode } from "react";
-
-import styles from "./index.module.scss";
-
-export const VARIANTS = [
-  "default",
-  "primary",
-  "secondary",
-  "tertiary",
-  "error",
-  "info",
-  "warning",
-  "important",
-  "success",
-] as const;
-
-type OwnProps = {
+type Props = ComponentProps<"div"> & {
+  icon?: ReactNode;
+  header?: ReactNode;
   variant?: (typeof VARIANTS)[number] | undefined;
-  icon?: ReactNode | undefined;
-  nonInteractive?: boolean | undefined;
 };
 
-export type Props<T extends ElementType> = Omit<
-  ComponentProps<T>,
-  keyof OwnProps
-> &
-  OwnProps;
-
-export const Callout = (
-  props: (Props<"div"> & { nonInteractive?: true }) | Props<typeof Link>,
-) => {
-  if (props.nonInteractive) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { nonInteractive, ...otherProps } = props;
-    return <div {...calloutProps(otherProps)} />;
-  } else if ("href" in props) {
-    return <Link {...calloutProps(props)} />;
-  } else {
-    return <div {...calloutProps(props)} />;
-  }
+const DEFAULT_ICONS: Record<(typeof VARIANTS)[number], string> = {
+  neutral: "⦿",
+  info: "💡",
+  warning: "⚠️",
+  error: "❗",
+  data: "💾",
+  success: "🎉",
 };
 
-const calloutProps = <T extends ElementType>({
-  className,
-  variant = "default",
-  children,
+export const Callout = ({
   icon,
-  ...props
-}: Props<T>) => ({
-  ...props,
-  "data-variant": variant,
-  className: clsx(styles.callout, className),
-  children: (
-    <>
-      <div className={styles.hover} />
-      <div className={styles.body}>
-        {Boolean(icon) && <div className={styles.icon}>{icon}</div>}
-        <div>{children}</div>
-      </div>
-    </>
-  ),
-});
+  header,
+  variant = "info",
+  children,
+  ...rest
+}: Props) => {
+  return (
+    <InfoBox
+      icon={icon ?? DEFAULT_ICONS[variant] ?? DEFAULT_ICONS["info"]}
+      header={header ?? <Case variant="APA Title Case">{variant}</Case>}
+      variant={variant}
+      {...rest}
+    >
+      {children}
+    </InfoBox>
+  );
+};
