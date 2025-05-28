@@ -86,7 +86,7 @@ contract MockPyth is AbstractPyth {
         return singleUpdateFeeInWei * updateData.length;
     }
 
-       function parsePriceFeedUpdatesWithConfig(
+    function parsePriceFeedUpdatesWithConfig(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
         uint64 minAllowedPublishTime,
@@ -159,7 +159,7 @@ contract MockPyth is AbstractPyth {
             maxPublishTime,
             false,
             true,
-            true
+            false
         );
     }
 
@@ -176,30 +176,7 @@ contract MockPyth is AbstractPyth {
             maxPublishTime,
             false,
             true,
-            true
-        );
-    }
-
-    function parsePriceFeedUpdatesWithSlotsStrict(
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
-    )
-        external
-        payable
-        override
-        returns (PythStructs.PriceFeed[] memory feeds, uint64[] memory slots)
-    {
-        return
-            parsePriceFeedUpdatesWithConfig(
-            updateData,
-            priceIds,
-            minPublishTime,
-            maxPublishTime,
-            false,
-            true,
-            true
+            false
         );
     }
 

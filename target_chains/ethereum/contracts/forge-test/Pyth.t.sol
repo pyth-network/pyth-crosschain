@@ -361,11 +361,14 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
-        ) = pyth.parsePriceFeedUpdatesWithSlotsStrict{value: updateFee}(
+        ) = pyth.parsePriceFeedUpdatesWithConfig{value: updateFee}(
                 updateData,
                 priceIds,
                 0,
-                MAX_UINT64
+                MAX_UINT64,
+                false,
+                true,
+                false
             );
 
         assertEq(priceFeeds.length, numMessages);
@@ -527,11 +530,14 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
 
         // Should revert in strict mode
         vm.expectRevert(PythErrors.InvalidArgument.selector);
-        pyth.parsePriceFeedUpdatesWithSlotsStrict{value: updateFee}(
+        pyth.parsePriceFeedUpdatesWithConfig{value: updateFee}(
             updateData,
             requestedPriceIds,
             0,
-            MAX_UINT64
+            MAX_UINT64,
+            false,
+            true,
+            false
         );
     }
 
@@ -564,11 +570,14 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
 
         // Should revert in strict mode because we have fewer updates than price IDs
         vm.expectRevert(PythErrors.InvalidArgument.selector);
-        pyth.parsePriceFeedUpdatesWithSlotsStrict{value: updateFee}(
+        pyth.parsePriceFeedUpdatesWithConfig{value: updateFee}(
             updateData,
             requestedPriceIds,
             0,
-            MAX_UINT64
+            MAX_UINT64,
+            false,
+            true,
+            false
         );
     }
 

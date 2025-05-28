@@ -411,34 +411,8 @@ abstract contract Pyth is
             maxPublishTime,
             false,
             false,
-            true
+            false
         );
-    }
-
-    function parsePriceFeedUpdatesWithSlotsStrict(
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
-    )
-        external
-        payable
-        override
-        returns (
-            PythStructs.PriceFeed[] memory priceFeeds,
-            uint64[] memory slots
-        )
-    {
-        return
-            parsePriceFeedUpdatesWithConfig(
-                updateData,
-                priceIds,
-                minPublishTime,
-                maxPublishTime,
-                false,
-                true,
-                true
-            );
     }
 
     function extractTwapPriceInfos(
@@ -648,7 +622,7 @@ abstract contract Pyth is
             maxPublishTime,
             true,
             false,
-            true
+            false
         );
     }
 

@@ -251,7 +251,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
             50,
             false,
             true,  // check minimal
-            true
+            false
         );
     }
 
@@ -266,7 +266,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
             50,
             false,
             true,  // check minimal
-            true
+            false
         );
     }
 
