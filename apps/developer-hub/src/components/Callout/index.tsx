@@ -1,5 +1,6 @@
 import { InfoBox, VARIANTS } from "@pythnetwork/component-library/InfoBox";
 import type { ComponentProps, ReactNode } from "react";
+
 import { Case } from "../Case";
 
 type Props = ComponentProps<"div"> & {
@@ -26,7 +27,7 @@ export const Callout = ({
 }: Props) => {
   return (
     <InfoBox
-      icon={icon ?? DEFAULT_ICONS[variant] ?? DEFAULT_ICONS["info"]}
+      icon={icon ?? DEFAULT_ICONS[variant]}
       header={header ?? <Case variant="APA Title Case">{variant}</Case>}
       variant={variant}
       {...rest}

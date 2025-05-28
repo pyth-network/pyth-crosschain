@@ -1,4 +1,5 @@
 import type React from "react";
+
 import styles from "./index.module.scss";
 
 export type Props = {
@@ -18,8 +19,8 @@ const TruncateToMiddle = ({
   // (e.g., 'i' is narrower than 'W'), the exact count of visible characters
   // might differ slightly from the specified 'ch' value.
   const style = {
-    "--min-chars-start-ch": `${minCharsStart}ch`,
-    "--min-chars-end-ch": `${minCharsEnd}ch`,
+    "--min-chars-start-ch": `${minCharsStart.toString()}ch`,
+    "--min-chars-end-ch": `${minCharsEnd.toString()}ch`,
   } as React.CSSProperties;
 
   return (

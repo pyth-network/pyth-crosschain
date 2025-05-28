@@ -26,30 +26,42 @@ export const Case = ({ children, variant }: Props) => {
 
 const convertCase = (text: string, variant: CaseVariant): string => {
   switch (variant) {
-    case "Uppercase":
+    case "Uppercase": {
       return text.toUpperCase();
-    case "Lowercase":
+    }
+    case "Lowercase": {
       return text.toLowerCase();
-    case "Title Case":
+    }
+    case "Title Case": {
       return toTitleCase(text);
-    case "APA Title Case":
+    }
+    case "APA Title Case": {
       return toAPATitleCase(text);
-    case "Sentence Case":
+    }
+    case "Sentence Case": {
       return toSentenceCase(text);
-    case "Snake Case":
+    }
+    case "Snake Case": {
       return toSnakeCase(text);
-    case "Kebab Case":
+    }
+    case "Kebab Case": {
       return toKebabCase(text);
-    case "Pascal Case":
+    }
+    case "Pascal Case": {
       return toPascalCase(text);
-    case "Camel Case":
+    }
+    case "Camel Case": {
       return toCamelCase(text);
-    case "Train Case":
+    }
+    case "Train Case": {
       return toTrainCase(text);
-    case "Macro Case":
+    }
+    case "Macro Case": {
       return toMacroCase(text);
-    default:
+    }
+    default: {
       return text;
+    }
   }
 };
 
@@ -64,7 +76,7 @@ const toTitleCase = (text: string): string => {
 
 // Convert to APA Title Case (capitalize first letter of each word except articles, prepositions, and conjunctions)
 const toAPATitleCase = (text: string): string => {
-  const minorWords = [
+  const minorWords = new Set([
     "a",
     "an",
     "the",
@@ -80,7 +92,7 @@ const toAPATitleCase = (text: string): string => {
     "by",
     "in",
     "of",
-  ];
+  ]);
 
   const words = text.toLowerCase().split(" ");
 
@@ -93,7 +105,7 @@ const toAPATitleCase = (text: string): string => {
       }
 
       // Check if the word is a minor word
-      if (minorWords.includes(word)) {
+      if (minorWords.has(word)) {
         return word;
       }
 
@@ -112,27 +124,27 @@ const toSentenceCase = (text: string): string => {
 // Convert to Snake Case (lowercase with underscores between words)
 const toSnakeCase = (text: string): string => {
   return text
-    .replace(/([A-Z])/g, " $1") // Add space before capital letters
+    .replaceAll(/([A-Z])/g, " $1") // Add space before capital letters
     .trim()
     .toLowerCase()
-    .replace(/[^\w\s]/g, "") // Remove special characters
-    .replace(/\s+/g, "_"); // Replace spaces with underscores
+    .replaceAll(/[^\w\s]/g, "") // Remove special characters
+    .replaceAll(/\s+/g, "_"); // Replace spaces with underscores
 };
 
 // Convert to Kebab Case (lowercase with hyphens between words)
 const toKebabCase = (text: string): string => {
   return text
-    .replace(/([A-Z])/g, " $1") // Add space before capital letters
+    .replaceAll(/([A-Z])/g, " $1") // Add space before capital letters
     .trim()
     .toLowerCase()
-    .replace(/[^\w\s]/g, "") // Remove special characters
-    .replace(/\s+/g, "-"); // Replace spaces with hyphens
+    .replaceAll(/[^\w\s]/g, "") // Remove special characters
+    .replaceAll(/\s+/g, "-"); // Replace spaces with hyphens
 };
 
 // Convert to Pascal Case (capitalize first letter of each word, no spaces)
 const toPascalCase = (text: string): string => {
   return text
-    .replace(/[^\w\s]/g, "") // Remove special characters
+    .replaceAll(/[^\w\s]/g, "") // Remove special characters
     .split(/\s+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join("");
@@ -147,7 +159,7 @@ const toCamelCase = (text: string): string => {
 // Convert to Train Case (capitalize first letter of each word, hyphens between words)
 const toTrainCase = (text: string): string => {
   return text
-    .replace(/[^\w\s]/g, "") // Remove special characters
+    .replaceAll(/[^\w\s]/g, "") // Remove special characters
     .split(/\s+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join("-");
