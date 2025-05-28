@@ -1,10 +1,12 @@
 use std::{collections::BTreeMap, time::Duration};
 
-use ::protobuf::MessageField;
+use crate::transaction::SignedLazerTransaction;
+use ::protobuf::{Message, MessageField};
 use anyhow::{bail, ensure, Context};
 use humantime::format_duration;
 use protobuf::dynamic_value::{dynamic_value, DynamicValue};
 use pyth_lazer_protocol::router::TimestampUs;
+use sha2::{Digest, Sha256};
 
 pub mod transaction_envelope {
     pub use crate::protobuf::transaction_envelope::*;
@@ -158,5 +160,25 @@ impl TryFrom<DynamicValue> for serde_value::Value {
                 Ok(serde_value::Value::Map(output))
             }
         }
+    }
+}
+
+impl SignedLazerTransaction {
+    // The id of a SignedLazerTransaction is calculated as sha256 of its entire payload. This is
+    // an unstable ID (sensitive to any proto changes) are should only be used to correlate
+    //  immediate responses sent from the relayer
+    pub fn id(&self) -> anyhow::Result<[u8; 32]> {
+        let mut hasher = Sha256::new();
+        self.write_to_writer(&mut hasher)?;
+        hasher
+            .finalize()
+            .try_into()
+            .context("failed to calculate the sha256 as transaction id")
+    }
+
+    pub fn calculate_id_from_bytes(payload: &Vec<u8>) -> anyhow::Result<[u8; 32]> {
+        Ok(Sha256::digest(payload)
+            .try_into()
+            .context("failed to calculate the sha256 as transaction id")?)
     }
 }

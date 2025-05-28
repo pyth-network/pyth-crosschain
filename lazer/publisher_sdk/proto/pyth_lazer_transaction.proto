@@ -88,3 +88,26 @@ message LazerTransaction {
         GovernanceInstruction governance_instruction = 2;
     }
 }
+
+// Response to SignedLazerTransactionResponse from the relayer
+message SignedLazerTransactionResponse {
+    // [required] The ID of a transaction derived as sha256 of the payload.
+    optional bytes transaction_id = 1;
+
+    // [required] Status of the transaction received by the relayer
+    oneof status {
+        // The transaction was accepted by the relayer
+        SignedLazerTransactionAccepted accepted = 2;
+        // The transaction was rejected by the relayer
+        SignedLazerTransactionRejected rejected = 3;
+    }
+
+    // Message containing additional details for accepted transactions
+    message SignedLazerTransactionAccepted {}
+
+    // Message containing details why the transaction was rejected
+    message SignedLazerTransactionRejected {
+        // [required] Human readable error message
+        optional string message = 1;
+    }
+}
