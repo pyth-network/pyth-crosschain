@@ -287,26 +287,37 @@ abstract contract Entropy is IEntropy, EntropyState {
         external
         payable
         override
-        returns (uint64 assignedSequenceNumber)
+        returns (uint64 sequenceNumber, address providerAddress)
     {
-        assignedSequenceNumber = requestV2(getDefaultProvider(), random(), 0);
+        address provider = getDefaultProvider();
+        (sequenceNumber, ) = requestV2(provider, random(), 0);
+        providerAddress = provider;
     }
 
     function requestV2(
         uint32 gasLimit
-    ) external payable override returns (uint64 assignedSequenceNumber) {
-        assignedSequenceNumber = requestV2(
-            getDefaultProvider(),
-            random(),
-            gasLimit
-        );
+    )
+        external
+        payable
+        override
+        returns (uint64 sequenceNumber, address providerAddress)
+    {
+        address provider = getDefaultProvider();
+        (sequenceNumber, ) = requestV2(provider, random(), gasLimit);
+        providerAddress = provider;
     }
 
     function requestV2(
         address provider,
         uint32 gasLimit
-    ) external payable override returns (uint64 assignedSequenceNumber) {
-        assignedSequenceNumber = requestV2(provider, random(), gasLimit);
+    )
+        external
+        payable
+        override
+        returns (uint64 sequenceNumber, address providerAddress)
+    {
+        (sequenceNumber, ) = requestV2(provider, random(), gasLimit);
+        providerAddress = provider;
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -347,19 +358,24 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userContribution
     ) public payable override returns (uint64) {
-        return
-            requestV2(
-                provider,
-                userContribution,
-                0 // Passing 0 will assign the request the provider's default gas limit
-            );
+        (uint64 sequenceNumber, ) = requestV2(
+            provider,
+            userContribution,
+            0 // Passing 0 will assign the request the provider's default gas limit
+        );
+        return sequenceNumber;
     }
 
     function requestV2(
         address provider,
         bytes32 userContribution,
         uint32 gasLimit
-    ) public payable override returns (uint64) {
+    )
+        public
+        payable
+        override
+        returns (uint64 sequenceNumber, address providerAddress)
+    {
         EntropyStructsV2.Request storage req = requestHelper(
             provider,
             constructUserCommitment(userContribution),
@@ -386,7 +402,8 @@ abstract contract Entropy is IEntropy, EntropyState {
             uint32(req.gasLimit10k) * TEN_THOUSAND,
             bytes("")
         );
-        return req.sequenceNumber;
+        sequenceNumber = req.sequenceNumber;
+        providerAddress = provider;
     }
 
     // This method validates the provided user's revelation and provider's revelation against the corresponding

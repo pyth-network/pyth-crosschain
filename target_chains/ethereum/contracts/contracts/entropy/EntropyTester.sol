@@ -134,7 +134,7 @@ contract EntropyTester is IEntropyConsumer {
         address provider = getProviderWithDefault(entropy, _provider);
 
         uint128 fee = entropy.getFeeV2(provider, gasLimit);
-        sequenceNumber = entropy.requestV2{value: fee}(provider, gasLimit);
+        (sequenceNumber, ) = entropy.requestV2{value: fee}(provider, gasLimit);
 
         callbackData[
             callbackKey(address(entropy), provider, sequenceNumber)

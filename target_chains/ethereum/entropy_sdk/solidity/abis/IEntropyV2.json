@@ -552,8 +552,13 @@
     "outputs": [
       {
         "internalType": "uint64",
-        "name": "assignedSequenceNumber",
+        "name": "sequenceNumber",
         "type": "uint64"
+      },
+      {
+        "internalType": "address",
+        "name": "providerAddress",
+        "type": "address"
       }
     ],
     "stateMutability": "payable",
@@ -576,8 +581,13 @@
     "outputs": [
       {
         "internalType": "uint64",
-        "name": "assignedSequenceNumber",
+        "name": "sequenceNumber",
         "type": "uint64"
+      },
+      {
+        "internalType": "address",
+        "name": "providerAddress",
+        "type": "address"
       }
     ],
     "stateMutability": "payable",
@@ -589,8 +599,13 @@
     "outputs": [
       {
         "internalType": "uint64",
-        "name": "assignedSequenceNumber",
+        "name": "sequenceNumber",
         "type": "uint64"
+      },
+      {
+        "internalType": "address",
+        "name": "providerAddress",
+        "type": "address"
       }
     ],
     "stateMutability": "payable",
@@ -618,8 +633,13 @@
     "outputs": [
       {
         "internalType": "uint64",
-        "name": "assignedSequenceNumber",
+        "name": "sequenceNumber",
         "type": "uint64"
+      },
+      {
+        "internalType": "address",
+        "name": "providerAddress",
+        "type": "address"
       }
     ],
     "stateMutability": "payable",
