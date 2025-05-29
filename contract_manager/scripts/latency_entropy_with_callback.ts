@@ -37,7 +37,7 @@ async function testLatency(
   privateKey: PrivateKey,
   provider?: string,
 ) {
-  provider = provider || await contract.getDefaultProvider();
+  provider = provider || (await contract.getDefaultProvider());
   const userRandomNumber = contract.generateUserRandomNumber();
   const requestResponse = await contract.requestRandomness(
     userRandomNumber,
