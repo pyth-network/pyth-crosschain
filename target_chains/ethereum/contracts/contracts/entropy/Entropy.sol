@@ -290,7 +290,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         returns (uint64 sequenceNumber, address providerAddress)
     {
         address provider = getDefaultProvider();
-        (sequenceNumber, ) = requestV2(provider, random(), 0);
+        uint64 seq = requestV2(provider, random(), 0);
+        sequenceNumber = seq;
         providerAddress = provider;
     }
 
@@ -303,7 +304,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         returns (uint64 sequenceNumber, address providerAddress)
     {
         address provider = getDefaultProvider();
-        (sequenceNumber, ) = requestV2(provider, random(), gasLimit);
+        uint64 seq = requestV2(provider, random(), gasLimit);
+        sequenceNumber = seq;
         providerAddress = provider;
     }
 
@@ -316,7 +318,8 @@ abstract contract Entropy is IEntropy, EntropyState {
         override
         returns (uint64 sequenceNumber, address providerAddress)
     {
-        (sequenceNumber, ) = requestV2(provider, random(), gasLimit);
+        uint64 seq = requestV2(provider, random(), gasLimit);
+        sequenceNumber = seq;
         providerAddress = provider;
     }
 
@@ -358,12 +361,11 @@ abstract contract Entropy is IEntropy, EntropyState {
         address provider,
         bytes32 userContribution
     ) public payable override returns (uint64) {
-        (uint64 sequenceNumber, ) = requestV2(
+        return requestV2(
             provider,
             userContribution,
             0 // Passing 0 will assign the request the provider's default gas limit
         );
-        return sequenceNumber;
     }
 
     function requestV2(
@@ -374,7 +376,7 @@ abstract contract Entropy is IEntropy, EntropyState {
         public
         payable
         override
-        returns (uint64 sequenceNumber, address providerAddress)
+        returns (uint64)
     {
         EntropyStructsV2.Request storage req = requestHelper(
             provider,
@@ -402,8 +404,7 @@ abstract contract Entropy is IEntropy, EntropyState {
             uint32(req.gasLimit10k) * TEN_THOUSAND,
             bytes("")
         );
-        sequenceNumber = req.sequenceNumber;
-        providerAddress = provider;
+        return req.sequenceNumber;
     }
 
     // This method validates the provided user's revelation and provider's revelation against the corresponding

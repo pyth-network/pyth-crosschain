@@ -1759,7 +1759,7 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             bytes("")
         );
         vm.prank(user1);
-        (uint64 sequenceNumber, ) = random.requestV2{value: fee}(
+        uint64 sequenceNumber = random.requestV2{value: fee}(
             provider1,
             userRandomNumber,
             gasLimit
@@ -1953,7 +1953,7 @@ contract EntropyConsumer is IEntropyConsumer {
         bytes32 randomNumber
     ) public payable returns (uint64 sequenceNumber) {
         address _provider = IEntropy(entropy).getDefaultProvider();
-        (sequenceNumber, ) = IEntropy(entropy).requestV2{value: msg.value}(
+        sequenceNumber = IEntropy(entropy).requestV2{value: msg.value}(
             _provider,
             randomNumber,
             0
@@ -1965,7 +1965,7 @@ contract EntropyConsumer is IEntropyConsumer {
         uint32 gasLimit
     ) public payable returns (uint64 sequenceNumber) {
         address _provider = IEntropy(entropy).getDefaultProvider();
-        (sequenceNumber, ) = IEntropy(entropy).requestV2{value: msg.value}(
+        sequenceNumber = IEntropy(entropy).requestV2{value: msg.value}(
             _provider,
             randomNumber,
             gasLimit

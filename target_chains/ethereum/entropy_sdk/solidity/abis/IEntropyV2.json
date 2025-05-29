@@ -633,13 +633,8 @@
     "outputs": [
       {
         "internalType": "uint64",
-        "name": "sequenceNumber",
+        "name": "",
         "type": "uint64"
-      },
-      {
-        "internalType": "address",
-        "name": "providerAddress",
-        "type": "address"
       }
     ],
     "stateMutability": "payable",

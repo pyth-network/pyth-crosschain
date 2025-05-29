@@ -87,8 +87,7 @@ interface IEntropyV2 is EntropyEventsV2 {
     /// @param provider The address of the provider to request from
     /// @param userRandomNumber A random number provided by the user for additional entropy
     /// @param gasLimit The gas limit for the callback function. Pass 0 to get a sane default value -- see note below.
-    /// @return sequenceNumber A unique identifier for this request
-    /// @return providerAddress The address of the provider that handled the request
+    /// @return A unique identifier for this request
     /// @dev The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
     /// The `entropyCallback` method on that interface will receive a callback with the returned sequence number and
     /// the generated random number.
@@ -104,7 +103,7 @@ interface IEntropyV2 is EntropyEventsV2 {
         address provider,
         bytes32 userRandomNumber,
         uint32 gasLimit
-    ) external payable returns (uint64 sequenceNumber, address providerAddress);
+    ) external payable returns (uint64);
 
     /// @notice Get information about a specific entropy provider
     /// @param provider The address of the provider to query
