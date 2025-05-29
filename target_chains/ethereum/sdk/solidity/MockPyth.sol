@@ -97,10 +97,7 @@ contract MockPyth is AbstractPyth {
     )
         public
         payable
-        returns (
-            PythStructs.PriceFeed[] memory feeds,
-            uint64[] memory slots
-        )
+        returns (PythStructs.PriceFeed[] memory feeds, uint64[] memory slots)
     {
         uint requiredFee = getUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
@@ -132,7 +129,8 @@ contract MockPyth is AbstractPyth {
                     if (
                         minAllowedPublishTime <= publishTime &&
                         publishTime <= maxAllowedPublishTime &&
-                        (!checkUniqueness || prevPublishTime < minAllowedPublishTime)
+                        (!checkUniqueness ||
+                            prevPublishTime < minAllowedPublishTime)
                     ) {
                         break;
                     } else {

@@ -278,7 +278,9 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         }
     }
 
-    function testParsePriceFeedUpdatesWithConfigIfStorageTrue(uint seed) public {
+    function testParsePriceFeedUpdatesWithConfigIfStorageTrue(
+        uint seed
+    ) public {
         setRandSeed(seed);
         uint numMessages = 1 + (getRandUint() % 10);
         (
@@ -291,9 +293,16 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             uint updateFee
         ) = createBatchedUpdateDataFromMessages(messages);
 
-        (PythStructs.PriceFeed[] memory priceFeeds,) = pyth.parsePriceFeedUpdatesWithConfig{
-            value: updateFee
-        }(updateData, priceIds, 0, MAX_UINT64, false, true, true);
+        (PythStructs.PriceFeed[] memory priceFeeds, ) = pyth
+            .parsePriceFeedUpdatesWithConfig{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64,
+            false,
+            true,
+            true
+        );
 
         for (uint i = 0; i < numMessages; i++) {
             // Validating that returned priceIds are equal
@@ -322,7 +331,9 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         }
     }
 
-    function testParsePriceFeedUpdatesWithConfigIfStorageFalse(uint seed) public {
+    function testParsePriceFeedUpdatesWithConfigIfStorageFalse(
+        uint seed
+    ) public {
         setRandSeed(seed);
         uint numMessages = 1 + (getRandUint() % 10);
         (
@@ -335,9 +346,15 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
             uint updateFee
         ) = createBatchedUpdateDataFromMessages(messages);
 
-        pyth.parsePriceFeedUpdatesWithConfig{
-            value: updateFee
-        }(updateData, priceIds, 0, MAX_UINT64, false, true, false);
+        pyth.parsePriceFeedUpdatesWithConfig{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64,
+            false,
+            true,
+            false
+        );
 
         // validate that stored prices of each priceId are still unpopulated
         for (uint i = 0; i < numMessages; i++) {
@@ -346,7 +363,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         }
     }
 
-    function testParsePriceFeedUpdatesWithSlotsStrictWorks(uint seed) public {
+    function testParsePriceFeedUpdatesWithConfigWorks(uint seed) public {
         setRandSeed(seed);
         uint numMessages = 1 + (getRandUint() % 10);
         (
@@ -505,7 +522,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         );
     }
 
-    function testParsePriceFeedUpdatesWithSlotsStrictRevertsWithExcessUpdateData()
+    function testParsePriceFeedUpdatesWithConfigRevertsWithExcessUpdateData()
         public
     {
         // Create a price update with more price updates than requested price IDs
@@ -541,7 +558,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
         );
     }
 
-    function testParsePriceFeedUpdatesWithSlotsStrictRevertsWithFewerUpdateData()
+    function testParsePriceFeedUpdatesWithConfigRevertsWithFewerUpdateData()
         public
     {
         // Create a price update with fewer price updates than requested price IDs

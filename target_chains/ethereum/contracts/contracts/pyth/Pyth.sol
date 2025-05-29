@@ -333,18 +333,20 @@ abstract contract Pyth is
             uint64[] memory slots
         )
     {
-        if (msg.value < getUpdateFee(updateData)) revert PythErrors.InsufficientFee();
+        if (msg.value < getUpdateFee(updateData))
+            revert PythErrors.InsufficientFee();
 
         // Create the context struct that holds all shared parameters
-        PythInternalStructs.UpdateParseContext memory context = PythInternalStructs.UpdateParseContext({
-            priceIds: priceIds,
-            minAllowedPublishTime: minAllowedPublishTime,
-            maxAllowedPublishTime: maxAllowedPublishTime,
-            checkUniqueness: checkUniqueness,
-            checkUpdateDataIsMinimal: checkUpdateDataIsMinimal,
-            priceFeeds: new PythStructs.PriceFeed[](priceIds.length),
-            slots: new uint64[](priceIds.length)
-        });
+        PythInternalStructs.UpdateParseContext
+            memory context = PythInternalStructs.UpdateParseContext({
+                priceIds: priceIds,
+                minAllowedPublishTime: minAllowedPublishTime,
+                maxAllowedPublishTime: maxAllowedPublishTime,
+                checkUniqueness: checkUniqueness,
+                checkUpdateDataIsMinimal: checkUpdateDataIsMinimal,
+                priceFeeds: new PythStructs.PriceFeed[](priceIds.length),
+                slots: new uint64[](priceIds.length)
+            });
 
         // Track total updates for minimal update data check
         uint64 totalUpdatesAcrossBlobs = 0;
@@ -352,24 +354,27 @@ abstract contract Pyth is
         unchecked {
             // Process each update, passing the context struct
             // Parsed results will be filled in context.priceFeeds and context.slots
-            for (uint i = 0; i < updateData.length; ++i) {
+            for (uint i = 0; i < updateData.length; i++) {
                 totalUpdatesAcrossBlobs += _processSingleUpdateDataBlob(
                     updateData[i],
                     context
                 );
             }
-            
-            for (uint j = 0; j < priceIds.length; ++j) {
+
+            for (uint j = 0; j < priceIds.length; j++) {
                 PythStructs.PriceFeed memory pf = context.priceFeeds[j];
                 if (storeUpdatesIfFresh && pf.id != 0) {
-                    updateLatestPriceIfNecessary(priceIds[j], PythInternalStructs.PriceInfo({
-                        publishTime: uint64(pf.price.publishTime),
-                        expo: pf.price.expo,
-                        price: pf.price.price,
-                        conf: pf.price.conf,
-                        emaPrice: pf.emaPrice.price,
-                        emaConf: pf.emaPrice.conf
-                    }));
+                    updateLatestPriceIfNecessary(
+                        priceIds[j],
+                        PythInternalStructs.PriceInfo({
+                            publishTime: uint64(pf.price.publishTime),
+                            expo: pf.price.expo,
+                            price: pf.price.price,
+                            conf: pf.price.conf,
+                            emaPrice: pf.emaPrice.price,
+                            emaConf: pf.emaPrice.conf
+                        })
+                    );
                 }
             }
         }
@@ -383,7 +388,7 @@ abstract contract Pyth is
         }
 
         // Check all price feeds were found
-        for (uint k = 0; k < priceIds.length; ++k) {
+        for (uint k = 0; k < priceIds.length; k++) {
             if (context.priceFeeds[k].id == 0) {
                 revert PythErrors.PriceFeedNotFoundWithinRange();
             }
@@ -695,7 +700,7 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.5";
+        return "1.4.5-alpha.1";
     }
 
     /// @notice Calculates TWAP from two price points

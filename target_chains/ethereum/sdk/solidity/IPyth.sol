@@ -136,7 +136,7 @@ interface IPyth is IPythEvents {
     /// This method requires the caller to pay a fee in wei; the required fee can be computed by calling
     /// `getUpdateFee` with the length of the `updateData` array.
     ///
-    /// This method will eventually allow the caller to determine whether parsed price feeds should update 
+    /// This method will eventually allow the caller to determine whether parsed price feeds should update
     /// the stored values as well.
     ///
     /// @dev Reverts if the transferred fee is not sufficient or the updateData is invalid or there is
@@ -145,7 +145,7 @@ interface IPyth is IPythEvents {
     /// @param priceIds Array of price ids.
     /// @param minAllowedPublishTime minimum acceptable publishTime for the given `priceIds`.
     /// @param maxAllowedPublishTime maximum acceptable publishTime for the given `priceIds`.
-    /// @param storeUpdatesIfFresh flag for the parse function to 
+    /// @param storeUpdatesIfFresh flag for the parse function to
     /// @return priceFeeds Array of the price feeds corresponding to the given `priceIds` (with the same order).
     function parsePriceFeedUpdatesWithConfig(
         bytes[] calldata updateData,
@@ -155,7 +155,13 @@ interface IPyth is IPythEvents {
         bool checkUniqueness,
         bool checkUpdateDataIsMinimal,
         bool storeUpdatesIfFresh
-    ) external payable returns ( PythStructs.PriceFeed[] memory priceFeeds, uint64[] memory slots);
+    )
+        external
+        payable
+        returns (
+            PythStructs.PriceFeed[] memory priceFeeds,
+            uint64[] memory slots
+        );
 
     /// @notice Parse time-weighted average price (TWAP) from two consecutive price updates for the given `priceIds`.
     ///
