@@ -22,6 +22,7 @@
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",
+    "@pythnetwork/pyth-lazer-state-sdk": "workspace:*",
     "@radix-ui/react-label": "^2.0.0",
     "@radix-ui/react-tooltip": "^1.0.3",
     "@solana/spl-token": "^0.3.7",

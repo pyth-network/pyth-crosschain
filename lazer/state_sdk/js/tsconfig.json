@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "include": ["./src/**/*.js", "./src/**/*.d.ts", "./src/**/*.cjs"],
+  "exclude": ["node_modules", "**/__tests__/*"],
+  "compilerOptions": {
+    "rootDir": "src/",
+    "noEmit": true
+  },
+  "allowJs": true
+}

@@ -58,7 +58,7 @@
         "^build",
         "build:cjs",
         "build:esm",
-        "build:copy-generated"
+        "build:pbts"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -116,32 +116,28 @@
       ],
       "outputs": ["lib/**", "dist/**", ".next/**", "!.next/cache/**"]
     },
-    "build:pbjs": {
+    "build:pbjs-esm": {
       "dependsOn": ["//#install:modules"],
       "inputs": [
-        "../../../../lazer/publisher_sdk/proto/governance_instruction.proto",
-        "../../../../lazer/publisher_sdk/proto/dynamic_value.proto"
+        "../../publisher_sdk/proto/governance_instruction.proto",
+        "../../publisher_sdk/proto/dynamic_value.proto"
       ],
-      "outputs": ["src/programs/lazer/generated/governance_instruction.js"]
+      "outputs": ["src/generated/governance_instruction.js"]
+    },
+    "build:pbjs-cjs": {
+      "dependsOn": ["//#install:modules"],
+      "inputs": [
+        "../../publisher_sdk/proto/governance_instruction.proto",
+        "../../publisher_sdk/proto/dynamic_value.proto"
+      ],
+      "outputs": ["src/generated/governance_instruction.cjs"]
     },
     "build:pbts": {
-      "dependsOn": ["//#install:modules", "build:pbjs"],
+      "dependsOn": ["//#install:modules", "build:pbjs-esm", "build:pbjs-cjs"],
       "inputs": [
-        "../../../../lazer/publisher_sdk/proto/governance_instruction.proto",
-        "../../../../lazer/publisher_sdk/proto/dynamic_value.proto"
+        "src/generated/governance_instruction.js"
       ],
-      "outputs": ["src/programs/lazer/generated/governance_instruction.d.ts"]
-    },
-    "build:copy-generated": {
-      "dependsOn": ["//#install:modules", "build:pbts"],
-      "inputs": [
-        "src/programs/lazer/generated/governance_instruction.d.ts",
-        "src/programs/lazer/generated/governance_instruction.js"
-      ],
-      "outputs": [
-        "lib/programs/lazer/generated/governance_instruction.d.ts",
-        "lib/programs/lazer/generated/governance_instruction.js"
-      ]
+      "outputs": ["src/generated/governance_instruction.d.ts"]
     },
     "fix": {
       "dependsOn": ["fix:lint", "fix:format"],

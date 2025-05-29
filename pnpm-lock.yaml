@@ -1701,6 +1701,9 @@ importers:
       '@pythnetwork/pyth-lazer-sdk':
         specifier: workspace:*
         version: link:../../../../lazer/sdk/js
+      '@pythnetwork/pyth-lazer-state-sdk':
+        specifier: workspace:*
+        version: link:../../../../lazer/state_sdk/js
       '@pythnetwork/pyth-solana-receiver':
         specifier: workspace:*
         version: link:../../../../target_chains/solana/sdk/js/pyth_solana_receiver
@@ -1753,9 +1756,6 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
-      protobufjs-cli:
-        specifier: ^1.1.3
-        version: 1.1.3(protobufjs@7.5.2)
       ts-jest:
         specifier: ^29.0.3
         version: 29.3.1(@babel/core@7.27.1)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.27.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@types/node@22.14.0)(typescript@4.9.5)))(typescript@4.9.5)
@@ -1771,6 +1771,9 @@ importers:
       '@pythnetwork/client':
         specifier: 'catalog:'
         version: 2.22.1(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@pythnetwork/pyth-lazer-state-sdk':
+        specifier: workspace:*
+        version: link:../../../../lazer/state_sdk/js
       '@pythnetwork/solana-utils':
         specifier: workspace:^
         version: link:../../../../target_chains/solana/sdk/js/solana_utils
@@ -1984,6 +1987,12 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.8.2
+
+  lazer/state_sdk/js:
+    devDependencies:
+      protobufjs-cli:
+        specifier: ^1.1.3
+        version: 1.1.3(protobufjs@7.5.2)
 
   packages/component-library:
     dependencies:
@@ -25204,7 +25213,7 @@ snapshots:
     dependencies:
       '@babel/code-frame': 7.26.2
       '@babel/generator': 7.27.0
-      '@babel/parser': 7.27.0
+      '@babel/parser': 7.27.2
       '@babel/template': 7.27.0
       '@babel/types': 7.27.1
       debug: 4.4.0(supports-color@8.1.1)
@@ -25216,7 +25225,7 @@ snapshots:
     dependencies:
       '@babel/code-frame': 7.26.2
       '@babel/generator': 7.27.0
-      '@babel/parser': 7.27.0
+      '@babel/parser': 7.27.2
       '@babel/template': 7.27.0
       '@babel/types': 7.27.1
       debug: 4.4.0(supports-color@5.5.0)
@@ -41673,7 +41682,7 @@ snapshots:
       '@grpc/grpc-js': 1.13.2
       '@grpc/proto-loader': 0.7.13
       docker-modem: 5.0.6
-      protobufjs: 7.4.0
+      protobufjs: 7.5.2
       tar-fs: 2.1.2
       uuid: 10.0.0
     transitivePeerDependencies:

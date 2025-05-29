@@ -1,0 +1,43 @@
+{
+  "name": "@pythnetwork/pyth-lazer-state-sdk",
+  "version": "0.0.1",
+  "description": "Pyth Lazer State SDK",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./governance": {
+      "types": "./src/generated/governance_instruction.d.ts",
+      "default": "./src/generated/governance_instruction.cjs"
+    },
+    "./state": {
+      "types": "./src/generated/state.d.ts",
+      "default": "./src/generated/state.cjs"
+    }
+  },
+  "scripts": {
+    "build:pbjs-esm": "npx pbjs -t static-module -w es6 -o src/generated/governance_instruction.js ../../publisher_sdk/proto/governance_instruction.proto ../../publisher_sdk/proto/dynamic_value.proto",
+    "build:pbjs-cjs": "npx pbjs -t static-module -w commonjs -o src/generated/governance_instruction.cjs ../../publisher_sdk/proto/governance_instruction.proto ../../publisher_sdk/proto/dynamic_value.proto",
+    "build:pbts": "npx pbts -o src/generated/governance_instruction.d.ts src/generated/governance_instruction.js"
+  },
+  "devDependencies": {
+    "protobufjs-cli": "^1.1.3"
+  },
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/state_sdk/js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "lazer/state_sdk/js"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+
+  }
+}
