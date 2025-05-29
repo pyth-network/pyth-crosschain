@@ -7,7 +7,7 @@ import {
   LazerState,
   LazerFeedMetadata,
 } from "../types";
-import { pyth_lazer_transaction } from "./generated/governance_instruction";
+import { pyth_lazer_transaction } from "@pythnetwork/pyth-lazer-state-sdk/governance";
 
 /**
  * Converts LazerFeedMetadata to protobuf IMap format using protobufjs fromObject
