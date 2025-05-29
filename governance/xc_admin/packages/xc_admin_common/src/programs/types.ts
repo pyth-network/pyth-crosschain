@@ -124,7 +124,7 @@ export interface ValidationResult {
  * Lazer feed metadata type
  */
 export type LazerFeedMetadata = {
-  priceFeedId: number;
+  feedId: number;
   name: string;
   symbol: string;
   description: string;
