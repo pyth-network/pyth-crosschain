@@ -2516,6 +2516,9 @@ importers:
       '@pythnetwork/entropy-sdk-solidity':
         specifier: workspace:*
         version: link:../entropy_sdk/solidity
+      '@pythnetwork/pulse-sdk-solidity':
+        specifier: workspace:*
+        version: link:../pulse_sdk/solidity
       '@pythnetwork/pyth-sdk-solidity':
         specifier: workspace:*
         version: link:../sdk/solidity
@@ -2609,6 +2612,22 @@ importers:
         version: 0.6.7(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)
 
   target_chains/ethereum/entropy_sdk/solidity:
+    devDependencies:
+      abi_generator:
+        specifier: workspace:*
+        version: link:../../abi_generator
+      prettier:
+        specifier: 'catalog:'
+        version: 3.5.3
+      prettier-plugin-solidity:
+        specifier: 'catalog:'
+        version: 1.4.2(prettier@3.5.3)
+
+  target_chains/ethereum/pulse_sdk/solidity:
+    dependencies:
+      '@pythnetwork/pyth-sdk-solidity':
+        specifier: workspace:*
+        version: link:../../sdk/solidity
     devDependencies:
       abi_generator:
         specifier: workspace:*

@@ -3,49 +3,67 @@ import type { ClientRequestArgs } from "node:http";
 import type { ClientOptions, ErrorEvent } from "isomorphic-ws";
 import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
+import { dummyLogger } from "ts-log";
 
-const HEARTBEAT_TIMEOUT_DURATION = 10_000;
-const CONNECTION_TIMEOUT = 5000;
+const DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS = 5000; // 5 seconds
+const DEFAULT_MAX_RETRY_DELAY_MS = 1000; // 1 second'
+const DEFAULT_LOG_AFTER_RETRY_COUNT = 10;
+
+export type ResilientWebSocketConfig = {
+  endpoint: string;
+  wsOptions?: ClientOptions | ClientRequestArgs | undefined;
+  logger?: Logger;
+  heartbeatTimeoutDurationMs?: number;
+  maxRetryDelayMs?: number;
+  logAfterRetryCount?: number;
+};
 
 export class ResilientWebSocket {
-  endpoint: string;
+  private endpoint: string;
+  private wsOptions?: ClientOptions | ClientRequestArgs | undefined;
+  private logger: Logger;
+  private heartbeatTimeoutDurationMs: number;
+  private maxRetryDelayMs: number;
+  private logAfterRetryCount: number;
+
   wsClient: undefined | WebSocket;
-  wsUserClosed: boolean;
-  private wsOptions: ClientOptions | ClientRequestArgs | undefined;
+  wsUserClosed = false;
   private wsFailedAttempts: number;
-  private heartbeatTimeout: undefined | NodeJS.Timeout;
-  private logger: undefined | Logger;
-  private connectionPromise: Promise<void> | undefined;
-  private resolveConnection: (() => void) | undefined;
-  private rejectConnection: ((error: Error) => void) | undefined;
+  private heartbeatTimeout?: NodeJS.Timeout | undefined;
+  private retryTimeout?: NodeJS.Timeout | undefined;
   private _isReconnecting = false;
 
-  get isReconnecting(): boolean {
+  isReconnecting(): boolean {
     return this._isReconnecting;
   }
 
-  get isConnected(): boolean {
+  isConnected(): this is this & { wsClient: WebSocket } {
     return this.wsClient?.readyState === WebSocket.OPEN;
+  }
+
+  private shouldLogRetry() {
+    return this.wsFailedAttempts % this.logAfterRetryCount === 0;
   }
 
   onError: (error: ErrorEvent) => void;
   onMessage: (data: WebSocket.Data) => void;
   onReconnect: () => void;
 
-  constructor(
-    endpoint: string,
-    wsOptions?: ClientOptions | ClientRequestArgs,
-    logger?: Logger,
-  ) {
-    this.endpoint = endpoint;
-    this.wsOptions = wsOptions;
-    this.logger = logger;
+  constructor(config: ResilientWebSocketConfig) {
+    this.endpoint = config.endpoint;
+    this.wsOptions = config.wsOptions;
+    this.logger = config.logger ?? dummyLogger;
+    this.heartbeatTimeoutDurationMs =
+      config.heartbeatTimeoutDurationMs ??
+      DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS;
+    this.maxRetryDelayMs = config.maxRetryDelayMs ?? DEFAULT_MAX_RETRY_DELAY_MS;
+    this.logAfterRetryCount =
+      config.logAfterRetryCount ?? DEFAULT_LOG_AFTER_RETRY_COUNT;
 
     this.wsFailedAttempts = 0;
     this.onError = (error: ErrorEvent) => {
-      this.logger?.error(error.error);
+      void error;
     };
-    this.wsUserClosed = true;
     this.onMessage = (data: WebSocket.Data): void => {
       void data;
     };
@@ -54,62 +72,67 @@ export class ResilientWebSocket {
     };
   }
 
-  async send(data: string | Buffer) {
-    this.logger?.info(`Sending message`);
+  send(data: string | Buffer) {
+    this.logger.debug(`Sending message`);
 
-    await this.waitForMaybeReadyWebSocket();
-
-    if (this.wsClient === undefined) {
-      this.logger?.error(
-        "Couldn't connect to the websocket server. Error callback is called.",
-      );
-    } else {
+    if (this.isConnected()) {
       this.wsClient.send(data);
+    } else {
+      this.logger.warn(
+        `WebSocket to ${this.endpoint} is not connected. Cannot send message.`,
+      );
     }
   }
 
-  async startWebSocket(): Promise<void> {
-    if (this.wsClient !== undefined) {
-      // If there's an existing connection attempt, wait for it
-      if (this.connectionPromise) {
-        return this.connectionPromise;
-      }
+  startWebSocket() {
+    if (this.wsUserClosed) {
+      this.logger.error(
+        "Connection was explicitly closed by user. Will not reconnect.",
+      );
       return;
     }
 
-    this.logger?.info(`Creating Web Socket client`);
+    if (this.wsClient !== undefined) {
+      this.logger.info("WebSocket client already started.");
+      return;
+    }
 
-    // Create a new promise for this connection attempt
-    this.connectionPromise = new Promise((resolve, reject) => {
-      this.resolveConnection = resolve;
-      this.rejectConnection = reject;
-    });
+    if (this.wsFailedAttempts == 0) {
+      this.logger.info(`Creating Web Socket client`);
+    }
 
-    // Set a connection timeout
-    const timeoutId = setTimeout(() => {
-      if (this.rejectConnection) {
-        this.rejectConnection(
-          new Error(`Connection timeout after ${String(CONNECTION_TIMEOUT)}ms`),
-        );
-      }
-    }, CONNECTION_TIMEOUT);
+    if (this.retryTimeout !== undefined) {
+      clearTimeout(this.retryTimeout);
+      this.retryTimeout = undefined;
+    }
 
     this.wsClient = new WebSocket(this.endpoint, this.wsOptions);
-    this.wsUserClosed = false;
 
     this.wsClient.addEventListener("open", () => {
+      this.logger.info("WebSocket connection established");
       this.wsFailedAttempts = 0;
-      this.resetHeartbeat();
-      clearTimeout(timeoutId);
       this._isReconnecting = false;
-      this.resolveConnection?.();
+      this.resetHeartbeat();
+      this.onReconnect();
+    });
+
+    this.wsClient.addEventListener("close", (e) => {
+      if (this.wsUserClosed) {
+        this.logger.info(
+          `WebSocket connection to ${this.endpoint} closed by user`,
+        );
+      } else {
+        if (this.shouldLogRetry()) {
+          this.logger.warn(
+            `WebSocket connection to ${this.endpoint} closed unexpectedly: Code: ${e.code.toString()}`,
+          );
+        }
+        this.handleReconnect();
+      }
     });
 
     this.wsClient.addEventListener("error", (event) => {
       this.onError(event);
-      if (this.rejectConnection) {
-        this.rejectConnection(new Error("WebSocket connection failed"));
-      }
     });
 
     this.wsClient.addEventListener("message", (event) => {
@@ -117,22 +140,12 @@ export class ResilientWebSocket {
       this.onMessage(event.data);
     });
 
-    this.wsClient.addEventListener("close", () => {
-      clearTimeout(timeoutId);
-      if (this.rejectConnection) {
-        this.rejectConnection(new Error("WebSocket closed before connecting"));
-      }
-      void this.handleClose();
-    });
-
     if ("on" in this.wsClient) {
       this.wsClient.on("ping", () => {
-        this.logger?.info("Ping received");
+        this.logger.info("Ping received");
         this.resetHeartbeat();
       });
     }
-
-    return this.connectionPromise;
   }
 
   private resetHeartbeat(): void {
@@ -141,91 +154,66 @@ export class ResilientWebSocket {
     }
 
     this.heartbeatTimeout = setTimeout(() => {
-      this.logger?.warn("Connection timed out. Reconnecting...");
+      this.logger.warn("Connection timed out. Reconnecting...");
       this.wsClient?.terminate();
-      void this.restartUnexpectedClosedWebsocket();
-    }, HEARTBEAT_TIMEOUT_DURATION);
+      this.handleReconnect();
+    }, this.heartbeatTimeoutDurationMs);
   }
 
-  private async waitForMaybeReadyWebSocket(): Promise<void> {
-    let waitedTime = 0;
-    while (
-      this.wsClient !== undefined &&
-      this.wsClient.readyState !== this.wsClient.OPEN
-    ) {
-      if (waitedTime > 5000) {
-        this.wsClient.close();
-        return;
-      } else {
-        waitedTime += 10;
-        await sleep(10);
-      }
+  private handleReconnect() {
+    if (this.wsUserClosed) {
+      this.logger.info(
+        "WebSocket connection closed by user, not reconnecting.",
+      );
+      return;
     }
-  }
 
-  private async handleClose(): Promise<void> {
     if (this.heartbeatTimeout !== undefined) {
       clearTimeout(this.heartbeatTimeout);
     }
 
-    if (this.wsUserClosed) {
-      this.logger?.info("The connection has been closed successfully.");
-    } else {
-      this.wsFailedAttempts += 1;
-      this.wsClient = undefined;
-      this.connectionPromise = undefined;
-      this.resolveConnection = undefined;
-      this.rejectConnection = undefined;
+    if (this.retryTimeout !== undefined) {
+      clearTimeout(this.retryTimeout);
+    }
 
-      const waitTime = expoBackoff(this.wsFailedAttempts);
+    this.wsFailedAttempts += 1;
+    this.wsClient = undefined;
 
-      this._isReconnecting = true;
-      this.logger?.error(
+    this._isReconnecting = true;
+
+    if (this.shouldLogRetry()) {
+      this.logger.error(
         "Connection closed unexpectedly or because of timeout. Reconnecting after " +
-          String(waitTime) +
+          String(this.retryDelayMs()) +
           "ms.",
       );
-
-      await sleep(waitTime);
-      await this.restartUnexpectedClosedWebsocket();
-    }
-  }
-
-  private async restartUnexpectedClosedWebsocket(): Promise<void> {
-    if (this.wsUserClosed) {
-      return;
     }
 
-    await this.startWebSocket();
-    await this.waitForMaybeReadyWebSocket();
-
-    if (this.wsClient === undefined) {
-      this.logger?.error(
-        "Couldn't reconnect to websocket. Error callback is called.",
-      );
-      return;
-    }
-
-    this.onReconnect();
+    this.retryTimeout = setTimeout(() => {
+      this.startWebSocket();
+    }, this.retryDelayMs());
   }
 
   closeWebSocket(): void {
     if (this.wsClient !== undefined) {
-      const client = this.wsClient;
+      this.wsClient.close();
       this.wsClient = undefined;
-      this.connectionPromise = undefined;
-      this.resolveConnection = undefined;
-      this.rejectConnection = undefined;
-      client.close();
     }
     this.wsUserClosed = true;
   }
-}
 
-async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function expoBackoff(attempts: number): number {
-  return 2 ** attempts * 100;
+  /**
+   * Calculates the delay in milliseconds for exponential backoff based on the number of failed attempts.
+   *
+   * The delay increases exponentially with each attempt, starting at 20ms for the first attempt,
+   * and is capped at maxRetryDelayMs for attempts greater than or equal to 10.
+   *
+   * @returns The calculated delay in milliseconds before the next retry.
+   */
+  private retryDelayMs(): number {
+    if (this.wsFailedAttempts >= 10) {
+      return this.maxRetryDelayMs;
+    }
+    return Math.min(2 ** this.wsFailedAttempts * 10, this.maxRetryDelayMs);
+  }
 }

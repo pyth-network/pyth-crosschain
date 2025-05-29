@@ -1,9 +1,8 @@
 import WebSocket from "isomorphic-ws";
-import type { Logger } from "ts-log";
-import { dummyLogger } from "ts-log";
 
 import type { ParsedPayload, Request, Response } from "./protocol.js";
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
+import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
 
 export type BinaryResponse = {
@@ -35,13 +34,8 @@ export class PythLazerClient {
    * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream. The connections will round-robin across the provided URLs.
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
-  static async create(
-    urls: string[],
-    token: string,
-    numConnections = 3,
-    logger: Logger = dummyLogger,
-  ): Promise<PythLazerClient> {
-    const wsp = await WebSocketPool.create(urls, token, numConnections, logger);
+  static async create(config: WebSocketPoolConfig): Promise<PythLazerClient> {
+    const wsp = await WebSocketPool.create(config);
     return new PythLazerClient(wsp);
   }
 
@@ -102,19 +96,19 @@ export class PythLazerClient {
     });
   }
 
-  async subscribe(request: Request): Promise<void> {
+  subscribe(request: Request) {
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
-    await this.wsp.addSubscription(request);
+    this.wsp.addSubscription(request);
   }
 
-  async unsubscribe(subscriptionId: number): Promise<void> {
-    await this.wsp.removeSubscription(subscriptionId);
+  unsubscribe(subscriptionId: number) {
+    this.wsp.removeSubscription(subscriptionId);
   }
 
-  async send(request: Request): Promise<void> {
-    await this.wsp.sendRequest(request);
+  send(request: Request) {
+    this.wsp.sendRequest(request);
   }
 
   /**
