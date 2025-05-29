@@ -38,3 +38,4 @@ target_chains/ton/sdk/js
 contract_manager
 lazer/contracts/solana
 lazer/sdk/js
+lazer/state_sdk/js
