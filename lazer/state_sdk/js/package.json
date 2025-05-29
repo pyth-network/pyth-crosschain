@@ -18,10 +18,13 @@
   "scripts": {
     "build:pbjs-esm": "npx pbjs -t static-module -w es6 -o src/generated/governance_instruction.js ../../publisher_sdk/proto/governance_instruction.proto ../../publisher_sdk/proto/dynamic_value.proto",
     "build:pbjs-cjs": "npx pbjs -t static-module -w commonjs -o src/generated/governance_instruction.cjs ../../publisher_sdk/proto/governance_instruction.proto ../../publisher_sdk/proto/dynamic_value.proto",
-    "build:pbts": "npx pbts -o src/generated/governance_instruction.d.ts src/generated/governance_instruction.js"
+    "build:pbts": "npx pbts -o src/generated/governance_instruction.d.ts src/generated/governance_instruction.js",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write ."
   },
   "devDependencies": {
-    "protobufjs-cli": "^1.1.3"
+    "protobufjs-cli": "^1.1.3",
+    "prettier": "catalog:"
   },
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
@@ -37,7 +40,5 @@
     "oracle"
   ],
   "license": "Apache-2.0",
-  "dependencies": {
-
-  }
+  "dependencies": {}
 }

@@ -1929,6 +1929,9 @@ importers:
 
   lazer/state_sdk/js:
     devDependencies:
+      prettier:
+        specifier: 'catalog:'
+        version: 3.5.3
       protobufjs-cli:
         specifier: ^1.1.3
         version: 1.1.3(protobufjs@7.5.2)
