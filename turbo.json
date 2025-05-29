@@ -134,9 +134,7 @@
     },
     "build:pbts": {
       "dependsOn": ["//#install:modules", "build:pbjs-esm", "build:pbjs-cjs"],
-      "inputs": [
-        "src/generated/governance_instruction.js"
-      ],
+      "inputs": ["src/generated/governance_instruction.js"],
       "outputs": ["src/generated/governance_instruction.d.ts"]
     },
     "fix": {
