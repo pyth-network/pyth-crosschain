@@ -96,9 +96,12 @@ export function shouldUpdate(
 ): UpdateCondition {
   const priceId = priceConfig.id;
 
-  // There is no price to update the target with.
+  // There is no price to update the target with. So we should not update it.
   if (sourceLatestPrice === undefined) {
-    return UpdateCondition.YES;
+    logger.info(
+      `${priceConfig.alias} (${priceId}) is not available on the source network. Ignoring it.`,
+    );
+    return UpdateCondition.NO;
   }
 
   // It means that price never existed there. So we should push the latest price feed.
@@ -140,7 +143,7 @@ export function shouldUpdate(
       }%? / early: < ${priceConfig.earlyUpdatePriceDeviation}%?) OR ` +
       `Confidence ratio: ${confidenceRatioPct.toFixed(5)}% (< ${
         priceConfig.confidenceRatio
-      }%? / early: < ${priceConfig.earlyUpdatePriceDeviation}%?)`,
+      }%? / early: < ${priceConfig.earlyUpdateConfidenceRatio}%?)`,
   );
 
   if (

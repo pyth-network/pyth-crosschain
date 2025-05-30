@@ -131,6 +131,7 @@ export class NearPricePusher implements IPricePusher {
   ): Promise<string[]> {
     const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
       encoding: "base64",
+      ignoreInvalidPriceIds: true,
     });
     return response.binary.data;
   }
