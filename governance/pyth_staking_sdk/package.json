@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/staking-sdk",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Pyth staking SDK",
   "type": "module",
   "exports": {
