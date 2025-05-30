@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  Confetti,
+  DotOutline,
+  HardDrives,
+  Info,
+  WarningCircle,
+  XCircle,
+} from "@phosphor-icons/react";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -14,9 +22,44 @@ export const VARIANTS = [
   "success",
 ] as const;
 
+const DEFAULTS: Default = {
+  neutral: {
+    header: "-",
+    icon: <DotOutline />,
+  },
+  info: {
+    header: "Info",
+    icon: <Info />,
+  },
+  warning: {
+    header: "Warning",
+    icon: <WarningCircle />,
+  },
+  error: {
+    header: "Error",
+    icon: <XCircle />,
+  },
+  data: {
+    header: "Data",
+    icon: <HardDrives />,
+  },
+  success: {
+    header: "Success",
+    icon: <Confetti />,
+  },
+};
+
+type Default = Record<
+  (typeof VARIANTS)[number],
+  {
+    header: string;
+    icon: ReactNode;
+  }
+>;
+
 type Props = ComponentProps<"div"> & {
-  icon: ReactNode;
-  header: ReactNode;
+  icon?: ReactNode;
+  header?: ReactNode;
   variant?: (typeof VARIANTS)[number] | undefined;
 };
 
@@ -33,9 +76,9 @@ export const InfoBox = ({
     data-variant={variant}
     {...props}
   >
-    <div className={styles.icon}>{icon}</div>
+    <div className={styles.icon}>{icon ?? DEFAULTS[variant].icon}</div>
     <div className={styles.body}>
-      <h3 className={styles.header}>{header}</h3>
+      <h3 className={styles.header}>{header ?? DEFAULTS[variant].header}</h3>
       <div className={styles.contents}>{children}</div>
     </div>
   </div>
