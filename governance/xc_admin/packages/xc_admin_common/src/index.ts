@@ -15,9 +15,9 @@ export * from "./deterministic_stake_accounts";
 export * from "./price_store";
 export { default as lazerIdl } from "./multisig_transaction/idl/lazer.json";
 
-export {
-  ProgramType,
-  PROGRAM_TYPE_NAMES,
+export { ProgramType, PROGRAM_TYPE_NAMES } from "./programs/types";
+
+export type {
   PriceRawConfig,
   ProductRawConfig,
   MappingRawConfig,
@@ -29,7 +29,13 @@ export {
   ProgramInstructionAccounts,
   InstructionAccountsTypeMap,
   ValidationResult,
+  LazerState,
+  LazerFeed,
+  LazerPublisher,
+  LazerFeedMetadata,
+  LazerConfig,
 } from "./programs/types";
+
 export {
   getProgramAddress,
   isAvailableOnCluster,
