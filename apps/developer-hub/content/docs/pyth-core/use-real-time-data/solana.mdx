@@ -26,10 +26,10 @@ Add this crate to the dependencies section of your `Cargo.toml` file:
 pyth-solana-receiver-sdk ="x.y.z" # get the latest version from https://crates.io/crates/pyth-solana-receiver-sdk
 ```
 
-<Callout variant="warning" icon="⚓">
+<InfoBox variant="warning">
 At the time of writing, [pyth-solana-receiver-sdk](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/pyth_solana_receiver_sdk) is compatible with Anchor `v0.28.0{:js}`, `v0.29.0{:js}`, and `v0.30.1{:js}`.
 If you are on `v0.30.0{:js}` or any other version, please move to `v0.30.1{:js}`.
-</Callout>
+</InfoBox>
 
 ### Typescript SDK
 
@@ -59,11 +59,11 @@ pub struct Sample<'info> {
 }
 ```
 
-<Callout variant="info" icon="ℹ️">
+<InfoBox variant="info">
 Users must ensure that the account passed to their instruction is owned by the Pyth Pull Oracle program.
 Using Anchor with the `Account<'info, PriceUpdateV2>` type will automatically perform this check.
 However, it is the developer's responsibility to perform this check if they are not using Anchor.
-</Callout>
+</InfoBox>
 
 Next, update the instruction logic to read the price from the price update account:
 
@@ -84,7 +84,7 @@ pub fn sample(ctx: Context<Sample>) -> Result<()> {
 }
 ```
 
-<Callout variant="warning" icon="⚠️">
+<InfoBox variant="warning">
   Users must validate the price update for the appropriate **price
   feed** and **timestamp**. `PriceUpdateV2` guarantees that the account contains
   a verified price for _some_ price feed at _some_ point in time. There are
@@ -94,7 +94,7 @@ pub fn sample(ctx: Context<Sample>) -> Result<()> {
 If you choose the price feed account integration (see below), you
 can use an account address check to validate the price feed ID.
 
-</Callout>
+</InfoBox>
 
 ## Write Frontend Code
 
@@ -135,7 +135,7 @@ const solUsdPriceFeedAccount = pythSolanaReceiver
   .toBase58();
 ```
 
-<Callout variant="info" icon="ℹ️">
+<InfoBox variant="info" icon="ℹ️">
   The Price Feed Accounts integration assumes that an off-chain process is
   continuously updating each price feed. The Pyth Data Association sponsors
   price updates for a subset of commonly used price feeds on shard 0. Please see
@@ -148,7 +148,7 @@ Scheduler](/price-feeds/schedule-price-updates/using-scheduler) for more
 information. Running the scheduler can help with reliability and update
 feed/shard pairs that are not part of the default schedule.
 
-</Callout>
+</InfoBox>
 
 ### Price Update Accounts
 
@@ -234,7 +234,7 @@ await pythSolanaReceiver.provider.sendAll(
 
 The [SDK documentation](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver) contains more information about interacting with the Pyth solana receiver contract, including working examples.
 
-<Callout variant="info" icon="ℹ️">
+<InfoBox variant="info">
   Posting and verifying price updates currently requires multiple transactions
   on Solana. If your usecase requires a single transaction, you can reduce the
   verification level of the posted price updates by replacing
@@ -243,7 +243,7 @@ The [SDK documentation](https://github.com/pyth-network/pyth-crosschain/tree/mai
   [VerificationLevel](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_sdk/src/price_update.rs#L20)
   docs to understand more about the data integrity tradeoffs when using
   partially verified price updates.
-</Callout>
+</InfoBox>
 
 ## Time-Weighted Average Price (TWAP)
 

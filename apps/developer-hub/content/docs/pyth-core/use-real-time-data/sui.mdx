@@ -167,7 +167,7 @@ const result = await wallet.signAndExecuteTransactionBlock(txBlock);
 
 By calling the `updatePriceFeeds` function, the `SuiPythClient` adds the necessary transactions to the transaction block to update the price feeds.
 
-<Callout variant="warning" icon="⚠️">
+<InfoBox variant="warning">
 
 Your Sui Move module **should NOT** have a hard-coded call to `pyth::update_single_price_feed.` In other words, a contract should **never call** the Sui Pyth `pyth::update_single_price_feed` entry point. Instead, it should be called directly from client code (e.g., Typescript or Rust).
 
@@ -178,7 +178,7 @@ You can use `SuiPythClient` to build such transactions and handle all the comple
 
 Consult [Fetch Price Updates](../fetch-price-updates) for more information on how to fetch the `pyth_price_update`.
 
-</Callout>
+</InfoBox>
 
 ## Additional Resources
 

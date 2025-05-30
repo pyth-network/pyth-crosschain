@@ -31,9 +31,9 @@ If `weekly_schedule` is also undefined, pyth-agent will default to 24/7 publishi
 
 - `Timezone` - A human-readable tz database TZ identifier of the market’s local timezone, such as `America/New_York`.
   **Full list of identifiers can be found [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)**.
-  <Callout variant="info">
+  <InfoBox variant="info">
     Daylight-saving time is automatically handled by the pyth-agent.
-  </Callout>
+  </InfoBox>
 - `WeeklySchedule` - A list of seven comma-separated `DaySchedule` entries that define the recurring weekly schedule of a product’s market hours.
   Each `DaySchedule` entry corresponds to a day of the week, starting from Monday.
   None of the comma-separated values can be omitted.
@@ -70,9 +70,9 @@ If `weekly_schedule` is also undefined, pyth-agent will default to 24/7 publishi
 
 ## Weekly Schedule Format (Deprecated)
 
-<Callout variant="warning" icon="⚠️">
+<InfoBox variant="warning">
   This field is deprecated in favor of `schedule`.
-</Callout>
+</InfoBox>
 
 This document outlines the rules for specifying contents of a new Pyth product metadata field - `weekly_schedule` . The field specifies the recurring weekly schedule of a product’s market hours. It serves as a reference for `pyth-agent` to stop publishing outside the hours specified in the schedule. Notable use cases include:
 
