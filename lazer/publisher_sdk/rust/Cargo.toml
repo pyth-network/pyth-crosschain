@@ -11,8 +11,8 @@ pyth-lazer-protocol = { version = "0.7.2", path = "../../sdk/rust/protocol" }
 anyhow = "1.0.98"
 protobuf = "3.7.2"
 serde-value = "0.7.0"
+ sha2 = "0.10.9"
 humantime = "2.2.0"
-tracing = "0.1.41"
 
 [build-dependencies]
 fs-err = "3.1.0"
