@@ -2,8 +2,6 @@ name: Publish Pyth JS packages
 
 on:
   push:
-    tags:
-      - pyth-js-v*
 jobs:
   publish-js:
     name: Publish Javascript Packages to NPM
@@ -22,4 +20,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm exec lerna run build --no-private
-      - run: pnpm exec lerna publish from-package --no-private --no-git-tag-version --yes
+      - run: pnpm exec lerna publish from-package --no-private --no-git-tag-version --yes --scope "@pythnetwork/staking-sdk"
