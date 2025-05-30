@@ -13,6 +13,7 @@ import blocksize from "./icons/monochrome/blocksize.svg";
 import elfomo from "./icons/monochrome/elfomo.svg";
 import finazonMonochrome from "./icons/monochrome/finazon.svg";
 import gluex from "./icons/monochrome/gluex.svg";
+import kronosResearchMonochrome from "./icons/monochrome/kronos-research.svg";
 import lotechMonochrome from "./icons/monochrome/lotech.svg";
 import ltpMonochrome from "./icons/monochrome/ltp.svg";
 import nobiMonochrome from "./icons/monochrome/nobi.svg";
@@ -100,6 +101,12 @@ export const knownPublishers = {
     icon: {
       monochrome: nobiMonochrome,
       color: nobiColor,
+    },
+  },
+  A7ULyKhnyCW3yfSNCiHCt7gUEMVwYBeRdgYKV1BRYPVH: {
+    name: "Kronos Research",
+    icon: {
+      monochrome: kronosResearchMonochrome,
     },
   },
 } as const;
