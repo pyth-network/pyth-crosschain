@@ -1,0 +1,21 @@
+---
+title: "Pyth Scheduler: Schedule Off-Chain Price Updates Guide"
+description: >-
+  Pyth’s off-chain scheduler triggers on-chain price updates when predefined
+  conditions are met, maintaining reliable blockchain integration and supporting
+  seamless migration from existing oracles with minimal downtime.
+full: false
+index: false
+---
+
+# Scheduler
+
+The [scheduler](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/price_pusher) (previously known as "price pusher")
+is an off-chain application that regularly pulls price updates on to a blockchain.
+Anyone can run this service to regularly update the on-chain Pyth price based on various conditions, such as a minimum update frequency, or a price change threshold.
+This service can simplify the process of migrating to Pyth from other oracles.
+Protocols that currently depend on regular push updates can simply run this service.
+Please see the README linked above for additional information about this service.
+
+In addition, you can find an in-depth explanation from one of Pyth's contributors, Ali:
+[How to Build with Pyth Data on EVM Chains (with Pusher): Pyth Tutorials](https://youtu.be/yhmo81JOH10)

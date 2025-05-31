@@ -1,0 +1,14 @@
+{
+  "evm": "EVM",
+  "solana": "Solana / SVM",
+  "aptos": "Aptos",
+  "sui": "Sui",
+  "iota": "IOTA",
+  "movement": "Movement",
+  "ton": "TON",
+  "fuel": "Fuel",
+  "cosmwasm": "CosmWasm",
+  "near": "NEAR",
+  "starknet": "Starknet",
+  "pythnet": "Pythnet"
+}

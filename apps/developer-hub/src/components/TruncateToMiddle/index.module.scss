@@ -1,0 +1,32 @@
+@use "@pythnetwork/component-library/theme";
+
+.srOnly {
+  @include theme.sr-only;
+}
+
+.truncateToMiddle {
+  // Defaults may get overridden by style on span
+  --min-chars-start-ch: 0ch;
+  --min-chars-end-ch: 0ch;
+
+  &::before,
+  &::after {
+    display: inline-block;
+    overflow: hidden;
+    white-space: pre;
+    max-width: 50%;
+  }
+
+  &::before {
+    content: attr(data-text-start);
+    text-overflow: ellipsis;
+    min-width: var(--min-chars-start-ch);
+  }
+
+  &::after {
+    content: attr(data-text-end);
+    text-overflow: clip;
+    direction: rtl;
+    min-width: var(--min-chars-end-ch);
+  }
+}

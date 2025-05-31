@@ -1,0 +1,211 @@
+---
+title: Integrating Real-Time Pyth Data into IOTA Contracts
+description: >-
+  This SDK includes code samples and best practices for integrating live Pyth
+  price feeds into IOTA smart contracts.
+full: false
+index: false
+---
+
+# How to Use Real-Time Data in IOTA Contracts
+
+This guide explains how to use real-time Pyth data in IOTA applications.
+
+## Install Pyth SDK
+
+Use the following dependency in your `Move.toml` file to use the latest Pyth IOTA package and its dependencies:
+
+<Tabs groupId="network-type" items={['IOTA Testnet', 'IOTA Mainnet']} persist>
+<Tab>
+
+```sh copy
+[dependencies.Pyth]
+git = "https://github.com/pyth-network/pyth-crosschain.git"
+subdir = "target_chains/sui/contracts"
+rev = "iota-contract-testnet"
+
+[dependencies.Wormhole]
+git = "https://github.com/pyth-network/pyth-crosschain.git"
+subdir = "target_chains/sui/contracts/vendor/wormhole_iota_testnet/wormhole"
+rev = "iota-contract-testnet"
+
+[dependencies.Iota]
+git = "https://github.com/iotaledger/iota.git"
+subdir = "crates/iota-framework/packages/iota-framework"
+rev = "751c23caf24efd071463b9ffd07eabcb15f44f31"
+```
+
+</Tab>
+<Tab>
+
+```sh copy
+[dependencies.Pyth]
+git = "https://github.com/pyth-network/pyth-crosschain.git"
+subdir = "target_chains/sui/contracts"
+rev = "iota-contract-mainnet"
+
+[dependencies.Wormhole]
+git = "https://github.com/pyth-network/pyth-crosschain.git"
+subdir = "target_chains/sui/contracts/vendor/wormhole_iota_mainnet/wormhole"
+rev = "iota-contract-mainnet"
+
+[dependencies.Iota]
+git = "https://github.com/iotaledger/iota.git"
+subdir = "crates/iota-framework/packages/iota-framework"
+rev = "751c23caf24efd071463b9ffd07eabcb15f44f31"
+```
+
+</Tab>
+</Tabs>
+
+Pyth also provides a javascript SDK to construct transaction blocks that update price feeds:
+
+<Tabs items={["IOTA"]}>
+  <Tab>
+    ```sh
+    # NPM
+    npm install --save @pythnetwork/pyth-iota-js
+
+    # Yarn
+    yarn add @pythnetwork/pyth-iota-js
+    ```
+
+  </Tab>
+</Tabs>
+
+## Write Contract Code
+
+The code snippet below provides a general template for what your contract code should look like:
+
+```rust {18} copy
+module pyth_example::main {
+    use iota::clock::Clock;
+    use pyth::price_info;
+    use pyth::price_identifier;
+    use pyth::price;
+    use pyth::pyth;
+    use pyth::price_info::PriceInfoObject;
+
+    const E_INVALID_ID: u64 = 1;
+
+    public fun use_pyth_price(
+        // Other arguments
+        clock: &Clock,
+        price_info_object: &PriceInfoObject,
+    ){
+        let max_age = 60;
+        // Make sure the price is not older than max_age seconds
+        let price_struct = pyth::get_price_no_older_than(price_info_object,clock, max_age);
+
+        // Check the price feed ID
+        let price_info = price_info::get_price_info_from_price_info_object(price_info_object);
+        let price_id = price_identifier::get_bytes(&price_info::get_price_identifier(&price_info));
+
+        // ETH/USD price feed ID
+        // The complete list of feed IDs is available at https://pyth.network/developers/price-feed-ids
+        // Note: IOTA uses the Pyth price feed ID without the `0x` prefix.
+        assert!(price_id!=x"ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", E_INVALID_ID);
+
+        // Extract the price, decimal, and timestamp from the price struct and use them
+        let decimal_i64 = price::get_expo(&price_struct);
+        let price_i64 = price::get_price(&price_struct);
+        let timestamp_sec = price::get_timestamp(&price_struct);
+    }
+}
+```
+
+One can consume the price by calling `pyth::get_price` abovementioned or other utility functions on the `PriceInfoObject` in the Move module
+
+The code snippet below provides an example of how to update the Pyth price feeds:
+
+```ts copy
+import { IotaPriceServiceConnection, IotaPythClient } from "@pythnetwork/pyth-iota-js";
+import { Transaction } from "@iota/iota-sdk/transactions";
+
+// Get the Stable Hermes service URL from https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes
+const connection = new IotaPriceServiceConnection("https://hermes-beta.pyth.network");
+
+const priceIDs = [
+  // You can find the IDs of prices at https://pyth.network/developers/price-feed-ids
+  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", // BTC/USD price ID
+  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price ID
+];
+
+const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIDs);
+
+// It is either injected from the browser (https://www.npmjs.com/package/@iota/dapp-kit)
+// or instantiated in the backend via some private key (https://www.npmjs.com/package/@iota/iota-sdk)
+const wallet: SignerWithProvider = getWallet();
+// Get the state IDs of the Pyth and Wormhole contracts from
+// https://docs.pyth.network/price-feeds/contract-addresses/iota
+const wormholeStateId = "0x8bc490f69520a97ca1b3de864c96aa2265a0cf5d90f5f3f016b2eddf0cf2af2b";
+const pythStateId = "0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1";
+
+const client = new IotaPythClient(wallet.provider, pythStateId, wormholeStateId);
+const tx = new Transaction();
+const priceInfoObjectIds = await client.updatePriceFeeds(tx, priceFeedUpdateData, priceIDs);
+
+tx.moveCall({
+    target: `pyth_example::main::use_pyth_price`,
+    arguments: [
+        ..., // other arguments needed for your contract
+        tx.object(priceInfoObjectIds[0]),
+    ],
+});
+
+const txBlock = {
+    transaction: tx,
+    wallet,
+    options: {
+        showEffects: true,
+        showEvents: true,
+    },
+};
+
+const result = await wallet.signAndExecuteTransaction(txBlock);
+```
+
+By calling the `updatePriceFeeds` function, the `IotaPythClient` adds the necessary transactions to the transaction block to update the price feeds.
+
+<InfoBox variant="warning">
+
+Your IOTA Move module **should NOT** have a hard-coded call to `pyth::update_single_price_feed.` In other words, a contract should **never call** the IOTA Pyth `pyth::update_single_price_feed` entry point. Instead, it should be called directly from client code (e.g., Typescript or Rust).
+
+When IOTA contracts are [upgraded](https://docs.iota.org/developer/iota-101/move-overview/package-upgrades/introduction), the address changes, which makes the old address no longer valid. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to how Pyth upgrades are implemented. (Pyth only allow users to interact with the most recent package version for security reasons).
+
+Therefore, you should build a [IOTA programmable transaction](https://docs.iota.org/developer/iota-101/transactions/ptb/programmable-transaction-blocks-overview) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call a function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
+You can use `IOTAPythClient` to build such transactions and handle all the complexity of updating the price feeds.
+
+Consult [Fetch Price Updates](../fetch-price-updates) for more information on how to fetch the `pyth_price_update`.
+
+</InfoBox>
+
+## Additional Resources
+
+You may find these additional resources helpful for developing your IOTA application.
+
+### CLI Example
+
+[This example](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/iota/cli) shows how to update prices on a IOTA network. It does the following:
+
+1. Fetches update data from Hermes for the given price feeds.
+1. Call the Pyth IOTA contract with a price update.
+
+You can run this example with `npm run example-relay`. A full command that updates prices on the IOTA testnet looks like this:
+
+```bash
+export IOTA_KEY=YOUR_PRIV_KEY;
+npm run example-relay -- --feed-id "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace" \
+--hermes "https://hermes.pyth.network" \
+--full-node "https://api.testnet.iota.cafe" \
+--pyth-state-id "0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1" \
+--wormhole-state-id "0x8bc490f69520a97ca1b3de864c96aa2265a0cf5d90f5f3f016b2eddf0cf2af2b"
+```
+
+### Contract Addresses
+
+Consult [IOTA Contract Addresses](../contract-addresses/iota) to find the package IDs.
+
+### Pyth Price Feed IDs
+
+Consult [Pyth Price Feed IDs](https://pyth.network/developers/price-feed-ids) to find Pyth price feed IDs for various assets.

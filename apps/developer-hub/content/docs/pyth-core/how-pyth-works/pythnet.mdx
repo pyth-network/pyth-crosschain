@@ -1,0 +1,28 @@
+---
+title: "Pythnet: Real-Time Off-Chain Price Feeds on Solana"
+description: >-
+  Pythnet on Solana delivers secure, real-time price data across multiple
+  blockchains with on-chain verification for smart contracts.
+full: false
+index: false
+---
+
+# Pythnet
+
+Pythnet is an application-specific blockchain operated by Pyth's data providers.
+This blockchain is a computation substrate to securely combine the data provider's prices into a single aggregate price for each Pyth price feed.
+Pythnet forms the core of Pyth's off-chain price feeds that serve all blockchains.
+
+Pythnet is powered by Solana technology: it runs the same validator software but is a Pyth-specific chain that is independent of Solana's mainnet.
+The Pyth Data Association DAO enables each data provider to operate one validator by delegating them the necessary stake.
+
+The purpose of Pythnet is to provide a secure and reliable computing substrate for Pyth's price aggregation.
+Recall that Pyth's data providers submit their own price measurements for each product.
+The Pyth protocol needs to combine these prices to produce a single aggregate price.
+This computation needs to be performed securely -- prices must be combined correctly -- and reliably -- so that accurate and up-to-date price information is always available for applications.
+Pythnet solves both of these problems.
+First, anyone can validate that the price computation is done correctly by replaying the network's transaction log.
+The Wormhole guardians perform this validation when constructing the Pyth price update messages that are delivered to other blockchains.
+Consequently, as long as 2/3+ of the Wormhole guardians are honest, users of Pyth prices can trust that they were computed accurately.
+Second, the Pythnet blockchain has built-in redundancy to ensure high availability: it is operational as long as 2/3+ of Pythnet validators are online.
+Furthermore, Pythnet remains available even when target chain transaction bandwidth is highly contested, such as during periods of high market volatility.

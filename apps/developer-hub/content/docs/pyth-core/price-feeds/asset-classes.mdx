@@ -1,0 +1,30 @@
+---
+title: Understanding Asset Classes in Pyth Price Feeds
+description: >-
+  Real-time Pyth price feeds for crypto, equities, FX, metals, commodities, and
+  energy. Integrate these feeds into trading and analytics systems to support
+  data-driven decision-making.
+full: false
+index: false
+---
+
+# Asset Classes
+
+[Pyth price feeds](https://www.pyth.network/price-feeds) provide market data for the following asset classes:
+
+| Asset Class | Subclass         | Definition                                                                                                                                                                                                                       |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Crypto      | Spot Prices      | Real-time prices for cryptocurrencies and digital assets                                                                                                                                                                         |
+|             | Redemption Rates | Real-time swap rates derived from smart contracts for the redemption of liquid staking and liquid restaking tokens (LSTs and LRTs), liquidity provider tokens (LP Tokens) and interest-bearing assets, including tokenised notes |
+|             | Indices          | Real-time prices that measure the performance of baskets of cryptocurrencies and digital assets                                                                                                                                  |
+| US Equities | Spot Prices      | Real-time prices for US equities                                                                                                                                                                                                 |
+| FX          | Spot Prices      | Real-time prices for fiat currency pairs                                                                                                                                                                                         |
+| Metals      | Spot Prices      | Real-time prices for precious metals                                                                                                                                                                                             |
+| Rates       | Future Prices    | Real-time prices for fixed income products, including bond futures                                                                                                                                                               |
+| Commodities | Futures Prices   | Real-time prices for commodity futures                                                                                                                                                                                           |
+| Energy      | Spot Prices      | Real-time prices for a non-expiring Contract for Difference (CFD) that tracks the price of the asset                                                                                                                             |
+|             | Futures Prices   | Real-time prices for energy futures contract                                                                                                                                                                                     |
+
+**NOTE:** When integrating with **Energy Futures Price Feeds**, it is not recommended to rely solely on the first month expiry price feed as there is often lower liquidity towards expiration.
+Best practice is to combine, 1-month, 2-month and 3-month feeds or use the weighted average which is represented by spot price(USOILSPOT or UKOILSPOT).
+Please refer to the [Best Practices](../best-practices.mdx#pricing-futures-based-assets) page for more information.

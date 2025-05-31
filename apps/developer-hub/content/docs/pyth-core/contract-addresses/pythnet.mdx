@@ -1,0 +1,34 @@
+---
+title: Pythnet & Testnet Contract Addresses for Cross-Chain Price Feeds
+description: >-
+  Easily access Pythnet and testnet contract addresses for blockchain price
+  feeds. View mainnet/testnet details, reference links, and comprehensive
+  program information.
+full: false
+index: false
+---
+
+# Price Feed Program Addresses on Pythnet
+
+<InfoBox variant="warning">
+  **Important:** The addresses on this page are for the Pythnet network itself,
+  which is used to construct and deliver Pyth prices to other blockchains. If
+  you are building an application on EVM, Solana, SVM, or another chain, you
+  should use the Pyth program deployed on your target chain instead. Please
+  refer to the [Contract Addresses](/price-feeds/contract-addresses) page and
+  select your specific blockchain environment.
+</InfoBox>
+
+The following table contains the addresses of the programs deployed on Pythnet that operate together to construct Pyth prices and deliver them to other blockchains:
+
+| Network  | Program                                                                                                 | Program address                                |
+| -------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Pythnet  | [Oracle Program](https://github.com/pyth-network/pyth-client/tree/main)                                 | `FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH` |
+| Pythnet  | [Remote Executor](https://github.com/pyth-network/pyth-crosschain/tree/main/governance/remote_executor) | `exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq`  |
+| Pythnet  | [Message Buffer](https://github.com/pyth-network/pyth-crosschain/tree/main/pythnet/message_buffer)      | `7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM` |
+| Pythtest | [Oracle Program](https://github.com/pyth-network/pyth-client/tree/main)                                 | `gSbePebfvPy7tRqimPoVecS2UsBvYv46ynrzWocc92s`  |
+| Pythtest | [Oracle Program](https://github.com/pyth-network/pyth-client/tree/main)                                 | `8tfDNiaEyrV6Q1U4DEXrEigs9DoDtkugzFbybENEbCDz` |
+| Pythtest | [Remote Executor](https://github.com/pyth-network/pyth-crosschain/tree/main/governance/remote_executor) | `exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq`  |
+| Pythtest | [Message Buffer](https://github.com/pyth-network/pyth-crosschain/tree/main/pythnet/message_buffer)      | `7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM` |
+
+Note that Pythnet above is the mainnet network for Pyth, and Pythtest is a testnet for development purposes.

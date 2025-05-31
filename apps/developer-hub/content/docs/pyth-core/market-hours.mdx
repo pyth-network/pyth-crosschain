@@ -1,0 +1,28 @@
+---
+title: "Pyth Market Hours by Asset Class: Trading Schedules & Holidays"
+description: >-
+  Pyth provides market hours data for cryptocurrencies, stocks, forex, metals,
+  interest rates, and commodities. It includes regular schedules, holiday
+  closures, and exceptions.
+full: false
+index: false
+---
+
+# Market Hours
+
+Pyth price feeds follow the [traditional market hours](https://www.cmegroup.com/trading-hours.html) of each asset classes and will be available at the following hours:
+| Asset Class | Opening Hours | Exceptions |
+| ----------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Crypto | 24/7 | No market close |
+| US Equities | Every weekday from 9.30AM ET to 4PM ET | Markets are closed on weekends, and follow [NYSE Holidays & Trading Hours](https://www.nyse.com/markets/hours-calendars) |
+| EU Equities | Paris, Amsterdam, Ireland: Every weekday from 9AM CET to 5.30PM CET | Markets are closed on weekends, and follow [Euronext Holidays & Trading Hours](https://live.euronext.com/en/resources/trading-hours-holidays) |
+| UK Equities | Every weekday from 8AM UK time to 4.30PM UK time | Markets are closed on weekends, and follow [LSE Holidays & Trading Hours](https://www.londonstockexchange.com/equities-trading/business-days) |
+| FX | From Sunday 5PM ET to Friday 5PM ET | Trading continues during most US holidays |
+| Emerging Markets FX | From Sunday 6PM ET to Friday 5PM ET. For USDBRL, USDCOP, USDCLP and USDPEN, please refer to the [EM FX Market Hours Guide](https://pyth-network.notion.site/EM-FX-Market-Hours-Guide-1de2eecaaac980eea5eddf8f34398309) | Spot EM FX liquidity can be significantly limited at the start of the trading week, outside local market trading hours, and during local holidays, which can lead to wider confidence intervals. Pyth EM FX currencies: INR, IDR, PHP, KRW, TWD, CNH, TRY, ZAR, MXN, BRL, COP, CLP, PEN |
+| Metals | From Sunday 6PM ET to Friday 5PM ET | Daily maintenance window applies from 5PM ET to 6PM ET, Monday to Thursday. Spot gold and silver trading also follow [CME holiday closures](https://www.cmegroup.com/tools-information/holiday-calendar.html)|
+| Rates | Every weekday from 8AM ET to 5PM ET | Markets are closed on weekends, and follow [NYSE Holidays & Trading Hours](https://www.nyse.com/markets/hours-calendars) |
+| Reference Rates | 24/7 | Follow [Federal Reserve Bank of New York Holidays](https://www.newyorkfed.org/aboutthefed/holiday_schedule.html) |
+| Commodities | WTI: From Sunday 6PM ET to Friday 5PM ET | Daily maintenance window applies from 5PM ET to 6PM ET and follow [CME Holidays](https://www.cmegroup.com/tools-information/holiday-calendar.html)|
+| Commodities | BRENT: From Sunday 6PM ET to Friday 6PM ET | Daily maintenance window applies from 6PM ET to 8PM ET, Monday to Thursday and follow [ICE Holidays](https://www.ice.com/publicdocs/Trading_Schedule.pdf)|
+| Commodities | UKOILSPOT CFD: From Monday 1AM GMT to Friday 9:45PM GMT | Daily maintenance window applies from 10PM GMT to 1AM GMT, Monday to Friday and follow [FXCM Holidays](https://www.fxcm.com/markets/help/cfd-trading-what-are-the-cfd-holiday-hours/)|
+| Commodities | USOILSPOT CFD: From Sunday 11PM GMT to Friday 9:45PM GMT | Daily maintenance window applies from 10PM GMT to 11PM GMT, Monday to Friday and follow [FXCM Holidays](https://www.fxcm.com/markets/help/cfd-trading-what-are-the-cfd-holiday-hours/)|

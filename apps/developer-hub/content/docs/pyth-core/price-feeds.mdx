@@ -1,0 +1,40 @@
+---
+title: "Pyth Price Feeds: Real-Time Data & Asset Identifiers"
+description: >-
+  Get real-time Pyth Price Feeds with unique IDs for every blockchain asset
+  class. Learn to fetch, identify, and integrate them effortlessly.
+full: false
+index: false
+---
+
+# Price Feeds
+
+Pyth Price Feeds provide real-time, first-party, market data for a wide range of assets.
+
+Every price feed has a **unique ID**, representing the specific pair of assets being priced.
+These specific pairs are part of an asset class, which is a broader category of assets.
+
+Anyone can fetch available price feeds and their IDs via [Hermes API](https://hermes.pyth.network/docs/#/rest/price_feeds_metadata).
+
+## Asset Classes
+
+Every price feed belongs to an asset class. These asset classes distinguish between different types of assets, such as crypto, US equities, and metals.
+
+Refer to the [Asset Classes](./price-feeds/asset-classes.md) page to learn more about the existing asset classes.
+
+## Price Feed IDs
+
+Price Feed IDs are unique identifiers for each specific pair of assets being priced (e.g. BTC/USD).
+Every price update is tagged with the corresponding price feed ID.
+
+Applications need to store the IDs of the feeds they wish to read.
+However, the IDs may be represented in different formats (e.g. hex or base58) depending on the blockchain.
+Price feeds also have different IDs in the Stable and Beta channels.
+
+Refer to the [Price Feed ID reference catalog](https://www.pyth.network/developers/price-feed-ids) to identify a feed's ID in your chosen ecosystem.
+
+### Solana Price Feed Accounts
+
+On Solana, each feed additionally has a collection of **price feed accounts** containing the feed's data.
+The addresses of these accounts are programmatically derived from the feed id and a shard id, which is simply a 16-bit number.
+See [How to Use Real-Time Data on Solana](./use-real-time-data/solana#price-feed-accounts) for more information on price feed accounts.

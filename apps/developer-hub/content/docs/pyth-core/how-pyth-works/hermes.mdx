@@ -1,0 +1,41 @@
+---
+title: "Hermes: Real-Time Price Data Service for Pyth Network"
+description: >-
+  Provides real-time Pythnet and Wormhole price data via REST APIs and
+  server-sent events (SSE) for on-chain verification.
+full: false
+index: false
+---
+
+# Hermes
+
+[Hermes][hermes-repo] is a web service that listens to the Pythnet and the Wormhole Network for Pyth price updates, and
+serves them via a convenient web API. It provides Pyth's latest price update data format that are more cost-effective
+to verify and use on-chain.
+
+Hermes allows users to easily query for recent price updates via a REST API, or subscribe to a server-side events stream
+for streaming updates. The Pyth Network's Javascript SDKs connect to an instance of Hermes to fetch price updates.
+
+[hermes-repo]: https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes
+
+## Documentation
+
+The [Hermes API Documentation](https://hermes.pyth.network/docs) provides a comprehensive explanation of Hermes API for
+user interaction. You can use [the price service client library in
+JS](https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/client/js) to interact with Hermes.
+
+Here's an example of retrieving the latest update of the ETH/USD price feed using `curl`.
+
+```bash
+# Example API call
+$ curl https://hermes.pyth.network/api/latest_price_feeds?ids[]=0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
+
+# Example Response
+[{"id":"ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace","price":{"price":"184136023127","conf":"177166324","expo":-8,"publish_time":1692110601},"ema_price":{"price":"184100641000","conf":"178704085","expo":-8,"publish_time":1692110601}}]
+```
+
+## Accessing Hermes
+
+Hermes is a permissionless service that can either be self-hosted or accessed through a third-party provider (similar to a blockchain RPC).
+The Pyth Data Association also operates a public instance for development purposes.
+Please see [Hermes API Instances and Providers](../api-instances-and-providers/hermes) for more details.

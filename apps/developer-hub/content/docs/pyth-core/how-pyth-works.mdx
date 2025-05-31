@@ -1,0 +1,28 @@
+---
+title: "How Pyth Works: On-Chain Price Aggregation & Cross-Chain Data Transfer"
+description: >-
+  Pyth Oracle provides real-time price data via cross-chain feeds. Publishers
+  submit signed price updates which are aggregated on-chain to ensure accuracy.
+  Developers can integrate these feeds directly into smart contracts for
+  blockchain applications.
+full: false
+index: false
+---
+
+# Design Overview
+
+Pyth is a protocol that allows market participants to publish pricing information on-chain for others to use. The protocol is an interaction between three parties:
+
+1. _Publishers_ submit pricing information to Pyth's oracle program. Pyth has multiple data publishers for every product to improve the accuracy and robustness of the system.
+2. Pyth's _oracle program_ combines publishers' data to produce a single aggregate price and confidence interval.
+3. _Consumers_ read the price information produced by the oracle program.
+
+Pyth's oracle program runs on [Pythnet](how-pyth-works/pythnet.md).
+The prices constructed on Pythnet are transferred [cross-chain](how-pyth-works/cross-chain.md) to reach consumers on these blockchains.
+
+The critical component of the system is the [oracle program](how-pyth-works/oracle-program.md) that combines the data from each individual publisher.
+This program maintains a number of different [SVM accounts](pythnet-reference/account-structure.md) that list the products on Pyth and their current price data.
+Publishers publish their price and confidence by interacting with the oracle program on every slot.
+The program stores this information in its accounts.
+The first price update in a slot additionally triggers [price aggregation](how-pyth-works/price-aggregation.md), which combines the price data from the previous slot into a single aggregate price and confidence interval.
+This aggregate price is written to these SVM accounts of Pythnet where it is available for transmission to other blockchains.
