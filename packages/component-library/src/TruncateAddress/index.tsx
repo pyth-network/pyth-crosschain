@@ -46,18 +46,19 @@ const TruncateAddressDynamic = ({
   );
 };
 
+const truncate = (text: string, minCharsStart: number, minCharsEnd: number) => {
+  const start = minCharsStart <= 0 ? "" : text.slice(0, minCharsStart);
+  const end = minCharsEnd <= 0 ? "" : text.slice(minCharsStart * -1);
+
+  return `${start}…${end}`;
+}
+
 const TruncateAddressFixed = ({
   text,
   minCharsStart = 6,
   minCharsEnd = 6,
 }: Props) => {
-  const truncatedValue = useMemo(
-    () =>
-      text.length <= minCharsStart + minCharsEnd
-        ? text
-        : `${text.slice(0, minCharsStart)}…${text.slice(minCharsEnd * -1)}`,
-    [text, minCharsStart, minCharsEnd],
-  );
+  const truncatedValue = useMemo(() => truncate(text, minCharsStart, minCharsEnd), [text, minCharsStart, minCharsEnd])
 
   return truncatedValue === text ? (
     <span>{text}</span>
