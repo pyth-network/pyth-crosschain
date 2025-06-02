@@ -1,0 +1,12 @@
+[package]
+name = "pyth-stylus"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [
+    "contracts/wormhole",
+    "contracts/pyth",
+]
+
+[dependencies]
