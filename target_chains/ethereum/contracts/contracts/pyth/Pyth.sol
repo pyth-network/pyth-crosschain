@@ -317,34 +317,36 @@ abstract contract Pyth is
         return merkleData.numUpdates;
     }
 
-    function parsePriceFeedUpdatesInternal(
+    function parsePriceFeedUpdatesWithConfig(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
         uint64 minAllowedPublishTime,
         uint64 maxAllowedPublishTime,
         bool checkUniqueness,
-        bool checkUpdateDataIsMinimal
+        bool checkUpdateDataIsMinimal,
+        bool storeUpdatesIfFresh
     )
-        internal
+        public
+        payable
         returns (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
         )
     {
-        {
-            uint requiredFee = getUpdateFee(updateData);
-            if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
-        }
+        if (msg.value < getUpdateFee(updateData))
+            revert PythErrors.InsufficientFee();
 
         // Create the context struct that holds all shared parameters
-        PythInternalStructs.UpdateParseContext memory context;
-        context.priceIds = priceIds;
-        context.minAllowedPublishTime = minAllowedPublishTime;
-        context.maxAllowedPublishTime = maxAllowedPublishTime;
-        context.checkUniqueness = checkUniqueness;
-        context.checkUpdateDataIsMinimal = checkUpdateDataIsMinimal;
-        context.priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
-        context.slots = new uint64[](priceIds.length);
+        PythInternalStructs.UpdateParseContext
+            memory context = PythInternalStructs.UpdateParseContext({
+                priceIds: priceIds,
+                minAllowedPublishTime: minAllowedPublishTime,
+                maxAllowedPublishTime: maxAllowedPublishTime,
+                checkUniqueness: checkUniqueness,
+                checkUpdateDataIsMinimal: checkUpdateDataIsMinimal,
+                priceFeeds: new PythStructs.PriceFeed[](priceIds.length),
+                slots: new uint64[](priceIds.length)
+            });
 
         // Track total updates for minimal update data check
         uint64 totalUpdatesAcrossBlobs = 0;
@@ -357,6 +359,23 @@ abstract contract Pyth is
                     updateData[i],
                     context
                 );
+            }
+
+            for (uint j = 0; j < priceIds.length; j++) {
+                PythStructs.PriceFeed memory pf = context.priceFeeds[j];
+                if (storeUpdatesIfFresh && pf.id != 0) {
+                    updateLatestPriceIfNecessary(
+                        priceIds[j],
+                        PythInternalStructs.PriceInfo({
+                            publishTime: uint64(pf.price.publishTime),
+                            expo: pf.price.expo,
+                            price: pf.price.price,
+                            conf: pf.price.conf,
+                            emaPrice: pf.emaPrice.price,
+                            emaConf: pf.emaPrice.conf
+                        })
+                    );
+                }
             }
         }
 
@@ -378,6 +397,7 @@ abstract contract Pyth is
         // Return results
         return (context.priceFeeds, context.slots);
     }
+
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
@@ -389,39 +409,15 @@ abstract contract Pyth is
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
-        (priceFeeds, ) = parsePriceFeedUpdatesInternal(
+        (priceFeeds, ) = parsePriceFeedUpdatesWithConfig(
             updateData,
             priceIds,
             minPublishTime,
             maxPublishTime,
             false,
+            false,
             false
         );
-    }
-
-    function parsePriceFeedUpdatesWithSlotsStrict(
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
-    )
-        external
-        payable
-        override
-        returns (
-            PythStructs.PriceFeed[] memory priceFeeds,
-            uint64[] memory slots
-        )
-    {
-        return
-            parsePriceFeedUpdatesInternal(
-                updateData,
-                priceIds,
-                minPublishTime,
-                maxPublishTime,
-                false,
-                true
-            );
     }
 
     function extractTwapPriceInfos(
@@ -624,12 +620,13 @@ abstract contract Pyth is
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
-        (priceFeeds, ) = parsePriceFeedUpdatesInternal(
+        (priceFeeds, ) = parsePriceFeedUpdatesWithConfig(
             updateData,
             priceIds,
             minPublishTime,
             maxPublishTime,
             true,
+            false,
             false
         );
     }
@@ -703,7 +700,7 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.5";
+        return "1.4.5-alpha.1";
     }
 
     /// @notice Calculates TWAP from two price points
