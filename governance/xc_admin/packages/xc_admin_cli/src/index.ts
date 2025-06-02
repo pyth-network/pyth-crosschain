@@ -419,13 +419,16 @@ multisigCommand(
           ),
         ),
       )
-    ).map((stakeAccounts, index) => {
-      if (stakeAccounts.length === 0) {
-        console.log(`Skipping vote account ${voteAccounts[index].toBase58()} - no stake accounts found`);
-      }
-      return stakeAccounts;
-    })
-    .flat();
+    )
+      .map((stakeAccounts, index) => {
+        if (stakeAccounts.length === 0) {
+          console.log(
+            `Skipping vote account ${voteAccounts[index].toBase58()} - no stake accounts found`,
+          );
+        }
+        return stakeAccounts;
+      })
+      .flat();
 
     const instructions = stakeAccounts.flatMap(
       (stakeAccount) =>
