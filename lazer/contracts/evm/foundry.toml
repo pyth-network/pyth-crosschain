@@ -5,3 +5,4 @@ libs = ["lib"]
 
 optimizer = true
 optimizer_runs = 100000
+solc_version = "0.8.23"
