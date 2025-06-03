@@ -1,0 +1,115 @@
+@use "../theme";
+
+.tabContent {
+  padding: theme.spacing(8);
+}
+
+.heading {
+  margin-bottom: theme.spacing(4);
+}
+
+.list {
+  margin-top: theme.spacing(4);
+  padding-left: theme.spacing(6);
+}
+
+// Custom styling story
+.homePanel {
+  padding: theme.spacing(8);
+  background-color: #f0f9ff;
+  border-radius: theme.border-radius("lg");
+
+  .heading {
+    color: #0369a1;
+  }
+}
+
+.aboutPanel {
+  padding: theme.spacing(8);
+  background-color: #f0fdf4;
+  border-radius: theme.border-radius("lg");
+
+  .heading {
+    color: #166534;
+  }
+}
+
+.contactPanel {
+  padding: theme.spacing(8);
+  background-color: #fef3c7;
+  border-radius: theme.border-radius("lg");
+
+  .heading {
+    color: #92400e;
+  }
+}
+
+// Complex content story
+.section {
+  margin-top: theme.spacing(4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: theme.spacing(4);
+  margin-top: theme.spacing(4);
+}
+
+.widget {
+  padding: theme.spacing(4);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("base");
+}
+
+.chartPlaceholder {
+  padding: theme.spacing(4);
+  background-color: theme.color("background", "secondary");
+  border-radius: theme.border-radius("base");
+  margin-bottom: theme.spacing(4);
+}
+
+.chart {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: theme.color("border");
+}
+
+// Settings form
+.form {
+  margin-top: theme.spacing(4);
+}
+
+.formField {
+  margin-bottom: theme.spacing(4);
+}
+
+.label {
+  display: block;
+  margin-bottom: theme.spacing(2);
+}
+
+.input,
+.select {
+  padding: theme.spacing(2);
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("base");
+}
+
+.button {
+  padding: theme.spacing(2) theme.spacing(4);
+  margin-top: theme.spacing(4);
+  background-color: theme.color("button", "primary", "background", "normal");
+  color: theme.color("button", "primary", "foreground");
+  border: none;
+  border-radius: theme.border-radius("base");
+  cursor: pointer;
+
+  &:hover {
+    background-color: theme.color("button", "primary", "background", "hover");
+  }
+}
