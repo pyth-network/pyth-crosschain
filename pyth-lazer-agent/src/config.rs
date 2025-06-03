@@ -4,7 +4,6 @@ use std::time::Duration;
 
 use config::{Environment, File};
 use derivative::Derivative;
-use pyth_lazer_protocol::router::PublisherId;
 use serde::Deserialize;
 use url::Url;
 
@@ -12,9 +11,10 @@ use url::Url;
 #[derivative(Debug)]
 pub struct Config {
     pub listen_address: SocketAddr,
-    pub publisher_id: PublisherId,
     pub relayer_urls: Vec<Url>,
+    #[derivative(Debug = "ignore")]
     pub authorization_token: String,
+    #[derivative(Debug = "ignore")]
     pub publish_keypair_path: PathBuf,
     #[serde(with = "humantime_serde", default = "default_publish_interval")]
     pub publish_interval_duration: Duration,

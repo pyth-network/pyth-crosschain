@@ -2,11 +2,10 @@ use std::time::Duration;
 
 use anyhow::Error;
 use futures::{AsyncRead, AsyncWrite};
-use soketto::{Sender, data::ByteSlice125};
+use soketto::Sender;
 use tokio::time::timeout;
 use tracing::{debug, warn};
 
-const SEND_PING_TIMEOUT: Duration = Duration::from_millis(10);
 const SEND_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub fn handle_websocket_error(err: Error) {
@@ -28,20 +27,6 @@ pub fn handle_websocket_error(err: Error) {
         }
     } else {
         warn!("error while handling connection: {:?}", err.to_string());
-    }
-}
-
-pub async fn send_ping<T: AsyncRead + AsyncWrite + Unpin>(sender: &mut Sender<T>) {
-    let ping_result = timeout(SEND_PING_TIMEOUT, async {
-        let payload = ByteSlice125::try_from(&[][..])?;
-        sender.send_ping(payload).await?;
-        sender.flush().await?;
-        anyhow::Ok(())
-    })
-    .await;
-
-    if let Err(e) = ping_result {
-        debug!("Failed to ping: {:?}", e);
     }
 }
 

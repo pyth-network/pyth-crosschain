@@ -34,12 +34,9 @@ pub async fn run(config: Config, lazer_publisher: LazerPublisher) -> Result<()> 
 
     loop {
         let stream_addr = listener.accept().await;
-        let config_clone = config.clone();
         let lazer_publisher_clone = lazer_publisher.clone();
         tokio::spawn(async {
-            if let Err(err) =
-                try_handle_connection(stream_addr, config_clone, lazer_publisher_clone).await
-            {
+            if let Err(err) = try_handle_connection(stream_addr, lazer_publisher_clone).await {
                 warn!("error while handling connection: {err:?}");
             }
         });
@@ -48,7 +45,6 @@ pub async fn run(config: Config, lazer_publisher: LazerPublisher) -> Result<()> 
 
 async fn try_handle_connection(
     stream_addr: io::Result<(TcpStream, SocketAddr)>,
-    config: Config,
     lazer_publisher: LazerPublisher,
 ) -> Result<()> {
     let (stream, remote_addr) = stream_addr?;
@@ -59,12 +55,7 @@ async fn try_handle_connection(
             TokioIo::new(stream),
             service_fn(move |r| {
                 let request = RelayerRequest(r);
-                request_handler(
-                    request,
-                    remote_addr,
-                    config.clone(),
-                    lazer_publisher.clone(),
-                )
+                request_handler(request, remote_addr, lazer_publisher.clone())
             }),
         )
         .with_upgrades()
@@ -76,7 +67,6 @@ async fn try_handle_connection(
 async fn request_handler(
     request: RelayerRequest,
     remote_addr: SocketAddr,
-    config: Config,
     lazer_publisher: LazerPublisher,
 ) -> Result<Response<FullBody>, BoxedError> {
     let path = request.0.uri().path();
@@ -107,7 +97,6 @@ async fn request_handler(
                 Request::PublisherV1 | Request::PublisherV2 => {
                     let publisher_connection_context = PublisherConnectionContext {
                         request_type,
-                        publisher_id: config.publisher_id,
                         _remote_addr: remote_addr,
                     };
                     tokio::spawn(handle_publisher(

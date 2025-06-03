@@ -10,6 +10,7 @@ mod config;
 mod http_server;
 mod lazer_publisher;
 mod publisher_handle;
+mod relayer_session;
 mod websocket_utils;
 
 #[derive(Parser)]

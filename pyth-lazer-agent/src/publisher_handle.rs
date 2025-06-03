@@ -1,46 +1,34 @@
-use std::{net::SocketAddr, time::Duration};
+use std::net::SocketAddr;
 
 use anyhow::bail;
 use futures_util::io::{BufReader, BufWriter};
 use hyper_util::rt::TokioIo;
 use protobuf::MessageField;
 use protobuf::well_known_types::timestamp::Timestamp;
-use pyth_lazer_protocol::{
-    publisher::{
-        PriceFeedDataV1, PriceFeedDataV2, ServerResponse, UpdateDeserializationErrorResponse,
-    },
-    router::PublisherId,
+use pyth_lazer_protocol::publisher::{
+    PriceFeedDataV1, PriceFeedDataV2, ServerResponse, UpdateDeserializationErrorResponse,
 };
 use pyth_lazer_publisher_sdk::publisher_update::feed_update::Update;
 use pyth_lazer_publisher_sdk::publisher_update::{FeedUpdate, FundingRateUpdate, PriceUpdate};
-use soketto::{Incoming, handshake::http::Server};
-use tokio::{
-    pin, select,
-    time::{Instant, sleep},
-};
+use soketto::handshake::http::Server;
+use tokio::{pin, select};
 use tokio_util::compat::TokioAsyncReadCompatExt;
 use tracing::{error, instrument, warn};
 
 use crate::{
     http_server,
     lazer_publisher::LazerPublisher,
-    websocket_utils::{handle_websocket_error, send_ping, send_text},
+    websocket_utils::{handle_websocket_error, send_text},
 };
-
-//pub const MAX_EXPIRY_TIME_US: u64 = 5_000_000; // 5s
-//pub const MAX_TIMESTAMP_ERROR_US: u64 = 50_000; // 5ms
-const PUBLISHER_TIMEOUT: Duration = Duration::from_secs(5);
-const PING_FREQUENCY: Duration = Duration::from_secs(5);
 
 pub struct PublisherConnectionContext {
     pub request_type: http_server::Request,
-    pub publisher_id: PublisherId,
     pub _remote_addr: SocketAddr,
 }
 
 #[instrument(
     skip(server, request, lazer_publisher, context),
-    fields(component = "publisher_ws", publisher_id = context.publisher_id.0)
+    fields(component = "publisher_ws")
 )]
 pub async fn handle_publisher(
     server: Server,
@@ -55,7 +43,7 @@ pub async fn handle_publisher(
 
 #[instrument(
     skip(server, request, lazer_publisher, context),
-    fields(component = "publisher_ws", publisher_id = context.publisher_id.0)
+    fields(component = "publisher_ws")
 )]
 async fn try_handle_publisher(
     server: Server,
@@ -68,12 +56,7 @@ async fn try_handle_publisher(
     let stream = BufReader::new(BufWriter::new(io.compat()));
     let (mut ws_sender, mut ws_receiver) = server.into_builder(stream).finish();
 
-    let mut receive_type: Option<Incoming>;
     let mut receive_buf = Vec::new();
-    let publisher_timeout = sleep(PUBLISHER_TIMEOUT);
-    pin!(publisher_timeout);
-    //let mut last_ping_timestamp: Option<TimestampUs> = None;
-    let mut ping_interval = tokio::time::interval(PING_FREQUENCY);
 
     let mut error_count = 0u32;
     const MAX_ERROR_LOG: u32 = 10u32;
@@ -89,26 +72,11 @@ async fn try_handle_publisher(
             #[allow(clippy::never_loop)] // false positive
             loop {
                 select! {
-                    result = &mut receive => {
-                        receive_type = Some(result?);
+                    _result = &mut receive => {
                         break
-                    }
-                    _ = ping_interval.tick() => {
-                        send_ping(&mut ws_sender).await;
-                        //last_ping_timestamp = Some(TimestampUs::now());
-                    }
-                    _ = &mut publisher_timeout => {
-                        bail!("no updates received from publisher after {:?}", PUBLISHER_TIMEOUT);
                     }
                 }
             }
-        }
-        publisher_timeout
-            .as_mut()
-            .reset(Instant::now() + PUBLISHER_TIMEOUT);
-
-        if let Some(Incoming::Pong(_)) = receive_type {
-            continue;
         }
 
         // reply with an error if we can't parse the binary update
@@ -139,21 +107,15 @@ async fn try_handle_publisher(
                     Err(err) => {
                         error_count += 1;
                         if error_count <= MAX_ERROR_LOG {
-                            warn!(
-                                "Error decoding v1 update from publisher_id {:?} error: {:?}",
-                                context.publisher_id, err
-                            );
+                            warn!("Error decoding v1 update error: {:?}", err);
                         }
                         if error_count >= MAX_ERROR_DISCONNECT {
-                            error!(
-                                "Error threshold reached for publisher_id {:?}; disconnecting",
-                                context.publisher_id
-                            );
+                            error!("Error threshold reached; disconnecting",);
                             bail!("Error threshold reached");
                         }
                         let error_json = &serde_json::to_string::<ServerResponse>(
                             &UpdateDeserializationErrorResponse {
-                                error: format!("failed to parse binary update: {}", err),
+                                error: format!("failed to parse binary update: {err}"),
                             }
                             .into(),
                         )?;
@@ -187,21 +149,15 @@ async fn try_handle_publisher(
                     Err(err) => {
                         error_count += 1;
                         if error_count <= MAX_ERROR_LOG {
-                            warn!(
-                                "Error decoding v2 update from publisher_id {:?} error: {:?}",
-                                context.publisher_id, err
-                            );
+                            warn!("Error decoding v2 update error: {:?}", err);
                         }
                         if error_count >= MAX_ERROR_DISCONNECT {
-                            error!(
-                                "Error threshold reached for publisher_id {:?}; disconnecting",
-                                context.publisher_id
-                            );
+                            error!("Error threshold reached; disconnecting");
                             bail!("Error threshold reached");
                         }
                         let error_json = &serde_json::to_string::<ServerResponse>(
                             &UpdateDeserializationErrorResponse {
-                                error: format!("failed to parse binary update: {}", err),
+                                error: format!("failed to parse binary update: {err}"),
                             }
                             .into(),
                         )?;
@@ -211,9 +167,6 @@ async fn try_handle_publisher(
                 }
             } //_ => bail!("Publisher API request set with invalid context"),
         };
-
-        // TODO: The relayer does timestamp validation here and marks an update as rejected
-        //       if it is stale or in the future.
 
         lazer_publisher.push_feed_update(feed_update).await?;
     }
