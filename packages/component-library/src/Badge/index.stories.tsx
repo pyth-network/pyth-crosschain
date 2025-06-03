@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Badge as BadgeComponent, SIZES, STYLES, VARIANTS } from "./index.jsx";
+import styles from "./index.stories.module.scss";
 
 const meta = {
   component: BadgeComponent,
@@ -49,7 +50,7 @@ export const Badge = {
 type Story = StoryObj<typeof BadgeComponent>;
 
 const renderAllVariants = (style: typeof STYLES[number], size: typeof SIZES[number], children: React.ReactNode) => (
-  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+  <div className={styles.variantsContainer}>
     {VARIANTS.map((variant) => (
       <BadgeComponent key={variant} variant={variant} style={style} size={size}>
         {children}
