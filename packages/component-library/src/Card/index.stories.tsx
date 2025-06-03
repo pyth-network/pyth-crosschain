@@ -148,7 +148,7 @@ export const WithFooter: Story = {
         <span className={styles.footerText}>
           Last updated 5 minutes ago
         </span>
-        <Button size="sm" variant="link">
+        <Button size="sm" variant="outline">
           View All
         </Button>
       </div>
@@ -217,7 +217,7 @@ export const CompleteExample: Story = {
       </div>
     ),
     footer: (
-      <Button variant="primary" fullWidth>
+      <Button variant="primary" size="lg">
         View Detailed Report
       </Button>
     ),
