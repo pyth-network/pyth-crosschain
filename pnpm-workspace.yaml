@@ -81,6 +81,7 @@ catalog:
   "@storybook/blocks": ^8.6.12
   "@storybook/nextjs": ^8.6.12
   "@storybook/react": ^8.6.12
+  "@storybook/test": "^8.6.12"
   "@svgr/webpack": ^8.1.0
   "@tailwindcss/forms": ^0.5.10
   "@tailwindcss/postcss": "^4.1.6"

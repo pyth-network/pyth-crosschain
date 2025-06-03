@@ -68,6 +68,7 @@
     "@storybook/blocks": "catalog:",
     "@storybook/nextjs": "catalog:",
     "@storybook/react": "catalog:",
+    "@storybook/test": "catalog:",
     "@svgr/webpack": "catalog:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
