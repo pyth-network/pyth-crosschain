@@ -1,0 +1,14 @@
+@use "../theme";
+
+.controlledContainer {
+  > p {
+    margin-top: theme.spacing(4);
+  }
+}
+
+.sizesContainer,
+.statesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+}
