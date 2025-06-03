@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import { Badge } from "../Badge/index.jsx";
 import { EntityList as EntityListComponent } from "./index.jsx";
+import styles from "./index.stories.module.scss";
 
 const meta = {
   component: EntityListComponent,
@@ -196,13 +197,13 @@ export const ComplexContent: Story = {
         data: {
           project: <strong>Project Alpha</strong>,
           metrics: (
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className={styles.metricsContainer}>
               <Badge variant="neutral">10 feeds</Badge>
               <Badge variant="success">98% uptime</Badge>
             </div>
           ),
           actions: (
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className={styles.actionsContainer}>
               <button>Edit</button>
               <button>Delete</button>
             </div>
@@ -215,13 +216,13 @@ export const ComplexContent: Story = {
         data: {
           project: <strong>Project Beta</strong>,
           metrics: (
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className={styles.metricsContainer}>
               <Badge variant="neutral">5 feeds</Badge>
               <Badge variant="warning">92% uptime</Badge>
             </div>
           ),
           actions: (
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className={styles.actionsContainer}>
               <button>Edit</button>
               <button>Delete</button>
             </div>

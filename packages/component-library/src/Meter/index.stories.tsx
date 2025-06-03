@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Meter as MeterComponent } from "./index.jsx";
+import styles from "./index.stories.module.scss";
 
 const meta = {
   component: MeterComponent,
@@ -159,9 +160,9 @@ export const BatteryLevel: Story = {
 
 export const PerformanceScore: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div>
-        <h3 style={{ marginBottom: "8px" }}>CPU Usage</h3>
+    <div className={styles.performanceContainer}>
+      <div className={styles.performanceSection}>
+        <h3>CPU Usage</h3>
         <MeterComponent
           label="CPU usage"
           value={45}
@@ -171,8 +172,8 @@ export const PerformanceScore: Story = {
           endLabel="100%"
         />
       </div>
-      <div>
-        <h3 style={{ marginBottom: "8px" }}>Memory Usage</h3>
+      <div className={styles.performanceSection}>
+        <h3>Memory Usage</h3>
         <MeterComponent
           label="Memory usage"
           value={78}
@@ -183,8 +184,8 @@ export const PerformanceScore: Story = {
           variant="error"
         />
       </div>
-      <div>
-        <h3 style={{ marginBottom: "8px" }}>Disk Usage</h3>
+      <div className={styles.performanceSection}>
+        <h3>Disk Usage</h3>
         <MeterComponent
           label="Disk usage"
           value={30}
