@@ -1,7 +1,7 @@
-import * as Icon from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Card as CardComponent, VARIANTS } from "./index.jsx";
+import { iconControl } from "../icon-control.jsx";
 
 const meta = {
   component: CardComponent,
@@ -44,14 +44,7 @@ const meta = {
       },
     },
     icon: {
-      control: "select",
-      options: Object.keys(Icon),
-      mapping: Object.fromEntries(
-        Object.entries(Icon).map(([key, Icon]) => [
-          key,
-          <Icon weights={new Map()} key={key} />,
-        ]),
-      ),
+      ...iconControl,
       table: {
         category: "Contents",
       },
