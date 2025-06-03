@@ -6,8 +6,8 @@ body,
 }
 
 .contents {
-  height: 100vh;
-  min-width: 100vh;
+  height: 100%;
+  min-width: 100%;
   color: theme.color("foreground");
   background: theme.color("background", "primary");
   display: grid;
