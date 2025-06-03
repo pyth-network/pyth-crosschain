@@ -24,6 +24,7 @@ const meta = {
       },
     },
   },
+  tags: ["autodocs"],
 } satisfies Meta<typeof LinkComponent>;
 export default meta;
 
