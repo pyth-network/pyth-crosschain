@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Badge as BadgeComponent, VARIANTS, SIZES, STYLES } from "./index.jsx";
+import { Badge as BadgeComponent, SIZES, STYLES, VARIANTS } from "./index.jsx";
 
 const meta = {
   component: BadgeComponent,
@@ -33,6 +33,7 @@ const meta = {
       },
     },
   },
+  tags: ["autodocs"],
 } satisfies Meta<typeof BadgeComponent>;
 export default meta;
 
@@ -44,3 +45,130 @@ export const Badge = {
     size: "md",
   },
 } satisfies StoryObj<typeof BadgeComponent>;
+
+type Story = StoryObj<typeof BadgeComponent>;
+
+const renderAllVariants = (style: typeof STYLES[number], size: typeof SIZES[number], children: React.ReactNode) => (
+  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+    {VARIANTS.map((variant) => (
+      <BadgeComponent key={variant} variant={variant} style={style} size={size}>
+        {children}
+      </BadgeComponent>
+    ))}
+  </div>
+);
+
+export const FilledXS: Story = {
+  args: {
+    children: "Badge",
+  },
+  render: ({ children }) => renderAllVariants("filled", "xs", children),
+  argTypes: {
+    variant: { table: { disable: true } },
+    style: { table: { disable: true } },
+    size: { table: { disable: true } },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Extra small filled badges in all variants",
+      },
+    },
+  },
+};
+
+export const FilledMD: Story = {
+  args: {
+    children: "Badge",
+  },
+  render: ({ children }) => renderAllVariants("filled", "md", children),
+  argTypes: {
+    variant: { table: { disable: true } },
+    style: { table: { disable: true } },
+    size: { table: { disable: true } },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Medium filled badges in all variants",
+      },
+    },
+  },
+};
+
+export const FilledLG: Story = {
+  args: {
+    children: "Badge",
+  },
+  render: ({ children }) => renderAllVariants("filled", "lg", children),
+  argTypes: {
+    variant: { table: { disable: true } },
+    style: { table: { disable: true } },
+    size: { table: { disable: true } },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Large filled badges in all variants",
+      },
+    },
+  },
+};
+
+export const OutlineXS: Story = {
+  args: {
+    children: "Badge",
+  },
+  render: ({ children }) => renderAllVariants("outline", "xs", children),
+  argTypes: {
+    variant: { table: { disable: true } },
+    style: { table: { disable: true } },
+    size: { table: { disable: true } },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Extra small outline badges in all variants",
+      },
+    },
+  },
+};
+
+
+export const OutlineMD: Story = {
+  args: {
+    children: "Badge",
+  },
+  render: ({ children }) => renderAllVariants("outline", "md", children),
+  argTypes: {
+    variant: { table: { disable: true } },
+    style: { table: { disable: true } },
+    size: { table: { disable: true } },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Medium outline badges in all variants",
+      },
+    },
+  },
+};
+
+export const OutlineLG: Story = {
+  args: {
+    children: "Badge",
+  },
+  render: ({ children }) => renderAllVariants("outline", "lg", children),
+  argTypes: {
+    variant: { table: { disable: true } },
+    style: { table: { disable: true } },
+    size: { table: { disable: true } },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Large outline badges in all variants",
+      },
+    },
+  },
+};
