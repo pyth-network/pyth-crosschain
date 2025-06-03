@@ -21,8 +21,8 @@ export const MobileNavTabs = {
   args: {
     tabs: [
       { children: "Home", segment: "" },
-      { children: "Foo", segment: "foo" },
-      { children: "Bar", segment: "bar" },
+      { children: "Products", segment: "products" },
+      { children: "Developers", segment: "developers" },
     ],
   },
 } satisfies StoryObj<typeof MobileNavTabsComponent>;

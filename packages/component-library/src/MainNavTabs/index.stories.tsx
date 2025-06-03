@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { MainNavTabs as MainNavTabsComponent } from "./index.jsx";
 import { Tabs } from "../unstyled/Tabs/index.jsx";
+import { MainNavTabs as MainNavTabsComponent } from "./index.jsx";
 
 const meta = {
   component: MainNavTabsComponent,
@@ -26,8 +26,8 @@ export const MainNavTabs = {
   args: {
     tabs: [
       { children: "Home", segment: "" },
-      { children: "Foo", segment: "foo" },
-      { children: "Bar", segment: "bar" },
+      { children: "Products", segment: "products" },
+      { children: "Developers", segment: "developers" },
     ],
   },
 } satisfies StoryObj<typeof MainNavTabsComponent>;
