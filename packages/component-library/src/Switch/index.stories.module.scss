@@ -1,0 +1,139 @@
+@use "../theme";
+
+.statesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  max-width: 600px;
+}
+
+.stateRow {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  align-items: center;
+  gap: theme.spacing(4);
+}
+
+.description {
+  font-size: theme.font-size("sm");
+  color: theme.color("muted");
+}
+
+.controlledContainer {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  max-width: 400px;
+  
+  > p {
+    margin: 0;
+    font-size: theme.font-size("sm");
+    color: theme.color("paragraph");
+  }
+}
+
+.settingsList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  max-width: 600px;
+}
+
+.settingItem {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+  padding-bottom: theme.spacing(4);
+  border-bottom: 1px solid theme.color("border");
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.settingDescription {
+  font-size: theme.font-size("sm");
+  color: theme.color("muted");
+  margin-left: theme.spacing(11); // Align with switch content
+}
+
+.featureFlags {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  max-width: 500px;
+  
+  > h3 {
+    margin: 0;
+    font-size: theme.font-size("lg");
+    font-weight: 600;
+    color: theme.color("heading");
+  }
+}
+
+.flagItem {
+  padding: theme.spacing(3);
+  background-color: theme.color("background", "secondary");
+  border-radius: theme.border-radius("md");
+}
+
+.permissionsList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  max-width: 500px;
+  
+  > h3 {
+    margin: 0;
+    font-size: theme.font-size("lg");
+    font-weight: 600;
+    color: theme.color("heading");
+  }
+}
+
+.permissionItem {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(3);
+  padding: theme.spacing(2) 0;
+}
+
+.lockedBadge {
+  font-size: theme.font-size("xs");
+  padding: theme.spacing(1) theme.spacing(2);
+  background-color: theme.color("states", "warning", "background");
+  color: theme.color("states", "warning", "normal");
+  border-radius: theme.border-radius("sm");
+  font-weight: 500;
+}
+
+.customLabels {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  max-width: 400px;
+}
+
+.dynamicLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
+
+.errorExample {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+  max-width: 500px;
+}
+
+.errorMessage {
+  padding: theme.spacing(3);
+  background-color: theme.color("states", "error", "background");
+  color: theme.color("states", "error", "base");
+  border-radius: theme.border-radius("md");
+  font-size: theme.font-size("sm");
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
