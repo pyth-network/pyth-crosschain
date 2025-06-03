@@ -1,0 +1,7 @@
+@use "../theme";
+
+.variantsList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+}
