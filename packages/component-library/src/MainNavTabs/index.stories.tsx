@@ -4,6 +4,7 @@ import { Tabs } from "../unstyled/Tabs/index.jsx";
 import { MainNavTabs as MainNavTabsComponent } from "./index.jsx";
 
 const meta = {
+  title: "navigation & menus/MainNavTabs",
   component: MainNavTabsComponent,
   argTypes: {
     tabs: {

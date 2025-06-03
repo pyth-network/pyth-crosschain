@@ -9,6 +9,7 @@ import { NotFoundPage } from "../NotFoundPage/index.jsx";
 import { AppBody as AppShellComponent } from "./index.jsx";
 
 const meta = {
+  title: "layouts & pages/AppShell",
   component: AppShellComponent,
   subcomponents: { ErrorPage, NoResults, NotFoundPage },
   globals: {

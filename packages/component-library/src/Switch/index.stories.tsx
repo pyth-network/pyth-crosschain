@@ -6,6 +6,7 @@ import { Switch as SwitchComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "forms & controls/Switch",
   component: SwitchComponent,
   argTypes: {
     isDisabled: {

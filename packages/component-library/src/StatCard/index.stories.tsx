@@ -13,6 +13,7 @@ const cardMetaArgTypes = () => {
 };
 
 const meta = {
+  title: "data & tables/StatCard",
   component: StatCardComponent,
   parameters: {
     layout: "padded",

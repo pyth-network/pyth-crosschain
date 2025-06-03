@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Link as LinkComponent } from "./index.jsx";
 
 const meta = {
+  title: "building blocks/Link",
   component: LinkComponent,
   argTypes: {
     children: {

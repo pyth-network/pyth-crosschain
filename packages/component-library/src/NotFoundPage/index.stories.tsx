@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { NotFoundPage as NotFoundPageComponent } from "./index.jsx";
 
 const meta = {
+  title: "layouts & pages/NotFoundPage",
   component: NotFoundPageComponent,
   parameters: {
     layout: "fullscreen",

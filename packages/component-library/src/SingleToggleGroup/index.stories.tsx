@@ -6,6 +6,7 @@ import { SingleToggleGroup as SingleToggleGroupComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "forms & controls/SingleToggleGroup",
   component: SingleToggleGroupComponent,
   argTypes: {
     items: {

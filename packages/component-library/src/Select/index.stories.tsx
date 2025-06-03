@@ -10,6 +10,7 @@ import styles from "./index.stories.module.scss";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { children, beforeIcon, ...argTypes } = buttonMeta.argTypes;
 const meta = {
+  title: "forms & controls/Select",
   component: SelectComponent,
   argTypes: {
     ...argTypes,

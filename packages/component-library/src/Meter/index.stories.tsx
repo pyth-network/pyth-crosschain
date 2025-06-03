@@ -4,6 +4,7 @@ import { Meter as MeterComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "data & tables/Meter",
   component: MeterComponent,
   argTypes: {
     value: {

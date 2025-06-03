@@ -4,6 +4,7 @@ import { fn } from "@storybook/test";
 import { ErrorPage as ErrorPageComponent } from "./index.jsx";
 
 const meta = {
+  title: "layouts & pages/ErrorPage",
   component: ErrorPageComponent,
   parameters: {
     layout: "fullscreen",

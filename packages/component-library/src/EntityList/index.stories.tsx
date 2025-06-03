@@ -5,6 +5,7 @@ import { EntityList as EntityListComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "data & tables/EntityList",
   component: EntityListComponent,
   argTypes: {
     label: {

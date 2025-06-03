@@ -4,6 +4,7 @@ import { Button as ButtonComponent, VARIANTS, SIZES } from "./index.jsx";
 import { iconControl } from "../icon-control.jsx";
 
 const meta = {
+  title: "forms & controls/Button",
   component: ButtonComponent,
   argTypes: {
     children: {

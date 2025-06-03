@@ -1,14 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import {
-  Status as StatusComponent,
-  VARIANTS,
   SIZES,
+  Status as StatusComponent,
   STYLES,
+  VARIANTS,
 } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "building blocks/Status",
   component: StatusComponent,
   argTypes: {
     children: {

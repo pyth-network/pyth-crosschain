@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { CopyButton as CopyButtonComponent } from "./index.jsx";
 
 const meta = {
+  title: "forms & controls/CopyButton",
   component: CopyButtonComponent,
   argTypes: {
     text: {

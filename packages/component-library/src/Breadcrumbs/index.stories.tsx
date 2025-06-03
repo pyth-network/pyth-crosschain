@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Breadcrumbs as BreadcrumbsComponent } from "./index.jsx";
 
 const meta = {
+  title: "navigation & menus/Breadcrumbs",
   component: BreadcrumbsComponent,
   argTypes: {
     label: {

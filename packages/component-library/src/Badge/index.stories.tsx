@@ -4,6 +4,7 @@ import { Badge as BadgeComponent, SIZES, STYLES, VARIANTS } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "building blocks/Badge",
   component: BadgeComponent,
   argTypes: {
     children: {

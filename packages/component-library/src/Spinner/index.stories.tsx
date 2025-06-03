@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Spinner as SpinnerComponent } from "./index.jsx";
 
 const meta = {
+  title: "loading/Spinner",
   component: SpinnerComponent,
   argTypes: {
     label: {

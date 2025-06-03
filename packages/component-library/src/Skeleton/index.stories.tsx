@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Skeleton as SkeletonComponent } from "./index.jsx";
 
 const meta = {
+  title: "loading/Skeleton",
   component: SkeletonComponent,
   argTypes: {
     label: {

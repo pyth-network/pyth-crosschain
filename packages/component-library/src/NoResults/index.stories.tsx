@@ -6,6 +6,7 @@ import { iconControl } from "../icon-control.jsx";
 import { NoResults as NoResultsComponent } from "./index.jsx";
 
 const meta = {
+  title: "layouts & pages/NoResults",
   component: NoResultsComponent,
   parameters: {
     layout: "fullscreen",

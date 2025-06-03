@@ -4,6 +4,7 @@ import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.jsx";
 import { TabList as TabListComponent } from "./index.jsx";
 
 const meta = {
+  title: "navigation & menus/TabList",
   component: TabListComponent,
   argTypes: {
     items: {

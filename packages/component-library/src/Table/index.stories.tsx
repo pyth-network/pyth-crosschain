@@ -11,6 +11,7 @@ import { Table as TableComponent, type ColumnConfig, type RowConfig, type SortDe
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "data & tables/Table",
   component: TableComponent,
   parameters: {
     layout: "padded",

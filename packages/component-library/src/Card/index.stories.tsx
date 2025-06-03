@@ -8,6 +8,7 @@ import { Card as CardComponent, VARIANTS } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "building blocks/Card",
   component: CardComponent,
   globals: {
     background: "primary",

@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { CrossfadeTabPanels as CrossfadeTabPanelsComponent } from "./index.jsx";
 import { TabList } from "../TabList/index.jsx";
 import { Tabs } from "../unstyled/Tabs/index.jsx";
+import { CrossfadeTabPanels as CrossfadeTabPanelsComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "navigation & menus/CrossfadeTabPanels",
   component: CrossfadeTabPanelsComponent,
   parameters: {
     docs: {

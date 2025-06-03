@@ -6,6 +6,7 @@ import { iconControl } from "../icon-control.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
+  title: "overlays & dialogs/InfoBox",
   component: InfoBoxComponent,
   argTypes: {
     variant: {

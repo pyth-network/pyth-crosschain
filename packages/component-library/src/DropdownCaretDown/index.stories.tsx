@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { DropdownCaretDown as DropdownCaretDownComponent } from "./index.jsx";
 
 const meta = {
+  title: "building blocks/DropdownCaretDown",
   component: DropdownCaretDownComponent,
   argTypes: {
     width: {

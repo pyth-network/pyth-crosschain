@@ -8,6 +8,7 @@ import { MainNavTabs } from "../MainNavTabs/index.jsx";
 import { Header as HeaderComponent } from "./index.jsx";
 
 const meta = {
+  title: "navigation & menus/Header",
   component: HeaderComponent,
   decorators: [
     (Story) => (
