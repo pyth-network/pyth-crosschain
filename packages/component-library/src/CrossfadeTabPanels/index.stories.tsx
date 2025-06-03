@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { TabList } from "../TabList/index.jsx";
-import { Tabs } from "../unstyled/Tabs/index.jsx";
 import { CrossfadeTabPanels as CrossfadeTabPanelsComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
+import { TabList } from "../TabList/index.jsx";
+import { Tabs } from "../unstyled/Tabs/index.jsx";
 
 const meta = {
   title: "navigation & menus/CrossfadeTabPanels",
@@ -18,7 +18,8 @@ const meta = {
   },
   argTypes: {
     items: {
-      description: "Array of tab panel items with id, optional className, and children",
+      description:
+        "Array of tab panel items with id, optional className, and children",
       table: {
         category: "Props",
       },
@@ -156,8 +157,14 @@ export const DifferentHeights: Story = {
               <div className={styles.tabContent}>
                 <h2 className={styles.heading}>Medium Content</h2>
                 <p>This tab has more content than the first one.</p>
-                <p>It includes multiple paragraphs to show how the crossfade handles different heights.</p>
-                <p>The animation should smoothly transition between different content sizes.</p>
+                <p>
+                  It includes multiple paragraphs to show how the crossfade
+                  handles different heights.
+                </p>
+                <p>
+                  The animation should smoothly transition between different
+                  content sizes.
+                </p>
               </div>
             ),
           },
@@ -166,13 +173,22 @@ export const DifferentHeights: Story = {
             children: (
               <div className={styles.tabContent}>
                 <h2 className={styles.heading}>Long Content</h2>
-                <p>This tab contains the most content to demonstrate height transitions.</p>
+                <p>
+                  This tab contains the most content to demonstrate height
+                  transitions.
+                </p>
                 <h3>Section 1</h3>
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
                 <h3>Section 2</h3>
-                <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <p>
+                  Sed do eiusmod tempor incididunt ut labore et dolore magna
+                  aliqua.
+                </p>
                 <h3>Section 3</h3>
-                <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+                <p>
+                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
+                  laboris.
+                </p>
               </div>
             ),
           },
@@ -221,11 +237,12 @@ export const ComplexContent: Story = {
                 <div className={styles.section}>
                   <div className={styles.chartPlaceholder}>
                     <h3>Chart Placeholder</h3>
-                    <div className={styles.chart}>
-                      Chart would go here
-                    </div>
+                    <div className={styles.chart}>Chart would go here</div>
                   </div>
-                  <p>Analytics data and insights would be displayed in this panel.</p>
+                  <p>
+                    Analytics data and insights would be displayed in this
+                    panel.
+                  </p>
                 </div>
               </div>
             ),
@@ -237,12 +254,16 @@ export const ComplexContent: Story = {
                 <h2 className={styles.heading}>Settings</h2>
                 <form className={styles.form}>
                   <div className={styles.formField}>
-                    <label className={styles.label}>Setting 1</label>
-                    <input type="text" className={styles.input} />
+                    <label className={styles.label} htmlFor="setting1">
+                      Setting 1
+                    </label>
+                    <input type="text" className={styles.input} id="setting1" />
                   </div>
                   <div className={styles.formField}>
-                    <label className={styles.label}>Setting 2</label>
-                    <select className={styles.select}>
+                    <label className={styles.label} htmlFor="setting2">
+                      Setting 2
+                    </label>
+                    <select className={styles.select} id="setting2">
                       <option>Option 1</option>
                       <option>Option 2</option>
                     </select>

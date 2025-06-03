@@ -1,5 +1,6 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
 
 import { Badge } from "../Badge/index.jsx";
 import { Button } from "../Button/index.jsx";
@@ -87,8 +88,8 @@ export const BasicCard: Story = {
   args: {
     children: (
       <p>
-        This is a basic card with just content. It can contain any React elements
-        and will display them with appropriate styling.
+        This is a basic card with just content. It can contain any React
+        elements and will display them with appropriate styling.
       </p>
     ),
     variant: "secondary",
@@ -102,7 +103,7 @@ export const WithTitleAndIcon: Story = {
     children: (
       <div>
         <p>This card has a title and an icon in the header.</p>
-        <p>Icons help users quickly identify the card's purpose.</p>
+        <p>Icons help users quickly identify the card&apos;s purpose.</p>
       </div>
     ),
     variant: "secondary",
@@ -146,9 +147,7 @@ export const WithFooter: Story = {
     ),
     footer: (
       <div className={styles.footerContent}>
-        <span className={styles.footerText}>
-          Last updated 5 minutes ago
-        </span>
+        <span className={styles.footerText}>Last updated 5 minutes ago</span>
         <Button size="sm" variant="outline">
           View All
         </Button>
@@ -175,7 +174,7 @@ export const AsLink: Story = {
 
 export const AsButton: Story = {
   args: {
-    onPress: () => alert("Card clicked!"),
+    onPress: fn(),
     icon: <icons.CursorClick />,
     title: "Interactive Card",
     children: (

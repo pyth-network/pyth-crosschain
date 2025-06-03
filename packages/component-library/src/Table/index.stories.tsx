@@ -1,14 +1,13 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import { useState } from "react";
 
+import { Table as TableComponent } from "./index.jsx";
+import styles from "./index.stories.module.scss";
 import { Badge } from "../Badge/index.jsx";
 import { Button } from "../Button/index.jsx";
 import { CopyButton } from "../CopyButton/index.jsx";
 import { Status } from "../Status/index.jsx";
-import { Table as TableComponent, type ColumnConfig, type RowConfig, type SortDescriptor } from "./index.jsx";
-import styles from "./index.stories.module.scss";
 
 const meta = {
   title: "data & tables/Table",
@@ -223,103 +222,109 @@ export const StickyColumns: Story = {
         <TableComponent
           label="Sticky column demo"
           columns={[
-          {
-            name: "NAME",
-            id: "name",
-            sticky: true,
-            isRowHeader: true,
-            width: 150,
-          },
-          {
-            name: "SKU",
-            id: "sku",
-            width: 120,
-          },
-          {
-            name: "DESCRIPTION",
-            id: "description",
-            width: 300,
-          },
-          {
-            name: "CATEGORY",
-            id: "category",
-            width: 150,
-          },
-          {
-            name: "SUBCATEGORY",
-            id: "subcategory",
-            width: 150,
-          },
-          {
-            name: "BRAND",
-            id: "brand",
-            width: 120,
-          },
-          {
-            name: "STATUS",
-            id: "status",
-            width: 120,
-          },
-          {
-            name: "STOCK",
-            id: "stock",
-            width: 100,
-            alignment: "right",
-          },
-          {
-            name: "PRICE",
-            id: "price",
-            width: 100,
-            alignment: "right",
-          },
-          {
-            name: "DISCOUNT",
-            id: "discount",
-            width: 100,
-            alignment: "right",
-          },
-          {
-            name: "CREATED",
-            id: "created",
-            width: 120,
-          },
-          {
-            name: "UPDATED",
-            id: "updated",
-            width: 120,
-          },
-          {
-            name: "ACTIONS",
-            id: "actions",
-            width: 150,
-            alignment: "center",
-          },
-        ]}
-        rows={Array.from({ length: 8 }, (_, i) => ({
-          id: `row-${i}`,
-          data: {
-            name: `Product ${i + 1}`,
-            sku: `SKU-${1000 + i}`,
-            description: `This is a detailed description for product ${i + 1} that might be quite long`,
-            category: `Category ${(i % 3) + 1}`,
-            subcategory: `Subcat ${(i % 2) + 1}`,
-            brand: `Brand ${String.fromCharCode(65 + (i % 4))}`,
-            status: <Badge variant={i % 2 === 0 ? "success" : "warning"}>
-              {i % 2 === 0 ? "Active" : "Draft"}
-            </Badge>,
-            stock: i * 10 + 5,
-            price: `$${(i + 1) * 99}.99`,
-            discount: i % 3 === 0 ? "10%" : "-",
-            created: "2024-01-15",
-            updated: "2024-12-01",
-            actions: (
-              <div className={styles.actions}>
-                <Button size="xs" variant="ghost">Edit</Button>
-                <Button size="xs" variant="ghost">Delete</Button>
-              </div>
-            ),
-          },
-        }))}
+            {
+              name: "NAME",
+              id: "name",
+              sticky: true,
+              isRowHeader: true,
+              width: 150,
+            },
+            {
+              name: "SKU",
+              id: "sku",
+              width: 120,
+            },
+            {
+              name: "DESCRIPTION",
+              id: "description",
+              width: 300,
+            },
+            {
+              name: "CATEGORY",
+              id: "category",
+              width: 150,
+            },
+            {
+              name: "SUBCATEGORY",
+              id: "subcategory",
+              width: 150,
+            },
+            {
+              name: "BRAND",
+              id: "brand",
+              width: 120,
+            },
+            {
+              name: "STATUS",
+              id: "status",
+              width: 120,
+            },
+            {
+              name: "STOCK",
+              id: "stock",
+              width: 100,
+              alignment: "right",
+            },
+            {
+              name: "PRICE",
+              id: "price",
+              width: 100,
+              alignment: "right",
+            },
+            {
+              name: "DISCOUNT",
+              id: "discount",
+              width: 100,
+              alignment: "right",
+            },
+            {
+              name: "CREATED",
+              id: "created",
+              width: 120,
+            },
+            {
+              name: "UPDATED",
+              id: "updated",
+              width: 120,
+            },
+            {
+              name: "ACTIONS",
+              id: "actions",
+              width: 150,
+              alignment: "center",
+            },
+          ]}
+          rows={Array.from({ length: 8 }, (_, i) => ({
+            id: `row-${i.toString()}`,
+            data: {
+              name: `Product ${String(i + 1)}`,
+              sku: `SKU-${String(1000 + i)}`,
+              description: `This is a detailed description for product ${String(i + 1)} that might be quite long`,
+              category: `Category ${String((i % 3) + 1)}`,
+              subcategory: `Subcat ${String((i % 2) + 1)}`,
+              brand: `Brand ${String.fromCodePoint(65 + (i % 4))}`,
+              status: (
+                <Badge variant={i % 2 === 0 ? "success" : "warning"}>
+                  {i % 2 === 0 ? "Active" : "Draft"}
+                </Badge>
+              ),
+              stock: i * 10 + 5,
+              price: `$${String((i + 1) * 99)}.99`,
+              discount: i % 3 === 0 ? "10%" : "-",
+              created: "2024-01-15",
+              updated: "2024-12-01",
+              actions: (
+                <div className={styles.actions}>
+                  <Button size="xs" variant="ghost">
+                    Edit
+                  </Button>
+                  <Button size="xs" variant="ghost">
+                    Delete
+                  </Button>
+                </div>
+              ),
+            },
+          }))}
         />
       </div>
     </div>
@@ -382,93 +387,6 @@ export const Updating: Story = {
         },
       },
     ],
-  },
-};
-
-// Sortable columns
-export const Sortable: Story = {
-  render: () => {
-    const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-      column: "name",
-      direction: "ascending",
-    });
-
-    const data = [
-      { id: "1", name: "Bitcoin", symbol: "BTC", price: 45234.56, change: 2.34 },
-      { id: "2", name: "Ethereum", symbol: "ETH", price: 3234.56, change: -1.23 },
-      { id: "3", name: "Solana", symbol: "SOL", price: 123.45, change: 5.67 },
-      { id: "4", name: "Cardano", symbol: "ADA", price: 0.45, change: -0.89 },
-    ];
-
-    const sortedData = [...data].sort((a, b) => {
-      const column = sortDescriptor.column as keyof typeof a;
-      const aValue = a[column];
-      const bValue = b[column];
-      
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDescriptor.direction === "ascending" 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-      
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDescriptor.direction === "ascending"
-          ? aValue - bValue
-          : bValue - aValue;
-      }
-      
-      return 0;
-    });
-
-    const columns: ColumnConfig<"name" | "symbol" | "price" | "change">[] = [
-      {
-        name: "NAME",
-        id: "name",
-        isRowHeader: true,
-        allowsSorting: true,
-      },
-      {
-        name: "SYMBOL",
-        id: "symbol",
-        allowsSorting: true,
-      },
-      {
-        name: "PRICE",
-        id: "price",
-        alignment: "right",
-        allowsSorting: true,
-      },
-      {
-        name: "24H CHANGE",
-        id: "change",
-        alignment: "right",
-        allowsSorting: true,
-      },
-    ];
-
-    const rows: RowConfig<"name" | "symbol" | "price" | "change">[] = sortedData.map(item => ({
-      id: item.id,
-      data: {
-        name: item.name,
-        symbol: item.symbol,
-        price: `$${item.price.toLocaleString()}`,
-        change: (
-          <span className={item.change >= 0 ? styles.positive : styles.negative}>
-            {item.change >= 0 ? "+" : ""}{item.change}%
-          </span>
-        ),
-      },
-    }));
-
-    return (
-      <TableComponent
-        label="Sortable cryptocurrency table"
-        columns={columns}
-        rows={rows}
-        sortDescriptor={sortDescriptor}
-        onSortChange={setSortDescriptor}
-      />
-    );
   },
 };
 
@@ -613,12 +531,20 @@ export const ComplexDataTable: Story = {
             </div>
           ),
           role: <Badge variant="info">Admin</Badge>,
-          status: <Status variant="success" size="xs">Active</Status>,
+          status: (
+            <Status variant="success" size="xs">
+              Active
+            </Status>
+          ),
           lastActive: "2 minutes ago",
           actions: (
             <div className={styles.actions}>
-              <Button size="xs" variant="ghost">Edit</Button>
-              <Button size="xs" variant="ghost">Delete</Button>
+              <Button size="xs" variant="ghost">
+                Edit
+              </Button>
+              <Button size="xs" variant="ghost">
+                Delete
+              </Button>
             </div>
           ),
         },
@@ -636,12 +562,20 @@ export const ComplexDataTable: Story = {
             </div>
           ),
           role: <Badge variant="neutral">Editor</Badge>,
-          status: <Status variant="success" size="xs">Active</Status>,
+          status: (
+            <Status variant="success" size="xs">
+              Active
+            </Status>
+          ),
           lastActive: "1 hour ago",
           actions: (
             <div className={styles.actions}>
-              <Button size="xs" variant="ghost">Edit</Button>
-              <Button size="xs" variant="ghost">Delete</Button>
+              <Button size="xs" variant="ghost">
+                Edit
+              </Button>
+              <Button size="xs" variant="ghost">
+                Delete
+              </Button>
             </div>
           ),
         },
@@ -659,12 +593,20 @@ export const ComplexDataTable: Story = {
             </div>
           ),
           role: <Badge variant="neutral">Viewer</Badge>,
-          status: <Status variant="disabled" size="xs">Inactive</Status>,
+          status: (
+            <Status variant="disabled" size="xs">
+              Inactive
+            </Status>
+          ),
           lastActive: "3 days ago",
           actions: (
             <div className={styles.actions}>
-              <Button size="xs" variant="ghost">Activate</Button>
-              <Button size="xs" variant="ghost">Delete</Button>
+              <Button size="xs" variant="ghost">
+                Activate
+              </Button>
+              <Button size="xs" variant="ghost">
+                Delete
+              </Button>
             </div>
           ),
         },
@@ -787,7 +729,11 @@ export const ApiEndpointsTable: Story = {
         id: "get-price",
         data: {
           endpoint: <code>/api/v1/price/{`{symbol}`}</code>,
-          method: <Badge variant="success" size="xs">GET</Badge>,
+          method: (
+            <Badge variant="success" size="xs">
+              GET
+            </Badge>
+          ),
           description: "Get current price for a symbol",
           copy: <CopyButton text="/api/v1/price/{symbol}" />,
         },
@@ -796,7 +742,11 @@ export const ApiEndpointsTable: Story = {
         id: "post-order",
         data: {
           endpoint: <code>/api/v1/orders</code>,
-          method: <Badge variant="info" size="xs">POST</Badge>,
+          method: (
+            <Badge variant="info" size="xs">
+              POST
+            </Badge>
+          ),
           description: "Create a new order",
           copy: <CopyButton text="/api/v1/orders" />,
         },
@@ -805,7 +755,11 @@ export const ApiEndpointsTable: Story = {
         id: "delete-order",
         data: {
           endpoint: <code>/api/v1/orders/{`{id}`}</code>,
-          method: <Badge variant="error" size="xs">DELETE</Badge>,
+          method: (
+            <Badge variant="error" size="xs">
+              DELETE
+            </Badge>
+          ),
           description: "Cancel an existing order",
           copy: <CopyButton text="/api/v1/orders/{id}" />,
         },
@@ -829,61 +783,15 @@ export const StickyHeaderTable: Story = {
           { name: "DATA", id: "data", fill: true },
         ]}
         rows={Array.from({ length: 50 }, (_, i) => ({
-          id: `row-${i}`,
+          id: `row-${i.toString()}`,
           data: {
             index: i + 1,
-            data: `Row ${i + 1} data - scroll to see sticky header`,
+            data: `Row ${String(i + 1)} data - scroll to see sticky header`,
           },
         }))}
       />
     </div>
   ),
-};
-
-// Table with dependencies (re-render optimization)
-export const WithDependencies: Story = {
-  render: () => {
-    const [filter, setFilter] = useState("");
-    
-    const allData = [
-      { id: "1", name: "Apple", category: "Fruit" },
-      { id: "2", name: "Carrot", category: "Vegetable" },
-      { id: "3", name: "Banana", category: "Fruit" },
-      { id: "4", name: "Broccoli", category: "Vegetable" },
-    ];
-    
-    const filteredData = allData.filter(item => 
-      item.name.toLowerCase().includes(filter.toLowerCase()) ||
-      item.category.toLowerCase().includes(filter.toLowerCase())
-    );
-
-    return (
-      <div className={styles.filterableTable}>
-        <input
-          type="text"
-          placeholder="Filter items..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className={styles.filterInput}
-        />
-        <TableComponent
-          label="Filtered table"
-          columns={[
-            { name: "NAME", id: "name", isRowHeader: true },
-            { name: "CATEGORY", id: "category" },
-          ]}
-          rows={filteredData.map(item => ({
-            id: item.id,
-            data: {
-              name: item.name,
-              category: item.category,
-            },
-          }))}
-          dependencies={[filter]}
-        />
-      </div>
-    );
-  },
 };
 
 // Legacy export

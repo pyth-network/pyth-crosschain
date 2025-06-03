@@ -24,7 +24,7 @@
   padding: theme.spacing(12) theme.spacing(4);
   text-align: center;
   color: theme.color("muted");
-  
+
   > p {
     margin: 0;
     font-size: theme.font-size("sm");
@@ -39,14 +39,14 @@
   gap: theme.spacing(4);
   padding: theme.spacing(16) theme.spacing(4);
   text-align: center;
-  
+
   > h3 {
     margin: 0;
     font-size: theme.font-size("xl");
     font-weight: 600;
     color: theme.color("heading");
   }
-  
+
   > p {
     margin: 0;
     font-size: theme.font-size("base");
@@ -93,7 +93,7 @@
   display: flex;
   flex-direction: column;
   gap: theme.spacing(1);
-  
+
   > strong {
     font-weight: 600;
     color: theme.color("foreground");
@@ -111,33 +111,6 @@
   gap: theme.spacing(3);
 }
 
-.filterableTable {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(4);
-}
-
-.filterInput {
-  padding: theme.spacing(2) theme.spacing(3);
-  border: 1px solid theme.color("border");
-  border-radius: theme.border-radius("md");
-  background-color: theme.color("background", "primary");
-  color: theme.color("foreground");
-  font-size: theme.font-size("sm");
-  width: 100%;
-  max-width: 300px;
-  
-  &:focus {
-    outline: none;
-    border-color: theme.color("focus");
-    box-shadow: 0 0 0 3px theme.color("focus-dim");
-  }
-  
-  &::placeholder {
-    color: theme.color("muted");
-  }
-}
-
 .stickyHeaderContainer {
   height: 400px;
   overflow-y: auto;
@@ -152,7 +125,7 @@
   color: theme.color("states", "info", "normal");
   text-align: center;
   font-size: theme.font-size("sm");
-  
+
   > p {
     margin: 0;
   }
@@ -179,7 +152,7 @@
   position: sticky;
   left: 0;
   z-index: 10;
-  
+
   > p {
     margin: 0;
   }

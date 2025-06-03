@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Badge } from "../Badge/index.jsx";
 import { EntityList as EntityListComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
+import { Badge } from "../Badge/index.jsx";
 
 const meta = {
   title: "data & tables/EntityList",

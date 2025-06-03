@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ThemeProvider } from "next-themes";
 
+import { Header as HeaderComponent } from "./index.jsx";
 import { TabRoot } from "../AppShell/tabs.jsx";
 import { Badge } from "../Badge/index.jsx";
 import { Button } from "../Button/index.jsx";
 import { MainNavTabs } from "../MainNavTabs/index.jsx";
-import { Header as HeaderComponent } from "./index.jsx";
 
 const meta = {
   title: "navigation & menus/Header",

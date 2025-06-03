@@ -4,8 +4,8 @@ import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass"
 import clsx from "clsx";
 import type { ReactNode } from "react";
 
-import { Button } from "../Button/index.jsx";
 import styles from "./index.module.scss";
+import { Button } from "../Button/index.jsx";
 
 export type Props = {
   className?: string | undefined;

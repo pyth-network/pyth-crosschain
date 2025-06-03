@@ -165,7 +165,8 @@ export const NoFavorites: Story = {
 
 export const LongQuery: Story = {
   args: {
-    query: "This is a very long search query that someone might type when looking for something very specific in the application",
+    query:
+      "This is a very long search query that someone might type when looking for something very specific in the application",
     onClearSearch: fn(),
   },
 };

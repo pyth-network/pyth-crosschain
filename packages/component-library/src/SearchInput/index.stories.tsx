@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
-import { useState } from "react";
 
 import { SearchInput as SearchInputComponent, SIZES } from "./index.jsx";
 import styles from "./index.stories.module.scss";
@@ -154,24 +153,6 @@ export const WithSubmitHandler: Story = {
     size: "md",
     placeholder: "Press Enter to search",
     onSubmit: fn(),
-  },
-};
-
-export const ControlledInput: Story = {
-  render: () => {
-    const [value, setValue] = useState("");
-    
-    return (
-      <div className={styles.controlledContainer}>
-        <SearchInputComponent
-          value={value}
-          onChange={setValue}
-          onSubmit={() => alert(`Searching for: ${value}`)}
-          placeholder="Controlled search input"
-        />
-        <p>Current value: {value}</p>
-      </div>
-    );
   },
 };
 

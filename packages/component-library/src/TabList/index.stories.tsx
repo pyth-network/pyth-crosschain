@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.jsx";
 import { TabList as TabListComponent } from "./index.jsx";
+import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.jsx";
 
 const meta = {
   title: "navigation & menus/TabList",

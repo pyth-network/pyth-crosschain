@@ -1,11 +1,5 @@
 @use "../theme";
 
-.controlledContainer {
-  > p {
-    margin-top: theme.spacing(4);
-  }
-}
-
 .sizesContainer,
 .statesContainer {
   display: flex;

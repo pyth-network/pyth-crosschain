@@ -2,9 +2,9 @@ import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { StatCard as StatCardComponent } from "./index.jsx";
+import styles from "./index.stories.module.scss";
 import { Badge } from "../Badge/index.jsx";
 import cardMeta, { Card as CardStory } from "../Card/index.stories.jsx";
-import styles from "./index.stories.module.scss";
 
 const cardMetaArgTypes = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -124,7 +124,11 @@ export const WithCorner: Story = {
   args: {
     header: "System Status",
     stat: "Online",
-    corner: <Badge variant="success" size="xs">Live</Badge>,
+    corner: (
+      <Badge variant="success" size="xs">
+        Live
+      </Badge>
+    ),
     variant: "secondary",
   },
 };
@@ -146,21 +150,33 @@ export const CryptocurrencyPrices: Story = {
         header="Bitcoin"
         stat="$43,892"
         miniStat="+2.34%"
-        corner={<Badge variant="success" size="xs">+5.2%</Badge>}
+        corner={
+          <Badge variant="success" size="xs">
+            +5.2%
+          </Badge>
+        }
         variant="secondary"
       />
       <StatCardComponent
-        header="Ethereum" 
+        header="Ethereum"
         stat="$2,847"
         miniStat="-1.23%"
-        corner={<Badge variant="error" size="xs">-2.1%</Badge>}
+        corner={
+          <Badge variant="error" size="xs">
+            -2.1%
+          </Badge>
+        }
         variant="secondary"
       />
       <StatCardComponent
         header="Solana"
         stat="$98.45"
         miniStat="+8.91%"
-        corner={<Badge variant="success" size="xs">+12.8%</Badge>}
+        corner={
+          <Badge variant="success" size="xs">
+            +12.8%
+          </Badge>
+        }
         variant="secondary"
       />
     </div>
@@ -206,7 +222,11 @@ export const SystemMonitoring: Story = {
         header="CPU Usage"
         stat="67%"
         miniStat="Normal"
-        corner={<Badge variant="warning" size="xs">High</Badge>}
+        corner={
+          <Badge variant="warning" size="xs">
+            High
+          </Badge>
+        }
         variant="secondary"
         small
       />
@@ -214,7 +234,11 @@ export const SystemMonitoring: Story = {
         header="Memory"
         stat="84%"
         miniStat="8.4 GB / 10 GB"
-        corner={<Badge variant="error" size="xs">Critical</Badge>}
+        corner={
+          <Badge variant="error" size="xs">
+            Critical
+          </Badge>
+        }
         variant="secondary"
         small
       />
@@ -222,7 +246,11 @@ export const SystemMonitoring: Story = {
         header="Disk Space"
         stat="45%"
         miniStat="450 GB / 1 TB"
-        corner={<Badge variant="success" size="xs">OK</Badge>}
+        corner={
+          <Badge variant="success" size="xs">
+            OK
+          </Badge>
+        }
         variant="secondary"
         small
       />
@@ -230,7 +258,11 @@ export const SystemMonitoring: Story = {
         header="Network"
         stat="12.4 MB/s"
         miniStat="Upload: 2.1 MB/s"
-        corner={<Badge variant="success" size="xs">Stable</Badge>}
+        corner={
+          <Badge variant="success" size="xs">
+            Stable
+          </Badge>
+        }
         variant="secondary"
         small
       />
@@ -241,7 +273,7 @@ export const SystemMonitoring: Story = {
 export const DualLayout: Story = {
   args: {
     header1: "Inbound",
-    header2: "Outbound", 
+    header2: "Outbound",
     stat1: "1,234",
     stat2: "856",
     miniStat1: "+12%",
@@ -292,15 +324,16 @@ export const WithCustomContent: Story = {
     header: "Sales Performance",
     stat: "98.5%",
     miniStat: "of monthly target",
-    corner: <Badge variant="success" size="xs">On Track</Badge>,
+    corner: (
+      <Badge variant="success" size="xs">
+        On Track
+      </Badge>
+    ),
     variant: "secondary",
     children: (
       <div className={styles.progressContainer}>
         <div className={styles.progressBar}>
-          <div 
-            className={styles.progressFill} 
-            data-progress="98.5"
-          />
+          <div className={styles.progressFill} data-progress="98.5" />
         </div>
         <div className={styles.progressLabels}>
           <span>$98,500</span>
@@ -319,7 +352,11 @@ export const AnalyticsDashboard: Story = {
           header="Total Revenue"
           stat="$234,567"
           miniStat="+18.2% vs last month"
-          corner={<Badge variant="success" size="xs">Target: 110%</Badge>}
+          corner={
+            <Badge variant="success" size="xs">
+              Target: 110%
+            </Badge>
+          }
           variant="primary"
         >
           <div className={styles.trendIndicator}>
@@ -371,7 +408,11 @@ export const PythNetworkStats: Story = {
         header="Price Feeds"
         stat="400+"
         miniStat="across all networks"
-        corner={<Badge variant="success" size="xs">Live</Badge>}
+        corner={
+          <Badge variant="success" size="xs">
+            Live
+          </Badge>
+        }
         variant="secondary"
       >
         <div className={styles.networkBreakdown}>
@@ -406,21 +447,33 @@ export const ErrorStates: Story = {
         header="Connection Status"
         stat="Offline"
         miniStat="Last seen: 2 hours ago"
-        corner={<Badge variant="error" size="xs">Error</Badge>}
+        corner={
+          <Badge variant="error" size="xs">
+            Error
+          </Badge>
+        }
         variant="secondary"
       />
       <StatCardComponent
         header="Data Quality"
         stat="--"
         miniStat="No data available"
-        corner={<Badge variant="neutral" size="xs">N/A</Badge>}
+        corner={
+          <Badge variant="neutral" size="xs">
+            N/A
+          </Badge>
+        }
         variant="secondary"
       />
       <StatCardComponent
         header="Failed Requests"
         stat="127"
         miniStat="in the last hour"
-        corner={<Badge variant="warning" size="xs">Alert</Badge>}
+        corner={
+          <Badge variant="warning" size="xs">
+            Alert
+          </Badge>
+        }
         variant="secondary"
       />
     </div>

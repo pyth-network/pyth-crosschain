@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   gap: theme.spacing(4);
-  
+
   > label {
     min-width: 80px;
     font-size: theme.font-size("xs");
@@ -28,19 +28,8 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: theme.spacing(8);
-  align-items: center;
-  justify-items: center;
+  place-items: center center;
   min-height: 300px;
-}
-
-.controlledContainer {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(4);
-  
-  > p {
-    font-size: theme.font-size("xs");
-  }
 }
 
 .iconsGrid {
@@ -59,19 +48,19 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  
+
   &[data-status="active"] {
     background-color: #10b981;
   }
-  
+
   &[data-status="inactive"] {
     background-color: #ef4444;
   }
-  
+
   &[data-status="pending"] {
     background-color: #f59e0b;
   }
-  
+
   &[data-status="archived"] {
     background-color: #6b7280;
   }

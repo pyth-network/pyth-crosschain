@@ -1,11 +1,10 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
 
-import { SIZES, VARIANTS } from "../Button/index.jsx";
-import buttonMeta from "../Button/index.stories.jsx";
 import { Select as SelectComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
+import { SIZES, VARIANTS } from "../Button/index.jsx";
+import buttonMeta from "../Button/index.stories.jsx";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { children, beforeIcon, ...argTypes } = buttonMeta.argTypes;
@@ -98,11 +97,7 @@ type Story = StoryObj<typeof SelectComponent>;
 export const Default: Story = {
   args: {
     defaultSelectedKey: "option1",
-    options: [
-      { id: "option1" },
-      { id: "option2" },
-      { id: "option3" },
-    ],
+    options: [{ id: "option1" }, { id: "option2" }, { id: "option3" }],
     variant: "primary",
     size: "md",
     hideLabel: true,
@@ -200,11 +195,7 @@ export const Grouped: Story = {
       },
       {
         name: "Mobile Frameworks",
-        options: [
-          { id: "react-native" },
-          { id: "flutter" },
-          { id: "ionic" },
-        ],
+        options: [{ id: "react-native" }, { id: "flutter" }, { id: "ionic" }],
       },
     ],
     hideLabel: true,
@@ -219,18 +210,11 @@ export const GroupedWithHiddenLabels: Story = {
     optionGroups: [
       {
         name: "User Roles",
-        options: [
-          { id: "admin" },
-          { id: "editor" },
-          { id: "viewer" },
-        ],
+        options: [{ id: "admin" }, { id: "editor" }, { id: "viewer" }],
       },
       {
         name: "System Roles",
-        options: [
-          { id: "super-admin" },
-          { id: "moderator" },
-        ],
+        options: [{ id: "super-admin" }, { id: "moderator" }],
       },
     ],
     show: (value) => {
@@ -258,11 +242,7 @@ export const AllSizes: Story = {
           <label>{size.toUpperCase()}</label>
           <SelectComponent
             defaultSelectedKey="option1"
-            options={[
-              { id: "option1" },
-              { id: "option2" },
-              { id: "option3" },
-            ]}
+            options={[{ id: "option1" }, { id: "option2" }, { id: "option3" }]}
             size={size}
             variant="primary"
             label={`Size ${size}`}
@@ -280,19 +260,15 @@ export const AllVariants: Story = {
       {VARIANTS.map((variant) => (
         <div key={variant} className={styles.row}>
           <label>{variant.toUpperCase()}</label>
-        <SelectComponent
-          key={variant}
-          defaultSelectedKey="option1"
-          options={[
-            { id: "option1" },
-            { id: "option2" },
-            { id: "option3" },
-          ]}
-          variant={variant}
-          size="md"
-          label={`${variant.charAt(0).toUpperCase() + variant.slice(1)} variant`}
-          hideLabel={true}
-        />
+          <SelectComponent
+            key={variant}
+            defaultSelectedKey="option1"
+            options={[{ id: "option1" }, { id: "option2" }, { id: "option3" }]}
+            variant={variant}
+            size="md"
+            label={`${variant.charAt(0).toUpperCase() + variant.slice(1)} variant`}
+            hideLabel={true}
+          />
         </div>
       ))}
     </div>
@@ -333,43 +309,10 @@ export const States: Story = {
   },
 };
 
-export const ControlledExample: Story = {
-  render: () => {
-    const [selected, setSelected] = useState<string>("apple");
-    const fruits = [
-      { id: "apple", name: "Apple", emoji: "🍎" },
-      { id: "banana", name: "Banana", emoji: "🍌" },
-      { id: "orange", name: "Orange", emoji: "🍊" },
-      { id: "grape", name: "Grape", emoji: "🍇" },
-    ];
-
-    return (
-      <div className={styles.controlledContainer}>
-        <SelectComponent
-          selectedKey={selected}
-          onSelectionChange={setSelected}
-          options={fruits}
-          show={(value) => `${value.emoji} ${value.name}`}
-          label="Favorite fruit"
-          hideLabel={true}
-          variant="primary"
-          size="md"
-        />
-        <p>You selected: {fruits.find(f => f.id === selected)?.name}</p>
-      </div>
-    );
-  },
-};
-
 export const WithButtonLabel: Story = {
   args: {
     defaultSelectedKey: "en",
-    options: [
-      { id: "en" },
-      { id: "es" },
-      { id: "fr" },
-      { id: "de" },
-    ],
+    options: [{ id: "en" }, { id: "es" }, { id: "fr" }, { id: "de" }],
     show: (value) => {
       const languages = {
         en: "English",
@@ -389,11 +332,7 @@ export const WithButtonLabel: Story = {
 
 export const WithDefaultButtonLabel: Story = {
   args: {
-    options: [
-      { id: "small" },
-      { id: "medium" },
-      { id: "large" },
-    ],
+    options: [{ id: "small" }, { id: "medium" }, { id: "large" }],
     defaultButtonLabel: "Select size...",
     label: "Product size",
     hideLabel: false,
@@ -486,10 +425,7 @@ export const WithIconsAndCustomContent: Story = {
           const label = statuses[value.id as keyof typeof statuses];
           return (
             <span className={styles.iconLabel}>
-              <span 
-                className={styles.statusIndicator}
-                data-status={value.id}
-              />
+              <span className={styles.statusIndicator} data-status={value.id} />
               {label}
             </span>
           );

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Tabs } from "../unstyled/Tabs/index.jsx";
 import { MainNavTabs as MainNavTabsComponent } from "./index.jsx";
+import { Tabs } from "../unstyled/Tabs/index.jsx";
 
 const meta = {
   title: "navigation & menus/MainNavTabs",

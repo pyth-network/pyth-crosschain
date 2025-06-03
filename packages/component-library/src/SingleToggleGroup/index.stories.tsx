@@ -1,6 +1,5 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
 
 import { SingleToggleGroup as SingleToggleGroupComponent } from "./index.jsx";
 import styles from "./index.stories.module.scss";
@@ -86,35 +85,35 @@ export const ViewToggle: Story = {
 export const WithIcons: Story = {
   args: {
     items: [
-      { 
-        id: "grid", 
+      {
+        id: "grid",
         children: (
           <span className={styles.iconButton}>
             <icons.GridFour />
             Grid
           </span>
         ),
-        "aria-label": "Grid view"
+        "aria-label": "Grid view",
       },
-      { 
-        id: "list", 
+      {
+        id: "list",
         children: (
           <span className={styles.iconButton}>
             <icons.List />
             List
           </span>
         ),
-        "aria-label": "List view"
+        "aria-label": "List view",
       },
-      { 
-        id: "table", 
+      {
+        id: "table",
         children: (
           <span className={styles.iconButton}>
             <icons.Table />
             Table
           </span>
         ),
-        "aria-label": "Table view"
+        "aria-label": "Table view",
       },
     ],
     defaultSelectedKeys: ["grid"],
@@ -124,25 +123,25 @@ export const WithIcons: Story = {
 export const IconOnly: Story = {
   args: {
     items: [
-      { 
-        id: "bold", 
+      {
+        id: "bold",
         children: <icons.TextBolder />,
-        "aria-label": "Bold"
+        "aria-label": "Bold",
       },
-      { 
-        id: "italic", 
+      {
+        id: "italic",
         children: <icons.TextItalic />,
-        "aria-label": "Italic"
+        "aria-label": "Italic",
       },
-      { 
-        id: "underline", 
+      {
+        id: "underline",
         children: <icons.TextUnderline />,
-        "aria-label": "Underline"
+        "aria-label": "Underline",
       },
-      { 
-        id: "strikethrough", 
+      {
+        id: "strikethrough",
         children: <icons.TextStrikethrough />,
-        "aria-label": "Strikethrough"
+        "aria-label": "Strikethrough",
       },
     ],
     defaultSelectedKeys: ["bold"],
@@ -160,30 +159,6 @@ export const TimeRanges: Story = {
       { id: "all", children: "ALL" },
     ],
     defaultSelectedKeys: ["1d"],
-  },
-};
-
-export const ControlledExample: Story = {
-  render: () => {
-    const [selectedTab, setSelectedTab] = useState<string | number>("overview");
-    
-    const tabs = [
-      { id: "overview", children: "Overview" },
-      { id: "analytics", children: "Analytics" },
-      { id: "reports", children: "Reports" },
-      { id: "settings", children: "Settings" },
-    ];
-
-    return (
-      <div className={styles.controlledContainer}>
-        <SingleToggleGroupComponent
-          items={tabs}
-          selectedKey={selectedTab}
-          onSelectionChange={setSelectedTab}
-        />
-        <p>Current tab: {selectedTab}</p>
-      </div>
-    );
   },
 };
 
@@ -225,73 +200,44 @@ export const SortingOptions: Story = {
 export const ChartTypes: Story = {
   args: {
     items: [
-      { 
-        id: "line", 
+      {
+        id: "line",
         children: (
           <span className={styles.iconButton}>
             <icons.ChartLine />
             Line
           </span>
-        )
+        ),
       },
-      { 
-        id: "bar", 
+      {
+        id: "bar",
         children: (
           <span className={styles.iconButton}>
             <icons.ChartBar />
             Bar
           </span>
-        )
+        ),
       },
-      { 
-        id: "pie", 
+      {
+        id: "pie",
         children: (
           <span className={styles.iconButton}>
             <icons.ChartPie />
             Pie
           </span>
-        )
+        ),
       },
-      { 
-        id: "area", 
+      {
+        id: "area",
         children: (
           <span className={styles.iconButton}>
             <icons.ChartLineUp />
             Area
           </span>
-        )
+        ),
       },
     ],
     defaultSelectedKeys: ["line"],
-  },
-};
-
-export const PricingPlans: Story = {
-  render: () => {
-    const [selectedPlan, setSelectedPlan] = useState<string | number>("monthly");
-    
-    const plans = [
-      { id: "monthly", children: "Monthly" },
-      { id: "yearly", children: "Yearly (Save 20%)" },
-    ];
-
-    return (
-      <div className={styles.pricingContainer}>
-        <h3>Billing Period</h3>
-        <SingleToggleGroupComponent
-          items={plans}
-          selectedKey={selectedPlan}
-          onSelectionChange={setSelectedPlan}
-        />
-        <div className={styles.pricingDetails}>
-          {selectedPlan === "monthly" ? (
-            <p>$29/month - Billed monthly</p>
-          ) : (
-            <p>$278/year - Billed annually (Save $70)</p>
-          )}
-        </div>
-      </div>
-    );
   },
 };
 
@@ -317,43 +263,6 @@ export const LanguageSelector: Story = {
       { id: "ja", children: "日" },
     ],
     defaultSelectedKeys: ["en"],
-  },
-};
-
-export const StatusFilter: Story = {
-  render: () => {
-    const [status, setStatus] = useState<string | number>("all");
-    
-    const statusOptions = [
-      { id: "all", children: "All" },
-      { id: "active", children: "Active" },
-      { id: "inactive", children: "Inactive" },
-      { id: "pending", children: "Pending" },
-    ];
-
-    const getStatusCount = (statusId: string | number) => {
-      const counts = { all: 156, active: 89, inactive: 45, pending: 22 };
-      return counts[statusId as keyof typeof counts] || 0;
-    };
-
-    return (
-      <div className={styles.filterContainer}>
-        <SingleToggleGroupComponent
-          items={statusOptions.map(option => ({
-            ...option,
-            children: (
-              <span className={styles.statusOption}>
-                {option.children}
-                <span className={styles.count}>{getStatusCount(option.id)}</span>
-              </span>
-            )
-          }))}
-          selectedKey={status}
-          onSelectionChange={setStatus}
-        />
-        <p>Showing {getStatusCount(status)} items with status: {status}</p>
-      </div>
-    );
   },
 };
 

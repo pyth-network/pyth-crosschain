@@ -1,8 +1,8 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { InfoBox as InfoBoxComponent, VARIANTS } from "./index.jsx";
 import { iconControl } from "../icon-control.jsx";
+import { InfoBox as InfoBoxComponent, VARIANTS } from "./index.jsx";
 import styles from "./index.stories.module.scss";
 
 const meta = {
@@ -47,7 +47,8 @@ type Story = StoryObj<typeof InfoBoxComponent>;
 
 export const Default: Story = {
   args: {
-    children: "This is an informational message to help users understand something important.",
+    children:
+      "This is an informational message to help users understand something important.",
   },
 };
 
@@ -131,7 +132,8 @@ export const SuccessNotification: Story = {
   args: {
     variant: "success",
     header: "Payment Successful!",
-    children: "Your transaction has been processed successfully. You should receive a confirmation email shortly.",
+    children:
+      "Your transaction has been processed successfully. You should receive a confirmation email shortly.",
   },
 };
 
@@ -141,7 +143,8 @@ export const DataExample: Story = {
     header: "API Response",
     children: (
       <pre>
-        {JSON.stringify({ status: "ok", timestamp: 1234567890 }, null, 2)}
+        {/* eslint-disable-next-line unicorn/no-null */}
+        {JSON.stringify({ status: "ok", timestamp: 1_234_567_890 }, null, 2)}
       </pre>
     ),
   },

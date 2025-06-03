@@ -50,7 +50,11 @@ export const Badge = {
 
 type Story = StoryObj<typeof BadgeComponent>;
 
-const renderAllVariants = (style: typeof STYLES[number], size: typeof SIZES[number], children: React.ReactNode) => (
+const renderAllVariants = (
+  style: (typeof STYLES)[number],
+  size: (typeof SIZES)[number],
+  children: React.ReactNode,
+) => (
   <div className={styles.variantsContainer}>
     {VARIANTS.map((variant) => (
       <BadgeComponent key={variant} variant={variant} style={style} size={size}>
@@ -135,7 +139,6 @@ export const OutlineXS: Story = {
     },
   },
 };
-
 
 export const OutlineMD: Story = {
   args: {
