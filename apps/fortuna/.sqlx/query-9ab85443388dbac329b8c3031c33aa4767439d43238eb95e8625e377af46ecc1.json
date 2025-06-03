@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT * FROM request WHERE sender = ?",
+  "query": "\n              SELECT * FROM request\n              WHERE\n                created_at >= $1\n                AND created_at <= $2\n                AND (\n                  $3 IS NULL\n                  OR CONCAT('0x', request_tx_hash) = $3\n                  OR CONCAT('0x', reveal_tx_hash) = $3\n                  OR CONCAT('0x', sender) = $3\n                  OR sequence = $3\n                )\n                AND ($4 IS NULL OR network_id = $4)\n                AND ($5 IS NULL OR state = $5)\n              ORDER BY created_at DESC\n              LIMIT $6\n              OFFSET $7\n            ",
   "describe": {
     "columns": [
       {
@@ -90,7 +90,7 @@
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 7
     },
     "nullable": [
       false,
@@ -112,5 +112,5 @@
       false
     ]
   },
-  "hash": "8cd10cd5839b81bd9538aeb10fdfd27c6e36baf5d90a4fb9e61718f021812710"
+  "hash": "9ab85443388dbac329b8c3031c33aa4767439d43238eb95e8625e377af46ecc1"
 }

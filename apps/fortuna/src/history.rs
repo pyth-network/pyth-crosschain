@@ -1,5 +1,5 @@
 use {
-    crate::api::{ChainId, NetworkId},
+    crate::api::{ChainId, NetworkId, StateTag},
     anyhow::Result,
     chrono::{DateTime, NaiveDateTime},
     ethers::{
@@ -15,6 +15,8 @@ use {
     tokio::{spawn, sync::mpsc},
     utoipa::ToSchema,
 };
+
+const LOG_RETURN_LIMIT: u64 = 1000;
 
 #[serde_as]
 #[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
@@ -335,134 +337,127 @@ impl History {
         }
     }
 
-    pub async fn get_requests_by_tx_hash(&self, tx_hash: TxHash) -> Result<Vec<RequestStatus>> {
-        let tx_hash: String = tx_hash.encode_hex();
+    pub fn query(&self) -> RequestQueryBuilder {
+        RequestQueryBuilder::new(&self.pool)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RequestQueryBuilder<'a> {
+    pool: &'a Pool<Sqlite>,
+    search: Option<String>,
+    network_id: Option<i64>,
+    state: Option<StateTag>,
+    limit: i64,
+    offset: i64,
+    min_timestamp: DateTime<chrono::Utc>,
+    max_timestamp: DateTime<chrono::Utc>,
+}
+
+impl<'a> RequestQueryBuilder<'a> {
+    fn new(pool: &'a Pool<Sqlite>) -> Self {
+        Self {
+            pool,
+            search: None,
+            network_id: None,
+            state: None,
+            limit: LOG_RETURN_LIMIT as i64,
+            offset: 0,
+            // UTC_MIN and UTC_MAX are not valid timestamps in SQLite
+            // So we need small and large enough timestamps to replace them
+            min_timestamp: "2012-12-12T12:12:12Z"
+                .parse::<DateTime<chrono::Utc>>()
+                .unwrap(),
+            max_timestamp: "2050-12-12T12:12:12Z"
+                .parse::<DateTime<chrono::Utc>>()
+                .unwrap(),
+        }
+    }
+
+    pub fn search(mut self, search: String) -> Self {
+        self.search = Some(search);
+        self
+    }
+
+    pub fn network_id(mut self, network_id: NetworkId) -> Self {
+        self.network_id = Some(network_id as i64);
+        self
+    }
+
+    pub fn state(mut self, state: StateTag) -> Self {
+        self.state = Some(state);
+        self
+    }
+
+    pub fn limit(mut self, limit: u64) -> Result<Self, RequestQueryBuilderError> {
+        if limit > LOG_RETURN_LIMIT {
+            Err(RequestQueryBuilderError::LimitTooLarge)
+        } else if limit == 0 {
+            Err(RequestQueryBuilderError::ZeroLimit)
+        } else {
+            self.limit = limit as i64;
+            Ok(self)
+        }
+    }
+
+    pub fn offset(mut self, offset: u64) -> Self {
+        self.offset = offset as i64;
+        self
+    }
+
+    pub fn min_timestamp(mut self, min_timestamp: DateTime<chrono::Utc>) -> Self {
+        self.min_timestamp = min_timestamp;
+        self
+    }
+
+    pub fn max_timestamp(mut self, max_timestamp: DateTime<chrono::Utc>) -> Self {
+        self.max_timestamp = max_timestamp;
+        self
+    }
+
+    pub async fn execute(&self) -> Result<Vec<RequestStatus>> {
         let rows = sqlx::query_as!(
             RequestRow,
-            "SELECT * FROM request WHERE request_tx_hash = ? OR reveal_tx_hash = ?",
-            tx_hash,
-            tx_hash
+            r"
+              SELECT * FROM request
+              WHERE
+                created_at >= $1
+                AND created_at <= $2
+                AND (
+                  $3 IS NULL
+                  OR CONCAT('0x', request_tx_hash) = $3
+                  OR CONCAT('0x', reveal_tx_hash) = $3
+                  OR CONCAT('0x', sender) = $3
+                  OR sequence = $3
+                )
+                AND ($4 IS NULL OR network_id = $4)
+                AND ($5 IS NULL OR state = $5)
+              ORDER BY created_at DESC
+              LIMIT $6
+              OFFSET $7
+            ",
+            self.min_timestamp,
+            self.max_timestamp,
+            self.search,
+            self.network_id,
+            self.state,
+            self.limit,
+            self.offset
         )
-        .fetch_all(&self.pool)
+        .fetch_all(self.pool)
         .await
         .map_err(|e| {
-            tracing::error!("Failed to fetch request by tx hash: {}", e);
-            e
-        })?;
-        Ok(rows.into_iter().filter_map(|row| row.into()).collect())
-    }
-
-    pub async fn get_requests_by_sender(
-        &self,
-        sender: Address,
-        network_id: Option<NetworkId>,
-    ) -> Result<Vec<RequestStatus>> {
-        let sender: String = sender.encode_hex();
-        let rows = match network_id {
-            Some(network_id) => {
-                let network_id = network_id as i64;
-                sqlx::query_as!(
-                    RequestRow,
-                    "SELECT * FROM request WHERE sender = ? AND network_id = ?",
-                    sender,
-                    network_id,
-                )
-                .fetch_all(&self.pool)
-                .await
-            }
-            None => {
-                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE sender = ?", sender,)
-                    .fetch_all(&self.pool)
-                    .await
-            }
-        }
-        .map_err(|e| {
-            tracing::error!("Failed to fetch request by sender: {}", e);
-            e
-        })?;
-        Ok(rows.into_iter().filter_map(|row| row.into()).collect())
-    }
-
-    pub async fn get_requests_by_sequence(
-        &self,
-        sequence: u64,
-        network_id: Option<NetworkId>,
-    ) -> Result<Vec<RequestStatus>> {
-        let sequence = sequence as i64;
-        let rows = match network_id {
-            Some(network_id) => {
-                let network_id = network_id as i64;
-                sqlx::query_as!(
-                    RequestRow,
-                    "SELECT * FROM request WHERE sequence = ? AND network_id = ?",
-                    sequence,
-                    network_id,
-                )
-                .fetch_all(&self.pool)
-                .await
-            }
-            None => {
-                sqlx::query_as!(
-                    RequestRow,
-                    "SELECT * FROM request WHERE sequence = ?",
-                    sequence,
-                )
-                .fetch_all(&self.pool)
-                .await
-            }
-        }
-        .map_err(|e| {
-            tracing::error!("Failed to fetch request by sequence: {}", e);
-            e
-        })?;
-        Ok(rows.into_iter().filter_map(|row| row.into()).collect())
-    }
-
-    pub async fn get_requests_by_time(
-        &self,
-        network_id: Option<NetworkId>,
-        limit: u64,
-        offset: u64,
-        min_timestamp: Option<DateTime<chrono::Utc>>,
-        max_timestamp: Option<DateTime<chrono::Utc>>,
-    ) -> Result<Vec<RequestStatus>> {
-        // UTC_MIN and UTC_MAX are not valid timestamps in SQLite
-        // So we need small and large enough timestamps to replace them
-        let min_timestamp = min_timestamp.unwrap_or(
-            "2012-12-12T12:12:12Z"
-                .parse::<DateTime<chrono::Utc>>()
-                .unwrap(),
-        );
-        let max_timestamp = max_timestamp.unwrap_or(
-            "2050-12-12T12:12:12Z"
-                .parse::<DateTime<chrono::Utc>>()
-                .unwrap(),
-        );
-        let limit = limit as i64;
-        let offset = offset as i64;
-        let rows = match network_id {
-            Some(network_id) => {
-                let network_id = network_id as i64;
-                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE network_id = ? AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
-                    network_id,
-                    min_timestamp,
-                    max_timestamp,
-                    limit,
-                offset).fetch_all(&self.pool).await
-            }
-            None => {
-                sqlx::query_as!(RequestRow, "SELECT * FROM request WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
-                    min_timestamp,
-                    max_timestamp,
-                    limit,
-                offset).fetch_all(&self.pool).await
-            }
-        }.map_err(|e| {
             tracing::error!("Failed to fetch request by time: {}", e);
             e
         })?;
         Ok(rows.into_iter().filter_map(|row| row.into()).collect())
     }
+}
+
+#[derive(Debug)]
+pub enum RequestQueryBuilderError {
+    LimitTooLarge,
+    ZeroLimit,
 }
 
 #[cfg(test)]
@@ -486,6 +481,10 @@ mod test {
         }
     }
 
+    fn to_hex_string<T: ToHex>(val: T) -> String {
+        format!("0x{}", val.encode_hex::<String>())
+    }
+
     #[tokio::test]
     async fn test_history_return_correct_logs() {
         let history = History::new_in_memory().await.unwrap();
@@ -505,37 +504,51 @@ mod test {
         History::update_request_status(&history.pool, status.clone()).await;
 
         let logs = history
-            .get_requests_by_sequence(status.sequence, Some(status.network_id))
+            .query()
+            .search(status.sequence.to_string())
+            .network_id(status.network_id)
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
 
         let logs = history
-            .get_requests_by_sequence(status.sequence, None)
+            .query()
+            .search(status.sequence.to_string())
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
 
         let logs = history
-            .get_requests_by_tx_hash(status.request_tx_hash)
+            .query()
+            .search(to_hex_string(status.request_tx_hash))
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
 
         let logs = history
-            .get_requests_by_tx_hash(reveal_tx_hash)
+            .query()
+            .search(to_hex_string(reveal_tx_hash))
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
 
         let logs = history
-            .get_requests_by_sender(status.sender, Some(status.network_id))
+            .query()
+            .search(to_hex_string(status.sender))
+            .network_id(status.network_id)
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
 
         let logs = history
-            .get_requests_by_sender(status.sender, None)
+            .query()
+            .search(to_hex_string(status.sender))
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
@@ -566,7 +579,9 @@ mod test {
         History::update_request_status(&history.pool, failed_status).await;
 
         let logs = history
-            .get_requests_by_tx_hash(reveal_tx_hash)
+            .query()
+            .search(to_hex_string(reveal_tx_hash))
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
@@ -583,7 +598,9 @@ mod test {
         };
         History::update_request_status(&history.pool, status.clone()).await;
         let logs = history
-            .get_requests_by_tx_hash(status.request_tx_hash)
+            .query()
+            .search(to_hex_string(status.request_tx_hash))
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status.clone()]);
@@ -617,31 +634,43 @@ mod test {
         History::update_request_status(&history.pool, status.clone()).await;
 
         let logs = history
-            .get_requests_by_sequence(status.sequence, Some(123))
+            .query()
+            .search(status.sequence.to_string())
+            .network_id(123)
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![]);
 
         let logs = history
-            .get_requests_by_sequence(status.sequence + 1, None)
+            .query()
+            .search((status.sequence + 1).to_string())
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![]);
 
         let logs = history
-            .get_requests_by_tx_hash(TxHash::zero())
+            .query()
+            .search(to_hex_string(TxHash::zero()))
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![]);
 
         let logs = history
-            .get_requests_by_sender(Address::zero(), Some(status.network_id))
+            .query()
+            .search(to_hex_string(Address::zero()))
+            .network_id(status.network_id)
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![]);
 
         let logs = history
-            .get_requests_by_sender(Address::zero(), None)
+            .query()
+            .search(to_hex_string(Address::zero()))
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![]);
@@ -654,49 +683,41 @@ mod test {
         History::update_request_status(&history.pool, status.clone()).await;
         for network_id in [None, Some(121)] {
             // min = created_at = max
-            let logs = history
-                .get_requests_by_time(
-                    network_id,
-                    10,
-                    0,
-                    Some(status.created_at),
-                    Some(status.created_at),
-                )
+            let mut query = history.query().limit(10).unwrap();
+
+            if let Some(network_id) = network_id {
+                query = query.network_id(network_id);
+            }
+
+            let logs = query
+                .clone()
+                .min_timestamp(status.created_at)
+                .max_timestamp(status.created_at)
+                .execute()
                 .await
                 .unwrap();
             assert_eq!(logs, vec![status.clone()]);
 
             // min = created_at + 1
-            let logs = history
-                .get_requests_by_time(
-                    network_id,
-                    10,
-                    0,
-                    Some(status.created_at + Duration::seconds(1)),
-                    None,
-                )
+            let logs = query
+                .clone()
+                .min_timestamp(status.created_at + Duration::seconds(1))
+                .execute()
                 .await
                 .unwrap();
             assert_eq!(logs, vec![]);
 
             // max = created_at - 1
-            let logs = history
-                .get_requests_by_time(
-                    network_id,
-                    10,
-                    0,
-                    None,
-                    Some(status.created_at - Duration::seconds(1)),
-                )
+            let logs = query
+                .clone()
+                .max_timestamp(status.created_at - Duration::seconds(1))
+                .execute()
                 .await
                 .unwrap();
             assert_eq!(logs, vec![]);
 
             // no min or max
-            let logs = history
-                .get_requests_by_time(network_id, 10, 0, None, None)
-                .await
-                .unwrap();
+            let logs = query.execute().await.unwrap();
             assert_eq!(logs, vec![status.clone()]);
         }
     }
@@ -709,7 +730,10 @@ mod test {
         // wait for the writer thread to write to the db
         sleep(std::time::Duration::from_secs(1)).await;
         let logs = history
-            .get_requests_by_sequence(1, Some(121))
+            .query()
+            .search(1.to_string())
+            .network_id(121)
+            .execute()
             .await
             .unwrap();
         assert_eq!(logs, vec![status]);

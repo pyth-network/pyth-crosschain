@@ -1,6 +1,6 @@
 use {
     crate::{
-        api::{ApiBlockChainState, NetworkId, RestError},
+        api::{ApiBlockChainState, NetworkId, RestError, StateTag},
         history::RequestStatus,
     },
     axum::{
@@ -8,8 +8,6 @@ use {
         Json,
     },
     chrono::{DateTime, Utc},
-    ethers::types::{Address, TxHash},
-    std::str::FromStr,
     utoipa::IntoParams,
 };
 
@@ -27,6 +25,8 @@ pub struct ExplorerQueryParams {
     /// The network ID to filter the results by.
     #[param(value_type = Option<u64>)]
     pub network_id: Option<NetworkId>,
+    /// The state to filter the results by.
+    pub state: Option<StateTag>,
     /// The maximum number of logs to return. Max value is 1000.
     #[param(default = 1000)]
     pub limit: Option<u64>,
@@ -34,8 +34,6 @@ pub struct ExplorerQueryParams {
     #[param(default = 0)]
     pub offset: Option<u64>,
 }
-
-const LOG_RETURN_LIMIT: u64 = 1000;
 
 /// Returns the logs of all requests captured by the keeper.
 ///
@@ -65,51 +63,33 @@ pub async fn explorer(
             return Err(RestError::InvalidChainId);
         }
     }
-    if let Some(limit) = query_params.limit {
-        if limit > LOG_RETURN_LIMIT || limit == 0 {
-            return Err(RestError::InvalidQueryString);
-        }
+    let mut query = state.history.query();
+    if let Some(search) = query_params.query {
+        query = query.search(search);
     }
-    if let Some(query) = query_params.query {
-        if let Ok(tx_hash) = TxHash::from_str(&query) {
-            return Ok(Json(
-                state
-                    .history
-                    .get_requests_by_tx_hash(tx_hash)
-                    .await
-                    .map_err(|_| RestError::TemporarilyUnavailable)?,
-            ));
-        }
-        if let Ok(sender) = Address::from_str(&query) {
-            return Ok(Json(
-                state
-                    .history
-                    .get_requests_by_sender(sender, query_params.network_id)
-                    .await
-                    .map_err(|_| RestError::TemporarilyUnavailable)?,
-            ));
-        }
-        if let Ok(sequence_number) = u64::from_str(&query) {
-            return Ok(Json(
-                state
-                    .history
-                    .get_requests_by_sequence(sequence_number, query_params.network_id)
-                    .await
-                    .map_err(|_| RestError::TemporarilyUnavailable)?,
-            ));
-        }
-        return Err(RestError::InvalidQueryString);
+    if let Some(network_id) = query_params.network_id {
+        query = query.network_id(network_id);
+    }
+    if let Some(state) = query_params.state {
+        query = query.state(state);
+    }
+    if let Some(limit) = query_params.limit {
+        query = query
+            .limit(limit)
+            .map_err(|_| RestError::InvalidQueryString)?;
+    }
+    if let Some(offset) = query_params.offset {
+        query = query.offset(offset);
+    }
+    if let Some(min_timestamp) = query_params.min_timestamp {
+        query = query.min_timestamp(min_timestamp);
+    }
+    if let Some(max_timestamp) = query_params.max_timestamp {
+        query = query.max_timestamp(max_timestamp);
     }
     Ok(Json(
-        state
-            .history
-            .get_requests_by_time(
-                query_params.network_id,
-                query_params.limit.unwrap_or(LOG_RETURN_LIMIT),
-                query_params.offset.unwrap_or(0),
-                query_params.min_timestamp,
-                query_params.max_timestamp,
-            )
+        query
+            .execute()
             .await
             .map_err(|_| RestError::TemporarilyUnavailable)?,
     ))
