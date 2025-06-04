@@ -1,6 +1,6 @@
 [package]
 name = "pyth-lazer-publisher-sdk"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "Pyth Lazer Publisher SDK types."
 license = "Apache-2.0"
