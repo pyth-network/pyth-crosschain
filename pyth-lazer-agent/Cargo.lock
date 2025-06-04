@@ -1686,9 +1686,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.1.3"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea6d25c6a6fd319e4def6dc92a544b3323213fbbc5c53bba5ac89999ad169092"
+checksum = "a3e633db28ca38210de8ab3e99d5bd85ad8cae08a08bb0292506340ee9d1c718"
 dependencies = [
  "anyhow",
  "fs-err",
