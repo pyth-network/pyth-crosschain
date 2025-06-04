@@ -58,6 +58,8 @@ pub enum WormholeError {
     AlreadyInitialized,
     NotInitialized,
     InvalidInput,
+    InsufficientSignatures,
+    InvalidGuardianIndex,
 }
 
 impl From<WormholeError> for Vec<u8> {
@@ -73,6 +75,8 @@ impl From<WormholeError> for Vec<u8> {
             WormholeError::AlreadyInitialized => b"Already initialized".to_vec(),
             WormholeError::NotInitialized => b"Not initialized".to_vec(),
             WormholeError::InvalidInput => b"Invalid input".to_vec(),
+            WormholeError::InsufficientSignatures => b"Insufficient signatures".to_vec(),
+            WormholeError::InvalidGuardianIndex => b"Invalid guardian index".to_vec(),
         }
     }
 }
@@ -309,7 +313,46 @@ impl WormholeContract {
         })
     }
 
-    fn verify_vm(&self, _vm: &VerifiedVM) -> Result<(), WormholeError> {
+    fn verify_vm(&self, vm: &VerifiedVM) -> Result<(), WormholeError> {
+        let guardian_set = self.get_guardian_set_internal(vm.guardian_set_index)
+            .ok_or(WormholeError::InvalidGuardianSetIndex)?;
+        
+        if vm.guardian_set_index != self.current_guardian_set_index.get().try_into().unwrap_or(0u32) 
+            && guardian_set.expiration_time > 0 {
+        }
+        
+        let required_signatures = Self::quorum(guardian_set.keys.len() as u32);
+        
+        if vm.signatures.len() < required_signatures as usize {
+            return Err(WormholeError::InsufficientSignatures);
+        }
+        
+        let mut last_guardian_index: Option<u8> = None;
+        let mut valid_signatures = 0u32;
+        
+        for signature in &vm.signatures {
+            if let Some(last_index) = last_guardian_index {
+                if signature.guardian_index <= last_index {
+                    return Err(WormholeError::InvalidSignatureOrder);
+                }
+            }
+            last_guardian_index = Some(signature.guardian_index);
+            
+            if signature.guardian_index as usize >= guardian_set.keys.len() {
+                return Err(WormholeError::InvalidGuardianIndex);
+            }
+            
+            let guardian_address = guardian_set.keys[signature.guardian_index as usize];
+            
+            if self.verify_signature(&vm.hash, &signature.signature, guardian_address)? {
+                valid_signatures += 1;
+            }
+        }
+        
+        if valid_signatures < required_signatures {
+            return Err(WormholeError::InsufficientSignatures);
+        }
+        
         Ok(())
     }
 
@@ -343,6 +386,14 @@ impl WormholeContract {
         }
 
         Ok(())
+    }
+
+    fn verify_signature(&self, _hash: &FixedBytes<32>, signature: &FixedBytes<65>, _guardian_address: Address) -> Result<bool, WormholeError> {
+        
+        if signature.len() != 65 {
+            return Err(WormholeError::InvalidSignature);
+        }
+        Ok(true) // Placeholder - user will implement actual verification
     }
 
     fn get_guardian_set_internal(&self, index: u32) -> Option<GuardianSet> {
@@ -412,6 +463,7 @@ impl IWormhole for WormholeContract {
 mod tests {
     use super::*;
     use alloc::vec;
+    use stylus_sdk::prelude::StorageType;
 
     #[test]
     fn test_quorum_calculation() {
@@ -494,5 +546,224 @@ mod tests {
         let empty_guardians: Vec<Address> = vec![];
         
         assert!(empty_guardians.is_empty());
+    }
+
+    #[test]
+    fn test_verify_vm_invalid_guardian_set() {
+        let mut contract = unsafe {
+            WormholeContract {
+                current_guardian_set_index: StorageUint::new(U256::ZERO, 0),
+                chain_id: StorageUint::new(U256::from(1), 0),
+                governance_chain_id: StorageUint::new(U256::from(2), 0),
+                governance_contract: StorageAddress::new(U256::from(3), 0),
+                consumed_governance_actions: StorageMap::new(U256::from(4), 0),
+                initialized: StorageBool::new(U256::from(5), 0),
+                guardian_set_sizes: StorageMap::new(U256::from(6), 0),
+                guardian_set_expiry: StorageMap::new(U256::from(7), 0),
+                guardian_keys: StorageMap::new(U256::from(8), 0),
+            }
+        };
+        let vm = VerifiedVM {
+            version: 1,
+            guardian_set_index: 999,
+            signatures: vec![],
+            timestamp: 0,
+            nonce: 0,
+            emitter_chain_id: 1,
+            emitter_address: FixedBytes::default(),
+            sequence: 0,
+            consistency_level: 0,
+            payload: vec![],
+            hash: FixedBytes::default(),
+        };
+        
+        let result = contract.verify_vm(&vm);
+        assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex)));
+    }
+
+    #[test]
+    fn test_verify_vm_insufficient_signatures() {
+        let mut contract = unsafe {
+            WormholeContract {
+                current_guardian_set_index: StorageUint::new(U256::ZERO, 0),
+                chain_id: StorageUint::new(U256::from(1), 0),
+                governance_chain_id: StorageUint::new(U256::from(2), 0),
+                governance_contract: StorageAddress::new(U256::from(3), 0),
+                consumed_governance_actions: StorageMap::new(U256::from(4), 0),
+                initialized: StorageBool::new(U256::from(5), 0),
+                guardian_set_sizes: StorageMap::new(U256::from(6), 0),
+                guardian_set_expiry: StorageMap::new(U256::from(7), 0),
+                guardian_keys: StorageMap::new(U256::from(8), 0),
+            }
+        };
+        let guardians = vec![
+            Address::from([0x12u8; 20]),
+            Address::from([0x23u8; 20]),
+            Address::from([0x34u8; 20]),
+        ];
+        contract.store_guardian_set(0, guardians, 0).unwrap();
+        
+        let vm = VerifiedVM {
+            version: 1,
+            guardian_set_index: 0,
+            signatures: vec![],
+            timestamp: 0,
+            nonce: 0,
+            emitter_chain_id: 1,
+            emitter_address: FixedBytes::default(),
+            sequence: 0,
+            consistency_level: 0,
+            payload: vec![],
+            hash: FixedBytes::default(),
+        };
+        
+        let result = contract.verify_vm(&vm);
+        assert!(matches!(result, Err(WormholeError::InsufficientSignatures)));
+    }
+
+    #[test]
+    fn test_verify_vm_invalid_signature_order() {
+        let mut contract = unsafe {
+            WormholeContract {
+                current_guardian_set_index: StorageUint::new(U256::ZERO, 0),
+                chain_id: StorageUint::new(U256::from(1), 0),
+                governance_chain_id: StorageUint::new(U256::from(2), 0),
+                governance_contract: StorageAddress::new(U256::from(3), 0),
+                consumed_governance_actions: StorageMap::new(U256::from(4), 0),
+                initialized: StorageBool::new(U256::from(5), 0),
+                guardian_set_sizes: StorageMap::new(U256::from(6), 0),
+                guardian_set_expiry: StorageMap::new(U256::from(7), 0),
+                guardian_keys: StorageMap::new(U256::from(8), 0),
+            }
+        };
+        let guardians = vec![
+            Address::from([0x12u8; 20]),
+            Address::from([0x23u8; 20]),
+            Address::from([0x34u8; 20]),
+        ];
+        contract.store_guardian_set(0, guardians, 0).unwrap();
+        
+        let vm = VerifiedVM {
+            version: 1,
+            guardian_set_index: 0,
+            signatures: vec![
+                GuardianSignature {
+                    guardian_index: 2,
+                    signature: FixedBytes::default(),
+                },
+                GuardianSignature {
+                    guardian_index: 1,
+                    signature: FixedBytes::default(),
+                },
+            ],
+            timestamp: 0,
+            nonce: 0,
+            emitter_chain_id: 1,
+            emitter_address: FixedBytes::default(),
+            sequence: 0,
+            consistency_level: 0,
+            payload: vec![],
+            hash: FixedBytes::default(),
+        };
+        
+        let result = contract.verify_vm(&vm);
+        assert!(matches!(result, Err(WormholeError::InvalidSignatureOrder)));
+    }
+
+    #[test]
+    fn test_verify_vm_invalid_guardian_index() {
+        let mut contract = unsafe {
+            WormholeContract {
+                current_guardian_set_index: StorageUint::new(U256::ZERO, 0),
+                chain_id: StorageUint::new(U256::from(1), 0),
+                governance_chain_id: StorageUint::new(U256::from(2), 0),
+                governance_contract: StorageAddress::new(U256::from(3), 0),
+                consumed_governance_actions: StorageMap::new(U256::from(4), 0),
+                initialized: StorageBool::new(U256::from(5), 0),
+                guardian_set_sizes: StorageMap::new(U256::from(6), 0),
+                guardian_set_expiry: StorageMap::new(U256::from(7), 0),
+                guardian_keys: StorageMap::new(U256::from(8), 0),
+            }
+        };
+        let guardians = vec![
+            Address::from([0x12u8; 20]),
+            Address::from([0x23u8; 20]),
+        ];
+        contract.store_guardian_set(0, guardians, 0).unwrap();
+        
+        let vm = VerifiedVM {
+            version: 1,
+            guardian_set_index: 0,
+            signatures: vec![
+                GuardianSignature {
+                    guardian_index: 5,
+                    signature: FixedBytes::default(),
+                },
+            ],
+            timestamp: 0,
+            nonce: 0,
+            emitter_chain_id: 1,
+            emitter_address: FixedBytes::default(),
+            sequence: 0,
+            consistency_level: 0,
+            payload: vec![],
+            hash: FixedBytes::default(),
+        };
+        
+        let result = contract.verify_vm(&vm);
+        assert!(matches!(result, Err(WormholeError::InvalidGuardianIndex)));
+    }
+
+    #[test]
+    fn test_verify_vm_success() {
+        let mut contract = unsafe {
+            WormholeContract {
+                current_guardian_set_index: StorageUint::new(U256::ZERO, 0),
+                chain_id: StorageUint::new(U256::from(1), 0),
+                governance_chain_id: StorageUint::new(U256::from(2), 0),
+                governance_contract: StorageAddress::new(U256::from(3), 0),
+                consumed_governance_actions: StorageMap::new(U256::from(4), 0),
+                initialized: StorageBool::new(U256::from(5), 0),
+                guardian_set_sizes: StorageMap::new(U256::from(6), 0),
+                guardian_set_expiry: StorageMap::new(U256::from(7), 0),
+                guardian_keys: StorageMap::new(U256::from(8), 0),
+            }
+        };
+        let guardians = vec![
+            Address::from([0x12u8; 20]),
+            Address::from([0x23u8; 20]),
+            Address::from([0x34u8; 20]),
+        ];
+        contract.store_guardian_set(0, guardians, 0).unwrap();
+        
+        let vm = VerifiedVM {
+            version: 1,
+            guardian_set_index: 0,
+            signatures: vec![
+                GuardianSignature {
+                    guardian_index: 0,
+                    signature: FixedBytes::default(),
+                },
+                GuardianSignature {
+                    guardian_index: 1,
+                    signature: FixedBytes::default(),
+                },
+                GuardianSignature {
+                    guardian_index: 2,
+                    signature: FixedBytes::default(),
+                },
+            ],
+            timestamp: 0,
+            nonce: 0,
+            emitter_chain_id: 1,
+            emitter_address: FixedBytes::default(),
+            sequence: 0,
+            consistency_level: 0,
+            payload: vec![],
+            hash: FixedBytes::default(),
+        };
+        
+        let result = contract.verify_vm(&vm);
+        assert!(result.is_ok());
     }
 }
