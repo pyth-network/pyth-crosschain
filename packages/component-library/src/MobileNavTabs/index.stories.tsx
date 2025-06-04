@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { MobileNavTabs as MobileNavTabsComponent } from "./index.jsx";
 
 const meta = {
+  title: "navigation & menus/MobileNavTabs",
   component: MobileNavTabsComponent,
   parameters: {
     layout: "padded",
@@ -21,8 +22,8 @@ export const MobileNavTabs = {
   args: {
     tabs: [
       { children: "Home", segment: "" },
-      { children: "Foo", segment: "foo" },
-      { children: "Bar", segment: "bar" },
+      { children: "Products", segment: "products" },
+      { children: "Developers", segment: "developers" },
     ],
   },
 } satisfies StoryObj<typeof MobileNavTabsComponent>;

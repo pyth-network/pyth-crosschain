@@ -1,0 +1,58 @@
+@use "../theme";
+
+// WithFooter story styles
+.footerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footerText {
+  font-size: theme.font-size("sm");
+  opacity: 0.7;
+}
+
+.activityList {
+  margin: 0;
+  padding-left: theme.spacing(6);
+}
+
+// CompleteExample story styles
+.revenueContent {
+  margin-bottom: theme.spacing(4);
+}
+
+.revenueHeading {
+  margin: 0 0 theme.spacing(2) 0;
+  font-size: theme.font-size("4xl");
+}
+
+.revenueSubtext {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: theme.spacing(4);
+}
+
+.statLabel {
+  margin: 0;
+  font-size: theme.font-size("sm");
+  opacity: 0.7;
+}
+
+.statValue {
+  margin: 0;
+  font-size: theme.font-size("xl");
+  font-weight: theme.font-weight("semibold");
+}
+
+// AllVariants story styles
+.variantsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+}

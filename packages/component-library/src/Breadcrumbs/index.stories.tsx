@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Breadcrumbs as BreadcrumbsComponent } from "./index.jsx";
 
 const meta = {
+  title: "navigation & menus/Breadcrumbs",
   component: BreadcrumbsComponent,
   argTypes: {
     label: {
@@ -25,8 +26,8 @@ export const Breadcrumbs = {
     label: "Breadcrumbs",
     items: [
       { href: "/", label: "Home" },
-      { href: "/foo", label: "Foo" },
-      { label: "Bar" },
+      { href: "#", label: "Products" },
+      { label: "Pyth Core" },
     ],
   },
 } satisfies StoryObj<typeof BreadcrumbsComponent>;
