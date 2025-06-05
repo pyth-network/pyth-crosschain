@@ -427,8 +427,34 @@ impl<'a> RequestQueryBuilder<'a> {
     }
 
     pub async fn execute(&self) -> Result<Vec<RequestStatus>> {
-        let mut query_builder =
-            QueryBuilder::new("SELECT * FROM request WHERE created_at BETWEEN ");
+        let mut query_builder = self.build_query("*");
+        query_builder.push(" LIMIT ");
+        query_builder.push_bind(self.limit);
+        query_builder.push(" OFFSET ");
+        query_builder.push_bind(self.offset);
+
+        let result: sqlx::Result<Vec<RequestRow>> =
+            query_builder.build_query_as().fetch_all(self.pool).await;
+
+        if let Err(e) = &result {
+            tracing::error!("Failed to fetch request: {}", e);
+        }
+
+        Ok(result?.into_iter().filter_map(|row| row.into()).collect())
+    }
+
+    pub async fn count_results(&self) -> Result<u64> {
+        self.build_query("COUNT(*) AS count")
+            .build_query_scalar::<u64>()
+            .fetch_one(self.pool)
+            .await
+            .map_err(|err| err.into())
+    }
+
+    fn build_query(&self, columns: &str) -> QueryBuilder<Sqlite> {
+        let mut query_builder = QueryBuilder::new(format!(
+            "SELECT {columns} FROM request WHERE created_at BETWEEN "
+        ));
         query_builder.push_bind(self.min_timestamp);
         query_builder.push(" AND ");
         query_builder.push_bind(self.max_timestamp);
@@ -464,21 +490,8 @@ impl<'a> RequestQueryBuilder<'a> {
             query_builder.push_bind(state);
         }
 
-        query_builder.push(" ORDER BY created_at DESC LIMIT ");
-        query_builder.push_bind(self.limit);
-        query_builder.push(" OFFSET ");
-        query_builder.push_bind(self.offset);
-
-        let rows = query_builder
-            .build_query_as::<RequestRow>()
-            .fetch_all(self.pool)
-            .await;
-
-        if let Err(e) = &rows {
-            tracing::error!("Failed to fetch request by time: {}", e);
-        }
-
-        Ok(rows?.into_iter().filter_map(|row| row.into()).collect())
+        query_builder.push(" ORDER BY created_at DESC");
+        query_builder
     }
 }
 
@@ -927,5 +940,39 @@ mod test {
             .await
             .unwrap();
         assert_eq!(logs, vec![status]);
+    }
+
+    #[tokio::test]
+    async fn test_count_results() {
+        let history = History::new_in_memory().await.unwrap();
+        History::update_request_status(&history.pool, get_random_request_status()).await;
+        History::update_request_status(&history.pool, get_random_request_status()).await;
+        let mut failed_status = get_random_request_status();
+        History::update_request_status(&history.pool, failed_status.clone()).await;
+        failed_status.state = RequestEntryState::Failed {
+            reason: "Failed".to_string(),
+            provider_random_number: None,
+        };
+        History::update_request_status(&history.pool, failed_status.clone()).await;
+
+        let results = history.query().count_results().await.unwrap();
+        assert_eq!(results, 3);
+
+        let results = history
+            .query()
+            .limit(1)
+            .unwrap()
+            .count_results()
+            .await
+            .unwrap();
+        assert_eq!(results, 3);
+
+        let results = history
+            .query()
+            .state(StateTag::Pending)
+            .count_results()
+            .await
+            .unwrap();
+        assert_eq!(results, 2);
     }
 }
