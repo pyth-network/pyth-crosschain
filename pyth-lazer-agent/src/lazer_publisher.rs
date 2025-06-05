@@ -137,15 +137,12 @@ impl LazerPublisherTask {
             payload: Some(buf),
             special_fields: Default::default(),
         };
-        for relayer_sender in self.relayer_senders.iter() {
-            if let Err(e) = relayer_sender
-                .sender
-                .send(signed_lazer_transaction.clone())
-                .await
-            {
-                error!("Error sending transaction to Lazer relayer session: {e:?}");
-            }
-        }
+        futures::future::join_all(
+            self.relayer_senders
+                .iter_mut()
+                .map(|relayer_sender| relayer_sender.sender.send(signed_lazer_transaction.clone())),
+        )
+        .await;
 
         self.pending_updates.clear();
         Ok(())

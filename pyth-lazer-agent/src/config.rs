@@ -21,7 +21,7 @@ pub struct Config {
 }
 
 fn default_publish_interval() -> Duration {
-    Duration::from_millis(50)
+    Duration::from_micros(500)
 }
 
 pub fn load_config(config_path: String) -> anyhow::Result<Config> {

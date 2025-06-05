@@ -1,5 +1,7 @@
 use crate::config::CHANNEL_CAPACITY;
 use anyhow::{Result, bail};
+use backoff::ExponentialBackoffBuilder;
+use backoff::backoff::Backoff;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use http::HeaderValue;
@@ -85,8 +87,15 @@ struct RelayerSessionTask {
 
 impl RelayerSessionTask {
     pub async fn run(&mut self) {
+        let initial_interval = Duration::from_millis(100);
+        let max_interval = Duration::from_secs(5);
+        let mut backoff = ExponentialBackoffBuilder::new()
+            .with_initial_interval(initial_interval)
+            .with_max_interval(max_interval)
+            .with_max_elapsed_time(None)
+            .build();
+
         let mut failure_count = 0;
-        let retry_duration = Duration::from_secs(1);
 
         loop {
             match self.run_relayer_connection().await {
@@ -96,13 +105,14 @@ impl RelayerSessionTask {
                 }
                 Err(e) => {
                     failure_count += 1;
+                    let next_backoff = backoff.next_backoff().unwrap_or(max_interval);
                     tracing::error!(
                         "relayer session failed with error: {:?}, failure_count: {}; retrying in {:?}",
                         e,
                         failure_count,
-                        retry_duration
+                        next_backoff
                     );
-                    tokio::time::sleep(retry_duration).await;
+                    tokio::time::sleep(next_backoff).await;
                 }
             }
         }

@@ -165,7 +165,7 @@ async fn try_handle_publisher(
                         continue;
                     }
                 }
-            } //_ => bail!("Publisher API request set with invalid context"),
+            }
         };
 
         lazer_publisher.push_feed_update(feed_update).await?;
