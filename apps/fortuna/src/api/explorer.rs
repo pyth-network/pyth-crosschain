@@ -35,6 +35,12 @@ pub struct ExplorerQueryParams {
     pub offset: Option<u64>,
 }
 
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct ExplorerResponse {
+    pub requests: Vec<RequestStatus>,
+    pub total_results: u64,
+}
+
 /// Returns the logs of all requests captured by the keeper.
 ///
 /// This endpoint allows you to filter the logs by a specific network ID, a query string (which can be a transaction hash, sender address, or sequence number), and a time range.
@@ -42,13 +48,13 @@ pub struct ExplorerQueryParams {
 #[utoipa::path(
     get,
     path = "/v1/logs",
-    responses((status = 200, description = "A list of Entropy request logs", body = Vec<RequestStatus>)),
+    responses((status = 200, description = "A list of Entropy request logs", body = ExplorerResponse)),
     params(ExplorerQueryParams)
 )]
 pub async fn explorer(
     State(state): State<crate::api::ApiState>,
     Query(query_params): Query<ExplorerQueryParams>,
-) -> anyhow::Result<Json<Vec<RequestStatus>>, RestError> {
+) -> anyhow::Result<Json<ExplorerResponse>, RestError> {
     if let Some(network_id) = &query_params.network_id {
         if !state
             .chains
@@ -89,10 +95,13 @@ pub async fn explorer(
     if let Some(max_timestamp) = query_params.max_timestamp {
         query = query.max_timestamp(max_timestamp);
     }
-    Ok(Json(
-        query
-            .execute()
-            .await
-            .map_err(|_| RestError::TemporarilyUnavailable)?,
-    ))
+
+    let (requests, total_results) = tokio::join!(query.execute(), query.count_results());
+    let requests = requests.map_err(|_| RestError::TemporarilyUnavailable)?;
+    let total_results = total_results.map_err(|_| RestError::TemporarilyUnavailable)?;
+
+    Ok(Json(ExplorerResponse {
+        requests,
+        total_results,
+    }))
 }

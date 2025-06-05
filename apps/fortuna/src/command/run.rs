@@ -45,6 +45,7 @@ pub async fn run_api(
     crate::api::Blob,
     crate::api::BinaryEncoding,
     crate::api::StateTag,
+    crate::api::ExplorerResponse,
     )
     ),
     tags(
