@@ -65,7 +65,9 @@ pub async fn explorer(
     }
     let mut query = state.history.query();
     if let Some(search) = query_params.query {
-        query = query.search(search);
+        query = query
+            .search(search)
+            .map_err(|_| RestError::InvalidQueryString)?;
     }
     if let Some(network_id) = query_params.network_id {
         query = query.network_id(network_id);

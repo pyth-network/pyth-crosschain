@@ -10,8 +10,8 @@ use {
     },
     serde::Serialize,
     serde_with::serde_as,
-    sqlx::{migrate, Pool, Sqlite, SqlitePool},
-    std::sync::Arc,
+    sqlx::{migrate, FromRow, Pool, QueryBuilder, Sqlite, SqlitePool},
+    std::{str::FromStr, sync::Arc},
     tokio::{spawn, sync::mpsc},
     utoipa::ToSchema,
 };
@@ -99,7 +99,7 @@ impl RequestStatus {
     }
 }
 
-#[derive(Clone, Debug, Serialize, ToSchema, PartialEq)]
+#[derive(Clone, Debug, Serialize, ToSchema, PartialEq, FromRow)]
 struct RequestRow {
     chain_id: String,
     network_id: i64,
@@ -345,7 +345,7 @@ impl History {
 #[derive(Debug, Clone)]
 pub struct RequestQueryBuilder<'a> {
     pool: &'a Pool<Sqlite>,
-    search: Option<String>,
+    search: Option<SearchField>,
     network_id: Option<i64>,
     state: Option<StateTag>,
     limit: i64,
@@ -374,9 +374,20 @@ impl<'a> RequestQueryBuilder<'a> {
         }
     }
 
-    pub fn search(mut self, search: String) -> Self {
-        self.search = Some(search);
-        self
+    pub fn search(mut self, search: String) -> Result<Self, RequestQueryBuilderError> {
+        if let Ok(tx_hash) = TxHash::from_str(&search) {
+            Ok(SearchField::TxHash(tx_hash))
+        } else if let Ok(sender) = Address::from_str(&search) {
+            Ok(SearchField::Sender(sender))
+        } else if let Ok(sequence_number) = u64::from_str(&search) {
+            Ok(SearchField::SequenceNumber(sequence_number as i64))
+        } else {
+            Err(RequestQueryBuilderError::InvalidSearch)
+        }
+        .map(|search_field| {
+            self.search = Some(search_field);
+            self
+        })
     }
 
     pub fn network_id(mut self, network_id: NetworkId) -> Self {
@@ -416,41 +427,58 @@ impl<'a> RequestQueryBuilder<'a> {
     }
 
     pub async fn execute(&self) -> Result<Vec<RequestStatus>> {
-        let rows = sqlx::query_as!(
-            RequestRow,
-            r"
-              SELECT * FROM request
-              WHERE
-                created_at >= $1
-                AND created_at <= $2
-                AND (
-                  $3 IS NULL
-                  OR CONCAT('0x', request_tx_hash) = $3
-                  OR CONCAT('0x', reveal_tx_hash) = $3
-                  OR CONCAT('0x', sender) = $3
-                  OR sequence = $3
-                )
-                AND ($4 IS NULL OR network_id = $4)
-                AND ($5 IS NULL OR state = $5)
-              ORDER BY created_at DESC
-              LIMIT $6
-              OFFSET $7
-            ",
-            self.min_timestamp,
-            self.max_timestamp,
-            self.search,
-            self.network_id,
-            self.state,
-            self.limit,
-            self.offset
-        )
-        .fetch_all(self.pool)
-        .await
-        .map_err(|e| {
+        let mut query_builder =
+            QueryBuilder::new("SELECT * FROM request WHERE created_at BETWEEN ");
+        query_builder.push_bind(self.min_timestamp);
+        query_builder.push(" AND ");
+        query_builder.push_bind(self.max_timestamp);
+
+        match &self.search {
+            Some(SearchField::TxHash(tx_hash)) => {
+                let tx_hash: String = tx_hash.encode_hex();
+                query_builder.push(" AND (request_tx_hash = ");
+                query_builder.push_bind(tx_hash.clone());
+                query_builder.push(" OR reveal_tx_hash = ");
+                query_builder.push_bind(tx_hash);
+                query_builder.push(")");
+            }
+            Some(SearchField::Sender(sender)) => {
+                let sender: String = sender.encode_hex();
+                query_builder.push(" AND sender = ");
+                query_builder.push_bind(sender);
+            }
+            Some(SearchField::SequenceNumber(sequence_number)) => {
+                query_builder.push(" AND sequence = ");
+                query_builder.push_bind(sequence_number);
+            }
+            None => (),
+        }
+
+        if let Some(network_id) = &self.network_id {
+            query_builder.push(" AND network_id = ");
+            query_builder.push_bind(network_id);
+        }
+
+        if let Some(state) = &self.state {
+            query_builder.push(" AND state = ");
+            query_builder.push_bind(state);
+        }
+
+        query_builder.push(" ORDER BY created_at DESC LIMIT ");
+        query_builder.push_bind(self.limit);
+        query_builder.push(" OFFSET ");
+        query_builder.push_bind(self.offset);
+
+        let rows = query_builder
+            .build_query_as::<RequestRow>()
+            .fetch_all(self.pool)
+            .await;
+
+        if let Err(e) = &rows {
             tracing::error!("Failed to fetch request by time: {}", e);
-            e
-        })?;
-        Ok(rows.into_iter().filter_map(|row| row.into()).collect())
+        }
+
+        Ok(rows?.into_iter().filter_map(|row| row.into()).collect())
     }
 }
 
@@ -458,6 +486,14 @@ impl<'a> RequestQueryBuilder<'a> {
 pub enum RequestQueryBuilderError {
     LimitTooLarge,
     ZeroLimit,
+    InvalidSearch,
+}
+
+#[derive(Debug, Clone)]
+enum SearchField {
+    TxHash(TxHash),
+    Sender(Address),
+    SequenceNumber(i64),
 }
 
 #[cfg(test)]
@@ -506,6 +542,7 @@ mod test {
         let logs = history
             .query()
             .search(status.sequence.to_string())
+            .unwrap()
             .network_id(status.network_id)
             .execute()
             .await
@@ -515,6 +552,17 @@ mod test {
         let logs = history
             .query()
             .search(status.sequence.to_string())
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(status.sequence.to_string())
+            .unwrap()
+            .state(StateTag::Completed)
             .execute()
             .await
             .unwrap();
@@ -523,6 +571,17 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(status.request_tx_hash))
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(to_hex_string(status.request_tx_hash))
+            .unwrap()
+            .state(StateTag::Completed)
             .execute()
             .await
             .unwrap();
@@ -531,6 +590,17 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(reveal_tx_hash))
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(to_hex_string(reveal_tx_hash))
+            .unwrap()
+            .state(StateTag::Completed)
             .execute()
             .await
             .unwrap();
@@ -539,6 +609,7 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(status.sender))
+            .unwrap()
             .network_id(status.network_id)
             .execute()
             .await
@@ -548,6 +619,17 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(status.sender))
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(to_hex_string(status.sender))
+            .unwrap()
+            .state(StateTag::Completed)
             .execute()
             .await
             .unwrap();
@@ -581,6 +663,7 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(reveal_tx_hash))
+            .unwrap()
             .execute()
             .await
             .unwrap();
@@ -600,6 +683,7 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(status.request_tx_hash))
+            .unwrap()
             .execute()
             .await
             .unwrap();
@@ -636,6 +720,7 @@ mod test {
         let logs = history
             .query()
             .search(status.sequence.to_string())
+            .unwrap()
             .network_id(123)
             .execute()
             .await
@@ -645,6 +730,7 @@ mod test {
         let logs = history
             .query()
             .search((status.sequence + 1).to_string())
+            .unwrap()
             .execute()
             .await
             .unwrap();
@@ -653,6 +739,7 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(TxHash::zero()))
+            .unwrap()
             .execute()
             .await
             .unwrap();
@@ -661,6 +748,7 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(Address::zero()))
+            .unwrap()
             .network_id(status.network_id)
             .execute()
             .await
@@ -670,6 +758,15 @@ mod test {
         let logs = history
             .query()
             .search(to_hex_string(Address::zero()))
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![]);
+
+        let logs = history
+            .query()
+            .state(StateTag::Completed)
             .execute()
             .await
             .unwrap();
@@ -732,6 +829,7 @@ mod test {
         let logs = history
             .query()
             .search(1.to_string())
+            .unwrap()
             .network_id(121)
             .execute()
             .await
