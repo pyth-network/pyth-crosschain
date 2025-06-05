@@ -2,10 +2,47 @@ import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { PythCluster } from "@pythnetwork/client";
 import {
   ValidationResult,
+  LazerValidationResult,
   ProgramType,
   LazerConfig,
   LazerState,
+  LazerFeedMetadata,
+  LazerFeed,
+  LazerPublisher,
+  ShardChange,
+  FeedChange,
+  PublisherChange,
+  LazerConfigChanges,
 } from "../types";
+import { pyth_lazer_transaction } from "@pythnetwork/pyth-lazer-state-sdk/governance";
+
+/**
+ * Converts LazerFeedMetadata to protobuf IMap format using protobufjs fromObject
+ * This leverages the built-in protobufjs conversion capabilities
+ *
+ * @param metadata The LazerFeedMetadata to convert
+ * @returns IMap compatible object for protobuf
+ */
+export function convertLazerFeedMetadataToMap(
+  metadata: LazerFeedMetadata,
+): pyth_lazer_transaction.DynamicValue.IMap {
+  // Convert each metadata field to a DynamicValue
+  const items = Object.entries(metadata)
+    .filter(([_, value]) => value !== undefined)
+    .map(([key, value]) => ({
+      key,
+      value: {
+        // Wrap the value in the appropriate DynamicValue type
+        stringValue: typeof value === "string" ? value : undefined,
+        intValue: typeof value === "number" ? value : undefined,
+        boolValue: typeof value === "boolean" ? value : undefined,
+      },
+    }));
+
+  return pyth_lazer_transaction.DynamicValue.Map.fromObject({
+    items,
+  });
+}
 
 /**
  * Parameters for getting Lazer configuration
@@ -22,9 +59,6 @@ export type LazerConfigParams = {
  */
 export interface LazerInstructionAccounts {
   fundingAccount: PublicKey;
-  // Lazer-specific properties
-  lazerProgramClient?: any; // Replace with proper type when available
-  cluster: PythCluster;
   additionalAccounts?: Record<string, PublicKey>;
 }
 
@@ -39,7 +73,7 @@ const sampleLazerState: LazerState = {
   feeds: [
     {
       metadata: {
-        priceFeedId: 1,
+        feedId: 1,
         name: "CATCOIN",
         symbol: "CAT",
         description: "desc1",
@@ -55,7 +89,7 @@ const sampleLazerState: LazerState = {
     },
     {
       metadata: {
-        priceFeedId: 2,
+        feedId: 2,
         name: "DUCKCOIN",
         symbol: "DUCKY",
         description: "desc2",
@@ -157,7 +191,7 @@ export function validateUploadedConfig(
   existingConfig: LazerState,
   uploadedConfig: LazerState,
   cluster: PythCluster,
-): ValidationResult {
+): LazerValidationResult {
   try {
     // Basic type validation
     if (typeof uploadedConfig !== "object" || uploadedConfig === null) {
@@ -183,7 +217,7 @@ export function validateUploadedConfig(
     }
 
     // Calculate changes between existing and uploaded config
-    const changes: Record<string, { prev?: any; new?: any }> = {};
+    const changes: LazerConfigChanges = {};
 
     // Compare shard metadata
     if (
@@ -207,10 +241,10 @@ export function validateUploadedConfig(
 
     // Compare feeds
     const existingFeeds = new Map(
-      existingConfig.feeds.map((feed) => [feed.metadata.priceFeedId, feed]),
+      existingConfig.feeds.map((feed) => [feed.metadata.feedId, feed]),
     );
     const uploadedFeeds = new Map(
-      uploadedLazerState.feeds.map((feed) => [feed.metadata.priceFeedId, feed]),
+      uploadedLazerState.feeds.map((feed) => [feed.metadata.feedId, feed]),
     );
 
     // Find added, removed, and modified feeds
@@ -302,31 +336,262 @@ export function validateUploadedConfig(
 }
 
 /**
+ * Type guard to check if a change is a feed change
+ */
+function isFeedChange(key: string, change: any): change is FeedChange {
+  return key.startsWith("feed_");
+}
+
+/**
+ * Type guard to check if a change is a publisher change
+ */
+function isPublisherChange(
+  key: string,
+  change: any,
+): change is PublisherChange {
+  return key.startsWith("publisher_");
+}
+
+/**
+ * Type guard to check if a change is a shard change
+ */
+function isShardChange(key: string, change: any): change is ShardChange {
+  return key === "shard";
+}
+
+/**
  * Generate the necessary instructions to apply configuration changes
  *
  * @param changes Configuration changes to apply
- * @param cluster The Pyth cluster where the changes will be applied
  * @param accounts Additional context needed for generating instructions
  * @returns Promise resolving to an array of TransactionInstructions
  */
 export async function generateInstructions(
-  changes: Record<
-    string,
-    {
-      prev?: Partial<LazerState>;
-      new?: Partial<LazerState>;
-    }
-  >,
-  cluster: PythCluster,
+  changes: LazerConfigChanges,
   accounts: LazerInstructionAccounts,
 ): Promise<TransactionInstruction[]> {
-  // Simple placeholder implementation that returns an empty array of instructions
-  // In a real implementation, this would transform the changes into Lazer-specific instructions
+  // This function converts configuration changes into Lazer governance instructions
+  // using the new governance payload functions that properly encode protobuf messages.
+  const instructions: TransactionInstruction[] = [];
 
-  // Example of how this might be implemented:
-  // 1. For each change, determine if it's an add, update, or delete operation
-  // 2. Map the DownloadableProduct format to Lazer-specific data structure
-  // 3. Generate appropriate Lazer instructions based on the operation type
+  // Process each change and create corresponding governance instructions
+  for (const [changeKey, change] of Object.entries(changes)) {
+    let governanceBuffer: Buffer | null = null;
 
-  return [];
+    if (isFeedChange(changeKey, change)) {
+      const feedId = parseInt(changeKey.replace("feed_", ""));
+
+      if (!change.prev && change.new) {
+        // Adding a new feed
+        const feedMetadata = change.new.metadata;
+
+        const addFeedMessage = pyth_lazer_transaction.AddFeed.create({
+          feedId: feedId,
+          metadata: convertLazerFeedMetadataToMap(feedMetadata),
+          permissionedPublishers: [],
+        });
+        const encoded =
+          pyth_lazer_transaction.AddFeed.encode(addFeedMessage).finish();
+        governanceBuffer = Buffer.from(encoded);
+      } else if (change.prev && change.new) {
+        // Updating an existing feed
+        const prevFeed = change.prev;
+        const newFeed = change.new;
+
+        // Check if metadata changed
+        if (
+          JSON.stringify(prevFeed.metadata) !== JSON.stringify(newFeed.metadata)
+        ) {
+          const updateFeedMessage = pyth_lazer_transaction.UpdateFeed.create({
+            feedId: feedId,
+            updateFeedMetadata: {
+              name: "metadata",
+              value: {
+                map: convertLazerFeedMetadataToMap(newFeed.metadata),
+              },
+            },
+          });
+          const encoded =
+            pyth_lazer_transaction.UpdateFeed.encode(
+              updateFeedMessage,
+            ).finish();
+          governanceBuffer = Buffer.from(encoded);
+        }
+
+        // Check if pendingActivation changed
+        if (prevFeed.pendingActivation !== newFeed.pendingActivation) {
+          // If pendingActivation is being set or changed, create an activation instruction
+          if (newFeed.pendingActivation) {
+            const updateFeedMessage = pyth_lazer_transaction.UpdateFeed.create({
+              feedId: feedId,
+              activateFeed: {
+                activationTimestamp: {
+                  seconds: Math.floor(
+                    new Date(newFeed.pendingActivation).getTime() / 1000,
+                  ),
+                  nanos: 0,
+                },
+              },
+            });
+            const encoded =
+              pyth_lazer_transaction.UpdateFeed.encode(
+                updateFeedMessage,
+              ).finish();
+            governanceBuffer = Buffer.from(encoded);
+          } else {
+            // Deactivate feed
+            const updateFeedMessage = pyth_lazer_transaction.UpdateFeed.create({
+              feedId: feedId,
+              deactivateFeed: {
+                deactivationTimestamp: {
+                  seconds: Math.floor(Date.now() / 1000),
+                  nanos: 0,
+                },
+              },
+            });
+            const encoded =
+              pyth_lazer_transaction.UpdateFeed.encode(
+                updateFeedMessage,
+              ).finish();
+            governanceBuffer = Buffer.from(encoded);
+          }
+        }
+      } else if (change.prev && !change.new) {
+        // Removing a feed
+        const updateFeedMessage = pyth_lazer_transaction.UpdateFeed.create({
+          feedId: feedId,
+          removeFeed: {},
+        });
+        const encoded =
+          pyth_lazer_transaction.UpdateFeed.encode(updateFeedMessage).finish();
+        governanceBuffer = Buffer.from(encoded);
+      }
+    } else if (isPublisherChange(changeKey, change)) {
+      const publisherId = parseInt(changeKey.replace("publisher_", ""));
+
+      if (!change.prev && change.new) {
+        // Adding a new publisher
+        const newPublisher = change.new;
+
+        const addPublisherMessage = pyth_lazer_transaction.AddPublisher.create({
+          publisherId: publisherId,
+          name: newPublisher.name,
+          publicKeys: newPublisher.publicKeys.map((key) =>
+            Buffer.from(key, "base64"),
+          ),
+          isActive: newPublisher.isActive,
+        });
+        const encoded =
+          pyth_lazer_transaction.AddPublisher.encode(
+            addPublisherMessage,
+          ).finish();
+        governanceBuffer = Buffer.from(encoded);
+      } else if (change.prev && change.new) {
+        // Updating an existing publisher
+        const prevPublisher = change.prev;
+        const newPublisher = change.new;
+
+        // Check if name changed
+        if (prevPublisher.name !== newPublisher.name) {
+          const updatePublisherMessage =
+            pyth_lazer_transaction.UpdatePublisher.create({
+              publisherId: publisherId,
+              setPublisherName: {
+                name: newPublisher.name,
+              },
+            });
+          const encoded = pyth_lazer_transaction.UpdatePublisher.encode(
+            updatePublisherMessage,
+          ).finish();
+          governanceBuffer = Buffer.from(encoded);
+        }
+
+        // Check if public keys changed
+        if (
+          JSON.stringify(prevPublisher.publicKeys) !==
+          JSON.stringify(newPublisher.publicKeys)
+        ) {
+          const updatePublisherMessage =
+            pyth_lazer_transaction.UpdatePublisher.create({
+              publisherId: publisherId,
+              setPublisherPublicKeys: {
+                publicKeys: newPublisher.publicKeys.map((key) =>
+                  Buffer.from(key, "base64"),
+                ),
+              },
+            });
+          const encoded = pyth_lazer_transaction.UpdatePublisher.encode(
+            updatePublisherMessage,
+          ).finish();
+          governanceBuffer = Buffer.from(encoded);
+        }
+
+        // Check if active status changed
+        if (prevPublisher.isActive !== newPublisher.isActive) {
+          const updatePublisherMessage =
+            pyth_lazer_transaction.UpdatePublisher.create({
+              publisherId: publisherId,
+              setPublisherActive: {
+                isActive: newPublisher.isActive,
+              },
+            });
+          const encoded = pyth_lazer_transaction.UpdatePublisher.encode(
+            updatePublisherMessage,
+          ).finish();
+          governanceBuffer = Buffer.from(encoded);
+        }
+      } else if (change.prev && !change.new) {
+        // Removing a publisher
+        const prevPublisher = change.prev;
+
+        const updatePublisherMessage =
+          pyth_lazer_transaction.UpdatePublisher.create({
+            publisherId: publisherId,
+            removePublisher: {},
+          });
+        const encoded = pyth_lazer_transaction.UpdatePublisher.encode(
+          updatePublisherMessage,
+        ).finish();
+        governanceBuffer = Buffer.from(encoded);
+      }
+    } else if (isShardChange(changeKey, change)) {
+      // Updating shard configuration
+      if (change.new) {
+        const newShard = change.new;
+        const prevShard = change.prev;
+
+        // Check if shard name changed
+        if (!prevShard || prevShard.shardName !== newShard.shardName) {
+          const setShardNameMessage =
+            pyth_lazer_transaction.SetShardName.create({
+              shardName: newShard.shardName,
+            });
+          const encoded =
+            pyth_lazer_transaction.SetShardName.encode(
+              setShardNameMessage,
+            ).finish();
+          governanceBuffer = Buffer.from(encoded);
+        }
+      }
+    }
+
+    // Create Solana transaction instruction if we have a governance buffer
+    if (governanceBuffer) {
+      const instruction = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: accounts.fundingAccount,
+            isSigner: true,
+            isWritable: true,
+          },
+        ],
+        programId: LAZER_PROGRAM_ID,
+        data: governanceBuffer,
+      });
+
+      instructions.push(instruction);
+    }
+  }
+
+  return instructions;
 }

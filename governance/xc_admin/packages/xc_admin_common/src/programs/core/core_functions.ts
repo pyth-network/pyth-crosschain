@@ -32,7 +32,7 @@ import {
   DownloadableProduct,
   PriceRawConfig,
   RawConfig,
-  ValidationResult,
+  CoreValidationResult,
 } from "../types";
 import { Program } from "@coral-xyz/anchor";
 import { PythOracle } from "@pythnetwork/client/lib/anchor";
@@ -309,7 +309,7 @@ export function validateUploadedConfig(
   existingConfig: Record<string, DownloadableProduct>,
   uploadedConfig: Record<string, DownloadableProduct>,
   cluster: PythCluster,
-): ValidationResult {
+): CoreValidationResult {
   try {
     const existingSymbols = new Set(Object.keys(existingConfig));
     const changes: Record<
