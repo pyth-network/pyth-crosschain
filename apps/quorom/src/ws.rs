@@ -77,7 +77,7 @@ pub enum UpdateEvent {
 pub type SubscriberId = usize;
 
 /// Subscriber is an actor that handles a single websocket connection.
-/// It listens to the store for updates and sends them to the client.
+/// It listens to the state for updates and sends them to the client.
 pub struct Subscriber {
     id:                  SubscriberId,
     closed:              bool,

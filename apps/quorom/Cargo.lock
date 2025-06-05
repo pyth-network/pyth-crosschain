@@ -2683,7 +2683,6 @@ dependencies = [
  "secp256k1",
  "serde",
  "serde_json",
- "serde_wormhole 0.1.0 (git+https://github.com/wormhole-foundation/wormhole?tag=v2.17.1)",
  "sha3",
  "solana-client",
  "solana-sdk",
@@ -3339,18 +3338,6 @@ name = "serde_wormhole"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24b022bf813578a06341fd453c3fd6e64945d9975191193d5d45e8dbd97d1d84"
-dependencies = [
- "base64 0.13.1",
- "itoa",
- "serde",
- "serde_bytes",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "serde_wormhole"
-version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.17.1#3e423a75180f9da69263279e9ffce47b1858ae78"
 dependencies = [
  "base64 0.13.1",
  "itoa",
@@ -6481,7 +6468,7 @@ dependencies = [
  "bstr",
  "schemars",
  "serde",
- "serde_wormhole 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_wormhole",
  "sha3",
  "thiserror 1.0.69",
  "wormhole-supported-chains",
