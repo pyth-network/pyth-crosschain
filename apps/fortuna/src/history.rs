@@ -517,10 +517,6 @@ mod test {
         }
     }
 
-    fn to_hex_string<T: ToHex>(val: T) -> String {
-        format!("0x{}", val.encode_hex::<String>())
-    }
-
     #[tokio::test]
     async fn test_history_return_correct_logs() {
         let history = History::new_in_memory().await.unwrap();
@@ -570,7 +566,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(status.request_tx_hash))
+            .search(status.request_tx_hash.encode_hex())
             .unwrap()
             .execute()
             .await
@@ -579,7 +575,40 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(status.request_tx_hash))
+            .search(format!(
+                "0x{}",
+                status.request_tx_hash.encode_hex::<String>()
+            ))
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(status.request_tx_hash.encode_hex::<String>().to_uppercase())
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(format!(
+                "0x{}",
+                status.request_tx_hash.encode_hex::<String>().to_uppercase()
+            ))
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(status.request_tx_hash.encode_hex())
             .unwrap()
             .state(StateTag::Completed)
             .execute()
@@ -589,7 +618,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(reveal_tx_hash))
+            .search(reveal_tx_hash.encode_hex())
             .unwrap()
             .execute()
             .await
@@ -598,7 +627,37 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(reveal_tx_hash))
+            .search(format!("0x{}", reveal_tx_hash.encode_hex::<String>()))
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(reveal_tx_hash.encode_hex::<String>().to_uppercase())
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(format!(
+                "0x{}",
+                reveal_tx_hash.encode_hex::<String>().to_uppercase()
+            ))
+            .unwrap()
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(reveal_tx_hash.encode_hex())
             .unwrap()
             .state(StateTag::Completed)
             .execute()
@@ -608,7 +667,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(status.sender))
+            .search(status.sender.encode_hex())
             .unwrap()
             .network_id(status.network_id)
             .execute()
@@ -618,7 +677,40 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(status.sender))
+            .search(format!("0x{}", status.sender.encode_hex::<String>()))
+            .unwrap()
+            .network_id(status.network_id)
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(status.sender.encode_hex::<String>().to_uppercase())
+            .unwrap()
+            .network_id(status.network_id)
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(format!(
+                "0x{}",
+                status.sender.encode_hex::<String>().to_uppercase()
+            ))
+            .unwrap()
+            .network_id(status.network_id)
+            .execute()
+            .await
+            .unwrap();
+        assert_eq!(logs, vec![status.clone()]);
+
+        let logs = history
+            .query()
+            .search(status.sender.encode_hex())
             .unwrap()
             .execute()
             .await
@@ -627,7 +719,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(status.sender))
+            .search(status.sender.encode_hex())
             .unwrap()
             .state(StateTag::Completed)
             .execute()
@@ -662,7 +754,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(reveal_tx_hash))
+            .search(reveal_tx_hash.encode_hex())
             .unwrap()
             .execute()
             .await
@@ -682,7 +774,7 @@ mod test {
         History::update_request_status(&history.pool, status.clone()).await;
         let logs = history
             .query()
-            .search(to_hex_string(status.request_tx_hash))
+            .search(status.request_tx_hash.encode_hex())
             .unwrap()
             .execute()
             .await
@@ -738,7 +830,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(TxHash::zero()))
+            .search(TxHash::zero().encode_hex())
             .unwrap()
             .execute()
             .await
@@ -747,7 +839,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(Address::zero()))
+            .search(Address::zero().encode_hex())
             .unwrap()
             .network_id(status.network_id)
             .execute()
@@ -757,7 +849,7 @@ mod test {
 
         let logs = history
             .query()
-            .search(to_hex_string(Address::zero()))
+            .search(Address::zero().encode_hex())
             .unwrap()
             .execute()
             .await
