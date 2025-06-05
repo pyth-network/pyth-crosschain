@@ -32,7 +32,7 @@
             };
             fix = {
               format = "${cargo} fmt";
-              lint = "${cargo} sqlx migrate run && ${cargo} sqlx prepare && ${cargo} clippy -- --error-format human --color always --fix";
+              lint = "${cargo} sqlx migrate run && ${cargo} sqlx prepare && ${cargo} clippy -- --color always --fix";
             };
           };
         });
