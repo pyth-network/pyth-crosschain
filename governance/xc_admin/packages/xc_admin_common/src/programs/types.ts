@@ -2,6 +2,8 @@ import { PublicKey } from "@solana/web3.js";
 import { PermissionData, Product } from "@pythnetwork/client";
 import { LazerInstructionAccounts } from "./lazer/lazer_functions";
 import { CoreInstructionAccounts } from "./core/core_functions";
+import { pyth_lazer_transaction } from "@pythnetwork/pyth-lazer-state-sdk/governance";
+import { lazer } from "@pythnetwork/pyth-lazer-state-sdk/state";
 /**
  * Represents the different Pyth programs supported by the application.
  */
@@ -112,13 +114,67 @@ export type InstructionAccountsTypeMap = {
 };
 
 /**
- * Result of validating an uploaded configuration
+ * Types for different kinds of configuration changes
  */
-export interface ValidationResult {
+export type ShardChange = {
+  prev?: {
+    shardId: number;
+    shardName: string;
+    minRate: string;
+  };
+  new?: {
+    shardId: number;
+    shardName: string;
+    minRate: string;
+  };
+};
+
+export type FeedChange = {
+  prev?: LazerFeed;
+  new?: LazerFeed;
+};
+
+export type PublisherChange = {
+  prev?: LazerPublisher;
+  new?: LazerPublisher;
+};
+
+/**
+ * Union type for all possible Lazer configuration changes
+ */
+export type LazerConfigChanges = Record<
+  string,
+  FeedChange | PublisherChange | ShardChange
+>;
+
+/**
+ * Core-specific validation result
+ */
+export interface CoreValidationResult {
   isValid: boolean;
   error?: string;
-  changes?: any;
+  changes?: Record<
+    string,
+    {
+      prev?: Partial<DownloadableProduct>;
+      new?: Partial<DownloadableProduct>;
+    }
+  >;
 }
+
+/**
+ * Lazer-specific validation result
+ */
+export interface LazerValidationResult {
+  isValid: boolean;
+  error?: string;
+  changes?: LazerConfigChanges;
+}
+
+/**
+ * Union type for validation results
+ */
+export type ValidationResult = CoreValidationResult | LazerValidationResult;
 
 /**
  * Lazer feed metadata type

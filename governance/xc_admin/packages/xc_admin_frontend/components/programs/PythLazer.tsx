@@ -10,11 +10,14 @@ import toast from 'react-hot-toast'
 import Loadbar from '../loaders/Loadbar'
 import Spinner from '../common/Spinner'
 import {
-  LazerState,
   LazerFeed,
   LazerPublisher,
+  LazerConfigChanges,
 } from '@pythnetwork/xc-admin-common/src/programs/types'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
+import { generateInstructions } from '@pythnetwork/xc-admin-common/lib/programs/lazer/lazer_functions'
+import { useMultisigContext } from '../../contexts/MultisigContext'
+import { PublicKey } from '@solana/web3.js'
 
 interface PythLazerProps {
   proposerServerUrl: string
@@ -58,13 +61,7 @@ interface PublisherChangesRowsProps {
 }
 
 interface ModalContentProps {
-  changes: Record<
-    string,
-    {
-      prev?: Partial<LazerState>
-      new?: Partial<LazerState>
-    }
-  >
+  changes: LazerConfigChanges
   onSendProposal: () => void
   isSendProposalButtonLoading: boolean
 }
@@ -366,13 +363,11 @@ const PythLazer = ({
   const { dataIsLoading, lazerState } = usePythContext()
   const { cluster } = useContext(ClusterContext)
 
-  const [dataChanges, setDataChanges] =
-    useState<
-      Record<string, { prev?: Partial<LazerState>; new?: Partial<LazerState> }>
-    >()
+  const [dataChanges, setDataChanges] = useState<LazerConfigChanges>()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
+  const { isLoading: isMultisigLoading } = useMultisigContext()
 
   const openModal = () => {
     setIsModalOpen(true)
@@ -443,19 +438,31 @@ const PythLazer = ({
 
   const handleSendProposalButtonClick = async () => {
     setIsSendProposalButtonLoading(true)
-    try {
-      // In a real implementation, this would send the proposal to the server
-      await new Promise((resolve) => setTimeout(resolve, 2000)) // Mock delay
+    if (dataChanges && !isMultisigLoading) {
+      try {
+        // Generate the instructions for the proposal
+        const instructions = await generateInstructions(
+          dataChanges as LazerConfigChanges,
+          {
+            fundingAccount: new PublicKey(1),
+          }
+        )
 
-      // Close the modal and show success notification
-      setIsModalOpen(false)
-      toast.success('Proposal sent successfully!')
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(capitalizeFirstLetter(error.message))
+        console.log('Generated instructions:', instructions)
+
+        // In a real implementation, this would send the proposal to the server
+        await new Promise((resolve) => setTimeout(resolve, 2000)) // Mock delay
+
+        // Close the modal and show success notification
+        setIsModalOpen(false)
+        toast.success('Proposal sent successfully!')
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(capitalizeFirstLetter(error.message))
+        }
+      } finally {
+        setIsSendProposalButtonLoading(false)
       }
-    } finally {
-      setIsSendProposalButtonLoading(false)
     }
   }
 
