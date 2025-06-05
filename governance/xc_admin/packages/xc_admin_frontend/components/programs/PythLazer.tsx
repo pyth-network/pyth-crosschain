@@ -385,7 +385,7 @@ const PythLazer = ({
       encodeURIComponent(JSON.stringify(lazerState, null, 2))
     const downloadAnchor = document.createElement('a')
     downloadAnchor.setAttribute('href', dataStr)
-    downloadAnchor.setAttribute('download', `lazer_config_${cluster}.json`)
+    downloadAnchor.setAttribute('download', `lazer_config.json`)
     document.body.appendChild(downloadAnchor) // required for firefox
     downloadAnchor.click()
     downloadAnchor.remove()
