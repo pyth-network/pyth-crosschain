@@ -57,7 +57,7 @@ interface PublisherChanges {
 
 interface ProductChanges {
   prev?: Partial<DownloadableProduct>
-  new: Partial<DownloadableProduct>
+  new?: Partial<DownloadableProduct>
 }
 
 interface MetadataChangesRowsProps {
