@@ -1,0 +1,145 @@
+use std::{net::SocketAddr, time::Duration};
+use axum::{routing::{get, post}, Json, Router};
+use secp256k1::{ecdsa::{RecoverableSignature, RecoveryId}, Message, Secp256k1};
+use serde::{Deserialize};
+use sha3::{Digest, Keccak256};
+use ::time::OffsetDateTime;
+use wormhole_sdk::{vaa::{Body, Header, Signature}, GuardianAddress, GuardianSetInfo, Vaa};
+
+use crate::{server::State, ws::{ws_route_handler, UpdateEvent}};
+
+const OBSERVATION_LIFETIME: u32 = 10; // In seconds
+pub type Payload = Vec<u8>;
+
+pub async fn run(listen_address: SocketAddr, state: State) -> anyhow::Result<()> {
+    tracing::info!("Starting server...");
+
+    let routes = Router::new()
+        .route("/live", get(|| async { "OK" }))
+        .route("/observation", post(post_observation))
+        .route("/ws", get(ws_route_handler))
+        .with_state(state);
+    let listener = tokio::net::TcpListener::bind(&listen_address).await?;
+
+    axum::serve(listener, routes)
+        .with_graceful_shutdown(async {
+            let _ = crate::server::EXIT.subscribe().changed().await;
+            tracing::info!("Shutting down server...");
+        })
+        .await?;
+
+    Ok(())
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Observation {
+    #[serde(with = "hex::serde")]
+    pub signature: [u8; 65],
+    pub body: Body<Payload>,
+}
+
+fn is_body_expired(body: &Body<Payload>) -> bool {
+    let deadline = (body.timestamp + OBSERVATION_LIFETIME) as i64;
+    deadline < OffsetDateTime::now_utc().unix_timestamp()
+}
+
+impl Observation {
+    pub fn is_expired(&self) -> bool {
+        is_body_expired(&self.body)
+    }
+}
+
+fn verify_observation(
+    observation: &Observation,
+    guardian_set: GuardianSetInfo,
+) -> anyhow::Result<usize> {
+    if observation.is_expired() {
+        return Err(anyhow::anyhow!("Observation is expired"));
+    }
+
+    let digest = observation.body.digest()?;
+    let secp = Secp256k1::new();
+    let recid = RecoveryId::try_from(observation.signature[64] as i32)?;
+    let pubkey: &[u8; 65] = &secp
+        .recover_ecdsa(
+            Message::from_digest(digest.secp256k_hash),
+            &RecoverableSignature::from_compact(&observation.signature[..64], recid)?,
+        )?
+        .serialize_uncompressed();
+    let address: [u8; 32] = Keccak256::new_with_prefix(&pubkey[1..]).finalize().into();
+    let address: [u8; 20] = address[address.len() - 20..].try_into()?;
+
+    guardian_set.addresses.iter().position(|addr| *addr == GuardianAddress(address)).ok_or(
+        anyhow::anyhow!("Signature does not match any guardian address")
+    )
+}
+
+async fn run_expiration_loop(
+    state: axum::extract::State<State>,
+    body: Body<Payload>,
+) {
+    loop {
+        tokio::time::sleep(Duration::from_secs(OBSERVATION_LIFETIME as u64)).await;
+
+        let verification = state.verification.read().await;
+        if !verification.contains_key(&body) {
+            break;
+        }
+
+        if is_body_expired(&body) {
+            let mut verification = state.verification.write().await;
+            verification.remove(&body);
+            break;
+        }
+    }
+}
+
+async fn handle_observation(state: axum::extract::State<State>, params: Observation) -> Result<(), anyhow::Error> {
+    let verifier_index = verify_observation(&params, state.guardian_set.clone())?;
+    let new_signature = Signature {
+        signature: params.signature,
+        index: verifier_index.try_into()?,
+    };
+
+    let mut verification_writer = state.verification.write().await;
+    let signatures = verification_writer
+        .entry(params.body.clone())
+        .and_modify(|sigs| {
+            if sigs.iter().all(|sig| sig.index != new_signature.index) {
+                sigs.push(new_signature.clone());
+            }
+        })
+        .or_insert_with(|| vec![new_signature.clone()])
+        .clone();
+
+    if signatures.len() >= (state.guardian_set.addresses.len() * 2) / 3 + 1 {
+        let vaa: Vaa<Payload> = (Header {
+            version: 1,
+            guardian_set_index: state.guardian_set_index,
+            signatures,
+        }, params.body.clone()).into();
+        if let Err(e) = state.ws.broadcast_sender.send(UpdateEvent::NewVaa(vaa)) {
+            tracing::error!(error = ?e, "Failed to broadcast new VAA");
+        }
+        verification_writer.remove(&params.body);
+    } else {
+        tokio::spawn(run_expiration_loop(state.clone(), params.body.clone()));
+    }
+
+    Ok(())
+}
+
+async fn post_observation(
+    state: axum::extract::State<State>,
+    Json(params): Json<Observation>,
+) -> Json<()> {
+    state.task_tracker.spawn({
+        let state = state.clone();
+        async move {
+            if let Err(e) = handle_observation(state, params).await {
+                tracing::warn!(error = ?e, "Failed to handle observation");
+            }
+        }
+    });
+    Json(())
+}
