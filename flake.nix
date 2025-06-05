@@ -48,7 +48,6 @@
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = [
-            pkgs.cargo
             pkgs.cli
             pkgs.git
             pkgs.libusb1

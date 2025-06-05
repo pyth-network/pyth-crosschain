@@ -35,6 +35,13 @@ mod revelation;
 pub type ChainId = String;
 pub type NetworkId = u64;
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema, sqlx::Type)]
+pub enum StateTag {
+    Pending,
+    Completed,
+    Failed,
+}
+
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct RequestLabel {
     pub value: String,
