@@ -61,6 +61,8 @@ pub struct ApiState {
 
     /// Prometheus metrics
     pub metrics: Arc<ApiMetrics>,
+
+    pub explorer_metrics: Arc<ExplorerMetrics>,
 }
 
 impl ApiState {
@@ -73,6 +75,8 @@ impl ApiState {
             http_requests: Family::default(),
         };
 
+        let explorer_metrics = Arc::new(ExplorerMetrics::new(metrics_registry.clone()).await);
+
         let http_requests = metrics.http_requests.clone();
         metrics_registry.write().await.register(
             "http_requests",
@@ -83,6 +87,7 @@ impl ApiState {
         ApiState {
             chains,
             metrics: Arc::new(metrics),
+            explorer_metrics,
             history,
             metrics_registry,
         }

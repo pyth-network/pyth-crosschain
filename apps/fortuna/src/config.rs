@@ -11,8 +11,9 @@ use {
 };
 pub use {
     generate::GenerateOptions, get_request::GetRequestOptions, inspect::InspectOptions,
-    register_provider::RegisterProviderOptions, request_randomness::RequestRandomnessOptions,
-    run::RunOptions, setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
+    prometheus_client::metrics::histogram::Histogram, register_provider::RegisterProviderOptions,
+    request_randomness::RequestRandomnessOptions, run::RunOptions,
+    setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
 };
 
 mod generate;
@@ -367,3 +368,9 @@ impl SecretString {
         Ok(None)
     }
 }
+
+/// This is a histogram with a bucket configuration appropriate for most things
+/// which measure latency to external services.
+pub const LATENCY_BUCKETS: [f64; 11] = [
+    0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
+];

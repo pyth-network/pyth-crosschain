@@ -1,17 +1,89 @@
 use {
     crate::{
         api::{ApiBlockChainState, NetworkId, RestError, StateTag},
-        history::RequestStatus,
+        config::LATENCY_BUCKETS,
+        history::{RequestQueryBuilder, RequestStatus, SearchField},
     },
     axum::{
         extract::{Query, State},
         Json,
     },
     chrono::{DateTime, Utc},
+    prometheus_client::{
+        encoding::{EncodeLabelSet, EncodeLabelValue},
+        metrics::{family::Family, histogram::Histogram},
+        registry::Registry,
+    },
+    std::sync::Arc,
+    tokio::{sync::RwLock, time::Instant},
     utoipa::IntoParams,
 };
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
+#[derive(Debug)]
+pub struct ExplorerMetrics {
+    results_latency: Family<QueryTags, Histogram>,
+    count_latency: Family<QueryTags, Histogram>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, EncodeLabelSet)]
+pub struct QueryTags {
+    search_type: Option<SearchType>,
+    has_network_id_filter: bool,
+    has_state_filter: bool,
+}
+
+impl<'a> From<RequestQueryBuilder<'a>> for QueryTags {
+    fn from(builder: RequestQueryBuilder<'a>) -> Self {
+        QueryTags {
+            search_type: builder.search.map(|val| match val {
+                SearchField::TxHash(_) => SearchType::TxHash,
+                SearchField::Sender(_) => SearchType::Sender,
+                SearchField::SequenceNumber(_) => SearchType::SequenceNumber,
+            }),
+            has_network_id_filter: builder.network_id.is_some(),
+            has_state_filter: builder.state.is_some(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, EncodeLabelValue)]
+enum SearchType {
+    TxHash,
+    Sender,
+    SequenceNumber,
+}
+
+impl ExplorerMetrics {
+    pub async fn new(metrics_registry: Arc<RwLock<Registry>>) -> Self {
+        let mut guard = metrics_registry.write().await;
+        let sub_registry = guard.sub_registry_with_prefix("explorer");
+
+        let results_latency = Family::<QueryTags, Histogram>::new_with_constructor(|| {
+            Histogram::new(LATENCY_BUCKETS.into_iter())
+        });
+        sub_registry.register(
+            "results_latency",
+            "The latency of requests to the database to collect the limited results.",
+            results_latency.clone(),
+        );
+
+        let count_latency = Family::<QueryTags, Histogram>::new_with_constructor(|| {
+            Histogram::new(LATENCY_BUCKETS.into_iter())
+        });
+        sub_registry.register(
+            "count_latency",
+            "The latency of requests to the database to collect the total matching result count.",
+            count_latency.clone(),
+        );
+
+        Self {
+            results_latency,
+            count_latency,
+        }
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct ExplorerQueryParams {
     /// Only return logs that are newer or equal to this timestamp. Timestamp is in ISO 8601 format with UTC timezone.
@@ -96,7 +168,13 @@ pub async fn explorer(
         query = query.max_timestamp(max_timestamp);
     }
 
-    let (requests, total_results) = tokio::join!(query.execute(), query.count_results());
+    let results_latency = &state.explorer_metrics.results_latency;
+    let count_latency = &state.explorer_metrics.count_latency;
+    let query_tags = &query.clone().into();
+    let (requests, total_results) = tokio::join!(
+        measure_latency(results_latency, query_tags, query.execute()),
+        measure_latency(count_latency, query_tags, query.count_results())
+    );
     let requests = requests.map_err(|_| RestError::TemporarilyUnavailable)?;
     let total_results = total_results.map_err(|_| RestError::TemporarilyUnavailable)?;
 
@@ -104,4 +182,20 @@ pub async fn explorer(
         requests,
         total_results,
     }))
+}
+
+async fn measure_latency<T, F>(
+    metric: &Family<QueryTags, Histogram>,
+    query_tags: &QueryTags,
+    function: F,
+) -> T
+where
+    F: std::future::Future<Output = T>,
+{
+    let start = Instant::now();
+    let return_value = function.await;
+    metric
+        .get_or_create(query_tags)
+        .observe(start.elapsed().as_secs_f64());
+    return_value
 }
