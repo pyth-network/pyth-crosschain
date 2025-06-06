@@ -345,13 +345,13 @@ impl History {
 #[derive(Debug, Clone)]
 pub struct RequestQueryBuilder<'a> {
     pool: &'a Pool<Sqlite>,
-    search: Option<SearchField>,
-    network_id: Option<i64>,
-    state: Option<StateTag>,
-    limit: i64,
-    offset: i64,
-    min_timestamp: DateTime<chrono::Utc>,
-    max_timestamp: DateTime<chrono::Utc>,
+    pub search: Option<SearchField>,
+    pub network_id: Option<i64>,
+    pub state: Option<StateTag>,
+    pub limit: i64,
+    pub offset: i64,
+    pub min_timestamp: DateTime<chrono::Utc>,
+    pub max_timestamp: DateTime<chrono::Utc>,
 }
 
 impl<'a> RequestQueryBuilder<'a> {
@@ -503,7 +503,7 @@ pub enum RequestQueryBuilderError {
 }
 
 #[derive(Debug, Clone)]
-enum SearchField {
+pub enum SearchField {
     TxHash(TxHash),
     Sender(Address),
     SequenceNumber(i64),
