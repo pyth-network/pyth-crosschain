@@ -63,7 +63,7 @@ async function testLatency(
     // Read the sequence number for the request from the transaction events.
     const sequenceNumber =
         parseInt(requestResponse.events.RequestedWithCallback.returnValues.sequenceNumber);
-    logger.info({ sequnce: sequenceNumber, txHash: requestResponse.transactionHash }, `Request submitted`);
+    logger.info({ sequence: sequenceNumber, txHash: requestResponse.transactionHash }, `Request submitted`);
 
     const startTime = Date.now();
 
@@ -75,11 +75,11 @@ async function testLatency(
 
         if (parseInt(request.sequenceNumber) === 0) { // 0 means the request is cleared
             const endTime = Date.now();
-            logger.info({ sequnce: sequenceNumber, latency: endTime - startTime }, `Successful callback`);
+            logger.info({ sequence: sequenceNumber, latency: endTime - startTime }, `Successful callback`);
             break;
         }
         if (Date.now() - startTime > 60000) {
-            logger.error({ sequnce: sequenceNumber }, "Timeout: 60s passed without the callback being called");
+            logger.error({ sequence: sequenceNumber }, "Timeout: 60s passed without the callback being called");
             break;
         }
     }
