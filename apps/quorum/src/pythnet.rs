@@ -1,5 +1,5 @@
 use borsh::BorshDeserialize;
-use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_client::{client_error::reqwest::Url, nonblocking::rpc_client::RpcClient};
 use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
 use wormhole_sdk::{GuardianAddress, GuardianSetInfo};
 
@@ -13,7 +13,7 @@ pub struct GuardianSetData {
 }
 
 pub async fn fetch_guardian_set(
-    pythnet_http_endpoint: String,
+    pythnet_http_endpoint: Url,
     wormhole_contract_addr: Pubkey,
     guardian_set_index: u32,
 ) -> anyhow::Result<GuardianSetInfo> {

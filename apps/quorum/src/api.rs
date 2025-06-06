@@ -9,7 +9,6 @@ use wormhole_sdk::{vaa::{Body, Header, Signature}, GuardianAddress, GuardianSetI
 
 use crate::{server::State, ws::{ws_route_handler, UpdateEvent}};
 
-const OBSERVATION_LIFETIME: u32 = 10; // In seconds
 pub type Payload<'a> = &'a RawMessage;
 
 pub async fn run(listen_address: SocketAddr, state: State) -> anyhow::Result<()> {
@@ -40,8 +39,8 @@ pub struct Observation {
     pub body: Vec<u8>,
 }
 
-fn is_body_expired(body: &Body<Payload>) -> bool {
-    let deadline = (body.timestamp + OBSERVATION_LIFETIME) as i64;
+fn is_body_expired(body: &Body<Payload>, observation_lifetime: u32) -> bool {
+    let deadline = (body.timestamp + observation_lifetime) as i64;
     deadline < OffsetDateTime::now_utc().unix_timestamp()
 }
 
@@ -49,9 +48,9 @@ impl Observation {
     fn get_body(&self) -> Result<Body<Payload>, serde_wormhole::Error> {
         serde_wormhole::from_slice(self.body.as_slice())
     }
-    pub fn is_expired(&self) -> bool {
+    pub fn is_expired(&self, observation_lifetime: u32) -> bool {
         match self.get_body() {
-            Ok(body) => is_body_expired(&body),
+            Ok(body) => is_body_expired(&body, observation_lifetime),
             Err(_) => {
                 tracing::warn!("Failed to deserialize observation body");
                 true
@@ -63,8 +62,9 @@ impl Observation {
 fn verify_observation(
     observation: &Observation,
     guardian_set: GuardianSetInfo,
+    observation_lifetime: u32,
 ) -> anyhow::Result<usize> {
-    if observation.is_expired() {
+    if observation.is_expired(observation_lifetime) {
         return Err(anyhow::anyhow!("Observation is expired"));
     }
 
@@ -92,14 +92,14 @@ async fn run_expiration_loop(
     observation: Observation,
 ) {
     loop {
-        tokio::time::sleep(Duration::from_secs(OBSERVATION_LIFETIME as u64)).await;
+        tokio::time::sleep(Duration::from_secs(state.observation_lifetime as u64)).await;
 
         let verification = state.verification.read().await;
         if !verification.contains_key(&observation.body) {
             break;
         }
 
-        if observation.is_expired() {
+        if observation.is_expired(state.observation_lifetime) {
             let mut verification = state.verification.write().await;
             verification.remove(&observation.body);
             break;
@@ -108,7 +108,7 @@ async fn run_expiration_loop(
 }
 
 async fn handle_observation(state: axum::extract::State<State>, params: Observation) -> Result<(), anyhow::Error> {
-    let verifier_index = verify_observation(&params, state.guardian_set.clone())?;
+    let verifier_index = verify_observation(&params, state.guardian_set.clone(), state.observation_lifetime)?;
     let new_signature = Signature {
         signature: params.signature,
         index: verifier_index.try_into()?,

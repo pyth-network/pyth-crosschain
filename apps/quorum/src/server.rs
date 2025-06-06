@@ -1,6 +1,8 @@
 
 use std::{collections::HashMap, net::SocketAddr, ops::Deref, sync::Arc};
 use lazy_static::lazy_static;
+use solana_client::client_error::reqwest::Url;
+use solana_sdk::pubkey::Pubkey;
 use tokio::sync::{watch, RwLock};
 use tokio_util::task::TaskTracker;
 use clap::{
@@ -44,15 +46,20 @@ pub struct RunOptions {
     #[arg(long = "pythnet-url")]
     #[arg(env = "PYTHNET_URL")]
     #[arg(default_value = "https://api2.pythnet.pyth.network")]
-    pub pythnet_url: String,
+    pub pythnet_url: Url,
     /// The Wormhole pid on the Pythnet chain.
     #[arg(long = "wormhole-pid")]
     #[arg(env = "WORMHOLE_PID")]
-    pub wormhole_pid: String,
+    pub wormhole_pid: Pubkey,
     /// The index of the guardian set to use.
     #[arg(long = "guardian-set-index")]
     #[arg(env = "GUARDIAN_SET_INDEX")]
     pub guardian_set_index: u32,
+    /// The maximum lifetime of an observation in seconds.
+    #[arg(long = "observation-lifetime")]
+    #[arg(env = "OBSERVATION_LIFETIME")]
+    #[arg(default_value_t = DEFAULT_OBSERVATION_LIFETIME)]
+    pub observation_lifetime: u32,
 }
 
 
@@ -78,6 +85,8 @@ pub struct StateInner {
     pub guardian_set:       GuardianSetInfo,
     pub guardian_set_index: u32,
 
+    pub observation_lifetime: u32,
+
     pub ws: WsState,
 }
 impl Deref for State {
@@ -88,6 +97,7 @@ impl Deref for State {
     }
 }
 
+const DEFAULT_OBSERVATION_LIFETIME: u32 = 10; // In seconds
 const WEBSOCKET_NOTIFICATION_CHANNEL_SIZE: usize = 1000;
 
 pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
@@ -102,7 +112,7 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
     let task_tracker = TaskTracker::new();
     let guardian_set = fetch_guardian_set(
         run_options.pythnet_url,
-        run_options.wormhole_pid.parse()?,
+        run_options.wormhole_pid,
         run_options.guardian_set_index,
     ).await?;
 
@@ -112,6 +122,8 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
 
         guardian_set,
         guardian_set_index: run_options.guardian_set_index,
+
+        observation_lifetime: run_options.observation_lifetime,
 
         ws: WsState::new(WEBSOCKET_NOTIFICATION_CHANNEL_SIZE),
     }));
