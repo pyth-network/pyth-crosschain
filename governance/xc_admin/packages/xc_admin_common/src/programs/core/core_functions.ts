@@ -7,7 +7,6 @@ import {
 import {
   AccountType,
   PythCluster,
-  getPythProgramKeyForCluster,
   parseBaseData,
   parseMappingData,
   parsePermissionData,
@@ -34,7 +33,6 @@ import {
   PriceRawConfig,
   RawConfig,
   ValidationResult,
-  ProgramType,
 } from "../types";
 import { Program } from "@coral-xyz/anchor";
 import { PythOracle } from "@pythnetwork/client/lib/anchor";
@@ -103,7 +101,9 @@ const mapValues = <T, U>(
 /**
  * Sort configuration data for consistent output
  */
-function sortData(data: DownloadableConfig): DownloadableConfig {
+function sortData(
+  data: Record<string, DownloadableProduct>,
+): DownloadableConfig {
   return mapValues(data, (productData: DownloadableProduct) => ({
     address: productData.address,
     metadata: Object.fromEntries(
@@ -306,8 +306,8 @@ export function getDownloadableConfig(
  * Validate an uploaded configuration against the current configuration
  */
 export function validateUploadedConfig(
-  existingConfig: DownloadableConfig,
-  uploadedConfig: DownloadableConfig,
+  existingConfig: Record<string, DownloadableProduct>,
+  uploadedConfig: Record<string, DownloadableProduct>,
   cluster: PythCluster,
 ): ValidationResult {
   try {
