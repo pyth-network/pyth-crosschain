@@ -38,8 +38,11 @@ function loadConfig(configPath: string): LoadedConfig[] {
         const contracts = Object.values(DefaultStore.entropy_contracts).filter((contract) => (
             contract.chain.getId() == config['chain-id']
         ))
-        if (contracts.length !== 1) {
-            throw new Error(`Can not find the contract id ${config['chain-id']}, check contract manager store.`)
+        if (contracts.length === 0) {
+            throw new Error(`Can not find the contract for chain ${config['chain-id']}, check contract manager store.`)
+        }
+        if (contracts.length > 1) {
+            throw new Error(`Multiple contracts found for chain ${config['chain-id']}, check contract manager store.`)
         }
         loadedConfigs.push({ contract: contracts[0], interval })
     }
@@ -63,7 +66,7 @@ async function testLatency(
     // Read the sequence number for the request from the transaction events.
     const sequenceNumber =
         parseInt(requestResponse.events.RequestedWithCallback.returnValues.sequenceNumber);
-    logger.info({ sequence: sequenceNumber, txHash: requestResponse.transactionHash }, `Request submitted`);
+    logger.info({ sequenceNumber, txHash: requestResponse.transactionHash }, `Request submitted`);
 
     const startTime = Date.now();
 
@@ -75,11 +78,11 @@ async function testLatency(
 
         if (parseInt(request.sequenceNumber) === 0) { // 0 means the request is cleared
             const endTime = Date.now();
-            logger.info({ sequence: sequenceNumber, latency: endTime - startTime }, `Successful callback`);
+            logger.info({ sequenceNumber, latency: endTime - startTime }, `Successful callback`);
             break;
         }
         if (Date.now() - startTime > 60000) {
-            logger.error({ sequence: sequenceNumber }, "Timeout: 60s passed without the callback being called");
+            logger.error({ sequenceNumber }, "Timeout: 60s passed without the callback being called");
             break;
         }
     }
@@ -134,7 +137,6 @@ yargs(hideBin(process.argv))
                 }
             });
             await Promise.all(promises);
-
         }
     })
     .demandCommand()
