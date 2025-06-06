@@ -2670,7 +2670,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "quorom"
+name = "quorum"
 version = "0.1.0"
 dependencies = [
  "anyhow",
