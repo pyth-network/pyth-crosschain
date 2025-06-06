@@ -11,7 +11,7 @@ use clap::{
     Args,
     Parser,
 };
-use wormhole_sdk::{vaa::{Body, Signature}, GuardianSetInfo};
+use wormhole_sdk::{vaa::Signature, GuardianSetInfo};
 
 use crate::{api::{self}, pythnet::fetch_guardian_set, ws::WsState};
 
@@ -73,7 +73,7 @@ lazy_static! {
 pub struct State(Arc<StateInner>);
 pub struct StateInner {
     pub task_tracker: TaskTracker,
-    pub verification: Arc<RwLock<HashMap<Body<Vec<u8>>, Vec<Signature>>>>,
+    pub verification: Arc<RwLock<HashMap<Vec<u8>, Vec<Signature>>>>,
 
     pub guardian_set:       GuardianSetInfo,
     pub guardian_set_index: u32,

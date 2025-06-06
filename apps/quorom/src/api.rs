@@ -2,6 +2,7 @@ use std::{net::SocketAddr, time::Duration};
 use axum::{routing::{get, post}, Json, Router};
 use secp256k1::{ecdsa::{RecoverableSignature, RecoveryId}, Message, Secp256k1};
 use serde::{Deserialize};
+use serde_wormhole::RawMessage;
 use sha3::{Digest, Keccak256};
 use ::time::OffsetDateTime;
 use wormhole_sdk::{vaa::{Body, Header, Signature}, GuardianAddress, GuardianSetInfo, Vaa};
@@ -9,7 +10,7 @@ use wormhole_sdk::{vaa::{Body, Header, Signature}, GuardianAddress, GuardianSetI
 use crate::{server::State, ws::{ws_route_handler, UpdateEvent}};
 
 const OBSERVATION_LIFETIME: u32 = 10; // In seconds
-pub type Payload = Vec<u8>;
+pub type Payload<'a> = &'a RawMessage;
 
 pub async fn run(listen_address: SocketAddr, state: State) -> anyhow::Result<()> {
     tracing::info!("Starting server...");
@@ -35,7 +36,8 @@ pub async fn run(listen_address: SocketAddr, state: State) -> anyhow::Result<()>
 pub struct Observation {
     #[serde(with = "hex::serde")]
     pub signature: [u8; 65],
-    pub body: Body<Payload>,
+    // serde wormhole serialized Body<&RawMessage>
+    pub body: Vec<u8>,
 }
 
 fn is_body_expired(body: &Body<Payload>) -> bool {
@@ -44,8 +46,17 @@ fn is_body_expired(body: &Body<Payload>) -> bool {
 }
 
 impl Observation {
+    fn get_body(&self) -> Result<Body<Payload>, serde_wormhole::Error> {
+        serde_wormhole::from_slice(self.body.as_slice())
+    }
     pub fn is_expired(&self) -> bool {
-        is_body_expired(&self.body)
+        match self.get_body() {
+            Ok(body) => is_body_expired(&body),
+            Err(_) => {
+                tracing::warn!("Failed to deserialize observation body");
+                true
+            }
+        }
     }
 }
 
@@ -57,7 +68,9 @@ fn verify_observation(
         return Err(anyhow::anyhow!("Observation is expired"));
     }
 
-    let digest = observation.body.digest()?;
+    let body = observation.get_body()
+        .map_err(|e| anyhow::anyhow!("Failed to deserialize observation body: {}", e))?;
+    let digest = body.digest()?;
     let secp = Secp256k1::new();
     let recid = RecoveryId::try_from(observation.signature[64] as i32)?;
     let pubkey: &[u8; 65] = &secp
@@ -76,19 +89,19 @@ fn verify_observation(
 
 async fn run_expiration_loop(
     state: axum::extract::State<State>,
-    body: Body<Payload>,
+    observation: Observation,
 ) {
     loop {
         tokio::time::sleep(Duration::from_secs(OBSERVATION_LIFETIME as u64)).await;
 
         let verification = state.verification.read().await;
-        if !verification.contains_key(&body) {
+        if !verification.contains_key(&observation.body) {
             break;
         }
 
-        if is_body_expired(&body) {
+        if observation.is_expired() {
             let mut verification = state.verification.write().await;
-            verification.remove(&body);
+            verification.remove(&observation.body);
             break;
         }
     }
@@ -112,18 +125,22 @@ async fn handle_observation(state: axum::extract::State<State>, params: Observat
         .or_insert_with(|| vec![new_signature.clone()])
         .clone();
 
+    let body = params.get_body()
+        .map_err(|e| anyhow::anyhow!("Failed to deserialize observation body: {}", e))?;
     if signatures.len() >= (state.guardian_set.addresses.len() * 2) / 3 + 1 {
         let vaa: Vaa<Payload> = (Header {
             version: 1,
             guardian_set_index: state.guardian_set_index,
             signatures,
-        }, params.body.clone()).into();
-        if let Err(e) = state.ws.broadcast_sender.send(UpdateEvent::NewVaa(vaa)) {
+        }, body).into();
+        if let Err(e) = state.ws.broadcast_sender.send(UpdateEvent::NewVaa(
+            serde_wormhole::to_vec(&vaa).map_err(|e| anyhow::anyhow!("Failed to serialize VAA: {}", e))?
+        )) {
             tracing::error!(error = ?e, "Failed to broadcast new VAA");
         }
         verification_writer.remove(&params.body);
     } else {
-        tokio::spawn(run_expiration_loop(state.clone(), params.body.clone()));
+        tokio::spawn(run_expiration_loop(state.clone(), params));
     }
 
     Ok(())

@@ -1,5 +1,5 @@
 use {
-    crate::{api::Payload, server::{State, EXIT}}, anyhow::{
+    crate::{server::{State, EXIT}}, anyhow::{
         anyhow,
         Result,
     }, axum::{
@@ -24,7 +24,7 @@ use {
                 Ordering,
             },
         time::Duration,
-    }, tokio::sync::{broadcast, watch}, wormhole_sdk::Vaa
+    }, tokio::sync::{broadcast, watch},
 };
 
 pub struct WsState {
@@ -71,7 +71,7 @@ async fn websocket_handler(
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum UpdateEvent {
-    NewVaa(Vaa<Payload>),
+    NewVaa(Vec<u8>),
 }
 
 pub type SubscriberId = usize;
@@ -148,9 +148,8 @@ impl Subscriber {
         }
     }
 
-    async fn handle_new_vaa(&mut self, vaa: Vaa<Payload>) -> Result<()> {
-        let message = serde_json::to_string(&vaa)?;
-        self.sender.send(message.into()).await?;
+    async fn handle_new_vaa(&mut self, vaa: Vec<u8>) -> Result<()> {
+        self.sender.send(vaa.into()).await?;
         Ok(())
     }
 
