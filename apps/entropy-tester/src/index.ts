@@ -3,7 +3,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import YAML from "yaml";
 import fs from "fs";
-import pino from "pino";
+import pino, { Logger } from "pino";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
 import { EvmEntropyContract } from "@pythnetwork/contract-manager/core/contracts/evm";
 import { PrivateKey, toPrivateKey } from "@pythnetwork/contract-manager/core/base";
@@ -28,25 +28,29 @@ function timeToSeconds(timeStr: string): number {
         default: throw new Error("Unsupported time unit.");
     }
 }
-const logger = pino();
 
-function loadConfig(configPath: string): LoadedConfig {
-    const config = YAML.parse(fs.readFileSync(configPath, "utf-8"));
-    const contracts = Object.values(DefaultStore.entropy_contracts).filter((contract) => (
-        contract.chain.getId() == config['chain-id']
-    ))
-    if (contracts.length === 0) {
-        logger.error("Couldn't find the contract id, check contract manager store.")
-        process.exit(1)
+
+function loadConfig(configPath: string): LoadedConfig[] {
+    const configs = YAML.parse(fs.readFileSync(configPath, "utf-8"));
+    const loadedConfigs = [];
+    for (const config of configs) {
+        const interval = timeToSeconds(config['interval']);
+        const contracts = Object.values(DefaultStore.entropy_contracts).filter((contract) => (
+            contract.chain.getId() == config['chain-id']
+        ))
+        if (contracts.length !== 1) {
+            throw new Error(`Can not find the contract id ${config['chain-id']}, check contract manager store.`)
+        }
+        loadedConfigs.push({ contract: contracts[0], interval })
     }
-    const interval = timeToSeconds(config['interval']);
-    return { contract: contracts[0], interval }
+    return loadedConfigs
 }
 
 
 async function testLatency(
     contract: EvmEntropyContract,
     privateKey: PrivateKey,
+    logger: Logger
 ) {
     const provider = await contract.getDefaultProvider();
     const userRandomNumber = contract.generateUserRandomNumber();
@@ -59,7 +63,7 @@ async function testLatency(
     // Read the sequence number for the request from the transaction events.
     const sequenceNumber =
         parseInt(requestResponse.events.RequestedWithCallback.returnValues.sequenceNumber);
-    logger.info(`Request tx hash: ${requestResponse.transactionHash} Seq. No: ${sequenceNumber}`);
+    logger.info({ sequnce: sequenceNumber, txHash: requestResponse.transactionHash }, `Request submitted`);
 
     const startTime = Date.now();
 
@@ -71,11 +75,11 @@ async function testLatency(
 
         if (parseInt(request.sequenceNumber) === 0) { // 0 means the request is cleared
             const endTime = Date.now();
-            logger.info(`Fortuna Latency: ${endTime - startTime}ms`);
+            logger.info({ sequnce: sequenceNumber, latency: endTime - startTime }, `Successful callback`);
             break;
         }
         if (Date.now() - startTime > 60000) {
-            logger.error("Timeout: 60s passed without the callback being called.");
+            logger.error({ sequnce: sequenceNumber }, "Timeout: 60s passed without the callback being called");
             break;
         }
     }
@@ -108,18 +112,29 @@ yargs(hideBin(process.argv))
             },
         },
         handler: async (argv: any) => {
-            const { contract, interval } = loadConfig(argv.config);
+            const logger = pino();
+            const configs = loadConfig(argv.config);
             if (argv.validate) {
                 logger.info("Config validated")
                 return;
             }
             const privateKey = toPrivateKey(fs.readFileSync(argv['private-key'], "utf-8").replace('0x', '').trimEnd())
             logger.info("Running")
-            // eslint-disable-next-line no-constant-condition
-            while (true) {
-                await testLatency(contract, privateKey);
-                await new Promise((resolve) => setTimeout(resolve, interval));
-            }
+            const promises = configs.map(async ({ contract, interval }) => {
+                const child = logger.child({ chain: contract.chain.getId() })
+                // eslint-disable-next-line no-constant-condition
+                while (true) {
+                    try {
+                        await testLatency(contract, privateKey, child);
+                    }
+                    catch (e) {
+                        child.error(e, "Error testing latency")
+                    }
+                    await new Promise((resolve) => setTimeout(resolve, interval * 1000));
+                }
+            });
+            await Promise.all(promises);
+
         }
     })
     .demandCommand()
