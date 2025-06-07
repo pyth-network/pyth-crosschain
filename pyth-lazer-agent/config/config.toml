@@ -1,0 +1,5 @@
+relayer_urls = ["ws://relayer-0.pyth-lazer.dourolabs.app/v1/transaction", "ws://relayer-0.pyth-lazer.dourolabs.app/v1/transaction"]
+authorization_token = "token1"
+publish_keypair_path = "/path/to/solana/id.json"
+listen_address = "0.0.0.0:1776"
+publish_interval_duration = "0.5ms"
