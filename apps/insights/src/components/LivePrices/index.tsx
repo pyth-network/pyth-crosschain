@@ -5,13 +5,14 @@ import type { PriceData, PriceComponent } from "@pythnetwork/client";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import { useNumberFormatter, useDateFormatter } from "react-aria";
+import { useDateFormatter } from "react-aria";
 
 import styles from "./index.module.scss";
 import {
   useLivePriceComponent,
   useLivePriceData,
 } from "../../hooks/use-live-price-data";
+import { usePriceFormatter } from "../../hooks/use-price-formatter";
 import type { Cluster } from "../../services/pyth";
 
 export const SKELETON_WIDTH = 20;
@@ -66,20 +67,17 @@ const Price = ({
 }: {
   prev?: number | undefined;
   current?: number | undefined;
-}) => {
-  const numberFormatter = useNumberFormatter({ maximumFractionDigits: 5 });
-
-  return current === undefined ? (
+}) =>
+  current === undefined ? (
     <Skeleton width={SKELETON_WIDTH} />
   ) : (
     <span
       className={styles.price}
       data-direction={prev ? getChangeDirection(prev, current) : "flat"}
     >
-      {numberFormatter.format(current)}
+      <FormattedPriceValue n={current} />
     </span>
   );
-};
 
 export const LiveConfidence = ({
   publisherKey,
@@ -119,19 +117,23 @@ const LiveComponentConfidence = ({
   return <Confidence confidence={current?.latest.confidence} />;
 };
 
-const Confidence = ({ confidence }: { confidence?: number | undefined }) => {
-  const numberFormatter = useNumberFormatter({ maximumFractionDigits: 5 });
+const Confidence = ({ confidence }: { confidence?: number | undefined }) => (
+  <span className={styles.confidence}>
+    <PlusMinus className={styles.plusMinus} />
+    {confidence === undefined ? (
+      <Skeleton width={SKELETON_WIDTH} />
+    ) : (
+      <span>
+        <FormattedPriceValue n={confidence} />
+      </span>
+    )}
+  </span>
+);
 
-  return (
-    <span className={styles.confidence}>
-      <PlusMinus className={styles.plusMinus} />
-      {confidence === undefined ? (
-        <Skeleton width={SKELETON_WIDTH} />
-      ) : (
-        <span>{numberFormatter.format(confidence)}</span>
-      )}
-    </span>
-  );
+const FormattedPriceValue = ({ n }: { n: number }) => {
+  const formatter = usePriceFormatter();
+
+  return useMemo(() => formatter.format(n), [n, formatter]);
 };
 
 export const LiveLastUpdated = ({
