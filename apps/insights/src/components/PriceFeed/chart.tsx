@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import styles from "./chart.module.scss";
 import { useLivePriceData } from "../../hooks/use-live-price-data";
+import { usePriceFormatter } from "../../hooks/use-price-formatter";
 import { Cluster } from "../../services/pyth";
 
 type Props = {
@@ -44,6 +45,7 @@ const useChartElem = (symbol: string, feedId: string) => {
   const chartRef = useRef<ChartRefContents | undefined>(undefined);
   const earliestDateRef = useRef<bigint | undefined>(undefined);
   const isBackfilling = useRef(false);
+  const priceFormatter = usePriceFormatter();
 
   const backfillData = useCallback(() => {
     if (!isBackfilling.current && earliestDateRef.current) {
@@ -113,6 +115,9 @@ const useChartElem = (symbol: string, feedId: string) => {
           timeVisible: true,
           secondsVisible: true,
         },
+        localization: {
+          priceFormatter: priceFormatter.format,
+        },
       });
 
       const price = chart.addSeries(LineSeries, { priceFormat });
@@ -141,7 +146,7 @@ const useChartElem = (symbol: string, feedId: string) => {
         chart.remove();
       };
     }
-  }, [backfillData]);
+  }, [backfillData, priceFormatter]);
 
   useEffect(() => {
     if (current && chartRef.current) {
