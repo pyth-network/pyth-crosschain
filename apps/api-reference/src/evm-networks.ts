@@ -73,7 +73,7 @@ export const NETWORK_INFO = {
   },
   [97]: {
     name: "bsc_testnet",
-    rpcUrl: "https://rpc.ankr.com/bsc_testnet_chapel",
+    rpcUrl: "https://bsc-testnet.drpc.org",
     isMainnet: false,
     contractAddress: "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
   },
@@ -257,11 +257,17 @@ export const NETWORK_INFO = {
     isMainnet: true,
     contractAddress: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   },
+  [1315]: {
+    name: "story_testnet",
+    rpcUrl: "https://aeneid.storyrpc.io",
+    isMainnet: false,
+    contractAddress: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+  },
   [1328]: {
     name: "sei_evm_testnet",
     rpcUrl: "https://evm-rpc-testnet.sei-apis.com",
     isMainnet: false,
-    contractAddress: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    contractAddress: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
   },
   [1329]: {
     name: "sei_evm_mainnet",
@@ -274,6 +280,12 @@ export const NETWORK_INFO = {
     rpcUrl: "https://rpc.public.zkevm-test.net",
     isMainnet: false,
     contractAddress: "0xFf255f800044225f54Af4510332Aa3D67CC77635",
+  },
+  [1514]: {
+    name: "story",
+    rpcUrl: "https://homer.storyrpc.io",
+    isMainnet: true,
+    contractAddress: "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
   },
   [1625]: {
     name: "gravity",

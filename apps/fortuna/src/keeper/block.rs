@@ -30,6 +30,8 @@ const RETRY_INTERVAL: Duration = Duration::from_secs(5);
 const BLOCK_BATCH_SIZE: u64 = 100;
 /// How much to wait before polling the next latest block
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
+/// Retry last N blocks
+const RETRY_PREVIOUS_BLOCKS: u64 = 100;
 
 #[derive(Debug, Clone)]
 pub struct BlockRange {
@@ -194,7 +196,6 @@ pub async fn watch_blocks_wrapper(
     chain_state: BlockchainState,
     latest_safe_block: BlockNumber,
     tx: mpsc::Sender<BlockRange>,
-    retry_previous_blocks: u64,
 ) {
     let mut last_safe_block_processed = latest_safe_block;
     loop {
@@ -202,7 +203,6 @@ pub async fn watch_blocks_wrapper(
             chain_state.clone(),
             &mut last_safe_block_processed,
             tx.clone(),
-            retry_previous_blocks,
         )
         .in_current_span()
         .await
@@ -221,7 +221,6 @@ pub async fn watch_blocks(
     chain_state: BlockchainState,
     last_safe_block_processed: &mut BlockNumber,
     tx: mpsc::Sender<BlockRange>,
-    retry_previous_blocks: u64,
 ) -> Result<()> {
     tracing::info!("Watching blocks to handle new events");
 
@@ -230,7 +229,7 @@ pub async fn watch_blocks(
 
         let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
         if latest_safe_block > *last_safe_block_processed {
-            let mut from = latest_safe_block.saturating_sub(retry_previous_blocks);
+            let mut from = latest_safe_block.saturating_sub(RETRY_PREVIOUS_BLOCKS);
 
             // In normal situation, the difference between latest and last safe block should not be more than 2-3 (for arbitrum it can be 10)
             // TODO: add a metric for this in separate PR. We need alerts

@@ -11,8 +11,9 @@ use {
 };
 pub use {
     generate::GenerateOptions, get_request::GetRequestOptions, inspect::InspectOptions,
-    register_provider::RegisterProviderOptions, request_randomness::RequestRandomnessOptions,
-    run::RunOptions, setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
+    prometheus_client::metrics::histogram::Histogram, register_provider::RegisterProviderOptions,
+    request_randomness::RequestRandomnessOptions, run::RunOptions,
+    setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
 };
 
 mod generate;
@@ -189,9 +190,6 @@ pub struct EthereumConfig {
     /// at each specified delay. For example: [5, 10, 20].
     #[serde(default = "default_block_delays")]
     pub block_delays: Vec<u64>,
-
-    #[serde(default = "default_retry_previous_blocks")]
-    pub retry_previous_blocks: u64,
 }
 
 fn default_sync_fee_only_on_register() -> bool {
@@ -200,10 +198,6 @@ fn default_sync_fee_only_on_register() -> bool {
 
 fn default_block_delays() -> Vec<u64> {
     vec![5]
-}
-
-fn default_retry_previous_blocks() -> u64 {
-    100
 }
 
 fn default_priority_fee_multiplier_pct() -> u64 {
@@ -374,3 +368,9 @@ impl SecretString {
         Ok(None)
     }
 }
+
+/// This is a histogram with a bucket configuration appropriate for most things
+/// which measure latency to external services.
+pub const LATENCY_BUCKETS: [f64; 11] = [
+    0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
+];

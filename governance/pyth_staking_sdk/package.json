@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/staking-sdk",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "Pyth staking SDK",
   "type": "module",
   "exports": {
@@ -13,7 +13,7 @@
     "dist/**/*"
   ],
   "engines": {
-    "node": "22"
+    "node": "20 || 22"
   },
   "publishConfig": {
     "access": "public"

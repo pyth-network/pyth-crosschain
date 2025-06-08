@@ -17,7 +17,14 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useQueryState, parseAsString } from "nuqs";
 import type { ReactNode } from "react";
-import { Suspense, useState, useCallback, useMemo, useTransition } from "react";
+import {
+  Suspense,
+  useState,
+  useCallback,
+  useMemo,
+  useTransition,
+  useRef,
+} from "react";
 import {
   RouterProvider,
   useDateFormatter,
@@ -68,6 +75,7 @@ export const usePriceComponentDrawer = ({
   const drawer = useDrawer();
   const router = useRouter();
   const [isRouting, startTransition] = useTransition();
+  const didRestoreUrl = useRef(false);
 
   const navigate = useCallback(
     (route: string) => {
@@ -102,10 +110,12 @@ export const usePriceComponentDrawer = ({
   }, [updateSelectedComponentId]);
 
   useMountEffect(() => {
-    if (selectedComponentId) {
+    if (selectedComponentId && !didRestoreUrl.current) {
+      didRestoreUrl.current = true;
       const component = components.find(
         (component) =>
-          component[identifiesPublisher ? "publisherKey" : "feedKey"],
+          component[identifiesPublisher ? "publisherKey" : "feedKey"] ===
+          selectedComponentId,
       );
       if (component) {
         openDrawer(component);

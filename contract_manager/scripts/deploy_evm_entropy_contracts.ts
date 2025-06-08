@@ -1,16 +1,18 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { EvmChain } from "../src/chains";
-import { DefaultStore } from "../src/store";
+import { EvmChain } from "../src/core/chains";
+import { DefaultStore } from "../src/node/utils/store";
 import {
-  DeploymentType,
   ENTROPY_DEFAULT_KEEPER,
   ENTROPY_DEFAULT_PROVIDER,
   EvmEntropyContract,
+} from "../src/core/contracts/evm";
+import {
+  DeploymentType,
   getDefaultDeploymentConfig,
   toDeploymentType,
   toPrivateKey,
-} from "../src";
+} from "../src/core/base";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,

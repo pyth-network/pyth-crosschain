@@ -1,6 +1,7 @@
 -- we use VARCHAR(40) for addresses and VARCHAR(64) for tx_hashes and 32 byte numbers
 CREATE TABLE request(
                     chain_id VARCHAR(20) NOT NULL,
+                    network_id INTEGER NOT NULL,
                     provider VARCHAR(40) NOT NULL,
                     sequence INTEGER NOT NULL,
                     created_at DATETIME NOT NULL,
@@ -14,11 +15,11 @@ CREATE TABLE request(
                     reveal_tx_hash VARCHAR(64),
                     provider_random_number VARCHAR(64),
                     info TEXT,
-                    PRIMARY KEY (chain_id, sequence, provider, request_tx_hash)
+                    PRIMARY KEY (network_id, sequence, provider, request_tx_hash)
 );
 
 CREATE INDEX idx_request_sequence ON request (sequence);
-CREATE INDEX idx_request_chain_id_created_at ON request (chain_id, created_at);
+CREATE INDEX idx_request_network_id_created_at ON request (network_id, created_at);
 CREATE INDEX idx_request_created_at ON request (created_at);
 CREATE INDEX idx_request_request_tx_hash ON request (request_tx_hash) WHERE request_tx_hash IS NOT NULL;
 CREATE INDEX idx_request_reveal_tx_hash ON request (reveal_tx_hash) WHERE reveal_tx_hash IS NOT NULL;

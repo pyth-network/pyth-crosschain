@@ -124,6 +124,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
 
 export async function fetchStakeAccounts(
   connection: Connection,
+  staker: PublicKey,
   voterAccount: PublicKey,
 ) {
   const stakeAccounts = await connection.getProgramAccounts(
@@ -139,8 +140,20 @@ export async function fetchStakeAccounts(
         },
         {
           memcmp: {
+            offset: 12,
+            bytes: staker.toBase58(),
+          },
+        },
+        {
+          memcmp: {
             offset: 124,
             bytes: voterAccount.toBase58(),
+          },
+        },
+        {
+          memcmp: {
+            offset: 172,
+            bytes: bs58.encode(Buffer.from("ff".repeat(8), "hex")), // account is active
           },
         },
       ],

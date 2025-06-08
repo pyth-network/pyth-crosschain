@@ -6,12 +6,24 @@ import { PythLazerClient } from "../src/index.js";
 // Ignore debug messages
 console.debug = () => {};
 
-const client = await PythLazerClient.create(
-  ["wss://pyth-lazer.dourolabs.app/v1/stream"],
-  "access_token",
-  3, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. The connections will round-robin across the provided URLs. Default is 3.
-  console, // Optionally log socket operations (to the console in this case.)
-);
+const client = await PythLazerClient.create({
+  urls: [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+  ],
+  token: "you-access-token-here", // Replace with your actual access token
+  numConnections: 4, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. The connections will round-robin across the provided URLs. Default is 4.
+  logger: console, // Optionally log socket operations (to the console in this case.)
+  onError: (error) => {
+    console.error("WebSocket error:", error);
+  },
+  // Optional configuration for resilient WebSocket connections
+  rwsConfig: {
+    heartbeatTimeoutDurationMs: 5000, // Optional heartbeat timeout duration in milliseconds
+    maxRetryDelayMs: 1000, // Optional maximum retry delay in milliseconds
+    logAfterRetryCount: 10, // Optional log after how many retries
+  },
+});
 
 // Read and process messages from the Lazer stream
 client.addMessageListener((message) => {
@@ -47,7 +59,7 @@ client.addAllConnectionsDownListener(() => {
 });
 
 // Create and remove one or more subscriptions on the fly
-await client.subscribe({
+client.subscribe({
   type: "subscribe",
   subscriptionId: 1,
   priceFeedIds: [1, 2],
@@ -58,7 +70,7 @@ await client.subscribe({
   parsed: false,
   jsonBinaryEncoding: "base64",
 });
-await client.subscribe({
+client.subscribe({
   type: "subscribe",
   subscriptionId: 2,
   priceFeedIds: [1, 2, 3, 4, 5],
@@ -72,6 +84,6 @@ await client.subscribe({
 
 await new Promise((resolve) => setTimeout(resolve, 10_000));
 
-await client.unsubscribe(1);
-await client.unsubscribe(2);
+client.unsubscribe(1);
+client.unsubscribe(2);
 client.shutdown();

@@ -25,6 +25,10 @@ function generateAbi(contracts) {
     sources,
     settings: {
       outputSelection,
+      remappings: [
+        // Needed for @pythnetwork/pulse-sdk-solidity since it depends on @pythnetwork/pyth-sdk-solidity
+        "@pythnetwork/=./node_modules/@pythnetwork/",
+      ],
     },
   };
 
@@ -42,9 +46,28 @@ function generateAbi(contracts) {
     fs.mkdirSync("abis");
   }
 
+  // Report compilation failures
+  if (output.errors) {
+    // We can still generate ABIs with warnings, only throw for errors
+    const errors = output.errors.filter((e) => e.severity === "error");
+    if (errors.length > 0) {
+      console.error("Compilation errors:");
+      for (const error of errors) {
+        console.error(error.formattedMessage || error.message);
+      }
+      throw new Error("Compilation failed due to errors");
+    }
+  }
+
   for (let contract of contracts) {
     const contractFile = `${contract}.sol`;
 
+    if (!output.contracts[contractFile]) {
+      throw new Error(`Unable to produce ABI for ${contractFile}.`);
+    }
+    if (!output.contracts[contractFile][contract]) {
+      throw new Error(`Unable to produce ABI for ${contractFile}:${contract}.`);
+    }
     const abi = output.contracts[contractFile][contract].abi;
     fs.writeFileSync(
       `abis/${contract}.json`,

@@ -1,0 +1,26 @@
+---
+title: "Oracle Program: How Pyth Maintains & Aggregates Price Feeds"
+description: >-
+  Discover how Pyth’s oracle delivers accurate on-chain price feeds by
+  aggregating real-time data and computing moving averages for your
+  decentralized apps.
+full: false
+index: false
+---
+
+# Oracle Program
+
+The oracle program is responsible for several tasks:
+
+1. Maintaining the set of price feeds.
+2. Storing the contributions of data providers to each price feed.
+3. Combining the individual data providers' prices into a single aggregate price and confidence interval.
+4. Performing any additional stateful computations on the resulting price series, such as computing moving averages.
+
+The oracle solves these problems by maintaining a collection of [SVM accounts](../pythnet-reference/account-structure.md) to represent the set of price feeds.
+Each feed has two accounts: a product account to store [metadata](../pythnet-reference/product-metadata.md) and a price account.
+The price account stores a list of authorized data providers for this specific price feed, and allocates storage space for each data provider's price.
+The oracle program exposes an instruction called `upd_price` that enables an authorized data provider to update the price account with their current estimate of the price and confidence interval.
+Additionally, the first time that `upd_price` is called in a slot, it will [aggregate](price-aggregation.md) the individual data provider's prices into an aggregate price and confidence interval.
+Only the aggregate price and confidence are made available for use in downstream applications; the individual data providers prices are internal state of the oracle program.
+Finally, the oracle program computes an [exponentially-weighted moving average](ema-price-aggregation.md) of the oracle price.

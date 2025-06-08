@@ -3882,7 +3882,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.1.3"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "fs-err",

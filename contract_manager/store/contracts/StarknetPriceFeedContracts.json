@@ -1,0 +1,12 @@
+[
+  {
+    "chain": "starknet_sepolia",
+    "address": "0x07f2b07b6b5365e7ee055bda4c0ecabd867e6d3ee298d73aea32b027667186d6",
+    "type": "StarknetPriceFeedContract"
+  },
+  {
+    "chain": "starknet_mainnet",
+    "address": "0x062ab68d8e23a7aa0d5bf4d25380c2d54f2dd8f83012e047851c3706b53d64d1",
+    "type": "StarknetPriceFeedContract"
+  }
+]

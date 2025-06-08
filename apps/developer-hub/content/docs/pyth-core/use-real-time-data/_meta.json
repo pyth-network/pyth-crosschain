@@ -1,0 +1,13 @@
+{
+  "evm": "in EVM Contracts",
+  "solana": "in Solana and SVM Programs",
+  "starknet": "in Starknet Contracts",
+  "fuel": "in Fuel Contracts",
+  "aptos": "in Aptos Contracts",
+  "sui": "in Sui Contracts",
+  "iota": "in IOTA Contracts",
+  "ton": "in TON Contracts",
+  "cosmwasm": "in CosmWasm Contracts",
+  "near": "in Near Contracts",
+  "off-chain": "in Off-Chain Applications"
+}

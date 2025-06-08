@@ -98,6 +98,7 @@ export class TonPricePusher implements IPricePusher {
     try {
       const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
         encoding: "base64",
+        ignoreInvalidPriceIds: true,
       });
       priceFeedUpdateData = response.binary.data;
     } catch (err: any) {

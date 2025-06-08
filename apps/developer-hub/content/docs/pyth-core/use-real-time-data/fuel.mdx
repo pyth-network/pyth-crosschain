@@ -1,0 +1,192 @@
+---
+title: "Fuel Contracts: Integrate Real-Time Pyth Data"
+description: >-
+  Use Fuel SDKs, code samples, and documentation to integrate Pyth Network
+  real-time price feeds into your contracts and retrieve accurate, up-to-date
+  data.
+full: false
+index: false
+---
+
+# How to Use Real-Time Data in Fuel Contracts
+
+This guide explains how to use real-time Pyth data in Fuel contracts.
+
+## Install the Pyth SDK
+
+Use the following dependency in your `Forc.toml` file to use the latest Pyth Fuel package:
+
+```toml copy
+[dependencies]
+pyth_interface = { git = "https://github.com/pyth-network/pyth-crosschain", tag = "pyth-fuel-contract-v0.5.0" }
+```
+
+Pyth also provides a javascript SDK to interact with the Pyth contract on Fuel. You can install it using the following command:
+
+<Tabs groupId="node-package-manager" items={["npm", "yarn"]} persist>
+  <Tab>``` npm install --save @pythnetwork/pyth-fuel-js ```</Tab>
+  <Tab>``` yarn add @pythnetwork/pyth-fuel-js ```</Tab>
+</Tabs>
+
+## Write Contract Code
+
+The code snippet below provides an example module fetching the ETH/USD price from Pyth price feeds:
+
+```rust copy
+contract;
+
+use pyth_interface::{data_structures::price::{Price, PriceFeedId}, PythCore};
+
+use std::bytes::Bytes;
+
+abi UpdatePrice {
+    fn valid_time_period() -> u64;
+    fn get_price(price_feed_id: PriceFeedId) -> Price;
+    fn get_price_unsafe(price_feed_id: PriceFeedId) -> Price;
+    fn update_fee(update_data: Vec<Bytes>) -> u64;
+    #[payable]
+    fn update_price_feeds(update_fee: u64, update_data: Vec<Bytes>);
+}
+
+const PYTH_MAINNET_CONTRACT_ID = 0x1c86fdd9e0e7bc0d2ae1bf6817ef4834ffa7247655701ee1b031b52a24c523da; // Mainnet Contract
+const PYTH_TESTNET_CONTRACT_ID = 0x25146735b29d4216639f7f8b1d7b921ff87a1d3051de62d6cceaacabeb33b8e7; // Testnet Contract
+const FUEL_ETH_BASE_ASSET_ID = 0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07;
+
+impl UpdatePrice for Contract {
+    fn valid_time_period() -> u64 {
+        let pyth_contract = abi(PythCore, PYTH_MAINNET_CONTRACT_ID);
+        let period = pyth_contract.valid_time_period();
+        period
+    }
+    fn get_price(price_feed_id: PriceFeedId) -> Price {
+        let pyth_contract = abi(PythCore, PYTH_MAINNET_CONTRACT_ID);
+        let price = pyth_contract.price(price_feed_id);
+        price
+    }
+    fn get_price_unsafe(price_feed_id: PriceFeedId) -> Price {
+        let pyth_contract = abi(PythCore, PYTH_MAINNET_CONTRACT_ID);
+        let price = pyth_contract.price_unsafe(price_feed_id);
+        price
+    }
+    fn update_fee(update_data: Vec<Bytes>) -> u64 {
+        let pyth_contract = abi(PythCore, PYTH_MAINNET_CONTRACT_ID);
+        let fee = pyth_contract.update_fee(update_data);
+        fee
+    }
+    #[payable]
+    fn update_price_feeds(update_fee: u64, update_data: Vec<Bytes>) {
+        let pyth_contract = abi(PythCore, PYTH_MAINNET_CONTRACT_ID);
+        pyth_contract
+            .update_price_feeds {
+                asset_id: FUEL_ETH_BASE_ASSET_ID,
+                coins: update_fee,
+            }(update_data);
+    }
+}
+```
+
+The `update_data` argument contains verified prices from Pyth.
+Calling `pyth_contract.update_price_feeds` with this value updates the on-chain Pyth price and ensures your application has recent price data.
+The `update_data` can be fetched from Hermes; Consult [Fetch Price Updates](https://docs.pyth.network/price-feeds/fetch-price-updates) for more information on how to fetch the `update_data`.
+
+<InfoBox variant="info">
+  Regarding the Pyth contract on Fuel, the caller must pay the fee in the base
+  asset for functions like `update_price_feeds`. The fee is currently set to the
+  minimum possible value (1 wei).
+</InfoBox>
+
+The code snippet above does the following things:
+
+1. Defines an `UpdatePrice` ABI with functions to interact with the Pyth contract.
+2. Implements the `UpdatePrice` ABI for the contract, providing the following functionality:
+
+   - `valid_time_period()`: Retrieves the valid time period from the Pyth contract.
+   - `get_price(price_feed_id)`: Gets the price for a given price feed ID.
+   - `get_price_unsafe(price_feed_id)`: Gets the price for a given price feed ID without staleness checks.
+   - `update_fee(update_data)`: Calculates the fee required to update the price feeds.
+   - `update_price_feeds(update_fee, update_data)`: Updates the price feeds with the provided data and fee.
+
+3. Uses the `PYTH_MAINNET_CONTRACT_ID` constant to interact with the Pyth contract on testnet.
+4. Uses the `FUEL_ETH_BASE_ASSET_ID` constant as the asset ID for paying update fees.
+
+To use this contract, you would typically:
+
+1. Call `update_fee()` to get the required fee for updating price feeds.
+2. Call `update_price_feeds()` with the fee and update data to refresh the price feeds.
+3. Use `get_price()` or `get_price_unsafe()` to read the updated prices.
+
+### Write Client Code
+
+The code snippet below provides an example of how to fetch price updates using NextJS, a full example can be found [here](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/fuel/fetch-and-update-btc-price).
+
+```ts copy
+import { TestContractAbi__factory } from "@/sway-api";
+import PYTH_CONTRACT_ABI from "../abi/pyth-contract-abi.json";
+import { arrayify, Contract, hexlify } from "fuels";
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+const HERMES_ENDPOINT = "https://hermes.pyth.network/";
+const FUEL_ETH_BASE_ASSET_ID =
+  "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
+const ETH_USD_PRICE_FEED_ID =
+  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"; // ETH/USD
+
+const contractId =
+  CURRENT_ENVIRONMENT === "local"
+    ? contractIds.testContract
+    : (process.env.NEXT_PUBLIC_TESTNET_CONTRACT_ID as string); // Testnet Contract ID
+const pythContractId = process.env
+  .NEXT_PUBLIC_PYTH_TESTNET_CONTRACT_ID as string; // Testnet Contract ID
+
+async function updateAndGetPrice() {
+  const fetchPriceUpdateData = async () => {
+    const connection = new HermesClient(HERMES_ENDPOINT);
+
+    // Latest price updates
+    const priceUpdates = await connection.getLatestPriceUpdates([
+      ETH_USD_PRICE_FEED_ID,
+    ]);
+
+    const buffer = Buffer.from(priceUpdates.binary.data[0], "hex");
+    return buffer;
+  };
+
+  const updateData = await fetchPriceUpdateData();
+
+  const { waitForResult: waitForResultFee } = await contract.functions
+    .update_fee([arrayify(updateData)])
+    .addContracts([pythContract])
+    .call();
+  const { value: fee } = await waitForResultFee();
+
+  await contract.functions
+    .update_price_feeds(fee, [arrayify(updateData)])
+    .addContracts([pythContract])
+    .callParams({
+      forward: [fee, hexlify(FUEL_ETH_BASE_ASSET_ID)],
+    })
+    .call();
+
+  const { value: price } = await contract.functions
+    .get_price(hexlify(PRICE_FEED_ID))
+    .addContracts([pythContract])
+    .get();
+
+  console.log("Latest ETH/USD price after update:", price);
+  return price;
+}
+
+updateAndGetPrice().catch(console.error);
+```
+
+## Additional Resources
+
+You may find these additional resources helpful for developing your Fuel application.
+
+### Interface
+
+The [Fuel Interface](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/fuel/contracts/pyth-interface/src) directory contains multiple files that define the functions and structures for interacting with the Pyth contract deployed on Fuel.
+
+### Example Applications
+
+- [fetch-and-update-btc-price](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/fuel/fetch-and-update-btc-price), which fetches the latest price update from Hermes and updates the Pyth price feeds on Fuel.

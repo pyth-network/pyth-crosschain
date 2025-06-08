@@ -67,15 +67,13 @@ pub async fn run_keeper_threads(
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("Latest safe block: {}", &latest_safe_block);
 
-    let contract = Arc::new(
-        InstrumentedSignablePythContract::from_config(
-            &chain_eth_config,
-            &private_key,
-            chain_state.id.clone(),
-            rpc_metrics.clone(),
-        )
-        .await?,
-    );
+    let contract = Arc::new(InstrumentedSignablePythContract::from_config(
+        &chain_eth_config,
+        &private_key,
+        chain_state.id.clone(),
+        rpc_metrics.clone(),
+        chain_state.network_id,
+    )?);
     let keeper_address = contract.wallet().address();
 
     let fulfilled_requests_cache = Arc::new(RwLock::new(HashSet::<u64>::new()));
@@ -105,15 +103,7 @@ pub async fn run_keeper_threads(
 
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
-    spawn(
-        watch_blocks_wrapper(
-            chain_state.clone(),
-            latest_safe_block,
-            tx,
-            chain_eth_config.retry_previous_blocks,
-        )
-        .in_current_span(),
-    );
+    spawn(watch_blocks_wrapper(chain_state.clone(), latest_safe_block, tx).in_current_span());
 
     // Spawn a thread for block processing with configured delays
     spawn(

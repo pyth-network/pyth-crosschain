@@ -187,7 +187,7 @@ abstract contract MockPriceFeedTestUtils is Test {
             pyth,
             expectedFee,
             abi.encodeWithSelector(
-                IPyth.parsePriceFeedUpdatesWithSlotsStrict.selector
+                IPyth.parsePriceFeedUpdatesWithConfig.selector
             ),
             abi.encode(priceFeeds, slots)
         );

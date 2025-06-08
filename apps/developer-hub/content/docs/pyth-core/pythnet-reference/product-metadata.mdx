@@ -1,0 +1,133 @@
+---
+title: "Product Metadata: Structure & Best Practices for Asset Accounts"
+description: >-
+  Pyth’s product metadata schema covers equities, cryptocurrencies, FX, and
+  metals. This guide describes the schema’s key attributes and recommended usage
+  patterns to optimize data processing.
+full: false
+index: false
+---
+
+# Product Metadata
+
+Product accounts store metadata about a product. This metadata is represented as a set of reference attributes, stored as a list of text key/value pairs but not all products share the same account structure. Metadata is network dependent.
+
+Every product has `product_account`, `symbol`, `asset_type`, `quote_currency`, `base` and `price_account`. However, the remaining fields of a product account will depend on its `asset_type`.
+
+**Equity**
+
+As a rule, all products with `asset_type` = Equity will follow the below Product Account structure:
+
+```sh copy
+product_account... Solana Account
+  asset_type...... AssetType
+  base............ BaseCurrency
+  cms_symbol...... NYSESymbol
+  cqs_symbol...... SIPSSymbol
+  country......... Country
+  description..... Description
+  nasdaq_symbol... ComstockSymbol
+  quote_currency.. QuoteCurrency
+  symbol.......... AssetType.Country.BaseCurrency/QuoteCurrency
+  weekly_schedule. WeeklySchedule
+  price_account... Solana Account
+```
+
+`symbol`: AssetType.Country.BaseCurrency/QuoteCurrency where the `base`: BaseCurrency is, in order of availability:&#x20;
+
+1. `cms_symbol`: NYSESymbol&#x20;
+2. `cqs_symbol`: SIPSSymbol
+3. `nasdaq_symbol`: ComstockSymbol
+
+Here is a snapshot of the Apple product account on Pythnet:
+
+```sh copy
+product_account .. 3mkwqdkawySvAm1VjD4f2THN5mmXzb76fvft2hWpAANo
+  asset_type...... Equity
+  base............ AAPL
+  cms_symbol...... AAPL
+  cqs_symbol...... AAPL
+  country......... US
+  description..... APPLE INC / US DOLLAR
+  nasdaq_symbol... AAPL
+  quote_currency.. USD
+  symbol.......... Equity.US.AAPL/USD
+  weekly_schedule. America/New_York,9:30-16:00,9:30-16:00,9:30-16:00,9:30-16:00,9:30-16:00,C,C
+  price_account... 5yixRcKtcs5BZ1K2FsLFwmES1MyA92d6efvijjVevQCw
+```
+
+**Crypto**
+
+As a rule, all products with `asset_type` = Crypto will follow the below Product Account structure:
+
+```sh copy
+product_account .. Solana Account
+  asset_type...... AssetType
+  base............ BaseCurrency
+  description..... Description
+  generic_symbol.. JLQDSymbol
+  quote_currency.. QuoteCurrency
+  symbol.......... AssetType.BaseCurrency/QuoteCurrency
+  weekly_schedule. WeeklySchedule
+  price_account .. Solana Account
+```
+
+Here is a snapshot of the Ethereum product account on Pythnet:
+
+```sh copy
+product_account .. EMkxjGC1CQ7JLiutDbfYb7UKb3zm9SJcUmr1YicBsdpZ
+  asset_type...... Crypto
+  base............ ETH
+  description..... ETHEREUM / US DOLLAR
+  generic_symbol.. ETHUSD
+  quote_currency.. USD
+  symbol.......... Crypto.ETH/USD
+  weekly_schedule. America/New_York,O,O,O,O,O,O,O
+  price_account .. JBu1AL4obBcCMqKBBxhpWCNUt136ijcuMZLFvTP7iWdB
+```
+
+**Foreign Currency & Metal**
+
+Lastly, are Foreign Currencies (FX) and Metal assets. Those 2 `asset_type` share a common product account structure that follows the below template:
+
+```sh copy
+product_account .. Solana Account
+  asset_type...... AssetType
+  base............ BaseCurrency
+  description..... Description
+  generic_symbol.. JLQDSymbol
+  quote_currency.. QuoteCurrency
+  symbol.......... AssetType.BaseCurrency/QuoteCurrency
+  tenor........... Maturity
+  weekly_schedule. WeeklySchedule
+  price_account .. Solana Account
+```
+
+Here is a snapshot of the Japanese Yen product account on Pythnet:
+
+```sh copy
+product_account .. eAnmHaCS2J1XPEb6zohWFrnXD3Mni3wTrfKGhkoQmcZ
+  asset_type...... FX
+  base............ USD
+  description..... US DOLLAR / JAPANESE YEN
+  generic_symbol.. USDJPY
+  quote_currency.. JPY
+  symbol.......... FX.USD/JPY
+  tenor........... Spot
+  weekly_schedule. America/New_York,O,O,O,O,00:00-17:00,C,17:00-24:00
+  price_account .. H6dt83FavYgfJR8oV7HewKWZjzveFFiDhq41VbmDYnVF
+```
+
+**Other Fields**
+
+- `weekly_schedule` - Optional field. When set, contents are used by publishers to learn about a symbol's typical market hours. See [Weekly Schedule Format](schedule-format#weekly-schedule-format-deprecated) for a detailed format specification.
+
+**Best Practices**
+
+The users should not rely on the symbol name being unchanging or parse data out of the symbol.
+
+Instead, programs should always use the different attributes to identify the product you are interested in. You have to ensure that anything which is used to compose the symbol is made available as a stand-alone attribute.
+
+**Caveats**
+
+There is a limit of 464 bytes to store the attribute dictionary in v2 (the product account is 512 bytes and 48 are used for other fields). This has to hold all the keys and values, plus field separators. There is no data compression or abbreviation.

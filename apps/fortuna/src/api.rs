@@ -2,7 +2,7 @@ use {
     crate::{
         chain::reader::{BlockNumber, BlockStatus, EntropyReader},
         history::History,
-        state::HashChainState,
+        state::MonitoredHashChainState,
     },
     anyhow::Result,
     axum::{
@@ -33,6 +33,14 @@ mod ready;
 mod revelation;
 
 pub type ChainId = String;
+pub type NetworkId = u64;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema, sqlx::Type)]
+pub enum StateTag {
+    Pending,
+    Completed,
+    Failed,
+}
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct RequestLabel {
@@ -53,6 +61,8 @@ pub struct ApiState {
 
     /// Prometheus metrics
     pub metrics: Arc<ApiMetrics>,
+
+    pub explorer_metrics: Arc<ExplorerMetrics>,
 }
 
 impl ApiState {
@@ -65,6 +75,8 @@ impl ApiState {
             http_requests: Family::default(),
         };
 
+        let explorer_metrics = Arc::new(ExplorerMetrics::new(metrics_registry.clone()).await);
+
         let http_requests = metrics.http_requests.clone();
         metrics_registry.write().await.register(
             "http_requests",
@@ -75,6 +87,7 @@ impl ApiState {
         ApiState {
             chains,
             metrics: Arc::new(metrics),
+            explorer_metrics,
             history,
             metrics_registry,
         }
@@ -86,8 +99,11 @@ impl ApiState {
 pub struct BlockchainState {
     /// The chain id for this blockchain, useful for logging
     pub id: ChainId,
+    /// The network id for this blockchain
+    /// Obtained from the response of eth_chainId rpc call
+    pub network_id: u64,
     /// The hash chain(s) required to serve random numbers for this blockchain
-    pub state: Arc<HashChainState>,
+    pub state: Arc<MonitoredHashChainState>,
     /// The contract that the server is fulfilling requests for.
     pub contract: Arc<dyn EntropyReader>,
     /// The address of the provider that this server is operating for.
@@ -208,7 +224,7 @@ mod test {
             },
             chain::reader::{mock::MockEntropyReader, BlockStatus},
             history::History,
-            state::{HashChainState, PebbleHashChain},
+            state::{HashChainState, MonitoredHashChainState, PebbleHashChain},
         },
         axum::http::StatusCode,
         axum_test::{TestResponse, TestServer},
@@ -237,9 +253,17 @@ mod test {
     async fn test_server() -> (TestServer, Arc<MockEntropyReader>, Arc<MockEntropyReader>) {
         let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
+        let eth_state = MonitoredHashChainState::new(
+            ETH_CHAIN.clone(),
+            Default::default(),
+            "ethereum".into(),
+            PROVIDER,
+        );
+
         let eth_state = BlockchainState {
             id: "ethereum".into(),
-            state: ETH_CHAIN.clone(),
+            network_id: 1,
+            state: Arc::new(eth_state),
             contract: eth_read.clone(),
             provider_address: PROVIDER,
             reveal_delay_blocks: 1,
@@ -250,9 +274,17 @@ mod test {
 
         let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
+        let avax_state = MonitoredHashChainState::new(
+            AVAX_CHAIN.clone(),
+            Default::default(),
+            "avalanche".into(),
+            PROVIDER,
+        );
+
         let avax_state = BlockchainState {
             id: "avalanche".into(),
-            state: AVAX_CHAIN.clone(),
+            network_id: 43114,
+            state: Arc::new(avax_state),
             contract: avax_read.clone(),
             provider_address: PROVIDER,
             reveal_delay_blocks: 2,

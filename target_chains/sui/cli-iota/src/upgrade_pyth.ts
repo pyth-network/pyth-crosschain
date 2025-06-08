@@ -8,7 +8,7 @@ import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 
 import { execSync } from "child_process";
-import { IotaPriceFeedContract } from "@pythnetwork/contract-manager";
+import { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {

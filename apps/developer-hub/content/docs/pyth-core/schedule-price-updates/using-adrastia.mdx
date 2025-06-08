@@ -1,0 +1,45 @@
+---
+title: "Pyth Core: Using Adrastia for Real-Time Price Updates"
+description: >-
+  Adrastia automates secure, real-time access to Pyth price feeds for DeFi
+  applications. It provides a straightforward integration process, performance
+  optimizations, and consistently reliable market data.
+full: false
+index: false
+---
+
+# Using Adrastia to Schedule Real-Time Price Updates
+
+## About Adrastia
+
+Established in 2021, [Adrastia](https://adrastia.io) is an automation platform founded by TRILEZ SOFTWARE INC. and leverages over a decade of experience in building and running AI agents to deliver reliable, high-performance automated systems. Adrastia operates with the core values of reliability, transparency, and prudence with a focus on enhancing the security, performance, and efficiency of DeFi systems.
+
+## Pyth Price Feed Updater
+
+Adrastia's Pyth Price Feed Updater is a managed white-glove solution that reliably pushes price updates with speed and efficiency when specified trigger conditions are met. The setup process is simple and Adrastia handles all the heavy lifting.
+
+## Process
+
+Adrastia is working on a decentralized, permissionless system for managing this service where you'll be able to effortlessly choose your preferred service provider and manage all details in an app. In the meantime, they've made the offchain integration process as simple as possible.
+
+1. Reach out to them via email ([support@adrastia.io](mailto:support@adrastia.io)) or [Discord](https://discord.adrastia.io/).
+2. Provide them with the price feed IDs for which you'd like to schedule price updates.
+3. They'll create a public (or private) GitHub repository for you to view the configuration and suggest changes.
+4. They'll send you a Service Agreement to authorize.
+5. They'll provide you with a set of Automatos (automation) worker addresses for you to fund with gas.
+6. They'll start the service and provide you with access to a data analytics dashboard.
+7. They'll provide you with a status page for your service, at your request.
+8. They'll bill you at the end of the month.
+
+## Configuration
+
+Every price feed supports updates based on either:
+
+1. The price changing by at least the specified threshold, or
+2. The heartbeat period being met (i.e. requiring at least one update every so often)
+
+Additionally, every feed also supports early update conditions as an extension of the above criteria. When one feed requires an update based on the regular criteria, additional criteria can be applied to preemptively update other specified price feeds. This early update mechanism saves gas by reducing the amount of update transactions, with the cost savings rooted in performing a minimal amount of proof validations.
+
+## More details
+
+This page covers the key aspects of Adrastia's Pyth Price Feed Updater. For more details including aspects like costs, analytics, terms, and technical specifications, please visit [Adrastia's documentation page](https://docs.adrastia.io/automatos/pyth-price-feed-updater).

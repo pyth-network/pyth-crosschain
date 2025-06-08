@@ -1,0 +1,33 @@
+---
+title: "EVM Error Codes: Troubleshooting & Descriptions"
+description: >-
+  Decode Pyth Network EVM errors to troubleshoot invalid arguments, missing
+  price feeds, governance issues, and more. Resolve issues quickly.
+full: false
+index: false
+---
+
+# EVM Error Codes
+
+The following table contains the errors used in the Pyth Network's [EVM contracts](https://github.com/pyth-network/pyth-crosschain/tree/a888ba318c0325c29070eaf5afcc3a4d443b058c/target_chains/ethereum/contracts/contracts).
+This information is derived from [PythErrors.sol](https://github.com/pyth-network/pyth-crosschain/blob/a888ba318c0325c29070eaf5afcc3a4d443b058c/target_chains/ethereum/sdk/solidity/PythErrors.sol#L8)
+in the Pyth SDK and can be used to decode error codes programmatically.
+
+Consult [Troubleshoot Errors on EVM Price Feeds Contract](../troubleshoot/evm) for more information on how to handle these errors.
+
+| Error Codes | Error                          | Error Description                                                |
+| ----------- | ------------------------------ | ---------------------------------------------------------------- |
+| 0xa9cb9e0d  | InvalidArgument()              | Function Arguments are invalid.                                  |
+| 0xe60dce71  | InvalidUpdateDataSource()      | Invalid data source of the provided updateData.                  |
+| 0xe69ffece  | InvalidUpdateData()            | UpdateData is invalid.                                           |
+| 0x025dbdd4  | InsufficientFee()              | Insufficient fee provided for the operation.                     |
+| 0xde2c57fa  | NoFreshUpdate()                | No new fresh updates available.                                  |
+| 0x45805f5d  | PriceFeedNotFoundWithinRange() | No price feed found within the given range or it doesn't exists. |
+| 0x14aebe68  | PriceFeedNotFound()            | Price feed not found or it is not pushed on-chain yet.           |
+| 0x19abf40e  | StalePrice()                   | The requested price feed has not been updated recently enough.   |
+| 0x2acbe915  | InvalidWormholeVaa()           | Given message is not a valid Wormhole VAA.                       |
+| 0x97363b35  | InvalidGovernanceMessage()     | Governance message is invalid                                    |
+| 0x63daeb77  | InvalidGovernanceTarget()      | Governance message is not for this contract.                     |
+| 0x360f2d87  | InvalidGovernanceDataSource()  | Invalid data source for the governance message.                  |
+| 0x88d1b847  | OldGovernanceMessage()         | Governance message is old.                                       |
+| 0x13d3ed82  | InvalidWormholeAddressToSet()  | The wormhole address to set in SetWormholeAddress is invalid.    |

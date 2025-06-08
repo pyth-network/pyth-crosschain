@@ -240,6 +240,36 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         );
     }
 
+    function testBenchmarkParsePriceFeedUpdatesWithConfigTrue() public {
+        bytes32[] memory ids = new bytes32[](1);
+        ids[0] = priceIds[0];
+
+        pyth.parsePriceFeedUpdatesWithConfig{value: freshPricesUpdateFee[0]}(
+            freshPricesUpdateData[0],
+            ids,
+            0,
+            50,
+            false,
+            true, // check minimal
+            false
+        );
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesWithConfigFalse() public {
+        bytes32[] memory ids = new bytes32[](1);
+        ids[0] = priceIds[0];
+
+        pyth.parsePriceFeedUpdatesWithConfig{value: freshPricesUpdateFee[0]}(
+            freshPricesUpdateData[0], // contains only priceIds[0]
+            ids,
+            0,
+            50,
+            false,
+            true, // check minimal
+            false
+        );
+    }
+
     function testBenchmarkParsePriceFeedUpdatesUniqueFor() public {
         bytes32[] memory ids = new bytes32[](1);
         ids[0] = priceIds[0];
