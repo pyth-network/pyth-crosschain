@@ -1,9 +1,25 @@
 [package]
 name = "wormhole-contract"
-version = "0.1.0"
-edition = "2021"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[features]
+default = []
+std = []
 
 [dependencies]
-stylus-sdk = "0.4"
-alloy-primitives = "0.6"
-alloy-sol-types = "0.6"
+stylus-sdk.workspace = true
+alloy-primitives.workspace = true
+alloy-sol-types.workspace = true
+mini-alloc.workspace = true
+keccak-const.workspace = true
+secp256k1 = { version = "0.31.0", features = ["rand", "recovery"] }
+sha3 = "0.10.8"
+
+[dev-dependencies]
+motsu.workspace = true
+
+[lib]
+crate-type = ["lib", "cdylib"]
