@@ -8,8 +8,11 @@ import { DefaultStore } from "../src/node/utils/store";
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Tries to reveal entropy requests with callback using the provided private key.\n" +
-    "This can be used to manually debug why a callback was not triggered or recover manually from a downtime\n" +
-    "Usage: $0 --chain <chain-id> --private-key <private-key> --sequence-number <sequence-number>",
+      "This can be used to manually debug why a callback was not triggered or recover manually from a downtime\n" +
+      "Usage: \n" +
+      "$0 --chain <chain-id> --private-key <private-key> --sequence-number <sequence-number>\n" +
+      "$0 --chain <chain-id> --private-key <private-key> --sequence-number <start>:<end>",
+
   )
   .options({
     chain: {
@@ -21,7 +24,7 @@ const parser = yargs(hideBin(process.argv))
     "sequence-number": {
       type: "string",
       demandOption: true,
-      desc: "Sequence number of the request to reveal or a range of sequence numbers to reveal separated by colon (e.g. 1000:1100)",
+      desc: "Sequence number of the request to reveal or a range of sequence numbers to reveal separated by colon (e.g. 1000:1100 reveals requests with 1000 <= number < 1100)",
     },
   });
 
