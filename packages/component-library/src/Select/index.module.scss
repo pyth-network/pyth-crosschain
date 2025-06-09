@@ -1,6 +1,16 @@
 @use "../theme";
 
 .select {
+  .trigger {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .spinner {
+    width: 1em;
+    height: 1em;
+  }
+
   .caret {
     transition: transform 300ms ease;
   }

@@ -18,19 +18,28 @@ import { getErrorDetails } from "../../errors";
 import type { Request, CallbackErrorRequest } from "../../requests";
 import { Status } from "../../requests";
 import { truncate } from "../../truncate";
-import { Address } from "../Address";
+import { Account, Transaction } from "../Address";
 import { Status as StatusComponent } from "../Status";
 import { Timestamp } from "../Timestamp";
 
-export const mkRequestDrawer = (request: Request): OpenDrawerArgs => ({
+export const mkRequestDrawer = (
+  request: Request,
+  now: Date,
+): OpenDrawerArgs => ({
   title: `Request ${truncate(request.requestTxHash)}`,
   headingExtra: <StatusComponent prefix="CALLBACK " status={request.status} />,
   bodyClassName: styles.requestDrawer ?? "",
   fill: true,
-  contents: <RequestDrawerBody request={request} />,
+  contents: <RequestDrawerBody request={request} now={now} />,
 });
 
-const RequestDrawerBody = ({ request }: { request: Request }) => {
+const RequestDrawerBody = ({
+  request,
+  now,
+}: {
+  request: Request;
+  now: Date;
+}) => {
   const gasFormatter = useNumberFormatter({ maximumFractionDigits: 3 });
 
   return (
@@ -84,7 +93,7 @@ const RequestDrawerBody = ({ request }: { request: Request }) => {
           {
             id: "requestTimestamp",
             field: "Request Timestamp",
-            value: <Timestamp timestamp={request.requestTimestamp} />,
+            value: <Timestamp timestamp={request.requestTimestamp} now={now} />,
           },
           ...(request.status === Status.Pending
             ? []
@@ -92,7 +101,12 @@ const RequestDrawerBody = ({ request }: { request: Request }) => {
                 {
                   id: "callbackTimestamp",
                   field: "Callback Timestamp",
-                  value: <Timestamp timestamp={request.callbackTimestamp} />,
+                  value: (
+                    <Timestamp
+                      timestamp={request.callbackTimestamp}
+                      now={now}
+                    />
+                  ),
                 },
                 {
                   id: "duration",
@@ -123,17 +137,19 @@ const RequestDrawerBody = ({ request }: { request: Request }) => {
               </Term>
             ),
             value: (
-              <Address chain={request.chain} value={request.requestTxHash} />
+              <Transaction
+                chain={request.chain}
+                value={request.requestTxHash}
+              />
             ),
           },
           {
             id: "sender",
             field: "Sender",
-            value: <Address chain={request.chain} value={request.sender} />,
+            value: <Account chain={request.chain} value={request.sender} />,
           },
-          ...(request.status === Status.Pending
-            ? []
-            : [
+          ...(request.status === Status.Complete
+            ? [
                 {
                   id: "callbackTx",
                   field: (
@@ -143,17 +159,18 @@ const RequestDrawerBody = ({ request }: { request: Request }) => {
                     </Term>
                   ),
                   value: (
-                    <Address
+                    <Transaction
                       chain={request.chain}
                       value={request.callbackTxHash}
                     />
                   ),
                 },
-              ]),
+              ]
+            : []),
           {
             id: "provider",
             field: "Provider",
-            value: <Address chain={request.chain} value={request.provider} />,
+            value: <Account chain={request.chain} value={request.provider} />,
           },
           {
             id: "userContribution",
@@ -163,8 +180,8 @@ const RequestDrawerBody = ({ request }: { request: Request }) => {
               </Term>
             ),
             value: (
-              <CopyButton text={request.userRandomNumber}>
-                <code>{truncate(request.userRandomNumber)}</code>
+              <CopyButton text={request.userContribution}>
+                <code>{truncate(request.userContribution)}</code>
               </CopyButton>
             ),
           },
@@ -177,8 +194,8 @@ const RequestDrawerBody = ({ request }: { request: Request }) => {
               </Term>
             ),
             value: (
-              <CopyButton text={request.userRandomNumber}>
-                <code>{truncate(request.userRandomNumber)}</code>
+              <CopyButton text={request.providerContribution}>
+                <code>{truncate(request.providerContribution)}</code>
               </CopyButton>
             ),
           },
@@ -217,7 +234,7 @@ const RequestDrawerBody = ({ request }: { request: Request }) => {
 
 const CallbackFailedInfo = ({ request }: { request: CallbackErrorRequest }) => {
   const deployment = EntropyDeployments[request.chain];
-  const retryCommand = `cast send ${deployment.address} 'revealWithCallback(address, uint64, bytes32, bytes32)' ${request.provider} ${request.sequenceNumber.toString()} ${request.userRandomNumber} ${request.randomNumber} -r ${deployment.rpc} --private-key <YOUR_PRIVATE_KEY>`;
+  const retryCommand = `cast send ${deployment.address} 'revealWithCallback(address, uint64, bytes32, bytes32)' ${request.provider} ${request.sequenceNumber.toString()} ${request.userContribution} ${request.randomNumber} -r ${deployment.rpc} --private-key <YOUR_PRIVATE_KEY>`;
 
   return (
     <>
@@ -227,7 +244,21 @@ const CallbackFailedInfo = ({ request }: { request: CallbackErrorRequest }) => {
         className={styles.message}
         variant="warning"
       >
-        <CallbackFailureMessage request={request} />
+        <Button
+          hideText
+          beforeIcon={<Question />}
+          rounded
+          size="sm"
+          variant="ghost"
+          className={styles.helpButton ?? ""}
+          href={getHelpLink(request)}
+          target="_blank"
+        >
+          Help
+        </Button>
+        <div className={styles.failureMessage}>
+          <CallbackFailureMessage request={request} />
+        </div>
       </InfoBox>
       <InfoBox
         header="Retry the callback yourself"
@@ -258,6 +289,7 @@ const CallbackFailedInfo = ({ request }: { request: CallbackErrorRequest }) => {
             hideText
             href="https://docs.pyth.network/entropy/debug-callback-failures"
             target="_blank"
+            className={styles.helpButton ?? ""}
           >
             Help
           </Button>
@@ -265,6 +297,18 @@ const CallbackFailedInfo = ({ request }: { request: CallbackErrorRequest }) => {
       </InfoBox>
     </>
   );
+};
+
+const getHelpLink = (request: CallbackErrorRequest) => {
+  if (request.returnValue === "" && request.gasUsed > request.gasLimit) {
+    return "https://docs.pyth.network/entropy/best-practices#limit-gas-usage-on-the-callback";
+  } else {
+    const details = getErrorDetails(request.returnValue);
+    return (
+      details?.[2] ??
+      "https://docs.pyth.network/entropy/best-practices#handling-callback-failures"
+    );
+  }
 };
 
 const CallbackFailureMessage = ({
@@ -284,10 +328,7 @@ const CallbackFailureMessage = ({
         </p>
       </>
     ) : (
-      <>
-        The callback encountered an unknown error:{" "}
-        <code>{request.returnValue}</code>
-      </>
+      request.returnValue
     );
   }
 };

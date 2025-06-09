@@ -5,20 +5,4 @@
   flex-flow: row nowrap;
   gap: theme.spacing(2);
   font-size: theme.font-size("sm");
-
-  .full {
-    display: none;
-  }
-
-  &:not([data-always-truncate]) {
-    @include theme.breakpoint("xl") {
-      .truncated {
-        display: none;
-      }
-
-      .full {
-        display: unset;
-      }
-    }
-  }
 }
