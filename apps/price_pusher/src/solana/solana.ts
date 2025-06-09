@@ -244,6 +244,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       });
 
       try {
+        this.logger.info("Sending Jito transactions...");
         await sendTransactionsJito(
           transactions,
           this.searcherClients,
@@ -255,6 +256,7 @@ export class SolanaPricePusherJito implements IPricePusher {
           this.logger.warn("Rate limit hit, waiting before retry...");
           await this.sleep(1100); // Wait slightly more than 1 second
           try {
+            this.logger.info("Sending Jito transactions...");
             await sendTransactionsJito(
               transactions,
               this.searcherClients,

@@ -213,7 +213,12 @@ export default {
         .split(",")
         .map((endpoint: string) => endpoint.trim());
       const jitoClients: SearcherClient[] = jitoEndpointsList.map(
-        (endpoint: string) => searcherClient(endpoint, jitoKeypair),
+        (endpoint: string) => {
+          logger.info(
+            `Constructing Jito searcher client from endpoint ${endpoint}`,
+          );
+          return searcherClient(endpoint, jitoKeypair);
+        },
       );
 
       solanaPricePusher = new SolanaPricePusherJito(
