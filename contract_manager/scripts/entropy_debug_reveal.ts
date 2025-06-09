@@ -12,7 +12,6 @@ const parser = yargs(hideBin(process.argv))
       "Usage: \n" +
       "$0 --chain <chain-id> --private-key <private-key> --sequence-number <sequence-number>\n" +
       "$0 --chain <chain-id> --private-key <private-key> --sequence-number <start>:<end>",
-
   )
   .options({
     chain: {
