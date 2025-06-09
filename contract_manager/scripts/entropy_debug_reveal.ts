@@ -8,8 +8,8 @@ import { DefaultStore } from "../src/node/utils/store";
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Tries to reveal entropy requests with callback using the provided private key.\n" +
-      "This can be used to manually debug why a callback was not triggered or recover manually from a downtime\n" +
-      "Usage: $0 --chain <chain-id> --private-key <private-key> --sequence-number <sequence-number>",
+    "This can be used to manually debug why a callback was not triggered or recover manually from a downtime\n" +
+    "Usage: $0 --chain <chain-id> --private-key <private-key> --sequence-number <sequence-number>",
   )
   .options({
     chain: {
@@ -69,9 +69,7 @@ async function main() {
       parseInt(request.blockNumber),
     );
     console.log("User random number: ", userRandomNumber);
-    const revealUrl =
-      providerInfo.uri +
-      `/revelations/${sequenceNumber}?block_number=${request.blockNumber}`;
+    const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
     const fortunaResponse = await fetch(revealUrl);
     if (fortunaResponse.status !== 200) {
       console.error("Fortuna response status: ", fortunaResponse.status);
