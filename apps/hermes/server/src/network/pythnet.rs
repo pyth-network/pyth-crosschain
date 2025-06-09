@@ -279,8 +279,9 @@ async fn fetch_price_feeds_metadata(
                 filters: Some(vec![RpcFilterType::Memcmp(Memcmp::new(
                     0, // offset
                     // Product account header: <magic:u32le:0xa1b2c3d4> <version:u32le:0x02> <account_type:u32le:0x02>
-                    // The string literal in hex::decode is represented as be (big endian).
-                    MemcmpEncodedBytes::Bytes(hex::decode("d4c3b2a10200000002000000").unwrap()),
+                    MemcmpEncodedBytes::Bytes(
+                        b"\xd4\xc3\xb2\xa1\x02\x00\x00\x00\x02\x00\x00\x00".to_vec(),
+                    ),
                 ))]),
                 account_config: RpcAccountInfoConfig {
                     encoding: Some(UiAccountEncoding::Base64Zstd),
