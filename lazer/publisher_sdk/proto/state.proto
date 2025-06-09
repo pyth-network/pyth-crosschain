@@ -1,0 +1,136 @@
+syntax = "proto3";
+package lazer;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// All optional fields should always be set unless documented otherwise.
+
+// State of a Pyth Lazer shard.
+//
+// The state is shared across all Pyth Lazer aggregators that process this shard.
+// All aggregators should observe the same state at any `last_sequence_no`.
+// The state contains all the information necessary for processing the updates.
+// The aggregators cannot rely on any external data, except the state and the update sequence.
+// A snapshot of the state includes the serialized `State` value as the payload.
+message State {
+    // [required] ID of this shard. Each state value only accounts for data of a particular shard.
+    optional uint32 shard_id = 1;
+    // [required] sequence_no of the last update applied to the state.
+    optional uint64 last_sequence_no = 2;
+    // [required] Timestamp of the last update provided by Kafka/Nats.
+    // If no updates were applied, contains the timestamp of genesis snapshot creation time.
+    optional google.protobuf.Timestamp last_timestamp = 3;
+    // [required] Shard name (only for debug/monitoring/management purposes). Must be unique.
+    optional string shard_name = 4;
+    // [required] Minimal aggregation rate allowed in this shard.
+    optional google.protobuf.Duration min_rate = 5;
+    // List of feeds.
+    repeated Feed feeds = 7;
+    // List of publishers.
+    repeated Publisher publishers = 8;
+    // TODO: governance state (pubkey, last sequence no)
+}
+
+// An item of the state describing a publisher.
+message Publisher {
+    // [required] Publisher ID. Restricted to uint16.
+    optional uint32 publisher_id = 1;
+    // [required] Publisher name (only for debug/monitoring/management purposes). Must be unique.
+    optional string name = 2;
+    // Public keys used to sign publisher update transactions.
+    repeated bytes public_keys = 3;
+    // [required] If true, the publisher is active, i.e. it's allowed to publish updates.
+    optional bool is_active = 4;
+}
+
+// Static data for a feed.
+message FeedMetadata {
+    // [required] ID of the price feed.
+    optional uint32 price_feed_id = 1;
+    // [required] Feed name.
+    optional string name = 2;
+    // [required] Feed symbol.
+    optional string symbol = 3;
+    // [required] Feed description.
+    optional string description = 4;
+    // [required] Feed asset type.
+    optional string asset_type = 5;
+    // [required] Exponent applied to all price and rate values for this feed.
+    // Actual value is `mantissa * 10 ^ exponent`.
+    // Restricted to int16.
+    optional sint32 exponent = 6;
+    // [optional] CoinMarketCap ID. Can be absent if there is no CoinMarketCap ID for this symbol.
+    optional uint32 cmc_id = 7;
+    // [optional] Funding rate interval. Only present for funding rate feeds.
+    optional google.protobuf.Duration funding_rate_interval = 8;
+    // [required] Minimal number of publisher prices required to produce an aggregate.
+    optional uint32 min_publishers = 9;
+    // [required] Minimal rate of aggregation performed by the aggregator for this feed.
+    // Cannot be lower than the shard's top level `State.min_rate`.
+    optional google.protobuf.Duration min_rate = 10;
+    // [required] Time after which the publisher update is discarded.
+    optional google.protobuf.Duration expiry_time = 11;
+    // [required] If true, the feed is visible to the consumers. This can be used to prepare and verify
+    // new feeds before releasing them. This can also be used to migrate a feed from
+    // one shard to another. If a feed is present in
+    // multiple shards, it must only be active in one of them at each time.
+    // To enforce this, `pending_activation` and `pending_deactivation` fields
+    // can be used to deactivate a feed in one shard and activate it in another shard
+    // at the same instant.
+    optional bool is_activated = 12;
+    // [optional] ID of the corresponding price feed in Hermes (Pythnet).
+    optional string hermes_id = 13;
+    // [optional] Quote currency of the asset.
+    optional string quote_currency = 14;
+    // [optional] Market schedule in Pythnet format.
+    // If absent, the default schedule is used (market is always open).
+    optional string market_schedule = 15;
+}
+
+// An item of the state describing a feed.
+message Feed {
+    optional FeedMetadata metadata = 1;
+    // [optional] If present, the aggregator will activate the feed at the specified instant.
+    optional google.protobuf.Timestamp pending_activation = 2;
+    // [optional] If present, the aggregator will deactivate the feed at the specified instant.
+    optional google.protobuf.Timestamp pending_deactivation = 3;
+    // Additional state per publisher.
+    // If an eligible publisher is not listed here, the corresponding state should be considered empty.
+    repeated FeedPublisherState per_publisher = 4;
+    // TODO: list of permissioned publisher IDs.
+}
+
+// A part of the feed state related to a particular publisher.
+message FeedPublisherState {
+    // [required] Publisher ID. Restricted to uint16.
+    optional uint32 publisher_id = 1;
+    // [optional] Timestamp of the last update received from this publisher to this feed.
+    // This timestamp is provided by Nats/Kafka, not by publisher.
+    // Can be absent if no update was ever received or if the last update was deemed no longer relevant.
+    optional google.protobuf.Timestamp last_update_timestamp = 2;
+    // [optional] Publisher timestamp of the last update received from this publisher to this feed.
+    // This timestamp is provided by publisher.
+    // Can be absent if no update was ever received or if the last update was deemed no longer relevant.
+    optional google.protobuf.Timestamp last_publisher_timestamp = 3;
+    // [optional] Data of the last update received from this publisher to this feed.
+    // Can be absent if no update was ever received or if the last update was deemed no longer relevant.
+    optional FeedData last_feed_data = 4;
+}
+
+// Data provided by a publisher for a certain feed.
+message FeedData {
+    // [required] Timestamp provided by the source of data that the publisher uses (e.g. an exchange).
+    // If no such timestamp is available, it should be set to the same value as `publisher_timestamp`.
+    optional google.protobuf.Timestamp source_timestamp = 1;
+    // [required] Timestamp of the publisher.
+    optional google.protobuf.Timestamp publisher_timestamp = 2;
+    // [optional] Best executable price. Can be absent if no data is available. Never present for funding rate feeds.
+    optional int64 price = 3;
+    // [optional] Best bid price. Can be absent if no data is available. Never present for funding rate feeds.
+    optional int64 best_bid_price = 4;
+    // [optional] Best ask price. Can be absent if no data is available. Never present for funding rate feeds.
+    optional int64 best_ask_price = 5;
+    // [optional] Funding rate. Can be absent if no data is available. Can only be present for funding rate feeds.
+    optional int64 funding_rate = 6;
+}

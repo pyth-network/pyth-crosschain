@@ -35,6 +35,13 @@ mod revelation;
 pub type ChainId = String;
 pub type NetworkId = u64;
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema, sqlx::Type)]
+pub enum StateTag {
+    Pending,
+    Completed,
+    Failed,
+}
+
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct RequestLabel {
     pub value: String,
@@ -54,6 +61,8 @@ pub struct ApiState {
 
     /// Prometheus metrics
     pub metrics: Arc<ApiMetrics>,
+
+    pub explorer_metrics: Arc<ExplorerMetrics>,
 }
 
 impl ApiState {
@@ -66,6 +75,8 @@ impl ApiState {
             http_requests: Family::default(),
         };
 
+        let explorer_metrics = Arc::new(ExplorerMetrics::new(metrics_registry.clone()).await);
+
         let http_requests = metrics.http_requests.clone();
         metrics_registry.write().await.register(
             "http_requests",
@@ -76,6 +87,7 @@ impl ApiState {
         ApiState {
             chains,
             metrics: Arc::new(metrics),
+            explorer_metrics,
             history,
             metrics_registry,
         }

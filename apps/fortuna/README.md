@@ -57,3 +57,12 @@ RUST_LOG=INFO cargo run -- run
 ```
 
 This command will start the webservice on `localhost:34000`.
+
+## Nix
+
+If you are a nix user, you can use the included [Nix flake](./flake.nix) and
+[direnv config](./envrc) which will configure your environment for you
+automatically.  If you use this configuration you will have a `cli` script in
+your dev shell which provides easy access to some common tasks, such as `cli
+start` to start the server in watch mode, `cli test` to run unit, code format,
+and lint checks, and `cli fix` to run auto-fixes for formatting and lint issues.
