@@ -1,0 +1,148 @@
+---
+title: "Pyth Network TON Integration: Real-Time Data Usage"
+description: >-
+  Easily integrate Pyth Network’s live price feeds into your TON apps. Use our
+  SDK, handle smart contract interactions, and automate data updates for
+  precise, on-chain pricing.
+full: false
+index: false
+---
+
+# How to Use Real-Time Data in TON Contracts
+
+This guide explains how to use real-time Pyth data in TON applications.
+
+## Install the Pyth SDK
+
+Install the Pyth TON SDK and other necessary dependencies using npm:
+
+<Tabs groupId="node-package-manager" items={["npm", "yarn"]} persist>
+  <Tab>
+      {/* prettier-ignore-start */}
+
+      ```sh copy
+      npm install @pythnetwork/pyth-ton-js @pythnetwork/hermes-client @ton/core @ton/ton @ton/crypto
+      ```
+
+      {/* prettier-ignore-end */}
+
+  </Tab>
+  <Tab>
+      {/* prettier-ignore-start */}
+
+      ```sh copy
+      yarn add @pythnetwork/pyth-ton-js @pythnetwork/hermes-client @ton/core @ton/ton @ton/crypto
+      ```
+
+      {/* prettier-ignore-end */}
+
+  </Tab>
+</Tabs>
+
+## Write Contract Code
+
+The code snippet below provides an example sending a message to the Pyth price feed contract and call the `parse_price_feed_updates` method:
+
+```lisp copy
+    ;; Create message to Pyth contract according to schema
+    cell msg = begin_cell()
+        .store_uint(0x18, 6)                              ;; nobounce
+        .store_slice(ctx_pyth_address)                    ;; pyth contract address
+        .store_coins(forward_amount)                      ;; forward amount minus fees
+        .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)       ;; default message headers
+        .store_uint(PYTH_OP_PARSE_PRICE_FEED_UPDATES, 32) ;; pyth opcode
+        .store_ref(price_update_data)                     ;; update data
+        .store_ref(price_ids)                             ;; price feed IDs
+        .store_uint(now() - 100, 64)                      ;; min_publish_time
+        .store_uint(now() + 100, 64)                      ;; max_publish_time
+        .store_slice(my_address())                        ;; target address (this contract)
+        .store_ref(custom_payload)                        ;; custom payload with recipient and amount
+        .end_cell();
+
+    send_raw_message(msg, 0);
+```
+
+## Write Client Code
+
+The following code snippet demonstrates how to fetch price updates, interact with the Pyth contract on TON, and update price feeds:
+
+```typescript copy
+import { TonClient, Address, WalletContractV4 } from "@ton/ton";
+import { toNano } from "@ton/core";
+import { mnemonicToPrivateKey } from "@ton/crypto";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import {
+  PythContract,
+  PYTH_CONTRACT_ADDRESS_TESTNET,
+  calculateUpdatePriceFeedsFee,
+} from "@pythnetwork/pyth-ton-js";
+const BTC_PRICE_FEED_ID =
+  "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
+async function main() {
+  // Initialize TonClient
+  const client = new TonClient({
+    endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
+    apiKey: "your-api-key-here", // Optional
+  });
+  // Create PythContract instance
+  const contractAddress = Address.parse(PYTH_CONTRACT_ADDRESS_TESTNET);
+  const contract = client.open(PythContract.createFromAddress(contractAddress));
+  // Get current guardian set index
+  const guardianSetIndex = await contract.getCurrentGuardianSetIndex();
+  console.log("Guardian Set Index:", guardianSetIndex);
+  // Get BTC price from TON contract
+  const price = await contract.getPriceUnsafe(BTC_PRICE_FEED_ID);
+  console.log("BTC Price from TON contract:", price);
+  // Fetch latest price updates from Hermes
+  const hermesEndpoint = "https://hermes.pyth.network";
+  const hermesClient = new HermesClient(hermesEndpoint);
+  const priceIds = [BTC_PRICE_FEED_ID];
+  const latestPriceUpdates = await hermesClient.getLatestPriceUpdates(
+    priceIds,
+    { encoding: "hex" },
+  );
+  console.log("Hermes BTC price:", latestPriceUpdates.parsed?.[0].price);
+  // Prepare update data
+  const updateData = Buffer.from(latestPriceUpdates.binary.data[0], "hex");
+  console.log("Update data:", updateData);
+  // Get update fee
+  const updateFee = await contract.getUpdateFee(updateData);
+  console.log("Update fee:", updateFee);
+  const totalFee =
+    calculateUpdatePriceFeedsFee(BigInt(updateFee)) + BigInt(updateFee);
+  // Update price feeds
+  const mnemonic = "your mnemonic here";
+  const key = await mnemonicToPrivateKey(mnemonic.split(" "));
+  const wallet = WalletContractV4.create({
+    publicKey: key.publicKey,
+    workchain: 0,
+  });
+  const provider = client.open(wallet);
+  await contract.sendUpdatePriceFeeds(
+    provider.sender(key.secretKey),
+    updateData,
+    totalFee,
+  );
+  console.log("Price feeds updated successfully.");
+}
+main().catch(console.error);
+```
+
+This code snippet does the following:
+
+1. Initializes a `TonClient` and creates a `PythContract` instance.
+2. Retrieves the current guardian set index and BTC price from the TON contract.
+3. Fetches the latest price updates from Hermes.
+4. Prepares the update data and calculates the update fee.
+5. Updates the price feeds on the TON contract.
+
+## Additional Resources
+
+You may find these additional resources helpful for developing your TON application:
+
+- [TON Documentation](https://ton.org/docs/)
+- [Pyth Price Feed IDs](https://pyth.network/developers/price-feed-ids)
+- [Pyth TON Contract](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ton/contracts)
+- [Pyth TON SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ton/sdk)
+- [Pyth TON SDK Example](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/ton/sdk_js_usage)
+- [Pyth TON Send USD Example](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/ton/send_usd)

@@ -4,9 +4,9 @@ import { ThemeProvider } from "next-themes";
 import type { ComponentProps, CSSProperties } from "react";
 import { useState } from "react";
 
-import { OverlayVisibleContext } from "../overlay-visible-context.js";
-import { AlertProvider } from "../useAlert/index.js";
-import { DrawerProvider } from "../useDrawer/index.js";
+import { OverlayVisibleContext } from "../overlay-visible-context.jsx";
+import { AlertProvider } from "../useAlert/index.jsx";
+import { DrawerProvider } from "../useDrawer/index.jsx";
 
 type TabRootProps = ComponentProps<"div"> & {
   theme?: "dark" | "light" | undefined;

@@ -3,13 +3,17 @@ import { useMediaQuery } from "@react-hookz/web";
 import clsx from "clsx";
 import { animate, useMotionValue, useMotionValueEvent } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
-import { useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
+import { useIsSSR } from "react-aria";
 import { Heading } from "react-aria-components";
 
 import styles from "./index.module.scss";
-import { Button } from "../Button/index.js";
-import type { OpenArgs } from "../ModalDialog/index.js";
-import { ModalDialog, createModalDialogContext } from "../ModalDialog/index.js";
+import { Button } from "../Button/index.jsx";
+import type { ModalDialogProps } from "../ModalDialog/index.jsx";
+import {
+  ModalDialog,
+  createModalDialogContext,
+} from "../ModalDialog/index.jsx";
 
 const CLOSE_DURATION_IN_S = 0.15;
 
@@ -61,9 +65,23 @@ const Drawer = ({
     variant,
     setMainContentOffset,
   );
+  const isLarge = useIsLarge();
+
+  const wasPreviouslyLarge = useRef<boolean | undefined>(undefined);
+  useEffect(() => {
+    if (isLarge !== undefined) {
+      if (wasPreviouslyLarge.current === undefined) {
+        wasPreviouslyLarge.current = isLarge;
+      } else if (isLarge !== wasPreviouslyLarge.current) {
+        wasPreviouslyLarge.current = isLarge;
+        setMainContentOffset(isLarge ? 0 : 100);
+      }
+    }
+  }, [isLarge, setMainContentOffset]);
 
   return (
     <ModalDialog
+      key={`modal-dialog-${isLarge ? "large" : "small"}`}
       data-variant={variant}
       overlayVariants={{
         unmounted: { backgroundColor: "#00000000" },
@@ -78,53 +96,42 @@ const Drawer = ({
       {...animationProps}
       {...props}
     >
-      {(...args) => (
-        <>
-          <OnResize
-            threshold={styles["breakpoint-sm"]}
-            onResize={() => {
-              setMainContentOffset(0);
-              args[0].state.close();
-            }}
-          />
-          <div
-            className={styles.handle}
-            onPointerDown={() => {
-              setIsHandlePressed(true);
-            }}
-            onPointerUp={() => {
-              setIsHandlePressed(false);
-            }}
-            data-is-pressed={isHandlePressed || isDragging ? "" : undefined}
-          />
-          <div className={clsx(styles.heading, headingClassName)}>
-            <div className={styles.headingTop}>
-              <Heading className={styles.title} slot="title">
-                {title}
-              </Heading>
-              <div className={styles.headingEnd}>
-                {headingExtra}
-                <Button
-                  className={styles.closeButton ?? ""}
-                  beforeIcon={(props) => <XCircle weight="fill" {...props} />}
-                  slot="close"
-                  hideText
-                  rounded
-                  variant="ghost"
-                  size="sm"
-                  {...(closeHref && { href: closeHref })}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-            {headingAfter}
+      <div
+        className={styles.handle}
+        onPointerDown={() => {
+          setIsHandlePressed(true);
+        }}
+        onPointerUp={() => {
+          setIsHandlePressed(false);
+        }}
+        data-is-pressed={isHandlePressed || isDragging ? "" : undefined}
+      />
+      <div className={clsx(styles.heading, headingClassName)}>
+        <div className={styles.headingTop}>
+          <Heading className={styles.title} slot="title">
+            {title}
+          </Heading>
+          <div className={styles.headingEnd}>
+            {headingExtra}
+            <Button
+              className={styles.closeButton ?? ""}
+              beforeIcon={<XCircle weight="fill" />}
+              slot="close"
+              hideText
+              rounded
+              variant="ghost"
+              size="sm"
+              {...(closeHref && { href: closeHref })}
+            >
+              Close
+            </Button>
           </div>
-          <div className={clsx(styles.body, bodyClassName)}>{contents}</div>
-          {footer && (
-            <div className={clsx(styles.footer, footerClassName)}>{footer}</div>
-          )}
-        </>
+        </div>
+        {headingAfter}
+      </div>
+      <div className={clsx(styles.body, bodyClassName)}>{contents}</div>
+      {footer && (
+        <div className={clsx(styles.footer, footerClassName)}>{footer}</div>
       )}
     </ModalDialog>
   );
@@ -148,9 +155,7 @@ const useAnimationProps = (
       setMainContentOffset(100 - (100 * y) / modalRef.current.offsetHeight);
     }
   });
-  const isLarge = useMediaQuery(
-    `(min-width: ${styles["breakpoint-sm"] ?? ""})`,
-  );
+  const isLarge = useIsLarge();
 
   const commonProps = {
     ref: modalRef,
@@ -244,6 +249,20 @@ const useAnimationProps = (
       };
 };
 
+const useIsLarge = () => {
+  const isSSR = useIsSSR();
+  const breakpoint = useMemo(
+    () =>
+      isSSR
+        ? ""
+        : getComputedStyle(
+            globalThis.document.documentElement,
+          ).getPropertyValue("--breakpoint-sm"),
+    [isSSR],
+  );
+  return useMediaQuery(`(min-width: ${breakpoint})`);
+};
+
 const { Provider, useValue } = createModalDialogContext<
   Props,
   Pick<Props, "setMainContentOffset">
@@ -251,29 +270,7 @@ const { Provider, useValue } = createModalDialogContext<
 
 export const DrawerProvider = Provider;
 export const useDrawer = useValue;
-export type OpenDrawerArgs = OpenArgs<
+export type OpenDrawerArgs = ModalDialogProps<
   Props,
   Pick<Props, "setMainContentOffset">
 >;
-
-type OnResizeProps = {
-  threshold: string | undefined;
-  onResize: () => void;
-};
-
-const OnResize = ({ threshold, onResize }: OnResizeProps) => {
-  const isAboveThreshold = useMediaQuery(`(min-width: ${threshold ?? ""})`, {
-    initializeWithValue: false,
-  });
-  const previousValue = useRef<boolean | undefined>(undefined);
-  useEffect(() => {
-    if (previousValue.current === undefined) {
-      previousValue.current = isAboveThreshold;
-    } else if (isAboveThreshold !== previousValue.current) {
-      previousValue.current = isAboveThreshold;
-      onResize();
-    }
-  }, [isAboveThreshold, onResize]);
-  // eslint-disable-next-line unicorn/no-null
-  return null;
-};

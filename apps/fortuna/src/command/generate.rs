@@ -48,6 +48,7 @@ pub async fn generate(opts: &GenerateOptions) -> Result<()> {
         let mut event = contract.revealed_with_callback_filter();
         event.filter = event
             .filter
+            .address(contract.address())
             .from_block(last_block_number)
             .to_block(current_block_number);
 

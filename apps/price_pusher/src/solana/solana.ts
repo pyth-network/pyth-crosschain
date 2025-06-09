@@ -118,6 +118,7 @@ export class SolanaPricePusher implements IPricePusher {
         shuffledPriceIds,
         {
           encoding: "base64",
+          ignoreInvalidPriceIds: true,
         },
       );
       priceFeedUpdateData = response.binary.data;

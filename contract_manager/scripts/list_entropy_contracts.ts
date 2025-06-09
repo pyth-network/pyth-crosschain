@@ -1,6 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, ENTROPY_DEFAULT_KEEPER } from "../src";
+import { DefaultStore } from "../src/node/utils/store";
+import { ENTROPY_DEFAULT_KEEPER } from "../src/core/contracts";
 import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))
@@ -18,6 +19,7 @@ async function main() {
   const entries: {
     chain: string;
     contract: string;
+    owner: string;
     provider: string;
     feeManager: string;
     balance: string;
@@ -42,10 +44,13 @@ async function main() {
         /* old deployments did not have this method */
       }
       const providerInfo = await contract.getProviderInfo(provider);
+      const owner = await contract.getOwner();
+
       entries.push({
         chain: contract.getChain().getId(),
         contract: contract.address,
-        provider: providerInfo.uri,
+        owner,
+        provider,
         feeManager: providerInfo.feeManager,
         balance: Web3.utils.fromWei(balance),
         keeperBalance: Web3.utils.fromWei(keeperBalance),

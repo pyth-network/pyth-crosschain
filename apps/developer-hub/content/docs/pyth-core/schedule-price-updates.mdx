@@ -1,0 +1,27 @@
+---
+title: "Schedule Pyth Price Updates Using Adrastia, Gelato, or Scheduler"
+description: >-
+  Use Adrastia, Gelato, or Scheduler to automate Pyth price updates on EVM
+  chains. Schedule on-chain price feed updates programmatically to ensure
+  timely, consistent data.
+full: false
+index: false
+---
+
+# How To Schedule Price Updates
+
+The following guides explain how to schedule Pyth price updates to occur at regular intervals.
+As a pull oracle, Pyth's users are typically responsible for updating the state of on-chain feeds.
+Please see [What is a Pull Oracle?](/price-feeds/pull-updates) to learn more about pull updates.
+
+The Pyth Data Association sponsors regular on-chain updates for some price feeds.
+See [Sponsored Feeds](/price-feeds/sponsored-feeds) for the current list of feeds and their update parameters.
+If you would like to see additional feeds on this list, please [contact the association via this form](https://tally.so/r/nGz2jj).
+
+There are also three different tools to schedule price updates:
+
+- [Adrastia's Pyth Price Feed Updater](schedule-price-updates/using-adrastia) is a white-glove service that automates price updates based on time and price deviations, supporting any EVM chain.
+- [Gelato](schedule-price-updates/using-gelato) provides a turnkey automation solution for scheduled updates.
+- [Scheduler](schedule-price-updates/using-scheduler) is a service that developers can run to trigger price updates when certain time or price change conditions are met.
+
+For developers comparing these three options, Adrastia and Gelato are simpler, in that they do not require you to operate a service.

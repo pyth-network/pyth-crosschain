@@ -5,10 +5,10 @@ import { useCallback } from "react";
 import type { PressEvent } from "react-aria-components";
 import { Button as BaseButton } from "react-aria-components";
 
-import type { OpenAlertArgs } from "../../useAlert/index.js";
-import { useAlert } from "../../useAlert/index.js";
-import type { OpenDrawerArgs } from "../../useDrawer/index.js";
-import { useDrawer } from "../../useDrawer/index.js";
+import type { OpenAlertArgs } from "../../useAlert/index.jsx";
+import { useAlert } from "../../useAlert/index.jsx";
+import type { OpenDrawerArgs } from "../../useDrawer/index.jsx";
+import { useDrawer } from "../../useDrawer/index.jsx";
 
 export type Props = ComponentProps<typeof BaseButton> & {
   alert?: OpenAlertArgs | undefined;

@@ -135,7 +135,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
         <Button
           variant="outline"
           size="sm"
-          beforeIcon={ListDashes}
+          beforeIcon={<ListDashes />}
           isPending={props.isLoading}
           {...(!props.isLoading && {
             drawer: {

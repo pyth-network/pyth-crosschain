@@ -9,6 +9,7 @@ import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { Table } from "@pythnetwork/component-library/Table";
 import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
+import { StateType, useData } from "@pythnetwork/component-library/useData";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useMountEffect } from "@react-hookz/web";
@@ -16,7 +17,14 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useQueryState, parseAsString } from "nuqs";
 import type { ReactNode } from "react";
-import { Suspense, useState, useCallback, useMemo, useTransition } from "react";
+import {
+  Suspense,
+  useState,
+  useCallback,
+  useMemo,
+  useTransition,
+  useRef,
+} from "react";
 import {
   RouterProvider,
   useDateFormatter,
@@ -27,7 +35,6 @@ import type { CategoricalChartState } from "recharts/types/chart/types";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
-import { StateType, useData } from "../../hooks/use-data";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import type { Status } from "../../status";
 import { LiveConfidence, LivePrice, LiveComponentValue } from "../LivePrices";
@@ -68,6 +75,7 @@ export const usePriceComponentDrawer = ({
   const drawer = useDrawer();
   const router = useRouter();
   const [isRouting, startTransition] = useTransition();
+  const didRestoreUrl = useRef(false);
 
   const navigate = useCallback(
     (route: string) => {
@@ -102,10 +110,12 @@ export const usePriceComponentDrawer = ({
   }, [updateSelectedComponentId]);
 
   useMountEffect(() => {
-    if (selectedComponentId) {
+    if (selectedComponentId && !didRestoreUrl.current) {
+      didRestoreUrl.current = true;
       const component = components.find(
         (component) =>
-          component[identifiesPublisher ? "publisherKey" : "feedKey"],
+          component[identifiesPublisher ? "publisherKey" : "feedKey"] ===
+          selectedComponentId,
       );
       if (component) {
         openDrawer(component);
@@ -270,7 +280,7 @@ const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
       <OpenButton
         variant="ghost"
         hideText
-        beforeIcon={ArrowSquareOut}
+        beforeIcon={<ArrowSquareOut />}
         rounded
         className={styles.ghostOpenButton ?? ""}
         {...props}
@@ -353,7 +363,7 @@ const ScoreBreakdown = ({
               setSelectedPeriod(evaluationPeriod);
             }
           }}
-          options={evaluationPeriods.map(({ label }) => label)}
+          options={evaluationPeriods.map(({ label }) => ({ id: label }))}
           placement="bottom end"
         />
       }

@@ -105,8 +105,15 @@
 
         &[data-sticky-header] {
           position: sticky;
-          top: var(--sticky-header-top);
           z-index: 1;
+        }
+
+        &[data-sticky-header="top"] {
+          top: 0;
+        }
+
+        &[data-sticky-header="appHeader"] {
+          top: theme.$header-height;
         }
 
         &[data-sticky] {
@@ -178,6 +185,7 @@
         .cell {
           transition: background-color 100ms linear;
           border-bottom: 1px solid theme.color("background", "secondary");
+          isolation: isolate;
         }
 
         &[data-hovered] .cell {

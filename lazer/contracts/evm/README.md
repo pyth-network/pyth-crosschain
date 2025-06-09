@@ -9,25 +9,25 @@ This package is built using [Foundry](https://book.getfoundry.sh/).
 ### Build
 
 ```shell
-$ forge build
+forge build
 ```
 
 ### Test
 
 ```shell
-$ forge test
+forge test
 ```
 
 ### Format
 
 ```shell
-$ forge fmt
+forge fmt
 ```
 
 ### Gas Snapshots
 
 ```shell
-$ forge snapshot
+forge snapshot
 ```
 
 ### Anvil
@@ -35,13 +35,26 @@ $ forge snapshot
 Anvil does not come with CreateX by default. It can be deployed or an RPC which has the contract can be forked. The below command forks an RPC with a functional CreateX contract.
 
 ```shell
-$ anvil --fork-url "https://eth-sepolia.public.blastapi.io"
+anvil --fork-url "https://eth-sepolia.public.blastapi.io"
 ```
 
 ### Deploy
 
+Run the following commands to deploy the `PythLazer` contract to the target network. For the verification to work, you need to provide an API key (which is
+etherscan most of the times). If you can't make it work, you can always deploy the contract without verification and verify it manually later (using the
+standard input json format).
+
 ```shell
-$ forge script script/PythLazerDeploy.s.sol --rpc-url <your_rpc_url> --private-key <your_private_key> --broadcast
+export ETHERSCAN_API_KEY=<your_etherscan_api_key>
+forge script script/PythLazerDeploy.s.sol --rpc-url <your_rpc_url> --private-key <your_private_key> --broadcast --verify
+```
+
+Then, run the following command to add the trusted signer to the `PythLazer` contract. The trusted signer is the address of the Pyth Lazer payload signer, and
+the expiration timestamp is the time when the signer will no longer be trusted.
+
+```shell
+cast send --rpc-url <your_rpc_url> --private-key <your_private_key> 0xACeA761c27A909d4D3895128EBe6370FDE2dF481 "updateTrustedSigner(address,uint256)" \
+    "<trusted_signer_address>" "<trusted_signer_expiration_timestamp>"
 ```
 
 ### Upgrade
@@ -50,19 +63,19 @@ The UUPSUpgradeable feature adds functions to the cocntract which support upgrad
 In addition, the private key is necessary or contracts will be deployed to different addresses than expected.
 
 ```shell
-$ forge script script/PythLazerDeploy.s.sol --rpc-url <your_rpc_url> --private-key <your_private_key> --broadcast --sig "migrate()"
+forge script script/PythLazerDeploy.s.sol --rpc-url <your_rpc_url> --private-key <your_private_key> --broadcast --sig "migrate()"
 ```
 
 ### Cast
 
 ```shell
-$ cast <subcommand>
+cast <subcommand>
 ```
 
 ### Help
 
 ```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+forge --help
+anvil --help
+cast --help
 ```

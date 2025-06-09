@@ -8,7 +8,7 @@ import { useId } from "react";
 
 import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
-import { Tab, TabList } from "../unstyled/Tabs/index.js";
+import { Tab, TabList } from "../unstyled/Tabs/index.jsx";
 
 type Tab = Omit<ComponentProps<typeof Tab>, "id" | "href"> & {
   segment: string;

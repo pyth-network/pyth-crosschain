@@ -1,4 +1,4 @@
-import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager";
+import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
 import { DeploymentType } from "./helper";
 
 function getPythSources(deploymentType: DeploymentType) {

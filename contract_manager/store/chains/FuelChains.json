@@ -1,0 +1,16 @@
+[
+  {
+    "id": "fuel_testnet",
+    "wormholeChainName": "fuel_testnet",
+    "mainnet": false,
+    "gqlUrl": "https://testnet.fuel.network/v1/graphql",
+    "type": "FuelChain"
+  },
+  {
+    "id": "fuel_mainnet",
+    "wormholeChainName": "fuel_mainnet",
+    "mainnet": true,
+    "gqlUrl": "https://mainnet.fuel.network/v1/graphql",
+    "type": "FuelChain"
+  }
+]

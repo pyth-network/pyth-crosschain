@@ -5,6 +5,10 @@
 
   --header-height: #{theme.spacing(18)};
 
+  @each $name, $breakpoint in theme.$breakpoints {
+    --breakpoint-#{$name}: #{$breakpoint};
+  }
+
   @include theme.breakpoint("md") {
     --header-height: #{theme.spacing(20)};
   }
@@ -60,6 +64,10 @@
         @include theme.breakpoint("sm") {
           display: none;
         }
+      }
+
+      .footer {
+        margin-top: theme.spacing(20);
       }
     }
   }

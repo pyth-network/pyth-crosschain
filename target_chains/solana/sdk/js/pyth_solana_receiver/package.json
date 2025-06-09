@@ -34,6 +34,7 @@
   "devDependencies": {
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/jest": "^29.4.0",
+    "@types/node": "catalog:",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
     "eslint": "^8.13.0",

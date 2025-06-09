@@ -111,7 +111,7 @@ export const RECEIVER_CHAINS = {
   xion: 60081,
   worldchain: 60082,
   swellchain: 60083,
-  // empty chain id 60084
+  mezo: 60084,
   iota_sui_mainnet: 60085,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
@@ -243,6 +243,8 @@ export const RECEIVER_CHAINS = {
   converge_testnet: 50121,
   swellchain_testnet: 50122,
   worldchain_testnet: 50123,
+  mezo_testnet: 50124,
+  hemi_testnet: 50125,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

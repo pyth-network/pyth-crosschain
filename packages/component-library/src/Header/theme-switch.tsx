@@ -4,8 +4,6 @@ import type { IconProps } from "@phosphor-icons/react";
 import { Desktop } from "@phosphor-icons/react/dist/ssr/Desktop";
 import { Moon } from "@phosphor-icons/react/dist/ssr/Moon";
 import { Sun } from "@phosphor-icons/react/dist/ssr/Sun";
-import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
-import { Button } from "@pythnetwork/component-library/Button";
 import clsx from "clsx";
 import { motion } from "motion/react";
 import { useTheme } from "next-themes";
@@ -14,6 +12,8 @@ import { useCallback, useRef, useMemo } from "react";
 import { useIsSSR } from "react-aria";
 
 import styles from "./theme-switch.module.scss";
+import type { Props as ButtonProps } from "../Button/index.jsx";
+import { Button } from "../Button/index.jsx";
 
 type Props<T extends ElementType> = Omit<
   ButtonProps<T>,
@@ -37,7 +37,7 @@ export const ThemeSwitch = <T extends ElementType>({
       size="sm"
       hideText
       onPress={toggleTheme}
-      beforeIcon={IconPath}
+      beforeIcon={<IconPath />}
       className={clsx(styles.themeSwitch, className)}
       rounded
       {...props}
@@ -51,13 +51,18 @@ const IconPath = ({ className, ...props }: Omit<IconProps, "offset">) => {
   const offsets = useOffsets();
   const isSSR = useIsSSR();
 
-  return isSSR ? (
-    <div className={className} />
-  ) : (
+  return (
     <div className={clsx(styles.iconPath, className)}>
-      <IconMovement icon={<Desktop {...props} />} offset={offsets.desktop} />
-      <IconMovement icon={<Sun {...props} />} offset={offsets.sun} />
-      <IconMovement icon={<Moon {...props} />} offset={offsets.moon} />
+      {!isSSR && (
+        <>
+          <IconMovement
+            icon={<Desktop {...props} />}
+            offset={offsets.desktop}
+          />
+          <IconMovement icon={<Sun {...props} />} offset={offsets.sun} />
+          <IconMovement icon={<Moon {...props} />} offset={offsets.moon} />
+        </>
+      )}
     </div>
   );
 };

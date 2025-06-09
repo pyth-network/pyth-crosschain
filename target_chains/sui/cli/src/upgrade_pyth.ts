@@ -4,7 +4,7 @@ import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 import { execSync } from "child_process";
-import { SuiPriceFeedContract } from "@pythnetwork/contract-manager";
+import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {

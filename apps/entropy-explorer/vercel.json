@@ -1,0 +1,4 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "turbo run build:vercel --filter @pythnetwork/entropy-explorer"
+}

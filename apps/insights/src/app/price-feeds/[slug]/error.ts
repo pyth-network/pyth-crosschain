@@ -1,3 +1,3 @@
 "use client";
 
-export { Error as default } from "../../../components/Error";
+export { ErrorPage as default } from "@pythnetwork/component-library/ErrorPage";

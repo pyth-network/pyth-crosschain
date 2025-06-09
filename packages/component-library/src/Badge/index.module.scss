@@ -1,7 +1,10 @@
 @use "../theme";
 
 .badge {
-  display: inline flow-root;
+  display: inline-flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
   border-radius: theme.border-radius("3xl");
   transition-property: color, background-color, border-color;
   transition-duration: 100ms;
@@ -9,9 +12,9 @@
   white-space: nowrap;
   border-width: 1px;
   border-style: solid;
+  line-height: normal;
 
   &[data-size="xs"] {
-    line-height: theme.spacing(4);
     height: theme.spacing(4);
     padding: 0 theme.spacing(2);
     font-size: theme.font-size("xxs");
@@ -19,7 +22,6 @@
   }
 
   &[data-size="md"] {
-    line-height: theme.spacing(6);
     height: theme.spacing(6);
     padding: 0 theme.spacing(3);
     font-size: theme.font-size("xs");
@@ -27,7 +29,6 @@
   }
 
   &[data-size="lg"] {
-    line-height: theme.spacing(9);
     height: theme.spacing(9);
     padding: 0 theme.spacing(5);
     font-size: theme.font-size("sm");

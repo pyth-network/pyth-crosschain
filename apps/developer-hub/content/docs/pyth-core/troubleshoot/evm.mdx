@@ -1,0 +1,44 @@
+---
+title: "Troubleshoot Pyth EVM Price Feed Issues: Fix Common Errors"
+description: >-
+  Troubleshoot Pyth Price Feed on EVM chains with our concise guide and official
+  resources. Quickly fix stale prices, wrong feed IDs, and low-fee errors.
+full: true
+index: false
+---
+
+# Troubleshoot EVM Price Feeds Contract
+
+This reference page is designed to help you troubleshoot common issues you may encounter when using Pyth Price Feeds on EVM chains.
+Follow the steps provided below to diagnose and resolve the issue.
+
+#### getPrice() reverts with `StalePrice()` or `0x19abf40e` error
+
+This error occurs when the requested price feed has not been updated in the last `validTimePeriod`.
+The valid time period for the feed can queried using the [`getValidTime()`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L22) method.
+
+To resolve this issue:
+
+- Update the prices by calling [`updatePriceFeeds()`]("https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L88")
+  by passing the latest updateData from [Hermes](https://hermes.pyth.network/docs/#/rest/latest_vaas).
+- Another method to fetch the price is [`getPriceUnsafe()`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L41)
+  If the price feed is available, the method will return the latest prices with timestamp of last update.
+  NOTE: `getPriceUnsafe()` method does not check the freshness of the price.
+
+#### getPrice() reverts with `PriceFeedNotFound()` or `0x14aebe68` error
+
+This error occurs when the requested price feed has not been updated on-chain, or the price feed id is incorrect.
+
+To resolve this issue:
+
+- Update the prices by calling [`updatePriceFeeds()`](https://api-reference.pyth.network/price-feeds/evm/updatePriceFeeds)
+  by passing the latest updateData from [Hermes](https://hermes.pyth.network/docs/#/rest/latest_vaas).
+- Check the entered [price feed id](https://pyth.network/developers/price-feed-ids) and [pyth-contract address](https://docs.pyth.network/price-feeds/contract-addresses/evm) to make sure they are correct.
+
+#### updatePriceFeeds() reverts with `InsufficientFee()` or `0x025dbdd4` error
+
+This error occurs when the fee provided for updating the price feed is insufficient.
+To resolve this issue:
+
+- Fetch the latest fee by calling [`getUpdateFee()`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/IPyth.sol#L112) method and
+  provide the required fee to `msg.value` when calling [`updatePriceFeeds()`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/IPyth.sol#L112) method.

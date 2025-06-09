@@ -2,9 +2,9 @@ import type { Preview, Decorator } from "@storybook/react";
 import { useEffect } from "react";
 
 import styles from "./storybook.module.scss";
-import { BodyProviders } from "../src/AppShell/body-providers.js";
+import { BodyProviders } from "../src/AppShell/body-providers.jsx";
 import { sans } from "../src/AppShell/fonts";
-import { RootProviders } from "../src/AppShell/index.js";
+import { RootProviders } from "../src/AppShell/index.jsx";
 import shellStyles from "../src/AppShell/index.module.scss";
 
 const preview = {

@@ -1,0 +1,119 @@
+---
+title: Integrate Real-Time Pyth Data into EVM Contracts
+description: >-
+  This guide explains how to integrate Pyth Network’s real-time price feeds into
+  EVM smart contracts. It covers SDK installation and configuration, and
+  provides code examples for retrieving and using on-chain price data.
+full: false
+index: false
+---
+
+# How to Use Real-Time Data in EVM Contracts
+
+This guide explains how to use real-time Pyth data in EVM contracts. For an interactive playground to explore the methods supported by the Pyth contract, see the [EVM API reference](../api-reference/evm/).
+
+## Install Pyth SDK
+
+Pyth provides a [Solidity SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/sdk/solidity) to fetch prices from Pyth contracts.
+The SDK exposes `IPyth` interface to interact with Pyth price feeds.
+
+**Truffle/Hardhat**
+
+If you are using Truffle or Hardhat, simply install the NPM package:
+
+```bash copy
+npm install @pythnetwork/pyth-sdk-solidity
+```
+
+**Foundry**
+
+If you are using Foundry, you will need to create an NPM project if you don't already have one.
+From the root directory of your project, run:
+
+```bash copy
+npm init -y
+npm install @pythnetwork/pyth-sdk-solidity
+```
+
+Then add the following line to your `remappings.txt` file:
+
+```text copy
+@pythnetwork/pyth-sdk-solidity/=node_modules/@pythnetwork/pyth-sdk-solidity
+```
+
+## Write Contract Code
+
+The code snippet below provides a general template for what your contract code should look like:
+
+```solidity {30-31} copy
+pragma solidity ^0.8.0;
+
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+
+contract SomeContract {
+  IPyth pyth;
+
+  /**
+   * @param pythContract The address of the Pyth contract
+   */
+  constructor(address pythContract) {
+    // The IPyth interface from pyth-sdk-solidity provides the methods to interact with the Pyth contract.
+    // Instantiate it with the Pyth contract address from https://docs.pyth.network/price-feeds/contract-addresses/evm
+    pyth = IPyth(pythContract);
+  }
+
+  /**
+     * This method is an example of how to interact with the Pyth contract.
+     * Fetch the priceUpdate from Hermes and pass it to the Pyth contract to update the prices.
+     * Add the priceUpdate argument to any method on your contract that needs to read the Pyth price.
+     * See https://docs.pyth.network/price-feeds/fetch-price-updates for more information on how to fetch the priceUpdate.
+
+     * @param priceUpdate The encoded data to update the contract with the latest price
+     */
+  function exampleMethod(bytes[] calldata priceUpdate) public payable {
+    // Submit a priceUpdate to the Pyth contract to update the on-chain price.
+    // Updating the price requires paying the fee returned by getUpdateFee.
+    // WARNING: These lines are required to ensure the getPriceNoOlderThan call below succeeds. If you remove them, transactions may fail with "0x19abf40e" error.
+    uint fee = pyth.getUpdateFee(priceUpdate);
+    pyth.updatePriceFeeds{ value: fee }(priceUpdate);
+
+    // Read the current price from a price feed if it is less than 60 seconds old.
+    // Each price feed (e.g., ETH/USD) is identified by a price feed ID.
+    // The complete list of feed IDs is available at https://pyth.network/developers/price-feed-ids
+    bytes32 priceFeedId = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace; // ETH/USD
+    PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, 60);
+  }
+}
+
+```
+
+The code snippet above does the following things:
+
+1. Instantiate the `IPyth` interface from the Solidity SDK using the price feeds [contract address](../contract-addresses/evm).
+2. Select the [Price Feed IDs](https://pyth.network/developers/price-feed-ids) for the assets you want to fetch prices for. Price feeds come in two varieties, Stable and Beta. You should select Stable feed ids
+3. Call `IPyth.getUpdateFee` to calculate the fee charged by Pyth to update the price.
+4. Call `IPyth.updatePriceFeeds` to update the price, paying the fee calculated in the previous step.
+5. Call `IPyth.getPriceNoOlderThan` to read the current price, providing the [price feed ID](https://pyth.network/developers/price-feed-ids) that you wish to read and your acceptable staleness threshold for
+   the price.
+
+## Additional Resources
+
+You may find these additional resources helpful for developing your EVM application.
+
+### API Reference
+
+The [EVM API reference](../api-reference/evm/) lets you interactively explore the complete API of the Pyth contract.
+
+### Current Fees
+
+The [Current Fees](../current-fees/) page lists the current fees for each network.
+
+### Error Codes
+
+The [EVM error codes](../error-codes/evm/) page lists the error codes that the Pyth contract may return.
+
+### Example Applications
+
+[Oracle Swap](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/evm/oracle_swap) is an end-to-end example application that uses Pyth Network price feeds.
+This application is an AMM that allows users to swap two assets at the Pyth-provided exchange rate. The example contains both the contract and a frontend to interact with it.

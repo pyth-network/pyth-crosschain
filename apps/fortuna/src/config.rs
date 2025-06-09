@@ -11,8 +11,9 @@ use {
 };
 pub use {
     generate::GenerateOptions, get_request::GetRequestOptions, inspect::InspectOptions,
-    register_provider::RegisterProviderOptions, request_randomness::RequestRandomnessOptions,
-    run::RunOptions, setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
+    prometheus_client::metrics::histogram::Histogram, register_provider::RegisterProviderOptions,
+    request_randomness::RequestRandomnessOptions, run::RunOptions,
+    setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
 };
 
 mod generate;
@@ -172,6 +173,11 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub fee: u128,
 
+    /// Only set the provider's fee when the provider is registered for the first time. Default is true.
+    /// This is useful to avoid resetting the fees on service restarts.
+    #[serde(default = "default_sync_fee_only_on_register")]
+    pub sync_fee_only_on_register: bool,
+
     /// Historical commitments made by the provider.
     pub commitments: Option<Vec<Commitment>>,
 
@@ -184,6 +190,10 @@ pub struct EthereumConfig {
     /// at each specified delay. For example: [5, 10, 20].
     #[serde(default = "default_block_delays")]
     pub block_delays: Vec<u64>,
+}
+
+fn default_sync_fee_only_on_register() -> bool {
+    true
 }
 
 fn default_block_delays() -> Vec<u64> {
@@ -358,3 +368,9 @@ impl SecretString {
         Ok(None)
     }
 }
+
+/// This is a histogram with a bucket configuration appropriate for most things
+/// which measure latency to external services.
+pub const LATENCY_BUCKETS: [f64; 11] = [
+    0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
+];

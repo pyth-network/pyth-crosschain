@@ -1,0 +1,40 @@
+---
+title: "CosmWasm & Pyth Network: Integrating Real-Time Price Feeds"
+description: >-
+  Add real-time market data to your CosmWasm smart contracts with Pyth Network
+  price feeds. Follow our step-by-step setup, update guidance, and resource
+  library for seamless integration.
+full: false
+index: false
+---
+
+# Pyth on Cosmwasm
+
+Cosmwasm contracts can update and fetch the Pyth prices using the Pyth Cosmwasm Contract, deployed on their network.
+The documented source code can be found [here](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/cosmwasm/contracts/pyth).
+The [Cosmwasm API reference](../../cosmwasm) lets you interactively explore the complete API of the Pyth contract.
+
+## Update Price Feeds
+
+The mechanism by which price feeds are updated on Cosmwasm is explained [here](../pythnet-price-feeds/pull-updates.mdx). The [@pythnetwork/price-service-client](https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/client/js) typescript package can be used to fetch the latest price feed data which then can be passed to the contract as the [UpdatePriceFeeds](../api-reference/cosmwasm/execute-update-price-feeds) ExecuteMsg.
+
+Pyth publishes prices for two kinds of feeds:
+
+1. Stable price feeds consist of prices generated on the pythnet blockchain. These feeds are available on both mainnet and testnet blockchains. Use stable feeds if you would like your test environment to be identical to your production environment.
+2. Edge price feeds consist of prices generated on the pythtest blockchain, which is Pyth's test environment for new features. Consequently, these feeds are not as reliable as the stable feeds, and there are other differences as well (e.g., different price feed ids). These feeds are only available on testnets.
+
+## Examples
+
+- [Minimal on-chain contract](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/cosmwasm/examples/cw-contract) which queries the Pyth contract.
+
+## Price Feed IDs
+
+The price feed IDs for stable and edge feeds are different and can be found here.
+
+- [List of stable ids](https://pyth.network/developers/price-feed-ids#cosmwasm-stable)
+- [List of beta ids](https://pyth.network/developers/price-feed-ids#cosmwasm-edge)
+
+## Contract Addresses
+
+Developers will need the address of the Pyth price feed contract on their blockchain in order to use Pyth.
+Please consult [CosmWasm Contract Addresses](../contract-addresses/cosmwasm) to find the address for your blockchain.

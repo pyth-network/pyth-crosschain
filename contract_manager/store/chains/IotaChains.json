@@ -1,0 +1,16 @@
+[
+  {
+    "id": "iota_testnet",
+    "wormholeChainName": "iota_sui_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://api.testnet.iota.cafe/",
+    "type": "IotaChain"
+  },
+  {
+    "id": "iota_mainnet",
+    "wormholeChainName": "iota_sui_mainnet",
+    "mainnet": true,
+    "rpcUrl": "https://api.mainnet.iota.cafe/",
+    "type": "IotaChain"
+  }
+]

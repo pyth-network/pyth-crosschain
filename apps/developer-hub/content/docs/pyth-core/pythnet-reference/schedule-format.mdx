@@ -1,0 +1,111 @@
+---
+title: "PythNet Schedule Format: Market Hours, Timezones & Holidays"
+description: >-
+  Explore PythNet’s schedule format: discover its structure, components, and
+  usage with real-world examples for market hours, timezones, and holidays.
+full: false
+index: false
+---
+
+# Schedule Format
+
+This document describes the format for the `schedule` field in Pyth product metadata.
+The `schedule` field defines a product's market hours, including its timezone, weekly schedule, and any holiday exceptions.
+It controls the publishing schedule of `pyth-agent`, restricting it to follow a predetermined timetable.
+This field is particularly useful for:
+
+- FX
+- Metals
+- Stocks
+
+## Format
+
+```plain
+Timezone;WeeklySchedule;Holidays
+```
+
+**If `schedule` is omitted for a symbol, pyth-agent will revert to the deprecated [`weekly_schedule`](schedule-format#weekly-schedule-format-deprecated) field.
+If `weekly_schedule` is also undefined, pyth-agent will default to 24/7 publishing, which was the standard behavior prior to this feature.**
+
+**Detailed Definitions**
+
+- `Timezone` - A human-readable tz database TZ identifier of the market’s local timezone, such as `America/New_York`.
+  **Full list of identifiers can be found [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)**.
+  <InfoBox variant="info">
+    Daylight-saving time is automatically handled by the pyth-agent.
+  </InfoBox>
+- `WeeklySchedule` - A list of seven comma-separated `DaySchedule` entries that define the recurring weekly schedule of a product’s market hours.
+  Each `DaySchedule` entry corresponds to a day of the week, starting from Monday.
+  None of the comma-separated values can be omitted.
+- `Holidays` - A list of comma-separated `MonthDay/DaySchedule` entries.
+  Each entry specifies the schedule for a specific day of the year, overriding the `WeeklySchedule` for that date.
+  This list can be empty. `MonthDay` is a compact date format where the first two digits represent the month (01 for January, 12 for December),
+  and the last two digits represent the day of the month (e.g., `0415` for April 15th). **Leading zeros are mandatory**.
+- `DaySchedule` - A single day’s schedule. `DaySchedule` can be one of the following:
+
+  - `O` for all-day open
+  - `C` for all-day closed
+  - `HourMinute-HourMinute[&HourMinute-HourMinute[&...]]` for specific open and close times in the market-local timezone.
+    The hour and minute are combined into a single 4-digit number, where the first two digits represent the hour (00 to 24),
+    and the last two digits represent the minute (00 to 59).
+    For example, `0415` represents 4:15 AM. The open time must precede the close time, and the range is inclusive.
+
+    - `24` can only be used to specify `2400`, which represents the final moment of a given day.
+      - Context: Without this special case, the next best thing would be `2359` which could cause a symbol to go down between `2359` and the next day’s `0000` for a full minute.
+    - **Leading zeros are mandatory**.
+
+    If there are multiple open and close times per day (e.g., maintenance window) you can specify them by using `&` in between. For instance `0000-1200&1300-2400` means that the
+    market is open all day except between 12:00 and 13:00.
+
+**Examples**
+
+- `Europe/Lisbon;O,O,O,O,O,C,C;` - 24h open from Monday to Friday, according to Lisbon’s perspective of midnight. Closed on Saturdays and Sundays.
+- `America/New_York;0930-1630,0930-1630,0930-1630,0930-1630,0930-1630,C,C;` - Open 9:30AM - 4:30PM ET (EDT or EST)
+  from Monday to Friday. Closed outside specified ranges, on Saturdays and on Sundays. Based off real-life NASDAQ hours.
+- `Israel;0959-1714,0959-1714,0959-1714,0959-1714,C,C,0959-1539;` - Interesting edge case of the Tel-Aviv Stock Exchange. Open with reduced hours on Sundays, closed on Friday and Saturday. Note the slash-less timezone name.
+- `Africa/Johannesburg;C,C,C,C,C,C,C;` - Trivial made-up example. The market is not trading on any day - exact opposite of 24/7 trading. Pyth-agent instances observing this value will not publish the product at any time. Note: The timezone has no effect in this case.
+- `Europe/London;O,O,O,O,O,O,O;` - Trivial example. The market is open at all times and the timezone has no effect. Equivalent to default 24/7 behavior when `schedule` and `weekly_schedule` is not specified on a symbol.
+- `America/New_York;O,O,O,O,O,C,C;1224/0930-1300,1225/C` - An example of specifying holidays. The market closes early on Christmas Eve and is fully closed on Christmas Day.
+- `America/New_York;C,C,C,C,0930-1530&1830-2200,C,C;` - Only open Friday between 9:30AM - 3:30PM and 6:30PM - 10:00PM ET (EDT or EST)
+
+## Weekly Schedule Format (Deprecated)
+
+<InfoBox variant="warning">
+  This field is deprecated in favor of `schedule`.
+</InfoBox>
+
+This document outlines the rules for specifying contents of a new Pyth product metadata field - `weekly_schedule` . The field specifies the recurring weekly schedule of a product’s market hours. It serves as a reference for `pyth-agent` to stop publishing outside the hours specified in the schedule. Notable use cases include:
+
+- FX
+- Metals
+- Stocks
+
+## Format
+
+```plain
+Timezone,MHKind,MHKind,MHKind,MHKind,MHKind,MHKind,MHKind
+```
+
+**Note: None of the comma-separated values can be ommitted - exactly one timezone and seven subsequent per-day schedules are required. That said, ommitting `weekly_schedule` on a symbol is allowed and will cause pyth-agent to default to 24/7 publishing (the usual behavior before this feature)**
+
+**Detailed Definitions**
+
+- `Timezone` - A human-readable tz database TZ identifier of the market’s local timezone - e.g. `America/New_York`. **Full list of identifiers can be found [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)**. Notes:
+  - Daylight-saving time - Handled automatically by pyth-agent code dealing with the format.
+- `MHKind` - A single week day’s schedule. The `MHKind` values describe week days from Monday to Sunday, in that order. `MHKind` is defined as one of:
+  - `O` - all-day open
+  - `C` - all-day closed
+  - `Hour:Minute-Hour:Minute` - specific open and close times in the market-local timezone. Open time must come before close time. **The range is inclusive.** Definitions:
+    - `Hour` - number of hours from `00` to `24` . Notes:
+      - Leading zeros are optional - e.g. `9` and `09`, `0` and `00` are equivalent.
+      - `24` can only be used to specify `24:00`. This value is used to express the final moment of a given day (split-second before `00:00` on the next day). Context: Without this special case, the next best thing would be `23:59` which could cause a symbol to go down between `23:59` and the next day’s `00:00` for a full minute.
+    - `Minute` - number of minutes from `00` to `59`. Notes:
+      - Leading zeros are **mandatory** - e.g. `9:05`, `9:00`, `15:07`
+
+**Examples**
+
+- `Europe/Lisbon,O,O,O,O,O,C,C` - 24h open from Monday to Friday, according to Lisbon’s perspective of midnight. Closed on Saturdays and Sundays.
+- `America/New_York,9:30-16:30,9:30-16:30,9:30-16:30,9:30-16:30,9:30-16:30,C,C` - Open 9:30AM - 4:30PM ET (EDT or EST) from Monday to Friday. Closed outside specified ranges, on Saturdays and on Sundays. Based off real-life NASDAQ hours.
+- `Israel,9:59-17:14,9:59-17:14,9:59-17:14,9:59-17:14,C,C,9:59-15:39` - Interesting edge case of the Tel-Aviv Stock Exchange. Open with reduced hours on Sundays, closed on Friday and Saturday. Note the slash-less timezone name.
+- `Africa/Johannesburg,C,C,C,C,C,C,C` - Trivial made-up example. The market is not trading on any day - exact opposite of 24/7 trading. Pyth-agent instances observing this value will not publish the product at any time. Note: The timezone has no effect in this case.
+- `Europe/London,O,O,O,O,O,O,O` - Trivial example. The market is open at all times and the timezone has no effect. Equivalent to default 24/7 behavior when `weekly_schedule` is not specified on a symbol.

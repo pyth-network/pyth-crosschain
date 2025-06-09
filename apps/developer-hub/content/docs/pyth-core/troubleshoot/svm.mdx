@@ -1,0 +1,27 @@
+---
+title: "Troubleshoot SVM Price Feeds: Fix Anchor-Lang Version Mismatch"
+description: >-
+  Step-by-step guide to align anchor-lang versions in Cargo.toml and Cargo.lock
+  to resolve Pyth SVM compilation errors affecting Solana price feeds.
+full: false
+index: false
+---
+
+# Troubleshoot Solana Price Feeds Contract
+
+This reference page is designed to help you troubleshoot common issues you may encounter when using Pyth Price Feeds on SVM chains.
+Follow the steps provided below to diagnose and resolve the issue.
+
+1. `error[E0277]: the trait bound PriceUpdateV2: anchor_lang::AccountDeserialize is not satisfied{:rust}`
+
+   This error happens when a program using the [`pyth-solana-receiver-sdk`](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/pyth_solana_receiver_sdk) fails to compile. It is caused by an `anchor-lang` version mismatch.
+   Make sure the transitive version of `anchor-lang` brought by `pyth-solana-receiver-sdk`
+   matches the version of `anchor-lang` of your program's `Cargo.toml`.
+
+   You can fix it by following these steps:
+
+   - Check the version of `anchor-lang` in your [`Cargo.toml`](https://github.com/guibescos/anchor-pyth/blob/broken-build/programs/anchor-pyth/Cargo.toml) (in the example `0.29.0{:js}`) call it `x.y.z`
+   - Check the version of `anchor-lang` in the `pyth-solana-receiver-sdk` tree in [`Cargo.lock`](https://github.com/guibescos/anchor-pyth/blob/broken-build/Cargo.lock#L1400) (in the example `0.30.1{:js}`) call it `a.b.c`
+   - Run `cargo update -p anchor-lang@a.b.c --precise x.y.z{:bash}`
+     replacing `a.b.c` and `x.y.z` by the versions in the previous steps. For example:\
+     `cargo update -p anchor-lang@0.30.1 --precise 0.29.0{:bash}`

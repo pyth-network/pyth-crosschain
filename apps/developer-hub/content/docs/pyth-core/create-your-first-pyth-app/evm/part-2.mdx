@@ -1,0 +1,299 @@
+---
+title: "Part 2: Deploy & Interact with Pyth App on EVM Testnets"
+description: >-
+  A step-by-step guide to deploying Pyth applications on the EVM, retrieving
+  real-time price feeds via Hermes, and integrating them into a TypeScript
+  project.
+full: false
+index: false
+---
+
+# Deploy your Pyth App
+
+In this part of the tutorial, we will learn to deploy the `MyFirstPythContract.sol` contract and fetch the latest price from Pyth network.
+
+This part of the tutorial will conver the following:
+
+- Deploy the contract on OP Sepolia testnet.
+- Interact with the contract from the command line.
+- Update and fetch the price from the contract using [hermes-client](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js).
+
+<InfoBox variant="info">
+  This tutorial is continuation of the [Part 1: Create a Contract](./part-1). If
+  you haven't completed that part yet, please do so before continuing.
+</InfoBox>
+
+## Deploy the contract
+
+Now, let's deploy the contract to a test network.
+We will use Optimism Sepolia, but any EVM network will work.
+We will also use the Foundry command line tools -- specifically [`cast`](https://book.getfoundry.sh/reference/cast/) -- to perform many of the necessary operations.
+
+First, create a new wallet:
+
+```bash copy
+cast wallet new
+```
+
+This command will generate a new Ethereum keypair, producing output similar to the following.
+Note that the address and private key will be different hexadecimal values.
+
+```
+Successfully created new keypair.
+Address:     0xB806824fdA4b2b6631e9B87a86d42C9dfd04D129
+Private key: 0x0d510c72fd2279155c717eb433ae598a83cfb34b09c2ada86bc424b481082023
+```
+
+We will export the values from the command above as environment variables to simplify the commands below.
+We will also export the RPC URL of the network.
+Run the following commands in your shell substituting the address and private key in the indicated places:
+
+```bash copy
+export ADDRESS=<address from above>
+export PRIVATE_KEY=<your private key from above>
+export RPC_URL="https://sepolia.optimism.io"
+```
+
+Next, use the [Superchain Faucet](https://app.optimism.io/faucet?utm_source=docs) to claim some test Sepolia ETH.
+Paste the address from the command above into the faucet to get your ETH.
+You can verify that the ETH has arrived in your wallet by running the command `cast balance $ADDRESS -r $RPC_URL -e`
+
+The final step before deploying is to get the arguments for the contract's constructor:
+the [Pyth contract address](https://docs.pyth.network/price-feeds/contract-addresses/evm#testnets) for Optimism Sepolia
+and the [price feed id](https://docs.pyth.network/price-feeds/price-feed-ids) for ETH/USD.
+We will also export these values as environment variables for convenience:
+
+```bash copy
+export PYTH_OP_SEPOLIA_ADDRESS=0x0708325268dF9F66270F1401206434524814508b
+export ETH_USD_ID=0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
+```
+
+Finally, let's deploy the contracts.
+Run the following command:
+
+```bash copy
+forge create src/MyFirstPythContract.sol:MyFirstPythContract \
+--private-key $PRIVATE_KEY \
+--rpc-url $RPC_URL \
+--constructor-args $PYTH_OP_SEPOLIA_ADDRESS $ETH_USD_ID
+```
+
+This command should produce output along the following lines:
+
+```
+[⠑] Compiling...
+No files changed, compilation skipped
+Deployer: 0xB806824fdA4b2b6631e9B87a86d42C9dfd04D129
+Deployed to: 0xcb952c0D1E19E4cA5660Cc2F5E0284690bDd2fE9
+Transaction hash: 0x3b933816760d6a0070503ab251de0a21618e7634ca7c6c49aea75ff640d470db
+```
+
+The contract is deployed!
+Let's save the contract address as another environment variable for later use:
+
+```bash copy
+export DEPLOYMENT_ADDRESS=<deployed to address from above>
+```
+
+## Interact from command line
+
+Let's try out the deployed contract.
+In order to do so, we will need to get a price update to pass to the `updateAndMint` function.
+We can fetch this update from Hermes:
+
+```bash copy
+curl -s "https://hermes.pyth.network/v2/updates/price/latest?&ids[]=$ETH_USD_ID" | jq -r ".binary.data[0]" > price_update.txt
+```
+
+This command will fetch a fresh price update from Hermes and save it in the file `price_update.txt`.
+The update is a binary payload represented as a hexadecimal string.
+
+We can check the content of the price update by running `cat price_update.txt`
+
+```
+504e41550100000003b801000000030d023195d3ed202c9a25d396f2e6fab7240b02048675cadf473e1e1e1e0f64e08d16740e6f159f8bd0e2cf5104ecf8b32f66e7509b7df25691bbf2725d8d917db3a60103cde52454f3c173a56bbdcf6a1a76af6e865c21846f495f01a7401d522ff1248b0ad502d5101fa6077b128faa19f37c025190453f4ad62bd824462daea68d4b2d0104351ee942dea06e1549251f410c51c6f8128a0f5385aaa53ed8b6c4e9786b29bc5a2f0023d468a3aa01af9984b155870e1d427d22a295774982bfc53076c330900006e1139649178d4f5a9751d9ba66b1a7ad96b9aa20d9cc8f15f98be52b549388236e638187aa1c01670bdc80aeab818856683557b56ebd18f728e4f3ad80883b3f0107958e3b2db908aa15be048717662d409debd2d8e74a2a8ef21aa4db8dba60f79d4bcff1e6d0dd56c1556a9901b049cf8efc0777566917e8a804cbbdd653a57af9010a6d95b5fedd65a957c402f1ff1c3ae0035166974a852cee26a57d8a39ff0d0e837b8d65341f3fd3c191278e58116a9f1e0fc1459562c0ccec125b50a78e2d3a1e010bdf27fc6ea6440d1b128b632ee61a7d32e8a21e10f93364e43b4044bcdb53c2343437823e21d0e99cd854daa428a1020470b8ae2fa2b11bf237634933ee1dd89b000c154908a5f1f8f20dc4025d0ec694a06efef411d0ca094fcfd995d3015a72914a3e7f67c3c31088a47fb8e35edc41acbdaaa5ded841ea037ea214f7a9b5f4c832000d570579b62e11069d3fb69b7be88da639f85b3f6e58d698c471b14d5a8853059f365e18ad01606b5b2bcd48e1a4ef18bd317f213b2cff95cc925b152f9c91329a010e80e643b2e00b6959d0b25499dd203f45e84bcc61e5c2fe4cf6530bc5a8180b4f2bf558a6b07b9d57aa16bf2b0dcae7d96983eaffca33d17842659931d23f9d8d000fd79f8e039aa4f9d953cb8e019614002f92fb937b30f15ee5b60441539cb478d8316f89571db28a56455bf1af3ec5d86b9d12cf856887d17592e480fbe271710d01107403d7d0abb15c244d57a2ae793fd787a5f6ed5a88baf76b772c946f879b7e2b4abc1daa6c1d41ee426bc2e741ccea2d4ad8e1f7119d7041e6455fb9b90f093900125d43c3b17ec60baa73183d4952e9841ea634488cd94be32b81a1b722596eea7754c3fa7f8eea57c931aeb068b21edb434126294d2d91fd47c69a354eb640fe9b0065bc3ed700000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71000000000251b73d014155575600000000000759a54100002710a151b10b8b39820e349b4a4de8582797a10456b101005500ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace00000035c936c544000000000735253bfffffff80000000065bc3ed70000000065bc3ed600000035ab19daa8000000000721bc170a3c8bcdf88ed231a8cc6ac5ad368fdd2770058becddc01c7fd4bb496e5b90132acc0b205aefb9ee276700d5dfe6561d2ec75c601864935755429793d3c689fd7de917c94265013eceda08342839cfa48d411126369c480a114af1cd1231ee1b1a25f6b3d3fb06889adf467e9681f11a8b96022a9fb171b76fb68ed8b1c95090ff722bb6f851bb4f0770ec39a8eeeacec401b2e6fc3c7881557d1d8dcfa12e748408a7784b2959bd4d1fc5a8d0c8ba4ae56875340a5c43c63978a5164659af96f354f80ecd2786366f
+```
+
+As expected, it's a long hexadecimal string.
+
+Let's use the price update to call the `updateAndMint` function.
+We can do this using `cast` by running the following command:
+
+```bash copy
+cast send \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC_URL \
+  -j \
+  --value 0.0005ether \
+  $DEPLOYMENT_ADDRESS \
+  "updateAndMint(bytes[])" \
+  [0x`cat price_update.txt`]
+```
+
+Note that this command uses the environment variables defined in the sections above.
+It passes `0.0005` ETH to the `updateAndMint` function to cover the minting fee.
+It also passes the price update we got from Hermes, wrapped in an array to match the function signature.
+The command above should produce output along the following lines:
+
+```
+{"transactionHash":"0x789e9deffc57276efed218e979200a0144606ab77d8378ed55e6c062d4286cb1","transactionIndex":"0x1","blockHash":"0x09b49149595de2c5b683149c03afa36c1a77786b97ddd07ecc69b5b7f926cd0d","blockNumber":"0x76a204","from":"0xc47bf8ac4ded9f6fd4b4f22b11f2eef21bd97734","to":"0xedaa586727c51f0b29f2db7c68dab06499f44614","cumulativeGasUsed":"0x41f43","gasUsed":"0x35a0a","contractAddress":null,"logs":[{"address":"0x0708325268df9f66270f1401206434524814508b","topics":["0xd06a6b7f4918494b3719217d1802786c1f5112a6c1d88fe2cfec00b4584f6aec","0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"],"data":"0x0000000000000000000000000000000000000000000000000000000065c41fa400000000000000000000000000000000000000000000000000000038b9e86b65000000000000000000000000000000000000000000000000000000000b8318d5","blockHash":"0x09b49149595de2c5b683149c03afa36c1a77786b97ddd07ecc69b5b7f926cd0d","blockNumber":"0x76a204","transactionHash":"0x789e9deffc57276efed218e979200a0144606ab77d8378ed55e6c062d4286cb1","transactionIndex":"0x1","logIndex":"0x0","removed":false}],"status":"0x1","logsBloom":"0x00000000000000000000002004000000000000000000000000000000002000000000000000000000000000000000000000010000000000000000000000000000000000000100000000000000000000000000000000040000000000000002000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","type":"0x2","effectiveGasPrice":"0xb2d05efc","l1Fee":"0x4711ac0c0471","l1FeeScalar":"0.684","l1GasPrice":"0x13355e9e2","l1GasUsed":"0x568c"}
+```
+
+You can see the transaction using the [Optimism Sepolia Explorer](https://sepolia-optimism.etherscan.io/) by pasting the `transactionHash` from your result into the search box.
+If you get an error in this step, don't worry -- these are easily fixed.
+There are two possible errors when running this command.
+The first error looks like this:
+
+```
+Error:
+(code: 3, message: execution reverted, data: Some(String("0x025dbdd4")))
+```
+
+The error code `0x025dbdd4` represents the `InsufficientFee` error.
+This means that `0.0005` ETH was not sufficient to cover the minting fee.
+Try increasing the fee to fix the problem.
+
+The other error looks like this:
+
+```
+Error:
+(code: 3, message: execution reverted, data: Some(String("0x19abf40e")))
+```
+
+The error code `0x19abf40e` represents the `StalePrice` error that we saw before.
+This means that the `price_update.txt` was too old to be used by the contract.
+Simply re-run the `curl` command above to get a newer price update, then retry sending the transaction.
+
+## Interact from Typescript
+
+As a final task, let's interact with our deployed contract from Typescript.
+First create a new directory called `app` that is adjacent to `contracts` and create a new `npm` project:
+
+```bash copy
+cd ..
+mkdir app
+cd app
+npm init -y
+npm install --save typescript ts-node viem @pythnetwork/hermes-client
+```
+
+Then open `src/mintNft.ts` and paste in the following content:
+
+```typescript copy mintNft.ts
+import { createWalletClient, http, parseEther } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { optimismSepolia } from "viem/chains";
+import { EvmPriceServiceConnection } from "@pythnetwork/hermes-client";
+import { getContract } from "viem";
+
+export const abi = [
+  {
+    type: "constructor",
+    inputs: [
+      {
+        name: "_pyth",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_ethUsdPriceId",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+    ],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "mint",
+    inputs: [],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "updateAndMint",
+    inputs: [
+      {
+        name: "pythPriceUpdate",
+        type: "bytes[]",
+        internalType: "bytes[]",
+      },
+    ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "error",
+    name: "InsufficientFee",
+    inputs: [],
+  },
+] as const;
+
+async function run() {
+  const account = privateKeyToAccount(process.env["PRIVATE_KEY"] as any);
+  const client = createWalletClient({
+    account,
+    chain: optimismSepolia,
+    transport: http(),
+  });
+
+  const contract = getContract({
+    address: process.env["DEPLOYMENT_ADDRESS"] as any,
+    abi: abi,
+    client,
+  });
+
+  const connection = new HermesClient("https://hermes.pyth.network");
+  const priceIds = [process.env["ETH_USD_ID"] as string];
+  const priceFeedUpdateData = await connection.getLatestPriceUpdates(priceIds);
+  console.log("Retrieved Pyth price update:");
+  console.log(priceFeedUpdateData);
+
+  const hash = await contract.write.updateAndMint(
+    [priceFeedUpdateData as any],
+    { value: parseEther("0.0005") },
+  );
+  console.log("Transaction hash:");
+  console.log(hash);
+}
+
+run();
+```
+
+Notice: This `abi` variable which represents the interface of our contract and can be autogenerated by running `forge inspect MyFirstPythContract abi` in the `contracts` directory.
+
+The `run` function does two different things:
+
+- First, it instantiates an interface to our contract using the [`viem`](https://viem.sh/) library.
+- Second, it uses `HermesClient` from [`@pythnetwork/hermes-client`](<(https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js)>) to retrieve
+
+Run this script using:
+
+```bash copy
+npx ts-node src/mintNft.ts
+```
+
+```
+Retrieved Pyth price update:
+[
+  '0x504e41550100000003b801000000030d02cf1495bd7e3a4a300c46774ea60a3de03e01bac6508f8fc4b9a1bf88891850c7164dbbf575dce8abbd97b7006bd55b68e75f8399e1e149984bc2bf7113cb72f20003e99ef3fb2dd633b4c22caed107804fce7afd8634b452b33fb1e02371c5ba5a9e7166a7d255edf8e233a65978e69bce765dd2c40ad54be11ba56cbe15cba6b8ae0004ade36a8fd7ef703f0ec7295f23e49c5ed2f842d0d7dc2a4212e8b8e85898d6611df4f82edfb515767875e35994bd6da75e9e0677c9e43726aa498163f3ff35ad00065a4c59d485f7b98aab34cd6cdb91708a0730d1b3206d739b3380f6af6d882dbd29538428730451192420e9528cc131a738c4284de5f5d95b259dfff4981956fd00076eeb9628d8d6383649292c83c39ccd5526a743f99e76b5b47df818d27764ccfb50175090a6e4c34660e5b7a8b6422f5e5c465eb6b1a30bf47504ce79b08e91bb00085bb0ca77f52cd70f8adbaca61990b7cc93521bf2150ec15e08706bb8cb22b7ab344c6bda660b7d195fdf686750419cb2e8763c24b513c7c1dac1bfdcef8981b3000ade0739927220195c5cbb857521abb4c7a14f3293854849a3009c4f4a89e369f457a0631d771f78c74859aff00147aa29ce5593a8f06a4d95939c86fdb40e86cc010b8810faaf2c0aec4d5b2492640dafbf33a95f8aa4e4ea16f947dad970fd68251868ec583c38198199d7d5884aebed197b601d21b20b0abdd6facf817a4162712b010c4234eb67111ddf72e9ddb7f6ece59a56283e1a3d0b835708e1a59d91a816d86811affd934f8627704b942c52eaf7e94faf4f942c82e7a078e316ad71d5803eb1000da3ad633e65b7489d50b7a9b509695f47718c80cc977d2b1c6980b8120016dfd7639330f59808006540687f9c66451e1de8c9e9ea51f609e47f229fe9b805fc76000e3453fbce45c01cf0f5ba95db0448a37c41e4e8167d4aa8edc98e7bfd1e38637173702b2f696ec6f4ef062ebfc94ab63f7e25e44a5e04a826ea91ab62a5717f1b0010404056bc6c008112995330ba1ede419950117a4b7af8a988e8aa281983403851549e7298ea08a7b457fc01b59ec7a957a3e67a12b6d638d5d3bf5979c2f428d00012357b23a113a1f7012bb54d02d82a3b7929ce2f608866c5efdc2063f199fb2a1a447627d0924e58b78cf257ed0d8260e7f28ccc3950a08444b3e89931d1d573bd0065c4294600000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa7100000000025f827a01415557560000000000076776a700002710b5783543d1501816435cb3b16459ab24af01b58e01005500ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace00000038a5634d0e0000000006b5e152fffffff80000000065c429460000000065c42945000000388c33a76000000000065471df0a7b1d6dbea0c02d1d4db13cf9621d4b4a49f202e1826735bb5c06ffca5c63f40e91a4754987d9cd475d67e48e1a2b923550777fe16c0babe7c3fcab04e8582459b794376073c61a5e25dafee1a1be96cb4f37dca6457cec97f8bdb04f59b2b185d49ebc31684fc38dbb18d249ef5b7c5da2c961a0d63eb3ec96980d6b1d2c6f00c5be7793878a86724780165ce7cd3112d2e9b5d0ad18f0385f13a982527f16524bacf82dc732deb265b2bea4ea5d46676548c26381833540a7dd1b0e8b78ceb6fa2c59eb8bc13fe8'
+]
+Transaction hash:
+0xe304f461a9a0a8e47e1e8dd394e0d3f95dcadd9a2b72bb4963693bdc71ff8405
+```
+
+It works!
+Again, you can look up the transaction hash in the Optimism Sepolia explorer to check that the transaction landed.
+
+Congratulations! You've built your first app using Pyth price feeds.
+
+## Conclusion
+
+In this tutorial, we created a Solidity contract that updates and reads Pyth prices, tested the contract locally,
+then deployed the contract and interacted with it both via the command line and `hermes-client` sdk.
+
+## Next Steps
+
+Check out the [EVM Contract References](https://api-reference.pyth.network/price-feeds/evm/getPriceNoOlderThan) for detailed information on the Pyth EVM contract API.
+For an end-to-end example using Pyth price feed, check out the [Pyth Oracle AMM Example](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/evm).

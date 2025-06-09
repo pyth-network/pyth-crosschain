@@ -66,7 +66,7 @@ export const AssetClassTable = ({ numFeedsByAssetClass }: Props) => {
   return (
     <Table
       fill
-      stickyHeader
+      stickyHeader="top"
       label="Asset Classes"
       columns={[
         {

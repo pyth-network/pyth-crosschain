@@ -1,0 +1,59 @@
+{
+  "name": "@pythnetwork/entropy-explorer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build:vercel": "next build",
+    "fix:format": "prettier --write .",
+    "fix:lint:eslint": "eslint --fix .",
+    "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
+    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_34F8THr7mZ3eAOQoCLdo8xWj9fdT vercel env pull",
+    "start:dev": "next dev --port 3006 --turbopack",
+    "start:prod": "next start --port 3006",
+    "test:format": "prettier --check .",
+    "test:lint:eslint": "eslint . --max-warnings 0",
+    "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
+    "test:types": "tsc"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "catalog:",
+    "@pythnetwork/component-library": "workspace:*",
+    "clsx": "catalog:",
+    "connectkit": "catalog:",
+    "next": "catalog:",
+    "nuqs": "catalog:",
+    "react": "catalog:",
+    "react-aria": "catalog:",
+    "react-dom": "catalog:",
+    "react-timeago": "catalog:",
+    "viem": "catalog:",
+    "wagmi": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/jest-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@svgr/webpack": "catalog:",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "autoprefixer": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "postcss": "catalog:",
+    "prettier": "catalog:",
+    "sass": "catalog:",
+    "stylelint": "catalog:",
+    "stylelint-config-standard-scss": "catalog:",
+    "typescript": "catalog:",
+    "vercel": "catalog:"
+  }
+}

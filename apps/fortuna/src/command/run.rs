@@ -5,8 +5,9 @@ use {
         command::register_provider::CommitmentMetadata,
         config::{Commitment, Config, EthereumConfig, ProviderConfig, RunOptions},
         eth_utils::traced_client::RpcMetrics,
+        history::History,
         keeper::{self, keeper_metrics::KeeperMetrics},
-        state::{HashChainState, PebbleHashChain},
+        state::{HashChainState, MonitoredHashChainState, PebbleHashChain},
     },
     anyhow::{anyhow, Error, Result},
     axum::Router,
@@ -26,6 +27,7 @@ pub async fn run_api(
     socket_addr: SocketAddr,
     chains: Arc<RwLock<HashMap<String, ApiBlockChainState>>>,
     metrics_registry: Arc<RwLock<Registry>>,
+    history: Arc<History>,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     #[derive(OpenApi)]
@@ -33,12 +35,17 @@ pub async fn run_api(
     paths(
     crate::api::revelation,
     crate::api::chain_ids,
+    crate::api::explorer,
     ),
     components(
     schemas(
     crate::api::GetRandomValueResponse,
+    crate::history::RequestStatus,
+    crate::history::RequestEntryState,
     crate::api::Blob,
     crate::api::BinaryEncoding,
+    crate::api::StateTag,
+    crate::api::ExplorerResponse,
     )
     ),
     tags(
@@ -47,7 +54,7 @@ pub async fn run_api(
     )]
     struct ApiDoc;
 
-    let api_state = api::ApiState::new(chains, metrics_registry).await;
+    let api_state = api::ApiState::new(chains, metrics_registry, history).await;
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -98,13 +105,16 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             .map(|chain_id| (chain_id.clone(), ApiBlockChainState::Uninitialized))
             .collect(),
     ));
+    let history = Arc::new(History::new().await?);
     for (chain_id, chain_config) in config.chains.clone() {
+        keeper_metrics.add_chain(chain_id.clone(), config.provider.address);
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();
         let chains = chains.clone();
         let secret_copy = secret.clone();
         let rpc_metrics = rpc_metrics.clone();
         let provider_config = config.provider.clone();
+        let history = history.clone();
         spawn(async move {
             loop {
                 let setup_result = setup_chain_and_run_keeper(
@@ -115,6 +125,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
                     keeper_private_key_option.clone(),
                     chains.clone(),
                     &secret_copy,
+                    history.clone(),
                     rpc_metrics.clone(),
                 )
                 .await;
@@ -144,7 +155,14 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         Ok::<(), Error>(())
     });
 
-    run_api(opts.addr, chains.clone(), metrics_registry.clone(), rx_exit).await?;
+    run_api(
+        opts.addr,
+        chains.clone(),
+        metrics_registry.clone(),
+        history,
+        rx_exit,
+    )
+    .await?;
     Ok(())
 }
 
@@ -157,6 +175,7 @@ async fn setup_chain_and_run_keeper(
     keeper_private_key_option: Option<String>,
     chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
     secret_copy: &str,
+    history: Arc<History>,
     rpc_metrics: Arc<RpcMetrics>,
 ) -> Result<()> {
     let state = setup_chain_state(
@@ -166,9 +185,9 @@ async fn setup_chain_and_run_keeper(
         chain_id,
         &chain_config,
         rpc_metrics.clone(),
+        keeper_metrics.clone(),
     )
     .await?;
-    keeper_metrics.add_chain(chain_id.clone(), state.provider_address);
     chains.write().await.insert(
         chain_id.clone(),
         ApiBlockChainState::Initialized(state.clone()),
@@ -179,6 +198,7 @@ async fn setup_chain_and_run_keeper(
             chain_config,
             state,
             keeper_metrics.clone(),
+            history,
             rpc_metrics.clone(),
         )
         .await?;
@@ -193,19 +213,29 @@ async fn setup_chain_state(
     chain_id: &ChainId,
     chain_config: &EthereumConfig,
     rpc_metrics: Arc<RpcMetrics>,
+    keeper_metrics: Arc<KeeperMetrics>,
 ) -> Result<BlockchainState> {
     let contract = Arc::new(InstrumentedPythContract::from_config(
         chain_config,
         chain_id.clone(),
         rpc_metrics,
     )?);
+    let network_id: u64 = contract
+        .get_network_id()
+        .await
+        .map_err(|e| anyhow!("Failed to get network id: {}. Chain id: {}", &chain_id, e))?
+        .as_u64();
     let mut provider_commitments = chain_config.commitments.clone().unwrap_or_default();
     provider_commitments.sort_by(|c1, c2| {
         c1.original_commitment_sequence_number
             .cmp(&c2.original_commitment_sequence_number)
     });
 
-    let provider_info = contract.get_provider_info(*provider).call().await?;
+    let provider_info = contract
+        .get_provider_info(*provider)
+        .call()
+        .await
+        .map_err(|e| anyhow!("Failed to get provider info: {}", e))?;
     let latest_metadata = bincode::deserialize::<CommitmentMetadata>(
         &provider_info.commitment_metadata,
     )
@@ -258,10 +288,7 @@ async fn setup_chain_state(
         hash_chains.push(pebble_hash_chain);
     }
 
-    let chain_state = HashChainState {
-        offsets,
-        hash_chains,
-    };
+    let chain_state = HashChainState::new(offsets, hash_chains)?;
 
     if chain_state.reveal(provider_info.original_commitment_sequence_number)?
         != provider_info.original_commitment
@@ -271,9 +298,17 @@ async fn setup_chain_state(
         tracing::info!("Root of chain id {} matches commitment", &chain_id);
     }
 
+    let monitored_chain_state = MonitoredHashChainState::new(
+        Arc::new(chain_state),
+        keeper_metrics.clone(),
+        chain_id.clone(),
+        *provider,
+    );
+
     let state = BlockchainState {
         id: chain_id.clone(),
-        state: Arc::new(chain_state),
+        state: Arc::new(monitored_chain_state),
+        network_id,
         contract,
         provider_address: *provider,
         reveal_delay_blocks: chain_config.reveal_delay_blocks,

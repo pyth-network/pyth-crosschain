@@ -120,6 +120,37 @@ abstract contract Pyth is
         return getTotalFee(totalNumUpdates);
     }
 
+    function getTwapUpdateFee(
+        bytes[] calldata updateData
+    ) public view override returns (uint feeAmount) {
+        uint totalNumUpdates = 0;
+        // For TWAP updates, updateData is always length 2 (start and end points),
+        // but each VAA can contain multiple price feeds. We only need to count
+        // the number of updates in the first VAA since both VAAs will have the
+        // same number of price feeds.
+        if (
+            updateData[0].length > 4 &&
+            UnsafeCalldataBytesLib.toUint32(updateData[0], 0) ==
+            ACCUMULATOR_MAGIC
+        ) {
+            (
+                uint offset,
+                UpdateType updateType
+            ) = extractUpdateTypeFromAccumulatorHeader(updateData[0]);
+            if (updateType != UpdateType.WormholeMerkle) {
+                revert PythErrors.InvalidUpdateData();
+            }
+            totalNumUpdates += parseWormholeMerkleHeaderNumUpdates(
+                updateData[0],
+                offset
+            );
+        } else {
+            revert PythErrors.InvalidUpdateData();
+        }
+
+        return getTotalFee(totalNumUpdates);
+    }
+
     // This is an overwrite of the same method in AbstractPyth.sol
     // to be more gas efficient.
     function updatePriceFeedsIfNecessary(
@@ -208,10 +239,10 @@ abstract contract Pyth is
         if (k < context.priceIds.length && context.priceFeeds[k].id == 0) {
             uint publishTime = uint(priceInfo.publishTime);
             if (
-                publishTime >= context.config.minPublishTime &&
-                publishTime <= context.config.maxPublishTime &&
-                (!context.config.checkUniqueness ||
-                    context.config.minPublishTime > prevPublishTime)
+                publishTime >= context.minAllowedPublishTime &&
+                publishTime <= context.maxAllowedPublishTime &&
+                (!context.checkUniqueness ||
+                    context.minAllowedPublishTime > prevPublishTime)
             ) {
                 context.priceFeeds[k].id = priceId;
                 context.priceFeeds[k].price.price = priceInfo.price;
@@ -231,7 +262,7 @@ abstract contract Pyth is
     function _processSingleUpdateDataBlob(
         bytes calldata singleUpdateData,
         PythInternalStructs.UpdateParseContext memory context
-    ) internal view {
+    ) internal view returns (uint64 numUpdates) {
         // Check magic number and length first
         if (
             singleUpdateData.length <= 4 ||
@@ -281,37 +312,79 @@ abstract contract Pyth is
         if (offset != encoded.length) {
             revert PythErrors.InvalidUpdateData();
         }
+
+        // Return the number of updates in this blob for tracking
+        return merkleData.numUpdates;
     }
 
-    function parsePriceFeedUpdatesInternal(
+    function parsePriceFeedUpdatesWithConfig(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
-        PythInternalStructs.ParseConfig memory config
+        uint64 minAllowedPublishTime,
+        uint64 maxAllowedPublishTime,
+        bool checkUniqueness,
+        bool checkUpdateDataIsMinimal,
+        bool storeUpdatesIfFresh
     )
-        internal
+        public
+        payable
         returns (
             PythStructs.PriceFeed[] memory priceFeeds,
             uint64[] memory slots
         )
     {
-        {
-            uint requiredFee = getUpdateFee(updateData);
-            if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
-        }
+        if (msg.value < getUpdateFee(updateData))
+            revert PythErrors.InsufficientFee();
 
         // Create the context struct that holds all shared parameters
-        PythInternalStructs.UpdateParseContext memory context;
-        context.priceIds = priceIds;
-        context.config = config;
-        context.priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
-        context.slots = new uint64[](priceIds.length);
+        PythInternalStructs.UpdateParseContext
+            memory context = PythInternalStructs.UpdateParseContext({
+                priceIds: priceIds,
+                minAllowedPublishTime: minAllowedPublishTime,
+                maxAllowedPublishTime: maxAllowedPublishTime,
+                checkUniqueness: checkUniqueness,
+                checkUpdateDataIsMinimal: checkUpdateDataIsMinimal,
+                priceFeeds: new PythStructs.PriceFeed[](priceIds.length),
+                slots: new uint64[](priceIds.length)
+            });
+
+        // Track total updates for minimal update data check
+        uint64 totalUpdatesAcrossBlobs = 0;
 
         unchecked {
             // Process each update, passing the context struct
             // Parsed results will be filled in context.priceFeeds and context.slots
             for (uint i = 0; i < updateData.length; i++) {
-                _processSingleUpdateDataBlob(updateData[i], context);
+                totalUpdatesAcrossBlobs += _processSingleUpdateDataBlob(
+                    updateData[i],
+                    context
+                );
             }
+
+            for (uint j = 0; j < priceIds.length; j++) {
+                PythStructs.PriceFeed memory pf = context.priceFeeds[j];
+                if (storeUpdatesIfFresh && pf.id != 0) {
+                    updateLatestPriceIfNecessary(
+                        priceIds[j],
+                        PythInternalStructs.PriceInfo({
+                            publishTime: uint64(pf.price.publishTime),
+                            expo: pf.price.expo,
+                            price: pf.price.price,
+                            conf: pf.price.conf,
+                            emaPrice: pf.emaPrice.price,
+                            emaConf: pf.emaPrice.conf
+                        })
+                    );
+                }
+            }
+        }
+
+        // In minimal update data mode, revert if we have more or less updates than price IDs
+        if (
+            checkUpdateDataIsMinimal &&
+            totalUpdatesAcrossBlobs != priceIds.length
+        ) {
+            revert PythErrors.InvalidArgument();
         }
 
         // Check all price feeds were found
@@ -324,6 +397,7 @@ abstract contract Pyth is
         // Return results
         return (context.priceFeeds, context.slots);
     }
+
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
@@ -335,55 +409,29 @@ abstract contract Pyth is
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
-        (priceFeeds, ) = parsePriceFeedUpdatesInternal(
+        (priceFeeds, ) = parsePriceFeedUpdatesWithConfig(
             updateData,
             priceIds,
-            PythInternalStructs.ParseConfig(
-                minPublishTime,
-                maxPublishTime,
-                false
-            )
+            minPublishTime,
+            maxPublishTime,
+            false,
+            false,
+            false
         );
     }
 
-    function parsePriceFeedUpdatesWithSlots(
-        bytes[] calldata updateData,
-        bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
-    )
-        external
-        payable
-        override
-        returns (
-            PythStructs.PriceFeed[] memory priceFeeds,
-            uint64[] memory slots
-        )
-    {
-        return
-            parsePriceFeedUpdatesInternal(
-                updateData,
-                priceIds,
-                PythInternalStructs.ParseConfig(
-                    minPublishTime,
-                    maxPublishTime,
-                    false
-                )
-            );
-    }
-
-    function processSingleTwapUpdate(
+    function extractTwapPriceInfos(
         bytes calldata updateData
     )
         private
         view
         returns (
             /// @return newOffset The next position in the update data after processing this TWAP update
-            /// @return twapPriceInfo The extracted time-weighted average price information
-            /// @return priceId The unique identifier for this price feed
+            /// @return priceInfos Array of extracted TWAP price information
+            /// @return priceIds Array of corresponding price feed IDs
             uint newOffset,
-            PythStructs.TwapPriceInfo memory twapPriceInfo,
-            bytes32 priceId
+            PythStructs.TwapPriceInfo[] memory twapPriceInfos,
+            bytes32[] memory priceIds
         )
     {
         UpdateType updateType;
@@ -417,12 +465,22 @@ abstract contract Pyth is
             revert PythErrors.InvalidUpdateData();
         }
 
-        // Extract start TWAP data with robust error checking
-        (offset, twapPriceInfo, priceId) = extractTwapPriceInfoFromMerkleProof(
-            digest,
-            encoded,
-            offset
-        );
+        // Initialize arrays to store all price infos and ids from this update
+        twapPriceInfos = new PythStructs.TwapPriceInfo[](numUpdates);
+        priceIds = new bytes32[](numUpdates);
+
+        // Extract each TWAP price info from the merkle proof
+        for (uint i = 0; i < numUpdates; i++) {
+            PythStructs.TwapPriceInfo memory twapPriceInfo;
+            bytes32 priceId;
+            (
+                offset,
+                twapPriceInfo,
+                priceId
+            ) = extractTwapPriceInfoFromMerkleProof(digest, encoded, offset);
+            twapPriceInfos[i] = twapPriceInfo;
+            priceIds[i] = priceId;
+        }
 
         if (offset != encoded.length) {
             revert PythErrors.InvalidTwapUpdateData();
@@ -439,70 +497,88 @@ abstract contract Pyth is
         override
         returns (PythStructs.TwapPriceFeed[] memory twapPriceFeeds)
     {
-        // TWAP requires exactly 2 updates - one for the start point and one for the end point
-        // to calculate the time-weighted average price between those two points
+        // TWAP requires exactly 2 updates: one for the start point and one for the end point
         if (updateData.length != 2) {
             revert PythErrors.InvalidUpdateData();
         }
 
-        uint requiredFee = getUpdateFee(updateData);
+        uint requiredFee = getTwapUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
-        unchecked {
-            twapPriceFeeds = new PythStructs.TwapPriceFeed[](priceIds.length);
-            for (uint i = 0; i < updateData.length - 1; i++) {
-                if (
-                    (updateData[i].length > 4 &&
-                        UnsafeCalldataBytesLib.toUint32(updateData[i], 0) ==
-                        ACCUMULATOR_MAGIC) &&
-                    (updateData[i + 1].length > 4 &&
-                        UnsafeCalldataBytesLib.toUint32(updateData[i + 1], 0) ==
-                        ACCUMULATOR_MAGIC)
-                ) {
-                    uint offsetStart;
-                    uint offsetEnd;
-                    bytes32 priceIdStart;
-                    bytes32 priceIdEnd;
-                    PythStructs.TwapPriceInfo memory twapPriceInfoStart;
-                    PythStructs.TwapPriceInfo memory twapPriceInfoEnd;
-                    (
-                        offsetStart,
-                        twapPriceInfoStart,
-                        priceIdStart
-                    ) = processSingleTwapUpdate(updateData[i]);
-                    (
-                        offsetEnd,
-                        twapPriceInfoEnd,
-                        priceIdEnd
-                    ) = processSingleTwapUpdate(updateData[i + 1]);
+        // Process start update data
+        PythStructs.TwapPriceInfo[] memory startTwapPriceInfos;
+        bytes32[] memory startPriceIds;
+        {
+            uint offsetStart;
+            (
+                offsetStart,
+                startTwapPriceInfos,
+                startPriceIds
+            ) = extractTwapPriceInfos(updateData[0]);
+        }
 
-                    if (priceIdStart != priceIdEnd)
-                        revert PythErrors.InvalidTwapUpdateDataSet();
+        // Process end update data
+        PythStructs.TwapPriceInfo[] memory endTwapPriceInfos;
+        bytes32[] memory endPriceIds;
+        {
+            uint offsetEnd;
+            (offsetEnd, endTwapPriceInfos, endPriceIds) = extractTwapPriceInfos(
+                updateData[1]
+            );
+        }
 
-                    validateTwapPriceInfo(twapPriceInfoStart, twapPriceInfoEnd);
+        // Verify that we have the same number of price feeds in start and end updates
+        if (startPriceIds.length != endPriceIds.length) {
+            revert PythErrors.InvalidTwapUpdateDataSet();
+        }
 
-                    uint k = findIndexOfPriceId(priceIds, priceIdStart);
+        // Hermes always returns price feeds in the same order for start and end updates
+        // This allows us to assume startPriceIds[i] == endPriceIds[i] for efficiency
+        for (uint i = 0; i < startPriceIds.length; i++) {
+            if (startPriceIds[i] != endPriceIds[i]) {
+                revert PythErrors.InvalidTwapUpdateDataSet();
+            }
+        }
 
-                    // If priceFeed[k].id != 0 then it means that there was a valid
-                    // update for priceIds[k] and we don't need to process this one.
-                    if (k == priceIds.length || twapPriceFeeds[k].id != 0) {
-                        continue;
-                    }
+        // Initialize the output array
+        twapPriceFeeds = new PythStructs.TwapPriceFeed[](priceIds.length);
 
-                    twapPriceFeeds[k] = calculateTwap(
-                        priceIdStart,
-                        twapPriceInfoStart,
-                        twapPriceInfoEnd
-                    );
-                } else {
-                    revert PythErrors.InvalidUpdateData();
+        // For each requested price ID, find matching start and end data points
+        for (uint i = 0; i < priceIds.length; i++) {
+            bytes32 requestedPriceId = priceIds[i];
+            int startIdx = -1;
+
+            // Find the index of this price ID in the startPriceIds array
+            // (which is the same as the endPriceIds array based on our validation above)
+            for (uint j = 0; j < startPriceIds.length; j++) {
+                if (startPriceIds[j] == requestedPriceId) {
+                    startIdx = int(j);
+                    break;
                 }
             }
 
-            for (uint k = 0; k < priceIds.length; k++) {
-                if (twapPriceFeeds[k].id == 0) {
-                    revert PythErrors.PriceFeedNotFoundWithinRange();
-                }
+            // If we found the price ID
+            if (startIdx >= 0) {
+                uint idx = uint(startIdx);
+                // Validate the pair of price infos
+                validateTwapPriceInfo(
+                    startTwapPriceInfos[idx],
+                    endTwapPriceInfos[idx]
+                );
+
+                // Calculate TWAP from these data points
+                twapPriceFeeds[i] = calculateTwap(
+                    requestedPriceId,
+                    startTwapPriceInfos[idx],
+                    endTwapPriceInfos[idx]
+                );
+            }
+        }
+
+        // Ensure all requested price IDs were found
+        for (uint k = 0; k < priceIds.length; k++) {
+            if (twapPriceFeeds[k].id == 0) {
+                revert PythErrors.PriceFeedNotFoundWithinRange();
             }
         }
     }
@@ -544,14 +620,14 @@ abstract contract Pyth is
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
-        (priceFeeds, ) = parsePriceFeedUpdatesInternal(
+        (priceFeeds, ) = parsePriceFeedUpdatesWithConfig(
             updateData,
             priceIds,
-            PythInternalStructs.ParseConfig(
-                minPublishTime,
-                maxPublishTime,
-                true
-            )
+            minPublishTime,
+            maxPublishTime,
+            true,
+            false,
+            false
         );
     }
 
@@ -624,7 +700,7 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.4.4-alpha.5";
+        return "1.4.5-alpha.1";
     }
 
     /// @notice Calculates TWAP from two price points

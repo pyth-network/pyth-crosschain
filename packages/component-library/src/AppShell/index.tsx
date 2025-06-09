@@ -1,22 +1,24 @@
+"use client";
+
 import { GoogleAnalytics } from "@next/third-parties/google";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import type { ComponentProps, ReactNode } from "react";
 
-import { Amplitude } from "./amplitude.js";
-import { BodyProviders } from "./body-providers.js";
+import { Amplitude } from "./amplitude.jsx";
+import { BodyProviders } from "./body-providers.jsx";
 import { sans } from "./fonts.js";
-import { HtmlWithLang } from "./html-with-lang.js";
-import { I18nProvider } from "./i18n-provider.js";
+import { HtmlWithLang } from "./html-with-lang.jsx";
+import { I18nProvider } from "./i18n-provider.jsx";
 import styles from "./index.module.scss";
-import { TabRoot, TabPanel } from "./tabs";
-import { Footer } from "../Footer/index.js";
-import { Header } from "../Header/index.js";
-import { MainNavTabs } from "../MainNavTabs/index.js";
-import { MobileNavTabs } from "../MobileNavTabs/index.js";
-import { ComposeProviders } from "../compose-providers.js";
-import { RouterProvider } from "./router-provider.js";
-import { LoggerProvider } from "../useLogger/index.js";
+import { TabRoot, TabPanel } from "./tabs.jsx";
+import { Footer } from "../Footer/index.jsx";
+import { Header } from "../Header/index.jsx";
+import { MainNavTabs } from "../MainNavTabs/index.jsx";
+import { MobileNavTabs } from "../MobileNavTabs/index.jsx";
+import { ComposeProviders } from "../compose-providers.jsx";
+import { RouterProvider } from "./router-provider.jsx";
+import { LoggerProvider } from "../useLogger/index.jsx";
 
 import "./base.scss";
 
@@ -81,7 +83,7 @@ export const AppBody = ({ tabs, children, ...props }: AppBodyProps) => (
       <main className={styles.main}>
         <TabPanel>{children}</TabPanel>
       </main>
-      <Footer />
+      <Footer className={styles.footer} />
       {tabs && <MobileNavTabs tabs={tabs} className={styles.mobileNavTabs} />}
     </TabRoot>
   </BodyProviders>

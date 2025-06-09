@@ -1,0 +1,45 @@
+@use "../theme";
+
+.noResults {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(4);
+  align-items: center;
+  text-align: center;
+  padding: theme.spacing(24) 0;
+
+  .icon {
+    display: grid;
+    place-content: center;
+    padding: theme.spacing(4);
+    font-size: theme.spacing(6);
+    border-radius: theme.border-radius("full");
+  }
+
+  .text {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(2);
+
+    .header {
+      @include theme.text("lg", "medium");
+
+      color: theme.color("heading");
+    }
+
+    .body {
+      @include theme.text("sm", "normal");
+
+      color: theme.color("paragraph");
+    }
+  }
+
+  @each $variant in ("success", "error", "warning", "info", "data") {
+    &[data-variant="#{$variant}"] {
+      .icon {
+        background: theme.color("states", $variant, "background");
+        color: theme.color("states", $variant, "normal");
+      }
+    }
+  }
+}

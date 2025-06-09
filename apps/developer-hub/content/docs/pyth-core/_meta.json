@@ -1,0 +1,61 @@
+{
+  "documentation-home": {
+    "title": "← Documentation Home",
+    "href": "/home"
+  },
+
+  "-- Price Feeds": {
+    "title": "Price Feeds",
+    "type": "separator"
+  },
+  "index": "Introduction",
+  "getting-started": "Getting Started",
+
+  "-- Tutorials": {
+    "title": "Tutorials",
+    "type": "separator"
+  },
+
+  "create-your-first-pyth-app": "Create Your First Pyth App",
+
+  "-- How-to Guides": {
+    "title": "How-To Guides",
+    "type": "separator"
+  },
+
+  "use-real-time-data": "Use Real-Time Price Data",
+  "fetch-price-updates": "Fetch Price Updates",
+  "schedule-price-updates": "Schedule Price Updates",
+  "migrate-an-app-to-pyth": "Migrate an App to Pyth",
+  "use-pyth-for-morpho": "Use Pyth for Morpho Markets",
+  "publish-data": "Publish Data",
+  "troubleshoot": "Troubleshoot Errors",
+
+  "-- Reference Material": {
+    "title": "Reference Material",
+    "type": "separator"
+  },
+
+  "api-reference": "API Reference",
+  "price-feeds": "Price Feeds",
+  "current-fees": "Current Fees",
+  "sponsored-feeds": "Sponsored Feeds",
+  "market-hours": "Market Hours",
+  "best-practices": "Best Practices",
+  "error-codes": "Error Codes",
+  "api-instances-and-providers": "API Instances and Providers",
+  "contract-addresses": "Contract Addresses",
+  "pythnet-reference": "Pythnet Reference",
+
+  "examples": {
+    "title": "Example Applications ↗",
+    "href": "https://github.com/pyth-network/pyth-examples/tree/main/price_feeds"
+  },
+  "-- Understand Pyth": {
+    "title": "Understanding Pyth",
+    "type": "separator"
+  },
+
+  "pull-updates": "What is a Pull Oracle?",
+  "how-pyth-works": "How Pyth Works"
+}

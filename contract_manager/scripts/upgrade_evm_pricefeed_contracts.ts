@@ -1,6 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, loadHotWallet, toPrivateKey } from "../src";
+import { DefaultStore } from "../src/node/utils/store";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { toPrivateKey } from "../src/core/base";
 import { readFileSync } from "fs";
 
 import {

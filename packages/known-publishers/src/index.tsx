@@ -5,14 +5,18 @@ import nobiColor from "./icons/color/nobi.svg";
 import orcaColor from "./icons/color/orca.svg";
 import sentioColor from "./icons/color/sentio.svg";
 import wooColor from "./icons/color/woo.svg";
+import amberDark from "./icons/dark/amber.svg";
 import ltpDark from "./icons/dark/ltp.svg";
+import amberLight from "./icons/light/amber.svg";
 import ltpLight from "./icons/light/ltp.svg";
 import alenoMonochrome from "./icons/monochrome/aleno.svg";
 import alphanonce from "./icons/monochrome/alphanonce.svg";
+import amberMonochrome from "./icons/monochrome/amber.svg";
 import blocksize from "./icons/monochrome/blocksize.svg";
 import elfomo from "./icons/monochrome/elfomo.svg";
 import finazonMonochrome from "./icons/monochrome/finazon.svg";
 import gluex from "./icons/monochrome/gluex.svg";
+import kronosResearchMonochrome from "./icons/monochrome/kronos-research.svg";
 import lotechMonochrome from "./icons/monochrome/lotech.svg";
 import ltpMonochrome from "./icons/monochrome/ltp.svg";
 import nobiMonochrome from "./icons/monochrome/nobi.svg";
@@ -100,6 +104,20 @@ export const knownPublishers = {
     icon: {
       monochrome: nobiMonochrome,
       color: nobiColor,
+    },
+  },
+  A7ULyKhnyCW3yfSNCiHCt7gUEMVwYBeRdgYKV1BRYPVH: {
+    name: "Kronos Research",
+    icon: {
+      monochrome: kronosResearchMonochrome,
+    },
+  },
+  "2ehFijXkacypZL4jdfPm38BJnMKsN2nMHm8xekbujjdx": {
+    name: "Amber Group",
+    icon: {
+      monochrome: amberMonochrome,
+      dark: amberDark,
+      light: amberLight,
     },
   },
 } as const;

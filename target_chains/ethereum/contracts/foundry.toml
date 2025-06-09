@@ -1,5 +1,6 @@
 [profile.default]
-solc_version = '0.8.4'
+solc_version = '0.8.29'
+evm_version = "paris"
 optimizer = true
 optimizer_runs = 200
 src = 'contracts'
@@ -7,10 +8,7 @@ src = 'contracts'
 # truffle doesn't try to build them
 test = 'forge-test'
 
-libs = [
-    'lib',
-    'node_modules',
-]
+libs = ['lib', 'node_modules']
 
 # This doesn't work on ../../../node_modules alone because the sources from
 # parent directories are also represented as absolute paths and won't doesn't
@@ -20,5 +18,5 @@ libs = [
 ignored_warnings_from = [
     "lib",
     "node_modules/",
-    "/home/runner/work/pyth-crosschain/pyth-crosschain/node_modules"
+    "/home/runner/work/pyth-crosschain/pyth-crosschain/node_modules",
 ]
