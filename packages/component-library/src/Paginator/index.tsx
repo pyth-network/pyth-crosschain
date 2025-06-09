@@ -17,11 +17,11 @@ type Props = {
   numPages: number;
   currentPage: number;
   onPageChange: (newPage: number) => void;
-  isPageTransitioning: boolean;
+  isPageTransitioning?: boolean | undefined;
   pageSize: number;
   pageSizeOptions: number[];
   onPageSizeChange: (newPageSize: number) => void;
-  isPageSizeTransitioning: boolean;
+  isPageSizeTransitioning?: boolean | undefined;
   mkPageLink?: ((page: number) => string) | undefined;
   className?: string | undefined;
 };
@@ -61,7 +61,7 @@ type PageSizeSelectProps = {
   pageSize: number;
   pageSizeOptions: number[];
   onPageSizeChange: (newPageSize: number) => void;
-  isPending: boolean;
+  isPending?: boolean | undefined;
 };
 
 const PageSizeSelect = ({
@@ -80,7 +80,7 @@ const PageSizeSelect = ({
     show={(value) => `${value.id.toString()} per page`}
     variant="ghost"
     size="sm"
-    isPending={isPending}
+    isPending={isPending ?? false}
   />
 );
 
@@ -89,7 +89,7 @@ type PaginatorProps = {
   currentPage: number;
   onPageChange: (newPage: number) => void;
   mkPageLink: ((page: number) => string) | undefined;
-  isPending: boolean;
+  isPending?: boolean | undefined;
 };
 
 const PaginatorToolbar = ({
