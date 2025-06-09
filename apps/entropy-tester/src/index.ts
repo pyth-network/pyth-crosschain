@@ -10,10 +10,9 @@ import type { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-type DurationSeconds = number;
 type LoadedConfig = {
   contract: EvmEntropyContract;
-  interval: DurationSeconds;
+  interval: number;
 };
 
 function timeToSeconds(timeStr: string): number {
