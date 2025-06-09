@@ -324,7 +324,7 @@ impl WormholeContract {
         let guardian_set = self.get_guardian_set_internal(vm.guardian_set_index)
             .ok_or(WormholeError::InvalidGuardianSetIndex)?;
 
-        if vm.guardian_set_index != self.current_guardian_set_index.get().try_into().unwrap_or(0u32) 
+        if vm.guardian_set_index != self.current_guardian_set_index.get().try_into().unwrap_or(0u32)
             && guardian_set.expiration_time > 0 {
                 return Err(WormholeError::GuardianSetExpired)
         }
@@ -334,7 +334,7 @@ impl WormholeContract {
         if vm.signatures.len() < required_signatures as usize {
             return Err(WormholeError::InsufficientSignatures);
         }
-        
+
         let mut last_guardian_index: Option<u8> = None;
 
         for signature in &vm.signatures {
@@ -348,16 +348,16 @@ impl WormholeContract {
             if signature.guardian_index as usize >= guardian_set.keys.len() {
                 return Err(WormholeError::InvalidGuardianIndex);
             }
-            
+
             let guardian_address = guardian_set.keys[signature.guardian_index as usize];
-            
+
             match self.verify_signature(&vm.hash, &signature.signature, guardian_address) {
                 Ok(true) => {},
                 Ok(false) => return Err(WormholeError::InvalidSignature.into()),
                 Err(e) => return Err(e),
             }
         }
-        
+
         Ok(())
     }
 
@@ -398,7 +398,7 @@ impl WormholeContract {
         hash: &FixedBytes<32>,
         signature: &FixedBytes<65>,
         guardian_address: Address,
-    ) -> Result<bool, WormholeError> {        
+    ) -> Result<bool, WormholeError> {
         // Check length
         if signature.len() != 65 {
             return Err(WormholeError::InvalidSignature);
@@ -414,7 +414,7 @@ impl WormholeContract {
             _ => return Err(WormholeError::InvalidSignature),
         };
         // let recid = RecoveryId::try_from(signature[64] as i32).map_err(|_| WormholeError::InvalidSignature)?;
-        
+
         let recoverable_sig = RecoverableSignature::from_compact(&signature[..64], recid)
             .map_err(|_| WormholeError::InvalidSignature)?;
 
@@ -426,7 +426,7 @@ impl WormholeContract {
             .map_err(|_| WormholeError::InvalidSignature)?;
 
         let pubkey: &[u8; 65] = &pubkey_orig.serialize_uncompressed();
-        
+
         let address: [u8; 32] = Keccak256::new_with_prefix(&pubkey[1..]).finalize().into();
         let address: [u8; 20] = address[address.len() - 20..].try_into().map_err(|_| WormholeError::InvalidAddressLength)?;
 
@@ -509,7 +509,7 @@ mod tests {
     const CHAIN_ID: u16 = 60051;
     const GOVERNANCE_CHAIN_ID: u16 = 1;
     const GOVERNANCE_CONTRACT: U256 = U256::from_limbs([4, 0, 0, 0]);
-    
+
     fn test_guardian_secret1() -> SecretKey {
         SecretKey::from_slice(&[
             0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -600,7 +600,7 @@ mod tests {
         }
         let pos = pos % real_data.len();
         let pos2 = (pos + 1) % real_data.len();
-        
+
         real_data[pos] = real_data[pos].wrapping_add(random1).wrapping_add(1);
         real_data[pos2] = real_data[pos2].wrapping_add(random2).wrapping_add(1);
         real_data
@@ -625,7 +625,7 @@ mod tests {
     fn create_test_vm_with_emitter(guardian_set_index: u32, signatures: Vec<GuardianSignature>, emitter: Address) -> VerifiedVM {
         let mut emitter_bytes = [0u8; 32];
         emitter_bytes[12..32].copy_from_slice(emitter.as_slice());
-        
+
         VerifiedVM {
             version: 1,
             guardian_set_index,
@@ -695,7 +695,7 @@ mod tests {
     #[motsu::test]
     fn test_get_guardian_set_works() {
         let contract = deploy_with_mainnet_guardian_set0();
-        
+
         let set0 = contract.get_guardian_set_internal(0).unwrap();
         assert_eq!(set0.keys, guardian_set0());
         assert_eq!(set0.expiration_time, 0);
@@ -720,7 +720,7 @@ mod tests {
     fn test_verify_vm_invalid_guardian_set() {
         let contract = deploy_with_test_guardian();
         let vm = create_test_vm(999, vec![]);
-        
+
         let result = contract.verify_vm(&vm);
         assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex)));
     }
@@ -729,7 +729,7 @@ mod tests {
     fn test_verify_vm_insufficient_signatures() {
         let contract = deploy_with_test_guardian();
         let vm = create_test_vm(0, vec![]);
-        
+
         let result = contract.verify_vm(&vm);
         assert!(matches!(result, Err(WormholeError::InsufficientSignatures)));
     }
@@ -743,14 +743,14 @@ mod tests {
             Address::from([0x34u8; 20]),
         ];
         contract.store_guardian_set(0, guardians, 0).unwrap();
-        
+
         let signatures = vec![
             create_guardian_signature(2),
             create_guardian_signature(1), // Out of order - should trigger error
             create_guardian_signature(0),
         ];
         let vm = create_test_vm(0, signatures); // Use guardian set 0
-        
+
         let result = contract.verify_vm(&vm);
         assert!(matches!(result, Err(WormholeError::InvalidSignature)));
     }
@@ -762,7 +762,7 @@ mod tests {
             create_guardian_signature(5),
         ];
         let vm = create_test_vm(0, signatures);
-        
+
         let result = contract.verify_vm(&vm);
         assert!(matches!(result, Err(WormholeError::InvalidGuardianIndex)));
     }
@@ -794,7 +794,7 @@ mod tests {
     fn test_rejects_empty_guardian_set() {
         let mut contract = WormholeContract::default();
         let empty_guardians: Vec<Address> = vec![];
-        
+
         let result = contract.store_guardian_set(0, empty_guardians, 0);
         assert!(result.is_err());
     }
@@ -802,7 +802,7 @@ mod tests {
     #[motsu::test]
     fn test_rejects_invalid_guardian_set_index() {
         let contract = deploy_with_test_guardian();
-        
+
         let result = contract.get_guardian_set_internal(999);
         assert!(result.is_none());
     }
@@ -810,7 +810,7 @@ mod tests {
     #[motsu::test]
     fn test_submit_guardian_set_rejects_invalid_emitter() {
         let contract = deploy_with_test_guardian();
-        
+
         let vm = create_test_vm_with_emitter(0, vec![], Address::from([0x99u8; 20]));
         let result = contract.verify_vm(&vm);
         assert!(result.is_err());
@@ -819,7 +819,7 @@ mod tests {
     #[motsu::test]
     fn test_submit_guardian_set_rejects_wrong_index() {
         let contract = deploy_with_mainnet_guardian_set0();
-        
+
         let vm = create_test_vm(2, vec![]); // Skip index 1
         let result = contract.verify_vm(&vm);
         assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex)));
@@ -829,7 +829,7 @@ mod tests {
     fn test_deploy_rejects_empty_guardian_set() {
         let mut contract = WormholeContract::default();
         let empty_guardians: Vec<Address> = vec![];
-        
+
         let result = contract.initialize(empty_guardians, 1, 1, Address::default());
         assert!(result.is_err());
     }
@@ -838,7 +838,7 @@ mod tests {
     fn test_submit_guardian_set_rejects_empty() {
         let mut contract = WormholeContract::default();
         let empty_guardians: Vec<Address> = vec![];
-        
+
         let result = contract.store_guardian_set(0, empty_guardians, 0);
         assert!(result.is_err());
     }
@@ -846,7 +846,7 @@ mod tests {
     #[motsu::test]
     fn test_rejects_corrupted_vm_data() {
         let _contract = deploy_with_mainnet_guardians();
-        
+
         for i in 0..10 {
             let corrupted_data = corrupted_vm(vec![1, 0, 0, 1, 0, 0], i, i as u8, (i * 2) as u8);
             let result = WormholeContract::parse_vm_static(&corrupted_data);
@@ -857,7 +857,7 @@ mod tests {
     #[motsu::test]
     fn test_parse_and_verify_vm_rejects_corrupted_vm() {
         let contract = deploy_with_mainnet_guardians();
-        
+
         for i in 0..5 {
             let base_vm = vec![1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
             let corrupted_data = corrupted_vm(base_vm, i, i as u8, (i * 3) as u8);
@@ -869,10 +869,10 @@ mod tests {
     #[motsu::test]
     fn test_submit_guardian_set_rejects_non_governance() {
         let contract = deploy_with_mainnet_guardian_set0();
-        
+
         let mut vm = create_test_vm(0, vec![]);
         vm.emitter_chain_id = 999; // Wrong chain
-        
+
         let result = contract.verify_vm(&vm);
         assert!(result.is_err());
     }
@@ -884,9 +884,9 @@ mod tests {
             test_guardian_address1(),
             test_guardian_address2(),
         ];
-        
+
         contract.store_guardian_set(0, guardians.clone(), 0).unwrap();
-        
+
         let retrieved_set = contract.get_guardian_set_internal(0).unwrap();
         assert_eq!(retrieved_set.keys, guardians);
         assert_eq!(retrieved_set.expiration_time, 0);
@@ -910,13 +910,13 @@ mod tests {
     #[motsu::test]
     fn test_multiple_guardian_sets() {
         let mut contract = WormholeContract::default();
-        
+
         contract.store_guardian_set(0, guardian_set0(), 0).unwrap();
         contract.store_guardian_set(4, guardian_set4(), 0).unwrap();
-        
+
         let set0 = contract.get_guardian_set_internal(0).unwrap();
         let set4 = contract.get_guardian_set_internal(4).unwrap();
-        
+
         assert_eq!(set0.keys, guardian_set0());
         assert_eq!(set4.keys, guardian_set4());
     }
@@ -954,7 +954,7 @@ mod tests {
     #[motsu::test]
     fn test_chain_id_governance_values() {
         let contract = deploy_with_mainnet_guardians();
-        
+
         assert_eq!(contract.get_chain_id().unwrap(), CHAIN_ID);
         assert_eq!(contract.get_governance_chain_id().unwrap(), GOVERNANCE_CHAIN_ID);
         assert_eq!(contract.get_governance_contract().unwrap(), Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]));
@@ -963,7 +963,7 @@ mod tests {
     #[motsu::test]
     fn test_governance_action_consumed() {
         let contract = deploy_with_mainnet_guardians();
-        
+
         let test_hash = vec![0u8; 32];
         assert_eq!(contract.governance_action_is_consumed(test_hash), false);
     }
