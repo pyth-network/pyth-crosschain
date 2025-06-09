@@ -1,3 +1,5 @@
+"use client";
+
 import { Warning } from "@phosphor-icons/react/dist/ssr/Warning";
 import { useEffect } from "react";
 

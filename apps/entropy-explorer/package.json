@@ -23,15 +23,12 @@
     "@phosphor-icons/react": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
     "clsx": "catalog:",
-    "connectkit": "catalog:",
     "next": "catalog:",
     "nuqs": "catalog:",
     "react": "catalog:",
     "react-aria": "catalog:",
     "react-dom": "catalog:",
     "react-timeago": "catalog:",
-    "viem": "catalog:",
-    "wagmi": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

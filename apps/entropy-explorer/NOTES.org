@@ -1,0 +1,54 @@
+* TODO Lock timestamp to when page loaded & add sync button
+* TODO Add TODO items in requests.ts
+- providerContribution
+- gasUsed + randomNumber in errored state
+
+* TODO Connect the wallet to execute the transaction.
+* TODO Have a blinking yellow-coloured pending status that can be turned Green using an event listener.
+* TODO A dashboard on the home page to display reference material, such as current fees and usage.
+* TODO Many people use the Block number to search in explorers as well. We can think about it.
+
+* DONE Removing badges from the sequence number + making it bold
+CLOSED: [2025-05-09 Fri 20:06]
+* DONE Rename Caller -> From or Sender
+CLOSED: [2025-05-09 Fri 20:08]
+* DONE Option to filter Callback Status
+CLOSED: [2025-05-09 Fri 20:08]
+* DONE Reorder Failed Tx Fields.
+CLOSED: [2025-05-09 Fri 20:11]
+** Request Timestamp
+** Callback Timestamp
+** Request Tx +Hash+
+** From / Sender
+** Callback Tx +Hash+
+** Provider
+** +User Random Number+ User Contribution
+** Gas Used
+* DONE Put the cast command in the code background with syntax colouring/highlighting.
+CLOSED: [2025-05-09 Fri 20:11]
+* DONE Decoding [[https://docs.pyth.network/entropy/error-codes][Error codes]].
+CLOSED: [2025-05-12 Mon 13:53]
+* DONE The timestamp should be shown in the following format ~9 secs ago (May-09-2025 12:47:11 PM +utc:)~
+CLOSED: [2025-05-12 Mon 14:30]
+* DONE Tooltips
+CLOSED: [2025-05-12 Mon 22:37]
+** Request Tx
+** Callback Tx
+** User Random Number / User Contribution
+** Provider Random Number / User Contribution
+* DONE Show delay/latency (delta between callbackTimestamp and requestTimestamp) somehow
+CLOSED: [2025-05-12 Mon 22:45]
+* DONE As @Tejas mentioned above, a tooltip button for the code can be used, or it can redirect them [[https://docs.pyth.network/entropy/debug-callback-failures][here]].
+CLOSED: [2025-05-12 Mon 22:48]
+* DONE Finish paginator
+CLOSED: [2025-06-06 Fri 11:10]
+* DONE Improve use-search-params
+CLOSED: [2025-06-06 Fri 19:55]
+* DONE Fix callback error page for unknown callback errors (i.e. when fortuna sends a string that isn't an error code)
+CLOSED: [2025-06-06 Fri 20:07]
+* DONE Improve not found message, especially for invalid search
+CLOSED: [2025-06-10 Tue 12:24]
+* DONE Improve ErrorResult handling
+CLOSED: [2025-06-10 Tue 12:24]
+* DONE Add all chains + icons
+CLOSED: [2025-06-10 Tue 16:12]
