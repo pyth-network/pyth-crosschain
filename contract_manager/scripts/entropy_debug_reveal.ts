@@ -8,7 +8,7 @@ import { DefaultStore } from "../src/node/utils/store";
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Tries to reveal entropy requests with callback using the provided private key.\n" +
-      "This can be used to manually debug why a callback was not triggered, or recover manually from a downtime\n" +
+      "This can be used to manually debug why a callback was not triggered or recover manually from a downtime\n" +
       "Usage: $0 --chain <chain-id> --private-key <private-key> --sequence-number <sequence-number>",
   )
   .options({
@@ -29,6 +29,9 @@ async function main() {
   const argv = await parser.argv;
   const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
   const contract = findEntropyContract(chain);
+  const provider = await contract.getDefaultProvider();
+  const providerInfo = await contract.getProviderInfo(provider);
+  const privateKey = toPrivateKey(argv.privateKey);
   let startingSequenceNumber: number, endingSequenceNumber: number;
   if (argv.sequenceNumber.includes(":")) {
     [startingSequenceNumber, endingSequenceNumber] = argv.sequenceNumber
@@ -54,9 +57,6 @@ async function main() {
     sequenceNumber++
   ) {
     console.log("Revealing request for sequence number: ", sequenceNumber);
-    const provider = await contract.getDefaultProvider();
-    const providerInfo = await contract.getProviderInfo(provider);
-    const privateKey = toPrivateKey(argv.privateKey);
     const request = await contract.getRequest(provider, sequenceNumber);
     if (request.sequenceNumber === "0") {
       console.log("Request not found");
