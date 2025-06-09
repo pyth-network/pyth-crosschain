@@ -2,22 +2,27 @@
   "name": "@pythnetwork/entropy-tester",
   "version": "1.0.0",
   "description": "Utility to test entropy provider callbacks",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
-    "lib/**/*"
+    "dist/**/*",
+    "cli/**/*"
   ],
   "scripts": {
     "build": "tsc",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "start": "node lib/index.js",
-    "dev": "ts-node src/index.ts",
-    "prepublishOnly": "pnpm run build && pnpm run test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && pnpm run test:lint && git add -A src"
+    "fix:format": "prettier --write .",
+    "fix:lint": "eslint --fix .",
+    "test:format": "prettier --check .",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:types": "tsc",
+    "start": "tsc && node cli/run.js"
   },
   "repository": {
     "type": "git",
@@ -25,34 +30,32 @@
     "directory": "apps/entropy-tester"
   },
   "bin": {
-    "pyth-entropy-tester": "./lib/index.js"
+    "pyth-entropy-tester": "./cli/run.js"
   },
   "devDependencies": {
-    "@types/ethereum-protocol": "^1.0.2",
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
     "@types/express": "^4.17.21",
-    "@types/jest": "^27.4.1",
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.13.0",
-    "jest": "^29.7.0",
+    "eslint": "catalog:",
     "pino-pretty": "^11.2.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.1.1",
     "ts-node": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/contract-manager": "workspace:*",
     "joi": "^17.6.0",
-    "pino": "^9.2.0",
+    "pino": "catalog:",
     "prom-client": "^15.1.0",
-    "viem": "^2.19.4",
+    "viem": "catalog:",
     "yaml": "^2.1.1",
     "yargs": "^17.5.1"
   },
   "keywords": [],
   "author": "",
-  "license": "Apache-2.0",
-  "packageManager": "pnpm@10.7.0"
+  "license": "Apache-2.0"
 }
