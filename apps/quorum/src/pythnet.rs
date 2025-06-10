@@ -43,7 +43,7 @@ pub async fn fetch_guardian_set(
         addresses: deserialized_guardian_set
             .keys
             .into_iter()
-            .map(|key| GuardianAddress(key))
+            .map(GuardianAddress)
             .collect(),
     })
 }

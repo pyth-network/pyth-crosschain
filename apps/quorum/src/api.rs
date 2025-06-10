@@ -140,16 +140,16 @@ async fn handle_observation(
         .entry(params.body.clone())
         .and_modify(|sigs| {
             if sigs.iter().all(|sig| sig.index != new_signature.index) {
-                sigs.push(new_signature.clone());
+                sigs.push(new_signature);
             }
         })
-        .or_insert_with(|| vec![new_signature.clone()])
+        .or_insert_with(|| vec![new_signature])
         .clone();
 
     let body = params
         .get_body()
         .map_err(|e| anyhow::anyhow!("Failed to deserialize observation body: {}", e))?;
-    if signatures.len() >= (state.guardian_set.addresses.len() * 2) / 3 + 1 {
+    if signatures.len() > (state.guardian_set.addresses.len() * 2) / 3 + 1 {
         let vaa: Vaa<Payload> = (
             Header {
                 version: 1,

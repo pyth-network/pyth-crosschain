@@ -79,7 +79,7 @@ repos:
       - id: cargo-clippy-quorum
         name: Cargo clippy for Quorum
         language: "rust"
-        entry: cargo +1.87.0 clippy --manifest-path ./apps/quorum/Cargo.toml --tests
+        entry: cargo +1.87.0 clippy --manifest-path ./apps/quorum/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: apps/quorum
       # Hooks for Fortuna
