@@ -5882,6 +5882,7 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.7.6",
  "alloy-sol-types 0.7.6",
+ "base64 0.21.7",
  "keccak-const",
  "mini-alloc 0.4.2",
  "motsu",

@@ -17,6 +17,7 @@ mini-alloc.workspace = true
 keccak-const.workspace = true
 secp256k1 = { version = "0.31.0", features = ["rand", "recovery"] }
 sha3 = "0.10.8"
+base64 = "0.21"
 
 [dev-dependencies]
 motsu.workspace = true
