@@ -33,7 +33,7 @@ jobs:
       - name: Set image tag to the git commit hash
         if: ${{ !startsWith(github.ref, 'refs/tags/quorum-v') }}
         run: |
-          echo "IMAGE_TAG=${{ github.sha }}" >> "${GITHUB_ENV}"
+          echo "IMAGE_TAG=${{ github.ref }}" >> "${GITHUB_ENV}"
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
@@ -46,9 +46,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ env.IMAGE_TAG }},event=tag
-            type=ref,event=tag
-            type=ref,event=pr
+            type=raw,value=${{ env.IMAGE_TAG }}
       - name: Build and push server docker image
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
