@@ -1,5 +1,5 @@
 {
   "extends": "@cprussin/tsconfig/nextjs.json",
-  "include": ["svg.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
 }

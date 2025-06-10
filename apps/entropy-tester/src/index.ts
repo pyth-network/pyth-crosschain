@@ -9,6 +9,7 @@ import { pino } from "pino";
 import type { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { z } from "zod";
 
 type LoadedConfig = {
   contract: EvmEntropyContract;
@@ -39,21 +40,24 @@ function timeToSeconds(timeStr: string): number {
   }
 }
 
-type ParsedConfig = {
-  "chain-id": string;
-  interval: string;
-};
-
 async function loadConfig(configPath: string): Promise<LoadedConfig[]> {
-  const configs = (await import(configPath, {
+  const configSchema = z.array(
+    z.strictObject({
+      "chain-id": z.string(),
+      interval: z.string(),
+    }),
+  );
+  const configContent = (await import(configPath, {
     with: { type: "json" },
-  })) as { default: ParsedConfig[] };
-  const loadedConfigs = configs.default.map((config) => {
+  })) as { default: string };
+  const configs = configSchema.parse(configContent.default);
+  const loadedConfigs = configs.map((config) => {
     const interval = timeToSeconds(config.interval);
     const contracts = Object.values(DefaultStore.entropy_contracts).filter(
       (contract) => contract.chain.getId() == config["chain-id"],
     );
-    if (contracts.length === 0 || !contracts[0]) {
+    const firstContract = contracts[0];
+    if (contracts.length === 0 || !firstContract) {
       throw new Error(
         `Can not find the contract for chain ${config["chain-id"]}, check contract manager store.`,
       );
@@ -63,7 +67,7 @@ async function loadConfig(configPath: string): Promise<LoadedConfig[]> {
         `Multiple contracts found for chain ${config["chain-id"]}, check contract manager store.`,
       );
     }
-    return { contract: contracts[0], interval };
+    return { contract: firstContract, interval };
   });
   return loadedConfigs;
 }
@@ -75,21 +79,24 @@ async function testLatency(
 ) {
   const provider = await contract.getDefaultProvider();
   const userRandomNumber = contract.generateUserRandomNumber();
-  const requestResponse = (await contract.requestRandomness(
-    userRandomNumber,
-    provider,
-    privateKey,
-    true, // with callback
-  )) as {
-    transactionHash: string;
-    events: {
-      RequestedWithCallback: {
-        returnValues: {
-          sequenceNumber: string;
-        };
-      };
-    };
-  };
+  const requestResponseSchema = z.object({
+    transactionHash: z.string(),
+    events: z.object({
+      RequestedWithCallback: z.object({
+        returnValues: z.object({
+          sequenceNumber: z.string(),
+        }),
+      }),
+    }),
+  });
+  const requestResponse = requestResponseSchema.parse(
+    await contract.requestRandomness(
+      userRandomNumber,
+      provider,
+      privateKey,
+      true, // with callback
+    ),
+  );
   // Read the sequence number for the request from the transaction events.
   const sequenceNumber = Number.parseInt(
     requestResponse.events.RequestedWithCallback.returnValues.sequenceNumber,

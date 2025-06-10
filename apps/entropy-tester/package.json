@@ -52,7 +52,8 @@
     "pino": "catalog:",
     "prom-client": "^15.1.0",
     "viem": "catalog:",
-    "yargs": "^17.5.1"
+    "yargs": "^17.5.1",
+    "zod": "catalog:"
   },
   "keywords": [],
   "author": "",
