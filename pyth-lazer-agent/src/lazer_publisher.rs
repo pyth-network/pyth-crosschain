@@ -1,5 +1,5 @@
 use crate::config::{CHANNEL_CAPACITY, Config};
-use crate::relayer_session::RelayerSender;
+use crate::relayer_session::RelayerSessionTask;
 use anyhow::{Context, Result, bail};
 use ed25519_dalek::{Signer, SigningKey};
 use protobuf::well_known_types::timestamp::Timestamp;
@@ -11,6 +11,7 @@ use pyth_lazer_publisher_sdk::transaction::{
     Ed25519SignatureData, LazerTransaction, SignatureData, SignedLazerTransaction,
 };
 use solana_keypair::read_keypair_file;
+use tokio::sync::broadcast;
 use tokio::{
     select,
     sync::mpsc::{self, Receiver, Sender},
@@ -25,20 +26,22 @@ pub struct LazerPublisher {
 
 impl LazerPublisher {
     pub async fn new(config: &Config) -> Self {
-        let relayer_senders = futures::future::join_all(
-            config
-                .relayer_urls
-                .iter()
-                .map(async |url| RelayerSender::new(url, &config.authorization_token).await),
-        )
-        .await;
+        let (relayer_sender, _) = broadcast::channel(CHANNEL_CAPACITY);
+        for url in config.relayer_urls.iter() {
+            let mut task = RelayerSessionTask {
+                url: url.clone(),
+                token: config.authorization_token.to_owned(),
+                receiver: relayer_sender.subscribe(),
+            };
+            tokio::spawn(async move { task.run().await });
+        }
 
         let (sender, receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let mut task = LazerPublisherTask {
             config: config.clone(),
             receiver,
             pending_updates: Vec::new(),
-            relayer_senders,
+            relayer_sender,
         };
         tokio::spawn(async move { task.run().await });
         Self { sender }
@@ -55,7 +58,7 @@ struct LazerPublisherTask {
     config: Config,
     receiver: Receiver<FeedUpdate>,
     pending_updates: Vec<FeedUpdate>,
-    relayer_senders: Vec<RelayerSender>,
+    relayer_sender: broadcast::Sender<SignedLazerTransaction>,
 }
 
 impl LazerPublisherTask {
@@ -108,7 +111,7 @@ impl LazerPublisherTask {
         }
 
         let publisher_update = PublisherUpdate {
-            updates: self.pending_updates.clone(),
+            updates: self.pending_updates.drain(..).collect(),
             publisher_timestamp: MessageField::some(Timestamp::now()),
             special_fields: Default::default(),
         };
@@ -137,14 +140,13 @@ impl LazerPublisherTask {
             payload: Some(buf),
             special_fields: Default::default(),
         };
-        futures::future::join_all(
-            self.relayer_senders
-                .iter_mut()
-                .map(|relayer_sender| relayer_sender.sender.send(signed_lazer_transaction.clone())),
-        )
-        .await;
+        match self.relayer_sender.send(signed_lazer_transaction.clone()) {
+            Ok(_) => (),
+            Err(e) => {
+                tracing::error!("Error sending transaction to relayer receivers: {e}");
+            }
+        }
 
-        self.pending_updates.clear();
         Ok(())
     }
 }

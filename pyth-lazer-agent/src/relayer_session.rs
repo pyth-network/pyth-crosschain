@@ -1,4 +1,3 @@
-use crate::config::CHANNEL_CAPACITY;
 use anyhow::{Result, bail};
 use backoff::ExponentialBackoffBuilder;
 use backoff::backoff::Backoff;
@@ -7,35 +6,16 @@ use futures_util::{SinkExt, StreamExt};
 use http::HeaderValue;
 use protobuf::Message;
 use pyth_lazer_publisher_sdk::transaction::SignedLazerTransaction;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::net::TcpStream;
-use tokio::{
-    select,
-    sync::mpsc::{self, Receiver, Sender},
-};
+use tokio::select;
+use tokio::sync::broadcast;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::{
     MaybeTlsStream, WebSocketStream, connect_async_with_config,
     tungstenite::Message as TungsteniteMessage,
 };
 use url::Url;
-
-pub struct RelayerSender {
-    pub(crate) sender: Sender<SignedLazerTransaction>,
-}
-
-impl RelayerSender {
-    pub async fn new(url: &Url, token: &str) -> Self {
-        let (sender, receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let mut task = RelayerSessionTask {
-            url: url.clone(),
-            token: token.to_owned(),
-            receiver,
-        };
-        tokio::spawn(async move { task.run().await });
-        Self { sender }
-    }
-}
 
 type RelayerWsSender = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, TungsteniteMessage>;
 type RelayerWsReceiver = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
@@ -78,11 +58,11 @@ impl RelayerWsSession {
     }
 }
 
-struct RelayerSessionTask {
+pub struct RelayerSessionTask {
     // connection state
-    url: Url,
-    token: String,
-    receiver: Receiver<SignedLazerTransaction>,
+    pub url: Url,
+    pub token: String,
+    pub receiver: broadcast::Receiver<SignedLazerTransaction>,
 }
 
 impl RelayerSessionTask {
@@ -95,6 +75,8 @@ impl RelayerSessionTask {
             .with_max_elapsed_time(None)
             .build();
 
+        const FAILURE_RESET_TIME: Duration = Duration::from_secs(300);
+        let mut first_failure_time = Instant::now();
         let mut failure_count = 0;
 
         loop {
@@ -104,6 +86,12 @@ impl RelayerSessionTask {
                     return;
                 }
                 Err(e) => {
+                    if first_failure_time.elapsed() > FAILURE_RESET_TIME {
+                        failure_count = 0;
+                        first_failure_time = Instant::now();
+                        backoff.reset();
+                    }
+
                     failure_count += 1;
                     let next_backoff = backoff.next_backoff().unwrap_or(max_interval);
                     tracing::error!(
@@ -129,11 +117,25 @@ impl RelayerSessionTask {
 
         loop {
             select! {
-                Some(transaction) = self.receiver.recv() => {
-                    if let Err(e) = relayer_ws_session.send_transaction(transaction).await
-                    {
-                        tracing::error!("Error publishing transaction to Lazer relayer: {e:?}");
-                        bail!("Failed to publish transaction to Lazer relayer: {e:?}");
+                recv_result = self.receiver.recv() => {
+                    match recv_result {
+                        Ok(transaction) => {
+                            if let Err(e) = relayer_ws_session.send_transaction(transaction).await {
+                                tracing::error!("Error publishing transaction to Lazer relayer: {e:?}");
+                                bail!("Failed to publish transaction to Lazer relayer: {e:?}");
+                            }
+                        },
+                        Err(e) => {
+                            match e {
+                                broadcast::error::RecvError::Closed => {
+                                    tracing::error!("transaction broadcast channel closed");
+                                    bail!("transaction broadcast channel closed");
+                                }
+                                broadcast::error::RecvError::Lagged(skipped_count) => {
+                                    tracing::warn!("transaction broadcast channel lagged by {skipped_count} messages");
+                                }
+                            }
+                        }
                     }
                 }
                 // Handle messages from the relayers, such as errors if we send a bad update
