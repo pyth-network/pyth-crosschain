@@ -17,6 +17,10 @@ on:
 permissions:
   contents: read
   id-token: write
+  packages: write
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: pyth-network/entropy-tester
 jobs:
   entropy-tester-image:
     runs-on: ubuntu-latest
