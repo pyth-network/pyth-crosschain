@@ -6,7 +6,7 @@ on:
   pull_request:
     paths:
       - "apps/entropy-tester/**"
-      - ".workspaces/entropy-tester/docker-entropy-tester.yml"
+      - ".github/workflows/entropy-tester/docker-entropy-tester.yml"
       - "Dockerfile.node"
   workflow_dispatch:
     inputs:
