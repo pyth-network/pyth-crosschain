@@ -27,8 +27,7 @@ jobs:
       - name: Set image tag to version of the git tag
         if: ${{ startsWith(github.ref, 'refs/tags/quorum-v') }}
         run: |
-          PREFIX="refs/tags/quorum-"
-          VERSION="${GITHUB_REF:${#PREFIX}}"
+          VERSION="${GITHUB_REF#refs/tags/quorum-}"
           echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
       - name: Set image tag to the git commit hash
         if: ${{ !startsWith(github.ref, 'refs/tags/quorum-v') }}
