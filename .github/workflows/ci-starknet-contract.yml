@@ -5,7 +5,6 @@ on:
       - target_chains/starknet/contracts/**
   push:
     branches:
-      - fix/ci-starknet-contract
       - main
 jobs:
   check:
@@ -26,7 +25,7 @@ jobs:
           tool-versions: target_chains/starknet/contracts/.tool-versions
       - name: Install Starkli
         run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' .tool-versions)
-      - name: Install Rust nightly
+      - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: 1.85.0
