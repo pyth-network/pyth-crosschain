@@ -7,7 +7,6 @@ on:
       - target_chains/ethereum/sdk/stylus/**
   push:
     branches:
-      - fix/ci-sylus-check
       - main
 permissions:
   contents: read
