@@ -1,0 +1,34 @@
+name: Check Quorum
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/ci-quorum.yml
+      - apps/quorum/**
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/quorum
+    steps:
+      - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "apps/quorum -> target"
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.87.0
+          components: rustfmt, clippy
+          override: true
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy --tests -- --deny warnings
+        if: success() || failure()
+      - name: Run executor tests
+        run: cargo test
+        if: success() || failure()
