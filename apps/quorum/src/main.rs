@@ -1,10 +1,10 @@
-use std::{io::IsTerminal};
 use clap::Parser;
+use std::io::IsTerminal;
 
 use crate::server::RunOptions;
 
-mod pythnet;
 mod api;
+mod pythnet;
 mod server;
 mod ws;
 

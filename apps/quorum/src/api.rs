@@ -1,13 +1,25 @@
-use std::{net::SocketAddr, time::Duration};
-use axum::{routing::{get, post}, Json, Router};
-use secp256k1::{ecdsa::{RecoverableSignature, RecoveryId}, Message, Secp256k1};
-use serde::{Deserialize};
+use ::time::OffsetDateTime;
+use axum::{
+    routing::{get, post},
+    Json, Router,
+};
+use secp256k1::{
+    ecdsa::{RecoverableSignature, RecoveryId},
+    Message, Secp256k1,
+};
+use serde::Deserialize;
 use serde_wormhole::RawMessage;
 use sha3::{Digest, Keccak256};
-use ::time::OffsetDateTime;
-use wormhole_sdk::{vaa::{Body, Header, Signature}, GuardianAddress, GuardianSetInfo, Vaa};
+use std::{net::SocketAddr, time::Duration};
+use wormhole_sdk::{
+    vaa::{Body, Header, Signature},
+    GuardianAddress, GuardianSetInfo, Vaa,
+};
 
-use crate::{server::State, ws::{ws_route_handler, UpdateEvent}};
+use crate::{
+    server::State,
+    ws::{ws_route_handler, UpdateEvent},
+};
 
 pub type Payload<'a> = &'a RawMessage;
 
@@ -68,7 +80,8 @@ fn verify_observation(
         return Err(anyhow::anyhow!("Observation is expired"));
     }
 
-    let body = observation.get_body()
+    let body = observation
+        .get_body()
         .map_err(|e| anyhow::anyhow!("Failed to deserialize observation body: {}", e))?;
     let digest = body.digest()?;
     let secp = Secp256k1::new();
@@ -82,15 +95,16 @@ fn verify_observation(
     let address: [u8; 32] = Keccak256::new_with_prefix(&pubkey[1..]).finalize().into();
     let address: [u8; 20] = address[address.len() - 20..].try_into()?;
 
-    guardian_set.addresses.iter().position(|addr| *addr == GuardianAddress(address)).ok_or(
-        anyhow::anyhow!("Signature does not match any guardian address")
-    )
+    guardian_set
+        .addresses
+        .iter()
+        .position(|addr| *addr == GuardianAddress(address))
+        .ok_or(anyhow::anyhow!(
+            "Signature does not match any guardian address"
+        ))
 }
 
-async fn run_expiration_loop(
-    state: axum::extract::State<State>,
-    observation: Observation,
-) {
+async fn run_expiration_loop(state: axum::extract::State<State>, observation: Observation) {
     loop {
         tokio::time::sleep(Duration::from_secs(state.observation_lifetime as u64)).await;
 
@@ -107,8 +121,15 @@ async fn run_expiration_loop(
     }
 }
 
-async fn handle_observation(state: axum::extract::State<State>, params: Observation) -> Result<(), anyhow::Error> {
-    let verifier_index = verify_observation(&params, state.guardian_set.clone(), state.observation_lifetime)?;
+async fn handle_observation(
+    state: axum::extract::State<State>,
+    params: Observation,
+) -> Result<(), anyhow::Error> {
+    let verifier_index = verify_observation(
+        &params,
+        state.guardian_set.clone(),
+        state.observation_lifetime,
+    )?;
     let new_signature = Signature {
         signature: params.signature,
         index: verifier_index.try_into()?,
@@ -125,17 +146,26 @@ async fn handle_observation(state: axum::extract::State<State>, params: Observat
         .or_insert_with(|| vec![new_signature.clone()])
         .clone();
 
-    let body = params.get_body()
+    let body = params
+        .get_body()
         .map_err(|e| anyhow::anyhow!("Failed to deserialize observation body: {}", e))?;
     if signatures.len() >= (state.guardian_set.addresses.len() * 2) / 3 + 1 {
-        let vaa: Vaa<Payload> = (Header {
-            version: 1,
-            guardian_set_index: state.guardian_set_index,
-            signatures,
-        }, body).into();
-        if let Err(e) = state.ws.broadcast_sender.send(UpdateEvent::NewVaa(
-            serde_wormhole::to_vec(&vaa).map_err(|e| anyhow::anyhow!("Failed to serialize VAA: {}", e))?
-        )) {
+        let vaa: Vaa<Payload> = (
+            Header {
+                version: 1,
+                guardian_set_index: state.guardian_set_index,
+                signatures,
+            },
+            body,
+        )
+            .into();
+        if let Err(e) = state
+            .ws
+            .broadcast_sender
+            .send(UpdateEvent::NewVaa(serde_wormhole::to_vec(&vaa).map_err(
+                |e| anyhow::anyhow!("Failed to serialize VAA: {}", e),
+            )?))
+        {
             tracing::error!(error = ?e, "Failed to broadcast new VAA");
         }
         verification_writer.remove(&params.body);
@@ -150,7 +180,7 @@ async fn post_observation(
     state: axum::extract::State<State>,
     Json(params): Json<Observation>,
 ) -> Json<()> {
-    state.task_tracker.spawn({
+    tokio::spawn({
         let state = state.clone();
         async move {
             if let Err(e) = handle_observation(state, params).await {

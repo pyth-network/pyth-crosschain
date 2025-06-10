@@ -1,21 +1,16 @@
-
-use std::{collections::HashMap, net::SocketAddr, ops::Deref, sync::Arc};
+use clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser};
 use lazy_static::lazy_static;
 use solana_client::client_error::reqwest::Url;
 use solana_sdk::pubkey::Pubkey;
+use std::{collections::HashMap, net::SocketAddr, ops::Deref, sync::Arc};
 use tokio::sync::{watch, RwLock};
-use tokio_util::task::TaskTracker;
-use clap::{
-    crate_authors,
-    crate_description,
-    crate_name,
-    crate_version,
-    Args,
-    Parser,
-};
 use wormhole_sdk::{vaa::Signature, GuardianSetInfo};
 
-use crate::{api::{self}, pythnet::fetch_guardian_set, ws::WsState};
+use crate::{
+    api::{self},
+    pythnet::fetch_guardian_set,
+    ws::WsState,
+};
 
 const DEFAULT_LISTEN_ADDR: &str = "127.0.0.1:9000";
 
@@ -27,9 +22,8 @@ pub struct ServerOptions {
     #[arg(long = "listen-addr")]
     #[arg(default_value = DEFAULT_LISTEN_ADDR)]
     #[arg(env = "LISTEN_ADDR")]
-    pub listen_addr:              SocketAddr,
+    pub listen_addr: SocketAddr,
 }
-
 
 // `Options` is a structup definition to provide clean command-line args for Hermes.
 #[derive(Parser, Debug, Clone)]
@@ -62,7 +56,6 @@ pub struct RunOptions {
     pub observation_lifetime: u32,
 }
 
-
 lazy_static! {
     /// A static exit flag to indicate to running threads that we're shutting down. This is used to
     /// gracefully shut down the application.
@@ -79,10 +72,9 @@ lazy_static! {
 #[derive(Clone)]
 pub struct State(Arc<StateInner>);
 pub struct StateInner {
-    pub task_tracker: TaskTracker,
     pub verification: Arc<RwLock<HashMap<Vec<u8>, Vec<Signature>>>>,
 
-    pub guardian_set:       GuardianSetInfo,
+    pub guardian_set: GuardianSetInfo,
     pub guardian_set_index: u32,
 
     pub observation_lifetime: u32,
@@ -109,15 +101,14 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
         let _ = EXIT.send(true);
     });
 
-    let task_tracker = TaskTracker::new();
     let guardian_set = fetch_guardian_set(
         run_options.pythnet_url,
         run_options.wormhole_pid,
         run_options.guardian_set_index,
-    ).await?;
+    )
+    .await?;
 
     let state = State(Arc::new(StateInner {
-        task_tracker: task_tracker.clone(),
         verification: Arc::new(RwLock::new(HashMap::new())),
 
         guardian_set,
@@ -128,18 +119,11 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
         ws: WsState::new(WEBSOCKET_NOTIFICATION_CHANNEL_SIZE),
     }));
 
-    tokio::join!(
-        async {
-            if let Err(e) = api::run(run_options.server.listen_addr, state).await {
-                tracing::error!(error = ?e, "Failed to start API server");
-            }
+    tokio::join!(async {
+        if let Err(e) = api::run(run_options.server.listen_addr, state).await {
+            tracing::error!(error = ?e, "Failed to start API server");
         }
-    );
-
-    // To make sure all the spawned tasks will finish their job before shut down
-    // Closing task tracker doesn't mean that it won't accept new tasks!!
-    task_tracker.close();
-    task_tracker.wait().await;
+    });
 
     Ok(())
 }

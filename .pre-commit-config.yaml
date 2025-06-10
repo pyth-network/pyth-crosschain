@@ -69,6 +69,19 @@ repos:
         entry: cargo +1.82.0 clippy --manifest-path ./apps/hermes/server/Cargo.toml --tests -- --deny warnings
         pass_filenames: false
         files: apps/hermes
+      # Hooks for Quorum
+      - id: cargo-fmt-quorum
+        name: Cargo format for Quorum
+        language: "rust"
+        entry: cargo +1.87.0 fmt --manifest-path ./apps/quorum/Cargo.toml --all
+        pass_filenames: false
+        files: apps/quorum
+      - id: cargo-clippy-quorum
+        name: Cargo clippy for Quorum
+        language: "rust"
+        entry: cargo +1.87.0 clippy --manifest-path ./apps/quorum/Cargo.toml --tests
+        pass_filenames: false
+        files: apps/quorum
       # Hooks for Fortuna
       - id: cargo-fmt-fortuna
         name: Cargo format for Fortuna

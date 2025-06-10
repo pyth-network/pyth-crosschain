@@ -31,12 +31,19 @@ pub async fn fetch_guardian_set(
         .await
         .map_err(|err| anyhow::anyhow!("Failed to fetch GuardianSet account: {}", err))?
         .value
-        .ok_or(anyhow::anyhow!("GuardianSet account not found for index {}", guardian_set_index))?;
+        .ok_or(anyhow::anyhow!(
+            "GuardianSet account not found for index {}",
+            guardian_set_index
+        ))?;
 
-    let deserialized_guardian_set= GuardianSetData::deserialize(&mut guardian_set.data.as_ref()).map_err(
-        |err| anyhow::anyhow!("Failed to deserialize GuardianSet account: {}", err)
-    )?;
+    let deserialized_guardian_set =
+        GuardianSetData::deserialize(&mut guardian_set.data.as_ref())
+            .map_err(|err| anyhow::anyhow!("Failed to deserialize GuardianSet account: {}", err))?;
     Ok(GuardianSetInfo {
-        addresses: deserialized_guardian_set.keys.into_iter().map(|key| GuardianAddress(key)).collect(),
+        addresses: deserialized_guardian_set
+            .keys
+            .into_iter()
+            .map(|key| GuardianAddress(key))
+            .collect(),
     })
 }

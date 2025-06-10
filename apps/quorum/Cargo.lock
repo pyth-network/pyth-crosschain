@@ -2689,7 +2689,6 @@ dependencies = [
  "solana-sdk",
  "time",
  "tokio",
- "tokio-util",
  "tracing",
  "tracing-subscriber",
  "wormhole-vaas-serde",
@@ -5730,8 +5729,6 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
- "futures-util",
- "hashbrown 0.15.3",
  "pin-project-lite",
  "tokio",
 ]

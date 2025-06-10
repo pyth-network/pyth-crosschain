@@ -1,36 +1,28 @@
 use {
-    crate::{server::{State, EXIT}}, anyhow::{
-        anyhow,
-        Result,
-    }, axum::{
+    crate::server::{State, EXIT},
+    anyhow::{anyhow, Result},
+    axum::{
         extract::{
-            ws::{
-                Message,
-                WebSocket,
-            },
+            ws::{Message, WebSocket},
             WebSocketUpgrade,
         },
         response::IntoResponse,
-    }, futures::{
-        stream::{
-            SplitSink,
-            SplitStream,
-        },
-        SinkExt,
-        StreamExt,
-    }, std::{
-        sync::atomic::{
-                AtomicUsize,
-                Ordering,
-            },
+    },
+    futures::{
+        stream::{SplitSink, SplitStream},
+        SinkExt, StreamExt,
+    },
+    std::{
+        sync::atomic::{AtomicUsize, Ordering},
         time::Duration,
-    }, tokio::sync::{broadcast, watch},
+    },
+    tokio::sync::{broadcast, watch},
 };
 
 pub struct WsState {
-    subscriber_counter:           AtomicUsize,
-    pub broadcast_sender:         broadcast::Sender<UpdateEvent>,
-    pub broadcast_receiver:       broadcast::Receiver<UpdateEvent>,
+    subscriber_counter: AtomicUsize,
+    pub broadcast_sender: broadcast::Sender<UpdateEvent>,
+    pub broadcast_receiver: broadcast::Receiver<UpdateEvent>,
 }
 
 impl WsState {
@@ -48,24 +40,14 @@ pub async fn ws_route_handler(
     ws: WebSocketUpgrade,
     state: axum::extract::State<State>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| {
-        websocket_handler(state, socket)
-    })
+    ws.on_upgrade(move |socket| websocket_handler(state, socket))
 }
 
-async fn websocket_handler(
-    state: axum::extract::State<State>,
-    stream: WebSocket,
-) {
+async fn websocket_handler(state: axum::extract::State<State>, stream: WebSocket) {
     let subscriber_id = state.ws.subscriber_counter.fetch_add(1, Ordering::SeqCst);
     let (sender, receiver) = stream.split();
     let new_receiver = state.ws.broadcast_receiver.resubscribe();
-    let mut subscriber = Subscriber::new(
-        subscriber_id,
-        new_receiver,
-        receiver,
-        sender,
-    );
+    let mut subscriber = Subscriber::new(subscriber_id, new_receiver, receiver, sender);
     subscriber.run().await;
 }
 
@@ -79,14 +61,14 @@ pub type SubscriberId = usize;
 /// Subscriber is an actor that handles a single websocket connection.
 /// It listens to the state for updates and sends them to the client.
 pub struct Subscriber {
-    id:                  SubscriberId,
-    closed:              bool,
-    notify_receiver:     broadcast::Receiver<UpdateEvent>,
-    receiver:            SplitStream<WebSocket>,
-    sender:              SplitSink<WebSocket, Message>,
-    ping_interval:       tokio::time::Interval,
-    responded_to_ping:   bool,
-    exit:                watch::Receiver<bool>,
+    id: SubscriberId,
+    closed: bool,
+    notify_receiver: broadcast::Receiver<UpdateEvent>,
+    receiver: SplitStream<WebSocket>,
+    sender: SplitSink<WebSocket, Message>,
+    ping_interval: tokio::time::Interval,
+    responded_to_ping: bool,
+    exit: watch::Receiver<bool>,
 }
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
@@ -173,9 +155,9 @@ impl Subscriber {
                 self.closed = true;
                 return Ok(());
             }
-            Message::Text(_) => {},
-            Message::Binary(_) => {},
-            Message::Ping(_) => {},
+            Message::Text(_) => {}
+            Message::Binary(_) => {}
+            Message::Ping(_) => {}
             Message::Pong(_) => self.responded_to_ping = true,
         };
         Ok(())
