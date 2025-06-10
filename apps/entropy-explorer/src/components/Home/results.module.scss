@@ -36,3 +36,8 @@
     @include theme.text("base", "medium");
   }
 }
+
+.noResultsChainSelect {
+  margin-top: theme.spacing(4);
+  justify-self: center;
+}

@@ -12,6 +12,7 @@ import {
   ChainSelect,
   StatusSelect,
 } from "./search-controls";
+import { isValidDeployment } from "../../entropy-deployments";
 import type { Args } from "../../requests";
 import { getRequests, ResultType } from "../../requests";
 
@@ -28,14 +29,7 @@ export const Home = (props: Props) => (
         icon={<ListDashes />}
         toolbar={
           <>
-            <ChainSelect
-              label="Chain"
-              hideLabel
-              defaultButtonLabel="Chain"
-              variant="outline"
-              size="sm"
-              placement="bottom right"
-            />
+            <ChainSelect variant="outline" size="sm" placement="bottom right" />
             <StatusSelect
               label="Status"
               hideLabel
@@ -84,7 +78,7 @@ const Results = async (props: Props) => {
         );
       }
       case ResultType.ErrorResult: {
-        return;
+        return <ErrorPage error={results.error} />;
       }
       case ResultType.Success: {
         return (
@@ -94,6 +88,12 @@ const Results = async (props: Props) => {
               searchParams.search,
               searchParams.status,
             ].join(",")}
+            chain={
+              searchParams.chain !== undefined &&
+              isValidDeployment(searchParams.chain)
+                ? searchParams.chain
+                : undefined
+            }
             search={searchParams.search}
             currentPage={results.currentPage}
             now={new Date()}

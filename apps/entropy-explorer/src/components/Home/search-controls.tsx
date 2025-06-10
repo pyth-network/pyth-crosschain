@@ -4,6 +4,7 @@ import { Paginator as PaginatorImpl } from "@pythnetwork/component-library/Pagin
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import type { Props as SelectProps } from "@pythnetwork/component-library/Select";
 import { Select } from "@pythnetwork/component-library/Select";
+import Image from "next/image";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useCallback, useMemo, useTransition } from "react";
@@ -173,10 +174,15 @@ const useChainSelect = () => {
   const collator = useCollator();
 
   return {
+    label: "Chain",
+    hideLabel: true,
     selectedKey: chain.value,
     onSelectionChange: chain.onChange,
     isPending: chain.isTransitioning,
-    buttonLabel: chain.value === "all" ? "Chain" : chain.value.name,
+    buttonLabel:
+      chain.value === "all"
+        ? "All Chains"
+        : EntropyDeployments[chain.value].name,
     optionGroups: useMemo(
       () => [
         {
@@ -186,11 +192,11 @@ const useChainSelect = () => {
         },
         {
           name: "MAINNET",
-          options: entropyDeploymentsByNetwork("mainnet", collator),
+          options: entropyDeploymentsByNetwork(collator, false),
         },
         {
           name: "TESTNET",
-          options: entropyDeploymentsByNetwork("testnet", collator),
+          options: entropyDeploymentsByNetwork(collator, true),
         },
       ],
       [collator],
@@ -198,10 +204,10 @@ const useChainSelect = () => {
     show: useCallback(
       (chain: Deployment) =>
         chain.id === "all" ? (
-          "All"
+          "All Chains"
         ) : (
           <div className={styles.chainSelectItem}>
-            {chain.icon}
+            <Image alt={chain.name} src={chain.icon} width={20} height={20} />
             {chain.name}
           </div>
         ),
@@ -211,13 +217,22 @@ const useChainSelect = () => {
       (chain: Deployment) => (chain.id === "all" ? "All" : chain.name),
       [],
     ),
-    ...(chain.value !== "all" && { icon: chain.value.icon }),
+    ...(chain.value !== "all" && {
+      icon: (
+        <Image
+          alt={EntropyDeployments[chain.value].name}
+          src={EntropyDeployments[chain.value].icon}
+          width={20}
+          height={20}
+        />
+      ),
+    }),
   };
 };
 
 const entropyDeploymentsByNetwork = (
-  network: "mainnet" | "testnet",
   collator: ReturnType<typeof useCollator>,
+  isTestnet: boolean,
 ) =>
   Object.entries(EntropyDeployments)
     .map(([slug, chain]) => {
@@ -226,7 +241,7 @@ const entropyDeploymentsByNetwork = (
         id: Number.parseInt(slug, 10) as keyof typeof EntropyDeployments,
       };
     })
-    .filter((chain) => chain.network === network)
+    .filter((chain) => chain.isTestnet === isTestnet)
     .toSorted((a, b) => collator.compare(a.name, b.name));
 
 const id = <T,>(value: T) => value;
@@ -240,7 +255,7 @@ const parseChain = (value: string) => {
     return "all";
   } else {
     const parsedId = Number.parseInt(value, 10);
-    return isValidDeployment(parsedId) ? EntropyDeployments[parsedId] : "all";
+    return isValidDeployment(parsedId) ? parsedId : "all";
   }
 };
 
