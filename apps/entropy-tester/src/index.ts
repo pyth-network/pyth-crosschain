@@ -6,7 +6,6 @@ import { EvmEntropyContract } from "@pythnetwork/contract-manager/core/contracts
 import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
 import type { Logger } from "pino";
 import { pino } from "pino";
-import type { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { z } from "zod";
@@ -158,13 +157,11 @@ export const main = function () {
     .parserConfiguration({
       "parse-numbers": false,
     })
-    .command({
-      command: "run",
-      describe: "run the tester until manually stopped",
-      builder: RUN_OPTIONS,
-      handler: async (
-        argv: ArgumentsCamelCase<InferredOptionTypes<typeof RUN_OPTIONS>>,
-      ) => {
+    .command(
+      "run",
+      "run the tester until manually stopped",
+      RUN_OPTIONS,
+      async (argv) => {
         const logger = pino();
         const configs = await loadConfig(argv.config);
         if (argv.validate) {
@@ -195,7 +192,7 @@ export const main = function () {
         });
         await Promise.all(promises);
       },
-    })
+    )
     .demandCommand()
     .help();
 };
