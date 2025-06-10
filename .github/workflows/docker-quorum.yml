@@ -27,7 +27,8 @@ jobs:
       - name: Set image tag to version of the git tag
         if: ${{ startsWith(github.ref, 'refs/tags/quorum-v') }}
         run: |
-          VERSION="${GITHUB_REF#refs/tags/quorum-}"
+          PREFIX="refs/tags/quorum-"
+          VERSION="${GITHUB_REF:${#PREFIX}}"
           echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
       - name: Set image tag to the git commit hash
         if: ${{ !startsWith(github.ref, 'refs/tags/quorum-v') }}
@@ -44,6 +45,8 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ env.IMAGE_TAG }}
       - name: Build and push server docker image
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
