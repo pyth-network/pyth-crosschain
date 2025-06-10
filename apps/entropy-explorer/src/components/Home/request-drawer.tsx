@@ -278,9 +278,6 @@ const CallbackFailedInfo = ({ request }: { request: CallbackErrorRequest }) => {
           }}
         >
           <CopyButton text={retryCommand}>Copy Forge Command</CopyButton>
-          <Button size="sm" variant="outline">
-            Connect Wallet
-          </Button>
           <Button
             size="sm"
             variant="ghost"
