@@ -169,7 +169,7 @@ export class SolanaPricePusherJito implements IPricePusher {
     private searcherClients: SearcherClient[],
     private jitoBundleSize: number,
     private updatesPerJitoBundle: number,
-    private maxRetryTimeMs: number = 60000, // Default to 60 seconds max retry time
+    private maxRetryTimeMs: number,
     private addressLookupTableAccount?: AddressLookupTableAccount,
   ) {}
 
@@ -193,10 +193,6 @@ export class SolanaPricePusherJito implements IPricePusher {
       this.logger.error({ err }, "getRecentJitoTips failed");
       return undefined;
     }
-  }
-
-  private async sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async updatePriceFeed(priceIds: string[]): Promise<void> {
@@ -244,41 +240,15 @@ export class SolanaPricePusherJito implements IPricePusher {
         jitoBundleSize: this.jitoBundleSize,
       });
 
-      try {
-        this.logger.info("Sending Jito transactions...");
-        await sendTransactionsJito(
-          transactions,
-          this.searcherClients,
-          this.pythSolanaReceiver.wallet,
-          { maxRetryTimeMs: this.maxRetryTimeMs },
-        );
-      } catch (err: any) {
-        if (err.code === 8 && err.details?.includes("Rate limit exceeded")) {
-          this.logger.warn("Rate limit hit, waiting before retry...");
-          await this.sleep(1100); // Wait slightly more than 1 second
-          try {
-            this.logger.info("Sending Jito transactions...");
-            await sendTransactionsJito(
-              transactions,
-              this.searcherClients,
-              this.pythSolanaReceiver.wallet,
-              { maxRetryTimeMs: this.maxRetryTimeMs },
-            );
-          } catch (retryErr: any) {
-            this.logger.error("Failed after rate limit retry");
-            throw retryErr;
-          }
-        } else {
-          this.logger.error(
-            { err },
-            "Failed to send transactions via all JITO endpoints",
-          );
-          throw err;
-        }
-      }
-
-      // Add a delay between bundles to avoid rate limiting
-      await this.sleep(1100);
+      await sendTransactionsJito(
+        transactions,
+        this.searcherClients,
+        this.pythSolanaReceiver.wallet,
+        {
+          maxRetryTimeMs: this.maxRetryTimeMs,
+        },
+        this.logger,
+      );
     }
   }
 }

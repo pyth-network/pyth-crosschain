@@ -1,3 +1,4 @@
+import { dummyLogger, Logger } from "ts-log";
 import { Wallet } from "@coral-xyz/anchor";
 import {
   PublicKey,
@@ -45,8 +46,10 @@ export async function sendTransactionsJito(
   searcherClients: SearcherClient | SearcherClient[],
   wallet: Wallet,
   options: {
-    maxRetryTimeMs?: number;
+    maxRetryTimeMs?: number; // Max time to retry sending transactions
+    delayBetweenCyclesMs?: number; // Delay between cycles of sending transactions to all searcher clients
   } = {},
+  logger: Logger = dummyLogger, // Optional logger to track progress of retries
 ): Promise<string> {
   const clients = Array.isArray(searcherClients)
     ? searcherClients
@@ -57,6 +60,8 @@ export async function sendTransactionsJito(
   }
 
   const maxRetryTimeMs = options.maxRetryTimeMs || 60000; // Default to 60 seconds
+  const delayBetweenCyclesMs = options.delayBetweenCyclesMs || 1000; // Default to 1 second
+
   const startTime = Date.now();
 
   const signedTransactions = [];
@@ -80,22 +85,54 @@ export async function sendTransactionsJito(
   const bundle = new Bundle(signedTransactions, 2);
 
   let lastError: Error | null = null;
-  let clientIndex = 0;
+  let totalAttempts = 0;
 
   while (Date.now() - startTime < maxRetryTimeMs) {
-    const currentClient = clients[clientIndex];
-    try {
-      await currentClient.sendBundle(bundle);
-      return firstTransactionSignature;
-    } catch (err: any) {
-      lastError = err;
-      clientIndex = (clientIndex + 1) % clients.length;
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    // Try all clients in this cycle
+    for (let i = 0; i < clients.length; i++) {
+      const currentClient = clients[i];
+      totalAttempts++;
+
+      try {
+        await currentClient.sendBundle(bundle);
+        logger.info(
+          { clientIndex: i, totalAttempts },
+          `Successfully sent bundle to Jito client after ${totalAttempts} attempts`,
+        );
+        return firstTransactionSignature;
+      } catch (err: any) {
+        lastError = err;
+        logger.error(
+          { clientIndex: i, totalAttempts, err: err.message },
+          `Attempt ${totalAttempts}: Error sending bundle to Jito client ${i}`,
+        );
+      }
+
+      // Check if we've run out of time
+      if (Date.now() - startTime >= maxRetryTimeMs) {
+        break;
+      }
+    }
+
+    // If we've tried all clients and still have time, wait before next cycle
+    const timeRemaining = maxRetryTimeMs - (Date.now() - startTime);
+    if (timeRemaining > delayBetweenCyclesMs) {
+      await new Promise((resolve) => setTimeout(resolve, delayBetweenCyclesMs));
     }
   }
 
-  throw (
-    lastError ||
-    new Error("Failed to send transactions via JITO after maximum retry time")
+  const totalTimeMs = Date.now() - startTime;
+  const errorMsg = `Failed to send transactions via JITO after ${totalAttempts} attempts over ${totalTimeMs}ms (max: ${maxRetryTimeMs}ms)`;
+
+  logger.error(
+    {
+      totalAttempts,
+      totalTimeMs,
+      maxRetryTimeMs,
+      lastError: lastError?.message,
+    },
+    errorMsg,
   );
+
+  throw lastError || new Error(errorMsg);
 }

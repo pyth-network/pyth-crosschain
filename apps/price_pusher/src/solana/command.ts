@@ -232,7 +232,8 @@ export default {
         jitoClients,
         jitoBundleSize,
         updatesPerJitoBundle,
-        60000, // Default max retry time of 60 seconds
+        // Set max retry time to pushing frequency, since we want to stop retrying before the next push attempt
+        pushingFrequency * 1000,
         lookupTableAccount,
       );
 
