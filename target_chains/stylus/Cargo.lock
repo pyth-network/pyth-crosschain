@@ -5887,6 +5887,7 @@ dependencies = [
  "mini-alloc 0.4.2",
  "motsu",
  "secp256k1",
+ "serde",
  "sha3",
  "stylus-sdk 0.6.0",
 ]

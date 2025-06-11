@@ -22,6 +22,8 @@ use stylus_sdk::alloy_primitives::keccak256;
 use sha3::{Digest, Keccak256};
 use secp256k1::{ecdsa::{RecoverableSignature, RecoveryId}, Secp256k1, Message, SecretKey, PublicKey};
 
+pub mod governance;
+
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GuardianSet {
     pub keys: Vec<Address>,
@@ -60,11 +62,19 @@ pub enum WormholeError {
     GovernanceActionConsumed,
     AlreadyInitialized,
     NotInitialized,
+    InvalidAddressLength,
+    VerfiyVMError,
     InvalidInput,
     InsufficientSignatures,
     InvalidGuardianIndex,
-    InvalidAddressLength,
-    VerfiyVMError,
+    InvalidModule,
+    InvalidAction,
+    InvalidChainId,
+    TrailingData,
+    NotCurrentGuardianSet,
+    GuardianSetError,
+    WrongChain,
+    WrongContract,
 }
 
 impl From<WormholeError> for Vec<u8> {
@@ -84,6 +94,15 @@ impl From<WormholeError> for Vec<u8> {
             WormholeError::InsufficientSignatures => b"Insufficient signatures".to_vec(),
             WormholeError::InvalidGuardianIndex => b"Invalid guardian index".to_vec(),
             WormholeError::VerfiyVMError => b"Unable to verify signature".to_vec(),
+            WormholeError::GuardianSetError => b"Issue with getting guardian set and setting internal".to_vec(),
+            WormholeError::InvalidModule => b"Invalid module".to_vec(),
+            WormholeError::InvalidAction => b"Invalid action".to_vec(),
+            WormholeError::InvalidChainId => b"Invalid chain ID".to_vec(),
+            WormholeError::TrailingData => b"Trailing data".to_vec(),
+            WormholeError::NotCurrentGuardianSet => b"Not signed by current guardian".to_vec(),
+            WormholeError::WrongChain => b"Wrong governance chain".to_vec(),
+            WormholeError::WrongContract => b"Wrong governance contract".to_vec(),
+            
         }
     }
 }
@@ -135,7 +154,8 @@ impl WormholeContract {
         self.governance_chain_id.set(U256::from(governance_chain_id));
         self.governance_contract.set(governance_contract);
 
-        self.store_guardian_set(0, initial_guardians, 0)?;
+        self.store_guardian_set(0, initial_guardians.clone(), 0)?;
+        self.store_guardian_set(4, initial_guardians.clone(), 0)?;
 
         self.initialized.set(true);
         Ok(())
@@ -395,6 +415,42 @@ impl WormholeContract {
         Ok(())
     }
 
+    // fn expire_guardian_set(&mut self, set_index: u32, now: u32) -> Result<(), WormholeError> {
+    //     let mut guardian_set = self.get_guardian_set_internal(set_index).ok_or(WormholeError::GuardianSetError);
+    //     guardian_set.expiration_time = now; // 24 hours
+    //     self.store_guardian_set(set_index, guardian_set.keys, guardian_set.unwrap().expiration_time)?;
+    //     Ok(())
+    // }
+
+    // fn is_guardian_set_expired(&self, set_index: u32, current_time: u64) -> Result<bool, WormholeError> {
+    //     let guardian_set = self.get_guardian_set_internal(set_index).ok_or(WormholeError::GuardianSetError);
+    //     Ok(current_time > guardian_set.expiration_time)
+    // }   
+
+    fn verify_governance_vm(&self, vm: &VerifiedVM) -> Result<(), WormholeError> {
+        let current_index = self.get_current_guardian_set_index().map_err(|_| WormholeError::NotInitialized)?;
+        if vm.guardian_set_index != current_index {
+            return Err(WormholeError::NotCurrentGuardianSet);
+        }
+        
+        let governance_chain_id = self.get_governance_chain_id().map_err(|_| WormholeError::NotInitialized)?;
+        if vm.emitter_chain_id != governance_chain_id {
+            return Err(WormholeError::WrongChain);
+        }
+        
+        let governance_contract = self.get_governance_contract().map_err(|_| WormholeError::NotInitialized)?;
+        let governance_contract_bytes = governance_contract.into_array();
+        if vm.emitter_address.as_slice() != &governance_contract_bytes {
+            return Err(WormholeError::WrongContract);
+        }
+        
+        if self.consumed_governance_actions.get(vm.hash.to_vec()) {
+            return Err(WormholeError::GovernanceActionConsumed);
+        }
+        
+        Ok(())
+    }
+
     fn verify_signature(
         &self,
         hash: &FixedBytes<32>,
@@ -486,9 +542,44 @@ impl IWormhole for WormholeContract {
         self.governance_contract.get()
     }
 
-    fn submit_new_guardian_set(&mut self, _encoded_vm: Vec<u8>) -> Result<(), WormholeError> {
-        // TODO: COMPLETE EXTERNAL METHOD TO SUBMIT NEW GUARDIAN SET
-        Err(WormholeError::InvalidVMFormat)
+    fn submit_new_guardian_set(&mut self, encoded_vm: Vec<u8>) -> Result<(), WormholeError> {
+        if !self.initialized.get() {
+            return Err(WormholeError::NotInitialized);
+        }
+
+        if encoded_vm.is_empty() {
+            return Err(WormholeError::InvalidVMFormat);
+        }
+
+        let vm = self.parse_vm(&encoded_vm)?;
+        self.verify_vm(&vm)?;
+
+        self.verify_governance_vm(&vm)?;
+
+        let mut cursor = 0;
+        let header = governance::Governance::parse_header(&vm.payload, &mut cursor)?;
+
+        if header.action != governance::Action::GuardianSetUpgrade {
+            return Err(WormholeError::InvalidAction);
+        }
+
+        let chain_id = self.get_chain_id().map_err(|_| WormholeError::NotInitialized)?;
+        if header.chain_id != 0 && header.chain_id != chain_id {
+            return Err(WormholeError::InvalidChainId);
+        }
+
+        let new_set = governance::Governance::parse_new_guardian_set(&vm.payload, &mut cursor)?;
+
+        let current_set_index = self.get_current_guardian_set_index().map_err(|_| WormholeError::NotInitialized)?;
+        if new_set.set_index != current_set_index + 1 {
+            return Err(WormholeError::InvalidInput);
+        }
+
+        self.store_guardian_set(new_set.set_index, new_set.keys, 0)?;
+
+        self.consumed_governance_actions.insert(vm.hash.to_vec(), true);
+
+        Ok(())
     }
 }
 
