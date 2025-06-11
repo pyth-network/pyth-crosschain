@@ -1,9 +1,5 @@
 {
   "extends": "@cprussin/tsconfig/nextjs.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "noEmit": false
-  },
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]
 }
