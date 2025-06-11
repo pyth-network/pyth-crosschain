@@ -110,7 +110,6 @@ export default {
       enableMetrics,
       metricsPort,
     } = argv;
-    console.log("***** priceServiceEndpoint *****", priceServiceEndpoint);
 
     const logger = pino({
       level: logLevel,

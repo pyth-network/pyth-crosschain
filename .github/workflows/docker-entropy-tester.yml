@@ -1,0 +1,50 @@
+name: Build and Push Entropy Tester Image
+on:
+  push:
+    tags:
+      - entropy-tester-v*
+  pull_request:
+    paths:
+      - "apps/entropy-tester/**"
+      - ".github/workflows/docker-entropy-tester.yml"
+      - "Dockerfile.node"
+  workflow_dispatch:
+    inputs:
+      dispatch_description:
+        description: "Dispatch description"
+        required: true
+        type: string
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: pyth-network/entropy-tester
+jobs:
+  entropy-tester-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set image tag to version of the git tag
+        if: ${{ startsWith(github.ref, 'refs/tags/entropy-tester-v') }}
+        run: |
+          PREFIX="refs/tags/entropy-tester-"
+          VERSION="${GITHUB_REF:${#PREFIX}}"
+          echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
+      - name: Set image tag to the git commit hash
+        if: ${{ !startsWith(github.ref, 'refs/tags/entropy-tester-v') }}
+        run: |
+          echo "IMAGE_TAG=${{ github.sha }}" >> "${GITHUB_ENV}"
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build docker image
+        run: |
+          DOCKER_BUILDKIT=1 docker build --build-arg package="@pythnetwork/entropy-tester" -t ${{ env.REGISTRY }}/pyth-network/entropy-tester:${{ env.IMAGE_TAG }} -f Dockerfile.node .
+      - name: Push docker image
+        run: |
+          docker push ${{ env.REGISTRY }}/pyth-network/entropy-tester:${{ env.IMAGE_TAG }}
