@@ -149,7 +149,7 @@ async fn handle_observation(
     let body = params
         .get_body()
         .map_err(|e| anyhow::anyhow!("Failed to deserialize observation body: {}", e))?;
-    if signatures.len() > (state.guardian_set.addresses.len() * 2) / 3 + 1 {
+    if signatures.len() > (state.guardian_set.addresses.len() * 2) / 3 {
         let vaa: Vaa<Payload> = (
             Header {
                 version: 1,
