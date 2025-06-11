@@ -2889,6 +2889,9 @@ importers:
       jito-ts:
         specifier: ^3.0.1
         version: 3.0.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      ts-log:
+        specifier: ^2.2.7
+        version: 2.2.7
     devDependencies:
       '@solana/wallet-adapter-react':
         specifier: ^0.15.28
