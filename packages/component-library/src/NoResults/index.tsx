@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import styles from "./index.module.scss";
 import { Button } from "../Button/index.jsx";
 
-type Props = {
+export type Props = {
   className?: string | undefined;
   onClearSearch?: (() => void) | undefined;
 } & (

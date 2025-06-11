@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Footer as FooterComponent } from "./index.jsx";
 
 const meta = {
+  title: "navigation & menus/Footer",
   component: FooterComponent,
   parameters: {
     layout: "fullscreen",
