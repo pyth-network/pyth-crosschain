@@ -153,7 +153,7 @@ const RUN_OPTIONS = {
 } as const;
 
 export const main = function () {
-  yargs(hideBin(process.argv))
+  return yargs(hideBin(process.argv))
     .parserConfiguration({
       "parse-numbers": false,
     })

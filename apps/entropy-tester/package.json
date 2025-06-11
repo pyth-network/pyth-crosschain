@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/entropy-tester",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Utility to test entropy provider callbacks",
   "type": "module",
   "main": "dist/index.js",
@@ -16,13 +16,14 @@
     "cli/**/*"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "start": "tsc && node cli/run.js"
+    "start:dev": "tsc --project tsconfig.build.json && node cli/run.js",
+    "start:prod": "node cli/run.js"
   },
   "repository": {
     "type": "git",
