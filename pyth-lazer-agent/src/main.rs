@@ -16,7 +16,7 @@ mod websocket_utils;
 #[derive(Parser)]
 #[command(version)]
 struct Cli {
-    #[clap(short, long, default_value = "config.toml")]
+    #[clap(short, long, default_value = "config/config.toml")]
     config: String,
 }
 

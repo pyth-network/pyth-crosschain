@@ -14,8 +14,8 @@ use {
         },
     },
     anyhow::{anyhow, bail, Result},
-    borsh::BorshDeserialize,
-    futures::stream::StreamExt,
+    borsh::{BorshDeserialize, BorshSerialize},
+    futures::{stream::StreamExt, SinkExt},
     pyth_sdk::PriceIdentifier,
     pyth_sdk_solana::state::load_product_account,
     solana_account_decoder::UiAccountEncoding,
@@ -29,6 +29,10 @@ use {
     },
     std::{collections::BTreeMap, sync::Arc, time::Duration},
     tokio::time::Instant,
+    tokio_tungstenite::{
+        connect_async,
+        tungstenite::{client::IntoClientRequest, Message},
+    },
 };
 
 /// Using a Solana RPC endpoint, fetches the target GuardianSet based on an index.
@@ -279,8 +283,9 @@ async fn fetch_price_feeds_metadata(
                 filters: Some(vec![RpcFilterType::Memcmp(Memcmp::new(
                     0, // offset
                     // Product account header: <magic:u32le:0xa1b2c3d4> <version:u32le:0x02> <account_type:u32le:0x02>
-                    // The string literal in hex::decode is represented as be (big endian).
-                    MemcmpEncodedBytes::Bytes(hex::decode("d4c3b2a10200000002000000").unwrap()),
+                    MemcmpEncodedBytes::Bytes(
+                        b"\xd4\xc3\xb2\xa1\x02\x00\x00\x00\x02\x00\x00\x00".to_vec(),
+                    ),
                 ))]),
                 account_config: RpcAccountInfoConfig {
                     encoding: Some(UiAccountEncoding::Base64Zstd),
@@ -431,10 +436,98 @@ where
         })
     };
 
+    let task_quorum_listener = match opts.pythnet.quorum_ws_addr {
+        Some(pythnet_quorum_ws_addr) => {
+            let store = state.clone();
+            let mut exit = crate::EXIT.subscribe();
+            tokio::spawn(async move {
+                loop {
+                    let current_time = Instant::now();
+                    tokio::select! {
+                        _ = exit.changed() => break,
+                        Err(err) = run_quorom_listener(store.clone(), pythnet_quorum_ws_addr.clone()) => {
+                            tracing::error!(error = ?err, "Error in Pythnet quorum network listener.");
+                            if current_time.elapsed() < Duration::from_secs(30) {
+                                tracing::error!("Pythnet quorum listener restarting too quickly. Sleep 1s.");
+                                tokio::time::sleep(Duration::from_secs(1)).await;
+                            }
+                        }
+                    }
+                }
+                tracing::info!("Shutting down Pythnet quorum listener...");
+            })
+        }
+        None => tokio::spawn(async {
+            tracing::warn!(
+                "Pythnet quorum websocket address not provided, skipping quorum listener."
+            );
+        }),
+    };
+
     let _ = tokio::join!(
         task_listener,
         task_guardian_watcher,
-        task_price_feeds_metadata_updater
+        task_price_feeds_metadata_updater,
+        task_quorum_listener,
     );
     Ok(())
+}
+
+const QUORUM_PING_INTERVAL: Duration = Duration::from_secs(10);
+
+#[tracing::instrument(skip(state))]
+async fn run_quorom_listener<S>(state: Arc<S>, pythnet_quorum_ws_endpoint: String) -> Result<()>
+where
+    S: Wormhole,
+    S: Send + Sync + 'static,
+{
+    let mut ping_interval = tokio::time::interval(QUORUM_PING_INTERVAL);
+    let mut responded_to_ping = true; // Start with a true to not close the connection immediately
+    let request = pythnet_quorum_ws_endpoint.into_client_request()?;
+    let (mut ws_stream, _) = connect_async(request).await?;
+
+    loop {
+        tokio::select! {
+            message = ws_stream.next() => {
+                let vaa_bytes = match message.ok_or_else(|| anyhow!("PythNet quorum stream terminated."))?? {
+                    Message::Frame(_) => continue,
+                    Message::Text(message) => {
+                        match message.try_to_vec() {
+                            Ok(bytes) => bytes,
+                            Err(e) => {
+                                tracing::error!(error = ?e, "Failed to convert PythNet quorum text message to bytes.");
+                                continue;
+                            }
+                        }
+                    },
+                    Message::Binary(bytes) => bytes.to_vec(),
+                    Message::Ping(_) => continue,
+                    Message::Pong(_) => {
+                        responded_to_ping = true;
+                        continue;
+                    }
+                    Message::Close(_) => break,
+                };
+                tokio::spawn({
+                    let state = state.clone();
+                    async move {
+                        if let Err(e) = state.process_message(vaa_bytes).await {
+                            tracing::debug!(error = ?e, "Skipped VAA.");
+                        }
+                    }
+                });
+            },
+            _  = ping_interval.tick() => {
+                if !responded_to_ping {
+                    return Err(anyhow!("PythNet quorum subscriber did not respond to ping. Closing connection."));
+                }
+                responded_to_ping = false; // Reset the flag for the next ping
+                if let Err(e) = ws_stream.send(Message::Ping(vec![].into())).await {
+                    tracing::error!(error = ?e, "Failed to send PythNet quorum ping message.");
+                    return Err(anyhow!("Failed to send PythNet quorum ping message."));
+                }
+            },
+        }
+    }
+    Err(anyhow!("Pyth quorum stream terminated."))
 }

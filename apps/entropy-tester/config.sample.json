@@ -1,0 +1,14 @@
+[
+  {
+    "chain-id": "berachain_mainnet",
+    "interval": "3h"
+  },
+  {
+    "chain-id": "apechain_mainnet",
+    "interval": "6h"
+  },
+  {
+    "chain-id": "blast",
+    "interval": "10m"
+  }
+]
