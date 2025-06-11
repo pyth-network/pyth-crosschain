@@ -74,3 +74,46 @@ panic                  = 'abort'
 
 [profile.dev]
 panic                  = 'abort'
+
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+# See https://www.notion.so/pyth-network/Rust-code-guidelines-20a2eecaaac98060b6b2d9a52c9f9141
+
+wildcard_dependencies = "deny"
+
+collapsible_if = "allow"
+collapsible_else_if = "allow"
+
+allow_attributes_without_reason = "warn"
+
+# Panics
+expect_used = "warn"
+fallible_impl_from = "warn"
+indexing_slicing = "warn"
+panic = "warn"
+panic_in_result_fn = "warn"
+string_slice = "warn"
+todo = "warn"
+unchecked_duration_subtraction = "warn"
+unreachable = "warn"
+unwrap_in_result = "warn"
+unwrap_used = "warn"
+
+# Correctness
+cast_lossless = "warn"
+cast_possible_truncation = "warn"
+cast_possible_wrap = "warn"
+cast_sign_loss = "warn"
+collection_is_never_read = "warn"
+match_wild_err_arm = "warn"
+path_buf_push_overwrite = "warn"
+read_zero_byte_vec = "warn"
+same_name_method = "warn"
+suspicious_operation_groupings = "warn"
+suspicious_xor_used_as_pow = "warn"
+unused_self = "warn"
+used_underscore_binding = "warn"
+while_float = "warn"

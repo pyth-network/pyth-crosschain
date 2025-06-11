@@ -4,7 +4,7 @@ use {
         State,
     },
     crate::network::wormhole::GuardianSet,
-    anyhow::{anyhow, ensure, Result},
+    anyhow::{anyhow, ensure, Context, Result},
     chrono::DateTime,
     pythnet_sdk::{
         wire::v1::{WormholeMessage, WormholePayload},
@@ -104,8 +104,8 @@ where
         let vaa = serde_wormhole::from_slice::<Vaa<&RawMessage>>(&vaa_bytes)?;
 
         // Log VAA Processing.
-        let vaa_timestamp = DateTime::from_timestamp(vaa.timestamp as i64, 0)
-            .ok_or(anyhow!("Failed to parse VAA Tiestamp"))?
+        let vaa_timestamp = DateTime::from_timestamp(vaa.timestamp.into(), 0)
+            .context("Failed to parse VAA Timestamp")?
             .format("%Y-%m-%dT%H:%M:%S.%fZ")
             .to_string();
 
@@ -219,7 +219,7 @@ fn verify_vaa<'a>(
 
         // The address is the last 20 bytes of the Keccak256 hash of the public key
         let address: [u8; 32] = Keccak256::new_with_prefix(&pubkey[1..]).finalize().into();
-        let address: [u8; 20] = address[address.len() - 20..].try_into()?;
+        let address: [u8; 20] = address[32 - 20..].try_into()?;
 
         // Confirm the recovered address matches an address in the guardian set.
         if guardian_set.keys.get(signer_id) == Some(&address) {
