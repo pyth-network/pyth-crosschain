@@ -1,6 +1,6 @@
 [package]
 name        = "hermes"
-version     = "0.9.3"
+version     = "0.10.0-alpha"
 description = "Hermes is an agent that provides Verified Prices from the Pythnet Pyth Oracle."
 edition     = "2021"
 

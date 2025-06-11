@@ -491,12 +491,17 @@ where
             message = ws_stream.next() => {
                 let vaa_bytes = match message.ok_or_else(|| anyhow!("PythNet quorum stream terminated."))?? {
                     Message::Frame(_) => continue,
-                    Message::Text(message) => message.try_to_vec().unwrap(),
+                    Message::Text(message) => {
+                        match message.try_to_vec() {
+                            Ok(bytes) => bytes,
+                            Err(e) => {
+                                tracing::error!(error = ?e, "Failed to convert PythNet quorum text message to bytes.");
+                                continue;
+                            }
+                        }
+                    },
                     Message::Binary(bytes) => bytes.to_vec(),
-                    Message::Ping(_) => {
-                        let _ = ws_stream.send(Message::Pong(vec![].into())).await;
-                        continue;
-                    }
+                    Message::Ping(_) => continue,
                     Message::Pong(_) => {
                         responded_to_ping = true;
                         continue;
