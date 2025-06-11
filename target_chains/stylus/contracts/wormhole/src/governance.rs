@@ -31,7 +31,7 @@ pub enum Action {
 
 impl TryFrom<u8> for Action {
     type Error = WormholeError;
-    
+
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             1 => Ok(Action::ContractUpgrade),

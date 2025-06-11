@@ -102,7 +102,7 @@ impl From<WormholeError> for Vec<u8> {
             WormholeError::NotCurrentGuardianSet => b"Not signed by current guardian".to_vec(),
             WormholeError::WrongChain => b"Wrong governance chain".to_vec(),
             WormholeError::WrongContract => b"Wrong governance contract".to_vec(),
-            
+
         }
     }
 }
@@ -425,29 +425,29 @@ impl WormholeContract {
     // fn is_guardian_set_expired(&self, set_index: u32, current_time: u64) -> Result<bool, WormholeError> {
     //     let guardian_set = self.get_guardian_set_internal(set_index).ok_or(WormholeError::GuardianSetError);
     //     Ok(current_time > guardian_set.expiration_time)
-    // }   
+    // }
 
     fn verify_governance_vm(&self, vm: &VerifiedVM) -> Result<(), WormholeError> {
         let current_index = self.get_current_guardian_set_index().map_err(|_| WormholeError::NotInitialized)?;
         if vm.guardian_set_index != current_index {
             return Err(WormholeError::NotCurrentGuardianSet);
         }
-        
+
         let governance_chain_id = self.get_governance_chain_id().map_err(|_| WormholeError::NotInitialized)?;
         if vm.emitter_chain_id != governance_chain_id {
             return Err(WormholeError::WrongChain);
         }
-        
+
         let governance_contract = self.get_governance_contract().map_err(|_| WormholeError::NotInitialized)?;
         let governance_contract_bytes = governance_contract.into_array();
         if vm.emitter_address.as_slice() != &governance_contract_bytes {
             return Err(WormholeError::WrongContract);
         }
-        
+
         if self.consumed_governance_actions.get(vm.hash.to_vec()) {
             return Err(WormholeError::GovernanceActionConsumed);
         }
-        
+
         Ok(())
     }
 
