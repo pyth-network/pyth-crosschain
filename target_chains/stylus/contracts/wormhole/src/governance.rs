@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use stylus_sdk::alloy_primitives::{Address, U256};
 use stylus_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
