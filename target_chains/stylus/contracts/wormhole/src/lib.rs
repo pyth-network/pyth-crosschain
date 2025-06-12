@@ -5,6 +5,12 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
+// #[cfg(all(not(feature = "std"), not(test)))]
+// #[panic_handler]
+// fn panic(_info: &core::panic::PanicInfo) -> ! {
+//     loop {}
+// }
+
 use alloc::vec::Vec;
 use stylus_sdk::{
     prelude::{entrypoint, public, storage, SolidityError},
@@ -106,7 +112,7 @@ pub enum WormholeError {
 }
 
 pub trait IWormhole {
-    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VAA, WormholeError>;
+    fn parse_and_verify_vaa(&self, encoded_vaa: Vec<u8>) -> Result<VAA, WormholeError>;
     fn get_guardian_set(&self, index: u32) -> Option<GuardianSet>;
     fn get_current_guardian_set_index(&self) -> u32;
     fn governance_action_is_consumed(&self, hash: Vec<u8>) -> bool;
@@ -116,8 +122,8 @@ pub trait IWormhole {
     fn submit_new_guardian_set(&mut self, encoded_vaa: Vec<u8>) -> Result<(), WormholeError>;
 }
 
-#[storage]
 #[entrypoint]
+#[storage]
 pub struct WormholeContract {
     current_guardian_set_index: StorageUint<256, 4>,
     chain_id: StorageUint<256, 4>,
@@ -130,6 +136,7 @@ pub struct WormholeContract {
     guardian_keys: StorageMap<U256, StorageAddress>,
 }
 
+#[public]
 impl WormholeContract {
     pub fn initialize(
         &mut self,
@@ -203,7 +210,7 @@ impl WormholeContract {
         }
     }
 
-    pub fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+    pub fn parse_and_verify_vaa(&self, encoded_vaa: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
         if !self.initialized.get() {
             return Err(WormholeError::NotInitialized(NotInitialized {}).into());
         }
@@ -212,9 +219,9 @@ impl WormholeContract {
             return Err(WormholeError::InvalidVAAFormat(InvalidVAAFormat {}).into());
         }
 
-        let vaa = self.parse_vm(&encoded_vaa)?;
+        let vaa = self.parse_vaa(&encoded_vaa)?;
 
-        let verified = self.verify_vm(&vaa);
+        let verified = self.verify_vaa(&vaa);
 
         Ok(vaa.payload)
     }
@@ -225,11 +232,11 @@ impl WormholeContract {
 }
 
 impl WormholeContract {
-    fn parse_vm(&self, encoded_vaa: &[u8]) -> Result<VAA, WormholeError> {
-        Self::parse_vm_static(encoded_vaa)
+    fn parse_vaa(&self, encoded_vaa: &[u8]) -> Result<VAA, WormholeError> {
+        Self::parse_vaa_static(encoded_vaa)
     }
 
-    fn parse_vm_static(encoded_vaa: &[u8]) -> Result<VAA, WormholeError> {
+    fn parse_vaa_static(encoded_vaa: &[u8]) -> Result<VAA, WormholeError> {
         if encoded_vaa.len() < 6 {
             return Err(WormholeError::InvalidVAAFormat(InvalidVAAFormat {}));
         }
@@ -337,7 +344,7 @@ impl WormholeContract {
         })
     }
 
-    fn verify_vm(&self, vaa: &VAA) -> Result<(), WormholeError> {
+    fn verify_vaa(&self, vaa: &VAA) -> Result<(), WormholeError> {
         let guardian_set = self.get_guardian_set_internal(vaa.guardian_set_index)
             .ok_or(WormholeError::InvalidGuardianSetIndex(InvalidGuardianSetIndex {}))?;
 
@@ -468,13 +475,13 @@ impl WormholeContract {
 }
 
 impl IWormhole for WormholeContract {
-    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VAA, WormholeError> {
+    fn parse_and_verify_vaa(&self, encoded_vaa: Vec<u8>) -> Result<VAA, WormholeError> {
         if !self.initialized.get() {
             return Err(WormholeError::NotInitialized(NotInitialized {}));
         }
 
-        let vaa = self.parse_vm(&encoded_vaa)?;
-        self.verify_vm(&vaa)?;
+        let vaa = self.parse_vaa(&encoded_vaa)?;
+        self.verify_vaa(&vaa)?;
         Ok(vaa)
     }
 
@@ -759,7 +766,7 @@ mod tests {
     #[motsu::test]
     fn test_real_wormhole_vaa_parsing() {
         let vaa_vec = test_real_vaa();
-        let result = match WormholeContract::parse_vm_static(&vaa_vec) {
+        let result = match WormholeContract::parse_vaa_static(&vaa_vec) {
             Ok(vaa) => vaa,
             Err(_) => panic!("VAA parsing failed"),
         };
@@ -770,7 +777,7 @@ mod tests {
     fn test_real_guardian_set_real_vaa_verification() {
         let contract = deploy_with_real_guardians();
         let test_vaa = create_vaa_bytes("AQAAAAQNABKrA7vVGbeFAN4q6OpjL0zVVs8aPJHPqnj6KuboY755N5i2on/i4nXb2nahbVGDDqj9WV2DgLRdUyqoXL/C6HsBA6l03OVpWBMU5Kjh4a3yn539u/m6ieboUz5D2wAqrt0UHCPgOuXlixoEnYZJ2kTGOT0yqd/grj9g1i9hWkGsi/0BBei0DUXj9iLQ8PQfJGQRWluvvBefZrCi7sIpaN1P10FbABdrFE/Mop+h1n4vHleYqtX1DyD/Hl2CUVPRm+TL6AsABigepLVMC/ybUdI71rW5yKda/DxJ/ZtRa1c7iUOxUnpfENoxwLheaJLMfDVb0bfybkPnbq/UjQ3OjP9LMbb2Y5wBBy1uE/9Pv1nIswbb0H4Q4ej1X7W2vvdWTrt3AmrDPOvYfg3mK+Wae5ifPhCFKas7y2gUfHLm0I7INKTHQ+jjK3oBCjc+jJahqTQu/xPi+kgxvsSwwswoxPEgrd3UsylDbGRMKeEQ8pbB8dP3PzkKThYvVjQ56Vl1+ZZkVf4EzKi7uxIAC03+AG9MIrRsCZenLd8/BwJbr3M1MlIRDAE/JZQctOneEhL0ta0KifLZ8516sfpOLO0j4hyX2JGB7+KhEwaa7rAADOgUbAVn/Od0Mcz5T4Xdu0VJVXbvDcP4WC1vuiKYUuwvHI2lPRwUGEXBinmYuFAzBv5goEO+et71DBPbSocfyAgADUmsnFBn9Sqt1X6QUF3KD8aYb0O7x/w33W/VS+3Bl3JnEjfD8RbDWBmfKhamm6B55g3WytoDz5E+0UfwjMBhEs8BDqxaRg10LY8c2ASx/Ps8UZ8qFYdcQ0liJdfiXxaDMZzwMuQpYr3S+CzartkfaNfRKl4269UtQTxbCHYrnu4XrIMBDzNfMrUQCBQPyYTDsAubNi2AbmAsgrcGHNCquna7ScXaFrYbDrWcxNbXRL20fQ8m7lH1llM3S4UC25smNOino8sBEHDm77bSISVBykPRwfkZdtezi7RGxtFfb0jh1Iu54/pXKyQFjKKOzush9dXGvwCVCeKHL7P+PRT8e+FCxFMFaZEAEVxXoDeizuUQoHG1G+o0MNqT/JS4SfE7SyqZ6VJoezHZIxUFlvqYRufJsGk6FU6OO1zbxdL8evNXIoU0TFHVLwoBaEiioAAAAAAAFYm5HmjQJklWYyvxH4q9IkPKpWxKQsl9m5fq3HG/EHS/AAAAAAAAeRsA3ca06nFfN50X8Ov9vOf/MclvDB12K3Pdhb7X87OIwKs=");
-        let result = contract.parse_and_verify_vm(test_vaa);
+        let result = contract.parse_and_verify_vaa(test_vaa);
     }
 
     #[motsu::test]
@@ -784,39 +791,39 @@ mod tests {
     }
 
     #[motsu::test]
-    fn test_parse_vm_invalid_length() {
+    fn test_parse_vaa_invalid_length() {
         let short_vaa = vec![1, 0, 0, 0];
-        let result = WormholeContract::parse_vm_static(&short_vaa);
+        let result = WormholeContract::parse_vaa_static(&short_vaa);
         assert!(matches!(result, Err(WormholeError::InvalidVAAFormat(InvalidVAAFormat {}))));
     }
 
     #[motsu::test]
-    fn test_parse_vm_invalid_version() {
+    fn test_parse_vaa_invalid_version() {
         let invalid_version_vaa = vec![2, 0, 0, 0, 0, 0];
-        let result = WormholeContract::parse_vm_static(&invalid_version_vaa);
+        let result = WormholeContract::parse_vaa_static(&invalid_version_vaa);
         assert!(matches!(result, Err(WormholeError::InvalidVAAFormat(InvalidVAAFormat {}))));
     }
 
     #[motsu::test]
-    fn test_verify_vm_invalid_guardian_set() {
+    fn test_verify_vaa_invalid_guardian_set() {
         let contract = deploy_with_test_guardian();
         let vaa = create_test_vaa(999, vec![]);
 
-        let result = contract.verify_vm(&vaa);
+        let result = contract.verify_vaa(&vaa);
         assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex(InvalidGuardianSetIndex {}))));
     }
 
     #[motsu::test]
-    fn test_verify_vm_insufficient_signatures() {
+    fn test_verify_vaa_insufficient_signatures() {
         let contract = deploy_with_test_guardian();
         let vaa = create_test_vaa(0, vec![]);
 
-        let result = contract.verify_vm(&vaa);
+        let result = contract.verify_vaa(&vaa);
         assert!(matches!(result, Err(WormholeError::InsufficientSignatures(InsufficientSignatures {}))));
     }
 
     #[motsu::test]
-    fn test_verify_vm_invalid_signature_order() {
+    fn test_verify_vaa_invalid_signature_order() {
         let mut contract = WormholeContract::default();
         let guardians = vec![
             Address::from([0x12u8; 20]),
@@ -835,19 +842,19 @@ mod tests {
         ];
         let vaa = create_test_vaa(0, signatures); // Use guardian set 0
 
-        let result = contract.verify_vm(&vaa);
+        let result = contract.verify_vaa(&vaa);
         assert!(matches!(result, Err(WormholeError::InvalidSignature(InvalidSignature {}))));
     }
 
     #[motsu::test]
-    fn test_verify_vm_invalid_guardian_index() {
+    fn test_verify_vaa_invalid_guardian_index() {
         let contract = deploy_with_test_guardian();
         let signatures = vec![
             create_guardian_signature(5),
         ];
         let vaa = create_test_vaa(0, signatures);
 
-        let result = contract.verify_vm(&vaa);
+        let result = contract.verify_vaa(&vaa);
         assert!(matches!(result, Err(WormholeError::InvalidGuardianIndex(InvalidGuardianIndex {}))));
     }
 
@@ -896,7 +903,7 @@ mod tests {
         let contract = deploy_with_test_guardian();
 
         let vaa = create_test_vaa_with_emitter(0, vec![], Address::from([0x99u8; 20]));
-        let result = contract.verify_vm(&vaa);
+        let result = contract.verify_vaa(&vaa);
         assert!(result.is_err());
     }
 
@@ -905,7 +912,7 @@ mod tests {
         let contract = deploy_with_mainnet_guardian_set0();
 
         let vaa = create_test_vaa(2, vec![]); // Skip index 1
-        let result = contract.verify_vm(&vaa);
+        let result = contract.verify_vaa(&vaa);
         assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex(InvalidGuardianSetIndex {}))));
     }
 
@@ -933,19 +940,19 @@ mod tests {
 
         for i in 0..10 {
             let corrupted_data = corrupted_vaa(vec![1, 0, 0, 1, 0, 0], i, i as u8, (i * 2) as u8);
-            let result = WormholeContract::parse_vm_static(&corrupted_data);
+            let result = WormholeContract::parse_vaa_static(&corrupted_data);
             assert!(result.is_err());
         }
     }
 
     #[motsu::test]
-    fn test_parse_and_verify_vm_rejects_corrupted_vaa() {
+    fn test_parse_and_verify_vaa_rejects_corrupted_vaa() {
         let contract = deploy_with_mainnet_guardians();
 
         for i in 0..5 {
             let base_vaa = vec![1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
             let corrupted_data = corrupted_vaa(base_vaa, i, i as u8, (i * 3) as u8);
-            let result = WormholeContract::parse_vm_static(&corrupted_data);
+            let result = WormholeContract::parse_vaa_static(&corrupted_data);
             assert!(result.is_err());
         }
     }
@@ -957,7 +964,7 @@ mod tests {
         let mut vaa = create_test_vaa(0, vec![]);
         vaa.emitter_chain_id = 999; // Wrong chain
 
-        let result = contract.verify_vm(&vaa);
+        let result = contract.verify_vaa(&vaa);
         assert!(result.is_err());
     }
 
@@ -1016,7 +1023,7 @@ mod tests {
     }
 
     #[motsu::test]
-    fn test_verify_vm_with_valid_signatures() {
+    fn test_verify_vaa_with_valid_signatures() {
         let mut contract = WormholeContract::default();
         let guardians = vec![
             test_guardian_address1(),
@@ -1045,7 +1052,7 @@ mod tests {
             hash,
         };
 
-        let result = contract.verify_vm(&vaa);
+        let result = contract.verify_vaa(&vaa);
     }
 
     #[motsu::test]
