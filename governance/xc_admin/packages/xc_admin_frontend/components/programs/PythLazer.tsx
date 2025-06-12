@@ -5,6 +5,10 @@ import Modal from '../common/Modal'
 import {
   validateUploadedConfig,
   ProgramType,
+  mapKey,
+  PRICE_FEED_MULTISIG,
+  getMultisigCluster,
+  isRemoteCluster,
 } from '@pythnetwork/xc-admin-common'
 import toast from 'react-hot-toast'
 import Loadbar from '../loaders/Loadbar'
@@ -17,7 +21,6 @@ import {
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import { generateInstructions } from '@pythnetwork/xc-admin-common/lib/programs/lazer/lazer_functions'
 import { useMultisigContext } from '../../contexts/MultisigContext'
-import { PublicKey } from '@solana/web3.js'
 
 interface PythLazerProps {
   proposerServerUrl: string
@@ -367,7 +370,8 @@ const PythLazer = ({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
-  const { isLoading: isMultisigLoading } = useMultisigContext()
+  const { isLoading: isMultisigLoading, readOnlySquads } = useMultisigContext()
+  const isRemote: boolean = isRemoteCluster(cluster)
 
   const openModal = () => {
     setIsModalOpen(true)
@@ -440,12 +444,20 @@ const PythLazer = ({
     setIsSendProposalButtonLoading(true)
     if (dataChanges && !isMultisigLoading) {
       try {
+        const multisigAuthority = readOnlySquads.getAuthorityPDA(
+          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
+          1
+        )
+        const fundingAccount = isRemote
+          ? mapKey(multisigAuthority)
+          : multisigAuthority
         // Generate the instructions for the proposal
         const instructions = await generateInstructions(
           dataChanges as LazerConfigChanges,
           {
-            fundingAccount: new PublicKey(1),
-          }
+            fundingAccount,
+          },
+          'lazer_production'
         )
 
         console.log('Generated instructions:', instructions)

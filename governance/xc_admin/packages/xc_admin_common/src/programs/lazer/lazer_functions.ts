@@ -15,6 +15,7 @@ import {
   LazerConfigChanges,
 } from "../types";
 import { pyth_lazer_transaction } from "@pythnetwork/pyth-lazer-state-sdk/governance";
+import { ChainName, LazerExecute } from "../..";
 
 /**
  * Converts LazerFeedMetadata to protobuf IMap format using protobufjs fromObject
@@ -369,15 +370,15 @@ function isShardChange(key: string, change: any): change is ShardChange {
 export async function generateInstructions(
   changes: LazerConfigChanges,
   accounts: LazerInstructionAccounts,
+  targetChainId: ChainName,
 ): Promise<TransactionInstruction[]> {
   // This function converts configuration changes into Lazer governance instructions
   // using the new governance payload functions that properly encode protobuf messages.
   const instructions: TransactionInstruction[] = [];
+  const directives: pyth_lazer_transaction.IGovernanceDirective[] = [];
 
-  // Process each change and create corresponding governance instructions
+  // Process each change and create corresponding governance directives
   for (const [changeKey, change] of Object.entries(changes)) {
-    let governanceBuffer: Buffer | null = null;
-
     if (isFeedChange(changeKey, change)) {
       const feedId = parseInt(changeKey.replace("feed_", ""));
 
@@ -390,9 +391,13 @@ export async function generateInstructions(
           metadata: convertLazerFeedMetadataToMap(feedMetadata),
           permissionedPublishers: [],
         });
-        const encoded =
-          pyth_lazer_transaction.AddFeed.encode(addFeedMessage).finish();
-        governanceBuffer = Buffer.from(encoded);
+
+        directives.push({
+          shardFilter: {
+            allShards: {},
+          },
+          addFeed: addFeedMessage,
+        });
       } else if (change.prev && change.new) {
         // Updating an existing feed
         const prevFeed = change.prev;
@@ -411,11 +416,13 @@ export async function generateInstructions(
               },
             },
           });
-          const encoded =
-            pyth_lazer_transaction.UpdateFeed.encode(
-              updateFeedMessage,
-            ).finish();
-          governanceBuffer = Buffer.from(encoded);
+
+          directives.push({
+            shardFilter: {
+              allShards: {},
+            },
+            updateFeed: updateFeedMessage,
+          });
         }
 
         // Check if pendingActivation changed
@@ -433,11 +440,13 @@ export async function generateInstructions(
                 },
               },
             });
-            const encoded =
-              pyth_lazer_transaction.UpdateFeed.encode(
-                updateFeedMessage,
-              ).finish();
-            governanceBuffer = Buffer.from(encoded);
+
+            directives.push({
+              shardFilter: {
+                allShards: {},
+              },
+              updateFeed: updateFeedMessage,
+            });
           } else {
             // Deactivate feed
             const updateFeedMessage = pyth_lazer_transaction.UpdateFeed.create({
@@ -449,11 +458,13 @@ export async function generateInstructions(
                 },
               },
             });
-            const encoded =
-              pyth_lazer_transaction.UpdateFeed.encode(
-                updateFeedMessage,
-              ).finish();
-            governanceBuffer = Buffer.from(encoded);
+
+            directives.push({
+              shardFilter: {
+                allShards: {},
+              },
+              updateFeed: updateFeedMessage,
+            });
           }
         }
       } else if (change.prev && !change.new) {
@@ -462,9 +473,13 @@ export async function generateInstructions(
           feedId: feedId,
           removeFeed: {},
         });
-        const encoded =
-          pyth_lazer_transaction.UpdateFeed.encode(updateFeedMessage).finish();
-        governanceBuffer = Buffer.from(encoded);
+
+        directives.push({
+          shardFilter: {
+            allShards: {},
+          },
+          updateFeed: updateFeedMessage,
+        });
       }
     } else if (isPublisherChange(changeKey, change)) {
       const publisherId = parseInt(changeKey.replace("publisher_", ""));
@@ -481,11 +496,13 @@ export async function generateInstructions(
           ),
           isActive: newPublisher.isActive,
         });
-        const encoded =
-          pyth_lazer_transaction.AddPublisher.encode(
-            addPublisherMessage,
-          ).finish();
-        governanceBuffer = Buffer.from(encoded);
+
+        directives.push({
+          shardFilter: {
+            allShards: {},
+          },
+          addPublisher: addPublisherMessage,
+        });
       } else if (change.prev && change.new) {
         // Updating an existing publisher
         const prevPublisher = change.prev;
@@ -500,10 +517,13 @@ export async function generateInstructions(
                 name: newPublisher.name,
               },
             });
-          const encoded = pyth_lazer_transaction.UpdatePublisher.encode(
-            updatePublisherMessage,
-          ).finish();
-          governanceBuffer = Buffer.from(encoded);
+
+          directives.push({
+            shardFilter: {
+              allShards: {},
+            },
+            updatePublisher: updatePublisherMessage,
+          });
         }
 
         // Check if public keys changed
@@ -520,10 +540,13 @@ export async function generateInstructions(
                 ),
               },
             });
-          const encoded = pyth_lazer_transaction.UpdatePublisher.encode(
-            updatePublisherMessage,
-          ).finish();
-          governanceBuffer = Buffer.from(encoded);
+
+          directives.push({
+            shardFilter: {
+              allShards: {},
+            },
+            updatePublisher: updatePublisherMessage,
+          });
         }
 
         // Check if active status changed
@@ -535,24 +558,28 @@ export async function generateInstructions(
                 isActive: newPublisher.isActive,
               },
             });
-          const encoded = pyth_lazer_transaction.UpdatePublisher.encode(
-            updatePublisherMessage,
-          ).finish();
-          governanceBuffer = Buffer.from(encoded);
+
+          directives.push({
+            shardFilter: {
+              allShards: {},
+            },
+            updatePublisher: updatePublisherMessage,
+          });
         }
       } else if (change.prev && !change.new) {
         // Removing a publisher
-        const prevPublisher = change.prev;
-
         const updatePublisherMessage =
           pyth_lazer_transaction.UpdatePublisher.create({
             publisherId: publisherId,
             removePublisher: {},
           });
-        const encoded = pyth_lazer_transaction.UpdatePublisher.encode(
-          updatePublisherMessage,
-        ).finish();
-        governanceBuffer = Buffer.from(encoded);
+
+        directives.push({
+          shardFilter: {
+            allShards: {},
+          },
+          updatePublisher: updatePublisherMessage,
+        });
       }
     } else if (isShardChange(changeKey, change)) {
       // Updating shard configuration
@@ -566,31 +593,43 @@ export async function generateInstructions(
             pyth_lazer_transaction.SetShardName.create({
               shardName: newShard.shardName,
             });
-          const encoded =
-            pyth_lazer_transaction.SetShardName.encode(
-              setShardNameMessage,
-            ).finish();
-          governanceBuffer = Buffer.from(encoded);
+
+          directives.push({
+            shardFilter: {
+              allShards: {},
+            },
+            setShardName: setShardNameMessage,
+          });
         }
       }
     }
+  }
 
-    // Create Solana transaction instruction if we have a governance buffer
-    if (governanceBuffer) {
-      const instruction = new TransactionInstruction({
-        keys: [
-          {
-            pubkey: accounts.fundingAccount,
-            isSigner: true,
-            isWritable: true,
-          },
-        ],
-        programId: LAZER_PROGRAM_ID,
-        data: governanceBuffer,
-      });
+  // Create a single LazerExecute instruction with all directives if we have any
+  if (directives.length > 0) {
+    const lazerExecute = new LazerExecute(
+      targetChainId,
+      directives,
+      undefined, // minExecutionTimestamp
+      undefined, // maxExecutionTimestamp
+      undefined, // governanceSequenceNo
+    );
 
-      instructions.push(instruction);
-    }
+    const governanceBuffer = lazerExecute.encode();
+
+    const instruction = new TransactionInstruction({
+      keys: [
+        {
+          pubkey: accounts.fundingAccount,
+          isSigner: true,
+          isWritable: true,
+        },
+      ],
+      programId: LAZER_PROGRAM_ID,
+      data: governanceBuffer,
+    });
+
+    instructions.push(instruction);
   }
 
   return instructions;
