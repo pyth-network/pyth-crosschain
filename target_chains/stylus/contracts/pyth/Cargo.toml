@@ -1,9 +1,0 @@
-[package]
-name = "pyth-contract"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-stylus-sdk = "0.4"
-alloy-primitives = "0.6"
-alloy-sol-types = "0.6"
