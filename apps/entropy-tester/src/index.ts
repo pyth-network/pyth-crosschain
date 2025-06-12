@@ -181,7 +181,18 @@ export const main = function () {
           // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           while (true) {
             try {
-              await testLatency(contract, privateKey, child);
+              await Promise.race([
+                testLatency(contract, privateKey, child),
+                new Promise((_, reject) =>
+                  setTimeout(() => {
+                    reject(
+                      new Error(
+                        "Timeout: 120s passed but testLatency function was not resolved",
+                      ),
+                    );
+                  }, 120_000),
+                ),
+              ]);
             } catch (error) {
               child.error(error, "Error testing latency");
             }
