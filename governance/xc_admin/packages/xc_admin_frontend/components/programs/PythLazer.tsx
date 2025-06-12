@@ -1,6 +1,8 @@
 import React, { useState, useContext } from 'react'
 import { usePythContext } from '../../contexts/PythContext'
 import { ClusterContext } from '../../contexts/ClusterContext'
+import { LazerEnvContext } from '../../contexts/LazerEnvContext'
+import LazerEnvSwitch from '../LazerEnvSwitch'
 import Modal from '../common/Modal'
 import {
   validateUploadedConfig,
@@ -365,13 +367,14 @@ const PythLazer = ({
 }: PythLazerProps) => {
   const { dataIsLoading, lazerState } = usePythContext()
   const { cluster } = useContext(ClusterContext)
+  const { lazerEnv } = useContext(LazerEnvContext)
+  const { isLoading: isMultisigLoading, readOnlySquads } = useMultisigContext()
+  const isRemote: boolean = isRemoteCluster(cluster)
 
   const [dataChanges, setDataChanges] = useState<LazerConfigChanges>()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
-  const { isLoading: isMultisigLoading, readOnlySquads } = useMultisigContext()
-  const isRemote: boolean = isRemoteCluster(cluster)
 
   const openModal = () => {
     setIsModalOpen(true)
@@ -389,7 +392,7 @@ const PythLazer = ({
       encodeURIComponent(JSON.stringify(lazerState, null, 2))
     const downloadAnchor = document.createElement('a')
     downloadAnchor.setAttribute('href', dataStr)
-    downloadAnchor.setAttribute('download', `lazer_config.json`)
+    downloadAnchor.setAttribute('download', `lazer_config_${lazerEnv}.json`)
     document.body.appendChild(downloadAnchor) // required for firefox
     downloadAnchor.click()
     downloadAnchor.remove()
@@ -457,7 +460,7 @@ const PythLazer = ({
           {
             fundingAccount,
           },
-          'lazer_production'
+          `lazer_${lazerEnv}` // Use the selected lazer environment
         )
 
         console.log('Generated instructions:', instructions)
@@ -492,6 +495,9 @@ const PythLazer = ({
           />
         }
       />
+      <div className="mb-4 flex">
+        <LazerEnvSwitch />
+      </div>
       <div className="relative mt-6">
         {dataIsLoading || !lazerState ? (
           <div className="mt-3">

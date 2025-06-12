@@ -8,7 +8,9 @@ export const ClusterContext = createContext<{
   setCluster: (_cluster: PythCluster) => void
 }>({
   cluster: DEFAULT_CLUSTER,
-  setCluster: () => {},
+  setCluster: () => {
+    // Default no-op function
+  },
 })
 
 export const ClusterProvider = ({ children }: { children: ReactNode }) => {
