@@ -141,6 +141,7 @@ async fn handle_observation(
         .and_modify(|sigs| {
             if sigs.iter().all(|sig| sig.index != new_signature.index) {
                 sigs.push(new_signature);
+                sigs.sort_by(|a, b| a.index.cmp(&b.index));
             }
         })
         .or_insert_with(|| vec![new_signature])
