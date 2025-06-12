@@ -56,6 +56,8 @@ Use the [Conventional Commits](https://www.conventionalcommits.org) format for y
 In the PR description, please include a summary of the changes and any relevant context. Also, please make sure
 to update the package versions following the [Semantic Versioning](https://semver.org/) rules.
 
+See also: [Code guidelines](doc/code-guidelines.md)
+
 ### Releases
 
 The repository has several CI workflows that automatically release new versions of the various components when a new Github release is published.
