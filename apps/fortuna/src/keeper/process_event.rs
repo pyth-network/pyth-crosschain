@@ -1,12 +1,14 @@
 use {
     super::keeper_metrics::AccountLabel,
     crate::{
-        chain::reader::RequestedWithCallbackEvent,
-        eth_utils::utils::submit_tx_with_backoff,
+        chain::{ethereum::PythRandomErrorsErrors, reader::RequestedWithCallbackEvent},
+        eth_utils::utils::{submit_tx_with_backoff, SubmitTxError},
         history::{RequestEntryState, RequestStatus},
         keeper::block::ProcessParams,
     },
     anyhow::{anyhow, Result},
+    ethers::{abi::AbiDecode, contract::ContractError},
+    std::time::Duration,
     tracing,
 };
 
@@ -74,12 +76,40 @@ pub async fn process_event_with_backoff(
         event.user_random_number,
         provider_revelation,
     );
+    let error_mapper = |num_retries, e| {
+        if let backoff::Error::Transient {
+            err: SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert)),
+            ..
+        } = &e
+        {
+            if let Ok(PythRandomErrorsErrors::NoSuchRequest(_)) =
+                PythRandomErrorsErrors::decode(revert)
+            {
+                let err =
+                    SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert.clone()));
+                // Slow down the retries if the request is not found.
+                // This probably means that the request is already fulfilled via another process.
+                // After 5 retries, we return the error permanently.
+                if num_retries >= 5 {
+                    return backoff::Error::Permanent(err);
+                }
+                if 1 < num_retries && num_retries < 5 {
+                    return backoff::Error::Transient {
+                        err,
+                        retry_after: Some(Duration::from_secs(60)),
+                    };
+                }
+            }
+        }
+        e
+    };
 
     let success = submit_tx_with_backoff(
         contract.client(),
         contract_call,
         gas_limit,
         escalation_policy,
+        error_mapper,
     )
     .await;
 
@@ -160,16 +190,45 @@ pub async fn process_event_with_backoff(
                 .get_request(event.provider_address, event.sequence_number)
                 .await;
 
-            tracing::error!("Failed to process event: {:?}. Request: {:?}", e, req);
-
             // We only count failures for cases where we are completely certain that the callback failed.
-            if req.is_ok_and(|x| x.is_some()) {
+            if req.as_ref().is_ok_and(|x| x.is_some()) {
+                tracing::error!("Failed to process event: {}. Request: {:?}", e, req);
                 metrics
                     .requests_processed_failure
                     .get_or_create(&account_label)
                     .inc();
+                // Do not display the internal error, it might include RPC details.
+                let reason = match e {
+                    SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert)) => {
+                        format!("Reverted: {}", revert)
+                    }
+                    SubmitTxError::GasLimitExceeded { limit, estimate } => format!(
+                        "Gas limit exceeded: limit = {}, estimate = {}",
+                        limit, estimate
+                    ),
+                    SubmitTxError::GasUsageEstimateError(_) => {
+                        "Unable to estimate gas usage".to_string()
+                    }
+                    SubmitTxError::GasPriceEstimateError(_) => {
+                        "Unable to estimate gas price".to_string()
+                    }
+                    SubmitTxError::SubmissionError(_, _) => {
+                        "Error submitting the transaction on-chain".to_string()
+                    }
+                    SubmitTxError::ConfirmationTimeout(tx) => format!(
+                        "Transaction was submitted, but never confirmed. Hash: {}",
+                        tx.sighash()
+                    ),
+                    SubmitTxError::ConfirmationError(tx, _) => format!(
+                        "Transaction was submitted, but never confirmed. Hash: {}",
+                        tx.sighash()
+                    ),
+                    SubmitTxError::ReceiptError(tx, _) => {
+                        format!("Reveal transaction failed on-chain. Hash: {}", tx.sighash())
+                    }
+                };
                 status.state = RequestEntryState::Failed {
-                    reason: format!("Error revealing: {:?}", e),
+                    reason,
                     provider_random_number: Some(provider_revelation),
                 };
                 history.add(&status);
