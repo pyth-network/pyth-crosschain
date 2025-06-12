@@ -80,7 +80,7 @@ panic                  = 'abort'
 unsafe_code = "deny"
 
 [lints.clippy]
-# See https://www.notion.so/pyth-network/Rust-code-guidelines-20a2eecaaac98060b6b2d9a52c9f9141
+# See [Rust code guidelines](../../doc/rust-code-guidelines.md)
 
 wildcard_dependencies = "deny"
 
