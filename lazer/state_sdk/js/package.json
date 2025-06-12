@@ -40,5 +40,7 @@
     "oracle"
   ],
   "license": "Apache-2.0",
-  "dependencies": {}
+  "dependencies": {
+    "protobufjs": "^7.5.3"
+  }
 }

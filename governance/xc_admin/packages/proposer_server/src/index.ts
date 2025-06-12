@@ -90,8 +90,10 @@ app.post("/api/propose", async (req: Request, res: Response) => {
     res.status(200).json({ proposalPubkey: proposalPubkey });
   } catch (error) {
     if (error instanceof Error) {
+      console.error(error);
       res.status(500).json(error.message);
     } else {
+      console.error(error);
       res.status(500).json("An unknown error occurred");
     }
   }
