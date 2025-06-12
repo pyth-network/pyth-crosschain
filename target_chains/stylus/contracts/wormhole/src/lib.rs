@@ -111,27 +111,6 @@ pub enum WormholeError {
     VerifyVAAError(VerifyVAAError),
 }
 
-// impl From<WormholeError> for Vec<u8> {
-//     fn from(error: WormholeError) -> Self {
-//         match error {
-//             WormholeError::InvalidGuardianSetIndex(InvalidGuardianSetIndex {}) => b"Invalid guardian set index".to_vec(),
-//             WormholeError::GuardianSetExpired(GuardianSetExpired {}) => b"Guardian set expired".to_vec(),
-//             WormholeError::NoQuorum(NoQuorum {}) => b"No quorum".to_vec(),
-//             WormholeError::InvalidSignatureOrder(InvalidSignatureOrder {}) => b"Invalid signature order".to_vec(),
-//             WormholeError::InvalidAddressLength(InvalidAddressLength {}) => b"Invalid address length".to_vec(),
-//             WormholeError::InvalidSignature(InvalidSignature {}) => b"Invalid signature".to_vec(),
-//             WormholeError::InvalidVAAFormat(InvalidVAAFormat {}) => b"Invalid VAA format".to_vec(),
-//             WormholeError::GovernanceActionConsumed(GovernanceActionConsumed {}) => b"Governance action consumed".to_vec(),
-//             WormholeError::AlreadyInitialized(AlreadyInitialized {}) => b"Already initialized".to_vec(),
-//             WormholeError::NotInitialized(NotInitialized {}) => b"Not initialized".to_vec(),
-//             WormholeError::InvalidInput(InvalidInput {}) => b"Invalid input".to_vec(),
-//             WormholeError::InsufficientSignatures(InsufficientSignatures {}) => b"Insufficient signatures".to_vec(),
-//             WormholeError::InvalidGuardianIndex(InvalidGuardianIndex {}) => b"Invalid guardian index".to_vec(),
-//             WormholeError::VerfiyVAAError(VerifyVAAError {}) => b"Unable to verify signature".to_vec(),
-//         }
-//     }
-// }
-
 pub trait IWormhole {
     fn parse_and_verify_vaa(&self, encoded_vaa: Vec<u8>) -> Result<VAA, WormholeError>;
     fn get_guardian_set(&self, index: u32) -> Option<GuardianSet>;
@@ -174,7 +153,7 @@ impl WormholeContract {
             return Err(WormholeError::InvalidInput(InvalidInput {}).into());
         }
 
-        self.current_guardian_set_index.set(U256::from(0u32));
+        self.current_guardian_set_index.set(0);
         self.chain_id.set(U256::from(chain_id));
         self.governance_chain_id.set(U256::from(governance_chain_id));
         self.governance_contract.set(governance_contract);
