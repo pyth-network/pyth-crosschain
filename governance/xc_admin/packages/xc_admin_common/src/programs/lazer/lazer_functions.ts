@@ -1,21 +1,18 @@
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { PythCluster } from "@pythnetwork/client";
 import {
-  ValidationResult,
   LazerValidationResult,
   ProgramType,
   LazerConfig,
   LazerState,
   LazerFeedMetadata,
-  LazerFeed,
-  LazerPublisher,
   ShardChange,
   FeedChange,
   PublisherChange,
   LazerConfigChanges,
 } from "../types";
 import { pyth_lazer_transaction } from "@pythnetwork/pyth-lazer-state-sdk/governance";
-import { ChainName, LazerExecute } from "../..";
+import { ChainName, LazerExecute, WORMHOLE_ADDRESS } from "../..";
 
 /**
  * Converts LazerFeedMetadata to protobuf IMap format using protobufjs fromObject
@@ -605,11 +602,13 @@ export async function generateInstructions(
     }
   }
 
-  // Create a single LazerExecute instruction with all directives if we have any
-  if (directives.length > 0) {
+  // Create one LazerExecute instruction per directive
+  for (let i = 0; i < directives.length; i++) {
+    const directive = directives[i];
+
     const lazerExecute = new LazerExecute(
       targetChainId,
-      directives,
+      [directive], // Single directive per instruction
       undefined, // minExecutionTimestamp
       undefined, // maxExecutionTimestamp
       undefined, // governanceSequenceNo

@@ -23,6 +23,7 @@ import {
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import { generateInstructions } from '@pythnetwork/xc-admin-common/lib/programs/lazer/lazer_functions'
 import { useMultisigContext } from '../../contexts/MultisigContext'
+import axios from 'axios'
 
 interface PythLazerProps {
   proposerServerUrl: string
@@ -363,7 +364,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
 }
 
 const PythLazer = ({
-  proposerServerUrl: _proposerServerUrl,
+  proposerServerUrl: proposerServerUrl,
 }: PythLazerProps) => {
   const { dataIsLoading, lazerState } = usePythContext()
   const { cluster } = useContext(ClusterContext)
@@ -465,17 +466,20 @@ const PythLazer = ({
 
         console.log('Generated instructions:', instructions)
 
-        // In a real implementation, this would send the proposal to the server
-        await new Promise((resolve) => setTimeout(resolve, 2000)) // Mock delay
-
-        // Close the modal and show success notification
-        setIsModalOpen(false)
-        toast.success('Proposal sent successfully!')
+        const response = await axios.post(proposerServerUrl + '/api/propose', {
+          instructions,
+          cluster,
+        })
+        const { proposalPubkey } = response.data
+        toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
+        setIsSendProposalButtonLoading(false)
+        closeModal()
       } catch (error) {
-        if (error instanceof Error) {
+        if (axios.isAxiosError(error) && error.response) {
+          toast.error(capitalizeFirstLetter(error.response.data))
+        } else if (error instanceof Error) {
           toast.error(capitalizeFirstLetter(error.message))
         }
-      } finally {
         setIsSendProposalButtonLoading(false)
       }
     }
