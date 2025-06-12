@@ -29,7 +29,7 @@ pub struct GuardianSignature {
 }
 
 #[derive(Clone, Debug)]
-pub struct VAA {
+pub struct VerifiedVMM {
     pub version: u8,
     pub guardian_set_index: u32,
     pub signatures: Vec<GuardianSignature>,
@@ -109,7 +109,7 @@ pub enum WormholeError {
 }
 
 pub trait IWormhole {
-    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VAA, WormholeError>;
+    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VerifiedVMM, WormholeError>;
     fn get_guardian_set(&self, index: u32) -> Option<GuardianSet>;
     fn get_current_guardian_set_index(&self) -> u32;
     fn governance_action_is_consumed(&self, hash: Vec<u8>) -> bool;
@@ -229,13 +229,13 @@ impl WormholeContract {
 }
 
 impl WormholeContract {
-    fn parse_vm(&self, encoded_vaa: &[u8]) -> Result<VAA, WormholeError> {
+    fn parse_vm(&self, encoded_vaa: &[u8]) -> Result<VerifiedVMM, WormholeError> {
         Self::parse_vm_static(encoded_vaa)
     }
 
     // Parsing a Wormhole VAA according to the structure defined 
     // by https://wormhole.com/docs/protocol/infrastructure/vaas/
-    fn parse_vm_static(encoded_vaa: &[u8]) -> Result<VAA, WormholeError> {
+    fn parse_vm_static(encoded_vaa: &[u8]) -> Result<VerifiedVMM, WormholeError> {
         if encoded_vaa.len() < 6 {
             return Err(WormholeError::InvalidVAAFormat(InvalidVAAFormat {}));
         }
@@ -327,7 +327,7 @@ impl WormholeContract {
 
         let hash = Self::compute_hash_static(&encoded_vaa[cursor - 51..])?;
 
-        Ok(VAA {
+        Ok(VerifiedVMM {
             version,
             guardian_set_index,
             signatures,
@@ -342,7 +342,7 @@ impl WormholeContract {
         })
     }
 
-    fn verify_vm(&self, vaa: &VAA) -> Result<(), WormholeError> {
+    fn verify_vm(&self, vaa: &VerifiedVMM) -> Result<(), WormholeError> {
         let guardian_set = self.get_guardian_set_internal(vaa.guardian_set_index)
             .ok_or(WormholeError::InvalidGuardianSetIndex(InvalidGuardianSetIndex {}))?;
 
@@ -492,7 +492,7 @@ impl WormholeContract {
 }
 
 impl IWormhole for WormholeContract {
-    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VAA, WormholeError> {
+    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VerifiedVMM, WormholeError> {
         if !self.initialized.get() {
             return Err(WormholeError::NotInitialized(NotInitialized {}));
         }
@@ -694,8 +694,8 @@ mod tests {
         real_data
     }
 
-    fn create_test_vaa(guardian_set_index: u32, signatures: Vec<GuardianSignature>) -> VAA {
-        VAA {
+    fn create_test_vaa(guardian_set_index: u32, signatures: Vec<GuardianSignature>) -> VerifiedVMM {
+        VerifiedVMM {
             version: 1,
             guardian_set_index,
             signatures,
@@ -710,11 +710,11 @@ mod tests {
         }
     }
 
-    fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<GuardianSignature>, emitter: Address) -> VAA {
+    fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<GuardianSignature>, emitter: Address) -> VerifiedVMM {
         let mut emitter_bytes = [0u8; 32];
         emitter_bytes[12..32].copy_from_slice(emitter.as_slice());
 
-        VAA {
+        VerifiedVMM {
             version: 1,
             guardian_set_index,
             signatures,
@@ -1069,7 +1069,7 @@ mod tests {
         }
         let hash = FixedBytes::<32>::from([0x42u8; 32]);
 
-        let vaa = VAA {
+        let vaa = VerifiedVMM {
             version: 1,
             guardian_set_index: 0,
             signatures: vec![
