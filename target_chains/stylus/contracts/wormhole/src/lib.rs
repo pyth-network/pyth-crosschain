@@ -233,7 +233,7 @@ impl WormholeContract {
         Self::parse_vm_static(encoded_vaa)
     }
 
-    // Parsing a Wormhole VAA according to the structure defined 
+    // Parsing a Wormhole VAA according to the structure defined
     // by https://wormhole.com/docs/protocol/infrastructure/vaas/
     fn parse_vm_static(encoded_vaa: &[u8]) -> Result<VerifiedVMM, WormholeError> {
         if encoded_vaa.len() < 6 {
@@ -317,7 +317,7 @@ impl WormholeContract {
             .map_err(|_| WormholeError::InvalidVAAFormat(InvalidVAAFormat {}))?;
 
         let sequence = u64::from_be_bytes(sequence_bytes);
-        
+
         cursor += 8;
 
         let consistency_level = encoded_vaa[cursor];
@@ -350,7 +350,7 @@ impl WormholeContract {
             && guardian_set.expiration_time > 0 {
                 return Err(WormholeError::GuardianSetExpired(GuardianSetExpired {}))
         }
-        
+
         let num_guardians : u32 = guardian_set.keys.len().try_into().map_err(|_| WormholeError::InvalidInput(InvalidInput {}))?;
 
         let required_signatures = Self::quorum(num_guardians);
