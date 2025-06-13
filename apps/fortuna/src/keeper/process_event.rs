@@ -93,12 +93,15 @@ pub async fn process_event_with_backoff(
                 if num_retries >= 5 {
                     return backoff::Error::Permanent(err);
                 }
-                if 1 < num_retries && num_retries < 5 {
-                    return backoff::Error::Transient {
-                        err,
-                        retry_after: Some(Duration::from_secs(60)),
-                    };
-                }
+                let retry_after_seconds = match num_retries {
+                    0 => 5,
+                    1 => 10,
+                    _ => 60,
+                };
+                return backoff::Error::Transient {
+                    err,
+                    retry_after: Some(Duration::from_secs(retry_after_seconds)),
+                };
             }
         }
         e
@@ -109,7 +112,7 @@ pub async fn process_event_with_backoff(
         contract_call,
         gas_limit,
         escalation_policy,
-        error_mapper,
+        Some(error_mapper),
     )
     .await;
 

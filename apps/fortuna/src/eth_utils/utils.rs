@@ -155,13 +155,16 @@ pub async fn estimate_tx_cost<T: Middleware + 'static>(
 /// the transaction exceeds this limit, the transaction is not submitted.
 /// Note however that any gas_escalation policy is applied to the estimate, so the actual gas used may exceed the limit.
 /// The transaction is retried until it is confirmed on chain or the maximum number of retries is reached.
+/// You can pass an `error_mapper` function that will be called on each retry with the number of retries and the error.
+/// This lets you customize the backoff behavior based on the error type.
 pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     middleware: Arc<T>,
     call: ContractCall<T, ()>,
     gas_limit: U256,
     escalation_policy: EscalationPolicy,
-    error_mapper: impl Fn(u64, backoff::Error<SubmitTxError<T>>) -> backoff::Error<SubmitTxError<T>>
-        + Copy,
+    error_mapper: Option<
+        impl Fn(u64, backoff::Error<SubmitTxError<T>>) -> backoff::Error<SubmitTxError<T>>,
+    >,
 ) -> Result<SubmitTxResult, SubmitTxError<T>> {
     let start_time = std::time::Instant::now();
 
@@ -190,7 +193,11 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
                 fee_multiplier_pct,
             )
             .await;
-            result.map_err(|e| error_mapper(num_retries, e))
+            if let Some(ref mapper) = error_mapper {
+                result.map_err(|e| mapper(num_retries, e))
+            } else {
+                result
+            }
         },
         |e, dur| {
             let retry_number = num_retries.load(std::sync::atomic::Ordering::Relaxed);
