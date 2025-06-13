@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/entropy-tester",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Utility to test entropy provider callbacks",
   "type": "module",
   "main": "dist/index.js",
