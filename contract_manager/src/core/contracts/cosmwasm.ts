@@ -1,5 +1,4 @@
 import { Chain, CosmWasmChain } from "../chains";
-import { readFileSync } from "fs";
 import {
   ContractInfoResponse,
   CosmwasmQuerier,
@@ -178,9 +177,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
   static async storeCode(
     chain: CosmWasmChain,
     privateKey: PrivateKey,
-    wasmPath: string,
+    contractBytes: Buffer<ArrayBufferLike>,
   ) {
-    const contractBytes = readFileSync(wasmPath);
     const executor = await chain.getExecutor(privateKey);
     return executor.storeCode({ contractBytes });
   }

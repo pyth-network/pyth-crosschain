@@ -1,5 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { readFile } from "node:fs/promises";
 import { CosmWasmChain } from "../src/core/chains";
 import { CosmWasmPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
@@ -33,7 +34,7 @@ async function main() {
   const { codeId } = await CosmWasmPriceFeedContract.storeCode(
     DefaultStore.chains[argv.chain] as CosmWasmChain,
     toPrivateKey(argv["private-key"]),
-    code,
+    await readFile(code, "utf8"),
   );
   console.log(`Successfully uploaded code with id ${codeId}`);
 }
