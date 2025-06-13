@@ -57,63 +57,63 @@ library PythUtils {
         }
     }
 
-    /// @notice Combines two prices to get a cross-rate
-    /// @param price1 The first price (a/b)
-    /// @param expo1 The exponent of the first price
-    /// @param price2 The second price (c/b)
-    /// @param expo2 The exponent of the second price
-    /// @param targetDecimals The target number of decimals for the cross-rate
-    /// @return crossRate The cross-rate (a/c)
-    /// @dev This function will revert if either price is negative or if the exponents are invalid.
-    /// @dev This function will also revert if the cross-rate is greater than int64.max
-    /// @notice This function doesn't return the combined confidence interval.
-    function deriveCrossRate(
-        int64 price1,
-        int32 expo1,
-        int64 price2,
-        int32 expo2,
-        uint8 targetExpo
-    ) public pure returns (int64 crossRate) {
-        // Check if the input prices are negative
-        if (price1 < 0 || price2 < 0) {
-            revert PythErrors.NegativeInputPrice();
-        }
-        // Check if the input exponents are valid and not less than -255
-        if (expo1 > 0 || expo2 > 0 || expo1 < -255 || expo2 < -255) {
-            revert PythErrors.InvalidInputExpo();
-        }
+    // /// @notice Combines two prices to get a cross-rate
+    // /// @param price1 The first price (a/b)
+    // /// @param expo1 The exponent of the first price
+    // /// @param price2 The second price (c/b)
+    // /// @param expo2 The exponent of the second price
+    // /// @param targetDecimals The target number of decimals for the cross-rate
+    // /// @return crossRate The cross-rate (a/c)
+    // /// @dev This function will revert if either price is negative or if the exponents are invalid.
+    // /// @dev This function will also revert if the cross-rate is greater than int64.max
+    // /// @notice This function doesn't return the combined confidence interval.
+    // function deriveCrossRate(
+    //     int64 price1,
+    //     int32 expo1,
+    //     int64 price2,
+    //     int32 expo2,
+    //     uint8 targetExpo
+    // ) public pure returns (int64 crossRate) {
+    //     // Check if the input prices are negative
+    //     if (price1 < 0 || price2 < 0) {
+    //         revert PythErrors.NegativeInputPrice();
+    //     }
+    //     // Check if the input exponents are valid and not less than -255
+    //     if (expo1 > 0 || expo2 > 0 || expo1 < -255 || expo2 < -255) {
+    //         revert PythErrors.InvalidInputExpo();
+    //     }
 
-        // Calculate the combined price with precision of 36
-        uint256 fixedPointPrice = Math.mulDiv(uint64(price1), 10 ** PRECISION, uint64(price2));
-        int32 combinedExpo = expo1 - expo2 - int32(PRECISION);
+    //     // Calculate the combined price with precision of 36
+    //     uint256 fixedPointPrice = Math.mulDiv(uint64(price1), 10 ** PRECISION, uint64(price2));
+    //     int32 combinedExpo = expo1 - expo2 - int32(PRECISION);
 
-        console.log("PythUtils.deriveCrossRate: fixedPointPrice", fixedPointPrice);
-        console.log("PythUtils.deriveCrossRate: combinedExpo", combinedExpo);
+    //     console.log("PythUtils.deriveCrossRate: fixedPointPrice", fixedPointPrice);
+    //     console.log("PythUtils.deriveCrossRate: combinedExpo", combinedExpo);
 
-        // uint256 crossRateUnchecked = convertToUint(fixedPointPrice, combinedExpo, targetDecimals);
+    //     // uint256 crossRateUnchecked = convertToUint(fixedPointPrice, combinedExpo, targetDecimals);
 
 
 
-        // Convert the price to the target exponent
-        // We can't use the convertToUint function because it accepts int64 and we need to use uint256
-        uint256 fixedPointPrice;
-        if (combinedExpo >= targetExpo) {
-            console.log("combinedExpo >= targetExpo");
-            // If combinedExpo is greater than or equal to targetExpo, we need to multiply
-            fixedPointPrice = fixedPointPrice * 10 ** uint32(combinedExpo + targetExpo);
-        } else {
-            console.log("combinedExpo - targetExpo", combinedExpo - targetExpo);            
-            // If combinedExpo is less than targetExpo, we need to divide
-            fixedPointPrice = fixedPointPrice / 10 ** uint32(targetExpo - combinedExpo);
-        }
+    //     // Convert the price to the target exponent
+    //     // We can't use the convertToUint function because it accepts int64 and we need to use uint256
+    //     uint256 fixedPointPrice;
+    //     if (combinedExpo >= targetExpo) {
+    //         console.log("combinedExpo >= targetExpo");
+    //         // If combinedExpo is greater than or equal to targetExpo, we need to multiply
+    //         fixedPointPrice = fixedPointPrice * 10 ** uint32(combinedExpo + targetExpo);
+    //     } else {
+    //         console.log("combinedExpo - targetExpo", combinedExpo - targetExpo);            
+    //         // If combinedExpo is less than targetExpo, we need to divide
+    //         fixedPointPrice = fixedPointPrice / 10 ** uint32(targetExpo - combinedExpo);
+    //     }
 
-        console.log("PythUtils.deriveCrossRate: crossRateUnchecked", fixedPointPrice);
+    //     console.log("PythUtils.deriveCrossRate: crossRateUnchecked", fixedPointPrice);
 
-        // Check if the combined price fits in int64
-        if (fixedPointPrice > uint256(uint64(type(int64).max))) {
-            revert PythErrors.CombinedPriceOverflow();
-        }
+    //     // Check if the combined price fits in int64
+    //     if (fixedPointPrice > uint256(uint64(type(int64).max))) {
+    //         revert PythErrors.CombinedPriceOverflow();
+    //     }
 
-        return int64(uint64(fixedPointPrice));
-    }
+    //     return int64(uint64(fixedPointPrice));
+    // }
 }
