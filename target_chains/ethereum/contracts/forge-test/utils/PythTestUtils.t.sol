@@ -370,29 +370,29 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
 }
 
 contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
-    // function assertCrossRateEquals(
-    //     int64 price1, 
-    //     int32 expo1, 
-    //     int64 price2, 
-    //     int32 expo2,
-    //     uint8 targetDecimals, 
-    //     int64 expectedPrice
-    // ) internal {
-    //     int64 price = PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetDecimals);
-    //     assertEq(price, expectedPrice);
-    // }
+    function assertCrossRateEquals(
+        int64 price1, 
+        int32 expo1, 
+        int64 price2, 
+        int32 expo2,
+        int32 targetExpo, 
+        int256 expectedPrice
+    ) internal {
+        int256 price = PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetExpo);
+        assertEq(price, expectedPrice);
+    }
 
-    // function assertCrossRateReverts(
-    //     int64 price1, 
-    //     int32 expo1, 
-    //     int64 price2, 
-    //     int32 expo2,
-    //     uint8 targetDecimals,
-    //     bytes4 expectedError
-    // ) internal {
-    //     vm.expectRevert(expectedError);
-    //     PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetDecimals);
-    // }
+    function assertCrossRateReverts(
+        int64 price1, 
+        int32 expo1, 
+        int64 price2, 
+        int32 expo2,
+        int32 targetExpo,
+        bytes4 expectedError
+    ) internal {
+        vm.expectRevert(expectedError);
+        PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetExpo);
+    }
 
     function testConvertToUnit() public {
         // Price can't be negative
@@ -494,55 +494,59 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         assertEq(PythUtils.convertToUint(5, -1, 2), 50); // 5/10*100 = 50
     }
 
-    // function testDeriveCrossRate() public {
+    function testDeriveCrossRate() public {
 
-    //     // Test 1: Prices can't be negative
-    //     assertCrossRateReverts(-100, -2, 100, -2, 5, PythErrors.NegativeInputPrice.selector);
-    //     assertCrossRateReverts(100, -2, -100, -2, 5, PythErrors.NegativeInputPrice.selector);
-    //     assertCrossRateReverts(-100, -2, -100, -2, 5, PythErrors.NegativeInputPrice.selector);
+        // Test 1: Prices can't be negative
+        assertCrossRateReverts(-100, -2, 100, -2, 5, PythErrors.NegativeInputPrice.selector);
+        assertCrossRateReverts(100, -2, -100, -2, 5, PythErrors.NegativeInputPrice.selector);
+        assertCrossRateReverts(-100, -2, -100, -2, 5, PythErrors.NegativeInputPrice.selector);
 
+        // Test 2: Exponent can't be less than -255
+        assertCrossRateReverts(100, -256, 100, -2, 5, PythErrors.InvalidInputExpo.selector);
+        assertCrossRateReverts(100, -2, 100, -256, 5, PythErrors.InvalidInputExpo.selector);
+        assertCrossRateReverts(100, -256, 100, -256, 5, PythErrors.InvalidInputExpo.selector);
 
-    //     // Test 2: Exponent can't be positive
-    //     assertCrossRateReverts(100, 2, 100, -2, 5, PythErrors.InvalidInputExpo.selector);
-    //     assertCrossRateReverts(100, -2, 100, 2, 5, PythErrors.InvalidInputExpo.selector);
-    //     assertCrossRateReverts(100, 2, 100, 2, 5, PythErrors.InvalidInputExpo.selector);
+        // Test 3: Basic Tests with negative exponents 
+        assertCrossRateEquals(500, -8, 500, -8, -5, 100000); 
+        assertCrossRateEquals(10_000, -8, 100, -2, -5, 10);
+        assertCrossRateEquals(10_000, -2, 100, -8, -5, 100_00_000_000_000);
 
-    //     // Test 3: Exponent can't be less than -255
-    //     assertCrossRateReverts(100, -256, 100, -2, 5, PythErrors.InvalidInputExpo.selector);
-    //     assertCrossRateReverts(100, -2, 100, -256, 5, PythErrors.InvalidInputExpo.selector);
+        // Test 4: Basic Tests with positive exponents
+        assertCrossRateEquals(100, 2, 100, 2, -5, 100000); // 100 * 10^2 / 100 * 10^2 = 10000 / 10000 = 1 == 100000 * 10^-5
+        // We will loose preistion as the the target exponent is 5 making the price 0.00001
+        assertCrossRateEquals(100, 8, 100, 8, 5, 0); 
+        assertCrossRateEquals(100, 2, 100, 2, -5, 100000); // 100 * 10^2 / 100 * 10^2 = 10000 / 10000 = 1
+        // We will loose preistion as the the target exponent is 5 making the price 0.00001
+        assertCrossRateEquals(100, 2, 100, 2, 5, 0); 
 
-    //     // Test 4: Basic Tests 
-    //     assertCrossRateEquals(500, -8, 500, -8, 5, 100000); 
-    //     assertCrossRateEquals(10_000, -8, 100, -2, 5, 10);
-    //     assertCrossRateEquals(10_000, -2, 100, -8, 5, 1_000_000_000_000);
+        // Test 5: Different Exponent Tests
+        assertCrossRateEquals(10_000, -2, 100, -4, 0, 10_000); // 10_000 / 100 = 100 * 10(-2 - -4) = 10_000 with 0 decimals = 10_000
+        assertCrossRateEquals(10_000, -2, 100, -4, 5, 0); // 10_000 / 100 = 100 * 10(-2 - -4) = 10_000 with 5 decimals = 0
+        assertCrossRateEquals(10_000, -2, 10_000, -1, 5, 0); // It will truncate to 0
+        assertCrossRateEquals(10_000, -10, 10_000, -2, 0, 0); // It will truncate to 0
 
-    //     // Test 5: Different Exponent Tests
-    //     assertCrossRateEquals(10_000, -2, 100, -4, 0, 10_000); // 10_000 / 100 = 100 * 10(-2 - -4) = 10_000 with 0 decimals = 10_000
-    //     assertCrossRateEquals(10_000, -2, 100, -4, 5, 0); // 10_000 / 100 = 100 * 10(-2 - -4) = 10_000 with 5 decimals = 0
-    //     assertCrossRateEquals(10_000, -2, 10_000, -1, 5, 0); // It will truncate to 0
-    //     assertCrossRateEquals(10_000, -10, 10_000, -2, 0, 0); // It will truncate to 0
+        assertCrossRateEquals(100_000_000, -2, 100, -8, -8, 100_000_000_000_000_000_000); // 100_000_000 / 100 = 1_000_000 * 10(-2 - -8) = 1000000 * 10^6 = 1000000000000
 
-    //     // // Exponent Edge Tests
-    //     // assertCrossRateEquals(10_000, 0, 100, 0, 0, 100); 
-    //     // assertCrossRateEquals(10_000, 0, 100, 0, -255, 100); 
-    //     // assertCrossRateEquals(10_000, 0, 100, -255, -255, 100, -255); 
-    //     // assertCrossRateEquals(10_000, -255, 100, 0, 0, 100, 0); 
+        // Exponent Edge Tests
+        console.log("\nExponent Edge Tests");
+        assertCrossRateEquals(10_000, 0, 100, 0, 0, 100); 
+        assertCrossRateReverts(10_000, 0, 100, 0, -255, PythErrors.ExponentOverflow.selector);
+        assertCrossRateReverts(10_000, 0, 100, -255, -255, PythErrors.ExponentOverflow.selector); 
+        assertCrossRateReverts(10_000, -255, 100, 0, 0, PythErrors.ExponentOverflow.selector); 
+        assertCrossRateReverts(10_000, -255, 100, -178, -5, PythErrors.ExponentOverflow.selector);
 
-    //     // // End Range Tests
-    //     // successTest(int64(type(int64).max), 0, int64(type(int64).max), 0, 1, 0);
-    //     // successTest(int64(type(int64).max), 0, 1, 0, int64(type(int64).max), 0);
-    //     // successTest(1, 0, int64(type(int64).max), 0, 1 / int64(type(int64).max), 0);
-    //     // revertTest(10_000, -2, 10_000, -256);
-        
-    //     // // More Realistic Tests
-    //     // // Test case 1:  (StEth/Eth / Eth/USD = ETH/BTC)
-    //     // (int64 price, int32 expo) = PythUtils.deriveCrossRate(206487956502, -8, 206741615681, -8);
-    //     // assertApproxEqRel(price, 100000000, 9e17); // $1
-    //     // assertEq(expo, -8);
+        console.log("\nRealistic Tests");
+        // Realistic Tests
+        // Test case 1:  (StEth/Eth / Eth/USD = ETH/BTC)
+        int256 price = PythUtils.deriveCrossRate(206487956502, -8, 206741615681, -8, -8);
+        assertApproxEqRel(price, 100000000, 9e17); // $1
 
-    //     // // Test case 2: 
-    //     // (price, expo) = PythUtils.deriveCrossRate(520010, -8, 38591, -8);
-    //     // assertApproxEqRel(price, 1347490347, 9e17); // $1
-    //     // assertEq(expo, -8);
-    // }
+        // Test case 2: 
+        price = PythUtils.deriveCrossRate(520010, -8, 38591, -8, -8);
+        assertApproxEqRel(price, 1347490347, 9e17); // $13.47
+
+        // Test case 3: 
+        price = PythUtils.deriveCrossRate(520010, -8, 38591, -8, -12);
+        assertApproxEqRel(price, 13474903475432, 9e17); // $13.47
+    }
 }
