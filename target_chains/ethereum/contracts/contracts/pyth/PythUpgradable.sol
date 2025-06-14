@@ -28,7 +28,8 @@ contract PythUpgradable is
         bytes32 governanceEmitterAddress,
         uint64 governanceInitialSequence,
         uint validTimePeriodSeconds,
-        uint singleUpdateFeeInWei
+        uint singleUpdateFeeInWei,
+        address verifier
     ) public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
@@ -41,7 +42,8 @@ contract PythUpgradable is
             governanceEmitterAddress,
             governanceInitialSequence,
             validTimePeriodSeconds,
-            singleUpdateFeeInWei
+            singleUpdateFeeInWei,
+            verifier
         );
 
         renounceOwnership();

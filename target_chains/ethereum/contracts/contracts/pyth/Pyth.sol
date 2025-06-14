@@ -25,9 +25,11 @@ abstract contract Pyth is
         bytes32 governanceEmitterAddress,
         uint64 governanceInitialSequence,
         uint validTimePeriodSeconds,
-        uint singleUpdateFeeInWei
+        uint singleUpdateFeeInWei,
+        address verifier
     ) internal {
         setWormhole(wormhole);
+        setVerifier(verifier);
 
         if (
             dataSourceEmitterChainIds.length !=

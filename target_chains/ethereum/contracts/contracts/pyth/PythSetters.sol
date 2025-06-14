@@ -52,4 +52,8 @@ contract PythSetters is PythState, IPythEvents {
     function setTransactionFeeInWei(uint fee) internal {
         _state.transactionFeeInWei = fee;
     }
+
+    function setVerifier(address vf) internal {
+        _state.verifier = payable(vf);
+    }
 }
