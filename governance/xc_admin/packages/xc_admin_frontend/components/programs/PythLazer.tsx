@@ -1,41 +1,532 @@
-import React from 'react'
+import React, { useState, useContext } from 'react'
+import { usePythContext } from '../../contexts/PythContext'
+import { ClusterContext } from '../../contexts/ClusterContext'
+import { LazerEnvContext } from '../../contexts/LazerEnvContext'
+import LazerEnvSwitch from '../LazerEnvSwitch'
+import Modal from '../common/Modal'
+import {
+  validateUploadedConfig,
+  ProgramType,
+  mapKey,
+  PRICE_FEED_MULTISIG,
+  getMultisigCluster,
+  isRemoteCluster,
+} from '@pythnetwork/xc-admin-common'
+import toast from 'react-hot-toast'
+import Loadbar from '../loaders/Loadbar'
+import Spinner from '../common/Spinner'
+import {
+  LazerFeed,
+  LazerPublisher,
+  LazerConfigChanges,
+} from '@pythnetwork/xc-admin-common/src/programs/types'
+import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
+import { generateInstructions } from '@pythnetwork/xc-admin-common/lib/programs/lazer/lazer_functions'
+import { useMultisigContext } from '../../contexts/MultisigContext'
+import axios from 'axios'
 
 interface PythLazerProps {
-  proposerServerUrl: string // kept for consistency with PythCore interface
+  proposerServerUrl: string
+}
+
+interface ShardChanges {
+  prev?: {
+    shardId: number
+    shardName: string
+    minRate: string
+  }
+  new: {
+    shardId: number
+    shardName: string
+    minRate: string
+  }
+}
+
+interface FeedChanges {
+  prev?: LazerFeed
+  new?: LazerFeed
+}
+
+interface PublisherChanges {
+  prev?: LazerPublisher
+  new?: LazerPublisher
+}
+
+interface ShardChangesRowsProps {
+  changes: ShardChanges
+}
+
+interface FeedChangesRowsProps {
+  changes: FeedChanges
+  feedId: string
+}
+
+interface PublisherChangesRowsProps {
+  changes: PublisherChanges
+  publisherId: string
+}
+
+interface ModalContentProps {
+  changes: LazerConfigChanges
+  onSendProposal: () => void
+  isSendProposalButtonLoading: boolean
+}
+
+const ShardChangesRows: React.FC<ShardChangesRowsProps> = ({ changes }) => {
+  const isNewShard = !changes.prev && changes.new
+
+  return (
+    <>
+      {Object.entries(changes.new).map(
+        ([key, newValue]) =>
+          (isNewShard ||
+            (changes.prev &&
+              changes.prev[key as keyof typeof changes.prev] !== newValue)) && (
+            <tr key={key}>
+              <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+                {key
+                  .split(/(?=[A-Z])/)
+                  .join(' ')
+                  .split('_')
+                  .map((word) => capitalizeFirstLetter(word))
+                  .join(' ')}
+              </td>
+              <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+                {!isNewShard && changes.prev ? (
+                  <>
+                    <s>
+                      {String(changes.prev[key as keyof typeof changes.prev])}
+                    </s>
+                    <br />
+                  </>
+                ) : null}
+                {String(newValue)}
+              </td>
+            </tr>
+          )
+      )}
+    </>
+  )
+}
+
+const FeedChangesRows: React.FC<FeedChangesRowsProps> = ({
+  changes,
+  feedId,
+}) => {
+  const isNewFeed = !changes.prev && changes.new
+  const isDeletedFeed = changes.prev && !changes.new
+
+  if (isDeletedFeed) {
+    return (
+      <tr>
+        <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Feed ID</td>
+        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+          {feedId.replace('feed_', '')}
+        </td>
+      </tr>
+    )
+  }
+
+  if (!changes.new) return null
+
+  const renderMetadataChanges = () => {
+    if (!changes.new?.metadata) return null
+
+    return Object.entries(changes.new.metadata).map(([key, newValue]) => {
+      const prevValue =
+        changes.prev?.metadata?.[key as keyof typeof changes.prev.metadata]
+      const hasChanged = isNewFeed || prevValue !== newValue
+
+      if (!hasChanged) return null
+
+      return (
+        <tr key={key}>
+          <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+            {key
+              .split(/(?=[A-Z])/)
+              .join(' ')
+              .split('_')
+              .map((word) => capitalizeFirstLetter(word))
+              .join(' ')}
+          </td>
+          <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+            {!isNewFeed && prevValue !== undefined ? (
+              <>
+                <s>{String(prevValue)}</s>
+                <br />
+              </>
+            ) : null}
+            {String(newValue)}
+          </td>
+        </tr>
+      )
+    })
+  }
+
+  const renderPendingActivationChanges = () => {
+    if (
+      changes.new?.pendingActivation !== undefined ||
+      changes.prev?.pendingActivation !== undefined
+    ) {
+      const hasChanged =
+        isNewFeed ||
+        changes.prev?.pendingActivation !== changes.new?.pendingActivation
+
+      if (hasChanged) {
+        return (
+          <tr key="pendingActivation">
+            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+              Pending Activation
+            </td>
+            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+              {!isNewFeed && changes.prev?.pendingActivation ? (
+                <>
+                  <s>{changes.prev.pendingActivation}</s>
+                  <br />
+                </>
+              ) : null}
+              {changes.new?.pendingActivation || 'None'}
+            </td>
+          </tr>
+        )
+      }
+    }
+    return null
+  }
+
+  return (
+    <>
+      {renderMetadataChanges()}
+      {renderPendingActivationChanges()}
+    </>
+  )
+}
+
+const PublisherChangesRows: React.FC<PublisherChangesRowsProps> = ({
+  changes,
+  publisherId,
+}) => {
+  const isNewPublisher = !changes.prev && changes.new
+  const isDeletedPublisher = changes.prev && !changes.new
+
+  if (isDeletedPublisher) {
+    return (
+      <tr>
+        <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Publisher ID</td>
+        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+          {publisherId.replace('publisher_', '')}
+        </td>
+      </tr>
+    )
+  }
+
+  if (!changes.new) return null
+
+  return (
+    <>
+      {Object.entries(changes.new).map(([key, newValue]) => {
+        const prevValue = changes.prev?.[key as keyof LazerPublisher]
+        const hasChanged =
+          isNewPublisher ||
+          JSON.stringify(prevValue) !== JSON.stringify(newValue)
+
+        if (!hasChanged) return null
+
+        return (
+          <tr key={key}>
+            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+              {key
+                .split(/(?=[A-Z])/)
+                .join(' ')
+                .split('_')
+                .map((word) => capitalizeFirstLetter(word))
+                .join(' ')}
+            </td>
+            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+              {!isNewPublisher && prevValue !== undefined ? (
+                <>
+                  <s>
+                    {Array.isArray(prevValue)
+                      ? prevValue.join(', ')
+                      : String(prevValue)}
+                  </s>
+                  <br />
+                </>
+              ) : null}
+              {Array.isArray(newValue) ? newValue.join(', ') : String(newValue)}
+            </td>
+          </tr>
+        )
+      })}
+    </>
+  )
+}
+
+const ModalContent: React.FC<ModalContentProps> = ({
+  changes,
+  onSendProposal,
+  isSendProposalButtonLoading,
+}) => {
+  return (
+    <>
+      {Object.keys(changes).length > 0 ? (
+        <table className="mb-10 w-full table-auto bg-darkGray text-left">
+          {Object.entries(changes).map(([key, change]) => {
+            const { prev, new: newChanges } = change
+            const isAddition = !prev && newChanges
+            const isDeletion = prev && !newChanges
+
+            let title = key
+            if (key === 'shard') {
+              title = isAddition
+                ? 'Add New Shard'
+                : isDeletion
+                  ? 'Delete Shard'
+                  : 'Shard Configuration'
+            } else if (key.startsWith('feed_')) {
+              const feedId = key.replace('feed_', '')
+              title = isAddition
+                ? `Add New Feed (ID: ${feedId})`
+                : isDeletion
+                  ? `Delete Feed (ID: ${feedId})`
+                  : `Feed ${feedId}`
+            } else if (key.startsWith('publisher_')) {
+              const publisherId = key.replace('publisher_', '')
+              title = isAddition
+                ? `Add New Publisher (ID: ${publisherId})`
+                : isDeletion
+                  ? `Delete Publisher (ID: ${publisherId})`
+                  : `Publisher ${publisherId}`
+            }
+
+            return (
+              <tbody key={key}>
+                <tr>
+                  <td
+                    className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
+                    colSpan={2}
+                  >
+                    {title}
+                  </td>
+                </tr>
+
+                {key === 'shard' && newChanges ? (
+                  <ShardChangesRows
+                    changes={{
+                      prev: prev as ShardChanges['prev'],
+                      new: newChanges as ShardChanges['new'],
+                    }}
+                  />
+                ) : key.startsWith('feed_') ? (
+                  <FeedChangesRows
+                    feedId={key}
+                    changes={{
+                      prev: prev as LazerFeed,
+                      new: newChanges as LazerFeed,
+                    }}
+                  />
+                ) : key.startsWith('publisher_') ? (
+                  <PublisherChangesRows
+                    publisherId={key}
+                    changes={{
+                      prev: prev as LazerPublisher,
+                      new: newChanges as LazerPublisher,
+                    }}
+                  />
+                ) : null}
+
+                {Object.keys(changes).indexOf(key) !==
+                Object.keys(changes).length - 1 ? (
+                  <tr>
+                    <td className="base16 py-4 pl-6 pr-6" colSpan={2}>
+                      <hr className="border-gray-700" />
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            )
+          })}
+        </table>
+      ) : (
+        <p className="mb-8 leading-6">No proposed changes.</p>
+      )}
+      {Object.keys(changes).length > 0 && (
+        <button
+          className="action-btn text-base"
+          onClick={onSendProposal}
+          disabled={isSendProposalButtonLoading}
+        >
+          {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+        </button>
+      )}
+    </>
+  )
 }
 
 const PythLazer = ({
-  proposerServerUrl: _proposerServerUrl,
+  proposerServerUrl: proposerServerUrl,
 }: PythLazerProps) => {
+  const { dataIsLoading, lazerState } = usePythContext()
+  const { cluster } = useContext(ClusterContext)
+  const { lazerEnv } = useContext(LazerEnvContext)
+  const { isLoading: isMultisigLoading, readOnlySquads } = useMultisigContext()
+  const isRemote: boolean = isRemoteCluster(cluster)
+
+  const [dataChanges, setDataChanges] = useState<LazerConfigChanges>()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
+    useState(false)
+
+  const openModal = () => {
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+  }
+
+  const handleDownloadJsonButtonClick = () => {
+    if (!lazerState) return
+
+    const dataStr =
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(lazerState, null, 2))
+    const downloadAnchor = document.createElement('a')
+    downloadAnchor.setAttribute('href', dataStr)
+    downloadAnchor.setAttribute('download', `lazer_config_${lazerEnv}.json`)
+    document.body.appendChild(downloadAnchor) // required for firefox
+    downloadAnchor.click()
+    downloadAnchor.remove()
+  }
+
+  const handleUploadJsonButtonClick = () => {
+    if (!lazerState) {
+      toast.error('Lazer state not available')
+      return
+    }
+
+    const uploadAnchor = document.createElement('input')
+    uploadAnchor.setAttribute('type', 'file')
+    uploadAnchor.setAttribute('accept', '.json')
+    uploadAnchor.addEventListener('change', (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          try {
+            const uploadedConfig = JSON.parse(e.target.result as string)
+            const validation = validateUploadedConfig[ProgramType.PYTH_LAZER](
+              lazerState,
+              uploadedConfig,
+              cluster
+            )
+
+            if (!validation.isValid) {
+              toast.error(validation.error || 'Invalid configuration')
+              return
+            }
+
+            setDataChanges(validation.changes)
+            openModal()
+          } catch (error) {
+            if (error instanceof Error) {
+              toast.error(capitalizeFirstLetter(error.message))
+            }
+          }
+        }
+      }
+      reader.readAsText(file)
+    })
+    document.body.appendChild(uploadAnchor) // required for firefox
+    uploadAnchor.click()
+    uploadAnchor.remove()
+  }
+
+  const handleSendProposalButtonClick = async () => {
+    setIsSendProposalButtonLoading(true)
+    if (dataChanges && !isMultisigLoading) {
+      try {
+        const multisigAuthority = readOnlySquads.getAuthorityPDA(
+          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
+          1
+        )
+        const fundingAccount = isRemote
+          ? mapKey(multisigAuthority)
+          : multisigAuthority
+        // Generate the instructions for the proposal
+        const instructions = await generateInstructions(
+          dataChanges as LazerConfigChanges,
+          {
+            fundingAccount,
+          },
+          `lazer_${lazerEnv}` // Use the selected lazer environment
+        )
+
+        console.log('Generated instructions:', instructions)
+
+        const response = await axios.post(proposerServerUrl + '/api/propose', {
+          instructions,
+          cluster,
+        })
+        const { proposalPubkey } = response.data
+        toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
+        setIsSendProposalButtonLoading(false)
+        closeModal()
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+          toast.error(capitalizeFirstLetter(error.response.data))
+        } else if (error instanceof Error) {
+          toast.error(capitalizeFirstLetter(error.message))
+        }
+        setIsSendProposalButtonLoading(false)
+      }
+    }
+  }
+
   return (
-    <div className="relative p-10">
-      <div className="text-center">
-        <div className="mb-6 flex flex-col items-center justify-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="mb-4 h-16 w-16 text-amber-500"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-            />
-          </svg>
-          <h2 className="text-xl font-semibold">
-            Pyth Lazer is not supported yet
-          </h2>
-        </div>
-        <p className="text-md mb-4 text-gray-400">
-          The Pyth Lazer program integration is currently under development.
-        </p>
-        <p className="text-md mb-8 text-gray-400">
-          Please check back later or switch to Pyth Core using the program
-          selector above.
-        </p>
+    <div className="relative">
+      <Modal
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        closeModal={closeModal}
+        content={
+          <ModalContent
+            changes={dataChanges || {}}
+            onSendProposal={handleSendProposalButtonClick}
+            isSendProposalButtonLoading={isSendProposalButtonLoading}
+          />
+        }
+      />
+      <div className="mb-4 flex">
+        <LazerEnvSwitch />
+      </div>
+      <div className="relative mt-6">
+        {dataIsLoading || !lazerState ? (
+          <div className="mt-3">
+            <Loadbar theme="light" />
+          </div>
+        ) : (
+          <div className="flex items-center space-x-4">
+            <div className="mb-10">
+              <button
+                className="action-btn text-base"
+                onClick={handleDownloadJsonButtonClick}
+              >
+                Download JSON
+              </button>
+            </div>
+            <div className="mb-10">
+              <button
+                className="action-btn text-base"
+                onClick={handleUploadJsonButtonClick}
+              >
+                Upload JSON
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

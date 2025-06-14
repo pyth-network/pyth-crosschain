@@ -24,6 +24,7 @@ import { ProgramProvider } from '../contexts/ProgramContext'
 import SEO from '../next-seo.config'
 import '../styles/globals.css'
 import { NuqsAdapter } from 'nuqs/adapters/next/pages'
+import { LazerEnvProvider } from '../contexts/LazerEnvContext'
 
 const walletConnectConfig: WalletConnectWalletAdapterConfig = {
   network: WalletAdapterNetwork.Mainnet,
@@ -69,25 +70,27 @@ function MyApp({ Component, pageProps }: AppProps) {
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>
             <ClusterProvider>
-              <ProgramProvider>
-                <Head>
-                  <meta
-                    name="viewport"
-                    content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+              <LazerEnvProvider>
+                <ProgramProvider>
+                  <Head>
+                    <meta
+                      name="viewport"
+                      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+                    />
+                  </Head>
+                  <DefaultSeo {...SEO} />
+                  <Component {...pageProps} />
+                  <Toaster
+                    position="bottom-left"
+                    toastOptions={{
+                      style: {
+                        wordBreak: 'break-word',
+                      },
+                    }}
+                    reverseOrder={false}
                   />
-                </Head>
-                <DefaultSeo {...SEO} />
-                <Component {...pageProps} />
-                <Toaster
-                  position="bottom-left"
-                  toastOptions={{
-                    style: {
-                      wordBreak: 'break-word',
-                    },
-                  }}
-                  reverseOrder={false}
-                />
-              </ProgramProvider>
+                </ProgramProvider>
+              </LazerEnvProvider>
             </ClusterProvider>
           </WalletModalProvider>
         </WalletProvider>

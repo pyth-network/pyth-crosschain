@@ -1,7 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
 import { PermissionData, Product } from "@pythnetwork/client";
-import { LazerConfig, LazerInstructionAccounts } from "./lazer/lazer_functions";
+import { LazerInstructionAccounts } from "./lazer/lazer_functions";
 import { CoreInstructionAccounts } from "./core/core_functions";
+import { pyth_lazer_transaction } from "@pythnetwork/pyth-lazer-state-sdk/governance";
+import { lazer } from "@pythnetwork/pyth-lazer-state-sdk/state";
 /**
  * Represents the different Pyth programs supported by the application.
  */
@@ -85,8 +87,11 @@ export type DownloadableProduct = {
 
 /**
  * Type for downloadable configuration
+ * Can be either a mapping of symbols to products (Core) or a LazerState (Lazer)
  */
-export type DownloadableConfig = Record<string, DownloadableProduct>;
+export type DownloadableConfig =
+  | Record<string, DownloadableProduct>
+  | LazerState;
 
 /**
  * Type for configuration that can be either RawConfig for Pyth Core or LazerConfig for Lazer
@@ -109,10 +114,125 @@ export type InstructionAccountsTypeMap = {
 };
 
 /**
- * Result of validating an uploaded configuration
+ * Types for different kinds of configuration changes
  */
-export interface ValidationResult {
+export type ShardChange = {
+  prev?: {
+    shardId: number;
+    shardName: string;
+    minRate: string;
+  };
+  new?: {
+    shardId: number;
+    shardName: string;
+    minRate: string;
+  };
+};
+
+export type FeedChange = {
+  prev?: LazerFeed;
+  new?: LazerFeed;
+};
+
+export type PublisherChange = {
+  prev?: LazerPublisher;
+  new?: LazerPublisher;
+};
+
+/**
+ * Union type for all possible Lazer configuration changes
+ */
+export type LazerConfigChanges = Record<
+  string,
+  FeedChange | PublisherChange | ShardChange
+>;
+
+/**
+ * Core-specific validation result
+ */
+export interface CoreValidationResult {
   isValid: boolean;
   error?: string;
-  changes?: any;
+  changes?: Record<
+    string,
+    {
+      prev?: Partial<DownloadableProduct>;
+      new?: Partial<DownloadableProduct>;
+    }
+  >;
 }
+
+/**
+ * Lazer-specific validation result
+ */
+export interface LazerValidationResult {
+  isValid: boolean;
+  error?: string;
+  changes?: LazerConfigChanges;
+}
+
+/**
+ * Union type for validation results
+ */
+export type ValidationResult = CoreValidationResult | LazerValidationResult;
+
+/**
+ * Lazer feed metadata type
+ */
+export type LazerFeedMetadata = {
+  feedId: number;
+  name: string;
+  symbol: string;
+  description: string;
+  assetType: string;
+  exponent: number;
+  minPublishers: number;
+  minRate: string;
+  expiryTime: string;
+  isActivated: boolean;
+  hermesId?: string;
+  cmcId?: number;
+  fundingRateInterval?: string;
+  quoteCurrency?: string;
+  marketSchedule: string;
+};
+
+/**
+ * Lazer feed type
+ */
+export type LazerFeed = {
+  metadata: LazerFeedMetadata;
+  pendingActivation?: string;
+};
+
+/**
+ * Lazer publisher type
+ */
+export type LazerPublisher = {
+  publisherId: number;
+  name: string;
+  publicKeys: string[];
+  isActive: boolean;
+};
+
+/**
+ * Full Lazer state type
+ */
+export type LazerState = {
+  shardId: number;
+  lastSequenceNo: string;
+  lastTimestamp: string;
+  shardName: string;
+  minRate: string;
+  feeds: LazerFeed[];
+  publishers: LazerPublisher[];
+};
+
+/**
+ * Lazer-specific configuration type
+ */
+export type LazerConfig = {
+  programType: ProgramType.PYTH_LAZER;
+  // The Lazer state data
+  state: LazerState;
+};
