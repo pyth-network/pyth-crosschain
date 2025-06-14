@@ -95,4 +95,8 @@ contract PythGetters is PythState {
     function transactionFeeInWei() public view returns (uint) {
         return _state.transactionFeeInWei;
     }
+
+    function verifier() public view returns (IWormhole) {
+        return IWormhole(_state.verifier);
+    }
 }

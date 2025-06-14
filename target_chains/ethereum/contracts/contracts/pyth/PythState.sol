@@ -40,6 +40,8 @@ contract PythStorage {
         mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
         // Fee charged per transaction, in addition to per-update fees
         uint transactionFeeInWei;
+        // Verifier address for verifying VAA signatures
+        address verifier;
     }
 }
 

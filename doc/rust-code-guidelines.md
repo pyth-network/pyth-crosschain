@@ -14,48 +14,47 @@ Note: general [Code Guidelines](code-guidelines.md) also apply.
 
 - (expand to see clippy configuration)
 
-    ```toml
-    [lints.rust]
-    unsafe_code = "deny"
+  ```toml
+  [lints.rust]
+  unsafe_code = "deny"
 
-    [lints.clippy]
-    wildcard_dependencies = "deny"
+  [lints.clippy]
+  wildcard_dependencies = "deny"
 
-    collapsible_if = "allow"
-    collapsible_else_if = "allow"
+  collapsible_if = "allow"
+  collapsible_else_if = "allow"
 
-    allow_attributes_without_reason = "warn"
+  allow_attributes_without_reason = "warn"
 
-    # Panics
-    expect_used = "warn"
-    fallible_impl_from = "warn"
-    indexing_slicing = "warn"
-    panic = "warn"
-    panic_in_result_fn = "warn"
-    string_slice = "warn"
-    todo = "warn"
-    unchecked_duration_subtraction = "warn"
-    unreachable = "warn"
-    unwrap_in_result = "warn"
-    unwrap_used = "warn"
+  # Panics
+  expect_used = "warn"
+  fallible_impl_from = "warn"
+  indexing_slicing = "warn"
+  panic = "warn"
+  panic_in_result_fn = "warn"
+  string_slice = "warn"
+  todo = "warn"
+  unchecked_duration_subtraction = "warn"
+  unreachable = "warn"
+  unwrap_in_result = "warn"
+  unwrap_used = "warn"
 
-    # Correctness
-    cast_lossless = "warn"
-    cast_possible_truncation = "warn"
-    cast_possible_wrap = "warn"
-    cast_sign_loss = "warn"
-    collection_is_never_read = "warn"
-    match_wild_err_arm = "warn"
-    path_buf_push_overwrite = "warn"
-    read_zero_byte_vec = "warn"
-    same_name_method = "warn"
-    suspicious_operation_groupings = "warn"
-    suspicious_xor_used_as_pow = "warn"
-    unused_self = "warn"
-    used_underscore_binding = "warn"
-    while_float = "warn"
-    ```
-
+  # Correctness
+  cast_lossless = "warn"
+  cast_possible_truncation = "warn"
+  cast_possible_wrap = "warn"
+  cast_sign_loss = "warn"
+  collection_is_never_read = "warn"
+  match_wild_err_arm = "warn"
+  path_buf_push_overwrite = "warn"
+  read_zero_byte_vec = "warn"
+  same_name_method = "warn"
+  suspicious_operation_groupings = "warn"
+  suspicious_xor_used_as_pow = "warn"
+  unused_self = "warn"
+  used_underscore_binding = "warn"
+  while_float = "warn"
+  ```
 
 The recommendations on this page should help with dealing with these lints.
 
@@ -92,9 +91,10 @@ Panics are dangerous because they can arise from concise code constructions (suc
 **Common sources of panics:**
 
 | Source of panic | Non-panicking alternatives |
-| --- | --- |
+| --------------- | -------------------------- |
+
 | `.unwrap()`, `.expect(...)`,
-`panic!()`, `assert*!()`  | `Result`-based handling using `anyhow` crate:
+`panic!()`, `assert*!()` | `Result`-based handling using `anyhow` crate:
 `.context()?` , `.with_context()?` ,
 `bail!()`, `ensure!()`. |
 | `unimplemented!()`, `todo!()`, `unreachable!()` | — |
@@ -103,7 +103,7 @@ Panics are dangerous because they can arise from concise code constructions (suc
 | Indexing a `HashMap` or `BTreeMap` on a non-existing key: `&map[key]` | `.get()`, `.get_mut()`, `.entry()` |
 | Indexing a non-ASCII string not at char boundaries: `&"😢😢😢"[0..1]` | `.get()`, `.get_mut()` |
 | `Vec` methods: `.insert()`, `.remove()`, `.drain()`, `.split_off()` and many more | There are checked alternatives for some but not all of them. |
-| Division by zero: `a / b`, `a % b` | `.checked_div()`, `.checked_rem()`, `/ NonZero*`  |
+| Division by zero: `a / b`, `a % b` | `.checked_div()`, `.checked_rem()`, `/ NonZero*` |
 
 Think about the cases that could cause your code to panic. Try to rewrite the code in a way that avoids a possible panic.
 
@@ -111,239 +111,238 @@ Here are some tips to solve `clippy` warnings and avoid panics:
 
 - **Use `Result` type and return the error to the caller.** Use `.context()` or `.with_context()` from `anyhow` crate to add relevant information to the error. Use `.ok_or_else()` or `.context()` to convert `Option` to `Result`.
 
-    ⛔ Bad:
+  ⛔ Bad:
 
-    ```rust
-    pub fn best_bid(response: &Response) -> String {
-        response.bids[0].clone()
-    }
-    ```
+  ```rust
+  pub fn best_bid(response: &Response) -> String {
+      response.bids[0].clone()
+  }
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    pub fn best_bid(response: &Response) -> anyhow::Result<String> {
-        Ok(response.bids.first().context("expected 1 item in bids, got 0")?.clone())
-    }
-    ```
+  ```rust
+  pub fn best_bid(response: &Response) -> anyhow::Result<String> {
+      Ok(response.bids.first().context("expected 1 item in bids, got 0")?.clone())
+  }
+  ```
 
 - **If propagation with `?` doesn’t work because of error type, convert the error type with `.map_err()`.**
 
-    ✅ Good (`binary_search` returns `Err(index)` instead of a well-formed error, so we create our own error value):
+  ✅ Good (`binary_search` returns `Err(index)` instead of a well-formed error, so we create our own error value):
 
-    ```rust
-        items
-            .binary_search(&needle)
-            .map_err(|_| anyhow!("item not found: {:?}", needle))?;
-    ```
+  ```rust
+      items
+          .binary_search(&needle)
+          .map_err(|_| anyhow!("item not found: {:?}", needle))?;
+  ```
 
-    ✅ Good (`?` can’t convert from `Box<dyn Error>` to `anyhow::Error`, but there is a function that converts it):
+  ✅ Good (`?` can’t convert from `Box<dyn Error>` to `anyhow::Error`, but there is a function that converts it):
 
-    ```rust
-    let info = message.info().map_err(anyhow::Error::from_boxed)?;
-    ```
+  ```rust
+  let info = message.info().map_err(anyhow::Error::from_boxed)?;
+  ```
 
 - **If the error is in a non-Result function inside an iterator chain (e.g. `.map()`) or a combinator (e.g. `.unwrap_or_else()`), consider rewriting it as a plain `for` loop or `match`/`if let` to allow error propagation.** (If you’re determined to make iterators work, `fallible-iterator` crate may also be useful.)
 
-    ⛔ Bad (unwraps the error just because `?` doesn’t work):
+  ⛔ Bad (unwraps the error just because `?` doesn’t work):
 
-    ```rust
-    fn check_files(paths: &[&Path]) -> anyhow::Result<()> {
-        let good_paths: Vec<&Path> = paths
-            .iter()
-            .copied()
-            .filter(|path| fs::read_to_string(path).unwrap().contains("magic"))
-            .collect();
-        //...
-    }
-    ```
+  ```rust
+  fn check_files(paths: &[&Path]) -> anyhow::Result<()> {
+      let good_paths: Vec<&Path> = paths
+          .iter()
+          .copied()
+          .filter(|path| fs::read_to_string(path).unwrap().contains("magic"))
+          .collect();
+      //...
+  }
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    fn check_files(paths: &[&Path]) -> anyhow::Result<()> {
-        let mut good_paths = Vec::new();
-        for path in paths {
-            if fs::read_to_string(path)?.contains("magic") {
-                good_paths.push(path);
-            }
-        }
-        //...
-    }
-    ```
+  ```rust
+  fn check_files(paths: &[&Path]) -> anyhow::Result<()> {
+      let mut good_paths = Vec::new();
+      for path in paths {
+          if fs::read_to_string(path)?.contains("magic") {
+              good_paths.push(path);
+          }
+      }
+      //...
+  }
+  ```
 
 - **Log the error and return early or skip an item.**
 
-    ⛔ Bad (panics if we add too many publishers):
+  ⛔ Bad (panics if we add too many publishers):
 
-    ```rust
-    let publisher_count = u16::try_from(prices.len())
-        .expect("too many publishers");
-    ```
+  ```rust
+  let publisher_count = u16::try_from(prices.len())
+      .expect("too many publishers");
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    let Ok(publisher_count) = u16::try_from(prices.len()) else {
-        error!("too many publishers ({})", prices.len());
-        return Default::default();
-    };
-    ```
+  ```rust
+  let Ok(publisher_count) = u16::try_from(prices.len()) else {
+      error!("too many publishers ({})", prices.len());
+      return Default::default();
+  };
+  ```
 
-    ⛔ Bad (terminates on error) (and yes, [it can fail](https://www.greyblake.com/blog/when-serde-json-to-string-fails/)):
+  ⛔ Bad (terminates on error) (and yes, [it can fail](https://www.greyblake.com/blog/when-serde-json-to-string-fails/)):
 
-    ```rust
-    loop {
-        //...
-        yield Ok(
-            serde_json::to_string(&response).expect("should not fail") + "\n"
-        );
-    }
-    ```
+  ```rust
+  loop {
+      //...
+      yield Ok(
+          serde_json::to_string(&response).expect("should not fail") + "\n"
+      );
+  }
+  ```
 
-    ✅ Good (`return` instead of `continue` could also be reasonable):
+  ✅ Good (`return` instead of `continue` could also be reasonable):
 
-    ```rust
-    loop {
-        //...
-        match serde_json::to_string(&response) {
-            Ok(json) => {
-                yield Ok(json + "\n");
-            }
-            Err(err) => {
-                error!("json serialization error for {:?}: {}", response, err);
-                continue;
-            }
-        }
-    }
-    ```
+  ```rust
+  loop {
+      //...
+      match serde_json::to_string(&response) {
+          Ok(json) => {
+              yield Ok(json + "\n");
+          }
+          Err(err) => {
+              error!("json serialization error for {:?}: {}", response, err);
+              continue;
+          }
+      }
+  }
+  ```
 
 - **Supply a sensible default:**
 
-    ⛔ Bad:
+  ⛔ Bad:
 
-    ```rust
-    let interval_us: u64 = snapshot_interval
-        .as_micros()
-        .try_into()
-        .expect("snapshot_interval overflow");
-    ```
+  ```rust
+  let interval_us: u64 = snapshot_interval
+      .as_micros()
+      .try_into()
+      .expect("snapshot_interval overflow");
+  ```
 
-    ✅ Better:
+  ✅ Better:
 
-    ```rust
-    let interval_us =
-        u64::try_from(snapshot_interval.as_micros()).unwrap_or_else(|_| {
-            error!(
-                "invalid snapshot_interval in config: {:?}, defaulting to 1 min",
-                snapshot_interval
-            );
-            60_000_000 // 1 min
-        });
-    ```
+  ```rust
+  let interval_us =
+      u64::try_from(snapshot_interval.as_micros()).unwrap_or_else(|_| {
+          error!(
+              "invalid snapshot_interval in config: {:?}, defaulting to 1 min",
+              snapshot_interval
+          );
+          60_000_000 // 1 min
+      });
+  ```
 
 - **Avoid checking a condition and then unwrapping.** Instead, combine the check and access to the value using `match`, `if let`, and combinators such as `map_or`, `some_or`, etc.
 
-    🟡 Not recommended:
+  🟡 Not recommended:
 
-    ```rust
-    if !values.is_empty() {
-    		process_one(&values[0]);
-    }
-    ```
+  ```rust
+  if !values.is_empty() {
+  		process_one(&values[0]);
+  }
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    if let Some(first_value) = values.first() {
-        process_one(first_value);
-    }
-    ```
+  ```rust
+  if let Some(first_value) = values.first() {
+      process_one(first_value);
+  }
+  ```
 
-    🟡 Not recommended:
+  🟡 Not recommended:
 
-    ```rust
-    .filter(|price| {
-        median_price.is_none() || price < &median_price.expect("should not fail")
-    })
-    ```
+  ```rust
+  .filter(|price| {
+      median_price.is_none() || price < &median_price.expect("should not fail")
+  })
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    .filter(|price| median_price.is_none_or(|median_price| price < &median_price))
-    ```
+  ```rust
+  .filter(|price| median_price.is_none_or(|median_price| price < &median_price))
+  ```
 
-    🟡 Not recommended:
+  🟡 Not recommended:
 
-    ```rust
-    if data.len() < header_len {
-        bail!("data too short");
-    }
-    let header = &data[..header_len];
-    let payload = &data[header_len..];
-    ```
+  ```rust
+  if data.len() < header_len {
+      bail!("data too short");
+  }
+  let header = &data[..header_len];
+  let payload = &data[header_len..];
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    let (header, payload) = data
-        .split_at_checked(header_len)
-        .context("data too short")?;
-    ```
+  ```rust
+  let (header, payload) = data
+      .split_at_checked(header_len)
+      .context("data too short")?;
+  ```
 
 - **Avoid the panic by introducing a constant or move the panic inside the constant initialization.** Panicking in const initializers is safe because it happens at compile time.
 
-    🟡 Not recommended:
+  🟡 Not recommended:
 
-    ```rust
-    price.unwrap_or(Price::new(PRICE_FEED_EPS).expect("should never fail"))
-    ```
+  ```rust
+  price.unwrap_or(Price::new(PRICE_FEED_EPS).expect("should never fail"))
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    #[allow(clippy::unwrap_used, reason = "safe in const")]
-    const MIN_POSITIVE_PRICE: Price =
-        Price(NonZeroI64::new(PRICE_FEED_EPS).unwrap());
-    ```
+  ```rust
+  #[allow(clippy::unwrap_used, reason = "safe in const")]
+  const MIN_POSITIVE_PRICE: Price =
+      Price(NonZeroI64::new(PRICE_FEED_EPS).unwrap());
+  ```
 
 - **If it’s not possible to refactor the code, allow the lint and specify the reason why the code cannot fail. Prefer `.expect()` over `.unwrap()` and specify the failure in the argument.** This is reasonable if the failure is truly impossible or if a failure would be so critical that the service cannot continue working.
 
-    🟡 Not recommended:
+  🟡 Not recommended:
 
-    ```rust
-    Some(prices[prices.len() / 2])
-    ```
+  ```rust
+  Some(prices[prices.len() / 2])
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    #[allow(
-        clippy::indexing_slicing,
-        reason = "prices are not empty, prices.len() / 2 < prices.len()"
-    )]
-    Some(prices[prices.len() / 2])
-    ```
+  ```rust
+  #[allow(
+      clippy::indexing_slicing,
+      reason = "prices are not empty, prices.len() / 2 < prices.len()"
+  )]
+  Some(prices[prices.len() / 2])
+  ```
 
-    🟡 Not recommended:
+  🟡 Not recommended:
 
-    ```rust
-    let expiry_time = expiry_times.get(self.active_index).unwrap();
-    ```
+  ```rust
+  let expiry_time = expiry_times.get(self.active_index).unwrap();
+  ```
 
-    ✅ Better:
+  ✅ Better:
 
-    ```rust
-    #[allow(
-        clippy::expect_used,
-        reason = "we only assign valid indexes to `self.active_index`"
-    )]
-    let expiry_time = expiry_times
-        .get(self.active_index)
-        .expect("invalid active index");
-    ```
-
+  ```rust
+  #[allow(
+      clippy::expect_used,
+      reason = "we only assign valid indexes to `self.active_index`"
+  )]
+  let expiry_time = expiry_times
+      .get(self.active_index)
+      .expect("invalid active index");
+  ```
 
 # Avoid unchecked arithmetic operations
 
@@ -382,7 +381,7 @@ You can catch unchecked arithmetic operations with `clippy::arithmetic_side_effe
 
 # Avoid implicit wrapping and truncation with `as`
 
-Limit the use of `as` keyword for converting values between numeric types. While `as` is often the most convenient option, it’s quite bad at expressing intent. `as` can do conversions with  different semantics. In the case of integers, it can do both **lossless conversions** (e.g. from `u8` to `u32`; from `u32` to `i64`) and **lossy conversions** (e.g. `258_u32 as u8` evaluates to 2; `200_u8 as i8` evaluates to -56).
+Limit the use of `as` keyword for converting values between numeric types. While `as` is often the most convenient option, it’s quite bad at expressing intent. `as` can do conversions with different semantics. In the case of integers, it can do both **lossless conversions** (e.g. from `u8` to `u32`; from `u32` to `i64`) and **lossy conversions** (e.g. `258_u32 as u8` evaluates to 2; `200_u8 as i8` evaluates to -56).
 
 - Always use `.into()` and `T::from()` instead of `as` for lossless conversions. This makes the intent more clear.
 - Only use `as` for lossy conversions when you specifically intend to perform a lossy conversion and are aware of how it affects the value. Add an `#[allow]` attribute and specify the reason.
@@ -433,81 +432,80 @@ Other recommendations:
 
 - The error message should contain relevant context that can help understand the issue.
 
-    ⛔ Bad:
+  ⛔ Bad:
 
-    ```rust
-    let timestamp = args.timestamp.try_into()?;
-    ```
+  ```rust
+  let timestamp = args.timestamp.try_into()?;
+  ```
 
-    ✅ Good (using `anyhow::Context`):
+  ✅ Good (using `anyhow::Context`):
 
-    ```rust
-    let timestamp = args
-        .timestamp
-        .try_into()
-        .with_context(|| {
-            format!("invalid timestamp received from Hermes: {:?}", args.timestamp)
-        })?;
-    ```
+  ```rust
+  let timestamp = args
+      .timestamp
+      .try_into()
+      .with_context(|| {
+          format!("invalid timestamp received from Hermes: {:?}", args.timestamp)
+      })?;
+  ```
 
-    ⛔ Bad:
+  ⛔ Bad:
 
-    ```rust
-    let exponent = config.feeds.get(feed_id).context("missing feed")?.exponent;
-    ```
+  ```rust
+  let exponent = config.feeds.get(feed_id).context("missing feed")?.exponent;
+  ```
 
-    ✅ Good:
+  ✅ Good:
 
-    ```rust
-    let exponent = config
-        .feeds
-        .get(feed_id)
-        .with_context(|| {
-    			format!("missing feed {:?} in config", feed_id)
-        })?
-        .exponent;
-    ```
+  ```rust
+  let exponent = config
+      .feeds
+      .get(feed_id)
+      .with_context(|| {
+  			format!("missing feed {:?} in config", feed_id)
+      })?
+      .exponent;
+  ```
 
 - When wrapping another error or converting error type, preserve the error source instead of converting it to `String`. Especially avoid calling `to_string()` on `anyhow::Error` or formatting it with `{}` because it erases context and backtrace information.
 
-    ⛔ Bad (loses information about source errors and backtrace):
+  ⛔ Bad (loses information about source errors and backtrace):
 
-    ```rust
-    if let Err(err) = parse(data) {
-        bail!("parsing failed: {err}");
-    }
-    // OR
-    parse(data).map_err(|err| format!("parsing failed: {err}"))?;
-    ```
+  ```rust
+  if let Err(err) = parse(data) {
+      bail!("parsing failed: {err}");
+  }
+  // OR
+  parse(data).map_err(|err| format!("parsing failed: {err}"))?;
+  ```
 
-    ⛔ Better but still bad (preserves source errors and backtrace, but the error will have two backtraces now):
+  ⛔ Better but still bad (preserves source errors and backtrace, but the error will have two backtraces now):
 
-    ```rust
-    if let Err(err) = parse(data) {
-        bail!("parsing failed for {data:?}: {err:?}");
-    }
-    ```
+  ```rust
+  if let Err(err) = parse(data) {
+      bail!("parsing failed for {data:?}: {err:?}");
+  }
+  ```
 
-    ✅ Good (returns an error with proper source and backtrace):
+  ✅ Good (returns an error with proper source and backtrace):
 
-    ```rust
-    parse(data).with_context(|| format!("failed to parse {data:?}"))?;
-    ```
+  ```rust
+  parse(data).with_context(|| format!("failed to parse {data:?}"))?;
+  ```
 
-    ⛔ Bad (loses information about source errors and backtrace):
+  ⛔ Bad (loses information about source errors and backtrace):
 
-    ```rust
-    warn!(%err, ?data, "parsing failed");
-    // OR
-    warn!("parsing failed: {}", err);
-    ```
+  ```rust
+  warn!(%err, ?data, "parsing failed");
+  // OR
+  warn!("parsing failed: {}", err);
+  ```
 
-    ✅ Better (returns full information about the error in a structured way):
+  ✅ Better (returns full information about the error in a structured way):
 
-    ```rust
-    warn!(?err, ?data, "parsing failed");
-    ```
-
+  ```rust
+  warn!(?err, ?data, "parsing failed");
+  ```
 
 # Other recommendations
 

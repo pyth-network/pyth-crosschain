@@ -49,4 +49,7 @@ library PythErrors {
     error InvalidTwapUpdateData();
     // The twap update data set is invalid.
     error InvalidTwapUpdateDataSet();
+    // The verifier address to set in SetVerifierAddress governance is invalid.
+    // Signature: 0xab8af376
+    error InvalidVerifierAddressToSet();
 }
