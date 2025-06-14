@@ -37,7 +37,15 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         {
             bool valid;
             (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
-            if (!valid) revert PythErrors.InvalidWormholeVaa();
+            if (!valid) {
+                if (address(verifier()) == address(0)) {
+                    revert PythErrors.InvalidUpdateData();
+                }
+                (vm, valid, ) = verifier().parseAndVerifyVM(encodedVm);
+                if (!valid) {
+                    revert PythErrors.InvalidUpdateData();
+                }
+            }
         }
 
         if (!isValidDataSource(vm.emitterChainId, vm.emitterAddress))

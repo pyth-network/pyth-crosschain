@@ -46,6 +46,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidVerifierAddressToSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidWormholeAddressToSet",
     "type": "error"
   },
