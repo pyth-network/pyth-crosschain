@@ -19,9 +19,11 @@ const CHAINS = NETWORK_IDS.map((id) =>
 
 const TRANSPORTS = Object.fromEntries(
   CHAINS.map((chain) => {
-    const url = getRpcUrl(chain.id);
-    if (url) {
-      return [chain.id, http(url)];
+    const rpcUrl = getRpcUrl(chain.id);
+    if (rpcUrl) {
+      return [chain.id, http(rpcUrl)];
+    } else if (chain.rpcUrls.default.http[0]) {
+      return [chain.id, http(chain.rpcUrls.default.http[0])];
     } else {
       throw new Error(`No rpc url found for ${chain.name}`);
     }
