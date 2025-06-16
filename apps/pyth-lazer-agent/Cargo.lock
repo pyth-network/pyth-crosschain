@@ -1660,6 +1660,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "backoff",
+ "base64 0.22.1",
  "bincode",
  "clap",
  "config",
@@ -1679,6 +1680,7 @@ dependencies = [
  "serde_json",
  "soketto",
  "solana-keypair",
+ "tempfile",
  "tokio",
  "tokio-tungstenite",
  "tokio-util",

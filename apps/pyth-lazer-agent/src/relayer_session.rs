@@ -157,3 +157,131 @@ impl RelayerSessionTask {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::relayer_session::RelayerSessionTask;
+    use ed25519_dalek::{Signer, SigningKey};
+    use futures_util::StreamExt;
+    use protobuf::well_known_types::timestamp::Timestamp;
+    use protobuf::{Message, MessageField};
+    use pyth_lazer_publisher_sdk::publisher_update::feed_update::Update;
+    use pyth_lazer_publisher_sdk::publisher_update::{FeedUpdate, PriceUpdate, PublisherUpdate};
+    use pyth_lazer_publisher_sdk::transaction::lazer_transaction::Payload;
+    use pyth_lazer_publisher_sdk::transaction::signature_data::Data::Ed25519;
+    use pyth_lazer_publisher_sdk::transaction::{
+        Ed25519SignatureData, LazerTransaction, SignatureData, SignedLazerTransaction,
+    };
+    use std::net::SocketAddr;
+    use tokio::net::TcpListener;
+    use tokio::sync::{broadcast, mpsc};
+    use url::Url;
+
+    pub const RELAYER_CHANNEL_CAPACITY: usize = 1000;
+
+    fn get_private_key() -> SigningKey {
+        SigningKey::from_keypair_bytes(&[
+            105, 175, 146, 91, 32, 145, 164, 199, 37, 111, 139, 255, 44, 225, 5, 247, 154, 170,
+            238, 70, 47, 15, 9, 48, 102, 87, 180, 50, 50, 38, 148, 243, 62, 148, 219, 72, 222, 170,
+            8, 246, 176, 33, 205, 29, 118, 11, 220, 163, 214, 204, 46, 49, 132, 94, 170, 173, 244,
+            39, 179, 211, 177, 70, 252, 31,
+        ])
+        .unwrap()
+    }
+
+    pub async fn run_mock_relayer(
+        addr: SocketAddr,
+        back_sender: mpsc::Sender<SignedLazerTransaction>,
+    ) {
+        let listener = TcpListener::bind(addr).await.unwrap();
+
+        tokio::spawn(async move {
+            let Ok((stream, _)) = listener.accept().await else {
+                panic!("failed to accept mock relayer websocket connection");
+            };
+            let ws_stream = tokio_tungstenite::accept_async(stream)
+                .await
+                .expect("handshake failed");
+            let (_, mut read) = ws_stream.split();
+            while let Some(msg) = read.next().await {
+                if let Ok(msg) = msg {
+                    if msg.is_binary() {
+                        tracing::info!("Received binary message: {msg:?}");
+                        let transaction =
+                            SignedLazerTransaction::parse_from_bytes(msg.into_data().as_ref())
+                                .unwrap();
+                        back_sender.clone().send(transaction).await.unwrap();
+                    }
+                } else {
+                    tracing::error!("Received a malformed message: {msg:?}");
+                }
+            }
+        });
+    }
+
+    #[tokio::test]
+    async fn test_relayer_session() {
+        let (back_sender, mut back_receiver) = mpsc::channel(RELAYER_CHANNEL_CAPACITY);
+        let relayer_addr = "127.0.0.1:12346".parse().unwrap();
+        run_mock_relayer(relayer_addr, back_sender).await;
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
+        let (relayer_sender, relayer_receiver) = broadcast::channel(RELAYER_CHANNEL_CAPACITY);
+
+        let mut relayer_session_task = RelayerSessionTask {
+            // connection state
+            url: Url::parse("ws://127.0.0.1:12346").unwrap(),
+            token: "token1".to_string(),
+            receiver: relayer_receiver,
+        };
+        tokio::spawn(async move { relayer_session_task.run().await });
+        tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+
+        let transaction = get_signed_lazer_transaction();
+        relayer_sender
+            .send(transaction.clone())
+            .expect("relayer_sender.send failed");
+        tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+        let received_transaction = back_receiver
+            .recv()
+            .await
+            .expect("back_receiver.recv failed");
+        assert_eq!(transaction, received_transaction);
+    }
+
+    fn get_signed_lazer_transaction() -> SignedLazerTransaction {
+        let publisher_update = PublisherUpdate {
+            updates: vec![FeedUpdate {
+                feed_id: Some(1),
+                source_timestamp: MessageField::some(Timestamp::now()),
+                update: Some(Update::PriceUpdate(PriceUpdate {
+                    price: Some(1_000_000_000i64),
+                    ..PriceUpdate::default()
+                })),
+                special_fields: Default::default(),
+            }],
+            publisher_timestamp: MessageField::some(Timestamp::now()),
+            special_fields: Default::default(),
+        };
+        let lazer_transaction = LazerTransaction {
+            payload: Some(Payload::PublisherUpdate(publisher_update)),
+            special_fields: Default::default(),
+        };
+        let buf = lazer_transaction.write_to_bytes().unwrap();
+        let signing_key = get_private_key();
+        let signature = signing_key.sign(&buf);
+        let signature_data = SignatureData {
+            data: Some(Ed25519(Ed25519SignatureData {
+                signature: Some(signature.to_bytes().into()),
+                public_key: Some(signing_key.verifying_key().to_bytes().into()),
+                special_fields: Default::default(),
+            })),
+            special_fields: Default::default(),
+        };
+        SignedLazerTransaction {
+            signature_data: MessageField::some(signature_data),
+            payload: Some(buf),
+            special_fields: Default::default(),
+        }
+    }
+}
