@@ -538,7 +538,7 @@ mod tests {
     use alloc::vec;
     use motsu::prelude::DefaultStorage;
     use core::str::FromStr;
-    use libsecp256k1::{sign, Message, SecretKey};
+    use libsecp256k1::{sign, Message, SecretKey, PublicKey};
     use stylus_sdk::alloy_primitives::keccak256;
     use base64::engine::general_purpose;
     use base64::Engine;
