@@ -110,12 +110,7 @@ abstract contract PythGovernance is
         } else if (gi.action == GovernanceAction.WithdrawFee) {
             withdrawFee(parseWithdrawFeePayload(gi.payload));
         } else if (gi.action == GovernanceAction.SetVerifierAddress) {
-            if (gi.targetChainId == 0)
-                revert PythErrors.InvalidGovernanceTarget();
-            setVerifierAddress(
-                parseSetVerifierAddressPayload(gi.payload),
-                encodedVM
-            );
+            setVerifierAddress(parseSetVerifierAddressPayload(gi.payload));
         } else {
             revert PythErrors.InvalidGovernanceMessage();
         }
@@ -283,8 +278,7 @@ abstract contract PythGovernance is
     }
 
     function setVerifierAddress(
-        SetVerifierAddressPayload memory payload,
-        bytes memory encodedVM
+        SetVerifierAddressPayload memory payload
     ) internal {
         address oldVerifierAddress = address(verifier());
         setVerifier(payload.newVerifierAddress);
