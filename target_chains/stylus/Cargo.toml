@@ -34,3 +34,11 @@ rpath = false            # Disable rpath for smaller binary
 
 [profile.release.package."*"]
 opt-level = "z"           # Force size optimization for all dependencies
+
+[profile.release.package.k256]
+opt-level = "z"
+strip = "symbols"
+
+[profile.release.package.alloy-primitives]
+opt-level = "z"
+strip = "symbols"
