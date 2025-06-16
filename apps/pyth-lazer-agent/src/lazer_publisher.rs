@@ -189,7 +189,7 @@ mod tests {
         let mut temp_file = NamedTempFile::new().unwrap();
         temp_file
             .as_file_mut()
-            .write(private_key_string.as_bytes())
+            .write_all(private_key_string.as_bytes())
             .unwrap();
         temp_file.flush().unwrap();
         temp_file
@@ -228,7 +228,7 @@ mod tests {
             feed_id: Some(1),
             source_timestamp: MessageField::some(Timestamp::now()),
             update: Some(Update::PriceUpdate(PriceUpdate {
-                price: Some(100_000_00000000),
+                price: Some(100_000 * 100_000_000),
                 ..PriceUpdate::default()
             })),
             special_fields: Default::default(),
