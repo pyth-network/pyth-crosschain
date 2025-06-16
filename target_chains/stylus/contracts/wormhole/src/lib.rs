@@ -1,15 +1,7 @@
-#![cfg_attr(not(feature = "std"), no_std, no_main)]
 extern crate alloc;
 
-#[cfg(not(feature = "std"))]
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
-
-#[cfg(not(feature = "std"))]
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
 
 
 use alloc::{vec, vec::Vec};
