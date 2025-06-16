@@ -4,6 +4,7 @@ import { MainNavTabs as MainNavTabsComponent } from "./index.jsx";
 import { Tabs } from "../unstyled/Tabs/index.jsx";
 
 const meta = {
+  title: "navigation & menus/MainNavTabs",
   component: MainNavTabsComponent,
   argTypes: {
     tabs: {
@@ -26,8 +27,8 @@ export const MainNavTabs = {
   args: {
     tabs: [
       { children: "Home", segment: "" },
-      { children: "Foo", segment: "foo" },
-      { children: "Bar", segment: "bar" },
+      { children: "Products", segment: "products" },
+      { children: "Developers", segment: "developers" },
     ],
   },
 } satisfies StoryObj<typeof MainNavTabsComponent>;

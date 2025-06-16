@@ -76,7 +76,9 @@ export const decorators: Decorator[] = [
               "data-background": globals.background,
             })}
           >
-            <Story />
+            <div className={styles.storyWrapper}>
+              <Story />
+            </div>
           </BodyProviders>
         )}
       </RootProviders>
