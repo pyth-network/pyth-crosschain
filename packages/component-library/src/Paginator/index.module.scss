@@ -37,7 +37,14 @@
   .paginatorToolbar {
     display: flex;
     flex-flow: row nowrap;
+    align-items: center;
     gap: theme.spacing(1);
+    position: relative;
+
+    .spinner {
+      position: absolute;
+      left: -#{theme.spacing(8)};
+    }
 
     .selectedPage {
       cursor: text;
