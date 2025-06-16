@@ -5,6 +5,12 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
+#[cfg(not(feature = "std"))]
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
+
 use alloc::vec::Vec;
 use stylus_sdk::{
     prelude::{entrypoint, public, storage, SolidityError},
@@ -13,8 +19,7 @@ use stylus_sdk::{
 };
 use alloy_sol_types::{SolValue, sol};
 use stylus_sdk::alloy_primitives::keccak256;
-use sha3::{Digest, Keccak256};
-use libsecp256k1::{recover, Message, Signature, RecoveryId};
+use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GuardianSet {
@@ -392,9 +397,7 @@ impl WormholeContract {
         Ok(())
     }
 
-    fn compute_hash(&self, body: &[u8]) -> Result<FixedBytes<32>, WormholeError> {
-        Self::compute_hash_static(body)
-    }
+
 
     fn compute_hash_static(body: &[u8]) -> Result<FixedBytes<32>, WormholeError> {
         use stylus_sdk::alloy_primitives::keccak256;
@@ -436,27 +439,32 @@ impl WormholeContract {
             return Err(WormholeError::InvalidSignature(InvalidSignature {}));
         }
 
-        let recovery_id_raw = signature[64];
-        
-        let recovery_id = RecoveryId::parse_rpc(recovery_id_raw)
-            .map_err(|_| WormholeError::InvalidSignature(InvalidSignature {}))?;
-
         let sig_bytes: [u8; 64] = signature[..64].try_into()
             .map_err(|_| WormholeError::InvalidSignature(InvalidSignature {}))?;
-        let sig = Signature::parse_standard(&sig_bytes)
-            .map_err(|_| WormholeError::InvalidSignature(InvalidSignature {}))?;
+        let recovery_id_byte = signature[64];
+        
+        let recovery_id = if recovery_id_byte >= 27 {
+            RecoveryId::try_from(recovery_id_byte - 27)
+                .map_err(|_| WormholeError::InvalidSignature(InvalidSignature {}))?
+        } else {
+            RecoveryId::try_from(recovery_id_byte)
+                .map_err(|_| WormholeError::InvalidSignature(InvalidSignature {}))?
+        };
 
+        let sig = Signature::try_from(&sig_bytes[..])
+            .map_err(|_| WormholeError::InvalidSignature(InvalidSignature {}))?;
+        
         let hash_array: [u8; 32] = hash.as_slice().try_into()
             .map_err(|_| WormholeError::InvalidInput(InvalidInput {}))?;
-        let message = Message::parse(&hash_array);
 
-        let recovered_pubkey = recover(&message, &sig, &recovery_id)
+        let verifying_key = VerifyingKey::recover_from_prehash(&hash_array, &sig, recovery_id)
             .map_err(|_| WormholeError::InvalidSignature(InvalidSignature {}))?;
 
-        let pubkey_bytes = recovered_pubkey.serialize();
+        let public_key_bytes = verifying_key.to_encoded_point(false);
+        let public_key_slice = &public_key_bytes.as_bytes()[1..];
 
-        let address_hash: [u8; 32] = Keccak256::new_with_prefix(&pubkey_bytes[1..]).finalize().into();
-        let address_bytes: [u8; 20] = address_hash[12..32].try_into()
+        let address_hash = keccak256(public_key_slice);
+        let address_bytes: [u8; 20] = address_hash[12..].try_into()
             .map_err(|_| WormholeError::InvalidAddressLength(InvalidAddressLength {}))?;
 
         Ok(Address::from(address_bytes) == guardian_address)
@@ -538,7 +546,7 @@ mod tests {
     use alloc::vec;
     use motsu::prelude::DefaultStorage;
     use core::str::FromStr;
-    use libsecp256k1::{sign, Message, SecretKey, PublicKey};
+    use k256::ecdsa::{SigningKey, Signature as K256Signature};
     use stylus_sdk::alloy_primitives::keccak256;
     use base64::engine::general_purpose;
     use base64::Engine;
@@ -582,10 +590,11 @@ mod tests {
 
     fn test_guardian_address1() -> Address {
         let secret = test_guardian_secret1();
-        let secret_key = SecretKey::parse(&secret).expect("Valid secret key");
-        let pubkey = PublicKey::from_secret_key(&secret_key);
-        let pubkey_bytes = pubkey.serialize();
-        let hash = Keccak256::digest(&pubkey_bytes[1..]);
+        let signing_key = SigningKey::from_bytes(&secret.into()).expect("Valid secret key");
+        let verifying_key = signing_key.verifying_key();
+        let public_key_bytes = verifying_key.to_encoded_point(false);
+        let public_key_slice = &public_key_bytes.as_bytes()[1..];
+        let hash = keccak256(public_key_slice);
         let address_bytes: [u8; 20] = hash[12..].try_into().unwrap();
         Address::from(address_bytes)
     }
@@ -593,10 +602,11 @@ mod tests {
 
     fn test_guardian_address2() -> Address {
         let secret = test_guardian_secret2();
-        let secret_key = SecretKey::parse(&secret).expect("Valid secret key");
-        let pubkey = PublicKey::from_secret_key(&secret_key);
-        let pubkey_bytes = pubkey.serialize();
-        let hash = Keccak256::digest(&pubkey_bytes[1..]);
+        let signing_key = SigningKey::from_bytes(&secret.into()).expect("Valid secret key");
+        let verifying_key = signing_key.verifying_key();
+        let public_key_bytes = verifying_key.to_encoded_point(false);
+        let public_key_slice = &public_key_bytes.as_bytes()[1..];
+        let hash = keccak256(public_key_slice);
         let address_bytes: [u8; 20] = hash[12..].try_into().unwrap();
         Address::from(address_bytes)
     }
@@ -736,18 +746,18 @@ mod tests {
             _ => test_guardian_secret1(),
         };
 
-        let secret_key = SecretKey::parse(&secret_bytes)
+        let signing_key = SigningKey::from_bytes(&secret_bytes.into())
             .map_err(|_| WormholeError::InvalidInput(InvalidInput {}))?;
 
         let hash_array: [u8; 32] = hash.as_slice().try_into()
             .map_err(|_| WormholeError::InvalidInput(InvalidInput {}))?;
-        let message = Message::parse(&hash_array);
 
-        let (signature, recovery_id) = sign(&message, &secret_key);
+        let (signature, recovery_id) = signing_key.sign_prehash_recoverable(&hash_array)
+            .map_err(|_| WormholeError::InvalidInput(InvalidInput {}))?;
 
         let mut signature_bytes = [0u8; 65];
-        signature_bytes[..64].copy_from_slice(&signature.serialize());
-        signature_bytes[64] = recovery_id.serialize();
+        signature_bytes[..64].copy_from_slice(&signature.to_bytes());
+        signature_bytes[64] = recovery_id.to_byte() + 27;
 
         Ok(GuardianSignature {
             guardian_index,

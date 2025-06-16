@@ -16,12 +16,12 @@ alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 mini-alloc.workspace = true
 keccak-const.workspace = true
-libsecp256k1 = { workspace = true }
-sha3 = "0.10.8"
-base64 = "0.21"
+k256 = { workspace = true }
+
 
 [dev-dependencies]
 motsu.workspace = true
+base64 = "0.21"
 
 [lib]
 crate-type = ["lib", "cdylib"]

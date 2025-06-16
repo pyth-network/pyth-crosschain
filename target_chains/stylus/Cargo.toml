@@ -24,4 +24,8 @@ libsecp256k1 = { version = "0.7.1", default-features = false, features = ["stati
 panic = "abort"
 
 [profile.release]
-panic = "abort"
+opt-level = "z"           # Optimize for size instead of speed
+lto = true               # Link-time optimization
+strip = true             # Strip debug symbols
+panic = "abort"          # Smaller panic handling
+codegen-units = 1        # Better optimization (slower build, smaller binary)
