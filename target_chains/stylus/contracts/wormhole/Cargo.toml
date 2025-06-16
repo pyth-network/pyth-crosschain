@@ -8,6 +8,7 @@ version = "0.0.1"
 [features]
 default = []
 std = []
+export-abi = ["stylus-sdk/export-abi"]
 
 [dependencies]
 stylus-sdk.workspace = true

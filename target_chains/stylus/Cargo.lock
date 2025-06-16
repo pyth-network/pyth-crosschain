@@ -749,6 +749,7 @@ dependencies = [
  "hex",
  "keccak-const",
  "lazy_static",
+ "regex",
  "stylus-proc",
 ]
 
