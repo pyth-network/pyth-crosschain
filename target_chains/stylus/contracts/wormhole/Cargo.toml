@@ -11,12 +11,11 @@ std = []
 export-abi = ["stylus-sdk/export-abi"]
 
 [dependencies]
-stylus-sdk.workspace = true
-alloy-primitives.workspace = true
-alloy-sol-types.workspace = true
-mini-alloc.workspace = true
-keccak-const.workspace = true
-k256 = { workspace = true }
+stylus-sdk = { workspace = true, default-features = false }
+alloy-primitives = { workspace = true, default-features = false }
+mini-alloc = { workspace = true, default-features = false }
+
+k256 = { workspace = true, default-features = false, features = ["ecdsa"] }
 
 
 [dev-dependencies]
