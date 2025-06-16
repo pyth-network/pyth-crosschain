@@ -45,28 +45,14 @@ abstract contract PythGovernance is
         address newVerifierAddress
     );
 
-    // Check whether the encodedVM is signed by either the Wormhole or the Verifier.
-    function validateVm(
-        bytes memory encodedVM
-    ) internal view returns (IWormhole.VM memory parsedVM) {
-        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
-            encodedVM
-        );
-        if (valid) return vm;
-
-        if (address(verifier()) != address(0)) {
-            (IWormhole.VM memory vmv, bool validv, ) = verifier()
-                .parseAndVerifyVM(encodedVM);
-            if (validv) return vmv;
-        }
-
-        revert PythErrors.InvalidWormholeVaa();
-    }
-
     function verifyGovernanceVM(
         bytes memory encodedVM
     ) internal returns (IWormhole.VM memory parsedVM) {
-        IWormhole.VM memory vm = validateVm(encodedVM);
+        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
+            encodedVM
+        );
+
+        if (!valid) revert PythErrors.InvalidWormholeVaa();
 
         if (!isValidGovernanceDataSource(vm.emitterChainId, vm.emitterAddress))
             revert PythErrors.InvalidGovernanceDataSource();
@@ -156,8 +142,11 @@ abstract contract PythGovernance is
         // Make sure the claimVaa is a valid VAA with RequestGovernanceDataSourceTransfer governance message
         // If it's valid then its emitter can take over the governance from the current emitter.
         // The VAA is checked here to ensure that the new governance data source is valid and can send message
-        // through wormhole or verifier.
-        IWormhole.VM memory vm = validateVm(payload.claimVaa);
+        // through wormhole.
+        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
+            payload.claimVaa
+        );
+        if (!valid) revert PythErrors.InvalidWormholeVaa();
 
         GovernanceInstruction memory gi = parseGovernanceInstruction(
             vm.payload
@@ -232,8 +221,6 @@ abstract contract PythGovernance is
         emit ValidPeriodSet(oldValidPeriod, validTimePeriodSeconds());
     }
 
-    // If the VAA was created by Verifier, this will revert,
-    // because it assumes that the new Wormhole is able to parse and verify the governance VAA.
     function setWormholeAddress(
         SetWormholeAddressPayload memory payload,
         bytes memory encodedVM
@@ -295,47 +282,12 @@ abstract contract PythGovernance is
         emit FeeWithdrawn(payload.targetAddress, payload.fee);
     }
 
-    // If the VAA was created by Wormhole, this will revert,
-    // because it assumes that the new Verifier is able to parse and verify the governance VAA.
     function setVerifierAddress(
         SetVerifierAddressPayload memory payload,
         bytes memory encodedVM
     ) internal {
         address oldVerifierAddress = address(verifier());
         setVerifier(payload.newVerifierAddress);
-
-        // We want to verify that the new verifier address is valid, so we make sure that it can
-        // parse and verify the same governance VAA that is used to set it.
-        (IWormhole.VM memory vm, bool valid, ) = verifier().parseAndVerifyVM(
-            encodedVM
-        );
-
-        if (!valid) revert PythErrors.InvalidGovernanceMessage();
-
-        if (!isValidGovernanceDataSource(vm.emitterChainId, vm.emitterAddress))
-            revert PythErrors.InvalidGovernanceMessage();
-
-        if (vm.sequence != lastExecutedGovernanceSequence())
-            revert PythErrors.InvalidVerifierAddressToSet();
-
-        GovernanceInstruction memory gi = parseGovernanceInstruction(
-            vm.payload
-        );
-
-        if (gi.action != GovernanceAction.SetVerifierAddress)
-            revert PythErrors.InvalidVerifierAddressToSet();
-
-        // Purposefully, we don't check whether the chainId is the same as the current chainId because
-        // we might want to change the chain id of the verifier contract.
-
-        // The following check is not necessary for security, but is a sanity check that the new verifier
-        // contract parses the payload correctly.
-        SetVerifierAddressPayload
-            memory newPayload = parseSetVerifierAddressPayload(gi.payload);
-
-        if (newPayload.newVerifierAddress != payload.newVerifierAddress)
-            revert PythErrors.InvalidVerifierAddressToSet();
-
         emit VerifierAddressSet(oldVerifierAddress, address(verifier()));
     }
 }
