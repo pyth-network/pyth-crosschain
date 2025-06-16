@@ -1,11 +1,11 @@
-#![cfg_attr(not(feature = "std"), no_std, no_main)]
+#![cfg_attr(not(any(feature = "std", feature = "export-abi")), no_std)]
 extern crate alloc;
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "export-abi")))]
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "export-abi")))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
