@@ -69,20 +69,20 @@ pub enum WormholeError {
 impl From<WormholeError> for Vec<u8> {
     fn from(error: WormholeError) -> Vec<u8> {
         match error {
-            WormholeError::InvalidGuardianSetIndex => b"InvalidGuardianSetIndex".to_vec(),
-            WormholeError::GuardianSetExpired => b"GuardianSetExpired".to_vec(),
-            WormholeError::NoQuorum => b"NoQuorum".to_vec(),
-            WormholeError::InvalidSignatureOrder => b"InvalidSignatureOrder".to_vec(),
-            WormholeError::InvalidSignature => b"InvalidSignature".to_vec(),
-            WormholeError::InvalidVAAFormat => b"InvalidVAAFormat".to_vec(),
-            WormholeError::GovernanceActionConsumed => b"GovernanceActionConsumed".to_vec(),
-            WormholeError::AlreadyInitialized => b"AlreadyInitialized".to_vec(),
-            WormholeError::NotInitialized => b"NotInitialized".to_vec(),
-            WormholeError::InvalidInput => b"InvalidInput".to_vec(),
-            WormholeError::InsufficientSignatures => b"InsufficientSignatures".to_vec(),
-            WormholeError::InvalidGuardianIndex => b"InvalidGuardianIndex".to_vec(),
-            WormholeError::InvalidAddressLength => b"InvalidAddressLength".to_vec(),
-            WormholeError::VerifyVAAError => b"VerifyVAAError".to_vec(),
+            WormholeError::InvalidGuardianSetIndex => b"E1".to_vec(),
+            WormholeError::GuardianSetExpired => b"E2".to_vec(),
+            WormholeError::NoQuorum => b"E3".to_vec(),
+            WormholeError::InvalidSignatureOrder => b"E4".to_vec(),
+            WormholeError::InvalidSignature => b"E5".to_vec(),
+            WormholeError::InvalidVAAFormat => b"E6".to_vec(),
+            WormholeError::GovernanceActionConsumed => b"E7".to_vec(),
+            WormholeError::AlreadyInitialized => b"E8".to_vec(),
+            WormholeError::NotInitialized => b"E9".to_vec(),
+            WormholeError::InvalidInput => b"EA".to_vec(),
+            WormholeError::InsufficientSignatures => b"EB".to_vec(),
+            WormholeError::InvalidGuardianIndex => b"EC".to_vec(),
+            WormholeError::InvalidAddressLength => b"ED".to_vec(),
+            WormholeError::VerifyVAAError => b"EE".to_vec(),
         }
     }
 }
@@ -554,7 +554,7 @@ mod tests {
     fn create_vaa_bytes(input_string: &str) -> Vec<u8> {
         let vaa_bytes = general_purpose::STANDARD
             .decode(input_string)
-            .expect("Failed to decode base64 VAA");
+            .expect("decode fail");
         let vaa: Vec<u8> = vaa_bytes;
         vaa
     }
@@ -606,7 +606,7 @@ mod tests {
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         match contract.store_guardian_set(0, guardians.clone(), 0) {
             Ok(_) => {}
-            Err(_) => panic!("Already initialized!"),
+            Err(_) => panic!("init"),
         }
         contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
         contract
@@ -754,7 +754,7 @@ mod tests {
         let vaa_vec = test_wormhole_vaa();
         let result = match WormholeContract::parse_vm_static(&vaa_vec) {
             Ok(vaa) => vaa,
-            Err(e) => panic!("VAA parsing failed: {:?}", e),
+            Err(_) => panic!("parse"),
         };
         assert_eq!(result.signatures.len(), 13)
     }

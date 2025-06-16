@@ -903,10 +903,8 @@ name = "wormhole-contract"
 version = "0.0.1"
 dependencies = [
  "alloy-primitives",
- "alloy-sol-types",
  "base64",
  "k256",
- "keccak-const",
  "mini-alloc",
  "motsu",
  "stylus-sdk",
