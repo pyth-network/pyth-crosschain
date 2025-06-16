@@ -1,7 +1,15 @@
+#![cfg_attr(not(feature = "std"), no_std, no_main)]
 extern crate alloc;
 
+#[cfg(not(feature = "std"))]
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
+
+#[cfg(not(feature = "std"))]
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
 
 
 use alloc::{vec, vec::Vec};
@@ -58,8 +66,8 @@ pub enum WormholeError {
 }
 
 impl core::fmt::Debug for WormholeError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str("")
+    fn fmt(&self, _: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        Ok(())
     }
 }
 
@@ -486,28 +494,31 @@ mod tests {
     use core::str::FromStr;
     use k256::ecdsa::SigningKey;
     use stylus_sdk::alloy_primitives::keccak256;
+    
+    #[cfg(test)]
     use base64::engine::general_purpose;
+    #[cfg(test)]
     use base64::Engine;
 
     const CHAIN_ID: u16 = 60051;
     const GOVERNANCE_CHAIN_ID: u16 = 1;
     const GOVERNANCE_CONTRACT: U256 = U256::from_limbs([4, 0, 0, 0]);
 
+    #[cfg(test)]
     fn test_wormhole_vaa() -> Vec<u8> {
-        let vaa_raw_base64 = "AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==";
-        let vaa_bytes = general_purpose::STANDARD.decode(vaa_raw_base64).unwrap();
-        let vaa: Vec<u8> = vaa_bytes;
-        vaa
+        general_purpose::STANDARD.decode("AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==").unwrap()
     }
 
+    #[cfg(test)]
     fn create_vaa_bytes(input_string: &str) -> Vec<u8> {
         let vaa_bytes = general_purpose::STANDARD
             .decode(input_string)
-            .expect("dec");
+            .unwrap();
         let vaa: Vec<u8> = vaa_bytes;
         vaa
     }
 
+    #[cfg(test)]
     fn test_guardian_secret1() -> [u8; 32] {
         [
             0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -517,6 +528,7 @@ mod tests {
         ]
     }
 
+    #[cfg(test)]
     fn test_guardian_secret2() -> [u8; 32] {
         [
             0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
@@ -526,6 +538,7 @@ mod tests {
         ]
     }
 
+    #[cfg(test)]
     fn test_guardian_address1() -> Address {
         let secret = test_guardian_secret1();
         let signing_key = SigningKey::from_bytes(&secret.into()).expect("key");
@@ -538,6 +551,7 @@ mod tests {
     }
 
 
+    #[cfg(test)]
     fn test_guardian_address2() -> Address {
         let secret = test_guardian_secret2();
         let signing_key = SigningKey::from_bytes(&secret.into()).expect("key");
@@ -549,18 +563,20 @@ mod tests {
         Address::from(address_bytes)
     }
 
+    #[cfg(test)]
     fn deploy_with_test_guardian() -> WormholeContract {
         let mut contract = WormholeContract::default();
         let guardians = vec![test_guardian_address1()];
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         match contract.store_gs(0, guardians.clone(), 0) {
             Ok(_) => {}
-            Err(_) => panic!("s"),
+            Err(_) => unreachable!(),
         }
         contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
         contract
     }
 
+    #[cfg(test)]
     fn deploy_with_current_guardians() -> WormholeContract {
         let mut contract = WormholeContract::default();
         let guardians = mock_guardian_set13();
@@ -570,6 +586,7 @@ mod tests {
         contract
     }
 
+    #[cfg(test)]
     fn deploy_with_mainnet_guardian_set0() -> WormholeContract {
         let mut contract = WormholeContract::default();
         let guardians = guardian_set0();
@@ -580,6 +597,7 @@ mod tests {
 
 
 
+    #[cfg(test)]
     fn deploy_with_mainnet_guardians() -> WormholeContract {
         let mut contract = WormholeContract::default();
         let guardians = guardian_set4();
@@ -588,10 +606,12 @@ mod tests {
         contract
     }
 
+    #[cfg(test)]
     fn guardian_set0() -> Vec<Address> {
         vec![Address::from_str("0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5").unwrap()]
     }
 
+    #[cfg(test)]
     fn guardian_set4() -> Vec<Address> {
         vec![
             Address::from_str("0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3").unwrap(),
@@ -600,6 +620,7 @@ mod tests {
         ]
     }
 
+    #[cfg(test)]
     fn mock_guardian_set13() -> Vec<Address> {
         vec![
             Address::from([0x58, 0x93, 0xB5, 0xA7, 0x6c, 0x3f, 0x73, 0x96, 0x45, 0x64, 0x88, 0x85, 0xbD, 0xCc, 0xC0, 0x6c, 0xd7, 0x0a, 0x3C, 0xd3]),
@@ -607,6 +628,7 @@ mod tests {
         ]
     }
 
+    #[cfg(test)]
     fn corrupted_vaa(mut real_data: Vec<u8>, pos: usize, random1: u8, random2: u8) -> Vec<u8> {
         if real_data.len() < 2 {
             return real_data;
@@ -680,6 +702,7 @@ mod tests {
         })
     }
 
+    #[cfg(test)]
     fn create_guardian_signature(guardian_index: u8) -> GuardianSignature {
         GuardianSignature {
             guardian_index,
@@ -703,7 +726,7 @@ mod tests {
         let vaa_vec = test_wormhole_vaa();
         let result = match WormholeContract::parse_vm_static(&vaa_vec) {
             Ok(vaa) => vaa,
-            Err(_) => panic!("p"),
+            Err(_) => unreachable!(),
         };
         assert_eq!(result.signatures.len(), 13)
     }
@@ -767,7 +790,7 @@ mod tests {
         ];
         match contract.store_gs(0, guardians.clone(), 0) {
             Ok(_) => {},
-            Err(_) => panic!("s"),
+            Err(_) => unreachable!(),
         }
 
         let signatures = vec![
@@ -877,7 +900,7 @@ mod tests {
             let i_u8: u8 = match i.try_into() {
                 Ok(val) => val,
                 Err(_) => {
-                    panic!("i");
+                    unreachable!();
                 }
             };
             let corrupted_data = corrupted_vaa(vec![1, 0, 0, 1, 0, 0], i, i_u8, i_u8 * 2);
@@ -894,7 +917,7 @@ mod tests {
             let i_u8: u8 = match i.try_into() {
                 Ok(val) => val,
                 Err(_) => {
-                    panic!("i");
+                    unreachable!();
                 }
             };
             let base_vaa = vec![1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -954,15 +977,15 @@ mod tests {
 
         contract
             .store_gs(0, guardian_set0(), 0)
-            .unwrap_or_else(|_| panic!("sf"));
+            .unwrap();
         contract
             .store_gs(4, guardian_set4(), 0)
-            .unwrap_or_else(|_| panic!("sf"));
+            .unwrap();
 
         let set0 = contract.get_gs_internal(0)
-            .unwrap_or_else(|| panic!("gf"));
+            .unwrap();
         let set4 = contract.get_gs_internal(4)
-            .unwrap_or_else(|| panic!("gf"));
+            .unwrap();
 
         assert_eq!(set0.keys, guardian_set0());
         assert_eq!(set4.keys, guardian_set4());
@@ -977,7 +1000,7 @@ mod tests {
         ];
         match contract.store_gs(0, guardians.clone(), 0) {
             Ok(()) => (),
-            Err(_) => panic!("s"),
+            Err(_) => unreachable!(),
         }
         let hash = FixedBytes::<32>::from([0x42u8; 32]);
 
