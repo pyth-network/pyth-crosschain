@@ -12,8 +12,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 }
 
 
-use alloc::vec::Vec;
-use alloc::vec;
+use alloc::{vec, vec::Vec};
 use stylus_sdk::{
     prelude::{entrypoint, public, storage},
     storage::{StorageMap, StorageUint, StorageAddress, StorageBool},
@@ -49,7 +48,6 @@ pub struct VerifiedVMM {
     pub hash: FixedBytes<32>,
 }
 
-#[derive(Debug)]
 pub enum WormholeError {
     InvalidGuardianSetIndex,
     GuardianSetExpired,
@@ -67,9 +65,15 @@ pub enum WormholeError {
     VerifyVAAError,
 }
 
+impl core::fmt::Debug for WormholeError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str("")
+    }
+}
+
 impl From<WormholeError> for Vec<u8> {
     fn from(error: WormholeError) -> Vec<u8> {
-        let byte: u8 = match error {
+        vec![match error {
             WormholeError::InvalidGuardianSetIndex => 1,
             WormholeError::GuardianSetExpired => 2,
             WormholeError::NoQuorum => 3,
@@ -84,8 +88,7 @@ impl From<WormholeError> for Vec<u8> {
             WormholeError::InvalidGuardianIndex => 12,
             WormholeError::InvalidAddressLength => 13,
             WormholeError::VerifyVAAError => 14,
-        };
-        vec![byte]
+        }]
     }
 }
 
@@ -386,10 +389,7 @@ impl WormholeContract {
             return Err(WormholeError::InvalidSignature);
         }
 
-        let sig_bytes: [u8; 64] = signature[..64].try_into()
-            .map_err(|_| WormholeError::InvalidSignature)?;
         let recovery_id_byte = signature[64];
-        
         let recovery_id = if recovery_id_byte >= 27 {
             RecoveryId::try_from(recovery_id_byte - 27)
                 .map_err(|_| WormholeError::InvalidSignature)?
@@ -398,13 +398,10 @@ impl WormholeContract {
                 .map_err(|_| WormholeError::InvalidSignature)?
         };
 
-        let sig = Signature::try_from(&sig_bytes[..])
+        let sig = Signature::try_from(&signature[..64])
             .map_err(|_| WormholeError::InvalidSignature)?;
-        
-        let hash_array: [u8; 32] = hash.as_slice().try_into()
-            .map_err(|_| WormholeError::InvalidInput)?;
 
-        let verifying_key = VerifyingKey::recover_from_prehash(&hash_array, &sig, recovery_id)
+        let verifying_key = VerifyingKey::recover_from_prehash(hash.as_slice().try_into().map_err(|_| WormholeError::InvalidInput)?, &sig, recovery_id)
             .map_err(|_| WormholeError::InvalidSignature)?;
 
         let public_key_bytes = verifying_key.to_encoded_point(false);
