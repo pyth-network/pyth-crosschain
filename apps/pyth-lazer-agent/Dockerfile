@@ -2,7 +2,7 @@ FROM rust:slim-bookworm AS builder
 
 RUN apt update && apt install -y curl libssl-dev pkg-config build-essential && apt clean all
 
-ADD . /pyth-lazer-agent
+ADD apps/pyth-lazer-agent /pyth-lazer-agent
 WORKDIR /pyth-lazer-agent
 
 RUN cargo build --release
