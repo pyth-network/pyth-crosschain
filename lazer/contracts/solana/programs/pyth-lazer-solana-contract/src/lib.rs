@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs, reason = "anchor macro triggers it")]
+
 mod signature;
 
 use {
