@@ -269,7 +269,7 @@ contract VerificationExperiments is Test, PythTestUtils {
             sequence,
             bytes.concat(root),
             NUM_GUARDIAN_SIGNERS,
-            false
+            Signer.Wormhole
         );
 
         ++sequence;

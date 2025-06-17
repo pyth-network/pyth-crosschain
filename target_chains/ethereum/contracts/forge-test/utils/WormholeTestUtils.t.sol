@@ -469,4 +469,8 @@ contract WormholeTestUtils is AbstractWormholeTestUtils {
     constructor(uint8 numGuardians) {
         setUpWormholeReceiver(numGuardians);
     }
+
+    function getTotalSigners() public view returns (uint8) {
+        return uint8(currentSigners.length);
+    }
 }

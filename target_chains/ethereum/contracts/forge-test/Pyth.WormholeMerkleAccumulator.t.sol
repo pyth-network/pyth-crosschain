@@ -553,7 +553,7 @@ contract PythWormholeMerkleAccumulatorTest is Test, PythTestUtils {
             0,
             wormholePayload,
             1, // num signers
-            false
+            Signer.Wormhole
         );
 
         updateData = new bytes[](1);

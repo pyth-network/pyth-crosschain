@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import "../../contracts/pyth/PythUpgradable.sol";
 import "../../contracts/pyth/PythInternalStructs.sol";
 import "../../contracts/pyth/PythAccumulator.sol";
+import "../../contracts/pyth/PythGetters.sol";
+import "../../contracts/pyth/PythGovernanceInstructions.sol";
 
 import "../../contracts/libraries/MerkleTree.sol";
 
@@ -15,10 +17,15 @@ import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythUtils.sol";
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "./RandTestUtils.t.sol";
 import "./WormholeTestUtils.t.sol";
 
-abstract contract PythTestUtils is Test, RandTestUtils {
+abstract contract PythTestUtils is
+    Test,
+    RandTestUtils,
+    PythGovernanceInstructions
+{
     uint16 constant SOURCE_EMITTER_CHAIN_ID = 0x1;
     bytes32 constant SOURCE_EMITTER_ADDRESS =
         0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b;
@@ -28,7 +35,39 @@ abstract contract PythTestUtils is Test, RandTestUtils {
         0x0000000000000000000000000000000000000000000000000000000000000011;
     uint constant SINGLE_UPDATE_FEE_IN_WEI = 1;
 
+    enum Signer {
+        Wormhole,
+        Verifier
+    }
+
     WormholeTestUtils _wormholeTestUtils;
+    WormholeTestUtils _verifierTestUtils;
+
+    function setVerifier(address pyth, uint8 numSigners) internal {
+        _verifierTestUtils = new WormholeTestUtils(numSigners);
+        uint64 sequence = PythGetters(pyth).lastExecutedGovernanceSequence();
+
+        // Create governance VAA to set new verifier address
+        bytes memory payload = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetVerifierAddress),
+            uint16(2),
+            _verifierTestUtils.getWormholeReceiverAddr()
+        );
+
+        bytes memory vaa = generateVaa(
+            uint32(block.timestamp),
+            GOVERNANCE_EMITTER_CHAIN_ID,
+            GOVERNANCE_EMITTER_ADDRESS,
+            sequence + 1,
+            payload,
+            _wormholeTestUtils.getTotalSigners(),
+            Signer.Wormhole
+        );
+
+        PythGovernance(pyth).executeGovernanceInstruction(vaa);
+    }
 
     function setUpPyth(
         WormholeTestUtils wormholeTestUtils
@@ -58,7 +97,6 @@ abstract contract PythTestUtils is Test, RandTestUtils {
         );
 
         _wormholeTestUtils = wormholeTestUtils;
-
         return address(pyth);
     }
 
@@ -69,9 +107,9 @@ abstract contract PythTestUtils is Test, RandTestUtils {
         uint64 sequence,
         bytes memory payload,
         uint8 numSigners,
-        bool verifier
+        Signer signer
     ) internal view returns (bytes memory vaa) {
-        if (!verifier)
+        if (signer == Signer.Wormhole) {
             return
                 _wormholeTestUtils.generateVaa(
                     timestamp,
@@ -81,6 +119,17 @@ abstract contract PythTestUtils is Test, RandTestUtils {
                     payload,
                     numSigners
                 );
+        } else if (signer == Signer.Verifier) {
+            return
+                _verifierTestUtils.generateVaa(
+                    timestamp,
+                    emitterChainId,
+                    emitterAddress,
+                    sequence,
+                    payload,
+                    numSigners
+                );
+        }
         revert PythErrors.InvalidSigner();
     }
 
@@ -188,7 +237,7 @@ abstract contract PythTestUtils is Test, RandTestUtils {
             0,
             wormholePayload,
             config.numSigners,
-            false
+            Signer.Wormhole
         );
 
         if (config.brokenVaa) {
@@ -204,7 +253,8 @@ abstract contract PythTestUtils is Test, RandTestUtils {
             uint32(0x504e4155), // PythAccumulator.ACCUMULATOR_MAGIC
             uint8(1), // major version
             uint8(0), // minor version
-            uint8(0), // trailing header size
+            uint8(1), // trailing header size
+            uint8(0), // Signer
             uint8(PythAccumulator.UpdateType.WormholeMerkle),
             uint16(wormholeMerkleVaa.length),
             wormholeMerkleVaa,
@@ -248,7 +298,7 @@ abstract contract PythTestUtils is Test, RandTestUtils {
             0,
             wormholePayload,
             config.numSigners,
-            false
+            Signer.Wormhole
         );
 
         if (config.brokenVaa) {
@@ -374,7 +424,7 @@ abstract contract PythTestUtils is Test, RandTestUtils {
                 futureData
             ),
             numSigners,
-            false
+            Signer.Wormhole
         );
     }
 

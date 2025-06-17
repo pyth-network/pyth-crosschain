@@ -33,7 +33,7 @@ import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 
-contract PythGovernanceTest is Test, PythTestUtils, PythGovernanceInstructions {
+contract PythGovernanceTest is Test, PythTestUtils {
     using BytesLib for bytes;
 
     IPyth public pyth;
@@ -264,6 +264,9 @@ contract PythGovernanceTest is Test, PythTestUtils, PythGovernanceInstructions {
     }
 
     function testSetVerifierAddress() public {
+        setVerifier(address(pyth), 3);
+        address oldVerifier = address(PythGetters(address(pyth)).verifier());
+
         // Deploy a new verifier contract
         address newVerifier = new WormholeTestUtils(3)
             .getWormholeReceiverAddr();
@@ -281,10 +284,10 @@ contract PythGovernanceTest is Test, PythTestUtils, PythGovernanceInstructions {
             data,
             TEST_GOVERNANCE_CHAIN_ID,
             TEST_GOVERNANCE_EMITTER,
-            1
+            2
         );
 
-        address oldVerifier = address(PythGetters(address(pyth)).verifier());
+        oldVerifier = address(PythGetters(address(pyth)).verifier());
         vm.expectEmit(true, true, true, true);
         emit VerifierAddressSet(oldVerifier, newVerifier);
 
@@ -690,7 +693,7 @@ contract PythGovernanceTest is Test, PythTestUtils, PythGovernanceInstructions {
                 sequence,
                 data,
                 numGuardians,
-                false
+                Signer.Wormhole
             );
     }
 
