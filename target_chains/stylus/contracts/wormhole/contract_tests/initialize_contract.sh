@@ -2,7 +2,7 @@
 
 set -e
 
-CONTRACT_ADDRESS="0x7c56d119a916da6593e1fd8c1d010161f20afd70"
+CONTRACT_ADDRESS="0x3f38404a2e3cb949bcdfa19a5c3bdf3fe375feb0"
 RPC_URL="https://sepolia-rollup.arbitrum.io/rpc"
 
 CHAIN_ID=60051
@@ -45,7 +45,7 @@ if cast send "$CONTRACT_ADDRESS" "initialize(address[],uint16,uint16,address)" "
     fi
     
     echo "Testing getGuardianSet function..."
-    if cast call "$CONTRACT_ADDRESS" "getGuardianSet(uint32)" 0 --rpc-url "$RPC_URL"; then
+    if cast call "$CONTRACT_ADDRESS" "getGuardianSet(uint32)" 4 --rpc-url "$RPC_URL"; then
         echo "✅ Guardian set retrieval works - contract is initialized"
     else
         echo "❌ Guardian set retrieval failed"
