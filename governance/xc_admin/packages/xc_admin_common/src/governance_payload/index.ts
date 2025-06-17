@@ -22,6 +22,7 @@ import {
 import { EvmExecute } from "./ExecuteAction";
 import { SetTransactionFee } from "./SetTransactionFee";
 import { WithdrawFee } from "./WithdrawFee";
+import { LazerExecute } from "./LazerExecute";
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(
@@ -75,6 +76,8 @@ export function decodeGovernancePayload(
     }
     case "Execute":
       return EvmExecute.decode(data);
+    case "LazerExecute":
+      return LazerExecute.decode(data);
     case "SetTransactionFee":
       return SetTransactionFee.decode(data);
     case "WithdrawFee":
@@ -96,3 +99,4 @@ export * from "./SetTransactionFee";
 export * from "./SetWormholeAddress";
 export * from "./ExecuteAction";
 export * from "./WithdrawFee";
+export * from "./LazerExecute";
