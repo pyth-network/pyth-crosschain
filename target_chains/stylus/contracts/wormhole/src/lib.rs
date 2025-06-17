@@ -139,7 +139,7 @@ impl WormholeContract {
         self.governance_chain_id.set(U256::from(governance_chain_id));
         self.governance_contract.set(governance_contract);
 
-        self.store_gs(0, initial_guardians, 0)?;
+        self.store_gs(4, initial_guardians, 0)?;
 
         self.initialized.set(true);
         Ok(())
@@ -376,22 +376,6 @@ impl WormholeContract {
         Ok(())
     }
 
-    fn store_guardian_set(&mut self, set_index: u32, guardians: Vec<Address>, expiration_time: u32) -> Result<(), WormholeError> {
-        if guardians.is_empty() {
-            return Err(WormholeError::InvalidInput);
-        }
-
-        self.guardian_set_sizes.setter(U256::from(set_index)).set(U256::from(guardians.len()));
-        self.guardian_set_expiry.setter(U256::from(set_index)).set(U256::from(expiration_time));
-
-        for (i, guardian) in guardians.iter().enumerate() {
-            let key = self.compute_gs_key(set_index, i as u8);
-            self.guardian_keys.setter(key).set(*guardian);
-        }
-
-        Ok(())
-    }
-
     fn verify_signature(
         &self,
         hash: &FixedBytes<32>,
@@ -620,7 +604,7 @@ mod tests {
         let guardians = current_guardians();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
-        contract.store_guardian_set(4, current_guardians(), 0);
+        contract.store_gs(4, current_guardians(), 0);
         contract
     }
 
