@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "../contracts/pulse/SchedulerUpgradeable.sol";
 import "@pythnetwork/pulse-sdk-solidity/SchedulerErrors.sol";

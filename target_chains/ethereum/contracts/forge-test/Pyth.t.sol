@@ -11,7 +11,6 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
-import "forge-std/console.sol";
 
 contract PythTest is Test, PythTestUtils {
     IPyth public pyth;
