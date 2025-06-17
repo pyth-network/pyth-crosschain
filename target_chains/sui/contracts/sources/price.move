@@ -6,7 +6,7 @@ module pyth::price {
     /// The confidence interval roughly corresponds to the standard error of a normal distribution.
     /// Both the price and confidence are stored in a fixed-point numeric representation,
     /// `x * (10^expo)`, where `expo` is the exponent.
-    //
+    ///
     /// Please refer to the documentation at https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices for how
     /// to how this price safely.
     struct Price has copy, drop, store {
