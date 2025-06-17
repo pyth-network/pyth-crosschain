@@ -34,7 +34,7 @@ pub struct GuardianSignature {
 }
 
 #[derive(Clone)]
-pub struct VerifiedVMM {
+pub struct VerifiedVM {
     pub version: u8,
     pub guardian_set_index: u32,
     pub signatures: Vec<GuardianSignature>,
@@ -93,7 +93,7 @@ impl From<WormholeError> for Vec<u8> {
 }
 
 pub trait IWormhole {
-    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VerifiedVMM, WormholeError>;
+    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VerifiedVM, WormholeError>;
     fn get_guardian_set(&self, index: u32) -> Option<GuardianSet>;
     fn get_current_guardian_set_index(&self) -> u32;
     fn governance_action_is_consumed(&self, hash: Vec<u8>) -> bool;
@@ -184,13 +184,13 @@ impl WormholeContract {
 }
 
 impl WormholeContract {
-    fn parse_vm(&self, encoded_vaa: &[u8]) -> Result<VerifiedVMM, WormholeError> {
+    fn parse_vm(&self, encoded_vaa: &[u8]) -> Result<VerifiedVM, WormholeError> {
         Self::parse_vm_static(encoded_vaa)
     }
 
     // Parsing a Wormhole VAA according to the structure defined
     // by https://wormhole.com/docs/protocol/infrastructure/vaas/
-    fn parse_vm_static(encoded_vaa: &[u8]) -> Result<VerifiedVMM, WormholeError> {
+    fn parse_vm_static(encoded_vaa: &[u8]) -> Result<VerifiedVM, WormholeError> {
         if encoded_vaa.len() < 6 {
             return Err(WormholeError::InvalidVAAFormat);
         }
@@ -282,7 +282,7 @@ impl WormholeContract {
 
         let hash = Self::hash_static(&encoded_vaa[cursor - 51..])?;
 
-        Ok(VerifiedVMM {
+        Ok(VerifiedVM {
             version,
             guardian_set_index,
             signatures,
@@ -297,7 +297,7 @@ impl WormholeContract {
         })
     }
 
-    fn verify_vm(&self, vaa: &VerifiedVMM) -> Result<(), WormholeError> {
+    fn verify_vm(&self, vaa: &VerifiedVM) -> Result<(), WormholeError> {
 
         let guardian_set = self.get_gs_internal(vaa.guardian_set_index)?;
         if vaa.guardian_set_index != self.current_guardian_set_index.get().try_into().unwrap_or(0u32)
@@ -441,7 +441,7 @@ impl WormholeContract {
 }
 
 impl IWormhole for WormholeContract {
-    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VerifiedVMM, WormholeError> {
+    fn parse_and_verify_vm(&self, encoded_vaa: Vec<u8>) -> Result<VerifiedVM, WormholeError> {
         if !self.initialized.get() {
             return Err(WormholeError::NotInitialized);
         }

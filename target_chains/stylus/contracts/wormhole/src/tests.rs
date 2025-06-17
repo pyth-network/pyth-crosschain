@@ -181,8 +181,8 @@ mod tests {
         real_data
     }
 
-    fn create_test_vaa(guardian_set_index: u32, signatures: Vec<GuardianSignature>) -> VerifiedVMM {
-        VerifiedVMM {
+    fn create_test_vaa(guardian_set_index: u32, signatures: Vec<GuardianSignature>) -> VerifiedVM {
+        VerifiedVM {
             version: 1,
             guardian_set_index,
             signatures,
@@ -197,11 +197,11 @@ mod tests {
         }
     }
 
-    fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<GuardianSignature>, emitter: Address) -> VerifiedVMM {
+    fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<GuardianSignature>, emitter: Address) -> VerifiedVM {
         let mut emitter_bytes = [0u8; 32];
         emitter_bytes[12..32].copy_from_slice(emitter.as_slice());
 
-        VerifiedVMM {
+        VerifiedVM {
             version: 1,
             guardian_set_index,
             signatures,
@@ -580,7 +580,7 @@ mod tests {
         }
         let hash = FixedBytes::<32>::from([0x42u8; 32]);
 
-        let vaa = VerifiedVMM {
+        let vaa = VerifiedVM {
             version: 1,
             guardian_set_index: 0,
             signatures: vec![
