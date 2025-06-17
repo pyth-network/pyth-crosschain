@@ -145,22 +145,20 @@ impl WormholeContract {
         Ok(())
     }
 
-
-
     pub fn get_guardian_set(&self, index: u32) -> Result<Vec<u8>, Vec<u8>> {
         if !self.initialized.get() {
             return Err(WormholeError::NotInitialized.into());
         }
 
         match self.get_gs_internal(index) {
-            Some(guardian_set) => {
+            Ok(guardian_set) => {
                 let mut encoded = Vec::with_capacity(guardian_set.keys.len() * 20);
                 for address in &guardian_set.keys {
                     encoded.extend_from_slice(address.as_slice());
                 }
                 Ok(encoded)
             },
-            None => Err(WormholeError::InvalidGuardianSetIndex.into()),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -175,7 +173,7 @@ impl WormholeContract {
 
         let vaa = self.parse_vm(&encoded_vaa)?;
 
-        let _verified = self.verify_vm(&vaa);
+        let _verified = self.verify_vm(&vaa)?;
 
         Ok(vaa.payload)
     }
@@ -300,9 +298,8 @@ impl WormholeContract {
     }
 
     fn verify_vm(&self, vaa: &VerifiedVMM) -> Result<(), WormholeError> {
-        let guardian_set = self.get_gs_internal(vaa.guardian_set_index)
-            .ok_or(WormholeError::InvalidGuardianSetIndex)?;
 
+        let guardian_set = self.get_gs_internal(vaa.guardian_set_index)?;
         if vaa.guardian_set_index != self.current_guardian_set_index.get().try_into().unwrap_or(0u32)
             && guardian_set.expiration_time > 0 {
                 return Err(WormholeError::GuardianSetExpired)
@@ -379,6 +376,22 @@ impl WormholeContract {
         Ok(())
     }
 
+    fn store_guardian_set(&mut self, set_index: u32, guardians: Vec<Address>, expiration_time: u32) -> Result<(), WormholeError> {
+        if guardians.is_empty() {
+            return Err(WormholeError::InvalidInput);
+        }
+
+        self.guardian_set_sizes.setter(U256::from(set_index)).set(U256::from(guardians.len()));
+        self.guardian_set_expiry.setter(U256::from(set_index)).set(U256::from(expiration_time));
+
+        for (i, guardian) in guardians.iter().enumerate() {
+            let key = self.compute_gs_key(set_index, i as u8);
+            self.guardian_keys.setter(key).set(*guardian);
+        }
+
+        Ok(())
+    }
+
     fn verify_signature(
         &self,
         hash: &FixedBytes<32>,
@@ -414,10 +427,10 @@ impl WormholeContract {
         Ok(Address::from(address_bytes) == guardian_address)
     }
 
-    fn get_gs_internal(&self, index: u32) -> Option<GuardianSet> {
+   fn get_gs_internal(&self, index: u32) -> Result<GuardianSet, WormholeError> {
         let size = self.guardian_set_sizes.getter(U256::from(index)).get();
         if size.is_zero() {
-            return None;
+            return Err(WormholeError::InvalidGuardianSetIndex);
         }
 
         let size_u32: u32 = size.try_into().unwrap_or(0);
@@ -426,7 +439,7 @@ impl WormholeContract {
             let i_u8: u8 = match i.try_into() {
                 Ok(val) => val,
                 Err(_) => {
-                    return None;
+                    return Err(WormholeError::InvalidGuardianIndex);
                 }
             };
             let key = self.compute_gs_key(index, i_u8);
@@ -436,7 +449,7 @@ impl WormholeContract {
 
         let expiry = self.guardian_set_expiry.getter(U256::from(index)).get();
         let expiry_u32: u32 = expiry.try_into().unwrap_or(0);
-        Some(GuardianSet {
+        Ok(GuardianSet {
             keys,
             expiration_time: expiry_u32,
         })
@@ -455,7 +468,7 @@ impl IWormhole for WormholeContract {
     }
 
     fn get_guardian_set(&self, index: u32) -> Option<GuardianSet> {
-        self.get_gs_internal(index)
+        self.get_gs_internal(index).ok()
     }
 
     fn get_current_guardian_set_index(&self) -> u32 {
@@ -537,6 +550,31 @@ mod tests {
             0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
         ]
     }
+    
+    #[cfg(test)]
+    fn current_guardians() -> Vec<Address> {
+        vec![
+            Address::from_str("0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3").unwrap(), // Rockaway
+            Address::from_str("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").unwrap(), // Staked
+            Address::from_str("0x114De8460193bdf3A2fCf81f86a09765F4762fD1").unwrap(), // Figment
+            Address::from_str("0x107A0086b32d7A0977926A205131d8731D39cbEB").unwrap(), // ChainodeTech
+            Address::from_str("0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2").unwrap(), // Inotel
+            Address::from_str("0x11b39756C042441BE6D8650b69b54EbE715E2343").unwrap(), // HashKey Cloud
+            Address::from_str("0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd").unwrap(), // ChainLayer
+            Address::from_str("0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20").unwrap(), // xLabs
+            Address::from_str("0x74a3bf913953D695260D88BC1aA25A4eeE363ef0").unwrap(), // Forbole
+            Address::from_str("0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e").unwrap(), // Staking Fund
+            Address::from_str("0xAF45Ced136b9D9e24903464AE889F5C8a723FC14").unwrap(), // Moonlet Wallet
+            Address::from_str("0xf93124b7c738843CBB89E864c862c38cddCccF95").unwrap(), // P2P Validator
+            Address::from_str("0xD2CC37A4dc036a8D232b48f62cDD4731412f4890").unwrap(), // 01node
+            Address::from_str("0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811").unwrap(), // MCF
+            Address::from_str("0x71AA1BE1D36CaFE3867910F99C09e347899C19C3").unwrap(), // Everstake
+            Address::from_str("0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf").unwrap(), // Chorus One
+            Address::from_str("0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8").unwrap(), // Syncnode
+            Address::from_str("0x5E1487F35515d02A92753504a8D75471b9f49EdB").unwrap(), // Triton
+            Address::from_str("0x6FbEBc898F403E4773E95feB15E80C9A99c8348d").unwrap(), // Staking Facilities
+        ]
+    }
 
     #[cfg(test)]
     fn test_guardian_address1() -> Address {
@@ -573,6 +611,16 @@ mod tests {
             Err(_) => unreachable!(),
         }
         contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
+        contract
+    }
+    
+    #[cfg(test)]
+    fn deploy_with_real_guardians() -> WormholeContract {
+        let mut contract = WormholeContract::default();
+        let guardians = current_guardians();
+        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
+        contract.store_guardian_set(4, current_guardians(), 0);
         contract
     }
 
@@ -722,6 +770,14 @@ mod tests {
     }
 
     #[motsu::test]
+    fn test_vaa_invalid_guardian_set_idx() {
+        let contract = deploy_with_real_guardians();
+        let test_vaa = create_vaa_bytes("AQAHHHQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
+        let result = contract.parse_and_verify_vm(test_vaa);
+        assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex)));
+    }
+
+    #[motsu::test]
     fn test_wormhole_vaa_parsing() {
         let vaa_vec = test_wormhole_vaa();
         let result = match WormholeContract::parse_vm_static(&vaa_vec) {
@@ -853,7 +909,7 @@ mod tests {
         let contract = deploy_with_test_guardian();
 
         let result = contract.get_gs_internal(999);
-        assert!(result.is_none());
+        assert!(result.is_err());
     }
 
     #[motsu::test]
@@ -948,8 +1004,7 @@ mod tests {
 
         let _ = contract.store_gs(0, guardians.clone(), 0);
         let retrieved_set = contract
-            .get_gs_internal(0)
-            .ok_or(WormholeError::InvalidGuardianSetIndex)?;
+            .get_gs_internal(0)?;
 
         assert_eq!(retrieved_set.keys, guardians);
         assert_eq!(retrieved_set.expiration_time, 0);
