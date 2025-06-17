@@ -33,12 +33,7 @@ import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 
-contract PythGovernanceTest is
-    Test,
-    WormholeTestUtils,
-    PythTestUtils,
-    PythGovernanceInstructions
-{
+contract PythGovernanceTest is Test, PythTestUtils, PythGovernanceInstructions {
     using BytesLib for bytes;
 
     IPyth public pyth;
@@ -53,7 +48,7 @@ contract PythGovernanceTest is
     uint16 constant TARGET_CHAIN_ID = 2;
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
+        pyth = IPyth(setUpPyth(new WormholeTestUtils(1)));
     }
 
     function testNoOwner() public {
@@ -241,7 +236,8 @@ contract PythGovernanceTest is
 
     function testSetWormholeAddress() public {
         // Deploy a new wormhole contract
-        address newWormhole = address(setUpWormholeReceiver(1));
+        address newWormhole = new WormholeTestUtils(1)
+            .getWormholeReceiverAddr();
 
         // Create governance VAA to set new wormhole address
         bytes memory data = abi.encodePacked(
@@ -269,7 +265,8 @@ contract PythGovernanceTest is
 
     function testSetVerifierAddress() public {
         // Deploy a new verifier contract
-        address newVerifier = address(setUpWormholeReceiver(1));
+        address newVerifier = new WormholeTestUtils(3)
+            .getWormholeReceiverAddr();
 
         // Create governance VAA to set new verifier address
         bytes memory data = abi.encodePacked(
@@ -692,7 +689,8 @@ contract PythGovernanceTest is
                 emitterAddress,
                 sequence,
                 data,
-                numGuardians
+                numGuardians,
+                false
             );
     }
 

@@ -13,7 +13,7 @@ import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 import "forge-std/console.sol";
 
-contract PythTest is Test, WormholeTestUtils, PythTestUtils {
+contract PythTest is Test, PythTestUtils {
     IPyth public pyth;
 
     // -1 is equal to 0xffffff which is the biggest uint if converted back
@@ -32,7 +32,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils {
     bytes32[2] basePriceIds;
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormholeReceiver(NUM_GUARDIAN_SIGNERS)));
+        pyth = IPyth(setUpPyth(new WormholeTestUtils(NUM_GUARDIAN_SIGNERS)));
 
         // Initialize base TWAP messages for two price feeds
         basePriceIds[0] = bytes32(uint256(1));

@@ -8,7 +8,7 @@ import "../contracts/executor/ExecutorUpgradable.sol";
 import "./utils/WormholeTestUtils.t.sol";
 import "./utils/InvalidMagic.t.sol";
 
-contract ExecutorTest is Test, WormholeTestUtils {
+contract ExecutorTest is Test, AbstractWormholeTestUtils {
     Wormhole public wormhole;
     ExecutorUpgradable public executor;
     ExecutorUpgradable public executor2;

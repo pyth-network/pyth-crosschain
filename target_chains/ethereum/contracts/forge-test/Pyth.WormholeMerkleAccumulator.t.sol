@@ -8,24 +8,20 @@ import "forge-std/Test.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
-import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 
 import "../contracts/libraries/MerkleTree.sol";
+import "./utils/WormholeTestUtils.t.sol";
 
-contract PythWormholeMerkleAccumulatorTest is
-    Test,
-    WormholeTestUtils,
-    PythTestUtils
-{
+contract PythWormholeMerkleAccumulatorTest is Test, PythTestUtils {
     IPyth public pyth;
 
     // -1 is equal to 0xffffff which is the biggest uint if converted back
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
     function setUp() public virtual {
-        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
+        pyth = IPyth(setUpPyth(new WormholeTestUtils(1)));
     }
 
     function assertPriceFeedMessageStored(
@@ -530,15 +526,15 @@ contract PythWormholeMerkleAccumulatorTest is
         bytes memory wormholePayload;
         unchecked {
             wormholePayload = abi.encodePacked(
-                isNotMatch(forgeItem, "whMagic")
+                _wormholeTestUtils.isNotMatch(forgeItem, "whMagic")
                     ? uint32(0x41555756)
                     : uint32(0x41555750),
-                isNotMatch(forgeItem, "whUpdateType")
+                _wormholeTestUtils.isNotMatch(forgeItem, "whUpdateType")
                     ? uint8(PythAccumulator.UpdateType.WormholeMerkle)
                     : uint8(PythAccumulator.UpdateType.WormholeMerkle) + 1,
                 uint64(0), // Slot, not used in target networks
                 uint32(0), // Storage index, not used in target networks
-                isNotMatch(forgeItem, "rootDigest")
+                _wormholeTestUtils.isNotMatch(forgeItem, "rootDigest")
                     ? rootDigest
                     : bytes20(uint160(rootDigest) + 1)
             );
@@ -546,26 +542,29 @@ contract PythWormholeMerkleAccumulatorTest is
 
         bytes memory wormholeMerkleVaa = generateVaa(
             0,
-            isNotMatch(forgeItem, "whSourceChain")
+            _wormholeTestUtils.isNotMatch(forgeItem, "whSourceChain")
                 ? SOURCE_EMITTER_CHAIN_ID
                 : SOURCE_EMITTER_CHAIN_ID + 1,
-            isNotMatch(forgeItem, "whSourceAddress")
+            _wormholeTestUtils.isNotMatch(forgeItem, "whSourceAddress")
                 ? SOURCE_EMITTER_ADDRESS
                 : bytes32(
                     0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa00
                 ),
             0,
             wormholePayload,
-            1 // num signers
+            1, // num signers
+            false
         );
 
         updateData = new bytes[](1);
 
         updateData[0] = abi.encodePacked(
-            isNotMatch(forgeItem, "headerMagic")
+            _wormholeTestUtils.isNotMatch(forgeItem, "headerMagic")
                 ? uint32(0x504e4155)
                 : uint32(0x504e4150), // PythAccumulator.ACCUMULATOR_MAGIC
-            isNotMatch(forgeItem, "headerMajorVersion") ? uint8(1) : uint8(2), // major version
+            _wormholeTestUtils.isNotMatch(forgeItem, "headerMajorVersion")
+                ? uint8(1)
+                : uint8(2), // major version
             uint8(0), // minor version
             uint8(0), // trailing header size
             uint8(PythAccumulator.UpdateType.WormholeMerkle),
@@ -575,11 +574,15 @@ contract PythWormholeMerkleAccumulatorTest is
         );
 
         for (uint i = 0; i < priceFeedMessages.length; i++) {
+            bytes memory proof = proofs[0];
+            if (_wormholeTestUtils.isNotMatch(forgeItem, "proofItem")) {
+                proof = proofs[i];
+            }
             updateData[0] = abi.encodePacked(
                 updateData[0],
                 uint16(encodedPriceFeedMessages[i].length),
                 encodedPriceFeedMessages[i],
-                isNotMatch(forgeItem, "proofItem") ? proofs[i] : proofs[0]
+                proof
             );
         }
 

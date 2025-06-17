@@ -104,8 +104,9 @@ abstract contract Pyth is
             ) {
                 (
                     uint offset,
-                    UpdateType updateType
-                ) = extractUpdateTypeFromAccumulatorHeader(updateData[i]);
+                    UpdateType updateType,
+
+                ) = extractAccumulatorHeaderDetails(updateData[i]);
                 if (updateType != UpdateType.WormholeMerkle) {
                     revert PythErrors.InvalidUpdateData();
                 }
@@ -135,8 +136,9 @@ abstract contract Pyth is
         ) {
             (
                 uint offset,
-                UpdateType updateType
-            ) = extractUpdateTypeFromAccumulatorHeader(updateData[0]);
+                UpdateType updateType,
+
+            ) = extractAccumulatorHeaderDetails(updateData[0]);
             if (updateType != UpdateType.WormholeMerkle) {
                 revert PythErrors.InvalidUpdateData();
             }
@@ -273,9 +275,10 @@ abstract contract Pyth is
         }
 
         uint offset;
+        Signer signer;
         {
             UpdateType updateType;
-            (offset, updateType) = extractUpdateTypeFromAccumulatorHeader(
+            (offset, updateType, signer) = extractAccumulatorHeaderDetails(
                 singleUpdateData
             );
 
@@ -293,10 +296,7 @@ abstract contract Pyth is
             merkleData.numUpdates,
             encoded,
             merkleData.slot
-        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedAndSlotFromAccumulatorUpdate(
-            singleUpdateData,
-            offset
-        );
+        ) = extractWormholeMerkleHeader(singleUpdateData, signer, offset);
 
         // Process each update within the Merkle proof
         for (uint j = 0; j < merkleData.numUpdates; j++) {
@@ -435,12 +435,13 @@ abstract contract Pyth is
         )
     {
         UpdateType updateType;
+        Signer signer;
         uint offset;
         bytes20 digest;
         uint8 numUpdates;
         bytes calldata encoded;
         // Extract and validate the header for start data
-        (offset, updateType) = extractUpdateTypeFromAccumulatorHeader(
+        (offset, updateType, signer) = extractAccumulatorHeaderDetails(
             updateData
         );
 
@@ -455,10 +456,7 @@ abstract contract Pyth is
             encoded,
             // slot ignored
 
-        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedAndSlotFromAccumulatorUpdate(
-            updateData,
-            offset
-        );
+        ) = extractWormholeMerkleHeader(updateData, signer, offset);
 
         // Add additional validation before extracting TWAP price info
         if (offset >= updateData.length) {

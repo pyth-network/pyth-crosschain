@@ -26,6 +26,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidSigner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidTwapUpdateData",
     "type": "error"
   },

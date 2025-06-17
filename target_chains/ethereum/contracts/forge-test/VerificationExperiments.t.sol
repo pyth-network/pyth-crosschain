@@ -16,7 +16,7 @@ import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 
 // Experiments to measure the gas usage of different ways of verifying prices in the EVM contract.
-contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
+contract VerificationExperiments is Test, PythTestUtils {
     // 19, current mainnet number of guardians, is used to have gas estimates
     // close to our mainnet transactions.
     uint8 constant NUM_GUARDIANS = 19;
@@ -65,8 +65,15 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
     uint64 sequence;
 
     function setUp() public {
+        WormholeTestUtils wormholeTestUtils = new WormholeTestUtils(
+            NUM_GUARDIAN_SIGNERS
+        );
+
+        // Just set it up for generating the VAA signatures.
+        setUpPyth(wormholeTestUtils);
+
         address payable wormhole = payable(
-            setUpWormholeReceiver(NUM_GUARDIANS)
+            wormholeTestUtils.getWormholeReceiverAddr()
         );
 
         // Deploy experimental contract
@@ -93,7 +100,6 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
             60, // Valid time period in seconds
             1 // single update fee in wei
         );
-
         priceIds = new bytes32[](NUM_PRICES);
         priceIds[0] = bytes32(
             0x1000000000000000000000000000000000000000000000000000000000000f00
@@ -127,7 +133,6 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
             );
             freshPricesPublishTimes.push(publishTime);
         }
-
         // Populate the contract with the initial prices
         (
             cachedPricesUpdateData,
@@ -144,7 +149,6 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
         ) = generateWormholeUpdateDataAndFee(freshPrices);
 
         // Generate the update payloads for the various verification systems
-
         whMerkleUpdateDepth0 = generateSingleWhMerkleUpdate(
             priceIds[0],
             freshPrices[0],
@@ -176,7 +180,6 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
             freshPrices[0],
             8
         );
-
         thresholdUpdate = generateThresholdUpdate(priceIds[0], freshPrices[0]);
 
         nativeUpdate = generateMessagePayload(priceIds[0], freshPrices[0]);
@@ -265,7 +268,8 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
             PythTestUtils.SOURCE_EMITTER_ADDRESS,
             sequence,
             bytes.concat(root),
-            NUM_GUARDIAN_SIGNERS
+            NUM_GUARDIAN_SIGNERS,
+            false
         );
 
         ++sequence;

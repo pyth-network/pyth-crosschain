@@ -52,4 +52,7 @@ library PythErrors {
     // The verifier address to set in SetVerifierAddress governance is invalid.
     // Signature: 0xab8af376
     error InvalidVerifierAddressToSet();
+    // The signer of the message is invalid.
+    // Signature: 0x815e1d64
+    error InvalidSigner();
 }
