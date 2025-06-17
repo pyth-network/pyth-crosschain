@@ -5,7 +5,7 @@ import * as pythLazerSolanaContractIdl from "../target/idl/pyth_lazer_solana_con
 import yargs from "yargs/yargs";
 import { readFileSync } from "fs";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { createEd25519Instruction } from "@pythnetwork/pyth-lazer-sdk";
+import { createEd25519Instruction } from "../src/ed25519";
 import {
   sendAndConfirmTransaction,
   SendTransactionError,
