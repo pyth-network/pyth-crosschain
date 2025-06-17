@@ -17,7 +17,6 @@ import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythUtils.sol";
 
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
 import "./RandTestUtils.t.sol";
 import "./WormholeTestUtils.t.sol";
 
@@ -213,7 +212,8 @@ abstract contract PythTestUtils is
 
     function generateWhMerkleUpdateWithSource(
         PriceFeedMessage[] memory priceFeedMessages,
-        MerkleUpdateConfig memory config
+        MerkleUpdateConfig memory config,
+        Signer signer
     ) internal returns (bytes memory whMerkleUpdateData) {
         bytes[] memory encodedPriceFeedMessages = encodePriceFeedMessages(
             priceFeedMessages
@@ -237,7 +237,7 @@ abstract contract PythTestUtils is
             0,
             wormholePayload,
             config.numSigners,
-            Signer.Wormhole
+            signer
         );
 
         if (config.brokenVaa) {
@@ -249,16 +249,17 @@ abstract contract PythTestUtils is
             );
         }
 
+        uint256 priceFeedMessageLength = priceFeedMessages.length;
         whMerkleUpdateData = abi.encodePacked(
             uint32(0x504e4155), // PythAccumulator.ACCUMULATOR_MAGIC
             uint8(1), // major version
             uint8(0), // minor version
             uint8(1), // trailing header size
-            uint8(0), // Signer
+            uint8(signer), // Signer
             uint8(PythAccumulator.UpdateType.WormholeMerkle),
             uint16(wormholeMerkleVaa.length),
             wormholeMerkleVaa,
-            uint8(priceFeedMessages.length)
+            uint8(priceFeedMessageLength)
         );
 
         for (uint i = 0; i < priceFeedMessages.length; i++) {
@@ -334,7 +335,8 @@ abstract contract PythTestUtils is
     function generateWhMerkleUpdate(
         PriceFeedMessage[] memory priceFeedMessages,
         uint8 depth,
-        uint8 numSigners
+        uint8 numSigners,
+        Signer signer
     ) internal returns (bytes memory whMerkleUpdateData) {
         whMerkleUpdateData = generateWhMerkleUpdateWithSource(
             priceFeedMessages,
@@ -344,7 +346,21 @@ abstract contract PythTestUtils is
                 SOURCE_EMITTER_CHAIN_ID,
                 SOURCE_EMITTER_ADDRESS,
                 false
-            )
+            ),
+            signer
+        );
+    }
+
+    function generateWhMerkleUpdate(
+        PriceFeedMessage[] memory priceFeedMessages,
+        uint8 depth,
+        uint8 numSigners
+    ) internal returns (bytes memory whMerkleUpdateData) {
+        whMerkleUpdateData = generateWhMerkleUpdate(
+            priceFeedMessages,
+            depth,
+            numSigners,
+            Signer.Wormhole
         );
     }
 

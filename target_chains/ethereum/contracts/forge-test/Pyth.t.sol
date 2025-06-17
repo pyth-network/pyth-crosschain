@@ -134,7 +134,8 @@ contract PythTest is Test, PythTestUtils {
 
             updateData[i / batchSize] = generateWhMerkleUpdateWithSource(
                 batchMessages,
-                config
+                config,
+                Signer.Wormhole
             );
         }
 
