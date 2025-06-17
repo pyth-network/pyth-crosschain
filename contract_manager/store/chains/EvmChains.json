@@ -1073,7 +1073,7 @@
   {
     "id": "hyperevm_testnet",
     "mainnet": false,
-    "rpcUrl": "https://api.hyperliquid-testnet.xyz/evm",
+    "rpcUrl": "https://rpc.hyperliquid-testnet.xyz/evm",
     "networkId": 998,
     "type": "EvmChain"
   },
