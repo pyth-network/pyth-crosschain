@@ -222,7 +222,7 @@ multisigCommand(
   .requiredOption(
     "-t, --target <pubkey>",
     "The new governance authority to take over. " +
-      "If the target is another multisig, it will be the multisig's vault authority PDA.",
+    "If the target is another multisig, it will be the multisig's vault authority PDA.",
   )
   .action(async (options: any) => {
     const vault = await loadVaultFromOptions(options);
@@ -444,7 +444,7 @@ multisigCommand(
 
     console.log(
       "Successfully proposed at: https://proposals.pyth.network/?tab=proposals&proposal=" +
-        proposalAddresses[0].toBase58(),
+      proposalAddresses[0].toBase58(),
     );
   });
 
@@ -521,8 +521,8 @@ multisigCommand(
       if (await accountExists(cluster, stakePubkey)) {
         throw new Error(
           "Stake account for validator " +
-            votePubkey.toBase58() +
-            " already exists, it may be already permissioned",
+          votePubkey.toBase58() +
+          " already exists, it may be already permissioned",
         );
       }
 
@@ -564,7 +564,7 @@ multisigCommand(
     // This should be a single proposal normally
     console.log(
       "Successfully proposed at: https://proposals.pyth.network/?tab=proposals&proposal=" +
-        proposalAddresses[0].toBase58(),
+      proposalAddresses[0].toBase58(),
     );
   });
 
