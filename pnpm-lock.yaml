@@ -1899,8 +1899,8 @@ importers:
         specifier: ^0.30.1
         version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/pyth-lazer-sdk':
-        specifier: ^0.3.1
-        version: 0.3.3(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        specifier: workspace:*
+        version: link:../../sdk/js
       '@solana/buffer-layout':
         specifier: ^4.0.1
         version: 4.0.1
@@ -7222,9 +7222,6 @@ packages:
 
   '@pythnetwork/price-service-sdk@1.8.0':
     resolution: {integrity: sha512-tFZ1thj3Zja06DzPIX2dEWSi7kIfIyqreoywvw5NQ3Z1pl5OJHQGMEhxt6Li3UCGSp2ooYZS9wl8/8XfrfrNSA==}
-
-  '@pythnetwork/pyth-lazer-sdk@0.3.3':
-    resolution: {integrity: sha512-gk04HiKZbkCqWaPwY0riy02GBDl8uhrn5rJWcrDRtA6A+5Zy27KIj9q30K7F0QcnN7HCq0Tfo8EhGOCxY2rinw==}
 
   '@pythnetwork/pyth-sdk-solidity@4.0.0':
     resolution: {integrity: sha512-Cy2MvSN1Oh5YpIYmZd2In6/gfXbGjnpazmXKioTuq07Drp4Rl2XHcvtqHdgilplCl32IG4pU+XoRafpexID08A==}
@@ -30717,19 +30714,6 @@ snapshots:
   '@pythnetwork/price-service-sdk@1.8.0':
     dependencies:
       bn.js: 5.2.1
-
-  '@pythnetwork/pyth-lazer-sdk@0.3.3(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@isaacs/ttlcache': 1.4.1
-      '@solana/buffer-layout': 4.0.1
-      '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      isomorphic-ws: 5.0.0(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))
-      ts-log: 2.2.7
-      ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
 
   '@pythnetwork/pyth-sdk-solidity@4.0.0': {}
 
