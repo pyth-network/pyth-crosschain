@@ -15,8 +15,8 @@ library PythUtils {
     /// @dev Function will lose precision if targetDecimals is less than the Pyth price decimals.
     /// This method will truncate any digits that cannot be represented by the targetDecimals.
     /// e.g. If the price is 0.000123 and the targetDecimals is 2, the result will be 0
-    /// This function will overflow if the combined exponent(targetDecimals + expo) is greater than 77 or less than -77.
-    /// This function will also revert if prices combined with the targetDecimals are greater than 10 ** 77 or less than 10 ** -77.
+    /// This function will overflow if the combined exponent(targetDecimals + expo) is greater than 58 or less than -58.
+    /// This function will also revert if prices combined with the targetDecimals are greater than 10 ** 58 or less than 10 ** -58.
     function convertToUint(
         int64 price,
         int32 expo,
@@ -28,25 +28,28 @@ library PythUtils {
         if (expo < -255) {
             revert PythErrors.InvalidInputExpo();
         }
-        int32 combinedExpo = int32(uint32(targetDecimals)) + expo;
 
-        // Bounds check: prevent overflow/underflow with base 10 exponentiation
-        // Calculation: 10 ** n <= (2 ** 256) - 1
-        //              n <= log10((2 ** 256) - 1)
-        //              n <= 77.2
-        if (combinedExpo > 77 || combinedExpo < -77) revert PythErrors.ExponentOverflow();
+        // If targetDecimals is 6, we want to multiply the final price by 10 ** -6
+        // So the delta exponent is targetDecimals + currentExpo
+        int32 deltaExponent = int32(uint32(targetDecimals)) + expo;
 
-        // price is int64, always >= 0 here
+        // Bounds check: prevent overflow/underflow with base 10 exponentiation 
+        // Calculation: 10 ** n <= (2 ** 256 - 63) - 1
+        //              n <= log10((2 ** 193) - 1)
+        //              n <= 58.2
+        if (deltaExponent > 58 || deltaExponent < -58) revert PythErrors.ExponentOverflow();
+
+        // We can safely cast the price to uint256 because the above condition will revert if the price is negative
         uint256 unsignedPrice = uint256(uint64(price)); 
 
-        if (combinedExpo > 0) {
-            (bool success, uint256 result) = Math.tryMul(unsignedPrice, 10 ** uint32(combinedExpo));
+        if (deltaExponent > 0) {
+            (bool success, uint256 result) = Math.tryMul(unsignedPrice, 10 ** uint32(deltaExponent));
             if (!success) {
                 revert PythErrors.CombinedPriceOverflow();
             }
             return result;
         } else {
-            (bool success, uint256 result) = Math.tryDiv(unsignedPrice, 10 ** uint(Math.abs(combinedExpo)));
+            (bool success, uint256 result) = Math.tryDiv(unsignedPrice, 10 ** uint(Math.abs(deltaExponent)));
             if (!success) {
                 revert PythErrors.CombinedPriceOverflow();
             }

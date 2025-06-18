@@ -2,6 +2,7 @@
 // OpenZeppelin Contracts (last updated v5.3.0) (utils/math/Math.sol)
 // Source: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.3.0/contracts/utils/math/Math.sol
 
+// note: We only copy the subset of the library methods that we need.
 
 pragma solidity ^0.8.0;
 

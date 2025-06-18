@@ -395,103 +395,109 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
     }
 
     function testConvertToUnit() public {
-        // Price can't be negative
+
+        // Test 1: Price can't be negative
         vm.expectRevert(PythErrors.NegativeInputPrice.selector);
         PythUtils.convertToUint(-100, -5, 18);
 
-        // Exponent can't be less than -255
+        // Test 2: Exponent can't be less than -255
         vm.expectRevert(PythErrors.InvalidInputExpo.selector);
         PythUtils.convertToUint(100, -256, 18);
 
-        // This test will fail as the 10 ** 237 is too large for a uint256
+        // Test 3: This test will fail as the 10 ** 237 is too large for a uint256
         vm.expectRevert(PythErrors.ExponentOverflow.selector);
         assertEq(PythUtils.convertToUint(100, -255, 18), 0);
 
-        // Combined Exponent can't be greater than 77
-        // See the calculation how we came up with 77 in PythUtils.sol
+        // Test 4: Combined Exponent can't be greater than 58 and less than -58
+        // See the calculation how we came up with 58 in PythUtils.sol
         vm.expectRevert(PythErrors.ExponentOverflow.selector);
-        assertEq(PythUtils.convertToUint(100, 60, 18), 0); // 60 + 18 = 78 > 77
-
-        // Combined Exponent can't be less than -77
+        assertEq(PythUtils.convertToUint(100, 50, 9), 0); // 50 + 9 = 59 > 58
         vm.expectRevert(PythErrors.ExponentOverflow.selector);
-        assertEq(PythUtils.convertToUint(100, -96, 18), 0); // -96 + 18 = -78 < -77
+        assertEq(PythUtils.convertToUint(100, -96, 37), 0); // -96 + 37 = -59 < -58
 
-        // Negative Exponent Tests
+        // Test 5: Negative Exponent Tests
         // Price with 18 decimals and exponent -5
         assertEq(
             PythUtils.convertToUint(100, -5, 18),
             100_0_000_000_000_000 // 100 * 10^13
         );
-
         // Price with 9 decimals and exponent -2
         assertEq(
             PythUtils.convertToUint(100, -2, 9),
             100_0_000_000 // 100 * 10^7
         );
 
-        // Price with 4 decimals and exponent -5
+        // Test 6: Price with 4 decimals and exponent -5
         assertEq(PythUtils.convertToUint(100, -5, 4), 10);
 
-        // Price with 5 decimals and exponent -2
+        // Test 7: Price with 5 decimals and exponent -2
         // @note: We will lose precision here as price is
         // 0.00001 and we are targetDecimals is 2.
         assertEq(PythUtils.convertToUint(100, -5, 2), 0);
-
         assertEq(PythUtils.convertToUint(123, -8, 5), 0);
 
-        // Positive Exponent Tests
+        // Test 8: Positive Exponent Tests
         // Price with 18 decimals and exponent 5
         assertEq(PythUtils.convertToUint(100, 5, 18), 100_00_000_000_000_000_000_000_000); // 100 with 23 zeros
-
-        // Price with 9 decimals and exponent 2
+        // Test 9: Price with 9 decimals and exponent 2
         assertEq(PythUtils.convertToUint(100, 2, 9), 100_00_000_000_000); // 100 with 11 zeros
 
-        // Price with 2 decimals and exponent 1
+        // Test 10: Price with 2 decimals and exponent 1
         assertEq(PythUtils.convertToUint(100, 1, 2), 100_000); // 100 with 3 zeros  
 
 
-        // Edge Cases
-        // 1. Test: price = 0, any expo/decimals returns 0
-        assertEq(PythUtils.convertToUint(0, -77, 0), 0);
+        // Special Cases
+        // Test 11: price = 0, any expo/decimals returns 0
+        assertEq(PythUtils.convertToUint(0, -58, 0), 0);
         assertEq(PythUtils.convertToUint(0, 0, 0), 0);
-        assertEq(PythUtils.convertToUint(0, 77, 0), 0);
-        assertEq(PythUtils.convertToUint(0, -77, 77), 0);
+        assertEq(PythUtils.convertToUint(0, 58, 0), 0);
+        assertEq(PythUtils.convertToUint(0, -58, 58), 0);
 
-        // 2. Test: smallest positive price, maximum downward exponent (should round to zero)
-        assertEq(PythUtils.convertToUint(1, -77, 0), 0);
-        assertEq(PythUtils.convertToUint(1, -77, 77), 1);
+        // Test 12: smallest positive price, maximum downward exponent (should round to zero)
+        assertEq(PythUtils.convertToUint(1, -58, 0), 0);
+        assertEq(PythUtils.convertToUint(1, -58, 58), 1);
 
-        // 3. Test: combinedExpo == 0 (should be identical to price)
+        // Test 13: deltaExponent == 0 (should be identical to price)
         assertEq(PythUtils.convertToUint(123456, 0, 0), 123456);
         assertEq(PythUtils.convertToUint(123456, -5, 5), 123456); // -5 + 5 == 0
 
-        // 4. Test: combinedExpo > 0 (should shift price up)
+        // Test 14: deltaExponent > 0 (should shift price up)
         assertEq(PythUtils.convertToUint(123456, 5, 0), 12345600000);
         assertEq(PythUtils.convertToUint(123456, 5, 2), 1234560000000);
         
-        // 5. Test: combinedExpo < 0 (should shift price down)
+        // Test 15: deltaExponent < 0 (should shift price down)
         assertEq(PythUtils.convertToUint(123456, -5, 0), 1);
         assertEq(PythUtils.convertToUint(123456, -5, 2), 123);
 
-        // 6. Test: division with truncation
+        // Test 16: division with truncation
         assertEq(PythUtils.convertToUint(999, -2, 0), 9); // 999/100 = 9 (truncated)
         assertEq(PythUtils.convertToUint(199, -2, 0), 1); // 199/100 = 1 (truncated)
         assertEq(PythUtils.convertToUint(99, -2, 0), 0); // 99/100 = 0 (truncated)
 
-        // 7. Test: Big price and scaling, but outside of bounds
-        vm.expectRevert(PythErrors.CombinedPriceOverflow.selector);
-        assertEq(PythUtils.convertToUint(100_000_000, 10, 60),0);
+        // Test 17: Big price and scaling, but outside of bounds
+        vm.expectRevert(PythErrors.ExponentOverflow.selector);
+        assertEq(PythUtils.convertToUint(100_000_000, 10, 50),0);
 
-        // 8. Test: Big price and scaling
-        assertEq(PythUtils.convertToUint(100_000_000, -80, 10),0); // -80 + 10 = -70 > -77
-
-        // This will overflow as 100_000_000 * 10^70 which is equal to 10^78 which is greater than 2^256
-        vm.expectRevert(PythErrors.CombinedPriceOverflow.selector); 
-        assertEq(PythUtils.convertToUint(100_000_000, 10, 60), 0); // 10 + 60 = 70 > 77
+        // Test 18: Big price and scaling
+        assertEq(PythUtils.convertToUint(100_000_000, -50, 10),0); // -50 + 10 = -40 > -58
+        vm.expectRevert(PythErrors.ExponentOverflow.selector); 
+        assertEq(PythUtils.convertToUint(100_000_000, 10, 50), 0); // 10 + 50 = 60 > 58
         
-        // 9. Test: Decimals just save from truncation
+        // Test 19: Decimals just save from truncation
         assertEq(PythUtils.convertToUint(5, -1, 1), 5); // 5/10*10 = 5
         assertEq(PythUtils.convertToUint(5, -1, 2), 50); // 5/10*100 = 50
+
+        // 10. Test: Big price and scaling, should be inside the bounds
+        // We have to convert int64 -> int256 -> uint256 before multiplying by 10 ** 58
+        assertEq(PythUtils.convertToUint(type(int64).max, 50, 8), uint256(int256(type(int64).max)) * 10 ** 58); // 50 + 8 = 58
+        assertEq(PythUtils.convertToUint(type(int64).max, -64, 8), 0); // -64 + 8 = -56 > -58
+
+        // 11. Test: Big price and scaling, should be inside the bounds
+        vm.expectRevert(PythErrors.ExponentOverflow.selector);
+        assertEq(PythUtils.convertToUint(type(int64).max, 50, 9), 0); // 50 + 9 = 59 > 58
+        vm.expectRevert(PythErrors.ExponentOverflow.selector);
+        assertEq(PythUtils.convertToUint(type(int64).max, -60, 1), 0); // -60 + 1 = -59 < -58
+        
     }
 
     function testDeriveCrossRate() public {
