@@ -491,6 +491,7 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         // We have to convert int64 -> int256 -> uint256 before multiplying by 10 ** 58
         assertEq(PythUtils.convertToUint(type(int64).max, 50, 8), uint256(int256(type(int64).max)) * 10 ** 58); // 50 + 8 = 58
         assertEq(PythUtils.convertToUint(type(int64).max, -64, 8), 0); // -64 + 8 = -56 > -58
+        assertEq(PythUtils.convertToUint(type(int64).max, -50, 1), 0); // -64 + 1 = -63 < -58
 
         // 11. Test: Big price and scaling, should be inside the bounds
         vm.expectRevert(PythErrors.ExponentOverflow.selector);
