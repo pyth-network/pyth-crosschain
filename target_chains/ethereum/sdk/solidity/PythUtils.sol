@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./PythStructs.sol";
 import "./PythErrors.sol";
 import "./Math.sol";
-import "forge-std/console.sol";
 
 library PythUtils {
     uint8 public constant PRECISION = 36;
