@@ -36,15 +36,19 @@ impl PythReceiver {
     pub fn get_price_unsafe(&self, _id: [u8; 32]) -> Result<PriceInfoReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(_id);
         
-        let price_info = self.latest_price_info.get(id_fb).unwrap_or(PythReceiverError::PriceUnavailable)?;
+        let price_info = self.latest_price_info.get(id_fb);
+        
+        if price_info.publish_time.get() == U64::ZERO {
+            return Err(PythReceiverError::PriceUnavailable);
+        }
 
         Ok((
-            price_info.publish_time,
-            price_info.expo,
-            price_info.price,
-            price_info.conf,
-            price_info.ema_price,
-            price_info.ema_conf,
+            price_info.publish_time.get(),
+            price_info.expo.get(),
+            price_info.price.get(),
+            price_info.conf.get(),
+            price_info.ema_price.get(),
+            price_info.ema_conf.get(),
         ))
     }
 
