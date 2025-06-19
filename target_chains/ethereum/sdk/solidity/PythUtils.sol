@@ -15,8 +15,9 @@ library PythUtils {
     /// @dev Function will lose precision if targetDecimals is less than the Pyth price decimals.
     /// This method will truncate any digits that cannot be represented by the targetDecimals.
     /// e.g. If the price is 0.000123 and the targetDecimals is 2, the result will be 0
-    /// This function will overflow if the combined exponent(targetDecimals + expo) is greater than 58 or less than -58.
-    /// This function will also revert if prices combined with the targetDecimals are greater than 10 ** 58 or less than 10 ** -58.
+    /// This function will revert with PythErrors.ExponentOverflow if the combined exponent (targetDecimals + expo) is greater than 58 or less than -58.
+    /// Assuming the combined exponent is within bounds, this function will work for full range of int64 prices.
+    /// The result of the computation is rounded down. In particular, if the result is < 1 in the delta exponent, it will be rounded to 0
     function convertToUint(
         int64 price,
         int32 expo,
@@ -44,12 +45,16 @@ library PythUtils {
 
         if (deltaExponent > 0) {
             (bool success, uint256 result) = Math.tryMul(unsignedPrice, 10 ** uint32(deltaExponent));
+            // This condition is unreachable since we validated deltaExponent bounds above.
+            // But keeping it here for safety.
             if (!success) {
                 revert PythErrors.CombinedPriceOverflow();
             }
             return result;
         } else {
             (bool success, uint256 result) = Math.tryDiv(unsignedPrice, 10 ** uint(Math.abs(deltaExponent)));
+            // This condition is unreachable since we validated deltaExponent bounds above.
+            // But keeping it here for safety.
             if (!success) {
                 revert PythErrors.CombinedPriceOverflow();
             }
@@ -62,20 +67,20 @@ library PythUtils {
     /// @param expo1 The exponent of the first price
     /// @param price2 The second price (c/b)
     /// @param expo2 The exponent of the second price
-    /// @param targetExpo The target number of decimals for the cross-rate
+    /// @param targetExpo The target exponent for the cross-rate
     /// @return crossRate The cross-rate (a/c)
-    /// @dev This function will revert if either price is negative or if the exponents are invalid.
-    /// @dev This function will also revert if the cross-rate is greater than int64.max
+    /// @dev This function will revert if either price is negative or if the exponents are less than -255.
     /// @notice This function doesn't return the combined confidence interval.
-    /// This function will overflow if the combined exponent(targetExpo + expo1 - expo2) is greater than 58 or less than -58.
-    /// This function will also revert if prices combined with the targetExpo are greater than 10 ** 58 or less than 10 ** -58.
+    /// This function will revert with PythErrors.ExponentOverflow if the combined exponent (targetExpo + expo1 - expo2) is greater than 58 or less than -58.
+    /// Assuming the combined exponent is within bounds, this function will work for full range of int64 prices.
+    /// The result of the computation is rounded down. In particular, if the result is < 1 in the delta exponent, it will be rounded to 0
     function deriveCrossRate(
         int64 price1,
         int32 expo1,
         int64 price2,
         int32 expo2,
         int32 targetExpo
-    ) public pure returns (int256 crossRate) {
+    ) public pure returns (uint256 crossRate) {
         // Check if the input prices are negative
         if (price1 < 0 || price2 < 0) {
             revert PythErrors.NegativeInputPrice();
@@ -85,7 +90,7 @@ library PythUtils {
             revert PythErrors.InvalidInputExpo();
         }
         
-        // This value can be negative.
+        // note: This value can be negative.
         int64 deltaExponent = int64(expo1 - (expo2 + targetExpo));
 
         // Bounds check: prevent overflow/underflow with base 10 exponentiation 
@@ -101,11 +106,6 @@ library PythUtils {
             result = Math.mulDiv(uint64(price1), 1, 10 ** uint64(Math.abs(deltaExponent)) * uint64(price2));
         }
 
-        // Check if the combined price fits in int256
-        if (result > uint256((type(int256).max))) {
-            revert PythErrors.CombinedPriceOverflow();
-        }
-
-        return int256(result);
+        return result;
     }
 }

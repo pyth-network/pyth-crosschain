@@ -376,9 +376,9 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         int64 price2, 
         int32 expo2,
         int32 targetExpo, 
-        int256 expectedPrice
+        uint256 expectedPrice
     ) internal {
-        int256 price = PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetExpo);
+        uint256 price = PythUtils.deriveCrossRate(price1, expo1, price2, expo2, targetExpo);
         assertEq(price, expectedPrice);
     }
 
@@ -493,7 +493,7 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         vm.expectRevert(PythErrors.ExponentOverflow.selector);
         assertEq(PythUtils.convertToUint(type(int64).max, 50, 9), 0); 
         assertEq(PythUtils.convertToUint(type(int64).max, -64, 8), 0); // -64 + 8 = -56 > -58
-        assertEq(PythUtils.convertToUint(type(int64).max, -50, 1), 0); // -64 + 1 = -63 < -58
+        assertEq(PythUtils.convertToUint(type(int64).max, -50, 1), 0); // -50 + 1 = -49 > -58
 
         // 11. Test: Big price and scaling, should be inside the bounds
         vm.expectRevert(PythErrors.ExponentOverflow.selector);
@@ -543,19 +543,27 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
 
 
         // Test 7: Max int64 price and scaling
-        assertCrossRateEquals(type(int64).max, 0, 1, 0, 0, type(int64).max);
+        assertCrossRateEquals(type(int64).max, 0, 1, 0, 0, uint256(int256(type(int64).max)));
         assertCrossRateEquals(1, 0, type(int64).max, 0, 0, 0);
         assertCrossRateEquals(type(int64).max, 0, type(int64).max, 0, 0, 1);
         // type(int64).max is approx 9.223e18
         assertCrossRateEquals(type(int64).max, 0, 1, 0, 18, 9);
         // 1 / type(int64).max is approx 1.085e-19
         assertCrossRateEquals(1, 0, type(int64).max, 0, -19, 1);
-        assertCrossRateEquals(type(int64).max, 50, 1, -8, 58, type(int64).max);
+        // type(int64).max * 10 ** 58 / 1
+        assertCrossRateEquals(type(int64).max, 50, 1, -8, 0, uint256(int256(type(int64).max)) * 10 ** 58);
+        // 1 / (type(int64).max * 10 ** 58)
+        assertCrossRateEquals(1, 0, type(int64).max, 50, 8, 0);
+
+        // type(int64).max * 10 ** 59 / 1
+        assertCrossRateReverts(type(int64).max, 50, 1, -9, 0, PythErrors.ExponentOverflow.selector);
+        // 1 / (type(int64).max * 10 ** 59)
+        assertCrossRateReverts(1, 0, type(int64).max, 50, 9, PythErrors.ExponentOverflow.selector);
         
 
         // Realistic Tests
         // Test case 1:  (StEth/Eth / Eth/USD = ETH/BTC)
-        int256 price = PythUtils.deriveCrossRate(206487956502, -8, 206741615681, -8, -8);
+        uint256 price = PythUtils.deriveCrossRate(206487956502, -8, 206741615681, -8, -8);
         assertApproxEqRel(price, 100000000, 9e17); // $1
 
         // Test case 2: 
