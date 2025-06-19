@@ -9,12 +9,24 @@ mod structs;
 mod error;
 
 use alloc::vec::Vec;
-use stylus_sdk::{alloy_primitives::{U256, U64, I32, I64, FixedBytes},
+use stylus_sdk::{alloy_primitives::{U256, U64, I32, I64, FixedBytes, Bytes},
                 prelude::*, 
-                storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256}};
+                storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256},
+                call::Call};
 
 use structs::{DataSourceStorage, PriceInfoReturn, PriceInfoStorage};
 use error::{PythReceiverError};
+use pythnet_sdk::{wire::{v1::{
+            AccumulatorUpdateData, Proof,
+        },
+    },
+};
+
+sol_interface! {
+    interface IWormhole {
+        function parseAndVerifyVm(bytes calldata encodedVaa) external returns (bytes memory);
+    }
+}
 
 #[storage]
 #[entrypoint]
@@ -68,8 +80,21 @@ impl PythReceiver {
         (U64::ZERO, I32::ZERO, I64::ZERO, U64::ZERO, I64::ZERO, U64::ZERO)
     }
 
-    pub fn update_price_feeds(&mut self, _update_data: Vec<Vec<u8>>) {
-        // dummy implementation
+    pub fn update_price_feeds(&mut self, update_data: Vec<u8>) {
+        let update_data_array: &[u8] = &update_data;
+        let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).unwrap();
+
+        match update_data.proof {
+            Proof::WormholeMerkle { vaa, updates } => {
+                let wormhole: IWormhole = IWormhole::new(self.wormhole.get());
+                let config = Call::new_in(self);
+                let parsed_vaa = wormhole.parse_and_verify_vm(config, Bytes::from(Vec::from(vaa))).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
+
+                // for update in updates {
+                    
+                // }
+            }
+        };
     }
 
     pub fn update_price_feeds_if_necessary(
