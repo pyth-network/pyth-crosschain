@@ -490,6 +490,8 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         // 10. Test: Big price and scaling, should be inside the bounds
         // We have to convert int64 -> int256 -> uint256 before multiplying by 10 ** 58
         assertEq(PythUtils.convertToUint(type(int64).max, 50, 8), uint256(int256(type(int64).max)) * 10 ** 58); // 50 + 8 = 58
+        vm.expectRevert(PythErrors.ExponentOverflow.selector);
+        assertEq(PythUtils.convertToUint(type(int64).max, 50, 9), 0); 
         assertEq(PythUtils.convertToUint(type(int64).max, -64, 8), 0); // -64 + 8 = -56 > -58
         assertEq(PythUtils.convertToUint(type(int64).max, -50, 1), 0); // -64 + 1 = -63 < -58
 
@@ -512,6 +514,8 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         assertCrossRateReverts(100, -256, 100, -2, 5, PythErrors.InvalidInputExpo.selector);
         assertCrossRateReverts(100, -2, 100, -256, 5, PythErrors.InvalidInputExpo.selector);
         assertCrossRateReverts(100, -256, 100, -256, 5, PythErrors.InvalidInputExpo.selector);
+        // Target exponent can't be less than -255
+        assertCrossRateReverts(100, -2, 100, -2, -256, PythErrors.InvalidInputExpo.selector);
 
         // Test 3: Basic Tests with negative exponents 
         assertCrossRateEquals(500, -8, 500, -8, -5, 100000); 
@@ -522,24 +526,32 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         assertCrossRateEquals(100, 2, 100, 2, -5, 100000); // 100 * 10^2 / 100 * 10^2 = 10000 / 10000 = 1 == 100000 * 10^-5
         // We will loose preistion as the the target exponent is 5 making the price 0.00001
         assertCrossRateEquals(100, 8, 100, 8, 5, 0); 
-        assertCrossRateEquals(100, 2, 100, 2, -5, 100000); // 100 * 10^2 / 100 * 10^2 = 10000 / 10000 = 1
-        // We will loose preistion as the the target exponent is 5 making the price 0.00001
-        assertCrossRateEquals(100, 2, 100, 2, 5, 0); 
 
         // Test 5: Different Exponent Tests
         assertCrossRateEquals(10_000, -2, 100, -4, 0, 10_000); // 10_000 / 100 = 100 * 10(-2 - -4) = 10_000 with 0 decimals = 10_000
         assertCrossRateEquals(10_000, -2, 100, -4, 5, 0); // 10_000 / 100 = 100 * 10(-2 - -4) = 10_000 with 5 decimals = 0
         assertCrossRateEquals(10_000, -2, 10_000, -1, 5, 0); // It will truncate to 0
         assertCrossRateEquals(10_000, -10, 10_000, -2, 0, 0); // It will truncate to 0
-
         assertCrossRateEquals(100_000_000, -2, 100, -8, -8, 100_000_000_000_000_000_000); // 100_000_000 / 100 = 1_000_000 * 10(-2 - -8) = 1000000 * 10^6 = 1000000000000
 
-        // Exponent Edge Tests
+        // Test 6: Exponent Edge Tests
         assertCrossRateEquals(10_000, 0, 100, 0, 0, 100); 
         assertCrossRateReverts(10_000, 0, 100, 0, -255, PythErrors.ExponentOverflow.selector);
         assertCrossRateReverts(10_000, 0, 100, -255, -255, PythErrors.ExponentOverflow.selector); 
         assertCrossRateReverts(10_000, -255, 100, 0, 0, PythErrors.ExponentOverflow.selector); 
         assertCrossRateReverts(10_000, -255, 100, -178, -5, PythErrors.ExponentOverflow.selector);
+
+
+        // Test 7: Max int64 price and scaling
+        assertCrossRateEquals(type(int64).max, 0, 1, 0, 0, type(int64).max);
+        assertCrossRateEquals(1, 0, type(int64).max, 0, 0, 0);
+        assertCrossRateEquals(type(int64).max, 0, type(int64).max, 0, 0, 1);
+        // type(int64).max is approx 9.223e18
+        assertCrossRateEquals(type(int64).max, 0, 1, 0, 18, 9);
+        // 1 / type(int64).max is approx 1.085e-19
+        assertCrossRateEquals(1, 0, type(int64).max, 0, -19, 1);
+        assertCrossRateEquals(type(int64).max, 50, 1, -8, 58, type(int64).max);
+        
 
         // Realistic Tests
         // Test case 1:  (StEth/Eth / Eth/USD = ETH/BTC)
