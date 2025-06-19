@@ -535,14 +535,12 @@ contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
         assertCrossRateEquals(100_000_000, -2, 100, -8, -8, 100_000_000_000_000_000_000); // 100_000_000 / 100 = 1_000_000 * 10(-2 - -8) = 1000000 * 10^6 = 1000000000000
 
         // Exponent Edge Tests
-        console.log("\nExponent Edge Tests");
         assertCrossRateEquals(10_000, 0, 100, 0, 0, 100); 
         assertCrossRateReverts(10_000, 0, 100, 0, -255, PythErrors.ExponentOverflow.selector);
         assertCrossRateReverts(10_000, 0, 100, -255, -255, PythErrors.ExponentOverflow.selector); 
         assertCrossRateReverts(10_000, -255, 100, 0, 0, PythErrors.ExponentOverflow.selector); 
         assertCrossRateReverts(10_000, -255, 100, -178, -5, PythErrors.ExponentOverflow.selector);
 
-        console.log("\nRealistic Tests");
         // Realistic Tests
         // Test case 1:  (StEth/Eth / Eth/USD = ETH/BTC)
         int256 price = PythUtils.deriveCrossRate(206487956502, -8, 206741615681, -8, -8);
