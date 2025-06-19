@@ -68,6 +68,8 @@ library PythUtils {
     /// @dev This function will revert if either price is negative or if the exponents are invalid.
     /// @dev This function will also revert if the cross-rate is greater than int64.max
     /// @notice This function doesn't return the combined confidence interval.
+    /// This function will overflow if the combined exponent(targetExpo + expo1 - expo2) is greater than 58 or less than -58.
+    /// This function will also revert if prices combined with the targetExpo are greater than 10 ** 58 or less than 10 ** -58.
     function deriveCrossRate(
         int64 price1,
         int32 expo1,
@@ -84,12 +86,8 @@ library PythUtils {
             revert PythErrors.InvalidInputExpo();
         }
         
-        // uint256 fixedPointPrice = Math.mulDiv(uint64(price1), 10 ** uint32(expo1 - (expo2 + targetExpo)), uint64(price2));
-        
-        // This value can be negative, so we need can't use Math.mulDiv as it is.
+        // This value can be negative.
         int64 deltaExponent = int64(expo1 - (expo2 + targetExpo));
-        console.log("deltaExponent", deltaExponent);
-
 
         // Bounds check: prevent overflow/underflow with base 10 exponentiation 
         // Calculation: 10 ** n <= (2 ** 256 - 63) - 1
@@ -98,15 +96,10 @@ library PythUtils {
         if (deltaExponent > 58 || deltaExponent < -58) revert PythErrors.ExponentOverflow();
 
         uint256 result;
-
         if (deltaExponent > 0) {
-            console.log("deltaExponent > 0");
             result = Math.mulDiv(uint64(price1), 10 ** uint64(deltaExponent) , uint64(price2));
-            console.log("result for positive: ", result);
         } else {
-            console.log("deltaExponent < 0");
             result = Math.mulDiv(uint64(price1), 1, 10 ** uint64(Math.abs(deltaExponent)) * uint64(price2));
-            console.log("result for negative: ", result);
         }
 
         // Check if the combined price fits in int256
@@ -115,38 +108,5 @@ library PythUtils {
         }
 
         return int256(result);
-        
-
-        // // We can safely cast the prices to uint64 because we checked that they are positive
-        // uint256 fixedPointPrice = Math.mulDiv(uint64(price1), 10 ** PRECISION, uint64(price2));
-        // int32 combinedExpo = expo1 - expo2 - int32(int8(PRECISION));
-        // int32 factoredExpo = combinedExpo - targetExpo;
-
-        // if (factoredExpo > 77 || factoredExpo < -77) revert PythErrors.ExponentOverflow();
-        // // Convert the price to the target exponent
-        // // We can't use the convertToUint function because it accepts int64 and we need to use uint256
-        // // It makes more sense to ask users for exponent and not decimals here.
-        // if (factoredExpo > 0) {
-        //     // If combinedExpo is greater than targetExpo, we need to multiply
-        //     (bool success, uint256 result) = Math.tryMul(fixedPointPrice, 10 ** uint32(factoredExpo));
-        //     if (!success) {
-        //         revert PythErrors.CombinedPriceOverflow();
-        //     }
-        //     fixedPointPrice = result;
-        // } else if (factoredExpo < 0) {
-        //     // If combinedExpo is less than targetExpo, we need to divide
-        //     (bool success, uint256 result) = Math.tryDiv(fixedPointPrice, 10 ** uint32(Math.abs(factoredExpo)));
-        //     if (!success) {
-        //         revert PythErrors.CombinedPriceOverflow();
-        //     }
-        //     fixedPointPrice = result;
-        // }
-
-        // // Check if the combined price fits in int256
-        // if (fixedPointPrice > uint256((type(int256).max))) {
-        //     revert PythErrors.CombinedPriceOverflow();
-        // }
-
-        // return int256(fixedPointPrice);
     }
 }
