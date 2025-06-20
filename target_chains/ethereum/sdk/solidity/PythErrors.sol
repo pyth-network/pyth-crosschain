@@ -49,4 +49,12 @@ library PythErrors {
     error InvalidTwapUpdateData();
     // The twap update data set is invalid.
     error InvalidTwapUpdateDataSet();
+    // The Input Price is negative.
+    error NegativeInputPrice();
+    // The Input Exponent is invalid.
+    error InvalidInputExpo();
+    // The combined price is greater than int64.max.
+    error CombinedPriceOverflow();
+    // The exponent is greater than 77 or less than -77.
+    error ExponentOverflow();
 }
