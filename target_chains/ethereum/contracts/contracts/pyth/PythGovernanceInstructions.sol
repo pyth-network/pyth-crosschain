@@ -37,7 +37,8 @@ contract PythGovernanceInstructions {
         SetWormholeAddress, // 6
         SetFeeInToken, // 7 - No-op for EVM chains
         SetTransactionFee, // 8
-        WithdrawFee // 9
+        WithdrawFee, // 9
+        SetVerifierAddress // 10
     }
 
     struct GovernanceInstruction {
@@ -88,6 +89,10 @@ contract PythGovernanceInstructions {
         address targetAddress;
         // Fee in wei, matching the native uint256 type used for address.balance in EVM
         uint256 fee;
+    }
+
+    struct SetVerifierAddressPayload {
+        address newVerifierAddress;
     }
 
     /// @dev Parse a GovernanceInstruction
@@ -268,6 +273,19 @@ contract PythGovernanceInstructions {
         index += 8;
 
         wf.fee = uint256(val) * uint256(10) ** uint256(expo);
+
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
+    }
+
+    /// @dev Parse a UpdateVerifierAddressPayload (action 10) with minimal validation
+    function parseSetVerifierAddressPayload(
+        bytes memory encodedPayload
+    ) public pure returns (SetVerifierAddressPayload memory sv) {
+        uint index = 0;
+
+        sv.newVerifierAddress = address(encodedPayload.toAddress(index));
+        index += 20;
 
         if (encodedPayload.length != index)
             revert PythErrors.InvalidGovernanceMessage();

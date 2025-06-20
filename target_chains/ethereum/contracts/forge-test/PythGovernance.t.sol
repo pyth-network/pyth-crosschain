@@ -33,12 +33,7 @@ import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 
-contract PythGovernanceTest is
-    Test,
-    WormholeTestUtils,
-    PythTestUtils,
-    PythGovernanceInstructions
-{
+contract PythGovernanceTest is Test, PythTestUtils {
     using BytesLib for bytes;
 
     IPyth public pyth;
@@ -53,7 +48,7 @@ contract PythGovernanceTest is
     uint16 constant TARGET_CHAIN_ID = 2;
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
+        pyth = IPyth(setUpPyth(new WormholeTestUtils(1)));
     }
 
     function testNoOwner() public {
@@ -241,7 +236,8 @@ contract PythGovernanceTest is
 
     function testSetWormholeAddress() public {
         // Deploy a new wormhole contract
-        address newWormhole = address(setUpWormholeReceiver(1));
+        address newWormhole = new WormholeTestUtils(1)
+            .getWormholeReceiverAddr();
 
         // Create governance VAA to set new wormhole address
         bytes memory data = abi.encodePacked(
@@ -265,6 +261,38 @@ contract PythGovernanceTest is
 
         PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
         assertEq(address(PythGetters(address(pyth)).wormhole()), newWormhole);
+    }
+
+    function testSetVerifierAddress() public {
+        setVerifier(address(pyth), 3);
+        address oldVerifier = address(PythGetters(address(pyth)).verifier());
+
+        // Deploy a new verifier contract
+        address newVerifier = new WormholeTestUtils(3)
+            .getWormholeReceiverAddr();
+
+        // Create governance VAA to set new verifier address
+        bytes memory data = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetVerifierAddress),
+            TARGET_CHAIN_ID, // Target chain ID
+            newVerifier // New verifier address
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            data,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            2
+        );
+
+        oldVerifier = address(PythGetters(address(pyth)).verifier());
+        vm.expectEmit(true, true, true, true);
+        emit VerifierAddressSet(oldVerifier, newVerifier);
+
+        PythGovernance(address(pyth)).executeGovernanceInstruction(vaa);
+        assertEq(address(PythGetters(address(pyth)).verifier()), newVerifier);
     }
 
     function testTransferGovernanceDataSource() public {
@@ -664,7 +692,8 @@ contract PythGovernanceTest is
                 emitterAddress,
                 sequence,
                 data,
-                numGuardians
+                numGuardians,
+                Signer.Wormhole
             );
     }
 
@@ -706,4 +735,8 @@ contract PythGovernanceTest is
     );
     event TransactionFeeSet(uint oldFee, uint newFee);
     event FeeWithdrawn(address recipient, uint256 fee);
+    event VerifierAddressSet(
+        address oldVerifierAddress,
+        address newVerifierAddress
+    );
 }

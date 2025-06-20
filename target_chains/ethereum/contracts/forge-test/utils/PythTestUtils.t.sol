@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import "../../contracts/pyth/PythUpgradable.sol";
 import "../../contracts/pyth/PythInternalStructs.sol";
 import "../../contracts/pyth/PythAccumulator.sol";
+import "../../contracts/pyth/PythGetters.sol";
+import "../../contracts/pyth/PythGovernanceInstructions.sol";
 
 import "../../contracts/libraries/MerkleTree.sol";
 
@@ -15,10 +17,14 @@ import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythUtils.sol";
 
 import "forge-std/Test.sol";
-import "./WormholeTestUtils.t.sol";
 import "./RandTestUtils.t.sol";
+import "./WormholeTestUtils.t.sol";
 
-abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
+abstract contract PythTestUtils is
+    Test,
+    RandTestUtils,
+    PythGovernanceInstructions
+{
     uint16 constant SOURCE_EMITTER_CHAIN_ID = 0x1;
     bytes32 constant SOURCE_EMITTER_ADDRESS =
         0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b;
@@ -28,7 +34,43 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         0x0000000000000000000000000000000000000000000000000000000000000011;
     uint constant SINGLE_UPDATE_FEE_IN_WEI = 1;
 
-    function setUpPyth(address wormhole) public returns (address) {
+    enum Signer {
+        Wormhole,
+        Verifier
+    }
+
+    WormholeTestUtils _wormholeTestUtils;
+    WormholeTestUtils _verifierTestUtils;
+
+    function setVerifier(address pyth, uint8 numSigners) internal {
+        _verifierTestUtils = new WormholeTestUtils(numSigners);
+        uint64 sequence = PythGetters(pyth).lastExecutedGovernanceSequence();
+
+        // Create governance VAA to set new verifier address
+        bytes memory payload = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.SetVerifierAddress),
+            uint16(2),
+            _verifierTestUtils.getWormholeReceiverAddr()
+        );
+
+        bytes memory vaa = generateVaa(
+            uint32(block.timestamp),
+            GOVERNANCE_EMITTER_CHAIN_ID,
+            GOVERNANCE_EMITTER_ADDRESS,
+            sequence + 1,
+            payload,
+            _wormholeTestUtils.getTotalSigners(),
+            Signer.Wormhole
+        );
+
+        PythGovernance(pyth).executeGovernanceInstruction(vaa);
+    }
+
+    function setUpPyth(
+        WormholeTestUtils wormholeTestUtils
+    ) public returns (address) {
         PythUpgradable implementation = new PythUpgradable();
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(implementation),
@@ -43,7 +85,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
         emitterAddresses[0] = SOURCE_EMITTER_ADDRESS;
 
         pyth.initialize(
-            wormhole,
+            wormholeTestUtils.getWormholeReceiverAddr(),
             emitterChainIds,
             emitterAddresses,
             GOVERNANCE_EMITTER_CHAIN_ID,
@@ -53,7 +95,41 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
             SINGLE_UPDATE_FEE_IN_WEI // single update fee in wei
         );
 
+        _wormholeTestUtils = wormholeTestUtils;
         return address(pyth);
+    }
+
+    function generateVaa(
+        uint32 timestamp,
+        uint16 emitterChainId,
+        bytes32 emitterAddress,
+        uint64 sequence,
+        bytes memory payload,
+        uint8 numSigners,
+        Signer signer
+    ) internal view returns (bytes memory vaa) {
+        if (signer == Signer.Wormhole) {
+            return
+                _wormholeTestUtils.generateVaa(
+                    timestamp,
+                    emitterChainId,
+                    emitterAddress,
+                    sequence,
+                    payload,
+                    numSigners
+                );
+        } else if (signer == Signer.Verifier) {
+            return
+                _verifierTestUtils.generateVaa(
+                    timestamp,
+                    emitterChainId,
+                    emitterAddress,
+                    sequence,
+                    payload,
+                    numSigners
+                );
+        }
+        revert PythErrors.InvalidSigner();
     }
 
     function singleUpdateFeeInWei() public pure returns (uint) {
@@ -136,7 +212,8 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
 
     function generateWhMerkleUpdateWithSource(
         PriceFeedMessage[] memory priceFeedMessages,
-        MerkleUpdateConfig memory config
+        MerkleUpdateConfig memory config,
+        Signer signer
     ) internal returns (bytes memory whMerkleUpdateData) {
         bytes[] memory encodedPriceFeedMessages = encodePriceFeedMessages(
             priceFeedMessages
@@ -159,7 +236,8 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
             config.source_emitter_address,
             0,
             wormholePayload,
-            config.numSigners
+            config.numSigners,
+            signer
         );
 
         if (config.brokenVaa) {
@@ -171,15 +249,17 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
             );
         }
 
+        uint256 priceFeedMessageLength = priceFeedMessages.length;
         whMerkleUpdateData = abi.encodePacked(
             uint32(0x504e4155), // PythAccumulator.ACCUMULATOR_MAGIC
             uint8(1), // major version
             uint8(0), // minor version
-            uint8(0), // trailing header size
+            uint8(1), // trailing header size
+            uint8(signer), // Signer
             uint8(PythAccumulator.UpdateType.WormholeMerkle),
             uint16(wormholeMerkleVaa.length),
             wormholeMerkleVaa,
-            uint8(priceFeedMessages.length)
+            uint8(priceFeedMessageLength)
         );
 
         for (uint i = 0; i < priceFeedMessages.length; i++) {
@@ -218,7 +298,8 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
             config.source_emitter_address,
             0,
             wormholePayload,
-            config.numSigners
+            config.numSigners,
+            Signer.Wormhole
         );
 
         if (config.brokenVaa) {
@@ -254,7 +335,8 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
     function generateWhMerkleUpdate(
         PriceFeedMessage[] memory priceFeedMessages,
         uint8 depth,
-        uint8 numSigners
+        uint8 numSigners,
+        Signer signer
     ) internal returns (bytes memory whMerkleUpdateData) {
         whMerkleUpdateData = generateWhMerkleUpdateWithSource(
             priceFeedMessages,
@@ -264,7 +346,21 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
                 SOURCE_EMITTER_CHAIN_ID,
                 SOURCE_EMITTER_ADDRESS,
                 false
-            )
+            ),
+            signer
+        );
+    }
+
+    function generateWhMerkleUpdate(
+        PriceFeedMessage[] memory priceFeedMessages,
+        uint8 depth,
+        uint8 numSigners
+    ) internal returns (bytes memory whMerkleUpdateData) {
+        whMerkleUpdateData = generateWhMerkleUpdate(
+            priceFeedMessages,
+            depth,
+            numSigners,
+            Signer.Wormhole
         );
     }
 
@@ -343,7 +439,8 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
                 rootDigest, // this can have bytes past this for future versions
                 futureData
             ),
-            numSigners
+            numSigners,
+            Signer.Wormhole
         );
     }
 
@@ -369,7 +466,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils, RandTestUtils {
     }
 }
 
-contract PythUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
+contract PythUtilsTest is Test, PythTestUtils, IPythEvents {
     function testConvertToUnit() public {
         // Price can't be negative
         vm.expectRevert();

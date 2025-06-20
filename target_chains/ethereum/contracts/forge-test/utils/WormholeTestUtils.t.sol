@@ -14,7 +14,7 @@ import "../../contracts/wormhole-receiver/ReceiverGovernanceStructs.sol";
 
 import "forge-std/Test.sol";
 
-abstract contract WormholeTestUtils is Test {
+abstract contract AbstractWormholeTestUtils is Test {
     uint256[] currentSigners;
     address wormholeReceiverAddr;
     uint16 constant CHAIN_ID = 2; // Ethereum
@@ -22,36 +22,13 @@ abstract contract WormholeTestUtils is Test {
     bytes32 constant GOVERNANCE_CONTRACT =
         0x0000000000000000000000000000000000000000000000000000000000000004;
 
-    function setUpWormhole(uint8 numGuardians) public returns (address) {
-        Implementation wormholeImpl = new Implementation();
-        Setup wormholeSetup = new Setup();
-
-        Wormhole wormhole = new Wormhole(address(wormholeSetup), new bytes(0));
-
-        address[] memory initSigners = new address[](numGuardians);
-        currentSigners = new uint256[](numGuardians);
-
-        for (uint256 i = 0; i < numGuardians; ++i) {
-            currentSigners[i] = i + 1;
-            initSigners[i] = vm.addr(currentSigners[i]); // i+1 is the private key for the i-th signer.
-        }
-
-        // These values are the default values used in our tilt test environment
-        // and are not important.
-        Setup(address(wormhole)).setup(
-            address(wormholeImpl),
-            initSigners,
-            CHAIN_ID, // Ethereum chain ID
-            GOVERNANCE_CHAIN_ID, // Governance source chain ID (1 = solana)
-            GOVERNANCE_CONTRACT // Governance source address
-        );
-
-        return address(wormhole);
+    function getWormholeReceiverAddr() public view returns (address) {
+        return wormholeReceiverAddr;
     }
 
     function setUpWormholeReceiver(
         uint8 numGuardians
-    ) public returns (address) {
+    ) internal returns (address) {
         ReceiverImplementation wormholeReceiverImpl = new ReceiverImplementation();
         ReceiverSetup wormholeReceiverSetup = new ReceiverSetup();
 
@@ -228,7 +205,7 @@ abstract contract WormholeTestUtils is Test {
     }
 }
 
-contract WormholeTestUtilsTest is Test, WormholeTestUtils {
+contract WormholeTestUtilsTest is AbstractWormholeTestUtils {
     uint32 constant TEST_VAA_TIMESTAMP = 112;
     uint16 constant TEST_EMITTER_CHAIN_ID = 7;
     bytes32 constant TEST_EMITTER_ADDR =
@@ -485,5 +462,15 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         (, valid, reason) = wormhole.parseAndVerifyVM(vaa);
         assertEq(valid, false);
         assertEq(reason, "VM signature invalid");
+    }
+}
+
+contract WormholeTestUtils is AbstractWormholeTestUtils {
+    constructor(uint8 numGuardians) {
+        setUpWormholeReceiver(numGuardians);
+    }
+
+    function getTotalSigners() public view returns (uint8) {
+        return uint8(currentSigners.length);
     }
 }

@@ -11,7 +11,7 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 
-contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
+contract GasBenchmark is Test, PythTestUtils {
     // 19, current mainnet number of guardians, is used to have gas estimates
     // close to our mainnet transactions.
     uint8 constant NUM_GUARDIANS = 19;
@@ -53,9 +53,11 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     uint randomSeed;
 
     function setUp() public {
-        address wormholeAddr = setUpWormholeReceiver(NUM_GUARDIANS);
-        wormhole = IWormhole(wormholeAddr);
-        pyth = IPyth(setUpPyth(wormholeAddr));
+        WormholeTestUtils wormholeTestUtils = new WormholeTestUtils(
+            NUM_GUARDIANS
+        );
+        wormhole = IWormhole(wormholeTestUtils.getWormholeReceiverAddr());
+        pyth = IPyth(setUpPyth(wormholeTestUtils));
 
         priceIds = new bytes32[](NUM_PRICES);
         priceIds[0] = bytes32(

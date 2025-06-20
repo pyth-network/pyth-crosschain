@@ -8,24 +8,20 @@ import "forge-std/Test.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
-import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 
 import "../contracts/libraries/MerkleTree.sol";
+import "./utils/WormholeTestUtils.t.sol";
 
-contract PythWormholeMerkleAccumulatorTest is
-    Test,
-    WormholeTestUtils,
-    PythTestUtils
-{
+contract PythWormholeMerkleAccumulatorTest is Test, PythTestUtils {
     IPyth public pyth;
 
     // -1 is equal to 0xffffff which is the biggest uint if converted back
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
     function setUp() public virtual {
-        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
+        pyth = IPyth(setUpPyth(new WormholeTestUtils(1)));
     }
 
     function assertPriceFeedMessageStored(
@@ -143,7 +139,8 @@ contract PythWormholeMerkleAccumulatorTest is
     }
 
     function createWormholeMerkleUpdateData(
-        PriceFeedMessage[] memory priceFeedMessages
+        PriceFeedMessage[] memory priceFeedMessages,
+        Signer signer
     ) internal returns (bytes[] memory updateData, uint updateFee) {
         updateData = new bytes[](1);
 
@@ -154,9 +151,27 @@ contract PythWormholeMerkleAccumulatorTest is
 
         depth += getRandUint8() % 3;
 
-        updateData[0] = generateWhMerkleUpdate(priceFeedMessages, depth, 1);
+        uint8 numSigners = 1;
+        if (signer == Signer.Wormhole)
+            numSigners = _wormholeTestUtils.getTotalSigners();
+        if (signer == Signer.Verifier)
+            numSigners = _verifierTestUtils.getTotalSigners();
+
+        updateData[0] = generateWhMerkleUpdate(
+            priceFeedMessages,
+            depth,
+            numSigners,
+            signer
+        );
 
         updateFee = pyth.getUpdateFee(updateData);
+    }
+
+    function createWormholeMerkleUpdateData(
+        PriceFeedMessage[] memory priceFeedMessages
+    ) internal returns (bytes[] memory updateData, uint updateFee) {
+        return
+            createWormholeMerkleUpdateData(priceFeedMessages, Signer.Wormhole);
     }
 
     /// @notice This method creates a forward compatible wormhole update data by using a newer minor version,
@@ -530,15 +545,15 @@ contract PythWormholeMerkleAccumulatorTest is
         bytes memory wormholePayload;
         unchecked {
             wormholePayload = abi.encodePacked(
-                isNotMatch(forgeItem, "whMagic")
+                _wormholeTestUtils.isNotMatch(forgeItem, "whMagic")
                     ? uint32(0x41555756)
                     : uint32(0x41555750),
-                isNotMatch(forgeItem, "whUpdateType")
+                _wormholeTestUtils.isNotMatch(forgeItem, "whUpdateType")
                     ? uint8(PythAccumulator.UpdateType.WormholeMerkle)
                     : uint8(PythAccumulator.UpdateType.WormholeMerkle) + 1,
                 uint64(0), // Slot, not used in target networks
                 uint32(0), // Storage index, not used in target networks
-                isNotMatch(forgeItem, "rootDigest")
+                _wormholeTestUtils.isNotMatch(forgeItem, "rootDigest")
                     ? rootDigest
                     : bytes20(uint160(rootDigest) + 1)
             );
@@ -546,26 +561,29 @@ contract PythWormholeMerkleAccumulatorTest is
 
         bytes memory wormholeMerkleVaa = generateVaa(
             0,
-            isNotMatch(forgeItem, "whSourceChain")
+            _wormholeTestUtils.isNotMatch(forgeItem, "whSourceChain")
                 ? SOURCE_EMITTER_CHAIN_ID
                 : SOURCE_EMITTER_CHAIN_ID + 1,
-            isNotMatch(forgeItem, "whSourceAddress")
+            _wormholeTestUtils.isNotMatch(forgeItem, "whSourceAddress")
                 ? SOURCE_EMITTER_ADDRESS
                 : bytes32(
                     0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa00
                 ),
             0,
             wormholePayload,
-            1 // num signers
+            1, // num signers
+            Signer.Wormhole
         );
 
         updateData = new bytes[](1);
 
         updateData[0] = abi.encodePacked(
-            isNotMatch(forgeItem, "headerMagic")
+            _wormholeTestUtils.isNotMatch(forgeItem, "headerMagic")
                 ? uint32(0x504e4155)
                 : uint32(0x504e4150), // PythAccumulator.ACCUMULATOR_MAGIC
-            isNotMatch(forgeItem, "headerMajorVersion") ? uint8(1) : uint8(2), // major version
+            _wormholeTestUtils.isNotMatch(forgeItem, "headerMajorVersion")
+                ? uint8(1)
+                : uint8(2), // major version
             uint8(0), // minor version
             uint8(0), // trailing header size
             uint8(PythAccumulator.UpdateType.WormholeMerkle),
@@ -575,11 +593,15 @@ contract PythWormholeMerkleAccumulatorTest is
         );
 
         for (uint i = 0; i < priceFeedMessages.length; i++) {
+            bytes memory proof = proofs[0];
+            if (_wormholeTestUtils.isNotMatch(forgeItem, "proofItem")) {
+                proof = proofs[i];
+            }
             updateData[0] = abi.encodePacked(
                 updateData[0],
                 uint16(encodedPriceFeedMessages[i].length),
                 encodedPriceFeedMessages[i],
-                isNotMatch(forgeItem, "proofItem") ? proofs[i] : proofs[0]
+                proof
             );
         }
 
@@ -1139,6 +1161,61 @@ contract PythWormholeMerkleAccumulatorTest is
         pyth.updatePriceFeeds{value: updateFee}(forwardCompatibleUpdateData);
 
         for (uint i = 0; i < priceFeedMessages.length; i++) {
+            assertPriceFeedMessageStored(priceFeedMessages[i]);
+        }
+    }
+
+    /// Testing update price feeds method using wormhole merkle update type.
+    function testUpdatePriceFeedWithWormholeMerkleAndVerifierSignerWorks(
+        uint seed
+    ) public {
+        setRandSeed(seed);
+        setVerifier(address(pyth), 10);
+
+        uint numPriceFeeds = (getRandUint() % 10) + 1;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createWormholeMerkleUpdateData(priceFeedMessages, Signer.Verifier);
+
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            assertPriceFeedMessageStored(priceFeedMessages[i]);
+        }
+
+        // Update the prices again with the same data should work
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            assertPriceFeedMessageStored(priceFeedMessages[i]);
+        }
+
+        // Update the prices again with updated data should update the prices
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceFeedMessages[i].price = getRandInt64();
+            priceFeedMessages[i].conf = getRandUint64();
+            priceFeedMessages[i].expo = getRandInt32();
+
+            // Increase the publish time if it is not causing an overflow
+            if (priceFeedMessages[i].publishTime != type(uint64).max) {
+                priceFeedMessages[i].publishTime += 1;
+            }
+            priceFeedMessages[i].emaPrice = getRandInt64();
+            priceFeedMessages[i].emaConf = getRandUint64();
+        }
+
+        (updateData, updateFee) = createWormholeMerkleUpdateData(
+            priceFeedMessages
+        );
+
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        for (uint i = 0; i < numPriceFeeds; i++) {
             assertPriceFeedMessageStored(priceFeedMessages[i]);
         }
     }

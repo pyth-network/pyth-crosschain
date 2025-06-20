@@ -40,6 +40,10 @@ abstract contract PythGovernance is
     );
     event TransactionFeeSet(uint oldFee, uint newFee);
     event FeeWithdrawn(address targetAddress, uint fee);
+    event VerifierAddressSet(
+        address oldVerifierAddress,
+        address newVerifierAddress
+    );
 
     function verifyGovernanceVM(
         bytes memory encodedVM
@@ -105,6 +109,8 @@ abstract contract PythGovernance is
             setTransactionFee(parseSetTransactionFeePayload(gi.payload));
         } else if (gi.action == GovernanceAction.WithdrawFee) {
             withdrawFee(parseWithdrawFeePayload(gi.payload));
+        } else if (gi.action == GovernanceAction.SetVerifierAddress) {
+            setVerifierAddress(parseSetVerifierAddressPayload(gi.payload));
         } else {
             revert PythErrors.InvalidGovernanceMessage();
         }
@@ -269,5 +275,13 @@ abstract contract PythGovernance is
         require(success, "Failed to withdraw fees");
 
         emit FeeWithdrawn(payload.targetAddress, payload.fee);
+    }
+
+    function setVerifierAddress(
+        SetVerifierAddressPayload memory payload
+    ) internal {
+        address oldVerifierAddress = address(verifier());
+        setVerifier(payload.newVerifierAddress);
+        emit VerifierAddressSet(oldVerifierAddress, address(verifier()));
     }
 }

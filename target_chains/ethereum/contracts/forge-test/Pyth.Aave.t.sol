@@ -24,7 +24,7 @@ contract PythAaveTest is PythWormholeMerkleAccumulatorTest {
     uint constant VALID_TIME_PERIOD_SECS = 60;
 
     function setUp() public override {
-        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
+        pyth = IPyth(setUpPyth(new WormholeTestUtils(1)));
         assets = new address[](NUM_PRICE_FEEDS);
         PriceFeedMessage[]
             memory priceFeedMessages = generateRandomBoundedPriceFeedMessage(

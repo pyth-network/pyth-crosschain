@@ -29,24 +29,44 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         TwapPriceFeed
     }
 
+    enum Signer {
+        Wormhole,
+        Verifier
+    }
+
     // This method is also used by batch attestation but moved here
     // as the batch attestation will deprecate soon.
     function parseAndVerifyPythVM(
-        bytes calldata encodedVm
+        bytes calldata encodedVm,
+        Signer signer
     ) internal view returns (IWormhole.VM memory vm) {
-        {
-            bool valid;
+        bool valid;
+        if (signer == Signer.Wormhole) {
             (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
-            if (!valid) revert PythErrors.InvalidWormholeVaa();
+        } else if (signer == Signer.Verifier) {
+            if (address(verifier()) == address(0))
+                revert PythErrors.InvalidUpdateData();
+            (vm, valid, ) = verifier().parseAndVerifyVM(encodedVm);
+        } else {
+            revert PythErrors.InvalidSigner();
         }
 
-        if (!isValidDataSource(vm.emitterChainId, vm.emitterAddress))
+        if (!valid) {
+            revert PythErrors.InvalidUpdateData();
+        }
+
+        if (!isValidDataSource(vm.emitterChainId, vm.emitterAddress)) {
             revert PythErrors.InvalidUpdateDataSource();
+        }
     }
 
-    function extractUpdateTypeFromAccumulatorHeader(
+    function extractAccumulatorHeaderDetails(
         bytes calldata accumulatorUpdate
-    ) internal pure returns (uint offset, UpdateType updateType) {
+    )
+        internal
+        pure
+        returns (uint offset, UpdateType updateType, Signer signer)
+    {
         unchecked {
             offset = 0;
 
@@ -90,13 +110,14 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 );
                 offset += 1;
 
-                // We use another offset for the trailing header and in the end add the
-                // offset by trailingHeaderSize to skip the future headers.
-                //
-                // An example would be like this:
-                // uint trailingHeaderOffset = offset
-                // uint x = UnsafeBytesLib.ToUint8(accumulatorUpdate, trailingHeaderOffset)
-                // trailingHeaderOffset += 1
+                uint trailingHeaderOffset = offset;
+                signer = Signer(
+                    UnsafeCalldataBytesLib.toUint8(
+                        accumulatorUpdate,
+                        trailingHeaderOffset
+                    )
+                );
+                trailingHeaderOffset += 1;
 
                 offset += trailingHeaderSize;
             }
@@ -112,8 +133,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedAndSlotFromAccumulatorUpdate(
+    function extractWormholeMerkleHeader(
         bytes calldata accumulatorUpdate,
+        Signer signer,
         uint encodedOffset
     )
         internal
@@ -148,7 +170,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                             encoded,
                             offset,
                             whProofSize
-                        )
+                        ),
+                        signer
                     );
                     offset += whProofSize;
 
@@ -171,7 +194,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     UpdateType updateType = UpdateType(
                         UnsafeBytesLib.toUint8(encodedPayload, payloadOffset)
                     );
-                    ++payloadOffset;
+                    payloadOffset += 1;
 
                     if (updateType != UpdateType.WormholeMerkle)
                         revert PythErrors.InvalidUpdateData();
@@ -460,8 +483,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     ) internal returns (uint8 numUpdates) {
         (
             uint encodedOffset,
-            UpdateType updateType
-        ) = extractUpdateTypeFromAccumulatorHeader(accumulatorUpdate);
+            UpdateType updateType,
+            Signer signer
+        ) = extractAccumulatorHeaderDetails(accumulatorUpdate);
 
         if (updateType != UpdateType.WormholeMerkle) {
             revert PythErrors.InvalidUpdateData();
@@ -477,8 +501,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             numUpdates,
             encoded,
             slot
-        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedAndSlotFromAccumulatorUpdate(
+        ) = extractWormholeMerkleHeader(
             accumulatorUpdate,
+            signer,
             encodedOffset
         );
 

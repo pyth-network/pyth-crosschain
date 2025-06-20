@@ -26,6 +26,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidSigner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidTwapUpdateData",
     "type": "error"
   },
@@ -42,6 +47,11 @@
   {
     "inputs": [],
     "name": "InvalidUpdateDataSource",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidVerifierAddressToSet",
     "type": "error"
   },
   {
