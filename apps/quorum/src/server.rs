@@ -71,6 +71,7 @@ lazy_static! {
 
 #[derive(Clone)]
 pub struct State(Arc<StateInner>);
+
 pub struct StateInner {
     pub verification: Arc<RwLock<HashMap<Vec<u8>, Vec<Signature>>>>,
 
@@ -126,4 +127,25 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
     });
 
     Ok(())
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    pub fn get_state(
+        verification: Arc<RwLock<HashMap<Vec<u8>, Vec<Signature>>>>,
+        guardian_set: GuardianSetInfo,
+        observation_lifetime: u32,
+    ) -> State {
+        State(Arc::new(StateInner {
+            verification,
+            guardian_set,
+            observation_lifetime,
+
+            guardian_set_index: 0,
+
+            ws: WsState::new(1),
+        }))
+    }
 }
