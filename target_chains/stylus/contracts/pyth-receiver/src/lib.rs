@@ -6,6 +6,7 @@
 extern crate alloc;
 
 mod structs;
+mod error;
 
 use alloc::vec::Vec;
 use stylus_sdk::{alloy_primitives::{U256, U64, I32, I64, FixedBytes},
@@ -13,6 +14,7 @@ use stylus_sdk::{alloy_primitives::{U256, U64, I32, I64, FixedBytes},
                 storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256}};
 
 use structs::{DataSourceStorage, PriceInfoReturn, PriceInfoStorage};
+use error::{PythReceiverError};
 
 #[storage]
 #[entrypoint]
@@ -31,12 +33,31 @@ pub struct PythReceiver {
 
 #[public]
 impl PythReceiver {
-    pub fn get_price_unsafe(&self, _id: [u8; 32]) -> PriceInfoReturn {
-        (U64::ZERO, I32::ZERO, I64::ZERO, U64::ZERO, I64::ZERO, U64::ZERO)
+    pub fn get_price_unsafe(&self, _id: [u8; 32]) -> Result<PriceInfoReturn, PythReceiverError> {
+        let id_fb = FixedBytes::<32>::from(_id);
+        
+        let price_info = self.latest_price_info.get(id_fb);
+        
+        if price_info.publish_time.get() == U64::ZERO {
+            return Err(PythReceiverError::PriceUnavailable);
+        }
+
+        Ok((
+            price_info.publish_time.get(),
+            price_info.expo.get(),
+            price_info.price.get(),
+            price_info.conf.get(),
+            price_info.ema_price.get(),
+            price_info.ema_conf.get(),
+        ))
     }
 
-    pub fn get_price_no_older_than(&self, _id: [u8; 32], _age: u64) -> PriceInfoReturn {
-        (U64::ZERO, I32::ZERO, I64::ZERO, U64::ZERO, I64::ZERO, U64::ZERO)
+    pub fn get_price_no_older_than(&self, _id: [u8; 32], _age: u64) -> Result<PriceInfoReturn, PythReceiverError> {
+        let price_info = self.get_price_unsafe(_id)?;
+        if !self.is_no_older_than(price_info.0, _age) {
+            return Err(PythReceiverError::PriceUnavailable);
+        }
+        Ok(price_info)
     }
 
     pub fn get_ema_price_unsafe(&self, _id: [u8; 32]) -> PriceInfoReturn {
@@ -107,5 +128,12 @@ impl PythReceiver {
         _max_publish_time: u64,
     ) -> Vec<PriceInfoReturn> {
         Vec::new()
+    }
+
+    fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
+        let current_u64: u64 = self.vm().block_timestamp();
+        let publish_time_u64: u64 = publish_time.to::<u64>();
+        
+        current_u64.saturating_sub(publish_time_u64) <= max_age
     }
 }
