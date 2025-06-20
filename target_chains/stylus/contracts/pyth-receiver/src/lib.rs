@@ -14,7 +14,7 @@ use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, B
                 storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
                 call::Call};
 
-use structs::{PriceInfoReturn, PriceInfoStorage};
+use structs::{PriceInfoReturn, PriceInfoStorage, DataSourceStorage};
 use error::{PythReceiverError};
 use pythnet_sdk::{wire::{v1::{
             AccumulatorUpdateData, Proof,
@@ -32,8 +32,7 @@ sol_interface! {
 #[entrypoint]
 pub struct PythReceiver {
     pub wormhole: StorageAddress,
-    pub valid_data_source_chain_ids: StorageVec<StorageU16>,
-    pub valid_data_source_emitter_addresses: StorageVec<StorageFixedBytes<32>>,
+    pub valid_data_sources: StorageVec<DataSourceStorage>,
     pub is_valid_data_source: StorageMap<FixedBytes<32>, StorageBool>,
     pub single_update_fee_in_wei: StorageU256,
     pub valid_time_period_seconds: StorageU256,
@@ -65,18 +64,15 @@ impl PythReceiver {
         for (i, chain_id) in data_source_emitter_chain_ids.iter().enumerate() {
             let emitter_address = FixedBytes::<32>::from(data_source_emitter_addresses[i]);
             
-            // Get a new storage slot in the vector and set its value
-            let mut chain_id_storage = self.valid_data_source_chain_ids.grow();
-            chain_id_storage.set(U16::from(*chain_id));
-            
-            let mut emitter_address_storage = self.valid_data_source_emitter_addresses.grow();
-            emitter_address_storage.set(emitter_address);
+            // Create a new data source storage slot
+            let mut data_source = self.valid_data_sources.grow();
+            data_source.chain_id.set(U16::from(*chain_id));
+            data_source.emitter_address.set(emitter_address);
             
             self.is_valid_data_source
                 .setter(emitter_address)
                 .set(true);
         }
-        
     }
     
     pub fn get_price_unsafe(&self, _id: [u8; 32]) -> Result<PriceInfoReturn, PythReceiverError> {
@@ -124,8 +120,17 @@ impl PythReceiver {
                 let config = Call::new_in(self);
                 let _parsed_vaa = wormhole.parse_and_verify_vm(config, Bytes::from(Vec::from(vaa))).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
 
+                if !self.is_valid_data_source.entry(_parsed_vaa.data_source()).read() {
+                    panic!("Update data source is not a valid data source.");
+                }
+
                 for update in updates {
-                    // fill in update processign logic.
+                    // fill in update processing logic.
+                    // update is a merkle price update
+                    let message = update.message;
+                    let proof = update.proof;
+
+                    
                 }
             }
         };
