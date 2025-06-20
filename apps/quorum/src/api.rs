@@ -225,12 +225,9 @@ mod test {
     const OBSERVERATION_LIFETIME: u32 = 3;
     const SAMPLE_PAYLOAD: [u8; 5] = [4; 5];
 
-    fn get_sample_body<'a>(is_expired: bool) -> Body<&'a RawMessage> {
-        let expiration_offset = if is_expired { -1 } else { 4 };
+    fn get_sample_body<'a>(expiration_offset: i64) -> Body<&'a RawMessage> {
         let body = Body {
-            timestamp: (OffsetDateTime::now_utc().unix_timestamp()
-                - (OBSERVERATION_LIFETIME as i64)
-                + expiration_offset) as u32,
+            timestamp: (OffsetDateTime::now_utc().unix_timestamp() + expiration_offset) as u32,
             nonce: 0,
             sequence: 1,
             consistency_level: 2,
@@ -272,19 +269,19 @@ mod test {
 
     #[test]
     fn test_body_is_expired() {
-        let body = get_sample_body(true);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 + 1));
         assert!(is_body_expired(&body, OBSERVERATION_LIFETIME));
     }
 
     #[test]
     fn test_body_is_not_expired() {
-        let body = get_sample_body(false);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         assert!(!is_body_expired(&body, OBSERVERATION_LIFETIME));
     }
 
     #[test]
     fn test_observation_get_body() {
-        let body = get_sample_body(false);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let observation = Observation {
             signature: [0; 65],
             body: serde_wormhole::to_vec(&body).unwrap(),
@@ -296,7 +293,7 @@ mod test {
     fn test_verify_observation() {
         let (guardian_set, keys) = get_guardian_sets(10);
         let signer_index = 7;
-        let body = get_sample_body(false);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let observation = Observation {
             signature: sign(&body, &keys[signer_index]),
             body: serde_wormhole::to_vec(&body).unwrap(),
@@ -309,7 +306,7 @@ mod test {
     fn test_verify_observation_is_expired() {
         let (guardian_set, keys) = get_guardian_sets(10);
         let signer_index = 7;
-        let body = get_sample_body(true);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 + 1));
         let observation = Observation {
             signature: sign(&body, &keys[signer_index]),
             body: serde_wormhole::to_vec(&body).unwrap(),
@@ -322,7 +319,7 @@ mod test {
     fn test_verify_observation_invalid_body() {
         let (guardian_set, keys) = get_guardian_sets(10);
         let signer_index = 7;
-        let body = get_sample_body(false);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let mut body_bytes = serde_wormhole::to_vec(&body).unwrap();
         body_bytes.truncate(10); // remove most of the data
         let observation = Observation {
@@ -340,7 +337,7 @@ mod test {
     fn test_verify_observation_invalid_signature() {
         let (guardian_set, _) = get_guardian_sets(10);
         let random_key = get_new_keypair().0;
-        let body = get_sample_body(false);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let observation = Observation {
             signature: sign(&body, &random_key),
             body: serde_wormhole::to_vec(&body).unwrap(),
@@ -354,7 +351,7 @@ mod test {
 
     #[tokio::test]
     async fn test_expiration_loop_expired() {
-        let body = get_sample_body(false);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let (guardian_set, keys) = get_guardian_sets(10);
         let observation = Observation {
             signature: sign(&body, &keys[0]),
@@ -401,7 +398,7 @@ mod test {
 
     #[tokio::test]
     async fn test_expiration_loop_remove_before_expiration() {
-        let body = get_sample_body(false);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let (guardian_set, keys) = get_guardian_sets(10);
         let observation = Observation {
             signature: sign(&body, &keys[0]),
@@ -450,7 +447,7 @@ mod test {
     #[tokio::test]
     async fn test_expiration_loop_higher_expiration_than_timeout() {
         let timeout_duration = (OBSERVERATION_LIFETIME + 2) as u64;
-        let mut body = get_sample_body(false);
+        let mut body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
 
         // We should make sure the loop is going to run at least once
         // So we need to set time duration to be higher than the observation lifetime
@@ -508,7 +505,7 @@ mod test {
             "Quorum should be less than total observations"
         );
 
-        let sample_body = get_sample_body(false);
+        let sample_body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let (guardian_set, keys) = get_guardian_sets(19);
 
         // Shuffle the keys to ensure randomness in the test
@@ -624,7 +621,7 @@ mod test {
 
     #[tokio::test]
     async fn test_handle_observation_no_quorum() {
-        let body = get_sample_body(false);
+        let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let (guardian_set, keys) = get_guardian_sets(19);
 
         let observations: Vec<Observation> = (0..12)
