@@ -9,12 +9,12 @@ mod structs;
 mod error;
 
 use alloc::vec::Vec;
-use stylus_sdk::{alloy_primitives::{U256, U64, I32, I64, FixedBytes, Bytes},
+use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Bytes, Address},
                 prelude::*, 
-                storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256},
+                storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
                 call::Call};
 
-use structs::{DataSourceStorage, PriceInfoReturn, PriceInfoStorage};
+use structs::{PriceInfoReturn, PriceInfoStorage};
 use error::{PythReceiverError};
 use pythnet_sdk::{wire::{v1::{
             AccumulatorUpdateData, Proof,
@@ -32,11 +32,13 @@ sol_interface! {
 #[entrypoint]
 pub struct PythReceiver {
     pub wormhole: StorageAddress,
-    pub valid_data_sources: StorageVec<DataSourceStorage>,
+    pub valid_data_source_chain_ids: StorageVec<StorageU16>,
+    pub valid_data_source_emitter_addresses: StorageVec<StorageFixedBytes<32>>,
     pub is_valid_data_source: StorageMap<FixedBytes<32>, StorageBool>,
     pub single_update_fee_in_wei: StorageU256,
     pub valid_time_period_seconds: StorageU256,
-    pub governance_data_source: DataSourceStorage,
+    pub governance_data_source_chain_id: StorageU16,
+    pub governance_data_source_emitter_address: StorageFixedBytes<32>,
     pub last_executed_governance_sequence: StorageUint<64, 1>,
     pub governance_data_source_index: StorageUint<32, 1>,
     pub latest_price_info: StorageMap<FixedBytes<32>, PriceInfoStorage>,
@@ -45,6 +47,38 @@ pub struct PythReceiver {
 
 #[public]
 impl PythReceiver {
+    pub fn initialize(&mut self, _wormhole: Address, _single_update_fee_in_wei: U256, _valid_time_period_seconds: U256,
+                            data_source_emitter_chain_ids: Vec<u16>, data_source_emitter_addresses: Vec<[u8; 32]>,
+                            governance_emitter_chain_id: u16, governance_emitter_address: [u8; 32], 
+                            governance_initial_sequence: u64, _data: Vec<u8>) {
+        self.wormhole.set(_wormhole);
+        self.single_update_fee_in_wei.set(_single_update_fee_in_wei);
+        self.valid_time_period_seconds.set(_valid_time_period_seconds);
+
+        self.governance_data_source_chain_id.set(U16::from(governance_emitter_chain_id));
+        self.governance_data_source_emitter_address.set(FixedBytes::<32>::from(governance_emitter_address));
+        
+        // Initialize other fields
+        self.last_executed_governance_sequence.set(U64::from(governance_initial_sequence));
+        self.governance_data_source_index.set(U32::ZERO);
+
+        for (i, chain_id) in data_source_emitter_chain_ids.iter().enumerate() {
+            let emitter_address = FixedBytes::<32>::from(data_source_emitter_addresses[i]);
+            
+            // Get a new storage slot in the vector and set its value
+            let mut chain_id_storage = self.valid_data_source_chain_ids.grow();
+            chain_id_storage.set(U16::from(*chain_id));
+            
+            let mut emitter_address_storage = self.valid_data_source_emitter_addresses.grow();
+            emitter_address_storage.set(emitter_address);
+            
+            self.is_valid_data_source
+                .setter(emitter_address)
+                .set(true);
+        }
+        
+    }
+    
     pub fn get_price_unsafe(&self, _id: [u8; 32]) -> Result<PriceInfoReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(_id);
         
@@ -88,11 +122,11 @@ impl PythReceiver {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormhole = IWormhole::new(self.wormhole.get());
                 let config = Call::new_in(self);
-                let parsed_vaa = wormhole.parse_and_verify_vm(config, Bytes::from(Vec::from(vaa))).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
+                let _parsed_vaa = wormhole.parse_and_verify_vm(config, Bytes::from(Vec::from(vaa))).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
 
-                // for update in updates {
-                    
-                // }
+                for update in updates {
+                    // fill in update processign logic.
+                }
             }
         };
     }
