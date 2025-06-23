@@ -78,6 +78,34 @@ mod tests {
     }
 
     #[cfg(test)]
+    fn current_guardians_duplicate() -> Vec<Address> {
+        vec![
+            Address::from_str("0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3").unwrap(), // Rockaway
+            Address::from_str("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").unwrap(), // Staked
+            Address::from_str("0x114De8460193bdf3A2fCf81f86a09765F4762fD1").unwrap(), // Figment
+            Address::from_str("0x107A0086b32d7A0977926A205131d8731D39cbEB").unwrap(), // ChainodeTech
+            Address::from_str("0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2").unwrap(), // Inotel
+            Address::from_str("0x11b39756C042441BE6D8650b69b54EbE715E2343").unwrap(), // HashKey Cloud
+            Address::from_str("0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd").unwrap(), // ChainLayer
+            Address::from_str("0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20").unwrap(), // xLabs
+            Address::from_str("0x74a3bf913953D695260D88BC1aA25A4eeE363ef0").unwrap(), // Forbole
+            Address::from_str("0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e").unwrap(), // Staking Fund
+            Address::from_str("0xAF45Ced136b9D9e24903464AE889F5C8a723FC14").unwrap(), // Moonlet Wallet
+            Address::from_str("0xf93124b7c738843CBB89E864c862c38cddCccF95").unwrap(), // P2P Validator
+            Address::from_str("0xD2CC37A4dc036a8D232b48f62cDD4731412f4890").unwrap(), // 01node
+            Address::from_str("0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811").unwrap(), // MCF
+            Address::from_str("0x71AA1BE1D36CaFE3867910F99C09e347899C19C3").unwrap(), // Everstake
+            Address::from_str("0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf").unwrap(), // Chorus One
+            Address::from_str("0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8").unwrap(), // Syncnode
+            Address::from_str("0x5E1487F35515d02A92753504a8D75471b9f49EdB").unwrap(), // Triton
+            Address::from_str("0x6FbEBc898F403E4773E95feB15E80C9A99c8348d").unwrap(), // Staking Facilities
+            Address::from_str("0x6FbEBc898F403E4773E95feB15E80C9A99c8348d").unwrap(), // duplicate of Staking Facilities
+        ]
+    }
+
+
+
+    #[cfg(test)]
     fn test_guardian_address1() -> Address {
         let secret = test_guardian_secret1();
         let signing_key = SigningKey::from_bytes(&secret.into()).expect("key");
@@ -621,4 +649,62 @@ mod tests {
         let test_hash = vec![0u8; 32];
         assert_eq!(contract.governance_action_is_consumed(test_hash), false);
     }
+
+    #[motsu::test]
+    fn test_initialize_contract_like_shell_script() {
+        let mut contract = WormholeContract::default();
+        let guardians = current_guardians();
+        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        
+        let result = contract.initialize(guardians.clone(), CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
+        assert!(result.is_ok(), "Contract initialization should succeed");
+    }
+
+    #[motsu::test]
+    fn test_quorum_calculation_integration_test() {
+        let quorum_result = WormholeContract::quorum(3);
+        assert_eq!(quorum_result, 3, "Quorum calculation should work: (3 * 2) / 3 + 1 = 3");
+    }
+
+    #[motsu::test]
+    fn test_guardian_set_retrieval_current_guardians() {
+        let mut contract = WormholeContract::default();
+        let guardians = current_guardians();
+        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+
+        let result = contract.initialize(guardians.clone(), CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
+
+        let guardian_set_result = contract.get_guardian_set(4);
+        assert!(guardian_set_result.is_ok(), "Guardian set retrieval should work - contract is initialized");
+
+        let guardian_set_bytes = guardian_set_result.unwrap();
+        assert_eq!(guardian_set_bytes.len(), 19 * 20, "Should have 19 guardian addresses (20 bytes each)");
+
+        assert_eq!(contract.chain_id(), CHAIN_ID, "Chain ID should match shell script value");
+
+        assert_eq!(contract.governance_chain_id(), GOVERNANCE_CHAIN_ID, "Governance chain ID should match shell script value");
+
+        assert_eq!(contract.governance_contract(), governance_contract, "Governance contract should match shell script value");
+
+        assert_eq!(contract.get_current_guardian_set_index(), 4, "Current guardian set index should be 4");
+    }
+
+    #[motsu::test]
+    fn test_duplicate_verification() {
+        let mut contract = WormholeContract::default();
+        let guardians = current_guardians_duplicate();
+        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+
+        let result = contract.initialize(guardians.clone(), CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
+
+        let guardian_set_result = contract.get_guardian_set(4);
+        assert!(guardian_set_result.is_ok(), "Guardian set retrieval should work - contract is initialized");
+
+        let test_vaa = create_vaa_bytes("AQAHHHQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
+        let result = contract.parse_and_verify_vm(test_vaa);
+        println!("result: {:?}", result);
+        assert!(result.is_err());
+    }
+
+    
 }
