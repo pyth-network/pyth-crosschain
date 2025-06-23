@@ -5,6 +5,11 @@ import {
   PriceFeedMetadata as JsonPriceFeedMetadata,
 } from "./schemas/PriceFeed";
 
+export {
+  PriceUpdate,
+  Convert as PriceUpdateConvert
+} from './schemas/PriceUpdate';
+
 export type UnixTimestamp = number;
 export type DurationInSeconds = number;
 export type HexString = string;
