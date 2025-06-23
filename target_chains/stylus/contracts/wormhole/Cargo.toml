@@ -23,7 +23,7 @@ k256 = { version = "0.13.3", default-features = false, features = ["ecdsa"] }
 
 
 [dev-dependencies]
-motsu.workspace = true
+stylus-test.workspace = true
 base64 = "0.21"
 
 [lib]
