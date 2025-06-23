@@ -2,6 +2,7 @@
   "name": "@pythnetwork/entropy-tester",
   "version": "1.0.2",
   "description": "Utility to test entropy provider callbacks",
+  "private": true,
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
