@@ -24,6 +24,10 @@ export const EvmExecutorAction = {
   Execute: 0,
 } as const;
 
+export const LazerExecutorAction = {
+  LazerExecute: 0,
+} as const;
+
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
   deserialized: Readonly<{ moduleId: number; actionId: number }>,
@@ -58,6 +62,11 @@ export function toActionName(
     deserialized.actionId == 0
   ) {
     return "Execute";
+  } else if (
+    deserialized.moduleId == MODULE_LAZER_EXECUTOR &&
+    deserialized.actionId == 0
+  ) {
+    return "LazerExecute";
   }
   return undefined;
 }
@@ -65,7 +74,8 @@ export function toActionName(
 export declare type ActionName =
   | keyof typeof ExecutorAction
   | keyof typeof TargetAction
-  | keyof typeof EvmExecutorAction;
+  | keyof typeof EvmExecutorAction
+  | keyof typeof LazerExecutorAction;
 
 /** Governance header that should be in every Pyth crosschain governance message*/
 export class PythGovernanceHeader {
@@ -131,10 +141,15 @@ export class PythGovernanceHeader {
     } else if (this.action in TargetAction) {
       module = MODULE_TARGET;
       action = TargetAction[this.action as keyof typeof TargetAction];
-    } else {
+    } else if (this.action in EvmExecutorAction) {
       module = MODULE_EVM_EXECUTOR;
       action = EvmExecutorAction[this.action as keyof typeof EvmExecutorAction];
+    } else {
+      module = MODULE_LAZER_EXECUTOR;
+      action =
+        LazerExecutorAction[this.action as keyof typeof LazerExecutorAction];
     }
+
     if (toChainId(this.targetChainId) === undefined)
       throw new Error(`Invalid chain id ${this.targetChainId}`);
     const span = PythGovernanceHeader.layout.encode(
@@ -154,7 +169,13 @@ export const MAGIC_NUMBER = 0x4d475450;
 export const MODULE_EXECUTOR = 0;
 export const MODULE_TARGET = 1;
 export const MODULE_EVM_EXECUTOR = 2;
-export const MODULES = [MODULE_EXECUTOR, MODULE_TARGET, MODULE_EVM_EXECUTOR];
+export const MODULE_LAZER_EXECUTOR = 3;
+export const MODULES = [
+  MODULE_EXECUTOR,
+  MODULE_TARGET,
+  MODULE_EVM_EXECUTOR,
+  MODULE_LAZER_EXECUTOR,
+];
 
 export interface PythGovernanceAction {
   readonly targetChainId: ChainName;
