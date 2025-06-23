@@ -621,4 +621,31 @@ mod tests {
         let test_hash = vec![0u8; 32];
         assert_eq!(contract.governance_action_is_consumed(test_hash), false);
     }
+
+    #[motsu::test]
+    fn test_initialize_contract_like_shell_script() {
+        let mut contract = WormholeContract::default();
+        let guardians = current_guardians();
+        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        
+        let result = contract.initialize(guardians.clone(), CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
+        assert!(result.is_ok(), "Contract initialization should succeed");
+        
+        let quorum_result = WormholeContract::quorum(3);
+        assert_eq!(quorum_result, 3, "Quorum calculation should work: (3 * 2) / 3 + 1 = 3");
+        
+        let guardian_set_result = contract.get_guardian_set(4);
+        assert!(guardian_set_result.is_ok(), "Guardian set retrieval should work - contract is initialized");
+        
+        let guardian_set_bytes = guardian_set_result.unwrap();
+        assert_eq!(guardian_set_bytes.len(), 19 * 20, "Should have 19 guardian addresses (20 bytes each)");
+        
+        assert_eq!(contract.chain_id(), CHAIN_ID, "Chain ID should match shell script value");
+        
+        assert_eq!(contract.governance_chain_id(), GOVERNANCE_CHAIN_ID, "Governance chain ID should match shell script value");
+        
+        assert_eq!(contract.governance_contract(), governance_contract, "Governance contract should match shell script value");
+        
+        assert_eq!(contract.get_current_guardian_set_index(), 4, "Current guardian set index should be 4");
+    }
 }
