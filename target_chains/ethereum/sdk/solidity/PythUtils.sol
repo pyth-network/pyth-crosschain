@@ -34,17 +34,21 @@ library PythUtils {
         // So the delta exponent is targetDecimals + currentExpo
         int32 deltaExponent = int32(uint32(targetDecimals)) + expo;
 
-        // Bounds check: prevent overflow/underflow with base 10 exponentiation 
+        // Bounds check: prevent overflow/underflow with base 10 exponentiation
         // Calculation: 10 ** n <= (2 ** 256 - 63) - 1
         //              n <= log10((2 ** 193) - 1)
         //              n <= 58.2
-        if (deltaExponent > 58 || deltaExponent < -58) revert PythErrors.ExponentOverflow();
+        if (deltaExponent > 58 || deltaExponent < -58)
+            revert PythErrors.ExponentOverflow();
 
         // We can safely cast the price to uint256 because the above condition will revert if the price is negative
-        uint256 unsignedPrice = uint256(uint64(price)); 
+        uint256 unsignedPrice = uint256(uint64(price));
 
         if (deltaExponent > 0) {
-            (bool success, uint256 result) = Math.tryMul(unsignedPrice, 10 ** uint32(deltaExponent));
+            (bool success, uint256 result) = Math.tryMul(
+                unsignedPrice,
+                10 ** uint32(deltaExponent)
+            );
             // This condition is unreachable since we validated deltaExponent bounds above.
             // But keeping it here for safety.
             if (!success) {
@@ -52,7 +56,10 @@ library PythUtils {
             }
             return result;
         } else {
-            (bool success, uint256 result) = Math.tryDiv(unsignedPrice, 10 ** uint(Math.abs(deltaExponent)));
+            (bool success, uint256 result) = Math.tryDiv(
+                unsignedPrice,
+                10 ** uint(Math.abs(deltaExponent))
+            );
             // This condition is unreachable since we validated deltaExponent bounds above.
             // But keeping it here for safety.
             if (!success) {
@@ -89,21 +96,30 @@ library PythUtils {
         if (expo1 < -255 || expo2 < -255 || targetExponent < -255) {
             revert PythErrors.InvalidInputExpo();
         }
-        
+
         // note: This value can be negative.
         int64 deltaExponent = int64(expo1 - (expo2 + targetExponent));
 
-        // Bounds check: prevent overflow/underflow with base 10 exponentiation 
+        // Bounds check: prevent overflow/underflow with base 10 exponentiation
         // Calculation: 10 ** n <= (2 ** 256 - 63) - 1
         //              n <= log10((2 ** 193) - 1)
         //              n <= 58.2
-        if (deltaExponent > 58 || deltaExponent < -58) revert PythErrors.ExponentOverflow();
+        if (deltaExponent > 58 || deltaExponent < -58)
+            revert PythErrors.ExponentOverflow();
 
         uint256 result;
         if (deltaExponent > 0) {
-            result = Math.mulDiv(uint64(price1), 10 ** uint64(deltaExponent) , uint64(price2));
+            result = Math.mulDiv(
+                uint64(price1),
+                10 ** uint64(deltaExponent),
+                uint64(price2)
+            );
         } else {
-            result = Math.mulDiv(uint64(price1), 1, 10 ** uint64(Math.abs(deltaExponent)) * uint64(price2));
+            result = Math.mulDiv(
+                uint64(price1),
+                1,
+                10 ** uint64(Math.abs(deltaExponent)) * uint64(price2)
+            );
         }
 
         return result;

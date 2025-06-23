@@ -7,19 +7,20 @@
 pragma solidity ^0.8.0;
 
 library Math {
-
     /// @dev division or modulo by zero
     uint256 internal constant DIVISION_BY_ZERO = 0x12;
     /// @dev arithmetic underflow or overflow
     uint256 internal constant UNDER_OVERFLOW = 0x11;
 
-
-   /**
+    /**
      * @dev Return the 512-bit multiplication of two uint256.
      *
      * The result is stored in two 256 variables such that product = high * 2²⁵⁶ + low.
      */
-    function mul512(uint256 a, uint256 b) internal pure returns (uint256 high, uint256 low) {
+    function mul512(
+        uint256 a,
+        uint256 b
+    ) internal pure returns (uint256 high, uint256 low) {
         // 512-bit multiply [high low] = x * y. Compute the product mod 2²⁵⁶ and mod 2²⁵⁶ - 1, then use
         // the Chinese Remainder Theorem to reconstruct the 512 bit result. The result is stored in two 256
         // variables such that product = high * 2²⁵⁶ + low.
@@ -38,7 +39,11 @@ library Math {
      * However, the compiler may optimize Solidity ternary operations (i.e. `a ? b : c`) to only compute
      * one branch when needed, making this function more expensive.
      */
-    function ternary(bool condition, uint256 a, uint256 b) internal pure returns (uint256) {
+    function ternary(
+        bool condition,
+        uint256 a,
+        uint256 b
+    ) internal pure returns (uint256) {
         unchecked {
             // branchless ternary works because:
             // b ^ (a ^ b) == a
@@ -68,7 +73,6 @@ library Math {
         }
     }
 
-
     /**
      * @dev Calculates floor(x * y / denominator) with full precision. Throws if result overflows a uint256 or
      * denominator == 0.
@@ -76,7 +80,11 @@ library Math {
      * Original credit to Remco Bloemen under MIT license (https://xn--2-umb.com/21/muldiv) with further edits by
      * Uniswap Labs also under MIT license.
      */
-    function mulDiv(uint256 x, uint256 y, uint256 denominator) internal pure returns (uint256 result) {
+    function mulDiv(
+        uint256 x,
+        uint256 y,
+        uint256 denominator
+    ) internal pure returns (uint256 result) {
         unchecked {
             (uint256 high, uint256 low) = mul512(x, y);
 
@@ -90,7 +98,9 @@ library Math {
 
             // Make sure the result is less than 2²⁵⁶. Also prevents denominator == 0.
             if (denominator <= high) {
-                panic(ternary(denominator == 0, DIVISION_BY_ZERO, UNDER_OVERFLOW));
+                panic(
+                    ternary(denominator == 0, DIVISION_BY_ZERO, UNDER_OVERFLOW)
+                );
             }
 
             ///////////////////////////////////////////////
@@ -178,10 +188,13 @@ library Math {
     /**
      * @dev Returns the multiplication of two unsigned integers, with a success flag (no overflow).
      */
-    function tryMul(uint256 a, uint256 b) internal pure returns (bool success, uint256 result) {
+    function tryMul(
+        uint256 a,
+        uint256 b
+    ) internal pure returns (bool success, uint256 result) {
         unchecked {
             uint256 c = a * b;
-             /// @solidity memory-safe-assembly
+            /// @solidity memory-safe-assembly
             assembly {
                 // Only true when the multiplication doesn't overflow
                 // (c / a == b) || (a == 0)
@@ -195,15 +208,17 @@ library Math {
     /**
      * @dev Returns the division of two unsigned integers, with a success flag (no division by zero).
      */
-    function tryDiv(uint256 a, uint256 b) internal pure returns (bool success, uint256 result) {
+    function tryDiv(
+        uint256 a,
+        uint256 b
+    ) internal pure returns (bool success, uint256 result) {
         unchecked {
             success = b > 0;
-             /// @solidity memory-safe-assembly
+            /// @solidity memory-safe-assembly
             assembly {
                 // The `DIV` opcode returns zero when the denominator is 0.
                 result := div(a, b)
             }
         }
     }
-
 }
