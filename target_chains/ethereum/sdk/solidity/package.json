@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-sdk-solidity",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Read prices from the Pyth oracle",
   "type": "module",
   "repository": {
