@@ -12,8 +12,7 @@ use types::{GuardianSet, GuardianSignature, VerifiedVM, WormholeError};
 
 use alloc::{vec, vec::Vec};
 use stylus_sdk::{
-    prelude::{entrypoint, public, storage, MessageAccess, MemoryAccess, CalldataAccess, StorageAccess, HostAccess, StorageType},
-    storage::{StorageMap, StorageUint, StorageAddress, StorageBool},
+    prelude::{entrypoint, public, sol_storage, MessageAccess, MemoryAccess, CalldataAccess, StorageAccess, HostAccess, StorageType},
     alloy_primitives::{Address, FixedBytes, U256, keccak256},
 };
 
@@ -30,18 +29,19 @@ pub trait IWormhole {
     fn submit_new_guardian_set(&mut self, encoded_vaa: Vec<u8>) -> Result<(), WormholeError>;
 }
 
-#[storage]
-#[entrypoint]
-pub struct WormholeContract {
-    current_guardian_set_index: StorageUint<256, 4>,
-    chain_id: StorageUint<256, 4>,
-    governance_chain_id: StorageUint<256, 4>,
-    governance_contract: StorageAddress,
-    consumed_governance_actions: StorageMap<Vec<u8>, StorageBool>,
-    initialized: StorageBool,
-    guardian_set_sizes: StorageMap<U256, StorageUint<256, 4>>,
-    guardian_set_expiry: StorageMap<U256, StorageUint<256, 4>>,
-    guardian_keys: StorageMap<U256, StorageAddress>,
+sol_storage! {
+    #[entrypoint]
+    pub struct WormholeContract {
+        uint256 current_guardian_set_index;
+        uint256 chain_id;
+        uint256 governance_chain_id;
+        address governance_contract;
+        mapping(bytes => bool) consumed_governance_actions;
+        bool initialized;
+        mapping(uint256 => uint256) guardian_set_sizes;
+        mapping(uint256 => uint256) guardian_set_expiry;
+        mapping(uint256 => address) guardian_keys;
+    }
 }
 
 #[public]

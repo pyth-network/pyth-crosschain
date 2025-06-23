@@ -4,10 +4,11 @@ use super::*;
 mod tests {
     use super::*;
     use alloc::vec;
-    use motsu::prelude::DefaultStorage;
+
     use core::str::FromStr;
     use k256::ecdsa::SigningKey;
     use stylus_sdk::alloy_primitives::keccak256;
+    use stylus_test::*;
     
     #[cfg(test)]
     use base64::engine::general_purpose;
@@ -132,7 +133,8 @@ mod tests {
 
     #[cfg(test)]
     fn deploy_with_test_guardian() -> WormholeContract {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = vec![test_guardian_address1()];
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         match contract.store_gs(0, guardians.clone(), 0) {
@@ -145,7 +147,8 @@ mod tests {
     
     #[cfg(test)]
     fn deploy_with_current_mainnet_guardians() -> WormholeContract {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = current_guardians();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
@@ -158,7 +161,8 @@ mod tests {
 
     #[cfg(test)]
     fn deploy_with_mainnet_guardian_set0() -> WormholeContract {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = guardian_set0();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
@@ -167,7 +171,8 @@ mod tests {
 
     #[cfg(test)]
     fn deploy_with_mainnet_guardians() -> WormholeContract {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = guardian_set4();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
@@ -282,14 +287,21 @@ mod tests {
         }
     }
 
-    #[motsu::test]
+    #[test]
     fn test_quorum_calculation() {
         assert_eq!(WormholeContract::quorum(1), 1);
         assert_eq!(WormholeContract::quorum(3), 3);
         assert_eq!(WormholeContract::quorum(19), 13);
     }
 
-    #[motsu::test]
+    #[test]
+    fn test_testvm_integration() {
+        let vm = TestVM::default();
+        let contract = WormholeContract::from(&vm);
+        assert_eq!(contract.get_current_guardian_set_index(), 0u32);
+    }
+
+    #[test]
     fn test_vaa_invalid_guardian_set_idx() {
         let contract = deploy_with_current_mainnet_guardians();
         let test_vaa = create_vaa_bytes("AQAHHHQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
@@ -297,7 +309,7 @@ mod tests {
         assert!(matches!(result, Err(ref err) if err == &vec![1]));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_wormhole_vaa_parsing() {
         let vaa_vec = test_wormhole_vaa();
         let result = match WormholeContract::parse_vm_static(&vaa_vec) {
@@ -307,7 +319,7 @@ mod tests {
         assert_eq!(result.signatures.len(), 13)
     }
 
-    #[motsu::test]
+    #[test]
     fn test_verification_multiple_guardian_sets() {
         let mut contract = deploy_with_current_mainnet_guardians();
         
@@ -321,7 +333,7 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_verification_incorrect_guardian_set() {
         let mut contract = deploy_with_current_mainnet_guardians();
         
@@ -335,7 +347,7 @@ mod tests {
         assert!(result.is_err());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_wormhole_guardian_set_vaa_verification() {
         let contract = deploy_with_current_mainnet_guardians();
         let test_vaa = create_vaa_bytes("AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
@@ -343,7 +355,7 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_get_guardian_set_works() {
         let contract = deploy_with_mainnet_guardian_set0();
 
@@ -353,21 +365,21 @@ mod tests {
         assert_eq!(contract.get_current_guardian_set_index(), 4);
     }
 
-    #[motsu::test]
+    #[test]
     fn test_parse_vm_invalid_length() {
         let short_vaa = vec![1, 0, 0, 0];
         let result = WormholeContract::parse_vm_static(&short_vaa);
         assert!(matches!(result, Err(WormholeError::InvalidVAAFormat)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_parse_vm_invalid_version() {
         let invalid_version_vaa = vec![2, 0, 0, 0, 0, 0];
         let result = WormholeContract::parse_vm_static(&invalid_version_vaa);
         assert!(matches!(result, Err(WormholeError::InvalidVAAFormat)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_verify_vm_invalid_guardian_set() {
         let contract = deploy_with_test_guardian();
         let vaa = create_test_vaa(999, vec![]);
@@ -376,7 +388,7 @@ mod tests {
         assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_verify_vm_insufficient_signatures() {
         let contract = deploy_with_test_guardian();
         let vaa = create_test_vaa(0, vec![]);
@@ -385,9 +397,10 @@ mod tests {
         assert!(matches!(result, Err(WormholeError::InsufficientSignatures)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_verify_vm_invalid_signature_order() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = vec![
             Address::from([0x12u8; 20]),
             Address::from([0x23u8; 20]),
@@ -409,7 +422,7 @@ mod tests {
         assert!(matches!(result, Err(WormholeError::InvalidSignature)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_verify_vm_invalid_guardian_index() {
         let contract = deploy_with_test_guardian();
         let signatures = vec![
@@ -421,9 +434,10 @@ mod tests {
         assert!(matches!(result, Err(WormholeError::InvalidGuardianIndex)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_signature_verification_invalid_recovery_id() {
-        let contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let contract = WormholeContract::from(&vm);
         let hash = FixedBytes::default();
         let guardian_address = Address::default();
 
@@ -433,9 +447,10 @@ mod tests {
         assert!(matches!(result, Err(WormholeError::InvalidSignature)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_signature_verification_all_zeros() {
-        let contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let contract = WormholeContract::from(&vm);
         let hash = FixedBytes::default();
         let invalid_signature = FixedBytes::<65>::default();
         let guardian_address = Address::default();
@@ -444,16 +459,17 @@ mod tests {
         assert!(matches!(result, Err(WormholeError::InvalidSignature)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_rejects_empty_guardian_set() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let empty_guardians: Vec<Address> = vec![];
 
         let result = contract.store_gs(0, empty_guardians, 0);
         assert!(result.is_err());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_rejects_invalid_guardian_set_index() {
         let contract = deploy_with_test_guardian();
 
@@ -461,7 +477,7 @@ mod tests {
         assert!(result.is_err());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_submit_guardian_set_rejects_invalid_emitter() {
         let contract = deploy_with_test_guardian();
 
@@ -470,7 +486,7 @@ mod tests {
         assert!(result.is_err());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_submit_guardian_set_rejects_wrong_index() {
         let contract = deploy_with_mainnet_guardian_set0();
 
@@ -479,25 +495,27 @@ mod tests {
         assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex)));
     }
 
-    #[motsu::test]
+    #[test]
     fn test_deploy_rejects_empty_guardian_set() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let empty_guardians: Vec<Address> = vec![];
 
         let result = contract.initialize(empty_guardians, 1, 1, Address::default());
         assert!(result.is_err());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_submit_guardian_set_rejects_empty() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let empty_guardians: Vec<Address> = vec![];
 
         let result = contract.store_gs(0, empty_guardians, 0);
         assert!(result.is_err());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_rejects_corrupted_vaa_data() {
         let _contract = deploy_with_mainnet_guardians();
 
@@ -514,7 +532,7 @@ mod tests {
         }
     }
 
-    #[motsu::test]
+    #[test]
     fn test_parse_and_verify_vm_rejects_corrupted_vaa() {
         let _contract = deploy_with_mainnet_guardians();
 
@@ -532,7 +550,7 @@ mod tests {
         }
     }
 
-    #[motsu::test]
+    #[test]
     fn test_submit_guardian_set_rejects_non_governance() {
         let contract = deploy_with_mainnet_guardian_set0();
 
@@ -543,9 +561,10 @@ mod tests {
         assert!(result.is_err());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_guardian_set_storage_and_retrieval() -> Result<(), WormholeError> {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = vec![
             test_guardian_address1(),
             test_guardian_address2(),
@@ -561,7 +580,7 @@ mod tests {
         Ok(())
     }
 
-    #[motsu::test]
+    #[test]
     fn test_guardian_key_computation() {
 
         let set_index = 0u32;
@@ -575,9 +594,10 @@ mod tests {
         assert_eq!(expected, result2);
     }
 
-    #[motsu::test]
+    #[test]
     fn test_multiple_guardian_sets() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
 
         contract
             .store_gs(0, guardian_set0(), 0)
@@ -595,9 +615,10 @@ mod tests {
         assert_eq!(set4.keys, guardian_set4());
     }
 
-    #[motsu::test]
+    #[test]
     fn test_verify_vm_with_valid_signatures() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = vec![
             test_guardian_address1(),
             test_guardian_address2(),
@@ -628,7 +649,7 @@ mod tests {
         let _result = contract.verify_vm(&vaa);
     }
 
-    #[motsu::test]
+    #[test]
     fn test_chain_id_governance_values() {
         let contract = deploy_with_mainnet_guardians();
 
@@ -642,7 +663,7 @@ mod tests {
 
     }
 
-    #[motsu::test]
+    #[test]
     fn test_governance_action_consumed() {
         let contract = deploy_with_mainnet_guardians();
 
@@ -650,9 +671,10 @@ mod tests {
         assert_eq!(contract.governance_action_is_consumed(test_hash), false);
     }
 
-    #[motsu::test]
+    #[test]
     fn test_initialize_contract_like_shell_script() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = current_guardians();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         
@@ -660,15 +682,16 @@ mod tests {
         assert!(result.is_ok(), "Contract initialization should succeed");
     }
 
-    #[motsu::test]
+    #[test]
     fn test_quorum_calculation_integration_test() {
         let quorum_result = WormholeContract::quorum(3);
         assert_eq!(quorum_result, 3, "Quorum calculation should work: (3 * 2) / 3 + 1 = 3");
     }
 
-    #[motsu::test]
+    #[test]
     fn test_guardian_set_retrieval_current_guardians() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = current_guardians();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 
@@ -689,9 +712,10 @@ mod tests {
         assert_eq!(contract.get_current_guardian_set_index(), 4, "Current guardian set index should be 4");
     }
 
-    #[motsu::test]
+    #[test]
     fn test_duplicate_verification() {
-        let mut contract = WormholeContract::default();
+        let vm = TestVM::default();
+        let mut contract = WormholeContract::from(&vm);
         let guardians = current_guardians_duplicate();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 

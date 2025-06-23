@@ -23,6 +23,7 @@ k256 = { version = "0.13.3", default-features = false, features = ["ecdsa"] }
 
 
 [dev-dependencies]
+stylus-sdk = { workspace = true, features = ["stylus-test"] }
 stylus-test.workspace = true
 base64 = "0.21"
 
