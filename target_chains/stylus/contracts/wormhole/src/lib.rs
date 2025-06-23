@@ -16,7 +16,7 @@ use types::{GuardianSet, GuardianSignature, VerifiedVM, WormholeError};
 
 use alloc::{vec, vec::Vec};
 use stylus_sdk::{
-    prelude::{entrypoint, public, storage},
+    prelude::{entrypoint, public, storage, MessageAccess, MemoryAccess, CalldataAccess, StorageAccess, HostAccess, StorageType},
     storage::{StorageMap, StorageUint, StorageAddress, StorageBool},
     alloy_primitives::{Address, FixedBytes, U256, keccak256},
 };
