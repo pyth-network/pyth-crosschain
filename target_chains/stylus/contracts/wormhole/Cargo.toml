@@ -20,6 +20,7 @@ alloy-primitives = { workspace = true, default-features = false }
 mini-alloc = { workspace = true, default-features = false }
 
 k256 = { version = "0.13.3", default-features = false, features = ["ecdsa"] }
+getrandom = { version = "0.2", default-features = false, features = ["js"] }
 
 
 [dev-dependencies]
