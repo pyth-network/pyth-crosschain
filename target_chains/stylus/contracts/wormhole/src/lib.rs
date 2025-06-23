@@ -5,11 +5,7 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
-#[cfg(not(any(feature = "std", feature = "export-abi")))]
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
+
 
 mod types;
 use types::{GuardianSet, GuardianSignature, VerifiedVM, WormholeError};
