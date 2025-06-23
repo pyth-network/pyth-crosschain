@@ -67,11 +67,11 @@ library PythUtils {
     /// @param expo1 The exponent of the first price
     /// @param price2 The second price (c/b)
     /// @param expo2 The exponent of the second price
-    /// @param targetExpo The target exponent for the cross-rate
+    /// @param targetExponent The target exponent for the cross-rate
     /// @return crossRate The cross-rate (a/c)
     /// @dev This function will revert if either price is negative or if the exponents are less than -255.
     /// @notice This function doesn't return the combined confidence interval.
-    /// This function will revert with PythErrors.ExponentOverflow if the combined exponent (targetExpo + expo1 - expo2) is greater than 58 or less than -58.
+    /// This function will revert with PythErrors.ExponentOverflow if the combined exponent (targetExponent + expo1 - expo2) is greater than 58 or less than -58.
     /// Assuming the combined exponent is within bounds, this function will work for full range of int64 prices.
     /// The result of the computation is rounded down. In particular, if the result is < 1 in the delta exponent, it will be rounded to 0
     function deriveCrossRate(
@@ -79,19 +79,19 @@ library PythUtils {
         int32 expo1,
         int64 price2,
         int32 expo2,
-        int32 targetExpo
+        int32 targetExponent
     ) public pure returns (uint256 crossRate) {
         // Check if the input prices are negative
         if (price1 < 0 || price2 < 0) {
             revert PythErrors.NegativeInputPrice();
         }
         // Check if the input exponents are valid and not less than -255
-        if (expo1 < -255 || expo2 < -255 || targetExpo < -255) {
+        if (expo1 < -255 || expo2 < -255 || targetExponent < -255) {
             revert PythErrors.InvalidInputExpo();
         }
         
         // note: This value can be negative.
-        int64 deltaExponent = int64(expo1 - (expo2 + targetExpo));
+        int64 deltaExponent = int64(expo1 - (expo2 + targetExponent));
 
         // Bounds check: prevent overflow/underflow with base 10 exponentiation 
         // Calculation: 10 ** n <= (2 ** 256 - 63) - 1
