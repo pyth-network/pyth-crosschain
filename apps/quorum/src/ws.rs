@@ -1,5 +1,5 @@
 use {
-    crate::server::{State, EXIT},
+    crate::server::{wait_for_exit, State},
     anyhow::{anyhow, Result},
     axum::{
         extract::{
@@ -16,7 +16,7 @@ use {
         sync::atomic::{AtomicUsize, Ordering},
         time::Duration,
     },
-    tokio::sync::{broadcast, watch},
+    tokio::sync::broadcast,
 };
 
 pub struct WsState {
@@ -68,7 +68,6 @@ pub struct Subscriber {
     sender: SplitSink<WebSocket, Message>,
     ping_interval: tokio::time::Interval,
     responded_to_ping: bool,
-    exit: watch::Receiver<bool>,
 }
 
 const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
@@ -88,7 +87,6 @@ impl Subscriber {
             sender,
             ping_interval: tokio::time::interval(PING_INTERVAL_DURATION),
             responded_to_ping: true, // We start with true so we don't close the connection immediately
-            exit: EXIT.subscribe(),
         }
     }
 
@@ -122,7 +120,7 @@ impl Subscriber {
                 self.sender.send(Message::Ping(vec![].into())).await?;
                 Ok(())
             },
-            _ = self.exit.changed() => {
+            _ = wait_for_exit() => {
                 self.sender.close().await?;
                 self.closed = true;
                 Err(anyhow!("Application is shutting down. Closing connection."))
