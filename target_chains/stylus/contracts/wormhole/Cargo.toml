@@ -7,7 +7,7 @@ version = "0.0.1"
 
 [features]
 default = []
-std = []
+std = ["alloy-primitives/tiny-keccak"]
 export-abi = ["stylus-sdk/export-abi"]
 
 
@@ -16,9 +16,8 @@ export-abi = ["stylus-sdk/export-abi"]
 
 [dependencies]
 stylus-sdk = { workspace = true, default-features = false }
-alloy-primitives = { version = "0.8.20", default-features = false, features = ["tiny-keccak"] }
+alloy-primitives = { workspace = true, default-features = false }
 mini-alloc = { workspace = true, default-features = false }
-
 k256 = { version = "0.13.3", default-features = false, features = ["ecdsa"] }
 
 [dev-dependencies]
@@ -26,14 +25,8 @@ stylus-sdk = { workspace = true, features = ["stylus-test"] }
 stylus-test.workspace = true
 base64 = "0.21"
 
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
-overflow-checks = false
-debug-assertions = false
+
+
 
 [lib]
 crate-type = ["lib", "cdylib"]

@@ -5,11 +5,11 @@ use super::*;
 mod tests {
     use super::*;
     use alloc::vec;
+    use stylus_sdk::testing::*;
 
     use core::str::FromStr;
     use k256::ecdsa::SigningKey;
     use stylus_sdk::alloy_primitives::keccak256;
-    use stylus_test::*;
     
     #[cfg(test)]
     use base64::engine::general_purpose;
@@ -138,7 +138,7 @@ mod tests {
         let mut contract = WormholeContract::from(&vm);
         let guardians = vec![test_guardian_address1()];
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        match contract.store_gs(0, &guardians, 0) {
+        match contract.store_gs(0, guardians.clone(), 0) {
             Ok(_) => {}
             Err(_) => unreachable!(),
         }
@@ -154,7 +154,7 @@ mod tests {
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
         let guardians = current_guardians();
-        let result = contract.store_gs(4, &guardians, 0);
+        let result = contract.store_gs(4, guardians.clone(), 0);
         if let Err(_) = result {
             panic!("Error deploying mainnet guardians");
         }
@@ -326,7 +326,7 @@ mod tests {
         let mut contract = deploy_with_current_mainnet_guardians();
         
         let guardians = current_guardians();
-        let store_result = contract.store_gs(4, &guardians, 0);
+        let store_result = contract.store_gs(4, guardians.clone(), 0);
         if let Err(_) = store_result {
             panic!("Error deploying multiple guardian sets");
         }
@@ -341,7 +341,7 @@ mod tests {
         let mut contract = deploy_with_current_mainnet_guardians();
         
         let guardians = mock_guardian_set13();
-        let store_result = contract.store_gs(4, &guardians, 0);
+        let store_result = contract.store_gs(4, guardians.clone(), 0);
         if let Err(_) = store_result {
             panic!("Error deploying guardian set");
         }
@@ -410,7 +410,7 @@ mod tests {
             Address::from([0x23u8; 20]),
             Address::from([0x34u8; 20]),
         ];
-        match contract.store_gs(0, &guardians, 0) {
+        match contract.store_gs(0, guardians.clone(), 0) {
             Ok(_) => {},
             Err(_) => unreachable!(),
         }
@@ -469,7 +469,7 @@ mod tests {
         let mut contract = WormholeContract::from(&vm);
         let empty_guardians: Vec<Address> = vec![];
 
-        let result = contract.store_gs(0, &empty_guardians, 0);
+        let result = contract.store_gs(0, empty_guardians.clone(), 0);
         assert!(result.is_err());
     }
 
@@ -515,7 +515,7 @@ mod tests {
         let mut contract = WormholeContract::from(&vm);
         let empty_guardians: Vec<Address> = vec![];
 
-        let result = contract.store_gs(0, &empty_guardians, 0);
+        let result = contract.store_gs(0, empty_guardians.clone(), 0);
         assert!(result.is_err());
     }
 
@@ -574,7 +574,7 @@ mod tests {
             test_guardian_address2(),
         ];
 
-        let _ = contract.store_gs(0, &guardians, 0);
+        let _ = contract.store_gs(0, guardians.clone(), 0);
         let retrieved_set = contract
             .get_gs_internal(0)?;
 
@@ -604,10 +604,10 @@ mod tests {
         let mut contract = WormholeContract::from(&vm);
 
         contract
-            .store_gs(0, &guardian_set0(), 0)
+            .store_gs(0, guardian_set0(), 0)
             .unwrap();
         contract
-            .store_gs(4, &guardian_set4(), 0)
+            .store_gs(4, guardian_set4(), 0)
             .unwrap();
 
         let set0 = contract.get_gs_internal(0)
@@ -627,7 +627,7 @@ mod tests {
             test_guardian_address1(),
             test_guardian_address2(),
         ];
-        match contract.store_gs(0, &guardians, 0) {
+        match contract.store_gs(0, guardians.clone(), 0) {
             Ok(()) => (),
             Err(_) => unreachable!(),
         }
@@ -672,7 +672,7 @@ mod tests {
         let contract = deploy_with_mainnet_guardians();
 
         let test_hash = vec![0u8; 32];
-        assert_eq!(contract.governance_action_is_consumed(test_hash), false);
+        assert_eq!(contract.governance_action_is_consumed(&test_hash), false);
     }
 
     #[test]
