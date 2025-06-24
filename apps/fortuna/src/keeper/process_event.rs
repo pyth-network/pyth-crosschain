@@ -54,6 +54,18 @@ pub async fn process_event_with_backoff(
         };
 
     if !is_primary_replica {
+        if let Some(replica_config) = &process_param.keeper_config.replica_config {
+            tracing::info!(
+                sequence_number = event.sequence_number,
+                delay_seconds = replica_config.backup_delay_seconds,
+                "Waiting before processing as backup replica"
+            );
+            tokio::time::sleep(tokio::time::Duration::from_secs(
+                replica_config.backup_delay_seconds,
+            ))
+            .await;
+        }
+
         match chain_state
             .contract
             .get_request(event.provider_address, event.sequence_number)
@@ -62,13 +74,13 @@ pub async fn process_event_with_backoff(
             Ok(Some(_)) => {
                 tracing::info!(
                     sequence_number = event.sequence_number,
-                    "Request still open, processing as backup replica"
+                    "Request still open after delay, processing as backup replica"
                 );
             }
             Ok(None) => {
                 tracing::debug!(
                     sequence_number = event.sequence_number,
-                    "Request already fulfilled by primary replica, skipping"
+                    "Request already fulfilled by primary replica during delay, skipping"
                 );
                 return Ok(());
             }
@@ -76,7 +88,7 @@ pub async fn process_event_with_backoff(
                 tracing::warn!(
                     sequence_number = event.sequence_number,
                     error = ?e,
-                    "Error checking request status, skipping"
+                    "Error checking request status after delay, skipping"
                 );
                 return Ok(());
             }
