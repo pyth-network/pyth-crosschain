@@ -19,7 +19,7 @@ stylus-sdk = { workspace = true, default-features = false }
 alloy-primitives = { workspace = true, default-features = false }
 mini-alloc = { workspace = true, default-features = false }
 
-k256 = { workspace = true, default-features = false, features = ["ecdsa"] }
+k256 = { version = "0.13.3", default-features = false, features = ["ecdsa"] }
 
 [dev-dependencies]
 stylus-sdk = { workspace = true, features = ["stylus-test"] }
