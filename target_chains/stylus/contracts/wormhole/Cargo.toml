@@ -16,7 +16,7 @@ export-abi = ["stylus-sdk/export-abi"]
 
 [dependencies]
 stylus-sdk = { workspace = true, default-features = false }
-alloy-primitives = { version = "0.8.20", default-features = false, features = ["tiny-keccak"] }
+alloy-primitives = { workspace = true, default-features = false }
 mini-alloc = { workspace = true, default-features = false }
 
 k256 = { workspace = true, default-features = false, features = ["ecdsa"] }
