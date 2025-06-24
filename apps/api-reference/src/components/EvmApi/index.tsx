@@ -10,6 +10,7 @@ import {
   Label,
 } from "@headlessui/react";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { getEvmContractAddress } from "@pythnetwork/contract-manager/utils/utils";
 import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ChainIcon } from "connectkit";
@@ -29,7 +30,6 @@ import { ParameterInput } from "./parameter-input";
 import type { EvmApiType } from "./run-button";
 import { RunButton } from "./run-button";
 import { getLogger } from "../../browser-logger";
-import { getContractAddress } from "../../evm-networks";
 import { useIsMounted } from "../../use-is-mounted";
 import type { SupportedLanguage } from "../Code";
 import { Code } from "../Code";
@@ -251,7 +251,7 @@ export const EvmApi = <ParameterName extends string>({
                       ? {
                           name: currentChain.name,
                           rpcUrl: currentChain.rpcUrls.default.http[0] ?? "",
-                          contractAddress: getContractAddress(chainId) ?? "",
+                          contractAddress: getEvmContractAddress(chainId, "priceFeed"),
                         }
                       : { name: "", rpcUrl: "", contractAddress: "" },
                     paramValues,
@@ -294,7 +294,7 @@ const Example = <ParameterName extends string>({
   const updateValues = useCallback(() => {
     if (typeof example.parameters === "function") {
       setError(undefined);
-      const address = getContractAddress(config.state.chainId);
+      const address = getEvmContractAddress(config.state.chainId, "priceFeed");
       if (!address) {
         throw new Error(
           `No contract for chain id: ${config.state.chainId.toString()}`,

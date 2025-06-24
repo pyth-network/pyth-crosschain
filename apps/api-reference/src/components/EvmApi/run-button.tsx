@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { getEvmContractAddress } from "@pythnetwork/contract-manager/utils/utils";
 import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ConnectKitButton, Avatar } from "connectkit";
@@ -9,9 +10,9 @@ import { ContractFunctionExecutionError } from "viem";
 import { useAccount, useConfig } from "wagmi";
 import { readContract, simulateContract, writeContract } from "wagmi/actions";
 
+
 import type { Parameter } from "./parameter";
 import { TRANSFORMS } from "./parameter";
-import { getContractAddress } from "../../evm-networks";
 import { useIsMounted } from "../../use-is-mounted";
 import { Button } from "../Button";
 import { Code } from "../Code";
@@ -166,7 +167,7 @@ const useRunButton = <ParameterName extends string>({
     if (args === undefined) {
       setStatus(ErrorStatus(new Error("Invalid parameters!")));
     } else {
-      const address = getContractAddress(config.state.chainId);
+      const address = getEvmContractAddress(config.state.chainId, "priceFeed");
       if (!address) {
         throw new Error(
           `No contract for chain id: ${config.state.chainId.toString()}`,
