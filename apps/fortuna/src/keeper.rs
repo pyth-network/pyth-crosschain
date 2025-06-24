@@ -85,6 +85,13 @@ pub async fn run_keeper_threads(
         contract: contract.clone(),
         gas_limit,
         escalation_policy: chain_eth_config.escalation_policy.to_policy(),
+        keeper_config: crate::config::KeeperConfig {
+            private_key: crate::config::SecretString {
+                value: None,
+                file: None,
+            },
+            replica_config: None,
+        },
         metrics: metrics.clone(),
         fulfilled_requests_cache,
         history,

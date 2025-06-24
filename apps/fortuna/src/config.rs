@@ -94,6 +94,15 @@ impl Config {
             }
         }
 
+        if let Some(replica_config) = &config.keeper.replica_config {
+            if replica_config.total_replicas == 0 {
+                return Err(anyhow!("Keeper replica configuration is invalid. total_replicas must be greater than 0."));
+            }
+            if replica_config.replica_id >= replica_config.total_replicas {
+                return Err(anyhow!("Keeper replica configuration is invalid. replica_id must be less than total_replicas."));
+            }
+        }
+
         Ok(config)
     }
 
@@ -333,6 +342,12 @@ fn default_chain_sample_interval() -> u64 {
     1
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ReplicaConfig {
+    pub replica_id: u64,
+    pub total_replicas: u64,
+}
+
 /// Configuration values for the keeper service that are shared across chains.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct KeeperConfig {
@@ -342,6 +357,9 @@ pub struct KeeperConfig {
     /// This key *does not need to be a registered provider*. In particular, production deployments
     /// should ensure this is a different key in order to reduce the severity of security breaches.
     pub private_key: SecretString,
+
+    #[serde(default)]
+    pub replica_config: Option<ReplicaConfig>,
 }
 
 // A secret is a string that can be provided either as a literal in the config,

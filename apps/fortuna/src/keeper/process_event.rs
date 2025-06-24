@@ -35,6 +35,54 @@ pub async fn process_event_with_backoff(
         return Ok(());
     }
 
+    let is_primary_replica =
+        if let Some(replica_config) = &process_param.keeper_config.replica_config {
+            let assigned_replica = event.sequence_number % replica_config.total_replicas;
+            if assigned_replica != replica_config.replica_id {
+                tracing::debug!(
+                    sequence_number = event.sequence_number,
+                    assigned_replica = assigned_replica,
+                    our_replica_id = replica_config.replica_id,
+                    "Processing request as backup replica"
+                );
+                false
+            } else {
+                true
+            }
+        } else {
+            true // No replica config, process all requests
+        };
+
+    if !is_primary_replica {
+        match chain_state
+            .contract
+            .get_request(event.provider_address, event.sequence_number)
+            .await
+        {
+            Ok(Some(_)) => {
+                tracing::info!(
+                    sequence_number = event.sequence_number,
+                    "Request still open, processing as backup replica"
+                );
+            }
+            Ok(None) => {
+                tracing::debug!(
+                    sequence_number = event.sequence_number,
+                    "Request already fulfilled by primary replica, skipping"
+                );
+                return Ok(());
+            }
+            Err(e) => {
+                tracing::warn!(
+                    sequence_number = event.sequence_number,
+                    error = ?e,
+                    "Error checking request status, skipping"
+                );
+                return Ok(());
+            }
+        }
+    }
+
     let account_label = AccountLabel {
         chain_id: chain_state.id.clone(),
         address: chain_state.provider_address.to_string(),

@@ -47,6 +47,8 @@ chains:
     # blocks after 5 blocks, then again after 10 blocks, and finally after 20 blocks.
     block_delays: [5, 10, 20]
 
+
+
     # Historical commitments -- delete this block for local development purposes
     commitments:
       # prettier-ignore
