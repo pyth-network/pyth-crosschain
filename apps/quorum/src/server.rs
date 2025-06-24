@@ -80,14 +80,14 @@ lazy_static! {
     ///   happened after the subscribe, so it means all listeners should always be notified
     ///   correctly.
 
-    // Make sure at least one receiver is created
-    static ref EXIT_CHANNEL: (watch::Sender<bool>, watch::Receiver<bool>) = watch::channel(false);
-    pub static ref EXIT: watch::Sender<bool> = EXIT_CHANNEL.0.clone();
+    static ref EXIT: watch::Sender<bool> = watch::channel(false).0;
 }
 
 pub async fn wait_for_exit() {
     let mut rx = EXIT.subscribe();
-    if !*rx.borrow() {
+    // Check if the exit flag is already set, if so, we don't need to wait.
+    if !(*rx.borrow()) {
+        // Wait until the exit flag is set.
         let _ = rx.changed().await;
     }
 }
@@ -136,7 +136,7 @@ where
             },
             Err(err) => {
                 tracing::error!("{} is panicked or canceled: {:?}", name, err);
-                let _ = EXIT.send(true);
+                EXIT.send_modify(|exit| *exit = true);
                 break;
             }
         }
@@ -149,7 +149,7 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
         tracing::info!("Registered shutdown signal handler...");
         tokio::signal::ctrl_c().await.unwrap();
         tracing::info!("Shut down signal received, waiting for tasks...");
-        let _ = EXIT.send(true);
+        EXIT.send_modify(|exit| *exit = true);
     });
 
     let guardian_set = fetch_guardian_set(
