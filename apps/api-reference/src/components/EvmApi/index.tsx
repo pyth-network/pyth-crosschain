@@ -295,11 +295,6 @@ const Example = <ParameterName extends string>({
     if (typeof example.parameters === "function") {
       setError(undefined);
       const address = getEvmContractAddress(config.state.chainId, "priceFeed");
-      if (!address) {
-        throw new Error(
-          `No contract for chain id: ${config.state.chainId.toString()}`,
-        );
-      }
       const params = example.parameters({
         readContract: (functionName, args) =>
           readContract(config, { abi, address, functionName, args }),
