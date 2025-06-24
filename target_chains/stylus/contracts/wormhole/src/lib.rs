@@ -75,7 +75,7 @@ impl WormholeContract {
 
         match self.get_gs_internal(index) {
             Ok(guardian_set) => {
-                let mut encoded = Vec::new();
+                let mut encoded = Vec::with_capacity(guardian_set.keys.len() * 20);
                 for address in &guardian_set.keys {
                     encoded.extend_from_slice(address.as_slice());
                 }
@@ -361,7 +361,7 @@ impl WormholeContract {
         }
 
         let size_u32: u32 = size.try_into().unwrap_or(0);
-        let mut keys = Vec::new();
+        let mut keys = Vec::with_capacity(size_u32 as usize);
         for i in 0..size_u32 {
             let i_u8: u8 = match i.try_into() {
                 Ok(val) => val,
