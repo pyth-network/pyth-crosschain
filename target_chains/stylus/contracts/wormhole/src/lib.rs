@@ -119,10 +119,7 @@ impl WormholeContract {
 
 impl WormholeContract {
     fn parse_vm(&self, encoded_vaa: &[u8]) -> Result<VerifiedVM, Vec<u8>> {
-        match Self::parse_vm_static(encoded_vaa) {
-            Ok(vaa) => Ok(vaa),
-            Err(e) => Err(e.into()),
-        }
+        Self::parse_vm_static(encoded_vaa).map_err(|e| e.into())
     }
 
     // Parsing a Wormhole VAA according to the structure defined
@@ -215,9 +212,9 @@ impl WormholeContract {
         let consistency_level = encoded_vaa[cursor];
         cursor += 1;
 
-        let payload = encoded_vaa[cursor..].to_vec();
+        let payload = encoded_vaa[cursor..].into();
 
-        let hash = Self::hash_static(&encoded_vaa[cursor - 51..])?;
+        let hash = keccak256(&encoded_vaa[cursor - 51..]);
 
         Ok(VerifiedVM {
             version,
@@ -273,11 +270,7 @@ impl WormholeContract {
             let guardian_address = guardian_set.keys[index];
             let hashed_vaa_hash: FixedBytes<32> = FixedBytes::from(keccak256(vaa.hash));
 
-            match self.verify_signature(&hashed_vaa_hash, &signature.signature, guardian_address) {
-                Ok(true) => {},
-                Ok(false) => return Err(WormholeError::InvalidSignature.into()),
-                Err(e) => return Err(e),
-            }
+            self.verify_signature(&hashed_vaa_hash, &signature.signature, guardian_address)?;
         }
 
         Ok(())
@@ -285,15 +278,9 @@ impl WormholeContract {
 
 
 
-    fn hash_static(body: &[u8]) -> Result<FixedBytes<32>, WormholeError> {
-        let hash = keccak256(body);
-        Ok(hash)
-    }
 
-    fn compute_gs_key(&self, set_index: u32, guardian_index: u8) -> U256 {
-        let key_data = [&set_index.to_be_bytes()[..], &[guardian_index]].concat();
-        U256::from_be_bytes(keccak256(&key_data).0)
-    }
+
+
 
     fn store_gs(&mut self, set_index: u32, guardians: Vec<Address>, expiration_time: u32) -> Result<(), WormholeError> {
         if guardians.is_empty() {
@@ -306,46 +293,31 @@ impl WormholeContract {
         for (i, guardian) in guardians.iter().enumerate() {
             let i_u8: u8 = i.try_into()
                 .map_err(|_| WormholeError::InvalidGuardianIndex)?;
-            let key = self.compute_gs_key(set_index, i_u8);
+            let mut key_data = [0u8; 5];
+            key_data[..4].copy_from_slice(&set_index.to_be_bytes());
+            key_data[4] = i_u8;
+            let key = U256::from_be_bytes(keccak256(&key_data).0);
             self.guardian_keys.setter(key).set(*guardian);
         }
 
         Ok(())
     }
 
-    fn verify_signature(
-        &self,
-        hash: &FixedBytes<32>,
-        signature: &FixedBytes<65>,
-        guardian_address: Address,
-    ) -> Result<bool, WormholeError> {
-        if signature.len() != 65 {
-            return Err(WormholeError::InvalidSignature);
-        }
-
-        let recovery_id_byte = signature[64];
-        let recovery_id = if recovery_id_byte >= 27 {
-            RecoveryId::try_from(recovery_id_byte - 27)
-                .map_err(|_| WormholeError::InvalidSignature)?
-        } else {
-            RecoveryId::try_from(recovery_id_byte)
-                .map_err(|_| WormholeError::InvalidSignature)?
-        };
-
+    fn verify_signature(&self, hash: &FixedBytes<32>, signature: &FixedBytes<65>, guardian_address: Address) -> Result<(), WormholeError> {
+        let recovery_id = RecoveryId::try_from(if signature[64] >= 27 { signature[64] - 27 } else { signature[64] })
+            .map_err(|_| WormholeError::InvalidSignature)?;
         let sig = Signature::try_from(&signature[..64])
             .map_err(|_| WormholeError::InvalidSignature)?;
-
         let verifying_key = VerifyingKey::recover_from_prehash(hash.as_slice().try_into().map_err(|_| WormholeError::InvalidInput)?, &sig, recovery_id)
             .map_err(|_| WormholeError::InvalidSignature)?;
-
         let public_key_bytes = verifying_key.to_encoded_point(false);
-        let public_key_slice = &public_key_bytes.as_bytes()[1..];
-
-        let address_hash = keccak256(public_key_slice);
+        let address_hash = keccak256(&public_key_bytes.as_bytes()[1..]);
         let address_bytes: [u8; 20] = address_hash[12..].try_into()
             .map_err(|_| WormholeError::InvalidAddressLength)?;
-
-        Ok(Address::from(address_bytes) == guardian_address)
+        if Address::from(address_bytes) != guardian_address {
+            return Err(WormholeError::InvalidSignature);
+        }
+        Ok(())
     }
 
    fn get_gs_internal(&self, index: u32) -> Result<GuardianSet, WormholeError> {
@@ -363,7 +335,10 @@ impl WormholeContract {
                     return Err(WormholeError::InvalidGuardianIndex);
                 }
             };
-            let key = self.compute_gs_key(index, i_u8);
+            let mut key_data = [0u8; 5];
+            key_data[..4].copy_from_slice(&index.to_be_bytes());
+            key_data[4] = i_u8;
+            let key = U256::from_be_bytes(keccak256(&key_data).0);
             let guardian_address = self.guardian_keys.getter(key).get();
             keys.push(guardian_address);
         }
@@ -383,10 +358,7 @@ impl IWormhole for WormholeContract {
             return Err(WormholeError::NotInitialized);
         }
 
-        let vaa = match self.parse_vm(encoded_vaa) {
-            Ok(vaa) => vaa,
-            Err(_) => return Err(WormholeError::InvalidVAAFormat),
-        };
+        let vaa = self.parse_vm(encoded_vaa).map_err(|_| WormholeError::InvalidVAAFormat)?;
         self.verify_vm(&vaa)?;
         Ok(vaa)
     }
@@ -403,17 +375,14 @@ impl IWormhole for WormholeContract {
         self.consumed_governance_actions.get(hash.to_vec())
     }
 
-    #[inline]
     fn chain_id(&self) -> u16 {
         self.chain_id.get().try_into().unwrap_or(0u16)
     }
 
-    #[inline]
     fn governance_chain_id(&self) -> u16 {
         self.governance_chain_id.get().try_into().unwrap_or(0u16)
     }
 
-    #[inline]
     fn governance_contract(&self) -> Address {
         self.governance_contract.get()
     }
