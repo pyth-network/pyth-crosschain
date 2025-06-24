@@ -156,7 +156,7 @@ impl WormholeContract {
         let len_signatures = encoded_vaa[cursor];
         cursor += 1;
 
-        let mut signatures = Vec::new();
+        let mut signatures = Vec::with_capacity(len_signatures as usize);
 
         if len_signatures > 19 {
             return Err(WormholeError::InvalidVAAFormat);

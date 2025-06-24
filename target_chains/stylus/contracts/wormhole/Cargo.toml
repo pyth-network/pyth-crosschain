@@ -30,6 +30,7 @@ base64 = "0.21"
 opt-level = "z"
 lto = true
 codegen-units = 1
+panic = "abort"
 
 [lib]
 crate-type = ["lib", "cdylib"]
