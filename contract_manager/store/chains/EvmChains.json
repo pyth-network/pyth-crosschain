@@ -1258,5 +1258,12 @@
     "rpcUrl": "https://testnet.rpc.hemi.network/rpc",
     "networkId": 743111,
     "type": "EvmChain"
+  },
+  {
+    "id": "injective_evm_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://k8s.testnet.json-rpc.injective.network/",
+    "networkId": 1439,
+    "type": "EvmChain"
   }
 ]
