@@ -4,6 +4,7 @@ use std::io::IsTerminal;
 use crate::server::RunOptions;
 
 mod api;
+mod metrics_server;
 mod pythnet;
 mod server;
 mod ws;
