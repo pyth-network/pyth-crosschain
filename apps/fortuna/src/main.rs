@@ -17,16 +17,17 @@ use {
 #[tracing::instrument]
 async fn main() -> Result<()> {
     // Initialize a Tracing Subscriber
-    tracing::subscriber::set_global_default(
-        tracing_subscriber::fmt()
-            .compact()
-            .with_file(false)
-            .with_line_number(true)
-            .with_thread_ids(true)
-            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-            .with_ansi(std::io::stderr().is_terminal())
-            .finish(),
-    )?;
+    let fmt_builder = tracing_subscriber::fmt()
+        .with_file(false)
+        .with_line_number(true)
+        .with_thread_ids(true)
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_ansi(std::io::stderr().is_terminal());
+    if std::io::stderr().is_terminal() {
+        tracing::subscriber::set_global_default(fmt_builder.compact().finish())?;
+    } else {
+        tracing::subscriber::set_global_default(fmt_builder.json().finish())?;
+    }
 
     match config::Options::parse() {
         config::Options::GetRequest(opts) => command::get_request(&opts).await,
