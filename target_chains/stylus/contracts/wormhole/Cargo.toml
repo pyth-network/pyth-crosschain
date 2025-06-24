@@ -7,7 +7,7 @@ version = "0.0.1"
 
 [features]
 default = []
-std = []
+std = ["alloy-primitives/tiny-keccak"]
 export-abi = ["stylus-sdk/export-abi"]
 
 
@@ -27,9 +27,15 @@ stylus-test.workspace = true
 base64 = "0.21"
 
 [profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
+codegen-units = 1        # prefer efficiency to compile time
+panic = "abort"          # use simple panics
+opt-level = "s"          # optimize for size ("s" may also work)
+strip = true             # remove debug info
+lto = true               # link time optimization
+debug = false            # no debug data
+rpath = false            # no run-time search path
+debug-assertions = false # prune debug assertions
+incremental = false      # no incremental builds
 
 [lib]
 crate-type = ["lib", "cdylib"]
