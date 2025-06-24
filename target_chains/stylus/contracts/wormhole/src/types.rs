@@ -7,13 +7,11 @@ pub struct GuardianSet {
     pub expiration_time: u32,
 }
 
-#[derive(Clone)]
 pub struct GuardianSignature {
     pub guardian_index: u8,
     pub signature: FixedBytes<65>,
 }
 
-#[derive(Clone)]
 pub struct VerifiedVM {
     pub version: u8,
     pub guardian_set_index: u32,
