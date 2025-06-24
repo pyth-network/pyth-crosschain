@@ -3698,6 +3698,7 @@ version = "0.0.1"
 dependencies = [
  "alloy-primitives",
  "base64 0.21.7",
+ "k256",
  "mini-alloc",
  "stylus-sdk",
  "stylus-test",
