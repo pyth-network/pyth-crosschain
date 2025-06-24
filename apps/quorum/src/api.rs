@@ -3,6 +3,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use axum_prometheus::{EndpointLabel, PrometheusMetricLayerBuilder};
 use secp256k1::{
     ecdsa::{RecoverableSignature, RecoveryId},
     Message, Secp256k1,
@@ -26,16 +27,24 @@ pub type Payload<'a> = &'a RawMessage;
 pub async fn run(listen_address: SocketAddr, state: State) -> anyhow::Result<()> {
     tracing::info!("Starting server...");
 
+    let (prometheus_layer, _) = PrometheusMetricLayerBuilder::new()
+        .with_metrics_from_fn(|| state.metrics_recorder.clone())
+        .with_endpoint_label_type(EndpointLabel::MatchedPathWithFallbackFn(|_| {
+            "unknown".to_string()
+        }))
+        .build_pair();
+
     let routes = Router::new()
         .route("/live", get(|| async { "OK" }))
         .route("/observation", post(post_observation))
         .route("/ws", get(ws_route_handler))
+        .layer(prometheus_layer)
         .with_state(state);
     let listener = tokio::net::TcpListener::bind(&listen_address).await?;
 
     axum::serve(listener, routes)
         .with_graceful_shutdown(async {
-            let _ = crate::server::EXIT.subscribe().changed().await;
+            crate::server::wait_for_exit().await;
             tracing::info!("Shutting down server...");
         })
         .await?;

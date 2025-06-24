@@ -1,18 +1,26 @@
+use axum_prometheus::metrics_exporter_prometheus::PrometheusHandle;
 use clap::{crate_authors, crate_description, crate_name, crate_version, Args, Parser};
 use lazy_static::lazy_static;
 use solana_client::client_error::reqwest::Url;
 use solana_sdk::pubkey::Pubkey;
-use std::{collections::HashMap, net::SocketAddr, ops::Deref, sync::Arc};
-use tokio::sync::{watch, RwLock};
+use std::{
+    collections::HashMap, future::Future, net::SocketAddr, ops::Deref, sync::Arc, time::Duration,
+};
+use tokio::{
+    sync::{watch, RwLock},
+    time::sleep,
+};
 use wormhole_sdk::{vaa::Signature, GuardianSetInfo};
 
 use crate::{
     api::{self},
+    metrics_server::{self, setup_metrics_recorder},
     pythnet::fetch_guardian_set,
     ws::WsState,
 };
 
 const DEFAULT_LISTEN_ADDR: &str = "127.0.0.1:9000";
+const DEFAULT_METRICS_ADDR: &str = "127.0.0.1:9001";
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Server Options")]
@@ -23,6 +31,11 @@ pub struct ServerOptions {
     #[arg(default_value = DEFAULT_LISTEN_ADDR)]
     #[arg(env = "LISTEN_ADDR")]
     pub listen_addr: SocketAddr,
+    /// Address and port the metrics will bind to.
+    #[arg(long = "metrics-addr")]
+    #[arg(default_value = DEFAULT_METRICS_ADDR)]
+    #[arg(env = "METRICS_ADDR")]
+    pub metrics_addr: SocketAddr,
 }
 
 // `Options` is a structup definition to provide clean command-line args for Hermes.
@@ -66,7 +79,17 @@ lazy_static! {
     /// - The `Receiver` side of a watch channel performs the detection based on if the change
     ///   happened after the subscribe, so it means all listeners should always be notified
     ///   correctly.
-    pub static ref EXIT: watch::Sender<bool> = watch::channel(false).0;
+
+    static ref EXIT: watch::Sender<bool> = watch::channel(false).0;
+}
+
+pub async fn wait_for_exit() {
+    let mut rx = EXIT.subscribe();
+    // Check if the exit flag is already set, if so, we don't need to wait.
+    if !(*rx.borrow()) {
+        // Wait until the exit flag is set.
+        let _ = rx.changed().await;
+    }
 }
 
 #[derive(Clone)]
@@ -81,6 +104,8 @@ pub struct StateInner {
     pub observation_lifetime: u32,
 
     pub ws: WsState,
+
+    pub metrics_recorder: PrometheusHandle,
 }
 impl Deref for State {
     type Target = Arc<StateInner>;
@@ -93,17 +118,42 @@ impl Deref for State {
 const DEFAULT_OBSERVATION_LIFETIME: u32 = 10; // In seconds
 const WEBSOCKET_NOTIFICATION_CHANNEL_SIZE: usize = 1000;
 
+async fn fault_tolerant_handler<F, Fut>(name: String, f: F)
+where
+    F: Fn() -> Fut,
+    Fut: Future<Output = anyhow::Result<()>> + Send + 'static,
+    Fut::Output: Send + 'static,
+{
+    loop {
+        let res = tokio::spawn(f()).await;
+        match res {
+            Ok(result) => match result {
+                Ok(_) => break, // This will happen on graceful shutdown
+                Err(err) => {
+                    tracing::error!("{} returned error: {:?}", name, err);
+                    sleep(Duration::from_millis(500)).await;
+                }
+            },
+            Err(err) => {
+                tracing::error!("{} is panicked or canceled: {:?}", name, err);
+                EXIT.send_modify(|exit| *exit = true);
+                break;
+            }
+        }
+    }
+}
+
 pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
     // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
     tokio::spawn(async move {
         tracing::info!("Registered shutdown signal handler...");
         tokio::signal::ctrl_c().await.unwrap();
         tracing::info!("Shut down signal received, waiting for tasks...");
-        let _ = EXIT.send(true);
+        EXIT.send_modify(|exit| *exit = true);
     });
 
     let guardian_set = fetch_guardian_set(
-        run_options.pythnet_url,
+        run_options.pythnet_url.clone(),
         run_options.wormhole_pid,
         run_options.guardian_set_index,
     )
@@ -118,19 +168,28 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
         observation_lifetime: run_options.observation_lifetime,
 
         ws: WsState::new(WEBSOCKET_NOTIFICATION_CHANNEL_SIZE),
+
+        metrics_recorder: setup_metrics_recorder()?,
     }));
 
-    tokio::join!(async {
-        if let Err(e) = api::run(run_options.server.listen_addr, state).await {
-            tracing::error!(error = ?e, "Failed to start API server");
-        }
-    });
+    tokio::join!(
+        fault_tolerant_handler("API server".to_string(), || api::run(
+            run_options.server.listen_addr,
+            state.clone()
+        )),
+        fault_tolerant_handler("metrics server".to_string(), || metrics_server::run(
+            run_options.clone(),
+            state.clone()
+        )),
+    );
 
     Ok(())
 }
 
 #[cfg(test)]
 pub mod tests {
+    use axum_prometheus::metrics_exporter_prometheus::PrometheusBuilder;
+
     use super::*;
 
     pub fn get_state(
@@ -146,6 +205,8 @@ pub mod tests {
             guardian_set_index: 0,
 
             ws: WsState::new(1),
+
+            metrics_recorder: PrometheusBuilder::new().build_recorder().handle(),
         }))
     }
 }
