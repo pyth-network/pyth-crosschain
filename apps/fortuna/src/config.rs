@@ -349,6 +349,12 @@ fn default_chain_sample_interval() -> u64 {
 pub struct ReplicaConfig {
     pub replica_id: u64,
     pub total_replicas: u64,
+    #[serde(default = "default_backup_delay_seconds")]
+    pub backup_delay_seconds: u64,
+}
+
+fn default_backup_delay_seconds() -> u64 {
+    30
 }
 
 /// Configuration values for the keeper service that are shared across chains.
