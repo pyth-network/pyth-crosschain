@@ -88,3 +88,31 @@ keeper:
     value: 0xabcd
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
+# Multi-replica configuration documentation
+
+  # Optional: Multi-replica configuration for high availability and load distribution
+  # Uncomment and configure for production deployments with multiple Fortuna instances
+  # replica_config:
+  #   replica_id: 0              # Unique identifier for this replica (0, 1, 2, ...)
+  #   total_replicas: 2          # Total number of replica instances running
+  #   backup_delay_seconds: 30   # Seconds to wait before processing other replicas' requests
+  #
+  # Example configurations:
+  # 
+  # Two-replica setup (Blue/Green):
+  # - Replica 0: handles even sequence numbers (0, 2, 4, ...)
+  # - Replica 1: handles odd sequence numbers (1, 3, 5, ...)
+  #
+  # Three-replica setup:
+  # - Replica 0: handles sequence numbers 0, 3, 6, 9, ...
+  # - Replica 1: handles sequence numbers 1, 4, 7, 10, ...
+  # - Replica 2: handles sequence numbers 2, 5, 8, 11, ...
+  #
+  # Five-replica setup:
+  # - Replica 0: handles sequence numbers 0, 5, 10, 15, ...
+  # - Replica 1: handles sequence numbers 1, 6, 11, 16, ...
+  # - Replica 2: handles sequence numbers 2, 7, 12, 17, ...
+  # - Replica 3: handles sequence numbers 3, 8, 13, 18, ...
+  # - Replica 4: handles sequence numbers 4, 9, 14, 19, ...
+  #
+  # IMPORTANT: Each replica MUST use a different private_key to avoid nonce conflicts!

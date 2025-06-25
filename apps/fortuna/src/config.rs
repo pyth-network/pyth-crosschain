@@ -101,6 +101,9 @@ impl Config {
             if replica_config.replica_id >= replica_config.total_replicas {
                 return Err(anyhow!("Keeper replica configuration is invalid. replica_id must be less than total_replicas."));
             }
+            if replica_config.backup_delay_seconds == 0 {
+                return Err(anyhow!("Keeper replica configuration is invalid. backup_delay_seconds must be greater than 0 to prevent race conditions."));
+            }
         }
 
         Ok(config)
