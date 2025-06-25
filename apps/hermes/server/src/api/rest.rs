@@ -182,7 +182,7 @@ mod tests {
             unimplemented!("Not needed for this test")
         }
 
-        async fn store_update(&self, _update: Update) -> Result<()> {
+        async fn store_update(&self, _update: Update) -> Result<bool> {
             unimplemented!("Not needed for this test")
         }
 

@@ -512,7 +512,7 @@ where
                     let state = state.clone();
                     async move {
                         if let Err(e) = state.process_message(vaa_bytes).await {
-                            tracing::debug!(error = ?e, "Skipped VAA.");
+                            tracing::error!(error = ?e, "Received an invalid VAA from PythNet quorum.");
                         }
                     }
                 });
