@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
-import { getEvmContractAddress } from "@pythnetwork/contract-manager/utils/utils";
+import { getEvmPriceFeedContractAddress } from "@pythnetwork/contract-manager/utils/utils";
 import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ConnectKitButton, Avatar } from "connectkit";
@@ -167,7 +167,7 @@ const useRunButton = <ParameterName extends string>({
     if (args === undefined) {
       setStatus(ErrorStatus(new Error("Invalid parameters!")));
     } else {
-      const address = getEvmContractAddress(config.state.chainId, "priceFeed");
+      const address = getEvmPriceFeedContractAddress(config.state.chainId);
       switch (props.type) {
         case EvmApiType.Read: {
           readContract(config, { abi, address, functionName, args })
