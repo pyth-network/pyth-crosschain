@@ -56,11 +56,20 @@ impl LazerPublisher {
             }
         };
 
+        let authorization_token =
+            if let Some(authorization_token) = config.authorization_token.clone() {
+                // If authorization_token is configured, use it.
+                authorization_token
+            } else {
+                // Otherwise, use the base64 pubkey.
+                BASE64_STANDARD.encode(signing_key.verifying_key().to_bytes())
+            };
+
         let (relayer_sender, _) = broadcast::channel(CHANNEL_CAPACITY);
         for url in config.relayer_urls.iter() {
             let mut task = RelayerSessionTask {
                 url: url.clone(),
-                token: BASE64_STANDARD.encode(signing_key.verifying_key().to_bytes()),
+                token: authorization_token.clone(),
                 receiver: relayer_sender.subscribe(),
             };
             tokio::spawn(async move { task.run().await });
@@ -203,6 +212,7 @@ mod tests {
         let config = Config {
             listen_address: "0.0.0.0:12345".parse().unwrap(),
             relayer_urls: vec![Url::parse("http://127.0.0.1:12346").unwrap()],
+            authorization_token: None,
             publish_keypair_path: PathBuf::from(signing_key_file.path()),
             publish_interval_duration: Duration::from_millis(25),
         };
