@@ -1,0 +1,11 @@
+@use "../theme";
+
+.metricsContainer {
+  display: flex;
+  gap: theme.spacing(2);
+}
+
+.actionsContainer {
+  display: flex;
+  gap: theme.spacing(2);
+}

@@ -1,0 +1,73 @@
+@use "../theme";
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: theme.spacing(4);
+  align-items: center;
+}
+
+.combinationsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(8);
+}
+
+.styleSection {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: theme.font-size("lg");
+  font-weight: 600;
+  color: theme.color("heading");
+}
+
+.sizeSection {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+}
+
+.sizeTitle {
+  margin: 0;
+  font-size: theme.font-size("sm");
+  font-weight: 500;
+  color: theme.color("paragraph");
+}
+
+.variantsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(3);
+  align-items: center;
+}
+
+.variantGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: theme.spacing(6);
+}
+
+.sizeColumn {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+
+  > h4 {
+    margin: 0;
+    font-size: theme.font-size("sm");
+    font-weight: 600;
+    color: theme.color("heading");
+  }
+}
+
+.examplesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(3);
+  align-items: center;
+}

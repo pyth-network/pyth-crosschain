@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Paginator as PaginatorComponent } from "./index.jsx";
 
 const meta = {
+  title: "data & tables/Paginator",
   component: PaginatorComponent,
   parameters: {
     layout: "padded",

@@ -1,0 +1,67 @@
+@use "../theme";
+
+.storiesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(8);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: theme.spacing(4);
+  align-items: start;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(4);
+
+  > label {
+    min-width: 80px;
+    font-size: theme.font-size("xs");
+  }
+}
+
+.placementGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: theme.spacing(8);
+  place-items: center center;
+  min-height: 300px;
+}
+
+.iconsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: theme.spacing(4);
+}
+
+.iconLabel {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+
+  &[data-status="active"] {
+    background-color: #10b981;
+  }
+
+  &[data-status="inactive"] {
+    background-color: #ef4444;
+  }
+
+  &[data-status="pending"] {
+    background-color: #f59e0b;
+  }
+
+  &[data-status="archived"] {
+    background-color: #6b7280;
+  }
+}

@@ -5,7 +5,7 @@ import { Button } from "../Button";
 import { useLogger } from "../useLogger";
 import styles from "./index.module.scss";
 
-type Props = {
+export type Props = {
   error: Error & { digest?: string };
   reset?: () => void;
 };

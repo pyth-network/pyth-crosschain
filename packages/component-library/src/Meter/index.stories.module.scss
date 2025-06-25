@@ -1,0 +1,17 @@
+@use "../theme";
+
+.performanceContainer {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(6);
+}
+
+.performanceSection {
+  > h3 {
+    margin: 0;
+    margin-bottom: theme.spacing(2);
+    font-size: theme.font-size("lg");
+    font-weight: 600;
+    color: theme.color("heading");
+  }
+}

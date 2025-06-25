@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Term as TermComponent } from "./index.jsx";
 
 const meta = {
+  title: "typography/Term",
   component: TermComponent,
   argTypes: {
     children: {

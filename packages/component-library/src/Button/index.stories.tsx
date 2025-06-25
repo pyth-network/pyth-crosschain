@@ -1,20 +1,10 @@
-import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Button as ButtonComponent, VARIANTS, SIZES } from "./index.jsx";
-
-const iconControl = {
-  control: "select",
-  options: Object.keys(icons),
-  mapping: Object.fromEntries(
-    Object.entries(icons).map(([iconName, Icon]) => [
-      iconName,
-      <Icon key={iconName} weights={new Map()} />,
-    ]),
-  ),
-} as const;
+import { iconControl } from "../icon-control.jsx";
 
 const meta = {
+  title: "forms & controls/Button",
   component: ButtonComponent,
   argTypes: {
     children: {

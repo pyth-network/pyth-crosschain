@@ -1,0 +1,159 @@
+@use "../theme";
+
+.wideTable {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.positive {
+  color: theme.color("states", "success", "normal");
+  font-weight: 500;
+}
+
+.negative {
+  color: theme.color("states", "error", "normal");
+  font-weight: 500;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: theme.spacing(4);
+  padding: theme.spacing(12) theme.spacing(4);
+  text-align: center;
+  color: theme.color("muted");
+
+  > p {
+    margin: 0;
+    font-size: theme.font-size("sm");
+  }
+}
+
+.largeEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: theme.spacing(4);
+  padding: theme.spacing(16) theme.spacing(4);
+  text-align: center;
+
+  > h3 {
+    margin: 0;
+    font-size: theme.font-size("xl");
+    font-weight: 600;
+    color: theme.color("heading");
+  }
+
+  > p {
+    margin: 0;
+    font-size: theme.font-size("base");
+    color: theme.color("muted");
+  }
+}
+
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(3);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: theme.border-radius("full");
+  background-color: theme.color("states", "info", "background");
+  color: theme.color("states", "info", "normal");
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: theme.font-size("sm");
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.userName {
+  font-weight: 500;
+  color: theme.color("foreground");
+}
+
+.userEmail {
+  font-size: theme.font-size("sm");
+  color: theme.color("muted");
+}
+
+.actions {
+  display: flex;
+  gap: theme.spacing(2);
+}
+
+.assetCell {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+
+  > strong {
+    font-weight: 600;
+    color: theme.color("foreground");
+  }
+}
+
+.assetName {
+  font-size: theme.font-size("sm");
+  color: theme.color("muted");
+}
+
+.userSkeleton {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(3);
+}
+
+.stickyHeaderContainer {
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  position: relative;
+}
+
+.stickyHeaderInfo {
+  padding: theme.spacing(3);
+  background-color: theme.color("states", "info", "background");
+  color: theme.color("states", "info", "normal");
+  text-align: center;
+  font-size: theme.font-size("sm");
+
+  > p {
+    margin: 0;
+  }
+}
+
+.stickyColumnsWrapper {
+  width: 100%;
+}
+
+.stickyColumnsContainer {
+  width: 100%;
+  max-width: 800px;
+  overflow-x: auto;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+}
+
+.stickyColumnsInfo {
+  padding: theme.spacing(3);
+  background-color: theme.color("states", "info", "background");
+  color: theme.color("states", "info", "normal");
+  text-align: center;
+  font-size: theme.font-size("sm");
+  position: sticky;
+  left: 0;
+  z-index: 10;
+
+  > p {
+    margin: 0;
+  }
+}

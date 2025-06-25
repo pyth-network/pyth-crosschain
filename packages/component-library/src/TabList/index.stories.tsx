@@ -4,6 +4,7 @@ import { TabList as TabListComponent } from "./index.jsx";
 import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.jsx";
 
 const meta = {
+  title: "navigation & menus/TabList",
   component: TabListComponent,
   argTypes: {
     items: {
@@ -31,8 +32,9 @@ export const TabList = {
   args: {
     label: "Tab List",
     items: [
-      { id: "foo", children: "Foo" },
-      { id: "bar", children: "Bar" },
+      { id: "btc", children: "BTC" },
+      { id: "eth", children: "ETH" },
+      { id: "sol", children: "SOL" },
     ],
   },
 } satisfies StoryObj<typeof TabListComponent>;

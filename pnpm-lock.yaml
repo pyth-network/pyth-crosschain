@@ -108,6 +108,9 @@ catalogs:
     '@storybook/react':
       specifier: ^8.6.12
       version: 8.6.12
+    '@storybook/test':
+      specifier: ^8.6.12
+      version: 8.6.14
     '@svgr/webpack':
       specifier: ^8.1.0
       version: 8.1.0
@@ -2074,7 +2077,10 @@ importers:
         version: 8.6.12(esbuild@0.25.4)(next@15.3.2(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.86.1))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.86.1)(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))(type-fest@4.39.0)(typescript@5.8.2)(webpack-hot-middleware@2.26.1)(webpack@5.98.0(esbuild@0.25.4))
       '@storybook/react':
         specifier: 'catalog:'
-        version: 8.6.12(@storybook/test@8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))(typescript@5.8.2)
+        version: 8.6.12(@storybook/test@8.6.14(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))(typescript@5.8.2)
+      '@storybook/test':
+        specifier: 'catalog:'
+        version: 8.6.14(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
       '@svgr/webpack':
         specifier: 'catalog:'
         version: 8.1.0(typescript@5.8.2)
@@ -10004,6 +10010,11 @@ packages:
     peerDependencies:
       storybook: ^8.6.12
 
+  '@storybook/instrumenter@8.6.14':
+    resolution: {integrity: sha512-iG4MlWCcz1L7Yu8AwgsnfVAmMbvyRSk700Mfy2g4c8y5O+Cv1ejshE1LBBsCwHgkuqU0H4R0qu4g23+6UnUemQ==}
+    peerDependencies:
+      storybook: ^8.6.14
+
   '@storybook/manager-api@8.6.12':
     resolution: {integrity: sha512-O0SpISeJLNTQvhSBOsWzzkCgs8vCjOq1578rwqHlC6jWWm4QmtfdyXqnv7rR1Hk08kQ+Dzqh0uhwHx0nfwy4nQ==}
     peerDependencies:
@@ -10079,6 +10090,11 @@ packages:
     resolution: {integrity: sha512-0BK1Eg+VD0lNMB1BtxqHE3tP9FdkUmohtvWG7cq6lWvMrbCmAmh3VWai3RMCCDOukPFpjabOr8BBRLVvhNpv2w==}
     peerDependencies:
       storybook: ^8.6.12
+
+  '@storybook/test@8.6.14':
+    resolution: {integrity: sha512-GkPNBbbZmz+XRdrhMtkxPotCLOQ1BaGNp/gFZYdGDk2KmUWBKmvc5JxxOhtoXM2703IzNFlQHSSNnhrDZYuLlw==}
+    peerDependencies:
+      storybook: ^8.6.14
 
   '@storybook/theming@8.6.12':
     resolution: {integrity: sha512-6VjZg8HJ2Op7+KV7ihJpYrDnFtd9D1jrQnUS8LckcpuBXrIEbaut5+34ObY8ssQnSqkk2GwIZBBBQYQBCVvkOw==}
@@ -25115,7 +25131,7 @@ snapshots:
 
   '@babel/template@7.27.0':
     dependencies:
-      '@babel/code-frame': 7.26.2
+      '@babel/code-frame': 7.27.1
       '@babel/parser': 7.27.0
       '@babel/types': 7.27.1
 
@@ -25127,7 +25143,7 @@ snapshots:
 
   '@babel/traverse@7.27.0':
     dependencies:
-      '@babel/code-frame': 7.26.2
+      '@babel/code-frame': 7.27.1
       '@babel/generator': 7.27.0
       '@babel/parser': 7.27.0
       '@babel/template': 7.27.0
@@ -25139,7 +25155,7 @@ snapshots:
 
   '@babel/traverse@7.27.0(supports-color@5.5.0)':
     dependencies:
-      '@babel/code-frame': 7.26.2
+      '@babel/code-frame': 7.27.1
       '@babel/generator': 7.27.0
       '@babel/parser': 7.27.0
       '@babel/template': 7.27.0
@@ -35333,6 +35349,12 @@ snapshots:
       '@vitest/utils': 2.1.9
       storybook: 8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)
 
+  '@storybook/instrumenter@8.6.14(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))':
+    dependencies:
+      '@storybook/global': 5.0.0
+      '@vitest/utils': 2.1.9
+      storybook: 8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)
+
   '@storybook/manager-api@8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))':
     dependencies:
       storybook: 8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)
@@ -35471,10 +35493,36 @@ snapshots:
       '@storybook/test': 8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
       typescript: 5.8.2
 
+  '@storybook/react@8.6.12(@storybook/test@8.6.14(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))(typescript@5.8.2)':
+    dependencies:
+      '@storybook/components': 8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
+      '@storybook/global': 5.0.0
+      '@storybook/manager-api': 8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
+      '@storybook/preview-api': 8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
+      '@storybook/react-dom-shim': 8.6.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
+      '@storybook/theming': 8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      storybook: 8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)
+    optionalDependencies:
+      '@storybook/test': 8.6.14(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
+      typescript: 5.8.2
+
   '@storybook/test@8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/instrumenter': 8.6.12(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
+      '@testing-library/dom': 10.4.0
+      '@testing-library/jest-dom': 6.5.0
+      '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
+      '@vitest/expect': 2.0.5
+      '@vitest/spy': 2.0.5
+      storybook: 8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)
+
+  '@storybook/test@8.6.14(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))':
+    dependencies:
+      '@storybook/global': 5.0.0
+      '@storybook/instrumenter': 8.6.14(storybook@8.6.12(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3))
       '@testing-library/dom': 10.4.0
       '@testing-library/jest-dom': 6.5.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
@@ -35852,7 +35900,7 @@ snapshots:
 
   '@testing-library/dom@10.4.0':
     dependencies:
-      '@babel/code-frame': 7.26.2
+      '@babel/code-frame': 7.27.1
       '@babel/runtime': 7.27.0
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
@@ -43678,7 +43726,7 @@ snapshots:
 
   fork-ts-checker-webpack-plugin@6.5.3(eslint@9.23.0(jiti@2.4.2))(typescript@4.9.5)(webpack@5.98.0):
     dependencies:
-      '@babel/code-frame': 7.26.2
+      '@babel/code-frame': 7.27.1
       '@types/json-schema': 7.0.15
       chalk: 4.1.2
       chokidar: 3.6.0

@@ -1,0 +1,8 @@
+@use "../theme";
+
+.variantsContainer {
+  display: flex;
+  gap: theme.spacing(2);
+  flex-wrap: wrap;
+  align-items: center;
+}

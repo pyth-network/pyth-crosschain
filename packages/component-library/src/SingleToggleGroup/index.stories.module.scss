@@ -1,0 +1,7 @@
+@use "../theme";
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
