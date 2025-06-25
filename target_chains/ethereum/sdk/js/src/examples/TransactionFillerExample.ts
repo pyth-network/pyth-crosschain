@@ -12,14 +12,17 @@ interface Chain {
 
 const mainnet: Chain = { id: 1, name: "Ethereum Mainnet" };
 
-function createPublicClient(config: { chain: Chain; transport: any }): PublicClient {
+function createPublicClient(config: {
+  chain: Chain;
+  transport: any;
+}): PublicClient {
   return {
     async getChainId() {
       return config.chain.id;
     },
     async request() {
       return {};
-    }
+    },
   } as PublicClient;
 }
 
@@ -48,20 +51,22 @@ async function main() {
 
   try {
     console.log("Filling transaction with Pyth data...");
-    
+
     const result = await fillTransactionWithPythData(config, transaction);
-    
+
     console.log("Transaction filled successfully!");
     console.log("Detected price feeds:", result.detectedPriceFeeds.length);
     console.log("Price feed IDs:", result.detectedPriceFeeds);
     console.log("Price updates:", result.priceUpdateData.length);
     console.log("Iterations:", result.iterations);
     console.log("Final transaction to:", result.transaction.to);
-    
+
     if (result.detectedPriceFeeds.length > 0) {
       console.log("Transaction was bundled with price updates using multicall");
     } else {
-      console.log("No Pyth price feeds detected, original transaction unchanged");
+      console.log(
+        "No Pyth price feeds detected, original transaction unchanged",
+      );
     }
   } catch (error) {
     console.error("Error filling transaction:", error);

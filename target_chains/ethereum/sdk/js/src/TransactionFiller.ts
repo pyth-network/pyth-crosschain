@@ -3,80 +3,99 @@ export type Address = `0x${string}`;
 export type Hex = `0x${string}`;
 export type TransactionRequest = any;
 
-export function encodeFunctionData(params: { abi: any; functionName: string; args: any[] }): Hex {
+export function encodeFunctionData(params: {
+  abi: any;
+  functionName: string;
+  args: any[];
+}): Hex {
   const methodSignatures: Record<string, string> = {
     updatePriceFeeds: "0x1f379acc",
-    aggregate: "0x252dba42"
+    aggregate: "0x252dba42",
   };
-  
+
   if (params.functionName === "updatePriceFeeds") {
     const updateData = params.args[0] as string[];
     let encoded = methodSignatures.updatePriceFeeds;
-    encoded += "0000000000000000000000000000000000000000000000000000000000000020";
-    encoded += updateData.length.toString(16).padStart(64, '0');
-    
+    encoded +=
+      "0000000000000000000000000000000000000000000000000000000000000020";
+    encoded += updateData.length.toString(16).padStart(64, "0");
+
     for (let i = 0; i < updateData.length; i++) {
-      const offset = (0x20 + updateData.length * 0x20 + i * updateData[i].length / 2).toString(16).padStart(64, '0');
+      const offset = (
+        0x20 +
+        updateData.length * 0x20 +
+        (i * updateData[i].length) / 2
+      )
+        .toString(16)
+        .padStart(64, "0");
       encoded += offset;
     }
-    
+
     for (const data of updateData) {
-      const dataLength = (data.length / 2 - 1).toString(16).padStart(64, '0');
+      const dataLength = (data.length / 2 - 1).toString(16).padStart(64, "0");
       encoded += dataLength;
       encoded += data.slice(2);
       const padding = (32 - ((data.length / 2 - 1) % 32)) % 32;
       encoded += "0".repeat(padding * 2);
     }
-    
+
     return `0x${encoded}` as Hex;
   }
-  
+
   if (params.functionName === "aggregate") {
     const calls = params.args[0] as Array<{ target: string; callData: string }>;
     let encoded = methodSignatures.aggregate;
-    encoded += "0000000000000000000000000000000000000000000000000000000000000020";
-    encoded += calls.length.toString(16).padStart(64, '0');
-    
+    encoded +=
+      "0000000000000000000000000000000000000000000000000000000000000020";
+    encoded += calls.length.toString(16).padStart(64, "0");
+
     for (let i = 0; i < calls.length; i++) {
-      const offset = (0x20 + calls.length * 0x20 + i * 0x40).toString(16).padStart(64, '0');
+      const offset = (0x20 + calls.length * 0x20 + i * 0x40)
+        .toString(16)
+        .padStart(64, "0");
       encoded += offset;
     }
-    
+
     for (const call of calls) {
-      encoded += call.target.slice(2).padStart(64, '0');
-      encoded += "0000000000000000000000000000000000000000000000000000000000000040";
-      const dataLength = (call.callData.length / 2 - 1).toString(16).padStart(64, '0');
+      encoded += call.target.slice(2).padStart(64, "0");
+      encoded +=
+        "0000000000000000000000000000000000000000000000000000000000000040";
+      const dataLength = (call.callData.length / 2 - 1)
+        .toString(16)
+        .padStart(64, "0");
       encoded += dataLength;
       encoded += call.callData.slice(2);
       const padding = (32 - ((call.callData.length / 2 - 1) % 32)) % 32;
       encoded += "0".repeat(padding * 2);
     }
-    
+
     return `0x${encoded}` as Hex;
   }
-  
+
   return "0x" as Hex;
 }
 
-export function decodeFunctionData(params: { abi: any; data: Hex }): { args: any[] } {
+export function decodeFunctionData(params: { abi: any; data: Hex }): {
+  args: any[];
+} {
   const data = params.data;
   if (!data || data.length < 10) return { args: [] };
-  
+
   const methodId = data.slice(0, 10);
   const methodSignatures: Record<string, string> = {
     "0x41976e09": "getPrice",
-    "0xf7888aec": "getPriceUnsafe", 
+    "0xf7888aec": "getPriceUnsafe",
     "0x45a7c7e8": "getPriceNoOlderThan",
     "0x42c84d10": "getEmaPrice",
     "0xd1a8b23f": "getEmaPriceUnsafe",
-    "0x9a7b2b7f": "getEmaPriceNoOlderThan"
+    "0x9a7b2b7f": "getEmaPriceNoOlderThan",
   };
-  
+
   if (methodSignatures[methodId]) {
     const priceId = data.slice(10, 74);
     return { args: [`0x${priceId}`] };
   }
-  
+
   return { args: [] };
 }
 
@@ -90,29 +109,30 @@ interface TraceCallResult {
   input?: string;
 }
 
-async function traceCall(client: PublicClient, params: any): Promise<TraceCallResult> {
+async function traceCall(
+  client: PublicClient,
+  params: any,
+): Promise<TraceCallResult> {
   try {
     if (client.request) {
       const result = await client.request({
-        method: 'debug_traceCall',
-        params: [
-          params,
-          'latest',
-          { tracer: 'callTracer' }
-        ]
+        method: "debug_traceCall",
+        params: [params, "latest", { tracer: "callTracer" }],
       });
       return result as TraceCallResult;
     }
-    
+
     const mockTrace: TraceCallResult = {
       to: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
-      input: "0xf7888aec0000000000000000000000000000000000000000000000000000000000000001",
+      input:
+        "0xf7888aec0000000000000000000000000000000000000000000000000000000000000001",
       calls: [
         {
           to: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
-          input: "0xf7888aec0000000000000000000000000000000000000000000000000000000000000001"
-        }
-      ]
+          input:
+            "0xf7888aec0000000000000000000000000000000000000000000000000000000000000001",
+        },
+      ],
     };
     return mockTrace;
   } catch (error) {
@@ -135,13 +155,13 @@ class HermesClient {
   }
 
   async getLatestPriceUpdates(
-    priceIds: string[], 
-    options?: { encoding?: string }
+    priceIds: string[],
+    options?: { encoding?: string },
   ): Promise<PriceUpdate> {
-    const url = new URL('/v2/updates/price/latest', this.endpoint);
-    priceIds.forEach(id => url.searchParams.append('ids[]', id));
+    const url = new URL("/v2/updates/price/latest", this.endpoint);
+    priceIds.forEach((id) => url.searchParams.append("ids[]", id));
     if (options?.encoding) {
-      url.searchParams.set('encoding', options.encoding);
+      url.searchParams.set("encoding", options.encoding);
     }
 
     const response = await fetch(url.toString());
@@ -198,7 +218,8 @@ const MULTICALL3_ABI = parseAbi([
   "function aggregate(Call[] calldata calls) external payable returns (uint256 blockNumber, bytes[] memory returnData)",
 ]);
 
-const MULTICALL3_ADDRESS: Address = "0xcA11bde05977b3631167028862bE2a173976CA11";
+const MULTICALL3_ADDRESS: Address =
+  "0xcA11bde05977b3631167028862bE2a173976CA11";
 
 export class TransactionFiller {
   private config: TransactionFillerConfig;
@@ -213,7 +234,7 @@ export class TransactionFiller {
   }
 
   async fillTransaction(
-    transaction: TransactionContent
+    transaction: TransactionContent,
   ): Promise<FilledTransactionResult> {
     const detectedPriceFeeds = new Set<Hex>();
     let currentTransaction = transaction;
@@ -222,9 +243,9 @@ export class TransactionFiller {
 
     while (iterations < maxIterations) {
       iterations++;
-      
+
       const newPriceFeeds = await this.detectPythUsage(currentTransaction);
-      
+
       if (newPriceFeeds.length === 0) {
         break;
       }
@@ -242,22 +263,24 @@ export class TransactionFiller {
       }
 
       const priceUpdateData = await this.fetchPriceUpdates(
-        Array.from(detectedPriceFeeds)
+        Array.from(detectedPriceFeeds),
       );
 
       currentTransaction = await this.createBundledTransaction(
         transaction,
-        priceUpdateData
+        priceUpdateData,
       );
     }
 
-    const finalPriceUpdateData = detectedPriceFeeds.size > 0 
-      ? await this.fetchPriceUpdates(Array.from(detectedPriceFeeds))
-      : [];
+    const finalPriceUpdateData =
+      detectedPriceFeeds.size > 0
+        ? await this.fetchPriceUpdates(Array.from(detectedPriceFeeds))
+        : [];
 
-    const finalTransaction = detectedPriceFeeds.size > 0
-      ? await this.createBundledTransaction(transaction, finalPriceUpdateData)
-      : transaction;
+    const finalTransaction =
+      detectedPriceFeeds.size > 0
+        ? await this.createBundledTransaction(transaction, finalPriceUpdateData)
+        : transaction;
 
     return {
       transaction: finalTransaction,
@@ -267,7 +290,9 @@ export class TransactionFiller {
     };
   }
 
-  private async detectPythUsage(transaction: TransactionContent): Promise<Hex[]> {
+  private async detectPythUsage(
+    transaction: TransactionContent,
+  ): Promise<Hex[]> {
     try {
       const trace = await traceCall(this.config.viemClient, {
         ...transaction,
@@ -275,7 +300,7 @@ export class TransactionFiller {
       });
 
       const priceFeeds = new Set<Hex>();
-      
+
       this.extractPriceFeedsFromTrace(trace, priceFeeds);
 
       return Array.from(priceFeeds);
@@ -285,10 +310,15 @@ export class TransactionFiller {
     }
   }
 
-  private extractPriceFeedsFromTrace(trace: TraceCallResult, priceFeeds: Set<Hex>): void {
+  private extractPriceFeedsFromTrace(
+    trace: TraceCallResult,
+    priceFeeds: Set<Hex>,
+  ): void {
     if (!trace) return;
 
-    if (trace.to?.toLowerCase() === this.config.pythContractAddress.toLowerCase()) {
+    if (
+      trace.to?.toLowerCase() === this.config.pythContractAddress.toLowerCase()
+    ) {
       const feedId = this.extractPriceFeedFromCall(trace.input as Hex);
       if (feedId) {
         priceFeeds.add(feedId);
@@ -325,11 +355,11 @@ export class TransactionFiller {
     if (priceFeeds.length === 0) return [];
 
     try {
-      const priceIds = priceFeeds.map(feed => feed.slice(2));
+      const priceIds = priceFeeds.map((feed) => feed.slice(2));
       const response = await this.hermesClient.getLatestPriceUpdates(priceIds, {
         encoding: "hex",
       });
-      
+
       return response.binary.data.map((update: string) => `0x${update}` as Hex);
     } catch (error) {
       console.warn("Failed to fetch price updates:", error);
@@ -339,7 +369,7 @@ export class TransactionFiller {
 
   private async createBundledTransaction(
     originalTransaction: TransactionContent,
-    priceUpdateData: Hex[]
+    priceUpdateData: Hex[],
   ): Promise<TransactionContent> {
     if (priceUpdateData.length === 0) {
       return originalTransaction;
@@ -378,7 +408,7 @@ export class TransactionFiller {
 
 export async function fillTransactionWithPythData(
   config: TransactionFillerConfig,
-  transaction: TransactionContent
+  transaction: TransactionContent,
 ): Promise<FilledTransactionResult> {
   const filler = new TransactionFiller(config);
   return filler.fillTransaction(transaction);
