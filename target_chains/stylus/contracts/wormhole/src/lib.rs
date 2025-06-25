@@ -296,7 +296,6 @@ impl WormholeContract {
 
     fn verify_vm(&self, vaa: &VerifiedVM) -> Result<(), WormholeError> {
 
-        // println!("checkpoint 1: {:?}", vaa);
         let guardian_set = self.get_gs_internal(vaa.guardian_set_index)?;
         if vaa.guardian_set_index != self.current_guardian_set_index.get().try_into().unwrap_or(0u32)
             && guardian_set.expiration_time > 0 {
@@ -1177,7 +1176,6 @@ mod tests {
 
         let test_vaa = create_vaa_bytes("AQAAAAQNAInUwKI1ItLfYeLaAibn9oXaouTs9BL3Aa9DKCFWrLu0KDaQQMQJlih0Qh7l7yH2o6kD/g9RCmRwZJ6q0OZE0t4AArCSH1wpX04N1U59tQmss2xXZilimAMKlogp7ErAhAo0LFkDogqB74+2By9rm3P5OUWlbC0lrFNut5CQQV38DGsAAxO+1nUTUc842P2afDSjdWcmjvJl2s8secQzuiW8zrdgPpbzhzWsiYXizLQBRKigDS8pWGD4vRk0fuR8H/ZkO/0BBOmDobl1BLNJx7+Pt+NWfuOUBipVFIXGxI9b3vxxH0BIec8hhxDN4m2Pd2I0klGEXKhv9plcR7VlzAsaC7ZE7QIABh4ff66tP7EHdVfZR4mTzv5B97agMcSB1eDeijpyl9JuBhbMupw7nExZNnZag/x2k6AUEWnQnfp8AoaCK7Av+icAB2Ouk9mPd1ybyju39Q8m7GMevt2f1nHVyWVsPRzdEcCuAbzjh5137DCLzVWuFUujTQJ7IJiznQb6cm2Ljk3WOXUACMa/JwRdpVKZf6eTD6O6tivqhdhMtbijlPBZX/kgVKk5Xuyv3h1SRTrNCwkMg5XOWegnCbXqjbUlo+F3qTjCalQBCxfp1itJskZmv+SXA47QivURKWzGa3mntNh0vcAXYi8FeChvoUYmfYpejmBlOkD1I73pmUsyrbYbetHa7qFu3eoBDZScdyrWp2dS5Y9L4b0who/PncVp5oFs/4J8ThHNQoXWXvys+nUc2aM+E+Fwazo2ODdI8XZz9YOGf/ZfE6iXFBYBDgckow8Nb2QD//C6MfP2Bz8zftqvt+D6Dko7v/Inb2OtCj342yjrxcvAMlCQ6lYoTIAMNemzNoqlfNyDMdB9yKoAEKebRtCm8QZSjLQ5uPk8aoQpmNwCpLhiHuzh2fqH55fcQrE6/KFttfw7VzeGUE7k3PF6xIMq0BPr3vkG2MedIh8BEQvpmYK4fChLY5JG26Kk6KuZ1eCkJAOQgdSjWasAvNgsSIlsb5mFjIkGwK9j20svLSl+OJ7I0olefXcZ2JywjgYAEu1jITMLHCMR1blXENulhApdhMfTef1aQ/USMqRVWNigausEzq49Hi2GtcQzHmZuhgnhBZEnjq9K8jsZwJk59iwBaFxZegAAAAAAATTNxrJiPzbWCugg6Vtg92ToHsLNO1e3fj+OJd3UOsNzAAAAAAATpFIAAVE6cNLnZT2Noq5nJ4VNRSf2KrRBNrlimFaXauHv3efDAAFm5RiKEwih25C20x8/vcqMPfJnjIES3909GSxaPMRXqAAAAAAAAAAAAAAAAFxIFHGlrpnuxd5M5WePQalLpUyHAB4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALFcwAAAAAAAAAAAAAAAAaFxdzQAAAAAAAAAAAAAAAK3MabLDE8LWvGN6+AdUvFHJdm5RAAMAAAAAAAAAAAAAAADf0SJhChSsEtk0iYwC2+wfcnCBFg==");
         let result = contract.parse_and_verify_vm(test_vaa);
-        println!("result: {:?}", result);
         assert!(result.is_err());
     }
 
@@ -1189,8 +1187,6 @@ mod tests {
 
         let _ = contract.initialize(guardians.clone(), 3, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
         let test_vaa = create_vaa_bytes("AQAAAAQNAInUwKI1ItLfYeLaAibn9oXaouTs9BL3Aa9DKCFWrLu0KDaQQMQJlih0Qh7l7yH2o6kD/g9RCmRwZJ6q0OZE0t4AArCSH1wpX04N1U59tQmss2xXZilimAMKlogp7ErAhAo0LFkDogqB74+2By9rm3P5OUWlbC0lrFNut5CQQV38DGsAAxO+1nUTUc842P2afDSjdWcmjvJl2s8secQzuiW8zrdgPpbzhzWsiYXizLQBRKigDS8pWGD4vRk0fuR8H/ZkO/0BBOmDobl1BLNJx7+Pt+NWfuOUBipVFIXGxI9b3vxxH0BIec8hhxDN4m2Pd2I0klGEXKhv9plcR7VlzAsaC7ZE7QIABh4ff66tP7EHdVfZR4mTzv5B97agMcSB1eDeijpyl9JuBhbMupw7nExZNnZag/x2k6AUEWnQnfp8AoaCK7Av+icAB2Ouk9mPd1ybyju39Q8m7GMevt2f1nHVyWVsPRzdEcCuAbzjh5137DCLzVWuFUujTQJ7IJiznQb6cm2Ljk3WOXUACMa/JwRdpVKZf6eTD6O6tivqhdhMtbijlPBZX/kgVKk5Xuyv3h1SRTrNCwkMg5XOWegnCbXqjbUlo+F3qTjCalQBCxfp1itJskZmv+SXA47QivURKWzGa3mntNh0vcAXYi8FeChvoUYmfYpejmBlOkD1I73pmUsyrbYbetHa7qFu3eoBDZScdyrWp2dS5Y9L4b0who/PncVp5oFs/4J8ThHNQoXWXvys+nUc2aM+E+Fwazo2ODdI8XZz9YOGf/ZfE6iXFBYBDgckow8Nb2QD//C6MfP2Bz8zftqvt+D6Dko7v/Inb2OtCj342yjrxcvAMlCQ6lYoTIAMNemzNoqlfNyDMdB9yKoAEKebRtCm8QZSjLQ5uPk8aoQpmNwCpLhiHuzh2fqH55fcQrE6/KFttfw7VzeGUE7k3PF6xIMq0BPr3vkG2MedIh8BEQvpmYK4fChLY5JG26Kk6KuZ1eCkJAOQgdSjWasAvNgsSIlsb5mFjIkGwK9j20svLSl+OJ7I0olefXcZ2JywjgYAEu1jITMLHCMR1blXENulhApdhMfTef1aQ/USMqRVWNigausEzq49Hi2GtcQzHmZuhgnhBZEnjq9K8jsZwJk59iwBaFxZegAAAAAAATTNxrJiPzbWCugg6Vtg92ToHsLNO1e3fj+OJd3UOsNzAAAAAAATpFIAAVE6cNLnZT2Noq5nJ4VNRSf2KrRBNrlimFaXauHv3efDAAFm5RiKEwih25C20x8/vcqMPfJnjIES3909GSxaPMRXqAAAAAAAAAAAAAAAAFxIFHGlrpnuxd5M5WePQalLpUyHAB4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALFcwAAAAAAAAAAAAAAAAaFxdzQAAAAAAAAAAAAAAAK3MabLDE8LWvGN6+AdUvFHJdm5RAAMAAAAAAAAAAAAAAADf0SJhChSsEtk0iYwC2+wfcnCBFg==");
-        
-        println!("test_vaa: {:?}", test_vaa);
 
         let result1 = contract.parse_and_verify_vm(test_vaa.clone());
         assert!(result1.is_err());
@@ -1205,7 +1201,6 @@ mod tests {
         assert_eq!(current_guardian_set_idx, 4);
 
         let result2 = contract.parse_and_verify_vm(test_vaa.clone());
-        println!("{:?}", result2);
         assert!(result2.is_ok());
     }
 
