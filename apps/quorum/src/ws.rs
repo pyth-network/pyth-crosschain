@@ -54,6 +54,7 @@ async fn websocket_handler(state: axum::extract::State<State>, stream: WebSocket
 #[derive(Clone, PartialEq, Debug)]
 pub enum UpdateEvent {
     NewVaa(Vec<u8>),
+    Ping,
 }
 
 pub type SubscriberId = usize;
@@ -117,8 +118,7 @@ impl Subscriber {
                     return Err(anyhow!("Subscriber did not respond to ping. Closing connection."));
                 }
                 self.responded_to_ping = false;
-                self.sender.send(Message::Ping(vec![].into())).await?;
-                Ok(())
+                self.handle_update(UpdateEvent::Ping).await
             },
             _ = wait_for_exit() => {
                 self.sender.close().await?;
@@ -134,13 +134,35 @@ impl Subscriber {
     }
 
     async fn handle_update(&mut self, event: UpdateEvent) -> Result<()> {
-        match event.clone() {
-            UpdateEvent::NewVaa(vaa) => self.handle_new_vaa(vaa).await,
-        }
+        let start = std::time::Instant::now();
+        let update_name;
+        let result = match event.clone() {
+            UpdateEvent::NewVaa(vaa) => {
+                update_name = "new_vaa";
+                self.handle_new_vaa(vaa).await
+            }
+            UpdateEvent::Ping => {
+                update_name = "ping";
+                self.sender.send(Message::Ping(vec![].into())).await?;
+                Ok(())
+            }
+        };
+        let status = match &result {
+            Ok(_) => "success",
+            Err(_) => "error",
+        };
+        let label = [("status", status), ("name", update_name)];
+        metrics::counter!("ws_server_update_total", &label).increment(1);
+        metrics::histogram!("ws_server_update_duration_seconds", &label,)
+            .record(start.elapsed().as_secs_f64());
+        result
     }
 
     async fn handle_client_message(&mut self, message: Message) -> Result<()> {
-        match message {
+        let start = std::time::Instant::now();
+        let message_type;
+
+        let result: anyhow::Result<()> = match message {
             Message::Close(_) => {
                 // Closing the connection. We don't remove it from the subscribers
                 // list, instead when the Subscriber struct is dropped the channel
@@ -149,15 +171,39 @@ impl Subscriber {
                 // Send the close message to gracefully shut down the connection
                 // Otherwise the client might get an abnormal Websocket closure
                 // error.
+                message_type = "close";
                 self.sender.close().await?;
                 self.closed = true;
-                return Ok(());
+                Ok(())
             }
-            Message::Text(_) => {}
-            Message::Binary(_) => {}
-            Message::Ping(_) => {}
-            Message::Pong(_) => self.responded_to_ping = true,
+            Message::Text(_) => {
+                message_type = "text";
+                Ok(())
+            }
+            Message::Binary(_) => {
+                message_type = "binary";
+                Ok(())
+            }
+            Message::Ping(_) => {
+                message_type = "ping";
+                Ok(())
+            }
+            Message::Pong(_) => {
+                message_type = "pong";
+                self.responded_to_ping = true;
+                Ok(())
+            }
         };
-        Ok(())
+
+        let status = match &result {
+            Ok(_) => "success",
+            Err(_) => "error",
+        };
+        let label = [("status", status), ("message_type", message_type)];
+        metrics::counter!("ws_client_message_total", &label).increment(1);
+        metrics::histogram!("ws_client_message_duration_seconds", &label,)
+            .record(start.elapsed().as_secs_f64());
+
+        result
     }
 }
