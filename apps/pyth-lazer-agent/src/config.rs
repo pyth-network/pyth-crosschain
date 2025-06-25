@@ -12,6 +12,7 @@ use url::Url;
 pub struct Config {
     pub listen_address: SocketAddr,
     pub relayer_urls: Vec<Url>,
+    pub authorization_token: Option<String>,
     #[derivative(Debug = "ignore")]
     pub publish_keypair_path: PathBuf,
     #[serde(with = "humantime_serde", default = "default_publish_interval")]
