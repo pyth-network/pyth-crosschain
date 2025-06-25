@@ -1,6 +1,9 @@
 "use client";
 
-import { getEvmChainRpcUrl, getAllEvmChainsIds } from "@pythnetwork/contract-manager/utils/utils";
+import {
+  getEvmChainRpcUrl,
+  getAllEvmChainsIds,
+} from "@pythnetwork/contract-manager/utils/utils";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { useTheme } from "next-themes";
@@ -8,12 +11,11 @@ import type { ReactNode } from "react";
 import * as chains from "viem/chains";
 import { WagmiProvider, createConfig, http, useChainId } from "wagmi";
 
-
 import { metadata } from "../../metadata";
 
-const CHAINS = getAllEvmChainsIds.map((id) =>
-  Object.values(chains).find((chain) => chain.id === id),
-).filter((chain) => chain !== undefined) as unknown as readonly [
+const CHAINS = getAllEvmChainsIds
+  .map((id) => Object.values(chains).find((chain) => chain.id === id))
+  .filter((chain) => chain !== undefined) as unknown as readonly [
   chains.Chain,
   ...chains.Chain[],
 ];
@@ -33,7 +35,6 @@ const TRANSPORTS = Object.fromEntries(
 // const TRANSPORTS = Object.fromEntries(
 //   chainEntries.filter((entry): entry is [number, ReturnType<typeof http>] => entry !== undefined)
 // ) as Record<number, ReturnType<typeof http>>;
-
 
 type EvmProviderProps = {
   children: ReactNode;

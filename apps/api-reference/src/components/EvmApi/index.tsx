@@ -251,7 +251,8 @@ export const EvmApi = <ParameterName extends string>({
                       ? {
                           name: currentChain.name,
                           rpcUrl: currentChain.rpcUrls.default.http[0] ?? "",
-                          contractAddress: getEvmPriceFeedContractAddress(chainId) ?? "",
+                          contractAddress:
+                            getEvmPriceFeedContractAddress(chainId) ?? "",
                         }
                       : { name: "", rpcUrl: "", contractAddress: "" },
                     paramValues,
