@@ -2,6 +2,7 @@ use {
     crate::{
         api::BlockchainState,
         chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
+        config::KeeperConfig,
         eth_utils::utils::EscalationPolicy,
         history::History,
         keeper::{
@@ -45,7 +46,7 @@ pub struct ProcessParams {
     pub gas_limit: U256,
     pub escalation_policy: EscalationPolicy,
     pub chain_state: BlockchainState,
-    pub keeper_config: crate::config::KeeperConfig,
+    pub keeper_config: KeeperConfig,
     pub metrics: Arc<KeeperMetrics>,
     pub history: Arc<History>,
     pub fulfilled_requests_cache: Arc<RwLock<HashSet<u64>>>,

@@ -35,6 +35,8 @@ pub async fn process_event_with_backoff(
         return Ok(());
     }
 
+    // Check if we are the primary replica for this request.
+    // If not, we will wait for a delay before processing the request.
     let is_primary_replica =
         if let Some(replica_config) = &process_param.keeper_config.replica_config {
             let assigned_replica = event.sequence_number % replica_config.total_replicas;
@@ -66,6 +68,8 @@ pub async fn process_event_with_backoff(
             .await;
         }
 
+        // Check if the request is still open after the delay.
+        // If it is, we will process it as a backup replica.
         match chain_state
             .contract
             .get_request(event.provider_address, event.sequence_number)
@@ -88,9 +92,8 @@ pub async fn process_event_with_backoff(
                 tracing::warn!(
                     sequence_number = event.sequence_number,
                     error = ?e,
-                    "Error checking request status after delay, skipping"
+                    "Error checking request status after delay, processing as backup replica"
                 );
-                return Ok(());
             }
         }
     }

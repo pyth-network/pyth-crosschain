@@ -47,8 +47,6 @@ chains:
     # blocks after 5 blocks, then again after 10 blocks, and finally after 20 blocks.
     block_delays: [5, 10, 20]
 
-
-
     # Historical commitments -- delete this block for local development purposes
     commitments:
       # prettier-ignore
@@ -88,8 +86,8 @@ keeper:
     value: 0xabcd
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
-# Multi-replica configuration documentation
 
+  # Multi-replica configuration
   # Optional: Multi-replica configuration for high availability and load distribution
   # Uncomment and configure for production deployments with multiple Fortuna instances
   # replica_config:
@@ -98,7 +96,7 @@ keeper:
   #   backup_delay_seconds: 30   # Seconds to wait before processing other replicas' requests
   #
   # Example configurations:
-  # 
+  #
   # Two-replica setup (Blue/Green):
   # - Replica 0: handles even sequence numbers (0, 2, 4, ...)
   # - Replica 1: handles odd sequence numbers (1, 3, 5, ...)

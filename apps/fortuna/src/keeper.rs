@@ -56,7 +56,7 @@ pub enum RequestState {
 /// handle any events for the new blocks.
 #[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.id))]
 pub async fn run_keeper_threads(
-    private_key: String,
+    keeper_config: crate::config::KeeperConfig,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -66,6 +66,11 @@ pub async fn run_keeper_threads(
     tracing::info!("Starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("Latest safe block: {}", &latest_safe_block);
+
+    let private_key = keeper_config
+        .private_key
+        .load()?
+        .ok_or(anyhow::anyhow!("Keeper private key must be provided"))?;
 
     let contract = Arc::new(InstrumentedSignablePythContract::from_config(
         &chain_eth_config,
@@ -85,13 +90,7 @@ pub async fn run_keeper_threads(
         contract: contract.clone(),
         gas_limit,
         escalation_policy: chain_eth_config.escalation_policy.to_policy(),
-        keeper_config: crate::config::KeeperConfig {
-            private_key: crate::config::SecretString {
-                value: None,
-                file: None,
-            },
-            replica_config: None,
-        },
+        keeper_config,
         metrics: metrics.clone(),
         fulfilled_requests_cache,
         history,

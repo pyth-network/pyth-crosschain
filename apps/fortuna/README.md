@@ -17,6 +17,11 @@ a database to be available at build time. Create a `.env` file in the root of th
 DATABASE_URL="sqlite:fortuna.db?mode=rwc"
 ```
 
+Install sqlx for cargo with:
+```bash
+cargo install sqlx
+```
+
 Next, you need to create the database and apply the schema migrations. You can do this by running:
 
 ```bash
@@ -62,7 +67,7 @@ keeper:
     total_replicas: 2
     backup_delay_seconds: 30
 
-# Replica 1 (Green) - handles odd sequence numbers (1, 3, 5, ...)  
+# Replica 1 (Green) - handles odd sequence numbers (1, 3, 5, ...)
 keeper:
   replica_config:
     replica_id: 1
@@ -77,7 +82,7 @@ keeper:
   replica_config:
     replica_id: 0
     total_replicas: 3
-    backup_delay_seconds: 45
+    backup_delay_seconds: 30
 ```
 
 ### Deployment Considerations
