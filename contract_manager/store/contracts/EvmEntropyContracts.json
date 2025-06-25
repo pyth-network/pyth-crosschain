@@ -1,20 +1,5 @@
 [
   {
-    "chain": "lightlink_pegasus_testnet",
-    "address": "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "chiliz_spicy",
-    "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "mode_testnet",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
-    "type": "EvmEntropyContract"
-  },
-  {
     "chain": "arbitrum_sepolia",
     "address": "0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440",
     "type": "EvmEntropyContract"
@@ -22,16 +7,6 @@
   {
     "chain": "blast_s2_testnet",
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "lightlink_phoenix",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "chiliz",
-    "address": "0x0708325268dF9F66270F1401206434524814508b",
     "type": "EvmEntropyContract"
   },
   {
@@ -55,23 +30,8 @@
     "type": "EvmEntropyContract"
   },
   {
-    "chain": "mode",
-    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
-    "type": "EvmEntropyContract"
-  },
-  {
     "chain": "blast",
     "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "zetachain_testnet",
-    "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "zetachain",
-    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "type": "EvmEntropyContract"
   },
   {
@@ -80,28 +40,8 @@
     "type": "EvmEntropyContract"
   },
   {
-    "chain": "taiko_hekla",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
-    "type": "EvmEntropyContract"
-  },
-  {
     "chain": "sei_evm_mainnet",
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "merlin",
-    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "taiko_mainnet",
-    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
-    "type": "EvmEntropyContract"
-  },
-  {
-    "chain": "merlin_testnet",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmEntropyContract"
   },
   {
