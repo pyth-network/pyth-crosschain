@@ -14,7 +14,7 @@ use wormhole_sdk::{vaa::Signature, GuardianSetInfo};
 
 use crate::{
     api::{self},
-    metrics_server::{self, setup_metrics_recorder},
+    metrics_server::{self, metric_collector, setup_metrics_recorder},
     pythnet::fetch_guardian_set,
     ws::WsState,
 };
@@ -181,6 +181,15 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
             run_options.clone(),
             state.clone()
         )),
+        metric_collector("state".to_string(), || {
+            let state = state.clone();
+            async move {
+                let verification = state.verification.read().await;
+                metrics::gauge!("state_verifications_total").set(verification.len() as f64);
+                metrics::gauge!("state_verified_observations_total")
+                    .set(verification.values().flatten().count() as f64);
+            }
+        }),
     );
 
     Ok(())

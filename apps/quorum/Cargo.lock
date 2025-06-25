@@ -2760,7 +2760,7 @@ dependencies = [
 
 [[package]]
 name = "quorum"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -2770,6 +2770,7 @@ dependencies = [
  "futures",
  "hex",
  "lazy_static",
+ "metrics",
  "secp256k1",
  "serde",
  "serde_json",

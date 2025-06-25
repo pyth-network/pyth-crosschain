@@ -1,3 +1,5 @@
+use std::{future::Future, time::Duration};
+
 use axum::{routing::get, Router};
 use axum_prometheus::{
     metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle},
@@ -16,6 +18,27 @@ pub fn setup_metrics_recorder() -> anyhow::Result<PrometheusHandle> {
         .set_buckets(DEFAULT_METRICS_BUCKET)?
         .install_recorder()
         .map_err(|err| anyhow::anyhow!("Failed to set up metrics recorder: {:?}", err))
+}
+
+const METRIC_COLLECTION_INTERVAL: Duration = Duration::from_secs(1);
+pub async fn metric_collector<F, Fut>(service_name: String, update_metrics: F)
+where
+    F: Fn() -> Fut,
+    Fut: Future<Output = ()> + Send + 'static,
+{
+    let mut metric_interval = tokio::time::interval(METRIC_COLLECTION_INTERVAL);
+    loop {
+        tokio::select! {
+            _ = metric_interval.tick() => {
+                update_metrics().await;
+            }
+            _ = wait_for_exit() => {
+                tracing::info!("Received exit signal, stopping metric collector for {}...", service_name);
+                break;
+            }
+        }
+    }
+    tracing::info!("Shutting down metric collector for {}...", service_name);
 }
 
 pub async fn run(run_options: RunOptions, state: State) -> anyhow::Result<()> {
