@@ -97,6 +97,10 @@ where
             observed_vaa_seqs.pop_first();
         }
 
+        observed_vaa_seqs.insert(sequence);
+        // Drop the lock to allow other threads to access the state.
+        drop(observed_vaa_seqs);
+
         // Hand the VAA to the aggregate store.
         match Aggregates::store_update(self, Update::Vaa(vaa_bytes)).await {
             Ok(is_stored) => is_stored,
