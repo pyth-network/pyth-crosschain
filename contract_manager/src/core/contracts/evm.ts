@@ -7,7 +7,6 @@ import { WormholeContract } from "./wormhole";
 import { TokenQty } from "../token";
 import {
   EXECUTOR_ABI,
-  EXPRESS_RELAY_ABI,
   EXTENDED_ENTROPY_ABI,
   EXTENDED_PYTH_ABI,
   WORMHOLE_ABI,
