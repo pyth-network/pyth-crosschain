@@ -20,9 +20,6 @@ function createPublicClient(config: {
     async getChainId() {
       return config.chain.id;
     },
-    async request() {
-      return {};
-    },
   } as PublicClient;
 }
 

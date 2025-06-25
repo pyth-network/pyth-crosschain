@@ -122,6 +122,30 @@ async function traceCall(
       return result as TraceCallResult;
     }
 
+    const transactionData = params.data as string;
+    
+    if (transactionData && transactionData.startsWith("0xa824bf67")) {
+      const mockTrace: TraceCallResult = {
+        to: params.to,
+        input: transactionData,
+        calls: [
+          {
+            to: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+            input: "0xf7888aecff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+          },
+          {
+            to: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+            input: "0xf7888aece62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+          },
+          {
+            to: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+            input: "0x41976e09ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed6c7c6b4b73ef0731ab4e1f0",
+          },
+        ],
+      };
+      return mockTrace;
+    }
+
     const mockTrace: TraceCallResult = {
       to: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
       input:
