@@ -185,8 +185,8 @@ pub async fn run(run_options: RunOptions) -> anyhow::Result<()> {
             let state = state.clone();
             async move {
                 let verification = state.verification.read().await;
-                metrics::gauge!("state_verifications_total").set(verification.len() as f64);
-                metrics::gauge!("state_verified_observations_total")
+                metrics::gauge!("pending_vaas").set(verification.len() as f64);
+                metrics::gauge!("pending_verified_observations")
                     .set(verification.values().flatten().count() as f64);
             }
         }),

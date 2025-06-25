@@ -142,6 +142,11 @@ async fn handle_observation(
         state.guardian_set.clone(),
         state.observation_lifetime,
     )?;
+    metrics::counter!(
+        "verified_observations_total",
+        &[("gaurdian_index", verifier_index.to_string())]
+    )
+    .increment(1);
     let new_signature = Signature {
         signature: params.signature,
         index: verifier_index.try_into()?,
