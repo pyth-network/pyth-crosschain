@@ -10,21 +10,39 @@ use std::collections::HashMap;
 
 #[async_trait]
 pub trait GetChainPrices {
-    async fn get_price_unsafe(
+    async fn get_all_prices_for_subscription(
         &self,
         subscription_id: SubscriptionId,
-        feed_id: &PriceId,
-    ) -> Result<Option<Price>>;
+    ) -> Result<Vec<Price>>;
+
+    async fn get_prices_for_subscription(
+        &self,
+        subscription_id: SubscriptionId,
+        price_ids: &Vec<PriceId>,
+    ) -> Result<Vec<Price>>;
 }
 
 #[async_trait]
 impl<M: Middleware + 'static> GetChainPrices for PythPulse<M> {
-    async fn get_price_unsafe(
+    async fn get_all_prices_for_subscription(
         &self,
-        _subscription_id: SubscriptionId,
-        _feed_id: &PriceId,
-    ) -> Result<Option<Price>> {
-        todo!()
+        subscription_id: SubscriptionId,
+    ) -> Result<Vec<Price>> {
+        let price_ids = self.get_prices_unsafe(subscription_id, vec![]).await?;
+        Ok(price_ids.into_iter().map(From::from).collect())
+    }
+    async fn get_prices_for_subscription(
+        &self,
+        subscription_id: SubscriptionId,
+        price_ids: &Vec<PriceId>,
+    ) -> Result<Vec<Price>> {
+        let price_ids = self
+            .get_prices_unsafe(
+                subscription_id,
+                price_ids.into_iter().map(|id| id.to_bytes()).collect(),
+            )
+            .await?;
+        Ok(price_ids.into_iter().map(From::from).collect())
     }
 }
 #[async_trait]
