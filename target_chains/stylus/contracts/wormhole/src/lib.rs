@@ -131,11 +131,6 @@ impl WormholeContract {
         if self.initialized.get() {
             return Err(WormholeError::AlreadyInitialized.into());
         }
-
-        if initial_guardians.is_empty() {
-            return Err(WormholeError::InvalidInput.into());
-        }
-
         self.current_guardian_set_index.set(U256::from(initial_guardian_set_index));
         self.chain_id.set(U256::from(chain_id));
         self.governance_chain_id.set(U256::from(governance_chain_id));
@@ -282,7 +277,7 @@ impl WormholeContract {
 
         let payload = encoded_vaa[cursor..].to_vec();
 
-        let hash = Self::hash_static(&encoded_vaa[cursor - 51..])?;
+        let hash = keccak256(&encoded_vaa[cursor - 51..]);
 
         Ok(VerifiedVM {
             version,
@@ -348,13 +343,6 @@ impl WormholeContract {
         }
 
         Ok(())
-    }
-
-
-
-    fn hash_static(body: &[u8]) -> Result<FixedBytes<32>, WormholeError> {
-        let hash = keccak256(body);
-        Ok(hash)
     }
 
     fn compute_gs_key(&self, set_index: u32, guardian_index: u8) -> U256 {
@@ -495,7 +483,7 @@ mod tests {
     use core::str::FromStr;
     use k256::ecdsa::SigningKey;
     use stylus_sdk::alloy_primitives::keccak256;
-
+    
     #[cfg(test)]
     use base64::engine::general_purpose;
     #[cfg(test)]
@@ -538,7 +526,7 @@ mod tests {
             0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
         ]
     }
-
+    
     #[cfg(test)]
     fn current_guardians() -> Vec<Address> {
         vec![
@@ -629,7 +617,7 @@ mod tests {
         contract.initialize(guardians, 1, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
         contract
     }
-
+    
     #[cfg(test)]
     fn deploy_with_current_mainnet_guardians() -> WormholeContract {
         let mut contract = WormholeContract::default();
@@ -797,7 +785,7 @@ mod tests {
     #[motsu::test]
     fn test_verification_multiple_guardian_sets() {
         let mut contract = deploy_with_current_mainnet_guardians();
-
+        
         let store_result = contract.store_gs(4, current_guardians(), 0);
         if let Err(_) = store_result {
             panic!("Error deploying multiple guardian sets");
@@ -811,7 +799,7 @@ mod tests {
     #[motsu::test]
     fn test_verification_incorrect_guardian_set() {
         let mut contract = deploy_with_current_mainnet_guardians();
-
+        
         let store_result = contract.store_gs(4, mock_guardian_set13(), 0);
         if let Err(_) = store_result {
             panic!("Error deploying guardian set");
@@ -1142,7 +1130,7 @@ mod tests {
         let mut contract = WormholeContract::default();
         let guardians = current_guardians();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-
+        
         let result = contract.initialize(guardians.clone(), 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
         assert!(result.is_ok(), "Contract initialization should succeed");
     }
@@ -1201,7 +1189,7 @@ mod tests {
 
         let _ = contract.initialize(guardians.clone(), 3, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
         let test_vaa = create_vaa_bytes("AQAAAAQNAInUwKI1ItLfYeLaAibn9oXaouTs9BL3Aa9DKCFWrLu0KDaQQMQJlih0Qh7l7yH2o6kD/g9RCmRwZJ6q0OZE0t4AArCSH1wpX04N1U59tQmss2xXZilimAMKlogp7ErAhAo0LFkDogqB74+2By9rm3P5OUWlbC0lrFNut5CQQV38DGsAAxO+1nUTUc842P2afDSjdWcmjvJl2s8secQzuiW8zrdgPpbzhzWsiYXizLQBRKigDS8pWGD4vRk0fuR8H/ZkO/0BBOmDobl1BLNJx7+Pt+NWfuOUBipVFIXGxI9b3vxxH0BIec8hhxDN4m2Pd2I0klGEXKhv9plcR7VlzAsaC7ZE7QIABh4ff66tP7EHdVfZR4mTzv5B97agMcSB1eDeijpyl9JuBhbMupw7nExZNnZag/x2k6AUEWnQnfp8AoaCK7Av+icAB2Ouk9mPd1ybyju39Q8m7GMevt2f1nHVyWVsPRzdEcCuAbzjh5137DCLzVWuFUujTQJ7IJiznQb6cm2Ljk3WOXUACMa/JwRdpVKZf6eTD6O6tivqhdhMtbijlPBZX/kgVKk5Xuyv3h1SRTrNCwkMg5XOWegnCbXqjbUlo+F3qTjCalQBCxfp1itJskZmv+SXA47QivURKWzGa3mntNh0vcAXYi8FeChvoUYmfYpejmBlOkD1I73pmUsyrbYbetHa7qFu3eoBDZScdyrWp2dS5Y9L4b0who/PncVp5oFs/4J8ThHNQoXWXvys+nUc2aM+E+Fwazo2ODdI8XZz9YOGf/ZfE6iXFBYBDgckow8Nb2QD//C6MfP2Bz8zftqvt+D6Dko7v/Inb2OtCj342yjrxcvAMlCQ6lYoTIAMNemzNoqlfNyDMdB9yKoAEKebRtCm8QZSjLQ5uPk8aoQpmNwCpLhiHuzh2fqH55fcQrE6/KFttfw7VzeGUE7k3PF6xIMq0BPr3vkG2MedIh8BEQvpmYK4fChLY5JG26Kk6KuZ1eCkJAOQgdSjWasAvNgsSIlsb5mFjIkGwK9j20svLSl+OJ7I0olefXcZ2JywjgYAEu1jITMLHCMR1blXENulhApdhMfTef1aQ/USMqRVWNigausEzq49Hi2GtcQzHmZuhgnhBZEnjq9K8jsZwJk59iwBaFxZegAAAAAAATTNxrJiPzbWCugg6Vtg92ToHsLNO1e3fj+OJd3UOsNzAAAAAAATpFIAAVE6cNLnZT2Noq5nJ4VNRSf2KrRBNrlimFaXauHv3efDAAFm5RiKEwih25C20x8/vcqMPfJnjIES3909GSxaPMRXqAAAAAAAAAAAAAAAAFxIFHGlrpnuxd5M5WePQalLpUyHAB4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALFcwAAAAAAAAAAAAAAAAaFxdzQAAAAAAAAAAAAAAAK3MabLDE8LWvGN6+AdUvFHJdm5RAAMAAAAAAAAAAAAAAADf0SJhChSsEtk0iYwC2+wfcnCBFg==");
-
+        
         println!("test_vaa: {:?}", test_vaa);
 
         let result1 = contract.parse_and_verify_vm(test_vaa.clone());
@@ -1221,5 +1209,5 @@ mod tests {
         assert!(result2.is_ok());
     }
 
-
+    
 }
