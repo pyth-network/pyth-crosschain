@@ -1,6 +1,14 @@
 export { EvmPriceServiceConnection } from "./EvmPriceServiceConnection";
 
 export {
+  TransactionFiller,
+  fillTransactionWithPythData,
+  type TransactionFillerConfig,
+  type TransactionContent,
+  type FilledTransactionResult,
+} from "./TransactionFiller";
+
+export {
   DurationInMs,
   HexString,
   Price,

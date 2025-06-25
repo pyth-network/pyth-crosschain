@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-evm-js",
-  "version": "1.83.0",
+  "version": "1.84.0",
   "description": "Pyth Network EVM Utils in JS",
   "homepage": "https://pyth.network",
   "author": {
@@ -24,6 +24,7 @@
     "example-client": "pnpm run build && node lib/examples/EvmPriceServiceClient.js",
     "example-relay": "pnpm run build && node lib/examples/EvmRelay.js",
     "example-benchmark": "pnpm run build && node lib/examples/EvmBenchmark.js",
+    "example-transaction-filler": "pnpm run build && node -e \"require('./lib/examples/TransactionFillerExample.js').main()\"",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
@@ -57,6 +58,7 @@
   },
   "dependencies": {
     "@pythnetwork/price-service-client": "workspace:*",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "viem": "^2.21.0"
   }
 }
