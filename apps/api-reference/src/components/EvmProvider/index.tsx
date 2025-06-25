@@ -11,7 +11,7 @@ import { WagmiProvider, createConfig, http, useChainId } from "wagmi";
 
 import { metadata } from "../../metadata";
 
-const CHAINS = getAllEvmChainsIds().map((id) =>
+const CHAINS = getAllEvmChainsIds.map((id) =>
   Object.values(chains).find((chain) => chain.id === id),
 ).filter((chain) => chain !== undefined) as unknown as readonly [
   chains.Chain,

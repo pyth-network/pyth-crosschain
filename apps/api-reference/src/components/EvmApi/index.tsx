@@ -10,7 +10,7 @@ import {
   Label,
 } from "@headlessui/react";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
-import { getEvmContractAddress } from "@pythnetwork/contract-manager/utils/utils";
+import { getEvmPriceFeedContractAddress } from "@pythnetwork/contract-manager/utils/utils";
 import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ChainIcon } from "connectkit";
@@ -251,7 +251,7 @@ export const EvmApi = <ParameterName extends string>({
                       ? {
                           name: currentChain.name,
                           rpcUrl: currentChain.rpcUrls.default.http[0] ?? "",
-                          contractAddress: getEvmContractAddress(chainId, "priceFeed"),
+                          contractAddress: getEvmPriceFeedContractAddress(chainId) ?? "",
                         }
                       : { name: "", rpcUrl: "", contractAddress: "" },
                     paramValues,
@@ -294,7 +294,11 @@ const Example = <ParameterName extends string>({
   const updateValues = useCallback(() => {
     if (typeof example.parameters === "function") {
       setError(undefined);
-      const address = getEvmContractAddress(config.state.chainId, "priceFeed");
+      const address = getEvmPriceFeedContractAddress(config.state.chainId);
+      if (!address) {
+        setError("No contract address found for this chain");
+        return;
+      }
       const params = example.parameters({
         readContract: (functionName, args) =>
           readContract(config, { abi, address, functionName, args }),
