@@ -24,18 +24,6 @@ const TRANSPORTS = Object.fromEntries(
   CHAINS.map((chain) => [chain.id, http(getEvmChainRpcUrl(chain.id))]),
 );
 
-// TODO: Remove this once we have a way to get the TRANSPORTS from the contract manager
-// const chainEntries = await Promise.all(
-//   CHAINS.map(async (chain) => {
-//     const url = await getEvmChainRpcUrl(chain.id);
-//     return url ? [chain.id, http(url)] : undefined;
-//   }),
-// );
-
-// const TRANSPORTS = Object.fromEntries(
-//   chainEntries.filter((entry): entry is [number, ReturnType<typeof http>] => entry !== undefined)
-// ) as Record<number, ReturnType<typeof http>>;
-
 type EvmProviderProps = {
   children: ReactNode;
   walletConnectProjectId?: string | undefined;
