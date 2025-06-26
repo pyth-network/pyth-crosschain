@@ -9,18 +9,19 @@ mod structs;
 mod error;
 
 use alloc::vec::Vec;
-use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Bytes, Address},
+use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Address},
                 prelude::*, 
-                storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
+                storage::{StorageGuardMut, StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
                 call::Call};
 
-use structs::{PriceInfoReturn, PriceInfoStorage, DataSourceStorage};
+use structs::{PriceInfoReturn, PriceInfoStorage, DataSourceStorage, DataSource};
 use error::{PythReceiverError};
 use pythnet_sdk::{wire::{v1::{
             AccumulatorUpdateData, Proof,
         },
     },
 };
+use wormhole_vaas::{Readable, Vaa, VaaBody, VaaHeader};
 
 sol_interface! {
     interface IWormholeContract {
@@ -36,7 +37,7 @@ sol_interface! {
 pub struct PythReceiver {
     pub wormhole: StorageAddress,
     pub valid_data_sources: StorageVec<DataSourceStorage>,
-    pub is_valid_data_source: StorageMap<FixedBytes<32>, StorageBool>,
+    pub is_valid_data_source: StorageMap<DataSource, StorageBool>,
     pub single_update_fee_in_wei: StorageU256,
     pub valid_time_period_seconds: StorageU256,
     pub governance_data_source_chain_id: StorageU16,
@@ -71,9 +72,15 @@ impl PythReceiver {
             let mut data_source = self.valid_data_sources.grow();
             data_source.chain_id.set(U16::from(*chain_id));
             data_source.emitter_address.set(emitter_address);
+
+            let data_source_key = DataSource {
+                chain_id: U16::from(*chain_id),
+                emitter_address: emitter_address,
+            };
             
+
             self.is_valid_data_source
-                .setter(emitter_address)
+                .setter(data_source_key)
                 .set(true);
         }
     }
@@ -121,15 +128,18 @@ impl PythReceiver {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
                 let config = Call::new_in(self);
-                let _parsed_vaa = wormhole.parse_and_verify_vm(config, Bytes::from(Vec::from(vaa))).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
-
-                if !self.is_valid_data_source.entry(_parsed_vaa.data_source()).read() {
-                    panic!("Update data source is not a valid data source.");
-                }
+                let parsed_vaa = wormhole.parse_and_verify_vm(config, Vec::from(vaa)).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
+                let vaa = Vaa::read(&mut parsed_vaa.as_slice()).unwrap();
 
                 for update in updates {
                     // fill in update processing logic.
                     // update is a merkle price update
+
+                    // pub struct MerklePriceUpdate {
+                    //     pub message: PrefixedVec<u16, u8>,
+                    //     pub proof: MerklePath<Keccak160>,
+                    // }
+
                     let message = update.message;
                     let proof = update.proof;
 

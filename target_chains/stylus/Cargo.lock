@@ -95,7 +95,7 @@ checksum = "69e32ef5c74bbeb1733c37f4ac7f866f8c8af208b7b4265e21af609dcac5bd5e"
 dependencies = [
  "alloy-eips",
  "alloy-primitives 0.8.20",
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "alloy-serde",
  "alloy-trie",
  "auto_impl",
@@ -113,7 +113,7 @@ dependencies = [
  "alloy-consensus",
  "alloy-eips",
  "alloy-primitives 0.8.20",
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "alloy-serde",
  "serde",
 ]
@@ -125,7 +125,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "675264c957689f0fd75f5993a73123c2cc3b5c235a38f5b9037fe6c826bfb2c0"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "crc",
  "thiserror 2.0.12",
 ]
@@ -137,7 +137,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0069cf0642457f87a01a014f6dc29d5d893cd4fd8fddf0c3cdfad1bb3ebafc41"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "serde",
 ]
 
@@ -148,7 +148,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b15b13d38b366d01e818fe8e710d4d702ef7499eacd44926a06171dd9585d0c"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "serde",
  "thiserror 2.0.12",
 ]
@@ -163,7 +163,7 @@ dependencies = [
  "alloy-eip2930",
  "alloy-eip7702",
  "alloy-primitives 0.8.20",
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "alloy-serde",
  "auto_impl",
  "c-kzg",
@@ -239,6 +239,23 @@ dependencies = [
 
 [[package]]
 name = "alloy-primitives"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f09d3cd21353cf2f41f401e35093390f2a238ce0a72af0f6fc6be5157f525c7"
+dependencies = [
+ "alloy-rlp 0.2.0",
+ "bytes",
+ "const-hex",
+ "derive_more 0.99.20",
+ "itoa",
+ "proptest",
+ "ruint2",
+ "serde",
+ "tiny-keccak",
+]
+
+[[package]]
+name = "alloy-primitives"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f783611babedbbe90db3478c120fb5f5daacceffc210b39adc0af4fe0da70bad"
@@ -259,7 +276,7 @@ version = "0.8.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc1360603efdfba91151e623f13a4f4d3dc4af4adc1cbd90bf37c81e84db4c77"
 dependencies = [
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "bytes",
  "cfg-if 1.0.0",
  "const-hex",
@@ -315,6 +332,16 @@ dependencies = [
  "tracing",
  "url",
  "wasmtimer",
+]
+
+[[package]]
+name = "alloy-rlp"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6aa8b63682a5fa571b7c0281839e267b6a1f7569ba07b9b57b093050b7c2efda"
+dependencies = [
+ "arrayvec",
+ "bytes",
 ]
 
 [[package]]
@@ -384,7 +411,7 @@ dependencies = [
  "alloy-eips",
  "alloy-network-primitives",
  "alloy-primitives 0.8.20",
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "alloy-serde",
  "alloy-sol-types 0.8.20",
  "itertools 0.14.0",
@@ -589,7 +616,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d95a94854e420f07e962f7807485856cde359ab99ab6413883e15235ad996e8b"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "arrayvec",
  "derive_more 1.0.0",
  "nybbles",
@@ -3854,6 +3881,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-types"
+version = "0.1.0"
+dependencies = [
+ "stylus-sdk 0.6.0",
+]
+
+[[package]]
 name = "pythnet-sdk"
 version = "2.3.1"
 dependencies = [
@@ -3869,13 +3903,6 @@ dependencies = [
  "sha3",
  "slow_primes",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "pyth-types"
-version = "0.1.0"
-dependencies = [
- "stylus-sdk 0.6.0",
 ]
 
 [[package]]
@@ -4205,7 +4232,7 @@ version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11256b5fe8c68f56ac6f39ef0720e592f33d2367a4782740d9c9142e889c7fb4"
 dependencies = [
- "alloy-rlp",
+ "alloy-rlp 0.3.12",
  "ark-ff 0.3.0",
  "ark-ff 0.4.2",
  "bytes",
@@ -4231,6 +4258,24 @@ name = "ruint-macro"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48fd7bd8a6377e15ad9d42a8ec25371b94ddc67abe7c8b9127bec79bebaaae18"
+
+[[package]]
+name = "ruint2"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b066b8e4fcea7fae86b6932d2449670b6b5545b7e8407841b2d3a916ff2a9f86"
+dependencies = [
+ "derive_more 0.99.20",
+ "ruint2-macro",
+ "rustc_version 0.4.1",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "ruint2-macro"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89dc553bc0cf4512a8b96caa2e21ed5f6e4b66bf28a1bd08fd9eb07c0b39b28c"
 
 [[package]]
 name = "rustc-demangle"
@@ -4857,10 +4902,12 @@ dependencies = [
  "ethers",
  "eyre",
  "hex",
+ "pyth-types",
  "pythnet-sdk",
  "stylus-sdk 0.9.0",
  "tokio",
  "wormhole-contract",
+ "wormhole-vaas",
 ]
 
 [[package]]
@@ -5990,6 +6037,16 @@ dependencies = [
  "mini-alloc 0.4.2",
  "motsu",
  "stylus-sdk 0.6.0",
+]
+
+[[package]]
+name = "wormhole-vaas"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9cd4775f602f96f911d079c81a12fc964fab8632d56229bbb953335bae043d73"
+dependencies = [
+ "alloy-primitives 0.2.0",
+ "hex-literal",
 ]
 
 [[package]]
