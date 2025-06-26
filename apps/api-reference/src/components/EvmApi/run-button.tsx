@@ -167,6 +167,10 @@ const useRunButton = <ParameterName extends string>({
       setStatus(ErrorStatus(new Error("Invalid parameters!")));
     } else {
       const address = getEvmPriceFeedContractAddress(config.state.chainId);
+      if (!address) {
+        setStatus(ErrorStatus(new Error("No address found!")));
+        return;
+      }
       switch (props.type) {
         case EvmApiType.Read: {
           readContract(config, { abi, address, functionName, args })
