@@ -87,6 +87,13 @@ keeper:
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
 
+  # Runtime configuration for the keeper service
+  # Optional: Configure which keeper threads to disable. If running multiple replicas,
+  # only a single replica should have the fee adjustment and withdrawal threads enabled.
+  # run_config:
+  #   disable_fee_adjustment: false    # Set to true to disable automatic fee adjustment
+  #   disable_fee_withdrawal: false    # Set to true to disable automatic fee withdrawal
+
   # Multi-replica configuration
   # Optional: Multi-replica configuration for high availability and load distribution
   # Uncomment and configure for production deployments with multiple Fortuna instances
