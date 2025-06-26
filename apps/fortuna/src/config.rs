@@ -350,6 +350,17 @@ fn default_chain_sample_interval() -> u64 {
     1
 }
 
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+pub struct RunConfig {
+    /// Disable automatic fee adjustment threads
+    #[serde(default)]
+    pub disable_fee_adjustment: bool,
+
+    /// Disable automatic fee withdrawal threads
+    #[serde(default)]
+    pub disable_fee_withdrawal: bool,
+}
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ReplicaConfig {
     pub replica_id: u64,
@@ -374,6 +385,10 @@ pub struct KeeperConfig {
 
     #[serde(default)]
     pub replica_config: Option<ReplicaConfig>,
+
+    /// Runtime configuration for the keeper service
+    #[serde(default)]
+    pub run_config: RunConfig,
 }
 
 // A secret is a string that can be provided either as a literal in the config,

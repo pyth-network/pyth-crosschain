@@ -2,7 +2,7 @@ use {
     crate::{
         api::{BlockchainState, ChainId},
         chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
-        config::{EthereumConfig, ReplicaConfig},
+        config::{EthereumConfig, ReplicaConfig, RunConfig},
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{
@@ -54,10 +54,12 @@ pub enum RequestState {
 
 /// Run threads to handle events for the last `BACKLOG_RANGE` blocks, watch for new blocks and
 /// handle any events for the new blocks.
+#[allow(clippy::too_many_arguments)] // Top level orchestration function that needs to configure several threads
 #[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.id))]
 pub async fn run_keeper_threads(
     keeper_private_key: String,
     keeper_replica_config: Option<ReplicaConfig>,
+    keeper_run_config: RunConfig,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -118,44 +120,52 @@ pub async fn run_keeper_threads(
     );
 
     // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
-    spawn(
-        withdraw_fees_wrapper(
-            contract.clone(),
-            chain_state.provider_address,
-            WITHDRAW_INTERVAL,
-            U256::from(chain_eth_config.min_keeper_balance),
-        )
-        .in_current_span(),
-    );
+    if !keeper_run_config.disable_fee_withdrawal {
+        spawn(
+            withdraw_fees_wrapper(
+                contract.clone(),
+                chain_state.provider_address,
+                WITHDRAW_INTERVAL,
+                U256::from(chain_eth_config.min_keeper_balance),
+            )
+            .in_current_span(),
+        );
+    } else {
+        tracing::info!("Fee withdrawal thread disabled by configuration");
+    }
 
     // Spawn a thread that periodically adjusts the provider fee.
-    spawn(
-        adjust_fee_wrapper(
-            contract.clone(),
-            chain_state.clone(),
-            chain_state.provider_address,
-            ADJUST_FEE_INTERVAL,
-            chain_eth_config.legacy_tx,
-            // NOTE: we are adjusting the fees based on the maximum configured gas for user transactions.
-            // However, the keeper will pad the gas limit for transactions (per the escalation policy) to ensure reliable submission.
-            // Consequently, fees can be adjusted such that transactions are still unprofitable.
-            // While we could scale up this value based on the padding, that ends up overcharging users as most transactions cost nowhere
-            // near the maximum gas limit.
-            // In the unlikely event that the keeper fees aren't sufficient, the solution to this is to configure the target
-            // fee percentage to be higher on that specific chain.
-            chain_eth_config.gas_limit,
-            // NOTE: unwrap() here so we panic early if someone configures these values below -100.
-            u64::try_from(100 + chain_eth_config.min_profit_pct)
-                .expect("min_profit_pct must be >= -100"),
-            u64::try_from(100 + chain_eth_config.target_profit_pct)
-                .expect("target_profit_pct must be >= -100"),
-            u64::try_from(100 + chain_eth_config.max_profit_pct)
-                .expect("max_profit_pct must be >= -100"),
-            chain_eth_config.fee,
-            metrics.clone(),
-        )
-        .in_current_span(),
-    );
+    if !keeper_run_config.disable_fee_adjustment {
+        spawn(
+            adjust_fee_wrapper(
+                contract.clone(),
+                chain_state.clone(),
+                chain_state.provider_address,
+                ADJUST_FEE_INTERVAL,
+                chain_eth_config.legacy_tx,
+                // NOTE: we are adjusting the fees based on the maximum configured gas for user transactions.
+                // However, the keeper will pad the gas limit for transactions (per the escalation policy) to ensure reliable submission.
+                // Consequently, fees can be adjusted such that transactions are still unprofitable.
+                // While we could scale up this value based on the padding, that ends up overcharging users as most transactions cost nowhere
+                // near the maximum gas limit.
+                // In the unlikely event that the keeper fees aren't sufficient, the solution to this is to configure the target
+                // fee percentage to be higher on that specific chain.
+                chain_eth_config.gas_limit,
+                // NOTE: unwrap() here so we panic early if someone configures these values below -100.
+                u64::try_from(100 + chain_eth_config.min_profit_pct)
+                    .expect("min_profit_pct must be >= -100"),
+                u64::try_from(100 + chain_eth_config.target_profit_pct)
+                    .expect("target_profit_pct must be >= -100"),
+                u64::try_from(100 + chain_eth_config.max_profit_pct)
+                    .expect("max_profit_pct must be >= -100"),
+                chain_eth_config.fee,
+                metrics.clone(),
+            )
+            .in_current_span(),
+        );
+    } else {
+        tracing::info!("Fee adjustment thread disabled by configuration");
+    }
 
     spawn(update_commitments_loop(contract.clone(), chain_state.clone()).in_current_span());
 
