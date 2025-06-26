@@ -23,8 +23,11 @@ use pythnet_sdk::{wire::{v1::{
 };
 
 sol_interface! {
-    interface IWormhole {
-        function parseAndVerifyVm(bytes calldata encodedVaa) external returns (bytes memory);
+    interface IWormholeContract {
+        function initialize(address[] memory initial_guardians, uint16 chain_id, uint16 governance_chain_id, address governance_contract) external;
+        function getGuardianSet(uint32 index) external view returns (uint8[] memory);
+        function parseAndVerifyVm(uint8[] memory encoded_vaa) external view returns (uint8[] memory);
+        function quorum(uint32 num_guardians) external pure returns (uint32);
     }
 }
 
