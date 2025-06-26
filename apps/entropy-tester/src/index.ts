@@ -45,7 +45,7 @@ async function loadConfig(configPath: string): Promise<LoadedConfig[]> {
     z.strictObject({
       "chain-id": z.string(),
       interval: z.string(),
-      endpoint: z.string().optional(),
+      "rpc-endpoint": z.string().optional(),
     }),
   );
   const configContent = (await import(configPath, {
@@ -68,13 +68,13 @@ async function loadConfig(configPath: string): Promise<LoadedConfig[]> {
         `Multiple contracts found for chain ${config["chain-id"]}, check contract manager store.`,
       );
     }
-    if (config.endpoint) {
+    if (config["rpc-endpoint"]) {
       const evmChain = firstContract.chain;
       firstContract.chain = new EvmChain(
         evmChain.getId(),
         evmChain.isMainnet(),
         evmChain.getNativeToken(),
-        config.endpoint,
+        config["rpc-endpoint"],
         evmChain.networkId,
       );
     }

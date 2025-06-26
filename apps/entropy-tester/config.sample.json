@@ -10,6 +10,6 @@
   {
     "chain-id": "blast",
     "interval": "10m",
-    "endpoint": "https://rpc.blast.io"
+    "rpc-endpoint": "https://rpc.blast.io"
   }
 ]
