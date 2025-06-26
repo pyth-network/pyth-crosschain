@@ -1,8 +1,8 @@
 [workspace]
 members = [
     "contracts/wormhole",
-    "contracts/pyth-receiver"
-]
+    "contracts/pyth-receiver",
+    "contracts/pyth-types"]
 resolver = "2"
 
 [workspace.package]
