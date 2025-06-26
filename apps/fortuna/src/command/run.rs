@@ -3,7 +3,7 @@ use {
         api::{self, ApiBlockChainState, BlockchainState, ChainId},
         chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
-        config::{Commitment, Config, EthereumConfig, ProviderConfig, RunOptions},
+        config::{Commitment, Config, EthereumConfig, ProviderConfig, ReplicaConfig, RunOptions},
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{self, keeper_metrics::KeeperMetrics},
@@ -94,10 +94,14 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
 
     let keeper_metrics: Arc<KeeperMetrics> =
         Arc::new(KeeperMetrics::new(metrics_registry.clone()).await);
+
     let keeper_private_key_option = config.keeper.private_key.load()?;
     if keeper_private_key_option.is_none() {
         tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
     }
+
+    let keeper_replica_config = config.keeper.replica_config.clone();
+
     let chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>> = Arc::new(RwLock::new(
         config
             .chains
@@ -110,6 +114,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         keeper_metrics.add_chain(chain_id.clone(), config.provider.address);
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();
+        let keeper_replica_config = keeper_replica_config.clone();
         let chains = chains.clone();
         let secret_copy = secret.clone();
         let rpc_metrics = rpc_metrics.clone();
@@ -123,6 +128,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
                     chain_config.clone(),
                     keeper_metrics.clone(),
                     keeper_private_key_option.clone(),
+                    keeper_replica_config.clone(),
                     chains.clone(),
                     &secret_copy,
                     history.clone(),
@@ -173,6 +179,7 @@ async fn setup_chain_and_run_keeper(
     chain_config: EthereumConfig,
     keeper_metrics: Arc<KeeperMetrics>,
     keeper_private_key_option: Option<String>,
+    keeper_replica_config: Option<ReplicaConfig>,
     chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
     secret_copy: &str,
     history: Arc<History>,
@@ -195,6 +202,7 @@ async fn setup_chain_and_run_keeper(
     if let Some(keeper_private_key) = keeper_private_key_option {
         keeper::run_keeper_threads(
             keeper_private_key,
+            keeper_replica_config,
             chain_config,
             state,
             keeper_metrics.clone(),

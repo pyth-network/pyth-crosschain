@@ -1,6 +1,6 @@
 [package]
 name = "fortuna"
-version = "7.6.5"
+version = "7.7.0"
 edition = "2021"
 
 [lib]
@@ -41,13 +41,12 @@ url = "2.5.0"
 chrono = { version = "0.4.38", features = [
   "clock",
   "std",
-  "serde"
+  "serde",
 ], default-features = false }
 backoff = { version = "0.4.0", features = ["futures", "tokio"] }
 thiserror = "1.0.61"
 futures-locks = "0.7.1"
-sqlx = { version = "0.8", features = [ "runtime-tokio", "sqlite", "chrono" ] }
-
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono"] }
 
 
 [dev-dependencies]

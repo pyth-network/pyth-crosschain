@@ -35,6 +35,55 @@ pub async fn process_event_with_backoff(
         return Ok(());
     }
 
+    // If replica config is present, we're running with multiple instances.
+    // The incoming request is assigned by modulo operation on the sequence number
+    // and the total number of replicas. If our replica_id is the primary for this sequence number,
+    // we process the request directly. If our replica_id is a backup, we wait for the delay and
+    // then check if the request is still open. If it is, we process it as a backup replica.
+    if let Some(replica_config) = &process_param.replica_config {
+        let assigned_replica = event.sequence_number % replica_config.total_replicas;
+        let is_primary_replica = assigned_replica == replica_config.replica_id;
+
+        if is_primary_replica {
+            tracing::debug!("Processing request as primary replica");
+        } else {
+            tracing::debug!("Processing request as backup replica");
+
+            tracing::info!("Waiting before processing as backup replica");
+            tokio::time::sleep(tokio::time::Duration::from_secs(
+                replica_config.backup_delay_seconds,
+            ))
+            .await;
+
+            // Check if the request is still open after the delay.
+            // If it is, we will process it as a backup replica.
+            match chain_state
+                .contract
+                .get_request(event.provider_address, event.sequence_number)
+                .await
+            {
+                Ok(Some(_)) => {
+                    tracing::info!(
+                        delay_seconds = replica_config.backup_delay_seconds,
+                        "Request still open after delay, processing as backup replica"
+                    );
+                }
+                Ok(None) => {
+                    tracing::debug!(
+                        "Request already fulfilled by primary replica during delay, skipping"
+                    );
+                    return Ok(());
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        error = ?e,
+                        "Error checking request status after delay, processing as backup replica"
+                    );
+                }
+            }
+        }
+    }
+
     let account_label = AccountLabel {
         chain_id: chain_state.id.clone(),
         address: chain_state.provider_address.to_string(),
