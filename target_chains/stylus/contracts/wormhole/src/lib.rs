@@ -191,108 +191,133 @@ impl WormholeContract {
         if encoded_vaa.len() < 6 {
             return Err(WormholeError::InvalidVAAFormat);
         }
-
+    
         let mut cursor = 0;
-
-        let version = encoded_vaa[cursor];
+    
+        // Get version
+        let version = encoded_vaa.get(cursor)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
         cursor += 1;
-
-        if version != 1 {
+    
+        if *version != 1 {
             return Err(WormholeError::InvalidVAAFormat);
         }
-
-        let gsi_bytes: [u8; 4] = encoded_vaa[cursor..cursor + 4]
-            .try_into()
-            .map_err(|_| WormholeError::InvalidVAAFormat)?;
-
-        let guardian_set_index = u32::from_be_bytes(gsi_bytes);
-
+    
+        // Get guardian set index
+        let gsi_bytes = encoded_vaa.get(cursor..cursor + 4)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
+        let guardian_set_index = u32::from_be_bytes(
+            gsi_bytes.try_into()
+                .map_err(|_| WormholeError::InvalidVAAFormat)?
+        );
         cursor += 4;
-
-        let len_signatures = encoded_vaa[cursor];
+    
+        // Get number of signatures
+        let len_signatures = *encoded_vaa.get(cursor)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
         cursor += 1;
-
-        let mut signatures = Vec::with_capacity(len_signatures as usize);
-
+    
         if len_signatures > 19 {
             return Err(WormholeError::InvalidVAAFormat);
         }
-
+    
+        let mut signatures = Vec::with_capacity(len_signatures as usize);
+    
         for _ in 0..len_signatures {
             if cursor + 66 > encoded_vaa.len() {
                 return Err(WormholeError::InvalidVAAFormat);
             }
-
-            let guardian_index = encoded_vaa[cursor];
+    
+            let guardian_index = *encoded_vaa.get(cursor)
+                .ok_or(WormholeError::InvalidVAAFormat)?;
             cursor += 1;
-
-            let mut sig_bytes = [0u8; 65];
-            sig_bytes.copy_from_slice(&encoded_vaa[cursor..cursor + 65]);
+    
+            let sig_bytes = encoded_vaa.get(cursor..cursor + 65)
+                .ok_or(WormholeError::InvalidVAAFormat)?;
+            let mut fixed_sig = [0u8; 65];
+            fixed_sig.copy_from_slice(sig_bytes);
             cursor += 65;
-
+    
             signatures.push(GuardianSignature {
                 guardian_index,
-                signature: FixedBytes::from(sig_bytes),
+                signature: FixedBytes::from(fixed_sig),
             });
         }
-
+    
         if cursor + 51 > encoded_vaa.len() {
             return Err(WormholeError::InvalidVAAFormat);
         }
-
-        let ts_bytes: [u8; 4] = encoded_vaa[cursor..cursor + 4]
-            .try_into()
-            .map_err(|_| WormholeError::InvalidVAAFormat)?;
-
-        let timestamp = u32::from_be_bytes(ts_bytes);
+    
+        // Get timestamp
+        let ts_bytes = encoded_vaa.get(cursor..cursor + 4)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
+        let timestamp = u32::from_be_bytes(
+            ts_bytes.try_into()
+                .map_err(|_| WormholeError::InvalidVAAFormat)?
+        );
         cursor += 4;
-
-        let nonce_bytes: [u8; 4] = encoded_vaa[cursor..cursor + 4]
-            .try_into()
-            .map_err(|_| WormholeError::InvalidVAAFormat)?;
-
-        let nonce = u32::from_be_bytes(nonce_bytes);
+    
+        // Get nonce
+        let nonce_bytes = encoded_vaa.get(cursor..cursor + 4)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
+        let nonce = u32::from_be_bytes(
+            nonce_bytes.try_into()
+                .map_err(|_| WormholeError::InvalidVAAFormat)?
+        );
         cursor += 4;
-
+    
+        // Get emitter chain ID
+        let emitter_chain_bytes = encoded_vaa.get(cursor..cursor + 2)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
         let emitter_chain_id = u16::from_be_bytes([
-            encoded_vaa[cursor],
-            encoded_vaa[cursor + 1],
+            emitter_chain_bytes[0],
+            emitter_chain_bytes[1],
         ]);
         cursor += 2;
-
-        let mut emitter_address_bytes = [0u8; 32];
-        emitter_address_bytes.copy_from_slice(&encoded_vaa[cursor..cursor + 32]);
+    
+        // Get emitter address
+        let emitter_address_bytes = encoded_vaa.get(cursor..cursor + 32)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
+        let mut fixed_emitter = [0u8; 32];
+        fixed_emitter.copy_from_slice(emitter_address_bytes);
         cursor += 32;
-
-        let sequence_bytes: [u8; 8] = encoded_vaa[cursor..cursor + 8]
-            .try_into()
-            .map_err(|_| WormholeError::InvalidVAAFormat)?;
-
-        let sequence = u64::from_be_bytes(sequence_bytes);
-
+    
+        // Get sequence
+        let sequence_bytes = encoded_vaa.get(cursor..cursor + 8)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
+        let sequence = u64::from_be_bytes(
+            sequence_bytes.try_into()
+                .map_err(|_| WormholeError::InvalidVAAFormat)?
+        );
         cursor += 8;
-
-        let consistency_level = encoded_vaa[cursor];
+    
+        // Get consistency level
+        let consistency_level = *encoded_vaa.get(cursor)
+            .ok_or(WormholeError::InvalidVAAFormat)?;
         cursor += 1;
-
-        let payload = encoded_vaa[cursor..].to_vec();
-
+    
+        // Get payload
+        let payload = encoded_vaa.get(cursor..)
+            .ok_or(WormholeError::InvalidVAAFormat)?
+            .to_vec();
+    
         let hash = keccak256(&encoded_vaa[cursor - 51..]);
-
+    
         Ok(VerifiedVM {
-            version,
+            version: *version,
             guardian_set_index,
             signatures,
             timestamp,
             nonce,
             emitter_chain_id,
-            emitter_address: FixedBytes::from(emitter_address_bytes),
+            emitter_address: FixedBytes::from(fixed_emitter),
             sequence,
             consistency_level,
             payload,
             hash,
         })
     }
+    
 
     fn verify_vm(&self, vaa: &VerifiedVM) -> Result<(), WormholeError> {
 
