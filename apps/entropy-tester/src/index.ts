@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 
 import type { PrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
+import { EvmChain } from "@pythnetwork/contract-manager/core/chains";
 import { EvmEntropyContract } from "@pythnetwork/contract-manager/core/contracts/evm";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
 import type { Logger } from "pino";
@@ -44,6 +45,7 @@ async function loadConfig(configPath: string): Promise<LoadedConfig[]> {
     z.strictObject({
       "chain-id": z.string(),
       interval: z.string(),
+      endpoint: z.string().optional(),
     }),
   );
   const configContent = (await import(configPath, {
@@ -64,6 +66,16 @@ async function loadConfig(configPath: string): Promise<LoadedConfig[]> {
     if (contracts.length > 1) {
       throw new Error(
         `Multiple contracts found for chain ${config["chain-id"]}, check contract manager store.`,
+      );
+    }
+    if (config.endpoint) {
+      const evmChain = firstContract.chain;
+      firstContract.chain = new EvmChain(
+        evmChain.getId(),
+        evmChain.isMainnet(),
+        evmChain.getNativeToken(),
+        config.endpoint,
+        evmChain.networkId,
       );
     }
     return { contract: firstContract, interval };
