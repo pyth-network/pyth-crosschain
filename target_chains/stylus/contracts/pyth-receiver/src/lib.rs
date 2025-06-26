@@ -119,7 +119,7 @@ impl PythReceiver {
 
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
-                let wormhole: IWormhole = IWormhole::new(self.wormhole.get());
+                let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
                 let config = Call::new_in(self);
                 let _parsed_vaa = wormhole.parse_and_verify_vm(config, Bytes::from(Vec::from(vaa))).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
 
