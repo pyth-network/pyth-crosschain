@@ -11,7 +11,10 @@ use secp256k1::{
 use serde::Deserialize;
 use serde_wormhole::RawMessage;
 use sha3::{Digest, Keccak256};
-use std::{net::SocketAddr, time::Duration};
+use std::{
+    net::SocketAddr,
+    time::{Duration, Instant},
+};
 use wormhole_sdk::{
     vaa::{Body, Header, Signature},
     GuardianAddress, GuardianSetInfo, Vaa,
@@ -139,6 +142,11 @@ async fn handle_observation(
         state.guardian_set.clone(),
         state.observation_lifetime,
     )?;
+    metrics::counter!(
+        "verified_observations_total",
+        &[("gaurdian_index", verifier_index.to_string())]
+    )
+    .increment(1);
     let new_signature = Signature {
         signature: params.signature,
         index: verifier_index.try_into()?,
@@ -169,6 +177,7 @@ async fn handle_observation(
             body,
         )
             .into();
+        metrics::counter!("new_vaa_total").increment(1);
         if let Err(e) = state
             .ws
             .broadcast_sender
@@ -193,9 +202,14 @@ async fn post_observation(
     tokio::spawn({
         let state = state.clone();
         async move {
+            let start = Instant::now();
+            let mut status = "success";
             if let Err(e) = handle_observation(state, params).await {
+                status = "error";
                 tracing::warn!(error = ?e, "Failed to handle observation");
             }
+            metrics::histogram!("handle_observation_duration_seconds", &[("status", status)])
+                .record(start.elapsed().as_secs_f64());
         }
     });
     Json(())
@@ -580,7 +594,9 @@ mod test {
                 let update = subscriber
                     .try_recv()
                     .expect("Failed to receive update from subscriber");
-                let UpdateEvent::NewVaa(vaa) = update;
+                let UpdateEvent::NewVaa(vaa) = update else {
+                    panic!("Expected NewVaa event, got {:?}", update);
+                };
                 let vaa: Vaa<&RawMessage> =
                     serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");
                 // Check if the vaa signatures are sorted

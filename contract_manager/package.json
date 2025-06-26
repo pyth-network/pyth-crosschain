@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/contract-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
   "exports": {
@@ -23,6 +23,10 @@
     },
     "./data/vaults/*.json": {
       "default": "./store/vaults/*.json"
+    },
+    "./utils/*": {
+      "types": "./lib/utils/*.d.ts",
+      "default": "./lib/utils/*.js"
     }
   },
   "files": [
@@ -31,7 +35,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "shell": "ts-node ./src/shell.ts",
+    "shell": "ts-node ./src/node/utils/shell.ts",
     "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "test:lint": "eslint src/ scripts/ --max-warnings 0",
