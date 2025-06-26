@@ -98,6 +98,11 @@ impl Config {
             if replica_config.total_replicas == 0 {
                 return Err(anyhow!("Keeper replica configuration is invalid. total_replicas must be greater than 0."));
             }
+            if config.keeper.private_key.load()?.is_none() {
+                return Err(anyhow!(
+                    "Keeper replica configuration requires a keeper private key to be specified."
+                ));
+            }
             if replica_config.replica_id >= replica_config.total_replicas {
                 return Err(anyhow!("Keeper replica configuration is invalid. replica_id must be less than total_replicas."));
             }
