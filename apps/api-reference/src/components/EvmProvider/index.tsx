@@ -2,7 +2,7 @@
 
 import {
   getEvmChainRpcUrl,
-  getAllEvmChainsIds,
+  allEvmChainIds,
 } from "@pythnetwork/contract-manager/utils/utils";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
@@ -13,7 +13,7 @@ import { WagmiProvider, createConfig, http, useChainId } from "wagmi";
 
 import { metadata } from "../../metadata";
 
-const CHAINS = getAllEvmChainsIds
+const CHAINS = allEvmChainIds
   .map((id) => Object.values(chains).find((chain) => chain.id === id))
   .filter((chain) => chain !== undefined) as unknown as readonly [
   chains.Chain,
