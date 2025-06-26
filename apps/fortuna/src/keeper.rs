@@ -2,7 +2,7 @@ use {
     crate::{
         api::{BlockchainState, ChainId},
         chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
-        config::EthereumConfig,
+        config::{EthereumConfig, ReplicaConfig},
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{
@@ -56,7 +56,8 @@ pub enum RequestState {
 /// handle any events for the new blocks.
 #[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.id))]
 pub async fn run_keeper_threads(
-    keeper_config: crate::config::KeeperConfig,
+    keeper_private_key: String,
+    keeper_replica_config: Option<ReplicaConfig>,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -67,14 +68,9 @@ pub async fn run_keeper_threads(
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("Latest safe block: {}", &latest_safe_block);
 
-    let private_key = keeper_config
-        .private_key
-        .load()?
-        .ok_or(anyhow::anyhow!("Keeper private key must be provided"))?;
-
     let contract = Arc::new(InstrumentedSignablePythContract::from_config(
         &chain_eth_config,
-        &private_key,
+        &keeper_private_key,
         chain_state.id.clone(),
         rpc_metrics.clone(),
         chain_state.network_id,
@@ -90,7 +86,7 @@ pub async fn run_keeper_threads(
         contract: contract.clone(),
         gas_limit,
         escalation_policy: chain_eth_config.escalation_policy.to_policy(),
-        keeper_config,
+        replica_config: keeper_replica_config,
         metrics: metrics.clone(),
         fulfilled_requests_cache,
         history,
