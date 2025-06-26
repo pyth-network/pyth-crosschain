@@ -35,11 +35,11 @@ pub async fn process_event_with_backoff(
         return Ok(());
     }
 
-    // If replica config is present, we're running with multiple instances
+    // If replica config is present, we're running with multiple instances.
     // The incoming request is assigned by modulo operation on the sequence number
     // and the total number of replicas. If our replica_id is the primary for this sequence number,
     // we process the request directly. If our replica_id is a backup, we wait for the delay and
-    // then check if the request is still open. If it is, we process it as a failover.
+    // then check if the request is still open. If it is, we process it as a backup replica.
     if let Some(replica_config) = &process_param.replica_config {
         let assigned_replica = event.sequence_number % replica_config.total_replicas;
         let is_primary_replica = assigned_replica == replica_config.replica_id;
@@ -83,7 +83,6 @@ pub async fn process_event_with_backoff(
             }
         }
     }
-    // If no replica config we are running standalone, process all requests directly
 
     let account_label = AccountLabel {
         chain_id: chain_state.id.clone(),
