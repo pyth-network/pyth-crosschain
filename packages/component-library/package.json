@@ -70,6 +70,7 @@
     "@storybook/react": "catalog:",
     "@svgr/webpack": "catalog:",
     "@types/jest": "catalog:",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
