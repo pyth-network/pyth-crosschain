@@ -14,14 +14,21 @@ use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, A
                 storage::{StorageGuardMut, StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
                 call::Call};
 
-use structs::{PriceInfoReturn, PriceInfoStorage, DataSourceStorage, DataSource};
+use structs::{PriceInfoReturn, PriceInfoStorage, DataSourceStorage, DataSource, PriceInfo};
 use error::{PythReceiverError};
-use pythnet_sdk::{wire::{v1::{
+use pythnet_sdk::{wire::{from_slice, v1::{
             AccumulatorUpdateData, Proof,
+            PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
+            WormholeMessage, WormholePayload,
         },
     },
+    accumulators::{merkle::{MerklePath, MerkleRoot}},
+    hashers::keccak256_160::Keccak160,
+    messages::Message
 };
-use wormhole_vaas::{Readable, Vaa, VaaBody, VaaHeader};
+use wormhole_vaas::{Readable, Vaa, VaaBody, VaaHeader, Writeable};
+
+const ACCUMULATOR_WORMHOLE_MAGIC: u32 = 0x41555756;
 
 sol_interface! {
     interface IWormholeContract {
@@ -121,15 +128,44 @@ impl PythReceiver {
     }
 
     pub fn update_price_feeds(&mut self, update_data: Vec<u8>) {
-        let update_data_array: &[u8] = &update_data;
-        let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).unwrap();
+        
+    }
 
+    pub fn update_price_feeds_if_necessary(
+        &mut self,
+        _update_data: Vec<Vec<u8>>,
+        _price_ids: Vec<[u8; 32]>,
+        _publish_times: Vec<u64>,
+    ) {
+        // dummy implementation
+    }
+
+    fn update_price_feeds_internal(&self, update_data: Vec<u8>, price_ids: Vec<Address>, min_publish_time: u64, max_publish_time: u64, unique: bool) -> Result<(), PythReceiverError> {
+        let update_data_array: &[u8] = &update_data;
+        // Check the first 4 bytes of the update_data_array for the magic header
+        if update_data_array.len() < 4 {
+            panic!("update_data too short for magic header check");
+        }
+
+        let mut header = [0u8; 4];
+        header.copy_from_slice(&update_data_array[0..4]);
+        
+        if &header != PYTHNET_ACCUMULATOR_UPDATE_MAGIC {
+            panic!("Invalid update_data magic header");
+        }
+        
+        let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).unwrap();
+        
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
-                let config = Call::new_in(self);
+                let config = Call::new();
                 let parsed_vaa = wormhole.parse_and_verify_vm(config, Vec::from(vaa)).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
                 let vaa = Vaa::read(&mut parsed_vaa.as_slice()).unwrap();
+
+                // TODO: CHECK IF THE VAA IS FROM A VALID DATA SOURCE
+
+                let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa).unwrap();
 
                 for update in updates {
                     // fill in update processing logic.
@@ -140,22 +176,44 @@ impl PythReceiver {
                     //     pub proof: MerklePath<Keccak160>,
                     // }
 
-                    let message = update.message;
-                    let proof = update.proof;
+                    let message_vec = Vec::from(update.message);
+                    let proof: MerklePath<Keccak160> = update.proof;
 
+                    if !root_digest.check(proof, &message_vec) {
+                        return Err(PythReceiverError::PriceUnavailable);
+                    }
+
+                    // TODO: UPDATE THE PRICE INFO
+                    let msg = from_slice::<byteorder::BE, Message>(&message_vec)
+                        .map_err(|_| PythReceiverError::PriceUnavailable)?;
                     
+                    match msg {
+                        Message::PriceFeedMessage(price_feed_message) => {
+                            // if self.update_price_feed_if_new(price_feed_message.feed_id,PriceInfoStorage::from(&price_feed_message)) {
+                            //     count_updates += 1;
+                            // }
+
+                        },
+                        Message::TwapMessage(_) => {
+                            // Handle TWAP message - currently not implemented
+                            // This could be extended to handle TWAP price updates
+                        },
+                        Message::PublisherStakeCapsMessage(_) => {
+                            // Handle publisher stake caps message - currently not implemented
+                            // This could be extended to handle publisher stake updates
+                        },
+                    }
+
+
+                    // TODO: STORE PRICE INFO IN OUTPUT 
+
                 }
+
+                // TODO: FORM OUTPUT ARRAY
             }
         };
-    }
 
-    pub fn update_price_feeds_if_necessary(
-        &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _publish_times: Vec<u64>,
-    ) {
-        // dummy implementation
+        Ok(())
     }
 
     pub fn get_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
@@ -213,4 +271,33 @@ impl PythReceiver {
         
         current_u64.saturating_sub(publish_time_u64) <= max_age
     }
+
+    // Updates the Price Feed only if it is newer than the current one. This function never fails
+    // and will either update in-place or not update at all. The return value indicates whether
+    // the update was performed or not.
+    // fn update_price_feed_if_new(&mut self, price_id: [u8; 32], price_feed: PriceInfo) -> bool {
+    //     match self.latest_price_info.get(&price_id) {
+    //         Some(stored_price_feed) => {
+    //             let update = price_feed.price.publish_time > stored_price_feed.price.publish_time;
+    //             update.then(|| self.prices.insert(&price_feed.id, &price_feed));
+    //             update
+    //         }
+
+    //         None => {
+    //             self.prices.insert(&price_feed.id, &price_feed);
+    //             true
+    //         }
+    //     }
+    // }
+
+    
+}
+
+fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverError> {
+    let message = WormholeMessage::try_from_bytes(vaa.body.payload.to_vec())
+                .map_err(|_| PythReceiverError::PriceUnavailable)?;
+    let root: MerkleRoot<Keccak160> = MerkleRoot::new(match message.payload {
+        WormholePayload::Merkle(merkle_root) => merkle_root.root,
+    });
+    Ok(root)
 }

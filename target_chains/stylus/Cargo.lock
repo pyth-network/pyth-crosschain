@@ -4898,6 +4898,7 @@ version = "0.1.11"
 dependencies = [
  "alloy-primitives 0.8.20",
  "alloy-sol-types 0.8.20",
+ "byteorder",
  "dotenv",
  "ethers",
  "eyre",

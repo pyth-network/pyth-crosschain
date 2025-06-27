@@ -3,9 +3,10 @@ use stylus_sdk::{
     prelude::*,
     storage::{
         StorageU64, StorageI32, StorageI64, StorageU16, StorageFixedBytes, StorageKey
-    }
+    },
 };
 use stylus_sdk::alloy_primitives::{U16, FixedBytes,U64, I32, I64, B256, U256, keccak256};
+use pythnet_sdk::messages::PriceFeedMessage;
 
 #[derive(Debug)]
 #[storage]
@@ -75,6 +76,28 @@ pub struct PriceInfoStorage {
     pub conf: StorageU64,
     pub ema_price: StorageI64,
     pub ema_conf: StorageU64,
+}
+
+pub struct PriceInfo {
+    pub publish_time: U64,
+    pub expo: I32,
+    pub price: I64,
+    pub conf: U64,
+    pub ema_price: I64,
+    pub ema_conf: U64,
+}
+
+impl From<&PriceFeedMessage> for PriceInfo {
+    fn from(price_feed_message: &PriceFeedMessage) -> Self {
+        Self {
+            publish_time: U64::from(price_feed_message.publish_time),
+            expo: I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
+            price: I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
+            conf: U64::from(price_feed_message.conf),
+            ema_price: I64::from_be_bytes(price_feed_message.ema_price.to_be_bytes()),
+            ema_conf: U64::from(price_feed_message.ema_conf),
+        }
+    }
 }
 
 // PriceInfo struct storing price information
