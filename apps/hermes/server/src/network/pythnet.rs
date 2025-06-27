@@ -511,7 +511,9 @@ where
                 tokio::spawn({
                     let state = state.clone();
                     async move {
-                        if let Err(e) = state.process_message(vaa_bytes).await {
+                        // We always want to verify the VAA, even if it has been seen before.
+                        // This ensures that VAAs from the quorum are valid, and allows us to alert and log an error if they are not.
+                        if let Err(e) = state.process_message(vaa_bytes, true).await {
                             tracing::error!(error = ?e, "Received an invalid VAA from PythNet quorum.");
                         }
                     }

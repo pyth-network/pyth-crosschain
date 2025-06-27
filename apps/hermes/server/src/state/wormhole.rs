@@ -62,9 +62,11 @@ impl<'a> From<&'a State> for &'a WormholeState {
 pub trait Wormhole: Aggregates {
     async fn store_vaa(&self, sequence: u64, vaa_bytes: Vec<u8>) -> bool;
     /// Process a Wormhole message, extracting the VAA and storing it in the state.
+    /// If `always_verify` is false, it will check if the VAA has been seen before verifying it.
+    /// If true, it will verify the VAA even if it has been seen before.
     /// Returns true if the message was processed successfully, false if it was already seen.
     /// Throws an error if the VAA is invalid or cannot be processed.
-    async fn process_message(&self, vaa_bytes: Vec<u8>) -> Result<bool>;
+    async fn process_message(&self, vaa_bytes: Vec<u8>, always_verify: bool) -> Result<bool>;
     async fn update_guardian_set(&self, id: u32, guardian_set: GuardianSet);
 }
 
@@ -111,7 +113,7 @@ where
         }
     }
 
-    async fn process_message(&self, vaa_bytes: Vec<u8>) -> Result<bool> {
+    async fn process_message(&self, vaa_bytes: Vec<u8>, always_verify: bool) -> Result<bool> {
         let vaa = serde_wormhole::from_slice::<Vaa<&RawMessage>>(&vaa_bytes)?;
 
         // Log VAA Processing.
@@ -124,6 +126,20 @@ where
             WormholePayload::Merkle(proof) => proof.slot,
         };
         tracing::info!(slot = slot, vaa_timestamp = vaa_timestamp, "Observed VAA");
+
+        if !always_verify {
+            // Check VAA hasn't already been seen.
+            ensure!(
+                !self
+                    .into()
+                    .observed_vaa_seqs
+                    .read()
+                    .await
+                    .contains(&vaa.sequence),
+                "Previously observed VAA: {}",
+                vaa.sequence
+            );
+        }
 
         // Check VAA source is valid, we don't want to process other protocols VAAs.
         validate_vaa_source(&vaa)?;
