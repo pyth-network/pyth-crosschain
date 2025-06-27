@@ -189,9 +189,28 @@ impl PythReceiver {
                     
                     match msg {
                         Message::PriceFeedMessage(price_feed_message) => {
-                            // if self.update_price_feed_if_new(price_feed_message.feed_id,PriceInfoStorage::from(&price_feed_message)) {
-                            //     count_updates += 1;
-                            // }
+                            let price_id_fb : FixedBytes<32> = FixedBytes::from(price_feed_message.feed_id);
+                            let mut recent_price_info = self.latest_price_info.get(price_id_fb);
+
+                            let stored_price_info = PriceInfo {
+                                price: recent_price_info.price.get(),
+                                conf: recent_price_info.conf.get(),
+                                expo: recent_price_info.expo.get(),
+                                publish_time: recent_price_info.publish_time.get(),
+                                ema_price: recent_price_info.ema_price.get(),
+                                ema_conf: recent_price_info.ema_conf.get(),
+                            };
+
+                            if recent_price_info.publish_time.get() < U64::from(price_feed_message.publish_time) 
+                                || recent_price_info.price.get() == I64::ZERO {
+                                recent_price_info.publish_time.set(U64::from(price_feed_message.publish_time));
+                                recent_price_info.price.set(I64::from_le_bytes(price_feed_message.price.to_le_bytes()));
+                                recent_price_info.conf.set(U64::from(price_feed_message.conf));
+                                recent_price_info.expo.set(I32::from_le_bytes(price_feed_message.exponent.to_le_bytes()));
+                                recent_price_info.ema_price.set(I64::from_le_bytes(price_feed_message.ema_price.to_le_bytes()));
+                                recent_price_info.ema_conf.set(U64::from(price_feed_message.ema_conf));
+                            }
+                            
 
                         },
                         Message::TwapMessage(_) => {
@@ -275,19 +294,8 @@ impl PythReceiver {
     // Updates the Price Feed only if it is newer than the current one. This function never fails
     // and will either update in-place or not update at all. The return value indicates whether
     // the update was performed or not.
-    // fn update_price_feed_if_new(&mut self, price_id: [u8; 32], price_feed: PriceInfo) -> bool {
-    //     match self.latest_price_info.get(&price_id) {
-    //         Some(stored_price_feed) => {
-    //             let update = price_feed.price.publish_time > stored_price_feed.price.publish_time;
-    //             update.then(|| self.prices.insert(&price_feed.id, &price_feed));
-    //             update
-    //         }
+    // fn update_price_feed_if_new(&self, price_id: [u8; 32], price_feed: PriceInfo) -> bool {
 
-    //         None => {
-    //             self.prices.insert(&price_feed.id, &price_feed);
-    //             true
-    //         }
-    //     }
     // }
 
     
