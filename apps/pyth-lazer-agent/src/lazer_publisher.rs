@@ -14,6 +14,8 @@ use pyth_lazer_publisher_sdk::transaction::{
 };
 use solana_keypair::read_keypair_file;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use tokio::sync::broadcast;
 use tokio::{
     select,
@@ -25,6 +27,7 @@ use tracing::error;
 #[derive(Clone)]
 pub struct LazerPublisher {
     sender: Sender<FeedUpdate>,
+    pub(crate) is_ready: Arc<AtomicBool>,
 }
 
 impl LazerPublisher {
@@ -66,11 +69,13 @@ impl LazerPublisher {
             };
 
         let (relayer_sender, _) = broadcast::channel(CHANNEL_CAPACITY);
+        let is_ready = Arc::new(AtomicBool::new(false));
         for url in config.relayer_urls.iter() {
             let mut task = RelayerSessionTask {
                 url: url.clone(),
                 token: authorization_token.clone(),
                 receiver: relayer_sender.subscribe(),
+                is_ready: is_ready.clone(),
             };
             tokio::spawn(async move { task.run().await });
         }
@@ -84,7 +89,10 @@ impl LazerPublisher {
             signing_key,
         };
         tokio::spawn(async move { task.run().await });
-        Self { sender }
+        Self {
+            sender,
+            is_ready: is_ready.clone(),
+        }
     }
 
     pub async fn push_feed_update(&self, feed_update: FeedUpdate) -> Result<()> {
