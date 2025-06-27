@@ -91,7 +91,7 @@ impl LazerPublisher {
         tokio::spawn(async move { task.run().await });
         Self {
             sender,
-            is_ready: Arc::new(AtomicBool::new(false)),
+            is_ready: is_ready.clone(),
         }
     }
 
