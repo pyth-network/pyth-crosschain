@@ -10,7 +10,7 @@ mod error;
 
 use alloc::vec::Vec;
 use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Address},
-                prelude::*, 
+                prelude::*,
                 storage::{StorageGuardMut, StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
                 call::Call};
 
@@ -59,7 +59,7 @@ pub struct PythReceiver {
 impl PythReceiver {
     pub fn initialize(&mut self, _wormhole: Address, _single_update_fee_in_wei: U256, _valid_time_period_seconds: U256,
                             data_source_emitter_chain_ids: Vec<u16>, data_source_emitter_addresses: Vec<[u8; 32]>,
-                            governance_emitter_chain_id: u16, governance_emitter_address: [u8; 32], 
+                            governance_emitter_chain_id: u16, governance_emitter_address: [u8; 32],
                             governance_initial_sequence: u64, _data: Vec<u8>) {
         self.wormhole.set(_wormhole);
         self.single_update_fee_in_wei.set(_single_update_fee_in_wei);
@@ -67,14 +67,14 @@ impl PythReceiver {
 
         self.governance_data_source_chain_id.set(U16::from(governance_emitter_chain_id));
         self.governance_data_source_emitter_address.set(FixedBytes::<32>::from(governance_emitter_address));
-        
+
         // Initialize other fields
         self.last_executed_governance_sequence.set(U64::from(governance_initial_sequence));
         self.governance_data_source_index.set(U32::ZERO);
 
         for (i, chain_id) in data_source_emitter_chain_ids.iter().enumerate() {
             let emitter_address = FixedBytes::<32>::from(data_source_emitter_addresses[i]);
-            
+
             // Create a new data source storage slot
             let mut data_source = self.valid_data_sources.grow();
             data_source.chain_id.set(U16::from(*chain_id));
@@ -84,19 +84,19 @@ impl PythReceiver {
                 chain_id: U16::from(*chain_id),
                 emitter_address: emitter_address,
             };
-            
+
 
             self.is_valid_data_source
                 .setter(data_source_key)
                 .set(true);
         }
     }
-    
+
     pub fn get_price_unsafe(&self, _id: [u8; 32]) -> Result<PriceInfoReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(_id);
-        
+
         let price_info = self.latest_price_info.get(id_fb);
-        
+
         if price_info.publish_time.get() == U64::ZERO {
             return Err(PythReceiverError::PriceUnavailable);
         }
@@ -128,7 +128,7 @@ impl PythReceiver {
     }
 
     pub fn update_price_feeds(&mut self, update_data: Vec<u8>) {
-        
+
     }
 
     pub fn update_price_feeds_if_necessary(
@@ -140,7 +140,7 @@ impl PythReceiver {
         // dummy implementation
     }
 
-    fn update_price_feeds_internal(&self, update_data: Vec<u8>, price_ids: Vec<Address>, min_publish_time: u64, max_publish_time: u64, unique: bool) -> Result<(), PythReceiverError> {
+    fn update_price_feeds_internal(&mut self, update_data: Vec<u8>, price_ids: Vec<Address>, min_publish_time: u64, max_publish_time: u64, unique: bool) -> Result<(), PythReceiverError> {
         let update_data_array: &[u8] = &update_data;
         // Check the first 4 bytes of the update_data_array for the magic header
         if update_data_array.len() < 4 {
@@ -149,13 +149,13 @@ impl PythReceiver {
 
         let mut header = [0u8; 4];
         header.copy_from_slice(&update_data_array[0..4]);
-        
+
         if &header != PYTHNET_ACCUMULATOR_UPDATE_MAGIC {
             panic!("Invalid update_data magic header");
         }
-        
+
         let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).unwrap();
-        
+
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
@@ -186,22 +186,13 @@ impl PythReceiver {
                     // TODO: UPDATE THE PRICE INFO
                     let msg = from_slice::<byteorder::BE, Message>(&message_vec)
                         .map_err(|_| PythReceiverError::PriceUnavailable)?;
-                    
+
                     match msg {
                         Message::PriceFeedMessage(price_feed_message) => {
                             let price_id_fb : FixedBytes<32> = FixedBytes::from(price_feed_message.feed_id);
-                            let mut recent_price_info = self.latest_price_info.get(price_id_fb);
+                            let mut recent_price_info = self.latest_price_info.setter(price_id_fb);
 
-                            let stored_price_info = PriceInfo {
-                                price: recent_price_info.price.get(),
-                                conf: recent_price_info.conf.get(),
-                                expo: recent_price_info.expo.get(),
-                                publish_time: recent_price_info.publish_time.get(),
-                                ema_price: recent_price_info.ema_price.get(),
-                                ema_conf: recent_price_info.ema_conf.get(),
-                            };
-
-                            if recent_price_info.publish_time.get() < U64::from(price_feed_message.publish_time) 
+                            if recent_price_info.publish_time.get() < U64::from(price_feed_message.publish_time)
                                 || recent_price_info.price.get() == I64::ZERO {
                                 recent_price_info.publish_time.set(U64::from(price_feed_message.publish_time));
                                 recent_price_info.price.set(I64::from_le_bytes(price_feed_message.price.to_le_bytes()));
@@ -210,7 +201,7 @@ impl PythReceiver {
                                 recent_price_info.ema_price.set(I64::from_le_bytes(price_feed_message.ema_price.to_le_bytes()));
                                 recent_price_info.ema_conf.set(U64::from(price_feed_message.ema_conf));
                             }
-                            
+
 
                         },
                         Message::TwapMessage(_) => {
@@ -224,7 +215,7 @@ impl PythReceiver {
                     }
 
 
-                    // TODO: STORE PRICE INFO IN OUTPUT 
+                    // TODO: STORE PRICE INFO IN OUTPUT
 
                 }
 
@@ -287,7 +278,7 @@ impl PythReceiver {
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
         let current_u64: u64 = self.vm().block_timestamp();
         let publish_time_u64: u64 = publish_time.to::<u64>();
-        
+
         current_u64.saturating_sub(publish_time_u64) <= max_age
     }
 
@@ -298,7 +289,7 @@ impl PythReceiver {
 
     // }
 
-    
+
 }
 
 fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverError> {
