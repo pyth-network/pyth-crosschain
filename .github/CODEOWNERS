@@ -2,6 +2,7 @@ apps/api-reference @pyth-network/web-team
 apps/entropy-debugger @pyth-network/web-team
 apps/insights @pyth-network/web-team
 apps/staking @pyth-network/web-team
+apps/pyth-lazer-agent @merolish
 packages/component-library @pyth-network/web-team
 packages/known-publishers @pyth-network/web-team
 Dockerfile.node @pyth-network/web-team
