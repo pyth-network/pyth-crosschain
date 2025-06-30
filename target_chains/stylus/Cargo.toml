@@ -1,0 +1,44 @@
+[workspace]
+members = [
+    "contracts/wormhole",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/pyth-network/pyth-crosschain"
+version = "0.1.0"
+
+[workspace.dependencies]
+stylus-sdk = { version = "0.6.0", default-features = false }
+alloy-primitives = { version = "0.7.6", default-features = false }
+mini-alloc = { version = "0.4.2", default-features = false }
+motsu = "0.1.0"
+
+k256 = { version = "0.13.3", default-features = false, features = ["ecdsa"] }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+opt-level = "z"           # Optimize for size instead of speed
+lto = "fat"              # More aggressive link-time optimization
+strip = "symbols"        # Strip all symbols including debug
+panic = "abort"          # Smaller panic handling
+codegen-units = 1        # Better optimization (slower build, smaller binary)
+overflow-checks = false  # Disable overflow checks for size
+debug-assertions = false # Disable debug assertions
+incremental = false      # Disable incremental compilation for better optimization
+rpath = false            # Disable rpath for smaller binary
+
+[profile.release.package."*"]
+opt-level = "z"           # Force size optimization for all dependencies
+
+[profile.release.package.k256]
+opt-level = "z"
+strip = "symbols"
+
+[profile.release.package.alloy-primitives]
+opt-level = "z"
+strip = "symbols"
