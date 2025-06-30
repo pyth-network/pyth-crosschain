@@ -22,6 +22,10 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    #[allow(
+        clippy::expect_used,
+        reason = "application can fail on invalid RUST_LOG"
+    )]
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::builder()
