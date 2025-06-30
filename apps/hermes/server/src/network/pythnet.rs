@@ -447,7 +447,7 @@ where
                             tokio::select! {
                                 _ = exit.changed() => break,
                                 Err(err) = run_quorom_listener(store.clone(), pythnet_quorum_ws_addr.clone()) => {
-                                    tracing::error!(error = ?err, "Error in Pythnet quorum network listener.");
+                                    tracing::error!(ws_addr = ?pythnet_quorum_ws_addr, error = ?err, "Error in Pythnet quorum network listener.");
                                     if current_time.elapsed() < Duration::from_secs(30) {
                                         tracing::error!("Pythnet quorum listener restarting too quickly. Sleep 1s.");
                                         tokio::time::sleep(Duration::from_secs(1)).await;
