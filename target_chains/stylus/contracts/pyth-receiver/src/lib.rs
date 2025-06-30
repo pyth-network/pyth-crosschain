@@ -57,13 +57,13 @@ pub struct PythReceiver {
 
 #[public]
 impl PythReceiver {
-    pub fn initialize(&mut self, _wormhole: Address, _single_update_fee_in_wei: U256, _valid_time_period_seconds: U256,
+    pub fn initialize(&mut self, wormhole: Address, single_update_fee_in_wei: U256, valid_time_period_seconds: U256,
                             data_source_emitter_chain_ids: Vec<u16>, data_source_emitter_addresses: Vec<[u8; 32]>,
                             governance_emitter_chain_id: u16, governance_emitter_address: [u8; 32],
-                            governance_initial_sequence: u64, _data: Vec<u8>) {
-        self.wormhole.set(_wormhole);
-        self.single_update_fee_in_wei.set(_single_update_fee_in_wei);
-        self.valid_time_period_seconds.set(_valid_time_period_seconds);
+                            governance_initial_sequence: u64, data: Vec<u8>) {
+        self.wormhole.set(wormhole);
+        self.single_update_fee_in_wei.set(single_update_fee_in_wei);
+        self.valid_time_period_seconds.set(valid_time_period_seconds);
 
         self.governance_data_source_chain_id.set(U16::from(governance_emitter_chain_id));
         self.governance_data_source_emitter_address.set(FixedBytes::<32>::from(governance_emitter_address));
@@ -92,8 +92,8 @@ impl PythReceiver {
         }
     }
 
-    pub fn get_price_unsafe(&self, _id: [u8; 32]) -> Result<PriceInfoReturn, PythReceiverError> {
-        let id_fb = FixedBytes::<32>::from(_id);
+    pub fn get_price_unsafe(&self, id: [u8; 32]) -> Result<PriceInfoReturn, PythReceiverError> {
+        let id_fb = FixedBytes::<32>::from(id);
 
         let price_info = self.latest_price_info.get(id_fb);
 
@@ -111,10 +111,10 @@ impl PythReceiver {
         ))
     }
 
-    pub fn get_price_no_older_than(&self, _id: [u8; 32], _age: u64) -> Result<PriceInfoReturn, PythReceiverError> {
-        let price_info = self.get_price_unsafe(_id)?;
-        if !self.is_no_older_than(price_info.0, _age) {
-            return Err(PythReceiverError::PriceUnavailable);
+    pub fn get_price_no_older_than(&self, id: [u8; 32], age: u64) -> Result<PriceInfoReturn, PythReceiverError> {
+        let price_info = self.get_price_unsafe(id)?;
+        if !self.is_no_older_than(price_info.0, age) {
+            return Err(PythReceiverError::NewPriceUnavailable);
         }
         Ok(price_info)
     }
@@ -144,14 +144,14 @@ impl PythReceiver {
         let update_data_array: &[u8] = &update_data;
         // Check the first 4 bytes of the update_data_array for the magic header
         if update_data_array.len() < 4 {
-            panic!("update_data too short for magic header check");
+            return Err(PythReceiverError::InvalidUpdateData);
         }
 
         let mut header = [0u8; 4];
         header.copy_from_slice(&update_data_array[0..4]);
 
         if &header != PYTHNET_ACCUMULATOR_UPDATE_MAGIC {
-            panic!("Invalid update_data magic header");
+            return Err(PythReceiverError::InvalidAccumulatorMessage);
         }
 
         let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).unwrap();
@@ -160,7 +160,7 @@ impl PythReceiver {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
                 let config = Call::new();
-                let parsed_vaa = wormhole.parse_and_verify_vm(config, Vec::from(vaa)).map_err(|_| PythReceiverError::PriceUnavailable).unwrap();
+                let parsed_vaa = wormhole.parse_and_verify_vm(config, Vec::from(vaa)).map_err(|_| PythReceiverError::InvalidWormholeMessage).unwrap();
                 let vaa = Vaa::read(&mut parsed_vaa.as_slice()).unwrap();
 
                 // TODO: CHECK IF THE VAA IS FROM A VALID DATA SOURCE
@@ -168,24 +168,17 @@ impl PythReceiver {
                 let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa).unwrap();
 
                 for update in updates {
-                    // fill in update processing logic.
-                    // update is a merkle price update
-
-                    // pub struct MerklePriceUpdate {
-                    //     pub message: PrefixedVec<u16, u8>,
-                    //     pub proof: MerklePath<Keccak160>,
-                    // }
 
                     let message_vec = Vec::from(update.message);
                     let proof: MerklePath<Keccak160> = update.proof;
 
                     if !root_digest.check(proof, &message_vec) {
-                        return Err(PythReceiverError::PriceUnavailable);
+                        return Err(PythReceiverError::InvalidMerkleProof);
                     }
 
-                    // TODO: UPDATE THE PRICE INFO
+                    // UPDATE STORED PRICE INFO BASED ON THE UPDATES IN THE VAA
                     let msg = from_slice::<byteorder::BE, Message>(&message_vec)
-                        .map_err(|_| PythReceiverError::PriceUnavailable)?;
+                        .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
 
                     match msg {
                         Message::PriceFeedMessage(price_feed_message) => {
@@ -204,22 +197,11 @@ impl PythReceiver {
 
 
                         },
-                        Message::TwapMessage(_) => {
-                            // Handle TWAP message - currently not implemented
-                            // This could be extended to handle TWAP price updates
-                        },
-                        Message::PublisherStakeCapsMessage(_) => {
-                            // Handle publisher stake caps message - currently not implemented
-                            // This could be extended to handle publisher stake updates
+                        _ => {
+                            return Err(PythReceiverError::InvalidAccumulatorMessageType);
                         },
                     }
-
-
-                    // TODO: STORE PRICE INFO IN OUTPUT
-
                 }
-
-                // TODO: FORM OUTPUT ARRAY
             }
         };
 
@@ -300,3 +282,5 @@ fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverE
     });
     Ok(root)
 }
+
+
