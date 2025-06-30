@@ -14,6 +14,7 @@ alloy-sol-types = "=0.8.20"
 stylus-sdk = "0.9.0"
 byteorder = { version = "1.4.3" }
 hex = { version = "0.4", default-features = false }
+serde = { version = "1.0", features = ["derive"] }
 pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 pyth-types = { path = "../pyth-types" }
 wormhole-vaas = "0.1.1"
