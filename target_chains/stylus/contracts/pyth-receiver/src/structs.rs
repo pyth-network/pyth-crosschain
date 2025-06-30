@@ -1,5 +1,6 @@
-use alloc::vec::Vec;
-use byteorder::{BigEndian, ByteOrder};
+use alloc::{vec::Vec, boxed::Box, format};
+use pythnet_sdk::wire::to_vec;
+use serde::Serialize;
 use stylus_sdk::{
     prelude::*,
     storage::{
@@ -9,13 +10,27 @@ use stylus_sdk::{
 use stylus_sdk::alloy_primitives::{U16, FixedBytes,U64, I32, I64, B256, U256, keccak256};
 use pythnet_sdk::messages::PriceFeedMessage;
 
-fn serialize_data_source_to_bytes(chain_id: u16, emitter_address: &[u8; 32]) -> [u8; 34] {
-    let mut bytes = [0u8; 34];
+#[derive(Serialize)]
+struct SerializableDataSource {
+    chain_id: u16,
+    #[serde(with = "pythnet_sdk::wire::array")]
+    emitter_address: [u8; 32],
+}
 
-    BigEndian::write_u16(&mut bytes[0..2], chain_id);
-    bytes[2..].copy_from_slice(emitter_address);
-
-    bytes
+fn serialize_data_source_to_bytes(chain_id: u16, emitter_address: &[u8; 32]) -> Result<[u8; 34], Box<dyn core::error::Error>> {
+    let data_source = SerializableDataSource {
+        chain_id,
+        emitter_address: *emitter_address,
+    };
+    
+    let bytes = to_vec::<_, byteorder::BE>(&data_source)?;
+    if bytes.len() != 34 {
+        return Err(format!("Expected 34 bytes, got {}", bytes.len()).into());
+    }
+    
+    let mut result = [0u8; 34];
+    result.copy_from_slice(&bytes);
+    Ok(result)
 }
 
 #[derive(Debug)]
@@ -35,9 +50,10 @@ impl StorageKey for DataSourceStorage {
     fn to_slot(&self, root: B256) -> U256 {
         let chain_id: u16 = self.chain_id.get().to::<u16>();
         let emitter_address = self.emitter_address.get();
-
-        let bytes = serialize_data_source_to_bytes(chain_id, emitter_address.as_slice().try_into().unwrap());
-
+        
+        let bytes = serialize_data_source_to_bytes(chain_id, emitter_address.as_slice().try_into().unwrap())
+            .expect("Failed to serialize DataSource");
+        
         keccak256(bytes).to_slot(root)
     }
 }
@@ -46,9 +62,10 @@ impl StorageKey for DataSource {
     fn to_slot(&self, root: B256) -> U256 {
         let chain_id: u16 = self.chain_id.to::<u16>();
         let emitter_address: [u8; 32] = self.emitter_address.as_slice().try_into().unwrap();
-
-        let bytes = serialize_data_source_to_bytes(chain_id, &emitter_address);
-
+        
+        let bytes = serialize_data_source_to_bytes(chain_id, &emitter_address)
+            .expect("Failed to serialize DataSource");
+        
         keccak256(bytes).to_slot(root)
     }
 }
@@ -124,8 +141,9 @@ mod tests {
         expected_bytes[0..2].copy_from_slice(&chain_id.to_be_bytes());
         expected_bytes[2..].copy_from_slice(&emitter_address);
 
-        let actual_bytes = serialize_data_source_to_bytes(chain_id, &emitter_address);
-
+        let actual_bytes = serialize_data_source_to_bytes(chain_id, &emitter_address)
+            .expect("Serialization should succeed");
+        
         assert_eq!(actual_bytes, expected_bytes, "Serialization should produce identical bytes");
     }
 }
