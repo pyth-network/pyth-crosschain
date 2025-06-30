@@ -25,5 +25,6 @@ pub struct Options {
     /// Address of a PythNet quorum websocket RPC endpoint.
     #[arg(long = "pythnet-quorum-ws-addr")]
     #[arg(env = "PYTHNET_QUORUM_WS_ADDR")]
-    pub quorum_ws_addr: Option<String>,
+    #[arg(value_delimiter = ',')]
+    pub quorum_ws_addrs: Option<Vec<String>>,
 }

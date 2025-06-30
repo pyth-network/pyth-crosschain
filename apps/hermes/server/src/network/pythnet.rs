@@ -436,27 +436,29 @@ where
         })
     };
 
-    let task_quorum_listener = match opts.pythnet.quorum_ws_addr {
-        Some(pythnet_quorum_ws_addr) => {
-            let store = state.clone();
-            let mut exit = crate::EXIT.subscribe();
-            tokio::spawn(async move {
-                loop {
-                    let current_time = Instant::now();
-                    tokio::select! {
-                        _ = exit.changed() => break,
-                        Err(err) = run_quorom_listener(store.clone(), pythnet_quorum_ws_addr.clone()) => {
-                            tracing::error!(error = ?err, "Error in Pythnet quorum network listener.");
-                            if current_time.elapsed() < Duration::from_secs(30) {
-                                tracing::error!("Pythnet quorum listener restarting too quickly. Sleep 1s.");
-                                tokio::time::sleep(Duration::from_secs(1)).await;
+    let task_quorum_listeners = match opts.pythnet.quorum_ws_addrs {
+        Some(pythnet_quorum_ws_addrs) => tokio::spawn(async move {
+            pythnet_quorum_ws_addrs.into_iter().for_each(|pythnet_quorum_ws_addr| {
+                    let store = state.clone();
+                    let mut exit = crate::EXIT.subscribe();
+                    tokio::spawn(async move {
+                        loop {
+                            let current_time = Instant::now();
+                            tokio::select! {
+                                _ = exit.changed() => break,
+                                Err(err) = run_quorom_listener(store.clone(), pythnet_quorum_ws_addr.clone()) => {
+                                    tracing::error!(ws_addr = ?pythnet_quorum_ws_addr, error = ?err, "Error in Pythnet quorum network listener.");
+                                    if current_time.elapsed() < Duration::from_secs(30) {
+                                        tracing::error!("Pythnet quorum listener restarting too quickly. Sleep 1s.");
+                                        tokio::time::sleep(Duration::from_secs(1)).await;
+                                    }
+                                }
                             }
                         }
-                    }
-                }
-                tracing::info!("Shutting down Pythnet quorum listener...");
-            })
-        }
+                        tracing::info!("Shutting down Pythnet quorum listener...");
+                    });
+                });
+        }),
         None => tokio::spawn(async {
             tracing::warn!(
                 "Pythnet quorum websocket address not provided, skipping quorum listener."
@@ -468,7 +470,7 @@ where
         task_listener,
         task_guardian_watcher,
         task_price_feeds_metadata_updater,
-        task_quorum_listener,
+        task_quorum_listeners,
     );
     Ok(())
 }
