@@ -69,7 +69,7 @@ async fn try_handle_publisher(
             // in the inner loop.
             let receive = async { ws_receiver.receive(&mut receive_buf).await };
             pin!(receive);
-            #[allow(clippy::never_loop)] // false positive
+            #[allow(clippy::never_loop, reason = "false positive")]
             loop {
                 select! {
                     _result = &mut receive => {
@@ -88,7 +88,9 @@ async fn try_handle_publisher(
                 ) {
                     Ok((data, _)) => {
                         let source_timestamp = MessageField::some(Timestamp {
+                            #[allow(clippy::cast_possible_wrap, reason = "Unix seconds won't wrap any time soon")]
                             seconds: (data.source_timestamp_us.0 / 1_000_000) as i64,
+                            #[allow(clippy::cast_possible_truncation, reason = "this value will always be less than one billion")]
                             nanos: (data.source_timestamp_us.0 % 1_000_000 * 1000) as i32,
                             special_fields: Default::default(),
                         });
@@ -131,7 +133,9 @@ async fn try_handle_publisher(
                 ) {
                     Ok((data, _)) => {
                         let source_timestamp = MessageField::some(Timestamp {
+                            #[allow(clippy::cast_possible_wrap, reason = "Unix seconds won't wrap any time soon")]
                             seconds: (data.source_timestamp_us.0 / 1_000_000) as i64,
+                            #[allow(clippy::cast_possible_truncation, reason = "this value will always be less than one billion")]
                             nanos: (data.source_timestamp_us.0 % 1_000_000 * 1000) as i32,
                             special_fields: Default::default(),
                         });
