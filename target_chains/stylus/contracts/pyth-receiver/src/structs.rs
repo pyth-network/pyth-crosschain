@@ -22,12 +22,12 @@ fn serialize_data_source_to_bytes(chain_id: u16, emitter_address: &[u8; 32]) -> 
         chain_id,
         emitter_address: *emitter_address,
     };
-    
+
     let bytes = to_vec::<_, byteorder::BE>(&data_source)?;
     if bytes.len() != 34 {
         return Err(format!("Expected 34 bytes, got {}", bytes.len()).into());
     }
-    
+
     let mut result = [0u8; 34];
     result.copy_from_slice(&bytes);
     Ok(result)
@@ -50,10 +50,10 @@ impl StorageKey for DataSourceStorage {
     fn to_slot(&self, root: B256) -> U256 {
         let chain_id: u16 = self.chain_id.get().to::<u16>();
         let emitter_address = self.emitter_address.get();
-        
+
         let bytes = serialize_data_source_to_bytes(chain_id, emitter_address.as_slice().try_into().unwrap())
             .expect("Failed to serialize DataSource");
-        
+
         keccak256(bytes).to_slot(root)
     }
 }
@@ -62,10 +62,10 @@ impl StorageKey for DataSource {
     fn to_slot(&self, root: B256) -> U256 {
         let chain_id: u16 = self.chain_id.to::<u16>();
         let emitter_address: [u8; 32] = self.emitter_address.as_slice().try_into().unwrap();
-        
+
         let bytes = serialize_data_source_to_bytes(chain_id, &emitter_address)
             .expect("Failed to serialize DataSource");
-        
+
         keccak256(bytes).to_slot(root)
     }
 }
@@ -143,7 +143,7 @@ mod tests {
 
         let actual_bytes = serialize_data_source_to_bytes(chain_id, &emitter_address)
             .expect("Serialization should succeed");
-        
+
         assert_eq!(actual_bytes, expected_bytes, "Serialization should produce identical bytes");
     }
 }

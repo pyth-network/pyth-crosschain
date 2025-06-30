@@ -3868,6 +3868,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-receiver-stylus"
+version = "0.1.11"
+dependencies = [
+ "alloy-primitives 0.8.20",
+ "alloy-sol-types 0.8.20",
+ "byteorder",
+ "dotenv",
+ "ethers",
+ "eyre",
+ "hex",
+ "pyth-types",
+ "pythnet-sdk",
+ "serde",
+ "stylus-sdk 0.9.0",
+ "tokio",
+ "wormhole-contract",
+ "wormhole-vaas",
+]
+
+[[package]]
 name = "pyth-sdk"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4890,25 +4910,6 @@ dependencies = [
  "alloy-sol-types 0.8.20",
  "cfg-if 1.0.0",
  "dyn-clone",
-]
-
-[[package]]
-name = "stylus-hello-world"
-version = "0.1.11"
-dependencies = [
- "alloy-primitives 0.8.20",
- "alloy-sol-types 0.8.20",
- "byteorder",
- "dotenv",
- "ethers",
- "eyre",
- "hex",
- "pyth-types",
- "pythnet-sdk",
- "stylus-sdk 0.9.0",
- "tokio",
- "wormhole-contract",
- "wormhole-vaas",
 ]
 
 [[package]]

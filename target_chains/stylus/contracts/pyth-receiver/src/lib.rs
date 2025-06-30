@@ -176,7 +176,6 @@ impl PythReceiver {
                         return Err(PythReceiverError::InvalidMerkleProof);
                     }
 
-                    // UPDATE STORED PRICE INFO BASED ON THE UPDATES IN THE VAA
                     let msg = from_slice::<byteorder::BE, Message>(&message_vec)
                         .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
 
@@ -263,15 +262,6 @@ impl PythReceiver {
 
         current_u64.saturating_sub(publish_time_u64) <= max_age
     }
-
-    // Updates the Price Feed only if it is newer than the current one. This function never fails
-    // and will either update in-place or not update at all. The return value indicates whether
-    // the update was performed or not.
-    // fn update_price_feed_if_new(&self, price_id: [u8; 32], price_feed: PriceInfo) -> bool {
-
-    // }
-
-
 }
 
 fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverError> {
@@ -282,5 +272,3 @@ fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverE
     });
     Ok(root)
 }
-
-
