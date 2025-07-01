@@ -3,8 +3,8 @@
 mod test {
     use crate::PythReceiver;
     use crate::error::PythReceiverError;
-    use alloy_primitives::{address, U256};
-    use stylus_sdk::testing::*;
+    use alloy_primitives::{address, U256, FixedBytes};
+    use stylus_sdk::testing::TestVM;
     use pythnet_sdk::wire::v1::PYTHNET_ACCUMULATOR_UPDATE_MAGIC;
 
     const TEST_PRICE_ID: [u8; 32] = [
@@ -149,10 +149,10 @@ mod test {
         let _test_price_id = TEST_PRICE_ID;
 
         let update_data1 = create_valid_update_data();
-        let _result1 = contract.update_price_feeds_internal(update_data1);
+        let _result1 = contract.update_price_feeds(update_data1);
 
         let update_data2 = create_valid_update_data();
-        let _result2 = contract.update_price_feeds_internal(update_data2);
+        let _result2 = contract.update_price_feeds(update_data2);
 
     }
 
@@ -162,7 +162,7 @@ mod test {
         let mut contract = initialize_test_contract(&vm);
 
         let invalid_data = create_invalid_magic_data();
-        let result = contract.update_price_feeds_internal(invalid_data);
+        let result = contract.update_price_feeds(invalid_data);
 
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), PythReceiverError::InvalidAccumulatorMessage));
@@ -174,7 +174,7 @@ mod test {
         let mut contract = initialize_test_contract(&vm);
 
         let short_data = create_short_data();
-        let result = contract.update_price_feeds_internal(short_data);
+        let result = contract.update_price_feeds(short_data);
 
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), PythReceiverError::InvalidUpdateData));
@@ -186,7 +186,7 @@ mod test {
         let mut contract = initialize_test_contract(&vm);
 
         let invalid_vaa_data = create_invalid_vaa_data();
-        let result = contract.update_price_feeds_internal(invalid_vaa_data);
+        let result = contract.update_price_feeds(invalid_vaa_data);
 
         assert!(result.is_err());
     }
@@ -197,7 +197,7 @@ mod test {
         let mut contract = initialize_test_contract(&vm);
 
         let invalid_merkle_data = create_invalid_merkle_data();
-        let result = contract.update_price_feeds_internal(invalid_merkle_data);
+        let result = contract.update_price_feeds(invalid_merkle_data);
 
         assert!(result.is_err());
     }
