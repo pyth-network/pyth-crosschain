@@ -1,6 +1,6 @@
 [package]
 name = "pyth-lazer-agent"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 [dependencies]
@@ -9,6 +9,7 @@ pyth-lazer-protocol = "0.7.2"
 
 anyhow = "1.0.98"
 backoff = "0.4.0"
+base64 = "0.22.1"
 bincode = { version = "2.0.1", features = ["serde"] }
 clap = { version = "4.5.32", features = ["derive"] }
 config = "0.15.11"
@@ -32,3 +33,6 @@ tokio-util = { version = "0.7.14", features = ["compat"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }
 url = { version = "2.5.4", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3.20.0"

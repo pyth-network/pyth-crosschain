@@ -74,8 +74,8 @@ impl MessageState {
 }
 
 #[derive(Clone, Copy)]
-#[allow(dead_code)]
 pub enum MessageStateFilter {
+    #[allow(dead_code, reason = "can be useful later")]
     All,
     Only(MessageType),
 }
@@ -94,11 +94,11 @@ pub struct CacheState {
     accumulator_messages_cache: AccumulatorMessagesCache,
     wormhole_merkle_state_cache: WormholeMerkleStateCache,
     message_cache: MessageCache,
-    cache_size: u64,
+    cache_size: usize,
 }
 
 impl CacheState {
-    pub fn new(size: u64) -> Self {
+    pub fn new(size: usize) -> Self {
         Self {
             accumulator_messages_cache: Arc::new(RwLock::new(BTreeMap::new())),
             wormhole_merkle_state_cache: Arc::new(RwLock::new(BTreeMap::new())),
@@ -164,7 +164,7 @@ where
             cache.insert(time, message_state);
 
             // Remove the earliest message states if the cache size is exceeded
-            while cache.len() > self.into().cache_size as usize {
+            while cache.len() > self.into().cache_size {
                 cache.pop_first();
             }
         }
@@ -238,7 +238,7 @@ where
 
         // Messages don't exist, store them
         cache.insert(slot, accumulator_messages);
-        while cache.len() > self.into().cache_size as usize {
+        while cache.len() > self.into().cache_size {
             cache.pop_first();
         }
         Ok(true)
@@ -264,7 +264,7 @@ where
 
         // State doesn't exist, store it
         cache.insert(slot, wormhole_merkle_state);
-        while cache.len() > self.into().cache_size as usize {
+        while cache.len() > self.into().cache_size {
             cache.pop_first();
         }
         Ok(true)
@@ -344,6 +344,7 @@ async fn retrieve_message_state(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, reason = "tests")]
 mod test {
     use {
         super::*,

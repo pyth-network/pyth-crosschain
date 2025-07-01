@@ -1,3 +1,4 @@
+use anyhow::Context;
 use log::warn;
 #[cfg(test)]
 use mock_instant::{SystemTime, UNIX_EPOCH};
@@ -164,8 +165,9 @@ pub struct AccumulatorMessages {
 }
 
 impl AccumulatorMessages {
+    #[allow(clippy::cast_possible_truncation, reason = "intended truncation")]
     pub fn ring_index(&self) -> u32 {
-        (self.slot % self.ring_size as u64) as u32
+        (self.slot % u64::from(self.ring_size)) as u32
     }
 }
 
@@ -492,7 +494,12 @@ where
         let state_data = self.into().data.read().await;
         let price_feeds_metadata = PriceFeedMeta::retrieve_price_feeds_metadata(self)
             .await
-            .unwrap();
+            .unwrap_or_else(|err| {
+                tracing::error!(
+                    "unexpected failure of PriceFeedMeta::retrieve_price_feeds_metadata(self): {err}"
+                );
+                Vec::new()
+            });
 
         let current_time = SystemTime::now();
 
@@ -529,8 +536,8 @@ where
                 latest_completed_unix_timestamp: state_data.latest_completed_update_time.and_then(
                     |t| {
                         t.duration_since(UNIX_EPOCH)
-                            .map(|d| d.as_secs() as i64)
                             .ok()
+                            .and_then(|d| d.as_secs().try_into().ok())
                     },
                 ),
                 price_feeds_metadata_len: price_feeds_metadata.len(),
@@ -547,7 +554,11 @@ fn build_message_states(
     let wormhole_merkle_message_states_proofs =
         construct_message_states_proofs(&accumulator_messages, &wormhole_merkle_state)?;
 
-    let current_time: UnixTimestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as _;
+    let current_time: UnixTimestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)?
+        .as_secs()
+        .try_into()
+        .context("timestamp overflow")?;
 
     accumulator_messages
         .raw_messages
@@ -663,7 +674,12 @@ where
         ));
     } else {
         // Use the publish time from the first end message
-        end_messages[0].message.publish_time() - window_seconds as i64
+        end_messages
+            .first()
+            .context("no messages found")?
+            .message
+            .publish_time()
+            - i64::try_from(window_seconds).context("window size overflow")?
     };
     let start_time = RequestTime::FirstAfter(start_timestamp);
 
@@ -807,6 +823,12 @@ fn calculate_twap(start_message: &TwapMessage, end_message: &TwapMessage) -> Res
 }
 
 #[cfg(test)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::indexing_slicing,
+    clippy::cast_possible_wrap,
+    reason = "tests"
+)]
 mod test {
     use {
         super::*,
@@ -892,11 +914,11 @@ mod test {
     ) -> PriceFeedMessage {
         PriceFeedMessage {
             feed_id: [seed; 32],
-            price: seed as _,
-            conf: seed as _,
+            price: seed.into(),
+            conf: seed.into(),
             exponent: 0,
-            ema_conf: seed as _,
-            ema_price: seed as _,
+            ema_conf: seed.into(),
+            ema_price: seed.into(),
             publish_time,
             prev_publish_time,
         }
@@ -1239,7 +1261,7 @@ mod test {
                         PriceIdentifier::new([100; 32]),
                         PriceIdentifier::new([200; 32])
                     ],
-                    RequestTime::FirstAfter(slot as i64),
+                    RequestTime::FirstAfter(slot.into()),
                 )
                 .await
                 .is_err());
@@ -1631,6 +1653,7 @@ mod test {
     }
 }
 #[cfg(test)]
+#[allow(clippy::unwrap_used, reason = "tests")]
 /// Unit tests for the core TWAP calculation logic in `calculate_twap`
 mod calculate_twap_unit_tests {
     use super::*;

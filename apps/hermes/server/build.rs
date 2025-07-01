@@ -13,6 +13,7 @@ fn main() {
     // Build the wormhole and google protobufs using Rust's prost_build crate.
     // The generated Rust code is placed in the OUT_DIR (env var set by cargo).
     // `network/wormhole.rs` then includes the generated code into the source while compilation is happening.
+    #[allow(clippy::expect_used, reason = "failing at build time is fine")]
     tonic_build::configure()
         .build_server(false)
         .compile(

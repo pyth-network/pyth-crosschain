@@ -1897,7 +1897,16 @@ importers:
     dependencies:
       '@coral-xyz/anchor':
         specifier: ^0.30.1
-        version: 0.30.1(encoding@0.1.13)
+        version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@pythnetwork/pyth-lazer-sdk':
+        specifier: workspace:*
+        version: link:../../sdk/js
+      '@solana/buffer-layout':
+        specifier: ^4.0.1
+        version: 4.0.1
+      '@solana/web3.js':
+        specifier: ^1.98.0
+        version: 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
     devDependencies:
       '@types/bn.js':
         specifier: ^5.1.0
@@ -1938,21 +1947,15 @@ importers:
       '@isaacs/ttlcache':
         specifier: ^1.4.1
         version: 1.4.1
-      '@solana/buffer-layout':
-        specifier: ^4.0.1
-        version: 4.0.1
-      '@solana/web3.js':
-        specifier: ^1.98.0
-        version: 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+        version: 5.0.0(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@6.0.3))
       ts-log:
         specifier: ^2.2.7
         version: 2.2.7
       ws:
         specifier: ^8.18.0
-        version: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+        version: 8.18.1(bufferutil@4.0.9)(utf-8-validate@6.0.3)
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
@@ -2889,6 +2892,9 @@ importers:
       jito-ts:
         specifier: ^3.0.1
         version: 3.0.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      ts-log:
+        specifier: ^2.2.7
+        version: 2.2.7
     devDependencies:
       '@solana/wallet-adapter-react':
         specifier: ^0.15.28
@@ -25499,28 +25505,6 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@coral-xyz/anchor@0.30.1(encoding@0.1.13)':
-    dependencies:
-      '@coral-xyz/anchor-errors': 0.30.1
-      '@coral-xyz/borsh': 0.30.1(@solana/web3.js@1.98.0(encoding@0.1.13))
-      '@noble/hashes': 1.7.1
-      '@solana/web3.js': 1.98.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)
-      bn.js: 5.2.1
-      bs58: 4.0.1
-      buffer-layout: 1.2.2
-      camelcase: 6.3.0
-      cross-fetch: 3.2.0(encoding@0.1.13)
-      crypto-hash: 1.3.0
-      eventemitter3: 4.0.7
-      pako: 2.1.0
-      snake-case: 3.0.4
-      superstruct: 0.15.5
-      toml: 3.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
-
   '@coral-xyz/borsh@0.2.6(@solana/web3.js@1.98.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3))':
     dependencies:
       '@solana/web3.js': 1.98.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)
@@ -25566,12 +25550,6 @@ snapshots:
   '@coral-xyz/borsh@0.30.1(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bn.js: 5.2.1
-      buffer-layout: 1.2.2
-
-  '@coral-xyz/borsh@0.30.1(@solana/web3.js@1.98.0(encoding@0.1.13))':
-    dependencies:
-      '@solana/web3.js': 1.98.0(bufferutil@4.0.7)(encoding@0.1.13)(utf-8-validate@6.0.3)
       bn.js: 5.2.1
       buffer-layout: 1.2.2
 
@@ -45225,6 +45203,10 @@ snapshots:
   isomorphic-ws@5.0.0(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
     dependencies:
       ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+
+  isomorphic-ws@5.0.0(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@6.0.3)):
+    dependencies:
+      ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@6.0.3)
 
   isows@1.0.6(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
     dependencies:

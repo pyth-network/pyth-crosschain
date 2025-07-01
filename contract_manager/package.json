@@ -31,7 +31,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "shell": "ts-node ./src/shell.ts",
+    "shell": "ts-node ./src/node/utils/shell.ts",
     "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "test:lint": "eslint src/ scripts/ --max-warnings 0",

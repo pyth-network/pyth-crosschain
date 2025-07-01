@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/solana-utils",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Utility functions for Solana",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
@@ -49,6 +49,7 @@
     "@coral-xyz/anchor": "^0.29.0",
     "@solana/web3.js": "^1.90.0",
     "bs58": "^5.0.0",
-    "jito-ts": "^3.0.1"
+    "jito-ts": "^3.0.1",
+    "ts-log": "^2.2.7"
   }
 }

@@ -14,5 +14,5 @@ pub struct Options {
     #[arg(long = "cache-size-slots")]
     #[arg(env = "CACHE_SIZE_SLOTS")]
     #[arg(default_value = "1600")]
-    pub size_slots: u64,
+    pub size_slots: usize,
 }
