@@ -12,10 +12,10 @@ mod integration_tests;
 use alloc::vec::Vec;
 use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Address},
                 prelude::*,
-                storage::{StorageGuardMut, StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
+                storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
                 call::Call};
 
-use structs::{PriceInfoReturn, PriceInfoStorage, DataSourceStorage, DataSource, PriceInfo};
+use structs::{PriceInfoReturn, PriceInfoStorage, DataSourceStorage, DataSource};
 use error::{PythReceiverError};
 use pythnet_sdk::{wire::{from_slice, v1::{
             AccumulatorUpdateData, Proof,
@@ -27,7 +27,7 @@ use pythnet_sdk::{wire::{from_slice, v1::{
     hashers::keccak256_160::Keccak160,
     messages::Message
 };
-use wormhole_vaas::{Readable, Vaa, VaaBody, VaaHeader, Writeable};
+use wormhole_vaas::{Readable, Vaa, Writeable};
 
 const ACCUMULATOR_WORMHOLE_MAGIC: u32 = 0x41555756;
 
@@ -61,7 +61,7 @@ impl PythReceiver {
     pub fn initialize(&mut self, wormhole: Address, single_update_fee_in_wei: U256, valid_time_period_seconds: U256,
                             data_source_emitter_chain_ids: Vec<u16>, data_source_emitter_addresses: Vec<[u8; 32]>,
                             governance_emitter_chain_id: u16, governance_emitter_address: [u8; 32],
-                            governance_initial_sequence: u64, data: Vec<u8>) {
+                            governance_initial_sequence: u64, _data: Vec<u8>) {
         self.wormhole.set(wormhole);
         self.single_update_fee_in_wei.set(single_update_fee_in_wei);
         self.valid_time_period_seconds.set(valid_time_period_seconds);
@@ -120,12 +120,30 @@ impl PythReceiver {
         Ok(price_info)
     }
 
-    pub fn get_ema_price_unsafe(&self, _id: [u8; 32]) -> PriceInfoReturn {
-        (U64::ZERO, I32::ZERO, I64::ZERO, U64::ZERO, I64::ZERO, U64::ZERO)
+    pub fn get_ema_price_unsafe(&self, id: [u8; 32]) -> Result<PriceInfoReturn, PythReceiverError> {
+        let id_fb = FixedBytes::<32>::from(id);
+        let price_info = self.latest_price_info.get(id_fb);
+
+        if price_info.publish_time.get() == U64::ZERO {
+            return Err(PythReceiverError::PriceUnavailable);
+        }
+
+        Ok((
+            price_info.publish_time.get(),
+            price_info.expo.get(),
+            price_info.ema_price.get(),
+            price_info.ema_conf.get(),
+            price_info.ema_price.get(),
+            price_info.ema_conf.get(),
+        ))
     }
 
-    pub fn get_ema_price_no_older_than(&self, _id: [u8; 32], _age: u64) -> PriceInfoReturn {
-        (U64::ZERO, I32::ZERO, I64::ZERO, U64::ZERO, I64::ZERO, U64::ZERO)
+    pub fn get_ema_price_no_older_than(&self, id: [u8; 32], age: u64) -> Result<PriceInfoReturn, PythReceiverError> {
+        let price_info = self.get_ema_price_unsafe(id)?;
+        if !self.is_no_older_than(price_info.0, age) {
+            return Err(PythReceiverError::NewPriceUnavailable);
+        }
+        Ok(price_info)
     }
 
     pub fn update_price_feeds(&mut self, update_data: Vec<u8>) -> Result<(), PythReceiverError> {
@@ -284,7 +302,3 @@ fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverE
     });
     Ok(root)
 }
-
-
-#[cfg(test)]
-pub use integration_tests::*;

@@ -125,14 +125,14 @@ pub type PriceInfoReturn = (U64, I32, I64, U64, I64, U64);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use stylus_sdk::alloy_primitives::{U16, FixedBytes, B256, U256};
+    use stylus_sdk::alloy_primitives::{U16, FixedBytes};
 
     #[test]
     fn test_data_source_serialization_compatibility() {
         let chain_id = 1u16;
         let emitter_address = [1u8; 32];
 
-        let data_source = DataSource {
+        let _data_source = DataSource {
             chain_id: U16::from(chain_id),
             emitter_address: FixedBytes::from(emitter_address),
         };
