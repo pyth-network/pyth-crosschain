@@ -128,8 +128,9 @@ impl PythReceiver {
         (U64::ZERO, I32::ZERO, I64::ZERO, U64::ZERO, I64::ZERO, U64::ZERO)
     }
 
-    pub fn update_price_feeds(&mut self, update_data: Vec<u8>) {
-
+    pub fn update_price_feeds(&mut self, update_data: Vec<u8>) -> Result<(), PythReceiverError> {
+        self.update_price_feeds_internal(update_data)?;
+        Ok(())
     }
 
     pub fn update_price_feeds_if_necessary(
@@ -141,7 +142,8 @@ impl PythReceiver {
         // dummy implementation
     }
 
-    fn update_price_feeds_internal(&mut self, update_data: Vec<u8>, price_ids: Vec<Address>, min_publish_time: u64, max_publish_time: u64, unique: bool) -> Result<(), PythReceiverError> {
+    // fn update_price_feeds_internal(&mut self, update_data: Vec<u8>, price_ids: Vec<Address>, min_publish_time: u64, max_publish_time: u64, unique: bool) -> Result<(), PythReceiverError> {
+    fn update_price_feeds_internal(&mut self, update_data: Vec<u8>) -> Result<(), PythReceiverError> {
         let update_data_array: &[u8] = &update_data;
         // Check the first 4 bytes of the update_data_array for the magic header
         if update_data_array.len() < 4 {
