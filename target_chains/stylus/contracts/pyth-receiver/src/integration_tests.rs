@@ -128,7 +128,7 @@ mod test {
     #[test]
     fn test_update_new_price_feed() {
         let vm = TestVM::default();
-        let contract = initialize_test_contract(&vm);
+        let mut contract = initialize_test_contract(&vm);
 
         let test_price_id = TEST_PRICE_ID;
 
@@ -144,7 +144,7 @@ mod test {
     #[test]
     fn test_update_existing_price_feed() {
         let vm = TestVM::default();
-        let contract = initialize_test_contract(&vm);
+        let mut contract = initialize_test_contract(&vm);
 
         let _test_price_id = TEST_PRICE_ID;
 
@@ -159,7 +159,7 @@ mod test {
     #[test]
     fn test_invalid_magic_header() {
         let vm = TestVM::default();
-        let contract = initialize_test_contract(&vm);
+        let mut contract = initialize_test_contract(&vm);
 
         let invalid_data = create_invalid_magic_data();
         let result = contract.update_price_feeds_internal(invalid_data);
@@ -171,7 +171,7 @@ mod test {
     #[test]
     fn test_invalid_wire_format() {
         let vm = TestVM::default();
-        let contract = initialize_test_contract(&vm);
+        let mut contract = initialize_test_contract(&vm);
 
         let short_data = create_short_data();
         let result = contract.update_price_feeds_internal(short_data);
@@ -183,7 +183,7 @@ mod test {
     #[test]
     fn test_invalid_wormhole_vaa() {
         let vm = TestVM::default();
-        let contract = initialize_test_contract(&vm);
+        let mut contract = initialize_test_contract(&vm);
 
         let invalid_vaa_data = create_invalid_vaa_data();
         let result = contract.update_price_feeds_internal(invalid_vaa_data);
@@ -194,7 +194,7 @@ mod test {
     #[test]
     fn test_invalid_merkle_proof() {
         let vm = TestVM::default();
-        let contract = initialize_test_contract(&vm);
+        let mut contract = initialize_test_contract(&vm);
 
         let invalid_merkle_data = create_invalid_merkle_data();
         let result = contract.update_price_feeds_internal(invalid_merkle_data);
