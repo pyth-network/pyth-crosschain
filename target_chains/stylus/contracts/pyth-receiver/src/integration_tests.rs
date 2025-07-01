@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod test {
-    use super::*;
     use crate::PythReceiver;
     use alloy_primitives::{address, U256};
     use stylus_sdk::testing::*;
