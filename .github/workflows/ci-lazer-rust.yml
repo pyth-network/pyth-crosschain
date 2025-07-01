@@ -30,6 +30,7 @@ jobs:
         uses: arduino/setup-protoc@v3
         with:
           version: "30.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
       - name: install taplo
