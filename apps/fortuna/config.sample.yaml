@@ -87,6 +87,15 @@ keeper:
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
 
+  # Fee manager private key for fee manager operations (optional)
+  # fee_manager_private_key:
+  #   value: 0xabcd
+  #   # file: fee-manager-key.txt
+
+  # List of known keeper wallet addresses for balance comparison (optional)
+  # The keeper will only withdraw fees if its balance is the lowest among these addresses.
+
+
   # Runtime configuration for the keeper service
   # Optional: Configure which keeper threads to disable. If running multiple replicas,
   # only a single replica should have the fee adjustment and withdrawal threads enabled.

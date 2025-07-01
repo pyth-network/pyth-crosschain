@@ -2,7 +2,7 @@ use {
     crate::{
         api::{BlockchainState, ChainId},
         chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
-        config::{EthereumConfig, ReplicaConfig, RunConfig},
+        config::EthereumConfig,
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{
@@ -57,9 +57,7 @@ pub enum RequestState {
 #[allow(clippy::too_many_arguments)] // Top level orchestration function that needs to configure several threads
 #[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.id))]
 pub async fn run_keeper_threads(
-    keeper_private_key: String,
-    keeper_replica_config: Option<ReplicaConfig>,
-    keeper_run_config: RunConfig,
+    keeper_config: crate::config::KeeperConfig,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -69,6 +67,10 @@ pub async fn run_keeper_threads(
     tracing::info!("Starting keeper");
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("Latest safe block: {}", &latest_safe_block);
+
+    let keeper_private_key = keeper_config.private_key.load()?.ok_or_else(|| {
+        anyhow::anyhow!("Keeper private key is required but not provided in config")
+    })?;
 
     let contract = Arc::new(InstrumentedSignablePythContract::from_config(
         &chain_eth_config,
@@ -88,7 +90,7 @@ pub async fn run_keeper_threads(
         contract: contract.clone(),
         gas_limit,
         escalation_policy: chain_eth_config.escalation_policy.to_policy(),
-        replica_config: keeper_replica_config,
+        replica_config: keeper_config.replica_config.clone(),
         metrics: metrics.clone(),
         fulfilled_requests_cache,
         history,
@@ -120,13 +122,20 @@ pub async fn run_keeper_threads(
     );
 
     // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
-    if !keeper_run_config.disable_fee_withdrawal {
+    if !keeper_config.run_config.disable_fee_withdrawal {
+        let fee_manager_private_key = keeper_config
+            .fee_manager_private_key
+            .as_ref()
+            .and_then(|key| key.load().ok())
+            .flatten();
         spawn(
             withdraw_fees_wrapper(
                 contract.clone(),
                 chain_state.provider_address,
                 WITHDRAW_INTERVAL,
                 U256::from(chain_eth_config.min_keeper_balance),
+                fee_manager_private_key,
+                keeper_config.known_keeper_addresses.clone(),
             )
             .in_current_span(),
         );
@@ -135,7 +144,7 @@ pub async fn run_keeper_threads(
     }
 
     // Spawn a thread that periodically adjusts the provider fee.
-    if !keeper_run_config.disable_fee_adjustment {
+    if !keeper_config.run_config.disable_fee_adjustment {
         spawn(
             adjust_fee_wrapper(
                 contract.clone(),

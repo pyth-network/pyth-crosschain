@@ -16,17 +16,60 @@ use {
     tracing::{self, Instrument},
 };
 
+async fn should_withdraw_fees<M: Middleware>(
+    provider: Arc<M>,
+    current_keeper_address: Address,
+    known_keeper_addresses: &[Address],
+) -> Result<bool> {
+    if known_keeper_addresses.is_empty() {
+        return Ok(true);
+    }
+
+    let current_balance = provider
+        .get_balance(current_keeper_address, None)
+        .await
+        .map_err(|e| anyhow!("Error while getting current keeper balance. error: {:?}", e))?;
+
+    for &address in known_keeper_addresses {
+        let balance = provider.get_balance(address, None).await.map_err(|e| {
+            anyhow!(
+                "Error while getting keeper balance for {:?}. error: {:?}",
+                address,
+                e
+            )
+        })?;
+
+        if balance < current_balance {
+            tracing::info!(
+                "Skipping fee withdrawal: keeper {:?} has lower balance ({:?}) than current keeper {:?} ({:?})",
+                address, balance, current_keeper_address, current_balance
+            );
+            return Ok(false);
+        }
+    }
+
+    Ok(true)
+}
+
 #[tracing::instrument(name = "withdraw_fees", skip_all, fields())]
 pub async fn withdraw_fees_wrapper(
     contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
     poll_interval: Duration,
     min_balance: U256,
+    fee_manager_private_key: Option<String>,
+    known_keeper_addresses: Vec<Address>,
 ) {
     loop {
-        if let Err(e) = withdraw_fees_if_necessary(contract.clone(), provider_address, min_balance)
-            .in_current_span()
-            .await
+        if let Err(e) = withdraw_fees_if_necessary(
+            contract.clone(),
+            provider_address,
+            min_balance,
+            fee_manager_private_key.clone(),
+            known_keeper_addresses.clone(),
+        )
+        .in_current_span()
+        .await
         {
             tracing::error!("Withdrawing fees. error: {:?}", e);
         }
@@ -39,6 +82,8 @@ pub async fn withdraw_fees_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
     min_balance: U256,
+    fee_manager_private_key: Option<String>,
+    known_keeper_addresses: Vec<Address>,
 ) -> Result<()> {
     let provider = contract.provider();
     let wallet = contract.wallet();
@@ -48,22 +93,38 @@ pub async fn withdraw_fees_if_necessary(
         .await
         .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
 
+    if !should_withdraw_fees(
+        Arc::new(provider.clone()),
+        wallet.address(),
+        &known_keeper_addresses,
+    )
+    .await?
+    {
+        return Ok(());
+    }
+
     let provider_info = contract
         .get_provider_info(provider_address)
         .call()
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
 
-    if provider_info.fee_manager != wallet.address() {
-        return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}", provider, provider_info.fee_manager, wallet.address()));
-    }
-
     let fees = provider_info.accrued_fees_in_wei;
 
     if keeper_balance < min_balance && U256::from(fees) > min_balance {
         tracing::info!("Claiming accrued fees...");
-        let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
-        send_and_confirm(contract_call).await?;
+
+        if let Some(_fee_manager_key) = fee_manager_private_key {
+            let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
+            send_and_confirm(contract_call).await?;
+        } else {
+            if provider_info.fee_manager != wallet.address() {
+                return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet and no fee manager private key is configured. Fee manager: {:?} Keeper: {:?}", provider_address, provider_info.fee_manager, wallet.address()));
+            }
+
+            let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
+            send_and_confirm(contract_call).await?;
+        }
     } else if keeper_balance < min_balance {
         // NOTE: This log message triggers a grafana alert. If you want to change the text, please change the alert also.
         tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up.", keeper_balance, min_balance)

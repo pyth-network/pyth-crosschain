@@ -383,6 +383,15 @@ pub struct KeeperConfig {
     /// should ensure this is a different key in order to reduce the severity of security breaches.
     pub private_key: SecretString,
 
+    /// The fee manager's private key for fee manager operations.
+    /// This key is used to withdraw fees from the contract as the fee manager.
+    /// Multiple replicas can share the same fee manager private key.
+    #[serde(default)]
+    pub fee_manager_private_key: Option<SecretString>,
+
+    #[serde(default)]
+    pub known_keeper_addresses: Vec<Address>,
+
     #[serde(default)]
     pub replica_config: Option<ReplicaConfig>,
 
