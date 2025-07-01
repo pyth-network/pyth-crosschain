@@ -165,6 +165,17 @@ impl PythReceiver {
 
                 // TODO: CHECK IF THE VAA IS FROM A VALID DATA SOURCE
 
+                let cur_emitter_address: &[u8; 32] = vaa.body.emitter_address.as_slice().try_into().expect("emitter address must be 32 bytes");
+
+                let cur_data_source = DataSource {
+                    chain_id: U16::from(vaa.body.emitter_chain),
+                    emitter_address: FixedBytes::from(cur_emitter_address),
+                };
+
+                if !self.is_valid_data_source.get(cur_data_source) {
+                    return Err(PythReceiverError::InvalidWormholeMessage);
+                }
+
                 let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa).unwrap();
 
                 for update in updates {
