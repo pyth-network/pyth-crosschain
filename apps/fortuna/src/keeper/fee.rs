@@ -8,10 +8,10 @@ use {
     anyhow::{anyhow, Result},
     ethers::{
         middleware::Middleware,
-        signers::Signer,
-        types::{Address, U256},
+        signers::{LocalWallet, Signer},
+        types::{Address, TransactionRequest, U256},
     },
-    std::sync::Arc,
+    std::{str::FromStr, sync::Arc},
     tokio::time::{self, Duration},
     tracing::{self, Instrument},
 };
@@ -57,7 +57,7 @@ pub async fn withdraw_fees_wrapper(
     provider_address: Address,
     poll_interval: Duration,
     min_balance: U256,
-    fee_manager_private_key: Option<String>,
+    fee_manager_private_key: String,
     known_keeper_addresses: Vec<Address>,
 ) {
     loop {
@@ -82,16 +82,11 @@ pub async fn withdraw_fees_if_necessary(
     contract: Arc<InstrumentedSignablePythContract>,
     provider_address: Address,
     min_balance: U256,
-    fee_manager_private_key: Option<String>,
+    fee_manager_private_key: String,
     known_keeper_addresses: Vec<Address>,
 ) -> Result<()> {
     let provider = contract.provider();
     let wallet = contract.wallet();
-
-    let keeper_balance = provider
-        .get_balance(wallet.address(), None)
-        .await
-        .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
 
     if !should_withdraw_fees(
         Arc::new(provider.clone()),
@@ -102,6 +97,11 @@ pub async fn withdraw_fees_if_necessary(
     {
         return Ok(());
     }
+
+    let keeper_balance = provider
+        .get_balance(wallet.address(), None)
+        .await
+        .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
 
     let provider_info = contract
         .get_provider_info(provider_address)
@@ -114,16 +114,59 @@ pub async fn withdraw_fees_if_necessary(
     if keeper_balance < min_balance && U256::from(fees) > min_balance {
         tracing::info!("Claiming accrued fees...");
 
-        if let Some(_fee_manager_key) = fee_manager_private_key {
-            let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
-            send_and_confirm(contract_call).await?;
-        } else {
-            if provider_info.fee_manager != wallet.address() {
-                return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet and no fee manager private key is configured. Fee manager: {:?} Keeper: {:?}", provider_address, provider_info.fee_manager, wallet.address()));
-            }
+        let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
+        send_and_confirm(contract_call).await?;
 
-            let contract_call = contract.withdraw_as_fee_manager(provider_address, fees);
-            send_and_confirm(contract_call).await?;
+        let fee_manager_wallet = LocalWallet::from_str(&fee_manager_private_key)
+            .map_err(|e| anyhow!("Invalid fee manager private key: {:?}", e))?;
+        let fee_manager_address = fee_manager_wallet.address();
+        let keeper_address = wallet.address();
+
+        if fee_manager_address != keeper_address {
+            tracing::info!(
+                "Transferring withdrawn fees from fee manager {:?} to keeper {:?}",
+                fee_manager_address,
+                keeper_address
+            );
+
+            let transfer_amount = U256::from(fees);
+            let chain_id = provider
+                .get_chainid()
+                .await
+                .map_err(|e| anyhow!("Failed to get chain ID: {:?}", e))?;
+
+            let gas_price = provider
+                .get_gas_price()
+                .await
+                .map_err(|e| anyhow!("Failed to get gas price: {:?}", e))?;
+
+            let nonce = provider
+                .get_transaction_count(fee_manager_address, None)
+                .await
+                .map_err(|e| anyhow!("Failed to get nonce: {:?}", e))?;
+
+            let tx = TransactionRequest::new()
+                .to(keeper_address)
+                .value(transfer_amount)
+                .from(fee_manager_address)
+                .gas(21000) // Standard ETH transfer gas limit
+                .gas_price(gas_price)
+                .nonce(nonce)
+                .chain_id(chain_id.as_u64());
+
+            let typed_tx = tx.into();
+            let signature = fee_manager_wallet
+                .sign_transaction(&typed_tx)
+                .await
+                .map_err(|e| anyhow!("Failed to sign transfer transaction: {:?}", e))?;
+
+            let signed_tx = typed_tx.rlp_signed(&signature);
+            let tx_hash = provider
+                .send_raw_transaction(signed_tx)
+                .await
+                .map_err(|e| anyhow!("Failed to send transfer transaction: {:?}", e))?;
+
+            tracing::info!("Transfer transaction sent: {:?}", tx_hash);
         }
     } else if keeper_balance < min_balance {
         // NOTE: This log message triggers a grafana alert. If you want to change the text, please change the alert also.

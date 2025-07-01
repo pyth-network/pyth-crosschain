@@ -385,7 +385,7 @@ pub struct KeeperConfig {
 
     /// The fee manager's private key for fee manager operations.
     /// This key is used to withdraw fees from the contract as the fee manager.
-    /// Multiple replicas can share the same fee manager private key.
+    /// Multiple replicas can share the same fee manager private key but different keeper keys (`private_key`).
     #[serde(default)]
     pub fee_manager_private_key: Option<SecretString>,
 

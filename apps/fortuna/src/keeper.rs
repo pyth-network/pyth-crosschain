@@ -126,8 +126,17 @@ pub async fn run_keeper_threads(
         let fee_manager_private_key = keeper_config
             .fee_manager_private_key
             .as_ref()
-            .and_then(|key| key.load().ok())
-            .flatten();
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Fee manager private key is required when fee withdrawal is enabled"
+                )
+            })?
+            .load()?
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Fee manager private key value is required when fee withdrawal is enabled"
+                )
+            })?;
         spawn(
             withdraw_fees_wrapper(
                 contract.clone(),

@@ -3,7 +3,7 @@ use {
         api::{self, ApiBlockChainState, BlockchainState, ChainId},
         chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
-        config::{Commitment, Config, EthereumConfig, ProviderConfig, RunOptions},
+        config::{Commitment, Config, EthereumConfig, KeeperConfig, ProviderConfig, RunOptions},
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{self, keeper_metrics::KeeperMetrics},
@@ -100,9 +100,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
     }
 
-    let keeper_replica_config = config.keeper.replica_config.clone();
-    let keeper_run_config = config.keeper.run_config.clone();
-
     let chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>> = Arc::new(RwLock::new(
         config
             .chains
@@ -115,28 +112,16 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         keeper_metrics.add_chain(chain_id.clone(), config.provider.address);
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();
-        let keeper_replica_config = keeper_replica_config.clone();
-        let keeper_run_config = keeper_run_config.clone();
         let chains = chains.clone();
         let secret_copy = secret.clone();
         let rpc_metrics = rpc_metrics.clone();
         let provider_config = config.provider.clone();
         let history = history.clone();
-        let fee_manager_private_key = config.keeper.fee_manager_private_key.clone();
-        let known_keeper_addresses = config.keeper.known_keeper_addresses.clone();
+        let keeper_config_base = config.keeper.clone();
         spawn(async move {
             loop {
                 let keeper_config = if keeper_private_key_option.is_some() {
-                    Some(crate::config::KeeperConfig {
-                        private_key: crate::config::SecretString {
-                            value: keeper_private_key_option.clone(),
-                            file: None,
-                        },
-                        fee_manager_private_key: fee_manager_private_key.clone(),
-                        known_keeper_addresses: known_keeper_addresses.clone(),
-                        replica_config: keeper_replica_config.clone(),
-                        run_config: keeper_run_config.clone(),
-                    })
+                    Some(keeper_config_base.clone())
                 } else {
                     None
                 };
@@ -195,7 +180,7 @@ async fn setup_chain_and_run_keeper(
     chain_id: &ChainId,
     chain_config: EthereumConfig,
     keeper_metrics: Arc<KeeperMetrics>,
-    keeper_config: Option<crate::config::KeeperConfig>,
+    keeper_config: Option<KeeperConfig>,
     chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
     secret_copy: &str,
     history: Arc<History>,
