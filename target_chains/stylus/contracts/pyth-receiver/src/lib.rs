@@ -7,6 +7,7 @@ extern crate alloc;
 
 mod structs;
 mod error;
+mod integration_tests;
 
 use alloc::vec::Vec;
 use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Address},
@@ -163,8 +164,6 @@ impl PythReceiver {
                 let parsed_vaa = wormhole.parse_and_verify_vm(config, Vec::from(vaa)).map_err(|_| PythReceiverError::InvalidWormholeMessage).unwrap();
                 let vaa = Vaa::read(&mut parsed_vaa.as_slice()).unwrap();
 
-                // TODO: CHECK IF THE VAA IS FROM A VALID DATA SOURCE
-
                 let cur_emitter_address: &[u8; 32] = vaa.body.emitter_address.as_slice().try_into().expect("emitter address must be 32 bytes");
 
                 let cur_data_source = DataSource {
@@ -283,3 +282,7 @@ fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverE
     });
     Ok(root)
 }
+
+
+#[cfg(test)]
+pub use integration_tests::*;
