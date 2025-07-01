@@ -7,7 +7,10 @@ extern crate alloc;
 
 mod structs;
 mod error;
+#[cfg(test)]
 mod integration_tests;
+#[cfg(test)]
+mod test_data;
 
 use alloc::vec::Vec;
 use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Address},

@@ -3,6 +3,7 @@
 mod test {
     use crate::PythReceiver;
     use crate::error::PythReceiverError;
+    use crate::test_data;
     use alloy_primitives::{address, U256, FixedBytes};
     use stylus_sdk::testing::TestVM;
     use pythnet_sdk::wire::v1::PYTHNET_ACCUMULATOR_UPDATE_MAGIC;
@@ -53,10 +54,7 @@ mod test {
     }
 
     fn create_valid_update_data() -> Vec<u8> {
-        let mut data = Vec::new();
-        data.extend_from_slice(PYTHNET_ACCUMULATOR_UPDATE_MAGIC);
-        data.extend_from_slice(&[0u8; 100]);
-        data
+        test_data::good_update1()
     }
 
     fn create_invalid_magic_data() -> Vec<u8> {
@@ -252,15 +250,24 @@ mod test {
         assert!(initial_result.is_err());
         assert!(matches!(initial_result.unwrap_err(), PythReceiverError::PriceUnavailable));
 
-        // let update_data = create_valid_update_data();
-        // let update_result = contract.update_price_feeds(update_data);
+    }
 
-        // let price_result = contract.get_price_unsafe(TEST_PRICE_ID);
-        // assert!(price_result.is_ok());
+    #[test]
+    fn test_realistic_test_data_functions() {
+        let good_update_data = test_data::good_update1();
+        assert!(!good_update_data.is_empty());
+        assert!(good_update_data.len() > 100);
 
-        // let price_info = price_result.unwrap();
-        // assert_eq!(price_info.0.to::<u64>(), TEST_PUBLISH_TIME);
-        // assert_eq!(price_info.2.to::<i64>(), TEST_PRICE);
-        // assert_eq!(price_info.3.to::<u64>(), TEST_CONF);
+        let vaa_data = test_data::good_vm1();
+        assert!(!vaa_data.is_empty());
+        assert!(vaa_data.len() > 50);
+
+        let price_update_data = test_data::test_price_update1();
+        assert!(!price_update_data.is_empty());
+        assert!(price_update_data.len() > 100);
+
+        let price_update2_data = test_data::test_price_update2();
+        assert!(!price_update2_data.is_empty());
+        assert!(price_update2_data.len() > 100);
     }
 }
