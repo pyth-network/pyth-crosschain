@@ -3214,6 +3214,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-lazer-publisher-sdk"
+version = "0.1.6"
+dependencies = [
+ "anyhow",
+ "fs-err",
+ "humantime",
+ "protobuf",
+ "protobuf-codegen",
+ "pyth-lazer-protocol",
+ "serde-value",
+ "tracing",
+]
+
+[[package]]
 name = "pyth-lazer-solana-contract"
 version = "0.4.2"
 dependencies = [
