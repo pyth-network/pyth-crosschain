@@ -5,18 +5,13 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
-#[cfg(all(not(any(feature = "std", feature = "export-abi")), feature = "main"))]
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
 
 mod types;
 use types::{GuardianSet, GuardianSignature, VerifiedVM, WormholeError};
 
 use alloc::{vec, vec::Vec};
 use stylus_sdk::{
-    prelude::{entrypoint, public, storage},
+    prelude::*,
     storage::{StorageMap, StorageUint, StorageAddress, StorageBool},
     alloy_primitives::{Address, FixedBytes, U256, keccak256},
 };

@@ -1,4 +1,5 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
+#![cfg_attr(not(feature = "export-abi"), no_std)]
 
 #[cfg(feature = "export-abi")]
 fn main() {
