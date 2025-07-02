@@ -27,7 +27,7 @@ mod test {
 
     fn initialize_test_contract(vm: &TestVM) -> PythReceiver {
         let mut contract = PythReceiver::from(vm);
-        let wormhole_address = address!("0x3F38404A2e3Cb949bcDfA19a5C3bDf3fE375fEb0");
+        let wormhole_address = address!("0x395921b642ba511d421ae834fef56ac886735ca2");
         let single_update_fee = U256::from(100u64);
         let valid_time_period = U256::from(3600u64);
 
@@ -130,7 +130,7 @@ mod test {
 
         let test_price_id = TEST_PRICE_ID;
 
-        let update_data = create_valid_update_data();
+        let update_data = test_data::good_update1();
         let _result = contract.update_price_feeds(update_data);
 
 

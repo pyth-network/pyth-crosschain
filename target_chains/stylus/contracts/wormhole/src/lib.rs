@@ -5,7 +5,7 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
-#[cfg(all(not(any(feature = "std", feature = "export-abi")), feature = "main"))]
+#[cfg(all(not(any(feature = "std", feature = "export-abi"))))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}

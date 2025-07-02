@@ -154,14 +154,14 @@ impl PythReceiver {
         Ok(())
     }
 
-    pub fn update_price_feeds_if_necessary(
-        &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _publish_times: Vec<u64>,
-    ) {
-        // dummy implementation
-    }
+    // pub fn update_price_feeds_if_necessary(
+    //     &mut self,
+    //     _update_data: Vec<Vec<u8>>,
+    //     _price_ids: Vec<[u8; 32]>,
+    //     _publish_times: Vec<u64>,
+    // ) {
+    //     // dummy implementation
+    // }
 
     // fn update_price_feeds_internal(&mut self, update_data: Vec<u8>, price_ids: Vec<Address>, min_publish_time: u64, max_publish_time: u64, unique: bool) -> Result<(), PythReceiverError> {
     fn update_price_feeds_internal(&mut self, update_data: Vec<u8>) -> Result<(), PythReceiverError> {
@@ -240,60 +240,57 @@ impl PythReceiver {
         Ok(())
     }
 
-    pub fn get_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
-        U256::from(0u8)
-    }
+    // pub fn get_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
+    //     U256::from(0u8)
+    // }
 
-    pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
-        U256::from(0u8)
-    }
+    // pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
+    //     U256::from(0u8)
+    // }
 
-    pub fn parse_price_feed_updates(
-        &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _min_publish_time: u64,
-        _max_publish_time: u64,
-    ) -> Vec<PriceInfoReturn> {
-        Vec::new()
-    }
+    // pub fn parse_price_feed_updates(
+    //     &mut self,
+    //     _update_data: Vec<Vec<u8>>,
+    //     _price_ids: Vec<[u8; 32]>,
+    //     _min_publish_time: u64,
+    //     _max_publish_time: u64,
+    // ) -> Vec<PriceInfoReturn> {
+    //     Vec::new()
+    // }
 
-    pub fn parse_price_feed_updates_with_config(
-        &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _min_allowed_publish_time: u64,
-        _max_allowed_publish_time: u64,
-        _check_uniqueness: bool,
-        _check_update_data_is_minimal: bool,
-        _store_updates_if_fresh: bool,
-    ) -> (Vec<PriceInfoReturn>, Vec<u64>) {
-        (Vec::new(), Vec::new())
-    }
+    // pub fn parse_price_feed_updates_with_config(
+    //     &mut self,
+    //     _update_data: Vec<Vec<u8>>,
+    //     _price_ids: Vec<[u8; 32]>,
+    //     _min_allowed_publish_time: u64,
+    //     _max_allowed_publish_time: u64,
+    //     _check_uniqueness: bool,
+    //     _check_update_data_is_minimal: bool,
+    //     _store_updates_if_fresh: bool,
+    // ) -> (Vec<PriceInfoReturn>, Vec<u64>) {
+    //     (Vec::new(), Vec::new())
+    // }
 
-    pub fn parse_twap_price_feed_updates(
-        &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-    ) -> Vec<PriceInfoReturn> {
-        Vec::new()
-    }
+    // pub fn parse_twap_price_feed_updates(
+    //     &mut self,
+    //     _update_data: Vec<Vec<u8>>,
+    //     _price_ids: Vec<[u8; 32]>,
+    // ) -> Vec<PriceInfoReturn> {
+    //     Vec::new()
+    // }
 
-    pub fn parse_price_feed_updates_unique(
-        &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _min_publish_time: u64,
-        _max_publish_time: u64,
-    ) -> Vec<PriceInfoReturn> {
-        Vec::new()
-    }
+    // pub fn parse_price_feed_updates_unique(
+    //     &mut self,
+    //     _update_data: Vec<Vec<u8>>,
+    //     _price_ids: Vec<[u8; 32]>,
+    //     _min_publish_time: u64,
+    //     _max_publish_time: u64,
+    // ) -> Vec<PriceInfoReturn> {
+    //     Vec::new()
+    // }
 
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
-        let current_u64: u64 = self.vm().block_timestamp();
-        let publish_time_u64: u64 = publish_time.to::<u64>();
-
-        current_u64.saturating_sub(publish_time_u64) <= max_age
+        self.vm().block_timestamp().saturating_sub(publish_time.to::<u64>()) <= max_age
     }
 }
 

@@ -46,17 +46,17 @@ pub struct DataSource {
     pub emitter_address: FixedBytes<32>,
 }
 
-impl StorageKey for DataSourceStorage {
-    fn to_slot(&self, root: B256) -> U256 {
-        let chain_id: u16 = self.chain_id.get().to::<u16>();
-        let emitter_address = self.emitter_address.get();
+// impl StorageKey for DataSourceStorage {
+//     fn to_slot(&self, root: B256) -> U256 {
+//         let chain_id: u16 = self.chain_id.get().to::<u16>();
+//         let emitter_address = self.emitter_address.get();
 
-        let bytes = serialize_data_source_to_bytes(chain_id, emitter_address.as_slice().try_into().unwrap())
-            .expect("Failed to serialize DataSource");
+//         let bytes = serialize_data_source_to_bytes(chain_id, emitter_address.as_slice().try_into().unwrap())
+//             .expect("Failed to serialize DataSource");
 
-        keccak256(bytes).to_slot(root)
-    }
-}
+//         keccak256(bytes).to_slot(root)
+//     }
+// }
 
 impl StorageKey for DataSource {
     fn to_slot(&self, root: B256) -> U256 {
@@ -97,27 +97,27 @@ pub struct PriceInfoStorage {
     pub ema_conf: StorageU64,
 }
 
-pub struct PriceInfo {
-    pub publish_time: U64,
-    pub expo: I32,
-    pub price: I64,
-    pub conf: U64,
-    pub ema_price: I64,
-    pub ema_conf: U64,
-}
+// pub struct PriceInfo {
+//     pub publish_time: U64,
+//     pub expo: I32,
+//     pub price: I64,
+//     pub conf: U64,
+//     pub ema_price: I64,
+//     pub ema_conf: U64,
+// }
 
-impl From<&PriceFeedMessage> for PriceInfo {
-    fn from(price_feed_message: &PriceFeedMessage) -> Self {
-        Self {
-            publish_time: U64::from(price_feed_message.publish_time),
-            expo: I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
-            price: I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
-            conf: U64::from(price_feed_message.conf),
-            ema_price: I64::from_be_bytes(price_feed_message.ema_price.to_be_bytes()),
-            ema_conf: U64::from(price_feed_message.ema_conf),
-        }
-    }
-}
+// impl From<&PriceFeedMessage> for PriceInfo {
+//     fn from(price_feed_message: &PriceFeedMessage) -> Self {
+//         Self {
+//             publish_time: U64::from(price_feed_message.publish_time),
+//             expo: I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
+//             price: I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
+//             conf: U64::from(price_feed_message.conf),
+//             ema_price: I64::from_be_bytes(price_feed_message.ema_price.to_be_bytes()),
+//             ema_conf: U64::from(price_feed_message.ema_conf),
+//         }
+//     }
+// }
 
 // PriceInfo struct storing price information
 pub type PriceInfoReturn = (U64, I32, I64, U64, I64, U64);
