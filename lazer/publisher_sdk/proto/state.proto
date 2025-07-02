@@ -44,7 +44,7 @@ message Publisher {
     optional bool is_active = 4;
 }
 
-enum FeedMetadataState {
+enum FeedState {
     COMING_SOON = 0; // Default value
     STABLE = 1;
     DEPRECATED = 2;
@@ -93,7 +93,7 @@ message FeedMetadata {
     // If absent, the default schedule is used (market is always open).
     optional string market_schedule = 15;
     // [required] Feed state
-    optional FeedMetadataState state = 16;
+    optional FeedState state = 16;
 }
 
 // An item of the state describing a feed.
