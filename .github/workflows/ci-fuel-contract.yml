@@ -19,9 +19,8 @@ jobs:
         working-directory: target_chains/fuel/contracts/
     steps:
       - uses: actions/checkout@v2
-      - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "target_chains/fuel/contracts -> target"
+          cache-workspaces: "target_chains/fuel/contracts -> target"
       - name: Install Fuel toolchain
         run: |
           curl https://install.fuel.network | sh

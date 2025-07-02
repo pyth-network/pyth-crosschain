@@ -79,7 +79,7 @@ impl Metrics {
         let order = if self
             .newest_observed_slot
             .get(&event)
-            .map_or(true, |&observed_slot| slot > observed_slot)
+            .is_none_or(|&observed_slot| slot > observed_slot)
         {
             self.newest_observed_slot.insert(event.clone(), slot);
             SlotOrder::New
