@@ -64,7 +64,7 @@ The fee manager (configured in the provider section) can be a separate wallet fr
 
 **Key Configuration:**
 - Only one instance should have fee adjustment enabled to avoid multiple keepers racing to adjust the fee (`disable_fee_adjustment: false`)
-- All instances should have `fee_manager_private_key` provided so that each keeper can top itself up from contract fees.
+- All instances should have `keeper.private_key` and `keeper.fee_manager_private_key` provided so that each keeper can top itself up as fee manager from contract fees.
 
 ### Example Configurations
 
