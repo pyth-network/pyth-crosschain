@@ -69,7 +69,7 @@ The fee manager (configured in the provider section) can be a separate wallet fr
 ### Example Configurations
 
 ```yaml
-# Replica 0 (with fee management) - handles even sequence numbers + fee management
+# Replica 0 - handles even sequence numbers + fee management
 keeper:
   private_key:
     value: 0x<keeper_0_private_key>
@@ -85,7 +85,7 @@ keeper:
   run_config:
     disable_fee_adjustment: false  # Enable fee adjustment (default)
 
-# Replica 1 (request processing only) - handles odd sequence numbers
+# Replica 1 - handles odd sequence numbers
 keeper:
   private_key:
     value: 0x<keeper_1_private_key>
