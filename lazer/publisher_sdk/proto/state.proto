@@ -44,6 +44,12 @@ message Publisher {
     optional bool is_active = 4;
 }
 
+enum FeedState {
+    COMING_SOON = 0; // Default value
+    STABLE = 1;
+    INACTIVE = 2;
+}
+
 // Static data for a feed.
 message FeedMetadata {
     // [required] ID of the price feed.
@@ -86,6 +92,8 @@ message FeedMetadata {
     // [optional] Market schedule in Pythnet format.
     // If absent, the default schedule is used (market is always open).
     optional string market_schedule = 15;
+    // [required] Feed state
+    optional FeedState state = 16;
 }
 
 // An item of the state describing a feed.
