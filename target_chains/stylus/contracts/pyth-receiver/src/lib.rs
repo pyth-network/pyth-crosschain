@@ -185,7 +185,6 @@ impl PythReceiver {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
                 let config = Call::new();
-
                 wormhole.parse_and_verify_vm(config, Vec::from(vaa.clone())).map_err(|_| PythReceiverError::InvalidWormholeMessage).unwrap();
                 
                 let vaa = Vaa::read(&mut Vec::from(vaa.clone()).as_slice()).unwrap();

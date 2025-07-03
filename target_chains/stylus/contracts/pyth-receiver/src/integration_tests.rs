@@ -1,9 +1,8 @@
-
 #[cfg(test)]
 mod test {
     use crate::PythReceiver;
     use crate::test_data;
-    use alloy_primitives::{address, U256, Address};
+    use alloy_primitives::{address, U256, Address, U64, I64, I32};
     use stylus_sdk::testing::TestVM;
     use pythnet_sdk::wire::v1::PYTHNET_ACCUMULATOR_UPDATE_MAGIC;
     use motsu::prelude::*;
@@ -13,12 +12,12 @@ mod test {
         0xe6, 0x2d, 0xf6, 0xc8, 0xb4, 0xa8, 0x5f, 0xe1, 0xa6, 0x7d, 0xb4, 0x4d, 0xc1, 0x2d, 0xe5, 0xdb,
         0x33, 0x0f, 0x7a, 0xc6, 0x6b, 0x72, 0xdc, 0x65, 0x8a, 0xfe, 0xdf, 0x0f, 0x4a, 0x41, 0x5b, 0x43
     ];
-    const TEST_PUBLISH_TIME: u64 = 1712589206;
-    const TEST_PRICE: i64 = 7192002930010;
-    const TEST_CONF: u64 = 3596501465;
+    const TEST_PUBLISH_TIME: u64 = 1751563000;
+    const TEST_PRICE: i64 = 10967241867779;
+    const TEST_CONF: u64 = 4971244966;
     const TEST_EXPO: i32 = -8;
-    const TEST_EMA_PRICE: i64 = 7181868900000;
-    const TEST_EMA_CONF: u64 = 4096812700;
+    const TEST_EMA_PRICE: i64 = 10942391100000;
+    const TEST_EMA_CONF: u64 = 4398561400;
 
     const PYTHNET_CHAIN_ID: u16 = 26;
     const PYTHNET_EMITTER_ADDRESS: [u8; 32] = [
@@ -118,9 +117,16 @@ mod test {
         let result = pyth_contract.sender(alice).update_price_feeds(update_data);
         assert!(result.is_ok());
 
-        // let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
-        // assert!(price_result.is_ok());
-        // assert_eq!(price_result.unwrap(), (TEST_PUBLISH_TIME, TEST_EXPO, TEST_PRICE, TEST_CONF, TEST_EMA_PRICE, TEST_EMA_CONF));
+        let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
+        assert!(price_result.is_ok());
+        assert_eq!(price_result.unwrap(), (
+            U64::from(TEST_PUBLISH_TIME),
+            I32::from_le_bytes(TEST_EXPO.to_le_bytes()),
+            I64::from_le_bytes(TEST_PRICE.to_le_bytes()),
+            U64::from(TEST_CONF),
+            I64::from_le_bytes(TEST_EMA_PRICE.to_le_bytes()),
+            U64::from(TEST_EMA_CONF)
+        ));
         
         
     }
