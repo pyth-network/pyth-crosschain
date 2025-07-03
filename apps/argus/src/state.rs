@@ -41,12 +41,8 @@ impl SubscriptionState {
             subscriptions: DashMap::new(),
         }
     }
-
-    pub fn get_subscriptions(&self) -> HashMap<SubscriptionId, SubscriptionParams> {
-        self.subscriptions
-            .iter()
-            .map(|r| (*r.key(), r.value().clone()))
-            .collect()
+    pub fn get_subscriptions(&self) -> &DashMap<SubscriptionId, SubscriptionParams> {
+        &self.subscriptions
     }
 
     pub fn get_subscription(&self, id: &SubscriptionId) -> Option<SubscriptionParams> {
@@ -115,40 +111,46 @@ impl PythPriceState {
 /// Stores the latest on-chain prices for a given set of price feeds.
 /// Updated by the ChainPriceService.
 pub struct ChainPriceState {
-    prices: DashMap<PriceId, Price>,
-    feed_ids: DashMap<PriceId, ()>,
+    subscription_feed_prices: DashMap<SubscriptionId, DashMap<PriceId, Price>>,
 }
 
 impl ChainPriceState {
     pub fn new() -> Self {
         Self {
-            prices: DashMap::new(),
-            feed_ids: DashMap::new(),
+            subscription_feed_prices: DashMap::new(),
         }
     }
 
-    pub fn get_price(&self, feed_id: &PriceId) -> Option<Price> {
-        self.prices.get(feed_id).map(|r| r.value().clone())
+    pub fn get_price(&self, subscription_id: &SubscriptionId, feed_id: &PriceId) -> Option<Price> {
+        Some(
+            self.subscription_feed_prices
+                .get(subscription_id)?
+                .get(feed_id)?
+                .value()
+                .clone(),
+        )
+    }
+    pub fn update_price(&self, subscription_id: &SubscriptionId, feed_id: PriceId, price: Price) {
+        let subscription_feeds = self
+            .subscription_feed_prices
+            .entry(subscription_id.clone())
+            .or_insert_with(DashMap::new);
+        subscription_feeds.insert(feed_id, price);
     }
 
-    pub fn update_price(&self, feed_id: PriceId, price: Price) {
-        self.prices.insert(feed_id, price);
-    }
-
-    pub fn update_prices(&self, prices: HashMap<PriceId, Price>) {
+    pub fn update_prices(&self, subscription_id: SubscriptionId, prices: HashMap<PriceId, Price>) {
+        let subscription_map = self
+            .subscription_feed_prices
+            .entry(subscription_id)
+            .or_insert_with(DashMap::new);
         for (feed_id, price) in prices {
-            self.prices.insert(feed_id, price);
+            subscription_map.insert(feed_id, price);
         }
     }
 
-    pub fn update_feed_ids(&self, feed_ids: HashSet<PriceId>) {
-        self.feed_ids.clear();
-        for feed_id in feed_ids {
-            self.feed_ids.insert(feed_id, ());
-        }
-    }
-
-    pub fn get_feed_ids(&self) -> HashSet<PriceId> {
-        self.feed_ids.iter().map(|r| *r.key()).collect()
+    pub fn get_subscription_feed_prices(
+        &self,
+    ) -> &DashMap<SubscriptionId, DashMap<PriceId, Price>> {
+        &self.subscription_feed_prices
     }
 }

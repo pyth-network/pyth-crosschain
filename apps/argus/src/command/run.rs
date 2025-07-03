@@ -142,6 +142,7 @@ pub async fn run_keeper_for_chain(
         contract.clone(),
         config.keeper.chain_price_poll_interval,
         state.chain_price_state.clone(),
+        state.subscription_state.clone(),
     );
 
     let price_pusher_service = PricePusherService::new(
@@ -157,6 +158,7 @@ pub async fn run_keeper_for_chain(
         state.subscription_state.clone(),
         state.pyth_price_state.clone(),
         state.chain_price_state.clone(),
+        price_pusher_service.request_sender(),
     );
 
     let services: Vec<Arc<dyn Service>> = vec![
