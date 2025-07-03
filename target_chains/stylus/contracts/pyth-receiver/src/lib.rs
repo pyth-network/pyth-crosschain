@@ -296,6 +296,8 @@ impl PythReceiver {
         self.get_current_timestamp().saturating_sub(publish_time.to::<u64>()) <= max_age
     }
 
+    // Stylus doesn't provide a way to mock up the testing timestamp
+    // so at the moment I'm using the testing trait to let me test old timestamps
     fn get_current_timestamp(&self) -> u64 {
         #[cfg(test)]
         {
