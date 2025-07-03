@@ -1,5 +1,6 @@
 use alloc::vec::Vec;
 
+#[derive(PartialEq)]
 pub enum PythReceiverError {
     PriceUnavailable,
     InvalidUpdateData,
