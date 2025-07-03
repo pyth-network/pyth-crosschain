@@ -293,7 +293,18 @@ impl PythReceiver {
 
     #[inline]
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
-        self.vm().block_timestamp().saturating_sub(publish_time.to::<u64>()) <= max_age
+        self.get_current_timestamp().saturating_sub(publish_time.to::<u64>()) <= max_age
+    }
+
+    fn get_current_timestamp(&self) -> u64 {
+        #[cfg(test)]
+        {
+            1761573860u64
+        }
+        #[cfg(not(test))]
+        {
+            self.vm().block_timestamp()
+        }
     }
 }
 

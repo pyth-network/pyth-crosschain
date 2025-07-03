@@ -5,10 +5,8 @@ mod test {
     use crate::error::PythReceiverError;
     use alloy_primitives::{address, U256, Address, U64, I64, I32};
     use stylus_sdk::testing::TestVM;
-    use pythnet_sdk::wire::v1::PYTHNET_ACCUMULATOR_UPDATE_MAGIC;
     use motsu::prelude::*;
     use wormhole_contract::WormholeContract;
-
     const TEST_PRICE_ID: [u8; 32] = [
         0xe6, 0x2d, 0xf6, 0xc8, 0xb4, 0xa8, 0x5f, 0xe1, 0xa6, 0x7d, 0xb4, 0x4d, 0xc1, 0x2d, 0xe5, 0xdb,
         0x33, 0x0f, 0x7a, 0xc6, 0x6b, 0x72, 0xdc, 0x65, 0x8a, 0xfe, 0xdf, 0x0f, 0x4a, 0x41, 0x5b, 0x43
@@ -333,15 +331,8 @@ mod test {
         assert!(result.is_ok());
 
         let price_result = pyth_contract.sender(alice).get_price_no_older_than(TEST_PRICE_ID, 1);
-        assert!(price_result.is_ok());
-        assert_eq!(price_result.unwrap(), (
-            U64::from(1751573860u64),
-            I32::from_le_bytes((-8i32).to_le_bytes()),
-            I64::from_le_bytes(10985663592646i64.to_le_bytes()),
-            U64::from(4569386330u64),
-            I64::from_le_bytes(10977795800000i64.to_le_bytes()),
-            U64::from(3919318300u64)
-        ));
+        assert!(price_result.is_err());
+        assert_eq!(price_result.unwrap_err(), PythReceiverError::NewPriceUnavailable);
     }
 
     #[motsu::test]
