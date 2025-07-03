@@ -5,8 +5,10 @@ use {
     ethabi::ethereum_types::U64,
     ethers::{
         contract::{ContractCall, ContractError},
+        core::k256::ecdsa::SigningKey,
         middleware::Middleware,
         providers::ProviderError,
+        signers::Wallet,
         types::{transaction::eip2718::TypedTransaction, TransactionReceipt, U256},
     },
     std::{
@@ -18,6 +20,7 @@ use {
 };
 
 const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
+pub const ETH_TRANSFER_GAS_LIMIT: u64 = 21_000;
 
 #[derive(Debug)]
 pub struct SubmitTxResult {
@@ -366,4 +369,81 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     }
 
     Ok(receipt)
+}
+
+/// Transfer funds from fee manager wallet to keeper wallet.
+/// This is used when the fee manager and keeper are different addresses.
+pub async fn submit_transfer_tx<M: Middleware>(
+    provider: Arc<M>,
+    source_wallet: &Wallet<SigningKey>,
+    destination_address: ethers::types::Address,
+    gas_price: U256,
+    transfer_amount: U256,
+) -> Result<ethers::types::H256> {
+    use ethers::{signers::Signer, types::TransactionRequest};
+
+    let source_wallet_address = source_wallet.address();
+
+    tracing::info!(
+        "Transferring {:?} from {:?} to {:?}",
+        transfer_amount,
+        source_wallet_address,
+        destination_address
+    );
+
+    // Get transaction parameters
+    let chain_id = provider
+        .get_chainid()
+        .await
+        .map_err(|e| anyhow!("Failed to get chain ID: {:?}", e))?;
+
+    let nonce = provider
+        .get_transaction_count(source_wallet_address, None)
+        .await
+        .map_err(|e| anyhow!("Failed to get nonce: {:?}", e))?;
+
+    let tx = TransactionRequest::new()
+        .to(destination_address)
+        .value(transfer_amount)
+        .from(source_wallet_address)
+        .gas(ETH_TRANSFER_GAS_LIMIT)
+        .gas_price(gas_price)
+        .nonce(nonce)
+        .chain_id(chain_id.as_u64());
+
+    let typed_tx = tx.into();
+    let signature = source_wallet
+        .sign_transaction(&typed_tx)
+        .await
+        .map_err(|e| anyhow!("Failed to sign transfer transaction: {:?}", e))?;
+
+    let signed_tx = typed_tx.rlp_signed(&signature);
+
+    // Send transaction and get pending transaction
+    let pending_tx = provider
+        .send_raw_transaction(signed_tx)
+        .await
+        .map_err(|e| anyhow!("Failed to send transfer transaction: {:?}", e))?;
+
+    // Wait for confirmation with timeout
+    let tx_receipt = timeout(
+        Duration::from_secs(TX_CONFIRMATION_TIMEOUT_SECS),
+        pending_tx,
+    )
+    .await
+    .map_err(|_| anyhow!("Transfer transaction confirmation timeout"))?
+    .map_err(|e| anyhow!("Transfer transaction confirmation error: {:?}", e))?
+    .ok_or_else(|| anyhow!("Transfer transaction dropped from mempool"))?;
+
+    // Check if transaction was successful
+    if tx_receipt.status == Some(ethabi::ethereum_types::U64::from(0)) {
+        return Err(anyhow!(
+            "Transfer transaction failed on-chain. Receipt: {:?}",
+            tx_receipt
+        ));
+    }
+
+    let tx_hash = tx_receipt.transaction_hash;
+    tracing::info!("Transfer transaction confirmed: {:?}", tx_hash);
+    Ok(tx_hash)
 }

@@ -121,22 +121,14 @@ pub async fn run_keeper_threads(
         .in_current_span(),
     );
 
-    // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
-    if !keeper_config.run_config.disable_fee_withdrawal {
-        let fee_manager_private_key = keeper_config
-            .fee_manager_private_key
-            .as_ref()
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Fee manager private key is required when fee withdrawal is enabled"
-                )
-            })?
-            .load()?
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Fee manager private key value is required when fee withdrawal is enabled"
-                )
-            })?;
+    // Spawn a thread that watches all known keeper wallet balances and submits withdrawal transactions as needed to top-up this keeper's balance.
+    let fee_manager_private_key = if let Some(ref secret) = keeper_config.fee_manager_private_key {
+        secret.load()?
+    } else {
+        None
+    };
+
+    if let Some(fee_manager_private_key) = fee_manager_private_key {
         spawn(
             withdraw_fees_wrapper(
                 contract.clone(),
@@ -149,7 +141,9 @@ pub async fn run_keeper_threads(
             .in_current_span(),
         );
     } else {
-        tracing::info!("Fee withdrawal thread disabled by configuration");
+        tracing::warn!(
+            "Fee manager private key not provided - fee withdrawal thread will not run."
+        );
     }
 
     // Spawn a thread that periodically adjusts the provider fee.

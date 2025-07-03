@@ -58,58 +58,48 @@ Fortuna supports running multiple replica instances for high availability and re
 
 ### Fee Management with Multiple Instances
 
-When running multiple Fortuna instances with different keeper wallets but a single provider, only one instance should handle fee management. This instance needs to run using the same private key as the fee manager, because only the registerd fee manager wallet can adjust fees and withdraw funds.
+When running multiple Fortuna instances with different keeper wallets, the system uses a fair fee distribution strategy. Each keeper will withdraw fees from the contract to maintain a balanced distribution across all known keeper addresses.
+
+The fee manager (configured in the provider section) can be a separate wallet from the keeper wallets. When fees are withdrawn from the contract, they go to the fee manager wallet first, then are automatically transferred to the requesting keeper wallet.
+
+**Key Configuration:**
+- Only one instance should have fee adjustment enabled to avoid multiple keepers racing to adjust the fee (`disable_fee_adjustment: false`)
+- All instances should have `fee_manager_private_key` provided so that each keeper can top itself up from contract fees.
 
 ### Example Configurations
 
-**Two Replica Setup with Fee Management:**
 ```yaml
-# Replica 0 (fee manager wallet) - handles even sequence numbers + fee management
+# Replica 0 (with fee management) - handles even sequence numbers + fee management
 keeper:
   private_key:
+    value: 0x<keeper_0_private_key>
+  fee_manager_private_key:
     value: 0x<fee_manager_private_key>
+  known_keeper_addresses:
+    - 0x<keeper_0_address>  # This replica's address
+    - 0x<keeper_1_address>  # Other replica's address
   replica_config:
     replica_id: 0
     total_replicas: 2
-    backup_delay_seconds: 30
+    backup_delay_seconds: 15
   run_config:
-    disable_fee_adjustment: false  # Enable fee management (default)
-    disable_fee_withdrawal: false
+    disable_fee_adjustment: false  # Enable fee adjustment (default)
 
-# Replica 1 (non-fee-manager wallet) - handles odd sequence numbers only
+# Replica 1 (request processing only) - handles odd sequence numbers
 keeper:
   private_key:
-    value: 0x<other_keeper_private_key>
+    value: 0x<keeper_1_private_key>
+  fee_manager_private_key:
+    value: 0x<fee_manager_private_key>
+  known_keeper_addresses:
+    - 0x<keeper_0_address>  # Other replica's address
+    - 0x<keeper_1_address>  # This replica's address
   replica_config:
     replica_id: 1
     total_replicas: 2
-    backup_delay_seconds: 30
+    backup_delay_seconds: 15
   run_config:
-    disable_fee_adjustment: true   # Disable fee management
-    disable_fee_withdrawal: true
-```
-
-**Three Replica Setup:**
-```yaml
-# Replica 0 (fee manager wallet) - handles sequence numbers 0, 3, 6, 9, ... + fee management
-keeper:
-  replica_config:
-    replica_id: 0
-    total_replicas: 3
-    backup_delay_seconds: 30
-  run_config:
-    disable_fee_adjustment: false
-    disable_fee_withdrawal: false
-
-# Replicas 1 & 2 (non-fee-manager wallets) - request processing only
-keeper:
-  replica_config:
-    replica_id: 1  # or 2
-    total_replicas: 3
-    backup_delay_seconds: 30
-  run_config:
-    disable_fee_adjustment: true
-    disable_fee_withdrawal: true
+    disable_fee_adjustment: true   # Disable fee adjustment
 ```
 
 ### Deployment Considerations
@@ -117,7 +107,7 @@ keeper:
 1. **Separate Wallets**: Each replica MUST use a different private key to avoid nonce conflicts
 2. **Fee Manager Assignment**: Set the provider's `fee_manager` address to match the primary instance's keeper wallet
 3. **Thread Configuration**: Only enable fee management threads on the instance using the fee manager wallet
-4. **Backup Delay**: Set `backup_delay_seconds` long enough to allow primary replica to process requests, but short enough for acceptable failover time (recommended: 30-60 seconds)
+4. **Backup Delay**: Set `backup_delay_seconds` long enough to allow primary replica to process requests, but short enough for acceptable failover time (recommended: 10-30 seconds)
 5. **Monitoring**: Monitor each replica's processing metrics to ensure proper load distribution
 6. **Gas Management**: Each replica needs sufficient ETH balance for gas fees
 
@@ -127,7 +117,6 @@ keeper:
 - Backup replicas wait for `backup_delay_seconds` before checking if request is still unfulfilled
 - If request is already fulfilled during the delay, backup replica skips processing
 - This prevents duplicate transactions and wasted gas while ensuring reliability
-- Fee management operations (adjustment/withdrawal) only occur on an instance where the keeper wallet is the fee manager wallet.
 
 ## Local Development
 

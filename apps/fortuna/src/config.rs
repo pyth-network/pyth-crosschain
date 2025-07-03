@@ -355,10 +355,6 @@ pub struct RunConfig {
     /// Disable automatic fee adjustment threads
     #[serde(default)]
     pub disable_fee_adjustment: bool,
-
-    /// Disable automatic fee withdrawal threads
-    #[serde(default)]
-    pub disable_fee_withdrawal: bool,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
