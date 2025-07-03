@@ -1,5 +1,3 @@
-use super::*;
-
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
