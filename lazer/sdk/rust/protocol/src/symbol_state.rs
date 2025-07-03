@@ -8,7 +8,7 @@ use {
 pub enum SymbolState {
     ComingSoon,
     Stable,
-    Deprecated,
+    Inactive,
 }
 
 impl Display for SymbolState {
@@ -16,7 +16,7 @@ impl Display for SymbolState {
         match self {
             SymbolState::ComingSoon => write!(f, "coming_soon"),
             SymbolState::Stable => write!(f, "stable"),
-            SymbolState::Deprecated => write!(f, "deprecated"),
+            SymbolState::Inactive => write!(f, "inactive"),
         }
     }
 }
