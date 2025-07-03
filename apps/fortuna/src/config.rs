@@ -341,8 +341,8 @@ pub struct ProviderConfig {
     #[serde(default = "default_chain_sample_interval")]
     pub chain_sample_interval: u64,
 
-    /// The address of the fee manager for the provider. Set this value to the keeper wallet address to
-    /// enable keeper balance top-ups.
+    /// The address of the fee manager for the provider. Only used for syncing the fee manager address to the contract.
+    /// Fee withdrawals are handled by the fee manager private key defined in the keeper config.
     pub fee_manager: Option<Address>,
 }
 

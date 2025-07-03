@@ -73,8 +73,8 @@ provider:
     # For production, you can store the private key in a file.
     # file: secret.txt
 
-  # Set this to the address of your keeper wallet if you would like the keeper wallet to
-  # be able to withdraw fees from the contract.
+  # The address of the fee manager for the provider. Only used for syncing the fee manager address to the contract.
+  # Fee withdrawals are handled by the fee manager private key defined in the keeper config.
   fee_manager: 0xADDRESS
 keeper:
   # An ethereum wallet address and private key for running the keeper service.
