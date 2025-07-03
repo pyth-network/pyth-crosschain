@@ -47,7 +47,7 @@ message Publisher {
 enum FeedState {
     COMING_SOON = 0; // Default value
     STABLE = 1;
-    DEPRECATED = 2;
+    INACTIVE = 2;
 }
 
 // Static data for a feed.
