@@ -8,7 +8,6 @@ use stylus_sdk::{
     },
 };
 use stylus_sdk::alloy_primitives::{U16, FixedBytes,U64, I32, I64, B256, U256, keccak256};
-use pythnet_sdk::messages::PriceFeedMessage;
 
 #[derive(Serialize)]
 struct SerializableDataSource {

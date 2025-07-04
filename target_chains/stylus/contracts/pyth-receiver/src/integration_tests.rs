@@ -4,7 +4,6 @@ mod test {
     use crate::test_data;
     use crate::error::PythReceiverError;
     use alloy_primitives::{address, U256, Address, U64, I64, I32};
-    use stylus_sdk::testing::TestVM;
     use motsu::prelude::*;
     use wormhole_contract::WormholeContract;
     const TEST_PRICE_ID: [u8; 32] = [
@@ -27,34 +26,6 @@ mod test {
     const CHAIN_ID: u16 = 60051;
     const GOVERNANCE_CHAIN_ID: u16 = 1;
     const GOVERNANCE_CONTRACT: U256 = U256::from_limbs([4, 0, 0, 0]);
-
-    fn initialize_test_contract(vm: &TestVM) -> PythReceiver {
-        let mut contract = PythReceiver::from(vm);
-        let wormhole_address = address!("0x395921b642ba511d421ae834fef56ac886735ca2");
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        contract.initialize(
-            wormhole_address,
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
-        contract
-    }
 
     #[cfg(test)]
     fn current_guardians() -> Vec<Address> {
@@ -410,7 +381,7 @@ mod test {
             governance_initial_sequence,
             data,
         );
-        
+
         alice.fund(U256::from(200));
 
         let update_data = test_data::multiple_updates();
