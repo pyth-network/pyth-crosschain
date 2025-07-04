@@ -94,7 +94,7 @@ keeper:
 
   # List of other known keeper wallet addresses for balance comparison and fair fee withdrawals.
   # Do not include this keeper's address.
-  known_keeper_addresses:
+  other_keeper_addresses:
     - 0x1234
     - 0x5678
 

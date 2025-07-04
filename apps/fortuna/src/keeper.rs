@@ -2,7 +2,7 @@ use {
     crate::{
         api::{BlockchainState, ChainId},
         chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
-        config::EthereumConfig,
+        config::{EthereumConfig, KeeperConfig},
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{
@@ -58,7 +58,7 @@ pub enum RequestState {
 #[allow(clippy::too_many_arguments)] // Top level orchestration function that needs to configure several threads
 #[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.id))]
 pub async fn run_keeper_threads(
-    keeper_config: crate::config::KeeperConfig,
+    keeper_config: KeeperConfig,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -131,7 +131,7 @@ pub async fn run_keeper_threads(
     };
 
     if let Some(fee_manager_private_key) = fee_manager_private_key {
-        let contract_as_fee_mgr = Arc::new(InstrumentedSignablePythContract::from_config(
+        let contract_as_fee_manager = Arc::new(InstrumentedSignablePythContract::from_config(
             &chain_eth_config,
             &fee_manager_private_key,
             chain_state.id.clone(),
@@ -142,12 +142,12 @@ pub async fn run_keeper_threads(
         // Spawn a thread that periodically withdraws fees to the fee manager and keeper.
         spawn(
             withdraw_fees_wrapper(
-                contract_as_fee_mgr.clone(),
+                contract_as_fee_manager.clone(),
                 chain_state.provider_address,
                 WITHDRAW_INTERVAL,
                 U256::from(chain_eth_config.min_keeper_balance),
                 keeper_address,
-                keeper_config.known_keeper_addresses.clone(),
+                keeper_config.other_keeper_addresses.clone(),
             )
             .in_current_span(),
         );
@@ -155,7 +155,7 @@ pub async fn run_keeper_threads(
         // Spawn a thread that periodically adjusts the provider fee.
         spawn(
             adjust_fee_wrapper(
-                contract_as_fee_mgr.clone(),
+                contract_as_fee_manager.clone(),
                 chain_state.clone(),
                 chain_state.provider_address,
                 ADJUST_FEE_INTERVAL,

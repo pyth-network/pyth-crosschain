@@ -75,7 +75,7 @@ keeper:
     value: 0x<keeper_0_private_key>
   fee_manager_private_key:
     value: 0x<fee_manager_private_key>
-  known_keeper_addresses:
+  other_keeper_addresses:
     - 0x<keeper_0_address>  # This replica's address
     - 0x<keeper_1_address>  # Other replica's address
   replica_config:
@@ -91,7 +91,7 @@ keeper:
     value: 0x<keeper_1_private_key>
   fee_manager_private_key:
     value: 0x<fee_manager_private_key>
-  known_keeper_addresses:
+  other_keeper_addresses:
     - 0x<keeper_0_address>  # Other replica's address
     - 0x<keeper_1_address>  # This replica's address
   replica_config:

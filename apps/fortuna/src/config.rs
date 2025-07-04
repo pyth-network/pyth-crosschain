@@ -388,7 +388,7 @@ pub struct KeeperConfig {
     /// The addresses of other keepers in the replica set (excluding the current keeper).
     /// This is used to distribute fees fairly across all keepers.
     #[serde(default)]
-    pub known_keeper_addresses: Vec<Address>,
+    pub other_keeper_addresses: Vec<Address>,
 
     #[serde(default)]
     pub replica_config: Option<ReplicaConfig>,
