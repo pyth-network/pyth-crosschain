@@ -96,6 +96,9 @@ pub struct PriceInfoStorage {
     pub ema_conf: StorageU64,
 }
 
+// Addressing nit -- running into some versioning issues that preclude me
+// from returning the PriceInfo struct directly. Need to figure that out.
+
 // pub struct PriceInfo {
 //     pub publish_time: U64,
 //     pub expo: I32,
