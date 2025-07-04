@@ -111,9 +111,11 @@ mod test {
             data,
         );
         
+        alice.fund(U256::from(200));
+        
         let update_data = test_data::good_update1();
 
-        let result = pyth_contract.sender(alice).update_price_feeds(update_data);
+        let result = pyth_contract.sender_and_value(alice, U256::from(100)).update_price_feeds(update_data);
         assert!(result.is_ok());
 
         let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
@@ -127,6 +129,46 @@ mod test {
             U64::from(TEST_EMA_CONF)
         ));
         
+        
+    }
+
+    #[motsu::test]
+    fn test_update_price_feed_insufficient_fee(pyth_contract: Contract<PythReceiver>, wormhole_contract: Contract<WormholeContract>, alice: Address) {
+        let guardians = current_guardians();
+        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        wormhole_contract.sender(alice).initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
+        // let result = wormhole_contract.sender(alice).store_gs(4, current_guardians(), 0);
+
+        let single_update_fee = U256::from(100u64);
+        let valid_time_period = U256::from(3600u64);
+
+        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
+        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
+
+        let governance_chain_id = 1u16;
+        let governance_emitter_address = [3u8; 32];
+        let governance_initial_sequence = 0u64;
+        let data = vec![];
+
+        pyth_contract.sender(alice).initialize(
+            wormhole_contract.address(),
+            single_update_fee,
+            valid_time_period,
+            data_source_chain_ids,
+            data_source_emitter_addresses,
+            governance_chain_id,
+            governance_emitter_address,
+            governance_initial_sequence,
+            data,
+        );
+        
+        alice.fund(U256::from(50));
+        
+        let update_data = test_data::good_update1();
+
+        let result = pyth_contract.sender_and_value(alice, U256::from(50)).update_price_feeds(update_data);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), PythReceiverError::InsufficientFee);
         
     }
 
@@ -159,12 +201,14 @@ mod test {
             data,
         );
 
+        alice.fund(U256::from(200));
+
         let update_data1 = test_data::good_update1();
-        let result1 = pyth_contract.sender(alice).update_price_feeds(update_data1);
+        let result1 = pyth_contract.sender_and_value(alice, U256::from(100)).update_price_feeds(update_data1);
         assert!(result1.is_ok());
 
         let update_data2 = test_data::good_update2();
-        let result2 = pyth_contract.sender(alice).update_price_feeds(update_data2);
+        let result2 = pyth_contract.sender_and_value(alice, U256::from(100)).update_price_feeds(update_data2);
         assert!(result2.is_ok());
 
         let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
@@ -281,8 +325,10 @@ mod test {
             data,
         );
 
+        alice.fund(U256::from(200));
+
         let update_data = test_data::good_update2();
-        let result = pyth_contract.sender(alice).update_price_feeds(update_data);
+        let result = pyth_contract.sender_and_value(alice, U256::from(100)).update_price_feeds(update_data);
         assert!(result.is_ok());
 
         let price_result = pyth_contract.sender(alice).get_price_no_older_than(TEST_PRICE_ID, u64::MAX);
@@ -325,9 +371,10 @@ mod test {
             governance_initial_sequence,
             data,
         );
+        alice.fund(U256::from(200));
 
         let update_data = test_data::good_update2();
-        let result = pyth_contract.sender(alice).update_price_feeds(update_data);
+        let result = pyth_contract.sender_and_value(alice, U256::from(100)).update_price_feeds(update_data);
         assert!(result.is_ok());
 
         let price_result = pyth_contract.sender(alice).get_price_no_older_than(TEST_PRICE_ID, 1);
@@ -363,9 +410,11 @@ mod test {
             governance_initial_sequence,
             data,
         );
+        
+        alice.fund(U256::from(200));
 
         let update_data = test_data::multiple_updates();
-        let result = pyth_contract.sender(alice).update_price_feeds(update_data);
+        let result = pyth_contract.sender_and_value(alice, U256::from(200)).update_price_feeds(update_data);
         assert!(result.is_ok());
 
         let first_id: [u8; 32] = [

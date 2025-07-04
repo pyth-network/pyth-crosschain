@@ -14,6 +14,7 @@ pub enum PythReceiverError {
     InvalidUnknownSource,
     NewPriceUnavailable,
     InvalidAccumulatorMessageType,
+    InsufficientFee,
 }
 
 impl core::fmt::Debug for PythReceiverError {
@@ -37,6 +38,7 @@ impl From<PythReceiverError> for Vec<u8> {
             PythReceiverError::InvalidUnknownSource => 10,  
             PythReceiverError::NewPriceUnavailable => 11,
             PythReceiverError::InvalidAccumulatorMessageType => 12,
+            PythReceiverError::InsufficientFee => 13,
         }]
     }
 }

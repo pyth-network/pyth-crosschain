@@ -149,6 +149,7 @@ impl PythReceiver {
         Ok(price_info)
     }
 
+    #[payable]
     pub fn update_price_feeds(&mut self, update_data: Vec<u8>) -> Result<(), PythReceiverError> {
         self.update_price_feeds_internal(update_data)?;
         Ok(())
@@ -202,6 +203,15 @@ impl PythReceiver {
 
                 let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa).unwrap();
 
+                let num_updates = u8::try_from(updates.len()).expect("value doesn't fit in u8");
+                let total_fee = self.get_total_fee(num_updates);
+
+                let value = self.vm().msg_value();
+                
+                if value < total_fee {
+                    return Err(PythReceiverError::InsufficientFee);
+                }
+
                 for update in updates {
 
                     let message_vec = Vec::from(update.message);
@@ -240,6 +250,10 @@ impl PythReceiver {
         };
 
         Ok(())
+    }
+
+    fn get_total_fee(&self, num_updates: u8) -> U256 {
+        U256::from(num_updates).saturating_mul(self.single_update_fee_in_wei.get())
     }
 
     // pub fn get_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
