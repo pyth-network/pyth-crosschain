@@ -73,9 +73,9 @@ provider:
     # For production, you can store the private key in a file.
     # file: secret.txt
 
-  # Set this to the address of your keeper wallet if you would like the keeper wallet to
-  # be able to withdraw fees from the contract.
-  fee_manager: 0xADDRESS
+  # The address of the fee manager for the provider. Only used for syncing the fee manager address to the contract.
+  # Fee withdrawals are handled by the fee manager private key defined in the keeper config.
+  fee_manager: 0xfee
 keeper:
   # An ethereum wallet address and private key for running the keeper service.
   # This does not have to be the same key as the provider's key above.
@@ -87,25 +87,24 @@ keeper:
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
 
-  # Runtime configuration for the keeper service
-  # Optional: Configure which keeper threads to disable. If running multiple replicas,
-  # only a single replica should have the fee adjustment and withdrawal threads enabled.
-  # run_config:
-  #   disable_fee_adjustment: false    # Set to true to disable automatic fee adjustment
-  #   disable_fee_withdrawal: false    # Set to true to disable automatic fee withdrawal
+  # Fee manager private key for fee manager operations (if not provided, fee withdrawals won't happen)
+  fee_manager_private_key:
+    value: 0xabcd
+    # file: fee-manager-key.txt
+
+  # List of other known keeper wallet addresses for balance comparison and fair fee withdrawals.
+  # Do not include this keeper's address.
+  other_keeper_addresses:
+    - 0x1234
+    - 0x5678
 
   # Multi-replica configuration
   # Optional: Multi-replica configuration for high availability and load distribution
   # Uncomment and configure for production deployments with multiple Fortuna instances
-  # replica_config:
-  #   replica_id: 0              # Unique identifier for this replica (0, 1, 2, ...)
-  #   total_replicas: 2          # Total number of replica instances running
-  #   backup_delay_seconds: 30   # Seconds to wait before processing other replicas' requests
-  #
-  # Example configurations:
-  #
-  # Two-replica setup (Blue/Green):
-  # - Replica 0: handles even sequence numbers (0, 2, 4, ...)
-  # - Replica 1: handles odd sequence numbers (1, 3, 5, ...)
-  #
+  # See the README for more details.
+  replica_config:
+    replica_id: 0              # Unique identifier for this replica (0, 1, 2, ...)
+    total_replicas: 2          # Total number of replica instances running
+    backup_delay_seconds: 30   # Seconds to wait before processing other replicas' requests
+
   # IMPORTANT: Each replica must use a different private_key to avoid nonce conflicts!
