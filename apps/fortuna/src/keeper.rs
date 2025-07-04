@@ -123,7 +123,7 @@ pub async fn run_keeper_threads(
         .in_current_span(),
     );
 
-    // If fee manager private key is provided, spawn fee withdrawal and adjustmnet threads
+    // If fee manager private key is provided, spawn fee withdrawal and adjustment threads
     let fee_manager_private_key = if let Some(ref secret) = keeper_config.fee_manager_private_key {
         secret.load()?
     } else {
