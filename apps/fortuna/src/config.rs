@@ -392,10 +392,6 @@ pub struct KeeperConfig {
 
     #[serde(default)]
     pub replica_config: Option<ReplicaConfig>,
-
-    /// Runtime configuration for the keeper service
-    #[serde(default)]
-    pub run_config: RunConfig,
 }
 
 // A secret is a string that can be provided either as a literal in the config,

@@ -98,12 +98,6 @@ keeper:
     - 0x1234
     - 0x5678
 
-  # Runtime configuration for the keeper service
-  # Optional: Configure which keeper threads to disable. If running multiple replicas,
-  # only a single replica should have the fee adjustment thread enabled.
-  run_config:
-    disable_fee_adjustment: false
-
   # Multi-replica configuration
   # Optional: Multi-replica configuration for high availability and load distribution
   # Uncomment and configure for production deployments with multiple Fortuna instances

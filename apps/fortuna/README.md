@@ -63,7 +63,6 @@ When running multiple Fortuna instances with different keeper wallets, the syste
 The fee manager (configured in the provider section) can be a separate wallet from the keeper wallets. When fees are withdrawn from the contract, they go to the fee manager wallet first, then are automatically transferred to the requesting keeper wallet.
 
 **Key Configuration:**
-- Only one instance should have fee adjustment enabled to avoid multiple keepers racing to adjust the fee (`disable_fee_adjustment: false`)
 - All instances should have `keeper.private_key` and `keeper.fee_manager_private_key` provided so that each keeper can top itself up as fee manager from contract fees.
 
 ### Example Configurations
@@ -82,8 +81,7 @@ keeper:
     replica_id: 0
     total_replicas: 2
     backup_delay_seconds: 15
-  run_config:
-    disable_fee_adjustment: false  # Enable fee adjustment (default)
+
 
 # Replica 1 - handles odd sequence numbers
 keeper:
@@ -98,8 +96,7 @@ keeper:
     replica_id: 1
     total_replicas: 2
     backup_delay_seconds: 15
-  run_config:
-    disable_fee_adjustment: true   # Disable fee adjustment
+
 ```
 
 ### Deployment Considerations
