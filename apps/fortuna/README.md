@@ -58,7 +58,7 @@ Fortuna supports running multiple replica instances for high availability and re
 
 ### Fee Management with Multiple Instances
 
-When running multiple Fortuna instances with different keeper wallets, the system uses a fair fee distribution strategy. Each keeper will withdraw fees from the contract to maintain a balanced distribution across all known keeper addresses.
+When running multiple Fortuna instances with different keeper wallets, the system uses a fair fee distribution strategy. Each keeper will withdraw fees from the contract to maintain a balanced distribution across all known keeper addresses and the fee manager address.
 
 The fee manager (configured in the provider section) can be a separate wallet from the keeper wallets. When fees are withdrawn from the contract, they go to the fee manager wallet first, then are automatically transferred to the requesting keeper wallet.
 

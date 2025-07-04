@@ -385,6 +385,8 @@ pub struct KeeperConfig {
     #[serde(default)]
     pub fee_manager_private_key: Option<SecretString>,
 
+    /// The addresses of other keepers in the replica set (excluding the current keeper).
+    /// This is used to distribute fees fairly across all keepers.
     #[serde(default)]
     pub known_keeper_addresses: Vec<Address>,
 

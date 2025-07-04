@@ -75,7 +75,7 @@ provider:
 
   # The address of the fee manager for the provider. Only used for syncing the fee manager address to the contract.
   # Fee withdrawals are handled by the fee manager private key defined in the keeper config.
-  fee_manager: 0xADDRESS
+  fee_manager: 0xfee
 keeper:
   # An ethereum wallet address and private key for running the keeper service.
   # This does not have to be the same key as the provider's key above.
@@ -92,7 +92,8 @@ keeper:
     value: 0xabcd
     # file: fee-manager-key.txt
 
-  # List of known keeper wallet addresses for balance comparison and fair fee withdrawals
+  # List of other known keeper wallet addresses for balance comparison and fair fee withdrawals.
+  # Do not include this keeper's address.
   known_keeper_addresses:
     - 0x1234
     - 0x5678
