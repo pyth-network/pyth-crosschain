@@ -15,12 +15,6 @@ responses(
 pub async fn chain_ids(
     State(state): State<crate::api::ApiState>,
 ) -> Result<Json<Vec<ChainId>>, RestError> {
-    let chain_ids = state
-        .chains
-        .read()
-        .await
-        .iter()
-        .map(|(id, _)| id.clone())
-        .collect();
+    let chain_ids = state.chains.read().await.keys().cloned().collect();
     Ok(Json(chain_ids))
 }

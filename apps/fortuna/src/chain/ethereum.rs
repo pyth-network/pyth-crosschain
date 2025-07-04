@@ -1,3 +1,5 @@
+#![allow(clippy::same_name_method, reason = "generated code")]
+
 use {
     crate::{
         api::ChainId,

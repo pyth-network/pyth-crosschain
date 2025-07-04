@@ -224,6 +224,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     })
 }
 
+#[allow(clippy::large_enum_variant)]
 pub enum SubmitTxError<T: Middleware + NonceManaged + 'static> {
     GasUsageEstimateError(ContractError<T>),
     GasLimitExceeded { estimate: U256, limit: U256 },
@@ -241,29 +242,26 @@ where
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SubmitTxError::GasUsageEstimateError(e) => {
-                write!(f, "Error estimating gas for reveal: {:?}", e)
+                write!(f, "Error estimating gas for reveal: {e:?}")
             }
             SubmitTxError::GasLimitExceeded { estimate, limit } => write!(
                 f,
-                "Gas estimate for reveal with callback is higher than the gas limit {} > {}",
-                estimate, limit
+                "Gas estimate for reveal with callback is higher than the gas limit {estimate} > {limit}"
             ),
-            SubmitTxError::GasPriceEstimateError(e) => write!(f, "Gas price estimate error: {}", e),
+            SubmitTxError::GasPriceEstimateError(e) => write!(f, "Gas price estimate error: {e}"),
             SubmitTxError::SubmissionError(tx, e) => write!(
                 f,
-                "Error submitting the reveal transaction. Tx:{:?}, Error:{:?}",
-                tx, e
+                "Error submitting the reveal transaction. Tx:{tx:?}, Error:{e:?}"
             ),
             SubmitTxError::ConfirmationTimeout(tx) => {
-                write!(f, "Tx stuck in mempool. Resetting nonce. Tx:{:?}", tx)
+                write!(f, "Tx stuck in mempool. Resetting nonce. Tx:{tx:?}")
             }
             SubmitTxError::ConfirmationError(tx, e) => write!(
                 f,
-                "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
-                tx, e
+                "Error waiting for transaction receipt. Tx:{tx:?} Error:{e:?}"
             ),
             SubmitTxError::ReceiptError(tx, _) => {
-                write!(f, "Reveal transaction reverted on-chain. Tx:{:?}", tx,)
+                write!(f, "Reveal transaction reverted on-chain. Tx:{tx:?}")
             }
         }
     }

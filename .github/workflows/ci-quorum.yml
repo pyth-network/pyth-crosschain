@@ -15,20 +15,13 @@ jobs:
         working-directory: apps/quorum
     steps:
       - uses: actions/checkout@v2
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "apps/quorum -> target"
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: 1.87.0
-          components: rustfmt, clippy
-          override: true
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Format check
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --tests -- --deny warnings
+        run: cargo clippy -p quorum --all-targets -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
-        run: cargo test
+        run: cargo test -p quorum
         if: success() || failure()

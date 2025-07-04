@@ -357,7 +357,7 @@ pub fn deserialize_accumulator_update_data(
         AccumulatorUpdateData::try_from_slice(accumulator_message.as_slice()).unwrap();
 
     match accumulator_update_data.proof {
-        Proof::WormholeMerkle { vaa, updates } => return Ok((vaa.as_ref().to_vec(), updates)),
+        Proof::WormholeMerkle { vaa, updates } => Ok((vaa.as_ref().to_vec(), updates)),
     }
 }
 

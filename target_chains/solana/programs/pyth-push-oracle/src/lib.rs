@@ -1,5 +1,5 @@
 // We can't do much about the size of `anchor_lang::error::Error`.
-#![allow(clippy::result_large_err)]
+#![allow(clippy::result_large_err, unexpected_cfgs)]
 
 use {
     anchor_lang::prelude::*,

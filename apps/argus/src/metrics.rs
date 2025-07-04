@@ -68,13 +68,9 @@ impl Default for KeeperMetrics {
             gas_price_estimate: Family::default(),
             keeper_wallet_balance: Family::default(),
             price_update_latency_ms: Family::new_with_constructor(|| {
-                Histogram::new(
-                    vec![
-                        100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10000.0, 20000.0, 30000.0,
-                        60000.0,
-                    ]
-                    .into_iter(),
-                )
+                Histogram::new(vec![
+                    100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10000.0, 20000.0, 30000.0, 60000.0,
+                ])
             }),
         }
     }

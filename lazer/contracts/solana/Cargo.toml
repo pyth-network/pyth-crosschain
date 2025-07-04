@@ -1,13 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-  "publisher_sdk/rust",
-  "sdk/rust/protocol",
-  "sdk/rust/client",
-  "contracts/solana/programs/pyth-lazer-solana-contract",
+  "programs/pyth-lazer-solana-contract",
 ]
 
-# TODO: only for solana programs
 [profile.release]
 overflow-checks = true
 lto = "fat"

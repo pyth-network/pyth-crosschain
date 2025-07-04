@@ -22,7 +22,9 @@ get_example_crate_names () {
   find ./examples -maxdepth 2 -type f -name "Cargo.toml" | xargs grep 'name = ' | grep -oE '".*"' | tr -d "'\""
 }
 
-cargo build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
+rustup install nightly-2025-07-03
+rustup component add rust-src --toolchain nightly-2025-07-03
+cargo +nightly-2025-07-03 build --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
 
 for CRATE_NAME in $(get_example_crate_names)
 do

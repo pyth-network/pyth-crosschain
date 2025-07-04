@@ -88,7 +88,7 @@ where
             .endpoint
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Benchmarks endpoint is not set"))?
-            .join(&format!("/v1/updates/price/{}", publish_time))
+            .join(&format!("/v1/updates/price/{publish_time}"))
             .context("failed to construct price endpoint")?;
 
         let mut request = reqwest::Client::new()

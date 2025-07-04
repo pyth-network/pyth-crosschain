@@ -435,7 +435,7 @@ where
     }
 }
 
-impl<'de, 'a, B: ByteOrder> VariantAccess<'de> for &'a mut Deserializer<'de, B> {
+impl<'de, B: ByteOrder> VariantAccess<'de> for &mut Deserializer<'de, B> {
     type Error = DeserializerError;
 
     fn unit_variant(self) -> Result<(), Self::Error> {

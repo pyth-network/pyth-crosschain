@@ -1,5 +1,3 @@
-#![deny(warnings)]
-
 pub mod cli;
 
 use {
@@ -131,7 +129,7 @@ fn main() -> Result<()> {
             let mut current_guardian_set_index = match wormhole_account_data {
                 Ok(data) => {
                     let config = BridgeConfig::try_from_slice(&data)?;
-                    println!("Wormhole already initialized. config: {:?}", config);
+                    println!("Wormhole already initialized. config: {config:?}");
                     config.guardian_set_index
                 }
                 Err(_) => {

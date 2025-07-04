@@ -1,5 +1,3 @@
-#![deny(warnings)]
-
 use {
     serde_wormhole::RawMessage,
     wormhole_sdk::vaa::{Body, Header, Vaa},
@@ -250,11 +248,11 @@ pub fn process_transaction(
 
     // Check if simulation was successful
     if let Some(err) = simulation_result.value.err {
-        println!("Transaction simulation failed: {:?}", err);
+        println!("Transaction simulation failed: {err:?}");
         if let Some(logs) = simulation_result.value.logs {
             println!("Simulation logs:");
             for (i, log) in logs.iter().enumerate() {
-                println!("  {}: {}", i, log);
+                println!("  {i}: {log}");
             }
         }
         return Err(anyhow::anyhow!("Transaction simulation failed"));

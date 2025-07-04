@@ -12,7 +12,7 @@ pub type ChainName = String;
 
 /// The state of Argus for a single blockchain.
 /// Each sub state object should be a singleton and is shared across services.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ArgusState {
     pub subscription_state: Arc<SubscriptionState>,
     pub pyth_price_state: Arc<PythPriceState>,
@@ -21,25 +21,20 @@ pub struct ArgusState {
 
 impl ArgusState {
     pub fn new() -> Self {
-        Self {
-            subscription_state: Arc::new(SubscriptionState::new()),
-            pyth_price_state: Arc::new(PythPriceState::new()),
-            chain_price_state: Arc::new(ChainPriceState::new()),
-        }
+        Self::default()
     }
 }
 
 /// The state of active subscriptions for a single blockchain.
 /// Updated by the SubscriptionService.
+#[derive(Default)]
 pub struct SubscriptionState {
     subscriptions: DashMap<SubscriptionId, SubscriptionParams>,
 }
 
 impl SubscriptionState {
     pub fn new() -> Self {
-        Self {
-            subscriptions: DashMap::new(),
-        }
+        Self::default()
     }
 
     pub fn get_subscriptions(&self) -> HashMap<SubscriptionId, SubscriptionParams> {
@@ -73,6 +68,7 @@ impl SubscriptionState {
 
 /// Stores the latest off-chain prices for a given set of price feeds.
 /// Updated by the PythPriceService.
+#[derive(Default)]
 pub struct PythPriceState {
     prices: DashMap<PriceId, Price>,
     feed_ids: DashMap<PriceId, ()>,
@@ -80,14 +76,11 @@ pub struct PythPriceState {
 
 impl PythPriceState {
     pub fn new() -> Self {
-        Self {
-            prices: DashMap::new(),
-            feed_ids: DashMap::new(),
-        }
+        Self::default()
     }
 
     pub fn get_price(&self, feed_id: &PriceId) -> Option<Price> {
-        self.prices.get(feed_id).map(|r| r.value().clone())
+        self.prices.get(feed_id).map(|r| *r.value())
     }
 
     pub fn update_price(&self, feed_id: PriceId, price: Price) {
@@ -114,6 +107,7 @@ impl PythPriceState {
 
 /// Stores the latest on-chain prices for a given set of price feeds.
 /// Updated by the ChainPriceService.
+#[derive(Default)]
 pub struct ChainPriceState {
     prices: DashMap<PriceId, Price>,
     feed_ids: DashMap<PriceId, ()>,
@@ -121,14 +115,11 @@ pub struct ChainPriceState {
 
 impl ChainPriceState {
     pub fn new() -> Self {
-        Self {
-            prices: DashMap::new(),
-            feed_ids: DashMap::new(),
-        }
+        Self::default()
     }
 
     pub fn get_price(&self, feed_id: &PriceId) -> Option<Price> {
-        self.prices.get(feed_id).map(|r| r.value().clone())
+        self.prices.get(feed_id).map(|r| *r.value())
     }
 
     pub fn update_price(&self, feed_id: PriceId, price: Price) {

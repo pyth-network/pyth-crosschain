@@ -112,7 +112,7 @@ pub async fn process_event_with_backoff(
         .reveal(event.sequence_number)
         .map_err(|e| {
             status.state = RequestEntryState::Failed {
-                reason: format!("Error revealing: {:?}", e),
+                reason: format!("Error revealing: {e:?}"),
                 provider_random_number: None,
             };
             history.add(&status);
@@ -252,12 +252,11 @@ pub async fn process_event_with_backoff(
                 // Do not display the internal error, it might include RPC details.
                 let reason = match e {
                     SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert)) => {
-                        format!("Reverted: {}", revert)
+                        format!("Reverted: {revert}")
                     }
-                    SubmitTxError::GasLimitExceeded { limit, estimate } => format!(
-                        "Gas limit exceeded: limit = {}, estimate = {}",
-                        limit, estimate
-                    ),
+                    SubmitTxError::GasLimitExceeded { limit, estimate } => {
+                        format!("Gas limit exceeded: limit = {limit}, estimate = {estimate}")
+                    }
                     SubmitTxError::GasUsageEstimateError(_) => {
                         "Unable to estimate gas usage".to_string()
                     }

@@ -1,5 +1,6 @@
 #![allow(clippy::clone_on_copy)]
 #![allow(clippy::too_many_arguments)]
+#![allow(unexpected_cfgs)]
 use crate::pyth::errors::{Error, PriceFeedNotFound};
 use crate::pyth::events::PriceFeedUpdate;
 use crate::pyth::functions::create_price_feed_update_data;

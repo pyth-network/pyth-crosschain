@@ -232,7 +232,7 @@ pub fn create_vaa_from_payload(
 
     let signatures: Vec<(Signature, RecoveryId)> = guardians
         .iter()
-        .map(|x| libsecp256k1::sign(&digest, &x))
+        .map(|x| libsecp256k1::sign(&digest, x))
         .collect();
     let wormhole_signatures: Vec<wormhole_sdk::vaa::Signature> = signatures
         .iter()

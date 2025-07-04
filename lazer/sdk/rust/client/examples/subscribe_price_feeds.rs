@@ -190,7 +190,7 @@ async fn main() -> anyhow::Result<()> {
     // Unsubscribe example
     for sub_id in [SubscriptionId(1), SubscriptionId(2)] {
         client.unsubscribe(sub_id).await?;
-        println!("Unsubscribed from {:?}", sub_id);
+        println!("Unsubscribed from {sub_id:?}");
     }
 
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;

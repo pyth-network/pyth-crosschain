@@ -54,7 +54,7 @@ where
         .map_err(|e| {
             tracing::warn!("RPC connection error: {}", e);
             RestError::RpcConnectionError {
-                message: format!("RPC connection error: {}", e),
+                message: format!("RPC connection error: {e}"),
             }
         })?;
 

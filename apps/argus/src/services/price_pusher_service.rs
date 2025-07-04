@@ -6,7 +6,7 @@
 //! is met for a given subscription.
 //! The service handles retries and gas escalation to ensure the price update is successful.
 
-use anyhow::Result;
+use anyhow::{anyhow, Context as _, Result};
 use async_trait::async_trait;
 use backoff::ExponentialBackoff;
 use std::sync::{Arc, Mutex};
@@ -20,10 +20,12 @@ use crate::services::Service;
 use crate::state::ChainName;
 
 pub struct PricePusherService {
+    #[allow(dead_code, reason = "unknown")]
     chain_name: ChainName,
     name: String,
     contract: Arc<dyn UpdateChainPrices + Send + Sync>,
     pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
+    #[allow(dead_code, reason = "unknown")]
     backoff_policy: ExponentialBackoff,
     request_rx: Mutex<Option<mpsc::Receiver<PushRequest>>>,
     request_tx: mpsc::Sender<PushRequest>,
@@ -40,7 +42,7 @@ impl PricePusherService {
 
         Self {
             chain_name: chain_name.clone(),
-            name: format!("PricePusherService-{}", chain_name),
+            name: format!("PricePusherService-{chain_name}"),
             contract,
             pyth_price_client,
             backoff_policy,
@@ -111,9 +113,9 @@ impl Service for PricePusherService {
         let mut receiver = self
             .request_rx
             .lock()
-            .expect("Mutex poisoned")
+            .map_err(|_| anyhow!("Mutex poisoned"))?
             .take()
-            .expect("Request receiver already taken");
+            .context("Request receiver already taken")?;
 
         loop {
             tokio::select! {

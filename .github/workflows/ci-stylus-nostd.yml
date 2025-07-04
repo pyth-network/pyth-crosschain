@@ -30,14 +30,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Install rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable
-          rustflags: ""
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "target_chains/ethereum/sdk/stylus -> target"
+          cache-workspaces: "target_chains/ethereum/sdk/stylus -> target"
       - name: Add rust targets ${{ matrix.target }}
         run: rustup target add ${{ matrix.target }}
       - name: Cargo check

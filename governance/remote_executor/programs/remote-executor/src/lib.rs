@@ -1,6 +1,6 @@
-#![deny(warnings)]
 #![allow(clippy::result_unit_err)]
 #![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
 
 use {
     anchor_lang::{prelude::*, system_program},

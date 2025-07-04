@@ -133,8 +133,10 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
     // If base denom is present in coins and has enough amount this will return true
     // or if the base fee is set to 0
     // else it will return false
-    return Ok(state.fee.amount.u128() == 0
-        || has_coins(info.funds.as_ref(), &get_update_fee(deps, data)?));
+    Ok(
+        state.fee.amount.u128() == 0
+            || has_coins(info.funds.as_ref(), &get_update_fee(deps, data)?),
+    )
 }
 
 // it only checks for fee denoms other than the base denom

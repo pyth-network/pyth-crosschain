@@ -536,7 +536,7 @@ mod tests {
             let message: Message =
                 from_slice::<byteorder::BigEndian, _>(update.message.as_ref()).unwrap();
             let feed_id_hex = hex::encode(message.feed_id());
-            println!("id: {}, Message: {:?}", feed_id_hex, message);
+            println!("id: {feed_id_hex}, Message: {message:?}");
         }
     }
 }

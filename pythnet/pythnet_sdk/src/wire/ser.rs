@@ -218,7 +218,7 @@ impl<W: Write, B: ByteOrder> Serializer<W, B> {
     }
 }
 
-impl<'a, W: Write, B: ByteOrder> serde::Serializer for &'a mut Serializer<W, B> {
+impl<W: Write, B: ByteOrder> serde::Serializer for &mut Serializer<W, B> {
     type Ok = ();
     type Error = SerializerError;
 
@@ -477,7 +477,7 @@ impl<'a, W: Write, B: ByteOrder> serde::Serializer for &'a mut Serializer<W, B> 
     }
 }
 
-impl<'a, W: Write, B: ByteOrder> SerializeSeq for &'a mut Serializer<W, B> {
+impl<W: Write, B: ByteOrder> SerializeSeq for &mut Serializer<W, B> {
     type Ok = ();
     type Error = SerializerError;
 
@@ -491,7 +491,7 @@ impl<'a, W: Write, B: ByteOrder> SerializeSeq for &'a mut Serializer<W, B> {
     }
 }
 
-impl<'a, W: Write, B: ByteOrder> SerializeTuple for &'a mut Serializer<W, B> {
+impl<W: Write, B: ByteOrder> SerializeTuple for &mut Serializer<W, B> {
     type Ok = ();
     type Error = SerializerError;
 
@@ -505,7 +505,7 @@ impl<'a, W: Write, B: ByteOrder> SerializeTuple for &'a mut Serializer<W, B> {
     }
 }
 
-impl<'a, W: Write, B: ByteOrder> SerializeTupleStruct for &'a mut Serializer<W, B> {
+impl<W: Write, B: ByteOrder> SerializeTupleStruct for &mut Serializer<W, B> {
     type Ok = ();
     type Error = SerializerError;
 
@@ -519,7 +519,7 @@ impl<'a, W: Write, B: ByteOrder> SerializeTupleStruct for &'a mut Serializer<W, 
     }
 }
 
-impl<'a, W: Write, B: ByteOrder> SerializeTupleVariant for &'a mut Serializer<W, B> {
+impl<W: Write, B: ByteOrder> SerializeTupleVariant for &mut Serializer<W, B> {
     type Ok = ();
     type Error = SerializerError;
 
@@ -533,7 +533,7 @@ impl<'a, W: Write, B: ByteOrder> SerializeTupleVariant for &'a mut Serializer<W,
     }
 }
 
-impl<'a, W: Write, B: ByteOrder> SerializeMap for &'a mut Serializer<W, B> {
+impl<W: Write, B: ByteOrder> SerializeMap for &mut Serializer<W, B> {
     type Ok = ();
     type Error = SerializerError;
 
@@ -552,7 +552,7 @@ impl<'a, W: Write, B: ByteOrder> SerializeMap for &'a mut Serializer<W, B> {
     }
 }
 
-impl<'a, W: Write, B: ByteOrder> SerializeStruct for &'a mut Serializer<W, B> {
+impl<W: Write, B: ByteOrder> SerializeStruct for &mut Serializer<W, B> {
     type Ok = ();
     type Error = SerializerError;
 
@@ -570,7 +570,7 @@ impl<'a, W: Write, B: ByteOrder> SerializeStruct for &'a mut Serializer<W, B> {
     }
 }
 
-impl<'a, W: Write, B: ByteOrder> SerializeStructVariant for &'a mut Serializer<W, B> {
+impl<W: Write, B: ByteOrder> SerializeStructVariant for &mut Serializer<W, B> {
     type Ok = ();
     type Error = SerializerError;
 

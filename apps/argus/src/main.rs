@@ -1,4 +1,3 @@
-#![allow(clippy::just_underscores_and_digits)]
 pub mod adapters;
 pub mod api;
 pub mod command;

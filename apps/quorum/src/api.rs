@@ -601,7 +601,7 @@ mod test {
                     .try_recv()
                     .expect("Failed to receive update from subscriber");
                 let UpdateEvent::NewVaa(vaa) = update else {
-                    panic!("Expected NewVaa event, got {:?}", update);
+                    panic!("Expected NewVaa event, got {update:?}");
                 };
                 let vaa: Vaa<&RawMessage> =
                     serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");

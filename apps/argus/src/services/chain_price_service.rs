@@ -19,8 +19,10 @@ use crate::state::ChainName;
 use crate::state::ChainPriceState;
 
 pub struct ChainPriceService {
+    #[allow(dead_code, reason = "unknown")]
     chain_name: ChainName,
     name: String,
+    #[allow(dead_code, reason = "unknown")]
     contract: Arc<dyn GetChainPrices + Send + Sync>,
     poll_interval: Duration,
     chain_price_state: Arc<ChainPriceState>,
@@ -35,7 +37,7 @@ impl ChainPriceService {
     ) -> Self {
         Self {
             chain_name: chain_name.clone(),
-            name: format!("ChainPriceService-{}", chain_name),
+            name: format!("ChainPriceService-{chain_name}"),
             contract,
             poll_interval,
             chain_price_state,

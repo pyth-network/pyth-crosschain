@@ -180,10 +180,9 @@ impl IntoTransactionError for ErrorCode {
     fn into_transation_error(self) -> TransactionError {
         TransactionError::InstructionError(
             0,
-            InstructionError::try_from(u64::from(ProgramError::from(
+            InstructionError::from(u64::from(ProgramError::from(
                 anchor_lang::prelude::Error::from(self),
-            )))
-            .unwrap(),
+            ))),
         )
     }
 }
