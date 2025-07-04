@@ -21,4 +21,9 @@ pub struct Options {
     #[arg(default_value = DEFAULT_PYTHNET_ORACLE_PROGRAM_ADDR)]
     #[arg(env = "PYTHNET_ORACLE_PROGRAM_ADDR")]
     pub oracle_program_addr: Pubkey,
+
+    /// Address of a PythNet quorum websocket RPC endpoint.
+    #[arg(long = "pythnet-quorum-ws-addr")]
+    #[arg(env = "PYTHNET_QUORUM_WS_ADDR")]
+    pub quorum_ws_addr: Option<String>,
 }

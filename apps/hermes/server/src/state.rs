@@ -56,7 +56,7 @@ struct State {
 
 pub fn new(
     update_tx: Sender<AggregationEvent>,
-    cache_size: u64,
+    cache_size: usize,
     benchmarks_endpoint: Option<Url>,
     readiness_staleness_threshold: Duration,
     readiness_max_allowed_slot_lag: Slot,
@@ -87,7 +87,7 @@ pub mod test {
     };
 
     pub async fn setup_state(
-        cache_size: u64,
+        cache_size: usize,
     ) -> (Arc<impl Aggregates>, Receiver<AggregationEvent>) {
         let (update_tx, update_rx) = tokio::sync::broadcast::channel(1000);
         let state = super::new(update_tx, cache_size, None, Duration::from_secs(30), 10);

@@ -1,0 +1,58 @@
+name: Build and Push Quorum Image
+on:
+  push:
+    tags:
+      - quorum-v*
+  pull_request:
+    paths:
+      - "apps/quorum/**"
+  workflow_dispatch:
+    inputs:
+      dispatch_description:
+        description: "Dispatch description"
+        required: true
+        type: string
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: pyth-network/quorum
+jobs:
+  quorum-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set image tag to version of the git tag
+        if: ${{ startsWith(github.ref, 'refs/tags/quorum-v') }}
+        run: |
+          PREFIX="refs/tags/quorum-"
+          VERSION="${GITHUB_REF:${#PREFIX}}"
+          echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
+      - name: Set image tag to the git commit hash
+        if: ${{ !startsWith(github.ref, 'refs/tags/quorum-v') }}
+        run: |
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          echo "IMAGE_TAG=sha-${SHORT_SHA}" >> "${GITHUB_ENV}"
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: metadata_quorum
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ env.IMAGE_TAG }}
+      - name: Build and push server docker image
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          file: "./apps/quorum/Dockerfile"
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.metadata_quorum.outputs.tags }}
+          labels: ${{ steps.metadata_quorum.outputs.labels }}

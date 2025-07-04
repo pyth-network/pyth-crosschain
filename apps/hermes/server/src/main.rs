@@ -1,5 +1,5 @@
 use {
-    anyhow::Result,
+    anyhow::{Context, Result},
     clap::{CommandFactory, Parser},
     futures::future::join_all,
     lazy_static::lazy_static,
@@ -53,9 +53,13 @@ async fn init() -> Result<()> {
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
             spawn(async move {
                 tracing::info!("Registered shutdown signal handler...");
-                tokio::signal::ctrl_c().await.unwrap();
-                tracing::info!("Shut down signal received, waiting for tasks...");
-                let _ = EXIT.send(true);
+                match tokio::signal::ctrl_c().await {
+                    Ok(()) => {
+                        tracing::info!("Shut down signal received, waiting for tasks...");
+                        let _ = EXIT.send(true);
+                    }
+                    Err(err) => tracing::warn!("failed to register shutdown signal handler: {err}"),
+                }
             });
 
             // Spawn all worker tasks, and wait for all to complete (which will happen if a shutdown
@@ -83,8 +87,8 @@ async fn init() -> Result<()> {
                         let defaults = arg
                             .get_default_values()
                             .iter()
-                            .map(|v| v.to_str().unwrap())
-                            .collect::<Vec<_>>()
+                            .map(|v| v.to_str().context("non-utf8 default arg value"))
+                            .collect::<Result<Vec<_>>>()?
                             .join(",");
 
                         println!(

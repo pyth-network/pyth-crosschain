@@ -43,7 +43,10 @@ impl std::fmt::Display for GuardianSet {
 
 /// BridgeData extracted from wormhole bridge account, due to no API.
 #[derive(borsh::BorshDeserialize)]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "we have to deserialize all fields but we don't use all of them"
+)]
 pub struct BridgeData {
     pub guardian_set_index: u32,
     pub last_lamports: u64,
@@ -52,7 +55,10 @@ pub struct BridgeData {
 
 /// BridgeConfig extracted from wormhole bridge account, due to no API.
 #[derive(borsh::BorshDeserialize)]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "we have to deserialize all fields but we don't use all of them"
+)]
 pub struct BridgeConfig {
     pub guardian_set_expiration_time: u32,
     pub fee: u64,
@@ -75,7 +81,11 @@ pub struct GuardianSetData {
 ///
 /// The following module structure must match the protobuf definitions, so that the generated code
 /// can correctly reference modules from each other.
-#[allow(clippy::enum_variant_names)]
+#[allow(
+    clippy::enum_variant_names,
+    clippy::allow_attributes_without_reason,
+    reason = "generated code"
+)]
 mod proto {
     pub mod node {
         pub mod v1 {

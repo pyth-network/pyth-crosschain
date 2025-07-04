@@ -10,7 +10,10 @@
     "check-trusted-signer": "pnpm ts-node scripts/check_trusted_signer.ts"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1"
+    "@coral-xyz/anchor": "^0.30.1",
+    "@pythnetwork/pyth-lazer-sdk": "workspace:*",
+    "@solana/web3.js": "^1.98.0",
+    "@solana/buffer-layout": "^4.0.1"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

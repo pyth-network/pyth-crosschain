@@ -166,7 +166,9 @@ export class MultisigParser {
       return SolanaStakingMultisigInstruction.fromTransactionInstruction(
         instruction,
       );
-    } else if (instruction.programId.equals(SOLANA_LAZER_PROGRAM_ID)) {
+    } else if (
+      instruction.programId.equals(new PublicKey(SOLANA_LAZER_PROGRAM_ID))
+    ) {
       return LazerMultisigInstruction.fromInstruction(instruction);
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);

@@ -159,7 +159,7 @@ pnpm run start solana \
   --endpoint https://api.mainnet-beta.solana.com \
   --keypair-file ./id.json \
   --shard-id 1 \
-  --jito-endpoint mainnet.block-engine.jito.wtf \
+  --jito-endpoints mainnet.block-engine.jito.wtf,ny.mainnet.block-engine.jito.wtf \
   --jito-keypair-file ./jito.json \
   --jito-tip-lamports 100000 \
   --jito-bundle-size 5 \

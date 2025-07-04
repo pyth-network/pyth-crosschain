@@ -106,7 +106,12 @@ impl Metrics {
 
         // Clear out old slots
         while self.first_observed_time_of_slot.len() > MAX_SLOT_OBSERVATIONS {
-            let oldest_slot = *self.first_observed_time_of_slot.keys().next().unwrap();
+            #[allow(clippy::expect_used, reason = "len checked above")]
+            let oldest_slot = *self
+                .first_observed_time_of_slot
+                .keys()
+                .next()
+                .expect("first_observed_time_of_slot is empty");
             self.first_observed_time_of_slot.remove(&oldest_slot);
         }
     }

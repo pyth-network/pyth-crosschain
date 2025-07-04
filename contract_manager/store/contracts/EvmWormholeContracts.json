@@ -833,5 +833,10 @@
     "chain": "mezo",
     "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
     "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "injective_evm_testnet",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmWormholeContract"
   }
 ]

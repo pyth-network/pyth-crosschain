@@ -1,7 +1,7 @@
 "use client";
 
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useResizeObserver } from "@react-hookz/web";
+import { useResizeObserver, useMountEffect } from "@react-hookz/web";
 import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
 import { LineSeries, LineStyle, createChart } from "lightweight-charts";
 import { useTheme } from "next-themes";
@@ -101,10 +101,10 @@ const useChartElem = (symbol: string, feedId: string) => {
     }
   }, [logger, symbol]);
 
-  useEffect(() => {
+  useMountEffect(() => {
     const chartElem = chartContainerRef.current;
     if (chartElem === null) {
-      return;
+      throw new Error("Chart element was null on mount");
     } else {
       const chart = createChart(chartElem, {
         layout: {
@@ -146,7 +146,7 @@ const useChartElem = (symbol: string, feedId: string) => {
         chart.remove();
       };
     }
-  }, [backfillData, priceFormatter]);
+  });
 
   useEffect(() => {
     if (current && chartRef.current) {

@@ -40,11 +40,11 @@ async function main() {
 
   // Print storage info
   console.log("Storage Account Info:");
-  console.log("--------------------");
+  console.log("---------------------");
   console.log("Top Authority:", storage.topAuthority.toBase58());
   console.log("Treasury:", storage.treasury.toBase58());
-  console.log("\nTrusted Signers:");
-  console.log("----------------");
+  console.log("\nTrusted Ed25519 Signers:");
+  console.log("------------------------");
 
   const trustedSigners = storage.trustedSigners.slice(
     0,
@@ -67,7 +67,7 @@ async function main() {
   }
 
   console.log("\nTrusted ECDSA Signers:");
-  console.log("----------------");
+  console.log("----------------------");
 
   const trustedEcdsaSigners = storage.trustedEcdsaSigners.slice(
     0,

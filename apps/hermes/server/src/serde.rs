@@ -17,13 +17,16 @@ pub mod hex {
         R: FromHex,
         <R as hex::FromHex>::Error: std::fmt::Display,
     {
-        let s: String = Deserialize::deserialize(d)?;
-        let p = s.starts_with("0x") || s.starts_with("0X");
-        let s = if p { &s[2..] } else { &s[..] };
-        hex::serde::deserialize(s.into_deserializer())
+        let full: String = Deserialize::deserialize(d)?;
+        let hex = full
+            .strip_prefix("0x")
+            .or_else(|| full.strip_prefix("0X"))
+            .unwrap_or(&full);
+        hex::serde::deserialize(hex.into_deserializer())
     }
 
     #[cfg(test)]
+    #[allow(clippy::unwrap_used, reason = "tests")]
     mod tests {
         use serde::Deserialize;
 

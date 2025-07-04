@@ -1,6 +1,16 @@
 [
   {
     "inputs": [],
+    "name": "CombinedPriceOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExponentOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InsufficientFee",
     "type": "error"
   },
@@ -22,6 +32,11 @@
   {
     "inputs": [],
     "name": "InvalidGovernanceTarget",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidInputExpo",
     "type": "error"
   },
   {
@@ -52,6 +67,11 @@
   {
     "inputs": [],
     "name": "InvalidWormholeVaa",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NegativeInputPrice",
     "type": "error"
   },
   {

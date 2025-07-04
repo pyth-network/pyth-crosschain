@@ -51,15 +51,16 @@ pub async fn get_vaa_ccip<S>(
 where
     S: Aggregates,
 {
+    let data: [u8; 40] = *params.data;
     let price_id: PriceIdentifier = PriceIdentifier::new(
-        params.data[0..32]
+        data[0..32]
             .try_into()
             .map_err(|_| RestError::InvalidCCIPInput)?,
     );
     validate_price_ids(&state, &[price_id], false).await?;
 
     let publish_time = UnixTimestamp::from_be_bytes(
-        params.data[32..40]
+        data[32..40]
             .try_into()
             .map_err(|_| RestError::InvalidCCIPInput)?,
     );

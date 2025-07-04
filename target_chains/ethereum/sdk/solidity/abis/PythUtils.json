@@ -1,5 +1,38 @@
 [
   {
+    "inputs": [],
+    "name": "CombinedPriceOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExponentOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidInputExpo",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NegativeInputPrice",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PRECISION",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "int64",
@@ -22,6 +55,45 @@
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int64",
+        "name": "price1",
+        "type": "int64"
+      },
+      {
+        "internalType": "int32",
+        "name": "expo1",
+        "type": "int32"
+      },
+      {
+        "internalType": "int64",
+        "name": "price2",
+        "type": "int64"
+      },
+      {
+        "internalType": "int32",
+        "name": "expo2",
+        "type": "int32"
+      },
+      {
+        "internalType": "int32",
+        "name": "targetExponent",
+        "type": "int32"
+      }
+    ],
+    "name": "deriveCrossRate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "crossRate",
         "type": "uint256"
       }
     ],

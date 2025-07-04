@@ -140,7 +140,7 @@ where
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
     let app = Router::new();
-    #[allow(deprecated)]
+    #[allow(deprecated, reason = "serving deprecated API endpoints")]
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(rest::index))

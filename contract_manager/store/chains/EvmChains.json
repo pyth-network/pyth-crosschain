@@ -1073,7 +1073,7 @@
   {
     "id": "hyperevm_testnet",
     "mainnet": false,
-    "rpcUrl": "https://api.hyperliquid-testnet.xyz/evm",
+    "rpcUrl": "https://rpc.hyperliquid-testnet.xyz/evm",
     "networkId": 998,
     "type": "EvmChain"
   },
@@ -1257,6 +1257,13 @@
     "mainnet": false,
     "rpcUrl": "https://testnet.rpc.hemi.network/rpc",
     "networkId": 743111,
+    "type": "EvmChain"
+  },
+  {
+    "id": "injective_evm_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://k8s.testnet.json-rpc.injective.network/",
+    "networkId": 1439,
     "type": "EvmChain"
   }
 ]
