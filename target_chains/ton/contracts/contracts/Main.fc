@@ -29,11 +29,6 @@
         return ();
     }
 
-    ;; * A 32-bit (big-endian) unsigned integer `op`, identifying the `operation` to be performed, or the `method` of the smart contract to be invoked.
-    int op = in_msg_body~load_uint(32);
-    cell data = in_msg_body~load_ref();
-    slice data_slice = data.begin_parse();
-
     ;; Get sender address from message
     slice cs = in_msg_full.begin_parse();
     int flags = cs~load_uint(4);
@@ -41,6 +36,11 @@
         return ();
     }
     slice sender_address = cs~load_msg_addr();  ;; load sender address
+
+    ;; * A 32-bit (big-endian) unsigned integer `op`, identifying the `operation` to be performed, or the `method` of the smart contract to be invoked.
+    int op = in_msg_body~load_uint(32);
+    cell data = in_msg_body~load_ref();
+    slice data_slice = data.begin_parse();
 
     ;; * The remainder of the message body is specific for each supported value of `op`.
     if (op == OP_UPDATE_GUARDIAN_SET) {
