@@ -164,22 +164,28 @@ impl PythReceiver {
         // dummy implementation
     }
 
-    fn update_price_feeds_internal(&mut self, update_data: Vec<u8>, price_ids: Vec<[u8; 32]>, min_publish_time: u64, max_publish_time: u64, unique: bool) -> Result<(), PythReceiverError> {
-        let price_returns= self.parse_price_feed_updates(update_data, price_ids.clone(), min_publish_time, max_publish_time)?;
-        for i in 0..price_ids.clone().len() {
-            let cur_price_id = &price_ids[i];
-            let cur_price_return = &price_returns[i];
-            let price_id_fb : FixedBytes<32> = FixedBytes::from(cur_price_id);
+    fn update_price_feeds_internal(&mut self, update_data: Vec<u8>, _price_ids: Vec<[u8; 32]>, min_publish_time: u64, max_publish_time: u64, _unique: bool) -> Result<(), PythReceiverError> {
+        let price_pairs = self.parse_price_feed_updates_internal(
+            update_data,
+            min_publish_time,
+            max_publish_time,
+            false, // check_uniqueness
+            false, // check_update_data_is_minimal
+            true,  // store_updates_if_fresh
+        )?;
+
+        for (price_id, price_return) in price_pairs {
+            let price_id_fb: FixedBytes<32> = FixedBytes::from(price_id);
             let mut recent_price_info = self.latest_price_info.setter(price_id_fb);
 
-            if recent_price_info.publish_time.get() < cur_price_return.0
+            if recent_price_info.publish_time.get() < price_return.0
                 || recent_price_info.price.get() == I64::ZERO {
-                recent_price_info.publish_time.set(cur_price_return.0);
-                recent_price_info.expo.set(cur_price_return.1);
-                recent_price_info.price.set(cur_price_return.2);
-                recent_price_info.conf.set(cur_price_return.3);
-                recent_price_info.ema_price.set(cur_price_return.4);
-                recent_price_info.ema_conf.set(cur_price_return.5);
+                recent_price_info.publish_time.set(price_return.0);
+                recent_price_info.expo.set(price_return.1);
+                recent_price_info.price.set(price_return.2);
+                recent_price_info.conf.set(price_return.3);
+                recent_price_info.ema_price.set(price_return.4);
+                recent_price_info.ema_conf.set(price_return.5);
             }
         }
 
@@ -316,16 +322,13 @@ impl PythReceiver {
 
                     match msg {
                         Message::PriceFeedMessage(price_feed_message) => {
-                            let price_id_fb : FixedBytes<32> = FixedBytes::from(price_feed_message.feed_id);
-                            let mut recent_price_info = self.latest_price_info.setter(price_id_fb);
-
                             let price_info_return = (
-                                recent_price_info.publish_time.get(),
-                                recent_price_info.expo.get(),
-                                recent_price_info.price.get(),
-                                recent_price_info.conf.get(),
-                                recent_price_info.ema_price.get(),
-                                recent_price_info.ema_conf.get(),
+                                U64::from(price_feed_message.publish_time),
+                                I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
+                                I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
+                                U64::from(price_feed_message.conf),
+                                I64::from_be_bytes(price_feed_message.ema_price.to_be_bytes()),
+                                U64::from(price_feed_message.ema_conf),
                             );
 
                             price_feeds.insert(price_feed_message.feed_id, price_info_return);
