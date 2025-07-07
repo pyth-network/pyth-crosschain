@@ -259,20 +259,19 @@ impl History {
                 let block_number = new_status.request_block_number as i64;
                 let sender: String = new_status.sender.encode_hex();
                 let user_random_number: String = new_status.user_random_number.encode_hex();
-                sqlx::query!("INSERT INTO request(chain_id, network_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, user_random_number, sender, gas_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    chain_id,
-                    network_id,
-                    provider,
-                    sequence,
-                    new_status.created_at,
-                    new_status.last_updated_at,
-                    "Pending",
-                    block_number,
-                    request_tx_hash,
-                    user_random_number,
-                    sender,
-                    gas_limit
-            )
+                sqlx::query("INSERT INTO request(chain_id, network_id, provider, sequence, created_at, last_updated_at, state, request_block_number, request_tx_hash, user_random_number, sender, gas_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                    .bind(chain_id.clone())
+                    .bind(network_id)
+                    .bind(provider.clone())
+                    .bind(sequence)
+                    .bind(new_status.created_at)
+                    .bind(new_status.last_updated_at)
+                    .bind("Pending")
+                    .bind(block_number)
+                    .bind(request_tx_hash.clone())
+                    .bind(user_random_number)
+                    .bind(sender)
+                    .bind(gas_limit.clone())
                     .execute(pool)
                     .await
             }
@@ -287,17 +286,17 @@ impl History {
                 let reveal_tx_hash: String = reveal_tx_hash.encode_hex();
                 let provider_random_number: String = provider_random_number.encode_hex();
                 let gas_used: String = gas_used.to_string();
-                let result = sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number =?, gas_used = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?",
-                    "Completed",
-                    new_status.last_updated_at,
-                    reveal_block_number,
-                    reveal_tx_hash,
-                    provider_random_number,
-                    gas_used,
-                    network_id,
-                    sequence,
-                    provider,
-                    request_tx_hash)
+                let result = sqlx::query("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number =?, gas_used = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?")
+                    .bind("Completed")
+                    .bind(new_status.last_updated_at)
+                    .bind(reveal_block_number)
+                    .bind(reveal_tx_hash)
+                    .bind(provider_random_number)
+                    .bind(gas_used)
+                    .bind(network_id)
+                    .bind(sequence)
+                    .bind(provider.clone())
+                    .bind(request_tx_hash.clone())
                     .execute(pool)
                     .await;
                 if let Ok(query_result) = &result {
@@ -313,15 +312,15 @@ impl History {
             } => {
                 let provider_random_number: Option<String> = provider_random_number
                     .map(|provider_random_number| provider_random_number.encode_hex());
-                sqlx::query!("UPDATE request SET state = ?, last_updated_at = ?, info = ?, provider_random_number = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'",
-                    "Failed",
-                    new_status.last_updated_at,
-                    reason,
-                    provider_random_number,
-                    network_id,
-                    sequence,
-                    provider,
-                    request_tx_hash)
+                sqlx::query("UPDATE request SET state = ?, last_updated_at = ?, info = ?, provider_random_number = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'")
+                    .bind("Failed")
+                    .bind(new_status.last_updated_at)
+                    .bind(reason)
+                    .bind(provider_random_number)
+                    .bind(network_id)
+                    .bind(sequence)
+                    .bind(provider)
+                    .bind(request_tx_hash)
                     .execute(pool)
                     .await
             }

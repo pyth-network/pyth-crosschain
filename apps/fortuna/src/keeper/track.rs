@@ -6,6 +6,7 @@ use {
     },
     anyhow::{anyhow, Result},
     ethers::{middleware::Middleware, prelude::BlockNumber, providers::Provider, types::Address},
+    num_traits::cast::ToPrimitive,
     std::{
         sync::Arc,
         time::{SystemTime, UNIX_EPOCH},
@@ -86,7 +87,10 @@ pub async fn track_provider(
     provider_address: Address,
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
-    let provider_info = contract.get_provider_info(provider_address).call().await?;
+    let provider_info = contract
+        .get_provider_info_v2(provider_address)
+        .call()
+        .await?;
 
     // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
     // The fee is in wei, so we divide by 1e18 to convert it to eth.
@@ -155,7 +159,12 @@ pub async fn track_accrued_pyth_fees(
 
     // The f64 conversion is made to be able to serve metrics with the constraints of Prometheus.
     // The fee is in wei, so we divide by 1e18 to convert it to eth.
-    let accrued_pyth_fees = accrued_pyth_fees as f64 / 1e18;
+    let accrued_pyth_fees = accrued_pyth_fees.to_f64().ok_or_else(|| {
+        anyhow!(
+            "Failed to convert accrued_pyth_fees value {:?} to f64",
+            accrued_pyth_fees
+        )
+    })? / 1e18;
 
     metrics
         .accrued_pyth_fees

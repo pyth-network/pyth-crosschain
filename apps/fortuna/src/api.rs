@@ -209,7 +209,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
 /// The path and API are highly coupled. Please be sure to keep them consistent.
 pub fn get_register_uri(base_uri: &str, chain_id: &str) -> Result<String> {
     let base_uri = Url::parse(base_uri)?;
-    let path = format!("/v1/chains/{}", chain_id);
+    let path = format!("/v1/chains/{chain_id}");
     let uri = base_uri.join(&path)?;
     Ok(uri.to_string())
 }

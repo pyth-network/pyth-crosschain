@@ -153,7 +153,7 @@ pub async fn withdraw_fees_if_necessary(
     }
 
     let provider_info = contract_as_fee_manager
-        .get_provider_info(provider_address)
+        .get_provider_info_v2(provider_address)
         .call()
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
@@ -218,7 +218,6 @@ pub async fn adjust_fee_wrapper(
     provider_address: Address,
     poll_interval: Duration,
     legacy_tx: bool,
-    gas_limit: u64,
     min_profit_pct: u64,
     target_profit_pct: u64,
     max_profit_pct: u64,
@@ -235,7 +234,6 @@ pub async fn adjust_fee_wrapper(
             chain_state.id.clone(),
             provider_address,
             legacy_tx,
-            gas_limit,
             min_profit_pct,
             target_profit_pct,
             max_profit_pct,
@@ -272,7 +270,6 @@ pub async fn adjust_fee_if_necessary(
     chain_id: ChainId,
     provider_address: Address,
     legacy_tx: bool,
-    gas_limit: u64,
     min_profit_pct: u64,
     target_profit_pct: u64,
     max_profit_pct: u64,
@@ -282,7 +279,7 @@ pub async fn adjust_fee_if_necessary(
     metrics: Arc<KeeperMetrics>,
 ) -> Result<()> {
     let provider_info = contract
-        .get_provider_info(provider_address)
+        .get_provider_info_v2(provider_address)
         .call()
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
@@ -293,7 +290,8 @@ pub async fn adjust_fee_if_necessary(
 
     // Calculate target window for the on-chain fee.
     let middleware = contract.client();
-    let max_callback_cost: u128 = estimate_tx_cost(middleware, legacy_tx, gas_limit.into())
+    let gas_limit: u128 = u128::from(provider_info.default_gas_limit);
+    let max_callback_cost: u128 = estimate_tx_cost(middleware, legacy_tx, gas_limit)
         .await
         .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
 
@@ -305,7 +303,7 @@ pub async fn adjust_fee_if_necessary(
     metrics
         .gas_price_estimate
         .get_or_create(&account_label)
-        .set((max_callback_cost / u128::from(gas_limit)) as f64 / 1e9);
+        .set((max_callback_cost / gas_limit) as f64 / 1e9);
 
     let target_fee_min = std::cmp::max(
         (max_callback_cost * u128::from(min_profit_pct)) / 100,

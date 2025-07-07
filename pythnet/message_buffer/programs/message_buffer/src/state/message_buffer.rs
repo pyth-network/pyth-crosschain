@@ -85,7 +85,7 @@ impl MessageBuffer {
     pub fn put_all_in_buffer(
         &mut self,
         destination: &mut [u8],
-        values: &Vec<Vec<u8>>,
+        values: &[Vec<u8>],
     ) -> (usize, u16) {
         let mut offset = 0u16;
 
@@ -202,7 +202,7 @@ mod test {
             read_data.push(message_buffer_data);
             start = end_offset;
         }
-        println!("read_data: {:?}", read_data);
+        println!("read_data: {read_data:?}");
         assert_eq!(read_data.len(), num_msgs);
         for d in read_data.iter() {
             let expected_data = data_iter.next().unwrap();
@@ -322,11 +322,11 @@ mod test {
 
         let mut cursor = std::io::Cursor::new(&account_info_data[10..]);
         let header_len = cursor.read_u16::<LittleEndian>().unwrap();
-        println!("header_len: {}", header_len);
+        println!("header_len: {header_len}");
         let mut current_msg_start = header_len;
         let mut end_offset = cursor.read_u16::<LittleEndian>().unwrap();
         let mut data_iter = data_bytes.iter();
-        println!("init header_end: {}", end_offset);
+        println!("init header_end: {end_offset}");
         let read_data = &mut vec![];
         while end_offset != 0 {
             let current_msg_end = header_len + end_offset;
@@ -337,7 +337,7 @@ mod test {
             read_data.push(accumulator_input_data);
         }
 
-        println!("read_data: {:?}", read_data);
+        println!("read_data: {read_data:?}");
         for d in read_data.iter() {
             let expected_data = data_iter.next().unwrap();
             assert_eq!(d, &expected_data.as_slice());

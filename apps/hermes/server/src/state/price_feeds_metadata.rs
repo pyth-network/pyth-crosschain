@@ -73,16 +73,16 @@ where
         // Filter by query if provided
         if let Some(query_str) = &query {
             price_feeds_metadata.retain(|feed| {
-                feed.attributes.get("symbol").map_or(false, |symbol| {
-                    symbol.to_lowercase().contains(&query_str.to_lowercase())
-                })
+                feed.attributes
+                    .get("symbol")
+                    .is_some_and(|symbol| symbol.to_lowercase().contains(&query_str.to_lowercase()))
             });
         }
 
         // Filter by asset_type if provided
         if let Some(asset_type) = &asset_type {
             price_feeds_metadata.retain(|feed| {
-                feed.attributes.get("asset_type").map_or(false, |type_str| {
+                feed.attributes.get("asset_type").is_some_and(|type_str| {
                     type_str.to_lowercase().trim().replace(" ", "_")
                         == asset_type.to_string().to_lowercase()
                 })

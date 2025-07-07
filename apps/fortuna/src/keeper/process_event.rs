@@ -1,13 +1,16 @@
 use {
     super::keeper_metrics::AccountLabel,
     crate::{
-        chain::{ethereum::PythRandomErrorsErrors, reader::RequestedWithCallbackEvent},
+        chain::{
+            ethereum::PythRandomErrorsErrors,
+            reader::{RequestCallbackStatus, RequestedWithCallbackEvent},
+        },
         eth_utils::utils::{submit_tx_with_backoff, SubmitTxError},
         history::{RequestEntryState, RequestStatus},
         keeper::block::ProcessParams,
     },
     anyhow::{anyhow, Result},
-    ethers::{abi::AbiDecode, contract::ContractError},
+    ethers::{abi::AbiDecode, contract::ContractError, types::U256},
     std::time::Duration,
     tracing,
 };
@@ -23,7 +26,6 @@ pub async fn process_event_with_backoff(
     let ProcessParams {
         chain_state,
         contract,
-        gas_limit,
         escalation_policy,
         metrics,
         history,
@@ -59,10 +61,18 @@ pub async fn process_event_with_backoff(
             // If it is, we will process it as a backup replica.
             match chain_state
                 .contract
-                .get_request(event.provider_address, event.sequence_number)
+                .get_request_v2(event.provider_address, event.sequence_number)
                 .await
             {
-                Ok(Some(_)) => {
+                Ok(Some(req)) => {
+                    // If the request is in the CallbackNotStarted state, it means that the primary replica
+                    // has not yet called the callback. We should process it as a backup replica.
+                    if req.callback_status != RequestCallbackStatus::CallbackNotStarted {
+                        tracing::debug!(
+                            "Request already handled by primary replica during delay, skipping"
+                        );
+                        return Ok(());
+                    }
                     tracing::info!(
                         delay_seconds = replica_config.backup_delay_seconds,
                         "Request still open after delay, processing as backup replica"
@@ -70,7 +80,7 @@ pub async fn process_event_with_backoff(
                 }
                 Ok(None) => {
                     tracing::debug!(
-                        "Request already fulfilled by primary replica during delay, skipping"
+                        "Request already handled by primary replica during delay, skipping"
                     );
                     return Ok(());
                 }
@@ -103,7 +113,7 @@ pub async fn process_event_with_backoff(
         sender: event.requestor,
         user_random_number: event.user_random_number,
         state: RequestEntryState::Pending,
-        gas_limit,
+        gas_limit: U256::from(0), // FIXME(Tejas): set this properly
     };
     history.add(&status);
 
@@ -112,7 +122,7 @@ pub async fn process_event_with_backoff(
         .reveal(event.sequence_number)
         .map_err(|e| {
             status.state = RequestEntryState::Failed {
-                reason: format!("Error revealing: {:?}", e),
+                reason: format!("Error revealing: {e:?}"),
                 provider_random_number: None,
             };
             history.add(&status);
@@ -159,7 +169,6 @@ pub async fn process_event_with_backoff(
     let success = submit_tx_with_backoff(
         contract.client(),
         contract_call,
-        gas_limit,
         escalation_policy,
         Some(error_mapper),
     )
@@ -207,11 +216,6 @@ pub async fn process_event_with_backoff(
                 .observe(result.num_retries as f64);
 
             metrics
-                .final_gas_multiplier
-                .get_or_create(&account_label)
-                .observe(result.gas_multiplier as f64);
-
-            metrics
                 .final_fee_multiplier
                 .get_or_create(&account_label)
                 .observe(result.fee_multiplier as f64);
@@ -239,7 +243,7 @@ pub async fn process_event_with_backoff(
             // the RPC gave us an error anyway.
             let req = chain_state
                 .contract
-                .get_request(event.provider_address, event.sequence_number)
+                .get_request_v2(event.provider_address, event.sequence_number)
                 .await;
 
             // We only count failures for cases where we are completely certain that the callback failed.
@@ -252,12 +256,11 @@ pub async fn process_event_with_backoff(
                 // Do not display the internal error, it might include RPC details.
                 let reason = match e {
                     SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert)) => {
-                        format!("Reverted: {}", revert)
+                        format!("Reverted: {revert}")
                     }
-                    SubmitTxError::GasLimitExceeded { limit, estimate } => format!(
-                        "Gas limit exceeded: limit = {}, estimate = {}",
-                        limit, estimate
-                    ),
+                    SubmitTxError::GasLimitExceeded { limit, estimate } => {
+                        format!("Gas limit exceeded: limit = {limit}, estimate = {estimate}")
+                    }
                     SubmitTxError::GasUsageEstimateError(_) => {
                         "Unable to estimate gas usage".to_string()
                     }

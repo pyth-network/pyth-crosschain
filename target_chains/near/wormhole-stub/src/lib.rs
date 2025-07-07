@@ -1,5 +1,3 @@
-//#![deny(warnings)]
-
 use near_sdk::{
     borsh::{BorshDeserialize, BorshSerialize},
     log, near_bindgen, PanicOnDefault,

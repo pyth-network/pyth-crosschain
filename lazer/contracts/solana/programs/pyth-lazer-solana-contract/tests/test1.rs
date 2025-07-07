@@ -20,7 +20,7 @@ fn program_test() -> ProgramTest {
         env::set_var(
             "SBF_OUT_DIR",
             format!(
-                "{}/../../../../target/sbf-solana-solana/release",
+                "{}/../../target/sbf-solana-solana/release",
                 env::var("CARGO_MANIFEST_DIR").unwrap()
             ),
         );

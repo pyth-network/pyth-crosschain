@@ -2,6 +2,7 @@ pub use price::*;
 
 mod price;
 
+#[allow(dead_code)]
 trait PythAccount {
     const ACCOUNT_TYPE: PythAccountType;
     fn account_type() -> PythAccountType {

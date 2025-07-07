@@ -2,6 +2,7 @@
 // can test locally.
 
 use {
+    base64::{prelude::BASE64_STANDARD, Engine},
     pythnet_sdk::pythnet::PYTH_PID,
     serde_json::json,
     solana_client::rpc_client::RpcClient,
@@ -41,7 +42,7 @@ fn main() {
                         "account": {
                             "lamports": account.lamports,
                             "data": [
-                                base64::encode(&account.data),
+                                BASE64_STANDARD.encode(&account.data),
                                 "base64"
                             ],
                             "owner": account.owner.to_string(),
@@ -68,7 +69,7 @@ fn main() {
                 "account": {
                     "lamports": wormhole_account.lamports,
                     "data": [
-                        base64::encode(&wormhole_account.data),
+                        BASE64_STANDARD.encode(&wormhole_account.data),
                         "base64"
                     ],
                     "owner": wormhole_account.owner.to_string(),
@@ -93,7 +94,7 @@ fn main() {
                 "account": {
                     "lamports": pyth_account.lamports,
                     "data": [
-                        base64::encode(&pyth_account.data),
+                        BASE64_STANDARD.encode(&pyth_account.data),
                         "base64"
                     ],
                     "owner": pyth_account.owner.to_string(),
@@ -109,12 +110,12 @@ fn main() {
     // Write names of AccumulatorState accounts to pdas.txt
     {
         let mut file = std::fs::File::create("pdas.txt").unwrap();
-        for i in (0..10_000u32) {
+        for i in 0..10_000u32 {
             let (accumulator_account, _) = Pubkey::find_program_address(
                 &[b"AccumulatorState", &PYTH_PID, &i.to_be_bytes()],
                 &solana_sdk::system_program::id(),
             );
-            file.write_all(format!("{}\n", accumulator_account).as_bytes())
+            file.write_all(format!("{accumulator_account}\n").as_bytes())
                 .unwrap();
         }
     }

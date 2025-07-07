@@ -22,9 +22,9 @@ jobs:
         working-directory: target_chains/near/receiver
     steps:
       - uses: actions/checkout@v2
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          workspaces: "target_chains/near/receiver -> target"
+          cache-workspaces: "target_chains/near/receiver -> target"
       - name: Test
         run: ./workspace-test.sh
   reproducible-build:
@@ -35,11 +35,11 @@ jobs:
         working-directory: target_chains/near/receiver
     steps:
       - uses: actions/checkout@v2
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          workspaces: "target_chains/near/receiver -> target"
+          cache-workspaces: "target_chains/near/receiver -> target"
       - run: sudo apt-get update && sudo apt-get install -y libudev-dev
-      - run: cargo +stable install --locked cargo-near@0.13.3
+      - run: cargo install --locked cargo-near@0.13.3
       - run: cargo near build reproducible-wasm
       - name: Upload artifact
         uses: actions/upload-artifact@v4

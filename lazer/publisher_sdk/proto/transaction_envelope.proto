@@ -64,4 +64,5 @@ enum RejectReason {
     PriceOverflow = 2;
     InvalidFeedId = 3;
     MissingFields = 4;
+    InactiveFeedId = 5;
 }

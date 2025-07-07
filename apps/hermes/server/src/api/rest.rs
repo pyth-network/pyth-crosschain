@@ -76,7 +76,7 @@ impl IntoResponse for RestError {
 
                 (
                     StatusCode::NOT_FOUND,
-                    format!("Price ids not found: {}", missing_ids),
+                    format!("Price ids not found: {missing_ids}"),
                 )
                     .into_response()
             }

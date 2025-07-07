@@ -27,7 +27,6 @@ const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
 #[derive(Debug)]
 pub struct SubmitTxResult {
     pub num_retries: u64,
-    pub gas_multiplier: u64,
     pub fee_multiplier: u64,
     pub duration: Duration,
     pub receipt: TransactionReceipt,
@@ -35,19 +34,6 @@ pub struct SubmitTxResult {
 
 #[derive(Clone, Debug)]
 pub struct EscalationPolicy {
-    // The keeper will perform the callback as long as the tx is within this percentage of the configured gas limit.
-    // Default value is 110, meaning a 10% tolerance over the configured value.
-    pub gas_limit_tolerance_pct: u64,
-
-    /// The initial gas multiplier to apply to the tx gas estimate
-    pub initial_gas_multiplier_pct: u64,
-
-    /// The gas multiplier to apply to the tx gas estimate during backoff retries.
-    /// The gas on each successive retry is multiplied by this value, with the maximum multiplier capped at `gas_multiplier_cap_pct`.
-    pub gas_multiplier_pct: u64,
-    /// The maximum gas multiplier to apply to the tx gas estimate during backoff retries.
-    pub gas_multiplier_cap_pct: u64,
-
     /// The fee multiplier to apply to the fee during backoff retries.
     /// The initial fee is 100% of the estimate (which itself may be padded based on our chain configuration)
     /// The fee on each successive retry is multiplied by this value, with the maximum multiplier capped at `fee_multiplier_cap_pct`.
@@ -56,15 +42,6 @@ pub struct EscalationPolicy {
 }
 
 impl EscalationPolicy {
-    pub fn get_gas_multiplier_pct(&self, num_retries: u64) -> u64 {
-        self.apply_escalation_policy(
-            num_retries,
-            self.initial_gas_multiplier_pct,
-            self.gas_multiplier_pct,
-            self.gas_multiplier_cap_pct,
-        )
-    }
-
     pub fn get_fee_multiplier_pct(&self, num_retries: u64) -> u64 {
         self.apply_escalation_policy(
             num_retries,
@@ -165,7 +142,6 @@ pub async fn estimate_tx_cost<T: Middleware + 'static>(
 pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     middleware: Arc<T>,
     call: ContractCall<T, ()>,
-    gas_limit: U256,
     escalation_policy: EscalationPolicy,
     error_mapper: Option<
         impl Fn(u64, backoff::Error<SubmitTxError<T>>) -> backoff::Error<SubmitTxError<T>>,
@@ -181,23 +157,13 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
 
     let num_retries = Arc::new(AtomicU64::new(0));
 
-    let padded_gas_limit = U256::from(escalation_policy.gas_limit_tolerance_pct) * gas_limit / 100;
-
     let success = backoff::future::retry_notify(
         backoff,
         || async {
             let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
 
-            let gas_multiplier_pct = escalation_policy.get_gas_multiplier_pct(num_retries);
             let fee_multiplier_pct = escalation_policy.get_fee_multiplier_pct(num_retries);
-            let result = submit_tx(
-                middleware.clone(),
-                &call,
-                padded_gas_limit,
-                gas_multiplier_pct,
-                fee_multiplier_pct,
-            )
-            .await;
+            let result = submit_tx(middleware.clone(), &call, fee_multiplier_pct).await;
             if let Some(ref mapper) = error_mapper {
                 result.map_err(|e| mapper(num_retries, e))
             } else {
@@ -222,13 +188,13 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
 
     Ok(SubmitTxResult {
         num_retries,
-        gas_multiplier: escalation_policy.get_gas_multiplier_pct(num_retries),
         fee_multiplier: escalation_policy.get_fee_multiplier_pct(num_retries),
         duration,
         receipt: success,
     })
 }
 
+#[allow(clippy::large_enum_variant)]
 pub enum SubmitTxError<T: Middleware + NonceManaged + 'static> {
     GasUsageEstimateError(ContractError<T>),
     GasLimitExceeded { estimate: U256, limit: U256 },
@@ -246,29 +212,26 @@ where
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SubmitTxError::GasUsageEstimateError(e) => {
-                write!(f, "Error estimating gas for reveal: {:?}", e)
+                write!(f, "Error estimating gas for reveal: {e:?}")
             }
             SubmitTxError::GasLimitExceeded { estimate, limit } => write!(
                 f,
-                "Gas estimate for reveal with callback is higher than the gas limit {} > {}",
-                estimate, limit
+                "Gas estimate for reveal with callback is higher than the gas limit {estimate} > {limit}"
             ),
-            SubmitTxError::GasPriceEstimateError(e) => write!(f, "Gas price estimate error: {}", e),
+            SubmitTxError::GasPriceEstimateError(e) => write!(f, "Gas price estimate error: {e}"),
             SubmitTxError::SubmissionError(tx, e) => write!(
                 f,
-                "Error submitting the reveal transaction. Tx:{:?}, Error:{:?}",
-                tx, e
+                "Error submitting the reveal transaction. Tx:{tx:?}, Error:{e:?}"
             ),
             SubmitTxError::ConfirmationTimeout(tx) => {
-                write!(f, "Tx stuck in mempool. Resetting nonce. Tx:{:?}", tx)
+                write!(f, "Tx stuck in mempool. Resetting nonce. Tx:{tx:?}")
             }
             SubmitTxError::ConfirmationError(tx, e) => write!(
                 f,
-                "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
-                tx, e
+                "Error waiting for transaction receipt. Tx:{tx:?} Error:{e:?}"
             ),
             SubmitTxError::ReceiptError(tx, _) => {
-                write!(f, "Reveal transaction reverted on-chain. Tx:{:?}", tx,)
+                write!(f, "Reveal transaction reverted on-chain. Tx:{tx:?}")
             }
         }
     }
@@ -281,33 +244,9 @@ where
 pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     client: Arc<T>,
     call: &ContractCall<T, ()>,
-    gas_limit: U256,
-    // A value of 100 submits the tx with the same gas/fee as the estimate.
-    gas_estimate_multiplier_pct: u64,
+    // A value of 100 submits the tx with the same fee as the estimate.
     fee_estimate_multiplier_pct: u64,
 ) -> Result<TransactionReceipt, backoff::Error<SubmitTxError<T>>> {
-    let gas_estimate_res = call.estimate_gas().await;
-
-    let gas_estimate = gas_estimate_res.map_err(|e| {
-        // we consider the error transient even if it is a contract revert since
-        // it can be because of routing to a lagging RPC node. Retrying such errors will
-        // incur a few additional RPC calls, but it is fine.
-        backoff::Error::transient(SubmitTxError::GasUsageEstimateError(e))
-    })?;
-
-    // The gas limit on the simulated transaction is the maximum expected tx gas estimate,
-    // but we are willing to pad the gas a bit to ensure reliable submission.
-    if gas_estimate > gas_limit {
-        return Err(backoff::Error::permanent(SubmitTxError::GasLimitExceeded {
-            estimate: gas_estimate,
-            limit: gas_limit,
-        }));
-    }
-
-    // Pad the gas estimate after checking it against the simulation gas limit.
-    let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
-
-    let call = call.clone().gas(gas_estimate);
     let mut transaction = call.tx.clone();
 
     // manually fill the tx with the gas price info, so we can log the details in case of error
