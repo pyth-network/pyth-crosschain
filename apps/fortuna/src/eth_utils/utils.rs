@@ -1,5 +1,7 @@
 use {
-    crate::eth_utils::nonce_manager::NonceManaged,
+    crate::{
+        chain::ethereum::InstrumentedSignablePythContract, eth_utils::nonce_manager::NonceManaged,
+    },
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
     ethabi::ethereum_types::U64,
@@ -7,7 +9,10 @@ use {
         contract::{ContractCall, ContractError},
         middleware::Middleware,
         providers::ProviderError,
-        types::{transaction::eip2718::TypedTransaction, TransactionReceipt, U256},
+        signers::Signer,
+        types::{
+            transaction::eip2718::TypedTransaction, TransactionReceipt, TransactionRequest, U256,
+        },
     },
     std::{
         fmt::Display,
@@ -305,4 +310,50 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     }
 
     Ok(receipt)
+}
+
+/// Transfer funds from the signing wallet to the destination address.
+pub async fn submit_transfer_tx(
+    contract: Arc<InstrumentedSignablePythContract>,
+    destination_address: ethers::types::Address,
+    transfer_amount: U256,
+) -> Result<ethers::types::H256> {
+    let source_wallet_address = contract.wallet().address();
+
+    tracing::info!(
+        "Transferring {:?} from {:?} to {:?}",
+        transfer_amount,
+        source_wallet_address,
+        destination_address
+    );
+
+    let tx = TransactionRequest::new()
+        .to(destination_address)
+        .value(transfer_amount)
+        .from(source_wallet_address);
+
+    let client = contract.client();
+    let pending_tx = client.send_transaction(tx, None).await?;
+
+    // Wait for confirmation with timeout
+    let tx_receipt = timeout(
+        Duration::from_secs(TX_CONFIRMATION_TIMEOUT_SECS),
+        pending_tx,
+    )
+    .await
+    .map_err(|_| anyhow!("Transfer transaction confirmation timeout"))?
+    .map_err(|e| anyhow!("Transfer transaction confirmation error: {:?}", e))?
+    .ok_or_else(|| anyhow!("Transfer transaction, probably dropped from mempool"))?;
+
+    // Check if transaction was successful
+    if tx_receipt.status == Some(U64::from(0)) {
+        return Err(anyhow!(
+            "Transfer transaction failed on-chain. Receipt: {:?}",
+            tx_receipt
+        ));
+    }
+
+    let tx_hash = tx_receipt.transaction_hash;
+    tracing::info!("Transfer transaction confirmed: {:?}", tx_hash);
+    Ok(tx_hash)
 }

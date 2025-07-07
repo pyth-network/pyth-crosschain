@@ -300,8 +300,8 @@ pub struct ProviderConfig {
     #[serde(default = "default_chain_sample_interval")]
     pub chain_sample_interval: u64,
 
-    /// The address of the fee manager for the provider. Set this value to the keeper wallet address to
-    /// enable keeper balance top-ups.
+    /// The address of the fee manager for the provider. Only used for syncing the fee manager address to the contract.
+    /// Fee withdrawals are handled by the fee manager private key defined in the keeper config.
     pub fee_manager: Option<Address>,
 }
 
@@ -314,10 +314,6 @@ pub struct RunConfig {
     /// Disable automatic fee adjustment threads
     #[serde(default)]
     pub disable_fee_adjustment: bool,
-
-    /// Disable automatic fee withdrawal threads
-    #[serde(default)]
-    pub disable_fee_withdrawal: bool,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -342,12 +338,19 @@ pub struct KeeperConfig {
     /// should ensure this is a different key in order to reduce the severity of security breaches.
     pub private_key: SecretString,
 
+    /// The fee manager's private key for fee manager operations.
+    /// This key is used to withdraw fees from the contract as the fee manager.
+    /// Multiple replicas can share the same fee manager private key but different keeper keys (`private_key`).
+    #[serde(default)]
+    pub fee_manager_private_key: Option<SecretString>,
+
+    /// The addresses of other keepers in the replica set (excluding the current keeper).
+    /// This is used to distribute fees fairly across all keepers.
+    #[serde(default)]
+    pub other_keeper_addresses: Vec<Address>,
+
     #[serde(default)]
     pub replica_config: Option<ReplicaConfig>,
-
-    /// Runtime configuration for the keeper service
-    #[serde(default)]
-    pub run_config: RunConfig,
 }
 
 // A secret is a string that can be provided either as a literal in the config,

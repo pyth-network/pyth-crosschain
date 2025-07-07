@@ -2,7 +2,7 @@ use {
     crate::{
         api::{BlockchainState, ChainId},
         chain::ethereum::{InstrumentedPythContract, InstrumentedSignablePythContract},
-        config::{EthereumConfig, ReplicaConfig, RunConfig},
+        config::{EthereumConfig, KeeperConfig},
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{
@@ -17,6 +17,7 @@ use {
             },
         },
     },
+    anyhow,
     ethers::{signers::Signer, types::U256},
     keeper_metrics::{AccountLabel, KeeperMetrics},
     std::{collections::HashSet, sync::Arc},
@@ -57,9 +58,7 @@ pub enum RequestState {
 #[allow(clippy::too_many_arguments)] // Top level orchestration function that needs to configure several threads
 #[tracing::instrument(name = "keeper", skip_all, fields(chain_id = chain_state.id))]
 pub async fn run_keeper_threads(
-    keeper_private_key: String,
-    keeper_replica_config: Option<ReplicaConfig>,
-    keeper_run_config: RunConfig,
+    keeper_config: KeeperConfig,
     chain_eth_config: EthereumConfig,
     chain_state: BlockchainState,
     metrics: Arc<KeeperMetrics>,
@@ -70,6 +69,11 @@ pub async fn run_keeper_threads(
     let latest_safe_block = get_latest_safe_block(&chain_state).in_current_span().await;
     tracing::info!("Latest safe block: {}", &latest_safe_block);
 
+    let keeper_private_key = keeper_config.private_key.load()?.ok_or_else(|| {
+        anyhow::anyhow!("Keeper private key is required but not provided in config")
+    })?;
+
+    // Contract that uses the keeper wallet to send transactions
     let contract = Arc::new(InstrumentedSignablePythContract::from_config(
         &chain_eth_config,
         &keeper_private_key,
@@ -86,7 +90,7 @@ pub async fn run_keeper_threads(
         chain_state: chain_state.clone(),
         contract: contract.clone(),
         escalation_policy: chain_eth_config.escalation_policy.to_policy(),
-        replica_config: keeper_replica_config,
+        replica_config: keeper_config.replica_config.clone(),
         metrics: metrics.clone(),
         fulfilled_requests_cache,
         history,
@@ -117,26 +121,39 @@ pub async fn run_keeper_threads(
         .in_current_span(),
     );
 
-    // Spawn a thread that watches the keeper wallet balance and submits withdrawal transactions as needed to top-up the balance.
-    if !keeper_run_config.disable_fee_withdrawal {
+    // If fee manager private key is provided, spawn fee withdrawal and adjustment threads
+    let fee_manager_private_key = if let Some(ref secret) = keeper_config.fee_manager_private_key {
+        secret.load()?
+    } else {
+        None
+    };
+
+    if let Some(fee_manager_private_key) = fee_manager_private_key {
+        let contract_as_fee_manager = Arc::new(InstrumentedSignablePythContract::from_config(
+            &chain_eth_config,
+            &fee_manager_private_key,
+            chain_state.id.clone(),
+            rpc_metrics.clone(),
+            chain_state.network_id,
+        )?);
+
+        // Spawn a thread that periodically withdraws fees to the fee manager and keeper.
         spawn(
             withdraw_fees_wrapper(
-                contract.clone(),
+                contract_as_fee_manager.clone(),
                 chain_state.provider_address,
                 WITHDRAW_INTERVAL,
                 U256::from(chain_eth_config.min_keeper_balance),
+                keeper_address,
+                keeper_config.other_keeper_addresses.clone(),
             )
             .in_current_span(),
         );
-    } else {
-        tracing::info!("Fee withdrawal thread disabled by configuration");
-    }
 
-    // Spawn a thread that periodically adjusts the provider fee.
-    if !keeper_run_config.disable_fee_adjustment {
+        // Spawn a thread that periodically adjusts the provider fee.
         spawn(
             adjust_fee_wrapper(
-                contract.clone(),
+                contract_as_fee_manager.clone(),
                 chain_state.clone(),
                 chain_state.provider_address,
                 ADJUST_FEE_INTERVAL,
@@ -154,7 +171,9 @@ pub async fn run_keeper_threads(
             .in_current_span(),
         );
     } else {
-        tracing::info!("Fee adjustment thread disabled by configuration");
+        tracing::warn!(
+            "Fee manager private key not provided - fee withdrawal and adjustment threads will not run."
+        );
     }
 
     spawn(update_commitments_loop(contract.clone(), chain_state.clone()).in_current_span());
