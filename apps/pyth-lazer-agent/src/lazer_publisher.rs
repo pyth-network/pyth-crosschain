@@ -24,7 +24,7 @@ use tokio::{
 };
 use tracing::error;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LazerPublisher {
     sender: Sender<FeedUpdate>,
     pub(crate) is_ready: Arc<AtomicBool>,
