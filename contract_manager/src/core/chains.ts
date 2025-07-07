@@ -429,8 +429,8 @@ export class EvmChain extends Chain {
     id: string,
     mainnet: boolean,
     nativeToken: TokenId | undefined,
-    private rpcUrl: string,
-    private networkId: number,
+    public rpcUrl: string,
+    public networkId: number,
   ) {
     // On EVM networks we use the chain id as the wormhole chain name
     super(id, mainnet, id, nativeToken);

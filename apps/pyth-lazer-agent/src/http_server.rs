@@ -28,6 +28,9 @@ pub struct RelayerRequest(pub http::Request<hyper::body::Incoming>);
 const PUBLISHER_WS_URI: &str = "/v1/publisher";
 const PUBLISHER_WS_URI_V2: &str = "/v2/publisher";
 
+const READINESS_PROBE_PATH: &str = "/ready";
+const LIVENESS_PROBE_PATH: &str = "/live";
+
 pub async fn run(config: Config, lazer_publisher: LazerPublisher) -> Result<()> {
     let listener = TcpListener::bind(&config.listen_address).await?;
     info!("listening on {:?}", &config.listen_address);
@@ -74,6 +77,22 @@ async fn request_handler(
     let request_type = match path {
         PUBLISHER_WS_URI => Request::PublisherV1,
         PUBLISHER_WS_URI_V2 => Request::PublisherV2,
+        LIVENESS_PROBE_PATH => {
+            let response = Response::builder().status(StatusCode::OK);
+            return Ok(response.body(FullBody::default())?);
+        }
+        READINESS_PROBE_PATH => {
+            let status = if lazer_publisher
+                .is_ready
+                .load(std::sync::atomic::Ordering::Relaxed)
+            {
+                StatusCode::OK
+            } else {
+                StatusCode::SERVICE_UNAVAILABLE
+            };
+            let response = Response::builder().status(status);
+            return Ok(response.body(FullBody::default())?);
+        }
         _ => {
             return Ok(Response::builder()
                 .status(StatusCode::NOT_FOUND)

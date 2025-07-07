@@ -10,10 +10,6 @@ default = []
 std = []
 export-abi = ["stylus-sdk/export-abi"]
 
-
-
-
-
 [dependencies]
 stylus-sdk = { workspace = true, default-features = false }
 alloy-primitives = { workspace = true, default-features = false }

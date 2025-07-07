@@ -236,7 +236,7 @@ mod test {
         #[allow(clippy::needless_range_loop)]
         for i in 1..length {
             let cur_val = chain.reveal_ith(i).unwrap();
-            println!("{}", i);
+            println!("{i}");
             assert_eq!(basic_chain[i], cur_val);
 
             let expected_last_val: [u8; 32] = Keccak256::digest(cur_val).into();

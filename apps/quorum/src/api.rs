@@ -4,6 +4,7 @@ use axum::{
     Json, Router,
 };
 use axum_prometheus::{EndpointLabel, PrometheusMetricLayerBuilder};
+use clap::crate_version;
 use secp256k1::{
     ecdsa::{RecoverableSignature, RecoveryId},
     Message, Secp256k1,
@@ -27,6 +28,10 @@ use crate::{
 
 pub type Payload<'a> = &'a RawMessage;
 
+async fn root() -> String {
+    format!("Quorum API {}", crate_version!())
+}
+
 pub async fn run(listen_address: SocketAddr, state: State) -> anyhow::Result<()> {
     tracing::info!("Starting server...");
 
@@ -38,6 +43,7 @@ pub async fn run(listen_address: SocketAddr, state: State) -> anyhow::Result<()>
         .build_pair();
 
     let routes = Router::new()
+        .route("/", get(root))
         .route("/live", get(|| async { "OK" }))
         .route("/observation", post(post_observation))
         .route("/ws", get(ws_route_handler))
@@ -595,7 +601,7 @@ mod test {
                     .try_recv()
                     .expect("Failed to receive update from subscriber");
                 let UpdateEvent::NewVaa(vaa) = update else {
-                    panic!("Expected NewVaa event, got {:?}", update);
+                    panic!("Expected NewVaa event, got {update:?}");
                 };
                 let vaa: Vaa<&RawMessage> =
                     serde_wormhole::from_slice(&vaa).expect("Failed to deserialize VAA");

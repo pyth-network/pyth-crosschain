@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/entropy-tester",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Utility to test entropy provider callbacks",
   "private": true,
   "type": "module",
@@ -39,6 +39,7 @@
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/express": "^4.17.21",
+    "@types/node": "catalog:",
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",

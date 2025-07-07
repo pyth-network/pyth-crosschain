@@ -233,7 +233,7 @@ where
 {
     fn subscribe(&self) -> Receiver<AggregationEvent>;
     async fn is_ready(&self) -> (bool, ReadinessMetadata);
-    async fn store_update(&self, update: Update) -> Result<()>;
+    async fn store_update(&self, update: Update) -> Result<bool>;
     async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier>;
     async fn get_price_feeds_with_update_data(
         &self,
@@ -274,7 +274,7 @@ where
 
     /// Stores the update data in the store
     #[tracing::instrument(skip(self, update))]
-    async fn store_update(&self, update: Update) -> Result<()> {
+    async fn store_update(&self, update: Update) -> Result<bool> {
         // The slot that the update is originating from. It should be available
         // in all the updates.
         let slot = match update {
@@ -300,7 +300,7 @@ where
                                 slot = proof.slot,
                                 "VAA Merkle Proof already stored, skipping."
                             );
-                            return Ok(());
+                            return Ok(false);
                         }
 
                         self.into()
@@ -331,7 +331,7 @@ where
                         slot = slot,
                         "Accumulator Messages already stored, skipping."
                     );
-                    return Ok(());
+                    return Ok(false);
                 }
 
                 self.into()
@@ -358,7 +358,7 @@ where
                 (Some(accumulator_messages), Some(wormhole_merkle_state)) => {
                     (accumulator_messages, wormhole_merkle_state)
                 }
-                _ => return Ok(()),
+                _ => return Ok(true),
             };
 
         tracing::info!(slot = wormhole_merkle_state.root.slot, "Completed Update.");
@@ -408,7 +408,7 @@ where
             .metrics
             .observe(slot, metrics::Event::CompletedUpdate);
 
-        Ok(())
+        Ok(true)
     }
 
     async fn get_twaps_with_update_data(

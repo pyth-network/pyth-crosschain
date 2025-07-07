@@ -1,2 +1,3 @@
 [toolchain]
-channel = "1.79.0"
+# Cannot upgrade: tests fail with rust 1.88.0.
+channel = "1.81.0"

@@ -160,7 +160,10 @@ where
     while let Some(Ok(message)) = stream.next().await {
         let state = state.clone();
         tokio::spawn(async move {
-            if let Err(e) = state.process_message(message.vaa_bytes).await {
+            // We do not want to verify the VAA if it has already been seen.
+            // This improves performance, since the beacon may send the same body
+            // multiple times with different signatures.
+            if let Err(e) = state.process_message(message.vaa_bytes, false).await {
                 tracing::debug!(error = ?e, "Skipped VAA.");
             }
         });

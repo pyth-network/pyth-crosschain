@@ -94,6 +94,23 @@ impl Config {
             }
         }
 
+        if let Some(replica_config) = &config.keeper.replica_config {
+            if replica_config.total_replicas == 0 {
+                return Err(anyhow!("Keeper replica configuration is invalid. total_replicas must be greater than 0."));
+            }
+            if config.keeper.private_key.load()?.is_none() {
+                return Err(anyhow!(
+                    "Keeper replica configuration requires a keeper private key to be specified."
+                ));
+            }
+            if replica_config.replica_id >= replica_config.total_replicas {
+                return Err(anyhow!("Keeper replica configuration is invalid. replica_id must be less than total_replicas."));
+            }
+            if replica_config.backup_delay_seconds == 0 {
+                return Err(anyhow!("Keeper replica configuration is invalid. backup_delay_seconds must be greater than 0 to prevent race conditions."));
+            }
+        }
+
         Ok(config)
     }
 
@@ -333,6 +350,29 @@ fn default_chain_sample_interval() -> u64 {
     1
 }
 
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+pub struct RunConfig {
+    /// Disable automatic fee adjustment threads
+    #[serde(default)]
+    pub disable_fee_adjustment: bool,
+
+    /// Disable automatic fee withdrawal threads
+    #[serde(default)]
+    pub disable_fee_withdrawal: bool,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ReplicaConfig {
+    pub replica_id: u64,
+    pub total_replicas: u64,
+    #[serde(default = "default_backup_delay_seconds")]
+    pub backup_delay_seconds: u64,
+}
+
+fn default_backup_delay_seconds() -> u64 {
+    30
+}
+
 /// Configuration values for the keeper service that are shared across chains.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct KeeperConfig {
@@ -342,6 +382,13 @@ pub struct KeeperConfig {
     /// This key *does not need to be a registered provider*. In particular, production deployments
     /// should ensure this is a different key in order to reduce the severity of security breaches.
     pub private_key: SecretString,
+
+    #[serde(default)]
+    pub replica_config: Option<ReplicaConfig>,
+
+    /// Runtime configuration for the keeper service
+    #[serde(default)]
+    pub run_config: RunConfig,
 }
 
 // A secret is a string that can be provided either as a literal in the config,

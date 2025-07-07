@@ -6,6 +6,8 @@ use futures_util::{SinkExt, StreamExt};
 use http::HeaderValue;
 use protobuf::Message;
 use pyth_lazer_publisher_sdk::transaction::SignedLazerTransaction;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use tokio::net::TcpStream;
 use tokio::select;
@@ -63,6 +65,7 @@ pub struct RelayerSessionTask {
     pub url: Url,
     pub token: String,
     pub receiver: broadcast::Receiver<SignedLazerTransaction>,
+    pub is_ready: Arc<AtomicBool>,
 }
 
 impl RelayerSessionTask {
@@ -115,6 +118,9 @@ impl RelayerSessionTask {
         let mut relayer_ws_session = RelayerWsSession {
             ws_sender: relayer_ws_sender,
         };
+
+        // If we have at least one successful connection, mark as ready.
+        self.is_ready.store(true, Ordering::Relaxed);
 
         loop {
             select! {
@@ -174,6 +180,8 @@ mod tests {
         Ed25519SignatureData, LazerTransaction, SignatureData, SignedLazerTransaction,
     };
     use std::net::SocketAddr;
+    use std::sync::Arc;
+    use std::sync::atomic::AtomicBool;
     use tokio::net::TcpListener;
     use tokio::sync::{broadcast, mpsc};
     use url::Url;
@@ -234,6 +242,7 @@ mod tests {
             url: Url::parse("ws://127.0.0.1:12346").unwrap(),
             token: "token1".to_string(),
             receiver: relayer_receiver,
+            is_ready: Arc::new(AtomicBool::new(false)),
         };
         tokio::spawn(async move { relayer_session_task.run().await });
         tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
