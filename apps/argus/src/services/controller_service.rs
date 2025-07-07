@@ -36,7 +36,7 @@ impl ControllerService {
         chain_price_state: Arc<ChainPriceState>,
     ) -> Self {
         Self {
-            name: format!("ControllerService-{}", chain_name),
+            name: format!("ControllerService-{chain_name}"),
             update_interval,
             subscription_state,
             pyth_price_state,
@@ -54,7 +54,7 @@ impl ControllerService {
         );
 
         for (sub_id, params) in subscriptions {
-            let mut _needs_update = false;
+            let needs_update = false;
             let mut feed_ids: Vec<PriceId> = Vec::new();
 
             for feed_id in &params.price_ids {
@@ -69,7 +69,8 @@ impl ControllerService {
                 feed_ids.push(feed_id);
             }
 
-            if _needs_update && !feed_ids.is_empty() {
+            // TODO: this never happens
+            if needs_update && !feed_ids.is_empty() {
                 self.trigger_update(sub_id, feed_ids).await;
             }
         }

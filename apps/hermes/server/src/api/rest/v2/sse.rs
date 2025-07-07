@@ -185,9 +185,7 @@ where
             price_feed
                 .metadata
                 .prev_publish_time
-                .map_or(false, |prev_time| {
-                    prev_time != price_feed.price.publish_time
-                })
+                .is_some_and(|prev_time| prev_time != price_feed.price.publish_time)
         });
         // Retain price id in price_ids that are in parsed_price_updates
         price_ids.retain(|price_id| {
@@ -231,5 +229,5 @@ where
 fn error_event<E: std::fmt::Debug>(e: E) -> Event {
     Event::default()
         .event("error")
-        .data(format!("Error receiving update: {:?}", e))
+        .data(format!("Error receiving update: {e:?}"))
 }

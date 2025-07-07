@@ -17,6 +17,7 @@ use crate::services::Service;
 use crate::state::ChainName;
 
 pub struct PythPriceService {
+    #[allow(dead_code, reason = "unknown")]
     chain_name: ChainName,
     name: String,
     pyth_price_client: Arc<dyn ReadPythPrices + Send + Sync>,
@@ -33,7 +34,7 @@ impl PythPriceService {
     ) -> Self {
         Self {
             chain_name: chain_name.clone(),
-            name: format!("PythPriceService-{}", chain_name),
+            name: format!("PythPriceService-{chain_name}"),
             poll_interval,
             pyth_price_client,
             pyth_price_state,
