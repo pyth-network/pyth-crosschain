@@ -260,22 +260,18 @@ impl PythReceiver {
         U256::from(num_updates).saturating_mul(self.single_update_fee_in_wei.get())
     }
 
-    pub fn get_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
-        U256::from(0u8)
-    }
-
     pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
         U256::from(0u8)
     }
 
     pub fn parse_price_feed_updates(
         &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _min_publish_time: u64,
-        _max_publish_time: u64,
+        update_data: Vec<Vec<u8>>,
+        price_ids: Vec<[u8; 32]>,
+        min_publish_time: u64,
+        max_publish_time: u64,
     ) -> Vec<PriceInfoReturn> {
-        Vec::new()
+        parse_price_feed_updates_with_config(update_data, price_ids, min_publish_time, max_publish_time, false, false, false)
     }
 
     pub fn parse_price_feed_updates_with_config(
