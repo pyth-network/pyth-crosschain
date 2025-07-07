@@ -16,7 +16,7 @@ pub enum PythReceiverError {
     InvalidAccumulatorMessageType,
     InsufficientFee,
     InvalidEmitterAddress,
-    TooManyUpdates
+    TooManyUpdates,
 }
 
 impl core::fmt::Debug for PythReceiverError {
@@ -37,12 +37,12 @@ impl From<PythReceiverError> for Vec<u8> {
             PythReceiverError::InvalidAccumulatorMessage => 7,
             PythReceiverError::InvalidMerkleRoot => 8,
             PythReceiverError::InvalidMerklePath => 9,
-            PythReceiverError::InvalidUnknownSource => 10,  
+            PythReceiverError::InvalidUnknownSource => 10,
             PythReceiverError::NewPriceUnavailable => 11,
             PythReceiverError::InvalidAccumulatorMessageType => 12,
             PythReceiverError::InsufficientFee => 13,
             PythReceiverError::InvalidEmitterAddress => 14,
-            PythReceiverError::TooManyUpdates => 15
+            PythReceiverError::TooManyUpdates => 15,
         }]
     }
 }

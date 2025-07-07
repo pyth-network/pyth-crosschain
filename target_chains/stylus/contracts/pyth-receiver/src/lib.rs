@@ -5,31 +5,38 @@
 #[macro_use]
 extern crate alloc;
 
-mod structs;
 mod error;
 #[cfg(test)]
 mod integration_tests;
+mod structs;
 #[cfg(test)]
 mod test_data;
 
-use alloc::{vec::Vec, collections::BTreeMap};
-use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Address},
-                prelude::*,
-                storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
-                call::Call};
+use alloc::{collections::BTreeMap, vec::Vec};
+use stylus_sdk::{
+    alloy_primitives::{Address, FixedBytes, I32, I64, U16, U256, U32, U64},
+    call::Call,
+    prelude::*,
+    storage::{
+        StorageAddress, StorageBool, StorageFixedBytes, StorageMap, StorageU16, StorageU256,
+        StorageUint, StorageVec,
+    },
+};
 
-use structs::{PriceInfoReturn, PriceInfoStorage, DataSourceStorage, DataSource};
-use error::{PythReceiverError};
-use pythnet_sdk::{wire::{from_slice, v1::{
-            AccumulatorUpdateData, Proof,
+use error::PythReceiverError;
+use pythnet_sdk::{
+    accumulators::merkle::{MerklePath, MerkleRoot},
+    hashers::keccak256_160::Keccak160,
+    messages::Message,
+    wire::{
+        from_slice,
+        v1::{
+            AccumulatorUpdateData, Proof, WormholeMessage, WormholePayload,
             PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
-            WormholeMessage, WormholePayload,
         },
     },
-    accumulators::{merkle::{MerklePath, MerkleRoot}},
-    hashers::keccak256_160::Keccak160,
-    messages::Message
 };
+use structs::{DataSource, DataSourceStorage, PriceInfoReturn, PriceInfoStorage};
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
 const ACCUMULATOR_WORMHOLE_MAGIC: u32 = 0x41555756;
@@ -61,19 +68,31 @@ pub struct PythReceiver {
 
 #[public]
 impl PythReceiver {
-    pub fn initialize(&mut self, wormhole: Address, single_update_fee_in_wei: U256, valid_time_period_seconds: U256,
-                            data_source_emitter_chain_ids: Vec<u16>, data_source_emitter_addresses: Vec<[u8; 32]>,
-                            governance_emitter_chain_id: u16, governance_emitter_address: [u8; 32],
-                            governance_initial_sequence: u64, _data: Vec<u8>) {
+    pub fn initialize(
+        &mut self,
+        wormhole: Address,
+        single_update_fee_in_wei: U256,
+        valid_time_period_seconds: U256,
+        data_source_emitter_chain_ids: Vec<u16>,
+        data_source_emitter_addresses: Vec<[u8; 32]>,
+        governance_emitter_chain_id: u16,
+        governance_emitter_address: [u8; 32],
+        governance_initial_sequence: u64,
+        _data: Vec<u8>,
+    ) {
         self.wormhole.set(wormhole);
         self.single_update_fee_in_wei.set(single_update_fee_in_wei);
-        self.valid_time_period_seconds.set(valid_time_period_seconds);
+        self.valid_time_period_seconds
+            .set(valid_time_period_seconds);
 
-        self.governance_data_source_chain_id.set(U16::from(governance_emitter_chain_id));
-        self.governance_data_source_emitter_address.set(FixedBytes::<32>::from(governance_emitter_address));
+        self.governance_data_source_chain_id
+            .set(U16::from(governance_emitter_chain_id));
+        self.governance_data_source_emitter_address
+            .set(FixedBytes::<32>::from(governance_emitter_address));
 
         // Initialize other fields
-        self.last_executed_governance_sequence.set(U64::from(governance_initial_sequence));
+        self.last_executed_governance_sequence
+            .set(U64::from(governance_initial_sequence));
         self.governance_data_source_index.set(U32::ZERO);
 
         for (i, chain_id) in data_source_emitter_chain_ids.iter().enumerate() {
@@ -89,10 +108,7 @@ impl PythReceiver {
                 emitter_address: emitter_address,
             };
 
-
-            self.is_valid_data_source
-                .setter(data_source_key)
-                .set(true);
+            self.is_valid_data_source.setter(data_source_key).set(true);
         }
     }
 
@@ -115,7 +131,11 @@ impl PythReceiver {
         ))
     }
 
-    pub fn get_price_no_older_than(&self, id: [u8; 32], age: u64) -> Result<PriceInfoReturn, PythReceiverError> {
+    pub fn get_price_no_older_than(
+        &self,
+        id: [u8; 32],
+        age: u64,
+    ) -> Result<PriceInfoReturn, PythReceiverError> {
         let price_info = self.get_price_unsafe(id)?;
         if !self.is_no_older_than(price_info.0, age) {
             return Err(PythReceiverError::NewPriceUnavailable);
@@ -141,7 +161,11 @@ impl PythReceiver {
         ))
     }
 
-    pub fn get_ema_price_no_older_than(&self, id: [u8; 32], age: u64) -> Result<PriceInfoReturn, PythReceiverError> {
+    pub fn get_ema_price_no_older_than(
+        &self,
+        id: [u8; 32],
+        age: u64,
+    ) -> Result<PriceInfoReturn, PythReceiverError> {
         let price_info = self.get_ema_price_unsafe(id)?;
         if !self.is_no_older_than(price_info.0, age) {
             return Err(PythReceiverError::NewPriceUnavailable);
@@ -164,7 +188,14 @@ impl PythReceiver {
         // dummy implementation
     }
 
-    fn update_price_feeds_internal(&mut self, update_data: Vec<u8>, _price_ids: Vec<[u8; 32]>, min_publish_time: u64, max_publish_time: u64, _unique: bool) -> Result<(), PythReceiverError> {
+    fn update_price_feeds_internal(
+        &mut self,
+        update_data: Vec<u8>,
+        _price_ids: Vec<[u8; 32]>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+        _unique: bool,
+    ) -> Result<(), PythReceiverError> {
         let price_pairs = self.parse_price_feed_updates_internal(
             update_data,
             min_publish_time,
@@ -179,7 +210,8 @@ impl PythReceiver {
             let mut recent_price_info = self.latest_price_info.setter(price_id_fb);
 
             if recent_price_info.publish_time.get() < price_return.0
-                || recent_price_info.price.get() == I64::ZERO {
+                || recent_price_info.price.get() == I64::ZERO
+            {
                 recent_price_info.publish_time.set(price_return.0);
                 recent_price_info.expo.set(price_return.1);
                 recent_price_info.price.set(price_return.2);
@@ -207,7 +239,15 @@ impl PythReceiver {
         min_publish_time: u64,
         max_publish_time: u64,
     ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
-        let price_feeds = self.parse_price_feed_updates_with_config(update_data, price_ids, min_publish_time, max_publish_time, false, false, false);
+        let price_feeds = self.parse_price_feed_updates_with_config(
+            update_data,
+            price_ids,
+            min_publish_time,
+            max_publish_time,
+            false,
+            false,
+            false,
+        );
         price_feeds
     }
 
@@ -232,14 +272,20 @@ impl PythReceiver {
 
         let price_map: BTreeMap<[u8; 32], PriceInfoReturn> = price_pairs.into_iter().collect();
 
-        // Create a vector with the same length as price_ids
         let mut result: Vec<PriceInfoReturn> = Vec::with_capacity(price_ids.len());
 
         for price_id in price_ids {
             if let Some(price_info) = price_map.get(&price_id) {
                 result.push(*price_info);
             } else {
-                result.push((U64::from(0), I32::from_be_bytes([0, 0, 0, 0]), I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]), U64::from(0), I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]), U64::from(0)));
+                result.push((
+                    U64::from(0),
+                    I32::from_be_bytes([0, 0, 0, 0]),
+                    I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]),
+                    U64::from(0),
+                    I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]),
+                    U64::from(0),
+                ));
             }
         }
 
@@ -268,7 +314,8 @@ impl PythReceiver {
             return Err(PythReceiverError::InvalidAccumulatorMessage);
         }
 
-        let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
+        let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array)
+            .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
 
         let mut price_feeds: BTreeMap<[u8; 32], PriceInfoReturn> = BTreeMap::new();
 
@@ -276,9 +323,12 @@ impl PythReceiver {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
                 let config = Call::new();
-                wormhole.parse_and_verify_vm(config, Vec::from(vaa.clone())).map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
+                wormhole
+                    .parse_and_verify_vm(config, Vec::from(vaa.clone()))
+                    .map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
 
-                let vaa = Vaa::read(&mut Vec::from(vaa.clone()).as_slice()).map_err(|_| PythReceiverError::VaaVerificationFailed)?;
+                let vaa = Vaa::read(&mut Vec::from(vaa.clone()).as_slice())
+                    .map_err(|_| PythReceiverError::VaaVerificationFailed)?;
 
                 let cur_emitter_address: &[u8; 32] = vaa
                     .body
@@ -298,7 +348,8 @@ impl PythReceiver {
 
                 let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa)?;
 
-                let num_updates = u8::try_from(updates.len()).map_err(|_| PythReceiverError::TooManyUpdates)?;
+                let num_updates =
+                    u8::try_from(updates.len()).map_err(|_| PythReceiverError::TooManyUpdates)?;
 
                 let total_fee = self.get_total_fee(num_updates);
 
@@ -309,7 +360,6 @@ impl PythReceiver {
                 }
 
                 for update in updates {
-
                     let message_vec = Vec::from(update.message);
                     let proof: MerklePath<Keccak160> = update.proof;
 
@@ -332,10 +382,10 @@ impl PythReceiver {
                             );
 
                             price_feeds.insert(price_feed_message.feed_id, price_info_return);
-                        },
+                        }
                         _ => {
                             return Err(PythReceiverError::InvalidAccumulatorMessageType);
-                        },
+                        }
                     }
                 }
             }
@@ -364,7 +414,9 @@ impl PythReceiver {
 
     #[inline]
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
-        self.get_current_timestamp().saturating_sub(publish_time.to::<u64>()) <= max_age
+        self.get_current_timestamp()
+            .saturating_sub(publish_time.to::<u64>())
+            <= max_age
     }
 
     // Stylus doesn't provide a way to mock up the testing timestamp
@@ -383,7 +435,7 @@ impl PythReceiver {
 
 fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverError> {
     let message = WormholeMessage::try_from_bytes(vaa.body.payload.to_vec())
-                .map_err(|_| PythReceiverError::PriceUnavailable)?;
+        .map_err(|_| PythReceiverError::PriceUnavailable)?;
     let root: MerkleRoot<Keccak160> = MerkleRoot::new(match message.payload {
         WormholePayload::Merkle(merkle_root) => merkle_root.root,
     });
