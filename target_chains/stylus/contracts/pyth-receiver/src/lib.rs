@@ -221,7 +221,6 @@ impl PythReceiver {
     fn parse_price_feed_updates_internal(
         &mut self,
         update_data: Vec<u8>,
-        price_ids: Vec<[u8; 32]>,
         min_allowed_publish_time: u64,
         max_allowed_publish_time: u64,
         check_uniqueness: bool,
