@@ -1,9 +1,12 @@
 use std::{collections::BTreeMap, time::Duration};
 
+use crate::publisher_update::feed_update::Update;
+use crate::publisher_update::{FeedUpdate, FundingRateUpdate, PriceUpdate};
 use ::protobuf::MessageField;
 use anyhow::{bail, ensure, Context};
 use humantime::format_duration;
 use protobuf::dynamic_value::{dynamic_value, DynamicValue};
+use pyth_lazer_protocol::jrpc::{FeedUpdateParams, UpdateParams};
 use pyth_lazer_protocol::router::TimestampUs;
 
 pub mod transaction_envelope {
@@ -160,6 +163,41 @@ impl TryFrom<DynamicValue> for serde_value::Value {
                     ensure!(old.is_none(), "duplicate DynamicValue.MapItem.key");
                 }
                 Ok(serde_value::Value::Map(output))
+            }
+        }
+    }
+}
+
+impl From<FeedUpdateParams> for FeedUpdate {
+    fn from(value: FeedUpdateParams) -> Self {
+        FeedUpdate {
+            feed_id: Some(value.feed_id.0),
+            source_timestamp: value.source_timestamp.into(),
+            update: Some(value.update.into()),
+            special_fields: Default::default(),
+        }
+    }
+}
+
+impl From<UpdateParams> for Update {
+    fn from(value: UpdateParams) -> Self {
+        match value {
+            UpdateParams::PriceUpdate {
+                price,
+                best_bid_price,
+                best_ask_price,
+            } => Update::PriceUpdate(PriceUpdate {
+                price: Some(price.0.into()),
+                best_bid_price: Some(best_bid_price.0.into()),
+                best_ask_price: Some(best_ask_price.0.into()),
+                special_fields: Default::default(),
+            }),
+            UpdateParams::FundingRateUpdate { price, rate } => {
+                Update::FundingRateUpdate(FundingRateUpdate {
+                    price: Some(price.0.into()),
+                    rate: Some(rate.0.into()),
+                    special_fields: Default::default(),
+                })
             }
         }
     }

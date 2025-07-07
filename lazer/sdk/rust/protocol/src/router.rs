@@ -1,5 +1,6 @@
-//! WebSocket JSON protocol types for API the router provides to consumers and publishers.
+//! WebSocket JSON protocol types for the API the router provides to consumers and publishers.
 
+use protobuf::MessageField;
 use {
     crate::payload::AggregatedPriceFeedData,
     anyhow::{bail, Context},
@@ -34,6 +35,26 @@ impl TryFrom<&Timestamp> for TimestampUs {
         let seconds_in_micros: u64 = (timestamp.seconds * 1_000_000).try_into()?;
         let nanos_in_micros: u64 = (timestamp.nanos / 1_000).try_into()?;
         Ok(TimestampUs(seconds_in_micros + nanos_in_micros))
+    }
+}
+
+impl Into<Timestamp> for TimestampUs {
+    fn into(self) -> Timestamp {
+        Timestamp {
+            #[allow(
+                clippy::cast_possible_wrap,
+                reason = "u64 to i64 after this division can never overflow because the value cannot be too big"
+            )]
+            seconds: (self.0 / 1_000_000) as i64,
+            nanos: (self.0 % 1_000_000) as i32 * 1000,
+            special_fields: Default::default(),
+        }
+    }
+}
+
+impl Into<MessageField<Timestamp>> for TimestampUs {
+    fn into(self) -> MessageField<Timestamp> {
+        MessageField::some(self.into())
     }
 }
 
@@ -304,7 +325,7 @@ impl<'de> Deserialize<'de> for Channel {
         D: serde::Deserializer<'de>,
     {
         let value = <String>::deserialize(deserializer)?;
-        parse_channel(&value).ok_or_else(|| D::Error::custom("unknown channel"))
+        parse_channel(&value).ok_or_else(|| Error::custom("unknown channel"))
     }
 }
 
@@ -341,12 +362,14 @@ fn fixed_rate_values() {
         "values must be unique and sorted"
     );
     for value in FixedRate::ALL {
-        assert!(
-            1000 % value.ms == 0,
+        assert_eq!(
+            1000 % value.ms,
+            0,
             "1 s must contain whole number of intervals"
         );
-        assert!(
-            value.value_us() % FixedRate::MIN.value_us() == 0,
+        assert_eq!(
+            value.value_us() % FixedRate::MIN.value_us(),
+            0,
             "the interval's borders must be a subset of the minimal interval's borders"
         );
     }
@@ -383,7 +406,7 @@ impl<'de> Deserialize<'de> for SubscriptionParams {
         D: serde::Deserializer<'de>,
     {
         let value = SubscriptionParamsRepr::deserialize(deserializer)?;
-        Self::new(value).map_err(D::Error::custom)
+        Self::new(value).map_err(Error::custom)
     }
 }
 
