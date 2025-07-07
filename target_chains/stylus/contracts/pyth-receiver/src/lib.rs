@@ -215,27 +215,40 @@ impl PythReceiver {
         check_update_data_is_minimal: bool,
         store_updates_if_fresh: bool,
     ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
-        self.parse_price_feed_updates_internal(
+        let price_pairs = self.parse_price_feed_updates_internal(
             update_data,
-            price_ids,
             min_allowed_publish_time,
             max_allowed_publish_time,
             check_uniqueness,
             check_update_data_is_minimal,
             store_updates_if_fresh,
-        )
+        )?;
+
+        let price_map: BTreeMap<[u8; 32], PriceInfoReturn> = price_pairs.into_iter().collect();
+
+        // Create a vector with the same length as price_ids
+        let mut result: Vec<PriceInfoReturn> = Vec::with_capacity(price_ids.len());
+
+        for price_id in price_ids {
+            if let Some(price_info) = price_map.get(&price_id) {
+                result.push(*price_info);
+            } else {
+                result.push((U64::from(0), I32::from_be_bytes([0, 0, 0, 0]), I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]), U64::from(0), I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]), U64::from(0)));
+            }
+        }
+
+        Ok(result)
     }
 
     fn parse_price_feed_updates_internal(
         &mut self,
         update_data: Vec<u8>,
-        price_ids: Vec<[u8; 32]>,
         min_allowed_publish_time: u64,
         max_allowed_publish_time: u64,
         check_uniqueness: bool,
         check_update_data_is_minimal: bool,
         store_updates_if_fresh: bool,
-    ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
+    ) -> Result<Vec<([u8; 32], PriceInfoReturn)>, PythReceiverError> {
         let update_data_array: &[u8] = &update_data;
         // Check the first 4 bytes of the update_data_array for the magic header
         if update_data_array.len() < 4 {
@@ -325,17 +338,7 @@ impl PythReceiver {
             }
         };
 
-        let mut result: Vec<PriceInfoReturn> = Vec::with_capacity(price_ids.len());
-
-        for price_id in price_ids {
-            if let Some(price_info) = price_feeds.get(&price_id) {
-                result.push(*price_info);
-            } else {
-                result.push((U64::from(0), I32::from_be_bytes([0, 0, 0, 0]), I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]), U64::from(0), I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]), U64::from(0)));
-            }
-        }
-
-        Ok(result)
+        Ok(price_feeds.into_iter().collect())
     }
 
     pub fn parse_twap_price_feed_updates(
