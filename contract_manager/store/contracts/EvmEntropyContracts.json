@@ -1,0 +1,192 @@
+[
+  {
+    "chain": "arbitrum_sepolia",
+    "address": "0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "blast_s2_testnet",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "arbitrum",
+    "address": "0x7698E925FfC29655576D0b361D75Af579e20AdAc",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "optimism",
+    "address": "0xdF21D137Aadc95588205586636710ca2890538d5",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "base_sepolia",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "optimism_sepolia",
+    "address": "0x4821932D0CDd71225A6d914706A621e0389D7061",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "blast",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "zetachain_testnet",
+    "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "zetachain",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "base",
+    "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "sei_evm_mainnet",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "etherlink_testnet",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "etherlink",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "sei_evm_testnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "kaia_testnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "kaia",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "b3_testnet",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "b3_mainnet",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "apechain_testnet",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "soneium_minato_testnet",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "apechain_mainnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "sanko",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "sanko_testnet",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "abstract_testnet",
+    "address": "0x858687fD592112f7046E394A3Bf10D0C11fF9e63",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "unichain",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "abstract",
+    "address": "0x5a4a369F4db5df2054994AF031b7b23949b98c0e",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "sonic_blaze_testnet",
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "unichain_sepolia",
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "fantom_sonic_mainnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "tabi_testnet",
+    "address": "0xEbe57e8045F2F230872523bbff7374986E45C486",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "monad_testnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "berachain_mainnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "hyperevm",
+    "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "story",
+    "address": "0xdF21D137Aadc95588205586636710ca2890538d5",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "story_testnet",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "berachain_bepolia",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "soneium",
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "hyperevm_testnet",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmEntropyContract"
+  }
+]

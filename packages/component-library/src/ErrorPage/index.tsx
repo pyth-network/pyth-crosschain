@@ -21,8 +21,8 @@ export const ErrorPage = ({ error, reset }: Props) => {
     <div className={styles.errorPage}>
       <Warning className={styles.errorIcon} />
       <div className={styles.text}>
-        <h1 className={styles.header}>Uh oh!</h1>
-        <h2 className={styles.subheader}>Something went wrong</h2>
+        <h2 className={styles.header}>Uh oh!</h2>
+        <p className={styles.subheader}>Something went wrong</p>
         <code className={styles.details}>{error.digest ?? error.message}</code>
       </div>
       {reset && (

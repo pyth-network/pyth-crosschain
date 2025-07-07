@@ -3,5 +3,7 @@ pub mod chain;
 pub mod command;
 pub mod config;
 pub mod eth_utils;
+pub mod history;
 pub mod keeper;
+pub mod serde;
 pub mod state;

@@ -57,7 +57,7 @@ import {
 } from "@pythnetwork/pyth-solana-receiver";
 import {
   SOLANA_LAZER_PROGRAM_ID,
-  SOLANA_STORAGE_ID,
+  SOLANA_LAZER_STORAGE_ID,
 } from "@pythnetwork/pyth-lazer-sdk";
 
 import { LedgerNodeWallet } from "./ledger";
@@ -414,11 +414,21 @@ multisigCommand(
         voteAccounts.map((voteAccount: PublicKey) =>
           fetchStakeAccounts(
             new Connection(getPythClusterApiUrl(cluster)),
+            authorizedPubkey,
             voteAccount,
           ),
         ),
       )
-    ).flat();
+    )
+      .map((stakeAccounts, index) => {
+        if (stakeAccounts.length === 0) {
+          console.log(
+            `Skipping vote account ${voteAccounts[index].toBase58()} - no stake accounts found`,
+          );
+        }
+        return stakeAccounts;
+      })
+      .flat();
 
     const instructions = stakeAccounts.flatMap(
       (stakeAccount) =>
@@ -968,7 +978,7 @@ multisigCommand(
       .update(trustedSigner, expiryTime)
       .accounts({
         topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
-        storage: SOLANA_STORAGE_ID,
+        storage: new PublicKey(SOLANA_LAZER_STORAGE_ID),
       })
       .instruction();
 
@@ -1000,7 +1010,7 @@ multisigCommand(
     const trustedSigner = Buffer.from(options.signer, "hex");
     const expiryTime = new BN(options.expiryTime);
 
-    const programId = SOLANA_LAZER_PROGRAM_ID;
+    const programId = new PublicKey(SOLANA_LAZER_PROGRAM_ID);
     const programDataAccount = PublicKey.findProgramAddressSync(
       [programId.toBuffer()],
       BPF_UPGRADABLE_LOADER,
@@ -1029,7 +1039,7 @@ multisigCommand(
     // Create Anchor program instance
     const lazerProgram = new Program(
       lazerIdl as Idl,
-      SOLANA_LAZER_PROGRAM_ID,
+      programId,
       vault.getAnchorProvider(),
     );
 
@@ -1038,7 +1048,7 @@ multisigCommand(
       .updateEcdsaSigner(trustedSigner, expiryTime)
       .accounts({
         topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
-        storage: SOLANA_STORAGE_ID,
+        storage: new PublicKey(SOLANA_LAZER_STORAGE_ID),
       })
       .instruction();
 

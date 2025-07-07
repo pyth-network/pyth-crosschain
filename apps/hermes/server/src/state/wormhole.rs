@@ -4,7 +4,7 @@ use {
         State,
     },
     crate::network::wormhole::GuardianSet,
-    anyhow::{anyhow, ensure, Result},
+    anyhow::{anyhow, ensure, Context, Result},
     chrono::DateTime,
     pythnet_sdk::{
         wire::v1::{WormholeMessage, WormholePayload},
@@ -60,8 +60,13 @@ impl<'a> From<&'a State> for &'a WormholeState {
 
 #[async_trait::async_trait]
 pub trait Wormhole: Aggregates {
-    async fn store_vaa(&self, sequence: u64, vaa_bytes: Vec<u8>);
-    async fn process_message(&self, vaa_bytes: Vec<u8>) -> Result<()>;
+    async fn store_vaa(&self, sequence: u64, vaa_bytes: Vec<u8>) -> bool;
+    /// Process a Wormhole message, extracting the VAA and storing it in the state.
+    /// If `always_verify` is false, it will check if the VAA has been seen before verifying it.
+    /// If true, it will verify the VAA even if it has been seen before.
+    /// Returns true if the message was processed successfully, false if it was already seen.
+    /// Throws an error if the VAA is invalid or cannot be processed.
+    async fn process_message(&self, vaa_bytes: Vec<u8>, always_verify: bool) -> Result<bool>;
     async fn update_guardian_set(&self, id: u32, guardian_set: GuardianSet);
 }
 
@@ -80,13 +85,13 @@ where
     }
 
     #[tracing::instrument(skip(self, vaa_bytes))]
-    async fn store_vaa(&self, sequence: u64, vaa_bytes: Vec<u8>) {
+    async fn store_vaa(&self, sequence: u64, vaa_bytes: Vec<u8>) -> bool {
         // Check VAA hasn't already been seen, this may have been checked previously
         // but due to async nature it's possible other threads have mutated the state
         // since this VAA started processing.
         let mut observed_vaa_seqs = self.into().observed_vaa_seqs.write().await;
         if observed_vaa_seqs.contains(&sequence) {
-            return;
+            return false;
         }
 
         // Clear old cached VAA sequences.
@@ -94,18 +99,26 @@ where
             observed_vaa_seqs.pop_first();
         }
 
+        observed_vaa_seqs.insert(sequence);
+        // Drop the lock to allow other threads to access the state.
+        drop(observed_vaa_seqs);
+
         // Hand the VAA to the aggregate store.
-        if let Err(e) = Aggregates::store_update(self, Update::Vaa(vaa_bytes)).await {
-            tracing::error!(error = ?e, "Failed to store VAA in aggregate store.");
+        match Aggregates::store_update(self, Update::Vaa(vaa_bytes)).await {
+            Ok(is_stored) => is_stored,
+            Err(e) => {
+                tracing::error!(error = ?e, "Failed to store VAA in aggregate store.");
+                false
+            }
         }
     }
 
-    async fn process_message(&self, vaa_bytes: Vec<u8>) -> Result<()> {
+    async fn process_message(&self, vaa_bytes: Vec<u8>, always_verify: bool) -> Result<bool> {
         let vaa = serde_wormhole::from_slice::<Vaa<&RawMessage>>(&vaa_bytes)?;
 
         // Log VAA Processing.
-        let vaa_timestamp = DateTime::from_timestamp(vaa.timestamp as i64, 0)
-            .ok_or(anyhow!("Failed to parse VAA Tiestamp"))?
+        let vaa_timestamp = DateTime::from_timestamp(vaa.timestamp.into(), 0)
+            .context("Failed to parse VAA Timestamp")?
             .format("%Y-%m-%dT%H:%M:%S.%fZ")
             .to_string();
 
@@ -114,17 +127,19 @@ where
         };
         tracing::info!(slot = slot, vaa_timestamp = vaa_timestamp, "Observed VAA");
 
-        // Check VAA hasn't already been seen.
-        ensure!(
-            !self
-                .into()
-                .observed_vaa_seqs
-                .read()
-                .await
-                .contains(&vaa.sequence),
-            "Previously observed VAA: {}",
-            vaa.sequence
-        );
+        if !always_verify {
+            // Check VAA hasn't already been seen.
+            ensure!(
+                !self
+                    .into()
+                    .observed_vaa_seqs
+                    .read()
+                    .await
+                    .contains(&vaa.sequence),
+                "Previously observed VAA: {}",
+                vaa.sequence
+            );
+        }
 
         // Check VAA source is valid, we don't want to process other protocols VAAs.
         validate_vaa_source(&vaa)?;
@@ -140,9 +155,7 @@ where
             vaa,
         )?;
 
-        // Finally, store the resulting VAA in Hermes.
-        self.store_vaa(vaa.sequence, vaa_bytes).await;
-        Ok(())
+        Ok(self.store_vaa(vaa.sequence, vaa_bytes).await)
     }
 }
 // Rejects VAAs from invalid sources.
@@ -219,7 +232,7 @@ fn verify_vaa<'a>(
 
         // The address is the last 20 bytes of the Keccak256 hash of the public key
         let address: [u8; 32] = Keccak256::new_with_prefix(&pubkey[1..]).finalize().into();
-        let address: [u8; 20] = address[address.len() - 20..].try_into()?;
+        let address: [u8; 20] = address[32 - 20..].try_into()?;
 
         // Confirm the recovered address matches an address in the guardian set.
         if guardian_set.keys.get(signer_id) == Some(&address) {

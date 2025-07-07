@@ -9,34 +9,32 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/starknet/tools/test_vaas
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.86.0
-          components: rustfmt, clippy
-          override: true
       - uses: actions/checkout@v3
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "target_chains/starknet/tools/test_vaas -> target"
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install Scarb
         uses: software-mansion/setup-scarb@v1
         with:
           tool-versions: target_chains/starknet/contracts/.tool-versions
       - name: Install Starkli
-        run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' target_chains/starknet/contracts/.tool-versions)
+        run: |
+          curl https://get.starkli.sh | sh
+          . ~/.config/.starkli/env
+          starkliup -v $(awk '/starkli/{print $2}' ../../contracts/.tool-versions)
+          echo "${HOME}/.starkli/bin" >> "${GITHUB_PATH}"
       - name: Check formatting
-        run: cargo fmt --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml -- --check
+        run: cargo fmt -- --check
       - name: Run clippy
-        run: cargo clippy --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --all-targets -- --deny warnings
+        run: cargo clippy -p test_vaas --all-targets -- --deny warnings
       - name: Run generate_keypair binary
-        run: cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_keypair
+        run: cargo run --bin generate_keypair
       - name: Check test data
         run: |
-          . ~/.config/.starkli/env && cargo run --manifest-path ./target_chains/starknet/tools/test_vaas/Cargo.toml --bin generate_test_data > ./target_chains/starknet/contracts/data.cairo
-          cd target_chains/starknet/contracts && scarb fmt data.cairo
+          . ~/.config/.starkli/env && cargo run --bin generate_test_data > ../../contracts/data.cairo
+          cd ../../contracts && scarb fmt data.cairo
           if ! diff ./tests/data.cairo data.cairo; then
             >&2 echo "Re-run generate_test_data to update data.cairo"
             exit 1

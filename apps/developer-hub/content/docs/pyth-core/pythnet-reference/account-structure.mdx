@@ -1,0 +1,100 @@
+---
+title: Account Structure of PythNet Oracle Accounts
+description: >-
+  Dive into Pyth oracle accounts on Pythnet: understand product and price data
+  structures, on-chain mappings, real-world examples, and network interactions.
+full: false
+index: false
+---
+
+# Account Structure
+
+The Pyth oracle program manages a number of on-chain accounts. There are three different types of accounts:
+
+1. _Product accounts_ store metadata about a product, such as its symbol (e.g., "BTC/USD") and asset type.
+2. _Price accounts_ store the current price information for a particular product. This account has fields such as the current price, a confidence interval, an exponential moving average price, an exponential moving average confidence interval and whether or not a price is currently available.
+3. _Mapping accounts_ serve as a listing of other accounts. The mapping accounts are organized into a linked list whose values are the set of product accounts. These accounts allow applications to enumerate the full list of products whose prices are available on Pyth.&#x20;
+
+The [Pyth Rust SDK](https://github.com/pyth-network/pyth-sdk-rs) contains a sample application that prints the current content of all Pyth accounts. The following sections use the output of this application to better understand the content of these accounts.
+
+**Product Accounts**
+
+Product accounts store metadata about a product. This metadata is represented as a set of reference attributes, stored as a list of text key/value pairs. Not all product accounts follow the same structure; for a comprehensive overview, visit the [Product Metadata page](product-metadata.md). For example, the product account for AAPL contains the following fields:
+
+```sh copy
+product_account .. G89jkM5wFLpmnbvRbeePUumxsJyzoXaRfgBVjyx2CPzQ
+  symbol.......... Equity.US.AAPL/USD
+  asset_type...... Equity
+  quote_currency.. USD
+  description..... APPLE INC
+  base............ AAPL
+  country......... US
+  cms_symbol...... AAPL
+  cqs_symbol...... AAPL
+  nasdaq_symbol... AAPL
+  price_account... CqFJLrT4rSpA46RQkVYWn8tdBDuQ7p7RXcp6Um76oaph
+```
+
+This snippet shows the reference attributes for AAPL. The set of available reference attributes depends on the `asset_type`. Every product account has `symbol` , `asset_type`, `quote_currency` , and `price_account` . US equity products additionally include additional reference symbology that is useful for mapping Pyth products to other industry-standard identifiers. The product account also contains a pointer to a price account that contains the product's current pricing information.&#x20;
+
+As another example, here is the product account for BTC/USD:
+
+```sh copy
+product_account .. 3m1y5h2uv7EQL3KaJZehvAJa4yDNvgc5yAdL9KPMKwvk
+  symbol.......... Crypto.BTC/USD
+  asset_type...... Crypto
+  quote_currency.. USD
+  description..... BTC/USD
+  generic_symbol.. BTCUSD
+  base............ BTC
+  price_account .. HovQMDrbAgAYPCmHVSrezcSmkMtXSSUsLDFANExrZh2J
+```
+
+**Price Accounts**
+
+Price accounts store the current price of a product along with additional useful information. For example, consider the following content of AAPL's price account:&#x20;
+
+```sh copy
+price_account .. CqFJLrT4rSpA46RQkVYWn8tdBDuQ7p7RXcp6Um76oaph
+    price ........ 16297000 x 10^-5
+    conf ......... 27952 x 10^-5
+    price_type ... price
+    exponent ..... -5
+    status ....... trading
+    corp_act ..... nocorpact
+    num_qt ....... 2
+    valid_slot ... 110430111
+    publish_slot . 110430112
+    ema_price ......... 16247409 x 10^-5
+    ema_confidence ......... 19415 x 10^-5
+```
+
+This account stores the current price in a fixed-point format. The price is computed by taking the `price` field and multiplying by `10^exponent`. The account also includes a confidence interval that represents Pyth's uncertainty about the current price. This confidence interval can be interpreted as the standard deviation of a Laplace distribution centered around the price. `conf` is also stored in the same fixed-point format. In the example above, the price is 12276250, the conf is 1500 and the exponent is -5. These values translate into a price of \$122.76250 +- 0.015.
+
+Price accounts include several other useful fields. First, each account has a `status` that indicates whether or not the price is valid. Pricing information for a product can be unavailable for various reasons, for example, US equity markets only trade during certain hours. The status field indicates whether or not Pyth currently has a price for the product. **Only prices with a value of `status=trading` should be used**. If the status is not `trading` but is Unknown, Halted or Auction the Pyth price can be an arbitrary value.
+
+**Mapping Accounts**
+
+Mapping accounts serve as an index of the pricing information currently available on Pyth. These accounts are organized into a linked list whose values are product accounts. Applications can traverse this linked list to enumerate all products currently available on Pyth.
+
+The on-chain relationship between different account types is as follows:
+
+```
+  -------------        -------------       -------------
+  |           |1      m|           |       |           |
+  |  mapping  |------->|  product  |------>|   price   |
+  |           |        |           |       |           |
+  -------------        -------------       -------------
+        |
+        V
+  -------------
+  |           |
+  |  mapping  |
+  |           |
+  -------------
+        |
+        V
+       ...
+```
+
+Each mapping account contains a list of product account ids, plus an optional pointer to the subsequent mapping account. Each product account in turn points to the price account that stores the current price information for that product.&#x20;

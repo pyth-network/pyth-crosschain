@@ -125,12 +125,12 @@ async fn setup_chain_provider(
                 provider_config.chain_sample_interval,
             )
             .await?;
-            let chain_state = HashChainState {
-                offsets: vec![provider_info
+            let chain_state = HashChainState::new(
+                vec![provider_info
                     .original_commitment_sequence_number
                     .try_into()?],
-                hash_chains: vec![hash_chain],
-            };
+                vec![hash_chain],
+            )?;
 
             if chain_state.reveal(provider_info.original_commitment_sequence_number)?
                 != provider_info.original_commitment
@@ -155,9 +155,11 @@ async fn setup_chain_provider(
         .call()
         .await?;
 
-    sync_fee(&contract, &provider_info, chain_config.fee)
-        .in_current_span()
-        .await?;
+    if register || !chain_config.sync_fee_only_on_register {
+        sync_fee(&contract, &provider_info, chain_config.fee)
+            .in_current_span()
+            .await?;
+    }
 
     let uri = get_register_uri(&provider_config.uri, chain_id)?;
     sync_uri(&contract, &provider_info, uri)

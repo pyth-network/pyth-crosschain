@@ -1,0 +1,26 @@
+[package]
+name = "wormhole-contract"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version = "0.0.1"
+
+[features]
+default = []
+std = []
+export-abi = ["stylus-sdk/export-abi"]
+
+[dependencies]
+stylus-sdk = { workspace = true, default-features = false }
+alloy-primitives = { workspace = true, default-features = false }
+mini-alloc = { workspace = true, default-features = false }
+
+k256 = { version = "0.13.3", default-features = false, features = ["ecdsa"] }
+
+
+[dev-dependencies]
+motsu.workspace = true
+base64 = "0.21"
+
+[lib]
+crate-type = ["lib", "cdylib"]

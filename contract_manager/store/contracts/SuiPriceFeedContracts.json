@@ -1,0 +1,20 @@
+[
+  {
+    "chain": "sui_mainnet",
+    "stateId": "0x1f9310238ee9298fb703c3419030b35b22bb1cc37113e3bb5007c99aec79e5b8",
+    "wormholeStateId": "0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c",
+    "type": "SuiPriceFeedContract"
+  },
+  {
+    "chain": "sui_testnet",
+    "stateId": "0x243759059f4c3111179da5878c12f68d612c21a8d54d85edc86164bb18be1c7c",
+    "wormholeStateId": "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790",
+    "type": "SuiPriceFeedContract"
+  },
+  {
+    "chain": "movement_m2_devnet",
+    "stateId": "0xa2b4997fe170d5d7d622d5f43e54880ccdf69716df4ac4d215a69c35a0a1831f",
+    "wormholeStateId": "0xcf185fbc1af3a437a600587e0b39e5fede163336ffbb7ff24dca9b6eb19d2656",
+    "type": "SuiPriceFeedContract"
+  }
+]

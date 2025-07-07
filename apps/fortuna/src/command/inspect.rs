@@ -20,7 +20,7 @@ pub async fn inspect(opts: &InspectOptions) -> Result<()> {
         None => {
             let config = Config::load(&opts.config.config)?;
             for (chain_id, chain_config) in config.chains.iter() {
-                println!("Inspecting chain: {}", chain_id);
+                println!("Inspecting chain: {chain_id}");
                 inspect_chain(chain_config, opts.num_requests, opts.multicall_batch_size).await?;
             }
         }
@@ -34,12 +34,11 @@ async fn inspect_chain(
     multicall_batch_size: u64,
 ) -> Result<()> {
     let rpc_provider = Provider::<Http>::try_from(&chain_config.geth_rpc_addr)?;
-    let multicall_exists = rpc_provider
+    let multicall_exists = !rpc_provider
         .get_code(ethers::contract::MULTICALL_ADDRESS, None)
         .await
         .expect("Failed to get code")
-        .len()
-        > 0;
+        .is_empty();
 
     let contract = PythContract::from_config(chain_config)?;
     let entropy_provider = contract.get_default_provider().call().await?;
@@ -48,7 +47,7 @@ async fn inspect_chain(
         .call()
         .await?;
     let mut current_request_number = provider_info.sequence_number;
-    println!("Initial request number: {}", current_request_number);
+    println!("Initial request number: {current_request_number}");
     let last_request_number = current_request_number.saturating_sub(num_requests);
     if multicall_exists {
         println!("Using multicall");
@@ -73,7 +72,7 @@ async fn inspect_chain(
             for request in return_data {
                 process_request(rpc_provider.clone(), request).await?;
             }
-            println!("Current request number: {}", current_request_number);
+            println!("Current request number: {current_request_number}");
         }
     } else {
         println!("Multicall not deployed in this chain, fetching requests one by one");
@@ -85,7 +84,7 @@ async fn inspect_chain(
             process_request(rpc_provider.clone(), request).await?;
             current_request_number -= 1;
             if current_request_number % 100 == 0 {
-                println!("Current request number: {}", current_request_number);
+                println!("Current request number: {current_request_number}");
             }
         }
     }

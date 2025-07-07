@@ -14,7 +14,10 @@ mod wormhole;
 #[command(author = crate_authors!())]
 #[command(about = crate_description!())]
 #[command(version = crate_version!())]
-#[allow(clippy::large_enum_variant)]
+#[allow(
+    clippy::large_enum_variant,
+    reason = "performance is not a concern for config"
+)]
 pub enum Options {
     /// Run the Hermes Price Service.
     Run(RunOptions),

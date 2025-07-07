@@ -42,7 +42,13 @@ pub async fn update_commitments_if_necessary(
         .block(latest_safe_block) // To ensure we are not revealing sooner than we should
         .call()
         .await
-        .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
+        .map_err(|e| {
+            anyhow!(
+                "Error while getting provider info at block {}. error: {:?}",
+                latest_safe_block,
+                e
+            )
+        })?;
     if provider_info.max_num_hashes == 0 {
         return Ok(());
     }

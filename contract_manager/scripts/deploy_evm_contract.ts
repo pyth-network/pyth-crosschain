@@ -1,9 +1,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { EvmChain } from "../src/chains";
-import { DefaultStore } from "../src/store";
+import { EvmChain } from "../src/core/chains";
+import { DefaultStore } from "../src/node/utils/store";
 import { readFileSync } from "fs";
-import { toPrivateKey } from "../src";
+import { toPrivateKey } from "../src/core/base";
 
 import { COMMON_DEPLOY_OPTIONS } from "./common";
 

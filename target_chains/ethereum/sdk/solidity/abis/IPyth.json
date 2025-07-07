@@ -489,16 +489,31 @@
       },
       {
         "internalType": "uint64",
-        "name": "minPublishTime",
+        "name": "minAllowedPublishTime",
         "type": "uint64"
       },
       {
         "internalType": "uint64",
-        "name": "maxPublishTime",
+        "name": "maxAllowedPublishTime",
         "type": "uint64"
+      },
+      {
+        "internalType": "bool",
+        "name": "checkUniqueness",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "checkUpdateDataIsMinimal",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "storeUpdatesIfFresh",
+        "type": "bool"
       }
     ],
-    "name": "parsePriceFeedUpdatesWithSlotsStrict",
+    "name": "parsePriceFeedUpdatesWithConfig",
     "outputs": [
       {
         "components": [

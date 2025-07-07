@@ -1,0 +1,63 @@
+---
+title: "Understanding Publishing Slots in Pyth: How Price Updates Work"
+description: >-
+  Pythnet’s publishing slots deliver ordered price updates on Solana, prevent
+  on-chain data conflicts, and improve cross-chain update efficiency.
+full: false
+index: false
+---
+
+# Understanding Publishing Slots
+
+When a quoter publishes a price, the pyth-client API also forwards what it thinks is the current slot on Solana and Pythnet. This is known as its publishing slot.
+
+The publishing slot and price is stored as the latest update for that publisher on-chain but only if the price is for a later slot than that currently stored. This is to prevent prices from being updated out-of-order and to facilitate arbitration between multiple publishers.
+
+The aggregation algorithm only combines prices from publishers that were published within 25 slots of the current on-chain slot.
+
+Not all published prices get included in the pyth contract due to unreliable transports and the way Solana and Pythnet formulate and reach consensus on each slot.
+
+A quoter may detect if a published price is dropped by comparing the list of publishing slots it submits vs what it subsequently receives in each aggregate price callback.
+
+For example, here is an excerpt of a log take from a run of the test_publish.cpp example program against mainnet-beta. It logs everything it sends and everything it receives.
+
+The publishing slots of six consecutive price submissions have been annotated with the labels A, B, C, D, E and F or slots 79018079, 79018084, 79018085, 79018086, 79018087, 79018092.
+
+The API submits a new price every time it receives notification of a new slot but note that prices for slots 79018080 thru 79018083 and 79018088 thru 79018091 were not submitted. This is because solana does not always publish consecutive slots and gaps can occur. Solana can also publish slots out-of-order, but the API ignores these and is guaranteed only to issue callbacks for slots that are strictly increasing.
+
+Price updates occur for slots labelled A, B, C and F. Slots D and E (79018086, 79018087) were dropped and did not get executed on the chain.
+
+```sh copy
+[2021-05-18T22:36:14.048435Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.116000,spread=0.001000,slot=79018079,sub_id=1
+                                                                                                                                                          ^^ A ^^^
+[2021-05-18T22:36:14.237644Z 654359 INF received aggregate price update         ] symbol=SYMBOL1/USD,price_type=price,status=trading,agg_price=0.112000,agg_spread=0.001000,valid_slot=79018076,pub_slot=79018077,my_price=0.112000,my_conf=0.001000,my_status=trading,my_slot=79018075
+[2021-05-18T22:36:14.405182Z 654359 INF received aggregate price update         ] symbol=SYMBOL1/USD,price_type=price,status=trading,agg_price=0.113000,agg_spread=0.001000,valid_slot=79018077,pub_slot=79018078,my_price=0.113000,my_conf=0.001000,my_status=trading,my_slot=79018076
+[2021-05-18T22:36:16.099126Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.117000,spread=0.001000,slot=79018084,sub_id=1
+                                                                                                                                                          ^^ B ^^^
+[2021-05-18T22:36:16.962077Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.118000,spread=0.001000,slot=79018085,sub_id=1
+                                                                                                                                                          ^^ C ^^^
+[2021-05-18T22:36:17.519741Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.119000,spread=0.001000,slot=79018086,sub_id=1
+                                                                                                                                                          ^^ D ^^^
+[2021-05-18T22:36:17.671924Z 654359 INF received aggregate price update         ] symbol=SYMBOL1/USD,price_type=price,status=trading,agg_price=0.114000,agg_spread=0.001000,valid_slot=79018078,pub_slot=79018079,my_price=0.114000,my_conf=0.001000,my_status=trading,my_slot=79018077
+[2021-05-18T22:36:18.109491Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.120000,spread=0.001000,slot=79018087,sub_id=1
+                                                                                                                                                          ^^ E ^^^
+[2021-05-18T22:36:20.537479Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.121000,spread=0.001000,slot=79018092,sub_id=1
+                                                                                                                                                          ^^ F ^^^
+[2021-05-18T22:36:21.195836Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.122000,spread=0.001000,slot=79018093,sub_id=1
+[2021-05-18T22:36:21.529074Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.123000,spread=0.001000,slot=79018094,sub_id=1
+[2021-05-18T22:36:21.802004Z 654359 INF received aggregate price update         ] symbol=SYMBOL1/USD,price_type=price,status=trading,agg_price=0.116000,agg_spread=0.001000,valid_slot=79018079,pub_slot=79018085,my_price=0.116000,my_conf=0.001000,my_status=trading,my_slot=79018079
+                                                                                                                                                                                                                                                                               ^^ A ^^^
+[2021-05-18T22:36:21.969477Z 654359 INF received aggregate price update         ] symbol=SYMBOL1/USD,price_type=price,status=trading,agg_price=0.117000,agg_spread=0.001000,valid_slot=79018085,pub_slot=79018087,my_price=0.117000,my_conf=0.001000,my_status=trading,my_slot=79018084
+                                                                                                                                                                                                                                                                               ^^ B ^^^
+[2021-05-18T22:36:22.304469Z 654359 INF received aggregate price update         ] symbol=SYMBOL1/USD,price_type=price,status=trading,agg_price=0.118000,agg_spread=0.001000,valid_slot=79018087,pub_slot=79018093,my_price=0.118000,my_conf=0.001000,my_status=trading,my_slot=79018085
+                                                                                                                                                                                                                                                                               ^^ C ^^^
+[2021-05-18T22:36:22.758348Z 654359 INF submit price to block-chain             ] symbol=SYMBOL1/USD,price_type=price,price=0.125000,spread=0.001000,slot=79018096,sub_id=1
+[2021-05-18T22:36:23.121339Z 654359 INF received aggregate price update         ] symbol=SYMBOL1/USD,price_type=price,status=trading,agg_price=0.121000,agg_spread=0.001000,valid_slot=79018093,pub_slot=79018094,my_price=0.121000,my_conf=0.001000,my_status=trading,my_slot=79018092
+                                                                                                                                                                                                                                                                               ^^ F ^^^
+```
+
+The API keeps track of the "hit-rate" of price submissions that show up in the update callbacks and tracks end-to-end latency statistics at the 25th, 50th, 75th and 99th percentiles both in terms of seconds of elapsed time and in number of slot updates observed. For example, from the same log:
+
+```sh copy
+[2021-05-18T22:37:26.685518Z 654359 INF publish statistics                      ] symbol=SYMBOL1/USD,price_type=price,num_sent=135,hit_rate=73.333333,secs_p25=2.000000,secs_p50=2.500000,secs_p75=3.000000,secs_p99=7.500000,slot_p25=4,slot_p50=4,slot_p75=6,slot_p99=16
+```

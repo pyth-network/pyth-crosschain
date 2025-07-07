@@ -1,0 +1,118 @@
+---
+title: "Pyth Price Feeds: Best Practices for Safe Use"
+description: >-
+  Best practices for Pyth price feeds: secure fixed-point representation,
+  mitigate latency & threats, use confidence intervals, and follow futures
+  pricing guidelines.
+full: false
+index: false
+---
+
+# Best Practices
+
+This page provides some technical details about Pyth price feeds that are necessary to use them safely and correctly.
+Please read this page before using Pyth price feeds in your application.
+
+## Fixed-Point Numeric Representation
+
+Price feeds represent numbers in a fixed-point format. The same exponent is used for both the price and confidence interval. The integer representation of these values can be computed by multiplying by `10^exponent`. As an example, imagine Pyth reported the following values for AAPL/USD:
+
+| Field      | Value    |
+| ---------- | -------- |
+| `exponent` | -5       |
+| `conf`     | 1500     |
+| `price`    | 12276250 |
+
+The confidence interval is `1500 * 10^(-5) = $0.015`, and the price is `12276250 * 10^(-5) = $122.7625`.
+
+## Price Availability
+
+Sometimes, Pyth will not be able to provide a current price for a product.
+This situation can happen for various reasons.
+For example, US equity markets only trade during certain hours, and outside those hours, it's not clear what an equity's price is.
+Pyth price feeds follow the traditional market hours for each asset class. \
+Consult [Market Hours](./market-hours.md) to know the market hours for each asset class.
+
+Alternatively, a network outage (at the internet level, blockchain level, or at multiple data providers) may prevent the protocol from producing new price updates.
+(Such outages are unlikely, but integrators should still be prepared for the possibility.)
+In such cases, Pyth may return a stale price for the product.
+
+Integrators should be careful to avoid accidentally using a stale price.
+The Pyth SDKs guard against this failure mode by incorporating a staleness check by default.
+Querying the current price will fail if too much time has elapsed since the last update.
+The SDKs expose this failure condition in an idiomatic way: for example, the Rust SDK may return `None`, and the Solidity SDK may revert the transaction.
+The SDK provides a sane default for the staleness threshold, but users may configure it to suit their use case.
+
+## Adversarial selection
+
+Pull updates give users of Pyth Network some ability to select which price to use in a transaction.
+This ability is highly circumscribed by various constraints: on-chain prices must move forward in time and cannot be from too far in the past.
+However, users can still choose any price update that satisfies these constraints.
+This ability is functionally equivalent to latency: it allows users to see the price in the future before using a price from the past.
+
+The simplest way to guard against this attack vector is to incorporate a **staleness check** to ensure that the price used in a transaction is sufficiently recent.
+
+The Pyth SDK provides the [`getPriceNoOlderThan()`](https://api-reference.pyth.network/price-feeds/evm/getPriceNoOlderThan) method to help users guard against this attack vector. This method returns the most recent price update that is not older than a specified threshold.
+Highly latency-sensitive protocols may wish to reduce the threshold to a few seconds to better suit their needs.
+Please also see the section below on [latency mitigations](best-practices.md#latency) for additional ideas on how latency-sensitive protocols can minimize the impact of oracle latency.
+
+## Latency
+
+Developers integrating Pyth Network price feeds should account for the difference in latency between on-chain oracles and off-chain sources (e.g. centralized exchanges).
+Although Pyth Network is designed with low latency in mind, no on-chain oracle can match the latency of an off-chain source due to the added overhead for consensus and security.
+The threat model for integrating protocols should assume that adversaries see price changes a short time before the protocol does.
+In this threat model, protocol designers should avoid situations where a Pyth price update must race against an adversary's transaction.
+Adversaries are highly likely to win these races, as they have a head start, and sophisticated adversaries can additionally optimize their network latencies or pay miners for priority blockspace.
+
+### Latency Mitigations for Derivative Protocols[^1]
+
+Derivative protocols are encouraged to consider the following strategies to mitigate the impact of oracle latency:
+
+1. **Use Delayed Settlement**: Derivative protocols can introduce a delay between the time an order is created and the time it is executed. This delay gives the protocol time to observe price changes and reject trades/transactions that profit over latency.
+   Suppose a user submits a trade transaction at a time `t`. The protocol should execute the trade by using the price at the time `t`, which will be available to the protocol after a short delay.
+   The protocol can fetch this price update of a specific timestamp from [Hermes](https://hermes.pyth.network/docs/#/rest/timestamp_price_updates) and can use [`parsePriceFeedUpdates()`](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates) to parse the prices and submit to prevent price frontrunning.
+
+1. **Use a Spread**: Pyth provides a confidence interval for each price update. Derivative protocols can use this confidence interval to determine the range in which the true price probably lies.
+   By using the lower bound of the confidence interval, derivative protocols can protect themselves from price manipulation that drives the price down. By using the upper bound of the confidence interval, derivative protocols can protect themselves from price manipulation that drives the price up.
+
+1. **Enforce Position Holding**: Derivative protocols can enforce hold times on positions to prevent users from exploiting oracle latency.
+   For example, a protocol could require users to hold an asset or a position for a certain period before they can trade or close it.
+   This hold time gives the protocol time to observe price changes and reject trades that profit over latency.
+
+## Confidence Intervals
+
+At every point in time, Pyth publishes both a price and a confidence interval for each product. For example, Pyth may publish the current price of bitcoin as \$50000 ± \$10. Pyth publishes a confidence interval because, in real markets, there is _no one single price for a product_. For example, at any given time, bitcoin trades at different prices at different venues around the world. While these prices are typically similar, they can diverge for a number of reasons, such as when a cryptocurrency exchange blocks withdrawals on an asset. If this happens, prices diverge because arbitrageurs can no longer bring prices across exchanges into line. Alternatively, prices on different venues can differ simply because an asset is highly volatile at a particular point in time. At such times, bid/ask spreads tend to be wider, and trades on different markets at around the same time tend to occur at a wider range of prices.
+
+In a Pyth feed, each publisher specifies an interval `(p_i-c_i, p_i+c_i)` in the form of their price and confidence submission. This interval is intended to achieve 95% coverage, i.e. the publisher expresses the belief that this interval contains the “true” price with 95% probability. The resulting aggregate interval `(μ-σ, μ+σ)`, where `μ` represents the aggregate price and `σ` represents the aggregate confidence, is a good estimate of a range in which the true price lies.
+
+To explain this, consider two cases of publisher estimates. In the first case, there is 100% overlap of all the publishers’ intervals, i.e. each publisher submits the same interval `(p-c, p+c)`. In this case, the aggregate confidence interval is exactly that interval, so the aggregate confidence interval provides 100% coverage of the publishers’ intervals. This first case represents normal operating conditions, where most publishers agree about the price of an asset.
+
+In the second case, each publisher specifies an interval that is disjoint from each of the other publishers’ intervals. In this case, the aggregate confidence interval can be seen to contain at least the 25th percentile and at least the 75th percentile of the set of points consisting of each of the publisher’s price, price plus confidence, and price plus confidence. As a result, the aggregate confidence interval is somewhat analogous to an interquartile range of the data, which is a reasonable measure of the spread of a set of points. Note that this is not an IQR of the prices alone of the publishers but rather of the set composed of the 3 points that each publisher submits. Moreover, note that the IQR does not include the most extreme publishers’ prices on either side; this property is necessary to ensure that a small group of publishers cannot manipulate the aggregate confidence interval. This second case represents an atypical scenario where publishers all disagree. Such circumstances are rare but can occur during market volatility or unusual events.
+
+The aggregate confidence interval interpolates between the two cases above as publishers’ prices begin to diverge. In situations closer to case 1 where there is significant overlap of the individual publishers’ intervals, the aggregate interval `(μ-σ, μ+σ)` will capture most of the spread of the individual publishers. In the situation where the prices look more like case 2 with greater disjointness due to different views of the price across different venues, that aggregate interval may be in some eyes an imperfect measure of spread because there may be a number of individual price intervals that lie outside the aggregate interval. In this case, a protocol has a couple of options:
+
+1. It can use a discounted price in the direction favorable to it. For example, a lending protocol valuing a user’s collateral can use the lower valuation price `μ-σ`. When valuing an outstanding loan position consisting of tokens a user has borrowed from the protocol, it can use the higher end of the interval by using the price `μ+σ`. This allows the protocol to be conservative with regard to its own health and safety when making valuations.
+2. It can decide that there is too much uncertainty when `σ/μ` exceeds some threshold and choose to pause any new activity that depends on the price of this asset.
+
+To expand upon the first option, it is recommended to use the confidence interval to protect your users from these unusual market conditions. The simplest way to do so is to use Pyth's confidence interval to compute a _range_ in which the true price probably lies. This principle is common sense. Imagine that you are lending money to a friend, and your friend pledges a bitcoin as collateral. Also imagine that Pyth says the bitcoin price is \$50000 +- \$1000. (Note that \$1000 is an unusually large confidence interval for bitcoin; the confidence interval is typically \$50 dollars). You therefore calculate that the true price is between \$49000 and \$51000. When originating the loan, you would value the bitcoin at \$49000. The lower price is conservative in this instance because it limits the amount of borrowing that is possible while the price is uncertain. On the other hand, if you were to issue a loan of bitcoin, you would value the borrowed bitcoin at \$51000. The higher price is conservative, as it protects you from allowing someone to borrow in excess during times of increased volatility.
+
+The same principle would apply if you wrote a derivative contract. If someone wants to open a derivative contract with you, you would value their collateral at the lower price. However, if you were deciding whether someone's margin limits were violated, you could value their outstanding leveraged position at the higher price. If a contract needs to be settled at a price, you could take approaches such as the following:
+
+1. Using Pyth's exponential moving average price, which represents estimates of the average price of the asset over a specified time period (e.g., over the past 1 hour). The exponential moving average price is computed such that it lessens the influence of prices with wide confidence intervals. You may find more details in [EMA Price Aggregation](./how-pyth-works/ema-price-aggregation.md).
+2. Using the aggregate price, which is Pyth's best estimate of the price at a single point in time. The quality of this estimate depends on the width of the confidence interval at settlement time and on occasion, it may be imprecise. However, it is the best you can do with Pyth data if you need a single price at that exact point in time.
+3. Defining the contract to depend on confidence. For example, you could create an option that refunds the option premium to the buyer (so both sides of the transaction are even) if the strike price is within the confidence interval at settlement time. You could also create a contract that delayed settlement until the confidence interval was sufficiently small. If you choose this second option, you should ensure that your contract is guaranteed to eventually settle even if the confidence interval never narrows.
+
+## Pricing Futures-Based Assets
+
+For assets like commodities, interest rates, and even volatility indices, pricing is primarily derived from futures contracts. These contracts form a series of prices for different delivery dates, collectively known as the futures curve. While the **front-month contract** is the most actively traded and often seen as the benchmark, it **doesn't** represent the current price of the asset but rather a proxy of the near-term price of the asset at the time of delivery.
+
+This reliance on futures, in the absence of a native spot price, means that market expectations, logistical constraints, amongst other factors can heavily influence the front-month price.
+For example, in times of extreme market stress, the front-month contract turn **negative** when traders avoid delivery, distorting its usefulness as a representative market signal. This happened in the case of the 2020 oil crash, where the front-month price of WTI Crude oil turned negative due to a lack of storage capacity, making applications that rely exclusively on the front-month price unreliable.
+
+Thus it is important that each contract **should have a weighted stratergy** based on the their expiration dates. As the front month approaches expiry, least weight should be allocated on this contract and the weights of the other contracts are determined proportionally. A daily re-adjusted strategy should be applied by the end user of the price feeds.
+
+##
+
+[^1]:
+    _The strategies and methodologies outlined in this page, including those addressing price latency mitigation, are provided solely for informational purposes and might not fully eliminate the discussed problems. Do your own research before using them. \
+    Refer to [Terms of Use](https://www.pyth.network/terms-of-use) for more information._

@@ -1,5 +1,5 @@
 use {
-    crate::api::ChainId,
+    crate::{api::ChainId, config::LATENCY_BUCKETS},
     anyhow::Result,
     axum::async_trait,
     ethers::{
@@ -42,12 +42,7 @@ impl RpcMetrics {
         );
 
         let latency = Family::<RpcLabel, Histogram>::new_with_constructor(|| {
-            Histogram::new(
-                [
-                    0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
-                ]
-                .into_iter(),
-            )
+            Histogram::new(LATENCY_BUCKETS.into_iter())
         });
         sub_registry.register(
             "latency",

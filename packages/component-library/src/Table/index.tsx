@@ -25,7 +25,7 @@ export type { SortDescriptor } from "../unstyled/Table/index.jsx";
 type TableProps<T extends string> = ComponentProps<typeof UnstyledTable> & {
   className?: string | undefined;
   headerCellClassName?: string | undefined;
-  stickyHeader?: boolean | undefined;
+  stickyHeader?: "top" | "appHeader" | undefined;
   fill?: boolean | undefined;
   rounded?: boolean | undefined;
   label: string;
@@ -110,7 +110,7 @@ export const Table = <T extends string>({
         <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
           {(columnConfig: ColumnConfig<T>) => (
             <Column
-              data-sticky-header={stickyHeader === undefined ? undefined : ""}
+              data-sticky-header={stickyHeader}
               {...columnConfig}
               {...cellProps(columnConfig, headerCellClassName)}
             >
@@ -129,12 +129,11 @@ export const Table = <T extends string>({
                             : "ascending",
                         );
                       }}
-                      beforeIcon={(props) => (
+                      beforeIcon={
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 16 16"
                           fill="currentColor"
-                          {...props}
                         >
                           <path
                             className={styles.ascending}
@@ -145,7 +144,7 @@ export const Table = <T extends string>({
                             d="m10.677 9.927-2.5 2.5a.25.25 0 0 1-.354 0l-2.5-2.5A.25.25 0 0 1 5.5 9.5h5a.25.25 0 0 1 .177.427Z"
                           />
                         </svg>
-                      )}
+                      }
                       hideText
                     >
                       Sort

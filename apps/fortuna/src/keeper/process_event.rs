@@ -1,12 +1,14 @@
 use {
-    super::keeper_metrics::{AccountLabel, KeeperMetrics},
+    super::keeper_metrics::AccountLabel,
     crate::{
-        api::BlockchainState,
-        chain::{ethereum::InstrumentedSignablePythContract, reader::RequestedWithCallbackEvent},
-        eth_utils::utils::{submit_tx_with_backoff, EscalationPolicy},
+        chain::{ethereum::PythRandomErrorsErrors, reader::RequestedWithCallbackEvent},
+        eth_utils::utils::{submit_tx_with_backoff, SubmitTxError},
+        history::{RequestEntryState, RequestStatus},
+        keeper::block::ProcessParams,
     },
     anyhow::{anyhow, Result},
-    std::sync::Arc,
+    ethers::{abi::AbiDecode, contract::ContractError, types::U256},
+    std::time::Duration,
     tracing,
 };
 
@@ -16,14 +18,71 @@ use {
 ))]
 pub async fn process_event_with_backoff(
     event: RequestedWithCallbackEvent,
-    chain_state: BlockchainState,
-    contract: Arc<InstrumentedSignablePythContract>,
-    escalation_policy: EscalationPolicy,
-    metrics: Arc<KeeperMetrics>,
+    process_param: ProcessParams,
 ) -> Result<()> {
+    let ProcessParams {
+        chain_state,
+        contract,
+        escalation_policy,
+        metrics,
+        history,
+        ..
+    } = process_param;
+
     // ignore requests that are not for the configured provider
     if chain_state.provider_address != event.provider_address {
         return Ok(());
+    }
+
+    // If replica config is present, we're running with multiple instances.
+    // The incoming request is assigned by modulo operation on the sequence number
+    // and the total number of replicas. If our replica_id is the primary for this sequence number,
+    // we process the request directly. If our replica_id is a backup, we wait for the delay and
+    // then check if the request is still open. If it is, we process it as a backup replica.
+    if let Some(replica_config) = &process_param.replica_config {
+        let assigned_replica = event.sequence_number % replica_config.total_replicas;
+        let is_primary_replica = assigned_replica == replica_config.replica_id;
+
+        if is_primary_replica {
+            tracing::debug!("Processing request as primary replica");
+        } else {
+            tracing::debug!("Processing request as backup replica");
+
+            tracing::info!("Waiting before processing as backup replica");
+            tokio::time::sleep(tokio::time::Duration::from_secs(
+                replica_config.backup_delay_seconds,
+            ))
+            .await;
+
+            // Check if the request is still open after the delay.
+            // If it is, we will process it as a backup replica.
+
+            // FIXME(Tejas): check callback status
+            match chain_state
+                .contract
+                .get_request_v2(event.provider_address, event.sequence_number)
+                .await
+            {
+                Ok(Some(_)) => {
+                    tracing::info!(
+                        delay_seconds = replica_config.backup_delay_seconds,
+                        "Request still open after delay, processing as backup replica"
+                    );
+                }
+                Ok(None) => {
+                    tracing::debug!(
+                        "Request already fulfilled by primary replica during delay, skipping"
+                    );
+                    return Ok(());
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        error = ?e,
+                        "Error checking request status after delay, processing as backup replica"
+                    );
+                }
+            }
+        }
     }
 
     let account_label = AccountLabel {
@@ -33,11 +92,33 @@ pub async fn process_event_with_backoff(
 
     metrics.requests.get_or_create(&account_label).inc();
     tracing::info!("Started processing event");
+    let mut status = RequestStatus {
+        chain_id: chain_state.id.clone(),
+        network_id: chain_state.network_id,
+        provider: event.provider_address,
+        sequence: event.sequence_number,
+        created_at: chrono::Utc::now(),
+        last_updated_at: chrono::Utc::now(),
+        request_block_number: event.log_meta.block_number.as_u64(),
+        request_tx_hash: event.log_meta.transaction_hash,
+        sender: event.requestor,
+        user_random_number: event.user_random_number,
+        state: RequestEntryState::Pending,
+        gas_limit: U256::from(0), // FIXME(Tejas): set this properly
+    };
+    history.add(&status);
 
     let provider_revelation = chain_state
         .state
         .reveal(event.sequence_number)
-        .map_err(|e| anyhow!("Error revealing: {:?}", e))?;
+        .map_err(|e| {
+            status.state = RequestEntryState::Failed {
+                reason: format!("Error revealing: {e:?}"),
+                provider_random_number: None,
+            };
+            history.add(&status);
+            anyhow!("Error revealing: {:?}", e)
+        })?;
 
     let contract_call = contract.reveal_with_callback(
         event.provider_address,
@@ -45,8 +126,44 @@ pub async fn process_event_with_backoff(
         event.user_random_number,
         provider_revelation,
     );
+    let error_mapper = |num_retries, e| {
+        if let backoff::Error::Transient {
+            err: SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert)),
+            ..
+        } = &e
+        {
+            if let Ok(PythRandomErrorsErrors::NoSuchRequest(_)) =
+                PythRandomErrorsErrors::decode(revert)
+            {
+                let err =
+                    SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert.clone()));
+                // Slow down the retries if the request is not found.
+                // This probably means that the request is already fulfilled via another process.
+                // After 5 retries, we return the error permanently.
+                if num_retries >= 5 {
+                    return backoff::Error::Permanent(err);
+                }
+                let retry_after_seconds = match num_retries {
+                    0 => 5,
+                    1 => 10,
+                    _ => 60,
+                };
+                return backoff::Error::Transient {
+                    err,
+                    retry_after: Some(Duration::from_secs(retry_after_seconds)),
+                };
+            }
+        }
+        e
+    };
 
-    let success = submit_tx_with_backoff(contract.client(), contract_call, escalation_policy).await;
+    let success = submit_tx_with_backoff(
+        contract.client(),
+        contract_call,
+        escalation_policy,
+        Some(error_mapper),
+    )
+    .await;
 
     metrics
         .requests_processed
@@ -55,6 +172,17 @@ pub async fn process_event_with_backoff(
 
     match success {
         Ok(result) => {
+            status.state = RequestEntryState::Completed {
+                reveal_block_number: result.receipt.block_number.unwrap_or_default().as_u64(),
+                reveal_tx_hash: result.receipt.transaction_hash,
+                provider_random_number: provider_revelation,
+                gas_used: result.receipt.gas_used.unwrap_or_default(),
+                combined_random_number: RequestStatus::generate_combined_random_number(
+                    &event.user_random_number,
+                    &provider_revelation,
+                ),
+            };
+            history.add(&status);
             tracing::info!(
                 "Processed event successfully in {:?} after {} retries. Receipt: {:?}",
                 result.duration,
@@ -109,14 +237,47 @@ pub async fn process_event_with_backoff(
                 .get_request_v2(event.provider_address, event.sequence_number)
                 .await;
 
-            tracing::error!("Failed to process event: {:?}. Request: {:?}", e, req);
-
             // We only count failures for cases where we are completely certain that the callback failed.
-            if req.is_ok_and(|x| x.is_some()) {
+            if req.as_ref().is_ok_and(|x| x.is_some()) {
+                tracing::error!("Failed to process event: {}. Request: {:?}", e, req);
                 metrics
                     .requests_processed_failure
                     .get_or_create(&account_label)
                     .inc();
+                // Do not display the internal error, it might include RPC details.
+                let reason = match e {
+                    SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert)) => {
+                        format!("Reverted: {revert}")
+                    }
+                    SubmitTxError::GasLimitExceeded { limit, estimate } => {
+                        format!("Gas limit exceeded: limit = {limit}, estimate = {estimate}")
+                    }
+                    SubmitTxError::GasUsageEstimateError(_) => {
+                        "Unable to estimate gas usage".to_string()
+                    }
+                    SubmitTxError::GasPriceEstimateError(_) => {
+                        "Unable to estimate gas price".to_string()
+                    }
+                    SubmitTxError::SubmissionError(_, _) => {
+                        "Error submitting the transaction on-chain".to_string()
+                    }
+                    SubmitTxError::ConfirmationTimeout(tx) => format!(
+                        "Transaction was submitted, but never confirmed. Hash: {}",
+                        tx.sighash()
+                    ),
+                    SubmitTxError::ConfirmationError(tx, _) => format!(
+                        "Transaction was submitted, but never confirmed. Hash: {}",
+                        tx.sighash()
+                    ),
+                    SubmitTxError::ReceiptError(tx, _) => {
+                        format!("Reveal transaction failed on-chain. Hash: {}", tx.sighash())
+                    }
+                };
+                status.state = RequestEntryState::Failed {
+                    reason,
+                    provider_random_number: Some(provider_revelation),
+                };
+                history.add(&status);
             }
         }
     }

@@ -39,6 +39,11 @@ const meta = {
         category: "Behavior",
       },
     },
+    onCloseFinished: {
+      table: {
+        category: "Behavior",
+      },
+    },
   },
 } satisfies Meta<typeof OpenButton>;
 export default meta;

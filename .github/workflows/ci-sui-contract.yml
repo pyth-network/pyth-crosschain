@@ -17,16 +17,14 @@ jobs:
         working-directory: target_chains/sui/contracts/
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
-          toolchain: 1.77.0
-          override: true
-      - uses: taiki-e/cache-cargo-install-action@v2
-        with:
-          tool: sui
-          git: https://github.com/MystenLabs/sui.git
-          rev: 041c5f2bae2fe52079e44b70514333532d69f4e6
-
+          rustflags: ""
+      - name: install sui
+        run: |
+          # This version doesn't build with newer Rust
+          cargo +1.79.0 install -f sui --locked \
+            --git https://github.com/MystenLabs/sui.git \
+            --rev 041c5f2bae2fe52079e44b70514333532d69f4e6
       - name: Run tests
         run: sui move test

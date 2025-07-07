@@ -1,0 +1,64 @@
+{
+  "name": "@pythnetwork/entropy-tester",
+  "version": "1.1.0",
+  "description": "Utility to test entropy provider callbacks",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "cli/**/*"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "fix:format": "prettier --write .",
+    "fix:lint": "eslint --fix .",
+    "test:format": "prettier --check .",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:types": "tsc",
+    "start:dev": "tsc --project tsconfig.build.json && node cli/run.js",
+    "start:prod": "node cli/run.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git",
+    "directory": "apps/entropy-tester"
+  },
+  "bin": {
+    "pyth-entropy-tester": "./cli/run.js"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@types/express": "^4.17.21",
+    "@types/node": "catalog:",
+    "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "catalog:",
+    "pino-pretty": "^11.2.1",
+    "prettier": "catalog:",
+    "ts-node": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@pythnetwork/contract-manager": "workspace:*",
+    "joi": "^17.6.0",
+    "pino": "catalog:",
+    "prom-client": "^15.1.0",
+    "viem": "catalog:",
+    "yargs": "^17.5.1",
+    "zod": "catalog:"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0"
+}

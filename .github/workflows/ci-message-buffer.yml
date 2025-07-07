@@ -17,14 +17,9 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          workspaces: "pythnet/message_buffer -> target"
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.66.1
-          components: rustfmt, clippy
+          cache-workspaces: "pythnet/message_buffer -> target"
       - name: Install Solana
         run: |
           wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
@@ -33,7 +28,10 @@ jobs:
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Install Anchor
         run: |
-          cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
+          unset CARGO_UNSTABLE_SPARSE_REGISTRY
+          unset CARGO_REGISTRIES_CRATES_IO_PROTOCOL
+          # Anchor doesn't build with newer Rust
+          cargo +1.66.1 install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
       - name: Install g++ 12
         run: |
           sudo apt-get install g++-12
@@ -51,7 +49,12 @@ jobs:
         with:
           run_install: true
       - name: Build and generate IDLs
-        run: anchor build
+        run: |
+          unset CARGO_UNSTABLE_SPARSE_REGISTRY
+          unset CARGO_REGISTRIES_CRATES_IO_PROTOCOL
+          rustup override set 1.66.1
+          anchor build
+          rustup override unset
       - name: Copy anchor target files
         run: cp ./target/idl/message_buffer.json idl/ && cp ./target/types/message_buffer.ts idl/
       - name: Fix formatting (to avoid pre-commit failures)
@@ -65,5 +68,4 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Cargo clippy
-        run: cargo clippy --tests -- --deny warnings
-        if: success() || failure()
+        run: cargo clippy --all-targets -- --deny warnings

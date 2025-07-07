@@ -1,10 +1,18 @@
-use ethabi::ethereum_types::U64;
 use {
     crate::eth_utils::nonce_manager::NonceManaged,
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
-    ethers::{contract::ContractCall, middleware::Middleware, types::TransactionReceipt},
-    std::sync::{atomic::AtomicU64, Arc},
+    ethabi::ethereum_types::U64,
+    ethers::{
+        contract::{ContractCall, ContractError},
+        middleware::Middleware,
+        providers::ProviderError,
+        types::{transaction::eip2718::TypedTransaction, TransactionReceipt, U256},
+    },
+    std::{
+        fmt::Display,
+        sync::{atomic::AtomicU64, Arc},
+    },
     tokio::time::{timeout, Duration},
     tracing,
 };
@@ -124,11 +132,16 @@ pub async fn estimate_tx_cost<T: Middleware + 'static>(
 /// the transaction exceeds this limit, the transaction is not submitted.
 /// Note however that any gas_escalation policy is applied to the estimate, so the actual gas used may exceed the limit.
 /// The transaction is retried until it is confirmed on chain or the maximum number of retries is reached.
+/// You can pass an `error_mapper` function that will be called on each retry with the number of retries and the error.
+/// This lets you customize the backoff behavior based on the error type.
 pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     middleware: Arc<T>,
     call: ContractCall<T, ()>,
     escalation_policy: EscalationPolicy,
-) -> Result<SubmitTxResult> {
+    error_mapper: Option<
+        impl Fn(u64, backoff::Error<SubmitTxError<T>>) -> backoff::Error<SubmitTxError<T>>,
+    >,
+) -> Result<SubmitTxResult, SubmitTxError<T>> {
     let start_time = std::time::Instant::now();
 
     tracing::info!("Started processing event");
@@ -145,11 +158,16 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
             let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
 
             let fee_multiplier_pct = escalation_policy.get_fee_multiplier_pct(num_retries);
-            submit_tx(middleware.clone(), &call, fee_multiplier_pct).await
+            let result = submit_tx(middleware.clone(), &call, fee_multiplier_pct).await;
+            if let Some(ref mapper) = error_mapper {
+                result.map_err(|e| mapper(num_retries, e))
+            } else {
+                result
+            }
         },
         |e, dur| {
             let retry_number = num_retries.load(std::sync::atomic::Ordering::Relaxed);
-            tracing::error!(
+            tracing::warn!(
                 "Error on retry {} at duration {:?}: {}",
                 retry_number,
                 dur,
@@ -171,6 +189,49 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     })
 }
 
+#[allow(clippy::large_enum_variant)]
+pub enum SubmitTxError<T: Middleware + NonceManaged + 'static> {
+    GasUsageEstimateError(ContractError<T>),
+    GasLimitExceeded { estimate: U256, limit: U256 },
+    GasPriceEstimateError(<T as Middleware>::Error),
+    SubmissionError(TypedTransaction, <T as Middleware>::Error),
+    ConfirmationTimeout(TypedTransaction),
+    ConfirmationError(TypedTransaction, ProviderError),
+    ReceiptError(TypedTransaction, TransactionReceipt),
+}
+
+impl<T> Display for SubmitTxError<T>
+where
+    T: Middleware + NonceManaged + 'static,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SubmitTxError::GasUsageEstimateError(e) => {
+                write!(f, "Error estimating gas for reveal: {e:?}")
+            }
+            SubmitTxError::GasLimitExceeded { estimate, limit } => write!(
+                f,
+                "Gas estimate for reveal with callback is higher than the gas limit {estimate} > {limit}"
+            ),
+            SubmitTxError::GasPriceEstimateError(e) => write!(f, "Gas price estimate error: {e}"),
+            SubmitTxError::SubmissionError(tx, e) => write!(
+                f,
+                "Error submitting the reveal transaction. Tx:{tx:?}, Error:{e:?}"
+            ),
+            SubmitTxError::ConfirmationTimeout(tx) => {
+                write!(f, "Tx stuck in mempool. Resetting nonce. Tx:{tx:?}")
+            }
+            SubmitTxError::ConfirmationError(tx, e) => write!(
+                f,
+                "Error waiting for transaction receipt. Tx:{tx:?} Error:{e:?}"
+            ),
+            SubmitTxError::ReceiptError(tx, _) => {
+                write!(f, "Reveal transaction reverted on-chain. Tx:{tx:?}")
+            }
+        }
+    }
+}
+
 /// Submit a transaction to the blockchain. It estimates the gas for the transaction,
 /// pads both the gas and fee estimates using the provided multipliers, and submits the transaction.
 /// It will return a permanent or transient error depending on the error type and whether
@@ -180,16 +241,14 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     call: &ContractCall<T, ()>,
     // A value of 100 submits the tx with the same fee as the estimate.
     fee_estimate_multiplier_pct: u64,
-) -> Result<TransactionReceipt, backoff::Error<anyhow::Error>> {
+) -> Result<TransactionReceipt, backoff::Error<SubmitTxError<T>>> {
     let mut transaction = call.tx.clone();
 
-    // manually fill the tx with the gas info, so we can log the details in case of error
+    // manually fill the tx with the gas price info, so we can log the details in case of error
     client
         .fill_transaction(&mut transaction, None)
         .await
-        .map_err(|e| {
-            backoff::Error::transient(anyhow!("Error filling the reveal transaction: {:?}", e))
-        })?;
+        .map_err(|e| backoff::Error::transient(SubmitTxError::GasPriceEstimateError(e)))?;
 
     // Apply the fee escalation policy. Note: the unwrap_or_default should never default as we have a gas oracle
     // in the client that sets the gas price.
@@ -207,11 +266,7 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
         .send_transaction(transaction.clone(), None)
         .await
         .map_err(|e| {
-            backoff::Error::transient(anyhow!(
-                "Error submitting the reveal transaction. Tx:{:?}, Error:{:?}",
-                transaction,
-                e
-            ))
+            backoff::Error::transient(SubmitTxError::SubmissionError(transaction.clone(), e))
         })?;
 
     let reset_nonce = || {
@@ -228,34 +283,24 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
         // in this case ethers internal polling will not reduce the number of retries
         // and keep retrying indefinitely. So we set a manual timeout here and reset the nonce.
         reset_nonce();
-        backoff::Error::transient(anyhow!(
-            "Tx stuck in mempool. Resetting nonce. Tx:{:?}",
-            transaction
-        ))
+        backoff::Error::transient(SubmitTxError::ConfirmationTimeout(transaction.clone()))
     })?;
 
     let receipt = pending_receipt
         .map_err(|e| {
-            backoff::Error::transient(anyhow!(
-                "Error waiting for transaction receipt. Tx:{:?} Error:{:?}",
-                transaction,
-                e
-            ))
+            backoff::Error::transient(SubmitTxError::ConfirmationError(transaction.clone(), e))
         })?
         .ok_or_else(|| {
             // RPC may not return an error on tx submission if the nonce is too high.
             // But we will never get a receipt. So we reset the nonce manager to get the correct nonce.
             reset_nonce();
-            backoff::Error::transient(anyhow!(
-                "Can't verify the reveal, probably dropped from mempool. Resetting nonce. Tx:{:?}",
-                transaction
-            ))
+            backoff::Error::transient(SubmitTxError::ConfirmationTimeout(transaction.clone()))
         })?;
 
     if receipt.status == Some(U64::from(0)) {
-        return Err(backoff::Error::transient(anyhow!(
-            "Reveal transaction reverted on-chain. Tx:{:?}",
-            transaction
+        return Err(backoff::Error::transient(SubmitTxError::ReceiptError(
+            transaction.clone(),
+            receipt.clone(),
         )));
     }
 

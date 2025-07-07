@@ -27,7 +27,7 @@ It then pushes a price update to an on-chain Pyth contract if any of the followi
 - Price deviation: The latest Pyth price feed has changed more than `price_deviation` percent
   from the on-chain price feed price.
 - Confidence ratio: The latest Pyth price feed has confidence to price ratio of more than
-  `confidence_ratio`.
+  `confidence_ratio`. *We discourage using low values for this because it triggers push for every update in high confidence periods.*
 
 The parameters above are configured per price feed in a price configuration YAML file. The structure looks like this:
 
@@ -36,7 +36,7 @@ The parameters above are configured per price feed in a price configuration YAML
   id: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef # id of a price feed, a 32-byte hex string.
   time_difference: 60 # Time difference threshold (in seconds) to push a newer price feed.
   price_deviation: 0.5 # The price deviation (%) threshold to push a newer price feed.
-  confidence_ratio: 1 # The confidence/price (%) threshold to push a newer price feed.
+  confidence_ratio: 50 # The confidence/price (%) threshold to push a newer price feed.
 
   # Optional block to configure whether this feed can be early updated. If at least one feed meets the
   # triggering conditions above, all other feeds who meet the early update conditions will be included in
@@ -46,7 +46,7 @@ The parameters above are configured per price feed in a price configuration YAML
   early_update:
     time_difference: 30
     price_deviation: 0.1
-    confidence_ratio: 0.5
+    confidence_ratio: 5
 - ...
 ```
 
@@ -65,7 +65,7 @@ the feed.
   early_update:
     time_difference: 30
     price_deviation: 0.1
-    confidence_ratio: 0.5
+    confidence_ratio: 5
 ```
 
 Two sample YAML configuration files are available in the root of this repo.
@@ -159,7 +159,7 @@ pnpm run start solana \
   --endpoint https://api.mainnet-beta.solana.com \
   --keypair-file ./id.json \
   --shard-id 1 \
-  --jito-endpoint mainnet.block-engine.jito.wtf \
+  --jito-endpoints mainnet.block-engine.jito.wtf,ny.mainnet.block-engine.jito.wtf \
   --jito-keypair-file ./jito.json \
   --jito-tip-lamports 100000 \
   --jito-bundle-size 5 \

@@ -11,8 +11,9 @@ use {
 };
 pub use {
     generate::GenerateOptions, get_request::GetRequestOptions, inspect::InspectOptions,
-    register_provider::RegisterProviderOptions, request_randomness::RequestRandomnessOptions,
-    run::RunOptions, setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
+    prometheus_client::metrics::histogram::Histogram, register_provider::RegisterProviderOptions,
+    request_randomness::RequestRandomnessOptions, run::RunOptions,
+    setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
 };
 
 mod generate;
@@ -90,6 +91,23 @@ impl Config {
                 && config.target_profit_pct <= config.max_profit_pct)
             {
                 return Err(anyhow!("chain id {:?} configuration is invalid. Config must satisfy min_profit_pct <= target_profit_pct <= max_profit_pct.", chain_id));
+            }
+        }
+
+        if let Some(replica_config) = &config.keeper.replica_config {
+            if replica_config.total_replicas == 0 {
+                return Err(anyhow!("Keeper replica configuration is invalid. total_replicas must be greater than 0."));
+            }
+            if config.keeper.private_key.load()?.is_none() {
+                return Err(anyhow!(
+                    "Keeper replica configuration requires a keeper private key to be specified."
+                ));
+            }
+            if replica_config.replica_id >= replica_config.total_replicas {
+                return Err(anyhow!("Keeper replica configuration is invalid. replica_id must be less than total_replicas."));
+            }
+            if replica_config.backup_delay_seconds == 0 {
+                return Err(anyhow!("Keeper replica configuration is invalid. backup_delay_seconds must be greater than 0 to prevent race conditions."));
             }
         }
 
@@ -172,6 +190,11 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub fee: u128,
 
+    /// Only set the provider's fee when the provider is registered for the first time. Default is true.
+    /// This is useful to avoid resetting the fees on service restarts.
+    #[serde(default = "default_sync_fee_only_on_register")]
+    pub sync_fee_only_on_register: bool,
+
     /// Historical commitments made by the provider.
     pub commitments: Option<Vec<Commitment>>,
 
@@ -184,6 +207,10 @@ pub struct EthereumConfig {
     /// at each specified delay. For example: [5, 10, 20].
     #[serde(default = "default_block_delays")]
     pub block_delays: Vec<u64>,
+}
+
+fn default_sync_fee_only_on_register() -> bool {
+    true
 }
 
 fn default_block_delays() -> Vec<u64> {
@@ -282,6 +309,29 @@ fn default_chain_sample_interval() -> u64 {
     1
 }
 
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+pub struct RunConfig {
+    /// Disable automatic fee adjustment threads
+    #[serde(default)]
+    pub disable_fee_adjustment: bool,
+
+    /// Disable automatic fee withdrawal threads
+    #[serde(default)]
+    pub disable_fee_withdrawal: bool,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ReplicaConfig {
+    pub replica_id: u64,
+    pub total_replicas: u64,
+    #[serde(default = "default_backup_delay_seconds")]
+    pub backup_delay_seconds: u64,
+}
+
+fn default_backup_delay_seconds() -> u64 {
+    30
+}
+
 /// Configuration values for the keeper service that are shared across chains.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct KeeperConfig {
@@ -291,6 +341,13 @@ pub struct KeeperConfig {
     /// This key *does not need to be a registered provider*. In particular, production deployments
     /// should ensure this is a different key in order to reduce the severity of security breaches.
     pub private_key: SecretString,
+
+    #[serde(default)]
+    pub replica_config: Option<ReplicaConfig>,
+
+    /// Runtime configuration for the keeper service
+    #[serde(default)]
+    pub run_config: RunConfig,
 }
 
 // A secret is a string that can be provided either as a literal in the config,
@@ -317,3 +374,9 @@ impl SecretString {
         Ok(None)
     }
 }
+
+/// This is a histogram with a bucket configuration appropriate for most things
+/// which measure latency to external services.
+pub const LATENCY_BUCKETS: [f64; 11] = [
+    0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
+];

@@ -21,17 +21,12 @@ jobs:
         working-directory: target_chains/cosmwasm/contracts/pyth
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.82.0
-          components: rustfmt, clippy
-          override: true
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Format check
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --tests -- --deny warnings
+        run: cargo clippy --all-targets -- --deny warnings
         if: success() || failure()
       - name: Build
         run: cargo build --verbose

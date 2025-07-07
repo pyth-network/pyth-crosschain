@@ -18,7 +18,8 @@
     "./theme": "./dist/esm/theme.scss"
   },
   "scripts": {
-    "build:esm": "tsc --project tsconfig.build.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build:declarations": "tsc --project tsconfig.build.json --outDir ./dist/esm",
+    "build:esm": "babel src --out-dir ./dist/esm --extensions .ts && babel src --out-dir ./dist/esm --extensions .tsx --out-file-extension .jsx",
     "build:scss": "copyfiles -u 1 \"src/**/*.scss\" dist/esm",
     "build:storybook": "storybook build",
     "build:svg": "copyfiles -u 1 \"src/**/*.svg\" dist/esm",
@@ -53,6 +54,9 @@
     "swr": "catalog:"
   },
   "devDependencies": {
+    "@babel/cli": "catalog:",
+    "@babel/core": "catalog:",
+    "@babel/preset-typescript": "catalog:",
     "@cprussin/eslint-config": "catalog:",
     "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
@@ -66,9 +70,11 @@
     "@storybook/react": "catalog:",
     "@svgr/webpack": "catalog:",
     "@types/jest": "catalog:",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "copyfiles": "catalog:",
     "css-loader": "catalog:",
     "eslint": "catalog:",

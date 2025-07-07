@@ -15,20 +15,13 @@ jobs:
         working-directory: pythnet/pythnet_sdk
     steps:
       - uses: actions/checkout@v2
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "pythnet/pythnet_sdk -> target"
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.82.0
-          override: true
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Format check
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --tests -- --deny warnings
+        run: cargo clippy -p pythnet-sdk --all-targets -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
-        run: cargo test
+        run: cargo test -p pythnet-sdk
         if: success() || failure()

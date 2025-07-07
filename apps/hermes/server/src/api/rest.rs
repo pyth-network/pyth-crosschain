@@ -76,7 +76,7 @@ impl IntoResponse for RestError {
 
                 (
                     StatusCode::NOT_FOUND,
-                    format!("Price ids not found: {}", missing_ids),
+                    format!("Price ids not found: {missing_ids}"),
                 )
                     .into_response()
             }
@@ -119,6 +119,7 @@ where
     }
 }
 #[cfg(test)]
+#[allow(clippy::unwrap_used, reason = "tests")]
 mod tests {
     use {
         super::*,
@@ -181,7 +182,7 @@ mod tests {
             unimplemented!("Not needed for this test")
         }
 
-        async fn store_update(&self, _update: Update) -> Result<()> {
+        async fn store_update(&self, _update: Update) -> Result<bool> {
             unimplemented!("Not needed for this test")
         }
 

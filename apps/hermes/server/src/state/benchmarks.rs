@@ -6,7 +6,7 @@ use {
         State,
     },
     crate::api::types::PriceUpdate,
-    anyhow::Result,
+    anyhow::{Context, Result},
     base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
     pyth_sdk::PriceIdentifier,
     reqwest::Url,
@@ -88,8 +88,8 @@ where
             .endpoint
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Benchmarks endpoint is not set"))?
-            .join(&format!("/v1/updates/price/{}", publish_time))
-            .unwrap();
+            .join(&format!("/v1/updates/price/{publish_time}"))
+            .context("failed to construct price endpoint")?;
 
         let mut request = reqwest::Client::new()
             .get(endpoint)

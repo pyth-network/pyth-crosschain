@@ -25,6 +25,7 @@
     "@heroicons/react": "catalog:",
     "@next/third-parties": "catalog:",
     "@pythnetwork/client": "catalog:",
+    "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@solana/web3.js": "catalog:",
     "@tanstack/react-query": "catalog:",

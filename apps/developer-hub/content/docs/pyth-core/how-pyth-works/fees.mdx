@@ -1,0 +1,22 @@
+---
+title: Understanding Fees in the Pyth Network Protocol
+description: >-
+  Learn how Pyth Network’s governance sets optional data fees for on-chain price
+  feeds, compensates providers, and ensures transparent, efficient pricing.
+full: false
+index: false
+---
+
+# Fees
+
+The Pyth Network protocol has been designed to allow for the optional enablement of data fees in order to update the state of an on-chain price feeds.
+The ongoing existence of and size of the fee will be determined by governance on a per-blockchain basis; until governance is live, the fee will be 1 of the smallest denomination of the blockchain's native token (e.g., 1 wei on Ethereum).
+The fees collected by the protocol will go toward compensating data providers and possibly other uses as determined by governance.
+
+Note that protocols integrating with Pyth Network can pass these fees along to their users.
+Whenever a user submits a transaction that requires a price update, that transaction can also include payment of the necessary fee.
+This approach charges end users in proportion to their usage of Pyth Network data.
+The Pyth Network SDKs use this approach by default and include all of the necessary logic for computing and sending the fee along with every transaction.
+
+In addition to update fees, end users ultimately bear the gas cost of updating the Pyth Network price feeds, which means that their transactions cost a little more than they would in the push model.
+However, the cost of a single price update is minimal, so the combined gas and update fee should only be a small portion of the overall transaction cost for the end user.

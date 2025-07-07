@@ -88,9 +88,7 @@ export const Select = <T extends { id: string | number }>({
   >
     <Label className={styles.label}>{label}</Label>
     <Button
-      afterIcon={({ className }) => (
-        <DropdownCaretDown className={clsx(styles.caret, className)} />
-      )}
+      afterIcon={<DropdownCaretDown className={styles.caret} />}
       variant={variant}
       size={size}
       rounded={rounded}

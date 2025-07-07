@@ -1,0 +1,37 @@
+[
+  {
+    "chain": "aptos_mainnet",
+    "address": "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
+    "type": "AptosWormholeContract"
+  },
+  {
+    "chain": "aptos_testnet",
+    "address": "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
+    "type": "AptosWormholeContract"
+  },
+  {
+    "chain": "movement_m1_devnet",
+    "address": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosWormholeContract"
+  },
+  {
+    "chain": "movement_suzuka_testnet",
+    "address": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosWormholeContract"
+  },
+  {
+    "chain": "movement_porto_testnet",
+    "address": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosWormholeContract"
+  },
+  {
+    "chain": "movement_bardock_testnet",
+    "address": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosWormholeContract"
+  },
+  {
+    "chain": "movement_mainnet",
+    "address": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosWormholeContract"
+  }
+]

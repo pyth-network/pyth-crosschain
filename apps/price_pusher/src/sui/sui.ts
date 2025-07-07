@@ -225,6 +225,7 @@ export class SuiPricePusher implements IPricePusher {
           priceIdChunk,
           {
             encoding: "base64",
+            ignoreInvalidPriceIds: true,
           },
         );
         if (response.binary.data.length !== 1) {

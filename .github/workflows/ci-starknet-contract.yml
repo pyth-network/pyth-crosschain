@@ -25,6 +25,7 @@ jobs:
           tool-versions: target_chains/starknet/contracts/.tool-versions
       - name: Install Starkli
         run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' .tool-versions)
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install Devnet
         run: cargo install starknet-devnet --version $(awk '/starknet-devnet/{print $2}' .tool-versions)
       - name: Check formatting

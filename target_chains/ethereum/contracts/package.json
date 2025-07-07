@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-evm-contract",
-  "version": "1.4.4-alpha.5",
+  "version": "1.4.5",
   "description": "",
   "private": "true",
   "devDependencies": {
@@ -42,6 +42,7 @@
     "@nomad-xyz/excessively-safe-call": "^0.0.1-rc.1",
     "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
+    "@pythnetwork/pulse-sdk-solidity": "workspace:*",
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@pythnetwork/xc-admin-common": "workspace:*",
     "dotenv": "^10.0.0",

@@ -12,7 +12,7 @@ use {
         },
         state::ArgusState,
     },
-    anyhow::{anyhow, Error, Result},
+    anyhow::{anyhow, Context as _, Result},
     backoff::ExponentialBackoff,
     ethers::signers::Signer,
     fortuna::eth_utils::traced_client::RpcMetrics,
@@ -35,7 +35,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         .keeper
         .private_key
         .load()?
-        .expect("Keeper private key not found in config");
+        .context("Keeper private key not found in config")?;
 
     let chain_labels: Vec<String> = config.chains.keys().cloned().collect();
     let keeper_metrics = Arc::new(KeeperMetrics::new(metrics_registry.clone(), chain_labels).await);
@@ -47,19 +47,22 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
     // Spawn a task to listen for Ctrl+C so we can trigger a graceful shutdown
     spawn(async move {
         tracing::info!("Registered shutdown signal handler");
-        tokio::signal::ctrl_c().await.unwrap();
-        tracing::info!("Shutdown signal received, waiting for tasks to exit");
-        // No need to handle error here, as this can only error if all of the
-        // receivers have been dropped, which is what we want to do
-        exit_tx.send(true)?;
-
-        Ok::<(), Error>(())
+        match tokio::signal::ctrl_c().await {
+            Ok(()) => {
+                tracing::info!("Shutdown signal received, waiting for tasks to exit");
+                // No need to handle error here, as this can only error if all of the
+                // receivers have been dropped, which is what we want to do
+                let _ = exit_tx.send(true);
+            }
+            Err(err) => {
+                tracing::error!(?err, "Couldn't register shutdown signal handler");
+            }
+        }
     });
 
     // Run keeper services for all chains
-    let mut handles = Vec::new();
     for (chain_name, chain_config) in &config.chains {
-        handles.push(spawn(run_keeper_for_chain(
+        spawn(run_keeper_for_chain(
             keeper_private_key.clone(),
             chain_config.clone(),
             chain_name.clone(),
@@ -67,7 +70,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
             rpc_metrics.clone(),
             exit_rx.clone(),
             config.clone(),
-        )));
+        ));
     }
 
     // Run API server for metrics and health checks
@@ -98,10 +101,11 @@ pub async fn run_keeper_for_chain(
             rpc_metrics.clone(),
         )
         .await
-        .expect(&format!(
-            "Failed to create InstrumentedSignablePythContract from config for chain {}",
-            chain_name
-        )),
+        .with_context(|| {
+            format!(
+                "Failed to create InstrumentedSignablePythContract from config for chain {chain_name}"
+            )
+        })?,
     );
 
     let keeper_address = contract.wallet().address();

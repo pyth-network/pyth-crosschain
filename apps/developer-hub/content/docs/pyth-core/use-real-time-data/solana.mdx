@@ -1,0 +1,381 @@
+---
+title: Using Pyth Network for Real-Time Data in Solana & SVM Programs
+description: >-
+  Fetch real-time Pyth price feeds in Solana programs: configure the SDK, read
+  on-chain data, integrate with your frontend, and use TWAP for reliable
+  pricing.
+full: false
+index: false
+---
+
+# How to Use Real-Time Data in Solana Programs
+
+This guide explains how to use real-time Pyth data in Solana applications.
+
+## Install Pyth SDKs
+
+Pyth provides two SDKs for Solana applications to cover the on- and off-chain portions of the integration:
+
+### Rust SDK
+
+The [pyth-solana-receiver-sdk](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/pyth_solana_receiver_sdk) crate can be used to consume Pyth prices inside Solana programs written in Rust.
+Add this crate to the dependencies section of your `Cargo.toml` file:
+
+```toml copy
+[dependencies]
+pyth-solana-receiver-sdk ="x.y.z" # get the latest version from https://crates.io/crates/pyth-solana-receiver-sdk
+```
+
+<InfoBox variant="warning">
+At the time of writing, [pyth-solana-receiver-sdk](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/pyth_solana_receiver_sdk) is compatible with Anchor `v0.28.0{:js}`, `v0.29.0{:js}`, and `v0.30.1{:js}`.
+If you are on `v0.30.0{:js}` or any other version, please move to `v0.30.1{:js}`.
+</InfoBox>
+
+### Typescript SDK
+
+Pyth provides two Typescript packages, [@pythnetwork/hermes-client](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js) and [@pythnetwork/pyth-solana-receiver](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver), for fetching Pyth prices and submitting them to the blockchain respectively.
+Add these packages to your off-chain dependencies:
+
+```bash copy
+npm install --save @pythnetwork/hermes-client @pythnetwork/pyth-solana-receiver
+```
+
+## Write Contract Code
+
+Add the following code to your Solana program to read Pyth prices.
+Pyth prices are posted to price update accounts that can be passed to any instruction that needs price data.
+For developers using Anchor, simply add an `Account<'info, PriceUpdateV2>` field to the `Context` struct:
+
+```rust {9} copy
+use pyth_solana_receiver_sdk::price_update::{PriceUpdateV2};
+
+#[derive(Accounts)]
+#[instruction()]
+pub struct Sample<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    // Add this account to any instruction Context that needs price data.
+    pub price_update: Account<'info, PriceUpdateV2>,
+}
+```
+
+<InfoBox variant="info">
+Users must ensure that the account passed to their instruction is owned by the Pyth Pull Oracle program.
+Using Anchor with the `Account<'info, PriceUpdateV2>` type will automatically perform this check.
+However, it is the developer's responsibility to perform this check if they are not using Anchor.
+</InfoBox>
+
+Next, update the instruction logic to read the price from the price update account:
+
+```rust copy
+pub fn sample(ctx: Context<Sample>) -> Result<()> {
+    let price_update = &mut ctx.accounts.price_update;
+    // get_price_no_older_than will fail if the price update is more than 30 seconds old
+    let maximum_age: u64 = 30;
+    // get_price_no_older_than will fail if the price update is for a different price feed.
+    // This string is the id of the BTC/USD feed. See https://pyth.network/developers/price-feed-ids for all available IDs.
+    let feed_id: [u8; 32] = get_feed_id_from_hex("0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")?;
+    let price = price_update.get_price_no_older_than(&Clock::get()?, maximum_age, &feed_id)?;
+    // Sample output:
+    // The price is (7160106530699 ± 5129162301) * 10^-8
+    msg!("The price is ({} ± {}) * 10^{}", price.price, price.conf, price.exponent);
+
+    Ok(())
+}
+```
+
+<InfoBox variant="warning">
+  Users must validate the price update for the appropriate **price
+  feed** and **timestamp**. `PriceUpdateV2` guarantees that the account contains
+  a verified price for _some_ price feed at _some_ point in time. There are
+  various methods on this struct (such as `get_price_no_older_than`) that users
+  can use to implement the necessary checks.
+
+If you choose the price feed account integration (see below), you
+can use an account address check to validate the price feed ID.
+
+</InfoBox>
+
+## Write Frontend Code
+
+There are two different paths to the frontend integration of Pyth prices on Solana.
+Developers can choose to use two different types of accounts:
+
+- **Price feed accounts** hold a sequence of prices for a specific price feed ID that always moves forward in time.
+  These accounts have a fixed address that your program can depend on.
+  The Pyth Data Association maintains a set of price feed accounts that are continuously updated.
+  Such accounts are a good fit for applications that always want to consume the most recent price.
+- **Price update accounts** are ephemeral accounts that anyone can create, overwrite, and close.
+  These accounts are a good fit for applications that want to consume prices for a specific timestamp.
+
+Both price feed accounts and price update accounts work identically from the perspective of the on-chain program.
+However, the frontend integration differs slightly between the two.
+Both options are explained in the sections below, and developers should pick the one that is best suited for their use case.
+
+### Price Feed Accounts
+
+For developers using price feed accounts, the frontend code needs to pass the relevant price feed **account address** to the transaction.
+Price feed accounts are program-derived addresses and thus the account ID for any price feed can be derived automatically.
+The `PythSolanaReceiver` class provides a method for deriving this information:
+
+```typescript copy
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+
+// You will need a Connection from @solana/web3.js and a Wallet from @coral-xyz/anchor to create
+// the receiver.
+const connection: Connection;
+const wallet: Wallet;
+const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+
+// There are up to 2^16 different accounts for any given price feed id.
+// The 0 value below is the shard id that indicates which of these accounts you would like to use.
+// However, you may choose to use a different shard to prevent Solana congestion on another app from affecting your app.
+const solUsdPriceFeedAccount = pythSolanaReceiver
+  .getPriceFeedAccountAddress(0, SOL_PRICE_FEED_ID)
+  .toBase58();
+```
+
+<InfoBox variant="info" icon="ℹ️">
+  The Price Feed Accounts integration assumes that an off-chain process is
+  continuously updating each price feed. The Pyth Data Association sponsors
+  price updates for a subset of commonly used price feeds on shard 0. Please see
+  [Sponsored Feeds](/price-feeds/sponsored-feeds) for a list of sponsored feeds
+  and their account addresses.
+
+Additionally, updating a price feed is a
+permissionless operation, and anyone can run this process. Please see [Using
+Scheduler](/price-feeds/schedule-price-updates/using-scheduler) for more
+information. Running the scheduler can help with reliability and update
+feed/shard pairs that are not part of the default schedule.
+
+</InfoBox>
+
+### Price Update Accounts
+
+To use price update accounts, the frontend code needs to perform two different tasks:
+
+1. Fetch price updates from Hermes
+2. Post the price updates to Solana and invoke your application logic
+
+#### Fetch price updates
+
+Use `PriceServiceConnection` from `@pythnetwork/hermes-client` to fetch Pyth price updates from Hermes:
+
+```typescript copy
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+// The URL below is a public Hermes instance operated by the Pyth Data Association.
+// Hermes is also available from several third-party providers listed here:
+// https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes
+const priceServiceConnection = new HermesClient(
+  "https://hermes.pyth.network/",
+  {},
+);
+
+// Hermes provides other methods for retrieving price updates. See
+// https://hermes.pyth.network/docs for more information.
+const priceUpdateData = (
+  await priceServiceConnection.getLatestPriceUpdates(
+    ["0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"],
+    { encoding: "base64" },
+  )
+).binary.data;
+
+// Price updates are strings of base64-encoded binary data. Example:
+// ["UE5BVQEAAAADuAEAAAADDQJoIZzihVp30/71MXDexqiJDjGpEUEcHj/D06pRiYTPPlRPZKKiVFaZdqiGZ7vvGBj1kK69fKRncCKHXlGyS0LcAQPREzVlm7AcY+X0/hCupv8M5KMhEgOCxq5LxCCKQjL/xwm4jTCJrwkHn/PBaoirnlbHMjxAlwJaFF4RGeE1KRDeAASQIFjfbbobiq2OcSRnK3Ny1NY2Zd012ahIhoWpqxbv4UqDZXLh+bPm4Q14SfO/llRTOmqG6O4v+nfjZa7WNjgxAAZFANqAEooKvijK+476YBITKono+vJ4bSQHUiXOaiGs/zcI6WYGRM0xc6ov2mfCaTuH7mx3ElaLyPGvRX4D9DyHAAf+dPg+NEepwMJI1qPLRcTy0xoz2Yq0k2MuL87gCBsYVlS31atGsQcrXfHr4xcTKKyEUh1tIaOfRbPdX1cvs4D6AAj2/vuKpAgYWhd2gtqHsQLV1vMgq8SKH8wiOmhaMZ06GAQSM1pYLpHZRhYaUQbrUJAeqEeX+qMMqQFMPSSUnEKNAAmCE98NUYbHuEoxJGMDybTGCyDEXCmaNM0q6GT0qrbSmT6NF50yz9CE30WWHNOZzFtK2rCyBYFH2aAp6lQ1JKfmAQpW/wUaOhSdwGiEPWvpY3FWL077i0c4auXQjSQNaDD0cBnmvJTS5R3KxK5aunuUvVAT1mHTnpKHIzNKyu7ICM2zAQvrIFfWRFjVE0zRCvoAcvMpmpS7atWu8VgvklpZh9Qt9xYSO2Yq/asgNsMSQaowXiU0MfjggS+UJ8yWaOpUg18vAAxAMuUlOjNzFj6oPES850YNu2k7PM7AGL8Gb/8+HshkfjG0GsNR8H8/vB8v/iEcaScxQFXwtLT0OSgjWMa0ByknAA7PScKUEP8N7iJKYv6lmEs26DZnxzdpGVZRGqbbC0mxyjY0HqsT0rv2wNvy3MbAtABDMsLumII00cRCKBsZXGlKARCC0NzsKnduLsgGfqxYL4yuf910DKrRp5j+fKLmF2QiB2yVT90ja0782/u6BZZUGRMoA/AWl1qvswBtnlSkHcWEABIp74UFLiiA+MBBvBzhLBxSTKXldiLJ75+U/eqK/ej6qT+I+6S1pzT/ntXdpD25jmQhjtsYEqs/rmgs5U2p4AVRAGYULPcAAAAAABrhAfrtrFhR4yubI7X5QRqMK6xKrj7U3XuBHdGnLqSqcQAAAAAC8IR2AUFVV1YAAAAAAAf6dUkAACcQMZv+5jfvAe6sflX1cL7xu9WWQ9UBAFUA5i32yLSoX+GmfbRNwS3l2zMPesZrctxliv7fD0pBW0MAAAaBiqrXwAAAAADYu55y////+AAAAABmFCz3AAAAAGYULPYAAAaFH6MbAAAAAADcBIdMCre0t06ngCnw+N4IkFpZVqOz9YuwKL+UFdt13ZBtay0YZnkw7QGoaTDCLlsNK1tk1F/qgMyOcYozjOTj41XriIpEPeG2HPYl+u0CKolGlCsz1IDu4w2lyh6LWVaMkEybGz7ih4H2RqCj6BVu182ZqsZgJx9ghzKImAo4cIlWzRTwpm4daAqHa4JEyimFDpFt6UeqvS5TNu2F8W+X+edeiph20EulTI7sx38jwhq5Yc0Mf2ElvFgToGQ806Vs2HynuLwh9OIuTTZh"]
+console.log(priceUpdateData);
+```
+
+Consult [Fetch Price Updates](/price-feeds/fetch-price-updates) for more information on fetching price updates from Hermes.
+
+#### Post price updates
+
+Finally, post the price update to the Pyth program on Solana.
+This step will create the price update account that your application reads from.
+Applications typically combine posting the price update and invoking their application into a sequence of transactions.
+The `PythSolanaReceiver` class in `@pythnetwork/pyth-solana-receiver` provides a convenient transaction builder to help with this process:
+
+```typescript copy
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+
+// You will need a Connection from @solana/web3.js and a Wallet from @coral-xyz/anchor to create
+// the receiver.
+const connection: Connection;
+const wallet: Wallet;
+const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+
+// Set closeUpdateAccounts: true if you want to delete the price update account at
+// the end of the transaction to reclaim rent.
+const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
+  closeUpdateAccounts: false,
+});
+await transactionBuilder.addPostPriceUpdates(priceUpdateData);
+
+// Use this function to add your application-specific instructions to the builder
+await transactionBuilder.addPriceConsumerInstructions(
+  async (
+    getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
+  ): Promise<InstructionWithEphemeralSigners[]> => {
+    // Generate instructions here that use the price updates posted above.
+    // getPriceUpdateAccount(<price feed id>) will give you the account for each price update.
+    return [];
+  },
+);
+
+// Send the instructions in the builder in 1 or more transactions.
+// The builder will pack the instructions into transactions automatically.
+await pythSolanaReceiver.provider.sendAll(
+  await transactionBuilder.buildVersionedTransactions({
+    computeUnitPriceMicroLamports: 50000,
+  }),
+  { skipPreflight: true },
+);
+```
+
+The [SDK documentation](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver) contains more information about interacting with the Pyth solana receiver contract, including working examples.
+
+<InfoBox variant="info">
+  Posting and verifying price updates currently requires multiple transactions
+  on Solana. If your usecase requires a single transaction, you can reduce the
+  verification level of the posted price updates by replacing
+  `addPostPriceUpdates` by `addPostPartiallyVerifiedPriceUpdates` in the
+  transaction builder. Please read the
+  [VerificationLevel](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_sdk/src/price_update.rs#L20)
+  docs to understand more about the data integrity tradeoffs when using
+  partially verified price updates.
+</InfoBox>
+
+## Time-Weighted Average Price (TWAP)
+
+Pyth also provides Time-Weighted Average Price (TWAP) for Solana applications. TWAP represents the average price over a specified time window, which can be useful for reducing the impact of short-term price volatility. The TWAP window is currently limited to a maximum of 10 minutes (600 seconds).
+
+### Using TWAP in Solana Programs
+
+To use TWAP in your Solana program, import the `TwapUpdate` struct from the Pyth Solana receiver SDK. The process for fetching and posting TWAP updates is similar to regular price updates from Hermes.
+
+```rust copy
+use pyth_solana_receiver_sdk::price_update::{TwapUpdate};
+
+#[derive(Accounts)]
+#[instruction(twap_window_seconds: u64)]
+pub struct SampleWithTwap<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    // Add this account to any instruction Context that needs TWAP data
+    pub twap_update: Account<'info, TwapUpdate>,
+}
+```
+
+Update your instruction logic to read the TWAP from the update account:
+
+```rust copy
+pub fn sample_with_twap(
+    ctx: Context<SampleWithTwap>,
+    twap_window_seconds: u64,
+) -> Result<()> {
+    let twap_update = &mut ctx.accounts.twap_update;
+    // get_twap_no_older_than will fail if the price update is more than 30 seconds old
+    let maximum_age: u64 = 30;
+    // Specify the price feed ID and the window in seconds for the TWAP
+    let feed_id: [u8; 32] = get_feed_id_from_hex("0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")?;
+    let price = twap_update.get_twap_no_older_than(
+        &Clock::get()?,
+        maximum_age,
+        twap_window_seconds,
+        &feed_id,
+    )?;
+
+    // Sample output:
+    // The TWAP price is (7160106530699 ± 5129162301) * 10^-8
+    msg!("The TWAP price is ({} ± {}) * 10^{}", price.price, price.conf, price.exponent);
+
+    Ok(())
+}
+```
+
+### Fetching and Posting TWAP Updates
+
+To use TWAP updates in your application, you need to fetch them from Hermes and post them to Solana:
+
+#### Fetch TWAP updates from Hermes
+
+Use `HermesClient` from `@pythnetwork/hermes-client` to fetch TWAP updates:
+
+```typescript copy
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+// The URL below is a public Hermes instance operated by the Pyth Data Association.
+// Hermes is also available from several third-party providers listed here:
+// https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes
+const hermesClient = new HermesClient("https://hermes.pyth.network/", {});
+
+// Specify the price feed ID and the TWAP window in seconds (maximum 600 seconds)
+const twapWindowSeconds = 300; // 5 minutes
+const twapUpdateData = await hermesClient.getLatestTwaps(
+  ["0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"], // BTC/USD feed ID
+  twapWindowSeconds,
+  { encoding: "base64" },
+);
+
+// TWAP updates are strings of base64-encoded binary data
+console.log(twapUpdateData.binary.data);
+```
+
+For a complete example of fetching TWAP updates from Hermes, see the [HermesClient example script](https://github.com/pyth-network/pyth-crosschain/blob/main/apps/hermes/client/js/src/examples/HermesClient.ts) in the Pyth crosschain repository.
+
+#### Post TWAP updates to Solana
+
+Use `PythSolanaReceiver` to post the TWAP updates and consume them in your application:
+
+```typescript copy
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+
+// You will need a Connection from @solana/web3.js and a Wallet from @coral-xyz/anchor
+const connection: Connection;
+const wallet: Wallet;
+const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+
+// Create a transaction builder
+const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
+  closeUpdateAccounts: false,
+});
+
+// Add the TWAP update to the transaction
+await transactionBuilder.addPostTwapUpdates(twapUpdateData.binary.data);
+
+// Add your application's instructions that use the TWAP update
+await transactionBuilder.addTwapConsumerInstructions(
+  async (
+    getTwapUpdateAccount: (priceFeedId: string) => PublicKey,
+  ): Promise<InstructionWithEphemeralSigners[]> => {
+    // Generate instructions here that use the TWAP updates posted above
+    // getTwapUpdateAccount(<price feed id>) will give you the account for each TWAP update
+    return []; // Replace with your actual instructions
+  },
+);
+
+// Send the instructions
+await pythSolanaReceiver.provider.sendAll(
+  await transactionBuilder.buildVersionedTransactions({
+    computeUnitPriceMicroLamports: 50000,
+  }),
+  { skipPreflight: true },
+);
+```
+
+For a complete example of posting TWAP updates to Solana, see the [post_twap_update.ts example script](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/sdk/js/pyth_solana_receiver/examples/post_twap_update.ts) in the Pyth crosschain repository.
+
+## Additional Resources
+
+You may find these additional resources helpful for developing your Solana application.
+
+### Example Application
+
+See an end-to-end example of using Pyth Network prices in the [SendUSD Solana Demo App](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/solana/send_usd). The app allows users to send a USD-denominated amount of SOL using either spot prices or TWAP prices.
+It demonstrates how to fetch price data from Hermes from a frontend, post it to the Solana blockchain, and consume it from a smart contract.
+
+The example includes:
+
+- A React frontend for interacting with the contract
+- Solana programs that consumes spot price updates (Price Update Accounts) and time-averaged price updates (TWAP Accounts)
+- Complete transaction building for posting and consuming price data

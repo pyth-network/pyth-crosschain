@@ -1,7 +1,7 @@
 "use client";
 
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useResizeObserver } from "@react-hookz/web";
+import { useResizeObserver, useMountEffect } from "@react-hookz/web";
 import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
 import { LineSeries, LineStyle, createChart } from "lightweight-charts";
 import { useTheme } from "next-themes";
@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import styles from "./chart.module.scss";
 import { useLivePriceData } from "../../hooks/use-live-price-data";
+import { usePriceFormatter } from "../../hooks/use-price-formatter";
 import { Cluster } from "../../services/pyth";
 
 type Props = {
@@ -44,6 +45,7 @@ const useChartElem = (symbol: string, feedId: string) => {
   const chartRef = useRef<ChartRefContents | undefined>(undefined);
   const earliestDateRef = useRef<bigint | undefined>(undefined);
   const isBackfilling = useRef(false);
+  const priceFormatter = usePriceFormatter();
 
   const backfillData = useCallback(() => {
     if (!isBackfilling.current && earliestDateRef.current) {
@@ -99,10 +101,10 @@ const useChartElem = (symbol: string, feedId: string) => {
     }
   }, [logger, symbol]);
 
-  useEffect(() => {
+  useMountEffect(() => {
     const chartElem = chartContainerRef.current;
     if (chartElem === null) {
-      return;
+      throw new Error("Chart element was null on mount");
     } else {
       const chart = createChart(chartElem, {
         layout: {
@@ -112,6 +114,9 @@ const useChartElem = (symbol: string, feedId: string) => {
         timeScale: {
           timeVisible: true,
           secondsVisible: true,
+        },
+        localization: {
+          priceFormatter: priceFormatter.format,
         },
       });
 
@@ -141,7 +146,7 @@ const useChartElem = (symbol: string, feedId: string) => {
         chart.remove();
       };
     }
-  }, [backfillData]);
+  });
 
   useEffect(() => {
     if (current && chartRef.current) {

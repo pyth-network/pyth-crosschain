@@ -1,0 +1,27 @@
+name: Check Quorum
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/ci-quorum.yml
+      - apps/quorum/**
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/quorum
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy -p quorum --all-targets -- --deny warnings
+        if: success() || failure()
+      - name: Run executor tests
+        run: cargo test -p quorum
+        if: success() || failure()

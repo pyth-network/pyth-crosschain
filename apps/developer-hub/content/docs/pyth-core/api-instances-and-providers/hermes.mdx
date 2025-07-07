@@ -1,0 +1,51 @@
+---
+title: "Hermes: Open-Source Service for Pyth Price Updates"
+description: >-
+  Experience real-time Pyth price feeds with Hermes: an open-source REST and
+  streaming API. Use public endpoints or self-host for reliable, decentralized
+  data.
+full: false
+index: false
+---
+
+# Hermes
+
+Hermes is an open-source service that listens to the Pythnet and the Wormhole Network for Pyth price updates, and
+serves them via a convenient web API.
+
+Hermes allows users to easily [fetch price updates](../fetch-price-updates) via a REST API, or subscribe to server-side streaming
+updates.
+
+## Public Endpoints
+
+The Pyth Data Association operates a public endpoint for Hermes, which can be used to test integrations with Pyth
+Network:
+
+URL: https://hermes.pyth.network
+
+<InfoBox variant="warning">
+For developers building on **Aptos testnet**, **Sui testnet** or **Near testnet**, please use the Hermes Beta endpoint:
+
+URL: https://hermes-beta.pyth.network
+
+</InfoBox>
+
+For production deployments, developers integrating with Pyth Network are **strongly encouraged** to use Node Providers
+for maximum resilience and decentralization. Moreover, Hermes is designed to be self-hosted, so developers can run their own
+instance of Hermes to fetch Pyth price updates. Please note it is not recommended to use the public endpoint for production as it has rate limits.
+
+## Node Providers
+
+The following node providers offer Hermes:
+
+- [Triton](https://triton.one)
+- [P2P](https://p2p.org)
+- [extrnode](https://extrnode.com/)
+- [Liquify](https://www.liquify.io/)
+
+## Self-Hosting
+
+The Pyth Data Association provides a Helm chart for running Hermes in
+[charts](https://github.com/pyth-network/charts/tree/main/charts/hermes) repository. Please refer to the chart's readme
+for the configuration values.
+You will need a Pythnet RPC to run Hermes; see the [guide for accessing a Pythnet RPC](pythnet-rpc).

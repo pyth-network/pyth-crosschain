@@ -142,6 +142,13 @@ pub fn construct_update_data(mut messages: Vec<RawMessageWithMerkleProof>) -> Re
 }
 
 #[cfg(test)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::cast_possible_wrap,
+    clippy::panic,
+    clippy::indexing_slicing,
+    reason = "tests"
+)]
 mod test {
     use {
         super::*,
@@ -175,6 +182,7 @@ mod test {
     }
 
     #[test]
+
     fn test_construct_update_data_works_on_mixed_slot_and_big_size() {
         let mut messages = vec![];
 

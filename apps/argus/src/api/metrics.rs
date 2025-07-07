@@ -9,9 +9,11 @@ pub async fn metrics(State(state): State<crate::api::ApiState>) -> impl IntoResp
     let registry = state.metrics_registry.read().await;
     let mut buffer = String::new();
 
-    // Should not fail if the metrics are valid and there is memory available
-    // to write to the buffer.
-    encode(&mut buffer, &registry).unwrap();
+    #[allow(
+        clippy::expect_used,
+        reason = "should not fail if the metrics are valid and there is memory available to write to the buffer"
+    )]
+    encode(&mut buffer, &registry).expect("metric encoding failed");
 
     buffer
 }

@@ -17,7 +17,7 @@ export const Explain = ({ size, title, children }: Props) => (
       className={styles.trigger ?? ""}
       variant="ghost"
       size={size}
-      beforeIcon={(props) => <Info weight="fill" {...props} />}
+      beforeIcon={<Info weight="fill" />}
       rounded
       hideText
       alert={{

@@ -91,7 +91,7 @@ export const Publishers = async () => {
               target="_blank"
               size="sm"
               variant="outline"
-              afterIcon={ArrowSquareOut}
+              afterIcon={<ArrowSquareOut />}
             >
               Staking App
             </Button>

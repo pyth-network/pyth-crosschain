@@ -15,15 +15,9 @@ jobs:
         working-directory: apps/hermes/server
     steps:
       - uses: actions/checkout@v2
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          workspaces: "apps/hermes/server -> target"
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.82.0
-          components: rustfmt, clippy
-          override: true
+          cache-workspaces: "apps/hermes/server -> target"
       - name: Install protoc
         uses: arduino/setup-protoc@v3
         with:
@@ -32,7 +26,7 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy --tests -- --deny warnings
+        run: cargo clippy --all-targets -- --deny warnings
         if: success() || failure()
       - name: Run executor tests
         run: cargo test

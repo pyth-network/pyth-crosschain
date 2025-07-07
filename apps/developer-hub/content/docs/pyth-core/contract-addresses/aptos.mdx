@@ -1,0 +1,22 @@
+---
+title: "Aptos Pyth Contract Addresses (Mainnet, Testnet, Devnet)"
+description: >-
+  Browse Pyth’s Aptos contract addresses on Mainnet, Testnet, and Devnet with
+  direct links to Pyth, Wormhole, and the Deployer for quick reference.
+full: false
+index: false
+---
+
+import CopyAddress from "../../../../src/components/CopyAddress";
+
+# Price Feed Contract Addresses on Aptos
+
+Pyth is currently deployed on Aptos Mainnet, Aptos Testnet, and Movement devnet.
+
+When deploying contracts using Pyth, the [named addresses](https://diem.github.io/move/address.html#named-addresses) `pyth`, `wormhole` and `deployer` need to be defined at compile time. These addresses are the same across both Aptos Mainnet and Testnet:
+
+| Named Address | Value                                                                                                                                                                                               |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pyth`        | <CopyAddress address={`0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387`} url="https://aptscan.ai/accounts/0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387" /> |
+| `wormhole`    | <CopyAddress address={`0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625`} url="https://aptscan.ai/accounts/0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625" /> |
+| `deployer`    | <CopyAddress address={`0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434`} url="https://aptscan.ai/accounts/0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434" /> |

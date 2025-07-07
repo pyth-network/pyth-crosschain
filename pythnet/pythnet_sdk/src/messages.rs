@@ -38,7 +38,6 @@ use {
         Deserialize
     ))
 )]
-
 pub enum Message {
     PriceFeedMessage(PriceFeedMessage),
     TwapMessage(TwapMessage),
@@ -89,7 +88,6 @@ pub type Pubkey = [u8; 32];
     not(feature = "solana-program"),
     derive(BorshSerialize, BorshDeserialize)
 )]
-
 pub struct PriceFeedMessage {
     /// `FeedId` but avoid the type alias because of compatibility issues with Anchor's `idl-build` feature.
     pub feed_id: [u8; 32],
@@ -244,7 +242,7 @@ mod tests {
         let mut cursor = std::io::Cursor::new(&mut buffer);
         let mut serializer: Serializer<_, byteorder::LE> = Serializer::new(&mut cursor);
         msg.serialize(&mut serializer).unwrap();
-        buffer.extend(iter::repeat(0).take(10));
+        buffer.extend(iter::repeat_n(0, 10));
         let deserialized = crate::wire::from_slice::<byteorder::LE, Message>(&buffer).unwrap();
         assert_eq!(deserialized, msg);
     }

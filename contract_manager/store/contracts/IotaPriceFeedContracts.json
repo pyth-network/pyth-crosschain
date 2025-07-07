@@ -1,0 +1,14 @@
+[
+  {
+    "chain": "iota_testnet",
+    "stateId": "0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1",
+    "wormholeStateId": "0x8bc490f69520a97ca1b3de864c96aa2265a0cf5d90f5f3f016b2eddf0cf2af2b",
+    "type": "IotaPriceFeedContract"
+  },
+  {
+    "chain": "iota_mainnet",
+    "stateId": "0x6bc33855c7675e006f55609f61eebb1c8a104d8973a698ee9efd3127c210b37f",
+    "wormholeStateId": "0xd43b448afc9dd01deb18273ec39d8f27ddd4dd46b0922383874331771b70df73",
+    "type": "IotaPriceFeedContract"
+  }
+]

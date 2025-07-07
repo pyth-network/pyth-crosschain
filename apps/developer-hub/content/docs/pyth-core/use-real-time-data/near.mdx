@@ -1,0 +1,347 @@
+---
+title: "Pyth on NEAR: Integrating Price Feeds & Real-Time Data"
+description: >-
+  Integrate Pyth price feeds on NEAR with our step-by-step guide. Learn to use
+  the Pyth API, fetch off-chain data, and update on-chain seamlessly.
+full: false
+index: false
+---
+
+# Pyth on NEAR
+
+Pyth price feeds on NEAR are managed through the main NEAR Pyth smart
+contract, enabling seamless interaction with on-chain data. In NEAR,
+these interactions are facilitated by specific functions within the
+Pyth receiver contract. This contract acts as an interface to Pyth
+price feeds, handling the retrieval and updating of price data.
+
+The two Key functions in the Pyth receiver contract to get started
+are as follows:
+
+1. [`update_price_feeds`](#update_price_feeds)
+   _(updates Pyth smart contract with the price feed you provide)_
+
+   - args: `data`
+   - type: `object`
+   - example: `{ "data": "504e41...' }`
+
+2. [`get_price`](#get_price) (fetches the most recent price stored in the contract)\_
+   - args: `price_identifier`
+   - type: `object`
+   - example: `{ price_identifier: 'f9c0172ba10dfa8...' }`
+
+These functions are core for interacting with Pyth price feeds in
+NEAR-based applications, providing a reliable and up-to-date source of
+price information.
+
+For a full overview of methods provided by the NEAR
+contract, see [the interface](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/near/receiver/src/ext.rs)] exposed by the receiver contract.
+
+## Getting Started
+
+To get started with Pyth oracle you will need to gather the following information which differ between networks:
+
+- Price ID(s)
+- HermesAPI Endpoint
+- Smart contract address
+
+| Network   | Price Feed IDs                                                                                   | Hermes API Address         | Contract Address                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------------------- |
+| `testnet` | [NEAR `testnet` Price Feed IDs](https://www.pyth.network/developers/price-feed-ids#near-testnet) | `hermes-beta.pyth.network` | [pyth-oracle.testnet](https://testnet.nearblocks.io/address/pyth-oracle.testnet) |
+| `mainnet` | [NEAR `mainnet` Price Feed IDs](https://www.pyth.network/developers/price-feed-ids#near-mainnet) | `hermes.pyth.network`      | [pyth-oracle.near](https://nearblocks.io/address/pyth-oracle.near)               |
+
+Note: When using Price Feed IDs, you will need to remove the `0x` prefix.
+
+---
+
+### `update_price_feeds`
+
+> Updates the Pyth Oracle contract data with the price feed you provide.
+
+- args: `data` _(off-chain hex-encoded price feed)_
+- type: `object`
+- example: `{ "data": "504e41...' }`
+
+Update the Pyth Oracle contract with new price feed data in two main steps:
+
+1. [Fetch off-chain price feed](#1-fetch-off-chain-price-feed)
+2. [Update Pyth Oracle contract with off-chain price feed](#2-update-pyth-oracle-contract-price-feed)
+
+#### 1) Fetch off-chain price feed
+
+You can obtain an off-chain price feed using Pyth's [Hermes API](https://hermes-beta.pyth.network/docs/).
+
+To use these endpoints, you will need to provide a Price Feed ID and ensure you are targeting the correct network. See [Getting Started](#getting-started) for more information.
+
+Here is a node.js example of fetching the latest price feed using `/v2/updates/price/latest` endpoint:
+
+`Example:`
+
+```js
+const axios = require("axios");
+
+// There are separate endpoints for testnet and mainnet
+const HERMES_TESTNET_URL = "https://hermes-beta.pyth.network";
+const HERMES_MAINNET_URL = "https://hermes.pyth.network";
+
+async function getHermesPriceData(priceId, network) {
+  try {
+    let url;
+    network === "testnet"
+      ? (url = HERMES_TESTNET_URL)
+      : (url = HERMES_MAINNET_URL);
+
+    // Fetch the price data from the Hermes API
+    const response = await axios.get(
+      `${url}/v2/updates/price/latest?ids[]=${priceId}`,
+    );
+
+    return response.data.binary.data[0];
+  } catch (error) {
+    console.error(
+      "Error:",
+      error.response ? error.response.data : error.message,
+    );
+  }
+}
+
+module.exports = { getHermesPriceData };
+```
+
+<center>
+  z [See full example on
+  GitHub](https://github.com/near-examples/near-js/blob/main/node-js/utils/fetch-hermes-price-data.js)
+</center>
+
+---
+
+### 2) Update Pyth Oracle Contract Price Feed
+
+After [fetching an off-chain price feed](#1-fetch-off-chain-price-feed), you can now perform a contract call to the Pyth Oracle contract to update.
+Call `update_price_feeds` on the Pyth Oracle contract deployed on NEAR with `data` as your arguments.
+
+`example args:`
+
+```json
+{
+  "data": "504e41550100000000a00100000000010070b0ee3a00d1a3c07ee440887eb34a5a35860e6f4b9230fd62f0593fe35c8a3561735a6a37d269c5f166b84ead8918f710dc1be2ee6b51db5b22340ea2c173fc01673d544b00000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa7100000000061bc18c014155575600000000000ab0f04600002710f41bc8c224ed983c68dbf5dab7dd34c9129fecfa03005500ca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a600000047e2eb4ef0000000000692480ffffffff800000000673d544b00000000673d544b00000048200e66a00000000005e495a60bb9370c458dd50558b34699b5b179f45e56be22f0a1a0feb1db8469adc8c5efeb53988495bac07bf9efed07f5eee43818150c55055882f6872a228e8e9bc78459ed3ea7fe0b86f3048f6bf0aad34befc46063ab7d200beb8bc9fe5839844d2233546f0742bb665f1e610370fcf8ce5be83d0f47e584b685af87cf3ebcb79e714827dcb99dba579e1a03785052ab3c7c7147d3f7bba822b04dbda159670e9a8d29e7ccf68474b2ca85e00224d29bf65b06b09f95e91703313e053b697b48ac1e4d1c57605a71ab77e7ef276bfe8a369c268333b9a37461bf2b7cb7fd4c005500ecf553770d9b10965f8fb64771e93f5690a182edc32be4a3236e0caaa6e0581a0000000e2ba8cd280000000001b40517fffffff800000000673d544b00000000673d544b0000000e3ea44c6800000000016aee120b47b853f55949284cb8ba0b63824ff9b48cd1da8417f45421b79ee3195fc8d107540a0bbb95c2445b66065754f135cb842db09a7e7ab33f79c546a48db872bd7197b04e3d7b52fbb55b3b9f51707c5a55fac3707cb563dbcde4aadeecc3649c237454cecf519dc567c0da03d81808523aa4fa71815eab25ce7da61b48647bac645d403208135002aab5fde2d7ab3c7c7147d3f7bba822b04dbda159670e9a8d29e7ccf68474b2ca85e00224d29bf65b06b09f95e91703313e053b697b48ac1e4d1c57605a71ab77e7ef276bfe8a369c268333b9a37461bf2b7cb7fd4c"
+}
+```
+
+To perform this contract call you must first create a NEAR account which can be done using `near-cli`.
+
+Fist, install `near-cli`:
+
+```bash
+
+npm install -g near-cli-rs@latest
+
+```
+
+This CLI allows you to simply run `near` and let the prompts guide you through the process.
+
+To quickly create a NEAR account, run the following command (replacing `your-new-account.testnet` with your desired account name):
+
+```bash
+near account \
+create-account sponsor-by-faucet-service \
+your-new-account.testnet \
+autogenerate-new-keypair save-to-legacy-keychain \
+network-config testnet \
+create
+```
+
+To perform a contract call to the Pyth Oracle contract, run the following command:
+
+Replace:
+
+- `your-account.testnet` with your account name
+- `'{"data": "504e41550100..."}'` with your off-chain price feed
+
+```
+near contract \
+    call-function \
+    as-transaction pyth-oracle.testnet update_price_feeds \
+    json-args '{"data": "504e41550100..."}' \
+    prepaid-gas '300.0 Tgas' \
+    attached-deposit '0.01 NEAR' \
+    sign-as your-account.testnet \
+    network-config testnet \
+    sign-with-legacy-keychain \
+    send
+```
+
+**Try it out on [Lantstool](https://app.lantstool.dev/import/gh/lantstool/examples.near-protocol/main/integrations/pyth/real-time-price-data/update-price-feed.json)**
+
+Alternatively, you can use `near-js` libraries to perform the contract call. For this example we will create a simple node.js project.
+
+First, install the `near-js` libraries we will use:
+
+```bash
+npm install @near-js/client @near-js/keystores-node
+```
+
+To setup a NEAR connection, we'll create a `connect.js` file that will initialize an RPC provider and signer. This will look for your NEAR credentials in your `.near-credentials` directory.
+
+```js
+// node.js imports
+const { join } = require("node:path");
+const { homedir } = require("node:os");
+
+// near-js imports
+const {
+  getTestnetRpcProvider,
+  getSignerFromKeystore,
+} = require("@near-js/client");
+const { UnencryptedFileSystemKeyStore } = require("@near-js/keystores-node");
+
+// initialize RPC provider and signer
+const nearConnect = (sender, network) => ({
+  rpcProvider: getTestnetRpcProvider(),
+  signer: getSignerFromKeystore(
+    sender,
+    network,
+    new UnencryptedFileSystemKeyStore(join(homedir(), ".near-credentials")),
+  ),
+});
+
+module.exports = { nearConnect };
+```
+
+Next we can create a `update-oracle.js` file that will perform the contract call to update the Pyth Oracle contract's price feed.
+
+```js
+// near-js imports
+// https://www.npmjs.com/package/@near-js/client
+const { nearConnect } = require("../utils/connect");
+const { functionCall } = require("@near-js/client");
+
+const sender = "your-account.testnet";
+const receiver = "pyth-oracle.testnet";
+const network = "testnet";
+
+const PRICE_IDS = [
+  // Price ids can be found at https://www.pyth.network/developers/price-feed-ids#near-testnet
+  // NOTE: Ensure you are using NEAR specific price ids & remove the '0x' prefix before using them
+  "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b", // BTC/USD price id
+  "ca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6", // ETH/USD price id
+];
+
+async function updatePythContractPriceFeeds(network) {
+  // Connect to the NEAR network
+  const { rpcProvider, signer } = nearConnect(sender, network);
+
+  // Update the Pyth Oracle contract with the price data
+  // Performs a NEAR function call to the Pyth Oracle contract
+  // Deposit for transaction fee (balance will be refunded)
+  const result = await functionCall({
+    sender,
+    receiver,
+    method: "update_price_feeds",
+    args: { data: "504e4155010..." },
+    deposit: 10000000000000000000000,
+    deps: { rpcProvider, signer },
+  });
+
+  console.log(
+    `Transaction 👉 https://testnet.nearblocks.io/txns/${result.outcome.transaction.hash}`,
+  );
+  return result;
+}
+
+updatePythOracle();
+```
+
+<center>
+  [See full example on
+  GitHub](https://github.com/near-examples/near-js/blob/main/node-js/oracle-example/pyth-oracle-update.js)
+</center>
+
+Although unused deposit will be refunded, you can calculate an estimate by calling the `get_update_fee_estimate` method against the Pyth contract.
+
+---
+
+### `get_price`
+
+> Fetches the most recent price feed stored in the Pyth Oracle contract. Is a view method, so does not require a signature or payment.
+
+- args: `price_identifier` _(unique [price feed identifier](#environment-variables))_
+- type: `object`
+- example: `{ price_identifier: 'f9c0172ba10dfa8...' }`
+
+After [updating the price feed](#update_price_feeds), you can view the feed on-chain by calling `get_price` on the Pyth Oracle contract. Note that this is a view method and does not require a signature or deposit.
+
+#### NEAR CLI example
+
+```bash
+near contract \
+    call-function \
+    as-read-only pyth-oracle.testnet get_price \
+    json-args '{"price_identifier": "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b"}' \
+    network-config testnet \
+    now
+
+```
+
+**Try it out on [Lantstool](https://app.lantstool.dev/import/gh/lantstool/examples.near-protocol/main/integrations/pyth/real-time-price-data/get-price.json)**
+
+#### NEAR-JS Example
+
+For this example we will create a simple node.js project. First, install the [`near-js\client`](https://www.npmjs.com/package/@near-js/client) library:
+
+```bash
+npm install @near-js/client
+```
+
+Create a `get-price.js` file that will perform the view call from the Pyth Oracle contract. Note that this does not require a signature or deposit.
+
+```js
+// near-js import
+// https://www.npmjs.com/package/@near-js/client
+const { getTestnetRpcProvider, view } = require("@near-js/client");
+
+const PRICE_IDS = [
+  // Price ids can be found at https://www.pyth.network/developers/price-feed-ids#near-testnet
+  // NOTE: Ensure you are using NEAR specific price ids & remove the '0x' prefix before using them
+  "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b", // BTC/USD price id
+  "ca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6", // ETH/USD price id
+];
+
+async function getPrice(price_ID, symbol) {
+  try {
+    const rpcProvider = getTestnetRpcProvider();
+    const result = await view({
+      account: "pyth-oracle.testnet",
+      method: "get_price",
+      args: { price_identifier: price_ID },
+      deps: { rpcProvider },
+    });
+    console.log(symbol, result);
+  } catch (error) {
+    console.error(`Error fetching ${symbol} price:`, error.message);
+  }
+}
+
+getPrice(PRICE_IDS[0], "BTC/USD:");
+```
+
+<center>
+  [See full example on
+  GitHub](https://github.com/near-examples/near-js/blob/main/node-js/oracle-example/pyth-oracle-view.js)
+</center>
+
+---
+
+## On-Chain Prices
+
+For on-chain price interactions, see the [example contract][] in the
+Pyth Github repo for an example of how to update and use prices
+within a NEAR contract.
+
+[example contract]: https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/near/example
+
+A CLI-based approach can also be taken for interacting with Pyth prices,
+see the [update.sh][] example script in the repository to see how to
+pull prices with the official NEAR cli.
+
+[update.sh]: https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/near/scripts/update.sh

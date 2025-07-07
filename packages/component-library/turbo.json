@@ -6,10 +6,16 @@
       "dependsOn": [
         "//#install:modules",
         "^build",
+        "build:declarations",
         "build:esm",
         "build:scss",
         "build:svg"
       ]
+    },
+    "build:declarations": {
+      "dependsOn": ["//#install:modules", "^build"],
+      "inputs": ["src/**/*.ts", "src/**/*.tsx"],
+      "outputs": ["dist/**/*.d.ts"]
     },
     "build:scss": {
       "dependsOn": ["//#install:modules"],

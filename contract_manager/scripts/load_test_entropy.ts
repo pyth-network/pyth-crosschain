@@ -1,13 +1,15 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore, EvmChain, toPrivateKey } from "../src";
+import { DefaultStore } from "../src/node/utils/store";
+import { EvmChain } from "../src/core/chains";
+import { toPrivateKey } from "../src/core/base";
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Load tests the entropy contract using the EntropyTester contract with many requests in a single transaction\n" +
       "it does not monitor whether the callbacks are actually submitted or not.\n" +
-      "Usage: $0 --private-key <private-key> --chain <chain-id> --tester-address <tester-address>",
+      "Usage: $0 --private-key <private-key> --chain <chain-id> --tester-address <tester-address> --provider-address <provider-address>",
   )
   .options({
     chain: {
@@ -19,6 +21,10 @@ const parser = yargs(hideBin(process.argv))
       type: "string",
       demandOption: true,
       desc: "Address of the EntropyTester contract",
+    },
+    provider: {
+      type: "string",
+      desc: "Address of the entropy provider to use for requests (defaults to default provider)",
     },
     "success-count": {
       type: "number",
@@ -64,7 +70,7 @@ async function main() {
   const privateKey = toPrivateKey(argv.privateKey);
   const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
   const contract = findEntropyContract(chain);
-  const provider = await contract.getDefaultProvider();
+  const provider = argv.provider || (await contract.getDefaultProvider());
   const fee = await contract.getFee(provider);
   const web3 = contract.chain.getWeb3();
   const testerContract = new web3.eth.Contract(ABI, argv.testerAddress);

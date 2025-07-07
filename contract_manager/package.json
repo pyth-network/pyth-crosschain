@@ -1,16 +1,41 @@
 {
   "name": "@pythnetwork/contract-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "exports": {
+    "./node/*": {
+      "types": "./lib/node/utils/*.d.ts",
+      "default": "./lib/node/utils/*.js"
+    },
+    "./core/*": {
+      "types": "./lib/core/*.d.ts",
+      "default": "./lib/core/*.js"
+    },
+    "./data/chains/*.json": {
+      "default": "./store/chains/*.json"
+    },
+    "./data/contracts/*.json": {
+      "default": "./store/contracts/*.json"
+    },
+    "./data/tokens/*.json": {
+      "default": "./store/tokens/*.json"
+    },
+    "./data/vaults/*.json": {
+      "default": "./store/vaults/*.json"
+    },
+    "./utils/*": {
+      "types": "./lib/utils/*.d.ts",
+      "default": "./lib/utils/*.js"
+    }
+  },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "store/**/*.json"
   ],
   "scripts": {
     "build": "tsc",
-    "shell": "ts-node ./src/shell.ts",
+    "shell": "ts-node ./src/node/utils/shell.ts",
     "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "test:lint": "eslint src/ scripts/ --max-warnings 0",
@@ -63,11 +88,11 @@
     "typescript": "catalog:",
     "viem": "^2.23.5",
     "web3": "^1.8.2",
-    "web3-eth-contract": "^1.8.2",
-    "yaml": "^2.1.1"
+    "web3-eth-contract": "^1.8.2"
   },
   "devDependencies": {
     "@types/web3": "^1.2.2",
+    "@types/node": "catalog:",
     "eslint": "^8.0.0",
     "prettier": "catalog:",
     "typedoc": "^0.25.7"

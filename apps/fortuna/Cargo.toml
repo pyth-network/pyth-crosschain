@@ -19,7 +19,7 @@ ethabi = "18.0.0"
 ethers = { version = "2.0.14", features = ["ws"] }
 futures = { version = "0.3.28" }
 hex = "0.4.3"
-prometheus-client = { version = "0.21.2" }
+prometheus-client = { version = "0.23.1" }
 pythnet-sdk = { path = "../../pythnet/pythnet_sdk", features = ["strum"] }
 rand = "0.8.5"
 reqwest = { version = "0.11.22", features = ["json", "blocking"] }
@@ -32,7 +32,7 @@ sha3 = "0.10.8"
 tokio = { version = "1.33.0", features = ["full"] }
 tower-http = { version = "0.4.0", features = ["cors"] }
 tracing = { version = "0.1.37", features = ["log"] }
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter", "json"] }
 utoipa = { version = "3.4.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "3.1.4", features = ["axum"] }
 once_cell = "1.18.0"
@@ -41,11 +41,13 @@ url = "2.5.0"
 chrono = { version = "0.4.38", features = [
   "clock",
   "std",
+  "serde",
 ], default-features = false }
 backoff = { version = "0.4.0", features = ["futures", "tokio"] }
 thiserror = "1.0.61"
 futures-locks = "0.7.1"
-
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono"] }
+num-traits = "0.2.19"
 
 [dev-dependencies]
 axum-test = "13.1.1"

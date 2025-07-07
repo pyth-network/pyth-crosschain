@@ -4,6 +4,8 @@
   "exclude": ["node_modules", "**/__tests__/*"],
   "compilerOptions": {
     "rootDir": "src/",
-    "outDir": "./lib"
+    "outDir": "./lib",
+    "moduleResolution": "nodenext",
+    "module": "nodenext"
   }
 }

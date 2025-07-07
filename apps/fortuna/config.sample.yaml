@@ -32,6 +32,9 @@ chains:
     # How much to charge in fees
     fee: 1500000000000000
 
+    # Set this temporarily to false if you have changed the fees and want to apply a new baseline fee.
+    sync_fee_only_on_register: true
+
     # Configuration for dynamic fees under high gas prices. The keeper will set
     # on-chain fees to make between [min_profit_pct, max_profit_pct] of the max callback
     # cost in profit per transaction.
@@ -83,3 +86,26 @@ keeper:
     value: 0xabcd
     # For production, you can store the private key in a file.
     # file: keeper-key.txt
+
+  # Runtime configuration for the keeper service
+  # Optional: Configure which keeper threads to disable. If running multiple replicas,
+  # only a single replica should have the fee adjustment and withdrawal threads enabled.
+  # run_config:
+  #   disable_fee_adjustment: false    # Set to true to disable automatic fee adjustment
+  #   disable_fee_withdrawal: false    # Set to true to disable automatic fee withdrawal
+
+  # Multi-replica configuration
+  # Optional: Multi-replica configuration for high availability and load distribution
+  # Uncomment and configure for production deployments with multiple Fortuna instances
+  # replica_config:
+  #   replica_id: 0              # Unique identifier for this replica (0, 1, 2, ...)
+  #   total_replicas: 2          # Total number of replica instances running
+  #   backup_delay_seconds: 30   # Seconds to wait before processing other replicas' requests
+  #
+  # Example configurations:
+  #
+  # Two-replica setup (Blue/Green):
+  # - Replica 0: handles even sequence numbers (0, 2, 4, ...)
+  # - Replica 1: handles odd sequence numbers (1, 3, 5, ...)
+  #
+  # IMPORTANT: Each replica must use a different private_key to avoid nonce conflicts!

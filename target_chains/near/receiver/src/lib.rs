@@ -1,5 +1,3 @@
-//#![deny(warnings)]
-
 use {
     error::Error,
     ext::ext_wormhole,
