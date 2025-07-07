@@ -96,12 +96,48 @@ pub struct Request {
     // The block number where this request was created
     pub block_number: BlockNumber,
     pub use_blockhash: bool,
+    pub callback_status: RequestCallbackStatus,
+}
+
+/// Status values for Request.callback_status
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RequestCallbackStatus {
+    /// Not a request with callback
+    CallbackNotNecessary = 0,
+    /// A request with callback where the callback hasn't been invoked yet
+    CallbackNotStarted = 1,
+    /// A request with callback where the callback is currently in flight (this state is a reentry guard)
+    CallbackInProgress = 2,
+    /// A request with callback where the callback has been invoked and failed
+    CallbackFailed = 3,
+}
+
+impl TryFrom<u8> for RequestCallbackStatus {
+    type Error = anyhow::Error;
+
+    fn try_from(value: u8) -> Result<Self> {
+        match value {
+            0 => Ok(RequestCallbackStatus::CallbackNotNecessary),
+            1 => Ok(RequestCallbackStatus::CallbackNotStarted),
+            2 => Ok(RequestCallbackStatus::CallbackInProgress),
+            3 => Ok(RequestCallbackStatus::CallbackFailed),
+            _ => Err(anyhow::anyhow!("Invalid callback status value: {}", value)),
+        }
+    }
+}
+
+impl From<RequestCallbackStatus> for u8 {
+    fn from(status: RequestCallbackStatus) -> Self {
+        status as u8
+    }
 }
 
 #[cfg(test)]
 pub mod mock {
     use {
-        crate::chain::reader::{BlockNumber, BlockStatus, EntropyReader, Request},
+        crate::chain::reader::{
+            BlockNumber, BlockStatus, EntropyReader, Request, RequestCallbackStatus,
+        },
         anyhow::Result,
         axum::async_trait,
         ethers::types::{Address, U256},
@@ -132,6 +168,7 @@ pub mod mock {
                             sequence_number: s,
                             block_number: b,
                             use_blockhash: u,
+                            callback_status: RequestCallbackStatus::CallbackNotNecessary,
                         })
                         .collect(),
                 ),
@@ -151,6 +188,7 @@ pub mod mock {
                 sequence_number: sequence,
                 block_number,
                 use_blockhash,
+                callback_status: RequestCallbackStatus::CallbackNotNecessary,
             });
             self
         }

@@ -1,7 +1,10 @@
 use {
     super::keeper_metrics::AccountLabel,
     crate::{
-        chain::{ethereum::PythRandomErrorsErrors, reader::RequestedWithCallbackEvent},
+        chain::{
+            ethereum::PythRandomErrorsErrors,
+            reader::{RequestCallbackStatus, RequestedWithCallbackEvent},
+        },
         eth_utils::utils::{submit_tx_with_backoff, SubmitTxError},
         history::{RequestEntryState, RequestStatus},
         keeper::block::ProcessParams,
@@ -56,14 +59,20 @@ pub async fn process_event_with_backoff(
 
             // Check if the request is still open after the delay.
             // If it is, we will process it as a backup replica.
-
-            // FIXME(Tejas): check callback status
             match chain_state
                 .contract
                 .get_request_v2(event.provider_address, event.sequence_number)
                 .await
             {
-                Ok(Some(_)) => {
+                Ok(Some(req)) => {
+                    // If the request is in the CallbackNotStarted state, it means that the primary replica
+                    // has not yet called the callback. We should process it as a backup replica.
+                    if req.callback_status != RequestCallbackStatus::CallbackNotStarted {
+                        tracing::debug!(
+                            "Request already handled by primary replica during delay, skipping"
+                        );
+                        return Ok(());
+                    }
                     tracing::info!(
                         delay_seconds = replica_config.backup_delay_seconds,
                         "Request still open after delay, processing as backup replica"
@@ -71,7 +80,7 @@ pub async fn process_event_with_backoff(
                 }
                 Ok(None) => {
                     tracing::debug!(
-                        "Request already fulfilled by primary replica during delay, skipping"
+                        "Request already handled by primary replica during delay, skipping"
                     );
                     return Ok(());
                 }
