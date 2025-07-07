@@ -151,7 +151,7 @@ impl PythReceiver {
 
     #[payable]
     pub fn update_price_feeds(&mut self, update_data: Vec<u8>) -> Result<(), PythReceiverError> {
-        self.update_price_feeds_internal(update_data)?;
+        self.update_price_feeds_internal(update_data, Vec::new(), 0, 0, false)?;
         Ok(())
     }
 
@@ -164,7 +164,70 @@ impl PythReceiver {
         // dummy implementation
     }
 
-    fn update_price_feeds_internal(&mut self, update_data: Vec<u8>) -> Result<(), PythReceiverError> {
+    fn update_price_feeds_internal(&mut self, update_data: Vec<u8>, price_ids: Vec<[u8; 32]>, min_publish_time: u64, max_publish_time: u64, unique: bool) -> Result<(), PythReceiverError> {
+        let price_returns= self.parse_price_feed_updates(update_data, price_ids.clone(), min_publish_time, max_publish_time)?;
+        for i in 0..price_ids.clone().len() {
+            let cur_price_id = &price_ids[i];
+            let cur_price_return = &price_returns[i];
+            let price_id_fb : FixedBytes<32> = FixedBytes::from(cur_price_id);
+            let mut recent_price_info = self.latest_price_info.setter(price_id_fb);
+
+            if recent_price_info.publish_time.get() < cur_price_return.0
+                || recent_price_info.price.get() == I64::ZERO {
+                recent_price_info.publish_time.set(cur_price_return.0);
+                recent_price_info.expo.set(cur_price_return.1);
+                recent_price_info.price.set(cur_price_return.2);
+                recent_price_info.conf.set(cur_price_return.3);
+                recent_price_info.ema_price.set(cur_price_return.4);
+                recent_price_info.ema_conf.set(cur_price_return.5);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn get_total_fee(&self, num_updates: u8) -> U256 {
+        U256::from(num_updates).saturating_mul(self.single_update_fee_in_wei.get())
+    }
+
+    pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
+        U256::from(0u8)
+    }
+
+    pub fn parse_price_feed_updates(
+        &mut self,
+        update_data: Vec<u8>,
+        price_ids: Vec<[u8; 32]>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+    ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
+        let price_feeds = self.parse_price_feed_updates_with_config(update_data, price_ids, min_publish_time, max_publish_time, false, false, false);
+        price_feeds
+    }
+
+    pub fn parse_price_feed_updates_with_config(
+        &mut self,
+        update_data: Vec<u8>,
+        price_ids: Vec<[u8; 32]>,
+        min_allowed_publish_time: u64,
+        max_allowed_publish_time: u64,
+        check_uniqueness: bool,
+        check_update_data_is_minimal: bool,
+        store_updates_if_fresh: bool,
+    ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
+
+    }
+
+    fn parse_price_feed_updates_internal(
+        &mut self,
+        update_data: Vec<u8>,
+        price_ids: Vec<[u8; 32]>,
+        min_allowed_publish_time: u64,
+        max_allowed_publish_time: u64,
+        check_uniqueness: bool,
+        check_update_data_is_minimal: bool,
+        store_updates_if_fresh: bool,
+    ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
         let update_data_array: &[u8] = &update_data;
         // Check the first 4 bytes of the update_data_array for the magic header
         if update_data_array.len() < 4 {
@@ -180,6 +243,8 @@ impl PythReceiver {
 
         let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
 
+        let mut price_feeds: Vec<PriceInfoReturn> = Vec::new();
+        
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
@@ -233,17 +298,22 @@ impl PythReceiver {
                             let price_id_fb : FixedBytes<32> = FixedBytes::from(price_feed_message.feed_id);
                             let mut recent_price_info = self.latest_price_info.setter(price_id_fb);
 
-                            if recent_price_info.publish_time.get() < U64::from(price_feed_message.publish_time)
-                                || recent_price_info.price.get() == I64::ZERO {
-                                recent_price_info.publish_time.set(U64::from(price_feed_message.publish_time));
-                                recent_price_info.price.set(I64::from_le_bytes(price_feed_message.price.to_le_bytes()));
-                                recent_price_info.conf.set(U64::from(price_feed_message.conf));
-                                recent_price_info.expo.set(I32::from_le_bytes(price_feed_message.exponent.to_le_bytes()));
-                                recent_price_info.ema_price.set(I64::from_le_bytes(price_feed_message.ema_price.to_le_bytes()));
-                                recent_price_info.ema_conf.set(U64::from(price_feed_message.ema_conf));
+                            let price_info_return = (
+                                recent_price_info.publish_time.get(),
+                                recent_price_info.expo.get(),
+                                recent_price_info.price.get(),
+                                recent_price_info.conf.get(),
+                                recent_price_info.ema_price.get(),
+                                recent_price_info.ema_conf.get(),
+                            );
+
+                            // Find the index of the price_id in the input price_ids vector
+                            if let Some(idx) = price_ids.iter().position(|id| *id == price_feed_message.feed_id) {
+                                if price_feeds.len() <= idx {
+                                    price_feeds.resize(idx + 1, Default::default());
+                                }
+                                price_feeds[idx] = price_info_return;
                             }
-
-
                         },
                         _ => {
                             return Err(PythReceiverError::InvalidAccumulatorMessageType);
@@ -253,38 +323,7 @@ impl PythReceiver {
             }
         };
 
-        Ok(())
-    }
-
-    fn get_total_fee(&self, num_updates: u8) -> U256 {
-        U256::from(num_updates).saturating_mul(self.single_update_fee_in_wei.get())
-    }
-
-    pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
-        U256::from(0u8)
-    }
-
-    pub fn parse_price_feed_updates(
-        &mut self,
-        update_data: Vec<Vec<u8>>,
-        price_ids: Vec<[u8; 32]>,
-        min_publish_time: u64,
-        max_publish_time: u64,
-    ) -> Vec<PriceInfoReturn> {
-        parse_price_feed_updates_with_config(update_data, price_ids, min_publish_time, max_publish_time, false, false, false)
-    }
-
-    pub fn parse_price_feed_updates_with_config(
-        &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _min_allowed_publish_time: u64,
-        _max_allowed_publish_time: u64,
-        _check_uniqueness: bool,
-        _check_update_data_is_minimal: bool,
-        _store_updates_if_fresh: bool,
-    ) -> (Vec<PriceInfoReturn>, Vec<u64>) {
-        (Vec::new(), Vec::new())
+        Ok(price_feeds)
     }
 
     pub fn parse_twap_price_feed_updates(
