@@ -579,8 +579,7 @@ where
                             serde_json::to_string(&ServerMessage::Response(
                                 ServerResponseMessage::Err {
                                     error: format!(
-                                        "Price feed(s) with id(s) {:?} not found",
-                                        not_found_price_ids
+                                        "Price feed(s) with id(s) {not_found_price_ids:?} not found",
                                     ),
                                 },
                             ))?

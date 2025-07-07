@@ -26,7 +26,7 @@ fn parse_chain(chain: &str) -> Result<u16, String> {
         .iter()
         .find(|&&(name, _)| name == chain)
         .map(|&(_, id)| id)
-        .ok_or_else(|| format!("Unsupported chain: {}", chain))
+        .ok_or_else(|| format!("Unsupported chain: {chain}"))
 }
 
 #[derive(Subcommand, Debug)]
