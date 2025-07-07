@@ -195,7 +195,7 @@ impl From<UpdateParams> for Update {
             UpdateParams::FundingRateUpdate { price, rate } => {
                 Update::FundingRateUpdate(FundingRateUpdate {
                     price: Some(price.0.into()),
-                    rate: Some(rate.0.into()),
+                    rate: Some(rate.0),
                     special_fields: Default::default(),
                 })
             }

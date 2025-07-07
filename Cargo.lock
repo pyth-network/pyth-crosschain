@@ -5539,8 +5539,8 @@ dependencies = [
  "hyper 1.6.0",
  "hyper-util",
  "protobuf",
- "pyth-lazer-protocol 0.7.2",
- "pyth-lazer-publisher-sdk 0.1.5",
+ "pyth-lazer-protocol 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-publisher-sdk 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "soketto",
@@ -5579,23 +5579,6 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9bdf4e2ba853a8b437309487542e742c7d094d8db189db194cb538f2be02ecd"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "byteorder",
- "derive_more 1.0.0",
- "itertools 0.13.0",
- "protobuf",
- "rust_decimal",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "pyth-lazer-protocol"
 version = "0.7.3"
 dependencies = [
  "alloy-primitives 0.8.25",
@@ -5616,19 +5599,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-lazer-publisher-sdk"
-version = "0.1.5"
+name = "pyth-lazer-protocol"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3e633db28ca38210de8ab3e99d5bd85ad8cae08a08bb0292506340ee9d1c718"
+checksum = "6445dc5d2f7fff7c677fb8edc5a080a82ef7583c1bdb39daa95421788c23f695"
 dependencies = [
  "anyhow",
- "fs-err",
- "humantime",
+ "base64 0.22.1",
+ "byteorder",
+ "derive_more 1.0.0",
+ "itertools 0.13.0",
  "protobuf",
- "protobuf-codegen",
- "pyth-lazer-protocol 0.7.2",
- "serde-value",
- "tracing",
+ "rust_decimal",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -5641,6 +5625,22 @@ dependencies = [
  "protobuf",
  "protobuf-codegen",
  "pyth-lazer-protocol 0.7.3",
+ "serde-value",
+ "tracing",
+]
+
+[[package]]
+name = "pyth-lazer-publisher-sdk"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db6ef4052ebf2a7943259b3d52a10b2231ffc346717735c50e44d73fe92019d5"
+dependencies = [
+ "anyhow",
+ "fs-err",
+ "humantime",
+ "protobuf",
+ "protobuf-codegen",
+ "pyth-lazer-protocol 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-value",
  "tracing",
 ]

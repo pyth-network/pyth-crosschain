@@ -1,6 +1,6 @@
-use std::time::Duration;
 use crate::router::{Price, PriceFeedId, Rate, TimestampUs};
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct PythLazerAgentJrpcV1 {
@@ -65,7 +65,7 @@ pub struct JrpcResponse<T> {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct ErrorResponse {
-    pub message: String
+    pub message: String,
 }
 
 #[derive(Serialize, Deserialize)]
