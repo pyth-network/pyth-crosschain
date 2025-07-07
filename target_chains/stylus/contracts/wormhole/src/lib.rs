@@ -7,10 +7,6 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
-
-mod types;
-use types::{GuardianSet, GuardianSignature, VerifiedVM, WormholeError};
-
 use alloc::{vec, vec::Vec};
 use stylus_sdk::{
     prelude::*,

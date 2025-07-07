@@ -178,17 +178,22 @@ impl PythReceiver {
             return Err(PythReceiverError::InvalidAccumulatorMessage);
         }
 
-        let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).unwrap();
+        let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
 
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
                 let config = Call::new();
-                wormhole.parse_and_verify_vm(config, Vec::from(vaa.clone())).map_err(|_| PythReceiverError::InvalidWormholeMessage).unwrap();
+                wormhole.parse_and_verify_vm(config, Vec::from(vaa.clone())).map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
                 
-                let vaa = Vaa::read(&mut Vec::from(vaa.clone()).as_slice()).unwrap();
+                let vaa = Vaa::read(&mut Vec::from(vaa.clone()).as_slice()).map_err(|_| PythReceiverError::VaaVerificationFailed)?;
 
-                let cur_emitter_address: &[u8; 32] = vaa.body.emitter_address.as_slice().try_into().expect("emitter address must be 32 bytes");
+                let cur_emitter_address: &[u8; 32] = vaa
+                    .body
+                    .emitter_address
+                    .as_slice()
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidEmitterAddress)?;
 
                 let cur_data_source = DataSource {
                     chain_id: U16::from(vaa.body.emitter_chain),
@@ -199,9 +204,10 @@ impl PythReceiver {
                     return Err(PythReceiverError::InvalidWormholeMessage);
                 }
 
-                let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa).unwrap();
+                let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa)?;
 
-                let num_updates = u8::try_from(updates.len()).expect("value doesn't fit in u8");
+                let num_updates = u8::try_from(updates.len()).map_err(|_| PythReceiverError::TooManyUpdates)?;
+
                 let total_fee = self.get_total_fee(num_updates);
 
                 let value = self.vm().msg_value();
