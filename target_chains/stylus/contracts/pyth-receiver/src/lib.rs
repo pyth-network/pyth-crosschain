@@ -12,7 +12,7 @@ mod integration_tests;
 #[cfg(test)]
 mod test_data;
 
-use alloc::vec::Vec;
+use alloc::{vec::Vec, collections::BTreeMap};
 use stylus_sdk::{alloy_primitives::{U16, U32, U256, U64, I32, I64, FixedBytes, Address},
                 prelude::*,
                 storage::{StorageAddress, StorageVec, StorageMap, StorageUint, StorageBool, StorageU256, StorageU16, StorageFixedBytes},
@@ -215,12 +215,21 @@ impl PythReceiver {
         check_update_data_is_minimal: bool,
         store_updates_if_fresh: bool,
     ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
-
+        self.parse_price_feed_updates_internal(
+            update_data,
+            price_ids,
+            min_allowed_publish_time,
+            max_allowed_publish_time,
+            check_uniqueness,
+            check_update_data_is_minimal,
+            store_updates_if_fresh,
+        )
     }
 
     fn parse_price_feed_updates_internal(
         &mut self,
         update_data: Vec<u8>,
+        price_ids: Vec<[u8; 32]>,
         min_allowed_publish_time: u64,
         max_allowed_publish_time: u64,
         check_uniqueness: bool,
@@ -242,14 +251,14 @@ impl PythReceiver {
 
         let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array).map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
 
-        let mut price_feeds: Vec<PriceInfoReturn> = Vec::new();
-        
+        let mut price_feeds: BTreeMap<[u8; 32], PriceInfoReturn> = BTreeMap::new();
+
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
                 let config = Call::new();
                 wormhole.parse_and_verify_vm(config, Vec::from(vaa.clone())).map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
-                
+
                 let vaa = Vaa::read(&mut Vec::from(vaa.clone()).as_slice()).map_err(|_| PythReceiverError::VaaVerificationFailed)?;
 
                 let cur_emitter_address: &[u8; 32] = vaa
@@ -275,7 +284,7 @@ impl PythReceiver {
                 let total_fee = self.get_total_fee(num_updates);
 
                 let value = self.vm().msg_value();
-                
+
                 if value < total_fee {
                     return Err(PythReceiverError::InsufficientFee);
                 }
@@ -306,13 +315,7 @@ impl PythReceiver {
                                 recent_price_info.ema_conf.get(),
                             );
 
-                            // Find the index of the price_id in the input price_ids vector
-                            // if let Some(idx) = price_ids.iter().position(|id| *id == price_feed_message.feed_id) {
-                            //     if price_feeds.len() <= idx {
-                            //         price_feeds.resize(idx + 1, Default::default());
-                            //     }
-                            //     price_feeds[idx] = price_info_return;
-                            // }
+                            price_feeds.insert(price_feed_message.feed_id, price_info_return);
                         },
                         _ => {
                             return Err(PythReceiverError::InvalidAccumulatorMessageType);
@@ -322,7 +325,17 @@ impl PythReceiver {
             }
         };
 
-        Ok(price_feeds)
+        let mut result: Vec<PriceInfoReturn> = Vec::with_capacity(price_ids.len());
+
+        for price_id in price_ids {
+            if let Some(price_info) = price_feeds.get(&price_id) {
+                result.push(*price_info);
+            } else {
+                result.push((U64::from(0), I32::from_be_bytes([0, 0, 0, 0]), I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]), U64::from(0), I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]), U64::from(0)));
+            }
+        }
+
+        Ok(result)
     }
 
     pub fn parse_twap_price_feed_updates(
