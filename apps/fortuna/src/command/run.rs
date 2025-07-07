@@ -248,7 +248,7 @@ async fn setup_chain_state(
     });
 
     let provider_info = contract
-        .get_provider_info(*provider)
+        .get_provider_info_v2(*provider)
         .call()
         .await
         .map_err(|e| anyhow!("Failed to get provider info: {}", e))?;
