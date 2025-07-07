@@ -307,12 +307,12 @@ impl PythReceiver {
                             );
 
                             // Find the index of the price_id in the input price_ids vector
-                            if let Some(idx) = price_ids.iter().position(|id| *id == price_feed_message.feed_id) {
-                                if price_feeds.len() <= idx {
-                                    price_feeds.resize(idx + 1, Default::default());
-                                }
-                                price_feeds[idx] = price_info_return;
-                            }
+                            // if let Some(idx) = price_ids.iter().position(|id| *id == price_feed_message.feed_id) {
+                            //     if price_feeds.len() <= idx {
+                            //         price_feeds.resize(idx + 1, Default::default());
+                            //     }
+                            //     price_feeds[idx] = price_info_return;
+                            // }
                         },
                         _ => {
                             return Err(PythReceiverError::InvalidAccumulatorMessageType);
