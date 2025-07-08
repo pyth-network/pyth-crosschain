@@ -4,3 +4,4 @@
 *private-key*
 .envrc
 fortuna.db*
+.env*
