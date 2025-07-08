@@ -98,7 +98,7 @@ mod test {
     }
 
     #[motsu::test]
-    fn e2e_valid_test(
+    fn tests_pyth_end_to_end_with_update(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
@@ -130,7 +130,7 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_update_price_feed_insufficient_fee(
+    fn test_update_price_feed_reverts_insufficient_fee(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
@@ -149,7 +149,7 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_after_multiple_updates(
+    fn test_get_price_after_multiple_updates_returns_recent_price(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
@@ -186,7 +186,7 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_unavailable_no_update(
+    fn test_get_price_with_no_update_reverts_with_price_unavailable(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
@@ -202,7 +202,7 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_no_older_than_unavailable_random_id(
+    fn test_get_price_no_older_than_with_random_id_reverts_with_price_unavailable(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
@@ -226,7 +226,7 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_no_older_than_valid_max_age(
+    fn test_get_price_no_older_than_where_update_younger_than_max_age_returns_price(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
@@ -259,7 +259,7 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_no_older_than_too_old(
+    fn test_get_price_no_older_than_reverts_too_old(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
@@ -285,7 +285,7 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_multiple_updates_both_ids(
+    fn test_multiple_updates_different_ids_updates_both(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
