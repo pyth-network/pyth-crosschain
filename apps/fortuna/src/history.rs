@@ -1,7 +1,7 @@
 use {
     crate::api::{ChainId, NetworkId, StateTag},
     anyhow::Result,
-    chrono::{DateTime, NaiveDateTime},
+    chrono::DateTime,
     ethers::{
         core::utils::hex::ToHex,
         prelude::TxHash,
@@ -10,7 +10,7 @@ use {
     },
     serde::Serialize,
     serde_with::serde_as,
-    sqlx::{migrate, FromRow, Pool, QueryBuilder, Sqlite, SqlitePool},
+    sqlx::{migrate, Any, AnyPool, FromRow, QueryBuilder},
     std::{str::FromStr, sync::Arc},
     tokio::{spawn, sync::mpsc},
     utoipa::ToSchema,
@@ -105,8 +105,8 @@ struct RequestRow {
     network_id: i64,
     provider: String,
     sequence: i64,
-    created_at: NaiveDateTime,
-    last_updated_at: NaiveDateTime,
+    created_at: i64,      // Unix timestamp
+    last_updated_at: i64, // Unix timestamp
     state: String,
     request_block_number: i64,
     request_tx_hash: String,
@@ -128,8 +128,10 @@ impl TryFrom<RequestRow> for RequestStatus {
         let network_id = row.network_id as u64;
         let provider = row.provider.parse()?;
         let sequence = row.sequence as u64;
-        let created_at = row.created_at.and_utc();
-        let last_updated_at = row.last_updated_at.and_utc();
+        let created_at = DateTime::from_timestamp(row.created_at, 0)
+            .ok_or(anyhow::anyhow!("Invalid created_at timestamp"))?;
+        let last_updated_at = DateTime::from_timestamp(row.last_updated_at, 0)
+            .ok_or(anyhow::anyhow!("Invalid last_updated_at timestamp"))?;
         let request_block_number = row.request_block_number as u64;
         let user_random_number = hex::FromHex::from_hex(row.user_random_number)?;
         let request_tx_hash = row.request_tx_hash.parse()?;
@@ -211,7 +213,7 @@ impl From<RequestRow> for Option<RequestStatus> {
 }
 
 pub struct History {
-    pool: Pool<Sqlite>,
+    pool: AnyPool,
     write_queue: mpsc::Sender<RequestStatus>,
     _writer_thread: Arc<tokio::task::JoinHandle<()>>,
 }
@@ -219,7 +221,9 @@ pub struct History {
 impl History {
     const MAX_WRITE_QUEUE: usize = 1_000;
     pub async fn new() -> Result<Self> {
-        Self::new_with_url("sqlite:fortuna.db?mode=rwc").await
+        let database_url = std::env::var("DATABASE_URL")
+            .unwrap_or_else(|_| "sqlite:fortuna.db?mode=rwc".to_string());
+        Self::new_with_url(&database_url).await
     }
 
     pub async fn new_in_memory() -> Result<Self> {
@@ -227,12 +231,12 @@ impl History {
     }
 
     pub async fn new_with_url(url: &str) -> Result<Self> {
-        let pool = SqlitePool::connect(url).await?;
+        let pool = AnyPool::connect(url).await?;
         let migrator = migrate!("./migrations");
         migrator.run(&pool).await?;
         Self::new_with_pool(pool).await
     }
-    pub async fn new_with_pool(pool: Pool<Sqlite>) -> Result<Self> {
+    pub async fn new_with_pool(pool: AnyPool) -> Result<Self> {
         let (sender, mut receiver) = mpsc::channel(Self::MAX_WRITE_QUEUE);
         let pool_write_connection = pool.clone();
         let writer_thread = spawn(async move {
@@ -247,7 +251,7 @@ impl History {
         })
     }
 
-    async fn update_request_status(pool: &Pool<Sqlite>, new_status: RequestStatus) {
+    async fn update_request_status(pool: &AnyPool, new_status: RequestStatus) {
         let sequence = new_status.sequence as i64;
         let chain_id = new_status.chain_id;
         let network_id = new_status.network_id as i64;
@@ -264,8 +268,8 @@ impl History {
                     .bind(network_id)
                     .bind(provider.clone())
                     .bind(sequence)
-                    .bind(new_status.created_at)
-                    .bind(new_status.last_updated_at)
+                    .bind(new_status.created_at.timestamp())
+                    .bind(new_status.last_updated_at.timestamp())
                     .bind("Pending")
                     .bind(block_number)
                     .bind(request_tx_hash.clone())
@@ -288,7 +292,7 @@ impl History {
                 let gas_used: String = gas_used.to_string();
                 let result = sqlx::query("UPDATE request SET state = ?, last_updated_at = ?, reveal_block_number = ?, reveal_tx_hash = ?, provider_random_number =?, gas_used = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ?")
                     .bind("Completed")
-                    .bind(new_status.last_updated_at)
+                    .bind(new_status.last_updated_at.timestamp())
                     .bind(reveal_block_number)
                     .bind(reveal_tx_hash)
                     .bind(provider_random_number)
@@ -314,7 +318,7 @@ impl History {
                     .map(|provider_random_number| provider_random_number.encode_hex());
                 sqlx::query("UPDATE request SET state = ?, last_updated_at = ?, info = ?, provider_random_number = ? WHERE network_id = ? AND sequence = ? AND provider = ? AND request_tx_hash = ? AND state = 'Pending'")
                     .bind("Failed")
-                    .bind(new_status.last_updated_at)
+                    .bind(new_status.last_updated_at.timestamp())
                     .bind(reason)
                     .bind(provider_random_number)
                     .bind(network_id)
@@ -343,7 +347,7 @@ impl History {
 
 #[derive(Debug, Clone)]
 pub struct RequestQueryBuilder<'a> {
-    pool: &'a Pool<Sqlite>,
+    pool: &'a AnyPool,
     pub search: Option<SearchField>,
     pub network_id: Option<i64>,
     pub state: Option<StateTag>,
@@ -354,7 +358,7 @@ pub struct RequestQueryBuilder<'a> {
 }
 
 impl<'a> RequestQueryBuilder<'a> {
-    fn new(pool: &'a Pool<Sqlite>) -> Self {
+    fn new(pool: &'a AnyPool) -> Self {
         Self {
             pool,
             search: None,
@@ -442,21 +446,21 @@ impl<'a> RequestQueryBuilder<'a> {
         Ok(result?.into_iter().filter_map(|row| row.into()).collect())
     }
 
-    pub async fn count_results(&self) -> Result<u64> {
+    pub async fn count_results(&self) -> Result<i64> {
         self.build_query("COUNT(*) AS count")
-            .build_query_scalar::<u64>()
+            .build_query_scalar::<i64>()
             .fetch_one(self.pool)
             .await
             .map_err(|err| err.into())
     }
 
-    fn build_query(&self, columns: &str) -> QueryBuilder<Sqlite> {
+    fn build_query(&self, columns: &str) -> QueryBuilder<Any> {
         let mut query_builder = QueryBuilder::new(format!(
             "SELECT {columns} FROM request WHERE created_at BETWEEN "
         ));
-        query_builder.push_bind(self.min_timestamp);
+        query_builder.push_bind(self.min_timestamp.timestamp());
         query_builder.push(" AND ");
-        query_builder.push_bind(self.max_timestamp);
+        query_builder.push_bind(self.max_timestamp.timestamp());
 
         match &self.search {
             Some(SearchField::TxHash(tx_hash)) => {
@@ -486,7 +490,7 @@ impl<'a> RequestQueryBuilder<'a> {
 
         if let Some(state) = &self.state {
             query_builder.push(" AND state = ");
-            query_builder.push_bind(state);
+            query_builder.push_bind(state.to_string());
         }
 
         query_builder.push(" ORDER BY created_at DESC");
