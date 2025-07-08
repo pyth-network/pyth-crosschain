@@ -352,7 +352,6 @@ impl PythReceiver {
         Vec::new()
     }
 
-    #[inline]
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
         self.get_current_timestamp()
             .saturating_sub(publish_time.to::<u64>())
