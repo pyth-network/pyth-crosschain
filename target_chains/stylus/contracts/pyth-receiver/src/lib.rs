@@ -197,8 +197,6 @@ impl PythReceiver {
             min_publish_time,
             max_publish_time,
             false, // check_uniqueness
-            false, // check_update_data_is_minimal
-            true,  // store_updates_if_fresh
         )?;
 
         for (price_id, price_return) in price_pairs.clone() {
@@ -281,8 +279,6 @@ impl PythReceiver {
                 min_allowed_publish_time,
                 max_allowed_publish_time,
                 check_uniqueness,
-                check_update_data_is_minimal,
-                store_updates_if_fresh,
             )?;
         }
 
@@ -311,8 +307,6 @@ impl PythReceiver {
         min_allowed_publish_time: u64,
         max_allowed_publish_time: u64,
         check_uniqueness: bool,
-        check_update_data_is_minimal: bool,
-        store_updates_if_fresh: bool,
     ) -> Result<Vec<([u8; 32], PriceInfoReturn)>, PythReceiverError> {
         let update_data_array: &[u8] = &update_data;
         // Check the first 4 bytes of the update_data_array for the magic header
