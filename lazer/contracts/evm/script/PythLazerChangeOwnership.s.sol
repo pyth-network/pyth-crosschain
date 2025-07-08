@@ -13,7 +13,8 @@ contract PythLazerChangeOwnership is Script {
     uint256 public OLD_OWNER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address public OLD_OWNER = vm.addr(OLD_OWNER_PRIVATE_KEY);
     // EVM Executor Contract
-    address public constant NEW_OWNER = address(0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440);
+    address public constant NEW_OWNER =
+        address(0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440);
 
     function run() public {
         console.log("Old owner: %s", OLD_OWNER);
@@ -27,7 +28,10 @@ contract PythLazerChangeOwnership is Script {
         require(lazer.owner() == OLD_OWNER, "Old owner mismatch");
         lazer.transferOwnership(NEW_OWNER);
         console.log("Ownership transferred");
-        console.log("New Lazer owner: %s", PythLazer(LAZER_PROXY_ADDRESS).owner());
+        console.log(
+            "New Lazer owner: %s",
+            PythLazer(LAZER_PROXY_ADDRESS).owner()
+        );
         vm.stopBroadcast();
     }
 }
