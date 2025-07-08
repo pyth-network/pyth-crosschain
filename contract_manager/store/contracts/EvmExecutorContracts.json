@@ -99,7 +99,6 @@
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "type": "EvmExecutorContract"
   },
-
   {
     "chain": "arbitrum",
     "address": "0x24654078A8E043e8985D962a5100CDfA2026f92C",
@@ -189,6 +188,10 @@
     "chain": "soneium",
     "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
     "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "sepolia",
+    "address": "0xB0D4a9640aDdd415551B6A4fe75403c9f73A7C49",
+    "type": "EvmExecutorContract"
   }
 ]
-  
