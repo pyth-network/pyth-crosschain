@@ -382,8 +382,15 @@ impl PythReceiver {
 
                     match msg {
                         Message::PriceFeedMessage(price_feed_message) => {
+                            let publish_time = price_feed_message.publish_time;
+                            
+                            if (min_allowed_publish_time > 0 && publish_time < min_allowed_publish_time as i64) ||
+                               (max_allowed_publish_time > 0 && publish_time > max_allowed_publish_time as i64) {
+                                return Err(PythReceiverError::PriceFeedNotFoundWithinRange);
+                            }
+                            
                             let price_info_return = (
-                                U64::from(price_feed_message.publish_time),
+                                U64::from(publish_time),
                                 I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
                                 I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
                                 U64::from(price_feed_message.conf),
