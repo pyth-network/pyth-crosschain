@@ -5,6 +5,7 @@ mod test {
     use crate::PythReceiver;
     use alloy_primitives::{address, Address, I32, I64, U256, U64};
     use motsu::prelude::*;
+    use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
     use wormhole_contract::WormholeContract;
     const TEST_PRICE_ID: [u8; 32] = [
         0xe6, 0x2d, 0xf6, 0xc8, 0xb4, 0xa8, 0x5f, 0xe1, 0xa6, 0x7d, 0xb4, 0x4d, 0xc1, 0x2d, 0xe5,
@@ -28,6 +29,8 @@ mod test {
     const CHAIN_ID: u16 = 60051;
     const GOVERNANCE_CHAIN_ID: u16 = 1;
     const GOVERNANCE_CONTRACT: U256 = U256::from_limbs([4, 0, 0, 0]);
+
+    const SINGLE_UPDATE_FEE_IN_WEI: U256 = U256::from_limbs([100, 0, 0, 0]);
 
     #[cfg(test)]
     fn current_guardians() -> Vec<Address> {
@@ -54,6 +57,21 @@ mod test {
         ]
     }
 
+    #[cfg(test)]
+    fn get_update_fee(update_data: Vec<u8>) -> Result<U256, PythReceiverError> {
+        let update_data_array: &[u8] = &update_data;
+        let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
+            .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
+        match accumulator_update.proof {
+            Proof::WormholeMerkle { vaa: _, updates } => {
+                let num_updates =
+                    u8::try_from(updates.len()).map_err(|_| PythReceiverError::TooManyUpdates)?;
+                Ok(U256::from(num_updates).saturating_mul(SINGLE_UPDATE_FEE_IN_WEI))
+            }
+        }
+    }
+
+    #[cfg(test)]
     fn pyth_wormhole_init(
         pyth_contract: &Contract<PythReceiver>,
         wormhole_contract: &Contract<WormholeContract>,
@@ -73,7 +91,7 @@ mod test {
             )
             .unwrap();
 
-        let single_update_fee = U256::from(100u64);
+        let single_update_fee = SINGLE_UPDATE_FEE_IN_WEI;
         let valid_time_period = U256::from(3600u64);
 
         let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
@@ -108,9 +126,10 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update1();
+        let update_fee = get_update_fee(update_data.clone()).unwrap();
 
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
@@ -137,12 +156,14 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        alice.fund(U256::from(50));
+        alice.fund(U256::from(200));
 
         let update_data = test_data::good_update1();
+        let update_fee = get_update_fee(update_data.clone()).unwrap();
+        let small_update_fee = update_fee / U256::from(2);
 
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(50))
+            .sender_and_value(alice, small_update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), PythReceiverError::InsufficientFee);
@@ -159,14 +180,17 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data1 = test_data::good_update1();
+        let update_fee1 = get_update_fee(update_data1.clone()).unwrap();
         let result1 = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee1)
             .update_price_feeds(update_data1);
         assert!(result1.is_ok());
 
         let update_data2 = test_data::good_update2();
+        let update_fee2 = get_update_fee(update_data2.clone()).unwrap();
+
         let result2 = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee2)
             .update_price_feeds(update_data2);
         assert!(result2.is_ok());
 
@@ -236,8 +260,10 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update2();
+        let update_fee = get_update_fee(update_data.clone()).unwrap();
+
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
@@ -269,8 +295,10 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update2();
+        let update_fee = get_update_fee(update_data.clone()).unwrap();
+
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
@@ -295,8 +323,10 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::multiple_updates();
+        let update_fee = get_update_fee(update_data.clone()).unwrap();
+
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(200))
+            .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
