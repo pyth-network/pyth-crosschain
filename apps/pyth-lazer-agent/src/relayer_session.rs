@@ -35,6 +35,7 @@ async fn connect_to_relayer(
         HeaderValue::from_str(&format!("Bearer {token}"))?,
     );
     let (ws_stream, _) = connect_async_with_config(req, None, true).await?;
+    tracing::info!("connected to the relayer at {}", url);
     Ok(ws_stream.split())
 }
 

@@ -17,6 +17,7 @@ pub struct Config {
     pub publish_keypair_path: PathBuf,
     #[serde(with = "humantime_serde", default = "default_publish_interval")]
     pub publish_interval_duration: Duration,
+    pub history_service_url: Option<Url>
 }
 
 fn default_publish_interval() -> Duration {

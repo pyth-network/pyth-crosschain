@@ -1,4 +1,5 @@
-relayer_urls = ["ws://relayer-0.pyth-lazer.dourolabs.app/v1/transaction", "ws://relayer-0.pyth-lazer.dourolabs.app/v1/transaction"]
-publish_keypair_path = "/path/to/solana/id.json"
+relayer_urls = ["ws://localhost:10001"]
+publish_keypair_path = "/Users/bartplatak/workspace/pyth-crosschain/apps/pyth-lazer-agent/config/test_keypair.json"
 listen_address = "0.0.0.0:8910"
 publish_interval_duration = "25ms"
+authorization_token="token1"
