@@ -58,7 +58,7 @@ mod test {
     }
 
     #[cfg(test)]
-    fn get_update_fee(update_data: Vec<u8>) -> Result<U256, PythReceiverError> {
+    fn mock_get_update_fee(update_data: Vec<u8>) -> Result<U256, PythReceiverError> {
         let update_data_array: &[u8] = &update_data;
         let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
             .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
@@ -126,7 +126,7 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update1();
-        let update_fee = get_update_fee(update_data.clone()).unwrap();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         let result = pyth_contract
             .sender_and_value(alice, update_fee)
@@ -159,7 +159,7 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update1();
-        let update_fee = get_update_fee(update_data.clone()).unwrap();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
         let small_update_fee = update_fee / U256::from(2);
 
         let result = pyth_contract
@@ -180,14 +180,14 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data1 = test_data::good_update1();
-        let update_fee1 = get_update_fee(update_data1.clone()).unwrap();
+        let update_fee1 = mock_get_update_fee(update_data1.clone()).unwrap();
         let result1 = pyth_contract
             .sender_and_value(alice, update_fee1)
             .update_price_feeds(update_data1);
         assert!(result1.is_ok());
 
         let update_data2 = test_data::good_update2();
-        let update_fee2 = get_update_fee(update_data2.clone()).unwrap();
+        let update_fee2 = mock_get_update_fee(update_data2.clone()).unwrap();
 
         let result2 = pyth_contract
             .sender_and_value(alice, update_fee2)
@@ -260,7 +260,7 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update2();
-        let update_fee = get_update_fee(update_data.clone()).unwrap();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         let result = pyth_contract
             .sender_and_value(alice, update_fee)
@@ -295,7 +295,7 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update2();
-        let update_fee = get_update_fee(update_data.clone()).unwrap();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         let result = pyth_contract
             .sender_and_value(alice, update_fee)
@@ -323,7 +323,7 @@ mod test {
         alice.fund(U256::from(200));
 
         let update_data = test_data::multiple_updates();
-        let update_fee = get_update_fee(update_data.clone()).unwrap();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         let result = pyth_contract
             .sender_and_value(alice, update_fee)
