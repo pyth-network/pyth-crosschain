@@ -9,7 +9,6 @@ import {
 } from "../src/core/contracts/evm";
 import {
   DeploymentType,
-  getDefaultDeploymentConfig,
   toDeploymentType,
   toPrivateKey,
 } from "../src/core/base";
@@ -22,7 +21,7 @@ import {
   topupAccountsIfNecessary,
   DefaultAddresses,
 } from "./common";
-import {getOrDeployExecutorContract } from "./deploy_evm_executor";
+import { getOrDeployExecutorContract } from "./deploy_evm_executor";
 
 interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;
