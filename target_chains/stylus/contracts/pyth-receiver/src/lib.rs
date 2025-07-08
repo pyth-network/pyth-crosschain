@@ -191,7 +191,7 @@ impl PythReceiver {
         min_publish_time: u64,
         max_publish_time: u64,
         _unique: bool,
-    ) -> Result<(), PythReceiverError> {
+    ) -> Result<Vec<([u8; 32], PriceInfoReturn)>, PythReceiverError> {
         let price_pairs = self.parse_price_feed_updates_internal(
             update_data,
             min_publish_time,
@@ -201,7 +201,7 @@ impl PythReceiver {
             true,  // store_updates_if_fresh
         )?;
 
-        for (price_id, price_return) in price_pairs {
+        for (price_id, price_return) in price_pairs.clone() {
             let price_id_fb: FixedBytes<32> = FixedBytes::from(price_id);
             let mut recent_price_info = self.latest_price_info.setter(price_id_fb);
 
@@ -217,7 +217,7 @@ impl PythReceiver {
             }
         }
 
-        Ok(())
+        Ok(price_pairs)
     }
 
     fn get_update_fee(&self, update_data: Vec<u8>) -> Result<U256, PythReceiverError> {
@@ -266,14 +266,29 @@ impl PythReceiver {
         check_update_data_is_minimal: bool,
         store_updates_if_fresh: bool,
     ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
-        let price_pairs = self.parse_price_feed_updates_internal(
-            update_data,
-            min_allowed_publish_time,
-            max_allowed_publish_time,
-            check_uniqueness,
-            check_update_data_is_minimal,
-            store_updates_if_fresh,
-        )?;
+        let price_pairs;
+        if store_updates_if_fresh {
+            price_pairs = self.update_price_feeds_internal(
+                update_data,
+                price_ids.clone(),
+                min_allowed_publish_time,
+                max_allowed_publish_time,
+                check_uniqueness,
+            )?;
+        } else {
+            price_pairs = self.parse_price_feed_updates_internal(
+                update_data,
+                min_allowed_publish_time,
+                max_allowed_publish_time,
+                check_uniqueness,
+                check_update_data_is_minimal,
+                store_updates_if_fresh,
+            )?;
+        }
+
+        if check_update_data_is_minimal && price_ids.len() != price_pairs.len() {
+            return Err(PythReceiverError::InvalidUpdateData);
+        }
 
         let price_map: BTreeMap<[u8; 32], PriceInfoReturn> = price_pairs.into_iter().collect();
 
@@ -283,14 +298,7 @@ impl PythReceiver {
             if let Some(price_info) = price_map.get(&price_id) {
                 result.push(*price_info);
             } else {
-                result.push((
-                    U64::from(0),
-                    I32::from_be_bytes([0, 0, 0, 0]),
-                    I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]),
-                    U64::from(0),
-                    I64::from_be_bytes([0, 0, 0, 0, 0, 0, 0, 0]),
-                    U64::from(0),
-                ));
+                return Err(PythReceiverError::PriceFeedNotFoundWithinRange);
             }
         }
 
