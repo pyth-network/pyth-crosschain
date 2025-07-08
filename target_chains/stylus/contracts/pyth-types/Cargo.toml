@@ -1,9 +1,0 @@
-[package]
-name = "pyth-types"
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-version.workspace = true
-
-[dependencies]
-stylus-sdk = { workspace = true, default-features = false }
