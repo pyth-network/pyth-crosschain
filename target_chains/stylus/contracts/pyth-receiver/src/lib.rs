@@ -90,7 +90,6 @@ impl PythReceiver {
         self.governance_data_source_emitter_address
             .set(FixedBytes::<32>::from(governance_emitter_address));
 
-        // Initialize other fields
         self.last_executed_governance_sequence
             .set(U64::from(governance_initial_sequence));
         self.governance_data_source_index.set(U32::ZERO);
