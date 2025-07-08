@@ -5,6 +5,7 @@ mod test {
     use crate::PythReceiver;
     use alloy_primitives::{address, Address, I32, I64, U256, U64};
     use motsu::prelude::*;
+    use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
     use wormhole_contract::WormholeContract;
     const TEST_PRICE_ID: [u8; 32] = [
         0xe6, 0x2d, 0xf6, 0xc8, 0xb4, 0xa8, 0x5f, 0xe1, 0xa6, 0x7d, 0xb4, 0x4d, 0xc1, 0x2d, 0xe5,
@@ -28,6 +29,8 @@ mod test {
     const CHAIN_ID: u16 = 60051;
     const GOVERNANCE_CHAIN_ID: u16 = 1;
     const GOVERNANCE_CONTRACT: U256 = U256::from_limbs([4, 0, 0, 0]);
+
+    const SINGLE_UPDATE_FEE_IN_WEI: U256 = U256::from_limbs([100, 0, 0, 0]);
 
     #[cfg(test)]
     fn current_guardians() -> Vec<Address> {
@@ -54,17 +57,31 @@ mod test {
         ]
     }
 
-    #[motsu::test]
-    fn e2e_valid_test(
-        pyth_contract: Contract<PythReceiver>,
-        wormhole_contract: Contract<WormholeContract>,
-        alice: Address,
+    #[cfg(test)]
+    fn mock_get_update_fee(update_data: Vec<u8>) -> Result<U256, PythReceiverError> {
+        let update_data_array: &[u8] = &update_data;
+        let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
+            .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
+        match accumulator_update.proof {
+            Proof::WormholeMerkle { vaa: _, updates } => {
+                let num_updates =
+                    u8::try_from(updates.len()).map_err(|_| PythReceiverError::TooManyUpdates)?;
+                Ok(U256::from(num_updates).saturating_mul(SINGLE_UPDATE_FEE_IN_WEI))
+            }
+        }
+    }
+
+    #[cfg(test)]
+    fn pyth_wormhole_init(
+        pyth_contract: &Contract<PythReceiver>,
+        wormhole_contract: &Contract<WormholeContract>,
+        alice: &Address,
     ) {
         let guardians = current_guardians();
         let governance_contract =
             Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         wormhole_contract
-            .sender(alice)
+            .sender(*alice)
             .initialize(
                 guardians,
                 4,
@@ -73,9 +90,8 @@ mod test {
                 governance_contract,
             )
             .unwrap();
-        // let result = wormhole_contract.sender(alice).store_gs(4, current_guardians(), 0);
 
-        let single_update_fee = U256::from(100u64);
+        let single_update_fee = SINGLE_UPDATE_FEE_IN_WEI;
         let valid_time_period = U256::from(3600u64);
 
         let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
@@ -86,7 +102,7 @@ mod test {
         let governance_initial_sequence = 0u64;
         let data = vec![];
 
-        pyth_contract.sender(alice).initialize(
+        pyth_contract.sender(*alice).initialize(
             wormhole_contract.address(),
             single_update_fee,
             valid_time_period,
@@ -97,13 +113,23 @@ mod test {
             governance_initial_sequence,
             data,
         );
+    }
+
+    #[motsu::test]
+    fn tests_pyth_end_to_end_with_update(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update1();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
@@ -123,114 +149,48 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_update_price_feed_insufficient_fee(
+    fn test_update_price_feed_reverts_insufficient_fee(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-        // let result = wormhole_contract.sender(alice).store_gs(4, current_guardians(), 0);
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
-
-        alice.fund(U256::from(50));
+        alice.fund(U256::from(200));
 
         let update_data = test_data::good_update1();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
+        let small_update_fee = update_fee / U256::from(2);
 
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(50))
+            .sender_and_value(alice, small_update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), PythReceiverError::InsufficientFee);
     }
 
     #[motsu::test]
-    fn test_get_price_after_multiple_updates(
+    fn test_get_price_after_multiple_updates_returns_recent_price(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
         let update_data1 = test_data::good_update1();
+        let update_fee1 = mock_get_update_fee(update_data1.clone()).unwrap();
         let result1 = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee1)
             .update_price_feeds(update_data1);
         assert!(result1.is_ok());
 
         let update_data2 = test_data::good_update2();
+        let update_fee2 = mock_get_update_fee(update_data2.clone()).unwrap();
+
         let result2 = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee2)
             .update_price_feeds(update_data2);
         assert!(result2.is_ok());
 
@@ -250,47 +210,12 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_unavailable_no_update(
+    fn test_get_price_with_no_update_reverts_with_price_unavailable(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
         assert!(price_result.is_err());
@@ -301,47 +226,12 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_no_older_than_unavailable_random_id(
+    fn test_get_price_no_older_than_with_random_id_reverts_with_price_unavailable(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let random_id: [u8; 32] = [
             0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc,
@@ -360,53 +250,20 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_no_older_than_valid_max_age(
+    fn test_get_price_no_older_than_where_update_younger_than_max_age_returns_price(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update2();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
+
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
@@ -428,52 +285,20 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_no_older_than_too_old(
+    fn test_get_price_no_older_than_reverts_too_old(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update2();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
+
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(100))
+            .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
@@ -488,53 +313,20 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_multiple_updates_both_ids(
+    fn test_multiple_updates_different_ids_updates_both(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
         let update_data = test_data::multiple_updates();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
+
         let result = pyth_contract
-            .sender_and_value(alice, U256::from(200))
+            .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
