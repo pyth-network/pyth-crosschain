@@ -39,8 +39,6 @@ use pythnet_sdk::{
 use structs::{DataSource, DataSourceStorage, PriceInfoReturn, PriceInfoStorage};
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
-const ACCUMULATOR_WORMHOLE_MAGIC: u32 = 0x41555756;
-
 sol_interface! {
     interface IWormholeContract {
         function initialize(address[] memory initial_guardians, uint16 chain_id, uint16 governance_chain_id, address governance_contract) external;
@@ -204,10 +202,10 @@ impl PythReceiver {
             return Err(PythReceiverError::InvalidAccumulatorMessage);
         }
 
-        let update_data = AccumulatorUpdateData::try_from_slice(&update_data_array)
+        let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
             .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
 
-        match update_data.proof {
+        match accumulator_update.proof {
             Proof::WormholeMerkle { vaa, updates } => {
                 let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
                 let config = Call::new();
@@ -236,10 +234,7 @@ impl PythReceiver {
 
                 let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa)?;
 
-                let num_updates =
-                    u8::try_from(updates.len()).map_err(|_| PythReceiverError::TooManyUpdates)?;
-
-                let total_fee = self.get_total_fee(num_updates);
+                let total_fee = self.get_update_fee(update_data)?;
 
                 let value = self.vm().msg_value();
 
@@ -299,12 +294,17 @@ impl PythReceiver {
         Ok(())
     }
 
-    fn get_total_fee(&self, num_updates: u8) -> U256 {
-        U256::from(num_updates).saturating_mul(self.single_update_fee_in_wei.get())
-    }
-
-    pub fn get_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
-        U256::from(0u8)
+    fn get_update_fee(&self, update_data: Vec<u8>) -> Result<U256, PythReceiverError> {
+        let update_data_array: &[u8] = &update_data;
+        let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
+            .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
+        match accumulator_update.proof {
+            Proof::WormholeMerkle { vaa: _, updates } => {
+                let num_updates =
+                    u8::try_from(updates.len()).map_err(|_| PythReceiverError::TooManyUpdates)?;
+                Ok(U256::from(num_updates).saturating_mul(self.single_update_fee_in_wei.get()))
+            }
+        }
     }
 
     pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
