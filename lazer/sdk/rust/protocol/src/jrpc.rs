@@ -1,6 +1,7 @@
-use crate::router::{Price, PriceFeedId, Rate, TimestampUs};
-use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use crate::router::{Channel, Price, PriceFeedId, Rate, TimestampUs};
+use serde::{Deserialize, Serialize};
+use crate::symbol_state::SymbolState;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct PythLazerAgentJrpcV1 {
@@ -41,13 +42,13 @@ pub enum UpdateParams {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct Filter {
-    name: Option<String>,
-    asset_type: Option<String>,
+    pub name: Option<String>,
+    pub asset_type: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct GetMetadataParams {
-    filters: Option<Vec<Filter>>,
+    pub filters: Option<Vec<Filter>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -57,42 +58,78 @@ pub enum JsonRpcVersion {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
-pub struct JrpcResponse<T> {
+pub enum JrpcResponse<T> {
+    Success(JrpcSuccessResponse<T>),
+    Error(JrpcErrorResponse),
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+pub struct JrpcSuccessResponse<T> {
     pub jsonrpc: JsonRpcVersion,
     pub result: T,
     pub id: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
-pub struct ErrorResponse {
-    pub message: String,
+pub struct JrpcErrorResponse {
+    pub jsonrpc: JsonRpcVersion,
+    pub error: JrpcErrorObject,
+    pub id: Option<i64>,
 }
 
-#[derive(Serialize, Deserialize)]
-struct SymbolMetadata {
-    pub asset_type: String,
-    pub cmc_id: i64,
-    pub description: String,
-    pub exponent: i64,
-    pub hermes_id: String,
-    #[serde(default, with = "humantime_serde", alias = "interval")]
-    pub interval: Option<Duration>,
-    pub min_channel: String,
-    pub min_publishers: i64,
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+pub struct JrpcErrorObject {
+    pub code: i64,
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum JrpcError {
+    ParseError,
+    InternalError,
+}
+
+impl From<JrpcError> for JrpcErrorObject {
+    fn from(error: JrpcError) -> Self {
+        match error {
+            JrpcError::ParseError => JrpcErrorObject {
+                code: -32700,
+                message: "Parse error".to_string(),
+                data: None,
+            },
+            JrpcError::InternalError => JrpcErrorObject {
+                code: -32603,
+                message: "Internal error".to_string(),
+                data: None,
+            },
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct SymbolMetadata {
+    pub pyth_lazer_id: PriceFeedId,
     pub name: String,
-    pub pyth_lazer_id: i64,
-    pub schedule: String,
-    pub state: String,
     pub symbol: String,
+    pub description: String,
+    pub asset_type: String,
+    pub exponent: i16,
+    pub cmc_id: Option<u32>,
+    #[serde(default, with = "humantime_serde", alias = "interval")]
+    pub funding_rate_interval: Option<Duration>,
+    pub min_publishers: u16,
+    pub min_channel: Channel,
+    pub state: SymbolState,
+    pub hermes_id: Option<String>,
+    pub quote_currency: Option<String>,
 }
 
 #[cfg(test)]
 mod tests {
     use crate::jrpc::JrpcParams::{GetMetadata, SendUpdates};
-    use crate::jrpc::{
-        FeedUpdateParams, Filter, GetMetadataParams, JsonRpcVersion, PythLazerAgentJrpcV1,
-        UpdateParams,
-    };
+    use crate::jrpc::{FeedUpdateParams, Filter, GetMetadataParams, JrpcErrorObject, JrpcErrorResponse, JrpcSuccessResponse, JsonRpcVersion, PythLazerAgentJrpcV1, UpdateParams};
     use crate::router::{Price, PriceFeedId, Rate, TimestampUs};
 
     #[test]
@@ -234,5 +271,50 @@ mod tests {
             serde_json::from_str::<PythLazerAgentJrpcV1>(json).unwrap(),
             expected
         );
+    }
+
+    #[test]
+    fn test_response_format_error() {
+        let response = serde_json::from_str::<JrpcErrorResponse>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": 2,
+              "error": {
+                "message": "Internal error",
+                "code": -32603
+              }
+            }
+            "#
+        ).unwrap();
+
+        assert_eq!(response, JrpcErrorResponse {
+            jsonrpc: JsonRpcVersion::V2,
+            error: JrpcErrorObject {
+                code: -32603,
+                message: "Internal error".to_string(),
+                data: None,
+            },
+            id: Some(2),
+        });
+    }
+
+    #[test]
+    pub fn test_response_format_success() {
+        let response = serde_json::from_str::<JrpcSuccessResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": 2,
+              "result": "success"
+            }
+            "#
+        ).unwrap();
+
+        assert_eq!(response, JrpcSuccessResponse::<String> {
+            jsonrpc: JsonRpcVersion::V2,
+            result: "success".to_string(),
+            id: 2,
+        });
     }
 }
