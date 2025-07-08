@@ -54,17 +54,16 @@ mod test {
         ]
     }
 
-    #[motsu::test]
-    fn e2e_valid_test(
-        pyth_contract: Contract<PythReceiver>,
-        wormhole_contract: Contract<WormholeContract>,
-        alice: Address,
+    fn pyth_wormhole_init(
+        pyth_contract: &Contract<PythReceiver>,
+        wormhole_contract: &Contract<WormholeContract>,
+        alice: &Address,
     ) {
         let guardians = current_guardians();
         let governance_contract =
             Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         wormhole_contract
-            .sender(alice)
+            .sender(*alice)
             .initialize(
                 guardians,
                 4,
@@ -73,7 +72,6 @@ mod test {
                 governance_contract,
             )
             .unwrap();
-        // let result = wormhole_contract.sender(alice).store_gs(4, current_guardians(), 0);
 
         let single_update_fee = U256::from(100u64);
         let valid_time_period = U256::from(3600u64);
@@ -86,7 +84,7 @@ mod test {
         let governance_initial_sequence = 0u64;
         let data = vec![];
 
-        pyth_contract.sender(alice).initialize(
+        pyth_contract.sender(*alice).initialize(
             wormhole_contract.address(),
             single_update_fee,
             valid_time_period,
@@ -97,6 +95,15 @@ mod test {
             governance_initial_sequence,
             data,
         );
+    }
+
+    #[motsu::test]
+    fn e2e_valid_test(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
@@ -128,43 +135,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-        // let result = wormhole_contract.sender(alice).store_gs(4, current_guardians(), 0);
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(50));
 
@@ -183,42 +154,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
@@ -255,42 +191,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
         assert!(price_result.is_err());
@@ -306,42 +207,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let random_id: [u8; 32] = [
             0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc,
@@ -365,42 +231,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
@@ -433,42 +264,8 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
         alice.fund(U256::from(200));
 
         let update_data = test_data::good_update2();
@@ -493,42 +290,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
-        let single_update_fee = U256::from(100u64);
-        let valid_time_period = U256::from(3600u64);
-
-        let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
-        let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
-
-        let governance_chain_id = 1u16;
-        let governance_emitter_address = [3u8; 32];
-        let governance_initial_sequence = 0u64;
-        let data = vec![];
-
-        pyth_contract.sender(alice).initialize(
-            wormhole_contract.address(),
-            single_update_fee,
-            valid_time_period,
-            data_source_chain_ids,
-            data_source_emitter_addresses,
-            governance_chain_id,
-            governance_emitter_address,
-            governance_initial_sequence,
-            data,
-        );
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
