@@ -1,13 +1,11 @@
-use alloc::{vec::Vec, boxed::Box, format};
+use alloc::{boxed::Box, format, vec::Vec};
 use pythnet_sdk::wire::to_vec;
 use serde::Serialize;
+use stylus_sdk::alloy_primitives::{keccak256, FixedBytes, B256, I32, I64, U16, U256, U64};
 use stylus_sdk::{
     prelude::*,
-    storage::{
-        StorageU64, StorageI32, StorageI64, StorageU16, StorageFixedBytes, StorageKey
-    },
+    storage::{StorageFixedBytes, StorageI32, StorageI64, StorageKey, StorageU16, StorageU64},
 };
-use stylus_sdk::alloy_primitives::{U16, FixedBytes,U64, I32, I64, B256, U256, keccak256};
 
 #[derive(Serialize)]
 struct SerializableDataSource {
@@ -16,7 +14,10 @@ struct SerializableDataSource {
     emitter_address: [u8; 32],
 }
 
-fn serialize_data_source_to_bytes(chain_id: u16, emitter_address: &[u8; 32]) -> Result<[u8; 34], Box<dyn core::error::Error>> {
+fn serialize_data_source_to_bytes(
+    chain_id: u16,
+    emitter_address: &[u8; 32],
+) -> Result<[u8; 34], Box<dyn core::error::Error>> {
     let data_source = SerializableDataSource {
         chain_id,
         emitter_address: *emitter_address,
@@ -127,7 +128,7 @@ pub type PriceInfoReturn = (U64, I32, I64, U64, I64, U64);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use stylus_sdk::alloy_primitives::{U16, FixedBytes};
+    use stylus_sdk::alloy_primitives::{FixedBytes, U16};
 
     #[test]
     fn test_data_source_serialization_compatibility() {
@@ -146,6 +147,9 @@ mod tests {
         let actual_bytes = serialize_data_source_to_bytes(chain_id, &emitter_address)
             .expect("Serialization should succeed");
 
-        assert_eq!(actual_bytes, expected_bytes, "Serialization should produce identical bytes");
+        assert_eq!(
+            actual_bytes, expected_bytes,
+            "Serialization should produce identical bytes"
+        );
     }
 }
