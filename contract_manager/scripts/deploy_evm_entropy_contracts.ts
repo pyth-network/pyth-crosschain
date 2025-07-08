@@ -22,6 +22,7 @@ import {
   topupAccountsIfNecessary,
   DefaultAddresses,
 } from "./common";
+import {getOrDeployExecutorContract } from "./deploy_evm_executor";
 
 interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;
@@ -43,44 +44,6 @@ const parser = yargs(hideBin(process.argv))
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
     },
   });
-
-async function deployExecutorContracts(
-  chain: EvmChain,
-  config: DeploymentConfig,
-  wormholeAddr: string,
-): Promise<string> {
-  const executorImplAddr = await deployIfNotCached(
-    CACHE_FILE,
-    chain,
-    config,
-    "ExecutorUpgradable",
-    [],
-  );
-
-  // Craft the init data for the proxy contract
-  const { governanceDataSource } = getDefaultDeploymentConfig(config.type);
-
-  const executorImplContract = getWeb3Contract(
-    config.jsonOutputDir,
-    "ExecutorUpgradable",
-    executorImplAddr,
-  );
-
-  const executorInitData = executorImplContract.methods
-    .initialize(
-      wormholeAddr,
-      0, // lastExecutedSequence,
-      chain.getWormholeChainId(),
-      governanceDataSource.emitterChain,
-      `0x${governanceDataSource.emitterAddress}`,
-    )
-    .encodeABI();
-
-  return await deployIfNotCached(CACHE_FILE, chain, config, "ERC1967Proxy", [
-    executorImplAddr,
-    executorInitData,
-  ]);
-}
 
 async function deployEntropyContracts(
   chain: EvmChain,
@@ -166,7 +129,7 @@ async function main() {
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
 
-  const executorAddr = await deployExecutorContracts(
+  const executorContract = await getOrDeployExecutorContract(
     chain,
     deploymentConfig,
     wormholeContract.address,
@@ -174,7 +137,7 @@ async function main() {
   const entropyAddr = await deployEntropyContracts(
     chain,
     deploymentConfig,
-    executorAddr,
+    executorContract.address,
   );
 
   if (deploymentConfig.saveContract) {
