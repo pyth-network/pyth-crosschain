@@ -163,7 +163,7 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
                             JrpcErrorResponse {
                                 jsonrpc: JsonRpcVersion::V2,
                                 // note: right now specifying an invalid method results in a parse error
-                                error: JrpcError::ParseError(err.to_string()).into(),
+                                error: JrpcError::InternalError.into(),
                                 id: None,
                             },
                         ))?
