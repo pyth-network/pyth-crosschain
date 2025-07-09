@@ -1,20 +1,16 @@
-use alloc::{vec::Vec};
+use alloc::vec::Vec;
 use stylus_sdk::alloy_primitives::{keccak256, FixedBytes, B256, I32, I64, U16, U256, U64};
 use stylus_sdk::{
     prelude::*,
     storage::{StorageFixedBytes, StorageI32, StorageI64, StorageKey, StorageU16, StorageU64},
 };
 
-fn serialize_data_source_to_bytes(
-    chain_id: u16,
-    emitter_address: &[u8; 32],
-) -> [u8; 34] {
+fn serialize_data_source_to_bytes(chain_id: u16, emitter_address: &[u8; 32]) -> [u8; 34] {
     let mut result = [0u8; 34];
     result[0..2].copy_from_slice(&chain_id.to_be_bytes());
     result[2..].copy_from_slice(emitter_address);
     result
 }
-
 
 #[derive(Debug)]
 #[storage]
