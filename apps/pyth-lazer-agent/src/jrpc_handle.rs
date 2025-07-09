@@ -63,7 +63,7 @@ async fn try_handle_jrpc(
             // in the inner loop.
             let receive = async { ws_receiver.receive(&mut receive_buf).await };
             pin!(receive);
-            #[allow(clippy::never_loop, reason="false positive")] // false positive
+            #[allow(clippy::never_loop, reason = "false positive")] // false positive
             loop {
                 select! {
                     _result = &mut receive => {
