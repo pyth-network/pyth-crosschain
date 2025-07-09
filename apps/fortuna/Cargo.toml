@@ -48,11 +48,14 @@ thiserror = "1.0.61"
 futures-locks = "0.7.1"
 sqlx = { version = "0.8", features = [
   "runtime-tokio",
+  "tls-rustls",
   "sqlite",
+  "any",
   "postgres",
   "chrono",
 ] }
 num-traits = "0.2.19"
+dotenv = "0.15.0"
 
 [dev-dependencies]
 axum-test = "13.1.1"
