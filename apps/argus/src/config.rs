@@ -20,7 +20,6 @@ const DEFAULT_RPC_ADDR: &str = "127.0.0.1:7777";
 #[command(author = crate_authors!())]
 #[command(about = crate_description!())]
 #[command(version = crate_version!())]
-#[allow(clippy::large_enum_variant)]
 pub enum Options {
     /// Run the Argus keeper service.
     Run(RunOptions),

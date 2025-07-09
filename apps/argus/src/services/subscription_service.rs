@@ -18,6 +18,7 @@ use crate::services::Service;
 use crate::state::ChainName;
 
 pub struct SubscriptionService {
+    #[allow(dead_code, reason = "unknown")]
     chain_name: ChainName,
     name: String,
     contract: Arc<dyn ReadChainSubscriptions + Send + Sync>,
@@ -38,7 +39,7 @@ impl SubscriptionService {
     ) -> Self {
         Self {
             chain_name: chain_name.clone(),
-            name: format!("SubscriptionService-{}", chain_name),
+            name: format!("SubscriptionService-{chain_name}"),
             contract,
             poll_interval,
             subscription_state,

@@ -38,23 +38,23 @@ impl TryFrom<&Timestamp> for TimestampUs {
     }
 }
 
-impl Into<Timestamp> for TimestampUs {
-    fn into(self) -> Timestamp {
+impl From<TimestampUs> for Timestamp {
+    fn from(value: TimestampUs) -> Self {
         Timestamp {
             #[allow(
                 clippy::cast_possible_wrap,
                 reason = "u64 to i64 after this division can never overflow because the value cannot be too big"
             )]
-            seconds: (self.0 / 1_000_000) as i64,
-            nanos: (self.0 % 1_000_000) as i32 * 1000,
+            seconds: (value.0 / 1_000_000) as i64,
+            nanos: (value.0 % 1_000_000) as i32 * 1000,
             special_fields: Default::default(),
         }
     }
 }
 
-impl Into<MessageField<Timestamp>> for TimestampUs {
-    fn into(self) -> MessageField<Timestamp> {
-        MessageField::some(self.into())
+impl From<TimestampUs> for MessageField<Timestamp> {
+    fn from(value: TimestampUs) -> Self {
+        MessageField::some(value.into())
     }
 }
 

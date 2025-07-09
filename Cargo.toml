@@ -1,0 +1,108 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "apps/argus",
+    "apps/fortuna",
+    "apps/pyth-lazer-agent",
+    "apps/quorum",
+    "lazer/publisher_sdk/rust",
+    "lazer/sdk/rust/client",
+    "lazer/sdk/rust/protocol",
+    "pythnet/pythnet_sdk",
+    "target_chains/starknet/tools/test_vaas",
+]
+
+exclude = [
+    # Depends on pinned Solana version
+    "apps/hermes/server",
+    # Solana contract
+    "governance/remote_executor",
+    "governance/remote_executor/cli",
+    "governance/remote_executor/programs/remote-executor",
+    # Solana contract
+    "lazer/contracts/solana",
+    "lazer/contracts/solana/programs/pyth-lazer-solana-contract",
+    # Solana contract
+    "pythnet/message_buffer",
+    "pythnet/message_buffer/programs/message_buffer",
+    "pythnet/message_buffer/programs/mock-cpi-caller",
+    # Solana contract
+    "pythnet/stake_caps_parameters",
+    "pythnet/stake_caps_parameters/cli",
+    "pythnet/stake_caps_parameters/programs/stake_caps_parameters",
+    # CosmWasm contract
+    "target_chains/cosmwasm",
+    "target_chains/cosmwasm/contracts/pyth",
+    "target_chains/cosmwasm/examples/cw-contract",
+    "target_chains/cosmwasm/sdk/rust",
+    # Stylus contract
+    "target_chains/ethereum/sdk/stylus",
+    "target_chains/ethereum/sdk/stylus/benches",
+    "target_chains/ethereum/sdk/stylus/contracts",
+    "target_chains/ethereum/sdk/stylus/examples/extend-pyth-example",
+    "target_chains/ethereum/sdk/stylus/examples/function-example",
+    "target_chains/ethereum/sdk/stylus/examples/pyth-example",
+    # Fuel contract
+    "target_chains/fuel/contracts",
+    # Near contract
+    "target_chains/near/example",
+    "target_chains/near/receiver",
+    "target_chains/near/wormhole-stub",
+    # Solana contracts
+    "target_chains/solana",
+    "target_chains/solana/cli",
+    "target_chains/solana/common_test_utils",
+    "target_chains/solana/program_simulator",
+    "target_chains/solana/programs/pyth-price-store",
+    "target_chains/solana/programs/pyth-price-store/target/package/pyth-price-publisher-0.1.0",
+    "target_chains/solana/programs/pyth-push-oracle",
+    "target_chains/solana/programs/pyth-solana-receiver",
+    "target_chains/solana/pyth_solana_receiver_sdk",
+    # Stylus contract
+    "target_chains/stylus",
+    "target_chains/stylus/contracts/pyth-receiver",
+    "target_chains/stylus/contracts/wormhole",
+]
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+# See https://github.com/pyth-network/pyth-crosschain/blob/main/doc/rust-code-guidelines.md
+
+wildcard_dependencies = "deny"
+
+collapsible_if = "allow"
+collapsible_else_if = "allow"
+
+allow_attributes_without_reason = "warn"
+
+# Panics
+expect_used = "warn"
+fallible_impl_from = "warn"
+indexing_slicing = "warn"
+panic = "warn"
+panic_in_result_fn = "warn"
+string_slice = "warn"
+todo = "warn"
+unchecked_duration_subtraction = "warn"
+unreachable = "warn"
+unwrap_in_result = "warn"
+unwrap_used = "warn"
+
+# Correctness
+cast_lossless = "warn"
+cast_possible_truncation = "warn"
+cast_possible_wrap = "warn"
+cast_sign_loss = "warn"
+collection_is_never_read = "warn"
+match_wild_err_arm = "warn"
+path_buf_push_overwrite = "warn"
+read_zero_byte_vec = "warn"
+same_name_method = "warn"
+suspicious_operation_groupings = "warn"
+suspicious_xor_used_as_pow = "warn"
+unused_self = "warn"
+used_underscore_binding = "warn"
+while_float = "warn"

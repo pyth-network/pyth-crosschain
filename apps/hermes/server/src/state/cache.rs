@@ -183,10 +183,7 @@ where
 
         // Sometimes, some keys are removed from the accumulator. We track which keys are not
         // present in the message states and remove them from the cache.
-        let keys_in_cache = message_cache
-            .iter()
-            .map(|(key, _)| key.clone())
-            .collect::<HashSet<_>>();
+        let keys_in_cache = message_cache.keys().cloned().collect::<HashSet<_>>();
 
         for key in keys_in_cache {
             if !current_keys.contains(&key) {

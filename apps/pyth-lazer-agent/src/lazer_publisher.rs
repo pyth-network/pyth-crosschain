@@ -49,12 +49,12 @@ impl LazerPublisher {
             .context("Failed to create signing key from keypair")
     }
 
+    #[allow(clippy::panic, reason = "can't run agent without keypair")]
     pub async fn new(config: &Config) -> Self {
         let signing_key = match Self::load_signing_key(&config.publish_keypair_path) {
             Ok(signing_key) => signing_key,
             Err(e) => {
                 tracing::error!("Failed to load signing key: {e:?}");
-                // Can't proceed on key failure
                 panic!("Failed to load signing key: {e:?}");
             }
         };

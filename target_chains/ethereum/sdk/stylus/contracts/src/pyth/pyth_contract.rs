@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 pub use crate::pyth::functions::{
     get_ema_price_no_older_than, get_ema_price_unsafe, get_price_no_older_than, get_price_unsafe,
     get_update_fee, get_valid_time_period, parse_price_feed_updates,
