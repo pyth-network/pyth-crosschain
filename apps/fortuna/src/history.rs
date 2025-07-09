@@ -78,8 +78,7 @@ pub struct RequestStatus {
     /// Gas limit for the callback in the smallest unit of the chain.
     /// For example, if the native currency is ETH, this will be in wei.
     #[schema(example = "500000", value_type = String)]
-    #[serde(with = "crate::serde::u256")]
-    pub gas_limit: U256,
+    pub gas_limit: u32,
     /// The user contribution to the random number.
     #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
     #[serde_as(as = "serde_with::hex::Hex")]
@@ -139,7 +138,9 @@ impl TryFrom<RequestRow> for RequestStatus {
         let user_random_number = hex::FromHex::from_hex(row.user_random_number)?;
         let request_tx_hash = row.request_tx_hash.parse()?;
         let sender = row.sender.parse()?;
-        let gas_limit = U256::from_dec_str(&row.gas_limit)
+        let gas_limit = row
+            .gas_limit
+            .parse::<u32>()
             .map_err(|_| anyhow::anyhow!("Failed to parse gas limit"))?;
 
         let state = match row.state.as_str() {
@@ -233,8 +234,7 @@ impl History {
     /// Useful for testing.
     pub async fn new_in_memory() -> Result<Self> {
         sqlx::any::install_default_drivers();
-        // Connect to an in-memory SQLite database
-        // Don't let the pool drop the cxn, otherwise the database will be deleted
+        // Prevent the pool from dropping the cxn, otherwise the database will be deleted
         let pool = AnyPoolOptions::new()
             .min_connections(1)
             .max_connections(1)
@@ -635,7 +635,7 @@ mod test {
             user_random_number: [20; 32],
             sender: Address::random(),
             state: RequestEntryState::Pending,
-            gas_limit: U256::from(500_000),
+            gas_limit: 500_000,
         }
     }
 

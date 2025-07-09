@@ -3,14 +3,14 @@ use {
     crate::{
         chain::{
             ethereum::PythRandomErrorsErrors,
-            reader::{RequestCallbackStatus, RequestedWithCallbackEvent},
+            reader::{RequestCallbackStatus, RequestedV2Event},
         },
         eth_utils::utils::{submit_tx_with_backoff, SubmitTxError},
         history::{RequestEntryState, RequestStatus},
         keeper::block::ProcessParams,
     },
     anyhow::{anyhow, Result},
-    ethers::{abi::AbiDecode, contract::ContractError, types::U256},
+    ethers::{abi::AbiDecode, contract::ContractError},
     std::time::Duration,
     tracing,
 };
@@ -20,7 +20,7 @@ use {
     sequence_number = event.sequence_number
 ))]
 pub async fn process_event_with_backoff(
-    event: RequestedWithCallbackEvent,
+    event: RequestedV2Event,
     process_param: ProcessParams,
 ) -> Result<()> {
     let ProcessParams {
@@ -110,10 +110,10 @@ pub async fn process_event_with_backoff(
         last_updated_at: chrono::Utc::now(),
         request_block_number: event.log_meta.block_number.as_u64(),
         request_tx_hash: event.log_meta.transaction_hash,
-        sender: event.requestor,
+        sender: event.sender,
         user_random_number: event.user_random_number,
         state: RequestEntryState::Pending,
-        gas_limit: U256::from(0), // FIXME(Tejas): set this properly
+        gas_limit: event.gas_limit,
     };
     history.add(&status);
 
