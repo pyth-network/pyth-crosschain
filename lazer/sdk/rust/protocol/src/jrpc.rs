@@ -1,7 +1,7 @@
-use std::time::Duration;
 use crate::router::{Channel, Price, PriceFeedId, Rate, TimestampUs};
-use serde::{Deserialize, Serialize};
 use crate::symbol_state::SymbolState;
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct PythLazerAgentJrpcV1 {
@@ -91,6 +91,7 @@ pub enum JrpcError {
     InternalError,
 }
 
+// note: error codes can be found in the rfc https://www.jsonrpc.org/specification#error_object
 impl From<JrpcError> for JrpcErrorObject {
     fn from(error: JrpcError) -> Self {
         match error {
@@ -128,9 +129,8 @@ pub struct SymbolMetadata {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::jrpc::JrpcCall::{GetMetadata, PushUpdate};
-    use crate::jrpc::{FeedUpdateParams, Filter, GetMetadataParams, JrpcErrorObject, JrpcErrorResponse, JrpcSuccessResponse, JsonRpcVersion, PythLazerAgentJrpcV1, UpdateParams};
-    use crate::router::{Price, PriceFeedId, Rate, TimestampUs};
 
     #[test]
     fn test_push_update_price() {
@@ -218,8 +218,8 @@ mod tests {
           "jsonrpc": "2.0",
           "method": "get_metadata",
           "params": {
-              "names": ["BTC/USD"],
-              "asset_types": ["crypto"]
+            "names": ["BTC/USD"],
+            "asset_types": ["crypto"]
           },
           "id": 1
         }
@@ -253,7 +253,10 @@ mod tests {
 
         let expected = PythLazerAgentJrpcV1 {
             jsonrpc: JsonRpcVersion::V2,
-            params: GetMetadata(GetMetadataParams { names: None, asset_types: None }),
+            params: GetMetadata(GetMetadataParams {
+                names: None,
+                asset_types: None,
+            }),
             id: 1,
         };
 
@@ -275,18 +278,22 @@ mod tests {
                 "code": -32603
               }
             }
-            "#
-        ).unwrap();
+            "#,
+        )
+        .unwrap();
 
-        assert_eq!(response, JrpcErrorResponse {
-            jsonrpc: JsonRpcVersion::V2,
-            error: JrpcErrorObject {
-                code: -32603,
-                message: "Internal error".to_string(),
-                data: None,
-            },
-            id: Some(2),
-        });
+        assert_eq!(
+            response,
+            JrpcErrorResponse {
+                jsonrpc: JsonRpcVersion::V2,
+                error: JrpcErrorObject {
+                    code: -32603,
+                    message: "Internal error".to_string(),
+                    data: None,
+                },
+                id: Some(2),
+            }
+        );
     }
 
     #[test]
@@ -298,13 +305,17 @@ mod tests {
               "id": 2,
               "result": "success"
             }
-            "#
-        ).unwrap();
+            "#,
+        )
+        .unwrap();
 
-        assert_eq!(response, JrpcSuccessResponse::<String> {
-            jsonrpc: JsonRpcVersion::V2,
-            result: "success".to_string(),
-            id: 2,
-        });
+        assert_eq!(
+            response,
+            JrpcSuccessResponse::<String> {
+                jsonrpc: JsonRpcVersion::V2,
+                result: "success".to_string(),
+                id: 2,
+            }
+        );
     }
 }
