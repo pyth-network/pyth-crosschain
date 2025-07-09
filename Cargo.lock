@@ -5569,7 +5569,7 @@ dependencies = [
  "futures-util",
  "hex",
  "libsecp256k1 0.7.2",
- "pyth-lazer-protocol 0.8.0",
+ "pyth-lazer-protocol 0.8.1",
  "serde",
  "serde_json",
  "tokio",
@@ -5597,7 +5597,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5625,7 +5625,7 @@ dependencies = [
  "humantime",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.8.0",
+ "pyth-lazer-protocol 0.8.1",
  "serde-value",
  "tracing",
 ]
