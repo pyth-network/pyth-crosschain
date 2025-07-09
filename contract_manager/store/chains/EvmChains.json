@@ -401,7 +401,7 @@
   {
     "id": "sepolia",
     "mainnet": false,
-    "rpcUrl": "https://eth-sepolia.blastapi.io/$ENV_BLAST_API_KEY",
+    "rpcUrl": "https://eth-sepolia.public.blastapi.io",
     "networkId": 11155111,
     "type": "EvmChain"
   },
@@ -1264,6 +1264,13 @@
     "mainnet": false,
     "rpcUrl": "https://k8s.testnet.json-rpc.injective.network/",
     "networkId": 1439,
+    "type": "EvmChain"
+  },
+  {
+    "id": "ethereal_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc-ethereal-testnet.t.conduit.xyz",
+    "networkId": 657468,
     "type": "EvmChain"
   }
 ]
