@@ -5,17 +5,12 @@ use anyhow::Error;
 use futures::{AsyncRead, AsyncWrite};
 use futures_util::io::{BufReader, BufWriter};
 use hyper_util::rt::TokioIo;
-use pyth_lazer_protocol::jrpc::{
-    Filter, JrpcError, JrpcErrorResponse, JrpcParams, JrpcResponse, JrpcSuccessResponse,
-    JsonRpcVersion, PythLazerAgentJrpcV1, SymbolMetadata,
-};
-use serde::{Deserialize, Serialize};
+use pyth_lazer_protocol::jrpc::{GetMetadataParams, JrpcCall, JrpcError, JrpcErrorResponse, JrpcResponse, JrpcSuccessResponse, JsonRpcVersion, PythLazerAgentJrpcV1, SymbolMetadata};
 use soketto::Sender;
 use soketto::handshake::http::Server;
 use std::str::FromStr;
 use tokio::{pin, select};
 use tokio_util::compat::TokioAsyncReadCompatExt;
-use tracing::field::debug;
 use tracing::{debug, instrument};
 use url::Url;
 
@@ -41,14 +36,14 @@ pub async fn handle_jrpc(
 }
 
 #[instrument(
-    skip(server, request, lazer_publisher, context),
+    skip(server, request, lazer_publisher, _context),
     fields(component = "jrpc_ws")
 )]
 async fn try_handle_jrpc(
     config: Config,
     server: Server,
     request: hyper::Request<hyper::body::Incoming>,
-    context: JrpcConnectionContext,
+    _context: JrpcConnectionContext,
     lazer_publisher: LazerPublisher,
 ) -> anyhow::Result<()> {
     let stream = hyper::upgrade::on(request).await?;
@@ -104,7 +99,7 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
 ) -> anyhow::Result<()> {
     match serde_json::from_slice::<PythLazerAgentJrpcV1>(receive_buf.as_slice()) {
         Ok(jrpc_request) => match jrpc_request.params {
-            JrpcParams::SendUpdates(request_params) => {
+            JrpcCall::PushUpdate(request_params) => {
                 match lazer_publisher
                     .push_feed_update(request_params.into())
                     .await
@@ -140,13 +135,9 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
                     }
                 }
             }
-            JrpcParams::GetMetadata(request_params) => match get_metadata(config.clone()).await {
+            JrpcCall::GetMetadata(request_params) => match get_metadata(config.clone()).await {
                 Ok(symbols) => {
-                    let mut symbols = symbols.clone();
-
-                    if request_params.filters.is_some() {
-                        symbols = filter_symbols(symbols, request_params.filters.unwrap());
-                    }
+                    let symbols = filter_symbols(symbols.clone(), request_params);
 
                     send_text(
                         sender,
@@ -169,7 +160,7 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
                             JrpcErrorResponse {
                                 jsonrpc: JsonRpcVersion::V2,
                                 // note: right now specifying an invalid method results in a parse error
-                                error: JrpcError::ParseError.into(),
+                                error: JrpcError::ParseError(err.to_string()).into(),
                                 id: None,
                             },
                         ))?
@@ -186,7 +177,7 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
                 serde_json::to_string::<JrpcResponse<()>>(&JrpcResponse::Error(
                     JrpcErrorResponse {
                         jsonrpc: JsonRpcVersion::V2,
-                        error: JrpcError::ParseError.into(),
+                        error: JrpcError::ParseError(err.to_string()).into(),
                         id: None,
                     },
                 ))?
@@ -198,7 +189,7 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
     Ok(())
 }
 
-async fn get_metadata(config: Config) -> Result<Vec<SymbolMetadata>, anyhow::Error> {
+async fn get_metadata(config: Config) -> Result<Vec<SymbolMetadata>, Error> {
     let result = reqwest::get(
         config
             .history_service_url
@@ -219,17 +210,21 @@ async fn get_metadata(config: Config) -> Result<Vec<SymbolMetadata>, anyhow::Err
     }
 }
 
-fn filter_symbols(symbols: Vec<SymbolMetadata>, filters: Vec<Filter>) -> Vec<SymbolMetadata> {
+fn filter_symbols(symbols: Vec<SymbolMetadata>, get_metadata_params: GetMetadataParams) -> Vec<SymbolMetadata> {
+    let names = &get_metadata_params.names.clone();
+    let asset_types = &get_metadata_params.asset_types.clone();
+
     let res: Vec<SymbolMetadata> = symbols
         .into_iter()
         .filter(|symbol| {
-            for filter in &filters {
-                if filter.name.is_some() && filter.name.clone().unwrap() != symbol.name {
+            if let Some(names) = names {
+                if !names.contains(&symbol.name) {
                     return false;
                 }
-                if filter.asset_type.is_some()
-                    && filter.asset_type.clone().unwrap() != symbol.asset_type
-                {
+            }
+
+            if let Some(asset_types) = asset_types {
+                if !asset_types.contains(&symbol.asset_type) {
                     return false;
                 }
             }
@@ -292,10 +287,10 @@ pub mod tests {
         assert_eq!(
             filter_symbols(
                 symbols.clone(),
-                vec![Filter {
-                    name: Some("XMR".to_string()),
-                    asset_type: None,
-                }],
+                GetMetadataParams {
+                    names: Some(vec!["XMR".to_string()]),
+                    asset_types: None,
+                },
             ),
             vec![symbol2.clone()]
         );
@@ -304,10 +299,10 @@ pub mod tests {
         assert_eq!(
             filter_symbols(
                 symbols.clone(),
-                vec![Filter {
-                    name: None,
-                    asset_type: Some("crypto".to_string()),
-                }],
+                GetMetadataParams {
+                    names: None,
+                    asset_types: Some(vec!["crypto".to_string()]),
+                },
             ),
             vec![symbol1.clone(), symbol2.clone()]
         );
@@ -316,30 +311,12 @@ pub mod tests {
         assert_eq!(
             filter_symbols(
                 symbols.clone(),
-                vec![Filter {
-                    name: Some("BTC".to_string()),
-                    asset_type: Some("crypto".to_string()),
-                }],
+                GetMetadataParams {
+                    names: Some(vec!["BTC".to_string()]),
+                    asset_types: Some(vec!["crypto".to_string()]),
+                },
             ),
             vec![symbol1.clone()]
-        );
-
-        // and as two separate filters
-        assert_eq!(
-            filter_symbols(
-                symbols.clone(),
-                vec![
-                    Filter {
-                        name: None,
-                        asset_type: Some("crypto".to_string()),
-                    },
-                    Filter {
-                        name: Some("BTC".to_string()),
-                        asset_type: None,
-                    }
-                ],
-            ),
-            vec![symbol1]
         );
     }
 }
