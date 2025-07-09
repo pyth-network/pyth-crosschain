@@ -13,7 +13,7 @@ contract PythLazerChangeOwnership is Script {
     uint256 public OLD_OWNER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address public OLD_OWNER = vm.addr(OLD_OWNER_PRIVATE_KEY);
     // EVM Executor Contract
-    address public constant NEW_OWNER =
+    address public NEW_OWNER =
         vm.envAddress("NEW_OWNER");
 
     function run() public {
