@@ -242,7 +242,7 @@ impl History {
             .max_lifetime(None)
             .connect("sqlite::memory:")
             .await?;
-        let migrator = migrate!("./migrations");
+        let migrator = migrate!(); // defaults to "./migrations"
         migrator.run(&pool).await?;
         Self::new_with_pool(pool).await
     }
