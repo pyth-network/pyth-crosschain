@@ -46,18 +46,6 @@ pub struct DataSource {
     pub emitter_address: FixedBytes<32>,
 }
 
-// impl StorageKey for DataSourceStorage {
-//     fn to_slot(&self, root: B256) -> U256 {
-//         let chain_id: u16 = self.chain_id.get().to::<u16>();
-//         let emitter_address = self.emitter_address.get();
-
-//         let bytes = serialize_data_source_to_bytes(chain_id, emitter_address.as_slice().try_into().unwrap())
-//             .expect("Failed to serialize DataSource");
-
-//         keccak256(bytes).to_slot(root)
-//     }
-// }
-
 impl StorageKey for DataSource {
     fn to_slot(&self, root: B256) -> U256 {
         let chain_id: u16 = self.chain_id.to::<u16>();
@@ -69,24 +57,6 @@ impl StorageKey for DataSource {
         keccak256(bytes).to_slot(root)
     }
 }
-
-// pub trait GetDataSource {
-//     fn data_source(&self) -> DataSourceStorage;
-// }
-
-// impl GetDataSource for VerifiedVM {
-//     fn data_source(&self) -> DataSourceStorage {
-//         let mut ds = DataSourceStorage {
-//             chain_id: StorageU16::new(storage_key!("chain_id")),
-//             emitter_address: StorageFixedBytes::<32>::new(storage_key!("emitter_address")),
-//         };
-//         ds.chain_id.set(self.emitter_chain_id.into());
-//         ds.emitter_address.set(self.emitter_address);
-//         ds
-//     }
-// }
-
-// PriceInfo struct storing price information
 #[storage]
 pub struct PriceInfoStorage {
     pub publish_time: StorageU64,
@@ -109,20 +79,6 @@ pub struct PriceInfoStorage {
 //     pub ema_conf: U64,
 // }
 
-// impl From<&PriceFeedMessage> for PriceInfo {
-//     fn from(price_feed_message: &PriceFeedMessage) -> Self {
-//         Self {
-//             publish_time: U64::from(price_feed_message.publish_time),
-//             expo: I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
-//             price: I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
-//             conf: U64::from(price_feed_message.conf),
-//             ema_price: I64::from_be_bytes(price_feed_message.ema_price.to_be_bytes()),
-//             ema_conf: U64::from(price_feed_message.ema_conf),
-//         }
-//     }
-// }
-
-// PriceInfo struct storing price information
 pub type PriceInfoReturn = (U64, I32, I64, U64, I64, U64);
 
 #[cfg(test)]
