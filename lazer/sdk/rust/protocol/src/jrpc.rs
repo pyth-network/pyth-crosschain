@@ -13,10 +13,9 @@ pub struct PythLazerAgentJrpcV1 {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 #[serde(tag = "method", content = "params")]
+#[serde(rename_all = "snake_case")]
 pub enum JrpcCall {
-    #[serde(rename_all = "snake_case")]
     PushUpdate(FeedUpdateParams),
-    #[serde(rename = "get_symbols")]
     GetMetadata(GetMetadataParams),
 }
 
@@ -134,11 +133,11 @@ mod tests {
     use crate::router::{Price, PriceFeedId, Rate, TimestampUs};
 
     #[test]
-    fn test_send_updates_price() {
+    fn test_push_update_price() {
         let json = r#"
         {
           "jsonrpc": "2.0",
-          "method": "send_updates",
+          "method": "push_update",
           "params": {
             "feed_id": 1,
             "source_timestamp": 124214124124,
@@ -156,7 +155,7 @@ mod tests {
 
         let expected = PythLazerAgentJrpcV1 {
             jsonrpc: JsonRpcVersion::V2,
-            params: SendUpdates(FeedUpdateParams {
+            params: PushUpdate(FeedUpdateParams {
                 feed_id: PriceFeedId(1),
                 source_timestamp: TimestampUs(124214124124),
                 update: UpdateParams::PriceUpdate {
@@ -175,11 +174,11 @@ mod tests {
     }
 
     #[test]
-    fn test_send_updates_funding_rate() {
+    fn test_push_update_funding_rate() {
         let json = r#"
         {
           "jsonrpc": "2.0",
-          "method": "send_updates",
+          "method": "push_update",
           "params": {
             "feed_id": 1,
             "source_timestamp": 124214124124,
@@ -196,7 +195,7 @@ mod tests {
 
         let expected = PythLazerAgentJrpcV1 {
             jsonrpc: JsonRpcVersion::V2,
-            params: SendUpdates(FeedUpdateParams {
+            params: PushUpdate(FeedUpdateParams {
                 feed_id: PriceFeedId(1),
                 source_timestamp: TimestampUs(124214124124),
                 update: UpdateParams::FundingRateUpdate {
@@ -213,16 +212,14 @@ mod tests {
         );
     }
     #[test]
-    fn test_send_get_symbols() {
+    fn test_send_get_metadata() {
         let json = r#"
         {
           "jsonrpc": "2.0",
-          "method": "get_symbols",
+          "method": "get_metadata",
           "params": {
-            "filters": [
-              {"name":  "BTC/USD"},
-              {"asset_type": "crypto"}
-            ]
+              "names": ["BTC/USD"],
+              "asset_types": ["crypto"]
           },
           "id": 1
         }
@@ -231,16 +228,8 @@ mod tests {
         let expected = PythLazerAgentJrpcV1 {
             jsonrpc: JsonRpcVersion::V2,
             params: GetMetadata(GetMetadataParams {
-                filters: Some(vec![
-                    Filter {
-                        name: Some("BTC/USD".to_string()),
-                        asset_type: None,
-                    },
-                    Filter {
-                        name: None,
-                        asset_type: Some("crypto".to_string()),
-                    },
-                ]),
+                names: Some(vec!["BTC/USD".to_string()]),
+                asset_types: Some(vec!["crypto".to_string()]),
             }),
             id: 1,
         };
@@ -252,11 +241,11 @@ mod tests {
     }
 
     #[test]
-    fn test_get_symbols_without_filters() {
+    fn test_get_metadata_without_filters() {
         let json = r#"
         {
           "jsonrpc": "2.0",
-          "method": "get_symbols",
+          "method": "get_metadata",
           "params": {},
           "id": 1
         }
@@ -264,7 +253,7 @@ mod tests {
 
         let expected = PythLazerAgentJrpcV1 {
             jsonrpc: JsonRpcVersion::V2,
-            params: GetMetadata(GetMetadataParams { filters: None }),
+            params: GetMetadata(GetMetadataParams { names: None, asset_types: None }),
             id: 1,
         };
 

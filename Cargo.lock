@@ -4144,6 +4144,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonrpc-types"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d203b1b00d03d1cee9ddcaf970d2ccdd40d8036d8fafef34a0b1b841486b232"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "jsonwebtoken"
 version = "8.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5591,6 +5601,7 @@ dependencies = [
  "hex",
  "humantime-serde",
  "itertools 0.13.0",
+ "jsonrpc-types",
  "libsecp256k1 0.7.2",
  "protobuf",
  "rust_decimal",

@@ -16,6 +16,7 @@ itertools = "0.13.0"
 rust_decimal = "1.36.0"
 protobuf = "3.7.2"
 humantime-serde = "1.1.1"
+jsonrpc-types = "0.3.3"
 
 [dev-dependencies]
 bincode = "1.3.3"
