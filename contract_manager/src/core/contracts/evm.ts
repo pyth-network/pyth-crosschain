@@ -412,14 +412,30 @@ export class EvmEntropyContract extends Storable {
   }
 }
 
-export class EvmExecutorContract {
+export class EvmExecutorContract extends Storable {
+  static type = "EvmExecutorContract";
+
   constructor(
     public chain: EvmChain,
     public address: string,
-  ) {}
+  ) {
+    super();
+  }
 
   getId(): string {
     return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return EvmExecutorContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: EvmExecutorContract.type,
+    };
   }
 
   async getWormholeContract(): Promise<EvmWormholeContract> {
@@ -429,6 +445,17 @@ export class EvmExecutorContract {
     let address = await web3.eth.getStorageAt(this.address, 251);
     address = "0x" + address.slice(26);
     return new EvmWormholeContract(this.chain, address);
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string },
+  ): EvmExecutorContract {
+    if (parsed.type !== EvmExecutorContract.type)
+      throw new Error("Invalid type");
+    if (!(chain instanceof EvmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new EvmExecutorContract(chain, parsed.address);
   }
 
   getContract() {

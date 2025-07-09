@@ -151,7 +151,7 @@ pub struct EthereumConfig {
     pub legacy_tx: bool,
 
     /// The gas limit to use for entropy callback transactions.
-    pub gas_limit: u64,
+    pub gas_limit: u32,
 
     /// The percentage multiplier to apply to priority fee estimates (100 = no change, e.g. 150 = 150% of base fee)
     #[serde(default = "default_priority_fee_multiplier_pct")]
@@ -227,23 +227,6 @@ fn default_backlog_range() -> u64 {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EscalationPolicyConfig {
-    // The keeper will perform the callback as long as the tx is within this percentage of the configured gas limit.
-    // Default value is 110, meaning a 10% tolerance over the configured value.
-    #[serde(default = "default_gas_limit_tolerance_pct")]
-    pub gas_limit_tolerance_pct: u64,
-
-    /// The initial gas multiplier to apply to the tx gas estimate
-    #[serde(default = "default_initial_gas_multiplier_pct")]
-    pub initial_gas_multiplier_pct: u64,
-
-    /// The gas multiplier to apply to the tx gas estimate during backoff retries.
-    /// The gas on each successive retry is multiplied by this value, with the maximum multiplier capped at `gas_multiplier_cap_pct`.
-    #[serde(default = "default_gas_multiplier_pct")]
-    pub gas_multiplier_pct: u64,
-    /// The maximum gas multiplier to apply to the tx gas estimate during backoff retries.
-    #[serde(default = "default_gas_multiplier_cap_pct")]
-    pub gas_multiplier_cap_pct: u64,
-
     /// The fee multiplier to apply to the fee during backoff retries.
     /// The initial fee is 100% of the estimate (which itself may be padded based on our chain configuration)
     /// The fee on each successive retry is multiplied by this value, with the maximum multiplier capped at `fee_multiplier_cap_pct`.
@@ -251,22 +234,6 @@ pub struct EscalationPolicyConfig {
     pub fee_multiplier_pct: u64,
     #[serde(default = "default_fee_multiplier_cap_pct")]
     pub fee_multiplier_cap_pct: u64,
-}
-
-fn default_gas_limit_tolerance_pct() -> u64 {
-    110
-}
-
-fn default_initial_gas_multiplier_pct() -> u64 {
-    125
-}
-
-fn default_gas_multiplier_pct() -> u64 {
-    110
-}
-
-fn default_gas_multiplier_cap_pct() -> u64 {
-    600
 }
 
 fn default_fee_multiplier_pct() -> u64 {
@@ -280,10 +247,6 @@ fn default_fee_multiplier_cap_pct() -> u64 {
 impl Default for EscalationPolicyConfig {
     fn default() -> Self {
         Self {
-            gas_limit_tolerance_pct: default_gas_limit_tolerance_pct(),
-            initial_gas_multiplier_pct: default_initial_gas_multiplier_pct(),
-            gas_multiplier_pct: default_gas_multiplier_pct(),
-            gas_multiplier_cap_pct: default_gas_multiplier_cap_pct(),
             fee_multiplier_pct: default_fee_multiplier_pct(),
             fee_multiplier_cap_pct: default_fee_multiplier_cap_pct(),
         }
@@ -293,10 +256,6 @@ impl Default for EscalationPolicyConfig {
 impl EscalationPolicyConfig {
     pub fn to_policy(&self) -> EscalationPolicy {
         EscalationPolicy {
-            gas_limit_tolerance_pct: self.gas_limit_tolerance_pct,
-            initial_gas_multiplier_pct: self.initial_gas_multiplier_pct,
-            gas_multiplier_pct: self.gas_multiplier_pct,
-            gas_multiplier_cap_pct: self.gas_multiplier_cap_pct,
             fee_multiplier_pct: self.fee_multiplier_pct,
             fee_multiplier_cap_pct: self.fee_multiplier_cap_pct,
         }
@@ -341,8 +300,8 @@ pub struct ProviderConfig {
     #[serde(default = "default_chain_sample_interval")]
     pub chain_sample_interval: u64,
 
-    /// The address of the fee manager for the provider. Set this value to the keeper wallet address to
-    /// enable keeper balance top-ups.
+    /// The address of the fee manager for the provider. Only used for syncing the fee manager address to the contract.
+    /// Fee withdrawals are handled by the fee manager private key defined in the keeper config.
     pub fee_manager: Option<Address>,
 }
 
@@ -355,10 +314,6 @@ pub struct RunConfig {
     /// Disable automatic fee adjustment threads
     #[serde(default)]
     pub disable_fee_adjustment: bool,
-
-    /// Disable automatic fee withdrawal threads
-    #[serde(default)]
-    pub disable_fee_withdrawal: bool,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -383,12 +338,19 @@ pub struct KeeperConfig {
     /// should ensure this is a different key in order to reduce the severity of security breaches.
     pub private_key: SecretString,
 
+    /// The fee manager's private key for fee manager operations.
+    /// This key is used to withdraw fees from the contract as the fee manager.
+    /// Multiple replicas can share the same fee manager private key but different keeper keys (`private_key`).
+    #[serde(default)]
+    pub fee_manager_private_key: Option<SecretString>,
+
+    /// The addresses of other keepers in the replica set (excluding the current keeper).
+    /// This is used to distribute fees fairly across all keepers.
+    #[serde(default)]
+    pub other_keeper_addresses: Vec<Address>,
+
     #[serde(default)]
     pub replica_config: Option<ReplicaConfig>,
-
-    /// Runtime configuration for the keeper service
-    #[serde(default)]
-    pub run_config: RunConfig,
 }
 
 // A secret is a string that can be provided either as a literal in the config,
