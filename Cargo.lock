@@ -5584,8 +5584,8 @@ dependencies = [
  "hyper 1.6.0",
  "hyper-util",
  "protobuf",
- "pyth-lazer-protocol",
- "pyth-lazer-publisher-sdk",
+ "pyth-lazer-protocol 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-publisher-sdk 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.12.22",
  "serde",
  "serde_json",
@@ -5614,13 +5614,30 @@ dependencies = [
  "futures-util",
  "hex",
  "libsecp256k1 0.7.2",
- "pyth-lazer-protocol",
+ "pyth-lazer-protocol 0.8.1",
  "serde",
  "serde_json",
  "tokio",
  "tokio-tungstenite 0.20.1",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "pyth-lazer-protocol"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6445dc5d2f7fff7c677fb8edc5a080a82ef7583c1bdb39daa95421788c23f695"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "byteorder",
+ "derive_more 1.0.0",
+ "itertools 0.13.0",
+ "protobuf",
+ "rust_decimal",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -5645,6 +5662,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-lazer-protocol"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1258b8770756a82a39b7b02a296c10a91b93aa58c0cded47950defe4d9377644"
+dependencies = [
+ "anyhow",
+ "byteorder",
+ "derive_more 1.0.0",
+ "humantime-serde",
+ "itertools 0.13.0",
+ "protobuf",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "pyth-lazer-publisher-sdk"
 version = "0.1.6"
 dependencies = [
@@ -5653,7 +5687,23 @@ dependencies = [
  "humantime",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol",
+ "pyth-lazer-protocol 0.8.1",
+ "serde-value",
+ "tracing",
+]
+
+[[package]]
+name = "pyth-lazer-publisher-sdk"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db6ef4052ebf2a7943259b3d52a10b2231ffc346717735c50e44d73fe92019d5"
+dependencies = [
+ "anyhow",
+ "fs-err",
+ "humantime",
+ "protobuf",
+ "protobuf-codegen",
+ "pyth-lazer-protocol 0.7.3",
  "serde-value",
  "tracing",
 ]
