@@ -287,7 +287,7 @@ impl PythReceiver {
         max_publish_time: u64,
     ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
         let price_feeds = self.parse_price_feed_updates_with_config(
-            update_data,
+            vec![update_data],
             price_ids,
             min_publish_time,
             max_publish_time,
@@ -308,11 +308,11 @@ impl PythReceiver {
         check_update_data_is_minimal: bool,
         store_updates_if_fresh: bool,
     ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
-        let all_parsed_price_pairs = Vec::new();
+        let mut all_parsed_price_pairs = Vec::new();
         for data in &update_data {
             if store_updates_if_fresh {
                 all_parsed_price_pairs.extend(self.update_price_feeds_internal(
-                    data,
+                    data.clone(),
                     price_ids.clone(),
                     min_allowed_publish_time,
                     max_allowed_publish_time,
@@ -320,7 +320,7 @@ impl PythReceiver {
                 )?);
             } else {
                 all_parsed_price_pairs.extend(self.parse_price_feed_updates_internal(
-                    data,
+                    data.clone(),
                     min_allowed_publish_time,
                     max_allowed_publish_time,
                     check_uniqueness,
@@ -328,13 +328,18 @@ impl PythReceiver {
             }
         }
 
-        if check_update_data_is_minimal && price_ids.len() != price_pairs.len() {
+        if check_update_data_is_minimal && all_parsed_price_pairs.len() != price_ids.len() {
             return Err(PythReceiverError::InvalidUpdateData);
         }
 
-        let price_map: BTreeMap<[u8; 32], PriceInfoReturn> = price_pairs.into_iter().collect();
-
         let mut result: Vec<PriceInfoReturn> = Vec::with_capacity(price_ids.len());
+        let mut price_map: BTreeMap<[u8; 32], PriceInfoReturn> = BTreeMap::new();
+
+        for (price_id, price_info) in all_parsed_price_pairs {
+            if !price_map.contains_key(&price_id) {
+                price_map.insert(price_id, price_info);
+            }
+        }
 
         for price_id in price_ids {
             if let Some(price_info) = price_map.get(&price_id) {
