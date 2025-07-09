@@ -14,7 +14,7 @@ use soketto::handshake::http::Server;
 use std::str::FromStr;
 use tokio::{pin, select};
 use tokio_util::compat::TokioAsyncReadCompatExt;
-use tracing::{debug, instrument};
+use tracing::{debug, error, instrument};
 use url::Url;
 
 const DEFAULT_HISTORY_SERVICE_URL: &str =
@@ -156,7 +156,7 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
                     .await?;
                 }
                 Err(err) => {
-                    debug!("error while retrieving metadata: {:?}", err);
+                    error!("error while retrieving metadata: {:?}", err);
                     send_text(
                         sender,
                         serde_json::to_string::<JrpcResponse<()>>(&JrpcResponse::Error(
