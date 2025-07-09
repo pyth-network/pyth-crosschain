@@ -97,33 +97,22 @@ pub struct PriceInfoStorage {
     pub ema_conf: StorageU64,
 }
 
-// Addressing nit -- running into some versioning issues that preclude me
-// from returning the PriceInfo struct directly. Need to figure that out.
+// PriceInfo struct storing price information - keeping as tuple for ABI compatibility
+pub type PriceInfo = (U64, I32, I64, U64, I64, U64);
 
-// pub struct PriceInfo {
-//     pub publish_time: U64,
-//     pub expo: I32,
-//     pub price: I64,
-//     pub conf: U64,
-//     pub ema_price: I64,
-//     pub ema_conf: U64,
-// }
+impl PriceInfoStorage {
+    pub fn to_price_info(&self) -> PriceInfo {
+        (
+            self.publish_time.get(),
+            self.expo.get(),
+            self.price.get(),
+            self.conf.get(),
+            self.ema_price.get(),
+            self.ema_conf.get(),
+        )
+    }
+}
 
-// impl From<&PriceFeedMessage> for PriceInfo {
-//     fn from(price_feed_message: &PriceFeedMessage) -> Self {
-//         Self {
-//             publish_time: U64::from(price_feed_message.publish_time),
-//             expo: I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
-//             price: I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
-//             conf: U64::from(price_feed_message.conf),
-//             ema_price: I64::from_be_bytes(price_feed_message.ema_price.to_be_bytes()),
-//             ema_conf: U64::from(price_feed_message.ema_conf),
-//         }
-//     }
-// }
-
-// PriceInfo struct storing price information
-pub type PriceInfoReturn = (U64, I32, I64, U64, I64, U64);
 
 #[cfg(test)]
 mod tests {

@@ -135,17 +135,13 @@ mod test {
 
         let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
         assert!(price_result.is_ok());
-        assert_eq!(
-            price_result.unwrap(),
-            (
-                U64::from(TEST_PUBLISH_TIME),
-                I32::from_le_bytes(TEST_EXPO.to_le_bytes()),
-                I64::from_le_bytes(TEST_PRICE.to_le_bytes()),
-                U64::from(TEST_CONF),
-                I64::from_le_bytes(TEST_EMA_PRICE.to_le_bytes()),
-                U64::from(TEST_EMA_CONF)
-            )
-        );
+        let price_info = price_result.unwrap();
+        assert_eq!(price_info.0, U64::from(TEST_PUBLISH_TIME));
+        assert_eq!(price_info.1, I32::from_le_bytes(TEST_EXPO.to_le_bytes()));
+        assert_eq!(price_info.2, I64::from_le_bytes(TEST_PRICE.to_le_bytes()));
+        assert_eq!(price_info.3, U64::from(TEST_CONF));
+        assert_eq!(price_info.4, I64::from_le_bytes(TEST_EMA_PRICE.to_le_bytes()));
+        assert_eq!(price_info.5, U64::from(TEST_EMA_CONF));
     }
 
     #[motsu::test]
@@ -196,17 +192,13 @@ mod test {
 
         let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
         assert!(price_result.is_ok());
-        assert_eq!(
-            price_result.unwrap(),
-            (
-                U64::from(1751573860u64),
-                I32::from_le_bytes((-8i32).to_le_bytes()),
-                I64::from_le_bytes(10985663592646i64.to_le_bytes()),
-                U64::from(4569386330u64),
-                I64::from_le_bytes(10977795800000i64.to_le_bytes()),
-                U64::from(3919318300u64)
-            )
-        );
+        let price_info = price_result.unwrap();
+        assert_eq!(price_info.0, U64::from(1751573860u64));
+        assert_eq!(price_info.1, I32::from_le_bytes((-8i32).to_le_bytes()));
+        assert_eq!(price_info.2, I64::from_le_bytes(10985663592646i64.to_le_bytes()));
+        assert_eq!(price_info.3, U64::from(4569386330u64));
+        assert_eq!(price_info.4, I64::from_le_bytes(10977795800000i64.to_le_bytes()));
+        assert_eq!(price_info.5, U64::from(3919318300u64));
     }
 
     #[motsu::test]
@@ -271,17 +263,13 @@ mod test {
             .sender(alice)
             .get_price_no_older_than(TEST_PRICE_ID, u64::MAX);
         assert!(price_result.is_ok());
-        assert_eq!(
-            price_result.unwrap(),
-            (
-                U64::from(1751573860u64),
-                I32::from_le_bytes((-8i32).to_le_bytes()),
-                I64::from_le_bytes(10985663592646i64.to_le_bytes()),
-                U64::from(4569386330u64),
-                I64::from_le_bytes(10977795800000i64.to_le_bytes()),
-                U64::from(3919318300u64)
-            )
-        );
+        let price_info = price_result.unwrap();
+        assert_eq!(price_info.0, U64::from(1751573860u64));
+        assert_eq!(price_info.1, I32::from_le_bytes((-8i32).to_le_bytes()));
+        assert_eq!(price_info.2, I64::from_le_bytes(10985663592646i64.to_le_bytes()));
+        assert_eq!(price_info.3, U64::from(4569386330u64));
+        assert_eq!(price_info.4, I64::from_le_bytes(10977795800000i64.to_le_bytes()));
+        assert_eq!(price_info.5, U64::from(3919318300u64));
     }
 
     #[motsu::test]
@@ -343,31 +331,23 @@ mod test {
 
         let first_price_result = pyth_contract.sender(alice).get_price_unsafe(first_id);
         assert!(first_price_result.is_ok());
-        assert_eq!(
-            first_price_result.unwrap(),
-            (
-                U64::from(1751573123u64),
-                I32::from_le_bytes((-8i32).to_le_bytes()),
-                I64::from_le_bytes(10990356724259i64.to_le_bytes()),
-                U64::from(3891724259u64),
-                I64::from_le_bytes(10974970400000i64.to_le_bytes()),
-                U64::from(3918344000u64)
-            )
-        );
+        let first_price_info = first_price_result.unwrap();
+        assert_eq!(first_price_info.0, U64::from(1751573123u64));
+        assert_eq!(first_price_info.1, I32::from_le_bytes((-8i32).to_le_bytes()));
+        assert_eq!(first_price_info.2, I64::from_le_bytes(10990356724259i64.to_le_bytes()));
+        assert_eq!(first_price_info.3, U64::from(3891724259u64));
+        assert_eq!(first_price_info.4, I64::from_le_bytes(10974970400000i64.to_le_bytes()));
+        assert_eq!(first_price_info.5, U64::from(3918344000u64));
 
         let second_price_result = pyth_contract.sender(alice).get_price_unsafe(second_id);
         assert!(second_price_result.is_ok());
-        assert_eq!(
-            second_price_result.unwrap(),
-            (
-                U64::from(1751573123u64),
-                I32::from_le_bytes((-8i32).to_le_bytes()),
-                I64::from_le_bytes(258906787480i64.to_le_bytes()),
-                U64::from(158498649u64),
-                I64::from_le_bytes(258597182000i64.to_le_bytes()),
-                U64::from(131285914u64)
-            )
-        );
+        let second_price_info = second_price_result.unwrap();
+        assert_eq!(second_price_info.0, U64::from(1751573123u64));
+        assert_eq!(second_price_info.1, I32::from_le_bytes((-8i32).to_le_bytes()));
+        assert_eq!(second_price_info.2, I64::from_le_bytes(258906787480i64.to_le_bytes()));
+        assert_eq!(second_price_info.3, U64::from(158498649u64));
+        assert_eq!(second_price_info.4, I64::from_le_bytes(258597182000i64.to_le_bytes()));
+        assert_eq!(second_price_info.5, U64::from(131285914u64));
     }
 
     #[motsu::test]
