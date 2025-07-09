@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod test {
     use crate::error::PythReceiverError;
-    use crate::test_data::good_update1_results;
-    use crate::test_data::{self, good_update2_results, multiple_updates_results};
+    use crate::test_data::*;
     use crate::PythReceiver;
     use alloy_primitives::{Address, U256};
     use motsu::prelude::*;
@@ -57,7 +56,7 @@ mod test {
         wormhole_contract: &Contract<WormholeContract>,
         alice: &Address,
     ) {
-        let guardians = test_data::current_guardians();
+        let guardians = current_guardians();
         let governance_contract =
             Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         wormhole_contract
@@ -103,7 +102,7 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let update_data = test_data::good_update1();
+        let update_data = good_update1();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         alice.fund(update_fee);
@@ -128,7 +127,7 @@ mod test {
 
         alice.fund(U256::from(200));
 
-        let update_data = test_data::good_update1();
+        let update_data = good_update1();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
         let small_update_fee = update_fee / U256::from(2);
 
@@ -140,17 +139,17 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_get_price_after_multiple_updates_returns_recent_price(
+    fn test_get_price_after_multiple_different_updates_returns_recent_price(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let update_data1 = test_data::good_update1();
+        let update_data1 = good_update1();
         let update_fee1 = mock_get_update_fee(update_data1.clone()).unwrap();
 
-        let update_data2 = test_data::good_update2();
+        let update_data2 = good_update2();
         let update_fee2 = mock_get_update_fee(update_data2.clone()).unwrap();
 
         alice.fund(update_fee1 + update_fee2);
@@ -218,7 +217,7 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let update_data = test_data::good_update2();
+        let update_data = good_update2();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         alice.fund(update_fee);
@@ -243,7 +242,7 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let update_data = test_data::good_update2();
+        let update_data = good_update2();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         alice.fund(update_fee);
@@ -264,14 +263,14 @@ mod test {
     }
 
     #[motsu::test]
-    fn test_multiple_updates_different_ids_updates_both(
+    fn test_multiple_updates_in_same_vaa_different_ids_updates_both(
         pyth_contract: Contract<PythReceiver>,
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let update_data = test_data::multiple_updates();
+        let update_data = multiple_updates_same_vaa();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
 
         alice.fund(update_fee);
@@ -299,5 +298,45 @@ mod test {
         let second_price_result = pyth_contract.sender(alice).get_price_unsafe(second_id);
         assert!(second_price_result.is_ok());
         assert_eq!(second_price_result.unwrap(), multiple_updates_results()[1]);
+    }
+
+    #[motsu::test]
+    fn test_multiple_updates_different_ids_updates_both(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+
+        let update_data = multiple_updates_diff_vaa();
+        let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
+
+        alice.fund(update_fee);
+
+        let result = pyth_contract
+            .sender_and_value(alice, update_fee)
+            .update_price_feeds(update_data);
+        assert!(result.is_ok());
+
+        let first_id: [u8; 32] = [
+            0x3f, 0xa4, 0x25, 0x28, 0x48, 0xf9, 0xf0, 0xa1, 0x48, 0x0b, 0xe6, 0x27, 0x45, 0xa4,
+            0x62, 0x9d, 0x9e, 0xb1, 0x32, 0x2a, 0xeb, 0xab, 0x8a, 0x79, 0x1e, 0x34, 0x4b, 0x3b,
+            0x9c, 0x1a, 0xdc, 0xf5,
+        ];
+        let second_id: [u8; 32] = TEST_PRICE_ID;
+
+        let first_price_result = pyth_contract.sender(alice).get_price_unsafe(first_id);
+        assert!(first_price_result.is_ok());
+        assert_eq!(
+            first_price_result.unwrap(),
+            multiple_updates_diff_vaa_results()[0]
+        );
+
+        let second_price_result = pyth_contract.sender(alice).get_price_unsafe(second_id);
+        assert!(second_price_result.is_ok());
+        assert_eq!(
+            second_price_result.unwrap(),
+            multiple_updates_diff_vaa_results()[1]
+        );
     }
 }
