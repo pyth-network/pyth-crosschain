@@ -87,7 +87,7 @@ pub struct JrpcErrorObject {
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum JrpcError {
-    ParseError,
+    ParseError(String),
     InternalError,
 }
 
@@ -95,10 +95,10 @@ pub enum JrpcError {
 impl From<JrpcError> for JrpcErrorObject {
     fn from(error: JrpcError) -> Self {
         match error {
-            JrpcError::ParseError => JrpcErrorObject {
+            JrpcError::ParseError(error_message) => JrpcErrorObject {
                 code: -32700,
                 message: "Parse error".to_string(),
-                data: None,
+                data: Some(error_message.into()),
             },
             JrpcError::InternalError => JrpcErrorObject {
                 code: -32603,
