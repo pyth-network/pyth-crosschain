@@ -1,5 +1,4 @@
-use alloc::{boxed::Box, format, vec::Vec};
-use pythnet_sdk::wire::to_vec;
+use alloc::{vec::Vec};
 use serde::Serialize;
 use stylus_sdk::alloy_primitives::{keccak256, FixedBytes, B256, I32, I64, U16, U256, U64};
 use stylus_sdk::{
@@ -7,31 +6,16 @@ use stylus_sdk::{
     storage::{StorageFixedBytes, StorageI32, StorageI64, StorageKey, StorageU16, StorageU64},
 };
 
-#[derive(Serialize)]
-struct SerializableDataSource {
-    chain_id: u16,
-    #[serde(with = "pythnet_sdk::wire::array")]
-    emitter_address: [u8; 32],
-}
-
 fn serialize_data_source_to_bytes(
     chain_id: u16,
     emitter_address: &[u8; 32],
-) -> Result<[u8; 34], Box<dyn core::error::Error>> {
-    let data_source = SerializableDataSource {
-        chain_id,
-        emitter_address: *emitter_address,
-    };
-
-    let bytes = to_vec::<_, byteorder::BE>(&data_source)?;
-    if bytes.len() != 34 {
-        return Err(format!("Expected 34 bytes, got {}", bytes.len()).into());
-    }
-
+) -> [u8; 34] {
     let mut result = [0u8; 34];
-    result.copy_from_slice(&bytes);
-    Ok(result)
+    result[0..2].copy_from_slice(&chain_id.to_be_bytes());
+    result[2..].copy_from_slice(emitter_address);
+    result
 }
+
 
 #[derive(Debug)]
 #[storage]
@@ -51,8 +35,7 @@ impl StorageKey for DataSource {
         let chain_id: u16 = self.chain_id.to::<u16>();
         let emitter_address: [u8; 32] = self.emitter_address.as_slice().try_into().unwrap();
 
-        let bytes = serialize_data_source_to_bytes(chain_id, &emitter_address)
-            .expect("Failed to serialize DataSource");
+        let bytes = serialize_data_source_to_bytes(chain_id, &emitter_address);
 
         keccak256(bytes).to_slot(root)
     }
@@ -100,8 +83,7 @@ mod tests {
         expected_bytes[0..2].copy_from_slice(&chain_id.to_be_bytes());
         expected_bytes[2..].copy_from_slice(&emitter_address);
 
-        let actual_bytes = serialize_data_source_to_bytes(chain_id, &emitter_address)
-            .expect("Serialization should succeed");
+        let actual_bytes = serialize_data_source_to_bytes(chain_id, &emitter_address);
 
         assert_eq!(
             actual_bytes, expected_bytes,
