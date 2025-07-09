@@ -48,7 +48,8 @@ pub struct Filter {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct GetMetadataParams {
-    pub filters: Option<Vec<Filter>>,
+    pub names: Option<Vec<String>>,
+    pub asset_types: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
