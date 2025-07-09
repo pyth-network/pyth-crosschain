@@ -3204,7 +3204,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "anyhow",
  "byteorder",
