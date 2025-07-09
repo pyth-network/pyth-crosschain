@@ -125,7 +125,7 @@ async fn try_handle_publisher(
                             &UpdateDeserializationErrorResponse {
                                 error: format!("failed to parse binary update: {err}"),
                             }
-                                .into(),
+                            .into(),
                         )?;
                         send_text(&mut ws_sender, error_json).await?;
                         continue;
@@ -175,7 +175,7 @@ async fn try_handle_publisher(
                             &UpdateDeserializationErrorResponse {
                                 error: format!("failed to parse binary update: {err}"),
                             }
-                                .into(),
+                            .into(),
                         )?;
                         send_text(&mut ws_sender, error_json).await?;
                         continue;

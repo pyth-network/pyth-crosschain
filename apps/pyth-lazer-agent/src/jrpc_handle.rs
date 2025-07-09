@@ -5,7 +5,10 @@ use anyhow::Error;
 use futures::{AsyncRead, AsyncWrite};
 use futures_util::io::{BufReader, BufWriter};
 use hyper_util::rt::TokioIo;
-use pyth_lazer_protocol::jrpc::{GetMetadataParams, JrpcCall, JrpcError, JrpcErrorResponse, JrpcResponse, JrpcSuccessResponse, JsonRpcVersion, PythLazerAgentJrpcV1, SymbolMetadata};
+use pyth_lazer_protocol::jrpc::{
+    GetMetadataParams, JrpcCall, JrpcError, JrpcErrorResponse, JrpcResponse, JrpcSuccessResponse,
+    JsonRpcVersion, PythLazerAgentJrpcV1, SymbolMetadata,
+};
 use soketto::Sender;
 use soketto::handshake::http::Server;
 use std::str::FromStr;
@@ -210,7 +213,10 @@ async fn get_metadata(config: Config) -> Result<Vec<SymbolMetadata>, Error> {
     }
 }
 
-fn filter_symbols(symbols: Vec<SymbolMetadata>, get_metadata_params: GetMetadataParams) -> Vec<SymbolMetadata> {
+fn filter_symbols(
+    symbols: Vec<SymbolMetadata>,
+    get_metadata_params: GetMetadataParams,
+) -> Vec<SymbolMetadata> {
     let names = &get_metadata_params.names.clone();
     let asset_types = &get_metadata_params.asset_types.clone();
 

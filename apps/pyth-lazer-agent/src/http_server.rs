@@ -1,8 +1,7 @@
 use crate::jrpc_handle::{JrpcConnectionContext, handle_jrpc};
 use crate::publisher_handle::handle_publisher;
 use crate::{
-    config::Config, lazer_publisher::LazerPublisher,
-    publisher_handle::PublisherConnectionContext,
+    config::Config, lazer_publisher::LazerPublisher, publisher_handle::PublisherConnectionContext,
 };
 use anyhow::{Context, Result};
 use hyper::body::Incoming;
