@@ -464,37 +464,37 @@ impl<'a> RequestQueryBuilder<'a> {
         match &self.search {
             Some(SearchField::TxHash(_)) => {
                 param_count += 1;
-                sql.push_str(&format!(" AND (request_tx_hash = ${}", param_count));
+                sql.push_str(&format!(" AND (request_tx_hash = ${param_count}"));
                 param_count += 1;
-                sql.push_str(&format!(" OR reveal_tx_hash = ${})", param_count));
+                sql.push_str(&format!(" OR reveal_tx_hash = ${param_count})"));
             }
             Some(SearchField::Sender(_)) => {
                 param_count += 1;
-                sql.push_str(&format!(" AND sender = ${}", param_count));
+                sql.push_str(&format!(" AND sender = ${param_count}"));
             }
             Some(SearchField::SequenceNumber(_)) => {
                 param_count += 1;
-                sql.push_str(&format!(" AND sequence = ${}", param_count));
+                sql.push_str(&format!(" AND sequence = ${param_count}"));
             }
             None => (),
         }
 
         if self.network_id.is_some() {
             param_count += 1;
-            sql.push_str(&format!(" AND network_id = ${}", param_count));
+            sql.push_str(&format!(" AND network_id = ${param_count}"));
         }
 
         if self.state.is_some() {
             param_count += 1;
-            sql.push_str(&format!(" AND state = ${}", param_count));
+            sql.push_str(&format!(" AND state = ${param_count}"));
         }
 
         sql.push_str(" ORDER BY created_at DESC");
 
         param_count += 1;
-        sql.push_str(&format!(" LIMIT ${}", param_count));
+        sql.push_str(&format!(" LIMIT ${param_count}"));
         param_count += 1;
-        sql.push_str(&format!(" OFFSET ${}", param_count));
+        sql.push_str(&format!(" OFFSET ${param_count}"));
 
         // Now bind all parameters in order
         let mut query = sqlx::query_as::<_, RequestRow>(&sql)
@@ -543,29 +543,29 @@ impl<'a> RequestQueryBuilder<'a> {
         match &self.search {
             Some(SearchField::TxHash(_)) => {
                 param_count += 1;
-                sql.push_str(&format!(" AND (request_tx_hash = ${}", param_count));
+                sql.push_str(&format!(" AND (request_tx_hash = ${param_count}"));
                 param_count += 1;
-                sql.push_str(&format!(" OR reveal_tx_hash = ${})", param_count));
+                sql.push_str(&format!(" OR reveal_tx_hash = ${param_count})"));
             }
             Some(SearchField::Sender(_)) => {
                 param_count += 1;
-                sql.push_str(&format!(" AND sender = ${}", param_count));
+                sql.push_str(&format!(" AND sender = ${param_count}"));
             }
             Some(SearchField::SequenceNumber(_)) => {
                 param_count += 1;
-                sql.push_str(&format!(" AND sequence = ${}", param_count));
+                sql.push_str(&format!(" AND sequence = ${param_count}"));
             }
             None => (),
         }
 
         if self.network_id.is_some() {
             param_count += 1;
-            sql.push_str(&format!(" AND network_id = ${}", param_count));
+            sql.push_str(&format!(" AND network_id = ${param_count}"));
         }
 
         if self.state.is_some() {
             param_count += 1;
-            sql.push_str(&format!(" AND state = ${}", param_count));
+            sql.push_str(&format!(" AND state = ${param_count}"));
         }
 
         // Now bind all parameters in order
