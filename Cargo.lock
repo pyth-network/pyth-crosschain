@@ -3046,7 +3046,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "7.7.0"
+version = "8.1.0"
 dependencies = [
  "anyhow",
  "axum 0.6.20",
@@ -3064,6 +3064,7 @@ dependencies = [
  "futures-locks",
  "hex",
  "lazy_static",
+ "num-traits",
  "once_cell",
  "prometheus-client",
  "pythnet-sdk",
