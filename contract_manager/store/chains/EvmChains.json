@@ -1265,5 +1265,12 @@
     "rpcUrl": "https://k8s.testnet.json-rpc.injective.network/",
     "networkId": 1439,
     "type": "EvmChain"
+  },
+  {
+    "id": "ethereal_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc-ethereal-testnet.t.conduit.xyz",
+    "networkId": 657468,
+    "type": "EvmChain"
   }
 ]

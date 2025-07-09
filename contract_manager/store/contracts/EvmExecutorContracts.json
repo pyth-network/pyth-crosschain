@@ -193,5 +193,10 @@
     "chain": "sepolia",
     "address": "0xB0D4a9640aDdd415551B6A4fe75403c9f73A7C49",
     "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "ethereal_testnet",
+    "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
+    "type": "EvmExecutorContract"
   }
 ]

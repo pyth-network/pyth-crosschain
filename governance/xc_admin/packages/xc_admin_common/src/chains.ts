@@ -246,6 +246,7 @@ export const RECEIVER_CHAINS = {
   mezo_testnet: 50124,
   hemi_testnet: 50125,
   injective_evm_testnet: 50126,
+  ethereal_testnet: 50127,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
