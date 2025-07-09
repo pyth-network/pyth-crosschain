@@ -188,13 +188,13 @@ impl From<UpdateParams> for Update {
                 best_ask_price,
             } => Update::PriceUpdate(PriceUpdate {
                 price: Some(price.0.into()),
-                best_bid_price: Some(best_bid_price.0.into()),
-                best_ask_price: Some(best_ask_price.0.into()),
+                best_bid_price: best_bid_price.map(|p| p.0.into()),
+                best_ask_price: best_ask_price.map(|p| p.0.into()),
                 special_fields: Default::default(),
             }),
             UpdateParams::FundingRateUpdate { price, rate } => {
                 Update::FundingRateUpdate(FundingRateUpdate {
-                    price: Some(price.0.into()),
+                    price: price.map(|p| p.0.into()),
                     rate: Some(rate.0),
                     special_fields: Default::default(),
                 })
