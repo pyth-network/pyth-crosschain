@@ -26,6 +26,7 @@ stylus-sdk = { version = "0.9.0", features = ["stylus-test"] }
 dotenv = "0.15.0"
 motsu = "0.9.0"
 wormhole-contract = { path = "../wormhole" }
+mock_instant = "0.6.0"
 
 [features]
 default = ["mini-alloc"]

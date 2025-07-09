@@ -12,6 +12,9 @@ mod structs;
 #[cfg(test)]
 mod test_data;
 
+#[cfg(test)]
+use mock_instant::global::MockClock;
+
 use alloc::{collections::BTreeMap, vec::Vec};
 use stylus_sdk::{
     alloy_primitives::{Address, FixedBytes, I32, I64, U16, U256, U32, U64},
@@ -170,8 +173,21 @@ impl PythReceiver {
     }
 
     #[payable]
-    pub fn update_price_feeds(&mut self, update_data: Vec<u8>) -> Result<(), PythReceiverError> {
-        self.update_price_feeds_internal(update_data, Vec::new(), 0, 0, false)?;
+    pub fn update_price_feeds(
+        &mut self,
+        update_data: Vec<Vec<u8>>,
+    ) -> Result<(), PythReceiverError> {
+        for data in &update_data {
+            self.update_price_feeds_internal(data.clone(), Vec::new(), 0, 0, false)?;
+        }
+
+        let total_fee = self.get_update_fee(update_data)?;
+
+        let value = self.vm().msg_value();
+
+        if value < total_fee {
+            return Err(PythReceiverError::InsufficientFee);
+        }
         Ok(())
     }
 
@@ -218,17 +234,26 @@ impl PythReceiver {
         Ok(price_pairs)
     }
 
-    fn get_update_fee(&self, update_data: Vec<u8>) -> Result<U256, PythReceiverError> {
-        let update_data_array: &[u8] = &update_data;
-        let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
-            .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
-        match accumulator_update.proof {
-            Proof::WormholeMerkle { vaa: _, updates } => {
-                let num_updates =
-                    u8::try_from(updates.len()).map_err(|_| PythReceiverError::TooManyUpdates)?;
-                Ok(U256::from(num_updates).saturating_mul(self.single_update_fee_in_wei.get()))
+    fn get_update_fee(&self, update_data: Vec<Vec<u8>>) -> Result<U256, PythReceiverError> {
+        let mut total_num_updates: u64 = 0;
+        for data in &update_data {
+            let update_data_array: &[u8] = &data;
+            let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
+                .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
+            match accumulator_update.proof {
+                Proof::WormholeMerkle { vaa: _, updates } => {
+                    let num_updates = u64::try_from(updates.len())
+                        .map_err(|_| PythReceiverError::TooManyUpdates)?;
+                    total_num_updates += num_updates;
+                }
             }
         }
+        Ok(self.get_total_fee(total_num_updates))
+    }
+
+    fn get_total_fee(&self, total_num_updates: u64) -> U256 {
+        U256::from(total_num_updates).saturating_mul(self.single_update_fee_in_wei.get())
+            + self.transaction_fee_in_wei.get()
     }
 
     pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
@@ -355,14 +380,6 @@ impl PythReceiver {
 
                 let root_digest: MerkleRoot<Keccak160> = parse_wormhole_proof(vaa_obj)?;
 
-                let total_fee = self.get_update_fee(update_data)?;
-
-                let value = self.vm().msg_value();
-
-                if value < total_fee {
-                    return Err(PythReceiverError::InsufficientFee);
-                }
-
                 for update in updates {
                     let message_vec = Vec::from(update.message);
                     let proof: MerklePath<Keccak160> = update.proof;
@@ -377,22 +394,29 @@ impl PythReceiver {
                     match msg {
                         Message::PriceFeedMessage(price_feed_message) => {
                             let publish_time = price_feed_message.publish_time;
-                            
-                            if (min_allowed_publish_time > 0 && publish_time < min_allowed_publish_time as i64) ||
-                               (max_allowed_publish_time > 0 && publish_time > max_allowed_publish_time as i64) {
+
+                            if (min_allowed_publish_time > 0
+                                && publish_time < min_allowed_publish_time as i64)
+                                || (max_allowed_publish_time > 0
+                                    && publish_time > max_allowed_publish_time as i64)
+                            {
                                 return Err(PythReceiverError::PriceFeedNotFoundWithinRange);
                             }
-                            
+
                             if check_uniqueness {
-                                let price_id_fb = FixedBytes::<32>::from(price_feed_message.feed_id);
+                                let price_id_fb =
+                                    FixedBytes::<32>::from(price_feed_message.feed_id);
                                 let prev_price_info = self.latest_price_info.get(price_id_fb);
-                                let prev_publish_time = prev_price_info.publish_time.get().to::<u64>();
-                                
-                                if prev_publish_time > 0 && min_allowed_publish_time <= prev_publish_time {
+                                let prev_publish_time =
+                                    prev_price_info.publish_time.get().to::<u64>();
+
+                                if prev_publish_time > 0
+                                    && min_allowed_publish_time <= prev_publish_time
+                                {
                                     return Err(PythReceiverError::PriceFeedNotFoundWithinRange);
                                 }
                             }
-                            
+
                             let price_info_return = (
                                 U64::from(publish_time),
                                 I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
@@ -444,7 +468,7 @@ impl PythReceiver {
     fn get_current_timestamp(&self) -> u64 {
         #[cfg(test)]
         {
-            1761573860u64
+            MockClock::time().as_secs()
         }
         #[cfg(not(test))]
         {
