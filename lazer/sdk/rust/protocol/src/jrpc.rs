@@ -32,11 +32,11 @@ pub enum UpdateParams {
     #[serde(rename = "price")]
     PriceUpdate {
         price: Price,
-        best_bid_price: Price,
-        best_ask_price: Price,
+        best_bid_price: Option<Price>,
+        best_ask_price: Option<Price>,
     },
     #[serde(rename = "funding_rate")]
-    FundingRateUpdate { price: Price, rate: Rate },
+    FundingRateUpdate { price: Option<Price>, rate: Rate },
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -160,8 +160,47 @@ mod tests {
                 source_timestamp: TimestampUs(124214124124),
                 update: UpdateParams::PriceUpdate {
                     price: Price::from_integer(1234567890, 0).unwrap(),
-                    best_bid_price: Price::from_integer(1234567891, 0).unwrap(),
-                    best_ask_price: Price::from_integer(1234567892, 0).unwrap(),
+                    best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
+                    best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
+                },
+            }),
+            id: 1,
+        };
+
+        assert_eq!(
+            serde_json::from_str::<PythLazerAgentJrpcV1>(json).unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn test_push_update_price_without_bid_ask() {
+        let json = r#"
+        {
+          "jsonrpc": "2.0",
+          "method": "push_update",
+          "params": {
+            "feed_id": 1,
+            "source_timestamp": 124214124124,
+
+            "update": {
+              "type": "price",
+              "price": 1234567890
+            }
+          },
+          "id": 1
+        }
+        "#;
+
+        let expected = PythLazerAgentJrpcV1 {
+            jsonrpc: JsonRpcVersion::V2,
+            params: PushUpdate(FeedUpdateParams {
+                feed_id: PriceFeedId(1),
+                source_timestamp: TimestampUs(124214124124),
+                update: UpdateParams::PriceUpdate {
+                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    best_bid_price: None,
+                    best_ask_price: None,
                 },
             }),
             id: 1,
@@ -199,7 +238,7 @@ mod tests {
                 feed_id: PriceFeedId(1),
                 source_timestamp: TimestampUs(124214124124),
                 update: UpdateParams::FundingRateUpdate {
-                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
                 },
             }),
@@ -211,6 +250,44 @@ mod tests {
             expected
         );
     }
+    #[test]
+    fn test_push_update_funding_rate_without_price() {
+        let json = r#"
+        {
+          "jsonrpc": "2.0",
+          "method": "push_update",
+          "params": {
+            "feed_id": 1,
+            "source_timestamp": 124214124124,
+
+            "update": {
+              "type": "funding_rate",
+              "rate": 1234567891
+            }
+          },
+          "id": 1
+        }
+        "#;
+
+        let expected = PythLazerAgentJrpcV1 {
+            jsonrpc: JsonRpcVersion::V2,
+            params: PushUpdate(FeedUpdateParams {
+                feed_id: PriceFeedId(1),
+                source_timestamp: TimestampUs(124214124124),
+                update: UpdateParams::FundingRateUpdate {
+                    price: None,
+                    rate: Rate::from_integer(1234567891, 0).unwrap(),
+                },
+            }),
+            id: 1,
+        };
+
+        assert_eq!(
+            serde_json::from_str::<PythLazerAgentJrpcV1>(json).unwrap(),
+            expected
+        );
+    }
+
     #[test]
     fn test_send_get_metadata() {
         let json = r#"
