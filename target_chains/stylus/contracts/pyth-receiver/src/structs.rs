@@ -1,5 +1,4 @@
 use alloc::{vec::Vec};
-use serde::Serialize;
 use stylus_sdk::alloy_primitives::{keccak256, FixedBytes, B256, I32, I64, U16, U256, U64};
 use stylus_sdk::{
     prelude::*,

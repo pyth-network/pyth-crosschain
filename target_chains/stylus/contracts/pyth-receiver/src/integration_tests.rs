@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod test {
-    use crate::error::PythReceiverError;
-    use crate::test_data;
+    use crate::{error::PythReceiverError};
+    use crate::test_data::{self, good_update2_results, multiple_updates_results};
+    use crate::test_data::good_update1_results;
     use crate::PythReceiver;
-    use alloy_primitives::{address, Address, I32, I64, U256, U64};
+    use alloy_primitives::{Address, U256};
     use motsu::prelude::*;
     use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
     use wormhole_contract::WormholeContract;
@@ -12,13 +13,7 @@ mod test {
         0xdb, 0x33, 0x0f, 0x7a, 0xc6, 0x6b, 0x72, 0xdc, 0x65, 0x8a, 0xfe, 0xdf, 0x0f, 0x4a, 0x41,
         0x5b, 0x43,
     ];
-    const TEST_PUBLISH_TIME: u64 = 1751563000;
-    const TEST_PRICE: i64 = 10967241867779;
-    const TEST_CONF: u64 = 4971244966;
-    const TEST_EXPO: i32 = -8;
-    const TEST_EMA_PRICE: i64 = 10942391100000;
-    const TEST_EMA_CONF: u64 = 4398561400;
-
+    
     const PYTHNET_CHAIN_ID: u16 = 26;
     const PYTHNET_EMITTER_ADDRESS: [u8; 32] = [
         0xe1, 0x01, 0xfa, 0xed, 0xac, 0x58, 0x51, 0xe3, 0x2b, 0x9b, 0x23, 0xb5, 0xf9, 0x41, 0x1a,
@@ -31,31 +26,6 @@ mod test {
     const GOVERNANCE_CONTRACT: U256 = U256::from_limbs([4, 0, 0, 0]);
 
     const SINGLE_UPDATE_FEE_IN_WEI: U256 = U256::from_limbs([100, 0, 0, 0]);
-
-    #[cfg(test)]
-    fn current_guardians() -> Vec<Address> {
-        vec![
-            address!("0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3"), // Rockaway
-            address!("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157"), // Staked
-            address!("0x114De8460193bdf3A2fCf81f86a09765F4762fD1"), // Figment
-            address!("0x107A0086b32d7A0977926A205131d8731D39cbEB"), // ChainodeTech
-            address!("0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2"), // Inotel
-            address!("0x11b39756C042441BE6D8650b69b54EbE715E2343"), // HashKey Cloud
-            address!("0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd"), // ChainLayer
-            address!("0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20"), // xLabs
-            address!("0x74a3bf913953D695260D88BC1aA25A4eeE363ef0"), // Forbole
-            address!("0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e"), // Staking Fund
-            address!("0xAF45Ced136b9D9e24903464AE889F5C8a723FC14"), // Moonlet Wallet
-            address!("0xf93124b7c738843CBB89E864c862c38cddCccF95"), // P2P Validator
-            address!("0xD2CC37A4dc036a8D232b48f62cDD4731412f4890"), // 01node
-            address!("0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811"), // MCF
-            address!("0x71AA1BE1D36CaFE3867910F99C09e347899C19C3"), // Everstake
-            address!("0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf"), // Chorus One
-            address!("0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8"), // Syncnode
-            address!("0x5E1487F35515d02A92753504a8D75471b9f49EdB"), // Triton
-            address!("0x6FbEBc898F403E4773E95feB15E80C9A99c8348d"), // Staking Facilities
-        ]
-    }
 
     #[cfg(test)]
     fn mock_get_update_fee(update_data: Vec<u8>) -> Result<U256, PythReceiverError> {
@@ -77,7 +47,7 @@ mod test {
         wormhole_contract: &Contract<WormholeContract>,
         alice: &Address,
     ) {
-        let guardians = current_guardians();
+        let guardians = test_data::current_guardians();
         let governance_contract =
             Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         wormhole_contract
@@ -137,14 +107,7 @@ mod test {
         assert!(price_result.is_ok());
         assert_eq!(
             price_result.unwrap(),
-            (
-                U64::from(TEST_PUBLISH_TIME),
-                I32::from_le_bytes(TEST_EXPO.to_le_bytes()),
-                I64::from_le_bytes(TEST_PRICE.to_le_bytes()),
-                U64::from(TEST_CONF),
-                I64::from_le_bytes(TEST_EMA_PRICE.to_le_bytes()),
-                U64::from(TEST_EMA_CONF)
-            )
+            good_update1_results()
         );
     }
 
@@ -198,14 +161,7 @@ mod test {
         assert!(price_result.is_ok());
         assert_eq!(
             price_result.unwrap(),
-            (
-                U64::from(1751573860u64),
-                I32::from_le_bytes((-8i32).to_le_bytes()),
-                I64::from_le_bytes(10985663592646i64.to_le_bytes()),
-                U64::from(4569386330u64),
-                I64::from_le_bytes(10977795800000i64.to_le_bytes()),
-                U64::from(3919318300u64)
-            )
+            good_update2_results()
         );
     }
 
@@ -273,14 +229,7 @@ mod test {
         assert!(price_result.is_ok());
         assert_eq!(
             price_result.unwrap(),
-            (
-                U64::from(1751573860u64),
-                I32::from_le_bytes((-8i32).to_le_bytes()),
-                I64::from_le_bytes(10985663592646i64.to_le_bytes()),
-                U64::from(4569386330u64),
-                I64::from_le_bytes(10977795800000i64.to_le_bytes()),
-                U64::from(3919318300u64)
-            )
+            good_update2_results()
         );
     }
 
@@ -345,28 +294,14 @@ mod test {
         assert!(first_price_result.is_ok());
         assert_eq!(
             first_price_result.unwrap(),
-            (
-                U64::from(1751573123u64),
-                I32::from_le_bytes((-8i32).to_le_bytes()),
-                I64::from_le_bytes(10990356724259i64.to_le_bytes()),
-                U64::from(3891724259u64),
-                I64::from_le_bytes(10974970400000i64.to_le_bytes()),
-                U64::from(3918344000u64)
-            )
+            multiple_updates_results()[0]
         );
 
         let second_price_result = pyth_contract.sender(alice).get_price_unsafe(second_id);
         assert!(second_price_result.is_ok());
         assert_eq!(
             second_price_result.unwrap(),
-            (
-                U64::from(1751573123u64),
-                I32::from_le_bytes((-8i32).to_le_bytes()),
-                I64::from_le_bytes(258906787480i64.to_le_bytes()),
-                U64::from(158498649u64),
-                I64::from_le_bytes(258597182000i64.to_le_bytes()),
-                U64::from(131285914u64)
-            )
+            multiple_updates_results()[1]
         );
     }
 }
