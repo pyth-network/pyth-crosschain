@@ -300,7 +300,7 @@ impl PythReceiver {
 
     pub fn parse_price_feed_updates_with_config(
         &mut self,
-        update_data: Vec<u8>,
+        update_data: Vec<Vec<u8>>,
         price_ids: Vec<[u8; 32]>,
         min_allowed_publish_time: u64,
         max_allowed_publish_time: u64,
@@ -308,22 +308,24 @@ impl PythReceiver {
         check_update_data_is_minimal: bool,
         store_updates_if_fresh: bool,
     ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
-        let price_pairs;
-        if store_updates_if_fresh {
-            price_pairs = self.update_price_feeds_internal(
-                update_data,
-                price_ids.clone(),
-                min_allowed_publish_time,
-                max_allowed_publish_time,
-                check_uniqueness,
-            )?;
-        } else {
-            price_pairs = self.parse_price_feed_updates_internal(
-                update_data,
-                min_allowed_publish_time,
-                max_allowed_publish_time,
-                check_uniqueness,
-            )?;
+        let all_parsed_price_pairs = Vec::new();
+        for data in &update_data {
+            if store_updates_if_fresh {
+                all_parsed_price_pairs.extend(self.update_price_feeds_internal(
+                    data,
+                    price_ids.clone(),
+                    min_allowed_publish_time,
+                    max_allowed_publish_time,
+                    check_uniqueness,
+                )?);
+            } else {
+                all_parsed_price_pairs.extend(self.parse_price_feed_updates_internal(
+                    data,
+                    min_allowed_publish_time,
+                    max_allowed_publish_time,
+                    check_uniqueness,
+                )?);
+            }
         }
 
         if check_update_data_is_minimal && price_ids.len() != price_pairs.len() {
