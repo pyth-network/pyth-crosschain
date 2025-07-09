@@ -12,6 +12,9 @@ mod structs;
 #[cfg(test)]
 mod test_data;
 
+#[cfg(test)]
+use mock_instant::global::MockClock;
+
 use alloc::vec::Vec;
 use stylus_sdk::{
     alloy_primitives::{Address, FixedBytes, I32, I64, U16, U256, U32, U64},
@@ -377,7 +380,7 @@ impl PythReceiver {
     fn get_current_timestamp(&self) -> u64 {
         #[cfg(test)]
         {
-            1761573860u64
+            MockClock::time().as_secs()
         }
         #[cfg(not(test))]
         {
