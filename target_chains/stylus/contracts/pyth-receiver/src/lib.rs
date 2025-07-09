@@ -193,11 +193,30 @@ impl PythReceiver {
 
     pub fn update_price_feeds_if_necessary(
         &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _publish_times: Vec<u64>,
-    ) {
-        // dummy implementation
+        update_data: Vec<Vec<u8>>,
+        price_ids: Vec<[u8; 32]>,
+        publish_times: Vec<u64>,
+    ) -> Result<(), PythReceiverError> {
+        if (price_ids.len() != publish_times.len())
+            || (price_ids.is_empty() && publish_times.is_empty())
+        {
+            return Err(PythReceiverError::InvalidUpdateData);
+        }
+
+        for i in 0..price_ids.len() {
+            if (self.latest_price_info_publish_time(price_ids[i]) < publish_times[i]) {
+                self.update_price_feeds(update_data.clone())?;
+                return Ok(());
+            }
+        }
+
+        return Err(PythReceiverError::NoFreshUpdate);
+    }
+
+    fn latest_price_info_publish_time(&self, price_id: [u8; 32]) -> u64 {
+        let price_id_fb: FixedBytes<32> = FixedBytes::from(price_id);
+        let recent_price_info = self.latest_price_info.get(price_id_fb);
+        recent_price_info.publish_time.get().to::<u64>()
     }
 
     fn update_price_feeds_internal(
@@ -449,12 +468,21 @@ impl PythReceiver {
 
     pub fn parse_price_feed_updates_unique(
         &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-        _min_publish_time: u64,
-        _max_publish_time: u64,
-    ) -> Vec<PriceInfoReturn> {
-        Vec::new()
+        update_data: Vec<Vec<u8>>,
+        price_ids: Vec<[u8; 32]>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+    ) -> Result<Vec<PriceInfoReturn>, PythReceiverError> {
+        let price_feeds = self.parse_price_feed_updates_with_config(
+            update_data,
+            price_ids,
+            min_publish_time,
+            max_publish_time,
+            true,
+            false,
+            false,
+        );
+        price_feeds
     }
 
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {

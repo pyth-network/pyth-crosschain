@@ -18,6 +18,7 @@ pub enum PythReceiverError {
     InvalidEmitterAddress,
     TooManyUpdates,
     PriceFeedNotFoundWithinRange,
+    NoFreshUpdate,
 }
 
 impl core::fmt::Debug for PythReceiverError {
@@ -45,6 +46,7 @@ impl From<PythReceiverError> for Vec<u8> {
             PythReceiverError::InvalidEmitterAddress => 14,
             PythReceiverError::TooManyUpdates => 15,
             PythReceiverError::PriceFeedNotFoundWithinRange => 16,
+            PythReceiverError::NoFreshUpdate => 17,
         }]
     }
 }
