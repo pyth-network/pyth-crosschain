@@ -7,15 +7,15 @@ use crate::symbol_state::SymbolState;
 pub struct PythLazerAgentJrpcV1 {
     pub jsonrpc: JsonRpcVersion,
     #[serde(flatten)]
-    pub params: JrpcParams,
+    pub params: JrpcCall,
     pub id: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 #[serde(tag = "method", content = "params")]
-pub enum JrpcParams {
-    #[serde(rename = "send_updates")]
-    SendUpdates(FeedUpdateParams),
+pub enum JrpcCall {
+    #[serde(rename_all = "snake_case")]
+    PushUpdate(FeedUpdateParams),
     #[serde(rename = "get_symbols")]
     GetMetadata(GetMetadataParams),
 }
@@ -128,7 +128,7 @@ pub struct SymbolMetadata {
 
 #[cfg(test)]
 mod tests {
-    use crate::jrpc::JrpcParams::{GetMetadata, SendUpdates};
+    use crate::jrpc::JrpcCall::{GetMetadata, PushUpdate};
     use crate::jrpc::{FeedUpdateParams, Filter, GetMetadataParams, JrpcErrorObject, JrpcErrorResponse, JrpcSuccessResponse, JsonRpcVersion, PythLazerAgentJrpcV1, UpdateParams};
     use crate::router::{Price, PriceFeedId, Rate, TimestampUs};
 
