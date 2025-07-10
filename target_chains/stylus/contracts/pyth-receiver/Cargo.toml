@@ -1,18 +1,21 @@
 [package]
-name = "stylus-hello-world"
+name = "pyth-receiver-stylus"
 version = "0.1.11"
 edition = "2021"
-license = "MIT OR Apache-2.0"
-homepage = "https://github.com/OffchainLabs/stylus-hello-world"
-repository = "https://github.com/OffchainLabs/stylus-hello-world"
-keywords = ["arbitrum", "ethereum", "stylus", "alloy"]
-description = "Stylus hello world example"
+homepage = "https://github.com/pyth-network/pyth-crosschain"
+repository = "https://github.com/pyth-network/pyth-crosschain"
+keywords = ["arbitrum", "ethereum", "stylus", "alloy", "pyth"]
+description = "Pyth receiver contract for the Arbitrum networks, built on Arbitrum Stylus"
 
 [dependencies]
 alloy-primitives = "=0.8.20"
 alloy-sol-types = "=0.8.20"
 stylus-sdk = "0.9.0"
+byteorder = { version = "1.4.3" }
 hex = { version = "0.4", default-features = false }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
+serde = { version = "1.0", features = ["derive"] }
+wormhole-vaas = "0.1.1"
 
 [dev-dependencies]
 alloy-primitives = { version = "=0.8.20", features = ["sha3-keccak"] }
@@ -21,6 +24,9 @@ ethers = "2.0"
 eyre = "0.6.8"
 stylus-sdk = { version = "0.9.0", features = ["stylus-test"] }
 dotenv = "0.15.0"
+motsu = "0.9.0"
+wormhole-contract = { path = "../wormhole" }
+mock_instant = "0.6.0"
 
 [features]
 default = ["mini-alloc"]
@@ -29,7 +35,7 @@ debug = ["stylus-sdk/debug"]
 mini-alloc = ["stylus-sdk/mini-alloc"]
 
 [[bin]]
-name = "stylus-hello-world"
+name = "pyth-receiver-stylus"
 path = "src/main.rs"
 
 [lib]
@@ -37,10 +43,8 @@ crate-type = ["lib", "cdylib"]
 
 [profile.release]
 codegen-units = 1
-strip = true
+opt-level = "s"
 lto = true
+debug = false
 panic = "abort"
-
-# If you need to reduce the binary size, it is advisable to try other
-# optimization levels, such as "s" and "z"
-opt-level = 3
+overflow-checks = true

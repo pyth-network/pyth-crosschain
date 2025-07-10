@@ -7,15 +7,9 @@ extern crate alloc;
 #[global_allocator]
 static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
-#[cfg(not(any(feature = "std", feature = "export-abi")))]
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
-
 use alloc::{vec, vec::Vec};
 use stylus_sdk::{
-    prelude::{entrypoint, public, storage},
+    prelude::*,
     storage::{StorageMap, StorageUint, StorageAddress, StorageBool},
     alloy_primitives::{Address, FixedBytes, U256, keccak256},
 };
@@ -320,7 +314,6 @@ impl WormholeContract {
     
 
     fn verify_vm(&self, vaa: &VerifiedVM) -> Result<(), WormholeError> {
-
         let guardian_set = self.get_gs_internal(vaa.guardian_set_index)?;
         if vaa.guardian_set_index != self.current_guardian_set_index.get().try_into().unwrap_or(0u32)
             && guardian_set.expiration_time > 0 {
@@ -507,7 +500,7 @@ mod tests {
     use core::str::FromStr;
     use k256::ecdsa::SigningKey;
     use stylus_sdk::alloy_primitives::keccak256;
-    
+
     #[cfg(test)]
     use base64::engine::general_purpose;
     #[cfg(test)]
@@ -550,7 +543,7 @@ mod tests {
             0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
         ]
     }
-    
+
     #[cfg(test)]
     fn current_guardians() -> Vec<Address> {
         vec![
@@ -641,7 +634,7 @@ mod tests {
         contract.initialize(guardians, 1, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
         contract
     }
-    
+
     #[cfg(test)]
     fn deploy_with_current_mainnet_guardians() -> WormholeContract {
         let mut contract = WormholeContract::default();
@@ -809,7 +802,7 @@ mod tests {
     #[motsu::test]
     fn test_verification_multiple_guardian_sets() {
         let mut contract = deploy_with_current_mainnet_guardians();
-        
+
         let store_result = contract.store_gs(4, current_guardians(), 0);
         if let Err(_) = store_result {
             panic!("Error deploying multiple guardian sets");
@@ -823,7 +816,7 @@ mod tests {
     #[motsu::test]
     fn test_verification_incorrect_guardian_set() {
         let mut contract = deploy_with_current_mainnet_guardians();
-        
+
         let store_result = contract.store_gs(4, mock_guardian_set13(), 0);
         if let Err(_) = store_result {
             panic!("Error deploying guardian set");
@@ -1154,7 +1147,7 @@ mod tests {
         let mut contract = WormholeContract::default();
         let guardians = current_guardians();
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        
+
         let result = contract.initialize(guardians.clone(), 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
         assert!(result.is_ok(), "Contract initialization should succeed");
     }
@@ -1229,5 +1222,5 @@ mod tests {
         assert!(result2.is_ok());
     }
 
-    
+
 }
