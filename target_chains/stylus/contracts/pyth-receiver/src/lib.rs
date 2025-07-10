@@ -237,7 +237,9 @@ impl PythReceiver {
             if recent_price_info.publish_time.get() < price_return.1
                 || recent_price_info.price.get() == I64::ZERO
             {
-                recent_price_info.price_id.set(FixedBytes::from(price_return.0));
+                recent_price_info
+                    .price_id
+                    .set(FixedBytes::from(price_return.0));
                 recent_price_info.publish_time.set(price_return.1);
                 recent_price_info.expo.set(price_return.2);
                 recent_price_info.price.set(price_return.3);
@@ -332,7 +334,10 @@ impl PythReceiver {
         let mut result: Vec<PriceFeedReturn> = Vec::with_capacity(price_ids.len());
 
         for price_id in price_ids {
-            if let Some(price_info) = all_parsed_price_feeds.iter().find(|feed| feed.0 == price_id) {
+            if let Some(price_info) = all_parsed_price_feeds
+                .iter()
+                .find(|feed| feed.0 == price_id)
+            {
                 result.push(price_info.clone());
             } else {
                 return Err(PythReceiverError::PriceFeedNotFoundWithinRange);
@@ -453,7 +458,10 @@ impl PythReceiver {
             }
         };
 
-        Ok(price_feeds.into_iter().map(|(_, price_info)| price_info).collect())
+        Ok(price_feeds
+            .into_iter()
+            .map(|(_, price_info)| price_info)
+            .collect())
     }
 
     pub fn parse_twap_price_feed_updates(

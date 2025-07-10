@@ -304,11 +304,17 @@ mod test {
 
         let first_price_result = pyth_contract.sender(alice).get_price_unsafe(first_id);
         assert!(first_price_result.is_ok());
-        assert_eq!(first_price_result.unwrap(), multiple_updates_results_get_price()[0]);
+        assert_eq!(
+            first_price_result.unwrap(),
+            multiple_updates_results_get_price()[0]
+        );
 
         let second_price_result = pyth_contract.sender(alice).get_price_unsafe(second_id);
         assert!(second_price_result.is_ok());
-        assert_eq!(second_price_result.unwrap(), multiple_updates_results_get_price()[1]);
+        assert_eq!(
+            second_price_result.unwrap(),
+            multiple_updates_results_get_price()[1]
+        );
     }
 
     #[motsu::test]
