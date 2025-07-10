@@ -6,6 +6,9 @@ description = "Pyth Lazer Solana contract and SDK."
 license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
 
+# Forces recent toolchains to create a lockfile compatible with the current anchor/solana version.
+rust-version = "1.75.0"
+
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "pyth_lazer_solana_contract"

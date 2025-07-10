@@ -41,10 +41,8 @@ impl TryFrom<&Timestamp> for TimestampUs {
 impl From<TimestampUs> for Timestamp {
     fn from(value: TimestampUs) -> Self {
         Timestamp {
-            #[allow(
-                clippy::cast_possible_wrap,
-                reason = "u64 to i64 after this division can never overflow because the value cannot be too big"
-            )]
+            // u64 to i64 after this division can never overflow because the value cannot be too big
+            #[allow(clippy::cast_possible_wrap)]
             seconds: (value.0 / 1_000_000) as i64,
             nanos: (value.0 % 1_000_000) as i32 * 1000,
             special_fields: Default::default(),
