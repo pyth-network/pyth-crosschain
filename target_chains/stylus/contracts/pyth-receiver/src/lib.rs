@@ -444,9 +444,8 @@ impl PythReceiver {
                                 return Err(PythReceiverError::PriceFeedNotFoundWithinRange);
                             }
 
-                            let price_id_fb =
-                                FixedBytes::<32>::from(price_feed_message.feed_id);
-                                
+                            let price_id_fb = FixedBytes::<32>::from(price_feed_message.feed_id);
+
                             if check_uniqueness {
                                 let prev_price_info = self.latest_price_info.get(price_id_fb);
                                 let prev_publish_time =
