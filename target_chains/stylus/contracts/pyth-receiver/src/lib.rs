@@ -15,7 +15,7 @@ mod test_data;
 #[cfg(test)]
 use mock_instant::global::MockClock;
 
-use alloc::{collections::BTreeMap, vec::Vec};
+use alloc::vec::Vec;
 use stylus_sdk::{
     alloy_primitives::{Address, FixedBytes, I32, I64, U16, U256, U32, U64},
     call::Call,
@@ -109,6 +109,26 @@ impl PythReceiver {
 
             self.is_valid_data_source.setter(data_source_key).set(true);
         }
+    }
+
+    pub fn query_price_feed(&self, id: [u8; 32]) -> Result<PriceFeedReturn, PythReceiverError> {
+        let id_fb = FixedBytes::<32>::from(id);
+
+        let price_info = self.latest_price_info.get(id_fb);
+
+        if price_info.publish_time.get() == U64::ZERO {
+            return Err(PythReceiverError::PriceUnavailable);
+        }
+
+        Ok((
+            id_fb,
+            price_info.publish_time.get(),
+            price_info.expo.get(),
+            price_info.price.get(),
+            price_info.conf.get(),
+            price_info.ema_price.get(),
+            price_info.ema_conf.get(),
+        ))
     }
 
     pub fn get_price_unsafe(&self, id: [u8; 32]) -> Result<PriceReturn, PythReceiverError> {
@@ -370,7 +390,7 @@ impl PythReceiver {
         let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
             .map_err(|_| PythReceiverError::InvalidAccumulatorMessage)?;
 
-        let mut price_feeds: BTreeMap<[u8; 32], PriceFeedReturn> = BTreeMap::new();
+        let mut price_feeds = Vec::new();
 
         match accumulator_update.proof {
             Proof::WormholeMerkle { vaa, updates } => {
@@ -424,9 +444,10 @@ impl PythReceiver {
                                 return Err(PythReceiverError::PriceFeedNotFoundWithinRange);
                             }
 
+                            let price_id_fb =
+                                FixedBytes::<32>::from(price_feed_message.feed_id);
+                                
                             if check_uniqueness {
-                                let price_id_fb =
-                                    FixedBytes::<32>::from(price_feed_message.feed_id);
                                 let prev_price_info = self.latest_price_info.get(price_id_fb);
                                 let prev_publish_time =
                                     prev_price_info.publish_time.get().to::<u64>();
@@ -439,7 +460,7 @@ impl PythReceiver {
                             }
 
                             let price_info_return = (
-                                price_feed_message.feed_id,
+                                price_id_fb,
                                 U64::from(publish_time),
                                 I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
                                 I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
@@ -448,7 +469,7 @@ impl PythReceiver {
                                 U64::from(price_feed_message.ema_conf),
                             );
 
-                            price_feeds.insert(price_feed_message.feed_id, price_info_return);
+                            price_feeds.push(price_info_return);
                         }
                         _ => {
                             return Err(PythReceiverError::InvalidAccumulatorMessageType);
@@ -458,10 +479,7 @@ impl PythReceiver {
             }
         };
 
-        Ok(price_feeds
-            .into_iter()
-            .map(|(_, price_info)| price_info)
-            .collect())
+        Ok(price_feeds)
     }
 
     pub fn parse_twap_price_feed_updates(
