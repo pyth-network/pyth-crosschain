@@ -324,6 +324,24 @@ export const EntropyDeployments = {
     rpc: "https://mainnet.unichain.org",
     nativeCurrency: "ETH",
   },
+  zetachain: {
+    address: "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    network: "mainnet",
+    explorer: "https://zetachain.blockscout.com/address/$ADDRESS",
+    delay: "0 block",
+    gasLimit: "500K",
+    rpc: "https://zetachain-evm.blockpi.network/v1/rpc/public",
+    nativeCurrency: "ZETA",
+  },
+  "zetachain-testnet": {
+    rpc: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
+    network: "testnet",
+    delay: "",
+    address: "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
+    explorer: "https://explorer.zetachain.com/address/$ADDRESS",
+    gasLimit: "500K",
+    nativeCurrency: "ZETA",
+  },
 } as const satisfies Record<string, EntropyDeployment>;
 
 export const isValidDeployment = (
