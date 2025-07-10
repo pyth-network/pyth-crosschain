@@ -111,6 +111,12 @@ impl PythReceiver {
         }
     }
 
+    pub fn price_feed_exists(&self, id: [u8; 32]) -> bool {
+        let id_fb = FixedBytes::<32>::from(id);
+        let price_info = self.latest_price_info.get(id_fb);
+        return price_info.publish_time.get() != U64::ZERO;
+    }
+
     pub fn query_price_feed(&self, id: [u8; 32]) -> Result<PriceFeedReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(id);
 
