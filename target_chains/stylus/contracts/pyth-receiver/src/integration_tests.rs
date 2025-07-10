@@ -114,7 +114,9 @@ mod test {
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
-        let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
+        let price_result = pyth_contract
+            .sender(alice)
+            .get_price_unsafe(good_update1_feed_id());
         assert!(price_result.is_ok());
         assert_eq!(price_result.unwrap(), good_update1_results());
     }
@@ -166,7 +168,9 @@ mod test {
             .update_price_feeds(update_data2);
         assert!(result2.is_ok());
 
-        let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
+        let price_result = pyth_contract
+            .sender(alice)
+            .get_price_unsafe(good_update1_feed_id());
         assert!(price_result.is_ok());
         assert_eq!(price_result.unwrap(), good_update2_results());
     }
@@ -179,7 +183,9 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let price_result = pyth_contract.sender(alice).get_price_unsafe(TEST_PRICE_ID);
+        let price_result = pyth_contract
+            .sender(alice)
+            .get_price_unsafe(good_update1_feed_id());
         assert!(price_result.is_err());
         assert_eq!(
             price_result.unwrap_err(),
@@ -233,7 +239,7 @@ mod test {
 
         let price_result = pyth_contract
             .sender(alice)
-            .get_price_no_older_than(TEST_PRICE_ID, u64::MAX);
+            .get_price_no_older_than(good_update1_feed_id(), u64::MAX);
         assert!(price_result.is_ok());
         assert_eq!(price_result.unwrap(), good_update2_results());
     }
@@ -259,7 +265,7 @@ mod test {
 
         let price_result = pyth_contract
             .sender(alice)
-            .get_price_no_older_than(TEST_PRICE_ID, 1);
+            .get_price_no_older_than(good_update1_feed_id(), 1);
         assert!(price_result.is_err());
         assert_eq!(
             price_result.unwrap_err(),

@@ -46,9 +46,9 @@ pub struct PriceInfoStorage {
 }
 
 // Addressing nit -- running into some versioning issues that preclude me
-// from returning the PriceInfo struct directly. Need to figure that out.
+// from returning the PriceFeed struct directly. Need to figure that out.
 
-// pub struct PriceInfo {
+// pub struct PriceFeed {
 //     pub publish_time: U64,
 //     pub expo: I32,
 //     pub price: I64,
@@ -57,7 +57,9 @@ pub struct PriceInfoStorage {
 //     pub ema_conf: U64,
 // }
 
-pub type PriceInfoReturn = (U64, I32, I64, U64, I64, U64);
+pub type PriceFeedReturn = (U64, I32, I64, U64, I64, U64);
+
+pub type PriceReturn = ([u8; 32], U64, I32, I64, U64, I64, U64);
 
 #[cfg(test)]
 mod tests {
