@@ -57,7 +57,7 @@ pub struct PriceInfoStorage {
 //     pub ema_conf: U64,
 // }
 
-pub type PriceFeedReturn = (U64, I32, I64, U64, I64, U64);
+pub type PriceFeedReturn = ([u8; 32], U64, I32, I64, U64, I64, U64);
 
 pub type PriceReturn = ([u8; 32], U64, I32, I64, U64, I64, U64);
 

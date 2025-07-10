@@ -30,6 +30,33 @@ pub fn good_update1_feed_id() -> [u8; 32] {
 }
 
 #[cfg(test)]
+pub fn multiple_updates_first_feed_id() -> [u8; 32] {
+    [
+        0xe6, 0x2d, 0xf6, 0xc8, 0xb4, 0xa8, 0x5f, 0xe1, 0xa6, 0x7d, 0xb4, 0x4d, 0xc1, 0x2d, 0xe5,
+        0xdb, 0x33, 0x0f, 0x7a, 0xc6, 0x6b, 0x72, 0xdc, 0x65, 0x8a, 0xfe, 0xdf, 0x0f, 0x4a, 0x41,
+        0x5b, 0x43,
+    ]
+}
+
+#[cfg(test)]
+pub fn multiple_updates_second_feed_id() -> [u8; 32] {
+    [
+        0xff, 0x61, 0x49, 0x1a, 0x93, 0x11, 0x12, 0xdd, 0xf1, 0xbd, 0x81, 0x47, 0xcd, 0x1b,
+        0x64, 0x13, 0x75, 0xf7, 0x9f, 0x58, 0x25, 0x12, 0x6d, 0x66, 0x54, 0x80, 0x87, 0x46,
+        0x34, 0xfd, 0x0a, 0xce,
+    ]
+}
+
+#[cfg(test)]
+pub fn multiple_updates_diff_first_feed_id() -> [u8; 32] {
+    [
+        0x3f, 0xa4, 0x25, 0x28, 0x48, 0xf9, 0xf0, 0xa1, 0x48, 0x0b, 0xe6, 0x27, 0x45, 0xa4,
+        0x62, 0x9d, 0x9e, 0xb1, 0x32, 0x2a, 0xeb, 0xab, 0x8a, 0x79, 0x1e, 0x34, 0x4b, 0x3b,
+        0x9c, 0x1a, 0xdc, 0xf5,
+    ]
+}
+
+#[cfg(test)]
 pub fn multiple_updates_same_vaa() -> Vec<Vec<u8>> {
     let hex_str = "504e41550100000003b801000000040d02e57b0f291daa4d2f02f5c4a18793b278b238338f472d17897f8f0866549f77571cfe71fa55bae7f340b9124511559b73a0cf01c72adc8a8d9963cebecc5a503801039507a96b155046ab039f7c9cad17a4927e2ff34763bca9b65d572ddc7a5f019832ffbeeb5295447bfdb989efa0314865bb4571770ad8e75ae7a083288d6de232010412e7333ab5cf0f20274b0907da43b52016d5a095bb846962d13a222e4af1e7e63f7a8db49de04feb70f07a0e274dc58acc7a4c386a099369412c6813ba39916100063da672f75cf1d397829a39461e311ca366366828be8d12b19a00c552e7c8c5e7746b36d97dccc54e5b3aeae188b372ec885dc1fbd9c2285ce458764c86f0c1bb0008863aa237e9fe339683992121249a2e520b6483a3b3b60c703a1eb09ef33266312e729ff6d398e1a60be8474a95803cd1641ef6c1de2c74f3cd7e1f2510c919f9000a3bd5ec58424b21c48552c3be0f9cccd6e6c641eee2b4e550fb88cc93cfdf10c7409344ec3e81df711a293baba565a85e620d20028d9738e53939fa52f19ce622010b000f803511f89f02610fbece34fe327afb55196cc3e522bb28d71d6e4d5523ac77ca1afbbd8a28b4fe05c7f2aa1c3f428c89fe21096ba67bc505cbfa6ead9808010c315b34c9cac03647df4e12a050f8b739763498aa23999244036e09010e2a79a46d0cbabc22c535542896bc22df05dc5480db06a370dffeb0814424870fd50c21000d4a562686000b65df4e0ca00d2e00d10db9e913b481337ee1c80bb47b25553afb693d7be0c17f6fb106909a1eed52a6c27739471b719d4c450b99b066a02bd2c9010e309508bc7128030ca4b19fc34c0ee0e62eebb549c759c2e8ccfdf062793e41e935754ae1d5356ba98446fa2eaa837ae4b413d1ccdf1af6d9060a2885f18c19e1010f3e2ff50704a6ad1b491cb93a1e4678c0f58b91540ba3ce3b4424c96abbe922562c924debb3336ab2fe835237f16912d768e6e5b739f2ab44b57a1e2607c9bb89001070d0dfac758a38342b107870b4d5761df9e785c6be589317c4b1dad3c08998f11214c29201d172b278aa6f4d57171f0f05fb7a2718e6da6df4449e8897c0c2ac0011d9e885989fa2363ec311bf4e9ebd8738d4b3ecaf9a31c09ce06f9876c3ab772034c1df9ca09c847ee81de80a1f0f8592019fa60e55b02b657b8a7c99bee04701016866e28300000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa710000000008812f80014155575600000000000d8ebd6500002710f015dfd43b23aad91dcd4a7a8a113ed2d39233f202005500e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43000009fee44efa2300000000e7f6ffe3fffffff8000000006866e283000000006866e283000009fb4f364d0000000000e98d2f400c2704dab60f1b310d567acb60d77a3ce8003a6f564e8e1f567f00f004381d755e160a07372977a99288dcc9c9477cf9c1bb095403b514082aa774f7b243003e30548cbd97e8191d5ef2732796e06f84f05543a171f1e66052aa515c41a2d994a0d13e2e4016e6a28823201a52d408a5024797ec4b7629406062dd9ccc30a5d1eb4ac8b4a28a3d464bf4335ceda7646e03c29cc24b6c7c5e5924e6e69400a2c90561c9a2e4555084af13fbc7eaa0a884b75d4d1197933ac174b62c4b9b1cde3dd496f5e54cd2e01cdca0ba5c5a80a2bbd0d9d5dfb7aab5b638ef883e4e55f78a1536fe79c5c3e16cda9b53e364e3bbe95f005500ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace0000003c480c0e980000000009727f59fffffff8000000006866e283000000006866e2830000003c3597da300000000007d3439a0ccf5f10d7559e184107e994663aa0fc8f81718c0b281162b77eb09c774da30e2db5674df62494b3da820f6c986a0f32d1a195b6bc4676891d4e28cdb4e2f09dd47db3243547b37bdbb9799c82a42d6f1f18f8e17d7bed68408ef26e184f21e9b640e2c9f0416d91987acbe6fa8e72c2c99fa548f83c0eb5dd3c269ef52101521ef0b3d26f50b07dae68311bd138338881b20b78f8d21d2bfc27e9ac849b4c659d61c9a2e4555084af13fbc7eaa0a884b75d4d1197933ac174b62c4b9b1cde3dd496f5e54cd2e01cdca0ba5c5a80a2bbd0d9d5dfb7aab5b638ef883e4e55f78a1536fe79c5c3e16cda9b53e364e3bbe95f";
     let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
@@ -47,9 +74,10 @@ pub fn multiple_updates_diff_vaa() -> Vec<Vec<u8>> {
 }
 
 #[cfg(test)]
-pub fn multiple_updates_diff_vaa_results() -> [(U64, I32, I64, U64, I64, U64); 2] {
+pub fn multiple_updates_diff_vaa_results() -> [([u8; 32], U64, I32, I64, U64, I64, U64); 2] {
     [
         (
+            multiple_updates_diff_first_feed_id(),
             U64::from(1752094858u64),
             I32::from_le_bytes((-8i32).to_le_bytes()),
             I64::from_le_bytes(35134945i64.to_le_bytes()),
@@ -58,6 +86,7 @@ pub fn multiple_updates_diff_vaa_results() -> [(U64, I32, I64, U64, I64, U64); 2
             U64::from(35632u64),
         ),
         (
+            multiple_updates_first_feed_id(),
             U64::from(1751573860u64),
             I32::from_le_bytes((-8i32).to_le_bytes()),
             I64::from_le_bytes(10985663592646i64.to_le_bytes()),
@@ -69,8 +98,9 @@ pub fn multiple_updates_diff_vaa_results() -> [(U64, I32, I64, U64, I64, U64); 2
 }
 
 #[cfg(test)]
-pub fn good_update1_results() -> (U64, I32, I64, U64, I64, U64) {
+pub fn good_update1_results() -> ([u8; 32], U64, I32, I64, U64, I64, U64) {
     (
+        good_update1_feed_id(),
         U64::from(1752170378u64),
         I32::from_le_bytes((-8i32).to_le_bytes()),
         I64::from_le_bytes(6512459i64.to_le_bytes()),
@@ -81,8 +111,9 @@ pub fn good_update1_results() -> (U64, I32, I64, U64, I64, U64) {
 }
 
 #[cfg(test)]
-pub fn good_update2_results() -> (U64, I32, I64, U64, I64, U64) {
+pub fn good_update2_results() -> ([u8; 32], U64, I32, I64, U64, I64, U64) {
     (
+        good_update1_feed_id(),
         U64::from(1752171074u64),
         I32::from_le_bytes((-8i32).to_le_bytes()),
         I64::from_le_bytes(6468786i64.to_le_bytes()),
@@ -93,9 +124,10 @@ pub fn good_update2_results() -> (U64, I32, I64, U64, I64, U64) {
 }
 
 #[cfg(test)]
-pub fn multiple_updates_results() -> [(U64, I32, I64, U64, I64, U64); 2] {
+pub fn multiple_updates_results() -> [([u8; 32], U64, I32, I64, U64, I64, U64); 2] {
     [
         (
+            multiple_updates_first_feed_id(),
             U64::from(1751573123u64),
             I32::from_le_bytes((-8i32).to_le_bytes()),
             I64::from_le_bytes(10990356724259i64.to_le_bytes()),
@@ -104,6 +136,7 @@ pub fn multiple_updates_results() -> [(U64, I32, I64, U64, I64, U64); 2] {
             U64::from(3918344000u64),
         ),
         (
+            multiple_updates_second_feed_id(),
             U64::from(1751573123u64),
             I32::from_le_bytes((-8i32).to_le_bytes()),
             I64::from_le_bytes(258906787480i64.to_le_bytes()),
