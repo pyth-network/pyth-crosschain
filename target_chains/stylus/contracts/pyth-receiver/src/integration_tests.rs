@@ -348,7 +348,7 @@ mod test {
 
         let price_result = pyth_contract
             .sender(alice)
-            .get_price_unsafe(ban_usd_feed_id());
+            .query_price_feed(ban_usd_feed_id());
 
         assert!(price_result.is_err());
         assert_eq!(
