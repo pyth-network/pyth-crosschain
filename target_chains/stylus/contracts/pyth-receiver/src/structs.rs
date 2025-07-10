@@ -60,7 +60,8 @@ pub struct PriceFeedStorage {
 
 pub type PriceFeedReturn = ([u8; 32], U64, I32, I64, U64, I64, U64);
 
-pub type PriceReturn = ([u8; 32], U64, I32, I64, U64, I64, U64);
+// (price, conf, expo, publish_time)
+pub type PriceReturn = (I64, U64, I32, U64);
 
 #[cfg(test)]
 mod tests {

@@ -39,7 +39,7 @@ use pythnet_sdk::{
         },
     },
 };
-use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceFeedStorage};
+use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceInfoStorage, PriceReturn};
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
 sol_interface! {
@@ -111,7 +111,7 @@ impl PythReceiver {
         }
     }
 
-    pub fn get_price_unsafe(&self, id: [u8; 32]) -> Result<PriceFeedReturn, PythReceiverError> {
+    pub fn get_price_unsafe(&self, id: [u8; 32]) -> Result<PriceReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(id);
 
         let price_info = self.latest_price_info.get(id_fb);
@@ -121,13 +121,10 @@ impl PythReceiver {
         }
 
         Ok((
-            id,
-            price_info.publish_time.get(),
-            price_info.expo.get(),
             price_info.price.get(),
             price_info.conf.get(),
-            price_info.ema_price.get(),
-            price_info.ema_conf.get(),
+            price_info.expo.get(),
+            price_info.publish_time.get(),
         ))
     }
 
@@ -135,7 +132,7 @@ impl PythReceiver {
         &self,
         id: [u8; 32],
         age: u64,
-    ) -> Result<PriceFeedReturn, PythReceiverError> {
+    ) -> Result<PriceReturn, PythReceiverError> {
         let price_info = self.get_price_unsafe(id)?;
         if !self.is_no_older_than(price_info.1, age) {
             return Err(PythReceiverError::NewPriceUnavailable);
@@ -143,7 +140,7 @@ impl PythReceiver {
         Ok(price_info)
     }
 
-    pub fn get_ema_price_unsafe(&self, id: [u8; 32]) -> Result<PriceFeedReturn, PythReceiverError> {
+    pub fn get_ema_price_unsafe(&self, id: [u8; 32]) -> Result<PriceReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(id);
         let price_info = self.latest_price_info.get(id_fb);
 
@@ -152,13 +149,10 @@ impl PythReceiver {
         }
 
         Ok((
-            id,
-            price_info.publish_time.get(),
+            price_info.ema_price.get(),
+            price_info.ema_conf.get(),
             price_info.expo.get(),
-            price_info.ema_price.get(),
-            price_info.ema_conf.get(),
-            price_info.ema_price.get(),
-            price_info.ema_conf.get(),
+            price_info.publish_time.get(),
         ))
     }
 
@@ -166,7 +160,7 @@ impl PythReceiver {
         &self,
         id: [u8; 32],
         age: u64,
-    ) -> Result<PriceFeedReturn, PythReceiverError> {
+    ) -> Result<PriceReturn, PythReceiverError> {
         let price_info = self.get_ema_price_unsafe(id)?;
         if !self.is_no_older_than(price_info.1, age) {
             return Err(PythReceiverError::NewPriceUnavailable);

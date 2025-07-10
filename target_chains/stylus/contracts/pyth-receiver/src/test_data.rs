@@ -74,7 +74,57 @@ pub fn multiple_updates_diff_vaa() -> Vec<Vec<u8>> {
 }
 
 #[cfg(test)]
-pub fn multiple_updates_diff_vaa_results() -> [([u8; 32], U64, I32, I64, U64, I64, U64); 2] {
+pub fn good_update1_results_full() -> ([u8; 32], U64, I32, I64, U64, I64, U64) {
+    (
+        good_update1_feed_id(),
+        U64::from(1752170378u64),
+        I32::from_le_bytes((-8i32).to_le_bytes()),
+        I64::from_le_bytes(6512459i64.to_le_bytes()),
+        U64::from(20759u64),
+        I64::from_le_bytes(6423048i64.to_le_bytes()),
+        U64::from(14961u64),
+    )
+}
+
+#[cfg(test)]
+pub fn good_update2_results_full() -> ([u8; 32], U64, I32, I64, U64, I64, U64) {
+    (
+        good_update1_feed_id(),
+        U64::from(1752171074u64),
+        I32::from_le_bytes((-8i32).to_le_bytes()),
+        I64::from_le_bytes(6468786i64.to_le_bytes()),
+        U64::from(12875u64),
+        I64::from_le_bytes(6434624i64.to_le_bytes()),
+        U64::from(14559u64),
+    )
+}
+
+#[cfg(test)]
+pub fn multiple_updates_results_full() -> [([u8; 32], U64, I32, I64, U64, I64, U64); 2] {
+    [
+        (
+            multiple_updates_first_feed_id(),
+            U64::from(1751573123u64),
+            I32::from_le_bytes((-8i32).to_le_bytes()),
+            I64::from_le_bytes(10990356724259i64.to_le_bytes()),
+            U64::from(3891724259u64),
+            I64::from_le_bytes(10974970400000i64.to_le_bytes()),
+            U64::from(3918344000u64),
+        ),
+        (
+            multiple_updates_second_feed_id(),
+            U64::from(1751573123u64),
+            I32::from_le_bytes((-8i32).to_le_bytes()),
+            I64::from_le_bytes(258906787480i64.to_le_bytes()),
+            U64::from(158498649u64),
+            I64::from_le_bytes(258597182000i64.to_le_bytes()),
+            U64::from(131285914u64),
+        ),
+    ]
+}
+
+#[cfg(test)]
+pub fn multiple_updates_diff_vaa_results_full() -> [([u8; 32], U64, I32, I64, U64, I64, U64); 2] {
     [
         (
             multiple_updates_diff_first_feed_id(),
@@ -98,51 +148,57 @@ pub fn multiple_updates_diff_vaa_results() -> [([u8; 32], U64, I32, I64, U64, I6
 }
 
 #[cfg(test)]
-pub fn good_update1_results() -> ([u8; 32], U64, I32, I64, U64, I64, U64) {
+pub fn good_update1_results_get_price() -> (I64, U64, I32, U64) {
     (
-        good_update1_feed_id(),
-        U64::from(1752170378u64),
-        I32::from_le_bytes((-8i32).to_le_bytes()),
         I64::from_le_bytes(6512459i64.to_le_bytes()),
         U64::from(20759u64),
-        I64::from_le_bytes(6423048i64.to_le_bytes()),
-        U64::from(14961u64),
+        I32::from_le_bytes((-8i32).to_le_bytes()),
+        U64::from(1752170378u64),
     )
 }
 
 #[cfg(test)]
-pub fn good_update2_results() -> ([u8; 32], U64, I32, I64, U64, I64, U64) {
+pub fn good_update2_results_get_price() -> (I64, U64, I32, U64) {
     (
-        good_update1_feed_id(),
-        U64::from(1752171074u64),
-        I32::from_le_bytes((-8i32).to_le_bytes()),
         I64::from_le_bytes(6468786i64.to_le_bytes()),
         U64::from(12875u64),
-        I64::from_le_bytes(6434624i64.to_le_bytes()),
-        U64::from(14559u64),
+        I32::from_le_bytes((-8i32).to_le_bytes()),
+        U64::from(1752171074u64),
     )
 }
 
 #[cfg(test)]
-pub fn multiple_updates_results() -> [([u8; 32], U64, I32, I64, U64, I64, U64); 2] {
+pub fn multiple_updates_results_get_price() -> [(I64, U64, I32, U64); 2] {
     [
         (
-            multiple_updates_first_feed_id(),
-            U64::from(1751573123u64),
-            I32::from_le_bytes((-8i32).to_le_bytes()),
             I64::from_le_bytes(10990356724259i64.to_le_bytes()),
             U64::from(3891724259u64),
-            I64::from_le_bytes(10974970400000i64.to_le_bytes()),
-            U64::from(3918344000u64),
+            I32::from_le_bytes((-8i32).to_le_bytes()),
+            U64::from(1751573123u64),
         ),
         (
-            multiple_updates_second_feed_id(),
-            U64::from(1751573123u64),
-            I32::from_le_bytes((-8i32).to_le_bytes()),
             I64::from_le_bytes(258906787480i64.to_le_bytes()),
             U64::from(158498649u64),
-            I64::from_le_bytes(258597182000i64.to_le_bytes()),
-            U64::from(131285914u64),
+            I32::from_le_bytes((-8i32).to_le_bytes()),
+            U64::from(1751573123u64),
+        ),
+    ]
+}
+
+#[cfg(test)]
+pub fn multiple_updates_diff_vaa_results_get_price() -> [(I64, U64, I32, U64); 2] {
+    [
+        (
+            I64::from_le_bytes(35134945i64.to_le_bytes()),
+            U64::from(36279u64),
+            I32::from_le_bytes((-8i32).to_le_bytes()),
+            U64::from(1752094858u64),
+        ),
+        (
+            I64::from_le_bytes(10985663592646i64.to_le_bytes()),
+            U64::from(4569386330u64),
+            I32::from_le_bytes((-8i32).to_le_bytes()),
+            U64::from(1751573860u64),
         ),
     ]
 }

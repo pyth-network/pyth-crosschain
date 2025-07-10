@@ -118,7 +118,7 @@ mod test {
             .sender(alice)
             .get_price_unsafe(good_update1_feed_id());
         assert!(price_result.is_ok());
-        assert_eq!(price_result.unwrap(), good_update1_results());
+        assert_eq!(price_result.unwrap(), good_update1_results_get_price());
     }
 
     #[motsu::test]
@@ -172,7 +172,7 @@ mod test {
             .sender(alice)
             .get_price_unsafe(good_update1_feed_id());
         assert!(price_result.is_ok());
-        assert_eq!(price_result.unwrap(), good_update2_results());
+        assert_eq!(price_result.unwrap(), good_update2_results_get_price());
     }
 
     #[motsu::test]
@@ -241,7 +241,7 @@ mod test {
             .sender(alice)
             .get_price_no_older_than(good_update1_feed_id(), u64::MAX);
         assert!(price_result.is_ok());
-        assert_eq!(price_result.unwrap(), good_update2_results());
+        assert_eq!(price_result.unwrap(), good_update2_results_get_price());
     }
 
     #[motsu::test]
@@ -304,11 +304,11 @@ mod test {
 
         let first_price_result = pyth_contract.sender(alice).get_price_unsafe(first_id);
         assert!(first_price_result.is_ok());
-        assert_eq!(first_price_result.unwrap(), multiple_updates_results()[0]);
+        assert_eq!(first_price_result.unwrap(), multiple_updates_results_get_price()[0]);
 
         let second_price_result = pyth_contract.sender(alice).get_price_unsafe(second_id);
         assert!(second_price_result.is_ok());
-        assert_eq!(second_price_result.unwrap(), multiple_updates_results()[1]);
+        assert_eq!(second_price_result.unwrap(), multiple_updates_results_get_price()[1]);
     }
 
     #[motsu::test]
@@ -340,14 +340,14 @@ mod test {
         assert!(first_price_result.is_ok());
         assert_eq!(
             first_price_result.unwrap(),
-            multiple_updates_diff_vaa_results()[0]
+            multiple_updates_diff_vaa_results_get_price()[0]
         );
 
         let second_price_result = pyth_contract.sender(alice).get_price_unsafe(second_id);
         assert!(second_price_result.is_ok());
         assert_eq!(
             second_price_result.unwrap(),
-            multiple_updates_diff_vaa_results()[1]
+            multiple_updates_diff_vaa_results_get_price()[1]
         );
     }
 
