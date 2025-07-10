@@ -39,7 +39,7 @@ use pythnet_sdk::{
         },
     },
 };
-use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceInfoStorage, PriceReturn};
+use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceFeedStorage, PriceReturn};
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
 sol_interface! {
