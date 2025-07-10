@@ -123,7 +123,7 @@ impl PythReceiver {
         let price_info = self.latest_price_info.get(id_fb);
 
         if price_info.publish_time.get() == U64::ZERO {
-            return Err(PythReceiverError::PriceUnavailable);
+            return Err(PythReceiverError::PriceFeedNotFound);
         }
 
         Ok((
@@ -160,7 +160,7 @@ impl PythReceiver {
         age: u64,
     ) -> Result<PriceReturn, PythReceiverError> {
         let price_info = self.get_price_unsafe(id)?;
-        if !self.is_no_older_than(price_info.1, age) {
+        if !self.is_no_older_than(price_info.3, age) {
             return Err(PythReceiverError::NewPriceUnavailable);
         }
         Ok(price_info)
@@ -188,7 +188,7 @@ impl PythReceiver {
         age: u64,
     ) -> Result<PriceReturn, PythReceiverError> {
         let price_info = self.get_ema_price_unsafe(id)?;
-        if !self.is_no_older_than(price_info.1, age) {
+        if !self.is_no_older_than(price_info.3, age) {
             return Err(PythReceiverError::NewPriceUnavailable);
         }
         Ok(price_info)
