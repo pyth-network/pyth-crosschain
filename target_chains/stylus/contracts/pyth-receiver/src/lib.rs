@@ -39,7 +39,7 @@ use pythnet_sdk::{
         },
     },
 };
-use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceInfoStorage};
+use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceFeedStorage};
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
 sol_interface! {
@@ -63,7 +63,7 @@ pub struct PythReceiver {
     pub governance_data_source_emitter_address: StorageFixedBytes<32>,
     pub last_executed_governance_sequence: StorageUint<64, 1>,
     pub governance_data_source_index: StorageUint<32, 1>,
-    pub latest_price_info: StorageMap<FixedBytes<32>, PriceInfoStorage>,
+    pub latest_price_info: StorageMap<FixedBytes<32>, PriceFeedStorage>,
     pub transaction_fee_in_wei: StorageU256,
 }
 
@@ -243,6 +243,7 @@ impl PythReceiver {
             if recent_price_info.publish_time.get() < price_return.1
                 || recent_price_info.price.get() == I64::ZERO
             {
+                recent_price_info.price_id.set(FixedBytes::from(price_return.0));
                 recent_price_info.publish_time.set(price_return.1);
                 recent_price_info.expo.set(price_return.2);
                 recent_price_info.price.set(price_return.3);

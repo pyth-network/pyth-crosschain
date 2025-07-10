@@ -36,7 +36,8 @@ impl StorageKey for DataSource {
     }
 }
 #[storage]
-pub struct PriceInfoStorage {
+pub struct PriceFeedStorage {
+    pub price_id: StorageFixedBytes<32>,
     pub publish_time: StorageU64,
     pub expo: StorageI32,
     pub price: StorageI64,
