@@ -6,7 +6,6 @@ use {
         time::{DurationUs, TimestampUs},
     },
     anyhow::{bail, Context},
-    cadd::convert::IntoType,
     derive_more::derive::From,
     itertools::Itertools,
     protobuf::well_known_types::duration::Duration as ProtobufDuration,
@@ -312,7 +311,7 @@ impl FixedRate {
     pub fn from_millis(millis: u32) -> Option<Self> {
         Self::ALL
             .into_iter()
-            .find(|v| v.rate.as_millis() == millis.into_type::<u64>())
+            .find(|v| v.rate.as_millis() == u64::from(millis))
     }
 
     pub fn duration(self) -> DurationUs {

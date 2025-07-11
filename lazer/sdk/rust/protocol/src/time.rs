@@ -1,9 +1,5 @@
 use {
     anyhow::Context,
-    cadd::{
-        convert::{Cinto, IntoType},
-        ops::{cadd, cdiv, cmul, crem, csub, Cadd, Cdiv, Cmul, CnextMultipleOf, Csub},
-    },
     protobuf::{
         well_known_types::{
             duration::Duration as ProtobufDuration, timestamp::Timestamp as ProtobufTimestamp,
@@ -42,17 +38,21 @@ impl TimestampUs {
         u128::from(self.0) * 1000
     }
 
-    pub fn from_nanos(nanos: u128) -> cadd::Result<Self> {
-        let micros = cdiv(nanos, 1000)?;
-        Ok(Self::from_micros(micros.cinto()?))
+    pub fn from_nanos(nanos: u128) -> anyhow::Result<Self> {
+        let micros = nanos
+            .checked_div(1000)
+            .context("nanos.checked_div(1000) failed")?;
+        Ok(Self::from_micros(micros.try_into()?))
     }
 
     pub fn as_millis(self) -> u64 {
         self.0 / 1000
     }
 
-    pub fn from_millis(millis: u64) -> cadd::Result<Self> {
-        let micros = cmul(millis, 1000)?;
+    pub fn from_millis(millis: u64) -> anyhow::Result<Self> {
+        let micros = millis
+            .checked_mul(1000)
+            .context("millis.checked_mul(1000) failed")?;
         Ok(Self::from_micros(micros))
     }
 
@@ -60,20 +60,26 @@ impl TimestampUs {
         self.0 / 1_000_000
     }
 
-    pub fn from_secs(secs: u64) -> cadd::Result<Self> {
-        let micros = cmul(secs, 1_000_000)?;
+    pub fn from_secs(secs: u64) -> anyhow::Result<Self> {
+        let micros = secs
+            .checked_mul(1_000_000)
+            .context("secs.checked_mul(1_000_000) failed")?;
         Ok(Self::from_micros(micros))
     }
 
-    pub fn duration_since(self, other: Self) -> cadd::Result<DurationUs> {
-        Ok(DurationUs(csub(self.0, other.0)?))
+    pub fn duration_since(self, other: Self) -> anyhow::Result<DurationUs> {
+        Ok(DurationUs(
+            self.0
+                .checked_sub(other.0)
+                .context("timestamp.checked_sub(duration) failed")?,
+        ))
     }
 
     pub fn saturating_duration_since(self, other: Self) -> DurationUs {
         DurationUs(self.0.saturating_sub(other.0))
     }
 
-    pub fn elapsed(self) -> cadd::Result<DurationUs> {
+    pub fn elapsed(self) -> anyhow::Result<DurationUs> {
         self.duration_since(Self::now())
     }
 
@@ -90,38 +96,46 @@ impl TimestampUs {
     }
 
     pub fn is_multiple_of(self, duration: DurationUs) -> bool {
-        match crem(self.0, duration.0) {
-            Ok(rem) => rem == 0,
-            Err(_) => false,
+        match self.0.checked_rem(duration.0) {
+            Some(rem) => rem == 0,
+            None => false,
         }
     }
 
     /// Calculates the smallest value greater than or equal to self that is a multiple of `duration`.
-    pub fn next_multiple_of(self, duration: DurationUs) -> cadd::Result<TimestampUs> {
-        Ok(TimestampUs(self.0.cnext_multiple_of(duration.0)?))
+    pub fn next_multiple_of(self, duration: DurationUs) -> anyhow::Result<TimestampUs> {
+        Ok(TimestampUs(
+            self.0
+                .checked_next_multiple_of(duration.0)
+                .context("checked_next_multiple_of failed")?,
+        ))
     }
 
     /// Calculates the smallest value less than or equal to self that is a multiple of `duration`.
-    pub fn previous_multiple_of(self, duration: DurationUs) -> cadd::Result<TimestampUs> {
-        Ok(TimestampUs(self.0.cdiv(duration.0)?.cmul(duration.0)?))
+    pub fn previous_multiple_of(self, duration: DurationUs) -> anyhow::Result<TimestampUs> {
+        Ok(TimestampUs(
+            self.0
+                .checked_div(duration.0)
+                .context("checked_div failed")?
+                .checked_mul(duration.0)
+                .context("checked_mul failed")?,
+        ))
     }
-}
 
-impl Cadd<DurationUs> for TimestampUs {
-    type Error = cadd::Error;
-    type Output = Self;
-
-    fn cadd(self, duration: DurationUs) -> cadd::Result<Self> {
-        Ok(TimestampUs(cadd(self.0, duration.0)?))
+    pub fn checked_add(self, duration: DurationUs) -> anyhow::Result<Self> {
+        Ok(TimestampUs(
+            self.0
+                .checked_add(duration.0)
+                .context("checked_add failed")?,
+        ))
     }
-}
 
-impl Csub<DurationUs> for TimestampUs {
-    type Error = cadd::Error;
-    type Output = Self;
-
-    fn csub(self, duration: DurationUs) -> cadd::Result<Self> {
-        Ok(TimestampUs(csub(self.0, duration.0)?))
+    pub fn checked_sub(self, duration: DurationUs) -> anyhow::Result<Self> {
+        Ok(TimestampUs(
+            self.0
+                .checked_sub(duration.0)
+                .context("checked_sub failed")?,
+        ))
     }
 }
 
@@ -137,9 +151,21 @@ impl TryFrom<&ProtobufTimestamp> for TimestampUs {
     type Error = anyhow::Error;
 
     fn try_from(timestamp: &ProtobufTimestamp) -> anyhow::Result<Self> {
-        let seconds_in_micros = timestamp.seconds.cmul(1_000_000)?.cinto_type::<u64>()?;
-        let nanos_in_micros = timestamp.nanos.cdiv(1_000)?.cinto_type::<u64>()?;
-        Ok(TimestampUs(cadd(seconds_in_micros, nanos_in_micros)?))
+        let seconds_in_micros: u64 = timestamp
+            .seconds
+            .checked_mul(1_000_000)
+            .context("checked_mul failed")?
+            .try_into()?;
+        let nanos_in_micros: u64 = timestamp
+            .nanos
+            .checked_div(1_000)
+            .context("checked_div failed")?
+            .try_into()?;
+        Ok(TimestampUs(
+            seconds_in_micros
+                .checked_add(nanos_in_micros)
+                .context("checked_add failed")?,
+        ))
     }
 }
 
@@ -165,36 +191,38 @@ impl From<TimestampUs> for MessageField<ProtobufTimestamp> {
 }
 
 impl TryFrom<SystemTime> for TimestampUs {
-    type Error = cadd::Error;
+    type Error = anyhow::Error;
 
     fn try_from(value: SystemTime) -> Result<Self, Self::Error> {
         let value = value
             .duration_since(SystemTime::UNIX_EPOCH)
-            .map_err(|_| cadd::Error::new("invalid system time".into()))?
+            .context("invalid system time")?
             .as_micros()
-            .cinto()?;
+            .try_into()?;
         Ok(Self(value))
     }
 }
 
 impl TryFrom<TimestampUs> for SystemTime {
-    type Error = cadd::Error;
+    type Error = anyhow::Error;
 
     fn try_from(value: TimestampUs) -> Result<Self, Self::Error> {
-        SystemTime::UNIX_EPOCH.cadd(Duration::from_micros(value.as_micros()))
+        SystemTime::UNIX_EPOCH
+            .checked_add(Duration::from_micros(value.as_micros()))
+            .context("checked_add failed")
     }
 }
 
 impl TryFrom<&chrono::DateTime<chrono::Utc>> for TimestampUs {
-    type Error = cadd::Error;
+    type Error = anyhow::Error;
 
     fn try_from(value: &chrono::DateTime<chrono::Utc>) -> Result<Self, Self::Error> {
-        Ok(Self(value.timestamp_micros().cinto()?))
+        Ok(Self(value.timestamp_micros().try_into()?))
     }
 }
 
 impl TryFrom<chrono::DateTime<chrono::Utc>> for TimestampUs {
-    type Error = cadd::Error;
+    type Error = anyhow::Error;
 
     fn try_from(value: chrono::DateTime<chrono::Utc>) -> Result<Self, Self::Error> {
         TryFrom::<&chrono::DateTime<chrono::Utc>>::try_from(&value)
@@ -205,7 +233,7 @@ impl TryFrom<TimestampUs> for chrono::DateTime<chrono::Utc> {
     type Error = anyhow::Error;
 
     fn try_from(value: TimestampUs) -> Result<Self, Self::Error> {
-        chrono::DateTime::<chrono::Utc>::from_timestamp_micros(value.as_micros().cinto()?)
+        chrono::DateTime::<chrono::Utc>::from_timestamp_micros(value.as_micros().try_into()?)
             .with_context(|| format!("cannot convert timestamp to datetime: {value:?}"))
     }
 }
@@ -230,9 +258,9 @@ impl DurationUs {
         u128::from(self.0) * 1000
     }
 
-    pub fn from_nanos(nanos: u128) -> cadd::Result<Self> {
-        let micros = cdiv(nanos, 1000)?;
-        Ok(Self::from_micros(micros.cinto()?))
+    pub fn from_nanos(nanos: u128) -> anyhow::Result<Self> {
+        let micros = nanos.checked_div(1000).context("checked_div failed")?;
+        Ok(Self::from_micros(micros.try_into()?))
     }
 
     pub fn as_millis(self) -> u64 {
@@ -244,8 +272,10 @@ impl DurationUs {
         Self((millis as u64) * 1_000)
     }
 
-    pub fn from_millis(millis: u64) -> cadd::Result<Self> {
-        let micros = cmul(millis, 1000)?;
+    pub fn from_millis(millis: u64) -> anyhow::Result<Self> {
+        let micros = millis
+            .checked_mul(1000)
+            .context("millis.checked_mul(1000) failed")?;
         Ok(Self::from_micros(micros))
     }
 
@@ -258,15 +288,17 @@ impl DurationUs {
         Self((secs as u64) * 1_000_000)
     }
 
-    pub fn from_secs(secs: u64) -> cadd::Result<Self> {
-        let micros = cmul(secs, 1_000_000)?;
+    pub fn from_secs(secs: u64) -> anyhow::Result<Self> {
+        let micros = secs
+            .checked_mul(1_000_000)
+            .context("secs.checked_mul(1_000_000) failed")?;
         Ok(Self::from_micros(micros))
     }
 
     pub fn is_multiple_of(self, other: DurationUs) -> bool {
-        match crem(self.0, other.0) {
-            Ok(rem) => rem == 0,
-            Err(_) => false,
+        match self.0.checked_rem(other.0) {
+            Some(rem) => rem == 0,
+            None => false,
         }
     }
 
@@ -277,41 +309,26 @@ impl DurationUs {
     pub const fn is_positive(self) -> bool {
         self.0 > 0
     }
-}
 
-impl Cadd for DurationUs {
-    type Error = cadd::Error;
-    type Output = Self;
-
-    fn cadd(self, other: DurationUs) -> cadd::Result<Self> {
-        Ok(DurationUs(cadd(self.0, other.0)?))
+    pub fn checked_add(self, other: DurationUs) -> anyhow::Result<Self> {
+        Ok(DurationUs(
+            self.0.checked_add(other.0).context("checked_add failed")?,
+        ))
     }
-}
-
-impl Csub for DurationUs {
-    type Error = cadd::Error;
-    type Output = Self;
-
-    fn csub(self, other: DurationUs) -> cadd::Result<Self> {
-        Ok(DurationUs(csub(self.0, other.0)?))
+    pub fn checked_sub(self, other: DurationUs) -> anyhow::Result<Self> {
+        Ok(DurationUs(
+            self.0.checked_sub(other.0).context("checked_sub failed")?,
+        ))
     }
-}
-
-impl Cmul<u64> for DurationUs {
-    type Error = cadd::Error;
-    type Output = Self;
-
-    fn cmul(self, n: u64) -> cadd::Result<DurationUs> {
-        Ok(DurationUs(cmul(self.0, n)?))
+    pub fn checked_mul(self, n: u64) -> anyhow::Result<DurationUs> {
+        Ok(DurationUs(
+            self.0.checked_mul(n).context("checked_mul failed")?,
+        ))
     }
-}
-
-impl Cdiv<u64> for DurationUs {
-    type Error = cadd::Error;
-    type Output = Self;
-
-    fn cdiv(self, n: u64) -> cadd::Result<DurationUs> {
-        Ok(DurationUs(cdiv(self.0, n)?))
+    pub fn checked_div(self, n: u64) -> anyhow::Result<DurationUs> {
+        Ok(DurationUs(
+            self.0.checked_div(n).context("checked_div failed")?,
+        ))
     }
 }
 
@@ -322,10 +339,10 @@ impl From<DurationUs> for Duration {
 }
 
 impl TryFrom<Duration> for DurationUs {
-    type Error = cadd::Error;
+    type Error = anyhow::Error;
 
     fn try_from(value: Duration) -> Result<Self, Self::Error> {
-        Ok(Self(value.as_micros().cinto()?))
+        Ok(Self(value.as_micros().try_into()?))
     }
 }
 
@@ -341,9 +358,21 @@ impl TryFrom<&ProtobufDuration> for DurationUs {
     type Error = anyhow::Error;
 
     fn try_from(duration: &ProtobufDuration) -> anyhow::Result<Self> {
-        let seconds_in_micros = duration.seconds.cmul(1_000_000)?.cinto_type::<u64>()?;
-        let nanos_in_micros = duration.nanos.cdiv(1_000)?.cinto_type::<u64>()?;
-        Ok(DurationUs(cadd(seconds_in_micros, nanos_in_micros)?))
+        let seconds_in_micros: u64 = duration
+            .seconds
+            .checked_mul(1_000_000)
+            .context("checked_mul failed")?
+            .try_into()?;
+        let nanos_in_micros: u64 = duration
+            .nanos
+            .checked_div(1_000)
+            .context("nanos.checked_div(1_000) failed")?
+            .try_into()?;
+        Ok(DurationUs(
+            seconds_in_micros
+                .checked_add(nanos_in_micros)
+                .context("checked_add failed")?,
+        ))
     }
 }
 

@@ -947,10 +947,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cadd"
-version = "0.1.0-alpha.2"
-
-[[package]]
 name = "caps"
 version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3212,7 +3208,6 @@ version = "0.8.1"
 dependencies = [
  "anyhow",
  "byteorder",
- "cadd",
  "chrono",
  "derive_more",
  "humantime-serde",
