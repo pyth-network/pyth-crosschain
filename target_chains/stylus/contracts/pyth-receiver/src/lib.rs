@@ -516,7 +516,10 @@ impl PythReceiver {
         price_feeds
     }
 
-    pub fn execute_governance_instruction(&mut self, data: Vec<u8>) -> Result<(), PythReceiverError> {
+    pub fn execute_governance_instruction(
+        &mut self,
+        data: Vec<u8>,
+    ) -> Result<(), PythReceiverError> {
         let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
         let config = Call::new();
         wormhole
@@ -531,13 +534,19 @@ impl PythReceiver {
         let instruction = governance_structs::parse_instruction(vm.body.payload.to_vec())
             .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
 
-        if instruction.target_chain_id != 0 && instruction.target_chain_id != self.vm().chain_id() as u16 {
+        if instruction.target_chain_id != 0
+            && instruction.target_chain_id != self.vm().chain_id() as u16
+        {
             return Err(PythReceiverError::InvalidGovernanceTarget);
         }
 
         match instruction.payload {
-            GovernancePayload::SetFee(_payload) => {}
-            GovernancePayload::SetFeeInToken(_payload) => {}
+            GovernancePayload::SetFee(payload) => {
+                self.set_fee(payload.value, payload.expo, self.fee_token_address.get());
+            }
+            GovernancePayload::SetFeeInToken(payload) => {
+                self.set_fee(payload.value, payload.expo, payload.token);
+            }
             GovernancePayload::SetDataSources(_payload) => {}
             GovernancePayload::SetWormholeAddress(_payload) => {}
             GovernancePayload::RequestGovernanceDataSourceTransfer(_) => {
@@ -561,7 +570,6 @@ impl PythReceiver {
         unimplemented!("Upgrade contract not yet implemented");
     }
 
-
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
         self.get_current_timestamp()
             .saturating_sub(publish_time.to::<u64>())
@@ -580,6 +588,19 @@ impl PythReceiver {
             self.vm().block_timestamp()
         }
     }
+
+    fn set_fee(&mut self, value: u64, expo: u64, token_address: Address) {
+        let new_fee = apply_decimal_expo(value, expo);
+        let old_fee = self.single_update_fee_in_wei.get();
+
+        self.single_update_fee_in_wei.set(new_fee);
+
+        // TODO: HANDLE EVENT EMISSION
+    }
+}
+
+fn apply_decimal_expo(value: u64, expo: u64) -> U256 {
+    U256::from(value) * U256::from(10).pow(expo as u32)
 }
 
 fn verify_governance_vm(receiver: &mut PythReceiver, vm: Vaa) -> Result<(), PythReceiverError> {
@@ -587,7 +608,12 @@ fn verify_governance_vm(receiver: &mut PythReceiver, vm: Vaa) -> Result<(), Pyth
         return Err(PythReceiverError::InvalidGovernanceMessage);
     }
 
-    if vm.body.emitter_address.as_slice() != receiver.governance_data_source_emitter_address.get().as_slice() {
+    if vm.body.emitter_address.as_slice()
+        != receiver
+            .governance_data_source_emitter_address
+            .get()
+            .as_slice()
+    {
         return Err(PythReceiverError::InvalidGovernanceMessage);
     }
 
@@ -598,7 +624,8 @@ fn verify_governance_vm(receiver: &mut PythReceiver, vm: Vaa) -> Result<(), Pyth
         return Err(PythReceiverError::GovernanceMessageAlreadyExecuted);
     }
 
-    receiver.last_executed_governance_sequence
+    receiver
+        .last_executed_governance_sequence
         .set(U64::from(current_sequence));
 
     Ok(())
