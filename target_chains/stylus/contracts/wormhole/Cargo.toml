@@ -23,4 +23,10 @@ motsu.workspace = true
 base64 = "0.21"
 
 [lib]
+name = "wormhole_contract"
 crate-type = ["lib", "cdylib"]
+
+[[bin]]
+name = "wormhole-contract"
+path = "src/main.rs"
+required-features = ["export-abi"]
