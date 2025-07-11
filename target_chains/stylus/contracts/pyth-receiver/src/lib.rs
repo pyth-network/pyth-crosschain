@@ -516,7 +516,7 @@ impl PythReceiver {
         price_feeds
     }
 
-    pub fn execute_governance_instruction(&self, data: Vec<u8>) -> Result<(), PythReceiverError> {
+    pub fn execute_governance_instruction(&mut self, data: Vec<u8>) -> Result<(), PythReceiverError> {
         let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
         let config = Call::new();
         wormhole
@@ -526,27 +526,27 @@ impl PythReceiver {
         let vm = Vaa::read(&mut Vec::from(data.clone()).as_slice())
             .map_err(|_| PythReceiverError::VaaVerificationFailed)?;
 
-        self.verify_governance_vm(vm)?;
+        verify_governance_vm(self, vm.clone())?;
 
-        let instruction = governance_structs::parse_instruction(vm.payload.to_vec())
+        let instruction = governance_structs::parse_instruction(vm.body.payload.to_vec())
             .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
 
-        if instruction.target_chain_id != 0 && instruction.target_chain_id != wormhole.chain_id() {
+        if instruction.target_chain_id != 0 && instruction.target_chain_id != self.vm().chain_id() as u16 {
             return Err(PythReceiverError::InvalidGovernanceTarget);
         }
 
         match instruction.payload {
-            SetFee(payload) => {}
-            SetFeeInToken(payload) => {}
-            SetDataSources(payload) => {}
-            SetWormholeAddress(payload) => {}
-            RequestGovernanceDataSourceTransfer(_) => {
+            GovernancePayload::SetFee(_payload) => {}
+            GovernancePayload::SetFeeInToken(_payload) => {}
+            GovernancePayload::SetDataSources(_payload) => {}
+            GovernancePayload::SetWormholeAddress(_payload) => {}
+            GovernancePayload::RequestGovernanceDataSourceTransfer(_) => {
                 // RequestGovernanceDataSourceTransfer can be only part of
                 // AuthorizeGovernanceDataSourceTransfer message
                 return Err(PythReceiverError::InvalidGovernanceMessage);
             }
-            AuthorizeGovernanceDataSourceTransfer(payload) => {}
-            UpgradeContract(payload) => {
+            GovernancePayload::AuthorizeGovernanceDataSourceTransfer(_payload) => {}
+            GovernancePayload::UpgradeContract(payload) => {
                 if instruction.target_chain_id == 0 {
                     return Err(PythReceiverError::InvalidGovernanceTarget);
                 }
@@ -557,31 +557,10 @@ impl PythReceiver {
         Ok(())
     }
 
-    fn upgrade_contract(&self, new_implementation: Address) {
-        !unimplemented!("Upgrade contract not yet implemented");
+    fn upgrade_contract(&self, _new_implementation: FixedBytes<32>) {
+        unimplemented!("Upgrade contract not yet implemented");
     }
 
-    fn verify_governance_vm(&self, vm: Vaa) -> Result<(), PythReceiverError> {
-        if vm.body.emitter_chain != self.governance_data_source_chain_id.get().to::<u16>() {
-            return Err(PythReceiverError::InvalidGovernanceMessage);
-        }
-
-        if vm.body.emitter_address != self.governance_data_source_emitter_address.get() {
-            return Err(PythReceiverError::InvalidGovernanceMessage);
-        }
-
-        let current_sequence = vm.body.sequence.to::<u64>();
-        let last_executed_sequence = self.last_executed_governance_sequence.get().to::<u64>();
-
-        if current_sequence <= last_executed_sequence {
-            return Err(PythReceiverError::GovernanceMessageAlreadyExecuted);
-        }
-
-        self.last_executed_governance_sequence
-            .set(U64::from(current_sequence));
-
-        Ok(())
-    }
 
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
         self.get_current_timestamp()
@@ -601,6 +580,28 @@ impl PythReceiver {
             self.vm().block_timestamp()
         }
     }
+}
+
+fn verify_governance_vm(receiver: &mut PythReceiver, vm: Vaa) -> Result<(), PythReceiverError> {
+    if vm.body.emitter_chain != receiver.governance_data_source_chain_id.get().to::<u16>() {
+        return Err(PythReceiverError::InvalidGovernanceMessage);
+    }
+
+    if vm.body.emitter_address.as_slice() != receiver.governance_data_source_emitter_address.get().as_slice() {
+        return Err(PythReceiverError::InvalidGovernanceMessage);
+    }
+
+    let current_sequence = vm.body.sequence.to::<u64>();
+    let last_executed_sequence = receiver.last_executed_governance_sequence.get().to::<u64>();
+
+    if current_sequence <= last_executed_sequence {
+        return Err(PythReceiverError::GovernanceMessageAlreadyExecuted);
+    }
+
+    receiver.last_executed_governance_sequence
+        .set(U64::from(current_sequence));
+
+    Ok(())
 }
 
 fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverError> {
