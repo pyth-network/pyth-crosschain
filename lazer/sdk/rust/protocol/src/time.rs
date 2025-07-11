@@ -209,11 +209,9 @@ impl TryFrom<&ProtobufTimestamp> for TimestampUs {
 
 impl From<TimestampUs> for ProtobufTimestamp {
     fn from(timestamp: TimestampUs) -> Self {
+        // u64 to i64 after this division can never overflow because the value cannot be too big
         ProtobufTimestamp {
-            #[allow(
-                clippy::cast_possible_wrap,
-                reason = "u64 to i64 after this division can never overflow because the value cannot be too big"
-            )]
+            #[allow(clippy::cast_possible_wrap)]
             seconds: (timestamp.0 / 1_000_000) as i64,
             // never fails, never overflows
             nanos: (timestamp.0 % 1_000_000) as i32 * 1000,
@@ -456,10 +454,8 @@ impl TryFrom<&ProtobufDuration> for DurationUs {
 impl From<DurationUs> for ProtobufDuration {
     fn from(duration: DurationUs) -> Self {
         ProtobufDuration {
-            #[allow(
-                clippy::cast_possible_wrap,
-                reason = "u64 to i64 after this division can never overflow because the value cannot be too big"
-            )]
+            // u64 to i64 after this division can never overflow because the value cannot be too big
+            #[allow(clippy::cast_possible_wrap)]
             seconds: (duration.0 / 1_000_000) as i64,
             // never fails, never overflows
             nanos: (duration.0 % 1_000_000) as i32 * 1000,
